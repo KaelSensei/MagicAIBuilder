@@ -64,6 +64,7 @@ export interface DeckStats {
   overBudgetCards: string[]; // Cards exceeding budget
   bannedCards: string[]; // Banned cards in deck
   colorIdentityViolations: string[]; // Cards outside commander identity
+  themes?: import("./themes").DetectedTheme[]; // Detected archetypes
 }
 
 export interface BracketScore {

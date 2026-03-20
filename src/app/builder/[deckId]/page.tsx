@@ -30,6 +30,9 @@ import { ArrowLeft, Crown } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
+import { ToastContainer } from "@/components/ui/Toast";
+import { CombosPanel } from "@/components/deck/CombosPanel";
+import { useCombos } from "@/hooks/useCombos";
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
@@ -55,6 +58,7 @@ export default function BuilderPage() {
 
   const { stats } = useDeck();
   const bracketScore = useBracketScore(deck);
+  const { data: combos, isLoading: combosLoading } = useCombos(deck);
 
   // Search state
   const [searchText, setSearchText] = useState("");
@@ -254,10 +258,19 @@ export default function BuilderPage() {
               targetBracket={deck.targetBracket}
             />
 
-            <DeckStats stats={stats} />
+            <CombosPanel
+              combos={combos}
+              isLoading={combosLoading}
+              isEnabled={(deck?.cards.length ?? 0) >= 10}
+            />
+
+            <DeckStats stats={stats} targetBracket={deck.targetBracket} />
           </motion.div>
         </div>
       </div>
+
+      {/* Toast notifications */}
+      <ToastContainer />
 
       {/* Drag overlay */}
       <DragOverlay>

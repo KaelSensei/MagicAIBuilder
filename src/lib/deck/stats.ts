@@ -1,5 +1,6 @@
 // Deck statistics computation
 import type { Deck, DeckStats } from "./types";
+import { detectThemes } from "./themes";
 
 /** Compute comprehensive deck statistics */
 export function computeDeckStats(deck: Deck): DeckStats {
@@ -75,6 +76,9 @@ export function computeDeckStats(deck: Deck): DeckStats {
     )
     .map((c) => c.name);
 
+  // Theme detection (on all non-land cards)
+  const themes = detectThemes(allCards.filter((c) => c.category !== "land"));
+
   return {
     totalCards,
     lands,
@@ -92,5 +96,6 @@ export function computeDeckStats(deck: Deck): DeckStats {
     overBudgetCards,
     bannedCards,
     colorIdentityViolations,
+    themes,
   };
 }
