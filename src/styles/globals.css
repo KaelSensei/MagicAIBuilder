@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  /* Base colors */
+  --background: #0a0a0f;
+  --surface: #12121a;
+  --surface-hover: #1a1a25;
+  --border: #2a2a35;
+  --text-primary: #e8e8ec;
+  --text-secondary: #8888a0;
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+
+  /* MTG mana colors */
+  --mana-white: #f9faf4;
+  --mana-blue: #0e68ab;
+  --mana-black: #150b00;
+  --mana-red: #d3202a;
+  --mana-green: #00733e;
+  --mana-colorless: #ccc2c0;
+
+  /* Bracket colors */
+  --bracket-1: #22c55e;
+  --bracket-2: #3b82f6;
+  --bracket-3: #f59e0b;
+  --bracket-4: #ef4444;
+
+  /* Animations */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans, system-ui, sans-serif);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Card hover effects */
+.card-image-wrapper {
+  transition: transform var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.card-image-wrapper:hover {
+  transform: scale(1.05);
+  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+  z-index: 10;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}

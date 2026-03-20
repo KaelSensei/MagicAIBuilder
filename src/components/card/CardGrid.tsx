@@ -1,0 +1,65 @@
+"use client";
+// Grid display for search results
+import { motion } from "framer-motion";
+import { CardImage } from "./CardImage";
+import { cn } from "@/components/ui/utils";
+import type { ScryfallCard } from "@/lib/scryfall/types";
+import { getCardImageUri } from "@/lib/scryfall/images";
+
+interface CardGridProps {
+  cards: ScryfallCard[];
+  onCardClick?: (card: ScryfallCard) => void;
+  className?: string;
+  emptyMessage?: string;
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.04 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 },
+};
+
+export function CardGrid({
+  cards,
+  onCardClick,
+  className,
+  emptyMessage = "No cards found",
+}: CardGridProps) {
+  if (cards.length === 0) {
+    return (
+      <div className={cn("flex items-center justify-center h-40 text-[var(--text-secondary)]", className)}>
+        {emptyMessage}
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      className={cn(
+        "grid grid-cols-3 gap-2 p-2",
+        className
+      )}
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      {cards.map((card) => (
+        <motion.div key={card.id} variants={itemVariants}>
+          <CardImage
+            imageUri={getCardImageUri(card, "normal")}
+            largeUri={getCardImageUri(card, "large")}
+            name={card.name}
+            onClick={() => onCardClick?.(card)}
+          />
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
