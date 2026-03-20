@@ -1,4 +1,5 @@
 // Scryfall API client with rate limiting (max 10 req/s = 100ms between requests)
+// Cards are cached in the DB via /api/cache/cards (TTL: 24h)
 import type {
   ScryfallCard,
   ScryfallSearchResponse,
@@ -6,6 +7,7 @@ import type {
   ScryfallCollectionIdentifier,
   ScryfallCollectionResponse,
 } from "./types";
+import { lookupCardCache, storeCardCache } from "@/lib/db/deck-api";
 
 const SCRYFALL_BASE = "https://api.scryfall.com";
 const MIN_DELAY_MS = 100;
@@ -88,10 +90,27 @@ export async function getCardByNameFuzzy(name: string): Promise<ScryfallCard> {
   return handleResponse<ScryfallCard>(response);
 }
 
-/** Get a single card by Scryfall ID */
+/** Get a single card by Scryfall ID — with DB cache (TTL 24h) */
 export async function getCardById(id: string): Promise<ScryfallCard> {
+  // Check DB cache first (only available in browser / server-rendered contexts)
+  try {
+    const cached = await lookupCardCache(id);
+    if (cached) {
+      return cached as ScryfallCard;
+    }
+  } catch {
+    // Cache lookup failure is non-fatal — fall through to Scryfall
+  }
+
   const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/${id}`);
-  return handleResponse<ScryfallCard>(response);
+  const card = await handleResponse<ScryfallCard>(response);
+
+  // Store in DB cache (fire-and-forget)
+  storeCardCache(id, card).catch(() => {
+    /* non-fatal */
+  });
+
+  return card;
 }
 
 /** Autocomplete partial card name */
