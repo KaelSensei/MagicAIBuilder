@@ -23,7 +23,6 @@ import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
-import { ImportDialog } from "@/components/deck/ImportDialog";
 import { buildSearchQuery, buildCommanderSearchQuery } from "@/lib/scryfall/search";
 import type { SearchFilters as Filters } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";

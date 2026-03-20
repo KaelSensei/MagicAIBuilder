@@ -19,7 +19,7 @@ export function ImportDialog({ children }: ImportDialogProps) {
   const [text, setText] = useState("");
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [message, setMessage] = useState("");
-  const [addedCount, setAddedCount] = useState(0);
+
 
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
@@ -84,7 +84,6 @@ export function ImportDialog({ children }: ImportDialogProps) {
         }
       }
 
-      setAddedCount(added);
       setStatus("done");
       setMessage(`Successfully imported ${added} cards.`);
     } catch (err) {
@@ -101,7 +100,6 @@ export function ImportDialog({ children }: ImportDialogProps) {
       setText("");
       setStatus("idle");
       setMessage("");
-      setAddedCount(0);
     }, 200);
   };
 
