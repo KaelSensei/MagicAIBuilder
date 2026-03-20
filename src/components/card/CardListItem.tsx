@@ -40,10 +40,10 @@ export function CardListItem({ card, onRemove, className }: CardListItemProps) {
 
       {/* Flags */}
       {card.isGameChanger && (
-        <Zap className="w-3 h-3 text-amber-400 shrink-0" title="Game Changer" />
+        <span title="Game Changer"><Zap className="w-3 h-3 text-amber-400" /></span>
       )}
       {card.isBanned && (
-        <AlertTriangle className="w-3 h-3 text-red-500 shrink-0" title="Banned" />
+        <span title="Banned"><AlertTriangle className="w-3 h-3 text-red-500" /></span>
       )}
 
       {/* Remove button */}

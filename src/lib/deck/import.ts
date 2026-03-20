@@ -20,18 +20,15 @@ export function parseTextDecklist(text: string): ImportResult {
 
   // Detect commander section
   let inCommanderSection = false;
-  let inMainSection = false;
 
   for (const line of lines) {
     // Section headers
     if (/^commander/i.test(line)) {
       inCommanderSection = true;
-      inMainSection = false;
       continue;
     }
     if (/^(deck|main|mainboard|99)/i.test(line)) {
       inCommanderSection = false;
-      inMainSection = true;
       continue;
     }
 

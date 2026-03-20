@@ -161,7 +161,7 @@ export function checkColorIdentity(
 }
 
 /** Check if a card is a Game Changer based on oracle text heuristics */
-export function detectGameChanger(oracleText: string, _name: string): boolean {
+export function detectGameChanger(oracleText: string): boolean {
   const text = oracleText.toLowerCase();
   // Heuristics: very powerful effects
   return (

@@ -174,14 +174,14 @@ describe("checkColorIdentity", () => {
 
 describe("detectGameChanger", () => {
   it("detects take an extra turn as game changer", () => {
-    expect(detectGameChanger("Take an extra turn after this one.", "Time Walk")).toBe(true);
+    expect(detectGameChanger("Take an extra turn after this one.")).toBe(true);
   });
 
   it("detects win the game as game changer", () => {
-    expect(detectGameChanger("You win the game.", "Thassa's Oracle")).toBe(true);
+    expect(detectGameChanger("You win the game.")).toBe(true);
   });
 
   it("does not flag regular spells", () => {
-    expect(detectGameChanger("Lightning Bolt deals 3 damage to any target.", "Lightning Bolt")).toBe(false);
+    expect(detectGameChanger("Lightning Bolt deals 3 damage to any target.")).toBe(false);
   });
 });

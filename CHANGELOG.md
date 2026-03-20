@@ -9,6 +9,41 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — Phase 1: Integration (feat/phase-1-integration)
+
+#### Game Changers & Banlist Enrichment
+- `useBanlist.ts` — new hook fetching `banned:commander` cards from Scryfall (24h cache), exposes `isBanned(name)` helper
+- `useGameChangers.ts` — extended with `useGameChangersSet()` exposing `isGameChanger(name)` helper
+- `EnrichmentProvider.tsx` — new provider that syncs GC and banlist Sets into Zustand store at startup
+- `store.ts` — added `setGameChangerNames` / `setBannedNames` actions; `addCard` and `setCommander` now cross-reference enrichment sets to auto-mark `isGameChanger` and `isBanned` on new cards
+- `store.ts` — `partialize` exclude runtime Sets from localStorage persistence
+
+#### dnd-kit Drag-and-Drop
+- `DraggableCard.tsx` — new component wrapping search cards with `useDraggable` (dnd-kit), 8px activation distance
+- `CardGrid.tsx` — added optional `draggable` prop to wrap each card with `DraggableCard`
+- `CardSearchListItem.tsx` — new list-mode row for search results with optional `draggable` support
+- `DeckEditor.tsx` — category sections use `useDroppable` with visual highlight on drag-over; drop adds card to deck
+- `builder/[deckId]/page.tsx` — `DndContext` + `DragOverlay` wrapping entire page; drag from search → drop on deck category → `addCard()`
+
+#### Import UI
+- `ImportDialog.tsx` — Radix Dialog with textarea (plain text format), Scryfall batch collection lookup, adds imported cards and commander to deck
+- `Header.tsx` — Import button now opens `ImportDialog` when in builder context (deckId prop)
+
+#### Color Distribution Chart
+- `ColorDistribution.tsx` — CSS-only bar chart for W/U/B/R/G/C color pips using `--mana-*` design tokens; stacked color bar + per-color bar rows
+- `DeckStats.tsx` — integrated `ColorDistribution` component below mana curve
+
+#### Commander Auto-Detection
+- `search.ts` — `buildCommanderSearchQuery()` updated to accept `SearchFilters` parameter
+- `builder/[deckId]/page.tsx` — Commander mode toggle (Crown icon button): when active, search uses `buildCommanderSearchQuery` (filters for `is:commander`); clicking a card calls `setCommander()` and exits commander mode
+
+#### Grid/List View Toggle
+- `SearchResults.tsx` — grid/list toggle buttons (LayoutGrid / List icons); reads/writes `searchViewMode` from Zustand store
+- `DeckEditor.tsx` — grid/list toggle in card count header; reads/writes `deckViewMode` from Zustand store
+- `store.ts` — `searchViewMode` and `deckViewMode` persisted in localStorage
+
+---
+
 ### Added — Phase 1: Foundation Scaffold
 
 #### Project Setup
