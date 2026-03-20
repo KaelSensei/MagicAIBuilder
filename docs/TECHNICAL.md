@@ -54,14 +54,17 @@ src/
       Sidebar.tsx           # Future sidebar
 
   lib/
+    db/
+      prisma.ts             # PrismaClient singleton (dev-safe)
+      deck-api.ts           # HTTP client for /api/deck* routes
     scryfall/
-      client.ts             # Rate-limited fetch (100ms min)
+      client.ts             # Rate-limited fetch (100ms min) + DB cache
       types.ts              # ScryfallCard, response types
       images.ts             # Image URL helpers
       search.ts             # Query builder
     deck/
       types.ts              # Core domain types
-      store.ts              # Zustand store (persisted)
+      store.ts              # Zustand store (DB-synced, no localStorage)
       categories.ts         # Auto-categorization engine
       stats.ts              # computeDeckStats()
       bracket.ts            # scoreBracket() engine
@@ -280,7 +283,42 @@ pnpm lint     # ESLint check
 
 ### Environment
 
-No environment variables are required for Phase 1. All Scryfall calls go directly to the public API. No auth token needed.
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | ✅ Yes | PostgreSQL connection string |
+
+See `docs/INFRASTRUCTURE.md` for full infra setup instructions.
+
+---
+
+## Database Layer
+
+MagicAIBuilder uses **PostgreSQL + Prisma** for persistent storage. The Zustand store no longer persists to `localStorage` — all deck state is synced to the DB.
+
+### Architecture
+
+```
+Zustand (in-memory, optimistic)
+    ↕ fetch
+Next.js API Routes (/api/decks/*)
+    ↕ Prisma Client
+PostgreSQL 16
+```
+
+### Prisma Client
+
+`src/lib/db/prisma.ts` exports a singleton `PrismaClient` instance, safe for Next.js hot-reload in development.
+
+### API Client
+
+`src/lib/db/deck-api.ts` provides typed async functions:
+- `fetchDecks()`, `createDeck()`, `updateDeck()`, `deleteDeck()`
+- `addCard()`, `removeCard()`, `updateCardCategory()`, `removeAllCards()`
+- `lookupCardCache()`, `storeCardCache()` — for Scryfall DB cache
+
+### Scryfall Cache
+
+`getCardById()` in `src/lib/scryfall/client.ts` now checks the DB `CardCache` before hitting Scryfall. Cache entries expire after 24h.
 
 ---
 
