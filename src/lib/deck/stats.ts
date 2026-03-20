@@ -1,0 +1,96 @@
+// Deck statistics computation
+import type { Deck, DeckStats } from "./types";
+
+/** Compute comprehensive deck statistics */
+export function computeDeckStats(deck: Deck): DeckStats {
+  const allCards = [
+    ...(deck.commander ? [deck.commander] : []),
+    ...(deck.partner ? [deck.partner] : []),
+    ...deck.cards,
+  ];
+
+  const nonLandCards = allCards.filter((c) => c.category !== "land");
+
+  // Mana curve (exclude lands)
+  const manaCurve: Record<number, number> = {};
+  for (const card of nonLandCards) {
+    const cmc = Math.min(card.cmc, 7); // Cap at 7+
+    manaCurve[cmc] = (manaCurve[cmc] ?? 0) + card.quantity;
+  }
+
+  // Color distribution
+  const colorDistribution: Record<string, number> = {};
+  for (const card of allCards) {
+    for (const color of card.colorIdentity) {
+      colorDistribution[color] = (colorDistribution[color] ?? 0) + 1;
+    }
+  }
+
+  // Avg CMC (excluding lands and commander)
+  const cmcCards = deck.cards.filter((c) => c.category !== "land");
+  const avgCmc =
+    cmcCards.length > 0
+      ? cmcCards.reduce((sum, c) => sum + c.cmc * c.quantity, 0) /
+        cmcCards.reduce((sum, c) => sum + c.quantity, 0)
+      : 0;
+
+  // Category counts
+  const lands = allCards.filter((c) => c.category === "land").reduce((s, c) => s + c.quantity, 0);
+  const creatures = allCards.filter((c) => c.category === "creature").reduce((s, c) => s + c.quantity, 0);
+  const ramp = allCards.filter((c) => c.category === "ramp").reduce((s, c) => s + c.quantity, 0);
+  const draw = allCards.filter((c) => c.category === "draw").reduce((s, c) => s + c.quantity, 0);
+  const removal = allCards.filter((c) => c.category === "removal").reduce((s, c) => s + c.quantity, 0);
+  const boardWipes = allCards.filter((c) => c.category === "boardWipe").reduce((s, c) => s + c.quantity, 0);
+
+  // Game Changers
+  const gcCards = allCards.filter((c) => c.isGameChanger);
+  const gameChangersCount = gcCards.reduce((s, c) => s + c.quantity, 0);
+  const gameChangersList = gcCards.map((c) => c.name);
+
+  // Total cards
+  const totalCards = allCards.reduce((s, c) => s + c.quantity, 0);
+
+  // Price
+  const totalPrice = allCards.reduce(
+    (sum, c) => sum + (c.price ?? 0) * c.quantity,
+    0
+  );
+  const overBudgetCards =
+    deck.budget != null
+      ? allCards
+          .filter((c) => (c.price ?? 0) > deck.budget!)
+          .map((c) => c.name)
+      : [];
+
+  // Banned cards
+  const bannedCards = allCards.filter((c) => c.isBanned).map((c) => c.name);
+
+  // Color identity violations
+  const commanderIdentity = deck.commander?.colorIdentity ?? [];
+  const colorIdentityViolations = deck.cards
+    .filter((c) =>
+      c.colorIdentity.some(
+        (color) => !commanderIdentity.includes(color)
+      )
+    )
+    .map((c) => c.name);
+
+  return {
+    totalCards,
+    lands,
+    creatures,
+    ramp,
+    draw,
+    removal,
+    boardWipes,
+    avgCmc: Math.round(avgCmc * 100) / 100,
+    manaCurve,
+    colorDistribution,
+    gameChangersCount,
+    gameChangersList,
+    totalPrice: Math.round(totalPrice * 100) / 100,
+    overBudgetCards,
+    bannedCards,
+    colorIdentityViolations,
+  };
+}
