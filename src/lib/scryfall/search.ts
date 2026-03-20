@@ -47,7 +47,17 @@ export function buildSearchQuery(
 }
 
 /** Commander search query — includes legendary creatures and planeswalkers that can be commanders */
-export function buildCommanderSearchQuery(text: string): string {
+export function buildCommanderSearchQuery(
+  text: string,
+  filters: Partial<SearchFilters> = {}
+): string {
+  const parts: string[] = ["is:commander"];
   const name = text.trim();
-  return `(is:commander) name:/${name}/`;
+  if (name) {
+    parts.push(`name:/${name}/`);
+  }
+  if (filters.colors && filters.colors.length > 0) {
+    parts.push(`id<=${filters.colors.join("")}`);
+  }
+  return parts.join(" ");
 }

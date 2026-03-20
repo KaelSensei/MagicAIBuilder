@@ -1,7 +1,9 @@
 "use client";
-// Search results panel
-import { Loader2, AlertCircle } from "lucide-react";
+// Search results panel with grid/list toggle
+import { Loader2, AlertCircle, LayoutGrid, List } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
+import { CardSearchListItem } from "@/components/card/CardSearchListItem";
+import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface SearchResultsProps {
@@ -10,6 +12,7 @@ interface SearchResultsProps {
   error: Error | null;
   totalCards?: number;
   onCardClick?: (card: ScryfallCard) => void;
+  draggable?: boolean;
 }
 
 export function SearchResults({
@@ -18,7 +21,11 @@ export function SearchResults({
   error,
   totalCards,
   onCardClick,
+  draggable = false,
 }: SearchResultsProps) {
+  const viewMode = useDeckStore((s) => s.searchViewMode);
+  const setViewMode = useDeckStore((s) => s.setSearchViewMode);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-40 text-[var(--text-secondary)]">
@@ -47,12 +54,53 @@ export function SearchResults({
 
   return (
     <div className="flex flex-col">
-      {totalCards != null && (
-        <p className="text-xs text-[var(--text-secondary)] px-3 py-1.5">
-          {totalCards.toLocaleString()} results
-        </p>
+      {/* Header: count + view toggle */}
+      <div className="flex items-center justify-between px-3 py-1.5">
+        {totalCards != null && (
+          <p className="text-xs text-[var(--text-secondary)]">
+            {totalCards.toLocaleString()} results
+          </p>
+        )}
+        <div className="flex items-center gap-1 ml-auto">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`p-1 rounded transition-colors ${
+              viewMode === "grid"
+                ? "text-[var(--accent)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+            title="Grid view"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`p-1 rounded transition-colors ${
+              viewMode === "list"
+                ? "text-[var(--accent)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+            title="List view"
+          >
+            <List className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {viewMode === "grid" ? (
+        <CardGrid cards={cards} onCardClick={onCardClick} draggable={draggable} />
+      ) : (
+        <div className="px-1 py-1">
+          {cards.map((card) => (
+            <CardSearchListItem
+              key={card.id}
+              card={card}
+              onClick={onCardClick}
+              draggable={draggable}
+            />
+          ))}
+        </div>
       )}
-      <CardGrid cards={cards} onCardClick={onCardClick} />
     </div>
   );
 }

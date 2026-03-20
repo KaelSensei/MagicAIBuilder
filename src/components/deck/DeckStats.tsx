@@ -3,6 +3,7 @@
 import { cn } from "@/components/ui/utils";
 import type { DeckStats } from "@/lib/deck/types";
 import { ManaCurve } from "./ManaCurve";
+import { ColorDistribution } from "./ColorDistribution";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 
 interface DeckStatsProps {
@@ -57,6 +58,11 @@ export function DeckStats({ stats, className }: DeckStatsProps) {
     <div className={cn("space-y-3", className)}>
       {/* Mana Curve */}
       <ManaCurve curve={stats.manaCurve} />
+
+      {/* Color Distribution */}
+      {Object.keys(stats.colorDistribution).length > 0 && (
+        <ColorDistribution distribution={stats.colorDistribution} />
+      )}
 
       {/* Deck checks */}
       <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">

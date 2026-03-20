@@ -2,8 +2,13 @@
 // App header with nav
 import Link from "next/link";
 import { Layers, Plus, Upload } from "lucide-react";
+import { ImportDialog } from "@/components/deck/ImportDialog";
 
-export function Header() {
+interface HeaderProps {
+  deckId?: string;
+}
+
+export function Header({ deckId }: HeaderProps = {}) {
   return (
     <header className="h-14 border-b border-[var(--border)] bg-[var(--surface)] flex items-center px-6 gap-6 shrink-0">
       {/* Logo */}
@@ -27,10 +32,19 @@ export function Header() {
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">
-        <button className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
-          <Upload className="w-3.5 h-3.5" />
-          Import
-        </button>
+        {deckId ? (
+          <ImportDialog>
+            <button className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
+              <Upload className="w-3.5 h-3.5" />
+              Import
+            </button>
+          </ImportDialog>
+        ) : (
+          <button className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
+            <Upload className="w-3.5 h-3.5" />
+            Import
+          </button>
+        )}
         <Link
           href="/"
           className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-1.5 rounded transition-colors"
