@@ -1,13 +1,15 @@
 "use client";
-// Main deck editor with drag & drop zones and grid/list toggle
+// Main deck editor with drag & drop zones, category drag, and grid/list toggle
 import { AnimatePresence } from "framer-motion";
-import { useDroppable } from "@dnd-kit/core";
+import { useDroppable, DndContext, DragEndEvent, DragStartEvent, DragOverlay } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { CardListItem } from "@/components/card/CardListItem";
 import { cn } from "@/components/ui/utils";
-import type { Deck } from "@/lib/deck/types";
+import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import type { CardCategory } from "@/lib/deck/types";
-import { ChevronDown, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical } from "lucide-react";
 import { useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
 
@@ -23,12 +25,52 @@ interface CategorySectionProps {
   onRemoveCard: (id: string) => void;
 }
 
+// Draggable card list item (for intra-deck category drag)
+function DraggableDeckCard({
+  card,
+  onRemove,
+}: {
+  card: DeckCard;
+  onRemove: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id: `deck-card-${card.id}`,
+      data: { cardId: card.id, sourceCategory: card.category },
+    });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center group/drag">
+      <button
+        {...attributes}
+        {...listeners}
+        className="p-1 cursor-grab active:cursor-grabbing text-[var(--text-secondary)] opacity-0 group-hover/drag:opacity-50 hover:!opacity-100 transition-opacity shrink-0"
+        tabIndex={-1}
+        aria-label="Drag to reorder"
+      >
+        <GripVertical className="w-3 h-3" />
+      </button>
+      <div className="flex-1 min-w-0">
+        <CardListItem card={card} onRemove={onRemove} />
+      </div>
+    </div>
+  );
+}
+
 function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
     id: `deck-category-${category}`,
     data: { category },
   });
+
+  const cardIds = cards.map((c) => `deck-card-${c.id}`);
 
   if (cards.length === 0 && !isOver) return null;
 
@@ -60,20 +102,22 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
           <div
             ref={setNodeRef}
             className={cn(
-              "pl-2 min-h-[8px] rounded transition-colors",
+              "pl-1 min-h-[8px] rounded transition-colors",
               isOver && "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40"
             )}
           >
-            {cards.map((card) => (
-              <CardListItem
-                key={card.id}
-                card={card}
-                onRemove={onRemoveCard}
-              />
-            ))}
+            <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+              {cards.map((card) => (
+                <DraggableDeckCard
+                  key={card.id}
+                  card={card}
+                  onRemove={onRemoveCard}
+                />
+              ))}
+            </SortableContext>
             {cards.length === 0 && isOver && (
               <div className="py-2 text-center text-xs text-[var(--accent)]">
-                Drop here to add to {label}
+                Drop here to move to {label}
               </div>
             )}
           </div>
@@ -86,6 +130,8 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
 export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
   const viewMode = useDeckStore((s) => s.deckViewMode);
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
+  const updateCardCategory = useDeckStore((s) => s.updateCardCategory);
+  const [activeDragCardId, setActiveDragCardId] = useState<string | null>(null);
 
   // Group cards by category
   const cardsByCategory = deck.cards.reduce<Record<CardCategory, Deck["cards"]>>(
@@ -97,9 +143,46 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
     {} as Record<CardCategory, Deck["cards"]>
   );
 
-  const totalCards = deck.cards.reduce((sum, c) => sum + c.quantity, 0) +
+  const totalCards =
+    deck.cards.reduce((sum, c) => sum + c.quantity, 0) +
     (deck.commander ? 1 : 0) +
     (deck.partner ? 1 : 0);
+
+  function handleDragStart(event: DragStartEvent) {
+    const id = event.active.data.current?.cardId as string | undefined;
+    setActiveDragCardId(id ?? null);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setActiveDragCardId(null);
+    const { active, over } = event;
+    if (!over) return;
+
+    const cardId = active.data.current?.cardId as string | undefined;
+    if (!cardId) return;
+
+    // Check if dropped over a category droppable
+    const overId = String(over.id);
+    if (overId.startsWith("deck-category-")) {
+      const newCategory = overId.replace("deck-category-", "") as CardCategory;
+      const sourceCategory = active.data.current?.sourceCategory as CardCategory | undefined;
+      if (newCategory !== sourceCategory) {
+        updateCardCategory(cardId, newCategory);
+      }
+    } else if (overId.startsWith("deck-card-")) {
+      // Dropped over another card — move to that card's category
+      const targetCardId = overId.replace("deck-card-", "");
+      const targetCard = deck.cards.find((c) => c.id === targetCardId);
+      const sourceCategory = active.data.current?.sourceCategory as CardCategory | undefined;
+      if (targetCard && targetCard.category !== sourceCategory) {
+        updateCardCategory(cardId, targetCard.category);
+      }
+    }
+  }
+
+  const activeDragCard = activeDragCardId
+    ? deck.cards.find((c) => c.id === activeDragCardId)
+    : null;
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
@@ -136,7 +219,9 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
           <p
             className={cn(
               "text-xs font-medium",
-              totalCards === 100 ? "text-green-500" : "text-[var(--text-secondary)]"
+              totalCards === 100
+                ? "text-green-500"
+                : "text-[var(--text-secondary)]"
             )}
           >
             {totalCards}/100
@@ -168,20 +253,31 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
         </div>
       </div>
 
-      {/* Categories */}
+      {/* Categories with inner DndContext for card→category drag */}
       <div className="flex-1 overflow-y-auto p-2">
-        {CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
-          <DroppableCategory
-            key={category}
-            category={category}
-            cards={cardsByCategory[category] ?? []}
-            onRemoveCard={onRemoveCard}
-          />
-        ))}
+        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          {CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
+            <DroppableCategory
+              key={category}
+              category={category}
+              cards={cardsByCategory[category] ?? []}
+              onRemoveCard={onRemoveCard}
+            />
+          ))}
+          <DragOverlay>
+            {activeDragCard && (
+              <div className="rounded shadow-lg bg-[var(--surface)] border border-[var(--accent)]/40 px-2 py-1">
+                <CardListItem card={activeDragCard} />
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
         {deck.cards.length === 0 && (
           <div className="flex flex-col items-center justify-center h-40 text-[var(--text-secondary)] text-sm">
             <p>No cards yet</p>
-            <p className="text-xs mt-1">Search and click or drag cards to add them</p>
+            <p className="text-xs mt-1">
+              Search and click or drag cards to add them
+            </p>
           </div>
         )}
       </div>
