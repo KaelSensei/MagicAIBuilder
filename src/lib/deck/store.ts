@@ -46,6 +46,20 @@ export interface DeckStore {
   decks: Record<string, Deck>;
   activeDeckId: string | null;
 
+  // Enrichment sets (populated from hooks at app startup)
+  gameChangerNames: Set<string>;
+  bannedNames: Set<string>;
+
+  // Enrichment setters
+  setGameChangerNames: (names: Set<string>) => void;
+  setBannedNames: (names: Set<string>) => void;
+
+  // View preferences
+  searchViewMode: "grid" | "list";
+  deckViewMode: "grid" | "list";
+  setSearchViewMode: (mode: "grid" | "list") => void;
+  setDeckViewMode: (mode: "grid" | "list") => void;
+
   // Deck management
   createDeck: (name: string) => string;
   deleteDeck: (id: string) => void;
@@ -76,6 +90,15 @@ export const useDeckStore = create<DeckStore>()(
     (set, get) => ({
       decks: {},
       activeDeckId: null,
+      gameChangerNames: new Set<string>(),
+      bannedNames: new Set<string>(),
+      searchViewMode: "grid",
+      deckViewMode: "list",
+
+      setGameChangerNames: (names) => set({ gameChangerNames: names }),
+      setBannedNames: (names) => set({ bannedNames: names }),
+      setSearchViewMode: (mode) => set({ searchViewMode: mode }),
+      setDeckViewMode: (mode) => set({ deckViewMode: mode }),
 
       createDeck: (name: string) => {
         const id = crypto.randomUUID();
@@ -89,7 +112,8 @@ export const useDeckStore = create<DeckStore>()(
 
       deleteDeck: (id: string) => {
         set((state) => {
-          const { [id]: _, ...rest } = state.decks;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [id]: _removed, ...rest } = state.decks;
           return {
             decks: rest,
             activeDeckId: state.activeDeckId === id ? null : state.activeDeckId,
@@ -111,10 +135,12 @@ export const useDeckStore = create<DeckStore>()(
       },
 
       setCommander: (card: ScryfallCard) => {
-        const { activeDeckId, decks } = get();
+        const { activeDeckId, gameChangerNames, bannedNames } = get();
         if (!activeDeckId) return;
         const deckCard = makeDeckCard(card);
         deckCard.category = "commander";
+        deckCard.isGameChanger = gameChangerNames.has(card.name);
+        deckCard.isBanned = bannedNames.has(card.name);
         set((state) => ({
           decks: {
             ...state.decks,
@@ -145,7 +171,7 @@ export const useDeckStore = create<DeckStore>()(
       },
 
       addCard: (card: ScryfallCard) => {
-        const { activeDeckId, decks } = get();
+        const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
         if (!activeDeckId) return;
         const deck = decks[activeDeckId];
         if (!deck) return;
@@ -159,6 +185,10 @@ export const useDeckStore = create<DeckStore>()(
         }
 
         const deckCard = makeDeckCard(card);
+        // Cross-reference enrichment sets
+        deckCard.isGameChanger = gameChangerNames.has(card.name);
+        deckCard.isBanned = bannedNames.has(card.name);
+
         set((state) => ({
           decks: {
             ...state.decks,
@@ -274,6 +304,13 @@ export const useDeckStore = create<DeckStore>()(
     }),
     {
       name: "magic-ai-builder-decks",
+      // Only persist decks and view preferences (not runtime enrichment sets)
+      partialize: (state) => ({
+        decks: state.decks,
+        activeDeckId: state.activeDeckId,
+        searchViewMode: state.searchViewMode,
+        deckViewMode: state.deckViewMode,
+      }),
       // Revive dates after hydration
       onRehydrateStorage: () => (state) => {
         if (!state) return;

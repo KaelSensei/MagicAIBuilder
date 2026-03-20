@@ -1,7 +1,7 @@
 "use client";
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
 import { useCallback, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useDeckStore } from "@/lib/deck/store";
 import { useDeck } from "@/hooks/useDeck";
 import { useBracketScore } from "@/hooks/useBracketScore";
@@ -32,7 +32,6 @@ const DEFAULT_FILTERS: Filters = {
 
 export default function BuilderPage() {
   const params = useParams();
-  const router = useRouter();
   const deckId = params.deckId as string;
 
   // Ensure this deck is active

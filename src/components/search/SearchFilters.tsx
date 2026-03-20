@@ -11,16 +11,6 @@ const COLORS = [
   { code: "G", label: "Green", symbol: "🌲" },
 ];
 
-const TYPES = [
-  "Creature",
-  "Instant",
-  "Sorcery",
-  "Artifact",
-  "Enchantment",
-  "Planeswalker",
-  "Land",
-];
-
 interface SearchFiltersProps {
   filters: SearchFilters;
   onChange: (filters: SearchFilters) => void;
@@ -33,13 +23,6 @@ export function SearchFilters({ filters, onChange, className }: SearchFiltersPro
       ? filters.colors.filter((c) => c !== color)
       : [...filters.colors, color];
     onChange({ ...filters, colors });
-  };
-
-  const toggleType = (type: string) => {
-    const types = filters.types.includes(type)
-      ? filters.types.filter((t) => t !== type)
-      : [...filters.types, type];
-    onChange({ ...filters, types });
   };
 
   return (

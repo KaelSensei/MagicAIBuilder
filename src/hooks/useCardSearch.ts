@@ -30,7 +30,7 @@ export function useCardSearchInfinite(query: string) {
     enabled: query.trim().length >= 2,
     staleTime: STALE_TIME_5MIN,
     initialPageParam: 1,
-    getNextPageParam: (lastPage, _pages) => {
+    getNextPageParam: (lastPage) => {
       if (!lastPage.has_more) return undefined;
       // Extract page number from next_page URL
       if (lastPage.next_page) {

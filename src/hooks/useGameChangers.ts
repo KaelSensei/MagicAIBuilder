@@ -16,14 +16,22 @@ export function useGameChangersList() {
   });
 }
 
+/** Returns a Set of Game Changer card names and a helper function */
+export function useGameChangersSet() {
+  const { data } = useGameChangersList();
+  const names = useMemo(() => {
+    if (!data) return new Set<string>();
+    return new Set(data.data.map((c) => c.name));
+  }, [data]);
+
+  const isGameChanger = (cardName: string): boolean => names.has(cardName);
+
+  return { gameChangerNames: names, isGameChanger, isLoaded: !!data };
+}
+
 /** Detects Game Changers in the given deck */
 export function useGameChangers(deck: Deck | null) {
-  const { data: gameChangersData } = useGameChangersList();
-
-  const gameChangerNames = useMemo(() => {
-    if (!gameChangersData) return new Set<string>();
-    return new Set(gameChangersData.data.map((c) => c.name));
-  }, [gameChangersData]);
+  const { gameChangerNames } = useGameChangersSet();
 
   const deckGameChangers = useMemo(() => {
     if (!deck) return [];
@@ -41,6 +49,6 @@ export function useGameChangers(deck: Deck | null) {
     gameChangers: deckGameChangers,
     count: deckGameChangers.length,
     names: deckGameChangers.map((c) => c.name),
-    isLoading: !gameChangersData,
+    isLoading: !gameChangerNames.size,
   };
 }

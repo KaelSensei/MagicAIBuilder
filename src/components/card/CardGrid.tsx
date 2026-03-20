@@ -2,6 +2,7 @@
 // Grid display for search results
 import { motion } from "framer-motion";
 import { CardImage } from "./CardImage";
+import { DraggableCard } from "./DraggableCard";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
@@ -11,6 +12,7 @@ interface CardGridProps {
   onCardClick?: (card: ScryfallCard) => void;
   className?: string;
   emptyMessage?: string;
+  draggable?: boolean;
 }
 
 const containerVariants = {
@@ -31,6 +33,7 @@ export function CardGrid({
   onCardClick,
   className,
   emptyMessage = "No cards found",
+  draggable = false,
 }: CardGridProps) {
   if (cards.length === 0) {
     return (
@@ -52,12 +55,23 @@ export function CardGrid({
     >
       {cards.map((card) => (
         <motion.div key={card.id} variants={itemVariants}>
-          <CardImage
-            imageUri={getCardImageUri(card, "normal")}
-            largeUri={getCardImageUri(card, "large")}
-            name={card.name}
-            onClick={() => onCardClick?.(card)}
-          />
+          {draggable ? (
+            <DraggableCard card={card}>
+              <CardImage
+                imageUri={getCardImageUri(card, "normal")}
+                largeUri={getCardImageUri(card, "large")}
+                name={card.name}
+                onClick={() => onCardClick?.(card)}
+              />
+            </DraggableCard>
+          ) : (
+            <CardImage
+              imageUri={getCardImageUri(card, "normal")}
+              largeUri={getCardImageUri(card, "large")}
+              name={card.name}
+              onClick={() => onCardClick?.(card)}
+            />
+          )}
         </motion.div>
       ))}
     </motion.div>

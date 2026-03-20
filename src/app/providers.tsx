@@ -2,6 +2,7 @@
 // TanStack Query provider
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { EnrichmentProvider } from "@/components/providers/EnrichmentProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -18,6 +19,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <EnrichmentProvider>{children}</EnrichmentProvider>
+    </QueryClientProvider>
   );
 }
