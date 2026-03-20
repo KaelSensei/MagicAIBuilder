@@ -70,6 +70,7 @@ export interface DeckStore {
   setCommander: (card: ScryfallCard) => void;
   setPartner: (card: ScryfallCard | null) => void;
   addCard: (card: ScryfallCard) => void;
+  addDeckCard: (card: DeckCard) => void;
   removeCard: (cardId: string) => void;
   updateCardCategory: (cardId: string, category: CardCategory) => void;
 
@@ -195,6 +196,31 @@ export const useDeckStore = create<DeckStore>()(
             [activeDeckId]: {
               ...state.decks[activeDeckId],
               cards: [...state.decks[activeDeckId].cards, deckCard],
+              updatedAt: new Date(),
+            },
+          },
+        }));
+      },
+
+      addDeckCard: (card: DeckCard) => {
+        const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
+        if (!activeDeckId) return;
+        const deck = decks[activeDeckId];
+        if (!deck) return;
+        const isBasic = card.typeLine.toLowerCase().includes("basic land");
+        const exists = deck.cards.find((c) => c.name === card.name);
+        if (exists && !isBasic) return;
+        const enriched = {
+          ...card,
+          isGameChanger: gameChangerNames.has(card.name),
+          isBanned: bannedNames.has(card.name),
+        };
+        set((state) => ({
+          decks: {
+            ...state.decks,
+            [activeDeckId]: {
+              ...state.decks[activeDeckId],
+              cards: [...state.decks[activeDeckId].cards, enriched],
               updatedAt: new Date(),
             },
           },

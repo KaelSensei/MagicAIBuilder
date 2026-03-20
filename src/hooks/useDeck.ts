@@ -25,6 +25,7 @@ export function useDeck() {
     setCommander: store.setCommander,
     setPartner: store.setPartner,
     addCard: store.addCard,
+    addDeckCard: store.addDeckCard,
     removeCard: store.removeCard,
     updateCardCategory: store.updateCardCategory,
     setTargetBracket: store.setTargetBracket,
