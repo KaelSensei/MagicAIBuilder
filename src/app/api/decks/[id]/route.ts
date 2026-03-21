@@ -39,7 +39,11 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    if (name !== undefined && (typeof name !== "string" || name.trim() === "")) {
+    const sanitizedName = name !== undefined
+      ? name.replace(/<[^>]*>/g, "").trim().slice(0, 200)
+      : undefined;
+
+    if (name !== undefined && !sanitizedName) {
       return NextResponse.json(
         { error: "name must be a non-empty string" },
         { status: 400 }
@@ -49,7 +53,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const updated = await prisma.deck.update({
       where: { id },
       data: {
-        ...(name !== undefined && { name: name.trim() }),
+        ...(sanitizedName !== undefined && { name: sanitizedName }),
         ...(format !== undefined && { format }),
         ...(targetBracket !== undefined && { targetBracket }),
         ...(budget !== undefined && { budget }),

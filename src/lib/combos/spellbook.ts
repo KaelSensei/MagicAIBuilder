@@ -1,6 +1,4 @@
 // Commander Spellbook API integration for combo detection
-const SPELLBOOK_BASE =
-  "https://backend.commanderspellbook.com/variants";
 
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -73,7 +71,7 @@ export async function fetchCombosForCard(
   }
 
   try {
-    const url = `${SPELLBOOK_BASE}/?cards=${encodeURIComponent(cardName)}&format=json`;
+    const url = `/api/combos?cards=${encodeURIComponent(cardName)}&format=json`;
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
     });

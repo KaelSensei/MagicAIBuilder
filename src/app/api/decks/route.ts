@@ -22,10 +22,17 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, format, targetBracket, budget, commanderId, partnerId } =
-      body;
+    const { name, format, targetBracket, budget, commanderId, partnerId } = body;
 
-    if (!name || typeof name !== "string" || name.trim() === "") {
+    if (!name || typeof name !== "string") {
+      return NextResponse.json(
+        { error: "name is required and must be a non-empty string" },
+        { status: 400 }
+      );
+    }
+
+    const sanitizedName = name.replace(/<[^>]*>/g, "").trim().slice(0, 200);
+    if (!sanitizedName) {
       return NextResponse.json(
         { error: "name is required and must be a non-empty string" },
         { status: 400 }
@@ -34,7 +41,7 @@ export async function POST(request: Request) {
 
     const deck = await prisma.deck.create({
       data: {
-        name: name.trim(),
+        name: sanitizedName,
         format: format ?? "commander",
         targetBracket: targetBracket ?? 2,
         budget: budget ?? null,
