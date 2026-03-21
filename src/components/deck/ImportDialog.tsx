@@ -1,5 +1,6 @@
 "use client";
 // Import deck from plain text — Radix Dialog
+// Supports both trigger-based (children) and controlled (open/onOpenChange) usage
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -8,18 +9,23 @@ import { getCardCollection } from "@/lib/scryfall/client";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
-interface ImportDialogProps {
-  children: React.ReactNode;
-}
+type ImportDialogProps =
+  | { children: React.ReactNode; open?: never; onOpenChange?: never }
+  | { children?: never; open: boolean; onOpenChange: (v: boolean) => void };
 
 type ImportStatus = "idle" | "validating" | "done" | "error";
 
-export function ImportDialog({ children }: ImportDialogProps) {
-  const [open, setOpen] = useState(false);
+export function ImportDialog({ children, open: controlledOpen, onOpenChange: controlledOnOpenChange }: ImportDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [text, setText] = useState("");
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [message, setMessage] = useState("");
 
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled
+    ? (v: boolean) => controlledOnOpenChange?.(v)
+    : setInternalOpen;
 
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
@@ -103,9 +109,14 @@ export function ImportDialog({ children }: ImportDialogProps) {
     }, 200);
   };
 
+  const handleOpenChange = (v: boolean) => {
+    if (!v) handleClose();
+    else setOpen(true);
+  };
+
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>{children}</Dialog.Trigger>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
+      {children && <Dialog.Trigger asChild>{children}</Dialog.Trigger>}
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" />

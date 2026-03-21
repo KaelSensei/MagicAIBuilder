@@ -1,7 +1,7 @@
 "use client";
 // Grid display for search results
+import { RefObject } from "react";
 import { motion } from "framer-motion";
-import { Bookmark } from "lucide-react";
 import { CardImage } from "./CardImage";
 import { DraggableCard } from "./DraggableCard";
 import { cn } from "@/components/ui/utils";
@@ -11,11 +11,13 @@ import { getCardImageUri } from "@/lib/scryfall/images";
 interface CardGridProps {
   cards: ScryfallCard[];
   onCardClick?: (card: ScryfallCard) => void;
-  onAddToMaybeboard?: (card: ScryfallCard) => void;
-  maybeboardNames?: Set<string>;
   className?: string;
   emptyMessage?: string;
   draggable?: boolean;
+  /** Index of the keyboard-selected card (highlights it) */
+  selectedIndex?: number;
+  /** Ref attached to the selected card element for scroll-into-view */
+  selectedRef?: RefObject<HTMLDivElement | null>;
 }
 
 const containerVariants = {
@@ -34,11 +36,11 @@ const itemVariants = {
 export function CardGrid({
   cards,
   onCardClick,
-  onAddToMaybeboard,
-  maybeboardNames,
   className,
   emptyMessage = "No cards found",
   draggable = false,
+  selectedIndex = -1,
+  selectedRef,
 }: CardGridProps) {
   if (cards.length === 0) {
     return (
@@ -55,10 +57,18 @@ export function CardGrid({
       initial="hidden"
       animate="show"
     >
-      {cards.map((card) => {
-        const isInMaybeboard = maybeboardNames?.has(card.name) ?? false;
+      {cards.map((card, idx) => {
+        const isSelected = idx === selectedIndex;
         return (
-          <motion.div key={card.id} variants={itemVariants} className="relative group/gridcard">
+          <motion.div
+            key={card.id}
+            variants={itemVariants}
+            className={cn(
+              "relative rounded transition-all",
+              isSelected && "ring-2 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--background)]"
+            )}
+            ref={isSelected && selectedRef ? (selectedRef as RefObject<HTMLDivElement>) : undefined}
+          >
             {draggable ? (
               <DraggableCard card={card}>
                 <CardImage
@@ -81,27 +91,6 @@ export function CardGrid({
                 showOverlay={true}
                 onClick={() => onCardClick?.(card)}
               />
-            )}
-            {/* Maybeboard badge */}
-            {isInMaybeboard && (
-              <div className="absolute top-1 right-1 z-10">
-                <span className="text-[9px] px-1 py-0.5 rounded-full bg-amber-500/80 text-white font-medium shadow">
-                  Maybe
-                </span>
-              </div>
-            )}
-            {/* Add to maybeboard button */}
-            {onAddToMaybeboard && !isInMaybeboard && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToMaybeboard(card);
-                }}
-                className="absolute top-1 right-1 z-10 opacity-0 group-hover/gridcard:opacity-100 transition-opacity bg-amber-500/80 hover:bg-amber-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow"
-                title="Add to Maybeboard"
-              >
-                <Bookmark className="w-3 h-3" />
-              </button>
             )}
           </motion.div>
         );

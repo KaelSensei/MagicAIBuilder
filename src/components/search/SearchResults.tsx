@@ -1,9 +1,11 @@
 "use client";
-// Search results panel with grid/list toggle
+// Search results panel with grid/list toggle + keyboard navigation highlight
+import { useEffect, useRef } from "react";
 import { Loader2, AlertCircle, LayoutGrid, List } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
 import { CardSearchListItem } from "@/components/card/CardSearchListItem";
 import { useDeckStore } from "@/lib/deck/store";
+import { useUIStore } from "@/lib/ui/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface SearchResultsProps {
@@ -12,7 +14,6 @@ interface SearchResultsProps {
   error: Error | null;
   totalCards?: number;
   onCardClick?: (card: ScryfallCard) => void;
-  onAddToMaybeboard?: (card: ScryfallCard) => void;
   draggable?: boolean;
 }
 
@@ -22,13 +23,25 @@ export function SearchResults({
   error,
   totalCards,
   onCardClick,
-  onAddToMaybeboard,
   draggable = false,
 }: SearchResultsProps) {
   const viewMode = useDeckStore((s) => s.searchViewMode);
   const setViewMode = useDeckStore((s) => s.setSearchViewMode);
-  const activeDeck = useDeckStore((s) => s.activeDeckId ? s.decks[s.activeDeckId] : null);
-  const maybeboardNames = new Set(activeDeck?.maybeboard.map((c) => c.name) ?? []);
+  const keyboardSelectedIndex = useUIStore((s) => s.keyboardSelectedIndex);
+  const resetKeyboardSelection = useUIStore((s) => s.resetKeyboardSelection);
+
+  const selectedRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [keyboardSelectedIndex]);
+
+  // Reset keyboard selection when cards change
+  useEffect(() => {
+    resetKeyboardSelection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards]);
 
   if (isLoading) {
     return (
@@ -95,21 +108,24 @@ export function SearchResults({
         <CardGrid
           cards={cards}
           onCardClick={onCardClick}
-          onAddToMaybeboard={onAddToMaybeboard}
-          maybeboardNames={maybeboardNames}
           draggable={draggable}
+          selectedIndex={keyboardSelectedIndex}
+          selectedRef={selectedRef}
         />
       ) : (
         <div className="px-1 py-1">
-          {cards.map((card) => (
-            <CardSearchListItem
+          {cards.map((card, idx) => (
+            <div
               key={card.id}
-              card={card}
-              onClick={onCardClick}
-              onAddToMaybeboard={onAddToMaybeboard}
-              isInMaybeboard={maybeboardNames.has(card.name)}
-              draggable={draggable}
-            />
+              ref={idx === keyboardSelectedIndex ? selectedRef : undefined}
+            >
+              <CardSearchListItem
+                card={card}
+                onClick={onCardClick}
+                draggable={draggable}
+                isSelected={idx === keyboardSelectedIndex}
+              />
+            </div>
           ))}
         </div>
       )}

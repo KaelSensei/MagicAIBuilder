@@ -9,6 +9,13 @@ import { getCardImageUri } from "@/lib/scryfall/images";
 import * as deckApi from "@/lib/db/deck-api";
 import { useToastStore } from "@/hooks/useToast";
 
+// ---------------------------------------------------------------------------
+// Undo stack types
+// ---------------------------------------------------------------------------
+export type DeckAction =
+  | { type: "ADD_CARD"; deckId: string; card: DeckCard }
+  | { type: "REMOVE_CARD"; deckId: string; card: DeckCard };
+
 function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
   return {
     id: scryfallCard.id,
@@ -37,7 +44,6 @@ function createEmptyDeck(id: string, name: string): Deck {
     companion: null,
     pairingType: "none",
     cards: [],
-    maybeboard: [],
     format: "commander",
     targetBracket: 2,
     budget: null,
@@ -51,6 +57,10 @@ export interface DeckStore {
   decks: Record<string, Deck>;
   activeDeckId: string | null;
   isSyncing: boolean;
+
+  // Undo stack
+  undoStack: DeckAction[];
+  undo: () => Promise<void>;
 
   // Enrichment sets (populated from hooks at app startup)
   gameChangerNames: Set<string>;
@@ -82,11 +92,8 @@ export interface DeckStore {
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
 
-  // Maybeboard
-  addToMaybeboard: (card: ScryfallCard) => Promise<void>;
-  removeFromMaybeboard: (cardId: string) => Promise<void>;
-  moveToMaybeboard: (cardId: string) => Promise<void>;
-  moveToDeck: (cardId: string) => Promise<void>;
+  // Force save (sync) — triggers a full DB refresh for the active deck
+  forceSave: () => Promise<void>;
 
   // Deck settings
   setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
@@ -104,6 +111,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   decks: {},
   activeDeckId: null,
   isSyncing: false,
+  undoStack: [],
   gameChangerNames: new Set<string>(),
   bannedNames: new Set<string>(),
   searchViewMode: "grid",
@@ -113,6 +121,89 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   setBannedNames: (names) => set({ bannedNames: names }),
   setSearchViewMode: (mode) => set({ searchViewMode: mode }),
   setDeckViewMode: (mode) => set({ deckViewMode: mode }),
+
+  undo: async () => {
+    const { undoStack } = get();
+    if (undoStack.length === 0) return;
+    const last = undoStack[undoStack.length - 1];
+    // Pop the action
+    set((s) => ({ undoStack: s.undoStack.slice(0, -1) }));
+
+    if (last.type === "ADD_CARD") {
+      // Undo add → remove card (skip recording in undo stack)
+      const { activeDeckId } = get();
+      if (!activeDeckId) return;
+      const deck = get().decks[activeDeckId];
+      const card = deck?.cards.find((c) => c.name === last.card.name);
+      if (!card) return;
+      set((state) => ({
+        decks: {
+          ...state.decks,
+          [activeDeckId]: {
+            ...state.decks[activeDeckId],
+            cards: state.decks[activeDeckId].cards.filter((c) => c.id !== card.id),
+            updatedAt: new Date(),
+          },
+        },
+      }));
+      try {
+        await deckApi.removeCard(activeDeckId, card.id);
+      } catch (err) {
+        console.error("[undo:ADD_CARD]", err);
+      }
+    } else if (last.type === "REMOVE_CARD") {
+      // Undo remove → re-add card
+      const { activeDeckId } = get();
+      if (!activeDeckId) return;
+      set((state) => ({
+        decks: {
+          ...state.decks,
+          [activeDeckId]: {
+            ...state.decks[activeDeckId],
+            cards: [...state.decks[activeDeckId].cards, last.card],
+            updatedAt: new Date(),
+          },
+        },
+      }));
+      try {
+        await deckApi.addCard(activeDeckId, {
+          scryfallId: last.card.id,
+          name: last.card.name,
+          manaCost: last.card.manaCost,
+          cmc: last.card.cmc,
+          typeLine: last.card.typeLine,
+          oracleText: last.card.oracleText,
+          colorIdentity: last.card.colorIdentity,
+          isGameChanger: last.card.isGameChanger,
+          isBanned: last.card.isBanned,
+          price: last.card.price,
+          imageUri: last.card.imageUri,
+          artCropUri: last.card.artCropUri,
+          category: last.card.category,
+          quantity: last.card.quantity,
+          isCommander: false,
+          isPartner: false,
+        });
+      } catch (err) {
+        console.error("[undo:REMOVE_CARD]", err);
+      }
+    }
+    useToastStore.getState().add("info", "↩ Undo applied");
+  },
+
+  forceSave: async () => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    set({ isSyncing: true });
+    try {
+      await get().loadDecks();
+      useToastStore.getState().add("success", "✓ Deck saved");
+    } catch (err) {
+      console.error("[forceSave]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
 
   // Load all decks from the DB
   loadDecks: async () => {
@@ -125,9 +216,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         const allCards = d.cards ?? [];
         const commanderCard = allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
         const partnerCard = allCards.find((c) => c.isPartner) ?? null;
-        const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion" && !c.isMaybeboard) ?? null;
-        const maybeboardCards = allCards.filter((c) => c.isMaybeboard);
-        const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion" && !c.isMaybeboard);
+        const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
+        const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
 
         const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => ({
           id: c.id,
@@ -157,7 +247,6 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           companion: companionCard ? toDeckCard(companionCard) : null,
           pairingType: (d.pairingType as CommanderPairingType) ?? "none",
           cards: mainCards.map(toDeckCard),
-          maybeboard: maybeboardCards.map(toDeckCard),
           createdAt: new Date(d.createdAt),
           updatedAt: new Date(d.updatedAt),
         };
@@ -464,6 +553,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             ),
           },
         },
+        // Record in undo stack (use saved id)
+        undoStack: [
+          ...state.undoStack,
+          { type: "ADD_CARD" as const, deckId: activeDeckId, card: { ...deckCard, id: saved.id } },
+        ],
       }));
     } catch (err) {
       console.error("[addCard]", err);
@@ -537,8 +631,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   removeCard: async (cardId: string) => {
-    const { activeDeckId } = get();
+    const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
+
+    // Capture card before removing for undo stack
+    const removedCard = decks[activeDeckId]?.cards.find((c) => c.id === cardId) ?? null;
 
     // Optimistic update
     set((state) => ({
@@ -552,6 +649,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           updatedAt: new Date(),
         },
       },
+      // Record in undo stack
+      undoStack: removedCard
+        ? [
+            ...state.undoStack,
+            { type: "REMOVE_CARD" as const, deckId: activeDeckId, card: removedCard },
+          ]
+        : state.undoStack,
     }));
 
     set({ isSyncing: true });
@@ -587,170 +691,6 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateCardCategory(activeDeckId, cardId, category);
     } catch (err) {
       console.error("[updateCardCategory]", err);
-    } finally {
-      set({ isSyncing: false });
-    }
-  },
-
-  addToMaybeboard: async (card: ScryfallCard) => {
-    const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
-    if (!activeDeckId) return;
-    const deck = decks[activeDeckId];
-    if (!deck) return;
-
-    // Prevent duplicates in maybeboard (by name, similar to main deck logic)
-    const isBasic = card.type_line.toLowerCase().includes("basic land");
-    const exists = deck.maybeboard.find((c) => c.name === card.name);
-    if (exists && !isBasic) return;
-
-    const deckCard = makeDeckCard(card);
-    deckCard.isGameChanger = gameChangerNames.has(card.name);
-    deckCard.isBanned = bannedNames.has(card.name);
-
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          maybeboard: [...state.decks[activeDeckId].maybeboard, deckCard],
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      const saved = await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
-        name: deckCard.name,
-        manaCost: deckCard.manaCost,
-        cmc: deckCard.cmc,
-        typeLine: deckCard.typeLine,
-        oracleText: deckCard.oracleText,
-        colorIdentity: deckCard.colorIdentity,
-        isGameChanger: deckCard.isGameChanger,
-        isBanned: deckCard.isBanned,
-        price: deckCard.price,
-        imageUri: deckCard.imageUri,
-        artCropUri: deckCard.artCropUri,
-        category: deckCard.category,
-        quantity: deckCard.quantity,
-        isCommander: false,
-        isPartner: false,
-        isMaybeboard: true,
-      });
-      // Update local id to DB-generated CUID
-      set((state) => ({
-        decks: {
-          ...state.decks,
-          [activeDeckId]: {
-            ...state.decks[activeDeckId],
-            maybeboard: state.decks[activeDeckId].maybeboard.map((c) =>
-              c.id === card.id ? { ...c, id: saved.id } : c
-            ),
-          },
-        },
-      }));
-    } catch (err) {
-      console.error("[addToMaybeboard]", err);
-    } finally {
-      set({ isSyncing: false });
-    }
-  },
-
-  removeFromMaybeboard: async (cardId: string) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          maybeboard: state.decks[activeDeckId].maybeboard.filter(
-            (c) => c.id !== cardId
-          ),
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      await deckApi.removeCard(activeDeckId, cardId);
-    } catch (err) {
-      console.error("[removeFromMaybeboard]", err);
-    } finally {
-      set({ isSyncing: false });
-    }
-  },
-
-  moveToMaybeboard: async (cardId: string) => {
-    const { activeDeckId, decks } = get();
-    if (!activeDeckId) return;
-    const deck = decks[activeDeckId];
-    if (!deck) return;
-
-    const card = deck.cards.find((c) => c.id === cardId);
-    if (!card) return;
-
-    // Optimistic update — remove from deck, add to maybeboard
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.filter((c) => c.id !== cardId),
-          maybeboard: [...state.decks[activeDeckId].maybeboard, card],
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateCardMaybeboard(activeDeckId, cardId, true);
-    } catch (err) {
-      console.error("[moveToMaybeboard]", err);
-    } finally {
-      set({ isSyncing: false });
-    }
-  },
-
-  moveToDeck: async (cardId: string) => {
-    const { activeDeckId, decks } = get();
-    if (!activeDeckId) return;
-    const deck = decks[activeDeckId];
-    if (!deck) return;
-
-    const card = deck.maybeboard.find((c) => c.id === cardId);
-    if (!card) return;
-
-    // Check duplicate in main deck
-    const isBasic = card.typeLine.toLowerCase().includes("basic land");
-    const exists = deck.cards.find((c) => c.name === card.name);
-    if (exists && !isBasic) return;
-
-    // Optimistic update — remove from maybeboard, add to deck
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          maybeboard: state.decks[activeDeckId].maybeboard.filter((c) => c.id !== cardId),
-          cards: [...state.decks[activeDeckId].cards, card],
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateCardMaybeboard(activeDeckId, cardId, false);
-    } catch (err) {
-      console.error("[moveToDeck]", err);
     } finally {
       set({ isSyncing: false });
     }
