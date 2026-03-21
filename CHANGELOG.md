@@ -9,6 +9,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-21: Playtest Mode
+
+- **`PlaytestState` type** — `src/lib/deck/types.ts`: `{ hand, library, turn, mulliganCount }`
+- **`usePlaytest` hook** — `src/hooks/usePlaytest.ts`:
+  - `startPlaytest(deck)` — Fisher-Yates shuffle, draw 7 into hand
+  - `mulligan(state, deck)` — London mulligan: reshuffle full deck, draw `7 - mulliganCount`
+  - `drawCard(state)` — draw 1 from library into hand
+  - `nextTurn(state)` — increment turn + draw a card
+- **`PlaytestModal`** — `src/components/playtest/PlaytestModal.tsx`:
+  - Fullscreen overlay with animated card fan (Fisher-Yates spread)
+  - Hover card preview (full-size image tooltip)
+  - Library pile with face-down stack visual and count
+  - Control buttons: Mulligan (up to 6), Draw Card, End Turn
+  - Stats bar: hand count, library count, turn number, mulligan count
+  - Restart button to re-draw opening hand
+- **Playtest button** in deck builder toolbar (Dices icon, next to Export)
+
 ### Fixed — 2026-03-21
 - **Card tooltip position** — tooltip now follows the mouse cursor via `createPortal` instead of anchoring to the right edge of the full-width list item row (which landed it in the stats panel)
 

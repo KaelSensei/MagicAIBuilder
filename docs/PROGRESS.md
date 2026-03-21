@@ -206,6 +206,7 @@
 | US-21 | Combo detection | ✅ Done |
 | US-22 | AI deck suggestions | ✅ Done |
 | US-23 | Light/dark theme | ✅ Done |
+| US-24 | Playtest mode — draw hand, mulligan, simulate turns | ✅ Done |
 
 ---
 
@@ -222,11 +223,11 @@
 
 | Metric | Value |
 |---|---|
-| Source files | ~70 |
+| Source files | ~72 |
 | API routes | 7 |
 | Prisma models | 3 |
-| Hooks | 9 |
-| Components | ~35 |
+| Hooks | 10 |
+| Components | ~36 |
 | Phase 1 P0 completion | 100% |
 | Phase 1–4 completion | 100% |
 | Build | ✅ Passing |

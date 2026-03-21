@@ -151,16 +151,17 @@ interface Deck {
 | US-21 | Detect combos for current commander via Commander Spellbook | ✅ Done |
 | US-22 | AI deck suggestions with reasoning (Claude / GPT fallback) | ✅ Done |
 | US-23 | Light/dark theme toggle with persistence | ✅ Done |
+| US-24 | Playtest mode — draw opening hand, London mulligan, simulate turns | ✅ Done |
 
 ### P3 — Future
 
 | # | Story | Status |
 |---|---|---|
-| US-24 | Onboarding tutorial for new users | 📋 Planned |
-| US-25 | Mobile-responsive layout | 📋 Planned |
-| US-26 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
-| US-27 | Moxfield / Archidekt import from URL | 📋 Planned |
-| US-28 | User accounts and deck sharing | 📋 Planned |
+| US-25 | Onboarding tutorial for new users | 📋 Planned |
+| US-26 | Mobile-responsive layout | 📋 Planned |
+| US-27 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
+| US-28 | Moxfield / Archidekt import from URL | 📋 Planned |
+| US-29 | User accounts and deck sharing | 📋 Planned |
 
 ---
 
