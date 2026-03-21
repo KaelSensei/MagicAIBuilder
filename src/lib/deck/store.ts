@@ -119,7 +119,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         const commanderCard = allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
         const partnerCard = allCards.find((c) => c.isPartner) ?? null;
         const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
-        const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner);
+        const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
 
         const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => ({
           id: c.id,
