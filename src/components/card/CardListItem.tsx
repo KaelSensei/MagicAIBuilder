@@ -68,7 +68,7 @@ export function CardListItem({ card, onRemove, className }: CardListItemProps) {
   const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
   const updateCardQuantity = useDeckStore((s) => s.updateCardQuantity);
   const promoteToCommander = useDeckStore((s) => s.promoteToCommander);
-  const max = maxQuantity(card.name, card.typeLine);
+  const max = maxQuantity(card.name, card.typeLine, card.oracleText ?? "");
   const canIncrement = card.quantity < max;
   const canDecrement = card.quantity > 1;
 
