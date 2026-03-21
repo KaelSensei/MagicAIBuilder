@@ -9,6 +9,8 @@ export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "command
   partnerId: string | null;
   companionId: string | null;
   pairingType: CommanderPairingType;
+  description: string | null;
+  tags: string[];
   cards: ApiDeckCard[];
 }
 
@@ -18,6 +20,7 @@ export interface ApiDeckCard extends Omit<DeckCard, "id"> {
   scryfallId: string;
   isCommander: boolean;
   isPartner: boolean;
+  notes: string | null;
 }
 
 function handleApiError(res: Response, context: string): never {
@@ -62,6 +65,8 @@ export async function updateDeck(
     partnerId: string | null;
     companionId?: string | null;
     pairingType: CommanderPairingType;
+    description: string | null;
+    tags: string[];
   }>
 ): Promise<ApiDeck> {
   const res = await fetch(`/api/decks/${id}`, {
@@ -133,6 +138,20 @@ export async function updateCardCategory(
     body: JSON.stringify({ category }),
   });
   if (!res.ok) handleApiError(res, "updateCardCategory");
+  return res.json();
+}
+
+export async function updateCardNotes(
+  deckId: string,
+  cardId: string,
+  notes: string | null
+): Promise<ApiDeckCard> {
+  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notes }),
+  });
+  if (!res.ok) handleApiError(res, "updateCardNotes");
   return res.json();
 }
 

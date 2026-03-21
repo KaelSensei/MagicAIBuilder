@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   try {
     const body = await request.json();
-    const { name, format, targetBracket, budget, commanderId, partnerId, companionId, pairingType } =
+    const { name, format, targetBracket, budget, commanderId, partnerId, companionId, pairingType, description, tags } =
       body;
 
     const existing = await prisma.deck.findUnique({ where: { id } });
@@ -50,6 +50,11 @@ export async function PATCH(request: Request, { params }: Params) {
       );
     }
 
+    // Validate tags if provided
+    if (tags !== undefined && (!Array.isArray(tags) || tags.some((t: unknown) => typeof t !== "string"))) {
+      return NextResponse.json({ error: "tags must be an array of strings" }, { status: 400 });
+    }
+
     const updated = await prisma.deck.update({
       where: { id },
       data: {
@@ -61,6 +66,8 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(partnerId !== undefined && { partnerId }),
         ...(companionId !== undefined && { companionId }),
         ...(pairingType !== undefined && { pairingType }),
+        ...(description !== undefined && { description: description === null ? null : String(description).slice(0, 2000) }),
+        ...(tags !== undefined && { tags: (tags as string[]).map((t) => t.trim().slice(0, 50)).filter(Boolean) }),
       },
       include: { cards: true },
     });

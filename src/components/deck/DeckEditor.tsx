@@ -14,6 +14,8 @@ import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical } from "lucid
 import { useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
+import { DeckDescriptionEditor } from "@/components/deck/DeckDescriptionEditor";
+import { DeckTagsEditor } from "@/components/deck/DeckTagsEditor";
 
 interface DeckEditorProps {
   deck: Deck;
@@ -59,7 +61,7 @@ function DraggableDeckCard({
         <GripVertical className="w-3 h-3" />
       </button>
       <div className="flex-1 min-w-0">
-        <CardListItem card={card} onRemove={onRemove} />
+        <CardListItem card={card} onRemove={onRemove} showNotes />
       </div>
     </div>
   );
@@ -201,6 +203,12 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
           </CardTooltip>
         </div>
       )}
+
+      {/* Deck description (collapsible) */}
+      <DeckDescriptionEditor deckId={deck.id} description={deck.description} />
+
+      {/* Deck tags */}
+      <DeckTagsEditor deckId={deck.id} tags={deck.tags ?? []} />
 
       {/* Card count header + view toggle */}
       <div className="px-3 py-2 border-b border-[var(--border)] flex items-center justify-between">
