@@ -77,7 +77,8 @@ src/
       ExportModal.tsx           # Multi-format export (MTGO, Arena, plain text)
     layout/
       Header.tsx                # Logo, nav, theme toggle, actions
-      Footer.tsx                # Legal notices (WotC + Scryfall disclaimers)
+      Footer.tsx                # Legal notices (WotC + Scryfall disclaimers); KeyboardShortcutsTrigger
+      KeyboardShortcutsModal.tsx # Shortcuts help overlay (? key or ⌨️ button)
     providers/
       EnrichmentProvider.tsx    # Background GC + banlist enrichment on load
       ThemeSync.tsx             # Syncs CSS data-theme with Zustand theme store
@@ -91,9 +92,11 @@ src/
       types.ts                  # ScryfallCard, response types
       images.ts                 # Image URL helpers (normal/large/art_crop)
       search.ts                 # Query builder (name/set/color modes)
+    ui/
+      store.ts                  # UIStore — modal flags, keyboard nav index, focus/clear signals
     deck/
       types.ts                  # Core domain types (DeckCard, Deck, BracketScore…)
-      store.ts                  # Zustand store — DB-synced, no localStorage
+      store.ts                  # Zustand store — DB-synced, undoStack, forceSave
       categories.ts             # Auto-categorization engine (15 categories)
       stats.ts                  # computeDeckStats()
       bracket.ts                # scoreBracket() — 6-dimension engine
@@ -108,6 +111,7 @@ src/
     useCardSearch.ts            # TanStack Query search (5 min cache)
     useCardSearchInfinite.ts    # Paginated card search
     useCardLookup.ts            # TanStack Query single card by ID (24h)
+    useKeyboardShortcuts.ts     # Global keydown listener — 9 shortcuts; reads store via getState() to avoid stale closures
     useCardLookupByName.ts      # TanStack Query single card by name (24h)
     useDeck.ts                  # Zustand + computed stats
     useBracketScore.ts          # Memoized bracket score
@@ -127,6 +131,10 @@ __tests__/                      # Vitest unit tests
     categories.test.ts
   lib/scryfall/
     client.test.ts
+  lib/ui/
+    store.test.ts               # UIStore unit tests
+  hooks/
+    useKeyboardShortcuts.test.ts  # 22 tests — mocked keyboard events
 
 e2e/                            # Playwright E2E tests
   search.spec.ts

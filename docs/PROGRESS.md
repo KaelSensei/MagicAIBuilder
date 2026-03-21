@@ -21,6 +21,7 @@
 | Phase 3 | Database & Prisma | ✅ Complete |
 | Phase 4 | AI Suggestions | ✅ Complete |
 | Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
+| Phase 5 | Keyboard Shortcuts & Undo | ✅ Complete |
 
 ---
 
@@ -33,6 +34,17 @@
 - [x] Hydration mismatch on `<html>` — `data-theme` set by inline script before React hydrates
 - [x] Missing `zod` dependency in package.json
 - [x] Card tooltip shown far right — now follows mouse cursor via `createPortal` with viewport clamping
+
+### Phase 5 — Keyboard Shortcuts & Undo (feat/keyboard-shortcuts)
+
+- [x] Global `useKeyboardShortcuts` hook with all 9 shortcuts
+- [x] UIStore — centralised modal flags, keyboard navigation index, focus/clear signals
+- [x] Undo stack in DeckStore — `undoStack`, `undo()`, `forceSave()`
+- [x] `KeyboardShortcutsModal` — help overlay with `<kbd>` badges; `KeyboardShortcutsTrigger` in Footer
+- [x] SearchBar — focus & clear signal integration, `⌨ /` hint
+- [x] Search results keyboard navigation — highlight + auto-scroll (list & grid)
+- [x] ImportDialog — controlled `open`/`onOpenChange` props for programmatic open
+- [x] 29 new unit tests (22 hook + 7 store) — all 89 tests green
 
 ### UI Enhancements
 
