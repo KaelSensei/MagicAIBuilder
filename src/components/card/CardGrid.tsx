@@ -45,22 +45,22 @@ export function CardGrid({
 
   return (
     <motion.div
-      className={cn(
-        "grid grid-cols-3 gap-2 p-2",
-        className
-      )}
+      className={cn("grid grid-cols-3 gap-2 p-2", className)}
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       {cards.map((card) => (
-        <motion.div key={card.id} variants={itemVariants}>
+        <motion.div key={card.id} variants={itemVariants} className="relative">
           {draggable ? (
             <DraggableCard card={card}>
               <CardImage
                 imageUri={getCardImageUri(card, "normal")}
                 largeUri={getCardImageUri(card, "large")}
                 name={card.name}
+                manaCost={card.mana_cost}
+                cmc={card.cmc}
+                showOverlay={true}
                 onClick={() => onCardClick?.(card)}
               />
             </DraggableCard>
@@ -69,6 +69,9 @@ export function CardGrid({
               imageUri={getCardImageUri(card, "normal")}
               largeUri={getCardImageUri(card, "large")}
               name={card.name}
+              manaCost={card.mana_cost}
+              cmc={card.cmc}
+              showOverlay={true}
               onClick={() => onCardClick?.(card)}
             />
           )}
