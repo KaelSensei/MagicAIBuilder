@@ -92,6 +92,15 @@ export interface BracketScore {
   warnings: string[]; // Human-readable bracket warnings
 }
 
+// ─── Playtest ───────────────────────────────────────────────────────────────
+
+export interface PlaytestState {
+  hand: DeckCard[];
+  library: DeckCard[]; // remaining shuffled deck
+  turn: number;
+  mulliganCount: number;
+}
+
 export type ViewMode = "grid" | "list";
 
 export interface SearchFilters {
