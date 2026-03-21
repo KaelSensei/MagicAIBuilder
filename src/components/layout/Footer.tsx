@@ -1,8 +1,13 @@
+import { KeyboardShortcutsTrigger } from "./KeyboardShortcutsModal";
+
 // Legal footer — displayed on the home page
 export function Footer() {
   return (
     <footer className="border-t border-[var(--border)] bg-[var(--surface)] px-6 py-6 mt-auto">
       <div className="max-w-4xl mx-auto space-y-3 text-xs text-[var(--text-secondary)] leading-relaxed">
+        <div className="flex justify-end mb-1">
+          <KeyboardShortcutsTrigger />
+        </div>
         <p>
           Wizards of the Coast, Magic: The Gathering, and their logos are trademarks of Wizards of
           the Coast LLC in the United States and other countries. © 1993-2026 Wizards. All Rights
