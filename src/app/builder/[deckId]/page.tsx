@@ -27,7 +27,7 @@ import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, build
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { ArrowLeft, Check, Crown, Download, Pencil } from "lucide-react";
+import { ArrowLeft, Check, Crown, Download, Pencil, Dices } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
@@ -38,6 +38,7 @@ import { ExportModal } from "@/components/deck/ExportModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
+import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
@@ -97,6 +98,7 @@ export default function BuilderPage() {
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [showPlaytest, setShowPlaytest] = useState(false);
   const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
 
   const query = (() => {
@@ -156,7 +158,7 @@ export default function BuilderPage() {
 
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
-    analyzeAI(deck, stats, bracketScore ?? null);
+    analyzeAI(deck, stats, bracketScore?.overall ?? deck.targetBracket);
   }, [deck, stats, bracketScore, analyzeAI]);
 
   const handleAIAddCard = useCallback((cardName: string) => {
@@ -168,12 +170,6 @@ export default function BuilderPage() {
         .catch(() => console.warn(`Could not find card: ${cardName}`));
     });
   }, [addCard]);
-
-  const handleAIRemoveCard = useCallback((cardName: string) => {
-    if (!deck) return;
-    const card = deck.cards.find((c) => c.name === cardName);
-    if (card) removeCard(card.id);
-  }, [deck, removeCard]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -298,13 +294,23 @@ export default function BuilderPage() {
           <span className="text-xs text-[var(--text-secondary)]">
             {(deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
           </span>
-          <button
-            onClick={() => setShowExport(true)}
-            className="ml-auto flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-          >
-            <Download className="w-3 h-3" />
-            Export
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => setShowPlaytest(true)}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-purple-500 text-[var(--text-secondary)] hover:text-purple-400 transition-all"
+              title="Playtest this deck"
+            >
+              <Dices className="w-3 h-3" />
+              Playtest
+            </button>
+            <button
+              onClick={() => setShowExport(true)}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+            >
+              <Download className="w-3 h-3" />
+              Export
+            </button>
+          </div>
         </div>
 
         {/* 3-panel layout */}
@@ -488,7 +494,6 @@ export default function BuilderPage() {
               error={aiError}
               onAnalyze={handleAIAnalyze}
               onAddCard={handleAIAddCard}
-              onRemoveCard={handleAIRemoveCard}
               disabled={!deck?.commander}
             />
 
@@ -505,6 +510,11 @@ export default function BuilderPage() {
 
       {/* Toast notifications */}
       <ToastContainer />
+
+      {/* Playtest modal */}
+      {showPlaytest && deck && (
+        <PlaytestModal deck={deck} onClose={() => setShowPlaytest(false)} />
+      )}
 
       {/* Export modal */}
       {showExport && deck && (

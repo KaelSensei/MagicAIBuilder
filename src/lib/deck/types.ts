@@ -19,8 +19,7 @@ export type CardCategory =
   | "other";
 
 export interface DeckCard {
-  id: string; // DB CUID (after save) or Scryfall card ID (before save)
-  scryfallId?: string; // Scryfall card ID (populated from DB)
+  id: string; // Scryfall card ID
   name: string;
   manaCost: string; // e.g., "{2}{U}{U}"
   cmc: number;
@@ -93,6 +92,15 @@ export interface BracketScore {
   warnings: string[]; // Human-readable bracket warnings
 }
 
+// ─── Playtest ───────────────────────────────────────────────────────────────
+
+export interface PlaytestState {
+  hand: DeckCard[];
+  library: DeckCard[]; // remaining shuffled deck
+  turn: number;
+  mulliganCount: number;
+}
+
 export type ViewMode = "grid" | "list";
 
 export interface SearchFilters {
@@ -101,5 +109,4 @@ export interface SearchFilters {
   cmcMin: number | null;
   cmcMax: number | null;
   priceMax: number | null;
-  collectionOnly?: boolean;
 }
