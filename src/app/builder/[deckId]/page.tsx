@@ -34,6 +34,7 @@ import { ToastContainer } from "@/components/ui/Toast";
 import { CombosPanel } from "@/components/deck/CombosPanel";
 import { useCombos } from "@/hooks/useCombos";
 import { ExportModal } from "@/components/deck/ExportModal";
+import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
@@ -80,6 +81,7 @@ export default function BuilderPage() {
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
 
   const query = commanderMode
     ? buildCommanderSearchQuery(searchText, filters)
@@ -101,10 +103,19 @@ export default function BuilderPage() {
         setCommander(card);
         setCommanderMode(false);
       } else {
-        addCard(card);
+        // Open printing selector so user can pick their preferred art
+        setPrintingCard(card);
       }
     },
-    [addCard, setCommander, commanderMode]
+    [setCommander, commanderMode]
+  );
+
+  const handlePrintingSelect = useCallback(
+    (card: ScryfallCard) => {
+      addCard(card);
+      setPrintingCard(null);
+    },
+    [addCard]
   );
 
   // dnd-kit sensors
@@ -321,6 +332,15 @@ export default function BuilderPage() {
       {/* Export modal */}
       {showExport && deck && (
         <ExportModal deck={deck} onClose={() => setShowExport(false)} />
+      )}
+
+      {/* Printing selector modal */}
+      {printingCard && (
+        <PrintingSelectorModal
+          card={printingCard}
+          onSelect={handlePrintingSelect}
+          onClose={() => setPrintingCard(null)}
+        />
       )}
 
       {/* Drag overlay */}

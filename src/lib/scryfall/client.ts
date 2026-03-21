@@ -150,3 +150,15 @@ export async function getGameChangers(): Promise<ScryfallSearchResponse> {
 export async function getCommanderBanlist(): Promise<ScryfallSearchResponse> {
   return searchCards("banned:commander");
 }
+
+/** Fetch all printings of a card by exact name (unique=prints) */
+export async function searchCardPrintings(cardName: string): Promise<ScryfallSearchResponse> {
+  const params = new URLSearchParams({
+    q: `!"${cardName}" legal:commander`,
+    unique: "prints",
+    order: "released",
+    dir: "desc",
+  });
+  const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/search?${params}`);
+  return handleResponse<ScryfallSearchResponse>(response);
+}
