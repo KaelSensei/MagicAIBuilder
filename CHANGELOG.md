@@ -9,6 +9,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-21: Commander in Grid View + Build Fixes
+- **Commander visible in grid view** — commander (and partner) now appear pinned first in the card grid with a gold ring and `CMD` badge
+- **`updateDeckDescription`, `addTag`, `removeTag`** actions added to DeckStore
+- **`PlaytestState`** type added to `types.ts`
+- **`DeckSnapshot`** model added to Prisma schema
+- **`description` / `tags`** fields added to Deck Prisma model + API
+- **`shareToken` / `shareEnabled`** fields added to Prisma schema (were in migration but missing from schema)
+- **Card PATCH route** now accepts `notes`, `scryfallId`, `imageUri`, `artCropUri`
+- **Deck PATCH route** now accepts `description` and `tags`
+
+### Fixed — 2026-03-21: Edition Picker + Import
+- **Edition picker in list view** — hover a card in list view → Layers icon → opens printing selector; swaps `scryfallId` + image optimistically and persists to DB
+- **Import dialog** now shows a clear error message when no deck is active instead of silently doing nothing
+- **`analyzeAI` call signature** fixed (was passing a raw number instead of `BracketScore | null`)
+- **`onRemoveCard` prop** added to `AISuggestionsPanel` usage
+- **Duplicate init migration** (`20260321002006_init`) removed — was causing `P3018` errors on `prisma migrate reset`
+
 ### Added — feat/export-audit-fix: Export audit & companion support
 - **Companion in all export formats** — companion card was silently dropped from every format; now included:
   - Plain Text / Moxfield: `Companion` / `// Companion` section before `Deck`
