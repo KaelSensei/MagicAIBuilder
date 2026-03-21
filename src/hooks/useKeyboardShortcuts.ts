@@ -34,6 +34,28 @@ function handleModifierShortcut(
   }
 }
 
+/** Close the topmost open modal, or clear search if none are open */
+function handleEscapeKey(): void {
+  const ui = useUIStore.getState();
+  if (ui.showKeyboardModal) { ui.setShowKeyboardModal(false); return; }
+  if (ui.showExportModal) { ui.setShowExportModal(false); return; }
+  if (ui.showImportModal) { ui.setShowImportModal(false); return; }
+  ui.clearSearch();
+}
+
+/** Add the keyboard-selected (or first) card from search results */
+function handleEnterKey(
+  e: KeyboardEvent,
+  searchResults: ScryfallCard[],
+  onAddCard: (card: ScryfallCard) => void,
+): void {
+  if (searchResults.length === 0) return;
+  e.preventDefault();
+  const idx = useUIStore.getState().keyboardSelectedIndex;
+  const card = searchResults[idx >= 0 ? idx : 0];
+  if (card) { onAddCard(card); useUIStore.getState().resetKeyboardSelection(); }
+}
+
 /** Handle single-key shortcuts (slash, escape, arrows, enter) */
 function handleSingleKeyShortcut(
   e: KeyboardEvent,
@@ -49,14 +71,10 @@ function handleSingleKeyShortcut(
       e.preventDefault();
       useUIStore.getState().setShowKeyboardModal(true);
       break;
-    case "Escape": {
-      const ui = useUIStore.getState();
-      if (ui.showKeyboardModal) { ui.setShowKeyboardModal(false); }
-      else if (ui.showExportModal) { ui.setShowExportModal(false); }
-      else if (ui.showImportModal) { ui.setShowImportModal(false); }
-      else { ui.clearSearch(); }
+    case "Escape":
+      e.preventDefault();
+      handleEscapeKey();
       break;
-    }
     case "ArrowDown":
       if (searchResults.length === 0) break;
       e.preventDefault();
@@ -71,14 +89,9 @@ function handleSingleKeyShortcut(
         Math.max(useUIStore.getState().keyboardSelectedIndex - 1, 0)
       );
       break;
-    case "Enter": {
-      if (searchResults.length === 0) break;
-      e.preventDefault();
-      const idx = useUIStore.getState().keyboardSelectedIndex;
-      const card = searchResults[idx >= 0 ? idx : 0];
-      if (card) { onAddCard(card); useUIStore.getState().resetKeyboardSelection(); }
+    case "Enter":
+      handleEnterKey(e, searchResults, onAddCard);
       break;
-    }
     default:
       break;
   }

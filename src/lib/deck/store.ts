@@ -35,6 +35,18 @@ function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
   };
 }
 
+/** Displays a toast warning when a Game Changer card is added to the deck. */
+function notifyGameChangerAdded(cardName: string, newTotal: number): void {
+  const toast = useToastStore.getState();
+  if (newTotal === 1) {
+    toast.add("warning", `⚡ ${cardName} is a Game Changer — your deck is now Bracket 3 minimum.`);
+  } else if (newTotal <= 3) {
+    toast.add("warning", `⚡ ${cardName} is a Game Changer (${newTotal}/3). Bracket 3 minimum applies.`);
+  } else {
+    toast.add("warning", `⚡ ${cardName} is a Game Changer — you now have ${newTotal} Game Changers, pushing the deck to Bracket 4.`);
+  }
+}
+
 function createEmptyDeck(id: string, name: string): Deck {
   return {
     id,
@@ -562,14 +574,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const max = maxQuantity(card.name, card.type_line, card.oracle_text ?? "");
     const exists = deck.cards.find((c) => c.name === card.name);
     if (exists) {
-      if (!isBasic) {
-        // Already at max → skip
-        if (exists.quantity >= max) return;
-        // Can add more → increment quantity
-        get().updateCardQuantity(exists.id, 1);
-        return;
-      }
       // Basic land already present — skip (caller should pass quantity on first add)
+      if (isBasic) return;
+      // Already at max → skip
+      if (exists.quantity >= max) return;
+      // Can add more → increment quantity
+      get().updateCardQuantity(exists.id, 1);
       return;
     }
 
@@ -586,24 +596,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const { cards: currentCards, commander } = deck;
       const existingGCCount = currentCards.filter((c) => c.isGameChanger).length
         + (commander?.isGameChanger ? 1 : 0);
-      const newTotal = existingGCCount + 1;
-
-      if (newTotal === 1) {
-        useToastStore.getState().add(
-          "warning",
-          `⚡ ${card.name} is a Game Changer — your deck is now Bracket 3 minimum.`
-        );
-      } else if (newTotal <= 3) {
-        useToastStore.getState().add(
-          "warning",
-          `⚡ ${card.name} is a Game Changer (${newTotal}/3). Bracket 3 minimum applies.`
-        );
-      } else {
-        useToastStore.getState().add(
-          "warning",
-          `⚡ ${card.name} is a Game Changer — you now have ${newTotal} Game Changers, pushing the deck to Bracket 4.`
-        );
-      }
+      notifyGameChangerAdded(card.name, existingGCCount + 1);
     }
 
     // Optimistic update

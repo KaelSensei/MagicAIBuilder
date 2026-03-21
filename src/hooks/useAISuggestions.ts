@@ -84,6 +84,32 @@ function applyStreamEvent(event: StreamEvent, acc: StreamAcc): boolean {
   }
 }
 
+/** Reads a NDJSON stream and applies each event to the accumulator, calling onUpdate after each change. */
+async function processStream(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  onUpdate: (acc: StreamAcc) => void,
+): Promise<StreamAcc> {
+  const decoder = new TextDecoder();
+  const acc: StreamAcc = { suggestions: [], removals: [], analysis: "", provider: "mock" };
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      let event: StreamEvent;
+      try { event = JSON.parse(trimmed) as StreamEvent; } catch { continue; }
+      if (applyStreamEvent(event, acc)) { onUpdate(acc); }
+    }
+  }
+  return acc;
+}
+
 export function useAISuggestions() {
   const [result, setResult] = useState<AISuggestionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -111,7 +137,6 @@ export function useAISuggestions() {
 
     try {
       const payload = buildSuggestPayload(deck, stats, bracketScore, bracket);
-
       const response = await fetch("/api/ai/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -122,30 +147,9 @@ export function useAISuggestions() {
       if (!response.ok) throw new Error(`AI request failed (${response.status})`);
       if (!response.body) throw new Error("No response body");
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      const acc: StreamAcc = { suggestions: [], removals: [], analysis: "", provider: "mock" };
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
-          let event: StreamEvent;
-          try { event = JSON.parse(trimmed) as StreamEvent; } catch { continue; }
-          if (applyStreamEvent(event, acc)) {
-            setResult({ suggestions: [...acc.suggestions], removals: [...acc.removals], analysis: acc.analysis, provider: acc.provider });
-          }
-        }
-      }
+      const acc = await processStream(response.body.getReader(), (current) => {
+        setResult({ suggestions: [...current.suggestions], removals: [...current.removals], analysis: current.analysis, provider: current.provider });
+      });
       lastHash.current = hash;
       lastResult.current = { suggestions: acc.suggestions, removals: acc.removals, analysis: acc.analysis, provider: acc.provider };
     } catch (err) {
