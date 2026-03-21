@@ -67,7 +67,11 @@ export function computeDeckStats(deck: Deck): DeckStats {
   const bannedCards = allCards.filter((c) => c.isBanned).map((c) => c.name);
 
   // Color identity violations — only check if a commander is set
-  const commanderIdentity = deck.commander?.colorIdentity ?? [];
+  // Include partner's color identity (both commanders contribute to the identity)
+  const commanderIdentity = [
+    ...(deck.commander?.colorIdentity ?? []),
+    ...(deck.partner?.colorIdentity ?? []),
+  ];
   const colorIdentityViolations = deck.commander
     ? deck.cards
         .filter((c) =>
