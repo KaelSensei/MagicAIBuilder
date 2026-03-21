@@ -49,12 +49,22 @@ export default function BuilderPage() {
   // Ensure this deck is active
   const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory } = useDeck();
   const decks = useDeckStore((s) => s.decks);
+  const loadDecks = useDeckStore((s) => s.loadDecks);
+  const isSyncing = useDeckStore((s) => s.isSyncing);
   const deck = decks[deckId] ?? null;
 
   // Set active deck on mount
   useEffect(() => {
     if (deckId) setActiveDeck(deckId);
   }, [deckId, setActiveDeck]);
+
+  // If deck not in store (e.g. direct navigation / page refresh), load from DB
+  useEffect(() => {
+    if (deckId && !deck && !isSyncing) {
+      loadDecks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deckId]);
 
   const { stats } = useDeck();
   const bracketScore = useBracketScore(deck);
@@ -149,10 +159,16 @@ export default function BuilderPage() {
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-[var(--text-secondary)] mb-4">Deck not found</p>
-            <Link href="/" className="text-[var(--accent)] hover:underline text-sm">
-              ← Back to My Decks
-            </Link>
+            {isSyncing ? (
+              <p className="text-[var(--text-secondary)]">Loading deck…</p>
+            ) : (
+              <>
+                <p className="text-[var(--text-secondary)] mb-4">Deck not found</p>
+                <Link href="/" className="text-[var(--accent)] hover:underline text-sm">
+                  ← Back to My Decks
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
