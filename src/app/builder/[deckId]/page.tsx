@@ -36,6 +36,8 @@ import { CombosPanel } from "@/components/deck/CombosPanel";
 import { useCombos } from "@/hooks/useCombos";
 import { ExportModal } from "@/components/deck/ExportModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
+import { useAISuggestions } from "@/hooks/useAISuggestions";
+import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
@@ -72,6 +74,7 @@ export default function BuilderPage() {
   const { stats } = useDeck();
   const bracketScore = useBracketScore(deck);
   const { data: combos, isLoading: combosLoading } = useCombos(deck);
+  const { result: aiResult, isLoading: aiLoading, error: aiError, analyze: analyzeAI } = useAISuggestions();
 
   // Search state
   const [searchText, setSearchText] = useState("");
@@ -144,6 +147,21 @@ export default function BuilderPage() {
     const card = event.active.data.current?.card;
     if (card) setActiveDragCard(card);
   }, []);
+
+  const handleAIAnalyze = useCallback(() => {
+    if (!deck || !stats) return;
+    analyzeAI(deck, stats, bracketScore?.overall ?? deck.targetBracket);
+  }, [deck, stats, bracketScore, analyzeAI]);
+
+  const handleAIAddCard = useCallback((cardName: string) => {
+    // Search for the card by name and add it
+    // We use getCardByName from Scryfall client
+    import("@/lib/scryfall/client").then(({ getCardByName }) => {
+      getCardByName(cardName)
+        .then((card) => addCard(card))
+        .catch(() => console.warn(`Could not find card: ${cardName}`));
+    });
+  }, [addCard]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -422,6 +440,15 @@ export default function BuilderPage() {
               count={stats?.gameChangersCount ?? 0}
               names={stats?.gameChangersList ?? []}
               targetBracket={deck.targetBracket}
+            />
+
+            <AISuggestionsPanel
+              result={aiResult}
+              isLoading={aiLoading}
+              error={aiError}
+              onAnalyze={handleAIAnalyze}
+              onAddCard={handleAIAddCard}
+              disabled={!deck?.commander}
             />
 
             <CombosPanel
