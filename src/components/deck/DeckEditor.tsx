@@ -133,8 +133,13 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
   const clearCommander = useDeckStore((s) => s.clearCommander);
   const setPartner = useDeckStore((s) => s.setPartner);
 
+  // Deduplicate cards by id (guard against import bugs creating duplicate rows)
+  const uniqueCards = deck.cards.filter((card, index, arr) =>
+    arr.findIndex((c) => c.id === card.id) === index
+  );
+
   // Group cards by category
-  const cardsByCategory = deck.cards.reduce<Record<CardCategory, Deck["cards"]>>(
+  const cardsByCategory = uniqueCards.reduce<Record<CardCategory, Deck["cards"]>>(
     (acc, card) => {
       if (!acc[card.category]) acc[card.category] = [];
       acc[card.category].push(card);
@@ -144,7 +149,7 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
   );
 
   const totalCards =
-    deck.cards.reduce((sum, c) => sum + c.quantity, 0) +
+    uniqueCards.reduce((sum, c) => sum + c.quantity, 0) +
     (deck.commander ? 1 : 0) +
     (deck.partner ? 1 : 0);
 
@@ -316,7 +321,7 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
                 </button>
               </div>
             )}
-            {deck.cards.map((card) => (
+            {uniqueCards.map((card) => (
               <div key={card.id} className="relative group/card">
                 <CardImage
                   imageUri={card.imageUri}
