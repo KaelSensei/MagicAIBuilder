@@ -47,7 +47,7 @@ export default function BuilderPage() {
   const deckId = params.deckId as string;
 
   // Ensure this deck is active
-  const { setActiveDeck, addCard, removeCard, setCommander } = useDeck();
+  const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory } = useDeck();
   const decks = useDeckStore((s) => s.decks);
   const deck = decks[deckId] ?? null;
 
@@ -111,15 +111,36 @@ export default function BuilderPage() {
       const { active, over } = event;
       if (!over) return;
 
-      const card = active.data.current?.card as ScryfallCard | undefined;
-      if (!card) return;
+      const overId = over.id.toString();
 
-      // Dropped on a category zone — add to deck
-      if (over.id.toString().startsWith("deck-category-")) {
-        addCard(card);
+      // Case 1: drag from search results → drop on deck category zone
+      const searchCard = active.data.current?.card as ScryfallCard | undefined;
+      if (searchCard && overId.startsWith("deck-category-")) {
+        addCard(searchCard);
+        return;
+      }
+
+      // Case 2: intra-deck drag — move card between categories
+      const cardId = active.data.current?.cardId as string | undefined;
+      if (cardId) {
+        if (overId.startsWith("deck-category-")) {
+          const newCategory = overId.replace("deck-category-", "");
+          const sourceCategory = active.data.current?.sourceCategory as string | undefined;
+          if (newCategory !== sourceCategory) {
+            updateCardCategory(cardId, newCategory as import("@/lib/deck/types").CardCategory);
+          }
+        } else if (overId.startsWith("deck-card-")) {
+          // Dropped over another card → move to that card's category
+          const targetCardId = overId.replace("deck-card-", "");
+          const targetCard = deck?.cards.find((c) => c.id === targetCardId);
+          const sourceCategory = active.data.current?.sourceCategory as string | undefined;
+          if (targetCard && targetCard.category !== sourceCategory) {
+            updateCardCategory(cardId, targetCard.category);
+          }
+        }
       }
     },
-    [addCard]
+    [addCard, updateCardCategory, deck]
   );
 
   if (!deck) {
