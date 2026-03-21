@@ -28,7 +28,7 @@ import { BanlistAlert } from "@/components/deck/BanlistAlert";
 import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery } from "@/lib/scryfall/search";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
-import type { SearchFilters as Filters } from "@/lib/deck/types";
+import type { SearchFilters as Filters, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { ArrowLeft, Check, Crown, Download, Pencil } from "lucide-react";
 import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
@@ -121,6 +121,10 @@ export default function BuilderPage() {
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
   const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
 
+  // State for changing the printing/edition of an existing deck card
+  const [deckCardForPrinting, setDeckCardForPrinting] = useState<DeckCard | null>(null);
+  const [deckCardPrintingCard, setDeckCardPrintingCard] = useState<ScryfallCard | null>(null);
+
   // UI store — modals + keyboard signals
   const showExport = useUIStore((s) => s.showExportModal);
   const setShowExport = useUIStore((s) => s.setShowExportModal);
@@ -177,6 +181,38 @@ export default function BuilderPage() {
       setPrintingCard(null);
     },
     [addCard]
+  );
+
+  // Open printing selector when clicking a card in the deck grid
+  const handleDeckCardClick = useCallback(async (deckCard: DeckCard) => {
+    try {
+      const { getCardByNameFuzzy } = await import("@/lib/scryfall/client");
+      const scryfallCard = await getCardByNameFuzzy(deckCard.name);
+      setDeckCardForPrinting(deckCard);
+      setDeckCardPrintingCard(scryfallCard);
+    } catch {
+      console.warn("Could not find card:", deckCard.name);
+    }
+  }, []);
+
+  // Replace deck card with a newly selected printing, preserving category
+  const handleDeckCardPrintingSelect = useCallback(
+    async (newCard: ScryfallCard) => {
+      if (!deckCardForPrinting) return;
+      const originalCategory = deckCardForPrinting.category;
+      removeCard(deckCardForPrinting.id);
+      await addCard(newCard);
+      // Restore original category if it differs from the auto-categorized one
+      const addedCard = useDeckStore.getState().decks[deckId]?.cards.find(
+        (c) => c.name === newCard.name
+      );
+      if (addedCard && addedCard.category !== originalCategory) {
+        updateCardCategory(addedCard.id, originalCategory);
+      }
+      setDeckCardForPrinting(null);
+      setDeckCardPrintingCard(null);
+    },
+    [deckCardForPrinting, removeCard, addCard, updateCardCategory, deckId]
   );
 
   // Keyboard shortcuts — global listener
@@ -527,6 +563,7 @@ export default function BuilderPage() {
             <DeckEditor
               deck={deck}
               onRemoveCard={removeCard}
+              onCardClick={handleDeckCardClick}
               className="flex-1 overflow-hidden"
             />
           </motion.div>
@@ -589,12 +626,24 @@ export default function BuilderPage() {
       {/* Import modal — controlled via UI store (Cmd+I) */}
       <ImportDialog open={showImportModal} onOpenChange={setShowImportModal} />
 
-      {/* Printing selector modal */}
+      {/* Printing selector modal — for adding a card from search results */}
       {printingCard && (
         <PrintingSelectorModal
           card={printingCard}
           onSelect={handlePrintingSelect}
           onClose={() => setPrintingCard(null)}
+        />
+      )}
+
+      {/* Printing selector modal — for replacing a deck card's edition/art */}
+      {deckCardPrintingCard && (
+        <PrintingSelectorModal
+          card={deckCardPrintingCard}
+          onSelect={handleDeckCardPrintingSelect}
+          onClose={() => {
+            setDeckCardForPrinting(null);
+            setDeckCardPrintingCard(null);
+          }}
         />
       )}
 

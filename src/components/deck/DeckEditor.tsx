@@ -19,6 +19,7 @@ import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 interface DeckEditorProps {
   readonly deck: Deck;
   readonly onRemoveCard: (id: string) => void;
+  readonly onCardClick?: (card: DeckCard) => void;
   readonly className?: string;
 }
 
@@ -181,7 +182,7 @@ function CommanderBanner({
   );
 }
 
-export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
+export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckEditorProps) {
   const viewMode = useDeckStore((s) => s.deckViewMode);
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
   const clearCommander = useDeckStore((s) => s.clearCommander);
@@ -373,11 +374,12 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
                   cmc={card.cmc}
                   showOverlay={true}
                   zoomOnHover={false}
-                  className="w-full"
+                  className="w-full cursor-pointer"
+                  onClick={() => onCardClick?.(card)}
                 />
                 {/* Remove button — top-left, shown on hover */}
                 <button
-                  onClick={() => onRemoveCard(card.id)}
+                  onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }}
                   className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
                   aria-label={`Remove ${card.name}`}
                 >
