@@ -147,6 +147,8 @@ export function scoreBracket(deck: Deck, stats: DeckStats): BracketScore {
   let overall = Math.round(average(Object.values(dimensions)));
 
   // Game Changers force minimum bracket
+  // Bracket 1 & 2: 0 allowed → any GC forces bracket 3
+  // Bracket 3: max 3 → more than 3 forces bracket 4
   if (stats.gameChangersCount > 3) {
     overall = Math.max(overall, 4);
   } else if (stats.gameChangersCount > 0) {

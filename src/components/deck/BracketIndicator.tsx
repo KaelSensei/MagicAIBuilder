@@ -162,9 +162,14 @@ export function BracketIndicator({
 
       {/* 6 dimension mini-bars */}
       <div className="space-y-2">
-        <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
-          Dimensions
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
+            Dimensions
+          </p>
+          <p className="text-xs text-[var(--text-secondary)] italic">
+            score 1–4 (bracket level)
+          </p>
+        </div>
         {Object.entries(score.dimensions).map(([key, value]) => (
           <MiniBar
             key={key}
@@ -182,8 +187,8 @@ export function BracketIndicator({
           <span className="text-xs text-amber-400 font-medium">
             {score.gameChangers} Game Changer{score.gameChangers > 1 ? "s" : ""}
             {score.gameChangers > 3
-              ? " → Bracket 4 minimum"
-              : " → Bracket 3 minimum"}
+              ? " → Bracket 4 minimum (>3 GC)"
+              : " → Bracket 3 minimum (GC not allowed in B1/B2)"}
           </span>
         </div>
       )}
