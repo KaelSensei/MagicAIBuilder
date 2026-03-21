@@ -525,7 +525,8 @@ export default function BuilderPage() {
                         )}
                         title={c.label}
                       >
-                        {/* Official Scryfall mana symbol SVGs */}
+                        {/* Official Scryfall mana symbol SVGs — SVG external URL, next/image not applicable */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={`https://svgs.scryfall.io/card-symbols/${c.code}.svg`}
                           alt={c.label}

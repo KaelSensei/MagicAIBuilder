@@ -224,8 +224,8 @@ const BRACKET_OPTIONS = [
   {
     value: 1 as const,
     label: "Bracket 1",
-    subtitle: "Precon / Casual",
-    description: "No tutors, no combos, pure fun",
+    subtitle: "Exhibition",
+    description: "No interaction, no synergy — pure theme or storytelling",
     color: "text-green-400",
     border: "border-green-500/40",
     bg: "bg-green-500/10",
@@ -233,8 +233,8 @@ const BRACKET_OPTIONS = [
   {
     value: 2 as const,
     label: "Bracket 2",
-    subtitle: "Low Power",
-    description: "Optimised precons, light synergies",
+    subtitle: "Casual",
+    description: "Precons and light upgrades, 0–1 game changers, no infinite combos",
     color: "text-blue-400",
     border: "border-blue-500/40",
     bg: "bg-blue-500/10",
@@ -242,8 +242,8 @@ const BRACKET_OPTIONS = [
   {
     value: 3 as const,
     label: "Bracket 3",
-    subtitle: "Mid Power",
-    description: "Strong synergies, some staples",
+    subtitle: "Powered",
+    description: "Optimised synergies, up to 3 game changers, some strong staples",
     color: "text-amber-400",
     border: "border-amber-500/40",
     bg: "bg-amber-500/10",
@@ -251,8 +251,8 @@ const BRACKET_OPTIONS = [
   {
     value: 4 as const,
     label: "Bracket 4",
-    subtitle: "High Power / cEDH",
-    description: "Optimised for winning, anything goes",
+    subtitle: "cEDH",
+    description: "Fully optimised, fast combos, any legal card",
     color: "text-red-400",
     border: "border-red-500/40",
     bg: "bg-red-500/10",
