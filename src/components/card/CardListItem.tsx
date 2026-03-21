@@ -82,7 +82,7 @@ export function CardListItem({ card, onRemove, className }: CardListItemProps) {
       <CardTooltip card={card}>
         <motion.div
           className={cn(
-            "flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] group transition-colors",
+            "flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-[var(--surface-hover)] group transition-colors",
             className
           )}
           layout
