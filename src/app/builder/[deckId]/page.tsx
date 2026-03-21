@@ -141,10 +141,10 @@ export default function BuilderPage() {
     (card: ScryfallCard) => {
       if (commanderMode) {
         setCommander(card);
-        setCommanderMode(false);
+        // Stay in commander mode — user may want to change commander again
       } else if (partnerMode) {
         setPartner(card);
-        setPartnerMode(false);
+        // Stay in partner mode — user may want to change partner again
       } else {
         // Open printing selector so user can pick their preferred art
         setPrintingCard(card);
