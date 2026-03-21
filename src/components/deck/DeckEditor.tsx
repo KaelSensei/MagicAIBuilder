@@ -178,7 +178,7 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
                 <span className="text-xs text-[var(--text-secondary)]">
                   {partnerSlotLabel(deck.pairingType)}:
                 </span>
-                {deck.partner ? (
+                {deck.partner && deck.partner.name !== deck.commander?.name ? (
                   <div className="flex items-center gap-1 group/prt">
                     <CardTooltip card={deck.partner}>
                       <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors text-sm">
@@ -293,7 +293,7 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
                 </button>
               </div>
             )}
-            {deck.partner && (
+            {deck.partner && deck.partner.name !== deck.commander?.name && (
               <div className="relative group/card">
                 <CardImage
                   imageUri={deck.partner.imageUri}

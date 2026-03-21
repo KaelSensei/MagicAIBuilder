@@ -229,7 +229,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         // Re-hydrate dates and reconstruct commander/partner from cards list
         const allCards = d.cards ?? [];
         const commanderCard = allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
-        const partnerCard = allCards.find((c) => c.isPartner) ?? null;
+        // Guard: if partner has same name as commander (import bug), treat as no partner
+        const rawPartnerCard = allCards.find((c) => c.isPartner) ?? null;
+        const partnerCard = (rawPartnerCard && rawPartnerCard.name !== commanderCard?.name)
+          ? rawPartnerCard
+          : null;
         const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
         const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
 
