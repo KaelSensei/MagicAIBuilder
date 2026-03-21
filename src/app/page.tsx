@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDeckStore } from "@/lib/deck/store";
 import { Header } from "@/components/layout/Header";
-import { Plus, Layers, Clock, Loader2 } from "lucide-react";
+import { Plus, Layers, Clock, Loader2, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -24,8 +24,9 @@ function DeckCardSkeleton() {
 
 export default function HomePage() {
   const router = useRouter();
-  const { decks, createDeck, loadDecks, isSyncing } = useDeckStore();
+  const { decks, createDeck, loadDecks, isSyncing, deleteDeck } = useDeckStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const deckList = Object.values(decks);
 
@@ -34,6 +35,18 @@ export default function HomePage() {
     loadDecks().finally(() => setIsLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleDeleteDeck = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault(); // prevent Link navigation
+    e.stopPropagation();
+    if (!confirm("Delete this deck? This cannot be undone.")) return;
+    setDeletingId(id);
+    try {
+      await deleteDeck(id);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleNewDeck = async () => {
     if (isCreating) return;
@@ -136,7 +149,7 @@ export default function HomePage() {
               >
                 <Link
                   href={`/builder/${deck.id}`}
-                  className="block rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] hover:border-[var(--accent)] transition-all p-5"
+                  className="block rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] hover:border-[var(--accent)] transition-all p-5 group"
                   data-testid="deck-card"
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -158,9 +171,23 @@ export default function HomePage() {
                       (deck.partner ? 1 : 0)}{" "}
                     / 100 cards
                   </p>
-                  <div className="flex items-center gap-1 mt-3 text-xs text-[var(--text-secondary)]">
-                    <Clock className="w-3 h-3" />
-                    <span>{new Date(deck.updatedAt).toLocaleDateString()}</span>
+                  <div className="flex items-center justify-between mt-3">
+                    <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
+                      <Clock className="w-3 h-3" />
+                      <span>{new Date(deck.updatedAt).toLocaleDateString()}</span>
+                    </div>
+                    <button
+                      onClick={(e) => handleDeleteDeck(e, deck.id)}
+                      disabled={deletingId === deck.id}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400 disabled:opacity-60"
+                      aria-label={`Delete ${deck.name}`}
+                    >
+                      {deletingId === deck.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                    </button>
                   </div>
                 </Link>
               </motion.div>
