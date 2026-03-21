@@ -1,14 +1,17 @@
 "use client";
 // App header with nav
 import Link from "next/link";
-import { Layers, Plus, Upload } from "lucide-react";
+import { Layers, Moon, Plus, Sun, Upload } from "lucide-react";
 import { ImportDialog } from "@/components/deck/ImportDialog";
+import { useTheme } from "@/hooks/useTheme";
 
 interface HeaderProps {
   deckId?: string;
 }
 
 export function Header({ deckId }: HeaderProps = {}) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header className="h-14 border-b border-[var(--border)] bg-[var(--surface)] flex items-center px-6 gap-6 shrink-0">
       {/* Logo */}
@@ -32,6 +35,14 @@ export function Header({ deckId }: HeaderProps = {}) {
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          aria-label="Toggle theme"
+          title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+        >
+          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
         {deckId ? (
           <ImportDialog>
             <button className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
