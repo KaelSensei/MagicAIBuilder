@@ -30,11 +30,6 @@ export function useDeck() {
     updateCardCategory: store.updateCardCategory,
     setTargetBracket: store.setTargetBracket,
     setBudget: store.setBudget,
-    // Maybeboard
-    addToMaybeboard: store.addToMaybeboard,
-    removeFromMaybeboard: store.removeFromMaybeboard,
-    moveToMaybeboard: store.moveToMaybeboard,
-    moveToDeck: store.moveToDeck,
     // Deck list
     decks: Object.values(store.decks),
   };

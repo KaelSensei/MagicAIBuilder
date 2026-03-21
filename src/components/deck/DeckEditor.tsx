@@ -6,7 +6,6 @@ import { CSS } from "@dnd-kit/utilities";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { CardTooltip } from "@/components/card/CardTooltip";
-import { MaybeboardPanel } from "@/components/deck/MaybeboardPanel";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
@@ -19,9 +18,6 @@ import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 interface DeckEditorProps {
   deck: Deck;
   onRemoveCard: (id: string) => void;
-  onMoveToMaybeboard?: (cardId: string) => void;
-  onMoveFromMaybeboard?: (cardId: string) => void;
-  onRemoveFromMaybeboard?: (cardId: string) => void;
   className?: string;
 }
 
@@ -29,18 +25,15 @@ interface CategorySectionProps {
   category: CardCategory;
   cards: Deck["cards"];
   onRemoveCard: (id: string) => void;
-  onMoveToMaybeboard?: (id: string) => void;
 }
 
 // Draggable card list item (for intra-deck category drag)
 function DraggableDeckCard({
   card,
   onRemove,
-  onMoveToMaybeboard,
 }: {
   card: DeckCard;
   onRemove: (id: string) => void;
-  onMoveToMaybeboard?: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
@@ -66,13 +59,13 @@ function DraggableDeckCard({
         <GripVertical className="w-3 h-3" />
       </button>
       <div className="flex-1 min-w-0">
-        <CardListItem card={card} onRemove={onRemove} onMoveToMaybeboard={onMoveToMaybeboard} />
+        <CardListItem card={card} onRemove={onRemove} />
       </div>
     </div>
   );
 }
 
-function DroppableCategory({ category, cards, onRemoveCard, onMoveToMaybeboard }: CategorySectionProps) {
+function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
     id: `deck-category-${category}`,
@@ -121,7 +114,6 @@ function DroppableCategory({ category, cards, onRemoveCard, onMoveToMaybeboard }
                 key={card.id}
                 card={card}
                 onRemove={onRemoveCard}
-                onMoveToMaybeboard={onMoveToMaybeboard}
               />
             ))}
           </SortableContext>
@@ -136,17 +128,9 @@ function DroppableCategory({ category, cards, onRemoveCard, onMoveToMaybeboard }
   );
 }
 
-export function DeckEditor({
-  deck,
-  onRemoveCard,
-  onMoveToMaybeboard,
-  onMoveFromMaybeboard,
-  onRemoveFromMaybeboard,
-  className,
-}: DeckEditorProps) {
+export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
   const viewMode = useDeckStore((s) => s.deckViewMode);
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
-  const [activeTab, setActiveTab] = useState<"deck" | "maybeboard">("deck");
 
   // Group cards by category
   const cardsByCategory = deck.cards.reduce<Record<CardCategory, Deck["cards"]>>(
@@ -218,49 +202,21 @@ export function DeckEditor({
         </div>
       )}
 
-      {/* Tabs: Deck / Maybeboard */}
-      <div className="px-3 pt-2 border-b border-[var(--border)] flex items-center gap-0">
-        <button
-          onClick={() => setActiveTab("deck")}
-          className={cn(
-            "px-3 py-1.5 text-xs font-medium border-b-2 transition-colors",
-            activeTab === "deck"
-              ? "border-[var(--accent)] text-[var(--accent)]"
-              : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          )}
-        >
-          Deck
-          <span
+      {/* Card count header + view toggle */}
+      <div className="px-3 py-2 border-b border-[var(--border)] flex items-center justify-between">
+        <p className="text-xs text-[var(--text-secondary)]">Deck Cards</p>
+        <div className="flex items-center gap-2">
+          <p
             className={cn(
-              "ml-1.5 text-[10px] px-1 py-0.5 rounded-full",
+              "text-xs font-medium",
               totalCards === 100
-                ? "bg-green-500/20 text-green-400"
-                : "bg-[var(--surface-hover)] text-[var(--text-secondary)]"
+                ? "text-green-500"
+                : "text-[var(--text-secondary)]"
             )}
           >
             {totalCards}/100
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab("maybeboard")}
-          className={cn(
-            "px-3 py-1.5 text-xs font-medium border-b-2 transition-colors",
-            activeTab === "maybeboard"
-              ? "border-amber-400 text-amber-400"
-              : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          )}
-        >
-          Maybeboard
-          {deck.maybeboard.length > 0 && (
-            <span className="ml-1.5 text-[10px] px-1 py-0.5 rounded-full bg-amber-500/15 text-amber-400">
-              {deck.maybeboard.reduce((sum, c) => sum + c.quantity, 0)}
-            </span>
-          )}
-        </button>
-
-        {/* View toggle — only shown in Deck tab */}
-        {activeTab === "deck" && (
-          <div className="flex items-center gap-0.5 ml-auto mb-1">
+          </p>
+          <div className="flex items-center gap-0.5">
             <button
               onClick={() => setViewMode("list")}
               className={`p-1 rounded transition-colors ${
@@ -284,66 +240,54 @@ export function DeckEditor({
               <LayoutGrid className="w-3 h-3" />
             </button>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Tab content */}
-      {activeTab === "deck" ? (
-        /* Deck tab — Categories or Grid */
-        <div className="flex-1 overflow-y-auto p-2">
-          {viewMode === "grid" ? (
-            /* Grid view — flat image grid of all deck cards */
-            <div className="grid grid-cols-3 gap-1.5 p-1">
-              {deck.cards.map((card) => (
-                <div key={card.id} className="relative group/card">
-                  <CardImage
-                    imageUri={card.imageUri}
-                    largeUri={card.imageUri}
-                    name={card.name}
-                    manaCost={card.manaCost}
-                    cmc={card.cmc}
-                    showOverlay={true}
-                    zoomOnHover={false}
-                    className="w-full"
-                  />
-                  {/* Remove button — top-left, shown on hover */}
-                  <button
-                    onClick={() => onRemoveCard(card.id)}
-                    className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-                    aria-label={`Remove ${card.name}`}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              {deck.cards.length === 0 && (
-                <div className="col-span-3 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
-                  No cards yet
-                </div>
-              )}
-            </div>
-          ) : (
-            /* List view — categorized droppable zones */
-            CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
-              <DroppableCategory
-                key={category}
-                category={category}
-                cards={cardsByCategory[category] ?? []}
-                onRemoveCard={onRemoveCard}
-                onMoveToMaybeboard={onMoveToMaybeboard}
-              />
-            ))
-          )}
-        </div>
-      ) : (
-        /* Maybeboard tab */
-        <MaybeboardPanel
-          cards={deck.maybeboard}
-          onMoveToDecks={(cardId) => onMoveFromMaybeboard?.(cardId)}
-          onRemove={(cardId) => onRemoveFromMaybeboard?.(cardId)}
-          className="flex-1 overflow-hidden"
-        />
-      )}
+      {/* Categories — uses parent DndContext from BuilderPage */}
+      <div className="flex-1 overflow-y-auto p-2">
+        {viewMode === "grid" ? (
+          /* Grid view — flat image grid of all deck cards */
+          <div className="grid grid-cols-3 gap-1.5 p-1">
+            {deck.cards.map((card) => (
+              <div key={card.id} className="relative group/card">
+                <CardImage
+                  imageUri={card.imageUri}
+                  largeUri={card.imageUri}
+                  name={card.name}
+                  manaCost={card.manaCost}
+                  cmc={card.cmc}
+                  showOverlay={true}
+                  zoomOnHover={false}
+                  className="w-full"
+                />
+                {/* Remove button — top-left, shown on hover */}
+                <button
+                  onClick={() => onRemoveCard(card.id)}
+                  className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                  aria-label={`Remove ${card.name}`}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {deck.cards.length === 0 && (
+              <div className="col-span-3 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
+                No cards yet
+              </div>
+            )}
+          </div>
+        ) : (
+          /* List view — categorized droppable zones */
+          CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
+            <DroppableCategory
+              key={category}
+              category={category}
+              cards={cardsByCategory[category] ?? []}
+              onRemoveCard={onRemoveCard}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 }
