@@ -38,6 +38,7 @@ import { ExportModal } from "@/components/deck/ExportModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
+import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
@@ -156,8 +157,13 @@ export default function BuilderPage() {
 
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
-    analyzeAI(deck, stats, bracketScore ?? null);
+    analyzeAI(deck, stats, bracketScore?.overall ?? deck.targetBracket);
   }, [deck, stats, bracketScore, analyzeAI]);
+
+  const handleSnapshotRestore = useCallback(() => {
+    // Reload all decks from DB so the builder reflects the restored state
+    loadDecks();
+  }, [loadDecks]);
 
   const handleAIAddCard = useCallback((cardName: string) => {
     // Search for the card by name and add it
@@ -168,12 +174,6 @@ export default function BuilderPage() {
         .catch(() => console.warn(`Could not find card: ${cardName}`));
     });
   }, [addCard]);
-
-  const handleAIRemoveCard = useCallback((cardName: string) => {
-    if (!deck) return;
-    const card = deck.cards.find((c) => c.name === cardName);
-    if (card) removeCard(card.id);
-  }, [deck, removeCard]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -482,13 +482,18 @@ export default function BuilderPage() {
               targetBracket={deck.targetBracket}
             />
 
+            <SnapshotsPanel
+              deckId={deckId}
+              currentCardCount={deck.cards.length}
+              onRestore={handleSnapshotRestore}
+            />
+
             <AISuggestionsPanel
               result={aiResult}
               isLoading={aiLoading}
               error={aiError}
               onAnalyze={handleAIAnalyze}
               onAddCard={handleAIAddCard}
-              onRemoveCard={handleAIRemoveCard}
               disabled={!deck?.commander}
             />
 
