@@ -10,6 +10,7 @@ export interface BuildRequest {
   colors: string[]; // ["W", "U", "B", "R", "G"]
   strategy: string; // "Aggro" | "Control" | etc.
   commanderName: string | null; // null = let AI pick
+  bracket: 1 | 2 | 3 | 4; // target power level
 }
 
 export type BuildEvent =
@@ -34,38 +35,57 @@ interface AIDeckResponse {
 // ---------------------------------------------------------------------------
 // Prompt builder
 // ---------------------------------------------------------------------------
+const BRACKET_DESCRIPTIONS: Record<number, string> = {
+  1: "Bracket 1 — Casual/precon level. No tutors, no combos, no game changers.",
+  2: "Bracket 2 — Low power. 0-1 game changers max, no infinite combos, budget-friendly.",
+  3: "Bracket 3 — Mid power. Up to 3 game changers, some strong synergies, no cEDH staples.",
+  4: "Bracket 4 — High power / cEDH. Any legal card, optimized for winning.",
+};
+
 function buildPrompt(req: BuildRequest): string {
-  const colorStr = req.colors.length > 0 ? req.colors.join(", ") : "Colorless";
+  const colorNames: Record<string, string> = { W: "White", U: "Blue", B: "Black", R: "Red", G: "Green", C: "Colorless" };
+  const colorStr = req.colors.length > 0 ? req.colors.map((c) => colorNames[c] ?? c).join(", ") : "Colorless";
+  const colorSymbols = req.colors.filter((c) => c !== "C").join(""); // e.g. "UB" for Dimir
   const budgetStr = req.budget ? `$${req.budget} max per card` : "No limit";
-  const commanderStr = req.commanderName ?? "Choose the best commander for these colors and strategy";
+  const bracketDesc = BRACKET_DESCRIPTIONS[req.bracket] ?? BRACKET_DESCRIPTIONS[2];
+
+  const commanderStr = req.commanderName
+    ? `Use exactly "${req.commanderName}" as the commander`
+    : `Choose the best commander whose color identity is EXACTLY {${colorSymbols || "C"}} — meaning the commander uses ONLY these colors and no others`;
 
   return `You are a Magic: The Gathering Commander deck builder expert.
 
-Build a complete Commander deck with these constraints:
-- Colors: ${colorStr}
-- Strategy/Archetype: ${req.strategy}
-- Budget: ${budgetStr}
-- Commander: ${commanderStr}
+Build a complete Commander deck with these STRICT constraints:
 
-Return a complete 100-card Commander decklist in JSON:
+COLOR IDENTITY (CRITICAL — DO NOT VIOLATE):
+- Required colors: ${colorStr} (${colorSymbols || "Colorless"})
+- The commander's color identity MUST be exactly {${colorSymbols || "C"}} — no more, no fewer colors
+- Example: if colors are Blue + Black, use a Dimir commander (color identity UB), NOT a 4-color commander
+- Every non-land card in the deck must be castable within the ${colorStr} color identity
+
+STRATEGY: ${req.strategy}
+BUDGET: ${budgetStr}
+POWER LEVEL: ${bracketDesc}
+COMMANDER: ${commanderStr}
+
+Return a complete Commander decklist as ONLY valid JSON (no markdown, no text outside JSON):
 {
-  "commander": "Commander Name",
+  "commander": "Exact Commander Name",
   "partner": null,
   "cards": [
-    { "name": "Card Name", "quantity": 1, "category": "ramp|draw|removal|land|creature|other" }
+    { "name": "Exact Card Name", "quantity": 1, "category": "ramp|draw|removal|boardWipe|land|creature|protection|winCondition|other" }
   ]
 }
 
-Rules:
-- Exactly 1 commander (or 2 with partner — add partner in "partner" field and include 98 cards)
-- Exactly 99 other cards (98 with partner)
+STRICT RULES:
+- "cards" array must contain EXACTLY 99 entries (total quantity sum = 99) — this is mandatory
+- If using a partner commander, set "partner" field and "cards" must contain EXACTLY 98 entries
+- Include approximately 36-38 lands
+- Use basic lands matching your color identity only (Plains/Island/Swamp/Mountain/Forest)
 - All cards must be legal in Commander format
-- All non-commander cards must fit the commander's color identity
-- Include approximately 38 lands (with a mix of basics and non-basics)
-- Respect budget constraint (max price per card)
-- Optimize for the ${req.strategy} archetype
-- No banned cards (no Jeweled Lotus in budget builds, no Thassa's Oracle unless Combo, etc.)
-- Return ONLY valid JSON, no markdown, no explanation`;
+- No cards outside the commander's color identity
+- Respect budget (skip expensive staples if over budget)
+- Return ONLY the JSON object, nothing else`;
 }
 
 // ---------------------------------------------------------------------------

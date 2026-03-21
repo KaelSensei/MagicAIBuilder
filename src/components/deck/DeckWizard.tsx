@@ -219,6 +219,83 @@ function StepStrategy({
   );
 }
 
+// Bracket options — consistent with BracketIndicator colors
+const BRACKET_OPTIONS = [
+  {
+    value: 1 as const,
+    label: "Bracket 1",
+    subtitle: "Precon / Casual",
+    description: "No tutors, no combos, pure fun",
+    color: "text-green-400",
+    border: "border-green-500/40",
+    bg: "bg-green-500/10",
+  },
+  {
+    value: 2 as const,
+    label: "Bracket 2",
+    subtitle: "Low Power",
+    description: "Optimised precons, light synergies",
+    color: "text-blue-400",
+    border: "border-blue-500/40",
+    bg: "bg-blue-500/10",
+  },
+  {
+    value: 3 as const,
+    label: "Bracket 3",
+    subtitle: "Mid Power",
+    description: "Strong synergies, some staples",
+    color: "text-amber-400",
+    border: "border-amber-500/40",
+    bg: "bg-amber-500/10",
+  },
+  {
+    value: 4 as const,
+    label: "Bracket 4",
+    subtitle: "High Power / cEDH",
+    description: "Optimised for winning, anything goes",
+    color: "text-red-400",
+    border: "border-red-500/40",
+    bg: "bg-red-500/10",
+  },
+];
+
+function StepBracket({
+  value,
+  onChange,
+}: {
+  value: 1 | 2 | 3 | 4 | null;
+  onChange: (v: 1 | 2 | 3 | 4) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
+      {BRACKET_OPTIONS.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`
+            w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all text-left
+            ${value === opt.value
+              ? `${opt.border} ${opt.bg}`
+              : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border)] hover:bg-[var(--surface-hover)]"
+            }
+          `}
+        >
+          <span className={`text-2xl font-bold w-8 shrink-0 ${value === opt.value ? opt.color : "text-[var(--text-secondary)]"}`}>
+            {opt.value}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className={`font-semibold text-sm ${value === opt.value ? opt.color : "text-[var(--text-primary)]"}`}>
+              {opt.label} — {opt.subtitle}
+            </div>
+            <div className="text-xs text-[var(--text-secondary)] mt-0.5">{opt.description}</div>
+          </div>
+          {value === opt.value && <Check className="w-4 h-4 shrink-0 text-[var(--accent)]" />}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function StepCommander({
   commanderName,
   commanderCard,
@@ -413,7 +490,7 @@ function StepLoading({
 // Main wizard
 // ---------------------------------------------------------------------------
 
-const TOTAL_WIZARD_STEPS = 4;
+const TOTAL_WIZARD_STEPS = 5;
 /** Max cards per Scryfall collection lookup request */
 const BATCH_SIZE = 75;
 
@@ -479,7 +556,10 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   // Step 3 — Strategy
   const [strategy, setStrategy] = useState<string | null>(null);
 
-  // Step 4 — Commander
+  // Step 4 — Bracket (power level)
+  const [bracket, setBracket] = useState<1 | 2 | 3 | 4 | null>(null);
+
+  // Step 5 — Commander
   const [commanderName, setCommanderName] = useState("");
   const [commanderCard, setCommanderCard] = useState<ScryfallCard | null>(null);
   const [commanderSkipped, setCommanderSkipped] = useState(false);
@@ -499,6 +579,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       setBudget("unset");
       setColors([]);
       setStrategy(null);
+      setBracket(null);
       setCommanderName("");
       setCommanderCard(null);
       setCommanderSkipped(false);
@@ -519,10 +600,11 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       case 1: return budget !== "unset";
       case 2: return colors.length > 0;
       case 3: return strategy !== null;
-      case 4: return true; // optional
+      case 4: return bracket !== null;
+      case 5: return true; // commander is optional
       default: return false;
     }
-  }, [step, budget, colors, strategy]);
+  }, [step, budget, colors, strategy, bracket]);
 
   const toggleColor = (c: ColorKey) => {
     setColors((prev) =>
@@ -534,10 +616,11 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
     setCommanderName("");
     setCommanderCard(null);
     setCommanderSkipped(true);
-    handleGenerate();
+    // handleGenerate reads commanderSkipped via closure — pass explicit flag
+    handleGenerateWith(true);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerateWith = async (skipCommander = false) => {
     if (!strategy) return;
     setIsBuilding(true);
     setBuildError(null);
@@ -547,7 +630,8 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         budget: budget === "unset" ? null : budget,
         colors,
         strategy,
-        commanderName: (commanderSkipped || !commanderName) ? null : commanderName,
+        bracket: bracket ?? 2,
+        commanderName: (skipCommander || commanderSkipped || !commanderName) ? null : commanderName,
       });
 
       if (!cards) { setBuildError("Build was cancelled or failed."); return; }
@@ -578,6 +662,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
     { title: "What's your budget?", subtitle: "Set a per-card spending limit for your deck." },
     { title: "Choose your colors", subtitle: "Select one or more colors for your Commander identity." },
     { title: "What kind of deck?", subtitle: "Pick the archetype that matches your playstyle." },
+    { title: "Power level?", subtitle: "Choose the bracket that matches your playgroup." },
     {
       title: "Do you have a commander in mind?",
       subtitle: "Search for a specific commander, or let the AI choose.",
@@ -698,6 +783,9 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                       <StepStrategy value={strategy} onChange={setStrategy} />
                     )}
                     {step === 4 && (
+                      <StepBracket value={bracket} onChange={setBracket} />
+                    )}
+                    {step === 5 && (
                       <StepCommander
                         commanderName={commanderName}
                         commanderCard={commanderCard}
@@ -745,7 +833,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                   </button>
                 ) : (
                   <button
-                    onClick={handleGenerate}
+                    onClick={() => handleGenerateWith(false)}
                     disabled={!canContinue()}
                     className="
                       flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all
@@ -757,6 +845,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                     Generate Deck
                   </button>
                 )}
+                {/* Hidden — handleGenerate wired to button above */}
               </div>
             )}
           </motion.div>
