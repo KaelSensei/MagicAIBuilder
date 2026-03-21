@@ -156,7 +156,7 @@ export default function BuilderPage() {
 
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
-    analyzeAI(deck, stats, bracketScore ?? null);
+    analyzeAI(deck, stats, bracketScore?.overall ?? deck.targetBracket);
   }, [deck, stats, bracketScore, analyzeAI]);
 
   const handleAIAddCard = useCallback((cardName: string) => {
