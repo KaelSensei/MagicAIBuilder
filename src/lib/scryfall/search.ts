@@ -62,6 +62,35 @@ export function buildCommanderSearchQuery(
   return parts.join(" ");
 }
 
+/** Build a search query for partner slot based on pairing type */
+export function buildPartnerSearchQuery(
+  pairingType: string,
+  text: string,
+  filters: Partial<SearchFilters> = {}
+): string {
+  const name = text.trim();
+  const namePart = name ? ` name:/${name}/` : "";
+  const colorPart = filters.colors && filters.colors.length > 0
+    ? ` id<=${filters.colors.join("")}`
+    : "";
+
+  switch (pairingType) {
+    case "partner":
+      // Generic Partner — any commander with Partner keyword
+      return `is:commander o:"Partner" -o:"Partner with" -o:"Character select"${namePart}${colorPart}`;
+    case "character_select":
+      // TMNT Character Select — only pairs with other Character Select
+      return `is:commander o:"Character select"${namePart}`;
+    case "friends_forever":
+      return `is:commander o:"Friends forever"${namePart}${colorPart}`;
+    case "partner_with":
+      // Partner With — just use the specific card name search
+      return `is:commander o:"Partner with"${namePart}${colorPart}`;
+    default:
+      return `is:commander${namePart}${colorPart}`;
+  }
+}
+
 /** Build a query for browsing cards from a specific set */
 export function buildSetSearchQuery(setCode: string, colorFilter: string[] = []): string {
   const parts: string[] = [`set:${setCode}`, "legal:commander"];
