@@ -95,6 +95,7 @@ export interface DeckStore {
   addDeckCard: (card: DeckCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
+  updateCardQuantity: (cardId: string, delta: number) => Promise<void>;
   swapCardPrinting: (cardId: string, printing: import("@/lib/scryfall/types").ScryfallCard) => Promise<void>;
   updateCardNotes: (cardId: string, notes: string | null) => Promise<void>;
 
@@ -493,9 +494,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const isBasic = card.type_line.toLowerCase().includes("basic land");
+    const { maxQuantity } = await import("@/lib/deck/multiples");
+    const max = maxQuantity(card.name, card.type_line);
     const exists = deck.cards.find((c) => c.name === card.name);
-    if (exists && !isBasic) return;
+    if (exists) {
+      // Already at max → skip
+      if (exists.quantity >= max) return;
+      // Can add more → increment quantity
+      get().updateCardQuantity(exists.id, 1);
+      return;
+    }
 
     const deckCard = makeDeckCard(card);
     deckCard.isGameChanger = gameChangerNames.has(card.name);
@@ -587,9 +595,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!activeDeckId) return;
     const deck = decks[activeDeckId];
     if (!deck) return;
-    const isBasic = card.typeLine.toLowerCase().includes("basic land");
+    const { maxQuantity } = await import("@/lib/deck/multiples");
+    const max = maxQuantity(card.name, card.typeLine);
     const exists = deck.cards.find((c) => c.name === card.name);
-    if (exists && !isBasic) return;
+    if (exists) {
+      if (exists.quantity >= max) return;
+      get().updateCardQuantity(exists.id, 1);
+      return;
+    }
     const enriched = {
       ...card,
       isGameChanger: gameChangerNames.has(card.name),
@@ -707,6 +720,44 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateCardCategory(activeDeckId, cardId, category);
     } catch (err) {
       console.error("[updateCardCategory]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  updateCardQuantity: async (cardId, delta) => {
+    const { activeDeckId, decks } = get();
+    if (!activeDeckId) return;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
+    const card = deck.cards.find((c) => c.id === cardId);
+    if (!card) return;
+
+    const { maxQuantity } = await import("@/lib/deck/multiples");
+    const max = maxQuantity(card.name, card.typeLine);
+    const newQty = Math.max(1, Math.min(max, card.quantity + delta));
+    if (newQty === card.quantity) return;
+
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.map((c) =>
+            c.id === cardId ? { ...c, quantity: newQty } : c
+          ),
+        },
+      },
+    }));
+    set({ isSyncing: true });
+    try {
+      await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: newQty }),
+      });
+    } catch (err) {
+      console.error("[updateCardQuantity]", err);
     } finally {
       set({ isSyncing: false });
     }
