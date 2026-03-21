@@ -9,6 +9,13 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=alert_status)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=coverage)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=bugs)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=code_smells)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=sqale_index)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=duplicated_lines_density)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
+
 ## Features
 
 - 🔍 **Scryfall search** — full syntax support, commander mode, By Set, By Color
