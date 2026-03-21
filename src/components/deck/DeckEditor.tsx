@@ -3,7 +3,9 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
+import { CardTooltip } from "@/components/card/CardTooltip";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
@@ -153,15 +155,19 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
         </p>
         {deck.commander ? (
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-[var(--text-primary)] font-medium">
-              {deck.commander.name}
-            </span>
+            <CardTooltip card={deck.commander}>
+              <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors">
+                {deck.commander.name}
+              </span>
+            </CardTooltip>
             {deck.partner && (
               <>
                 <span className="text-[var(--text-secondary)]">&amp;</span>
-                <span className="text-[var(--text-primary)] font-medium">
-                  {deck.partner.name}
-                </span>
+                <CardTooltip card={deck.partner}>
+                  <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors">
+                    {deck.partner.name}
+                  </span>
+                </CardTooltip>
               </>
             )}
           </div>
@@ -215,15 +221,44 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
 
       {/* Categories — uses parent DndContext from BuilderPage */}
       <div className="flex-1 overflow-y-auto p-2">
-        {CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
-          <DroppableCategory
-            key={category}
-            category={category}
-            cards={cardsByCategory[category] ?? []}
-            onRemoveCard={onRemoveCard}
-          />
-        ))}
-
+        {viewMode === "grid" ? (
+          /* Grid view — flat image grid of all deck cards */
+          <div className="grid grid-cols-3 gap-1.5 p-1">
+            {deck.cards.map((card) => (
+              <div key={card.id} className="relative group/card">
+                <CardImage
+                  imageUri={card.imageUri}
+                  largeUri={card.imageUri}
+                  name={card.name}
+                  zoomOnHover={true}
+                  className="w-full"
+                />
+                <button
+                  onClick={() => onRemoveCard(card.id)}
+                  className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 hover:bg-red-600/80 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  aria-label={`Remove ${card.name}`}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {deck.cards.length === 0 && (
+              <div className="col-span-3 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
+                No cards yet
+              </div>
+            )}
+          </div>
+        ) : (
+          /* List view — categorized droppable zones */
+          CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
+            <DroppableCategory
+              key={category}
+              category={category}
+              cards={cardsByCategory[category] ?? []}
+              onRemoveCard={onRemoveCard}
+            />
+          ))
+        )}
       </div>
     </div>
   );
