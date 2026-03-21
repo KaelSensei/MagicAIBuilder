@@ -9,16 +9,8 @@ function cardLine(card: DeckCard, qty = 1): string {
 /** Plain text export — simple "1 Card Name" format, with optional // note lines */
 export function exportPlainText(deck: Deck): string {
   const lines: string[] = [];
-  if (deck.commander) {
-    lines.push("Commander");
-    lines.push(cardLine(deck.commander));
-    lines.push("");
-  }
-  if (deck.partner) {
-    lines.push("Partner");
-    lines.push(cardLine(deck.partner));
-    lines.push("");
-  }
+  if (deck.commander) { lines.push("Commander", cardLine(deck.commander), ""); }
+  if (deck.partner) { lines.push("Partner", cardLine(deck.partner), ""); }
   lines.push("Deck");
   for (const card of deck.cards) {
     lines.push(cardLine(card, card.quantity));
@@ -31,16 +23,8 @@ export function exportPlainText(deck: Deck): string {
 /** Moxfield format — same as plain text, Moxfield parses "1 Card Name" directly */
 export function exportMoxfield(deck: Deck): string {
   const lines: string[] = [];
-  if (deck.commander) {
-    lines.push("// Commander");
-    lines.push(cardLine(deck.commander));
-    lines.push("");
-  }
-  if (deck.partner) {
-    lines.push("// Partner");
-    lines.push(cardLine(deck.partner));
-    lines.push("");
-  }
+  if (deck.commander) { lines.push("// Commander", cardLine(deck.commander), ""); }
+  if (deck.partner) { lines.push("// Partner", cardLine(deck.partner), ""); }
   lines.push("// Deck");
   for (const card of deck.cards) {
     lines.push(cardLine(card, card.quantity));

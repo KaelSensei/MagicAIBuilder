@@ -5,7 +5,7 @@ import { Share2, Copy, Check, Globe, Lock, Loader2, X } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 
 interface SharePopoverProps {
-  deckId: string;
+  readonly deckId: string;
 }
 
 export function SharePopover({ deckId }: SharePopoverProps) {

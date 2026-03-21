@@ -5,8 +5,8 @@ import { useCollectionStore } from "@/lib/collection/store";
 import { cn } from "@/components/ui/utils";
 
 interface DeckCardOwnershipBadgeProps {
-  scryfallId: string;
-  className?: string;
+  readonly scryfallId: string;
+  readonly className?: string;
 }
 
 export function DeckCardOwnershipBadge({ scryfallId, className }: DeckCardOwnershipBadgeProps) {

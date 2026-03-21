@@ -7,15 +7,17 @@ import { ColorDistribution } from "./ColorDistribution";
 import { ThemeDetector } from "./ThemeDetector";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 
+type BracketLevel = 1 | 2 | 3 | 4;
+
 interface DeckStatsProps {
   readonly stats: DeckStats | null;
-  readonly targetBracket?: 1 | 2 | 3 | 4;
+  readonly targetBracket?: BracketLevel;
   readonly className?: string;
 }
 
 // Bracket-specific targets for each stat
 const BRACKET_TARGETS: Record<
-  1 | 2 | 3 | 4,
+  BracketLevel,
   { ramp: number; draw: number; removal: number; lands: number }
 > = {
   1: { ramp: 8,  draw: 7,  removal: 5,  lands: 37 },
@@ -82,9 +84,9 @@ function BenchmarkRow({ label, value, target, bracket }: BenchmarkRowProps) {
 }
 
 interface StatRowProps {
-  label: string;
-  value: string | number;
-  status?: "ok" | "warn" | "error" | "neutral";
+  readonly label: string;
+  readonly value: string | number;
+  readonly status?: "ok" | "warn" | "error" | "neutral";
 }
 
 function getStatusIcon(status: "ok" | "warn" | "error" | "neutral") {

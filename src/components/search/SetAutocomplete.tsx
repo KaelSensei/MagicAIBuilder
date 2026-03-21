@@ -64,9 +64,9 @@ async function fetchAllSets(): Promise<SetOption[]> {
 }
 
 interface SetAutocompleteProps {
-  value: string;
-  onChange: (code: string, name: string) => void;
-  onClear: () => void;
+  readonly value: string;
+  readonly onChange: (code: string, name: string) => void;
+  readonly onClear: () => void;
 }
 
 export function SetAutocomplete({ value, onChange, onClear }: SetAutocompleteProps) {

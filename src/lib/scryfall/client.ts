@@ -37,7 +37,7 @@ async function rateLimitedFetch(
     ...options,
     headers: {
       ...defaultHeaders,
-      ...(options?.headers ?? {}),
+      ...options?.headers,
     },
   });
 
