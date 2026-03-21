@@ -83,6 +83,7 @@ export interface DeckStore {
 
   // Deck management
   createDeck: (name: string) => Promise<string>;
+  duplicateDeck: (id: string) => Promise<string>;
   deleteDeck: (id: string) => Promise<void>;
   renameDeck: (id: string, name: string) => Promise<void>;
   setActiveDeck: (id: string) => void;
@@ -314,6 +315,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           activeDeckId: state.activeDeckId === id ? null : state.activeDeckId,
         };
       });
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  duplicateDeck: async (id: string) => {
+    set({ isSyncing: true });
+    try {
+      const res = await fetch(`/api/decks/${id}/duplicate`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to duplicate deck");
+      const copy = await res.json() as { id: string };
+      await get().loadDecks();
+      return copy.id;
     } finally {
       set({ isSyncing: false });
     }

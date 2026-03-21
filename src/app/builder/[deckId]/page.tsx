@@ -1,7 +1,7 @@
 "use client";
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   DndContext,
   DragEndEvent,
@@ -30,7 +30,7 @@ import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { ArrowLeft, Check, Crown, Download, Pencil } from "lucide-react";
+import { ArrowLeft, Check, Copy, Crown, Download, FileText, Pencil } from "lucide-react";
 import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -40,6 +40,7 @@ import { CombosPanel } from "@/components/deck/CombosPanel";
 import { useCombos } from "@/hooks/useCombos";
 import { ExportModal } from "@/components/deck/ExportModal";
 import { ImportDialog } from "@/components/deck/ImportDialog";
+import { BulkEditModal } from "@/components/deck/BulkEditModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
@@ -62,11 +63,13 @@ const DEFAULT_FILTERS: Filters = {
 
 export default function BuilderPage() {
   const params = useParams();
+  const router = useRouter();
   const deckId = params.deckId as string;
 
   // Ensure this deck is active
   const { setActiveDeck, addCard, removeCard, setCommander, setPartner, updateCardCategory } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
+  const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
   const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
@@ -370,13 +373,34 @@ export default function BuilderPage() {
           <span className="text-xs text-[var(--text-secondary)]">
             {(deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
           </span>
-          <button
-            onClick={() => setShowExport(true)}
-            className="ml-auto flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-          >
-            <Download className="w-3 h-3" />
-            Export
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            {/* Duplicate deck */}
+            <button
+              onClick={async () => {
+                const newId = await duplicateDeck(deckId);
+                router.push(`/builder/${newId}`);
+              }}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+            >
+              <Copy className="w-3 h-3" />
+              Duplicate
+            </button>
+            {/* Bulk edit — edit deck as plain text */}
+            <BulkEditModal deck={deck}>
+              <button className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">
+                <FileText className="w-3 h-3" />
+                Bulk Edit
+              </button>
+            </BulkEditModal>
+            {/* Export deck */}
+            <button
+              onClick={() => setShowExport(true)}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+            >
+              <Download className="w-3 h-3" />
+              Export
+            </button>
+          </div>
         </div>
 
         {/* 3-panel layout */}
