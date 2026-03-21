@@ -72,7 +72,11 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
 
   const cardIds = cards.map((c) => `deck-card-${c.id}`);
 
-  if (cards.length === 0 && !isOver) return null;
+  // Always keep the droppable ref mounted so dnd-kit can detect drag-over even when empty.
+  // Without this, all categories unmount when the deck is empty and `over` is always null.
+  if (cards.length === 0 && !isOver) {
+    return <div ref={setNodeRef} />;
+  }
 
   const label = CATEGORY_LABELS[category];
 
