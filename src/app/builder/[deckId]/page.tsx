@@ -557,9 +557,12 @@ export default function BuilderPage() {
 
           {/* Resize handle between panel 1 and 2 */}
           <div
-            role="separator"
-            aria-label="Resize search panel"
-            aria-orientation="vertical"
+            role="slider"
+            aria-label="Search panel width"
+            aria-orientation="horizontal"
+            aria-valuemin={220}
+            aria-valuemax={520}
+            aria-valuenow={searchPanelWidth}
             tabIndex={0}
             onMouseDown={handleSearchResize}
             onKeyDown={handleSearchResizeKeyDown}
