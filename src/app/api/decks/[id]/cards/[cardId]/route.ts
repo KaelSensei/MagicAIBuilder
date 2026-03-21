@@ -44,7 +44,7 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
     const body = await request.json();
-    const { category, quantity, isGameChanger, isBanned, isCommander, isPartner, isMaybeboard } = body;
+    const { category, quantity, isGameChanger, isBanned, isCommander, isPartner } = body;
 
     if (
       category !== undefined &&
@@ -65,7 +65,6 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(isBanned !== undefined && { isBanned }),
         ...(isCommander !== undefined && { isCommander }),
         ...(isPartner !== undefined && { isPartner }),
-        ...(isMaybeboard !== undefined && { isMaybeboard }),
       },
     });
 

@@ -28,6 +28,7 @@ import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { ArrowLeft, Check, Crown, Download, Pencil } from "lucide-react";
+import { SharePopover } from "@/components/deck/SharePopover";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
@@ -38,7 +39,6 @@ import { ExportModal } from "@/components/deck/ExportModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
-import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
@@ -53,7 +53,7 @@ export default function BuilderPage() {
   const deckId = params.deckId as string;
 
   // Ensure this deck is active
-  const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory, addToMaybeboard, removeFromMaybeboard, moveToMaybeboard, moveToDeck } = useDeck();
+  const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
@@ -159,11 +159,6 @@ export default function BuilderPage() {
     if (!deck || !stats) return;
     analyzeAI(deck, stats, bracketScore?.overall ?? deck.targetBracket);
   }, [deck, stats, bracketScore, analyzeAI]);
-
-  const handleSnapshotRestore = useCallback(() => {
-    // Reload all decks from DB so the builder reflects the restored state
-    loadDecks();
-  }, [loadDecks]);
 
   const handleAIAddCard = useCallback((cardName: string) => {
     // Search for the card by name and add it
@@ -298,13 +293,16 @@ export default function BuilderPage() {
           <span className="text-xs text-[var(--text-secondary)]">
             {(deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
           </span>
-          <button
-            onClick={() => setShowExport(true)}
-            className="ml-auto flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-          >
-            <Download className="w-3 h-3" />
-            Export
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <SharePopover deckId={deckId} />
+            <button
+              onClick={() => setShowExport(true)}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+            >
+              <Download className="w-3 h-3" />
+              Export
+            </button>
+          </div>
         </div>
 
         {/* 3-panel layout */}
@@ -435,7 +433,6 @@ export default function BuilderPage() {
                 error={searchError as Error | null}
                 totalCards={searchData?.total_cards}
                 onCardClick={handleCardClick}
-                onAddToMaybeboard={addToMaybeboard}
                 draggable={true}
               />
             </div>
@@ -461,9 +458,6 @@ export default function BuilderPage() {
             <DeckEditor
               deck={deck}
               onRemoveCard={removeCard}
-              onMoveToMaybeboard={moveToMaybeboard}
-              onMoveFromMaybeboard={moveToDeck}
-              onRemoveFromMaybeboard={removeFromMaybeboard}
               className="flex-1 overflow-hidden"
             />
           </motion.div>
@@ -484,12 +478,6 @@ export default function BuilderPage() {
               count={stats?.gameChangersCount ?? 0}
               names={stats?.gameChangersList ?? []}
               targetBracket={deck.targetBracket}
-            />
-
-            <SnapshotsPanel
-              deckId={deckId}
-              currentCardCount={deck.cards.length}
-              onRestore={handleSnapshotRestore}
             />
 
             <AISuggestionsPanel
