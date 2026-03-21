@@ -995,7 +995,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   addTag: async (deckId: string, tag: string) => {
     const deck = get().decks[deckId];
     if (!deck) return;
-    const tags = [...(deck.tags ?? []), tag];
+    const trimmed = tag.trim();
+    if (!trimmed) return;
+    const existingTags = deck.tags ?? [];
+    if (existingTags.includes(trimmed)) return;
+    const tags = [...existingTags, trimmed];
     set((state) => ({
       decks: { ...state.decks, [deckId]: { ...state.decks[deckId], tags } },
     }));

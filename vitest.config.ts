@@ -13,7 +13,8 @@ export default defineConfig({
     exclude: ["e2e/**", "node_modules/**", ".next/**"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "json", "html", "lcov"],
+      reportOnFailure: true,
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/app/**", "src/components/**"],
     },

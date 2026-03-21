@@ -59,11 +59,10 @@ function delay(ms: number): Promise<void> {
 }
 
 function buildPrompt(req: SuggestRequest): string {
-  const commander = req.commanderName
-    ? req.partnerName
-      ? `${req.commanderName} + ${req.partnerName}`
-      : req.commanderName
-    : "No commander set";
+  let commander: string;
+  if (!req.commanderName) { commander = "No commander set"; }
+  else if (req.partnerName) { commander = `${req.commanderName} + ${req.partnerName}`; }
+  else { commander = req.commanderName; }
 
   const colors = req.colorIdentity.length > 0 ? req.colorIdentity.join("") : "Colorless";
 

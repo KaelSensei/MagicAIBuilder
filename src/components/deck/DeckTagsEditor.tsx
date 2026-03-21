@@ -18,8 +18,8 @@ const TAG_COLORS: Record<string, string> = {
 const DEFAULT_TAG_COLOR = "bg-[var(--border)] text-[var(--text-secondary)] border-[var(--border)]";
 
 interface DeckTagsEditorProps {
-  deckId: string;
-  tags: string[];
+  readonly deckId: string;
+  readonly tags: readonly string[];
 }
 
 export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {

@@ -8,10 +8,14 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { useCardPrintings } from "@/hooks/useCardPrintings";
 import { getCardImageUri } from "@/lib/scryfall/images";
 
+function getPrintingsLabel(count: number): string {
+  return `${count} printing${count !== 1 ? "s" : ""} available`;
+}
+
 interface PrintingSelectorModalProps {
-  card: ScryfallCard;
-  onSelect: (card: ScryfallCard) => void;
-  onClose: () => void;
+  readonly card: ScryfallCard;
+  readonly onSelect: (card: ScryfallCard) => void;
+  readonly onClose: () => void;
 }
 
 /** Render a raw mana cost string like "{2}{U}{B}" with thin spans */
@@ -57,9 +61,7 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
             <div>
               <h2 className="text-base font-semibold text-(--text-primary)">{card.name}</h2>
               <p className="text-xs text-(--text-secondary) mt-0.5">
-                {isLoading
-                  ? "Loading printings…"
-                  : `${printings.length} printing${printings.length !== 1 ? "s" : ""} available`}
+                {isLoading ? "Loading printings…" : getPrintingsLabel(printings.length)}
               </p>
             </div>
             <button

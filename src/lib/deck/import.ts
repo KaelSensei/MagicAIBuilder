@@ -28,6 +28,40 @@ function clampQuantity(n: number): number {
   return Math.floor(n);
 }
 
+/** Strip trailing set code + collector number: "Card Name (SET) 123" */
+const SET_CODE_PATTERN = /\s+\([A-Z0-9]+\)\s+\d+[a-z*]*\s*$/i;
+
+type ParseState = {
+  commander: string | null;
+  cards: Array<{ name: string; quantity: number }>;
+  errors: string[];
+  inCommanderSection: boolean;
+};
+
+/** Process a single line and mutate state accordingly */
+function processImportLine(line: string, state: ParseState): void {
+  if (/^commander/i.test(line)) { state.inCommanderSection = true; return; }
+  if (/^(deck|main|mainboard|99)/i.test(line)) { state.inCommanderSection = false; return; }
+
+  const match = line.match(/^(\d+)x?\s+(.+)$/);
+  const rawName = match
+    ? match[2].replace(SET_CODE_PATTERN, "").trim()
+    : line.replace(SET_CODE_PATTERN, "").trim();
+  const quantity = match ? clampQuantity(parseInt(match[1], 10)) : 1;
+  const name = sanitizeName(rawName);
+
+  if (!name) {
+    if (match) state.errors.push(`Skipped empty card name on line: ${line.slice(0, 50)}`);
+    return;
+  }
+
+  if (state.inCommanderSection && !state.commander) {
+    state.commander = name;
+  } else {
+    state.cards.push({ name, quantity });
+  }
+}
+
 /** Parse a plain-text decklist (1x Card Name or 1 Card Name format) */
 export function parseTextDecklist(text: string): ImportResult {
   if (typeof text !== "string") {
@@ -40,32 +74,13 @@ export function parseTextDecklist(text: string): ImportResult {
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith("//") && !l.startsWith("#"));
 
-  const cards: Array<{ name: string; quantity: number }> = [];
-  const errors: string[] = [];
-  let commander: string | null = null;
-  let inCommanderSection = false;
+  const state: ParseState = { commander: null, cards: [], errors: [], inCommanderSection: false };
 
   for (const line of lines) {
-    if (/^commander/i.test(line)) { inCommanderSection = true; continue; }
-    if (/^(deck|main|mainboard|99)/i.test(line)) { inCommanderSection = false; continue; }
-
-    const match = line.match(/^(\d+)x?\s+(.+)$/);
-    if (match) {
-      const quantity = clampQuantity(parseInt(match[1], 10));
-      // Strip trailing set code + collector number: "Card Name (SET) 123" or "Card Name (SET) 123p" or "Card Name (SET) 123s"
-      const rawName = match[2].replace(/\s+\([A-Z0-9]+\)\s+\d+[a-z*]*\s*$/i, "").trim();
-      const name = sanitizeName(rawName);
-      if (!name) { errors.push(`Skipped empty card name on line: ${line.slice(0, 50)}`); continue; }
-      if (inCommanderSection && !commander) { commander = name; } else { cards.push({ name, quantity }); }
-    } else if (line) {
-      const rawName = line.replace(/\s+\([A-Z0-9]+\)\s+\d+[a-z*]*\s*$/i, "").trim();
-      const name = sanitizeName(rawName);
-      if (!name) continue;
-      if (inCommanderSection && !commander) { commander = name; } else { cards.push({ name, quantity: 1 }); }
-    }
+    processImportLine(line, state);
   }
 
-  return { commander, cards, errors };
+  return { commander: state.commander, cards: state.cards, errors: state.errors };
 }
 
 /** Export deck to plain text */

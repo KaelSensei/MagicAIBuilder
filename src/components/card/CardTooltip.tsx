@@ -10,8 +10,8 @@ const TOOLTIP_HEIGHT = 334; // image 310 + price row
 const OFFSET_X = 16;
 
 interface CardTooltipProps {
-  card: DeckCard;
-  children: React.ReactNode;
+  readonly card: DeckCard;
+  readonly children: React.ReactNode;
 }
 
 export function CardTooltip({ card, children }: CardTooltipProps) {
@@ -48,7 +48,7 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
   }, []);
 
   return (
-    <div onMouseEnter={handleMouseEnter} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+    <div role="group" onMouseEnter={handleMouseEnter} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
       {children}
       {pos &&
         createPortal(

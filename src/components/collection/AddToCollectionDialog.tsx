@@ -9,7 +9,7 @@ import { searchCards } from "@/lib/scryfall/client";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { cn } from "@/components/ui/utils";
 
-const CONDITIONS: CardCondition[] = ["NM", "LP", "MP", "HP", "DMG"];
+const CONDITIONS: readonly CardCondition[] = ["NM", "LP", "MP", "HP", "DMG"];
 
 export function AddToCollectionDialog() {
   const [open, setOpen] = useState(false);
@@ -144,7 +144,7 @@ export function AddToCollectionDialog() {
 
                 {/* Quantity */}
                 <div className="flex items-center gap-3">
-                  <label className="text-xs text-[var(--text-secondary)] w-20">Quantity</label>
+                  <span className="text-xs text-[var(--text-secondary)] w-20">Quantity</span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -164,7 +164,7 @@ export function AddToCollectionDialog() {
 
                 {/* Condition */}
                 <div className="flex items-center gap-3">
-                  <label className="text-xs text-[var(--text-secondary)] w-20">Condition</label>
+                  <span className="text-xs text-[var(--text-secondary)] w-20">Condition</span>
                   <div className="flex gap-1">
                     {CONDITIONS.map((c) => (
                       <button
@@ -185,7 +185,7 @@ export function AddToCollectionDialog() {
 
                 {/* Foil */}
                 <div className="flex items-center gap-3">
-                  <label className="text-xs text-[var(--text-secondary)] w-20">Foil</label>
+                  <span className="text-xs text-[var(--text-secondary)] w-20">Foil</span>
                   <button
                     onClick={() => setFoil((f) => !f)}
                     className={cn(

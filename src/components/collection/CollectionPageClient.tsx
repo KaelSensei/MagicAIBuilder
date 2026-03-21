@@ -110,7 +110,7 @@ export function CollectionPageClient() {
         </div>
 
         {/* Cards */}
-        {filtered.length === 0 ? (
+        {filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-[var(--text-secondary)] gap-3">
             <Package className="w-10 h-10 opacity-40" />
             {allCards.length === 0 ? (
@@ -124,7 +124,8 @@ export function CollectionPageClient() {
               <p className="text-sm">No cards match your search.</p>
             )}
           </div>
-        ) : viewMode === "grid" ? (
+        )}
+        {filtered.length > 0 && viewMode === "grid" && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
             {filtered.map((card) => (
               <CollectionGridCard
@@ -135,7 +136,8 @@ export function CollectionPageClient() {
               />
             ))}
           </div>
-        ) : (
+        )}
+        {filtered.length > 0 && viewMode !== "grid" && (
           <div className="space-y-1">
             <div className="grid grid-cols-[1fr_80px_80px_80px_100px_40px] gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)] uppercase tracking-wide border-b border-[var(--border)]">
               <span>Card</span>

@@ -7,12 +7,12 @@ import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface SearchResultsProps {
-  cards: ScryfallCard[];
-  isLoading: boolean;
-  error: Error | null;
-  totalCards?: number;
-  onCardClick?: (card: ScryfallCard) => void;
-  draggable?: boolean;
+  readonly cards: readonly ScryfallCard[];
+  readonly isLoading: boolean;
+  readonly error: Error | null;
+  readonly totalCards?: number;
+  readonly onCardClick?: (card: ScryfallCard) => void;
+  readonly draggable?: boolean;
 }
 
 export function SearchResults({

@@ -5,8 +5,8 @@ import { FileText } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 
 interface CardNoteInlineProps {
-  cardId: string;
-  notes?: string | null;
+  readonly cardId: string;
+  readonly notes?: string | null;
 }
 
 export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
@@ -65,6 +65,8 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
 
   return (
     <div
+      role="dialog"
+      aria-label="Card note editor"
       className="absolute left-0 right-0 top-full z-30 bg-[var(--surface-elevated,var(--surface))] border border-[var(--border)] rounded-lg shadow-lg p-2 mt-0.5"
       onClick={(e) => e.stopPropagation()}
     >

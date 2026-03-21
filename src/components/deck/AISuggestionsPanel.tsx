@@ -7,13 +7,13 @@ import { cn } from "@/components/ui/utils";
 import type { AISuggestionResult } from "@/hooks/useAISuggestions";
 
 interface AISuggestionsPanelProps {
-  result: AISuggestionResult | null;
-  isLoading: boolean;
-  error: string | null;
-  onAnalyze: () => void;
-  onAddCard: (cardName: string) => void;
-  onRemoveCard: (cardName: string) => void;
-  disabled?: boolean;
+  readonly result: AISuggestionResult | null;
+  readonly isLoading: boolean;
+  readonly error: string | null;
+  readonly onAnalyze: () => void;
+  readonly onAddCard: (cardName: string) => void;
+  readonly onRemoveCard: (cardName: string) => void;
+  readonly disabled?: boolean;
 }
 
 const PRIORITY_COLORS = {

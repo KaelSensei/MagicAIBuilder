@@ -6,7 +6,7 @@ function cardLine(card: DeckCard, qty = 1): string {
   return `${qty} ${card.name}`;
 }
 
-/** Plain text export — simple "1 Card Name" format */
+/** Plain text export — simple "1 Card Name" format, with optional // note lines */
 export function exportPlainText(deck: Deck): string {
   const lines: string[] = [];
   if (deck.commander) {
@@ -22,6 +22,8 @@ export function exportPlainText(deck: Deck): string {
   lines.push("Deck");
   for (const card of deck.cards) {
     lines.push(cardLine(card, card.quantity));
+    const note = card.notes?.trim();
+    if (note) lines.push(`// ${note}`);
   }
   return lines.join("\n");
 }
@@ -126,6 +128,6 @@ export function downloadFile(content: string, filename: string, mimeType = "text
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   URL.revokeObjectURL(url);
 }

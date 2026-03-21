@@ -3,8 +3,8 @@
 import { cn } from "@/components/ui/utils";
 
 interface ColorDistributionProps {
-  distribution: Record<string, number>;
-  className?: string;
+  readonly distribution: Readonly<Record<string, number>>;
+  readonly className?: string;
 }
 
 const COLOR_CONFIG: Array<{

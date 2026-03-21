@@ -17,6 +17,73 @@ interface UseKeyboardShortcutsOptions {
   isInputFocused?: boolean;
 }
 
+/** Handle Ctrl/Cmd modifier shortcuts — returns true if the event was handled */
+function handleModifierShortcut(
+  e: KeyboardEvent,
+  modKey: boolean,
+  undo: () => void,
+  forceSave: () => void,
+): boolean {
+  if (!modKey) return false;
+  switch (e.key) {
+    case "z": e.preventDefault(); undo(); return true;
+    case "s": e.preventDefault(); forceSave(); return true;
+    case "e": e.preventDefault(); useUIStore.getState().setShowExportModal(true); return true;
+    case "i": e.preventDefault(); useUIStore.getState().setShowImportModal(true); return true;
+    default: return false;
+  }
+}
+
+/** Handle single-key shortcuts (slash, escape, arrows, enter) */
+function handleSingleKeyShortcut(
+  e: KeyboardEvent,
+  searchResults: ScryfallCard[],
+  onAddCard: (card: ScryfallCard) => void,
+): void {
+  switch (e.key) {
+    case "/":
+      e.preventDefault();
+      useUIStore.getState().focusSearch();
+      break;
+    case "?":
+      e.preventDefault();
+      useUIStore.getState().setShowKeyboardModal(true);
+      break;
+    case "Escape": {
+      const ui = useUIStore.getState();
+      if (ui.showKeyboardModal) { ui.setShowKeyboardModal(false); }
+      else if (ui.showExportModal) { ui.setShowExportModal(false); }
+      else if (ui.showImportModal) { ui.setShowImportModal(false); }
+      else { ui.clearSearch(); }
+      break;
+    }
+    case "ArrowDown":
+      if (searchResults.length === 0) break;
+      e.preventDefault();
+      useUIStore.getState().setKeyboardSelectedIndex(
+        Math.min(useUIStore.getState().keyboardSelectedIndex + 1, searchResults.length - 1)
+      );
+      break;
+    case "ArrowUp":
+      if (searchResults.length === 0) break;
+      e.preventDefault();
+      useUIStore.getState().setKeyboardSelectedIndex(
+        Math.max(useUIStore.getState().keyboardSelectedIndex - 1, 0)
+      );
+      break;
+    case "Enter": {
+      if (searchResults.length === 0) break;
+      e.preventDefault();
+      const idx = useUIStore.getState().keyboardSelectedIndex;
+      const card = searchResults[idx >= 0 ? idx : 0];
+      if (card) { onAddCard(card); useUIStore.getState().resetKeyboardSelection(); }
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 export function useKeyboardShortcuts({
   searchResults,
   onAddCard,
@@ -29,106 +96,14 @@ export function useKeyboardShortcuts({
     (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().includes("MAC");
       const modKey = isMac ? e.metaKey : e.ctrlKey;
+      if (handleModifierShortcut(e, modKey, undo, forceSave)) return;
+
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       const isEditable =
         tag === "input" || tag === "textarea" || (e.target as HTMLElement)?.isContentEditable;
-
-      // ----------------------------------------------------------------
-      // Modifier shortcuts — always active, regardless of focus
-      // ----------------------------------------------------------------
-      if (modKey && e.key === "z") {
-        e.preventDefault();
-        undo();
-        return;
-      }
-
-      if (modKey && e.key === "s") {
-        e.preventDefault();
-        forceSave();
-        return;
-      }
-
-      if (modKey && e.key === "e") {
-        e.preventDefault();
-        useUIStore.getState().setShowExportModal(true);
-        return;
-      }
-
-      if (modKey && e.key === "i") {
-        e.preventDefault();
-        useUIStore.getState().setShowImportModal(true);
-        return;
-      }
-
-      // ----------------------------------------------------------------
-      // Single-key shortcuts — suppressed when a text field is focused
-      // ----------------------------------------------------------------
       if (isEditable || isInputFocused) return;
 
-      switch (e.key) {
-        case "/": {
-          e.preventDefault();
-          useUIStore.getState().focusSearch();
-          break;
-        }
-
-        case "?": {
-          e.preventDefault();
-          useUIStore.getState().setShowKeyboardModal(true);
-          break;
-        }
-
-        case "Escape": {
-          // Close modals in priority order; if none open, clear search
-          const ui = useUIStore.getState();
-          if (ui.showKeyboardModal) {
-            ui.setShowKeyboardModal(false);
-          } else if (ui.showExportModal) {
-            ui.setShowExportModal(false);
-          } else if (ui.showImportModal) {
-            ui.setShowImportModal(false);
-          } else {
-            ui.clearSearch();
-          }
-          break;
-        }
-
-        case "ArrowDown": {
-          if (searchResults.length === 0) break;
-          e.preventDefault();
-          // Read current index directly from store — avoids stale closure
-          const curDown = useUIStore.getState().keyboardSelectedIndex;
-          useUIStore
-            .getState()
-            .setKeyboardSelectedIndex(Math.min(curDown + 1, searchResults.length - 1));
-          break;
-        }
-
-        case "ArrowUp": {
-          if (searchResults.length === 0) break;
-          e.preventDefault();
-          const curUp = useUIStore.getState().keyboardSelectedIndex;
-          useUIStore
-            .getState()
-            .setKeyboardSelectedIndex(Math.max(curUp - 1, 0));
-          break;
-        }
-
-        case "Enter": {
-          if (searchResults.length === 0) break;
-          e.preventDefault();
-          const idx = useUIStore.getState().keyboardSelectedIndex;
-          const card = searchResults[idx >= 0 ? idx : 0];
-          if (card) {
-            onAddCard(card);
-            useUIStore.getState().resetKeyboardSelection();
-          }
-          break;
-        }
-
-        default:
-          break;
-      }
+      handleSingleKeyShortcut(e, searchResults, onAddCard);
     },
     [undo, forceSave, isInputFocused, searchResults, onAddCard]
   );

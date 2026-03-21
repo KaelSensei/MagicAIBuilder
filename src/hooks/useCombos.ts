@@ -20,7 +20,7 @@ export function useCombos(deck: Deck | null) {
   const enabled = allCardNames.length >= MIN_CARDS;
 
   return useQuery({
-    queryKey: ["combos", "spellbook", allCardNames.sort().join(",")],
+    queryKey: ["combos", "spellbook", allCardNames.toSorted((a, b) => a.localeCompare(b)).join(",")],
     queryFn: () => fetchCombosForDeck(allCardNames),
     enabled,
     staleTime: STALE_TIME_1H,

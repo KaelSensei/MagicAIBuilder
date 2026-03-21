@@ -12,10 +12,10 @@ import {
 } from "@/lib/db/snapshot-api";
 
 interface SnapshotsPanelProps {
-  deckId: string;
-  currentCardCount: number;
+  readonly deckId: string;
+  readonly currentCardCount: number;
   /** Called after a successful restore so the builder can reload the deck */
-  onRestore?: () => void;
+  readonly onRestore?: () => void;
 }
 
 function formatDate(iso: string) {
@@ -191,15 +191,17 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
       {/* Expandable snapshot list */}
       {isExpanded && (
         <div className="border-t border-[var(--border)] max-h-72 overflow-y-auto">
-          {isLoading ? (
+          {isLoading && (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="w-4 h-4 animate-spin text-[var(--text-secondary)]" />
             </div>
-          ) : snapshots.length === 0 ? (
+          )}
+          {!isLoading && snapshots.length === 0 && (
             <p className="text-xs text-[var(--text-secondary)] text-center py-6 italic">
               No snapshots yet. Save one above!
             </p>
-          ) : (
+          )}
+          {!isLoading && snapshots.length > 0 && (
             <ul className="divide-y divide-[var(--border)]">
               {snapshots.map((snap) => (
                 <li key={snap.id} className="px-3 py-2 hover:bg-[var(--surface-hover)] transition-colors">
@@ -221,7 +223,7 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 shrink-0">
-                      {confirmRestore === snap.id ? (
+                      {confirmRestore === snap.id && (
                         <>
                           <button
                             onClick={() => handleRestore(snap.id)}
@@ -237,7 +239,8 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                             No
                           </button>
                         </>
-                      ) : confirmDelete === snap.id ? (
+                      )}
+                      {confirmDelete === snap.id && confirmRestore !== snap.id && (
                         <>
                           <button
                             onClick={() => handleDelete(snap.id)}
@@ -253,7 +256,8 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                             No
                           </button>
                         </>
-                      ) : (
+                      )}
+                      {confirmRestore !== snap.id && confirmDelete !== snap.id && (
                         <>
                           <button
                             onClick={() => setConfirmRestore(snap.id)}

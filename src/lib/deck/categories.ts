@@ -13,7 +13,7 @@ function isRamp(card: ScryfallCard): boolean {
     text.includes("search your library for a basic land") ||
     text.includes("search your library for a land") ||
     text.includes("put a land") ||
-    text.includes("put up to") && text.includes("land") ||
+    (text.includes("put up to") && text.includes("land")) ||
     (text.includes("mana of any color") && card.cmc <= 3) ||
     (type.includes("artifact") && text.includes("add") && text.includes("{"))
   );
@@ -24,8 +24,8 @@ function isBoardWipe(card: ScryfallCard): boolean {
   return (
     text.includes("destroy all") ||
     text.includes("exile all") ||
-    text.includes("return all") && text.includes("to") && text.includes("hand") ||
-    text.includes("deals") && text.includes("damage to each") ||
+    (text.includes("return all") && text.includes("to") && text.includes("hand")) ||
+    (text.includes("deals") && text.includes("damage to each")) ||
     text.includes("each creature gets -")
   );
 }
@@ -38,10 +38,10 @@ function isRemoval(card: ScryfallCard): boolean {
   return (
     text.includes("destroy target") ||
     text.includes("exile target") ||
-    text.includes("return target") && text.includes("to") && text.includes("hand") ||
+    (text.includes("return target") && text.includes("to") && text.includes("hand")) ||
     (text.includes("deals") && text.includes("damage to target")) ||
     text.includes("-x/-x") ||
-    text.includes("gets -") && text.includes("until end of turn")
+    (text.includes("gets -") && text.includes("until end of turn"))
   );
 }
 
@@ -76,7 +76,7 @@ function isWinCondition(card: ScryfallCard): boolean {
     text.includes("infinite") || // text-based check
     keywords.includes("infect") ||
     text.includes("poison counter") ||
-    text.includes("combat damage") && text.includes("each opponent") ||
+    (text.includes("combat damage") && text.includes("each opponent")) ||
     text.includes("storm count")
   );
 }
@@ -86,12 +86,12 @@ function isProtection(card: ScryfallCard): boolean {
   const keywords = card.keywords?.map((k) => k.toLowerCase()) ?? [];
 
   return (
-    text.includes("hexproof") && card.cmc <= 3 ||
-    text.includes("shroud") && card.cmc <= 3 ||
+    (text.includes("hexproof") && card.cmc <= 3) ||
+    (text.includes("shroud") && card.cmc <= 3) ||
     keywords.includes("counterspell") ||
     text.includes("counter target") ||
     text.includes("can't be countered") ||
-    text.includes("indestructible") && card.cmc <= 3
+    (text.includes("indestructible") && card.cmc <= 3)
   );
 }
 
@@ -143,7 +143,7 @@ export const CATEGORY_LABELS: Record<CardCategory, string> = {
 };
 
 /** Ordered list of categories for display */
-export const CATEGORY_ORDER: CardCategory[] = [
+export const CATEGORY_ORDER: readonly CardCategory[] = [
   "commander",
   "creature",
   "ramp",

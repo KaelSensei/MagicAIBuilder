@@ -16,6 +16,11 @@ interface ToastStore {
   remove: (id: string) => void;
 }
 
+/** Returns a state updater that removes the toast with the given id */
+function withoutToast(id: string) {
+  return (state: ToastStore) => ({ toasts: state.toasts.filter((t) => t.id !== id) });
+}
+
 export const useToastStore = create<ToastStore>((set) => ({
   toasts: [],
   add: (type, message) => {
@@ -23,17 +28,9 @@ export const useToastStore = create<ToastStore>((set) => ({
     set((state) => ({ toasts: [...state.toasts, { id, type, message }] }));
     // Auto-dismiss after 5s for warnings, 3s for others
     const duration = type === "warning" ? 5000 : 3000;
-    setTimeout(() => {
-      set((state) => ({
-        toasts: state.toasts.filter((t) => t.id !== id),
-      }));
-    }, duration);
+    setTimeout(() => set(withoutToast(id)), duration);
   },
-  remove: (id) => {
-    set((state) => ({
-      toasts: state.toasts.filter((t) => t.id !== id),
-    }));
-  },
+  remove: (id) => set(withoutToast(id)),
 }));
 
 /** Convenience hook — returns typed toast helpers */

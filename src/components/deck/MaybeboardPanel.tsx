@@ -6,10 +6,10 @@ import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
 
 interface MaybeboardPanelProps {
-  cards: DeckCard[];
-  onMoveToDecks: (cardId: string) => void;
-  onRemove: (cardId: string) => void;
-  className?: string;
+  readonly cards: readonly DeckCard[];
+  readonly onMoveToDecks: (cardId: string) => void;
+  readonly onRemove: (cardId: string) => void;
+  readonly className?: string;
 }
 
 export function MaybeboardPanel({

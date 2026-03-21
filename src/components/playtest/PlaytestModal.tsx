@@ -10,8 +10,8 @@ import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import { cn } from "@/components/ui/utils";
 
 interface PlaytestModalProps {
-  deck: Deck;
-  onClose: () => void;
+  readonly deck: Deck;
+  readonly onClose: () => void;
 }
 
 // Single card in the hand "fan"
@@ -113,6 +113,23 @@ function LibraryPile({ count }: { count: number }) {
   );
 }
 
+function PlaytestStartScreen({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-6">
+      <div className="text-center">
+        <p className="text-white/70 text-sm mb-1">Ready to test your deck?</p>
+        <p className="text-white/40 text-xs">Shuffle and draw your opening hand of 7 cards.</p>
+      </div>
+      <button
+        onClick={onStart}
+        className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors text-sm shadow-lg shadow-purple-900/50"
+      >
+        Draw Opening Hand
+      </button>
+    </div>
+  );
+}
+
 export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const { state, startPlaytest, mulligan, drawCard, nextTurn, stopPlaytest } =
     usePlaytest();
@@ -141,6 +158,10 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     onClose();
   }, [stopPlaytest, onClose]);
 
+  const turnBadge = state
+    ? `Turn ${state.turn}${state.mulliganCount > 0 ? ` · ${state.mulliganCount} mulligan${state.mulliganCount > 1 ? "s" : ""}` : ""}`
+    : null;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -153,13 +174,10 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <Layers className="w-5 h-5 text-purple-400" />
-            <h2 className="text-white font-semibold">
-              Playtest — {deck.name}
-            </h2>
-            {state && (
+            <h2 className="text-white font-semibold">Playtest — {deck.name}</h2>
+            {turnBadge && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
-                Turn {state.turn}
-                {state.mulliganCount > 0 && ` · ${state.mulliganCount} mulligan${state.mulliganCount > 1 ? "s" : ""}`}
+                {turnBadge}
               </span>
             )}
           </div>
@@ -173,23 +191,8 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
 
         {/* Main content */}
         <div className="flex-1 flex flex-col items-center justify-center gap-8 p-6">
-          {!started ? (
-            /* Start screen */
-            <div className="flex flex-col items-center gap-6">
-              <div className="text-center">
-                <p className="text-white/70 text-sm mb-1">Ready to test your deck?</p>
-                <p className="text-white/40 text-xs">
-                  Shuffle and draw your opening hand of 7 cards.
-                </p>
-              </div>
-              <button
-                onClick={handleStart}
-                className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors text-sm shadow-lg shadow-purple-900/50"
-              >
-                Draw Opening Hand
-              </button>
-            </div>
-          ) : state ? (
+          {!started && <PlaytestStartScreen onStart={handleStart} />}
+          {started && state && (
             <>
               {/* Stats bar */}
               <div className="flex items-center gap-6 text-sm">
@@ -286,7 +289,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 </button>
               </div>
             </>
-          ) : null}
+          )}
         </div>
       </motion.div>
     </AnimatePresence>

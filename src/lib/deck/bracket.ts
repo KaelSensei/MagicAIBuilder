@@ -21,11 +21,17 @@ function scoreLinear(
   return 4;
 }
 
+function cmcToScore(avgCmc: number): number {
+  if (avgCmc <= 2.5) return 4;
+  if (avgCmc <= 3.0) return 3;
+  if (avgCmc <= 3.5) return 2;
+  return 1;
+}
+
 function scoreRamp(rampCount: number, avgCmc: number): number {
   // High ramp + low avg cmc = higher bracket
   const rampScore = scoreLinear(rampCount, [5, 8, 12]);
-  const cmcScore = avgCmc <= 2.5 ? 4 : avgCmc <= 3.0 ? 3 : avgCmc <= 3.5 ? 2 : 1;
-  return Math.round((rampScore + cmcScore) / 2);
+  return Math.round((rampScore + cmcToScore(avgCmc)) / 2);
 }
 
 function scoreDraw(drawCount: number): number {
@@ -61,7 +67,11 @@ function scoreWinSpeed(cards: Deck["cards"], avgCmc: number): number {
     );
   }).length;
 
-  const speed = fastWins > 3 ? 4 : fastWins > 1 ? 3 : winCons > 2 ? 2 : 1;
+  let speed: number;
+  if (fastWins > 3) { speed = 4; }
+  else if (fastWins > 1) { speed = 3; }
+  else if (winCons > 2) { speed = 2; }
+  else { speed = 1; }
   const cmcFactor = avgCmc <= 2.5 ? 1 : 0;
   return Math.min(4, speed + cmcFactor);
 }

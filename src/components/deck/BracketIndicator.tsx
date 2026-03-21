@@ -199,8 +199,8 @@ export function BracketIndicator({
           <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
             Warnings
           </p>
-          {score.warnings.map((warning, i) => (
-            <div key={i} className="flex items-start gap-1.5">
+          {score.warnings.map((warning) => (
+            <div key={warning} className="flex items-start gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
               <span className="text-xs text-[var(--text-secondary)]">
                 {warning}

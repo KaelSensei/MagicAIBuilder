@@ -13,9 +13,9 @@ import { maxQuantity } from "@/lib/deck/multiples";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface CardListItemProps {
-  card: DeckCard;
-  onRemove?: (id: string) => void;
-  className?: string;
+  readonly card: DeckCard;
+  readonly onRemove?: (id: string) => void;
+  readonly className?: string;
 }
 
 /** Convert a DeckCard back to a minimal ScryfallCard shape for the printing modal */

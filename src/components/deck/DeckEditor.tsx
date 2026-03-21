@@ -16,15 +16,15 @@ import { useDeckStore } from "@/lib/deck/store";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 
 interface DeckEditorProps {
-  deck: Deck;
-  onRemoveCard: (id: string) => void;
-  className?: string;
+  readonly deck: Deck;
+  readonly onRemoveCard: (id: string) => void;
+  readonly className?: string;
 }
 
 interface CategorySectionProps {
-  category: CardCategory;
-  cards: Deck["cards"];
-  onRemoveCard: (id: string) => void;
+  readonly category: CardCategory;
+  readonly cards: Deck["cards"];
+  readonly onRemoveCard: (id: string) => void;
 }
 
 // Draggable card list item (for intra-deck category drag)
@@ -65,6 +65,12 @@ function DraggableDeckCard({
   );
 }
 
+function getDropZoneClass(isOver: boolean, isEmpty: boolean): string {
+  if (isOver) return "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40";
+  if (isEmpty) return "min-h-[32px] border border-dashed border-[var(--border)] rounded opacity-40";
+  return "min-h-[8px]";
+}
+
 function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
@@ -99,14 +105,7 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
       {!collapsed && (
         <div
           ref={setNodeRef}
-          className={cn(
-            "pl-1 rounded transition-colors",
-            isOver
-              ? "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40"
-              : cards.length === 0
-              ? "min-h-[32px] border border-dashed border-[var(--border)] rounded opacity-40"
-              : "min-h-[8px]"
-          )}
+          className={cn("pl-1 rounded transition-colors", getDropZoneClass(isOver, cards.length === 0))}
         >
           <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
             {cards.map((card) => (

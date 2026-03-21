@@ -8,9 +8,9 @@ import { ThemeDetector } from "./ThemeDetector";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 
 interface DeckStatsProps {
-  stats: DeckStats | null;
-  targetBracket?: 1 | 2 | 3 | 4;
-  className?: string;
+  readonly stats: DeckStats | null;
+  readonly targetBracket?: 1 | 2 | 3 | 4;
+  readonly className?: string;
 }
 
 // Bracket-specific targets for each stat
@@ -29,23 +29,29 @@ function pct(value: number, target: number) {
 }
 
 interface BenchmarkRowProps {
-  label: string;
-  value: number;
-  target: number;
-  bracket: 1 | 2 | 3 | 4;
+  readonly label: string;
+  readonly value: number;
+  readonly target: number;
+  readonly bracket: 1 | 2 | 3 | 4;
+}
+
+function getRatioStatus(ratio: number): "ok" | "warn" | "error" {
+  if (ratio >= 90) return "ok";
+  if (ratio >= 70) return "warn";
+  return "error";
+}
+
+function getStatusColor(status: "ok" | "warn" | "error" | "neutral"): string {
+  if (status === "ok") return "text-green-400";
+  if (status === "warn") return "text-amber-400";
+  if (status === "error") return "text-red-400";
+  return "";
 }
 
 function BenchmarkRow({ label, value, target, bracket }: BenchmarkRowProps) {
   const ratio = pct(value, target);
-  const status: "ok" | "warn" | "error" =
-    ratio >= 90 ? "ok" : ratio >= 70 ? "warn" : "error";
-
-  const color =
-    status === "ok"
-      ? "text-green-400"
-      : status === "warn"
-      ? "text-amber-400"
-      : "text-red-400";
+  const status = getRatioStatus(ratio);
+  const color = getStatusColor(status);
 
   const icon =
     status === "ok" ? (
@@ -81,15 +87,15 @@ interface StatRowProps {
   status?: "ok" | "warn" | "error" | "neutral";
 }
 
+function getStatusIcon(status: "ok" | "warn" | "error" | "neutral") {
+  if (status === "ok") return <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />;
+  if (status === "warn") return <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />;
+  if (status === "error") return <AlertTriangle className="w-3.5 h-3.5 text-red-500" />;
+  return null;
+}
+
 function StatRow({ label, value, status = "neutral" }: StatRowProps) {
-  const icon =
-    status === "ok" ? (
-      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-    ) : status === "warn" ? (
-      <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-    ) : status === "error" ? (
-      <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
-    ) : null;
+  const icon = getStatusIcon(status);
 
   return (
     <div className="flex items-center justify-between py-1">
@@ -116,12 +122,10 @@ export function DeckStats({ stats, targetBracket = 2, className }: DeckStatsProp
   }
 
   const targets = BRACKET_TARGETS[targetBracket];
-  const cardCountStatus =
-    stats.totalCards === 100
-      ? "ok"
-      : stats.totalCards > 100
-      ? "error"
-      : "warn";
+  let cardCountStatus: "ok" | "warn" | "error";
+  if (stats.totalCards === 100) { cardCountStatus = "ok"; }
+  else if (stats.totalCards > 100) { cardCountStatus = "error"; }
+  else { cardCountStatus = "warn"; }
 
   return (
     <div className={cn("space-y-3", className)}>

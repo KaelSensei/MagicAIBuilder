@@ -45,6 +45,13 @@ import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
 import { useResizePanel } from "@/hooks/useResizePanel";
 
+type SearchMode = "name" | "set" | "color";
+function getSearchModeLabel(mode: SearchMode): string {
+  if (mode === "name") return "Name";
+  if (mode === "set") return "By Set";
+  return "By Color";
+}
+
 const DEFAULT_FILTERS: Filters = {
   colors: [],
   types: [],
@@ -97,10 +104,12 @@ export default function BuilderPage() {
   const [partnerMode, setPartnerMode] = useState(false);
 
   // Search mode
-  type SearchMode = "name" | "set" | "color";
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
   const [selectedSet, setSelectedSet] = useState<string>("");
   const [colorFilter, setColorFilter] = useState<string[]>([]);
+  const toggleColorFilter = useCallback((code: string) => {
+    setColorFilter((prev) => prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]);
+  }, []);
 
   // Inline deck name editing
   const [isEditingName, setIsEditingName] = useState(false);
@@ -362,7 +371,7 @@ export default function BuilderPage() {
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     )}
                   >
-                    {mode === "name" ? "Name" : mode === "set" ? "By Set" : "By Color"}
+                    {getSearchModeLabel(mode)}
                   </button>
                 ))}
               </div>
@@ -446,13 +455,7 @@ export default function BuilderPage() {
                     ].map((c) => (
                       <button
                         key={c.code}
-                        onClick={() =>
-                          setColorFilter((prev) =>
-                            prev.includes(c.code)
-                              ? prev.filter((x) => x !== c.code)
-                              : [...prev, c.code]
-                          )
-                        }
+                        onClick={() => toggleColorFilter(c.code)}
                         className={cn(
                           "w-9 h-9 rounded-full transition-all border-2 p-0.5",
                           colorFilter.includes(c.code)
@@ -493,6 +496,9 @@ export default function BuilderPage() {
 
           {/* Resize handle between panel 1 and 2 */}
           <div
+            role="separator"
+            aria-orientation="vertical"
+            tabIndex={0}
             onMouseDown={handleSearchResize}
             className="w-1 shrink-0 cursor-col-resize hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 transition-colors group relative z-10"
             title="Drag to resize"

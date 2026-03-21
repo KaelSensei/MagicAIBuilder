@@ -4,9 +4,9 @@ import { cn } from "@/components/ui/utils";
 import type { DetectedTheme } from "@/lib/deck/themes";
 
 interface ThemeDetectorProps {
-  themes?: DetectedTheme[];
-  maxThemes?: number;
-  className?: string;
+  readonly themes?: readonly DetectedTheme[];
+  readonly maxThemes?: number;
+  readonly className?: string;
 }
 
 const THEME_COLORS: Record<string, string> = {

@@ -68,14 +68,14 @@ export function computeDeckStats(deck: Deck): DeckStats {
 
   // Color identity violations — only check if a commander is set
   // Include partner's color identity (both commanders contribute to the identity)
-  const commanderIdentity = [
+  const commanderIdentitySet = new Set([
     ...(deck.commander?.colorIdentity ?? []),
     ...(deck.partner?.colorIdentity ?? []),
-  ];
+  ]);
   const colorIdentityViolations = deck.commander
     ? deck.cards
         .filter((c) =>
-          c.colorIdentity.some((color) => !commanderIdentity.includes(color))
+          c.colorIdentity.some((color) => !commanderIdentitySet.has(color))
         )
         .map((c) => c.name)
     : [];
