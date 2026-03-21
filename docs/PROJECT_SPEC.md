@@ -122,6 +122,21 @@ interface DeckCard {
   artCropUri: string;            // Art crop for backgrounds
   category: CardCategory;        // Auto-assigned or manual
   quantity: number;              // Always 1 in Commander (except basics)
+
+  // Double-faced card support (MDFCs, Transform)
+  cardFaces?: CardFace[];        // Present when card has multiple faces
+  layout: string;                // "normal" | "modal_dfc" | "transform" | "adventure" | etc.
+
+  // Commander-specific keywords (detected from Scryfall keywords array)
+  keywords: string[];            // ["Partner", "Companion", "Friends forever", etc.]
+}
+
+interface CardFace {
+  name: string;
+  manaCost: string;
+  typeLine: string;
+  oracleText: string;
+  imageUri: string;
 }
 
 type CardCategory =
@@ -141,15 +156,27 @@ type CardCategory =
   | "protection"
   | "other";
 
+// Commander pairing types — determines how 2nd commander slot works
+type CommanderPairingType =
+  | "none"              // Single commander, no partner
+  | "partner"           // Generic "Partner" keyword (any two Partner commanders)
+  | "partner_with"      // "Partner with [specific card]" (e.g., Brallin + Shabraz)
+  | "friends_forever"   // "Friends forever" keyword (Doctor Who / Secret Lair)
+  | "background"        // Commander has "Choose a Background" + a Background enchantment
+  | "doctor";           // "Doctor's companion" (Doctor Who set)
+
 interface Deck {
   id: string;
   name: string;
   commander: DeckCard | null;
-  partner: DeckCard | null;      // For partner commanders
-  cards: DeckCard[];             // The 99 (or 98 with partner)
+  partner: DeckCard | null;      // 2nd commander (partner, background, etc.)
+  pairingType: CommanderPairingType;
+  companion: DeckCard | null;    // Companion (outside the 100, sideboard slot)
+  cards: DeckCard[];             // The 99 (or 98 with partner, always 100 total with commanders)
   format: "commander" | "brawl";
   targetBracket: 1 | 2 | 3 | 4;
   budget: number | null;         // Max price per card in USD
+  budgetType: "per_card" | "total"; // Budget applies per card or to the whole deck
   createdAt: Date;
   updatedAt: Date;
 }
