@@ -26,6 +26,7 @@ import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
 import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery } from "@/lib/scryfall/search";
+import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -56,7 +57,7 @@ export default function BuilderPage() {
   const deckId = params.deckId as string;
 
   // Ensure this deck is active
-  const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory } = useDeck();
+  const { setActiveDeck, addCard, removeCard, setCommander, setPartner, updateCardCategory } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
@@ -86,6 +87,7 @@ export default function BuilderPage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [commanderMode, setCommanderMode] = useState(false);
+  const [partnerMode, setPartnerMode] = useState(false);
 
   // Search mode
   type SearchMode = "name" | "set" | "color";
@@ -112,7 +114,7 @@ export default function BuilderPage() {
   const [isInputFocused, setIsInputFocused] = useState(false);
 
   const query = (() => {
-    if (commanderMode) return buildCommanderSearchQuery(searchText, filters);
+    if (commanderMode || partnerMode) return buildCommanderSearchQuery(searchText, filters);
     switch (searchMode) {
       case "set":
         return selectedSet ? buildSetSearchQuery(selectedSet, colorFilter) : "";
@@ -140,12 +142,15 @@ export default function BuilderPage() {
       if (commanderMode) {
         setCommander(card);
         setCommanderMode(false);
+      } else if (partnerMode) {
+        setPartner(card);
+        setPartnerMode(false);
       } else {
         // Open printing selector so user can pick their preferred art
         setPrintingCard(card);
       }
     },
-    [setCommander, commanderMode]
+    [setCommander, setPartner, commanderMode, partnerMode]
   );
 
   const handlePrintingSelect = useCallback(
@@ -371,7 +376,7 @@ export default function BuilderPage() {
                       {showFilters ? "Hide filters" : "Show filters"}
                     </button>
                     <button
-                      onClick={() => setCommanderMode((m) => !m)}
+                      onClick={() => { setCommanderMode((m) => !m); setPartnerMode(false); }}
                       className={cn(
                         "ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
                         commanderMode
@@ -383,6 +388,21 @@ export default function BuilderPage() {
                       <Crown className="w-3 h-3" />
                       Commander
                     </button>
+                    {deck && supportsPartner(deck.pairingType) && (
+                      <button
+                        onClick={() => { setPartnerMode((m) => !m); setCommanderMode(false); }}
+                        className={cn(
+                          "flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
+                          partnerMode
+                            ? "border-purple-500 text-purple-400 bg-purple-500/10"
+                            : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+                        )}
+                        title={`Search for a ${partnerSlotLabel(deck.pairingType)}`}
+                      >
+                        <Crown className="w-3 h-3" />
+                        {partnerSlotLabel(deck.pairingType)}
+                      </button>
+                    )}
                   </div>
                   {showFilters && <SearchFilters filters={filters} onChange={setFilters} />}
                 </>
