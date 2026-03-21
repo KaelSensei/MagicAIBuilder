@@ -83,6 +83,15 @@ export async function deleteDeck(id: string): Promise<void> {
   if (!res.ok) handleApiError(res, "deleteDeck");
 }
 
+export async function duplicateDeck(id: string): Promise<ApiDeck> {
+  const res = await fetch(`/api/decks/${id}/duplicate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) handleApiError(res, "duplicateDeck");
+  return res.json();
+}
+
 // ─── Card CRUD ────────────────────────────────────────────────────────────────
 
 export interface AddCardPayload {

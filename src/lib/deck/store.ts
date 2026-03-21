@@ -325,8 +325,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       const res = await fetch(`/api/decks/${id}/duplicate`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to duplicate deck");
-      const copy = await res.json() as { id: string };
+      const copy = await res.json() as { id: string; name: string };
+      // Set new deck as active before reloading
+      set({ activeDeckId: copy.id });
       await get().loadDecks();
+      useToastStore.getState().add("success", `Deck duplicated: "${copy.name}"`);
       return copy.id;
     } finally {
       set({ isSyncing: false });
