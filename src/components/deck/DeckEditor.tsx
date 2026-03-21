@@ -10,7 +10,7 @@ import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import type { CardCategory } from "@/lib/deck/types";
-import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, X } from "lucide-react";
 import { useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
@@ -131,6 +131,8 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
 export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
   const viewMode = useDeckStore((s) => s.deckViewMode);
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
+  const clearCommander = useDeckStore((s) => s.clearCommander);
+  const setPartner = useDeckStore((s) => s.setPartner);
 
   // Group cards by category
   const cardsByCategory = deck.cards.reduce<Record<CardCategory, Deck["cards"]>>(
@@ -156,11 +158,20 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
         </p>
         {deck.commander ? (
           <div className="flex flex-col gap-1.5">
-            <CardTooltip card={deck.commander}>
-              <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors text-sm">
-                {deck.commander.name}
-              </span>
-            </CardTooltip>
+            <div className="flex items-center gap-1.5 group/cmd">
+              <CardTooltip card={deck.commander}>
+                <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors text-sm flex-1">
+                  {deck.commander.name}
+                </span>
+              </CardTooltip>
+              <button
+                onClick={() => clearCommander()}
+                className="opacity-0 group-hover/cmd:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
+                title="Remove commander"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
             {/* Partner slot — only shown when commander supports it */}
             {supportsPartner(deck.pairingType) && (
               <div className="flex items-center gap-1.5">
@@ -168,11 +179,20 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
                   {partnerSlotLabel(deck.pairingType)}:
                 </span>
                 {deck.partner ? (
-                  <CardTooltip card={deck.partner}>
-                    <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors text-sm">
-                      {deck.partner.name}
-                    </span>
-                  </CardTooltip>
+                  <div className="flex items-center gap-1 group/prt">
+                    <CardTooltip card={deck.partner}>
+                      <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors text-sm">
+                        {deck.partner.name}
+                      </span>
+                    </CardTooltip>
+                    <button
+                      onClick={() => setPartner(null)}
+                      className="opacity-0 group-hover/prt:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
+                      title="Remove partner"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
                 ) : (
                   <span className="text-xs text-[var(--text-secondary)] italic">
                     Enable Commander mode and search for a {partnerSlotLabel(deck.pairingType)}
@@ -264,6 +284,13 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
                 <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
                   CMD
                 </div>
+                <button
+                  onClick={() => clearCommander()}
+                  className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                  title="Remove commander"
+                >
+                  ×
+                </button>
               </div>
             )}
             {deck.partner && (
@@ -281,6 +308,13 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
                 <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
                   CMD
                 </div>
+                <button
+                  onClick={() => setPartner(null)}
+                  className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                  title="Remove partner"
+                >
+                  ×
+                </button>
               </div>
             )}
             {deck.cards.map((card) => (
