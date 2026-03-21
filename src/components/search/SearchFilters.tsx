@@ -5,11 +5,11 @@ import type { SearchFilters } from "@/lib/deck/types";
 import { useCollectionStore } from "@/lib/collection/store";
 
 const COLORS = [
-  { code: "W", label: "White", symbol: "☀️" },
-  { code: "U", label: "Blue", symbol: "💧" },
-  { code: "B", label: "Black", symbol: "💀" },
-  { code: "R", label: "Red", symbol: "🔥" },
-  { code: "G", label: "Green", symbol: "🌲" },
+  { code: "W", label: "White" },
+  { code: "U", label: "Blue" },
+  { code: "B", label: "Black" },
+  { code: "R", label: "Red" },
+  { code: "G", label: "Green" },
 ];
 
 interface SearchFiltersProps {
@@ -43,14 +43,21 @@ export function SearchFilters({ filters, onChange, className }: SearchFiltersPro
               key={c.code}
               onClick={() => toggleColor(c.code)}
               className={cn(
-                "w-8 h-8 rounded-full text-sm transition-all border-2",
+                "w-8 h-8 rounded-full transition-all border-2 flex items-center justify-center",
                 filters.colors.includes(c.code)
                   ? "border-[var(--accent)] scale-110"
                   : "border-transparent opacity-60 hover:opacity-100"
               )}
               title={c.label}
             >
-              {c.symbol}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://svgs.scryfall.io/card-symbols/${c.code}.svg`}
+                alt={c.label}
+                width={22}
+                height={22}
+                className="w-[22px] h-[22px]"
+              />
             </button>
           ))}
         </div>
