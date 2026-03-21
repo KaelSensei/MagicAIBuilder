@@ -51,6 +51,7 @@ export interface Deck {
   companion: DeckCard | null; // Companion (sideboard, outside the 99)
   pairingType: CommanderPairingType; // Detected from commander keywords
   cards: DeckCard[]; // The 99 (or 98 with partner)
+  maybeboard: DeckCard[]; // Considered cards, not counted in the 99
   format: "commander" | "brawl";
   targetBracket: 1 | 2 | 3 | 4;
   budget: number | null; // Max price per card in USD

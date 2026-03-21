@@ -52,7 +52,7 @@ export default function BuilderPage() {
   const deckId = params.deckId as string;
 
   // Ensure this deck is active
-  const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory } = useDeck();
+  const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory, addToMaybeboard, removeFromMaybeboard, moveToMaybeboard, moveToDeck } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
@@ -429,6 +429,7 @@ export default function BuilderPage() {
                 error={searchError as Error | null}
                 totalCards={searchData?.total_cards}
                 onCardClick={handleCardClick}
+                onAddToMaybeboard={addToMaybeboard}
                 draggable={true}
               />
             </div>
@@ -454,6 +455,9 @@ export default function BuilderPage() {
             <DeckEditor
               deck={deck}
               onRemoveCard={removeCard}
+              onMoveToMaybeboard={moveToMaybeboard}
+              onMoveFromMaybeboard={moveToDeck}
+              onRemoveFromMaybeboard={removeFromMaybeboard}
               className="flex-1 overflow-hidden"
             />
           </motion.div>
