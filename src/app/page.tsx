@@ -149,45 +149,52 @@ export default function HomePage() {
               >
                 <Link
                   href={`/builder/${deck.id}`}
-                  className="block rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] hover:border-[var(--accent)] transition-all p-5 group"
+                  className="block rounded-xl border border-[var(--border)] hover:border-[var(--accent)] transition-all overflow-hidden group relative"
+                  style={
+                    deck.commander?.artCropUri
+                      ? { backgroundImage: `url(${deck.commander.artCropUri})`, backgroundSize: "cover", backgroundPosition: "center top" }
+                      : undefined
+                  }
                   data-testid="deck-card"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-[var(--text-primary)] truncate pr-2">
-                      {deck.name}
-                    </h3>
-                    <span className="text-xs bg-[var(--border)] text-[var(--text-secondary)] px-2 py-0.5 rounded-full shrink-0">
-                      {deck.format}
-                    </span>
-                  </div>
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    {deck.commander
-                      ? `Commander: ${deck.commander.name}`
-                      : "No commander yet"}
-                  </p>
-                  <p className="text-xs text-[var(--text-secondary)] mt-1">
-                    {deck.cards.length +
-                      (deck.commander ? 1 : 0) +
-                      (deck.partner ? 1 : 0)}{" "}
-                    / 100 cards
-                  </p>
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center gap-1 text-xs text-[var(--text-secondary)]">
-                      <Clock className="w-3 h-3" />
-                      <span>{new Date(deck.updatedAt).toLocaleDateString()}</span>
+                  <div className={`p-5 h-full ${deck.commander?.artCropUri ? "bg-gradient-to-t from-black/90 via-black/60 to-black/20" : "bg-[var(--surface)] group-hover:bg-[var(--surface-hover)]"}`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className={`font-semibold truncate pr-2 ${deck.commander?.artCropUri ? "text-white" : "text-[var(--text-primary)]"}`}>
+                        {deck.name}
+                      </h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${deck.commander?.artCropUri ? "bg-black/40 text-white/70" : "bg-[var(--border)] text-[var(--text-secondary)]"}`}>
+                        {deck.format}
+                      </span>
                     </div>
-                    <button
-                      onClick={(e) => handleDeleteDeck(e, deck.id)}
-                      disabled={deletingId === deck.id}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400 disabled:opacity-60"
-                      aria-label={`Delete ${deck.name}`}
-                    >
-                      {deletingId === deck.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-3.5 h-3.5" />
-                      )}
-                    </button>
+                    <p className={`text-sm ${deck.commander?.artCropUri ? "text-white/70" : "text-[var(--text-secondary)]"}`}>
+                      {deck.commander
+                        ? `Commander: ${deck.commander.name}`
+                        : "No commander yet"}
+                    </p>
+                    <p className={`text-xs mt-1 ${deck.commander?.artCropUri ? "text-white/70" : "text-[var(--text-secondary)]"}`}>
+                      {deck.cards.length +
+                        (deck.commander ? 1 : 0) +
+                        (deck.partner ? 1 : 0)}{" "}
+                      / 100 cards
+                    </p>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className={`flex items-center gap-1 text-xs ${deck.commander?.artCropUri ? "text-white/70" : "text-[var(--text-secondary)]"}`}>
+                        <Clock className="w-3 h-3" />
+                        <span>{new Date(deck.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                      <button
+                        onClick={(e) => handleDeleteDeck(e, deck.id)}
+                        disabled={deletingId === deck.id}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400 disabled:opacity-60"
+                        aria-label={`Delete ${deck.name}`}
+                      >
+                        {deletingId === deck.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </Link>
               </motion.div>
