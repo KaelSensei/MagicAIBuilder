@@ -12,7 +12,6 @@ import { useToastStore } from "@/hooks/useToast";
 function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
   return {
     id: scryfallCard.id,
-    scryfallId: scryfallCard.id,
     name: scryfallCard.name,
     manaCost: scryfallCard.mana_cost ?? "",
     cmc: scryfallCard.cmc,
@@ -38,6 +37,7 @@ function createEmptyDeck(id: string, name: string): Deck {
     companion: null,
     pairingType: "none",
     cards: [],
+    maybeboard: [],
     format: "commander",
     targetBracket: 2,
     budget: null,
@@ -82,6 +82,12 @@ export interface DeckStore {
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
 
+  // Maybeboard
+  addToMaybeboard: (card: ScryfallCard) => Promise<void>;
+  removeFromMaybeboard: (cardId: string) => Promise<void>;
+  moveToMaybeboard: (cardId: string) => Promise<void>;
+  moveToDeck: (cardId: string) => Promise<void>;
+
   // Deck settings
   setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
   setBudget: (budget: number | null) => Promise<void>;
@@ -119,12 +125,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         const allCards = d.cards ?? [];
         const commanderCard = allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
         const partnerCard = allCards.find((c) => c.isPartner) ?? null;
-        const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
-        const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
+        const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion" && !c.isMaybeboard) ?? null;
+        const maybeboardCards = allCards.filter((c) => c.isMaybeboard);
+        const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion" && !c.isMaybeboard);
 
         const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => ({
           id: c.id,
-          scryfallId: c.scryfallId,
           name: c.name,
           manaCost: c.manaCost,
           cmc: c.cmc,
@@ -151,6 +157,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           companion: companionCard ? toDeckCard(companionCard) : null,
           pairingType: (d.pairingType as CommanderPairingType) ?? "none",
           cards: mainCards.map(toDeckCard),
+          maybeboard: maybeboardCards.map(toDeckCard),
           createdAt: new Date(d.createdAt),
           updatedAt: new Date(d.updatedAt),
         };
@@ -580,6 +587,170 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateCardCategory(activeDeckId, cardId, category);
     } catch (err) {
       console.error("[updateCardCategory]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  addToMaybeboard: async (card: ScryfallCard) => {
+    const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
+    if (!activeDeckId) return;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
+
+    // Prevent duplicates in maybeboard (by name, similar to main deck logic)
+    const isBasic = card.type_line.toLowerCase().includes("basic land");
+    const exists = deck.maybeboard.find((c) => c.name === card.name);
+    if (exists && !isBasic) return;
+
+    const deckCard = makeDeckCard(card);
+    deckCard.isGameChanger = gameChangerNames.has(card.name);
+    deckCard.isBanned = bannedNames.has(card.name);
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          maybeboard: [...state.decks[activeDeckId].maybeboard, deckCard],
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      const saved = await deckApi.addCard(activeDeckId, {
+        scryfallId: card.id,
+        name: deckCard.name,
+        manaCost: deckCard.manaCost,
+        cmc: deckCard.cmc,
+        typeLine: deckCard.typeLine,
+        oracleText: deckCard.oracleText,
+        colorIdentity: deckCard.colorIdentity,
+        isGameChanger: deckCard.isGameChanger,
+        isBanned: deckCard.isBanned,
+        price: deckCard.price,
+        imageUri: deckCard.imageUri,
+        artCropUri: deckCard.artCropUri,
+        category: deckCard.category,
+        quantity: deckCard.quantity,
+        isCommander: false,
+        isPartner: false,
+        isMaybeboard: true,
+      });
+      // Update local id to DB-generated CUID
+      set((state) => ({
+        decks: {
+          ...state.decks,
+          [activeDeckId]: {
+            ...state.decks[activeDeckId],
+            maybeboard: state.decks[activeDeckId].maybeboard.map((c) =>
+              c.id === card.id ? { ...c, id: saved.id } : c
+            ),
+          },
+        },
+      }));
+    } catch (err) {
+      console.error("[addToMaybeboard]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  removeFromMaybeboard: async (cardId: string) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          maybeboard: state.decks[activeDeckId].maybeboard.filter(
+            (c) => c.id !== cardId
+          ),
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.removeCard(activeDeckId, cardId);
+    } catch (err) {
+      console.error("[removeFromMaybeboard]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  moveToMaybeboard: async (cardId: string) => {
+    const { activeDeckId, decks } = get();
+    if (!activeDeckId) return;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
+
+    const card = deck.cards.find((c) => c.id === cardId);
+    if (!card) return;
+
+    // Optimistic update — remove from deck, add to maybeboard
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.filter((c) => c.id !== cardId),
+          maybeboard: [...state.decks[activeDeckId].maybeboard, card],
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateCardMaybeboard(activeDeckId, cardId, true);
+    } catch (err) {
+      console.error("[moveToMaybeboard]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  moveToDeck: async (cardId: string) => {
+    const { activeDeckId, decks } = get();
+    if (!activeDeckId) return;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
+
+    const card = deck.maybeboard.find((c) => c.id === cardId);
+    if (!card) return;
+
+    // Check duplicate in main deck
+    const isBasic = card.typeLine.toLowerCase().includes("basic land");
+    const exists = deck.cards.find((c) => c.name === card.name);
+    if (exists && !isBasic) return;
+
+    // Optimistic update — remove from maybeboard, add to deck
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          maybeboard: state.decks[activeDeckId].maybeboard.filter((c) => c.id !== cardId),
+          cards: [...state.decks[activeDeckId].cards, card],
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateCardMaybeboard(activeDeckId, cardId, false);
+    } catch (err) {
+      console.error("[moveToDeck]", err);
     } finally {
       set({ isSyncing: false });
     }

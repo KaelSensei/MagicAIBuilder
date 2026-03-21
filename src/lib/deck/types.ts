@@ -19,8 +19,7 @@ export type CardCategory =
   | "other";
 
 export interface DeckCard {
-  id: string; // DB CUID (after save) or Scryfall card ID (before save)
-  scryfallId?: string; // Scryfall card ID (populated from DB)
+  id: string; // Scryfall card ID
   name: string;
   manaCost: string; // e.g., "{2}{U}{U}"
   cmc: number;
@@ -52,6 +51,7 @@ export interface Deck {
   companion: DeckCard | null; // Companion (sideboard, outside the 99)
   pairingType: CommanderPairingType; // Detected from commander keywords
   cards: DeckCard[]; // The 99 (or 98 with partner)
+  maybeboard: DeckCard[]; // Considered cards, not counted in the 99
   format: "commander" | "brawl";
   targetBracket: 1 | 2 | 3 | 4;
   budget: number | null; // Max price per card in USD
@@ -101,5 +101,4 @@ export interface SearchFilters {
   cmcMin: number | null;
   cmcMax: number | null;
   priceMax: number | null;
-  collectionOnly?: boolean;
 }

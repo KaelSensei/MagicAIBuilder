@@ -1,15 +1,16 @@
 "use client";
 // List view row for search results
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Bookmark } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { DraggableCard } from "./DraggableCard";
-import { CollectionBadge } from "@/components/collection/CollectionBadge";
 
 interface CardSearchListItemProps {
   card: ScryfallCard;
   onClick?: (card: ScryfallCard) => void;
+  onAddToMaybeboard?: (card: ScryfallCard) => void;
+  isInMaybeboard?: boolean;
   draggable?: boolean;
   className?: string;
 }
@@ -17,9 +18,13 @@ interface CardSearchListItemProps {
 function ListItemContent({
   card,
   onClick,
+  onAddToMaybeboard,
+  isInMaybeboard,
 }: {
   card: ScryfallCard;
   onClick?: (card: ScryfallCard) => void;
+  onAddToMaybeboard?: (card: ScryfallCard) => void;
+  isInMaybeboard?: boolean;
 }) {
   return (
     <motion.div
@@ -33,11 +38,34 @@ function ListItemContent({
       <span className="flex-1 text-sm truncate text-[var(--text-primary)]">
         {card.name}
       </span>
-      <CollectionBadge scryfallId={card.id} compact className="shrink-0" />
+
+      {/* In Maybeboard badge */}
+      {isInMaybeboard && (
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 shrink-0">
+          In Maybeboard
+        </span>
+      )}
+
       <span className="text-xs text-[var(--text-secondary)] shrink-0">
         {card.cmc > 0 ? card.cmc : "—"}
       </span>
+
+      {/* Add to deck */}
       <Plus className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 shrink-0 transition-opacity" />
+
+      {/* Add to maybeboard */}
+      {onAddToMaybeboard && !isInMaybeboard && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddToMaybeboard(card);
+          }}
+          className="opacity-0 group-hover:opacity-70 hover:!opacity-100 shrink-0 transition-opacity text-amber-400"
+          title="Add to Maybeboard"
+        >
+          <Bookmark className="w-3.5 h-3.5" />
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -45,6 +73,8 @@ function ListItemContent({
 export function CardSearchListItem({
   card,
   onClick,
+  onAddToMaybeboard,
+  isInMaybeboard = false,
   draggable = false,
   className,
 }: CardSearchListItemProps) {
@@ -52,14 +82,24 @@ export function CardSearchListItem({
     return (
       <div className={className}>
         <DraggableCard card={card}>
-          <ListItemContent card={card} onClick={onClick} />
+          <ListItemContent
+            card={card}
+            onClick={onClick}
+            onAddToMaybeboard={onAddToMaybeboard}
+            isInMaybeboard={isInMaybeboard}
+          />
         </DraggableCard>
       </div>
     );
   }
   return (
     <div className={className}>
-      <ListItemContent card={card} onClick={onClick} />
+      <ListItemContent
+        card={card}
+        onClick={onClick}
+        onAddToMaybeboard={onAddToMaybeboard}
+        isInMaybeboard={isInMaybeboard}
+      />
     </div>
   );
 }

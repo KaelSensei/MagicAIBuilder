@@ -18,6 +18,7 @@ export interface ApiDeckCard extends Omit<DeckCard, "id"> {
   scryfallId: string;
   isCommander: boolean;
   isPartner: boolean;
+  isMaybeboard: boolean;
 }
 
 function handleApiError(res: Response, context: string): never {
@@ -97,6 +98,7 @@ export interface AddCardPayload {
   quantity?: number;
   isCommander?: boolean;
   isPartner?: boolean;
+  isMaybeboard?: boolean;
 }
 
 export async function addCard(
@@ -133,6 +135,20 @@ export async function updateCardCategory(
     body: JSON.stringify({ category }),
   });
   if (!res.ok) handleApiError(res, "updateCardCategory");
+  return res.json();
+}
+
+export async function updateCardMaybeboard(
+  deckId: string,
+  cardId: string,
+  isMaybeboard: boolean
+): Promise<ApiDeckCard> {
+  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isMaybeboard }),
+  });
+  if (!res.ok) handleApiError(res, "updateCardMaybeboard");
   return res.json();
 }
 

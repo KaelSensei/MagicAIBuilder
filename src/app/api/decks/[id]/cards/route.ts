@@ -30,6 +30,7 @@ export async function POST(request: Request, { params }: Params) {
       quantity,
       isCommander,
       isPartner,
+      isMaybeboard,
     } = body;
 
     if (!scryfallId || !name) {
@@ -58,6 +59,7 @@ export async function POST(request: Request, { params }: Params) {
         quantity: quantity ?? 1,
         isCommander: isCommander ?? false,
         isPartner: isPartner ?? false,
+        isMaybeboard: isMaybeboard ?? false,
       },
     });
 
