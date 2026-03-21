@@ -12,14 +12,19 @@
 ## Features
 
 - 🔍 **Scryfall search** — full syntax support, commander mode, By Set, By Color
-- 🎨 **Card printing selector** — choose your preferred art before adding
-- 🃏 **Drag & drop deck builder** — list and grid views, categorized zones
+- 🎨 **Card printing selector** — choose your preferred art before adding or swap it anytime from the deck list
+- 🃏 **Drag & drop deck builder** — list and grid views, categorized zones; commander pinned first in grid view
 - 📊 **Live bracket scoring** — 6-dimension analysis (ramp, draw, removal, tutors, win speed, CMC)
 - ⚡ **Game Changers detection** — auto-warns when you cross bracket thresholds
-- 🤖 **AI suggestions** — Anthropic Claude or OpenAI GPT analyzes your deck and recommends cards
+- 🤖 **AI suggestions** — Anthropic Claude or OpenAI GPT analyzes your deck and recommends cards + cuts
 - 🤝 **Partner pairing** — Partner, Partner With, Friends Forever, Background, Doctor's Companion
 - 📦 **Companion support** — sideboard companion slot
-- 📤 **Multi-format export** — Moxfield, MTG Arena, MTGO (.dek), TappedOut, Archidekt, Plain Text
+- 📤 **Multi-format export** — Moxfield, MTG Arena, MTGO (.dek), TappedOut, Archidekt, Manabox, Plain Text
+- 📝 **Deck notes & tags** — per-card notes, deck description, colored tag pills
+- 📸 **Deck snapshots** — save and restore deck states at any point
+- 🔗 **Deck sharing** — generate a shareable read-only link
+- 🎮 **Playtest mode** — draw opening hand, mulligan, simulate turns
+- ⌨️ **Keyboard shortcuts** — power-user navigation with undo stack
 - 🌙 **Dark / Light theme** — persisted across sessions
 - 🔒 **Security hardened** — Zod validation, input sanitization, no client-side secrets
 
