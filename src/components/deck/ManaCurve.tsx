@@ -101,27 +101,9 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
                   )}
                 </AnimatePresence>
 
-                {/* Count label above bar */}
-                <div className="absolute w-full flex justify-center" style={{ bottom: `${heightPct}%` }}>
-                  <AnimatePresence mode="wait">
-                    {count > 0 && (
-                      <motion.span
-                        key={count}
-                        className="text-[10px] font-medium text-[var(--text-secondary)] -translate-y-3"
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {count}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Bar */}
+                {/* Bar — positioned from bottom */}
                 <motion.div
-                  className="w-full"
+                  className="w-full relative"
                   style={{
                     background: `linear-gradient(to bottom, ${color}99, ${color})`,
                     borderRadius: "4px 4px 0 0",
@@ -134,7 +116,23 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
                     delay: index * 0.06,
                     ease: [0.25, 0.46, 0.45, 0.94],
                   }}
-                />
+                >
+                  {/* Count label pinned just above the bar top */}
+                  <AnimatePresence mode="wait">
+                    {count > 0 && (
+                      <motion.span
+                        key={count}
+                        className="absolute left-1/2 -translate-x-1/2 -top-4 text-[10px] font-medium text-[var(--text-secondary)] whitespace-nowrap"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {count}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               </div>
             );
           })}

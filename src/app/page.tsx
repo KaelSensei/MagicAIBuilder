@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useDeckStore } from "@/lib/deck/store";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Plus, Layers, Clock, Loader2, Trash2 } from "lucide-react";
+import { Plus, Layers, Clock, Loader2, Trash2, Copy } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import type { Deck } from "@/lib/deck/types";
@@ -13,13 +13,27 @@ import type { Deck } from "@/lib/deck/types";
 interface DeckCardItemProps {
   deck: Deck;
   onDelete: (e: React.MouseEvent, id: string) => void;
+  onDuplicate: (e: React.MouseEvent, id: string) => void;
   deletingId: string | null;
+  duplicatingId: string | null;
 }
 
-function DeckCardItem({ deck, onDelete, deletingId }: DeckCardItemProps) {
+/** Colors per bracket level — consistent with BracketIndicator.tsx */
+const BRACKET_COLORS: Record<number, string> = {
+  1: "text-green-400 bg-green-500/15 border-green-500/30",
+  2: "text-blue-400 bg-blue-500/15 border-blue-500/30",
+  3: "text-amber-400 bg-amber-500/15 border-amber-500/30",
+  4: "text-red-400 bg-red-500/15 border-red-500/30",
+};
+
+function DeckCardItem({ deck, onDelete, onDuplicate, deletingId, duplicatingId }: DeckCardItemProps) {
   const hasArt = Boolean(deck.commander?.artCropUri);
   const textMuted = hasArt ? "text-white/70" : "text-[var(--text-secondary)]";
   const textPrimary = hasArt ? "text-white" : "text-[var(--text-primary)]";
+
+  // Resolve displayed bracket: manual overrides auto-calculated target
+  const bracket = deck.manualBracket ?? deck.targetBracket;
+  const isManual = Boolean(deck.manualBracket);
 
   return (
     <Link
@@ -46,18 +60,41 @@ function DeckCardItem({ deck, onDelete, deletingId }: DeckCardItemProps) {
             <Clock className="w-3 h-3" />
             <span>{new Date(deck.updatedAt).toLocaleDateString()}</span>
           </div>
-          <button
-            onClick={(e) => onDelete(e, deck.id)}
-            disabled={deletingId === deck.id}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400 disabled:opacity-60"
-            aria-label={`Delete ${deck.name}`}
+          {/* Bracket badge — manual overrides show a gear icon */}
+          <span
+            className={`text-xs font-bold px-1.5 py-0.5 rounded border ${BRACKET_COLORS[bracket]}`}
+            title={isManual ? "Manual bracket override" : "Auto bracket"}
           >
-            {deletingId === deck.id ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="w-3.5 h-3.5" />
-            )}
-          </button>
+            B{bracket}{isManual ? " ⚙" : ""}
+          </span>
+          <div className="flex items-center gap-1">
+            {/* Duplicate button */}
+            <button
+              onClick={(e) => onDuplicate(e, deck.id)}
+              disabled={duplicatingId === deck.id}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--accent)]/20 text-[var(--text-secondary)] hover:text-[var(--accent)] disabled:opacity-60"
+              aria-label={`Duplicate ${deck.name}`}
+            >
+              {duplicatingId === deck.id ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
+            </button>
+            {/* Delete button */}
+            <button
+              onClick={(e) => onDelete(e, deck.id)}
+              disabled={deletingId === deck.id}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400 disabled:opacity-60"
+              aria-label={`Delete ${deck.name}`}
+            >
+              {deletingId === deck.id ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </Link>
@@ -88,9 +125,10 @@ function DeckCardSkeleton() {
 
 export default function HomePage() {
   const router = useRouter();
-  const { decks, createDeck, loadDecks, isSyncing, deleteDeck } = useDeckStore();
+  const { decks, createDeck, loadDecks, isSyncing, deleteDeck, duplicateDeck } = useDeckStore();
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const deckList = Object.values(decks);
 
@@ -109,6 +147,20 @@ export default function HomePage() {
       await deleteDeck(id);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleDuplicateDeck = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDuplicatingId(id);
+    try {
+      await fetch(`/api/decks/${id}/duplicate`, { method: "POST" });
+      await loadDecks();
+    } catch (err) {
+      console.error("[handleDuplicateDeck]", err);
+    } finally {
+      setDuplicatingId(null);
     }
   };
 
@@ -198,7 +250,7 @@ export default function HomePage() {
                 key={deck.id}
                 variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}
               >
-                <DeckCardItem deck={deck} onDelete={handleDeleteDeck} deletingId={deletingId} />
+                <DeckCardItem deck={deck} onDelete={handleDeleteDeck} onDuplicate={handleDuplicateDeck} deletingId={deletingId} duplicatingId={duplicatingId} />
               </motion.div>
             ))}
 
