@@ -89,6 +89,7 @@ export interface DeckStore {
 
   // Card management
   setCommander: (card: ScryfallCard) => Promise<void>;
+  clearCommander: () => Promise<void>;
   setPartner: (card: ScryfallCard | null) => Promise<void>;
   setCompanion: (card: ScryfallCard | null) => Promise<void>;
   addCard: (card: ScryfallCard) => Promise<void>;
@@ -391,6 +392,31 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       });
     } catch (err) {
       console.error("[setCommander]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  clearCommander: async () => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          commander: null,
+          partner: null, // Also clear partner — can't have partner without commander
+          pairingType: "none",
+          updatedAt: new Date(),
+        },
+      },
+    }));
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(activeDeckId, { commanderId: null, partnerId: null, pairingType: "none" });
+    } catch (err) {
+      console.error("[clearCommander]", err);
     } finally {
       set({ isSyncing: false });
     }
