@@ -1,7 +1,7 @@
 "use client";
 // Compact list view for deck cards
 import { motion } from "framer-motion";
-import { X, AlertTriangle, Zap, Layers, Plus, Minus } from "lucide-react";
+import { X, AlertTriangle, Zap, Layers, Plus, Minus, Crown } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
@@ -67,6 +67,7 @@ export function CardListItem({ card, onRemove, className }: CardListItemProps) {
   const [showPrintings, setShowPrintings] = useState(false);
   const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
   const updateCardQuantity = useDeckStore((s) => s.updateCardQuantity);
+  const promoteToCommander = useDeckStore((s) => s.promoteToCommander);
   const max = maxQuantity(card.name, card.typeLine);
   const canIncrement = card.quantity < max;
   const canDecrement = card.quantity > 1;
@@ -138,6 +139,16 @@ export function CardListItem({ card, onRemove, className }: CardListItemProps) {
           {card.isBanned && (
             <span title="Banned"><AlertTriangle className="w-3 h-3 text-red-500" /></span>
           )}
+
+          {/* Set as commander button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); promoteToCommander(card.id); }}
+            className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-0.5 rounded text-[var(--text-secondary)] hover:text-yellow-400"
+            aria-label={`Set ${card.name} as commander`}
+            title="Set as commander"
+          >
+            <Crown className="w-3 h-3" />
+          </button>
 
           {/* Edition picker button */}
           <button

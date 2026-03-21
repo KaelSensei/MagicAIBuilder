@@ -52,11 +52,14 @@ export function parseTextDecklist(text: string): ImportResult {
     const match = line.match(/^(\d+)x?\s+(.+)$/);
     if (match) {
       const quantity = clampQuantity(parseInt(match[1], 10));
-      const name = sanitizeName(match[2]);
+      // Strip trailing set code + collector number: "Card Name (SET) 123" or "Card Name (SET) 123p" or "Card Name (SET) 123s"
+      const rawName = match[2].replace(/\s+\([A-Z0-9]+\)\s+\d+[a-z*]*\s*$/i, "").trim();
+      const name = sanitizeName(rawName);
       if (!name) { errors.push(`Skipped empty card name on line: ${line.slice(0, 50)}`); continue; }
       if (inCommanderSection && !commander) { commander = name; } else { cards.push({ name, quantity }); }
     } else if (line) {
-      const name = sanitizeName(line);
+      const rawName = line.replace(/\s+\([A-Z0-9]+\)\s+\d+[a-z*]*\s*$/i, "").trim();
+      const name = sanitizeName(rawName);
       if (!name) continue;
       if (inCommanderSection && !commander) { commander = name; } else { cards.push({ name, quantity: 1 }); }
     }
