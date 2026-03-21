@@ -114,6 +114,39 @@ interface Deck {
 
 ---
 
+## Commander Card Quantity Rules
+
+Commander is a **singleton** format — max 1 copy per card — with the following exceptions enforced by `src/lib/deck/multiples.ts`:
+
+### Unlimited copies (up to 99)
+- All **basic lands** (type line contains "Basic Land")
+- Templar Knight
+- Tempest Hawk
+- Hare Apparent
+- Persistent Petitioners
+- Shadowborn Apostle
+- Rat Colony
+- Relentless Rats
+- Dragon's Approach
+- Slime Against Humanity
+- Vazal, the Compleat
+- Cid, Timeless Artificer
+
+### Capped copies
+| Card | Max copies |
+|---|---|
+| Nazgûl | 9 |
+| Seven Dwarves | 7 |
+
+### Implementation
+- `maxQuantity(cardName, typeLine): number` — returns the max allowed quantity for a card
+- `allowsMultiples(cardName, typeLine): boolean` — true if max > 1
+- `addCard` / `addDeckCard` increment quantity up to `maxQuantity` instead of blocking
+- `updateCardQuantity(cardId, delta)` enforces bounds client-side before persisting
+- `+` / `−` buttons appear on hover in list view only when the card allows multiples
+
+---
+
 ## User Stories
 
 ### P0 — Must Have (all complete)

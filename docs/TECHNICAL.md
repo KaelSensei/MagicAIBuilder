@@ -105,6 +105,7 @@ src/
       stats.ts                  # computeDeckStats()
       bracket.ts                # scoreBracket() — 6-dimension engine
       validation.ts             # validateCardForDeck() / validateDeck()
+      multiples.ts              # maxQuantity() / allowsMultiples() — Commander singleton rules
       import.ts                 # Text decklist parser
       export.ts                 # MTGO / Arena / plain text export
     constants/
@@ -484,6 +485,19 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 ### Mana Symbols in Color Filter (`feat/mana-symbols-color-filter`)
 - By Color mode buttons now use `<img src="https://svgs.scryfall.io/card-symbols/{code}.svg">`
 - Replaces emoji fallbacks (☀️💧💀🔥🌲); colorless (C) merged into the main color list
+
+### Card Quantity Editor (`feat/card-quantity-editor`)
+- `multiples.ts` — encodes Commander singleton rules: `maxQuantity(name, typeLine)` returns 1 by default, 99 for basic lands and special cards, 9 for Nazgûl, 7 for Seven Dwarves
+- `+` / `−` buttons appear on hover in list view; `+` only shown when card allows multiples and current qty < max
+- `addCard` / `addDeckCard` now call `updateCardQuantity` instead of silently blocking when a card is already present and allows multiples
+- `updateCardQuantity(cardId, delta)` — optimistic update + PATCH `/api/decks/:id/cards/:cardId`
+
+### Edition Picker in Deck List (`feat/import-fix-and-edition-picker`)
+- Layers icon on hover in list view → `PrintingSelectorModal` (same modal as search results)
+- `swapCardPrinting(cardId, ScryfallCard)` — updates `scryfallId`, `imageUri`, `artCropUri` optimistically and persists via PATCH
+
+### Commander in Grid View (`feat/commander-card-in-grid-view`)
+- Commander (and partner) pinned at top of card grid with gold ring (`ring-yellow-400/70`) and `CMD` badge
 
 ---
 
