@@ -9,6 +9,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-21: Maybeboard
+
+- `src/lib/deck/types.ts` — `maybeboard: DeckCard[]` field on `Deck` (cards considered but not in the 99)
+- `src/lib/deck/store.ts` — four new actions: `addToMaybeboard`, `removeFromMaybeboard`, `moveToMaybeboard`, `moveToDeck`
+- `prisma/schema.prisma` — `isMaybeboard Boolean @default(false)` on `DeckCard`; migration `20260321140000_add_maybeboard`
+- `src/lib/db/deck-api.ts` — `isMaybeboard` field in `ApiDeckCard` + `AddCardPayload`; `updateCardMaybeboard()` helper
+- `src/app/api/decks/[id]/cards/route.ts` — POST accepts `isMaybeboard`
+- `src/app/api/decks/[id]/cards/[cardId]/route.ts` — PATCH accepts `isMaybeboard`
+- `src/components/deck/MaybeboardPanel.tsx` — list view with "Move to Deck" and "Remove" actions
+- `src/components/deck/DeckEditor.tsx` — **Deck / Maybeboard** tab switcher; tab badge counts; Maybeboard tab renders `MaybeboardPanel`
+- `src/components/card/CardListItem.tsx` — Bookmark button (hover) to move deck card to Maybeboard
+- `src/components/card/CardSearchListItem.tsx` — Bookmark button + **In Maybeboard** badge on search results
+- `src/components/card/CardGrid.tsx` — **Maybe** badge overlay + Bookmark hover button on search grid
+- `src/components/search/SearchResults.tsx` — passes `onAddToMaybeboard` and `maybeboardNames` to card display components
+- `src/lib/deck/stats.ts` — `computeDeckStats` explicitly excludes `deck.maybeboard` from all totals
+- `__tests__/lib/deck/stats.test.ts` — 8 new tests verifying maybeboard exclusion from stats
+- `__tests__/lib/deck/store-maybeboard.test.ts` — 12 new tests covering all four store actions + round-trip; **80/80 tests green**
+
 ### Fixed — 2026-03-21
 - **Card tooltip position** — tooltip now follows the mouse cursor via `createPortal` instead of anchoring to the right edge of the full-width list item row (which landed it in the stats panel)
 

@@ -67,6 +67,7 @@
 - [x] Commander pairing types (partner, friends-forever, etc.)
 - [x] AI-assisted deck suggestions (Phase 4)
 - [x] Combo detection via Commander Spellbook API
+- [x] **Maybeboard** — considered cards outside the 99 with Move to Deck / Remove actions
 
 ### Infrastructure
 
@@ -195,6 +196,7 @@
 | US-15 | Choose card printing/art | ✅ Done |
 | US-16 | Search by set or color | ✅ Done |
 | US-17 | Companion card support | ✅ Done |
+| US-18b | Maybeboard (considered cards, outside the 99) | ✅ Done |
 
 ## P2 User Stories
 
@@ -230,3 +232,4 @@
 | Phase 1 P0 completion | 100% |
 | Phase 1–4 completion | 100% |
 | Build | ✅ Passing |
+| Tests | ✅ 80/80 passing |

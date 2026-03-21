@@ -9,6 +9,7 @@ A desktop-first Commander (EDH) deck builder with:
 - Real-time bracket scoring (MTG Commander Brackets 1–4) with 6 dimensions
 - Game Changers detection and banlist enforcement
 - Combo detection via Commander Spellbook
+- Maybeboard (considered cards outside the 99, with move-to-deck / remove)
 - AI-assisted deck suggestions (Anthropic Claude / OpenAI fallback)
 - Persistent multi-deck storage (PostgreSQL + Prisma)
 - Card printing/art selector
