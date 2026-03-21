@@ -13,6 +13,7 @@ import type { CardCategory } from "@/lib/deck/types";
 import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical } from "lucide-react";
 import { useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
+import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 
 interface DeckEditorProps {
   deck: Deck;
@@ -154,21 +155,30 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
           Commander
         </p>
         {deck.commander ? (
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex flex-col gap-1.5">
             <CardTooltip card={deck.commander}>
-              <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors">
+              <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors text-sm">
                 {deck.commander.name}
               </span>
             </CardTooltip>
-            {deck.partner && (
-              <>
-                <span className="text-[var(--text-secondary)]">&amp;</span>
-                <CardTooltip card={deck.partner}>
-                  <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors">
-                    {deck.partner.name}
+            {/* Partner slot — only shown when commander supports it */}
+            {supportsPartner(deck.pairingType) && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-[var(--text-secondary)]">
+                  {partnerSlotLabel(deck.pairingType)}:
+                </span>
+                {deck.partner ? (
+                  <CardTooltip card={deck.partner}>
+                    <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors text-sm">
+                      {deck.partner.name}
+                    </span>
+                  </CardTooltip>
+                ) : (
+                  <span className="text-xs text-[var(--text-secondary)] italic">
+                    Enable Commander mode and search for a {partnerSlotLabel(deck.pairingType)}
                   </span>
-                </CardTooltip>
-              </>
+                )}
+              </div>
             )}
           </div>
         ) : (

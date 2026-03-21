@@ -34,11 +34,20 @@ export interface DeckCard {
   quantity: number; // Always 1 in Commander (except basics)
 }
 
+export type CommanderPairingType =
+  | "none"            // Single commander
+  | "partner"         // Generic "Partner" keyword
+  | "partner_with"    // "Partner with [specific card]"
+  | "friends_forever" // "Friends forever"
+  | "background"      // "Choose a Background"
+  | "doctor";         // "Doctor's companion"
+
 export interface Deck {
   id: string;
   name: string;
   commander: DeckCard | null;
   partner: DeckCard | null; // For partner commanders
+  pairingType: CommanderPairingType; // Detected from commander keywords
   cards: DeckCard[]; // The 99 (or 98 with partner)
   format: "commander" | "brawl";
   targetBracket: 1 | 2 | 3 | 4;

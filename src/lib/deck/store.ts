@@ -1,8 +1,9 @@
 "use client";
 // Zustand deck store — manages all deck state (synced to DB via API routes)
 import { create } from "zustand";
-import type { Deck, DeckCard, CardCategory } from "./types";
+import type { Deck, DeckCard, CardCategory, CommanderPairingType } from "./types";
 import { categorizeCard } from "./categories";
+import { detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import * as deckApi from "@/lib/db/deck-api";
@@ -33,6 +34,7 @@ function createEmptyDeck(id: string, name: string): Deck {
     name,
     commander: null,
     partner: null,
+    pairingType: "none",
     cards: [],
     format: "commander",
     targetBracket: 2,
@@ -141,6 +143,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           budget: d.budget,
           commander: commanderCard ? toDeckCard(commanderCard) : null,
           partner: partnerCard ? toDeckCard(partnerCard) : null,
+          pairingType: (d.pairingType as CommanderPairingType) ?? "none",
           cards: mainCards.map(toDeckCard),
           createdAt: new Date(d.createdAt),
           updatedAt: new Date(d.updatedAt),
@@ -225,13 +228,18 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       );
     }
 
-    // Optimistic update
+    const pairingType = detectPairingType(card);
+
+    // Optimistic update — also update pairingType and clear partner if new commander doesn't support it
     set((state) => ({
       decks: {
         ...state.decks,
         [activeDeckId]: {
           ...state.decks[activeDeckId],
           commander: deckCard,
+          pairingType,
+          // Clear partner if new commander doesn't support pairing
+          partner: supportsPartner(pairingType) ? state.decks[activeDeckId].partner : null,
           updatedAt: new Date(),
         },
       },
@@ -239,7 +247,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     set({ isSyncing: true });
     try {
-      await deckApi.updateDeck(activeDeckId, { commanderId: card.id });
+      await deckApi.updateDeck(activeDeckId, { commanderId: card.id, pairingType });
       // Persist the commander card record
       await deckApi.addCard(activeDeckId, {
         scryfallId: card.id,
