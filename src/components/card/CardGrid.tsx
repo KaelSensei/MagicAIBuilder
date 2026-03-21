@@ -9,11 +9,11 @@ import { getCardImageUri } from "@/lib/scryfall/images";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
 
 interface CardGridProps {
-  cards: ScryfallCard[];
-  onCardClick?: (card: ScryfallCard) => void;
-  className?: string;
-  emptyMessage?: string;
-  draggable?: boolean;
+  readonly cards: readonly ScryfallCard[];
+  readonly onCardClick?: (card: ScryfallCard) => void;
+  readonly className?: string;
+  readonly emptyMessage?: string;
+  readonly draggable?: boolean;
 }
 
 const containerVariants = {

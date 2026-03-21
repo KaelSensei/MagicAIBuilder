@@ -16,8 +16,8 @@ import {
 } from "@/lib/deck/export";
 
 interface ExportModalProps {
-  deck: Deck;
-  onClose: () => void;
+  readonly deck: Deck;
+  readonly onClose: () => void;
 }
 
 type ExportFormat = "moxfield" | "arena" | "mtgo" | "tappedout" | "archidekt" | "plaintext";

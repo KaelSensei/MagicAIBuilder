@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUIStore } from "@/lib/ui/store";
 
 interface ShortcutEntry {
-  keys: string[];
-  description: string;
+  readonly keys: readonly string[];
+  readonly description: string;
 }
 
 const SHORTCUTS: ShortcutEntry[] = [

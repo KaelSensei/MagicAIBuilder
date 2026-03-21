@@ -26,13 +26,28 @@ export async function GET(_req: Request, { params }: Params) {
   }
 }
 
+type DeckPatchFields = {
+  name?: string; format?: string; targetBracket?: number; budget?: number;
+  commanderId?: string; partnerId?: string; companionId?: string;
+  pairingType?: string; description?: string; tags?: string[];
+};
+
+function buildDeckPatchData(fields: DeckPatchFields, sanitizedName: string | undefined) {
+  const data: Record<string, unknown> = {};
+  if (sanitizedName !== undefined) data.name = sanitizedName;
+  const simple = ["format", "targetBracket", "budget", "commanderId", "partnerId", "companionId", "pairingType", "description", "tags"] as const;
+  for (const key of simple) {
+    if (fields[key] !== undefined) data[key] = fields[key];
+  }
+  return data;
+}
+
 // PATCH /api/decks/[id] — update deck metadata
 export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   try {
-    const body = await request.json();
-    const { name, format, targetBracket, budget, commanderId, partnerId, companionId, pairingType, description, tags } =
-      body;
+    const body = await request.json() as DeckPatchFields;
+    const { name } = body;
 
     const existing = await prisma.deck.findUnique({ where: { id } });
     if (!existing) {
@@ -52,18 +67,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     const updated = await prisma.deck.update({
       where: { id },
-      data: {
-        ...(sanitizedName !== undefined && { name: sanitizedName }),
-        ...(format !== undefined && { format }),
-        ...(targetBracket !== undefined && { targetBracket }),
-        ...(budget !== undefined && { budget }),
-        ...(commanderId !== undefined && { commanderId }),
-        ...(partnerId !== undefined && { partnerId }),
-        ...(companionId !== undefined && { companionId }),
-        ...(pairingType !== undefined && { pairingType }),
-        ...(description !== undefined && { description }),
-        ...(tags !== undefined && { tags }),
-      },
+      data: buildDeckPatchData(body, sanitizedName),
       include: { cards: true },
     });
 

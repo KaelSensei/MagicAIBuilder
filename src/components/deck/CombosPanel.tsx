@@ -5,10 +5,10 @@ import type { SpellbookVariant } from "@/lib/combos/spellbook";
 import { Zap, Loader2 } from "lucide-react";
 
 interface CombosPanelProps {
-  combos?: SpellbookVariant[];
-  isLoading?: boolean;
-  isEnabled?: boolean; // False when deck < 10 cards
-  className?: string;
+  readonly combos?: readonly SpellbookVariant[];
+  readonly isLoading?: boolean;
+  readonly isEnabled?: boolean; // False when deck < 10 cards
+  readonly className?: string;
 }
 
 function ComboCard({ combo }: { combo: SpellbookVariant }) {
@@ -93,7 +93,7 @@ export function CombosPanel({
         </p>
       )}
 
-      {isEnabled && !isLoading && combos && combos.length === 0 && (
+      {isEnabled && !isLoading && (combos?.length ?? 0) === 0 && (
         <p className="text-xs text-[var(--text-secondary)] italic">
           No known combos detected
         </p>

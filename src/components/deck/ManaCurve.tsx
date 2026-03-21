@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 
 interface ManaCurveProps {
-  curve: Record<number, number>;
-  className?: string;
+  readonly curve: Readonly<Record<number, number>>;
+  readonly className?: string;
 }
 
 export function ManaCurve({ curve, className }: ManaCurveProps) {

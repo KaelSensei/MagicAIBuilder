@@ -15,6 +15,12 @@ type ImportDialogProps =
 
 type ImportStatus = "idle" | "validating" | "done" | "error";
 
+function getStatusTextClass(status: ImportStatus): string {
+  if (status === "error") return "text-red-400";
+  if (status === "done") return "text-green-400";
+  return "text-[var(--text-secondary)]";
+}
+
 export function ImportDialog({ children, open: controlledOpen, onOpenChange: controlledOnOpenChange }: ImportDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [text, setText] = useState("");
@@ -30,6 +36,39 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
+
+  /** Fetch Scryfall cards in batches of 75 */
+  async function fetchInBatches(names: Array<{ name: string }>): Promise<ScryfallCard[]> {
+    const BATCH_SIZE = 75;
+    const found: ScryfallCard[] = [];
+    for (let i = 0; i < names.length; i += BATCH_SIZE) {
+      const result = await getCardCollection(names.slice(i, i + BATCH_SIZE));
+      found.push(...result.data);
+    }
+    return found;
+  }
+
+  /** Add all found cards to the active deck; returns count of added cards */
+  function addParsedCards(
+    parsed: ReturnType<typeof parseTextDecklist>,
+    foundCards: ScryfallCard[],
+  ): number {
+    const byName = new Map(foundCards.map((c) => [c.name.toLowerCase(), c]));
+    let added = 0;
+
+    if (parsed.commander) {
+      const cmd = byName.get(parsed.commander.toLowerCase());
+      if (cmd) { setCommander(cmd); added++; }
+    }
+
+    for (const { name, quantity } of parsed.cards) {
+      const card = byName.get(name.toLowerCase());
+      if (!card) continue;
+      for (let q = 0; q < quantity; q++) { addCard(card); }
+      added++;
+    }
+    return added;
+  }
 
   const handleImport = async () => {
     if (!text.trim()) return;
@@ -56,52 +95,14 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
       }
 
       setMessage(`Validating ${allCardNames.length} cards with Scryfall...`);
-
-      // Batch lookup — Scryfall allows up to 75 per request
-      const BATCH_SIZE = 75;
-      const batches: typeof allCardNames[] = [];
-      for (let i = 0; i < allCardNames.length; i += BATCH_SIZE) {
-        batches.push(allCardNames.slice(i, i + BATCH_SIZE));
-      }
-
-      const foundCards: ScryfallCard[] = [];
-      for (const batch of batches) {
-        const result = await getCardCollection(batch);
-        foundCards.push(...result.data);
-      }
-
-      // Add commander first
-      let added = 0;
-      if (parsed.commander) {
-        const commanderCard = foundCards.find(
-          (c) => c.name.toLowerCase() === parsed.commander!.toLowerCase()
-        );
-        if (commanderCard) {
-          setCommander(commanderCard);
-          added++;
-        }
-      }
-
-      // Add regular cards
-      for (const { name, quantity } of parsed.cards) {
-        const card = foundCards.find(
-          (c) => c.name.toLowerCase() === name.toLowerCase()
-        );
-        if (card) {
-          for (let q = 0; q < quantity; q++) {
-            addCard(card);
-          }
-          added++;
-        }
-      }
+      const foundCards = await fetchInBatches(allCardNames);
+      const added = addParsedCards(parsed, foundCards);
 
       setStatus("done");
       setMessage(`Successfully imported ${added} cards.`);
     } catch (err) {
       setStatus("error");
-      setMessage(
-        err instanceof Error ? err.message : "Failed to import cards."
-      );
+      setMessage(err instanceof Error ? err.message : "Failed to import cards.");
     }
   };
 
@@ -114,13 +115,8 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
     }, 200);
   };
 
-  const handleOpenChange = (v: boolean) => {
-    if (!v) handleClose();
-    else setOpen(true);
-  };
-
   return (
-    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
+    <Dialog.Root open={open} onOpenChange={(v) => (v ? setOpen(true) : handleClose())}>
       {children && <Dialog.Trigger asChild>{children}</Dialog.Trigger>}
 
       <Dialog.Portal>
@@ -162,13 +158,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
           {/* Status message */}
           {message && (
             <div
-              className={`flex items-center gap-2 text-sm ${
-                status === "error"
-                  ? "text-red-400"
-                  : status === "done"
-                  ? "text-green-400"
-                  : "text-[var(--text-secondary)]"
-              }`}
+              className={`flex items-center gap-2 text-sm ${getStatusTextClass(status)}`}
             >
               {status === "validating" && (
                 <Loader2 className="w-4 h-4 animate-spin shrink-0" />

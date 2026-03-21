@@ -13,9 +13,9 @@ const COLORS = [
 ];
 
 interface SearchFiltersProps {
-  filters: SearchFilters;
-  onChange: (filters: SearchFilters) => void;
-  className?: string;
+  readonly filters: SearchFilters;
+  readonly onChange: (filters: SearchFilters) => void;
+  readonly className?: string;
 }
 
 export function SearchFilters({ filters, onChange, className }: SearchFiltersProps) {

@@ -6,13 +6,13 @@ import { cn } from "@/components/ui/utils";
 import { useUIStore } from "@/lib/ui/store";
 
 interface SearchBarProps {
-  onSearch: (query: string) => void;
-  onFocus?: () => void;
-  onBlur?: () => void;
-  placeholder?: string;
-  isLoading?: boolean;
-  className?: string;
-  showKeyboardHint?: boolean;
+  readonly onSearch: (query: string) => void;
+  readonly onFocus?: () => void;
+  readonly onBlur?: () => void;
+  readonly placeholder?: string;
+  readonly isLoading?: boolean;
+  readonly className?: string;
+  readonly showKeyboardHint?: boolean;
 }
 
 export function SearchBar({

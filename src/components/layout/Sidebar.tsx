@@ -3,7 +3,7 @@
 import { cn } from "@/components/ui/utils";
 
 interface SidebarProps {
-  className?: string;
+  readonly className?: string;
 }
 
 export function Sidebar({ className }: SidebarProps) {

@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 
 interface BanlistAlertProps {
-  bannedCards: string[];
-  colorViolations: string[];
-  onDismiss?: () => void;
-  className?: string;
+  readonly bannedCards: readonly string[];
+  readonly colorViolations: readonly string[];
+  readonly onDismiss?: () => void;
+  readonly className?: string;
 }
 
 export function BanlistAlert({

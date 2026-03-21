@@ -23,10 +23,65 @@ export interface AISuggestionResult {
 }
 
 function hashDeckState(deck: Deck, stats: DeckStats, bracket: number): string {
-  const cardNames = deck.cards.map((c) => c.name).sort().join(",");
+  const cardNames = deck.cards.map((c) => c.name).sort((a, b) => a.localeCompare(b)).join(",");
   const commander = deck.commander?.name ?? "";
   const partner = deck.partner?.name ?? "";
   return `${commander}|${partner}|${bracket}|${deck.targetBracket}|${deck.budget ?? ""}|${cardNames}`;
+}
+
+function buildSuggestPayload(deck: Deck, stats: DeckStats, bracketScore: BracketScore | null, bracket: number) {
+  return {
+    commanderName: deck.commander?.name ?? null,
+    partnerName: deck.partner?.name ?? null,
+    colorIdentity: [
+      ...(deck.commander?.colorIdentity ?? []),
+      ...(deck.partner?.colorIdentity ?? []),
+    ].filter((v, i, a) => a.indexOf(v) === i),
+    cardNames: deck.cards.map((c) => c.name),
+    categories: {
+      ramp: stats.ramp,
+      draw: stats.draw,
+      removal: stats.removal,
+      boardWipe: stats.boardWipes,
+      creatures: stats.creatures,
+      lands: stats.lands,
+    },
+    avgCmc: stats.avgCmc,
+    bracket,
+    bracketDimensions: bracketScore?.dimensions,
+    bracketWarnings: bracketScore?.warnings,
+    targetBracket: deck.targetBracket,
+    budget: deck.budget,
+    gameChangersCount: stats.gameChangersCount,
+    gameChangersList: stats.gameChangersList,
+    detectedThemes: stats.themes?.map((t) => t.name),
+  };
+}
+
+type StreamAcc = {
+  suggestions: CardSuggestion[];
+  removals: CardRemoval[];
+  analysis: string;
+  provider: AISuggestionResult["provider"];
+};
+
+function applyStreamEvent(event: StreamEvent, acc: StreamAcc): boolean {
+  switch (event.type) {
+    case "analysis":
+      acc.analysis = event.content;
+      acc.provider = event.provider;
+      return true;
+    case "suggestion":
+      acc.suggestions.push(event.data);
+      return true;
+    case "removal":
+      acc.removals.push(event.data);
+      return true;
+    case "done":
+      return false;
+    case "error":
+      throw new Error(event.message);
+  }
 }
 
 export function useAISuggestions() {
@@ -55,32 +110,7 @@ export function useAISuggestions() {
     setResult({ suggestions: [], removals: [], analysis: "", provider: "mock" });
 
     try {
-      const payload = {
-        commanderName: deck.commander?.name ?? null,
-        partnerName: deck.partner?.name ?? null,
-        colorIdentity: [
-          ...(deck.commander?.colorIdentity ?? []),
-          ...(deck.partner?.colorIdentity ?? []),
-        ].filter((v, i, a) => a.indexOf(v) === i),
-        cardNames: deck.cards.map((c) => c.name),
-        categories: {
-          ramp: stats.ramp,
-          draw: stats.draw,
-          removal: stats.removal,
-          boardWipe: stats.boardWipes,
-          creatures: stats.creatures,
-          lands: stats.lands,
-        },
-        avgCmc: stats.avgCmc,
-        bracket,
-        bracketDimensions: bracketScore?.dimensions,
-        bracketWarnings: bracketScore?.warnings,
-        targetBracket: deck.targetBracket,
-        budget: deck.budget,
-        gameChangersCount: stats.gameChangersCount,
-        gameChangersList: stats.gameChangersList,
-        detectedThemes: stats.themes?.map((t) => t.name),
-      };
+      const payload = buildSuggestPayload(deck, stats, bracketScore, bracket);
 
       const response = await fetch("/api/ai/suggest", {
         method: "POST",
@@ -96,10 +126,7 @@ export function useAISuggestions() {
       const decoder = new TextDecoder();
       let buffer = "";
 
-      let provider: AISuggestionResult["provider"] = "mock";
-      let analysis = "";
-      const suggestions: CardSuggestion[] = [];
-      const removals: CardRemoval[] = [];
+      const acc: StreamAcc = { suggestions: [], removals: [], analysis: "", provider: "mock" };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -114,27 +141,13 @@ export function useAISuggestions() {
           if (!trimmed) continue;
           let event: StreamEvent;
           try { event = JSON.parse(trimmed) as StreamEvent; } catch { continue; }
-
-          switch (event.type) {
-            case "analysis":
-              analysis = event.content; provider = event.provider;
-              setResult({ suggestions: [...suggestions], removals: [...removals], analysis, provider });
-              break;
-            case "suggestion":
-              suggestions.push(event.data);
-              setResult({ suggestions: [...suggestions], removals: [...removals], analysis, provider });
-              break;
-            case "removal":
-              removals.push(event.data);
-              setResult({ suggestions: [...suggestions], removals: [...removals], analysis, provider });
-              break;
-            case "done": break;
-            case "error": throw new Error(event.message);
+          if (applyStreamEvent(event, acc)) {
+            setResult({ suggestions: [...acc.suggestions], removals: [...acc.removals], analysis: acc.analysis, provider: acc.provider });
           }
         }
       }
       lastHash.current = hash;
-      lastResult.current = { suggestions, removals, analysis, provider };
+      lastResult.current = { suggestions: acc.suggestions, removals: acc.removals, analysis: acc.analysis, provider: acc.provider };
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
       setResult(null);

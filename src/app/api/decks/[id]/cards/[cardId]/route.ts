@@ -31,6 +31,22 @@ export async function DELETE(_req: Request, { params }: Params) {
   }
 }
 
+type CardPatchFields = {
+  category?: string; quantity?: number; isGameChanger?: boolean; isBanned?: boolean;
+  isCommander?: boolean; isPartner?: boolean; notes?: string | null;
+  scryfallId?: string; imageUri?: string; artCropUri?: string;
+};
+
+function buildCardPatchData(fields: CardPatchFields) {
+  const data: Record<string, unknown> = {};
+  const simple = ["category", "quantity", "isGameChanger", "isBanned", "isCommander", "isPartner", "scryfallId", "imageUri", "artCropUri"] as const;
+  for (const key of simple) {
+    if (fields[key] !== undefined) data[key] = fields[key];
+  }
+  if (fields.notes !== undefined) data.notes = fields.notes ?? null;
+  return data;
+}
+
 // PATCH /api/decks/[id]/cards/[cardId] — update card category (or other fields)
 export async function PATCH(request: Request, { params }: Params) {
   const { id: deckId, cardId } = await params;
@@ -43,13 +59,10 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Card not found" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { category, quantity, isGameChanger, isBanned, isCommander, isPartner, notes, scryfallId, imageUri, artCropUri } = body;
+    const body = await request.json() as CardPatchFields;
+    const { category } = body;
 
-    if (
-      category !== undefined &&
-      typeof category !== "string"
-    ) {
+    if (category !== undefined && typeof category !== "string") {
       return NextResponse.json(
         { error: "category must be a string" },
         { status: 400 }
@@ -58,18 +71,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     const updated = await prisma.deckCard.update({
       where: { id: cardId },
-      data: {
-        ...(category !== undefined && { category }),
-        ...(quantity !== undefined && { quantity }),
-        ...(isGameChanger !== undefined && { isGameChanger }),
-        ...(isBanned !== undefined && { isBanned }),
-        ...(isCommander !== undefined && { isCommander }),
-        ...(isPartner !== undefined && { isPartner }),
-        ...(notes !== undefined && { notes: notes ?? null }),
-        ...(scryfallId !== undefined && { scryfallId }),
-        ...(imageUri !== undefined && { imageUri }),
-        ...(artCropUri !== undefined && { artCropUri }),
-      },
+      data: buildCardPatchData(body),
     });
 
     await prisma.deck.update({

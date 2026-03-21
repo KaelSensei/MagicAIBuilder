@@ -10,39 +10,39 @@ interface Params {
 // ─── Types matching the API response ─────────────────────────────────────────
 
 interface ApiCard {
-  id: string;
-  scryfallId: string;
-  name: string;
-  manaCost: string;
-  cmc: number;
-  typeLine: string;
-  oracleText: string;
-  colorIdentity: string[];
-  isGameChanger: boolean;
-  isBanned: boolean;
-  price: number | null;
-  imageUri: string;
-  artCropUri: string;
-  category: string;
-  quantity: number;
-  isCommander: boolean;
-  isPartner: boolean;
+  readonly id: string;
+  readonly scryfallId: string;
+  readonly name: string;
+  readonly manaCost: string;
+  readonly cmc: number;
+  readonly typeLine: string;
+  readonly oracleText: string;
+  readonly colorIdentity: readonly string[];
+  readonly isGameChanger: boolean;
+  readonly isBanned: boolean;
+  readonly price: number | null;
+  readonly imageUri: string;
+  readonly artCropUri: string;
+  readonly category: string;
+  readonly quantity: number;
+  readonly isCommander: boolean;
+  readonly isPartner: boolean;
 }
 
 interface ApiSharedDeck {
-  id: string;
-  name: string;
-  format: string;
-  targetBracket: number;
-  budget: number | null;
-  commanderId: string | null;
-  partnerId: string | null;
-  companionId: string | null;
-  pairingType: string;
-  shareEnabled: boolean;
-  cards: ApiCard[];
-  createdAt: string;
-  updatedAt: string;
+  readonly id: string;
+  readonly name: string;
+  readonly format: string;
+  readonly targetBracket: number;
+  readonly budget: number | null;
+  readonly commanderId: string | null;
+  readonly partnerId: string | null;
+  readonly companionId: string | null;
+  readonly pairingType: string;
+  readonly shareEnabled: boolean;
+  readonly cards: readonly ApiCard[];
+  readonly createdAt: string;
+  readonly updatedAt: string;
 }
 
 // ─── Server-side data fetching ────────────────────────────────────────────────
@@ -78,11 +78,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const partner = deck.cards.find((c) => c.isPartner);
   const cardCount =
     deck.cards.length;
-  const commanderLabel = commander
-    ? partner
-      ? `${commander.name} + ${partner.name}`
-      : commander.name
-    : "No commander";
+  let commanderLabel: string;
+  if (!commander) { commanderLabel = "No commander"; }
+  else if (partner) { commanderLabel = `${commander.name} + ${partner.name}`; }
+  else { commanderLabel = commander.name; }
 
   const description = `Commander: ${commanderLabel} · ${cardCount} cards · Bracket ${deck.targetBracket} · ${deck.format}`;
 

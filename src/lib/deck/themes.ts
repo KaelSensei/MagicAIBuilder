@@ -256,44 +256,49 @@ const THEME_RULES: Record<ThemeName, ThemeRule> = {
   },
 };
 
+type CardScore = { keyword: string; hits: number };
+
+/** Score a single card against a theme rule — returns first matching keyword and hit weight */
+function scoreCardForTheme(card: DeckCard, rule: ThemeRule): readonly [CardScore | null, CardScore | null] {
+  const oracleText = card.oracleText.toLowerCase();
+  const typeLine = card.typeLine.toLowerCase();
+
+  let oracleMatch: CardScore | null = null;
+  for (const kw of rule.keywords) {
+    if (oracleText.includes(kw.toLowerCase())) {
+      oracleMatch = { keyword: kw, hits: rule.weight ?? 1 };
+      break;
+    }
+  }
+
+  let typeMatch: CardScore | null = null;
+  for (const typeKw of rule.typeKeywords ?? []) {
+    if (typeLine.includes(typeKw.toLowerCase())) {
+      typeMatch = { keyword: typeKw, hits: (rule.weight ?? 1) * 0.5 };
+      break;
+    }
+  }
+
+  return [oracleMatch, typeMatch] as const;
+}
+
 /** Detect themes from a list of deck cards */
 export function detectThemes(cards: DeckCard[]): DetectedTheme[] {
   const results: DetectedTheme[] = [];
 
-  for (const [themeName, rule] of Object.entries(THEME_RULES) as [
-    ThemeName,
-    ThemeRule,
-  ][]) {
+  for (const [themeName, rule] of Object.entries(THEME_RULES) as [ThemeName, ThemeRule][]) {
     const matchedKeywords = new Set<string>();
     let hits = 0;
 
     for (const card of cards) {
-      const oracleText = card.oracleText.toLowerCase();
-      const typeLine = card.typeLine.toLowerCase();
-
-      for (const kw of rule.keywords) {
-        if (oracleText.includes(kw.toLowerCase())) {
-          matchedKeywords.add(kw);
-          hits += rule.weight ?? 1;
-          break; // Count card once per theme, not per keyword
-        }
-      }
-
-      for (const typeKw of rule.typeKeywords ?? []) {
-        if (typeLine.includes(typeKw.toLowerCase())) {
-          matchedKeywords.add(typeKw);
-          hits += (rule.weight ?? 1) * 0.5;
-          break;
-        }
-      }
+      const [oracleMatch, typeMatch] = scoreCardForTheme(card, rule);
+      if (oracleMatch) { matchedKeywords.add(oracleMatch.keyword); hits += oracleMatch.hits; }
+      if (typeMatch) { matchedKeywords.add(typeMatch.keyword); hits += typeMatch.hits; }
     }
 
-    // Confidence: scale hits vs deck size
+    // Confidence: scale hits vs deck size — ~10 matching cards in 99-card deck ≈ 1.0
     const deckSize = Math.max(cards.length, 1);
-    // Normalize: themes usually need 5-20 cards to be strong
-    const rawConf = hits / deckSize;
-    // Scale so that ~10 matching cards in a 99-card deck ≈ 1.0
-    const confidence = Math.min(1, rawConf * (deckSize / 10));
+    const confidence = Math.min(1, (hits / deckSize) * (deckSize / 10));
 
     if (confidence >= 0.05) {
       results.push({
@@ -304,6 +309,5 @@ export function detectThemes(cards: DeckCard[]): DetectedTheme[] {
     }
   }
 
-  // Sort by confidence descending
   return results.sort((a, b) => b.confidence - a.confidence);
 }

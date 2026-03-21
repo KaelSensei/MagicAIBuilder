@@ -8,10 +8,10 @@ import { DraggableCard } from "./DraggableCard";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
 
 interface CardSearchListItemProps {
-  card: ScryfallCard;
-  onClick?: (card: ScryfallCard) => void;
-  draggable?: boolean;
-  className?: string;
+  readonly card: ScryfallCard;
+  readonly onClick?: (card: ScryfallCard) => void;
+  readonly draggable?: boolean;
+  readonly className?: string;
 }
 
 function ListItemContent({

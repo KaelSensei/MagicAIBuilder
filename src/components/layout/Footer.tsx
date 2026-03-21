@@ -27,8 +27,8 @@ export function Footer() {
             className="underline hover:text-[var(--text-primary)] transition-colors"
           >
             company.wizards.com
-          </a>
-          .
+          </a>{"."}
+
         </p>
         <p>
           Some card prices and other card data are provided by Scryfall. Scryfall makes no

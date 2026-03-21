@@ -7,17 +7,17 @@ import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import { cn } from "@/components/ui/utils";
 
 interface CardImageProps {
-  imageUri: string;
-  name: string;
-  largeUri?: string;
-  manaCost?: string;
-  cmc?: number;
+  readonly imageUri: string;
+  readonly name: string;
+  readonly largeUri?: string;
+  readonly manaCost?: string;
+  readonly cmc?: number;
   /** Show hover zoom effect */
-  zoomOnHover?: boolean;
+  readonly zoomOnHover?: boolean;
   /** Show name/mana overlay on hover */
-  showOverlay?: boolean;
-  className?: string;
-  onClick?: () => void;
+  readonly showOverlay?: boolean;
+  readonly className?: string;
+  readonly onClick?: () => void;
 }
 
 /** Render mana cost as colored pips — simplified text version */
@@ -64,6 +64,8 @@ export function CardImage({
 
   return (
     <div
+      role="img"
+      aria-label={name}
       className={cn("relative inline-block w-full", className)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {

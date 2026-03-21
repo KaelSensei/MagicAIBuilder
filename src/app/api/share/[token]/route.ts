@@ -18,7 +18,7 @@ export async function GET(_req: Request, { params }: Params) {
       include: { cards: true },
     });
 
-    if (!deck || !deck.shareEnabled) {
+    if (!deck?.shareEnabled) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 

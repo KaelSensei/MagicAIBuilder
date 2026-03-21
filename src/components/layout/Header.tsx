@@ -6,7 +6,7 @@ import { ImportDialog } from "@/components/deck/ImportDialog";
 import { useTheme } from "@/hooks/useTheme";
 
 interface HeaderProps {
-  deckId?: string;
+  readonly deckId?: string;
 }
 
 export function Header({ deckId }: HeaderProps = {}) {

@@ -33,12 +33,12 @@ export function validateCardForDeck(
 
   // Check color identity
   if (deck.commander) {
-    const commanderIdentity = [
+    const commanderIdentitySet = new Set([
       ...deck.commander.colorIdentity,
       ...(deck.partner?.colorIdentity ?? []),
-    ];
+    ]);
     const violation = card.colorIdentity.filter(
-      (c) => !commanderIdentity.includes(c)
+      (c) => !commanderIdentitySet.has(c)
     );
     if (violation.length > 0) {
       isColorViolation = true;
@@ -70,68 +70,37 @@ export function validateCardForDeck(
   };
 }
 
-/** Full deck validation */
-export function validateDeck(deck: Deck): ValidationResult {
-  const errors: string[] = [];
-  const warnings: string[] = [];
-
-  const allCards = [
-    ...(deck.commander ? [deck.commander] : []),
-    ...(deck.partner ? [deck.partner] : []),
-    ...deck.cards,
-  ];
-
-  // Card count
-  const totalCards = allCards.reduce((sum, c) => sum + c.quantity, 0);
-  if (totalCards !== 100) {
-    if (totalCards < 100) {
-      warnings.push(`Deck has ${totalCards}/100 cards — needs ${100 - totalCards} more`);
-    } else {
-      errors.push(`Deck has ${totalCards}/100 cards — remove ${totalCards - 100} cards`);
-    }
+function checkCardCount(allCards: DeckCard[], errors: string[], warnings: string[]): void {
+  const total = allCards.reduce((sum, c) => sum + c.quantity, 0);
+  if (total === 100) return;
+  if (total < 100) {
+    warnings.push(`Deck has ${total}/100 cards — needs ${100 - total} more`);
+  } else {
+    errors.push(`Deck has ${total}/100 cards — remove ${total - 100} cards`);
   }
+}
 
-  // Commander required
-  if (!deck.commander) {
-    errors.push("Deck must have a commander");
+function checkColorIdentityViolations(deck: Deck, errors: string[]): void {
+  if (!deck.commander) return;
+  const identitySet = new Set([...deck.commander.colorIdentity, ...(deck.partner?.colorIdentity ?? [])]);
+  const violations = deck.cards.filter((c) =>
+    c.colorIdentity.some((color) => !identitySet.has(color))
+  );
+  if (violations.length > 0) {
+    errors.push(`Color identity violations: ${violations.map((c) => c.name).join(", ")}`);
   }
+}
 
-  // Banned cards
-  const bannedCards = allCards.filter((c) => c.isBanned);
-  if (bannedCards.length > 0) {
-    errors.push(
-      `Banned cards in deck: ${bannedCards.map((c) => c.name).join(", ")}`
-    );
-  }
-
-  // Color identity violations
-  if (deck.commander) {
-    const commanderIdentity = [
-      ...deck.commander.colorIdentity,
-      ...(deck.partner?.colorIdentity ?? []),
-    ];
-    const violations = deck.cards.filter((c) =>
-      c.colorIdentity.some((color) => !commanderIdentity.includes(color))
-    );
-    if (violations.length > 0) {
-      errors.push(
-        `Color identity violations: ${violations.map((c) => c.name).join(", ")}`
-      );
-    }
-  }
-
-  // Game changers warnings
+function checkGameChangers(allCards: DeckCard[], warnings: string[]): void {
   const gcCards = allCards.filter((c) => c.isGameChanger);
-  if (gcCards.length > 0) {
-    warnings.push(
-      `${gcCards.length} Game Changer(s) detected: ${gcCards.map((c) => c.name).join(", ")}`
-    );
-    if (gcCards.length > 3) {
-      warnings.push("More than 3 Game Changers — deck is Bracket 4 minimum");
-    }
+  if (gcCards.length === 0) return;
+  warnings.push(`${gcCards.length} Game Changer(s) detected: ${gcCards.map((c) => c.name).join(", ")}`);
+  if (gcCards.length > 3) {
+    warnings.push("More than 3 Game Changers — deck is Bracket 4 minimum");
   }
+}
 
-  // Singleton rule (non-basic lands)
+function checkSingleton(allCards: DeckCard[], errors: string[]): void {
   const nameCounts: Record<string, number> = {};
   for (const card of allCards) {
     if (!card.typeLine.toLowerCase().includes("basic land")) {
@@ -144,12 +113,35 @@ export function validateDeck(deck: Deck): ValidationResult {
   if (duplicates.length > 0) {
     errors.push(`Duplicate cards (singleton violation): ${duplicates.join(", ")}`);
   }
+}
 
-  return {
-    valid: errors.length === 0,
-    errors,
-    warnings,
-  };
+/** Full deck validation */
+export function validateDeck(deck: Deck): ValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const allCards = [
+    ...(deck.commander ? [deck.commander] : []),
+    ...(deck.partner ? [deck.partner] : []),
+    ...deck.cards,
+  ];
+
+  checkCardCount(allCards, errors, warnings);
+
+  if (!deck.commander) {
+    errors.push("Deck must have a commander");
+  }
+
+  const bannedCards = allCards.filter((c) => c.isBanned);
+  if (bannedCards.length > 0) {
+    errors.push(`Banned cards in deck: ${bannedCards.map((c) => c.name).join(", ")}`);
+  }
+
+  checkColorIdentityViolations(deck, errors);
+  checkGameChangers(allCards, warnings);
+  checkSingleton(allCards, errors);
+
+  return { valid: errors.length === 0, errors, warnings };
 }
 
 /** Check color identity compatibility */
@@ -165,7 +157,7 @@ export function detectGameChanger(oracleText: string): boolean {
   const text = oracleText.toLowerCase();
   // Heuristics: very powerful effects
   return (
-    text.includes("search your library") && text.includes("put") && !text.includes("land") ||
+    (text.includes("search your library") && text.includes("put") && !text.includes("land")) ||
     text.includes("take an extra turn") ||
     text.includes("each opponent loses") ||
     text.includes("win the game")

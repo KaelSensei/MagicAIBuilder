@@ -22,7 +22,7 @@ interface ApiCard {
   cmc: number;
   typeLine: string;
   oracleText: string;
-  colorIdentity: string[];
+  readonly colorIdentity: readonly string[];
   isGameChanger: boolean;
   isBanned: boolean;
   price: number | null;
@@ -45,7 +45,7 @@ interface ApiSharedDeck {
   companionId: string | null;
   pairingType: string;
   shareEnabled: boolean;
-  cards: ApiCard[];
+  readonly cards: readonly ApiCard[];
   createdAt: string;
   updatedAt: string;
 }
@@ -150,9 +150,9 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
     (cat) => cat !== "commander" && cat !== "companion" && cardsByCategory[cat]?.length
   );
 
-  const manaCurve = useMemo(() => computeManaCurve(deck.cards), [deck.cards]);
-  const colorDist = useMemo(() => computeColorDistribution(deck.cards), [deck.cards]);
-  const avgCmc = useMemo(() => computeAvgCmc(deck.cards), [deck.cards]);
+  const manaCurve = useMemo(() => computeManaCurve([...deck.cards]), [deck.cards]);
+  const colorDist = useMemo(() => computeColorDistribution([...deck.cards]), [deck.cards]);
+  const avgCmc = useMemo(() => computeAvgCmc([...deck.cards]), [deck.cards]);
   const totalCards = deck.cards.length;
   const gameChangers = deck.cards.filter((c) => c.isGameChanger);
 
@@ -179,7 +179,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           cmc: card.cmc,
           typeLine: card.typeLine,
           oracleText: card.oracleText,
-          colorIdentity: card.colorIdentity,
+          colorIdentity: [...card.colorIdentity],
           isGameChanger: card.isGameChanger,
           isBanned: card.isBanned,
           price: card.price,
@@ -292,17 +292,19 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                   : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white disabled:opacity-60 disabled:cursor-not-allowed"
               )}
             >
-              {imported ? (
+              {imported && (
                 <>
                   <Check className="w-4 h-4" />
                   Imported!
                 </>
-              ) : importing ? (
+              )}
+              {!imported && importing && (
                 <>
                   <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                   Importing…
                 </>
-              ) : (
+              )}
+              {!imported && !importing && (
                 <>
                   <ExternalLink className="w-4 h-4" />
                   Import this deck

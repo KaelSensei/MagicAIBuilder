@@ -5,8 +5,8 @@ import { ChevronDown, ChevronRight, Edit3 } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 
 interface DeckDescriptionEditorProps {
-  deckId: string;
-  description: string | null | undefined;
+  readonly deckId: string;
+  readonly description: string | null | undefined;
 }
 
 export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEditorProps) {
@@ -26,11 +26,15 @@ export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEd
     else if (!editing) setExpanded(false);
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const startEditing = () => {
     setExpanded(true);
     setEditing(true);
     setTimeout(() => textareaRef.current?.focus(), 0);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    startEditing();
   };
 
   const handleSave = () => {
@@ -109,8 +113,11 @@ export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEd
             </div>
           ) : (
             <div
+              role="button"
+              tabIndex={0}
               className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap cursor-text min-h-[24px]"
               onClick={handleEdit}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") startEditing(); }}
               title="Click to edit"
             >
               {hasContent ? (
