@@ -1,5 +1,7 @@
 # MagicAIBuilder ✦
 
+![Banner](assets/banner.png)
+
 > A beautiful, intelligent Commander deck builder powered by Scryfall, bracket scoring, and AI suggestions.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
