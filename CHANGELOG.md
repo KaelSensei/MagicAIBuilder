@@ -65,6 +65,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `src/app/api/ai/suggest/route.ts` — Next.js API route proxying AI provider calls
 - Requires commander to be set before AI analysis is available
 
+### Fixed — 2026-03-21: Security (#29)
+- `next.config.ts` — upgrade Next.js to patch RCE CVE, restrict `images.remotePatterns` to Scryfall domains only, add `X-Content-Type-Options` / `X-Frame-Options` security headers
+- `src/app/api/**` — input validation with Zod on all API routes, log sanitization to prevent log injection
+
+### Added — 2026-03-21: Card Grid Hover Overlay (#28)
+- `src/components/card/CardImage.tsx` — hover overlay shows card name, mana cost, and "+" add-to-deck indicator on search result grid cards
+- `src/components/card/CardGrid.tsx` — overlay wired to grid items
+
+### Added — 2026-03-21: Deck Grid View + Commander Hover Tooltip (#23)
+- `src/components/deck/DeckEditor.tsx` — deck card grid view with card images (alongside existing list view)
+- Commander card shows hover tooltip with full card details
+
+### Added — 2026-03-21: Game Changer Toast Warning (#21)
+- `src/lib/deck/store.ts` — `addCard` triggers toast notification when a Game Changer card is added
+- `src/hooks/useToast.ts` — toast hook extended with GC-specific warning
+
 ### Added — Phase 3: Database & Prisma Integration
 
 - `docker-compose.yml` — Postgres 16-alpine service

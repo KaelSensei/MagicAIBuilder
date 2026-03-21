@@ -46,6 +46,19 @@
 - [x] Light / dark theme toggle with persistence
 - [x] Export deck (multiple formats)
 - [x] Delete deck with confirmation
+- [x] Deck card grid view with card images (alongside list view)
+- [x] Commander hover tooltip with full card details
+- [x] Card grid hover overlay (name + mana cost + add indicator)
+- [x] Game Changer toast warning on addCard
+- [x] Mana symbols as official Scryfall SVGs in color filter
+- [x] Oracle text panel in printing selector modal
+
+### Security
+
+- [x] Next.js upgraded to patch RCE CVE
+- [x] Scryfall image domains restricted in `next.config.ts`
+- [x] Security headers (X-Content-Type-Options, X-Frame-Options)
+- [x] Input validation with Zod on all API routes
 
 ### Features
 
