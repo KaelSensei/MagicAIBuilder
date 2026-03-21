@@ -11,9 +11,11 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useDeckStore } from "@/lib/deck/store";
+import { useUIStore } from "@/lib/ui/store";
 import { useDeck } from "@/hooks/useDeck";
 import { useBracketScore } from "@/hooks/useBracketScore";
 import { useCardSearch } from "@/hooks/useCardSearch";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
 import { SearchFilters } from "@/components/search/SearchFilters";
@@ -28,7 +30,7 @@ import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { ArrowLeft, Check, Crown, Download, Pencil } from "lucide-react";
-import { SharePopover } from "@/components/deck/SharePopover";
+import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
@@ -36,6 +38,7 @@ import { ToastContainer } from "@/components/ui/Toast";
 import { CombosPanel } from "@/components/deck/CombosPanel";
 import { useCombos } from "@/hooks/useCombos";
 import { ExportModal } from "@/components/deck/ExportModal";
+import { ImportDialog } from "@/components/deck/ImportDialog";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
@@ -97,8 +100,16 @@ export default function BuilderPage() {
 
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
-  const [showExport, setShowExport] = useState(false);
   const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
+
+  // UI store — modals + keyboard signals
+  const showExport = useUIStore((s) => s.showExportModal);
+  const setShowExport = useUIStore((s) => s.setShowExportModal);
+  const showImportModal = useUIStore((s) => s.showImportModal);
+  const setShowImportModal = useUIStore((s) => s.setShowImportModal);
+
+  // Input focus tracking — suppresses single-key shortcuts when typing
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const query = (() => {
     if (commanderMode) return buildCommanderSearchQuery(searchText, filters);
@@ -144,6 +155,13 @@ export default function BuilderPage() {
     },
     [addCard]
   );
+
+  // Keyboard shortcuts — global listener
+  useKeyboardShortcuts({
+    searchResults: searchData?.data ?? [],
+    onAddCard: handleCardClick,
+    isInputFocused,
+  });
 
   // dnd-kit sensors
   const sensors = useSensors(
@@ -293,16 +311,13 @@ export default function BuilderPage() {
           <span className="text-xs text-[var(--text-secondary)]">
             {(deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
           </span>
-          <div className="ml-auto flex items-center gap-2">
-            <SharePopover deckId={deckId} />
-            <button
-              onClick={() => setShowExport(true)}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-            >
-              <Download className="w-3 h-3" />
-              Export
-            </button>
-          </div>
+          <button
+            onClick={() => setShowExport(true)}
+            className="ml-auto flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+          >
+            <Download className="w-3 h-3" />
+            Export
+          </button>
         </div>
 
         {/* 3-panel layout */}
@@ -341,7 +356,13 @@ export default function BuilderPage() {
               {/* Mode-specific controls */}
               {searchMode === "name" && (
                 <>
-                  <SearchBar onSearch={handleSearch} isLoading={searchLoading} />
+                  <SearchBar
+                    onSearch={handleSearch}
+                    isLoading={searchLoading}
+                    showKeyboardHint={true}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
+                  />
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowFilters((f) => !f)}
@@ -381,6 +402,9 @@ export default function BuilderPage() {
                     onSearch={handleSearch}
                     isLoading={searchLoading}
                     placeholder="Filter by name (optional)…"
+                    showKeyboardHint={false}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
                   />
                   <div className="flex flex-wrap gap-1.5">
                     {[
@@ -503,10 +527,16 @@ export default function BuilderPage() {
       {/* Toast notifications */}
       <ToastContainer />
 
+      {/* Keyboard shortcuts modal */}
+      <KeyboardShortcutsModal />
+
       {/* Export modal */}
       {showExport && deck && (
         <ExportModal deck={deck} onClose={() => setShowExport(false)} />
       )}
+
+      {/* Import modal — controlled via UI store (Cmd+I) */}
+      <ImportDialog open={showImportModal} onOpenChange={setShowImportModal} />
 
       {/* Printing selector modal */}
       {printingCard && (
