@@ -155,11 +155,10 @@ export default function HomePage() {
     e.stopPropagation();
     setDuplicatingId(id);
     try {
-      await fetch(`/api/decks/${id}/duplicate`, { method: "POST" });
-      await loadDecks();
+      const newId = await duplicateDeck(id);
+      router.push(`/builder/${newId}`);
     } catch (err) {
       console.error("[handleDuplicateDeck]", err);
-    } finally {
       setDuplicatingId(null);
     }
   };
