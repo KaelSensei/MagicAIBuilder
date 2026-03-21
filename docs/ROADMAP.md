@@ -38,12 +38,12 @@ Tracked features and improvements for future development.
 
 ## Statistics
 
-- [ ] **Enhanced deck statistics** including:
-  - Cards playable on turn 1 (based on CMC and mana production)
-  - Corrected CMC split: with lands vs. without lands (non-land average)
-  - Mana production vs. mana curve alignment: flag color imbalances (e.g. 48% blue symbols but only 30% blue mana production on lands)
-  - Proportion of each mana symbol in card costs vs. proportion of that mana produced by lands
-  - Mana base recommendations based on color requirements
+- [x] **Enhanced deck statistics** (shipped in `feat/enhanced-deck-stats`)
+  - Turn 1 playable count (non-land cards with CMC <= 1)
+  - Dual CMC display: Avg CMC (spells only) + Avg CMC (with lands)
+  - Mana symbol ratio vs. land production ratio per color - gaps > 15% flagged in amber
+  - Recommended land count per color based on pip demand
+  - MDFC flexible land count (`flexibleLands`)
 
 ## Playtesting
 

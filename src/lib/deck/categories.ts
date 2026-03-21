@@ -1,5 +1,6 @@
 // Auto-categorization of cards based on type line and oracle text
-import type { ScryfallCard } from "@/lib/scryfall/types";
+import type { ScryfallCard, ScryfallCardFace } from "@/lib/scryfall/types";
+import { MDFC_LAYOUTS } from "./constants";
 import type { CardCategory } from "./types";
 
 export function isDfcLayout(card: ScryfallCard): boolean {
@@ -102,6 +103,41 @@ function isProtection(card: ScryfallCard): boolean {
     (text.includes("indestructible") && card.cmc <= 3)
   );
 }
+
+// ─── MDFC / DFC helpers ─────────────────────────────────────────────────────
+
+/** Returns true when the card is a double-faced layout (MDFC, transform, reversible) */
+export function isDfcLayout(card: ScryfallCard): boolean {
+  const isKnownLayout = MDFC_LAYOUTS.includes(card.layout as (typeof MDFC_LAYOUTS)[number]);
+  return isKnownLayout && (card.card_faces?.length ?? 0) >= 2;
+}
+
+/** Returns true when a DFC card has a Land on the back face (flexible land) */
+export function isMdfcWithLandBack(card: ScryfallCard): boolean {
+  if (!isDfcLayout(card)) return false;
+  const backFace = card.card_faces?.[1];
+  return (backFace?.type_line?.toLowerCase().includes("land")) ?? false;
+}
+
+/**
+ * Categorize a DFC card using the front face type/oracle only.
+ * Prevents MDFC spell//land from being mis-classified as land.
+ */
+export function categorizeDfcCard(card: ScryfallCard): CardCategory {
+  const frontFace: ScryfallCardFace | undefined = card.card_faces?.[0];
+  if (!frontFace) return categorizeCard(card);
+  const syntheticCard: ScryfallCard = {
+    ...card,
+    type_line: frontFace.type_line ?? card.type_line,
+    oracle_text: frontFace.oracle_text ?? card.oracle_text ?? "",
+    mana_cost: frontFace.mana_cost ?? card.mana_cost,
+    card_faces: undefined,
+    layout: "normal",
+  };
+  return categorizeCard(syntheticCard);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 /** Auto-categorize a Scryfall card into a deck category */
 export function categorizeCard(card: ScryfallCard): CardCategory {

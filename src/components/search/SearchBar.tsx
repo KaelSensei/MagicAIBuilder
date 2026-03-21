@@ -6,13 +6,13 @@ import { cn } from "@/components/ui/utils";
 import { useUIStore } from "@/lib/ui/store";
 
 interface SearchBarProps {
-  readonly onSearch: (query: string) => void;
-  readonly onFocus?: () => void;
-  readonly onBlur?: () => void;
-  readonly placeholder?: string;
-  readonly isLoading?: boolean;
-  readonly className?: string;
-  readonly showKeyboardHint?: boolean;
+  onSearch: (query: string) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  isLoading?: boolean;
+  className?: string;
+  showKeyboardHint?: boolean;
 }
 
 export function SearchBar({
@@ -38,7 +38,7 @@ export function SearchBar({
       inputRef.current?.focus();
       inputRef.current?.select();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: signal-based trigger; stable refs excluded
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchFocusSignal]);
 
   // Trigger clear when signal fires
@@ -48,7 +48,7 @@ export function SearchBar({
       onSearch("");
       inputRef.current?.blur();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: signal-based trigger; onSearch is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchClearSignal]);
 
   useEffect(() => {

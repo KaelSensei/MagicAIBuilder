@@ -83,6 +83,7 @@ export function computeDeckStats(deck: Deck): DeckStats {
   // Theme detection (on all non-land cards)
   const themes = detectThemes(allCards.filter((c) => c.category !== "land"));
 
+  // Flexible lands: MDFC/DFC cards with a land back face
   const flexibleLands = allCards.filter((c) => c.isFlexibleLand === true).reduce((s, c) => s + c.quantity, 0);
 
   return {
@@ -102,6 +103,7 @@ export function computeDeckStats(deck: Deck): DeckStats {
     overBudgetCards,
     bannedCards,
     colorIdentityViolations,
+    flexibleLands,
     themes,
     flexibleLands,
   };

@@ -255,6 +255,17 @@
 
 ---
 
+## Enhanced Deck Statistics (2026-03-26)
+
+- `avgCmcWithLands` / `avgCmcWithoutLands` - dual CMC display in UI
+- `turn1Playable` - count of CMC <= 1 non-land cards
+- `manaSymbolRatio` / `manaProductionRatio` / `manaImbalance` - per-color pip demand vs land supply
+- `recommendedLandsByColor` - ideal land split derived from pip ratio
+- `flexibleLands` - MDFC cards with a land back face
+- Collapsible **Mana Alignment** panel in the stats sidebar, amber warning on gaps > 15%
+
+---
+
 ## Known Issues / Next Steps
 
 1. **E2E tests** — Playwright tests need updates for new UI (search tabs, printing selector, companion)

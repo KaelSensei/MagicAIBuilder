@@ -5,7 +5,7 @@ import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { parseTextDecklist } from "@/lib/deck/import";
-import { fetchInBatches } from "@/lib/deck/batch-fetch";
+import { getCardCollection } from "@/lib/scryfall/client";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -14,12 +14,6 @@ type ImportDialogProps =
   | { children?: never; open: boolean; onOpenChange: (v: boolean) => void };
 
 type ImportStatus = "idle" | "validating" | "done" | "error";
-
-function getStatusTextClass(status: ImportStatus): string {
-  if (status === "error") return "text-red-400";
-  if (status === "done") return "text-green-400";
-  return "text-[var(--text-secondary)]";
-}
 
 export function ImportDialog({ children, open: controlledOpen, onOpenChange: controlledOnOpenChange }: ImportDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
@@ -35,57 +29,19 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
 
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
-  const setPartner = useDeckStore((s) => s.setPartner);
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
 
-  /** Add all found cards to the active deck; returns count of added cards */
-  async function addParsedCards(
-    parsed: ReturnType<typeof parseTextDecklist>,
-    foundCards: ScryfallCard[],
-  ): Promise<number> {
-    const byName = new Map(foundCards.map((c) => [c.name.toLowerCase(), c]));
-    let added = 0;
-
-    // Set commander first and await — it updates pairingType which partner needs
-    if (parsed.commander) {
-      const cmd = byName.get(parsed.commander.toLowerCase());
-      if (cmd) { await setCommander(cmd); added++; }
-    }
-
-    // Set partner after commander is persisted
-    if (parsed.partner) {
-      const prt = byName.get(parsed.partner.toLowerCase());
-      if (prt) { await setPartner(prt); added++; }
-    }
-
-    for (const { name, quantity } of parsed.cards) {
-      const card = byName.get(name.toLowerCase());
-      if (!card) continue;
-      // Pass quantity directly — addCard handles basics with quantity > 1 in a single call
-      addCard(card, quantity);
-      added++;
-    }
-    return added;
-  }
-
   const handleImport = async () => {
-    if (!text.trim()) return;
-    if (!activeDeckId) {
-      setStatus("error");
-      setMessage("No deck selected. Create or open a deck first.");
-      return;
-    }
+    if (!text.trim() || !activeDeckId) return;
 
     setStatus("validating");
     setMessage("Parsing decklist...");
 
     try {
       const parsed = parseTextDecklist(text);
-      // Deduplicate card names before sending to Scryfall batch (user may list same card twice)
       const allCardNames = [
         ...(parsed.commander ? [{ name: parsed.commander }] : []),
-        ...(parsed.partner ? [{ name: parsed.partner }] : []),
-        ...Array.from(new Set(parsed.cards.map((c) => c.name))).map((name) => ({ name })),
+        ...parsed.cards.map((c) => ({ name: c.name })),
       ];
 
       if (allCardNames.length === 0) {
@@ -95,14 +51,52 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
       }
 
       setMessage(`Validating ${allCardNames.length} cards with Scryfall...`);
-      const foundCards = await fetchInBatches(allCardNames);
-      const added = await addParsedCards(parsed, foundCards);
+
+      // Batch lookup — Scryfall allows up to 75 per request
+      const BATCH_SIZE = 75;
+      const batches: typeof allCardNames[] = [];
+      for (let i = 0; i < allCardNames.length; i += BATCH_SIZE) {
+        batches.push(allCardNames.slice(i, i + BATCH_SIZE));
+      }
+
+      const foundCards: ScryfallCard[] = [];
+      for (const batch of batches) {
+        const result = await getCardCollection(batch);
+        foundCards.push(...result.data);
+      }
+
+      // Add commander first
+      let added = 0;
+      if (parsed.commander) {
+        const commanderCard = foundCards.find(
+          (c) => c.name.toLowerCase() === parsed.commander!.toLowerCase()
+        );
+        if (commanderCard) {
+          setCommander(commanderCard);
+          added++;
+        }
+      }
+
+      // Add regular cards
+      for (const { name, quantity } of parsed.cards) {
+        const card = foundCards.find(
+          (c) => c.name.toLowerCase() === name.toLowerCase()
+        );
+        if (card) {
+          for (let q = 0; q < quantity; q++) {
+            addCard(card);
+          }
+          added++;
+        }
+      }
 
       setStatus("done");
       setMessage(`Successfully imported ${added} cards.`);
     } catch (err) {
       setStatus("error");
-      setMessage(err instanceof Error ? err.message : "Failed to import cards.");
+      setMessage(
+        err instanceof Error ? err.message : "Failed to import cards."
+      );
     }
   };
 
@@ -115,8 +109,13 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
     }, 200);
   };
 
+  const handleOpenChange = (v: boolean) => {
+    if (!v) handleClose();
+    else setOpen(true);
+  };
+
   return (
-    <Dialog.Root open={open} onOpenChange={(v) => (v ? setOpen(true) : handleClose())}>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       {children && <Dialog.Trigger asChild>{children}</Dialog.Trigger>}
 
       <Dialog.Portal>
@@ -158,7 +157,13 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
           {/* Status message */}
           {message && (
             <div
-              className={`flex items-center gap-2 text-sm ${getStatusTextClass(status)}`}
+              className={`flex items-center gap-2 text-sm ${
+                status === "error"
+                  ? "text-red-400"
+                  : status === "done"
+                  ? "text-green-400"
+                  : "text-[var(--text-secondary)]"
+              }`}
             >
               {status === "validating" && (
                 <Loader2 className="w-4 h-4 animate-spin shrink-0" />
@@ -184,7 +189,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
             {status !== "done" && (
               <button
                 onClick={handleImport}
-                disabled={!text.trim() || status === "validating"}
+                disabled={!text.trim() || status === "validating" || !activeDeckId}
                 className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {status === "validating" && (

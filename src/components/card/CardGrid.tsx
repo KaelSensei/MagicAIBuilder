@@ -1,5 +1,6 @@
 "use client";
 // Grid display for search results
+import { RefObject } from "react";
 import { motion } from "framer-motion";
 import { CardImage } from "./CardImage";
 import { DraggableCard } from "./DraggableCard";
@@ -12,11 +13,15 @@ import type { CardFace } from "@/lib/deck/types";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
 
 interface CardGridProps {
-  readonly cards: readonly ScryfallCard[];
-  readonly onCardClick?: (card: ScryfallCard) => void;
-  readonly className?: string;
-  readonly emptyMessage?: string;
-  readonly draggable?: boolean;
+  cards: ScryfallCard[];
+  onCardClick?: (card: ScryfallCard) => void;
+  className?: string;
+  emptyMessage?: string;
+  draggable?: boolean;
+  /** Index of the keyboard-selected card (highlights it) */
+  selectedIndex?: number;
+  /** Ref attached to the selected card element for scroll-into-view */
+  selectedRef?: RefObject<HTMLDivElement | null>;
 }
 
 function buildDfcFaces(card: ScryfallCard): [CardFace, CardFace] | undefined {
@@ -45,6 +50,8 @@ export function CardGrid({
   className,
   emptyMessage = "No cards found",
   draggable = false,
+  selectedIndex = -1,
+  selectedRef,
 }: CardGridProps) {
   if (cards.length === 0) {
     return (
@@ -61,10 +68,31 @@ export function CardGrid({
       initial="hidden"
       animate="show"
     >
-      {cards.map((card) => (
-        <motion.div key={card.id} variants={itemVariants} className="relative">
-          {draggable ? (
-            <DraggableCard card={card}>
+      {cards.map((card, idx) => {
+        const isSelected = idx === selectedIndex;
+        return (
+          <motion.div
+            key={card.id}
+            variants={itemVariants}
+            className={cn(
+              "relative rounded transition-all",
+              isSelected && "ring-2 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--background)]"
+            )}
+            ref={isSelected && selectedRef ? (selectedRef as RefObject<HTMLDivElement>) : undefined}
+          >
+            {draggable ? (
+              <DraggableCard card={card}>
+                <CardImage
+                  imageUri={getCardImageUri(card, "normal")}
+                  largeUri={getCardImageUri(card, "large")}
+                  name={card.name}
+                  manaCost={card.mana_cost}
+                  cmc={card.cmc}
+                  showOverlay={true}
+                  onClick={() => onCardClick?.(card)}
+                />
+              </DraggableCard>
+            ) : (
               <CardImage
                 imageUri={getCardImageUri(card, "normal")}
                 largeUri={getCardImageUri(card, "large")}
@@ -76,25 +104,10 @@ export function CardGrid({
                 cardFaces={buildDfcFaces(card)}
                 isFlexibleLand={isMdfcWithLandBack(card)}
               />
-            </DraggableCard>
-          ) : (
-            <CardImage
-              imageUri={getCardImageUri(card, "normal")}
-              largeUri={getCardImageUri(card, "large")}
-              name={card.name}
-              manaCost={card.mana_cost}
-              cmc={card.cmc}
-              showOverlay={true}
-              onClick={() => onCardClick?.(card)}
-            />
-          )}
-          <CollectionBadge
-            scryfallId={card.id}
-            compact
-            className="absolute bottom-6 left-1 z-10"
-          />
-        </motion.div>
-      ))}
+            )}
+          </motion.div>
+        );
+      })}
     </motion.div>
   );
 }

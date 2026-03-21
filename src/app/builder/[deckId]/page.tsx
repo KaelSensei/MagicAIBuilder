@@ -1,12 +1,11 @@
 "use client";
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   DndContext,
   DragEndEvent,
   DragOverlay,
-  MeasuringStrategy,
   PointerSensor,
   useSensor,
   useSensors,
@@ -26,12 +25,11 @@ import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
-import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery } from "@/lib/scryfall/search";
-import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
+import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery } from "@/lib/scryfall/search";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
-import type { SearchFilters as Filters, DeckCard, CardCategory } from "@/lib/deck/types";
+import type { SearchFilters as Filters } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { ArrowLeft, Check, Copy, Crown, Download, FileText, Pencil } from "lucide-react";
+import { ArrowLeft, Check, Crown, Download, Pencil } from "lucide-react";
 import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -41,18 +39,9 @@ import { CombosPanel } from "@/components/deck/CombosPanel";
 import { useCombos } from "@/hooks/useCombos";
 import { ExportModal } from "@/components/deck/ExportModal";
 import { ImportDialog } from "@/components/deck/ImportDialog";
-import { BulkEditModal } from "@/components/deck/BulkEditModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
-import { useResizePanel } from "@/hooks/useResizePanel";
-
-type SearchMode = "name" | "set" | "color";
-function getSearchModeLabel(mode: SearchMode): string {
-  if (mode === "name") return "Name";
-  if (mode === "set") return "By Set";
-  return "By Color";
-}
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
@@ -64,18 +53,11 @@ const DEFAULT_FILTERS: Filters = {
 
 export default function BuilderPage() {
   const params = useParams();
-  const router = useRouter();
   const deckId = params.deckId as string;
 
   // Ensure this deck is active
-  const { setActiveDeck, addCard, removeCard, setCommander, setPartner, updateCardCategory } = useDeck();
+  const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
-  const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
-  const handleDuplicate = useCallback(async () => {
-    const newId = await duplicateDeck(deckId);
-    router.push(`/builder/${newId}`);
-  }, [duplicateDeck, deckId, router]);
-  const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
   const isSyncing = useDeckStore((s) => s.isSyncing);
@@ -91,37 +73,25 @@ export default function BuilderPage() {
     if (deckId && !deck && !isSyncing) {
       loadDecks();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-run when deckId changes; loadDecks is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckId]);
 
   const { stats } = useDeck();
+  const bracketScore = useBracketScore(deck);
   const { data: combos, isLoading: combosLoading } = useCombos(deck);
-  const bracketScore = useBracketScore(deck, combos);
   const { result: aiResult, isLoading: aiLoading, error: aiError, analyze: analyzeAI } = useAISuggestions();
-
-  // Active zone state — lifted from DeckEditor so card adds target the right zone
-  const [activeZone, setActiveZone] = useState<"main" | "sideboard" | "maybeboard">("main");
 
   // Search state
   const [searchText, setSearchText] = useState("");
-  const { width: searchPanelWidth, handleMouseDown: handleSearchResize, handleKeyDown: handleSearchResizeKeyDown } = useResizePanel({
-    initialWidth: 300,
-    minWidth: 220,
-    maxWidth: 520,
-    storageKey: "builder-search-panel-width",
-  });
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [commanderMode, setCommanderMode] = useState(false);
-  const [partnerMode, setPartnerMode] = useState(false);
 
   // Search mode
+  type SearchMode = "name" | "set" | "color";
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
   const [selectedSet, setSelectedSet] = useState<string>("");
   const [colorFilter, setColorFilter] = useState<string[]>([]);
-  const toggleColorFilter = useCallback((code: string) => {
-    setColorFilter((prev) => prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]);
-  }, []);
 
   // Inline deck name editing
   const [isEditingName, setIsEditingName] = useState(false);
@@ -131,10 +101,6 @@ export default function BuilderPage() {
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
   const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
-
-  // State for changing the printing/edition of an existing deck card
-  const [deckCardForPrinting, setDeckCardForPrinting] = useState<DeckCard | null>(null);
-  const [deckCardPrintingCard, setDeckCardPrintingCard] = useState<ScryfallCard | null>(null);
 
   // UI store — modals + keyboard signals
   const showExport = useUIStore((s) => s.showExportModal);
@@ -147,7 +113,6 @@ export default function BuilderPage() {
 
   const query = (() => {
     if (commanderMode) return buildCommanderSearchQuery(searchText, filters);
-    if (partnerMode && deck) return buildPartnerSearchQuery(deck.pairingType, searchText, filters);
     switch (searchMode) {
       case "set":
         return selectedSet ? buildSetSearchQuery(selectedSet, colorFilter) : "";
@@ -174,56 +139,21 @@ export default function BuilderPage() {
     (card: ScryfallCard) => {
       if (commanderMode) {
         setCommander(card);
-        // Stay in commander mode — user may want to change commander again
-      } else if (partnerMode) {
-        setPartner(card);
-        // Stay in partner mode — user may want to change partner again
+        setCommanderMode(false);
       } else {
         // Open printing selector so user can pick their preferred art
         setPrintingCard(card);
       }
     },
-    [setCommander, setPartner, commanderMode, partnerMode]
+    [setCommander, commanderMode]
   );
 
   const handlePrintingSelect = useCallback(
     (card: ScryfallCard) => {
-      addCard(card, undefined, activeZone);
+      addCard(card);
       setPrintingCard(null);
     },
-    [addCard, activeZone]
-  );
-
-  // Open printing selector when clicking a card in the deck grid
-  const handleDeckCardClick = useCallback(async (deckCard: DeckCard) => {
-    try {
-      const { getCardByNameFuzzy } = await import("@/lib/scryfall/client");
-      const scryfallCard = await getCardByNameFuzzy(deckCard.name);
-      setDeckCardForPrinting(deckCard);
-      setDeckCardPrintingCard(scryfallCard);
-    } catch {
-      console.warn("Could not find card:", deckCard.name);
-    }
-  }, []);
-
-  // Replace deck card with a newly selected printing, preserving category
-  const handleDeckCardPrintingSelect = useCallback(
-    async (newCard: ScryfallCard) => {
-      if (!deckCardForPrinting) return;
-      const originalCategory = deckCardForPrinting.category;
-      removeCard(deckCardForPrinting.id);
-      await addCard(newCard);
-      // Restore original category if it differs from the auto-categorized one
-      const addedCard = useDeckStore.getState().decks[deckId]?.cards.find(
-        (c) => c.name === newCard.name
-      );
-      if (addedCard && addedCard.category !== originalCategory) {
-        updateCardCategory(addedCard.id, originalCategory);
-      }
-      setDeckCardForPrinting(null);
-      setDeckCardPrintingCard(null);
-    },
-    [deckCardForPrinting, removeCard, addCard, updateCardCategory, deckId]
+    [addCard]
   );
 
   // Keyboard shortcuts — global listener
@@ -245,7 +175,7 @@ export default function BuilderPage() {
 
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
-    analyzeAI(deck, stats, bracketScore);
+    analyzeAI(deck, stats, bracketScore?.overall ?? deck.targetBracket);
   }, [deck, stats, bracketScore, analyzeAI]);
 
   const handleAIAddCard = useCallback((cardName: string) => {
@@ -258,42 +188,6 @@ export default function BuilderPage() {
     });
   }, [addCard]);
 
-  const dropSearchCard = useCallback(
-    (searchCard: ScryfallCard, overId: string) => {
-      if (overId.startsWith("deck-category-")) {
-        addCard(searchCard, undefined, "main");
-      } else if (overId === "deck-zone-sideboard") {
-        addCard(searchCard, undefined, "sideboard");
-      } else if (overId === "deck-zone-maybeboard") {
-        addCard(searchCard, undefined, "maybeboard");
-      } else if (overId.startsWith("deck-panel-")) {
-        const zone = overId.replace("deck-panel-", "") as "main" | "sideboard" | "maybeboard";
-        addCard(searchCard, undefined, zone);
-      } else if (overId.startsWith("deck-")) {
-        addCard(searchCard, undefined, activeZone);
-      }
-    },
-    [addCard, activeZone]
-  );
-
-  const moveIntraDeck = useCallback(
-    (cardId: string, overId: string, sourceCategory: string | undefined, deckCards: readonly DeckCard[]) => {
-      if (overId.startsWith("deck-category-")) {
-        const newCategory = overId.replace("deck-category-", "");
-        if (newCategory !== sourceCategory) {
-          updateCardCategory(cardId, newCategory as CardCategory);
-        }
-      } else if (overId.startsWith("deck-card-")) {
-        const targetCardId = overId.replace("deck-card-", "");
-        const targetCard = deckCards.find((c) => c.id === targetCardId);
-        if (targetCard && targetCard.category !== sourceCategory) {
-          updateCardCategory(cardId, targetCard.category);
-        }
-      }
-    },
-    [updateCardCategory]
-  );
-
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setActiveDragCard(null);
@@ -301,19 +195,35 @@ export default function BuilderPage() {
       if (!over) return;
 
       const overId = over.id.toString();
+
+      // Case 1: drag from search results → drop on deck category zone
       const searchCard = active.data.current?.card as ScryfallCard | undefined;
-      if (searchCard) {
-        dropSearchCard(searchCard, overId);
+      if (searchCard && overId.startsWith("deck-category-")) {
+        addCard(searchCard);
         return;
       }
 
+      // Case 2: intra-deck drag — move card between categories
       const cardId = active.data.current?.cardId as string | undefined;
       if (cardId) {
-        const sourceCategory = active.data.current?.sourceCategory as string | undefined;
-        moveIntraDeck(cardId, overId, sourceCategory, deck?.cards ?? []);
+        if (overId.startsWith("deck-category-")) {
+          const newCategory = overId.replace("deck-category-", "");
+          const sourceCategory = active.data.current?.sourceCategory as string | undefined;
+          if (newCategory !== sourceCategory) {
+            updateCardCategory(cardId, newCategory as import("@/lib/deck/types").CardCategory);
+          }
+        } else if (overId.startsWith("deck-card-")) {
+          // Dropped over another card → move to that card's category
+          const targetCardId = overId.replace("deck-card-", "");
+          const targetCard = deck?.cards.find((c) => c.id === targetCardId);
+          const sourceCategory = active.data.current?.sourceCategory as string | undefined;
+          if (targetCard && targetCard.category !== sourceCategory) {
+            updateCardCategory(cardId, targetCard.category);
+          }
+        }
       }
     },
-    [dropSearchCard, moveIntraDeck, deck]
+    [addCard, updateCardCategory, deck]
   );
 
   if (!deck) {
@@ -355,7 +265,6 @@ export default function BuilderPage() {
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
     >
       <div className="flex flex-col h-screen overflow-hidden">
         <Header deckId={deckId} />
@@ -399,47 +308,23 @@ export default function BuilderPage() {
               <Pencil className="w-3 h-3 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           )}
-          {deck.isAIGenerated && (
-            <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
-              ✨ AI
-            </span>
-          )}
           <span className="text-xs text-[var(--text-secondary)]">
-            {(deck.cards.filter((c) => c.zone === "main").reduce((s, c) => s + c.quantity, 0) + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
+            {(deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
           </span>
-          <div className="ml-auto flex items-center gap-2">
-            {/* Duplicate deck */}
-            <button
-              onClick={handleDuplicate}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-            >
-              <Copy className="w-3 h-3" />
-              Duplicate
-            </button>
-            {/* Bulk edit — edit deck as plain text */}
-            <BulkEditModal deck={deck}>
-              <button className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">
-                <FileText className="w-3 h-3" />
-                Bulk Edit
-              </button>
-            </BulkEditModal>
-            {/* Export deck */}
-            <button
-              onClick={() => setShowExport(true)}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-            >
-              <Download className="w-3 h-3" />
-              Export
-            </button>
-          </div>
+          <button
+            onClick={() => setShowExport(true)}
+            className="ml-auto flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+          >
+            <Download className="w-3 h-3" />
+            Export
+          </button>
         </div>
 
         {/* 3-panel layout */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Panel 1: Search (resizable) */}
+          {/* Panel 1: Search (300px) */}
           <motion.div
-            style={{ width: searchPanelWidth, minWidth: 220, maxWidth: 520 }}
-            className="shrink-0 border-r border-[var(--border)] flex flex-col bg-[var(--surface)] relative"
+            className="w-[300px] shrink-0 border-r border-[var(--border)] flex flex-col bg-[var(--surface)]"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
@@ -463,7 +348,7 @@ export default function BuilderPage() {
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     )}
                   >
-                    {getSearchModeLabel(mode)}
+                    {mode === "name" ? "Name" : mode === "set" ? "By Set" : "By Color"}
                   </button>
                 ))}
               </div>
@@ -486,7 +371,7 @@ export default function BuilderPage() {
                       {showFilters ? "Hide filters" : "Show filters"}
                     </button>
                     <button
-                      onClick={() => { setCommanderMode((m) => !m); setPartnerMode(false); }}
+                      onClick={() => setCommanderMode((m) => !m)}
                       className={cn(
                         "ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
                         commanderMode
@@ -498,21 +383,6 @@ export default function BuilderPage() {
                       <Crown className="w-3 h-3" />
                       Commander
                     </button>
-                    {deck && supportsPartner(deck.pairingType) && (
-                      <button
-                        onClick={() => { setPartnerMode((m) => !m); setCommanderMode(false); }}
-                        className={cn(
-                          "flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
-                          partnerMode
-                            ? "border-purple-500 text-purple-400 bg-purple-500/10"
-                            : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
-                        )}
-                        title={`Search for a ${partnerSlotLabel(deck.pairingType)}`}
-                      >
-                        <Crown className="w-3 h-3" />
-                        {partnerSlotLabel(deck.pairingType)}
-                      </button>
-                    )}
                   </div>
                   {showFilters && <SearchFilters filters={filters} onChange={setFilters} />}
                 </>
@@ -547,7 +417,13 @@ export default function BuilderPage() {
                     ].map((c) => (
                       <button
                         key={c.code}
-                        onClick={() => toggleColorFilter(c.code)}
+                        onClick={() =>
+                          setColorFilter((prev) =>
+                            prev.includes(c.code)
+                              ? prev.filter((x) => x !== c.code)
+                              : [...prev, c.code]
+                          )
+                        }
                         className={cn(
                           "w-9 h-9 rounded-full transition-all border-2 p-0.5",
                           colorFilter.includes(c.code)
@@ -556,8 +432,7 @@ export default function BuilderPage() {
                         )}
                         title={c.label}
                       >
-                        {/* Official Scryfall mana symbol SVGs — SVG external URL, next/image not applicable */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {/* Official Scryfall mana symbol SVGs */}
                         <img
                           src={`https://svgs.scryfall.io/card-symbols/${c.code}.svg`}
                           alt={c.label}
@@ -587,23 +462,6 @@ export default function BuilderPage() {
             </div>
           </motion.div>
 
-          {/* Resize handle between panel 1 and 2 */}
-          <div
-            role="slider"
-            aria-label="Search panel width"
-            aria-orientation="horizontal"
-            aria-valuemin={220}
-            aria-valuemax={520}
-            aria-valuenow={searchPanelWidth}
-            tabIndex={0}
-            onMouseDown={handleSearchResize}
-            onKeyDown={handleSearchResizeKeyDown}
-            className="w-1 shrink-0 cursor-col-resize hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 transition-colors group relative z-10"
-            title="Drag to resize — use arrow keys to adjust"
-          >
-            <div className="absolute inset-y-0 -left-0.5 -right-0.5" />
-          </div>
-
           {/* Panel 2: Deck Editor (flex-1) */}
           <motion.div
             className="flex-1 border-r border-[var(--border)] flex flex-col overflow-hidden"
@@ -624,10 +482,7 @@ export default function BuilderPage() {
             <DeckEditor
               deck={deck}
               onRemoveCard={removeCard}
-              onCardClick={handleDeckCardClick}
               className="flex-1 overflow-hidden"
-              activeZone={activeZone}
-              onActiveZoneChange={setActiveZone}
             />
           </motion.div>
 
@@ -641,8 +496,6 @@ export default function BuilderPage() {
             <BracketIndicator
               score={bracketScore}
               targetBracket={deck.targetBracket}
-              manualBracket={deck.manualBracket}
-              onManualBracketChange={(b) => setManualBracket(b)}
             />
 
             <GameChangersBadge
@@ -657,10 +510,6 @@ export default function BuilderPage() {
               error={aiError}
               onAnalyze={handleAIAnalyze}
               onAddCard={handleAIAddCard}
-              onRemoveCard={(cardName) => {
-                const card = deck?.cards.find((c) => c.name === cardName);
-                if (card) removeCard(card.id);
-              }}
               disabled={!deck?.commander}
             />
 
@@ -689,24 +538,12 @@ export default function BuilderPage() {
       {/* Import modal — controlled via UI store (Cmd+I) */}
       <ImportDialog open={showImportModal} onOpenChange={setShowImportModal} />
 
-      {/* Printing selector modal — for adding a card from search results */}
+      {/* Printing selector modal */}
       {printingCard && (
         <PrintingSelectorModal
           card={printingCard}
           onSelect={handlePrintingSelect}
           onClose={() => setPrintingCard(null)}
-        />
-      )}
-
-      {/* Printing selector modal — for replacing a deck card's edition/art */}
-      {deckCardPrintingCard && (
-        <PrintingSelectorModal
-          card={deckCardPrintingCard}
-          onSelect={handleDeckCardPrintingSelect}
-          onClose={() => {
-            setDeckCardForPrinting(null);
-            setDeckCardPrintingCard(null);
-          }}
         />
       )}
 
