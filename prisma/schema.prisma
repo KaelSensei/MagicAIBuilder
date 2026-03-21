@@ -1,10 +1,10 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 /// A Commander (or Brawl) deck with its metadata
@@ -14,41 +14,37 @@ model Deck {
   format        String     @default("commander")
   targetBracket Int        @default(2)
   budget        Float?
-  /// Scryfall ID of the commander card
   commanderId   String?
-  /// Scryfall ID of the partner card (optional)
   partnerId     String?
   cards         DeckCard[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 }
 
-/// Individual card entry in a deck (the 99 + commanders)
 model DeckCard {
-  id            String   @id @default(cuid())
-  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  id            String  @id @default(cuid())
+  deck          Deck    @relation(fields: [deckId], references: [id], onDelete: Cascade)
   deckId        String
   scryfallId    String
   name          String
-  manaCost      String   @default("")
-  cmc           Float    @default(0)
-  typeLine      String   @default("")
-  oracleText    String   @default("")
+  manaCost      String  @default("")
+  cmc           Float   @default(0)
+  typeLine      String  @default("")
+  oracleText    String  @default("")
   colorIdentity String[]
-  isGameChanger Boolean  @default(false)
-  isBanned      Boolean  @default(false)
+  isGameChanger Boolean @default(false)
+  isBanned      Boolean @default(false)
   price         Float?
-  imageUri      String   @default("")
-  artCropUri    String   @default("")
-  category      String   @default("other")
-  quantity      Int      @default(1)
-  isCommander   Boolean  @default(false)
-  isPartner     Boolean  @default(false)
+  imageUri      String  @default("")
+  artCropUri    String  @default("")
+  category      String  @default("other")
+  quantity      Int     @default(1)
+  isCommander   Boolean @default(false)
+  isPartner     Boolean @default(false)
 
   @@index([deckId])
 }
 
-/// Server-side cache for Scryfall card data (TTL: 24h)
 model CardCache {
   scryfallId String   @id
   data       Json
