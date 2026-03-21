@@ -15,7 +15,6 @@ A desktop-first Commander (EDH) deck builder with:
 - Import/export (plain text, MTGO, Arena)
 - Light/dark theme with persistence
 - Legal, accessible, fan-site compliant
-- **Collection Mode** — track physical card ownership, show owned/buy badges in deck editor
 
 ---
 
@@ -153,15 +152,23 @@ interface Deck {
 | US-22 | AI deck suggestions with reasoning (Claude / GPT fallback) | ✅ Done |
 | US-23 | Light/dark theme toggle with persistence | ✅ Done |
 
+### P2+ — Deck Annotations (complete)
+
+| # | Story | Status |
+|---|---|---|
+| US-24 | Add a text description to a deck (collapsible, markdown-friendly) | ✅ Done |
+| US-25 | Annotate individual cards with private notes | ✅ Done |
+| US-26 | Tag decks with labels (casual, cEDH, WIP…) and filter by tag on home page | ✅ Done |
+
 ### P3 — Future
 
 | # | Story | Status |
 |---|---|---|
-| US-24 | Onboarding tutorial for new users | 📋 Planned |
-| US-25 | Mobile-responsive layout | 📋 Planned |
-| US-26 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
-| US-27 | Moxfield / Archidekt import from URL | 📋 Planned |
-| US-28 | User accounts and deck sharing | 📋 Planned |
+| US-27 | Onboarding tutorial for new users | 📋 Planned |
+| US-28 | Mobile-responsive layout | 📋 Planned |
+| US-29 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
+| US-30 | Moxfield / Archidekt import from URL | 📋 Planned |
+| US-31 | User accounts and deck sharing | 📋 Planned |
 
 ---
 
@@ -246,27 +253,3 @@ See `LEGAL.md` for full disclaimer text.
 - **Wizards of the Coast**: MagicAIBuilder is unofficial fan content permitted under the Fan Content Policy. Not affiliated with or endorsed by WotC.
 - **Scryfall**: Card data and images provided via the Scryfall API. Not affiliated with Scryfall LLC.
 - All card names, art, and game mechanics are © Wizards of the Coast LLC.
-
----
-
-## Collection Mode Specification
-
-### User Stories
-1. As a player, I can register which cards I own and how many copies
-2. When building a deck, I can see which cards I already own vs. need to buy
-3. I can filter card search to only show cards from my collection
-4. I can view my full collection with total value estimate
-
-### Features
-- Add cards with quantity, foil variant, condition (NM/LP/MP/HP/DMG), purchase price
-- Collection page: grid/list view, search, stats (unique cards, total qty, total value)
-- Collection badges on search results: "In Collection (xN)"
-- Deck editor badges: "Owned" (green) or "Buy" (amber) per card
-- "Show only collection cards" filter toggle in search panel
-- Upsert logic: adding same card+foil increments quantity automatically
-- Quantity controls inline (+ / -) in both grid and list views
-
-### Data Model
-- `CollectionCard` — id, scryfallId, name, quantity, foil, condition, acquiredAt, price, imageUri, createdAt
-- Unique constraint on (scryfallId, foil) to prevent duplicates
-

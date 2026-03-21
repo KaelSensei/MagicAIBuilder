@@ -5,9 +5,20 @@ import { useRouter } from "next/navigation";
 import { useDeckStore } from "@/lib/deck/store";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Plus, Layers, Clock, Loader2, Trash2 } from "lucide-react";
+import { Plus, Layers, Clock, Loader2, Trash2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+
+const TAG_COLORS: Record<string, string> = {
+  casual: "bg-green-500/20 text-green-400 border-green-500/30",
+  cEDH: "bg-red-500/20 text-red-400 border-red-500/30",
+  WIP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  budget: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  tuned: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  theme: "bg-pink-500/20 text-pink-400 border-pink-500/30",
+};
+const DEFAULT_TAG_COLOR = "bg-[var(--border)] text-[var(--text-secondary)] border-[var(--border)]";
+const tagColor = (tag: string) => TAG_COLORS[tag] ?? DEFAULT_TAG_COLOR;
 
 function DeckCardSkeleton() {
   return (
@@ -29,7 +40,11 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const deckList = Object.values(decks);
+  const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
+  const allDecks = Object.values(decks);
+  const deckList = activeTagFilter
+    ? allDecks.filter((d) => d.tags?.includes(activeTagFilter))
+    : allDecks;
 
   // Load decks from DB on mount
   useEffect(() => {
@@ -75,9 +90,9 @@ export default function HomePage() {
             <p className="text-sm text-[var(--text-secondary)] mt-1">
               {isLoading
                 ? "Loading…"
-                : deckList.length === 0
+                : deckList.length === 0 && !activeTagFilter
                 ? "No decks yet — create your first deck!"
-                : `${deckList.length} deck${deckList.length > 1 ? "s" : ""}`}
+                : `${deckList.length} deck${deckList.length > 1 ? "s" : ""}${activeTagFilter ? ` tagged "${activeTagFilter}"` : ""}`}
             </p>
           </div>
           <button
@@ -93,6 +108,35 @@ export default function HomePage() {
             New Deck
           </button>
         </div>
+
+        {/* Tag filter bar */}
+        {!isLoading && allDecks.some((d) => d.tags?.length > 0) && (
+          <div className="flex flex-wrap gap-2 mb-4 items-center">
+            <span className="text-xs text-[var(--text-secondary)]">Filter:</span>
+            {Array.from(new Set(allDecks.flatMap((d) => d.tags ?? []))).map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setActiveTagFilter(activeTagFilter === tag ? null : tag)}
+                className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-all ${
+                  activeTagFilter === tag
+                    ? tagColor(tag) + " opacity-100 ring-1 ring-current"
+                    : tagColor(tag) + " opacity-50 hover:opacity-80"
+                }`}
+              >
+                {tag}
+                {activeTagFilter === tag && <X className="w-3 h-3" />}
+              </button>
+            ))}
+            {activeTagFilter && (
+              <button
+                onClick={() => setActiveTagFilter(null)}
+                className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+        )}
 
         {isLoading ? (
           /* Loading skeletons */
@@ -178,6 +222,21 @@ export default function HomePage() {
                         (deck.partner ? 1 : 0)}{" "}
                       / 100 cards
                     </p>
+                    {/* Tags */}
+                    {deck.tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {deck.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className={`text-[10px] px-1.5 py-0.5 rounded-full border ${tagColor(tag)} ${deck.commander?.artCropUri ? "opacity-80" : ""}`}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTagFilter(tag); }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between mt-3">
                       <div className={`flex items-center gap-1 text-xs ${deck.commander?.artCropUri ? "text-white/70" : "text-[var(--text-secondary)]"}`}>
                         <Clock className="w-3 h-3" />

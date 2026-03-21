@@ -32,13 +32,7 @@ src/
     page.tsx                    # Home / deck list (commander art card backgrounds)
     builder/[deckId]/
       page.tsx                  # 3-panel builder view (Search | DeckEditor | Stats)
-    collection/
-      page.tsx                  # Collection page (grid/list of owned cards)
     api/
-      collection/
-        route.ts                # GET /api/collection, POST /api/collection
-        [id]/
-          route.ts              # PATCH/DELETE /api/collection/[id]
       decks/
         route.ts                # GET /api/decks, POST /api/decks
         [id]/
@@ -469,6 +463,21 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 
 ---
 
+## Deck Annotations (feat/deck-notes-description)
+
+### Deck Description
+Field `description String? @default("")` on `Deck`. Stored in DB and synced via `PATCH /api/decks/[id]`. The `DeckDescriptionEditor` component is a collapsible textarea in the deck sidebar, collapsed by default showing the first line as a preview. Supports Ctrl+Enter to save and Esc to cancel. Max 2000 chars (server-enforced).
+
+### Card Notes
+Field `notes String?` on `DeckCard`. Synced via `PATCH /api/decks/[id]/cards/[cardId]`. The `CardNoteInline` component renders a 📝 icon (amber when note exists, invisible until hover when empty) on each list-view card. Clicking opens an inline textarea popover. Note text is shown below the card name in amber. Max 1000 chars (server-enforced).
+
+**Export**: `exportPlainText()` emits notes as `// comment` lines immediately after the card line. Other formats (Moxfield, Arena, MTGO) do not include notes.
+
+### Deck Tags
+Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array. The `DeckTagsEditor` component shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. The home page renders a tag filter bar when any decks have tags, and tag pills on deck cards are clickable to activate filtering.
+
+---
+
 ## Phase Roadmap
 
 | Phase | Focus | Status |
@@ -479,77 +488,5 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 | Phase 3 | Database & Prisma — persistent storage, migrations, DB cache | ✅ Complete |
 | Phase 4 | AI Suggestions — Anthropic/OpenAI integration, deck analysis | ✅ Complete |
 | Phase 4+ | Polish — UI enhancements, export, companion, legal, light/dark theme | ✅ Complete |
-| Phase 5 | Onboarding & Tutorial (planned) | 📋 Planned |
-
----
-
-## Collection Mode Architecture
-
-### Data Model
-
-```prisma
-model CollectionCard {
-  id         String    @id @default(cuid())
-  scryfallId String
-  name       String
-  quantity   Int       @default(1)
-  foil       Boolean   @default(false)
-  condition  String?   // NM / LP / MP / HP / DMG
-  acquiredAt DateTime?
-  price      Float?
-  imageUri   String    @default("")
-  createdAt  DateTime  @default(now())
-
-  @@unique([scryfallId, foil]) // one record per card+foil variant
-  @@index([scryfallId])
-}
-```
-
-### Zustand Store
-
-`useCollectionStore` maintains two maps:
-- `collectionCards: Record<scryfallId, CollectionCard>` — non-foil copies
-- `collectionCardsFoil: Record<scryfallId, CollectionCard>` — foil copies
-
-`getTotalOwned(scryfallId)` returns the sum of both.
-
-### Component Integration
-
-- **Search list view** (`CardSearchListItem`) — shows compact `CollectionBadge`
-- **Search grid view** (`CardGrid`) — shows compact `CollectionBadge` overlay
-- **Deck editor list** (`CardListItem`) — shows `DeckCardOwnershipBadge`
-- **SearchFilters** — "Show only collection cards" toggle (visible only if collection non-empty)
-- **Header** — Collection nav link
-
-### API Upsert Logic
-
-`POST /api/collection` upserts by `(scryfallId, foil)` unique key:
-- If the card+foil variant already exists → increments quantity
-- Otherwise → creates new record
-
-`PATCH /api/collection/[id]` with `quantity=0` auto-deletes the record.
-
-
-
-### AI Suggestions Pattern (Streaming NDJSON)
-
-```
-// POST /api/ai/suggest
-// Request: { commanderName, partnerName, colorIdentity, cardNames[], categories{},
-//            avgCmc, bracket, bracketDimensions{}, bracketWarnings[], targetBracket,
-//            budget, gameChangersCount, gameChangersList[], detectedThemes[] }
-// Response: ReadableStream<NDJSON>
-// Events: { type: "analysis", content, provider }
-//         { type: "suggestion", data: CardSuggestion }
-//         { type: "removal", data: CardRemoval }
-//         { type: "done" }
-//         { type: "error", message }
-```
-
-1. `ANTHROPIC_API_KEY` → Claude Haiku (fastest, cheapest)
-2. `OPENAI_API_KEY` → gpt-4o-mini  
-3. No key → deterministic mock suggestions
-
-Cards appear one-by-one as stream events arrive. Hook uses deck-state hash cache to skip re-analysis if deck hasn't changed.
-
-Prompt sends ALL cards (no cap), bracket dimension scores, detected themes, game changers, and identified gaps. Requests 8 ADD suggestions + 4 REMOVE suggestions with commander-specific synergy reasoning.
+| Phase 5 | Deck Annotations — description, card notes, tags | ✅ Complete |
+| Phase 6 | Onboarding & Tutorial (planned) | 📋 Planned |

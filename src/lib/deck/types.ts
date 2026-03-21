@@ -19,8 +19,7 @@ export type CardCategory =
   | "other";
 
 export interface DeckCard {
-  id: string; // DB CUID (after save) or Scryfall card ID (before save)
-  scryfallId?: string; // Scryfall card ID (populated from DB)
+  id: string; // Scryfall card ID
   name: string;
   manaCost: string; // e.g., "{2}{U}{U}"
   cmc: number;
@@ -34,6 +33,7 @@ export interface DeckCard {
   artCropUri: string; // Art crop for backgrounds
   category: CardCategory; // Auto-assigned or manual
   quantity: number; // Always 1 in Commander (except basics)
+  notes?: string | null; // Private annotation on this card slot
 }
 
 export type CommanderPairingType =
@@ -47,6 +47,8 @@ export type CommanderPairingType =
 export interface Deck {
   id: string;
   name: string;
+  description?: string | null; // Optional deck description (markdown)
+  tags: string[]; // Deck tags e.g. "casual", "cEDH", "WIP"
   commander: DeckCard | null;
   partner: DeckCard | null; // For partner commanders
   companion: DeckCard | null; // Companion (sideboard, outside the 99)
@@ -101,5 +103,4 @@ export interface SearchFilters {
   cmcMin: number | null;
   cmcMax: number | null;
   priceMax: number | null;
-  collectionOnly?: boolean;
 }

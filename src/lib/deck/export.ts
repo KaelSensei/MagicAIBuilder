@@ -6,7 +6,7 @@ function cardLine(card: DeckCard, qty = 1): string {
   return `${qty} ${card.name}`;
 }
 
-/** Plain text export — simple "1 Card Name" format */
+/** Plain text export — simple "1 Card Name" format, with inline notes as comments */
 export function exportPlainText(deck: Deck): string {
   const lines: string[] = [];
   if (deck.commander) {
@@ -22,6 +22,9 @@ export function exportPlainText(deck: Deck): string {
   lines.push("Deck");
   for (const card of deck.cards) {
     lines.push(cardLine(card, card.quantity));
+    if (card.notes?.trim()) {
+      lines.push(`// ${card.notes.trim()}`);
+    }
   }
   return lines.join("\n");
 }
