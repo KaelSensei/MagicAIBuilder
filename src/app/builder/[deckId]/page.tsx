@@ -1,6 +1,6 @@
 "use client";
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   DndContext,
@@ -52,9 +52,9 @@ export default function BuilderPage() {
   const deck = decks[deckId] ?? null;
 
   // Set active deck on mount
-  useState(() => {
+  useEffect(() => {
     if (deckId) setActiveDeck(deckId);
-  });
+  }, [deckId, setActiveDeck]);
 
   const { stats } = useDeck();
   const bracketScore = useBracketScore(deck);
