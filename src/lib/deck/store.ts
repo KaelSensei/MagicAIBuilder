@@ -358,8 +358,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           ...state.decks[activeDeckId],
           commander: deckCard,
           pairingType,
-          // Clear partner if new commander doesn't support pairing
-          partner: supportsPartner(pairingType) ? state.decks[activeDeckId].partner : null,
+          // Clear partner if new commander doesn't support pairing, or if partner is the same card
+          partner: (supportsPartner(pairingType) && state.decks[activeDeckId].partner?.name !== deckCard.name)
+            ? state.decks[activeDeckId].partner
+            : null,
           updatedAt: new Date(),
         },
       },

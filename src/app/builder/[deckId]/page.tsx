@@ -25,7 +25,7 @@ import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
-import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery } from "@/lib/scryfall/search";
+import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery } from "@/lib/scryfall/search";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/deck/types";
@@ -114,7 +114,8 @@ export default function BuilderPage() {
   const [isInputFocused, setIsInputFocused] = useState(false);
 
   const query = (() => {
-    if (commanderMode || partnerMode) return buildCommanderSearchQuery(searchText, filters);
+    if (commanderMode) return buildCommanderSearchQuery(searchText, filters);
+    if (partnerMode && deck) return buildPartnerSearchQuery(deck.pairingType, searchText, filters);
     switch (searchMode) {
       case "set":
         return selectedSet ? buildSetSearchQuery(selectedSet, colorFilter) : "";
