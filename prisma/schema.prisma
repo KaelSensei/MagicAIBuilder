@@ -18,9 +18,27 @@ model Deck {
   partnerId     String?
   companionId   String?
   pairingType   String     @default("none")
+  shareToken    String?        @unique
+  shareEnabled  Boolean        @default(false)
+  description   String         @default("")
+  tags          String[]       @default([])
   cards         DeckCard[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  snapshots     DeckSnapshot[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model DeckSnapshot {
+  id        String   @id @default(cuid())
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  deckId    String
+  name      String
+  cardList  Json
+  commander String?
+  cardCount Int
+  createdAt DateTime @default(now())
+
+  @@index([deckId])
 }
 
 model DeckCard {
@@ -43,6 +61,7 @@ model DeckCard {
   quantity      Int     @default(1)
   isCommander   Boolean @default(false)
   isPartner     Boolean @default(false)
+  notes         String?
 
   @@index([deckId])
 }
