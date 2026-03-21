@@ -14,6 +14,13 @@ interface PlaytestModalProps {
   readonly onClose: () => void;
 }
 
+/** Formats the turn badge label shown in the playtest header. */
+function formatTurnBadge(turn: number, mulliganCount: number): string {
+  if (mulliganCount === 0) return `Turn ${turn}`;
+  const suffix = mulliganCount === 1 ? "mulligan" : "mulligans";
+  return `Turn ${turn} · ${mulliganCount} ${suffix}`;
+}
+
 // Single card in the hand "fan"
 function HandCard({
   card,
@@ -157,12 +164,6 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     stopPlaytest();
     onClose();
   }, [stopPlaytest, onClose]);
-
-  function formatTurnBadge(turn: number, mulliganCount: number): string {
-    if (mulliganCount === 0) return `Turn ${turn}`;
-    const suffix = mulliganCount === 1 ? "mulligan" : "mulligans";
-    return `Turn ${turn} · ${mulliganCount} ${suffix}`;
-  }
 
   const turnBadge = state ? formatTurnBadge(state.turn, state.mulliganCount) : null;
 

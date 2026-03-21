@@ -35,7 +35,7 @@ export function useCardSearchInfinite(query: string) {
       // Extract page number from next_page URL
       if (lastPage.next_page) {
         const url = new URL(lastPage.next_page);
-        return parseInt(url.searchParams.get("page") ?? "2", 10);
+        return Number.parseInt(url.searchParams.get("page") ?? "2", 10);
       }
       return undefined;
     },

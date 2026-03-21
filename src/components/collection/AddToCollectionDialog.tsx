@@ -59,7 +59,7 @@ export function AddToCollectionDialog() {
       quantity,
       foil,
       condition,
-      price: selected.prices?.usd ? parseFloat(selected.prices.usd) : null,
+      price: selected.prices?.usd ? Number.parseFloat(selected.prices.usd) : null,
       imageUri: getCardImageUri(selected, "normal"),
     });
     setAdded(true);
@@ -219,22 +219,9 @@ export function AddToCollectionDialog() {
                     : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
               >
-                {added ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    Added!
-                  </>
-                ) : isSyncing ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Adding…
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-3.5 h-3.5" />
-                    Add to Collection
-                  </>
-                )}
+                {added && <><Check className="w-3.5 h-3.5" />Added!</>}
+                {!added && isSyncing && <><Loader2 className="w-3.5 h-3.5 animate-spin" />Adding…</>}
+                {!added && !isSyncing && <><Plus className="w-3.5 h-3.5" />Add to Collection</>}
               </button>
             </div>
           </div>

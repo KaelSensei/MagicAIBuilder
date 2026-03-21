@@ -27,7 +27,7 @@ function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
     colorIdentity: scryfallCard.color_identity,
     isGameChanger: false,
     isBanned: false,
-    price: scryfallCard.prices?.usd ? parseFloat(scryfallCard.prices.usd) : null,
+    price: scryfallCard.prices?.usd ? Number.parseFloat(scryfallCard.prices.usd) : null,
     imageUri: getCardImageUri(scryfallCard, "normal"),
     artCropUri: getCardImageUri(scryfallCard, "art_crop"),
     category: categorizeCard(scryfallCard),

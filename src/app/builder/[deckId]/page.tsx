@@ -96,7 +96,7 @@ export default function BuilderPage() {
 
   // Search state
   const [searchText, setSearchText] = useState("");
-  const { width: searchPanelWidth, handleMouseDown: handleSearchResize } = useResizePanel({
+  const { width: searchPanelWidth, handleMouseDown: handleSearchResize, handleKeyDown: handleSearchResizeKeyDown } = useResizePanel({
     initialWidth: 300,
     minWidth: 220,
     maxWidth: 520,
@@ -558,11 +558,13 @@ export default function BuilderPage() {
           {/* Resize handle between panel 1 and 2 */}
           <div
             role="separator"
+            aria-label="Resize search panel"
             aria-orientation="vertical"
             tabIndex={0}
             onMouseDown={handleSearchResize}
+            onKeyDown={handleSearchResizeKeyDown}
             className="w-1 shrink-0 cursor-col-resize hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 transition-colors group relative z-10"
-            title="Drag to resize"
+            title="Drag to resize — use arrow keys to adjust"
           >
             <div className="absolute inset-y-0 -left-0.5 -right-0.5" />
           </div>

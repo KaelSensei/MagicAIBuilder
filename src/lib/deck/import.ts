@@ -49,7 +49,7 @@ function processImportLine(line: string, state: ParseState): void {
   const rawName = match
     ? match[2].replace(SET_CODE_PATTERN, "").trim()
     : line.replace(SET_CODE_PATTERN, "").trim();
-  const quantity = match ? clampQuantity(parseInt(match[1], 10)) : 1;
+  const quantity = match ? clampQuantity(Number.parseInt(match[1], 10)) : 1;
   const name = sanitizeName(rawName);
 
   if (!name) {

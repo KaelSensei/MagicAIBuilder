@@ -80,11 +80,15 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
             const isHovered = hoveredCmc === cmc;
 
             return (
-              <div
+              <button
                 key={cmc}
-                className="relative flex flex-col items-center flex-1 h-full justify-end"
+                type="button"
+                className="relative flex flex-col items-center flex-1 h-full justify-end bg-transparent border-0 p-0 cursor-default focus:outline-none"
+                aria-label={`CMC ${cmc === 7 ? "7+" : cmc}: ${count} card${count !== 1 ? "s" : ""}`}
                 onMouseEnter={() => setHoveredCmc(cmc)}
                 onMouseLeave={() => setHoveredCmc(null)}
+                onFocus={() => setHoveredCmc(cmc)}
+                onBlur={() => setHoveredCmc(null)}
               >
                 {/* Tooltip */}
                 <AnimatePresence>
@@ -133,7 +137,7 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
                     )}
                   </AnimatePresence>
                 </motion.div>
-              </div>
+              </button>
             );
           })}
         </div>

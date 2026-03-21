@@ -4,9 +4,9 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 
 /** Detect which pairing type a commander card supports */
 export function detectPairingType(card: ScryfallCard): CommanderPairingType {
-  const keywords = (card.keywords ?? []).map((k) => k.toLowerCase());
+  const keywords = new Set((card.keywords ?? []).map((k) => k.toLowerCase()));
   const oracle = (card.oracle_text ?? "").toLowerCase();
-  const has = (term: string) => keywords.includes(term) || oracle.includes(term);
+  const has = (term: string) => keywords.has(term) || oracle.includes(term);
 
   if (has("friends forever")) return "friends_forever";
   if (has("partner with")) return "partner_with";
