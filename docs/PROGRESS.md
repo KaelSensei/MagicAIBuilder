@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| Current Phase | Phase 5 — Collection Mode |
+| Current Phase | Phase 5+ — AI Builder Improvements |
 | Last Updated | 2026-03-21 |
 | Status | 🚀 Active Development |
 | Main Branch | `main` |
@@ -22,6 +22,21 @@
 | Phase 4 | AI Suggestions | ✅ Complete |
 | Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
 | Phase 5 | Collection Mode | ✅ Complete |
+
+---
+
+## Phase 4+ AI Builder Improvements
+
+### Status: ✅ Complete
+
+- [x] Streaming NDJSON API response (analysis → suggestions → removals → done)
+- [x] Improved prompt with all deck cards, bracket dimensions, themes, gaps
+- [x] Cards to Remove (4 removal suggestions per analysis)
+- [x] AISuggestionsPanel "Cards to Cut" section with Remove button
+- [x] Deck state hash cache to avoid redundant API calls
+- [x] BracketScore passed to hook instead of just number
+- [x] Animated streaming card entries in panel
+
 
 ---
 

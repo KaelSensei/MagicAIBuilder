@@ -19,6 +19,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **Manabox format** — added export support for Manabox (popular iOS/Android MTG collection app); Arena-compatible layout with Commander/Companion/Deck sections
 - **ExportModal card count fix** — total card count in export modal preview now includes the companion
 
+### Added — 2026-03-21: AI Builder Improvements
+
+- **Streaming suggestions** — API now streams NDJSON events instead of blocking; cards appear one-by-one as they arrive
+- **Full deck context** — prompt now sends ALL cards (removed 60-card cap), bracket dimension scores, detected themes, game changers list, and detected gaps
+- **Cards to Remove** — AI now suggests 4 cards to CUT in addition to 8 cards to add (least synergistic / bracket-pushing cards)
+- **Contextual prompt** — commander-specific synergy focus instead of generic staples, respects bracket targets
+- **Remove from deck button** — "Cards to Cut" section in AISuggestionsPanel with a red remove button per card
+- **Suggestion cache** — deck state hash prevents redundant API calls when deck hasn't changed
+- **Streaming UX** — animated card entries, loading skeleton while waiting for first stream event, spinner in header
+
 ### Added — 2026-03-21: Collection Mode
 
 - **CollectionCard Prisma model** — tracks owned cards with scryfallId, name, quantity, foil, condition, price, acquiredAt

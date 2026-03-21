@@ -529,3 +529,27 @@ model CollectionCard {
 
 `PATCH /api/collection/[id]` with `quantity=0` auto-deletes the record.
 
+
+
+### AI Suggestions Pattern (Streaming NDJSON)
+
+```
+// POST /api/ai/suggest
+// Request: { commanderName, partnerName, colorIdentity, cardNames[], categories{},
+//            avgCmc, bracket, bracketDimensions{}, bracketWarnings[], targetBracket,
+//            budget, gameChangersCount, gameChangersList[], detectedThemes[] }
+// Response: ReadableStream<NDJSON>
+// Events: { type: "analysis", content, provider }
+//         { type: "suggestion", data: CardSuggestion }
+//         { type: "removal", data: CardRemoval }
+//         { type: "done" }
+//         { type: "error", message }
+```
+
+1. `ANTHROPIC_API_KEY` → Claude Haiku (fastest, cheapest)
+2. `OPENAI_API_KEY` → gpt-4o-mini  
+3. No key → deterministic mock suggestions
+
+Cards appear one-by-one as stream events arrive. Hook uses deck-state hash cache to skip re-analysis if deck hasn't changed.
+
+Prompt sends ALL cards (no cap), bracket dimension scores, detected themes, game changers, and identified gaps. Requests 8 ADD suggestions + 4 REMOVE suggestions with commander-specific synergy reasoning.
