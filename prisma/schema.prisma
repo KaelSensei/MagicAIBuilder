@@ -18,6 +18,8 @@ model Deck {
   partnerId     String?
   companionId   String?
   pairingType   String     @default("none")
+  shareToken    String?    @unique  // null = private deck
+  shareEnabled  Boolean    @default(false)
   cards         DeckCard[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -53,21 +55,4 @@ model CardCache {
   cachedAt   DateTime @default(now())
 
   @@index([cachedAt])
-}
-
-/// A card owned by the user in their physical collection
-model CollectionCard {
-  id         String    @id @default(cuid())
-  scryfallId String
-  name       String
-  quantity   Int       @default(1)
-  foil       Boolean   @default(false)
-  condition  String?   // NM / LP / MP / HP / DMG
-  acquiredAt DateTime?
-  price      Float?
-  imageUri   String    @default("")
-  createdAt  DateTime  @default(now())
-
-  @@unique([scryfallId, foil])
-  @@index([scryfallId])
 }
