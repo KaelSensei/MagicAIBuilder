@@ -1,14 +1,17 @@
 "use client";
-// Bracket score with breakdown — enhanced UI with dimensions, warnings, animations
+// Bracket score with breakdown — supports manual override with amber warning badge
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import type { BracketScore } from "@/lib/deck/types";
 import { BRACKET_DEFINITIONS } from "@/lib/constants/brackets";
-import { AlertTriangle, Zap } from "lucide-react";
+import { AlertTriangle, Zap, X } from "lucide-react";
 
 interface BracketIndicatorProps {
   score: BracketScore | null;
   targetBracket?: 1 | 2 | 3 | 4;
+  manualBracket?: 1 | 2 | 3 | 4 | null;
+  onManualBracketChange?: (bracket: 1 | 2 | 3 | 4 | null) => void;
   className?: string;
 }
 
@@ -73,8 +76,13 @@ function MiniBar({
 export function BracketIndicator({
   score,
   targetBracket,
+  manualBracket,
+  onManualBracketChange,
   className,
 }: BracketIndicatorProps) {
+  // Controls visibility of the inline bracket-picker when no override is active
+  const [showPicker, setShowPicker] = useState(false);
+
   if (!score) {
     return (
       <div className={cn("rounded-lg bg-[var(--surface)] p-4", className)}>
@@ -85,10 +93,24 @@ export function BracketIndicator({
     );
   }
 
-  const bracketDef = BRACKET_DEFINITIONS[score.overall];
+  // When a manual override is active, use it as the displayed bracket
+  const isOverridden = manualBracket != null;
+  const displayBracket = isOverridden ? manualBracket : score.overall;
+
+  const bracketDef = BRACKET_DEFINITIONS[displayBracket];
   const bracketColor = bracketDef.color;
-  const bgClass = BRACKET_BG[score.overall];
-  const textClass = BRACKET_TEXT[score.overall];
+  const bgClass = BRACKET_BG[displayBracket];
+  const textClass = BRACKET_TEXT[displayBracket];
+
+  const handleSelectManual = (b: 1 | 2 | 3 | 4) => {
+    onManualBracketChange?.(b);
+    setShowPicker(false);
+  };
+
+  const handleReset = () => {
+    onManualBracketChange?.(null);
+    setShowPicker(false);
+  };
 
   return (
     <div
@@ -106,7 +128,7 @@ export function BracketIndicator({
           </p>
           <AnimatePresence mode="wait">
             <motion.div
-              key={score.overall}
+              key={displayBracket}
               className="flex items-baseline gap-2"
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -114,7 +136,7 @@ export function BracketIndicator({
               transition={{ duration: 0.25 }}
             >
               <span className={cn("text-4xl font-bold", textClass)}>
-                {score.overall}
+                {displayBracket}
               </span>
               <span className="text-sm text-[var(--text-secondary)]">
                 {bracketDef.name}
@@ -123,7 +145,7 @@ export function BracketIndicator({
           </AnimatePresence>
         </div>
 
-        {targetBracket && targetBracket !== score.overall && (
+        {targetBracket && targetBracket !== displayBracket && (
           <div className="text-right">
             <p className="text-xs text-[var(--text-secondary)] mb-1">Target</p>
             <span
@@ -141,6 +163,82 @@ export function BracketIndicator({
         )}
       </div>
 
+      {/* Manual override badge — shown when override is active */}
+      {isOverridden && (
+        <div className="flex items-center gap-2 rounded-md bg-amber-500/15 border border-amber-500/40 px-2.5 py-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-amber-400">
+              Manual override — Bracket {manualBracket}
+            </p>
+            <p className="text-xs text-amber-400/70">
+              Ignores Game Changers rules
+            </p>
+          </div>
+          {onManualBracketChange && (
+            <button
+              onClick={handleReset}
+              className="text-amber-400/70 hover:text-amber-300 transition-colors shrink-0"
+              title="Reset to calculated bracket"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* When no override, show calculated label + optional picker toggle */}
+      {!isOverridden && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-[var(--text-secondary)] italic">
+            Auto-calculated from deck rules
+          </p>
+          {onManualBracketChange && (
+            <button
+              onClick={() => setShowPicker((v) => !v)}
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] underline underline-offset-2 transition-colors"
+            >
+              {showPicker ? "Cancel" : "Override"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Inline bracket picker — visible when showPicker or editing an existing override */}
+      <AnimatePresence>
+        {(showPicker || isOverridden) && onManualBracketChange && (
+          <motion.div
+            key="bracket-picker"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <p className="text-xs text-[var(--text-secondary)] mb-2">
+              Set manual bracket:
+            </p>
+            <div className="flex gap-1.5">
+              {([1, 2, 3, 4] as const).map((b) => (
+                <button
+                  key={b}
+                  onClick={() => handleSelectManual(b)}
+                  className={cn(
+                    "flex-1 h-8 rounded text-sm font-bold transition-all border",
+                    manualBracket === b
+                      ? cn(BRACKET_TEXT[b], "border-current bg-current/10")
+                      : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+                  )}
+                  title={BRACKET_DEFINITIONS[b].name}
+                >
+                  {b}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Overall progress bar */}
       <div className="flex gap-1">
         {([1, 2, 3, 4] as const).map((b) => (
@@ -149,7 +247,7 @@ export function BracketIndicator({
             className="h-2 flex-1 rounded-full"
             style={{
               backgroundColor:
-                b <= score.overall
+                b <= displayBracket
                   ? BRACKET_DEFINITIONS[b].color
                   : "var(--border)",
             }}
@@ -160,7 +258,7 @@ export function BracketIndicator({
         ))}
       </div>
 
-      {/* 6 dimension mini-bars */}
+      {/* 6 dimension mini-bars (always shows raw calculated score, not the manual override) */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
@@ -199,8 +297,8 @@ export function BracketIndicator({
           <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
             Warnings
           </p>
-          {score.warnings.map((warning) => (
-            <div key={warning} className="flex items-start gap-1.5">
+          {score.warnings.map((warning, i) => (
+            <div key={i} className="flex items-start gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
               <span className="text-xs text-[var(--text-secondary)]">
                 {warning}

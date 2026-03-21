@@ -27,7 +27,7 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 type DeckPatchFields = {
-  name?: string; format?: string; targetBracket?: number; budget?: number;
+  name?: string; format?: string; targetBracket?: number; manualBracket?: number | null; budget?: number;
   commanderId?: string; partnerId?: string; companionId?: string;
   pairingType?: string; description?: string; tags?: string[];
 };
@@ -35,7 +35,7 @@ type DeckPatchFields = {
 function buildDeckPatchData(fields: DeckPatchFields, sanitizedName: string | undefined) {
   const data: Record<string, unknown> = {};
   if (sanitizedName !== undefined) data.name = sanitizedName;
-  const simple = ["format", "targetBracket", "budget", "commanderId", "partnerId", "companionId", "pairingType", "description", "tags"] as const;
+  const simple = ["format", "targetBracket", "manualBracket", "budget", "commanderId", "partnerId", "companionId", "pairingType", "description", "tags"] as const;
   for (const key of simple) {
     if (fields[key] !== undefined) data[key] = fields[key];
   }

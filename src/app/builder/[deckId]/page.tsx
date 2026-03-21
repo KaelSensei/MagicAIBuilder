@@ -67,6 +67,7 @@ export default function BuilderPage() {
   // Ensure this deck is active
   const { setActiveDeck, addCard, removeCard, setCommander, setPartner, updateCardCategory } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
+  const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
   const isSyncing = useDeckStore((s) => s.isSyncing);
@@ -540,6 +541,8 @@ export default function BuilderPage() {
             <BracketIndicator
               score={bracketScore}
               targetBracket={deck.targetBracket}
+              manualBracket={deck.manualBracket}
+              onManualBracketChange={(b) => setManualBracket(b)}
             />
 
             <GameChangersBadge

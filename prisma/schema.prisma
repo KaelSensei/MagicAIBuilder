@@ -18,6 +18,7 @@ model Deck {
   partnerId     String?
   companionId   String?
   pairingType   String     @default("none")
+  manualBracket Int?                // null = use calculated score, 1-4 = manual override
   shareToken    String?        @unique
   shareEnabled  Boolean        @default(false)
   description   String         @default("")
