@@ -1,179 +1,204 @@
-# MagicAIBuilder — Phase 1 Progress
+# MagicAIBuilder — Progress Tracker
 
 ## Overview
 
 | Field | Value |
 |---|---|
-| Phase | 1 — Free Build Mode (Foundation) |
-| Start Date | 2026-03-20 |
-| Status | ✅ Phase 1 Complete |
-| Branch | `feat/phase-1-integration` |
+| Current Phase | Post Phase 4 — Polish & Stability |
+| Last Updated | 2026-03-21 |
+| Status | 🚀 Active Development |
+| Main Branch | `main` |
 
 ---
 
-## Phase 1 Checklist
+## Phase Completion Summary
+
+| Phase | Name | Status |
+|---|---|---|
+| Phase 1 | Foundation Scaffold | ✅ Complete |
+| Phase 1+ | Integration (DB, DnD, Import) | ✅ Complete |
+| Phase 2 | Intelligence (Combos, Theme, Pairing) | ✅ Complete |
+| Phase 3 | Database & Prisma | ✅ Complete |
+| Phase 4 | AI Suggestions | ✅ Complete |
+| Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
+
+---
+
+## Phase 4+ Checklist (Polish & Enhancements)
+
+### Bug Fixes
+
+- [x] Drag from search to empty deck — droppable zones were unmounting when deck empty (dnd-kit)
+- [x] removeCard HTTP 404 — `toDeckCard` was using `scryfallId` instead of DB `id`
+- [x] Hydration mismatch on `<html>` — `data-theme` set by inline script before React hydrates
+- [x] Missing `zod` dependency in package.json
+
+### UI Enhancements
+
+- [x] Inline deck rename in builder title bar (click name → input → Enter/Escape)
+- [x] Card printing selector modal (choose art before adding to deck)
+- [x] Search mode tabs: By Name / By Set / By Color
+- [x] Commander art crop as background on home deck cards
+- [x] Favicon SVG + OG image (1200×630)
+- [x] Page metadata: title template, keywords, openGraph
+- [x] Light / dark theme toggle with persistence
+- [x] Export deck (multiple formats)
+- [x] Delete deck with confirmation
+
+### Features
+
+- [x] Companion card support (sideboard slot, outside the 99)
+- [x] Commander pairing types (partner, friends-forever, etc.)
+- [x] AI-assisted deck suggestions (Phase 4)
+- [x] Combo detection via Commander Spellbook API
 
 ### Infrastructure
 
-- [x] Next.js 15 App Router project initialized
-- [x] TypeScript 5 with strict mode
-- [x] Tailwind CSS 4 + PostCSS config
-- [x] shadcn/ui (Radix UI) installed
-- [x] Framer Motion installed
-- [x] Zustand 5 store with persistence
-- [x] TanStack Query 5 provider
-- [x] dnd-kit 6 installed
-- [x] Lucide React icons
-- [x] ESLint 9 + Prettier configured
-- [x] Dark theme by default (CSS custom properties)
-- [x] Design tokens: mana colors, bracket colors, surface/border
-- [x] pnpm as package manager
-- [x] Vitest 3 unit test setup
-- [x] @testing-library/react configured
-- [x] Playwright E2E test setup
+- [x] Prisma upgraded to v6
+- [x] Next.js upgraded to 15.5.14
+- [x] `.gitattributes` for LF line ending normalization
+- [x] `LEGAL.md` — WotC fan site policy + Scryfall disclaimer
+- [x] Footer component with legal notices on home page
+- [x] README: banner, legal section, comprehensive docs
+
+---
+
+## Phase 1–3 Checklist (Foundation → Database)
+
+### Infrastructure
+
+- [x] Next.js 15 App Router
+- [x] TypeScript 5 strict mode
+- [x] Tailwind CSS 4
+- [x] pnpm package manager
+- [x] ESLint 9 + Prettier 3
+- [x] Zustand 5 store
+- [x] TanStack Query 5
+- [x] dnd-kit 6
+- [x] Framer Motion
+- [x] Vitest 3 + Testing Library
+- [x] Playwright E2E
+- [x] Docker Compose + PostgreSQL 16
+- [x] Prisma ORM (schema, migrations, client)
 
 ### Core Types
 
-- [x] `DeckCard` interface
-- [x] `Deck` interface with commander + partner support
-- [x] `DeckStats` interface
-- [x] `BracketScore` interface
-- [x] `CardCategory` union (15 categories)
-- [x] `SearchFilters` interface
+- [x] `DeckCard`, `Deck`, `DeckStats`, `BracketScore`
+- [x] `CardCategory` (15 categories)
+- [x] `SearchFilters`, `ViewMode`
+- [x] `CommanderPairingType`
 - [x] Scryfall API response types
-- [x] `ViewMode` type ("grid" | "list")
 
 ### Scryfall Integration
 
 - [x] Rate-limited API client (100ms between requests)
-- [x] `User-Agent: MagicAIBuilder/1.0` header
-- [x] Card search endpoint
-- [x] Named card lookup (exact + fuzzy)
-- [x] Card by ID lookup
-- [x] Batch collection lookup (POST)
-- [x] Autocomplete endpoint
+- [x] Card search, named lookup, batch collection, autocomplete
 - [x] Game Changers list endpoint
 - [x] Commander banlist endpoint
 - [x] Image URL helpers (all sizes)
-- [x] Search query builder with filter support
-- [x] Commander search query builder (is:commander filter)
+- [x] Search query builders (name, commander, set, color)
+- [x] 24h DB cache via `CardCache` Prisma model
 
 ### Deck Logic
 
-- [x] Auto-categorization engine (ramp, removal, board wipe, draw, tutors, win conditions, protection)
+- [x] Auto-categorization engine (15 categories)
 - [x] `computeDeckStats()` — mana curve, color distribution, avg CMC
-- [x] `scoreBracket()` — 6-dimension scoring with Game Changers override
+- [x] `scoreBracket()` — 6-dimension scoring
 - [x] `validateCardForDeck()` — singleton, color identity, banlist
-- [x] `validateDeck()` — full deck validation
-- [x] Zustand store with persist middleware
-- [x] Text decklist import/export parser
-- [x] Store enrichment: `setGameChangerNames` / `setBannedNames`
-- [x] Store enrichment: cross-reference on `addCard` and `setCommander`
-- [x] View mode preferences persisted in store (searchViewMode, deckViewMode)
+- [x] Text decklist import/export
+- [x] Store enrichment: GC + banlist cross-reference on addCard/setCommander
+
+### API Routes
+
+- [x] `GET/POST /api/decks`
+- [x] `GET/PATCH/DELETE /api/decks/[id]`
+- [x] `POST/DELETE /api/decks/[id]/cards`
+- [x] `DELETE/PATCH /api/decks/[id]/cards/[cardId]`
+- [x] `GET/POST /api/cache/cards`
+- [x] `POST /api/ai/suggest`
 
 ### Hooks
 
-- [x] `useCardSearch` — TanStack Query, 5 min cache, infinite pagination
-- [x] `useCardLookup` / `useCardLookupByName` — 24h cache
+- [x] `useCardSearch` — TanStack Query, 5 min cache
+- [x] `useCardLookup` / `useCardLookupByName`
 - [x] `useDeck` — Zustand + computed stats
 - [x] `useBracketScore` — memoized
-- [x] `useGameChangers` — GC list + deck intersection + `isGameChanger()` helper
+- [x] `useGameChangers` — GC list + `isGameChanger()` helper
 - [x] `useBanlist` — banlist + `isBanned()` helper
+- [x] `useCombos` — Commander Spellbook API
+- [x] `useTheme` — dark/light preference store
+- [x] `useAISuggestions` — AI analysis with provider fallback
 
 ### Components
 
-- [x] `CardImage` — hover zoom with Framer Motion, fallback image
-- [x] `CardGrid` — animated stagger grid (with optional `draggable` prop)
-- [x] `CardListItem` — compact row with flags
-- [x] `CardSearchListItem` — list row for search results (with optional `draggable` prop)
-- [x] `DraggableCard` — dnd-kit useDraggable wrapper for search cards
-- [x] `CardTooltip` — Radix Tooltip with price
-- [x] `SearchBar` — debounced, loading state, clear button
-- [x] `SearchFilters` — color identity, CMC range, price max
-- [x] `SearchResults` — loading/error/empty/results states + grid/list toggle
-- [x] `DeckEditor` — collapsible categories with droppable zones + list/grid toggle
-- [x] `DeckStats` — stat rows with status icons
-- [x] `ManaCurve` — animated bar chart
-- [x] `ColorDistribution` — CSS bar chart for W/U/B/R/G/C pips
-- [x] `BracketIndicator` — score + dimensions
-- [x] `GameChangersBadge` — over-limit warning
-- [x] `BanlistAlert` — banned + color violations
-- [x] `ImportDialog` — Radix Dialog with textarea, Scryfall batch validation, adds to deck
-- [x] `Header` — logo, nav, Import button (triggers ImportDialog in builder context)
-- [x] `EnrichmentProvider` — syncs GC + banlist Sets into Zustand at startup
-- [x] `Sidebar` — placeholder
+- [x] `CardImage`, `CardGrid`, `CardListItem`, `CardTooltip`
+- [x] `DraggableCard`, `PrintingSelectorModal`
+- [x] `SearchBar`, `SearchFilters`, `SearchResults`, `SetAutocomplete`
+- [x] `DeckEditor` — droppable categories, list/grid toggle
+- [x] `DeckStats`, `ManaCurve`, `ColorDistribution`
+- [x] `BracketIndicator`, `GameChangersBadge`, `BanlistAlert`
+- [x] `CombosPanel`, `AISuggestionsPanel`
+- [x] `ImportDialog`, `ExportModal`
+- [x] `Header`, `Footer`
+- [x] `EnrichmentProvider`, `ThemeSync`
 
 ### Pages
 
-- [x] Root layout with dark theme + fonts
+- [x] Root layout with theme + fonts + `suppressHydrationWarning`
 - [x] Providers (TanStack Query + EnrichmentProvider)
-- [x] Home / deck list page
-- [x] Builder page with 3-panel layout
-- [x] Commander mode toggle in builder search panel
-- [x] DndContext wrapping entire builder page
-
-### Tests
-
-- [x] `bracket.test.ts` — 10 test cases
-- [x] `validation.test.ts` — 12 test cases
-- [x] `categories.test.ts` — 12 test cases
-- [x] `client.test.ts` — 6 test cases (rate limiting, endpoints)
-- [x] `e2e/search.spec.ts` — 5 Playwright tests
-- [x] `e2e/deck-builder.spec.ts` — 6 Playwright tests
-
-### Documentation
-
-- [x] `CHANGELOG.md` (Keep a Changelog format)
-- [x] `docs/TECHNICAL.md` (stack, architecture, patterns)
-- [x] `docs/PROGRESS.md` (this file)
+- [x] Home / deck list page with commander art backgrounds
+- [x] Builder page: 3-panel layout (Search | DeckEditor | Stats)
+- [x] Search mode tabs (By Name / By Set / By Color)
+- [x] Commander mode toggle
 
 ---
 
-## P0 User Stories (Must Have)
+## P0 User Stories
 
-| # | User Story | Status | Notes |
-|---|---|---|---|
-| US-1 | Search cards using Scryfall syntax | ✅ Done | `SearchBar` + `useCardSearch` + `SearchResults` |
-| US-2 | Pick a commander | ✅ Done | Commander mode toggle (Crown button) + `setCommander()` in store |
-| US-3 | Add cards to deck (click/drag) | ✅ Done | Click-to-add + dnd-kit drag from search → droppable category zones |
-| US-4 | See live deck stats | ✅ Done | `DeckStats` + `ManaCurve` + `ColorDistribution` + `computeDeckStats()` |
-| US-5 | See bracket score update live | ✅ Done | `BracketIndicator` + `useBracketScore` + `scoreBracket()` |
-| US-6 | Warn about banned cards | ✅ Done | `BanlistAlert` + real banlist via `useBanlist` + enrichment on `addCard` |
-| US-7 | Warn about Game Changers | ✅ Done | `GameChangersBadge` + real GC list via `useGameChangers` + enrichment on `addCard` |
-| US-8 | Warn about color identity violations | ✅ Done | `BanlistAlert` + `validateCardForDeck()` |
+| # | User Story | Status |
+|---|---|---|
+| US-1 | Search cards using Scryfall syntax | ✅ Done |
+| US-2 | Pick a commander | ✅ Done |
+| US-3 | Add cards to deck (click/drag) | ✅ Done |
+| US-4 | See live deck stats | ✅ Done |
+| US-5 | See bracket score update live | ✅ Done |
+| US-6 | Warn about banned cards | ✅ Done |
+| US-7 | Warn about Game Changers | ✅ Done |
+| US-8 | Warn about color identity violations | ✅ Done |
+
+## P1 User Stories
+
+| # | User Story | Status |
+|---|---|---|
+| US-9 | Set a budget with per-card flagging | ✅ Done |
+| US-10 | Manually recategorize cards (drag between categories) | ✅ Done |
+| US-11 | Import decklist from plain text | ✅ Done |
+| US-12 | Export deck | ✅ Done |
+| US-13 | Toggle grid/list view | ✅ Done |
+| US-14 | Inline deck rename | ✅ Done |
+| US-15 | Choose card printing/art | ✅ Done |
+| US-16 | Search by set or color | ✅ Done |
+| US-17 | Companion card support | ✅ Done |
+
+## P2 User Stories
+
+| # | User Story | Status |
+|---|---|---|
+| US-18 | Hover card to see full-size | ✅ Done |
+| US-19 | Filter by color/type/CMC/price | ✅ Done |
+| US-20 | Persist multiple decks | ✅ Done (PostgreSQL) |
+| US-21 | Combo detection | ✅ Done |
+| US-22 | AI deck suggestions | ✅ Done |
+| US-23 | Light/dark theme | ✅ Done |
 
 ---
 
-## P1 User Stories (Should Have)
+## Known Issues / Next Steps
 
-| # | User Story | Status | Notes |
-|---|---|---|---|
-| US-9 | Set a budget with per-card flagging | ✅ Done | `setBudget()` in store, `overBudgetCards` in stats |
-| US-10 | Manually recategorize cards | 🚧 Partial | `updateCardCategory()` exists; UI drag between categories pending |
-| US-11 | Import decklist from plain text | ✅ Done | `ImportDialog` — dialog with textarea, Scryfall batch lookup |
-| US-12 | Export deck to plain text | ✅ Done | `exportDeckToText()` + clipboard copy |
-| US-13 | Toggle grid/list view | ✅ Done | Toggle in `SearchResults` and `DeckEditor`, persisted in Zustand store |
-
----
-
-## P2 User Stories (Nice to Have)
-
-| # | User Story | Status | Notes |
-|---|---|---|---|
-| US-14 | Hover card to see full-size | ✅ Done | `CardImage` zoom + `CardTooltip` |
-| US-15 | Filter by color/type/CMC/price | ✅ Done | `SearchFilters` + `buildSearchQuery()` |
-| US-16 | Save multiple decks locally | ✅ Done | Zustand persist → localStorage |
-
----
-
-## Known Issues / TODO
-
-All Phase 1 known issues resolved. Remaining work for Phase 2:
-
-1. **Manual category drag** — drag cards between categories within DeckEditor (US-10 partial)
-2. **Commander color identity warning toast** — UI toast on add when color violation detected
-3. **Paginated GC/banlist** — only first page fetched (Scryfall returns 175 cards max per page)
-4. **E2E test updates** — Playwright tests need updates for new UI interactions
+1. **E2E tests** — Playwright tests need updates for new UI (search tabs, printing selector, companion)
+2. **Paginated GC/banlist** — only first page fetched (Scryfall 175 cards/page limit)
+3. **Mobile responsiveness** — 3-panel layout not optimized for small screens
+4. **AI provider config** — requires `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` env var; falls back to mock
 
 ---
 
@@ -181,10 +206,11 @@ All Phase 1 known issues resolved. Remaining work for Phase 2:
 
 | Metric | Value |
 |---|---|
-| Source files | ~45 |
-| Total LOC | ~3,800 |
-| Unit tests | 40 test cases |
-| E2E tests | 11 scenarios |
-| Build | ✅ Passing (pnpm build) |
+| Source files | ~70 |
+| API routes | 7 |
+| Prisma models | 3 |
+| Hooks | 9 |
+| Components | ~35 |
 | Phase 1 P0 completion | 100% |
-| Phase 1 P1 completion | ~90% (US-10 partial) |
+| Phase 1–4 completion | 100% |
+| Build | ✅ Passing |

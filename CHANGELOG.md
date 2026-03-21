@@ -9,158 +9,128 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-### Added — feat/database-prisma: PostgreSQL + Prisma integration
+### Added — 2026-03-21: Legal & Documentation
 
-#### Infrastructure
-- `docker-compose.yml` — Postgres 16-alpine service with healthcheck, named volume `pgdata`
-- `.env.example` — template for required environment variables
-- `.env.local` — local development config (gitignored)
+- `src/components/layout/Footer.tsx` — legal footer component with WotC fan site policy + Scryfall disclaimer
+- `LEGAL.md` — dedicated legal notices file at repo root (WotC trademarks, Scryfall data)
+- `README.md` — Legal section added, links to LEGAL.md, banner image added at top
+- `assets/banner.png` — updated banner image
 
-#### Prisma ORM
-- `prisma/schema.prisma` — full schema with `Deck`, `DeckCard`, and `CardCache` models
-- `src/lib/db/prisma.ts` — PrismaClient singleton (dev hot-reload safe)
+### Added — 2026-03-21: Companion Support
 
-#### API Routes (Next.js App Router)
-- `GET/POST /api/decks` — list all decks or create a new one
-- `GET/PATCH/DELETE /api/decks/[id]` — fetch, update, or delete a deck
-- `POST/DELETE /api/decks/[id]/cards` — add a card or clear all cards
-- `DELETE/PATCH /api/decks/[id]/cards/[cardId]` — remove or update a single card
-- `GET/POST /api/cache/cards` — Scryfall card cache lookup and storage
+- `src/lib/deck/types.ts` — `companion` field on `Deck` type (sideboard slot, outside the 99)
+- Full Companion card support: stored separately, not counted in the 99, shown in builder
 
-#### Data Layer
-- `src/lib/db/deck-api.ts` — typed HTTP client for all API routes
-- `src/lib/deck/store.ts` — migrated from `localStorage` persist to DB sync; added `isSyncing` state; all CRUD operations are now async with optimistic updates
-- `src/lib/scryfall/client.ts` — `getCardById()` now checks `CardCache` in DB before calling Scryfall (24h TTL)
+### Added — 2026-03-21: Inline Deck Rename
 
-#### UI
-- `src/app/page.tsx` — home page now fetches decks from `GET /api/decks` on mount, shows skeleton loaders during fetch, disables "New Deck" while creating
+- `src/app/builder/[deckId]/page.tsx` — click deck name in title bar to edit inline (Enter to save, Escape to cancel)
+- `src/lib/deck/store.ts` — `renameDeck(deckId, name)` action synced to DB via PATCH
 
-#### Docs
-- `docs/INFRASTRUCTURE.md` — new: full infra docs (schema, setup, env vars, API routes, data flow)
-- `docs/TECHNICAL.md` — updated with DB layer section and `DATABASE_URL` env var
+### Added — 2026-03-21: Favicon, OG Image & Page Metadata
 
-#### Scripts (`package.json`)
-- `db:up` — `docker compose up -d`
-- `db:down` — `docker compose down`
-- `db:migrate` — `prisma migrate dev`
-- `db:studio` — `prisma studio`
-- `db:reset` — `prisma migrate reset --force`
+- `public/favicon.svg` — custom SVG favicon
+- `public/og-image.svg` — Open Graph image (1200×630)
+- `src/app/layout.tsx` — `icons`, `openGraph`, `keywords` metadata fields
+- Page title template `%s | MagicAIBuilder`
+
+### Added — 2026-03-21: Home Page Deck Card Art
+
+- `src/app/page.tsx` — commander art crop shown as background on home deck cards
+
+### Added — 2026-03-21: Search Mode Tabs
+
+- `src/app/builder/[deckId]/page.tsx` — By Name / By Set / By Color mode tabs in search panel
+- `src/components/search/SetAutocomplete.tsx` — set name autocomplete for set search
+- `src/lib/scryfall/search.ts` — `buildSetSearchQuery()` and `buildColorSearchQuery()` builders
+
+### Added — 2026-03-21: Card Printing Selector
+
+- `src/components/card/PrintingSelectorModal.tsx` — modal to pick preferred art/printing before adding to deck
+- Clicking a search result now opens the printing selector instead of adding the default print
+
+### Added — 2026-03-21: Phase 4 — AI Suggestions
+
+- `src/hooks/useAISuggestions.ts` — AI deck analysis hook (Anthropic/OpenAI with mock fallback)
+- `src/components/deck/AISuggestionsPanel.tsx` — panel in stats column with analyze button + suggestions
+- `src/app/api/ai/suggest/route.ts` — Next.js API route proxying AI provider calls
+- Requires commander to be set before AI analysis is available
+
+### Added — Phase 3: Database & Prisma Integration
+
+- `docker-compose.yml` — Postgres 16-alpine service
+- `prisma/schema.prisma` — `Deck`, `DeckCard`, `CardCache` models
+- `src/lib/db/prisma.ts` — PrismaClient singleton
+- Full REST API: `GET/POST /api/decks`, `GET/PATCH/DELETE /api/decks/[id]`, card routes, cache routes
+- `src/lib/db/deck-api.ts` — typed HTTP client
+- `src/lib/deck/store.ts` — migrated from localStorage to DB sync with optimistic updates
+- `docs/INFRASTRUCTURE.md` — full infra documentation
+
+### Added — Phase 2: Intelligence Layer
+
+- Commander pairing types (`pairingType` field: none / partner / friends-forever / etc.)
+- `src/lib/deck/pairing.ts` — pairing type detection logic
+- Combo detection via Commander Spellbook API (`useCombos`, `CombosPanel`)
+- `src/hooks/useTheme.ts` — theme store (dark/light)
+- `src/components/providers/ThemeSync.tsx` — syncs theme to `data-theme` on `<html>`
+- Light theme CSS variables in `globals.css`
+- Theme toggle in `Header`
+- Delete deck action with confirmation
+
+---
+
+### Fixed — 2026-03-21
+
+- **Hydration mismatch** — `suppressHydrationWarning` on `<html>` in `layout.tsx`; inline theme script sets `data-theme` before React hydration causing server/client attribute diff
+- **removeCard HTTP 404** — `toDeckCard` in `loadDecks` was mapping `id: c.scryfallId` instead of `id: c.id` (DB CUID); DELETE sent wrong ID to API
+- **Drag to empty deck** — `DroppableCategory` returned `null` when empty, unregistering dnd-kit droppable zones; fix: always render `<div ref={setNodeRef} />` to keep zone registered
+- **Missing zod dependency** — `zod` was imported in API routes but not in `package.json`
+
+---
+
+### Changed — 2026-03-21
+
+- Prisma upgraded from `^5.22.0` to `^6.19.2`; moved `prisma` CLI to devDependencies
+- Next.js upgraded from `15.2.4` to `15.5.14`
+- `.gitattributes` added for LF line ending normalization across Windows/Linux
+- `src/app/layout.tsx` — `suppressHydrationWarning` on `<html>` element
+
+---
 
 ### Added — Phase 1: Integration (feat/phase-1-integration)
 
 #### Game Changers & Banlist Enrichment
-- `useBanlist.ts` — new hook fetching `banned:commander` cards from Scryfall (24h cache), exposes `isBanned(name)` helper
+- `useBanlist.ts` — new hook fetching `banned:commander` cards from Scryfall (24h cache)
 - `useGameChangers.ts` — extended with `useGameChangersSet()` exposing `isGameChanger(name)` helper
-- `EnrichmentProvider.tsx` — new provider that syncs GC and banlist Sets into Zustand store at startup
-- `store.ts` — added `setGameChangerNames` / `setBannedNames` actions; `addCard` and `setCommander` now cross-reference enrichment sets to auto-mark `isGameChanger` and `isBanned` on new cards
-- `store.ts` — `partialize` exclude runtime Sets from localStorage persistence
+- `EnrichmentProvider.tsx` — syncs GC and banlist Sets into Zustand store at startup
+- `store.ts` — `addCard` and `setCommander` auto-mark `isGameChanger` and `isBanned`
 
 #### dnd-kit Drag-and-Drop
-- `DraggableCard.tsx` — new component wrapping search cards with `useDraggable` (dnd-kit), 8px activation distance
-- `CardGrid.tsx` — added optional `draggable` prop to wrap each card with `DraggableCard`
-- `CardSearchListItem.tsx` — new list-mode row for search results with optional `draggable` support
-- `DeckEditor.tsx` — category sections use `useDroppable` with visual highlight on drag-over; drop adds card to deck
-- `builder/[deckId]/page.tsx` — `DndContext` + `DragOverlay` wrapping entire page; drag from search → drop on deck category → `addCard()`
+- `DraggableCard.tsx` — search cards wrapped with `useDraggable` (8px activation distance)
+- `DeckEditor.tsx` — category sections use `useDroppable` with visual highlight on drag-over
+- `builder/[deckId]/page.tsx` — `DndContext` + `DragOverlay` wrapping entire page
 
 #### Import UI
-- `ImportDialog.tsx` — Radix Dialog with textarea (plain text format), Scryfall batch collection lookup, adds imported cards and commander to deck
-- `Header.tsx` — Import button now opens `ImportDialog` when in builder context (deckId prop)
+- `ImportDialog.tsx` — Radix Dialog, plain text format, Scryfall batch lookup
 
 #### Color Distribution Chart
-- `ColorDistribution.tsx` — CSS-only bar chart for W/U/B/R/G/C color pips using `--mana-*` design tokens; stacked color bar + per-color bar rows
-- `DeckStats.tsx` — integrated `ColorDistribution` component below mana curve
+- `ColorDistribution.tsx` — CSS-only bar chart for W/U/B/R/G/C color pips
 
 #### Commander Auto-Detection
-- `search.ts` — `buildCommanderSearchQuery()` updated to accept `SearchFilters` parameter
-- `builder/[deckId]/page.tsx` — Commander mode toggle (Crown icon button): when active, search uses `buildCommanderSearchQuery` (filters for `is:commander`); clicking a card calls `setCommander()` and exits commander mode
+- Commander mode toggle (Crown icon): filters search with `is:commander`, clicking sets commander
 
 #### Grid/List View Toggle
-- `SearchResults.tsx` — grid/list toggle buttons (LayoutGrid / List icons); reads/writes `searchViewMode` from Zustand store
-- `DeckEditor.tsx` — grid/list toggle in card count header; reads/writes `deckViewMode` from Zustand store
-- `store.ts` — `searchViewMode` and `deckViewMode` persisted in localStorage
+- `SearchResults.tsx` + `DeckEditor.tsx` — grid/list toggle, persisted in Zustand store
 
 ---
 
 ### Added — Phase 1: Foundation Scaffold
 
 #### Project Setup
-- Next.js 15 App Router with TypeScript 5 and `src/` directory structure
-- Tailwind CSS 4 with PostCSS integration
-- pnpm as package manager
-- ESLint 9 + Prettier 3 configuration
-- Dark theme by default (CSS custom properties in `globals.css`)
-- Design tokens: MTG mana colors, bracket colors, surface/border palette
+- Next.js 15 App Router, TypeScript 5, Tailwind CSS 4, pnpm, ESLint 9 + Prettier 3
+- Dark theme (CSS custom properties), MTG design tokens
 
-#### Core Types (`src/lib/deck/types.ts`)
-- `DeckCard` interface with full Scryfall data + derived fields
-- `Deck` interface with commander, partner, cards, format, targetBracket, budget
-- `DeckStats` interface with mana curve, color distribution, category counts
-- `BracketScore` interface with overall 1–4 score + 6 dimension breakdown
-- `CardCategory` union type (15 categories)
-- `SearchFilters` interface for color/type/cmc/price filtering
-
-#### Scryfall Integration (`src/lib/scryfall/`)
-- `client.ts` — rate-limited fetch wrapper (100ms minimum between requests, User-Agent header)
-- `types.ts` — full Scryfall API response type definitions
-- `images.ts` — card image URL helpers for all sizes (normal, large, art_crop, png, border_crop)
-- `search.ts` — query builder for filtered searches and commander-specific queries
-
-#### Deck Logic (`src/lib/deck/`)
-- `categories.ts` — auto-categorization engine: ramp, board wipe, removal, draw, tutor, win condition, protection detection
-- `stats.ts` — `computeDeckStats()` — live stat computation (mana curve, color dist, avg CMC, category counts, price)
-- `bracket.ts` — `scoreBracket()` — bracket scoring with 6 weighted dimensions (ramp, draw, removal, tutors, winSpeed, avgCmc); Game Changers force minimum bracket
-- `validation.ts` — `validateCardForDeck()` + `validateDeck()` — singleton rule, color identity, banlist, Game Changers detection
-- `store.ts` — Zustand 5 store with persist middleware (localStorage); full deck CRUD, card management, commander/partner support
-- `import.ts` — plain text decklist parser (`1 Card Name` format) + text export
-- `export.ts` — deck export utilities and clipboard support
-
-#### Constants (`src/lib/constants/`)
-- `brackets.ts` — bracket definitions (name, color, maxGameChangers, allowsTutors)
-- `benchmarks.ts` — EDH heuristic benchmarks for scoring calibration
-
-#### Hooks (`src/hooks/`)
-- `useCardSearch.ts` — TanStack Query hook for Scryfall search (5 min cache, debounced, infinite pagination support)
-- `useCardLookup.ts` — TanStack Query hook for single card lookup (24h cache)
-- `useDeck.ts` — Zustand hook combining deck state + computed stats
-- `useBracketScore.ts` — memoized bracket score computation from deck state
-- `useGameChangers.ts` — Game Changers list fetching + deck intersection detection
-
-#### Components
-- `card/CardImage.tsx` — Framer Motion hover zoom (300ms delay), fallback to card back on error
-- `card/CardGrid.tsx` — animated stagger grid for search results
-- `card/CardListItem.tsx` — compact list view with remove button, Game Changer/banned flags
-- `card/CardTooltip.tsx` — Radix Tooltip with card image + price
-- `search/SearchBar.tsx` — debounced input (400ms), loading state, clear button
-- `search/SearchFilters.tsx` — color identity toggles, CMC range, price max
-- `search/SearchResults.tsx` — unified loading/error/empty/results states
-- `deck/DeckEditor.tsx` — collapsible category sections with card counts
-- `deck/DeckStats.tsx` — stat rows with OK/warn/error status icons
-- `deck/ManaCurve.tsx` — animated bar chart, 0–7+ CMC buckets
-- `deck/BracketIndicator.tsx` — bracket score with per-dimension mini bars
-- `deck/GameChangersBadge.tsx` — count badge with over-limit warning
-- `deck/BanlistAlert.tsx` — animated alert for banned + color violations
-- `layout/Header.tsx` — logo, nav, New Deck / Import actions
-- `layout/Sidebar.tsx` — placeholder for future sidebar content
-
-#### App Pages
-- `app/layout.tsx` — root layout: Geist font, dark theme, Providers
-- `app/providers.tsx` — TanStack Query client provider
-- `app/page.tsx` — home/deck list with empty state and deck cards grid
-- `app/builder/[deckId]/page.tsx` — 3-panel builder: Search | DeckEditor | Stats
-
-#### Tests
-- Vitest 3 configured with jsdom + @testing-library/jest-dom
-- `__tests__/lib/deck/bracket.test.ts` — 10 test cases for bracket scoring engine
-- `__tests__/lib/deck/validation.test.ts` — 12 test cases for banlist/GC/color identity
-- `__tests__/lib/deck/categories.test.ts` — 12 test cases for auto-categorization
-- `__tests__/lib/scryfall/client.test.ts` — 6 test cases for API client + rate limiting
-- Playwright configured for E2E testing
-- `e2e/search.spec.ts` — 5 tests for search UI flow
-- `e2e/deck-builder.spec.ts` — 6 tests for deck builder layout and navigation
-
-#### Documentation
-- `docs/TECHNICAL.md` — stack, architecture, patterns, conventions, local dev guide
-- `docs/PROGRESS.md` — Phase 1 user story checklist with P0/P1/P2 breakdown
+#### Core Types, Scryfall Integration, Deck Logic, Hooks, Components
+- Full details in `docs/PROGRESS.md`
 
 ---
 
