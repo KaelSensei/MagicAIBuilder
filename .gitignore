@@ -1,3 +1,7 @@
+# Sonar
+.env.sonar
+.scannerwork/
+
 # Dependencies
 node_modules/
 .pnp
