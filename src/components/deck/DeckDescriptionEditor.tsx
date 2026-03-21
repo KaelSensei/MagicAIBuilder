@@ -112,10 +112,9 @@ export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEd
               </div>
             </div>
           ) : (
-            <div
-              role="button"
-              tabIndex={0}
-              className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap cursor-text min-h-[24px]"
+            <button
+              type="button"
+              className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap cursor-text min-h-[24px] text-left w-full bg-transparent border-none p-0"
               onClick={handleEdit}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") startEditing(); }}
               title="Click to edit"
@@ -125,7 +124,7 @@ export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEd
               ) : (
                 <span className="italic opacity-50">No description — click to add one</span>
               )}
-            </div>
+            </button>
           )}
         </div>
       )}

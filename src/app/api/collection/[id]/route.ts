@@ -7,7 +7,7 @@ const patchSchema = z.object({
   condition: z.enum(["NM", "LP", "MP", "HP", "DMG"]).nullable().optional(),
   foil: z.boolean().optional(),
   price: z.number().positive().nullable().optional(),
-  acquiredAt: z.string().datetime().nullable().optional(),
+  acquiredAt: z.iso.datetime().nullable().optional(),
 });
 
 // PATCH /api/collection/[id] — update quantity/condition/etc
@@ -21,7 +21,7 @@ export async function PATCH(
     const parsed = patchSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: parsed.error.flatten() },
+        { error: "Invalid input", details: parsed.error.issues.map((i) => i.message) },
         { status: 400 }
       );
     }

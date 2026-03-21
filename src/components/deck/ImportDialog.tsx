@@ -9,6 +9,17 @@ import { getCardCollection } from "@/lib/scryfall/client";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
+/** Fetch Scryfall cards in batches of 75 */
+async function fetchInBatches(names: Array<{ name: string }>): Promise<ScryfallCard[]> {
+  const BATCH_SIZE = 75;
+  const found: ScryfallCard[] = [];
+  for (let i = 0; i < names.length; i += BATCH_SIZE) {
+    const result = await getCardCollection(names.slice(i, i + BATCH_SIZE));
+    found.push(...result.data);
+  }
+  return found;
+}
+
 type ImportDialogProps =
   | { children: React.ReactNode; open?: never; onOpenChange?: never }
   | { children?: never; open: boolean; onOpenChange: (v: boolean) => void };
@@ -36,17 +47,6 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
-
-  /** Fetch Scryfall cards in batches of 75 */
-  async function fetchInBatches(names: Array<{ name: string }>): Promise<ScryfallCard[]> {
-    const BATCH_SIZE = 75;
-    const found: ScryfallCard[] = [];
-    for (let i = 0; i < names.length; i += BATCH_SIZE) {
-      const result = await getCardCollection(names.slice(i, i + BATCH_SIZE));
-      found.push(...result.data);
-    }
-    return found;
-  }
 
   /** Add all found cards to the active deck; returns count of added cards */
   function addParsedCards(

@@ -48,7 +48,7 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
   }, []);
 
   return (
-    <div role="group" onMouseEnter={handleMouseEnter} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+    <div onMouseEnter={handleMouseEnter} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
       {children}
       {pos &&
         createPortal(

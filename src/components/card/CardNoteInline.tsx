@@ -64,10 +64,11 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
   }
 
   return (
-    <div
-      role="dialog"
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- #sonar: <dialog> is the semantic equivalent of role="dialog"; stopPropagation prevents card click-through
+    <dialog
       aria-label="Card note editor"
-      className="absolute left-0 right-0 top-full z-30 bg-[var(--surface-elevated,var(--surface))] border border-[var(--border)] rounded-lg shadow-lg p-2 mt-0.5"
+      open
+      className="absolute left-0 right-0 top-full z-30 m-0 p-2 mt-0.5 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
       onClick={(e) => e.stopPropagation()}
     >
       <textarea
@@ -84,6 +85,6 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       <div className="text-[10px] text-[var(--text-secondary)]/50 mt-1">
         Ctrl+Enter to save · Esc to cancel
       </div>
-    </div>
+    </dialog>
   );
 }
