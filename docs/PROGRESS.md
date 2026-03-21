@@ -113,6 +113,7 @@
 - [x] Commander pairing types (partner, friends-forever, etc.)
 - [x] AI-assisted deck suggestions (Phase 4)
 - [x] Combo detection via Commander Spellbook API
+- [x] **Maybeboard** — considered cards outside the 99 with Move to Deck / Remove actions
 
 ### Infrastructure
 
@@ -241,6 +242,14 @@
 | US-15 | Choose card printing/art                              | ✅ Done |
 | US-16 | Search by set or color                                | ✅ Done |
 | US-17 | Companion card support                                | ✅ Done |
+| US-11 | Import decklist from plain text | ✅ Done |
+| US-12 | Export deck | ✅ Done |
+| US-13 | Toggle grid/list view | ✅ Done |
+| US-14 | Inline deck rename | ✅ Done |
+| US-15 | Choose card printing/art | ✅ Done |
+| US-16 | Search by set or color | ✅ Done |
+| US-17 | Companion card support | ✅ Done |
+| US-18b | Maybeboard (considered cards, outside the 99) | ✅ Done |
 
 ## P2 User Stories
 
@@ -347,3 +356,14 @@
 - `CardFlip` 3D component; `useCardFlip` hook; `CardListItem` Turn Over; `CardGrid` cardFaces
 - Tests: `useCardFlip.test.ts` (6+), MDFC section in `categories.test.ts`
 - `docs/ROADMAP.md`: MDFC and DFC items marked done
+| Metric | Value |
+|---|---|
+| Source files | ~70 |
+| API routes | 7 |
+| Prisma models | 3 |
+| Hooks | 9 |
+| Components | ~35 |
+| Phase 1 P0 completion | 100% |
+| Phase 1–4 completion | 100% |
+| Build | ✅ Passing |
+| Tests | ✅ 80/80 passing |
