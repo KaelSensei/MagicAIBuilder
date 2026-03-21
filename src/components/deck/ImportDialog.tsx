@@ -32,7 +32,12 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
 
   const handleImport = async () => {
-    if (!text.trim() || !activeDeckId) return;
+    if (!text.trim()) return;
+    if (!activeDeckId) {
+      setStatus("error");
+      setMessage("No deck selected. Create or open a deck first.");
+      return;
+    }
 
     setStatus("validating");
     setMessage("Parsing decklist...");
@@ -189,7 +194,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
             {status !== "done" && (
               <button
                 onClick={handleImport}
-                disabled={!text.trim() || status === "validating" || !activeDeckId}
+                disabled={!text.trim() || status === "validating"}
                 className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {status === "validating" && (

@@ -44,7 +44,7 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
     const body = await request.json();
-    const { category, quantity, isGameChanger, isBanned, isCommander, isPartner, notes } = body;
+    const { category, quantity, isGameChanger, isBanned, isCommander, isPartner, notes, scryfallId, imageUri, artCropUri } = body;
 
     if (
       category !== undefined &&
@@ -66,6 +66,9 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(isCommander !== undefined && { isCommander }),
         ...(isPartner !== undefined && { isPartner }),
         ...(notes !== undefined && { notes: notes ?? null }),
+        ...(scryfallId !== undefined && { scryfallId }),
+        ...(imageUri !== undefined && { imageUri }),
+        ...(artCropUri !== undefined && { artCropUri }),
       },
     });
 

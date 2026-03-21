@@ -95,6 +95,7 @@ export interface DeckStore {
   addDeckCard: (card: DeckCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
+  swapCardPrinting: (cardId: string, printing: import("@/lib/scryfall/types").ScryfallCard) => Promise<void>;
   updateCardNotes: (cardId: string, notes: string | null) => Promise<void>;
 
   // Force save (sync) — triggers a full DB refresh for the active deck
@@ -706,6 +707,39 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateCardCategory(activeDeckId, cardId, category);
     } catch (err) {
       console.error("[updateCardCategory]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  swapCardPrinting: async (cardId, printing) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    const { getCardImageUri } = await import("@/lib/scryfall/images");
+    const imageUri = getCardImageUri(printing, "normal");
+    const artCropUri = getCardImageUri(printing, "art_crop");
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.map((c) =>
+            c.id === cardId
+              ? { ...c, scryfallId: printing.id, imageUri, artCropUri }
+              : c
+          ),
+        },
+      },
+    }));
+    set({ isSyncing: true });
+    try {
+      await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scryfallId: printing.id, imageUri, artCropUri }),
+      });
+    } catch (err) {
+      console.error("[swapCardPrinting]", err);
     } finally {
       set({ isSyncing: false });
     }
