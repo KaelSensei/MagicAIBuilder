@@ -2,12 +2,13 @@
 import type { Deck, DeckStats } from "./types";
 import { detectThemes } from "./themes";
 
-/** Compute comprehensive deck statistics */
+/** Compute comprehensive deck statistics (maybeboard cards are excluded) */
 export function computeDeckStats(deck: Deck): DeckStats {
   const allCards = [
     ...(deck.commander ? [deck.commander] : []),
     ...(deck.partner ? [deck.partner] : []),
     ...deck.cards,
+    // NOTE: deck.maybeboard is intentionally excluded from all stats
   ];
 
   const nonLandCards = allCards.filter((c) => c.category !== "land");

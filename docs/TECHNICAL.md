@@ -306,14 +306,16 @@ model Deck {
 }
 
 model DeckCard {
-  id          String   @id @default(cuid())
-  deckId      String
-  scryfallId  String
-  name        String
-  category    String
-  quantity    Int      @default(1)
-  cardData    Json     // Full ScryfallCard snapshot
-  deck        Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  deckId        String
+  scryfallId    String
+  name          String
+  category      String
+  quantity      Int      @default(1)
+  isCommander   Boolean  @default(false)
+  isPartner     Boolean  @default(false)
+  isMaybeboard  Boolean  @default(false)  // Considered cards outside the 99
+  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
 }
 
 model CardCache {

@@ -58,6 +58,7 @@ model DeckCard {
   quantity      Int     @default(1)
   isCommander   Boolean @default(false)
   isPartner     Boolean @default(false)
+  isMaybeboard  Boolean @default(false)
 
   @@index([deckId])
 }
