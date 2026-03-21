@@ -38,6 +38,7 @@
 - [x] Inline deck rename in builder title bar (click name → input → Enter/Escape)
 - [x] Card printing selector modal (choose art before adding to deck)
 - [x] Search mode tabs: By Name / By Set / By Color
+- [x] Dynamic set search — all sets fetched from Scryfall API (replaces static list), 1h cache, sorted newest first
 - [x] Commander art crop as background on home deck cards
 - [x] Favicon SVG + OG image (1200×630)
 - [x] Page metadata: title template, keywords, openGraph
