@@ -43,6 +43,7 @@ import { ImportDialog } from "@/components/deck/ImportDialog";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
+import { useResizePanel } from "@/hooks/useResizePanel";
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
@@ -84,6 +85,12 @@ export default function BuilderPage() {
 
   // Search state
   const [searchText, setSearchText] = useState("");
+  const { width: searchPanelWidth, handleMouseDown: handleSearchResize } = useResizePanel({
+    initialWidth: 300,
+    minWidth: 220,
+    maxWidth: 520,
+    storageKey: "builder-search-panel-width",
+  });
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [commanderMode, setCommanderMode] = useState(false);
@@ -328,9 +335,10 @@ export default function BuilderPage() {
 
         {/* 3-panel layout */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Panel 1: Search (300px) */}
+          {/* Panel 1: Search (resizable) */}
           <motion.div
-            className="w-[300px] shrink-0 border-r border-[var(--border)] flex flex-col bg-[var(--surface)]"
+            style={{ width: searchPanelWidth, minWidth: 220, maxWidth: 520 }}
+            className="shrink-0 border-r border-[var(--border)] flex flex-col bg-[var(--surface)] relative"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
@@ -482,6 +490,15 @@ export default function BuilderPage() {
               />
             </div>
           </motion.div>
+
+          {/* Resize handle between panel 1 and 2 */}
+          <div
+            onMouseDown={handleSearchResize}
+            className="w-1 shrink-0 cursor-col-resize hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 transition-colors group relative z-10"
+            title="Drag to resize"
+          >
+            <div className="absolute inset-y-0 -left-0.5 -right-0.5" />
+          </div>
 
           {/* Panel 2: Deck Editor (flex-1) */}
           <motion.div
