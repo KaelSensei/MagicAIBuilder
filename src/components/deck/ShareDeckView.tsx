@@ -187,6 +187,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           artCropUri: card.artCropUri,
           category: card.category as CardCategory,
           quantity: card.quantity,
+          zone: "main",
         });
       }
 

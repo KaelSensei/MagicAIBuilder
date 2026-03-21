@@ -46,9 +46,16 @@ function DeckCardItem({ deck, onDelete, onDuplicate, deletingId, duplicatingId }
       <div className={`p-5 h-full ${hasArt ? "bg-gradient-to-t from-black/90 via-black/60 to-black/20" : "bg-[var(--surface)] group-hover:bg-[var(--surface-hover)]"}`}>
         <div className="flex items-start justify-between mb-3">
           <h3 className={`font-semibold truncate pr-2 ${textPrimary}`}>{deck.name}</h3>
-          <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${hasArt ? "bg-black/40 text-white/70" : "bg-[var(--border)] text-[var(--text-secondary)]"}`}>
-            {deck.format}
-          </span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {deck.isAIGenerated && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 shrink-0">
+                ✨ AI
+              </span>
+            )}
+            <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${hasArt ? "bg-black/40 text-white/70" : "bg-[var(--border)] text-[var(--text-secondary)]"}`}>
+              {deck.format}
+            </span>
+          </div>
         </div>
         <p className={`text-sm ${textMuted}`}>
           {deck.commander ? `Commander: ${deck.commander.name}` : "No commander yet"}
@@ -137,7 +144,7 @@ export default function HomePage() {
   // Load decks from DB on mount
   useEffect(() => {
     loadDecks().finally(() => setIsLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: run once on mount; loadDecks is stable
   }, []);
 
   const handleDeleteDeck = async (e: React.MouseEvent, id: string) => {

@@ -226,9 +226,7 @@ function mockDeck(req: BuildRequest): AIDeckResponse {
 
   const allCards = [...lands, ...ramp, ...draw, ...removal, ...creatures, ...other];
 
-  // Count total (respecting quantity)
-  const total = allCards.reduce((sum, c) => sum + c.quantity, 0);
-  // Trim or pad to reach 99
+  // Expand by quantity and trim to exactly 99 cards
   const flat: AICard[] = [];
   for (const c of allCards) {
     for (let i = 0; i < c.quantity; i++) {
@@ -236,9 +234,6 @@ function mockDeck(req: BuildRequest): AIDeckResponse {
     }
   }
   const trimmed = flat.slice(0, 99);
-
-  void req; // suppress unused var warning
-  void total;
 
   return {
     commander,

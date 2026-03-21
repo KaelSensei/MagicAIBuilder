@@ -35,6 +35,7 @@ export interface DeckCard {
   category: CardCategory; // Auto-assigned or manual
   quantity: number; // Always 1 in Commander (except basics)
   notes?: string | null; // Optional per-card notes
+  zone: "main" | "sideboard" | "maybeboard"; // Deck zone (main deck, sideboard, or maybeboard)
 }
 
 export type CommanderPairingType =
@@ -62,6 +63,7 @@ export interface Deck {
   tags: string[]; // Deck tags
   shareToken: string | null;
   shareEnabled: boolean;
+  isAIGenerated: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

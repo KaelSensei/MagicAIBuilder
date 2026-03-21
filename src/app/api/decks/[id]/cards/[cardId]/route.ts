@@ -35,11 +35,12 @@ type CardPatchFields = {
   category?: string; quantity?: number; isGameChanger?: boolean; isBanned?: boolean;
   isCommander?: boolean; isPartner?: boolean; notes?: string | null;
   scryfallId?: string; imageUri?: string; artCropUri?: string;
+  zone?: string;
 };
 
 function buildCardPatchData(fields: CardPatchFields) {
   const data: Record<string, unknown> = {};
-  const simple = ["category", "quantity", "isGameChanger", "isBanned", "isCommander", "isPartner", "scryfallId", "imageUri", "artCropUri"] as const;
+  const simple = ["category", "quantity", "isGameChanger", "isBanned", "isCommander", "isPartner", "scryfallId", "imageUri", "artCropUri", "zone"] as const;
   for (const key of simple) {
     if (fields[key] !== undefined) data[key] = fields[key];
   }

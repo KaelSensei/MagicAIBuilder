@@ -38,7 +38,7 @@ export function SearchBar({
       inputRef.current?.focus();
       inputRef.current?.select();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: signal-based trigger; stable refs excluded
   }, [searchFocusSignal]);
 
   // Trigger clear when signal fires
@@ -48,7 +48,7 @@ export function SearchBar({
       onSearch("");
       inputRef.current?.blur();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: signal-based trigger; onSearch is stable
   }, [searchClearSignal]);
 
   useEffect(() => {

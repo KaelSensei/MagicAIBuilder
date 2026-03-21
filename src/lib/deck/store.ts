@@ -32,6 +32,7 @@ function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
     artCropUri: getCardImageUri(scryfallCard, "art_crop"),
     category: categorizeCard(scryfallCard),
     quantity: 1,
+    zone: "main" as const,
   };
 }
 
@@ -64,6 +65,7 @@ function createEmptyDeck(id: string, name: string): Deck {
     tags: [],
     shareToken: null,
     shareEnabled: false,
+    isAIGenerated: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -94,7 +96,7 @@ export interface DeckStore {
   setDeckViewMode: (mode: "grid" | "list") => void;
 
   // Deck management
-  createDeck: (name: string) => Promise<string>;
+  createDeck: (name: string, opts?: { isAIGenerated?: boolean }) => Promise<string>;
   duplicateDeck: (id: string) => Promise<string>;
   deleteDeck: (id: string) => Promise<void>;
   renameDeck: (id: string, name: string) => Promise<void>;
@@ -114,6 +116,7 @@ export interface DeckStore {
   promoteToCommander: (cardId: string) => Promise<void>;
   swapCardPrinting: (cardId: string, printing: import("@/lib/scryfall/types").ScryfallCard) => Promise<void>;
   updateCardNotes: (cardId: string, notes: string | null) => Promise<void>;
+  moveCardToZone: (cardId: string, zone: "main" | "sideboard" | "maybeboard") => Promise<void>;
 
   // Force save (sync) — triggers a full DB refresh for the active deck
   forceSave: () => Promise<void>;
@@ -268,6 +271,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           category: c.category as CardCategory,
           quantity: c.quantity,
           notes: c.notes ?? null,
+          zone: (c.zone as "main" | "sideboard" | "maybeboard") ?? "main",
         });
 
         decks[d.id] = {
@@ -281,6 +285,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           tags: d.tags ?? [],
           shareToken: d.shareToken ?? null,
           shareEnabled: d.shareEnabled ?? false,
+          isAIGenerated: d.isAIGenerated ?? false,
           commander: commanderCard ? toDeckCard(commanderCard) : null,
           partner: partnerCard ? toDeckCard(partnerCard) : null,
           companion: companionCard ? toDeckCard(companionCard) : null,
@@ -298,13 +303,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  createDeck: async (name: string) => {
+  createDeck: async (name: string, opts?: { isAIGenerated?: boolean }) => {
     set({ isSyncing: true });
     try {
-      const apiDeck = await deckApi.createDeck(name);
+      const apiDeck = await deckApi.createDeck(name, { isAIGenerated: opts?.isAIGenerated });
       const deck = createEmptyDeck(apiDeck.id, apiDeck.name);
       deck.createdAt = new Date(apiDeck.createdAt);
       deck.updatedAt = new Date(apiDeck.updatedAt);
+      deck.isAIGenerated = apiDeck.isAIGenerated ?? false;
       set((state) => ({
         decks: { ...state.decks, [apiDeck.id]: deck },
         activeDeckId: apiDeck.id,
@@ -320,7 +326,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.deleteDeck(id);
       set((state) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring to omit the deleted deck from state
         const { [id]: _removed, ...rest } = state.decks;
         return {
           decks: rest,
@@ -918,6 +924,34 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateCardNotes(activeDeckId, cardId, notes);
     } catch (err) {
       console.error("[updateCardNotes]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  moveCardToZone: async (cardId: string, zone: "main" | "sideboard" | "maybeboard") => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.map((c) =>
+            c.id === cardId ? { ...c, zone } : c
+          ),
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateCardZone(activeDeckId, cardId, zone);
+    } catch (err) {
+      console.error("[moveCardToZone]", err);
     } finally {
       set({ isSyncing: false });
     }

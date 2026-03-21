@@ -145,12 +145,14 @@ function generateWarnings(
 
 /** Score a deck and return its bracket with dimension breakdown */
 export function scoreBracket(deck: Deck, stats: DeckStats): BracketScore {
+  // Only score main-zone cards (sideboard/maybeboard don't affect bracket)
+  const mainCards = deck.cards.filter((c) => c.zone === "main");
   const dimensions = {
     ramp: scoreRamp(stats.ramp, stats.avgCmc),
     draw: scoreDraw(stats.draw),
     removal: scoreRemoval(stats.removal, stats.boardWipes),
-    tutors: scoreTutors(deck.cards),
-    winSpeed: scoreWinSpeed(deck.cards, stats.avgCmc),
+    tutors: scoreTutors(mainCards),
+    winSpeed: scoreWinSpeed(mainCards, stats.avgCmc),
     avgCmc: scoreCmc(stats.avgCmc),
   };
 

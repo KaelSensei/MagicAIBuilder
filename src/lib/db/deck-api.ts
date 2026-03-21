@@ -11,15 +11,17 @@ export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "command
   pairingType: CommanderPairingType;
   /** Raw DB value — cast to 1|2|3|4|null in store */
   manualBracket: number | null;
+  isAIGenerated: boolean;
   cards: ApiDeckCard[];
 }
 
-export interface ApiDeckCard extends Omit<DeckCard, "id"> {
+export interface ApiDeckCard extends Omit<DeckCard, "id" | "zone"> {
   id: string; // DB-generated CUID (not scryfall id)
   deckId: string;
   scryfallId: string;
   isCommander: boolean;
   isPartner: boolean;
+  zone: "main" | "sideboard" | "maybeboard";
 }
 
 function handleApiError(res: Response, context: string): never {
@@ -42,6 +44,7 @@ export async function createDeck(
     budget?: number | null;
     commanderId?: string | null;
     partnerId?: string | null;
+    isAIGenerated?: boolean;
   }
 ): Promise<ApiDeck> {
   const res = await fetch("/api/decks", {
@@ -67,6 +70,7 @@ export async function updateDeck(
     pairingType: CommanderPairingType;
     description: string;
     tags: string[];
+    isAIGenerated?: boolean;
   }>
 ): Promise<ApiDeck> {
   const res = await fetch(`/api/decks/${id}`, {
@@ -111,6 +115,7 @@ export interface AddCardPayload {
   quantity?: number;
   isCommander?: boolean;
   isPartner?: boolean;
+  zone?: "main" | "sideboard" | "maybeboard"; // Target zone (defaults to "main")
 }
 
 export async function addCard(
@@ -161,6 +166,20 @@ export async function updateCardNotes(
     body: JSON.stringify({ notes }),
   });
   if (!res.ok) handleApiError(res, "updateCardNotes");
+  return res.json();
+}
+
+export async function updateCardZone(
+  deckId: string,
+  cardId: string,
+  zone: "main" | "sideboard" | "maybeboard"
+): Promise<ApiDeckCard> {
+  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ zone }),
+  });
+  if (!res.ok) handleApiError(res, "updateCardZone");
   return res.json();
 }
 

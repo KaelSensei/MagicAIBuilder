@@ -4,10 +4,12 @@ import { detectThemes } from "./themes";
 
 /** Compute comprehensive deck statistics */
 export function computeDeckStats(deck: Deck): DeckStats {
+  // Only include main-zone cards in stats (sideboard/maybeboard are excluded)
+  const mainCards = deck.cards.filter((c) => c.zone === "main");
   const allCards = [
     ...(deck.commander ? [deck.commander] : []),
     ...(deck.partner ? [deck.partner] : []),
-    ...deck.cards,
+    ...mainCards,
   ];
 
   const nonLandCards = allCards.filter((c) => c.category !== "land");
@@ -27,8 +29,8 @@ export function computeDeckStats(deck: Deck): DeckStats {
     }
   }
 
-  // Avg CMC (excluding lands and commander)
-  const cmcCards = deck.cards.filter((c) => c.category !== "land");
+  // Avg CMC (excluding lands and commander, main zone only)
+  const cmcCards = mainCards.filter((c) => c.category !== "land");
   const avgCmc =
     cmcCards.length > 0
       ? cmcCards.reduce((sum, c) => sum + c.cmc * c.quantity, 0) /
@@ -73,7 +75,7 @@ export function computeDeckStats(deck: Deck): DeckStats {
     ...(deck.partner?.colorIdentity ?? []),
   ]);
   const colorIdentityViolations = deck.commander
-    ? deck.cards
+    ? mainCards
         .filter((c) =>
           c.colorIdentity.some((color) => !commanderIdentitySet.has(color))
         )

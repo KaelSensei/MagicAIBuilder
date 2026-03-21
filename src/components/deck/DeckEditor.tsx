@@ -16,6 +16,9 @@ import { useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type DeckZone = "main" | "sideboard" | "maybeboard";
+
 interface DeckEditorProps {
   readonly deck: Deck;
   readonly onRemoveCard: (id: string) => void;
@@ -187,14 +190,24 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckE
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
   const clearCommander = useDeckStore((s) => s.clearCommander);
   const setPartner = useDeckStore((s) => s.setPartner);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
+
+  // Active zone tab state
+  const [activeZone, setActiveZone] = useState<DeckZone>("main");
 
   // Deduplicate cards by id (guard against import bugs creating duplicate rows)
   const uniqueCards = deck.cards.filter((card, index, arr) =>
     arr.findIndex((c) => c.id === card.id) === index
   );
 
-  // Group cards by category
-  const cardsByCategory = uniqueCards.reduce<Record<CardCategory, Deck["cards"]>>(
+  // Cards split by zone
+  const mainCards = uniqueCards.filter((c) => c.zone === "main");
+  const sideboardCards = uniqueCards.filter((c) => c.zone === "sideboard");
+  const maybeboardCards = uniqueCards.filter((c) => c.zone === "maybeboard");
+
+  // Group main-zone cards by category (for list view with categories)
+  const cardsByCategory = mainCards.reduce<Record<CardCategory, Deck["cards"]>>(
     (acc, card) => {
       if (!acc[card.category]) acc[card.category] = [];
       acc[card.category].push(card);
@@ -203,8 +216,9 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckE
     {} as Record<CardCategory, Deck["cards"]>
   );
 
+  // Total only counts main deck + commander/partner (sideboard/maybeboard excluded)
   const totalCards =
-    uniqueCards.reduce((sum, c) => sum + c.quantity, 0) +
+    mainCards.reduce((sum, c) => sum + c.quantity, 0) +
     (deck.commander ? 1 : 0) +
     (deck.partner ? 1 : 0);
 
@@ -269,21 +283,50 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckE
         </div>
       )}
 
-      {/* Card count header + view toggle */}
-      <div className="px-3 py-2 border-b border-[var(--border)] flex items-center justify-between">
-        <p className="text-xs text-[var(--text-secondary)]">Deck Cards</p>
-        <div className="flex items-center gap-2">
-          <p
-            className={cn(
-              "text-xs font-medium",
-              totalCards === 100
-                ? "text-green-500"
-                : "text-[var(--text-secondary)]"
-            )}
-          >
-            {totalCards}/100
-          </p>
-          <div className="flex items-center gap-0.5">
+      {/* Zone tabs: Main / Sideboard / Considering */}
+      <div className="px-3 py-1.5 border-b border-[var(--border)] flex items-center justify-between gap-1">
+        <div className="flex items-center gap-0">
+          {(
+            [
+              { zone: "main" as DeckZone, label: "Main", count: mainCards.reduce((s, c) => s + c.quantity, 0) + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0) },
+              { zone: "sideboard" as DeckZone, label: "Sideboard", count: sideboardCards.reduce((s, c) => s + c.quantity, 0) },
+              { zone: "maybeboard" as DeckZone, label: "Considering", count: maybeboardCards.reduce((s, c) => s + c.quantity, 0) },
+            ] as const
+          ).map(({ zone, label, count }) => (
+            <button
+              key={zone}
+              onClick={() => setActiveZone(zone)}
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1 text-xs font-medium border-b-2 transition-colors -mb-[7px] pb-[5px]",
+                activeZone === zone
+                  ? "border-[var(--accent)] text-[var(--text-primary)]"
+                  : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              )}
+            >
+              {label}
+              <span
+                className={cn(
+                  "text-[10px] tabular-nums",
+                  activeZone === zone ? "text-[var(--accent)]" : "opacity-60"
+                )}
+              >
+                {count}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* View mode toggle — only relevant for main zone */}
+        {activeZone === "main" && (
+          <div className="flex items-center gap-0.5 ml-auto">
+            <p
+              className={cn(
+                "text-xs font-medium mr-1",
+                totalCards === 100 ? "text-green-500" : "text-[var(--text-secondary)]"
+              )}
+            >
+              {totalCards}/100
+            </p>
             <button
               onClick={() => setViewMode("list")}
               className={`p-1 rounded transition-colors ${
@@ -307,102 +350,170 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckE
               <LayoutGrid className="w-3 h-3" />
             </button>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Categories — uses parent DndContext from BuilderPage */}
+      {/* Zone content — uses parent DndContext from BuilderPage (main zone only) */}
       <div className="flex-1 overflow-y-auto p-2">
-        {viewMode === "grid" ? (
-          /* Grid view — commander + partner first, then all deck cards */
-          <div className="grid grid-cols-4 gap-1 p-1">
-            {/* Commander card(s) pinned at top with gold ring */}
-            {deck.commander && (
-              <div className="relative group/card">
-                <CardImage
-                  imageUri={deck.commander.imageUri}
-                  largeUri={deck.commander.imageUri}
-                  name={deck.commander.name}
-                  manaCost={deck.commander.manaCost}
-                  cmc={deck.commander.cmc}
-                  showOverlay={true}
-                  zoomOnHover={false}
-                  className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
-                />
-                <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
-                  CMD
+        {activeZone === "main" ? (
+          viewMode === "grid" ? (
+            /* Grid view — commander + partner first, then main-zone cards */
+            <div className="grid grid-cols-4 gap-1 p-1">
+              {deck.commander && (
+                <div className="relative group/card">
+                  <CardImage
+                    imageUri={deck.commander.imageUri}
+                    largeUri={deck.commander.imageUri}
+                    name={deck.commander.name}
+                    manaCost={deck.commander.manaCost}
+                    cmc={deck.commander.cmc}
+                    showOverlay={true}
+                    zoomOnHover={false}
+                    className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
+                  />
+                  <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
+                    CMD
+                  </div>
+                  <button
+                    onClick={() => clearCommander()}
+                    className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                    title="Remove commander"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  onClick={() => clearCommander()}
-                  className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-                  title="Remove commander"
-                >
-                  ×
-                </button>
-              </div>
-            )}
-            {deck.partner && deck.partner.name !== deck.commander?.name && (
-              <div className="relative group/card">
-                <CardImage
-                  imageUri={deck.partner.imageUri}
-                  largeUri={deck.partner.imageUri}
-                  name={deck.partner.name}
-                  manaCost={deck.partner.manaCost}
-                  cmc={deck.partner.cmc}
-                  showOverlay={true}
-                  zoomOnHover={false}
-                  className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
-                />
-                <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
-                  CMD
+              )}
+              {deck.partner && deck.partner.name !== deck.commander?.name && (
+                <div className="relative group/card">
+                  <CardImage
+                    imageUri={deck.partner.imageUri}
+                    largeUri={deck.partner.imageUri}
+                    name={deck.partner.name}
+                    manaCost={deck.partner.manaCost}
+                    cmc={deck.partner.cmc}
+                    showOverlay={true}
+                    zoomOnHover={false}
+                    className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
+                  />
+                  <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
+                    CMD
+                  </div>
+                  <button
+                    onClick={() => setPartner(null)}
+                    className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                    title="Remove partner"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  onClick={() => setPartner(null)}
-                  className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-                  title="Remove partner"
-                >
-                  ×
-                </button>
+              )}
+              {mainCards.map((card) => (
+                <div key={card.id} className="relative group/card">
+                  <CardImage
+                    imageUri={card.imageUri}
+                    largeUri={card.imageUri}
+                    name={card.name}
+                    manaCost={card.manaCost}
+                    cmc={card.cmc}
+                    showOverlay={true}
+                    zoomOnHover={false}
+                    className="w-full cursor-pointer"
+                    onClick={() => onCardClick?.(card)}
+                  />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }}
+                    className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                    aria-label={`Remove ${card.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {!deck.commander && mainCards.length === 0 && (
+                <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
+                  No cards yet
+                </div>
+              )}
+            </div>
+          ) : (
+            /* List view — categorized droppable zones (main zone only) */
+            CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
+              <DroppableCategory
+                key={category}
+                category={category}
+                cards={cardsByCategory[category] ?? []}
+                onRemoveCard={onRemoveCard}
+              />
+            ))
+          )
+        ) : activeZone === "sideboard" ? (
+          /* Sideboard — simple list with move buttons */
+          <div>
+            {sideboardCards.length === 0 ? (
+              <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
+                No sideboard cards — move cards here from the Main tab
               </div>
-            )}
-            {uniqueCards.map((card) => (
-              <div key={card.id} className="relative group/card">
-                <CardImage
-                  imageUri={card.imageUri}
-                  largeUri={card.imageUri}
-                  name={card.name}
-                  manaCost={card.manaCost}
-                  cmc={card.cmc}
-                  showOverlay={true}
-                  zoomOnHover={false}
-                  className="w-full cursor-pointer"
-                  onClick={() => onCardClick?.(card)}
-                />
-                {/* Remove button — top-left, shown on hover */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }}
-                  className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-                  aria-label={`Remove ${card.name}`}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-            {!deck.commander && deck.cards.length === 0 && (
-              <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
-                No cards yet
-              </div>
+            ) : (
+              sideboardCards.map((card) => (
+                <div key={card.id} className="flex items-center gap-1 group/zone">
+                  <div className="flex-1 min-w-0">
+                    <CardListItem card={card} onRemove={onRemoveCard} />
+                  </div>
+                  {/* Move to zone buttons */}
+                  <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => moveCardToZone(card.id, "main")}
+                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      title="Move to Main Deck"
+                    >
+                      → Main
+                    </button>
+                    <button
+                      onClick={() => moveCardToZone(card.id, "maybeboard")}
+                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      title="Move to Considering"
+                    >
+                      → Maybe
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         ) : (
-          /* List view — categorized droppable zones */
-          CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
-            <DroppableCategory
-              key={category}
-              category={category}
-              cards={cardsByCategory[category] ?? []}
-              onRemoveCard={onRemoveCard}
-            />
-          ))
+          /* Maybeboard (Considering) — simple list with move buttons */
+          <div>
+            {maybeboardCards.length === 0 ? (
+              <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
+                No cards under consideration — move cards here from other tabs
+              </div>
+            ) : (
+              maybeboardCards.map((card) => (
+                <div key={card.id} className="flex items-center gap-1 group/zone">
+                  <div className="flex-1 min-w-0">
+                    <CardListItem card={card} onRemove={onRemoveCard} />
+                  </div>
+                  {/* Move to zone buttons */}
+                  <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => moveCardToZone(card.id, "main")}
+                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      title="Move to Main Deck"
+                    >
+                      → Main
+                    </button>
+                    <button
+                      onClick={() => moveCardToZone(card.id, "sideboard")}
+                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      title="Move to Sideboard"
+                    >
+                      → Side
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         )}
       </div>
     </div>

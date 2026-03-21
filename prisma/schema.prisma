@@ -21,6 +21,7 @@ model Deck {
   manualBracket Int?                // null = use calculated score, 1-4 = manual override
   shareToken    String?        @unique
   shareEnabled  Boolean        @default(false)
+  isAIGenerated Boolean        @default(false)
   description   String         @default("")
   tags          String[]       @default([])
   cards         DeckCard[]
@@ -63,6 +64,7 @@ model DeckCard {
   isCommander   Boolean @default(false)
   isPartner     Boolean @default(false)
   notes         String?
+  zone          String  @default("main") // "main" | "sideboard" | "maybeboard"
 
   @@index([deckId])
 }

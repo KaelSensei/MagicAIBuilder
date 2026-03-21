@@ -534,6 +534,7 @@ async function importCardsInBatches(
           artCropUri: getCardImageUri(sc, "art_crop"),
           category: (categoryMap.get(sc.name) as DeckCard["category"]) ?? categorizeCard(sc),
           quantity: 1,
+          zone: "main",
         };
         await addDeckCard(deckCard);
       }
@@ -636,7 +637,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
 
       if (!cards) { setBuildError("Build was cancelled or failed."); return; }
 
-      const deckId = await createDeck(`AI Deck — ${strategy}`);
+      const deckId = await createDeck(`AI Deck — ${strategy}`, { isAIGenerated: true });
       setActiveDeck(deckId);
 
       const commander = buildState.commander;

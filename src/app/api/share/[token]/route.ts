@@ -22,9 +22,9 @@ export async function GET(_req: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    // Return deck but strip share token from public response
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { shareToken: _token, ...publicDeck } = deck;
+    // Strip shareToken before returning the public response
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring to omit shareToken from response
+    const { shareToken: _omitted, ...publicDeck } = deck;
     return NextResponse.json(publicDeck);
   } catch (error) {
     console.error(

@@ -86,7 +86,7 @@ export default function BuilderPage() {
     if (deckId && !deck && !isSyncing) {
       loadDecks();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-run when deckId changes; loadDecks is stable
   }, [deckId]);
 
   const { stats } = useDeck();
@@ -370,8 +370,13 @@ export default function BuilderPage() {
               <Pencil className="w-3 h-3 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           )}
+          {deck.isAIGenerated && (
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
+              ✨ AI
+            </span>
+          )}
           <span className="text-xs text-[var(--text-secondary)]">
-            {(deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
+            {(deck.cards.filter((c) => c.zone === "main").reduce((s, c) => s + c.quantity, 0) + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
           </span>
           <div className="ml-auto flex items-center gap-2">
             {/* Duplicate deck */}
