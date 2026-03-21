@@ -23,7 +23,8 @@ import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
-import { buildSearchQuery, buildCommanderSearchQuery } from "@/lib/scryfall/search";
+import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery } from "@/lib/scryfall/search";
+import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { ArrowLeft, Crown, Download } from "lucide-react";
@@ -78,14 +79,30 @@ export default function BuilderPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [commanderMode, setCommanderMode] = useState(false);
 
+  // Search mode
+  type SearchMode = "name" | "set" | "color";
+  const [searchMode, setSearchMode] = useState<SearchMode>("name");
+  const [selectedSet, setSelectedSet] = useState<string>("");
+  const [colorFilter, setColorFilter] = useState<string[]>([]);
+
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
 
-  const query = commanderMode
-    ? buildCommanderSearchQuery(searchText, filters)
-    : buildSearchQuery(searchText, filters);
+  const query = (() => {
+    if (commanderMode) return buildCommanderSearchQuery(searchText, filters);
+    switch (searchMode) {
+      case "set":
+        return selectedSet ? buildSetSearchQuery(selectedSet, colorFilter) : "";
+      case "color":
+        return colorFilter.length > 0 || searchText
+          ? buildColorSearchQuery(colorFilter, searchText)
+          : "";
+      default:
+        return buildSearchQuery(searchText, filters);
+    }
+  })();
 
   const {
     data: searchData,
@@ -230,34 +247,126 @@ export default function BuilderPage() {
             transition={{ duration: 0.3 }}
           >
             <div className="p-3 border-b border-[var(--border)] space-y-2">
-              <SearchBar
-                onSearch={handleSearch}
-                isLoading={searchLoading}
-              />
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowFilters((f) => !f)}
-                  className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                >
-                  {showFilters ? "Hide filters" : "Show filters"}
-                </button>
-                {/* Commander mode toggle */}
-                <button
-                  onClick={() => setCommanderMode((m) => !m)}
-                  className={cn(
-                    "ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
-                    commanderMode
-                      ? "border-amber-500 text-amber-400 bg-amber-500/10"
-                      : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
-                  )}
-                  title="Filter for legendary creatures (commanders)"
-                >
-                  <Crown className="w-3 h-3" />
-                  Commander
-                </button>
+              {/* Search mode tabs */}
+              <div className="flex gap-1 p-0.5 bg-[var(--background)] rounded-lg">
+                {(["name", "set", "color"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      setSearchMode(mode);
+                      setSearchText("");
+                      setSelectedSet("");
+                      setColorFilter([]);
+                    }}
+                    className={cn(
+                      "flex-1 text-xs py-1.5 rounded-md font-medium transition-all capitalize",
+                      searchMode === mode
+                        ? "bg-[var(--surface)] text-[var(--text-primary)] shadow-sm"
+                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    )}
+                  >
+                    {mode === "name" ? "Name" : mode === "set" ? "By Set" : "By Color"}
+                  </button>
+                ))}
               </div>
-              {showFilters && (
-                <SearchFilters filters={filters} onChange={setFilters} />
+
+              {/* Mode-specific controls */}
+              {searchMode === "name" && (
+                <>
+                  <SearchBar onSearch={handleSearch} isLoading={searchLoading} />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowFilters((f) => !f)}
+                      className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                    >
+                      {showFilters ? "Hide filters" : "Show filters"}
+                    </button>
+                    <button
+                      onClick={() => setCommanderMode((m) => !m)}
+                      className={cn(
+                        "ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
+                        commanderMode
+                          ? "border-amber-500 text-amber-400 bg-amber-500/10"
+                          : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+                      )}
+                      title="Filter for legendary creatures (commanders)"
+                    >
+                      <Crown className="w-3 h-3" />
+                      Commander
+                    </button>
+                  </div>
+                  {showFilters && <SearchFilters filters={filters} onChange={setFilters} />}
+                </>
+              )}
+
+              {searchMode === "set" && (
+                <SetAutocomplete
+                  value={selectedSet}
+                  onChange={(code) => setSelectedSet(code)}
+                  onClear={() => setSelectedSet("")}
+                />
+              )}
+
+              {searchMode === "color" && (
+                <div className="space-y-2">
+                  <SearchBar
+                    onSearch={handleSearch}
+                    isLoading={searchLoading}
+                    placeholder="Filter by name (optional)…"
+                  />
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { code: "W", label: "White", symbol: "☀️" },
+                      { code: "U", label: "Blue", symbol: "💧" },
+                      { code: "B", label: "Black", symbol: "💀" },
+                      { code: "R", label: "Red", symbol: "🔥" },
+                      { code: "G", label: "Green", symbol: "🌲" },
+                    ].map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() =>
+                          setColorFilter((prev) =>
+                            prev.includes(c.code)
+                              ? prev.filter((x) => x !== c.code)
+                              : [...prev, c.code]
+                          )
+                        }
+                        className={cn(
+                          "w-9 h-9 rounded-full text-base transition-all border-2",
+                          colorFilter.includes(c.code)
+                            ? "border-[var(--accent)] scale-110"
+                            : "border-transparent opacity-50 hover:opacity-100"
+                        )}
+                        title={c.label}
+                      >
+                        {c.symbol}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() =>
+                        setColorFilter((prev) =>
+                          prev.includes("C")
+                            ? prev.filter((x) => x !== "C")
+                            : [...prev, "C"]
+                        )
+                      }
+                      className={cn(
+                        "px-2 h-9 rounded-full text-xs font-medium transition-all border-2",
+                        colorFilter.includes("C")
+                          ? "border-[var(--accent)] text-[var(--accent)] scale-110"
+                          : "border-[var(--border)] text-[var(--text-secondary)] opacity-70 hover:opacity-100"
+                      )}
+                      title="Colorless"
+                    >
+                      ◇
+                    </button>
+                  </div>
+                  {colorFilter.length === 0 && !searchText && (
+                    <p className="text-xs text-[var(--text-secondary)] italic">
+                      Select colors to browse cards
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 
