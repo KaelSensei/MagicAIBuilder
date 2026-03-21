@@ -1,6 +1,5 @@
 "use client";
 // Main deck editor with drag & drop zones, category drag, and grid/list toggle
-import { AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -71,13 +70,6 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
   });
 
   const cardIds = cards.map((c) => `deck-card-${c.id}`);
-
-  // Always keep the droppable ref mounted so dnd-kit can detect drag-over even when empty.
-  // Without this, all categories unmount when the deck is empty and `over` is always null.
-  if (cards.length === 0 && !isOver) {
-    return <div ref={setNodeRef} />;
-  }
-
   const label = CATEGORY_LABELS[category];
 
   return (
@@ -100,33 +92,35 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
         </span>
       </button>
 
-      {/* Droppable area */}
-      <AnimatePresence>
-        {!collapsed && (
-          <div
-            ref={setNodeRef}
-            className={cn(
-              "pl-1 min-h-[8px] rounded transition-colors",
-              isOver && "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40"
-            )}
-          >
-            <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-              {cards.map((card) => (
-                <DraggableDeckCard
-                  key={card.id}
-                  card={card}
-                  onRemove={onRemoveCard}
-                />
-              ))}
-            </SortableContext>
-            {cards.length === 0 && isOver && (
-              <div className="py-2 text-center text-xs text-[var(--accent)]">
-                Drop here to move to {label}
-              </div>
-            )}
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Droppable area — always rendered so drag targets exist even when empty */}
+      {!collapsed && (
+        <div
+          ref={setNodeRef}
+          className={cn(
+            "pl-1 rounded transition-colors",
+            isOver
+              ? "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40"
+              : cards.length === 0
+              ? "min-h-[32px] border border-dashed border-[var(--border)] rounded opacity-40"
+              : "min-h-[8px]"
+          )}
+        >
+          <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+            {cards.map((card) => (
+              <DraggableDeckCard
+                key={card.id}
+                card={card}
+                onRemove={onRemoveCard}
+              />
+            ))}
+          </SortableContext>
+          {cards.length === 0 && isOver && (
+            <div className="py-2 text-center text-xs text-[var(--accent)]">
+              Drop here to move to {label}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -229,14 +223,7 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
             onRemoveCard={onRemoveCard}
           />
         ))}
-        {deck.cards.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-40 text-[var(--text-secondary)] text-sm">
-            <p>No cards yet</p>
-            <p className="text-xs mt-1">
-              Search and click or drag cards to add them
-            </p>
-          </div>
-        )}
+
       </div>
     </div>
   );
