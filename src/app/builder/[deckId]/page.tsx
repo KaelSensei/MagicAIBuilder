@@ -169,12 +169,6 @@ export default function BuilderPage() {
     });
   }, [addCard]);
 
-  const handleAIRemoveCard = useCallback((cardName: string) => {
-    if (!deck) return;
-    const card = deck.cards.find((c) => c.name === cardName);
-    if (card) removeCard(card.id);
-  }, [deck, removeCard]);
-
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setActiveDragCard(null);
@@ -488,7 +482,6 @@ export default function BuilderPage() {
               error={aiError}
               onAnalyze={handleAIAnalyze}
               onAddCard={handleAIAddCard}
-              onRemoveCard={handleAIRemoveCard}
               disabled={!deck?.commander}
             />
 
