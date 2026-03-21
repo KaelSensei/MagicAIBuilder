@@ -17,9 +17,11 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
         <Tooltip.Portal>
           <Tooltip.Content
             className="z-50 rounded-lg overflow-hidden shadow-2xl border border-[var(--border)]"
-            side="left"
+            side="right"
             sideOffset={12}
             align="center"
+            avoidCollisions={true}
+            collisionPadding={16}
           >
             <Image
               src={card.imageUri}
