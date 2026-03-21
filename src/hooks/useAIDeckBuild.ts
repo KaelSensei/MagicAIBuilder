@@ -30,11 +30,39 @@ type BuildAcc = {
   messages: string[];
 };
 
-/** Reads a NDJSON build stream and applies events, calling onUpdate after each state change. */
+/**
+ * Process a batch of decoded text lines into the accumulator.
+ * Returns the final card list when a "done" event is received, null otherwise.
+ */
+function processLines(
+  lines: string[],
+  acc: BuildAcc,
+  onUpdate: (acc: BuildAcc) => void,
+): BuildCard[] | null {
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    let event: BuildEvent;
+    try { event = JSON.parse(trimmed) as BuildEvent; } catch { continue; }
+    switch (event.type) {
+      case "status": acc.messages.push(event.message); onUpdate(acc); break;
+      case "commander": acc.commander = event.name; onUpdate(acc); break;
+      case "card":
+        acc.cards.push({ name: event.name, category: event.category });
+        if (acc.cards.length % 5 === 0) onUpdate(acc);
+        break;
+      case "done": onUpdate(acc); return acc.cards;
+      case "error": throw new Error(event.message);
+    }
+  }
+  return null;
+}
+
+/** Reads a NDJSON build stream chunk by chunk, delegating line processing to processLines. */
 async function processBuildStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   onUpdate: (acc: BuildAcc) => void,
-): Promise<BuildCard[] | null> {
+): Promise<BuildCard[]> {
   const decoder = new TextDecoder();
   const acc: BuildAcc = { commander: null, cards: [], messages: [] };
   let buffer = "";
@@ -45,33 +73,8 @@ async function processBuildStream(
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
     buffer = lines.pop() ?? "";
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      let event: BuildEvent;
-      try { event = JSON.parse(trimmed) as BuildEvent; } catch { continue; }
-
-      switch (event.type) {
-        case "status":
-          acc.messages.push(event.message);
-          onUpdate(acc);
-          break;
-        case "commander":
-          acc.commander = event.name;
-          onUpdate(acc);
-          break;
-        case "card":
-          acc.cards.push({ name: event.name, category: event.category });
-          if (acc.cards.length % 5 === 0) onUpdate(acc);
-          break;
-        case "done":
-          onUpdate(acc);
-          return acc.cards;
-        case "error":
-          throw new Error(event.message);
-      }
-    }
+    const result = processLines(lines, acc, onUpdate);
+    if (result !== null) return result;
   }
   return acc.cards;
 }
