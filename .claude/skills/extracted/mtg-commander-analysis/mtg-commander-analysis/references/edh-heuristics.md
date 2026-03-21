@@ -158,3 +158,36 @@ Every deck should answer: "How do I actually win?"
 | Too high CMC | Deck is slow and clunky | Cut cards above 5 CMC, add more 2-3 CMC cards |
 | Too many "cute" cards | Inconsistent, cards don't impact the game | Replace with efficient staples |
 | No protection for commander | Commander keeps getting killed | Add boots/greaves, counterspells, indestructible |
+
+---
+
+## Commander Singleton Rule — Card Quantity
+
+Commander is a **singleton format**: max 1 copy of each card except basic lands.
+
+### Exceptions allowed in Commander (multiple copies legal)
+
+**Unlimited copies (treated like basic lands):**
+- All basic lands (type line contains "Basic Land")
+- Templar Knight
+- Tempest Hawk
+- Hare Apparent
+- Persistent Petitioners
+- Shadowborn Apostle
+- Rat Colony
+- Relentless Rats
+- Dragon's Approach
+- Slime Against Humanity
+- Vazal, the Compleat
+- Cid, Timeless Artificer
+
+**Capped copies:**
+| Card | Max copies |
+|---|---|
+| Nazgûl | 9 |
+| Seven Dwarves | 7 |
+
+### Implementation in MagicAIBuilder
+- `src/lib/deck/multiples.ts` → `maxQuantity(cardName, typeLine)` returns the correct cap
+- `+` / `−` quantity buttons in list view, capped by these rules
+- `addCard()` auto-increments quantity for eligible cards instead of blocking duplicates
