@@ -66,15 +66,15 @@ export function computeDeckStats(deck: Deck): DeckStats {
   // Banned cards
   const bannedCards = allCards.filter((c) => c.isBanned).map((c) => c.name);
 
-  // Color identity violations
+  // Color identity violations — only check if a commander is set
   const commanderIdentity = deck.commander?.colorIdentity ?? [];
-  const colorIdentityViolations = deck.cards
-    .filter((c) =>
-      c.colorIdentity.some(
-        (color) => !commanderIdentity.includes(color)
-      )
-    )
-    .map((c) => c.name);
+  const colorIdentityViolations = deck.commander
+    ? deck.cards
+        .filter((c) =>
+          c.colorIdentity.some((color) => !commanderIdentity.includes(color))
+        )
+        .map((c) => c.name)
+    : [];
 
   // Theme detection (on all non-land cards)
   const themes = detectThemes(allCards.filter((c) => c.category !== "land"));

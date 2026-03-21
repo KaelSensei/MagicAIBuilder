@@ -258,7 +258,14 @@ MagicAIBuilder/
 - [ ] Collection-aware suggestions (recommend owned cards)
 - [ ] Playtest / goldfish mode
 
-### Phase 5: Mobile
+### Phase 5: Onboarding & Interactive Tutorial
+- [ ] First-run wizard: guided deck creation (commander → cards → bracket)
+- [ ] Tooltip-driven tour of the builder UI (Shepherd.js or similar)
+- [ ] Contextual hints on complex elements (Game Changers, bracket score, color identity)
+- [ ] Empty state CTAs that guide the user to the next action
+- [ ] "Skip tutorial" + "Replay tutorial" options in settings
+
+### Phase 6: Mobile
 - [ ] Mobile-responsive deck viewing
 - [ ] Quick card search and add
 - [ ] Deck sharing with QR codes

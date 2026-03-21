@@ -12,8 +12,8 @@ interface GameChangersBadgeProps {
 
 const BRACKET_MAX_GC: Record<number, number> = {
   1: 0,
-  2: 2,
-  3: 4,
+  2: 0,
+  3: 3,
   4: Infinity,
 };
 

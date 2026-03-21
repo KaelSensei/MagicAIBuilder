@@ -26,20 +26,20 @@ export const BRACKET_DEFINITIONS: Record<BracketLevel, BracketDefinition> = {
     level: 2,
     name: "Core",
     description:
-      "Improved pre-cons and focused brews. Limited game changers allowed.",
+      "Improved pre-cons and focused brews. No game changers allowed.",
     color: "#3b82f6",
     cssVar: "var(--bracket-2)",
-    maxGameChangers: 2,
+    maxGameChangers: 0,
     allowsTutors: true,
   },
   3: {
     level: 3,
     name: "Upgraded",
     description:
-      "Optimized decks with synergies and efficient game plans. Game changers present.",
+      "Optimized decks with synergies and efficient game plans. Up to 3 game changers.",
     color: "#f59e0b",
     cssVar: "var(--bracket-3)",
-    maxGameChangers: 4,
+    maxGameChangers: 3,
     allowsTutors: true,
   },
   4: {
