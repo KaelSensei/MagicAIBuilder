@@ -18,6 +18,8 @@ model Deck {
   partnerId     String?
   companionId   String?
   pairingType   String     @default("none")
+  shareToken    String?    @unique  // null = private deck
+  shareEnabled  Boolean    @default(false)
   cards         DeckCard[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
