@@ -119,7 +119,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner);
 
         const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => ({
-          id: c.scryfallId,
+          id: c.id,
           name: c.name,
           manaCost: c.manaCost,
           cmc: c.cmc,
