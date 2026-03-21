@@ -50,21 +50,23 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
 
   /** Add all found cards to the active deck; returns count of added cards */
-  function addParsedCards(
+  async function addParsedCards(
     parsed: ReturnType<typeof parseTextDecklist>,
     foundCards: ScryfallCard[],
-  ): number {
+  ): Promise<number> {
     const byName = new Map(foundCards.map((c) => [c.name.toLowerCase(), c]));
     let added = 0;
 
+    // Set commander first and await — it updates pairingType which partner needs
     if (parsed.commander) {
       const cmd = byName.get(parsed.commander.toLowerCase());
-      if (cmd) { setCommander(cmd); added++; }
+      if (cmd) { await setCommander(cmd); added++; }
     }
 
+    // Set partner after commander is persisted
     if (parsed.partner) {
       const prt = byName.get(parsed.partner.toLowerCase());
-      if (prt) { setPartner(prt); added++; }
+      if (prt) { await setPartner(prt); added++; }
     }
 
     for (const { name, quantity } of parsed.cards) {
@@ -103,7 +105,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
 
       setMessage(`Validating ${allCardNames.length} cards with Scryfall...`);
       const foundCards = await fetchInBatches(allCardNames);
-      const added = addParsedCards(parsed, foundCards);
+      const added = await addParsedCards(parsed, foundCards);
 
       setStatus("done");
       setMessage(`Successfully imported ${added} cards.`);
