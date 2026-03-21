@@ -125,6 +125,7 @@ export function categorizeCard(card: ScryfallCard): CardCategory {
 /** Display label for each category */
 export const CATEGORY_LABELS: Record<CardCategory, string> = {
   commander: "Commander",
+  companion: "Companion",
   creature: "Creatures",
   instant: "Instants",
   sorcery: "Sorceries",
