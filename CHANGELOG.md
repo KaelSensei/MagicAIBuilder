@@ -187,22 +187,21 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **DeckCardOwnershipBadge** — shows "Owned" or "Buy" badge on deck editor card list items
 - **Collection filter** — "Show only collection cards" toggle in SearchFilters (only visible when collection is non-empty)
 - **Header nav** — Collection link added next to My Decks
-### Added — 2026-03-21: Playtest Mode
-
-- **`PlaytestState` type** — `src/lib/deck/types.ts`: `{ hand, library, turn, mulliganCount }`
-- **`usePlaytest` hook** — `src/hooks/usePlaytest.ts`:
-  - `startPlaytest(deck)` — Fisher-Yates shuffle, draw 7 into hand
-  - `mulligan(state, deck)` — London mulligan: reshuffle full deck, draw `7 - mulliganCount`
-  - `drawCard(state)` — draw 1 from library into hand
-  - `nextTurn(state)` — increment turn + draw a card
-- **`PlaytestModal`** — `src/components/playtest/PlaytestModal.tsx`:
-  - Fullscreen overlay with animated card fan (Fisher-Yates spread)
-  - Hover card preview (full-size image tooltip)
-  - Library pile with face-down stack visual and count
-  - Control buttons: Mulligan (up to 6), Draw Card, End Turn
-  - Stats bar: hand count, library count, turn number, mulligan count
-  - Restart button to re-draw opening hand
-- **Playtest button** in deck builder toolbar (Dices icon, next to Export)
+### Added — 2026-03-21: Deck Snapshots (feat/deck-snapshots)
+- **DeckSnapshot model** — Prisma model with `id`, `deckId`, `name`, `cardList` (JSON), `commander`, `cardCount`, `createdAt`; `onDelete: Cascade` from Deck
+- **Migration** `20260321140000_add_deck_snapshots` — creates `DeckSnapshot` table with index on `deckId`
+- **API** `GET /api/decks/[id]/snapshots` — list all snapshots (sorted newest-first; `cardList` omitted for perf)
+- **API** `POST /api/decks/[id]/snapshots` — create snapshot from current deck state (body: `{ name }`)
+- **API** `DELETE /api/decks/[id]/snapshots/[snapshotId]` — delete a specific snapshot
+- **API** `POST /api/decks/[id]/snapshots/[snapshotId]/restore` — transactional restore: replaces all DeckCard rows from snapshot's `cardList`
+- **Client helper** `src/lib/db/snapshot-api.ts` — typed fetch wrappers (`listSnapshots`, `createSnapshot`, `deleteSnapshot`, `restoreSnapshot`)
+- **SnapshotsPanel** component — collapsible "History" panel in builder stats column:
+  - "Save" button opens a popover with name input (Enter/Escape support)
+  - Snapshot list: name, date, card count, commander name
+  - Diff badge showing `+N / -N cards` vs current deck
+  - Restore button with inline confirmation (`Confirm / No`)
+  - Delete button with inline confirmation
+- **Builder integration** — SnapshotsPanel rendered in Panel 3 (stats); `onRestore` triggers `loadDecks()` to refresh store
 
 ### Fixed — 2026-03-21
 
