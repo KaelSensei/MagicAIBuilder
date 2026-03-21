@@ -187,12 +187,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **DeckCardOwnershipBadge** — shows "Owned" or "Buy" badge on deck editor card list items
 - **Collection filter** — "Show only collection cards" toggle in SearchFilters (only visible when collection is non-empty)
 - **Header nav** — Collection link added next to My Decks
-### Added — feat/seo-optimization
-- **`app/robots.ts`** — robots.txt : autorise `/` et `/share/`, bloque `/api/`, `/builder/`, `/collection/`
-- **`app/sitemap.ts`** — sitemap dynamique incluant toutes les pages de decks publiquement partagés
-- **`app/layout.tsx`** — metadata enrichie : title template, description longue, 10 keywords MTG/EDH, Twitter card, canonical URL, `robots: index/follow`
-- **`components/JsonLd.tsx`** — composant JSON-LD réutilisable + structured data `SoftwareApplication`
-- **`app/api/og/route.tsx`** — image OG dynamique (edge runtime) avec nom du deck, commander, pips de couleur, design dark MTG-themed 1200×630
+### Added — 2026-03-21: Keyboard Shortcuts
+
+- **`useKeyboardShortcuts` hook** (`src/hooks/useKeyboardShortcuts.ts`) — global `keydown` listener that drives all shortcuts; modifier shortcuts (Ctrl/Cmd) active even when a text input is focused; single-key shortcuts suppressed when typing
+- **`/`** — focuses the search bar (via `UIStore.focusSearch()` signal)
+- **`↑` / `↓`** — navigate search results with keyboard; reads index directly from store to avoid stale-closure bugs across rapid keystrokes
+- **`Enter`** — adds the first (or currently highlighted) card to the deck
+- **`Escape`** — closes open modals in priority order; falls back to clearing search
+- **`?`** — opens the keyboard shortcuts help modal
+- **`Cmd/Ctrl+Z`** — undo last card add or remove (via new `undoStack` in DeckStore)
+- **`Cmd/Ctrl+S`** — force-saves deck to DB with a toast confirmation
+- **`Cmd/Ctrl+E`** — opens the export modal
+- **`Cmd/Ctrl+I`** — opens the import modal
+- **`UIStore`** (`src/lib/ui/store.ts`) — centralised UI state: modal open flags, `keyboardSelectedIndex`, `searchFocusSignal`, `searchClearSignal`
+- **Undo stack in DeckStore** — `undoStack: DeckAction[]`, `undo()`, and `forceSave()`; records add/remove card actions; `undo()` reverses the last action and shows a toast
+- **`KeyboardShortcutsModal`** (`src/components/layout/KeyboardShortcutsModal.tsx`) — full shortcut table with styled `<kbd>` badges; `KeyboardShortcutsTrigger` button added to Footer
+- **SearchBar** — subscribes to `searchFocusSignal` / `searchClearSignal`; shows `⌨ /` hint badge when empty; forwards `onFocus`/`onBlur` for input-focus tracking
+- **SearchResults / CardSearchListItem / CardGrid** — keyboard-selection highlight (list: blue left bar + tinted bg; grid: accent ring); selected item auto-scrolls into view; resets on new search
+- **ImportDialog** — now supports controlled `open`/`onOpenChange` props (alongside existing trigger-based usage) so `Cmd+I` can open it without a DOM trigger
+- **Tests**: 29 new tests (22 hook + 7 store); total 89/89 passing
 
 ### Fixed — 2026-03-21
 

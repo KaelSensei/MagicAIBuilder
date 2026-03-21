@@ -16,6 +16,8 @@ A desktop-first Commander (EDH) deck builder with:
 - Import/export (plain text, MTGO, Arena)
 - **Deck snapshots** — named version history (save/restore/delete + diff badges)
 - Light/dark theme with persistence
+- **Keyboard shortcuts** for power-user deck building (`/`, `↑↓`, `Enter`, `Esc`, `?`, `Cmd+Z/S/E/I`)
+- Undo stack for card add/remove actions
 - Legal, accessible, fan-site compliant
 
 ---
