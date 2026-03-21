@@ -46,6 +46,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
 
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
+  const setPartner = useDeckStore((s) => s.setPartner);
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
 
   /** Add all found cards to the active deck; returns count of added cards */
@@ -59,6 +60,11 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
     if (parsed.commander) {
       const cmd = byName.get(parsed.commander.toLowerCase());
       if (cmd) { setCommander(cmd); added++; }
+    }
+
+    if (parsed.partner) {
+      const prt = byName.get(parsed.partner.toLowerCase());
+      if (prt) { setPartner(prt); added++; }
     }
 
     for (const { name, quantity } of parsed.cards) {
@@ -85,6 +91,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
       const parsed = parseTextDecklist(text);
       const allCardNames = [
         ...(parsed.commander ? [{ name: parsed.commander }] : []),
+        ...(parsed.partner ? [{ name: parsed.partner }] : []),
         ...parsed.cards.map((c) => ({ name: c.name })),
       ];
 

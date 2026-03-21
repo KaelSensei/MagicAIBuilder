@@ -3,6 +3,7 @@ import type { DeckCard } from "./types";
 
 export interface ImportResult {
   commander: string | null;
+  partner: string | null;
   cards: Array<{ name: string; quantity: number }>;
   errors: string[];
 }
@@ -28,11 +29,12 @@ function clampQuantity(n: number): number {
   return Math.floor(n);
 }
 
-/** Strip trailing set code + collector number: "Card Name (SET) 123" */
-const SET_CODE_PATTERN = /\s+\([A-Z0-9]+\)\s+\d+[a-z*]*\s*$/i;
+/** Strip trailing set code + collector number: "Card Name (SET) 123" or "... 123p" or "... 123★" */
+const SET_CODE_PATTERN = /\s+\([A-Z0-9]+\)\s+\d+[a-z*★]*\s*$/i;
 
 type ParseState = {
   commander: string | null;
+  partner: string | null;
   cards: Array<{ name: string; quantity: number }>;
   errors: string[];
   inCommanderSection: boolean;
@@ -55,8 +57,15 @@ function processImportLine(line: string, state: ParseState): void {
     return;
   }
 
-  if (state.inCommanderSection && !state.commander) {
-    state.commander = name;
+  if (state.inCommanderSection) {
+    if (!state.commander) {
+      state.commander = name;
+    } else if (!state.partner) {
+      // Second card in Commander section = partner
+      state.partner = name;
+    } else {
+      state.cards.push({ name, quantity });
+    }
   } else {
     state.cards.push({ name, quantity });
   }
@@ -65,7 +74,7 @@ function processImportLine(line: string, state: ParseState): void {
 /** Parse a plain-text decklist (1x Card Name or 1 Card Name format) */
 export function parseTextDecklist(text: string): ImportResult {
   if (typeof text !== "string") {
-    return { commander: null, cards: [], errors: ["Invalid input"] };
+    return { commander: null, partner: null, cards: [], errors: ["Invalid input"] };
   }
 
   const lines = text
@@ -74,13 +83,13 @@ export function parseTextDecklist(text: string): ImportResult {
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith("//") && !l.startsWith("#"));
 
-  const state: ParseState = { commander: null, cards: [], errors: [], inCommanderSection: false };
+  const state: ParseState = { commander: null, partner: null, cards: [], errors: [], inCommanderSection: false };
 
   for (const line of lines) {
     processImportLine(line, state);
   }
 
-  return { commander: state.commander, cards: state.cards, errors: state.errors };
+  return { commander: state.commander, partner: state.partner, cards: state.cards, errors: state.errors };
 }
 
 /** Export deck to plain text */
