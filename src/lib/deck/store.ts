@@ -96,6 +96,7 @@ export interface DeckStore {
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
   updateCardQuantity: (cardId: string, delta: number) => Promise<void>;
+  promoteToCommander: (cardId: string) => Promise<void>;
   swapCardPrinting: (cardId: string, printing: import("@/lib/scryfall/types").ScryfallCard) => Promise<void>;
   updateCardNotes: (cardId: string, notes: string | null) => Promise<void>;
 
@@ -761,6 +762,40 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } finally {
       set({ isSyncing: false });
     }
+  },
+
+  promoteToCommander: async (cardId) => {
+    const { activeDeckId, decks } = get();
+    if (!activeDeckId) return;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
+    const card = deck.cards.find((c) => c.id === cardId);
+    if (!card) return;
+
+    // Build a minimal ScryfallCard from the DeckCard to reuse setCommander
+    const scryfallCard = {
+      id: card.scryfallId ?? card.id,
+      name: card.name,
+      mana_cost: card.manaCost,
+      cmc: card.cmc,
+      type_line: card.typeLine,
+      oracle_text: card.oracleText,
+      color_identity: card.colorIdentity,
+      image_uris: card.imageUri ? { normal: card.imageUri, art_crop: card.artCropUri ?? card.imageUri } : undefined,
+      prices: {},
+      legalities: {},
+      set: "", set_name: "", collector_number: "", rarity: "rare" as const,
+      object: "card" as const, lang: "en", released_at: "", uri: "", scryfall_uri: "",
+      layout: "normal", highres_image: false, image_status: "lowres" as const,
+      keywords: [], games: [], reserved: false, foil: false, nonfoil: true,
+      oversized: false, promo: false, reprint: false, variation: false,
+      set_id: "", set_type: "", border_color: "black" as const, frame: "2015",
+      full_art: false, textless: false, booster: false, story_spotlight: false,
+    };
+
+    // Remove from deck first, then set as commander
+    await get().removeCard(cardId);
+    await get().setCommander(scryfallCard as import("@/lib/scryfall/types").ScryfallCard);
   },
 
   swapCardPrinting: async (cardId, printing) => {
