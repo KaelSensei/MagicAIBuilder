@@ -9,6 +9,43 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — feat/database-prisma: PostgreSQL + Prisma integration
+
+#### Infrastructure
+- `docker-compose.yml` — Postgres 16-alpine service with healthcheck, named volume `pgdata`
+- `.env.example` — template for required environment variables
+- `.env.local` — local development config (gitignored)
+
+#### Prisma ORM
+- `prisma/schema.prisma` — full schema with `Deck`, `DeckCard`, and `CardCache` models
+- `src/lib/db/prisma.ts` — PrismaClient singleton (dev hot-reload safe)
+
+#### API Routes (Next.js App Router)
+- `GET/POST /api/decks` — list all decks or create a new one
+- `GET/PATCH/DELETE /api/decks/[id]` — fetch, update, or delete a deck
+- `POST/DELETE /api/decks/[id]/cards` — add a card or clear all cards
+- `DELETE/PATCH /api/decks/[id]/cards/[cardId]` — remove or update a single card
+- `GET/POST /api/cache/cards` — Scryfall card cache lookup and storage
+
+#### Data Layer
+- `src/lib/db/deck-api.ts` — typed HTTP client for all API routes
+- `src/lib/deck/store.ts` — migrated from `localStorage` persist to DB sync; added `isSyncing` state; all CRUD operations are now async with optimistic updates
+- `src/lib/scryfall/client.ts` — `getCardById()` now checks `CardCache` in DB before calling Scryfall (24h TTL)
+
+#### UI
+- `src/app/page.tsx` — home page now fetches decks from `GET /api/decks` on mount, shows skeleton loaders during fetch, disables "New Deck" while creating
+
+#### Docs
+- `docs/INFRASTRUCTURE.md` — new: full infra docs (schema, setup, env vars, API routes, data flow)
+- `docs/TECHNICAL.md` — updated with DB layer section and `DATABASE_URL` env var
+
+#### Scripts (`package.json`)
+- `db:up` — `docker compose up -d`
+- `db:down` — `docker compose down`
+- `db:migrate` — `prisma migrate dev`
+- `db:studio` — `prisma studio`
+- `db:reset` — `prisma migrate reset --force`
+
 ### Added — Phase 1: Integration (feat/phase-1-integration)
 
 #### Game Changers & Banlist Enrichment

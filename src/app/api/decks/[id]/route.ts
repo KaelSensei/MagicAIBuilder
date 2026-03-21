@@ -1,0 +1,90 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db/prisma";
+
+type Params = { params: Promise<{ id: string }> };
+
+// GET /api/decks/[id] — get a single deck
+export async function GET(_req: Request, { params }: Params) {
+  const { id } = await params;
+  try {
+    const deck = await prisma.deck.findUnique({
+      where: { id },
+      include: { cards: true },
+    });
+
+    if (!deck) {
+      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(deck);
+  } catch (error) {
+    console.error(`[GET /api/decks/${id}]`, error);
+    return NextResponse.json(
+      { error: "Failed to fetch deck" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH /api/decks/[id] — update deck metadata
+export async function PATCH(request: Request, { params }: Params) {
+  const { id } = await params;
+  try {
+    const body = await request.json();
+    const { name, format, targetBracket, budget, commanderId, partnerId } =
+      body;
+
+    const existing = await prisma.deck.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
+
+    if (name !== undefined && (typeof name !== "string" || name.trim() === "")) {
+      return NextResponse.json(
+        { error: "name must be a non-empty string" },
+        { status: 400 }
+      );
+    }
+
+    const updated = await prisma.deck.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name: name.trim() }),
+        ...(format !== undefined && { format }),
+        ...(targetBracket !== undefined && { targetBracket }),
+        ...(budget !== undefined && { budget }),
+        ...(commanderId !== undefined && { commanderId }),
+        ...(partnerId !== undefined && { partnerId }),
+      },
+      include: { cards: true },
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error(`[PATCH /api/decks/${id}]`, error);
+    return NextResponse.json(
+      { error: "Failed to update deck" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/decks/[id] — delete a deck and all its cards
+export async function DELETE(_req: Request, { params }: Params) {
+  const { id } = await params;
+  try {
+    const existing = await prisma.deck.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
+
+    await prisma.deck.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(`[DELETE /api/decks/${id}]`, error);
+    return NextResponse.json(
+      { error: "Failed to delete deck" },
+      { status: 500 }
+    );
+  }
+}

@@ -1,11 +1,11 @@
 "use client";
-// Zustand deck store — manages all deck state
+// Zustand deck store — manages all deck state (synced to DB via API routes)
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { Deck, DeckCard, CardCategory } from "./types";
 import { categorizeCard } from "./categories";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
+import * as deckApi from "@/lib/db/deck-api";
 
 function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
   return {
@@ -16,8 +16,8 @@ function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
     typeLine: scryfallCard.type_line,
     oracleText: scryfallCard.oracle_text ?? "",
     colorIdentity: scryfallCard.color_identity,
-    isGameChanger: false, // Will be enriched via API
-    isBanned: false, // Will be enriched via validation
+    isGameChanger: false,
+    isBanned: false,
     price: scryfallCard.prices?.usd ? parseFloat(scryfallCard.prices.usd) : null,
     imageUri: getCardImageUri(scryfallCard, "normal"),
     artCropUri: getCardImageUri(scryfallCard, "art_crop"),
@@ -45,6 +45,7 @@ export interface DeckStore {
   // State
   decks: Record<string, Deck>;
   activeDeckId: string | null;
+  isSyncing: boolean;
 
   // Enrichment sets (populated from hooks at app startup)
   gameChangerNames: Set<string>;
@@ -61,22 +62,23 @@ export interface DeckStore {
   setDeckViewMode: (mode: "grid" | "list") => void;
 
   // Deck management
-  createDeck: (name: string) => string;
-  deleteDeck: (id: string) => void;
-  renameDeck: (id: string, name: string) => void;
+  createDeck: (name: string) => Promise<string>;
+  deleteDeck: (id: string) => Promise<void>;
+  renameDeck: (id: string, name: string) => Promise<void>;
   setActiveDeck: (id: string) => void;
+  loadDecks: () => Promise<void>;
 
   // Card management
-  setCommander: (card: ScryfallCard) => void;
-  setPartner: (card: ScryfallCard | null) => void;
-  addCard: (card: ScryfallCard) => void;
-  addDeckCard: (card: DeckCard) => void;
-  removeCard: (cardId: string) => void;
-  updateCardCategory: (cardId: string, category: CardCategory) => void;
+  setCommander: (card: ScryfallCard) => Promise<void>;
+  setPartner: (card: ScryfallCard | null) => Promise<void>;
+  addCard: (card: ScryfallCard) => Promise<void>;
+  addDeckCard: (card: DeckCard) => Promise<void>;
+  removeCard: (cardId: string) => Promise<void>;
+  updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
 
   // Deck settings
-  setTargetBracket: (bracket: 1 | 2 | 3 | 4) => void;
-  setBudget: (budget: number | null) => void;
+  setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
+  setBudget: (budget: number | null) => Promise<void>;
 
   // Game Changer / banlist enrichment
   markGameChanger: (cardName: string) => void;
@@ -86,269 +88,495 @@ export interface DeckStore {
   getActiveDeck: () => Deck | null;
 }
 
-export const useDeckStore = create<DeckStore>()(
-  persist(
-    (set, get) => ({
-      decks: {},
-      activeDeckId: null,
-      gameChangerNames: new Set<string>(),
-      bannedNames: new Set<string>(),
-      searchViewMode: "grid",
-      deckViewMode: "list",
+export const useDeckStore = create<DeckStore>()((set, get) => ({
+  decks: {},
+  activeDeckId: null,
+  isSyncing: false,
+  gameChangerNames: new Set<string>(),
+  bannedNames: new Set<string>(),
+  searchViewMode: "grid",
+  deckViewMode: "list",
 
-      setGameChangerNames: (names) => set({ gameChangerNames: names }),
-      setBannedNames: (names) => set({ bannedNames: names }),
-      setSearchViewMode: (mode) => set({ searchViewMode: mode }),
-      setDeckViewMode: (mode) => set({ deckViewMode: mode }),
+  setGameChangerNames: (names) => set({ gameChangerNames: names }),
+  setBannedNames: (names) => set({ bannedNames: names }),
+  setSearchViewMode: (mode) => set({ searchViewMode: mode }),
+  setDeckViewMode: (mode) => set({ deckViewMode: mode }),
 
-      createDeck: (name: string) => {
-        const id = crypto.randomUUID();
-        const deck = createEmptyDeck(id, name);
-        set((state) => ({
-          decks: { ...state.decks, [id]: deck },
-          activeDeckId: id,
-        }));
-        return id;
-      },
+  // Load all decks from the DB
+  loadDecks: async () => {
+    set({ isSyncing: true });
+    try {
+      const apiDecks = await deckApi.fetchDecks();
+      const decks: Record<string, Deck> = {};
+      for (const d of apiDecks) {
+        // Re-hydrate dates and reconstruct commander/partner from cards list
+        const allCards = d.cards ?? [];
+        const commanderCard = allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
+        const partnerCard = allCards.find((c) => c.isPartner) ?? null;
+        const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner);
 
-      deleteDeck: (id: string) => {
-        set((state) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { [id]: _removed, ...rest } = state.decks;
-          return {
-            decks: rest,
-            activeDeckId: state.activeDeckId === id ? null : state.activeDeckId,
-          };
+        const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => ({
+          id: c.scryfallId,
+          name: c.name,
+          manaCost: c.manaCost,
+          cmc: c.cmc,
+          typeLine: c.typeLine,
+          oracleText: c.oracleText,
+          colorIdentity: c.colorIdentity,
+          isGameChanger: c.isGameChanger,
+          isBanned: c.isBanned,
+          price: c.price,
+          imageUri: c.imageUri,
+          artCropUri: c.artCropUri,
+          category: c.category as CardCategory,
+          quantity: c.quantity,
         });
-      },
 
-      renameDeck: (id: string, name: string) => {
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [id]: { ...state.decks[id], name, updatedAt: new Date() },
-          },
-        }));
-      },
-
-      setActiveDeck: (id: string) => {
-        set({ activeDeckId: id });
-      },
-
-      setCommander: (card: ScryfallCard) => {
-        const { activeDeckId, gameChangerNames, bannedNames } = get();
-        if (!activeDeckId) return;
-        const deckCard = makeDeckCard(card);
-        deckCard.category = "commander";
-        deckCard.isGameChanger = gameChangerNames.has(card.name);
-        deckCard.isBanned = bannedNames.has(card.name);
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              commander: deckCard,
-              updatedAt: new Date(),
-            },
-          },
-        }));
-      },
-
-      setPartner: (card: ScryfallCard | null) => {
-        const { activeDeckId } = get();
-        if (!activeDeckId) return;
-        const deckCard = card ? makeDeckCard(card) : null;
-        if (deckCard) deckCard.category = "commander";
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              partner: deckCard,
-              updatedAt: new Date(),
-            },
-          },
-        }));
-      },
-
-      addCard: (card: ScryfallCard) => {
-        const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
-        if (!activeDeckId) return;
-        const deck = decks[activeDeckId];
-        if (!deck) return;
-
-        // Check if already exists (singleton)
-        const isBasic = card.type_line.toLowerCase().includes("basic land");
-        const exists = deck.cards.find((c) => c.name === card.name);
-        if (exists && !isBasic) {
-          // Increment quantity for basics
-          return;
-        }
-
-        const deckCard = makeDeckCard(card);
-        // Cross-reference enrichment sets
-        deckCard.isGameChanger = gameChangerNames.has(card.name);
-        deckCard.isBanned = bannedNames.has(card.name);
-
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              cards: [...state.decks[activeDeckId].cards, deckCard],
-              updatedAt: new Date(),
-            },
-          },
-        }));
-      },
-
-      addDeckCard: (card: DeckCard) => {
-        const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
-        if (!activeDeckId) return;
-        const deck = decks[activeDeckId];
-        if (!deck) return;
-        const isBasic = card.typeLine.toLowerCase().includes("basic land");
-        const exists = deck.cards.find((c) => c.name === card.name);
-        if (exists && !isBasic) return;
-        const enriched = {
-          ...card,
-          isGameChanger: gameChangerNames.has(card.name),
-          isBanned: bannedNames.has(card.name),
+        decks[d.id] = {
+          id: d.id,
+          name: d.name,
+          format: d.format as "commander" | "brawl",
+          targetBracket: d.targetBracket as 1 | 2 | 3 | 4,
+          budget: d.budget,
+          commander: commanderCard ? toDeckCard(commanderCard) : null,
+          partner: partnerCard ? toDeckCard(partnerCard) : null,
+          cards: mainCards.map(toDeckCard),
+          createdAt: new Date(d.createdAt),
+          updatedAt: new Date(d.updatedAt),
         };
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              cards: [...state.decks[activeDeckId].cards, enriched],
-              updatedAt: new Date(),
-            },
-          },
-        }));
-      },
-
-      removeCard: (cardId: string) => {
-        const { activeDeckId } = get();
-        if (!activeDeckId) return;
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              cards: state.decks[activeDeckId].cards.filter(
-                (c) => c.id !== cardId
-              ),
-              updatedAt: new Date(),
-            },
-          },
-        }));
-      },
-
-      updateCardCategory: (cardId: string, category: CardCategory) => {
-        const { activeDeckId } = get();
-        if (!activeDeckId) return;
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              cards: state.decks[activeDeckId].cards.map((c) =>
-                c.id === cardId ? { ...c, category } : c
-              ),
-              updatedAt: new Date(),
-            },
-          },
-        }));
-      },
-
-      setTargetBracket: (bracket) => {
-        const { activeDeckId } = get();
-        if (!activeDeckId) return;
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              targetBracket: bracket,
-              updatedAt: new Date(),
-            },
-          },
-        }));
-      },
-
-      setBudget: (budget) => {
-        const { activeDeckId } = get();
-        if (!activeDeckId) return;
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              budget,
-              updatedAt: new Date(),
-            },
-          },
-        }));
-      },
-
-      markGameChanger: (cardName: string) => {
-        const { activeDeckId } = get();
-        if (!activeDeckId) return;
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              cards: state.decks[activeDeckId].cards.map((c) =>
-                c.name === cardName ? { ...c, isGameChanger: true } : c
-              ),
-            },
-          },
-        }));
-      },
-
-      markBanned: (cardName: string) => {
-        const { activeDeckId } = get();
-        if (!activeDeckId) return;
-        set((state) => ({
-          decks: {
-            ...state.decks,
-            [activeDeckId]: {
-              ...state.decks[activeDeckId],
-              cards: state.decks[activeDeckId].cards.map((c) =>
-                c.name === cardName ? { ...c, isBanned: true } : c
-              ),
-            },
-          },
-        }));
-      },
-
-      getActiveDeck: () => {
-        const { activeDeckId, decks } = get();
-        return activeDeckId ? (decks[activeDeckId] ?? null) : null;
-      },
-    }),
-    {
-      name: "magic-ai-builder-decks",
-      // Only persist decks and view preferences (not runtime enrichment sets)
-      partialize: (state) => ({
-        decks: state.decks,
-        activeDeckId: state.activeDeckId,
-        searchViewMode: state.searchViewMode,
-        deckViewMode: state.deckViewMode,
-      }),
-      // Revive dates after hydration
-      onRehydrateStorage: () => (state) => {
-        if (!state) return;
-        for (const deck of Object.values(state.decks)) {
-          if (typeof deck.createdAt === "string") {
-            deck.createdAt = new Date(deck.createdAt);
-          }
-          if (typeof deck.updatedAt === "string") {
-            deck.updatedAt = new Date(deck.updatedAt);
-          }
-        }
-      },
+      }
+      set({ decks });
+    } catch (err) {
+      console.error("[loadDecks]", err);
+    } finally {
+      set({ isSyncing: false });
     }
-  )
-);
+  },
+
+  createDeck: async (name: string) => {
+    set({ isSyncing: true });
+    try {
+      const apiDeck = await deckApi.createDeck(name);
+      const deck = createEmptyDeck(apiDeck.id, apiDeck.name);
+      deck.createdAt = new Date(apiDeck.createdAt);
+      deck.updatedAt = new Date(apiDeck.updatedAt);
+      set((state) => ({
+        decks: { ...state.decks, [apiDeck.id]: deck },
+        activeDeckId: apiDeck.id,
+      }));
+      return apiDeck.id;
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  deleteDeck: async (id: string) => {
+    set({ isSyncing: true });
+    try {
+      await deckApi.deleteDeck(id);
+      set((state) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { [id]: _removed, ...rest } = state.decks;
+        return {
+          decks: rest,
+          activeDeckId: state.activeDeckId === id ? null : state.activeDeckId,
+        };
+      });
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  renameDeck: async (id: string, name: string) => {
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [id]: { ...state.decks[id], name, updatedAt: new Date() },
+      },
+    }));
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(id, { name });
+    } catch (err) {
+      console.error("[renameDeck]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  setActiveDeck: (id: string) => {
+    set({ activeDeckId: id });
+  },
+
+  setCommander: async (card: ScryfallCard) => {
+    const { activeDeckId, gameChangerNames, bannedNames } = get();
+    if (!activeDeckId) return;
+    const deckCard = makeDeckCard(card);
+    deckCard.category = "commander";
+    deckCard.isGameChanger = gameChangerNames.has(card.name);
+    deckCard.isBanned = bannedNames.has(card.name);
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          commander: deckCard,
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(activeDeckId, { commanderId: card.id });
+      // Persist the commander card record
+      await deckApi.addCard(activeDeckId, {
+        scryfallId: card.id,
+        name: deckCard.name,
+        manaCost: deckCard.manaCost,
+        cmc: deckCard.cmc,
+        typeLine: deckCard.typeLine,
+        oracleText: deckCard.oracleText,
+        colorIdentity: deckCard.colorIdentity,
+        isGameChanger: deckCard.isGameChanger,
+        isBanned: deckCard.isBanned,
+        price: deckCard.price,
+        imageUri: deckCard.imageUri,
+        artCropUri: deckCard.artCropUri,
+        category: "commander",
+        quantity: 1,
+        isCommander: true,
+        isPartner: false,
+      });
+    } catch (err) {
+      console.error("[setCommander]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  setPartner: async (card: ScryfallCard | null) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    const deckCard = card ? makeDeckCard(card) : null;
+    if (deckCard) deckCard.category = "commander";
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          partner: deckCard,
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(activeDeckId, { partnerId: card?.id ?? null });
+      if (card && deckCard) {
+        await deckApi.addCard(activeDeckId, {
+          scryfallId: card.id,
+          name: deckCard.name,
+          manaCost: deckCard.manaCost,
+          cmc: deckCard.cmc,
+          typeLine: deckCard.typeLine,
+          oracleText: deckCard.oracleText,
+          colorIdentity: deckCard.colorIdentity,
+          isGameChanger: deckCard.isGameChanger,
+          isBanned: deckCard.isBanned,
+          price: deckCard.price,
+          imageUri: deckCard.imageUri,
+          artCropUri: deckCard.artCropUri,
+          category: "commander",
+          quantity: 1,
+          isCommander: true,
+          isPartner: true,
+        });
+      }
+    } catch (err) {
+      console.error("[setPartner]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  addCard: async (card: ScryfallCard) => {
+    const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
+    if (!activeDeckId) return;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
+
+    const isBasic = card.type_line.toLowerCase().includes("basic land");
+    const exists = deck.cards.find((c) => c.name === card.name);
+    if (exists && !isBasic) return;
+
+    const deckCard = makeDeckCard(card);
+    deckCard.isGameChanger = gameChangerNames.has(card.name);
+    deckCard.isBanned = bannedNames.has(card.name);
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: [...state.decks[activeDeckId].cards, deckCard],
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      const saved = await deckApi.addCard(activeDeckId, {
+        scryfallId: card.id,
+        name: deckCard.name,
+        manaCost: deckCard.manaCost,
+        cmc: deckCard.cmc,
+        typeLine: deckCard.typeLine,
+        oracleText: deckCard.oracleText,
+        colorIdentity: deckCard.colorIdentity,
+        isGameChanger: deckCard.isGameChanger,
+        isBanned: deckCard.isBanned,
+        price: deckCard.price,
+        imageUri: deckCard.imageUri,
+        artCropUri: deckCard.artCropUri,
+        category: deckCard.category,
+        quantity: deckCard.quantity,
+        isCommander: false,
+        isPartner: false,
+      });
+      // Update the card's local id to the DB-generated CUID for future ops
+      set((state) => ({
+        decks: {
+          ...state.decks,
+          [activeDeckId]: {
+            ...state.decks[activeDeckId],
+            cards: state.decks[activeDeckId].cards.map((c) =>
+              c.id === card.id ? { ...c, id: saved.id } : c
+            ),
+          },
+        },
+      }));
+    } catch (err) {
+      console.error("[addCard]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  addDeckCard: async (card: DeckCard) => {
+    const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
+    if (!activeDeckId) return;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
+    const isBasic = card.typeLine.toLowerCase().includes("basic land");
+    const exists = deck.cards.find((c) => c.name === card.name);
+    if (exists && !isBasic) return;
+    const enriched = {
+      ...card,
+      isGameChanger: gameChangerNames.has(card.name),
+      isBanned: bannedNames.has(card.name),
+    };
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: [...state.decks[activeDeckId].cards, enriched],
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      const saved = await deckApi.addCard(activeDeckId, {
+        scryfallId: card.id,
+        name: card.name,
+        manaCost: card.manaCost,
+        cmc: card.cmc,
+        typeLine: card.typeLine,
+        oracleText: card.oracleText,
+        colorIdentity: card.colorIdentity,
+        isGameChanger: enriched.isGameChanger,
+        isBanned: enriched.isBanned,
+        price: card.price,
+        imageUri: card.imageUri,
+        artCropUri: card.artCropUri,
+        category: card.category,
+        quantity: card.quantity,
+        isCommander: false,
+        isPartner: false,
+      });
+      set((state) => ({
+        decks: {
+          ...state.decks,
+          [activeDeckId]: {
+            ...state.decks[activeDeckId],
+            cards: state.decks[activeDeckId].cards.map((c) =>
+              c.id === card.id ? { ...c, id: saved.id } : c
+            ),
+          },
+        },
+      }));
+    } catch (err) {
+      console.error("[addDeckCard]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  removeCard: async (cardId: string) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.filter(
+            (c) => c.id !== cardId
+          ),
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.removeCard(activeDeckId, cardId);
+    } catch (err) {
+      console.error("[removeCard]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  updateCardCategory: async (cardId: string, category: CardCategory) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.map((c) =>
+            c.id === cardId ? { ...c, category } : c
+          ),
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateCardCategory(activeDeckId, cardId, category);
+    } catch (err) {
+      console.error("[updateCardCategory]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  setTargetBracket: async (bracket) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          targetBracket: bracket,
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(activeDeckId, { targetBracket: bracket });
+    } catch (err) {
+      console.error("[setTargetBracket]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  setBudget: async (budget) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          budget,
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(activeDeckId, { budget });
+    } catch (err) {
+      console.error("[setBudget]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  markGameChanger: (cardName: string) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.map((c) =>
+            c.name === cardName ? { ...c, isGameChanger: true } : c
+          ),
+        },
+      },
+    }));
+  },
+
+  markBanned: (cardName: string) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.map((c) =>
+            c.name === cardName ? { ...c, isBanned: true } : c
+          ),
+        },
+      },
+    }));
+  },
+
+  getActiveDeck: () => {
+    const { activeDeckId, decks } = get();
+    return activeDeckId ? (decks[activeDeckId] ?? null) : null;
+  },
+}));
