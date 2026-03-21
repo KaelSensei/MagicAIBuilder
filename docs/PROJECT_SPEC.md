@@ -1,10 +1,20 @@
-# MagicAIBuilder - Technical Specification (Phase 1: Foundation)
+# MagicAIBuilder — Project Specification
 
 ## Objective
 
-Build the Free Build mode: a desktop-first Commander deck builder with Scryfall-powered card search, drag & drop deck editor, live stats, bracket scoring, Game Changers detection, and banlist enforcement.
-
-Phase 1 does NOT include AI-assisted build. That's Phase 3. This phase is the Moxfield-like experience with bracket intelligence baked in.
+A desktop-first Commander (EDH) deck builder with:
+- Scryfall-powered card search (name, set, color identity)
+- Drag & drop deck editor with auto-categorization
+- Live deck statistics (mana curve, color distribution, avg CMC)
+- Real-time bracket scoring (MTG Commander Brackets 1–4) with 6 dimensions
+- Game Changers detection and banlist enforcement
+- Combo detection via Commander Spellbook
+- AI-assisted deck suggestions (Anthropic Claude / OpenAI fallback)
+- Persistent multi-deck storage (PostgreSQL + Prisma)
+- Card printing/art selector
+- Import/export (plain text, MTGO, Arena)
+- Light/dark theme with persistence
+- Legal, accessible, fan-site compliant
 
 ---
 
@@ -13,91 +23,39 @@ Phase 1 does NOT include AI-assisted build. That's Phase 3. This phase is the Mo
 | Layer | Technology | Version |
 |-------|-----------|---------|
 | Framework | Next.js (App Router) | 15.x |
-| Language | TypeScript | 5.x |
+| Language | TypeScript | 5.x strict |
 | Styling | Tailwind CSS | 4.x |
 | Components | shadcn/ui (Radix primitives) | latest |
 | Animations | Framer Motion | 11.x |
 | State | Zustand | 5.x |
-| Data fetching | TanStack Query (React Query) | 5.x |
+| Data fetching | TanStack Query | 5.x |
 | Drag & Drop | dnd-kit | 6.x |
+| Database | PostgreSQL 16 | via Docker |
+| ORM | Prisma | 6.x |
+| Validation | Zod | 3.x |
 | Icons | Lucide React | latest |
-| Linting | ESLint + Prettier | latest |
-| Package manager | pnpm | latest |
-
-### Why These Choices
-
-- **Zustand** over Redux: less boilerplate, simpler for a single-page builder app. Deck state is the core and Zustand handles it cleanly.
-- **TanStack Query** for Scryfall API calls: handles caching, deduplication, retry, and stale data. Scryfall has rate limits (10 req/s), TanStack Query prevents duplicate requests naturally.
-- **dnd-kit** over react-beautiful-dnd: actively maintained, better performance, more flexible for card grid drag & drop.
-- **Framer Motion**: card hover zoom, panel transitions, smooth drag animations. This is core to the "beautiful" requirement.
+| Package manager | pnpm | 10.x |
+| Testing | Vitest 3 + Playwright | — |
 
 ---
 
-## Project Structure
+## Architecture
 
 ```
-magic-ai-builder/
-  src/
-    app/
-      layout.tsx                  # Root layout (dark theme, fonts)
-      page.tsx                    # Home / deck list
-      builder/
-        [deckId]/
-          page.tsx                # Main builder view
-    components/
-      ui/                         # shadcn/ui components (button, dialog, input, etc.)
-      layout/
-        Header.tsx                # App header with nav
-        Sidebar.tsx               # Left sidebar (deck categories, stats)
-      card/
-        CardImage.tsx             # Card image with hover zoom (Scryfall images)
-        CardTooltip.tsx           # Hover tooltip with card details
-        CardGrid.tsx              # Grid display for search results
-        CardListItem.tsx          # Compact list view for deck cards
-      search/
-        SearchBar.tsx             # Scryfall search input with autocomplete
-        SearchFilters.tsx         # Color identity, type, CMC, price filters
-        SearchResults.tsx         # Search results panel (grid or list)
-      deck/
-        DeckEditor.tsx            # Main deck editor (drag & drop zones)
-        DeckCategory.tsx          # Category group (Creatures, Ramp, Draw, etc.)
-        DeckStats.tsx             # Live stats panel (mana curve, color pie, counts)
-        ManaCurve.tsx             # Mana curve bar chart
-        ColorDistribution.tsx     # Color pie chart
-        BracketIndicator.tsx      # Current bracket score with breakdown
-        GameChangersBadge.tsx     # Game Changers count with warning
-        BanlistAlert.tsx          # Alert when a banned card is added
-      commander/
-        CommanderPicker.tsx       # Commander selection with search
-        CommanderCard.tsx         # Commander display card (prominent)
-    lib/
-      scryfall/
-        client.ts                 # Scryfall API client (rate-limited, cached)
-        types.ts                  # Scryfall card types
-        search.ts                 # Search query builder
-        images.ts                 # Card image URL helpers
-      deck/
-        types.ts                  # Deck, Card, Category types
-        store.ts                  # Zustand deck store
-        categories.ts             # Auto-categorize cards (ramp, draw, removal, etc.)
-        stats.ts                  # Deck stats computation
-        bracket.ts                # Bracket scoring engine
-        validation.ts             # Banlist + Game Changers + color identity checks
-        import.ts                 # Import from text/Moxfield/Archidekt
-        export.ts                 # Export to text/Moxfield/Archidekt
-      constants/
-        brackets.ts               # Bracket definitions and thresholds
-        benchmarks.ts             # EDH heuristic benchmarks by bracket
-    hooks/
-      useCardSearch.ts            # TanStack Query hook for Scryfall search
-      useCardLookup.ts            # TanStack Query hook for single card lookup
-      useDeck.ts                  # Zustand hook for deck state
-      useBracketScore.ts          # Computed bracket score from deck state
-      useGameChangers.ts          # Game Changers detection hook
-    styles/
-      globals.css                 # Tailwind base + custom dark theme
-  public/
-    fonts/                        # Custom fonts (Geist or Inter)
+Browser (React + Zustand)
+    ↕ TanStack Query (HTTP)
+Next.js App Router (Server + API Routes)
+    ↕ Prisma Client
+PostgreSQL 16
+
+    ↕ fetch (rate-limited, DB-cached)
+Scryfall API
+
+    ↕ fetch
+Commander Spellbook API
+
+    ↕ fetch
+Anthropic / OpenAI API (AI suggestions)
 ```
 
 ---
@@ -105,355 +63,185 @@ magic-ai-builder/
 ## Core Data Types
 
 ```typescript
-// lib/deck/types.ts
-
 interface DeckCard {
-  id: string;                    // Scryfall card ID
+  id: string;                    // DB CUID (from Prisma DeckCard.id)
+  scryfallId: string;            // Scryfall card UUID
   name: string;
-  manaCost: string;              // e.g., "{2}{U}{U}"
+  manaCost: string;
   cmc: number;
   typeLine: string;
   oracleText: string;
-  colorIdentity: string[];       // ["W", "U", "B", "R", "G"]
+  colorIdentity: string[];
   isGameChanger: boolean;
   isBanned: boolean;
-  price: number | null;          // USD
-  imageUri: string;              // Scryfall image URL (normal)
-  artCropUri: string;            // Art crop for backgrounds
-  category: CardCategory;        // Auto-assigned or manual
-  quantity: number;              // Always 1 in Commander (except basics)
-
-  // Double-faced card support (MDFCs, Transform)
-  cardFaces?: CardFace[];        // Present when card has multiple faces
-  layout: string;                // "normal" | "modal_dfc" | "transform" | "adventure" | etc.
-
-  // Commander-specific keywords (detected from Scryfall keywords array)
-  keywords: string[];            // ["Partner", "Companion", "Friends forever", etc.]
-}
-
-interface CardFace {
-  name: string;
-  manaCost: string;
-  typeLine: string;
-  oracleText: string;
+  price: number | null;
   imageUri: string;
+  artCropUri: string;
+  category: CardCategory;
+  quantity: number;
+  keywords: string[];
+  cardFaces?: CardFace[];
+  layout: string;
 }
 
 type CardCategory =
-  | "commander"
-  | "creature"
-  | "instant"
-  | "sorcery"
-  | "artifact"
-  | "enchantment"
-  | "planeswalker"
-  | "land"
-  | "ramp"
-  | "draw"
-  | "removal"
-  | "boardWipe"
-  | "winCondition"
-  | "protection"
-  | "other";
+  | "commander" | "creature" | "instant" | "sorcery"
+  | "artifact" | "enchantment" | "planeswalker" | "land"
+  | "ramp" | "draw" | "removal" | "boardWipe"
+  | "winCondition" | "protection" | "other";
 
-// Commander pairing types — determines how 2nd commander slot works
 type CommanderPairingType =
-  | "none"              // Single commander, no partner
-  | "partner"           // Generic "Partner" keyword (any two Partner commanders)
-  | "partner_with"      // "Partner with [specific card]" (e.g., Brallin + Shabraz)
-  | "friends_forever"   // "Friends forever" keyword (Doctor Who / Secret Lair)
-  | "background"        // Commander has "Choose a Background" + a Background enchantment
-  | "doctor";           // "Doctor's companion" (Doctor Who set)
+  | "none" | "partner" | "partner_with"
+  | "friends_forever" | "background" | "doctor";
 
 interface Deck {
-  id: string;
+  id: string;                     // DB CUID
   name: string;
   commander: DeckCard | null;
-  partner: DeckCard | null;      // 2nd commander (partner, background, etc.)
+  partner: DeckCard | null;
   pairingType: CommanderPairingType;
-  companion: DeckCard | null;    // Companion (outside the 100, sideboard slot)
-  cards: DeckCard[];             // The 99 (or 98 with partner, always 100 total with commanders)
-  format: "commander" | "brawl";
+  companion: DeckCard | null;     // Outside the 100, sideboard slot
+  cards: DeckCard[];              // The 99 (or 98 with partner)
+  format: "commander";
   targetBracket: 1 | 2 | 3 | 4;
-  budget: number | null;         // Max price per card in USD
-  budgetType: "per_card" | "total"; // Budget applies per card or to the whole deck
+  budget: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
-
-interface DeckStats {
-  totalCards: number;            // Should be 100
-  lands: number;
-  creatures: number;
-  ramp: number;
-  draw: number;
-  removal: number;
-  boardWipes: number;
-  avgCmc: number;
-  manaCurve: Record<number, number>;  // CMC -> count
-  colorDistribution: Record<string, number>; // Color -> count
-  gameChangersCount: number;
-  gameChangersList: string[];    // Card names
-  totalPrice: number;
-  overBudgetCards: string[];     // Cards exceeding budget
-  bannedCards: string[];         // Banned cards in deck
-  colorIdentityViolations: string[]; // Cards outside commander identity
-}
-
-interface BracketScore {
-  overall: 1 | 2 | 3 | 4;
-  dimensions: {
-    ramp: number;
-    draw: number;
-    removal: number;
-    tutors: number;
-    winSpeed: number;
-    avgCmc: number;
-  };
-  gameChangers: number;
-  warnings: string[];            // Human-readable bracket warnings
-}
 ```
 
 ---
 
-## Scryfall API Integration
+## User Stories
 
-### Rate Limiting
-Scryfall allows 10 requests/second. Implement a request queue with 100ms minimum delay between requests.
+### P0 — Must Have (all complete)
 
-```typescript
-// lib/scryfall/client.ts
-// Use a simple queue + TanStack Query's built-in caching
+| # | Story | Status |
+|---|---|---|
+| US-1 | Search cards using Scryfall syntax (name, type, color, CMC, oracle text) | ✅ Done |
+| US-2 | Pick a commander — color identity locks from this choice | ✅ Done |
+| US-3 | Add cards to deck by clicking or dragging from search results | ✅ Done |
+| US-4 | See live deck stats: card count, mana curve, color distribution, avg CMC | ✅ Done |
+| US-5 | See bracket score update live with per-dimension breakdown | ✅ Done |
+| US-6 | Get warned about banned cards (red flag + explanation) | ✅ Done |
+| US-7 | Get warned about Game Changers with bracket-appropriate count | ✅ Done |
+| US-8 | Get warned about color identity violations | ✅ Done |
 
-const SCRYFALL_BASE = "https://api.scryfall.com";
-const MIN_DELAY_MS = 100;
+### P1 — Should Have (all complete)
 
-// Headers required by Scryfall
-const headers = {
-  "User-Agent": "MagicAIBuilder/1.0",
-  "Accept": "application/json",
-};
-```
+| # | Story | Status |
+|---|---|---|
+| US-9 | Set a budget (per card) and get cards over budget flagged | ✅ Done |
+| US-10 | Manually recategorize cards by dragging between category groups | ✅ Done |
+| US-11 | Import a decklist from plain text (1 Card Name format) | ✅ Done |
+| US-12 | Export deck to MTGO, Arena, and plain text formats | ✅ Done |
+| US-13 | Toggle between grid and list view for search results and deck cards | ✅ Done |
+| US-14 | Inline deck rename (click title → input → Enter/Escape) | ✅ Done |
+| US-15 | Choose card printing/art before adding to deck | ✅ Done |
+| US-16 | Search by set code or color identity (dedicated tabs) | ✅ Done |
+| US-17 | Companion card support (sideboard slot, outside the 99) | ✅ Done |
 
-### Key Endpoints Used
+### P2 — Nice to Have (all complete)
 
-| Endpoint | Usage | Cache TTL |
-|----------|-------|-----------|
-| `GET /cards/search?q={query}` | Card search | 5 min |
-| `GET /cards/named?exact={name}` | Single card lookup | 24h |
-| `GET /cards/named?fuzzy={name}` | Fuzzy card lookup | 24h |
-| `POST /cards/collection` | Batch lookup (up to 75) | 24h |
-| `GET /cards/autocomplete?q={partial}` | Search autocomplete | 5 min |
-| `GET /catalog/card-names` | Full card name list | 24h |
-| `GET /cards/search?q=is:gamechanger` | Game Changers list | 24h |
-| `GET /cards/search?q=banned:commander` | Banlist | 24h |
+| # | Story | Status |
+|---|---|---|
+| US-18 | Hover a card to see it full-size with oracle text and price | ✅ Done |
+| US-19 | Filter by color/type/CMC/price via UI controls | ✅ Done |
+| US-20 | Persist multiple decks across sessions | ✅ Done (PostgreSQL) |
+| US-21 | Detect combos for current commander via Commander Spellbook | ✅ Done |
+| US-22 | AI deck suggestions with reasoning (Claude / GPT fallback) | ✅ Done |
+| US-23 | Light/dark theme toggle with persistence | ✅ Done |
 
-### Card Images
+### P3 — Future
 
-Scryfall provides multiple image sizes:
-```
-https://cards.scryfall.io/normal/front/{a}/{b}/{uuid}.jpg    // 488x680
-https://cards.scryfall.io/large/front/{a}/{b}/{uuid}.jpg     // 672x936
-https://cards.scryfall.io/art_crop/front/{a}/{b}/{uuid}.jpg  // Art only
-https://cards.scryfall.io/border_crop/front/{a}/{b}/{uuid}.jpg
-https://cards.scryfall.io/png/front/{a}/{b}/{uuid}.png       // Highest quality
-```
-
-Use `normal` for grid display, `large` for hover zoom, `art_crop` for backgrounds.
-
----
-
-## Card Auto-Categorization
-
-Cards are auto-categorized by analyzing their type line and oracle text:
-
-```typescript
-// lib/deck/categories.ts
-
-function categorizeCard(card: ScryfallCard): CardCategory {
-  const type = card.type_line.toLowerCase();
-  const text = (card.oracle_text || "").toLowerCase();
-
-  // Explicit type matches first
-  if (type.includes("land")) return "land";
-  if (type.includes("planeswalker")) return "planeswalker";
-
-  // Functional categories (override type)
-  if (isRamp(card)) return "ramp";
-  if (isBoardWipe(card)) return "boardWipe";
-  if (isRemoval(card)) return "removal";
-  if (isCardDraw(card)) return "draw";
-
-  // Fall back to card type
-  if (type.includes("creature")) return "creature";
-  if (type.includes("instant")) return "instant";
-  if (type.includes("sorcery")) return "sorcery";
-  if (type.includes("artifact")) return "artifact";
-  if (type.includes("enchantment")) return "enchantment";
-
-  return "other";
-}
-```
-
-Ramp detection: oracle text contains "add {", "search your library for a land", "put a land", "mana of any color" + low CMC.
-Removal detection: "destroy target", "exile target", "deals X damage to target", "-X/-X".
-Board wipe detection: "destroy all", "exile all", "deals X damage to each".
-Card draw detection: "draw a card", "draw cards", "draw X cards".
-
-Users can always manually recategorize cards by dragging between categories.
-
----
-
-## Bracket Scoring Engine
-
-```typescript
-// lib/deck/bracket.ts
-
-function scoreBracket(deck: Deck, stats: DeckStats): BracketScore {
-  const dimensions = {
-    ramp: scoreRamp(stats.ramp, stats.avgCmc),
-    draw: scoreDraw(stats.draw),
-    removal: scoreRemoval(stats.removal, stats.boardWipes),
-    tutors: scoreTutors(deck.cards),
-    winSpeed: scoreWinSpeed(deck.cards, stats.avgCmc),
-    avgCmc: scoreCmc(stats.avgCmc),
-  };
-
-  // Average dimensions, then adjust for Game Changers
-  let overall = Math.round(average(Object.values(dimensions)));
-
-  // Game Changers force minimum bracket
-  if (stats.gameChangersCount > 3) overall = Math.max(overall, 4);
-  else if (stats.gameChangersCount > 0) overall = Math.max(overall, 3);
-
-  return {
-    overall: clamp(overall, 1, 4) as 1 | 2 | 3 | 4,
-    dimensions,
-    gameChangers: stats.gameChangersCount,
-    warnings: generateWarnings(deck, stats, dimensions),
-  };
-}
-```
+| # | Story | Status |
+|---|---|---|
+| US-24 | Onboarding tutorial for new users | 📋 Planned |
+| US-25 | Mobile-responsive layout | 📋 Planned |
+| US-26 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
+| US-27 | Moxfield / Archidekt import from URL | 📋 Planned |
+| US-28 | User accounts and deck sharing | 📋 Planned |
 
 ---
 
 ## UI Layout (Desktop)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Header: [Logo] MagicAIBuilder    [My Decks] [New Deck] [Import]│
-├──────────┬─────────────────────────────┬────────────────────────┤
-│          │                             │                        │
-│  Search  │      Deck Editor            │    Stats Panel         │
-│  Panel   │                             │                        │
-│  (300px) │  ┌─Commander Zone──────┐    │  ┌─Bracket Score─────┐ │
-│          │  │  [Commander Card]   │    │  │  Bracket: 2       │ │
-│  [Search]│  └─────────────────────┘    │  │  ████░░░░ 2.3     │ │
-│  [Filter]│                             │  │  GC: 0/0 allowed  │ │
-│          │  ┌─Creatures (24)──────┐    │  └───────────────────┘ │
-│  Results │  │  [card] [card] [card]│    │                        │
-│  Grid    │  │  [card] [card] [card]│    │  ┌─Mana Curve──────┐ │
-│  or List │  └─────────────────────┘    │  │  ▁▃█▆▃▂▁         │ │
-│          │                             │  └───────────────────┘ │
-│  Click   │  ┌─Ramp (8)───────────┐    │                        │
-│  or drag │  │  [card] [card]      │    │  ┌─Color Pie────────┐ │
-│  to add  │  └─────────────────────┘    │  │   W:12 U:18 B:8  │ │
-│          │                             │  └───────────────────┘ │
-│          │  ┌─Card Draw (7)───────┐    │                        │
-│          │  │  [card] [card]      │    │  ┌─Deck Checks──────┐ │
-│          │  └─────────────────────┘    │  │  ✓ 100 cards      │ │
-│          │                             │  │  ✓ Color identity  │ │
-│          │  ┌─Removal (6)─────────┐    │  │  ✓ Banlist clean   │ │
-│          │  │  [card] [card]      │    │  │  ⚠ Low ramp (5)   │ │
-│          │  └─────────────────────┘    │  └───────────────────┘ │
-│          │                             │                        │
-│          │  [+ more categories...]     │  ┌─Budget─────────────┐│
-│          │                             │  │  Total: $87.50     ││
-│          │                             │  │  Over budget: 0    ││
-│          │                             │  └────────────────────┘│
-├──────────┴─────────────────────────────┴────────────────────────┤
-│  Footer: [Export] [Save] [Bracket: 2] [Cards: 97/100] [$87.50] │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Header: [Logo] MagicAIBuilder    [My Decks] [New Deck] [Theme Toggle]   │
+├────────────────┬───────────────────────────┬─────────────────────────────┤
+│                │                           │                             │
+│  Search Panel  │     Deck Editor           │    Stats Panel              │
+│  (300px)       │                           │                             │
+│                │  ┌─Commander Zone──────┐  │  ┌─Bracket Score──────────┐ │
+│  [Tab: Name]   │  │  [Commander Card]   │  │  │  Bracket: 2            │ │
+│  [Tab: Set ]   │  └─────────────────────┘  │  │  ████░░░░  GC: 0       │ │
+│  [Tab: Color]  │                           │  └────────────────────────┘ │
+│                │  ┌─Creatures (24)──────┐  │                             │
+│  [Search Bar]  │  │  [card] [card] [card]│  │  ┌─Mana Curve────────────┐ │
+│  [Filters]     │  └─────────────────────┘  │  │  ▁▃█▆▃▂▁               │ │
+│                │                           │  └────────────────────────┘ │
+│  Results Grid  │  ┌─Ramp (8)───────────┐  │                             │
+│  or List       │  │  [card] [card]      │  │  ┌─Color Distribution────┐ │
+│                │  └─────────────────────┘  │  │   W:12 U:18 B:8       │ │
+│  Click or drag │                           │  └────────────────────────┘ │
+│  to add cards  │  ┌─Card Draw (7)───────┐  │                             │
+│                │  │  [card] [card]      │  │  ┌─Deck Checks───────────┐ │
+│                │  └─────────────────────┘  │  │  ✓ 100 cards           │ │
+│                │                           │  │  ✓ Color identity       │ │
+│                │  [+ more categories...]   │  │  ✓ Banlist clean        │ │
+│                │                           │  │  ⚠ Low ramp (5)        │ │
+│                │  ┌─Combos Panel────────┐  │  └────────────────────────┘ │
+│                │  │  [Combo list]       │  │                             │
+│                │  └─────────────────────┘  │  ┌─AI Suggestions────────┐ │
+│                │                           │  │  [Suggestion list]     │ │
+│                │                           │  └────────────────────────┘ │
+├────────────────┴───────────────────────────┴─────────────────────────────┤
+│  Footer: Legal notices (WotC fan policy + Scryfall disclaimer)           │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Theme & Design Tokens
 
-Dark theme by default. MTG players overwhelmingly prefer dark mode.
+Dark theme by default. Light theme available via toggle.
 
 ```css
-/* Color palette */
---background: #0a0a0f;        /* Near-black with slight blue */
---surface: #12121a;            /* Card/panel backgrounds */
---surface-hover: #1a1a25;      /* Hover state */
---border: #2a2a35;             /* Subtle borders */
---text-primary: #e8e8ec;       /* Main text */
---text-secondary: #8888a0;     /* Muted text */
---accent: #6366f1;             /* Primary accent (indigo) */
---accent-hover: #818cf8;
-
-/* MTG mana colors */
---mana-white: #f9faf4;
---mana-blue: #0e68ab;
---mana-black: #150b00;
---mana-red: #d3202a;
---mana-green: #00733e;
---mana-colorless: #ccc2c0;
+/* Dark theme */
+--background: #0a0a0f;
+--surface: #12121a;
+--surface-hover: #1a1a25;
+--border: #2a2a35;
+--text-primary: #e8e8ec;
+--text-secondary: #8888a0;
+--accent: #6366f1;
 
 /* Bracket colors */
---bracket-1: #22c55e;         /* Green - casual */
---bracket-2: #3b82f6;         /* Blue - core */
---bracket-3: #f59e0b;         /* Amber - upgraded */
---bracket-4: #ef4444;         /* Red - optimized */
-
-/* Animations */
---transition-fast: 150ms ease;
---transition-normal: 250ms ease;
---transition-slow: 400ms ease;
+--bracket-1: #22c55e;   /* Green - casual */
+--bracket-2: #3b82f6;   /* Blue - core */
+--bracket-3: #f59e0b;   /* Amber - upgraded */
+--bracket-4: #ef4444;   /* Red - optimized */
 ```
-
-Card hover: scale(1.05) with elevation shadow. Hover zoom: on long hover (300ms), show large card image in a floating panel.
 
 ---
 
-## Phase 1 User Stories
+## Scryfall Image Sizes
 
-### P0 (Must Have)
+| Size | Dimensions | Used For |
+|---|---|---|
+| `normal` | 488×680 | Card grid display |
+| `large` | 672×936 | Hover zoom |
+| `art_crop` | variable | Deck card backgrounds on home page |
+| `small` | 146×204 | Thumbnails |
+| `png` | 745×1040 | Highest quality |
 
-1. **As a user, I can search for cards** using Scryfall syntax (name, type, color, CMC, oracle text). Results appear in a grid with card images.
+---
 
-2. **As a user, I can pick a commander** from search results. The commander appears in a prominent zone above the deck. Color identity is locked from this choice.
+## Legal & Compliance
 
-3. **As a user, I can add cards to my deck** by clicking or dragging from search results. Cards are auto-categorized into groups (Creatures, Ramp, Draw, Removal, etc.).
+See `LEGAL.md` for full disclaimer text.
 
-4. **As a user, I can see live deck stats** as I add/remove cards: card count, mana curve, color distribution, avg CMC, category counts.
-
-5. **As a user, I see bracket score update live** as I modify the deck. The bracket indicator shows which bracket my deck falls into with per-dimension breakdown.
-
-6. **As a user, I get warned about banned cards** when I try to add one. The card is flagged with a red indicator and explanation.
-
-7. **As a user, I get warned about Game Changers** with a counter showing how many I have vs. my target bracket allows.
-
-8. **As a user, I get warned about color identity violations** when I try to add a card outside my commander's colors.
-
-### P1 (Should Have)
-
-9. **As a user, I can set a budget** (per card or total) and cards exceeding it are flagged.
-
-10. **As a user, I can manually recategorize cards** by dragging between category groups.
-
-11. **As a user, I can import a decklist** from plain text (1 Card Name format) or Moxfield/Archidekt URL.
-
-12. **As a user, I can export my deck** to plain text, Moxfield, or Archidekt format.
-
-13. **As a user, I can toggle between grid and list view** for both search results and deck cards.
-
-### P2 (Nice to Have)
-
-14. **As a user, I can hover a card to see it full-size** with oracle text, price, and legality info.
-
-15. **As a user, I can filter search by color identity, type, CMC range, and price range** using UI controls (not just raw Scryfall syntax).
-
-16. **As a user, I can save multiple decks** locally (localStorage or IndexedDB).
+- **Wizards of the Coast**: MagicAIBuilder is unofficial fan content permitted under the Fan Content Policy. Not affiliated with or endorsed by WotC.
+- **Scryfall**: Card data and images provided via the Scryfall API. Not affiliated with Scryfall LLC.
+- All card names, art, and game mechanics are © Wizards of the Coast LLC.
