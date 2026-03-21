@@ -158,9 +158,13 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     onClose();
   }, [stopPlaytest, onClose]);
 
-  const turnBadge = state
-    ? `Turn ${state.turn}${state.mulliganCount > 0 ? ` · ${state.mulliganCount} mulligan${state.mulliganCount > 1 ? "s" : ""}` : ""}`
-    : null;
+  function formatTurnBadge(turn: number, mulliganCount: number): string {
+    if (mulliganCount === 0) return `Turn ${turn}`;
+    const suffix = mulliganCount === 1 ? "mulligan" : "mulligans";
+    return `Turn ${turn} · ${mulliganCount} ${suffix}`;
+  }
+
+  const turnBadge = state ? formatTurnBadge(state.turn, state.mulliganCount) : null;
 
   return (
     <AnimatePresence>

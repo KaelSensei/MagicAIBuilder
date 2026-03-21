@@ -8,7 +8,7 @@ const addCardSchema = z.object({
   quantity: z.number().int().min(1).default(1),
   foil: z.boolean().default(false),
   condition: z.enum(["NM", "LP", "MP", "HP", "DMG"]).nullable().optional(),
-  acquiredAt: z.string().datetime().nullable().optional(),
+  acquiredAt: z.iso.datetime().nullable().optional(),
   price: z.number().positive().nullable().optional(),
   imageUri: z.string().optional().default(""),
 });
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const parsed = addCardSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: parsed.error.flatten() },
+        { error: "Invalid input", details: parsed.error.issues.map((i) => i.message) },
         { status: 400 }
       );
     }

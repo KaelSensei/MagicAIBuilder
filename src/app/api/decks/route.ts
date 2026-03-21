@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = createDeckSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ error: "Invalid input", details: parsed.error.issues.map((i) => i.message) }, { status: 400 });
     }
     const { name: rawName, format, targetBracket, budget, commanderId, partnerId, companionId, pairingType } = parsed.data;
     const sanitizedName = rawName.replace(/<[^>]*>/g, "").trim();
