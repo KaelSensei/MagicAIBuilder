@@ -61,3 +61,32 @@ export function buildCommanderSearchQuery(
   }
   return parts.join(" ");
 }
+
+/** Build a query for browsing cards from a specific set */
+export function buildSetSearchQuery(setCode: string, colorFilter: string[] = []): string {
+  const parts: string[] = [`set:${setCode}`, "legal:commander"];
+  if (colorFilter.length > 0) {
+    parts.push(`id<=${colorFilter.join("")}`);
+  }
+  return parts.join(" ");
+}
+
+/** Build a query for filtering by color */
+export function buildColorSearchQuery(
+  colors: string[],
+  text: string = "",
+  exact = false
+): string {
+  const parts: string[] = ["legal:commander"];
+  if (text.trim()) parts.push(`name:/${text.trim()}/`);
+
+  if (colors.length === 0) {
+    // Colorless
+  } else if (exact) {
+    parts.push(`c=${colors.join("")}`);
+  } else {
+    parts.push(`id<=${colors.join("")}`);
+  }
+
+  return parts.join(" ");
+}
