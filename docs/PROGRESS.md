@@ -40,6 +40,7 @@
 - [x] Card printing selector modal with oracle text panel (mana cost, type line, card text, price)
 - [x] Search mode tabs: By Name / By Set / By Color
 - [x] Dynamic set search — all sets fetched from Scryfall API (replaces static list), 1h cache, sorted newest first
+- [x] Mana symbols in color filter — official Scryfall SVGs (W/U/B/R/G/C) replacing emojis
 - [x] Commander art crop as background on home deck cards
 - [x] Favicon SVG + OG image (1200×630)
 - [x] Page metadata: title template, keywords, openGraph

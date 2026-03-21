@@ -380,11 +380,12 @@ export default function BuilderPage() {
                   />
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      { code: "W", label: "White", symbol: "☀️" },
-                      { code: "U", label: "Blue", symbol: "💧" },
-                      { code: "B", label: "Black", symbol: "💀" },
-                      { code: "R", label: "Red", symbol: "🔥" },
-                      { code: "G", label: "Green", symbol: "🌲" },
+                      { code: "W", label: "White" },
+                      { code: "U", label: "Blue" },
+                      { code: "B", label: "Black" },
+                      { code: "R", label: "Red" },
+                      { code: "G", label: "Green" },
+                      { code: "C", label: "Colorless" },
                     ].map((c) => (
                       <button
                         key={c.code}
@@ -396,34 +397,21 @@ export default function BuilderPage() {
                           )
                         }
                         className={cn(
-                          "w-9 h-9 rounded-full text-base transition-all border-2",
+                          "w-9 h-9 rounded-full transition-all border-2 p-0.5",
                           colorFilter.includes(c.code)
                             ? "border-[var(--accent)] scale-110"
                             : "border-transparent opacity-50 hover:opacity-100"
                         )}
                         title={c.label}
                       >
-                        {c.symbol}
+                        {/* Official Scryfall mana symbol SVGs */}
+                        <img
+                          src={`https://svgs.scryfall.io/card-symbols/${c.code}.svg`}
+                          alt={c.label}
+                          className="w-full h-full"
+                        />
                       </button>
                     ))}
-                    <button
-                      onClick={() =>
-                        setColorFilter((prev) =>
-                          prev.includes("C")
-                            ? prev.filter((x) => x !== "C")
-                            : [...prev, "C"]
-                        )
-                      }
-                      className={cn(
-                        "px-2 h-9 rounded-full text-xs font-medium transition-all border-2",
-                        colorFilter.includes("C")
-                          ? "border-[var(--accent)] text-[var(--accent)] scale-110"
-                          : "border-[var(--border)] text-[var(--text-secondary)] opacity-70 hover:opacity-100"
-                      )}
-                      title="Colorless"
-                    >
-                      ◇
-                    </button>
                   </div>
                   {colorFilter.length === 0 && !searchText && (
                     <p className="text-xs text-[var(--text-secondary)] italic">
