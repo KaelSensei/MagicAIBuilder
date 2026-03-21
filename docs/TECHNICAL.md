@@ -82,6 +82,9 @@ src/
       SnapshotsPanel.tsx        # Named deck snapshots — save/restore/delete + diff badge
       ImportDialog.tsx          # Text decklist import modal
       ExportModal.tsx           # Multi-format export (MTGO, Arena, plain text)
+    playtest/
+      PlaytestModal.tsx         # Fullscreen playtest: animated hand fan, mulligan, draw, next turn
+
     layout/
       Header.tsx                # Logo, nav, theme toggle, actions
       Footer.tsx                # Legal notices (WotC + Scryfall disclaimers)
@@ -99,7 +102,7 @@ src/
       images.ts                 # Image URL helpers (normal/large/art_crop)
       search.ts                 # Query builder (name/set/color modes)
     deck/
-      types.ts                  # Core domain types (DeckCard, Deck, BracketScore…)
+      types.ts                  # Core domain types (DeckCard, Deck, BracketScore, PlaytestState…)
       store.ts                  # Zustand store — DB-synced, no localStorage
       categories.ts             # Auto-categorization engine (15 categories)
       stats.ts                  # computeDeckStats()
@@ -124,6 +127,7 @@ src/
     useCombos.ts                # Commander Spellbook API combo detection
     useTheme.ts                 # Dark/light theme preference store
     useAISuggestions.ts         # AI analysis with Anthropic/OpenAI provider fallback
+    usePlaytest.ts              # Playtest state machine: shuffle, draw, London mulligan, nextTurn
 
   styles/
     globals.css                 # Tailwind 4 + CSS custom properties (theme tokens)
