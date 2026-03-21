@@ -1,7 +1,7 @@
 "use client";
 // List view row for search results
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Bookmark } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { DraggableCard } from "./DraggableCard";
@@ -17,9 +17,13 @@ interface CardSearchListItemProps {
 function ListItemContent({
   card,
   onClick,
+  onAddToMaybeboard,
+  isInMaybeboard,
 }: {
   card: ScryfallCard;
   onClick?: (card: ScryfallCard) => void;
+  onAddToMaybeboard?: (card: ScryfallCard) => void;
+  isInMaybeboard?: boolean;
 }) {
   return (
     <motion.button
@@ -38,6 +42,8 @@ function ListItemContent({
       <span className="text-xs text-[var(--text-secondary)] shrink-0">
         {card.cmc > 0 ? card.cmc : "—"}
       </span>
+
+      {/* Add to deck */}
       <Plus className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 shrink-0 transition-opacity" />
     </motion.button>
   );
@@ -46,6 +52,8 @@ function ListItemContent({
 export function CardSearchListItem({
   card,
   onClick,
+  onAddToMaybeboard,
+  isInMaybeboard = false,
   draggable = false,
   className,
 }: CardSearchListItemProps) {
@@ -53,14 +61,24 @@ export function CardSearchListItem({
     return (
       <div className={className}>
         <DraggableCard card={card}>
-          <ListItemContent card={card} onClick={onClick} />
+          <ListItemContent
+            card={card}
+            onClick={onClick}
+            onAddToMaybeboard={onAddToMaybeboard}
+            isInMaybeboard={isInMaybeboard}
+          />
         </DraggableCard>
       </div>
     );
   }
   return (
     <div className={className}>
-      <ListItemContent card={card} onClick={onClick} />
+      <ListItemContent
+        card={card}
+        onClick={onClick}
+        onAddToMaybeboard={onAddToMaybeboard}
+        isInMaybeboard={isInMaybeboard}
+      />
     </div>
   );
 }

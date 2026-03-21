@@ -7,6 +7,7 @@ import Image from "next/image";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { CardTooltip } from "@/components/card/CardTooltip";
+import { MaybeboardPanel } from "@/components/deck/MaybeboardPanel";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
@@ -38,9 +39,11 @@ interface CategorySectionProps {
 function DraggableDeckCard({
   card,
   onRemove,
+  onMoveToMaybeboard,
 }: {
   card: DeckCard;
   onRemove: (id: string) => void;
+  onMoveToMaybeboard?: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
@@ -66,7 +69,7 @@ function DraggableDeckCard({
         <GripVertical className="w-3 h-3" />
       </button>
       <div className="flex-1 min-w-0">
-        <CardListItem card={card} onRemove={onRemove} />
+        <CardListItem card={card} onRemove={onRemove} onMoveToMaybeboard={onMoveToMaybeboard} />
       </div>
     </div>
   );
@@ -132,6 +135,7 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
                 key={card.id}
                 card={card}
                 onRemove={onRemoveCard}
+                onMoveToMaybeboard={onMoveToMaybeboard}
               />
             ))}
           </SortableContext>
@@ -542,6 +546,64 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
           <SecondaryZoneContent zone="maybeboard" cards={maybeboardCards} viewMode={viewMode} gridCols={gridCols} onRemoveCard={onRemoveCard} onCardClick={onCardClick} moveCardToZone={moveCardToZone} />
         )}
       </div>
+
+      {/* Tab content */}
+      {activeTab === "deck" ? (
+        /* Deck tab — Categories or Grid */
+        <div className="flex-1 overflow-y-auto p-2">
+          {viewMode === "grid" ? (
+            /* Grid view — flat image grid of all deck cards */
+            <div className="grid grid-cols-3 gap-1.5 p-1">
+              {deck.cards.map((card) => (
+                <div key={card.id} className="relative group/card">
+                  <CardImage
+                    imageUri={card.imageUri}
+                    largeUri={card.imageUri}
+                    name={card.name}
+                    manaCost={card.manaCost}
+                    cmc={card.cmc}
+                    showOverlay={true}
+                    zoomOnHover={false}
+                    className="w-full"
+                  />
+                  {/* Remove button — top-left, shown on hover */}
+                  <button
+                    onClick={() => onRemoveCard(card.id)}
+                    className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                    aria-label={`Remove ${card.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {deck.cards.length === 0 && (
+                <div className="col-span-3 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
+                  No cards yet
+                </div>
+              )}
+            </div>
+          ) : (
+            /* List view — categorized droppable zones */
+            CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
+              <DroppableCategory
+                key={category}
+                category={category}
+                cards={cardsByCategory[category] ?? []}
+                onRemoveCard={onRemoveCard}
+                onMoveToMaybeboard={onMoveToMaybeboard}
+              />
+            ))
+          )}
+        </div>
+      ) : (
+        /* Maybeboard tab */
+        <MaybeboardPanel
+          cards={deck.maybeboard}
+          onMoveToDecks={(cardId) => onMoveFromMaybeboard?.(cardId)}
+          onRemove={(cardId) => onRemoveFromMaybeboard?.(cardId)}
+          className="flex-1 overflow-hidden"
+        />
+      )}
     </div>
   );
 }

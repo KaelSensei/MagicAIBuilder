@@ -582,6 +582,7 @@ export default function BuilderPage() {
                 error={searchError as Error | null}
                 totalCards={searchData?.total_cards}
                 onCardClick={handleCardClick}
+                onAddToMaybeboard={addToMaybeboard}
                 draggable={true}
               />
             </div>

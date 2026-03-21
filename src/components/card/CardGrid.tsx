@@ -1,6 +1,7 @@
 "use client";
 // Grid display for search results
 import { motion } from "framer-motion";
+import { Bookmark } from "lucide-react";
 import { CardImage } from "./CardImage";
 import { DraggableCard } from "./DraggableCard";
 import { cn } from "@/components/ui/utils";
@@ -42,6 +43,8 @@ const itemVariants = {
 export function CardGrid({
   cards,
   onCardClick,
+  onAddToMaybeboard,
+  maybeboardNames,
   className,
   emptyMessage = "No cards found",
   draggable = false,
@@ -61,10 +64,23 @@ export function CardGrid({
       initial="hidden"
       animate="show"
     >
-      {cards.map((card) => (
-        <motion.div key={card.id} variants={itemVariants} className="relative">
-          {draggable ? (
-            <DraggableCard card={card}>
+      {cards.map((card) => {
+        const isInMaybeboard = maybeboardNames?.has(card.name) ?? false;
+        return (
+          <motion.div key={card.id} variants={itemVariants} className="relative group/gridcard">
+            {draggable ? (
+              <DraggableCard card={card}>
+                <CardImage
+                  imageUri={getCardImageUri(card, "normal")}
+                  largeUri={getCardImageUri(card, "large")}
+                  name={card.name}
+                  manaCost={card.mana_cost}
+                  cmc={card.cmc}
+                  showOverlay={true}
+                  onClick={() => onCardClick?.(card)}
+                />
+              </DraggableCard>
+            ) : (
               <CardImage
                 imageUri={getCardImageUri(card, "normal")}
                 largeUri={getCardImageUri(card, "large")}
