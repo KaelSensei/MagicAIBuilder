@@ -59,6 +59,11 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
 
+    // Validate tags if provided
+    if (tags !== undefined && (!Array.isArray(tags) || tags.some((t: unknown) => typeof t !== "string"))) {
+      return NextResponse.json({ error: "tags must be an array of strings" }, { status: 400 });
+    }
+
     const updated = await prisma.deck.update({
       where: { id },
       data: buildDeckPatchData(parsed.data),
