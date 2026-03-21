@@ -32,13 +32,7 @@ src/
     page.tsx                    # Home / deck list (commander art card backgrounds)
     builder/[deckId]/
       page.tsx                  # 3-panel builder view (Search | DeckEditor | Stats)
-    collection/
-      page.tsx                  # Collection page (grid/list of owned cards)
     api/
-      collection/
-        route.ts                # GET /api/collection, POST /api/collection
-        [id]/
-          route.ts              # PATCH/DELETE /api/collection/[id]
       decks/
         route.ts                # GET /api/decks, POST /api/decks
         [id]/
@@ -47,6 +41,12 @@ src/
             route.ts            # POST /api/decks/[id]/cards
             [cardId]/
               route.ts          # DELETE/PATCH /api/decks/[id]/cards/[cardId]
+          snapshots/
+            route.ts            # GET/POST /api/decks/[id]/snapshots
+            [snapshotId]/
+              route.ts          # DELETE /api/decks/[id]/snapshots/[snapshotId]
+              restore/
+                route.ts        # POST /api/decks/[id]/snapshots/[snapshotId]/restore
       cache/
         cards/
           route.ts              # GET/POST /api/cache/cards
@@ -79,6 +79,7 @@ src/
       BanlistAlert.tsx          # Animated banned/color identity alert
       CombosPanel.tsx           # Commander Spellbook combo detection
       AISuggestionsPanel.tsx    # AI-assisted deck suggestions
+      SnapshotsPanel.tsx        # Named deck snapshots — save/restore/delete + diff badge
       ImportDialog.tsx          # Text decklist import modal
       ExportModal.tsx           # Multi-format export (MTGO, Arena, plain text)
     layout/
@@ -320,6 +321,17 @@ model CardCache {
   data        Json         // Full ScryfallCard JSON
   cachedAt    DateTime @default(now())
 }
+
+model DeckSnapshot {
+  id        String   @id @default(cuid())
+  deckId    String
+  name      String
+  cardList  Json     // Full DeckCard array at snapshot time
+  commander String?  // Commander name at snapshot time
+  cardCount Int
+  createdAt DateTime @default(now())
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+}
 ```
 
 ---
@@ -339,6 +351,10 @@ model CardCache {
 | GET | `/api/cache/cards` | Lookup card in DB cache |
 | POST | `/api/cache/cards` | Store card in DB cache |
 | POST | `/api/ai/suggest` | Get AI suggestions for deck |
+| GET | `/api/decks/[id]/snapshots` | List snapshots (newest first, no cardList) |
+| POST | `/api/decks/[id]/snapshots` | Create snapshot from current deck state |
+| DELETE | `/api/decks/[id]/snapshots/[snapshotId]` | Delete a snapshot |
+| POST | `/api/decks/[id]/snapshots/[snapshotId]/restore` | Restore deck to snapshot (transactional) |
 
 ---
 
@@ -480,76 +496,3 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 | Phase 4 | AI Suggestions — Anthropic/OpenAI integration, deck analysis | ✅ Complete |
 | Phase 4+ | Polish — UI enhancements, export, companion, legal, light/dark theme | ✅ Complete |
 | Phase 5 | Onboarding & Tutorial (planned) | 📋 Planned |
-
----
-
-## Collection Mode Architecture
-
-### Data Model
-
-```prisma
-model CollectionCard {
-  id         String    @id @default(cuid())
-  scryfallId String
-  name       String
-  quantity   Int       @default(1)
-  foil       Boolean   @default(false)
-  condition  String?   // NM / LP / MP / HP / DMG
-  acquiredAt DateTime?
-  price      Float?
-  imageUri   String    @default("")
-  createdAt  DateTime  @default(now())
-
-  @@unique([scryfallId, foil]) // one record per card+foil variant
-  @@index([scryfallId])
-}
-```
-
-### Zustand Store
-
-`useCollectionStore` maintains two maps:
-- `collectionCards: Record<scryfallId, CollectionCard>` — non-foil copies
-- `collectionCardsFoil: Record<scryfallId, CollectionCard>` — foil copies
-
-`getTotalOwned(scryfallId)` returns the sum of both.
-
-### Component Integration
-
-- **Search list view** (`CardSearchListItem`) — shows compact `CollectionBadge`
-- **Search grid view** (`CardGrid`) — shows compact `CollectionBadge` overlay
-- **Deck editor list** (`CardListItem`) — shows `DeckCardOwnershipBadge`
-- **SearchFilters** — "Show only collection cards" toggle (visible only if collection non-empty)
-- **Header** — Collection nav link
-
-### API Upsert Logic
-
-`POST /api/collection` upserts by `(scryfallId, foil)` unique key:
-- If the card+foil variant already exists → increments quantity
-- Otherwise → creates new record
-
-`PATCH /api/collection/[id]` with `quantity=0` auto-deletes the record.
-
-
-
-### AI Suggestions Pattern (Streaming NDJSON)
-
-```
-// POST /api/ai/suggest
-// Request: { commanderName, partnerName, colorIdentity, cardNames[], categories{},
-//            avgCmc, bracket, bracketDimensions{}, bracketWarnings[], targetBracket,
-//            budget, gameChangersCount, gameChangersList[], detectedThemes[] }
-// Response: ReadableStream<NDJSON>
-// Events: { type: "analysis", content, provider }
-//         { type: "suggestion", data: CardSuggestion }
-//         { type: "removal", data: CardRemoval }
-//         { type: "done" }
-//         { type: "error", message }
-```
-
-1. `ANTHROPIC_API_KEY` → Claude Haiku (fastest, cheapest)
-2. `OPENAI_API_KEY` → gpt-4o-mini  
-3. No key → deterministic mock suggestions
-
-Cards appear one-by-one as stream events arrive. Hook uses deck-state hash cache to skip re-analysis if deck hasn't changed.
-
-Prompt sends ALL cards (no cap), bracket dimension scores, detected themes, game changers, and identified gaps. Requests 8 ADD suggestions + 4 REMOVE suggestions with commander-specific synergy reasoning.
