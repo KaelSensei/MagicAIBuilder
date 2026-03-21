@@ -4,23 +4,17 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 
 /** Detect which pairing type a commander card supports */
 export function detectPairingType(card: ScryfallCard): CommanderPairingType {
-  const keywords = card.keywords ?? [];
+  const keywords = (card.keywords ?? []).map((k) => k.toLowerCase());
   const oracle = (card.oracle_text ?? "").toLowerCase();
-  const keywordsLower = keywords.map((k) => k.toLowerCase());
+  const has = (term: string) => keywords.includes(term) || oracle.includes(term);
 
-  if (keywordsLower.includes("friends forever")) return "friends_forever";
-  if (keywordsLower.includes("partner with") || oracle.includes("partner with"))
-    return "partner_with";
+  if (has("friends forever")) return "friends_forever";
+  if (has("partner with")) return "partner_with";
   // "Partner—Character select" (TMNT) — only pairs with other Character Select cards
-  if (oracle.includes("partner—character select") || oracle.includes("partner\u2014character select"))
-    return "character_select";
-  if (keywordsLower.includes("partner")) return "partner";
+  if (oracle.includes("partner—character select")) return "character_select";
+  if (has("partner")) return "partner";
   if (oracle.includes("choose a background")) return "background";
-  if (
-    keywordsLower.includes("doctor's companion") ||
-    oracle.includes("doctor's companion")
-  )
-    return "doctor";
+  if (has("doctor's companion")) return "doctor";
 
   return "none";
 }

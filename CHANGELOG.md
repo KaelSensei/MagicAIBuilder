@@ -9,6 +9,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-21: SonarCloud CI
+- `sonar-project.properties` — SonarCloud project config (sources, exclusions, coverage path)
+- `.github/workflows/sonar.yml` — GitHub Actions: runs on push/PR to main, installs deps, runs coverage, uploads to SonarCloud
+
+### Changed — 2026-03-21: pairing.ts refactor
+- `src/lib/deck/pairing.ts` — `detectPairingType()` simplifié: helper `has()` extrait, double check em-dash supprimé
+
 ### Added — 2026-03-21: Remove Commander / Partner
 - **✕ button on commander and partner** — hover in grid view (on the card image) or list view (next to the name) to remove
 - **`clearCommander()`** action in DeckStore — removes both commander and partner, resets pairingType to "none"
