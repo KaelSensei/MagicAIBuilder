@@ -207,20 +207,6 @@ export default function BuilderPage() {
     [addCard, updateCardCategory, deck]
   );
 
-  const handleStartEditName = () => {
-    setNameInput(deck?.name ?? "");
-    setIsEditingName(true);
-    setTimeout(() => nameInputRef.current?.select(), 0);
-  };
-
-  const handleSaveName = async () => {
-    const trimmed = nameInput.trim();
-    if (trimmed && deck && trimmed !== deck.name) {
-      await renameDeck(deckId, trimmed);
-    }
-    setIsEditingName(false);
-  };
-
   if (!deck) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -242,6 +228,18 @@ export default function BuilderPage() {
       </div>
     );
   }
+
+  const handleStartEditName = () => {
+    setNameInput(deck.name);
+    setIsEditingName(true);
+    setTimeout(() => nameInputRef.current?.select(), 0);
+  };
+
+  const handleSaveName = async () => {
+    const trimmed = nameInput.trim();
+    if (trimmed && trimmed !== deck.name) await renameDeck(deckId, trimmed);
+    setIsEditingName(false);
+  };
 
   return (
     <DndContext
