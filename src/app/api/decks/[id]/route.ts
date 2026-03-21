@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   try {
     const body = await request.json();
-    const { name, format, targetBracket, budget, commanderId, partnerId } =
+    const { name, format, targetBracket, budget, commanderId, partnerId, pairingType } =
       body;
 
     const existing = await prisma.deck.findUnique({ where: { id } });
@@ -59,6 +59,7 @@ export async function PATCH(request: Request, { params }: Params) {
         ...(budget !== undefined && { budget }),
         ...(commanderId !== undefined && { commanderId }),
         ...(partnerId !== undefined && { partnerId }),
+        ...(pairingType !== undefined && { pairingType }),
       },
       include: { cards: true },
     });

@@ -1,5 +1,5 @@
 // HTTP client for the deck API routes
-import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
+import type { Deck, DeckCard, CardCategory, CommanderPairingType } from "@/lib/deck/types";
 
 /** Shape returned by the API (dates as ISO strings) */
 export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "commander" | "partner" | "cards"> {
@@ -7,6 +7,7 @@ export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "command
   updatedAt: string;
   commanderId: string | null;
   partnerId: string | null;
+  pairingType: CommanderPairingType;
   cards: ApiDeckCard[];
 }
 
@@ -58,6 +59,7 @@ export async function updateDeck(
     budget: number | null;
     commanderId: string | null;
     partnerId: string | null;
+    pairingType: CommanderPairingType;
   }>
 ): Promise<ApiDeck> {
   const res = await fetch(`/api/decks/${id}`, {

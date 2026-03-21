@@ -22,7 +22,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, format, targetBracket, budget, commanderId, partnerId } = body;
+    const { name, format, targetBracket, budget, commanderId, partnerId, pairingType } = body;
 
     if (!name || typeof name !== "string") {
       return NextResponse.json(
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
         budget: budget ?? null,
         commanderId: commanderId ?? null,
         partnerId: partnerId ?? null,
+        pairingType: pairingType ?? "none",
       },
       include: { cards: true },
     });
