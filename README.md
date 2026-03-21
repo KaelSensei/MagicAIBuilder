@@ -125,3 +125,13 @@ Key points:
 ## License
 
 MIT
+
+## Legal
+
+Wizards of the Coast, Magic: The Gathering, and their logos are trademarks of Wizards of the Coast LLC. © 1993-2026 Wizards. All Rights Reserved.
+
+MagicAIBuilder is not affiliated with, endorsed, sponsored, or specifically approved by Wizards of the Coast LLC. This project operates under Wizards' Fan Site Policy. MAGIC: THE GATHERING® is a trademark of Wizards of the Coast.
+
+Some card prices and other card data are provided by [Scryfall](https://scryfall.com). Scryfall makes no guarantee about its price information.
+
+See [LEGAL.md](LEGAL.md) for full legal notices.

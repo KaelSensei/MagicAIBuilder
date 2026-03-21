@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDeckStore } from "@/lib/deck/store";
 import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import { Plus, Layers, Clock, Loader2, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -220,6 +221,7 @@ export default function HomePage() {
           </motion.div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
