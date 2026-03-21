@@ -32,7 +32,13 @@ src/
     page.tsx                    # Home / deck list (commander art card backgrounds)
     builder/[deckId]/
       page.tsx                  # 3-panel builder view (Search | DeckEditor | Stats)
+    collection/
+      page.tsx                  # Collection page (grid/list of owned cards)
     api/
+      collection/
+        route.ts                # GET /api/collection, POST /api/collection
+        [id]/
+          route.ts              # PATCH/DELETE /api/collection/[id]
       decks/
         route.ts                # GET /api/decks, POST /api/decks
         [id]/
@@ -474,3 +480,52 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 | Phase 4 | AI Suggestions — Anthropic/OpenAI integration, deck analysis | ✅ Complete |
 | Phase 4+ | Polish — UI enhancements, export, companion, legal, light/dark theme | ✅ Complete |
 | Phase 5 | Onboarding & Tutorial (planned) | 📋 Planned |
+
+---
+
+## Collection Mode Architecture
+
+### Data Model
+
+```prisma
+model CollectionCard {
+  id         String    @id @default(cuid())
+  scryfallId String
+  name       String
+  quantity   Int       @default(1)
+  foil       Boolean   @default(false)
+  condition  String?   // NM / LP / MP / HP / DMG
+  acquiredAt DateTime?
+  price      Float?
+  imageUri   String    @default("")
+  createdAt  DateTime  @default(now())
+
+  @@unique([scryfallId, foil]) // one record per card+foil variant
+  @@index([scryfallId])
+}
+```
+
+### Zustand Store
+
+`useCollectionStore` maintains two maps:
+- `collectionCards: Record<scryfallId, CollectionCard>` — non-foil copies
+- `collectionCardsFoil: Record<scryfallId, CollectionCard>` — foil copies
+
+`getTotalOwned(scryfallId)` returns the sum of both.
+
+### Component Integration
+
+- **Search list view** (`CardSearchListItem`) — shows compact `CollectionBadge`
+- **Search grid view** (`CardGrid`) — shows compact `CollectionBadge` overlay
+- **Deck editor list** (`CardListItem`) — shows `DeckCardOwnershipBadge`
+- **SearchFilters** — "Show only collection cards" toggle (visible only if collection non-empty)
+- **Header** — Collection nav link
+
+### API Upsert Logic
+
+`POST /api/collection` upserts by `(scryfallId, foil)` unique key:
+- If the card+foil variant already exists → increments quantity
+- Otherwise → creates new record
+
+`PATCH /api/collection/[id]` with `quantity=0` auto-deletes the record.
+
