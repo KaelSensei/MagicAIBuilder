@@ -46,6 +46,7 @@ function createEmptyDeck(id: string, name: string): Deck {
     cards: [],
     format: "commander",
     targetBracket: 2,
+    manualBracket: null,
     budget: null,
     description: "",
     tags: [],
@@ -92,7 +93,7 @@ export interface DeckStore {
   clearCommander: () => Promise<void>;
   setPartner: (card: ScryfallCard | null) => Promise<void>;
   setCompanion: (card: ScryfallCard | null) => Promise<void>;
-  addCard: (card: ScryfallCard) => Promise<void>;
+  addCard: (card: ScryfallCard, quantity?: number) => Promise<void>;
   addDeckCard: (card: DeckCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
@@ -106,6 +107,7 @@ export interface DeckStore {
 
   // Deck settings
   setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
+  setManualBracket: (bracket: 1 | 2 | 3 | 4 | null) => Promise<void>;
   setBudget: (budget: number | null) => Promise<void>;
 
   // Game Changer / banlist enrichment
@@ -260,6 +262,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           name: d.name,
           format: d.format as "commander" | "brawl",
           targetBracket: d.targetBracket as 1 | 2 | 3 | 4,
+          manualBracket: (d.manualBracket as 1 | 2 | 3 | 4 | null) ?? null,
           budget: d.budget,
           description: d.description ?? "",
           tags: d.tags ?? [],
@@ -530,24 +533,34 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  addCard: async (card: ScryfallCard) => {
+  addCard: async (card: ScryfallCard, quantity?: number) => {
     const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
     if (!activeDeckId) return;
     const deck = decks[activeDeckId];
     if (!deck) return;
 
+    const isBasic = card.type_line.toLowerCase().includes("basic land");
+
     const { maxQuantity } = await import("@/lib/deck/multiples");
     const max = maxQuantity(card.name, card.type_line, card.oracle_text ?? "");
     const exists = deck.cards.find((c) => c.name === card.name);
     if (exists) {
-      // Already at max → skip
-      if (exists.quantity >= max) return;
-      // Can add more → increment quantity
-      get().updateCardQuantity(exists.id, 1);
+      if (!isBasic) {
+        // Already at max → skip
+        if (exists.quantity >= max) return;
+        // Can add more → increment quantity
+        get().updateCardQuantity(exists.id, 1);
+        return;
+      }
+      // Basic land already present — skip (caller should pass quantity on first add)
       return;
     }
 
     const deckCard = makeDeckCard(card);
+    // If a specific quantity is provided (e.g. bulk import of basics), apply it directly
+    if (quantity && quantity > 1) {
+      deckCard.quantity = quantity;
+    }
     deckCard.isGameChanger = gameChangerNames.has(card.name);
     deckCard.isBanned = bannedNames.has(card.name);
 
@@ -921,6 +934,32 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateDeck(activeDeckId, { targetBracket: bracket });
     } catch (err) {
       console.error("[setTargetBracket]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  setManualBracket: async (bracket) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          manualBracket: bracket,
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(activeDeckId, { manualBracket: bracket });
+    } catch (err) {
+      console.error("[setManualBracket]", err);
     } finally {
       set({ isSyncing: false });
     }
