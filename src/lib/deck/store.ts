@@ -427,10 +427,18 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   setPartner: async (card: ScryfallCard | null) => {
-    const { activeDeckId } = get();
+    const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
     const deckCard = card ? makeDeckCard(card) : null;
     if (deckCard) deckCard.category = "commander";
+
+    // If commander has no pairing type but partner does, derive pairingType from partner
+    // e.g. Jaheira has "Choose a Background" → pairingType should be "background"
+    const currentPairingType = decks[activeDeckId]?.pairingType ?? "none";
+    const partnerPairingType = card ? detectPairingType(card) : "none";
+    const effectivePairingType = (currentPairingType === "none" && partnerPairingType !== "none")
+      ? partnerPairingType
+      : currentPairingType;
 
     // Optimistic update
     set((state) => ({
@@ -439,6 +447,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         [activeDeckId]: {
           ...state.decks[activeDeckId],
           partner: deckCard,
+          pairingType: effectivePairingType,
           updatedAt: new Date(),
         },
       },
@@ -446,7 +455,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     set({ isSyncing: true });
     try {
-      await deckApi.updateDeck(activeDeckId, { partnerId: card?.id ?? null });
+      await deckApi.updateDeck(activeDeckId, { partnerId: card?.id ?? null, pairingType: effectivePairingType });
       if (card && deckCard) {
         await deckApi.addCard(activeDeckId, {
           scryfallId: card.id,
