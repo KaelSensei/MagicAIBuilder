@@ -12,6 +12,7 @@ import { useToastStore } from "@/hooks/useToast";
 function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
   return {
     id: scryfallCard.id,
+    scryfallId: scryfallCard.id,
     name: scryfallCard.name,
     manaCost: scryfallCard.mana_cost ?? "",
     cmc: scryfallCard.cmc,
@@ -123,6 +124,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
         const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => ({
           id: c.id,
+          scryfallId: c.scryfallId,
           name: c.name,
           manaCost: c.manaCost,
           cmc: c.cmc,

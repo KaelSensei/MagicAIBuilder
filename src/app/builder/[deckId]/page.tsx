@@ -156,7 +156,7 @@ export default function BuilderPage() {
 
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
-    analyzeAI(deck, stats, bracketScore?.overall ?? deck.targetBracket);
+    analyzeAI(deck, stats, bracketScore ?? null);
   }, [deck, stats, bracketScore, analyzeAI]);
 
   const handleAIAddCard = useCallback((cardName: string) => {
@@ -168,6 +168,12 @@ export default function BuilderPage() {
         .catch(() => console.warn(`Could not find card: ${cardName}`));
     });
   }, [addCard]);
+
+  const handleAIRemoveCard = useCallback((cardName: string) => {
+    if (!deck) return;
+    const card = deck.cards.find((c) => c.name === cardName);
+    if (card) removeCard(card.id);
+  }, [deck, removeCard]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -482,6 +488,7 @@ export default function BuilderPage() {
               error={aiError}
               onAnalyze={handleAIAnalyze}
               onAddCard={handleAIAddCard}
+              onRemoveCard={handleAIRemoveCard}
               disabled={!deck?.commander}
             />
 

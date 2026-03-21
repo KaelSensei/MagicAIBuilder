@@ -2,6 +2,7 @@
 // Color identity, type, CMC, price filters
 import { cn } from "@/components/ui/utils";
 import type { SearchFilters } from "@/lib/deck/types";
+import { useCollectionStore } from "@/lib/collection/store";
 
 const COLORS = [
   { code: "W", label: "White", symbol: "☀️" },
@@ -18,6 +19,10 @@ interface SearchFiltersProps {
 }
 
 export function SearchFilters({ filters, onChange, className }: SearchFiltersProps) {
+  const collectionSize = useCollectionStore(
+    (s) => Object.keys(s.collectionCards).length + Object.keys(s.collectionCardsFoil).length
+  );
+
   const toggleColor = (color: string) => {
     const colors = filters.colors.includes(color)
       ? filters.colors.filter((c) => c !== color)
@@ -106,6 +111,26 @@ export function SearchFilters({ filters, onChange, className }: SearchFiltersPro
           className="w-24 text-xs bg-[var(--surface)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
         />
       </div>
+
+      {/* Collection only toggle */}
+      {collectionSize > 0 && (
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={() =>
+              onChange({ ...filters, collectionOnly: !filters.collectionOnly })
+            }
+            className={cn(
+              "flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border transition-colors",
+              filters.collectionOnly
+                ? "border-green-500 text-green-400 bg-green-500/10"
+                : "border-[var(--border)] text-[var(--text-secondary)] hover:border-green-500/50"
+            )}
+          >
+            <span className="text-sm">📦</span>
+            {filters.collectionOnly ? "Collection only" : "Show collection only"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

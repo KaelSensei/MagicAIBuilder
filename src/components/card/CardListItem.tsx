@@ -5,6 +5,7 @@ import { X, AlertTriangle, Zap } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
 import { CardTooltip } from "@/components/card/CardTooltip";
+import { DeckCardOwnershipBadge } from "@/components/collection/DeckCardOwnershipBadge";
 
 interface CardListItemProps {
   card: DeckCard;
@@ -39,6 +40,9 @@ export function CardListItem({ card, onRemove, className }: CardListItemProps) {
         <span className="text-xs text-[var(--text-secondary)] shrink-0">
           {card.cmc > 0 ? card.cmc : "—"}
         </span>
+
+        {/* Ownership badge */}
+        <DeckCardOwnershipBadge scryfallId={card.scryfallId ?? card.id} />
 
         {/* Flags */}
         {card.isGameChanger && (
