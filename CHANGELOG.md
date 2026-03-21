@@ -9,6 +9,49 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-21: Remove Commander / Partner
+- **✕ button on commander and partner** — hover in grid view (on the card image) or list view (next to the name) to remove
+- **`clearCommander()`** action in DeckStore — removes both commander and partner, resets pairingType to "none"
+- **`setPartner(null)`** removes only the partner without affecting the commander
+
+### Fixed — 2026-03-21: Partner & Pairing Bugs
+- **Partner search now filters by pairing type** — Character Select TMNT shows only other Character Select cards; generic Partner shows only Partner keyword cards (not Character Select)
+- **Self-partner bug fixed** — if commander and partner have the same name (import artifact), the duplicate is hidden in grid and list view, and filtered out at hydration time
+- **`clearCommander` clears partner too** — can't have a partner without a commander
+- **`setCommander` clears self-partner** — if partner name equals commander name, partner is reset to null
+
+### Added — 2026-03-21: TMNT Character Select Partner Type
+- New `character_select` value in `CommanderPairingType` for TMNT "Partner—Character select" mechanic
+- `detectPairingType()` detects `partner—character select` in oracle text
+- `canPairWith()` only allows character_select + character_select (not with generic Partner)
+- Partner button label shows "Character Select Partner" for these commanders
+
+### Fixed — 2026-03-21: Partner Search Mode
+- **Partner mode stays active** after selecting a partner (consistent with Commander mode behavior)
+- **Partner button appears** next to Commander button when current commander supports a pairing type
+- Partner mode and Commander mode are mutually exclusive
+
+### Fixed — 2026-03-21: Color Identity with Partner
+- `stats.ts` was only checking `commander.colorIdentity`, ignoring `partner.colorIdentity`
+- Combined identity now used for violation checks — Tymna + Reyhan = 5-color
+
+### Fixed — 2026-03-21: Import Formats
+- Import parser now strips trailing `(SET) collector_number` suffix (Moxfield/Archidekt format)
+- No Commander section required — works without it
+- Handles promo suffixes: 123p, 123s, 123★
+
+### Added — 2026-03-21: Set as Commander from Deck
+- **Crown icon** on hover in list view → removes card from deck and sets it as commander
+- **`promoteToCommander(cardId)`** action in DeckStore
+
+### Fixed — 2026-03-21: Multiples Detection via Oracle Text
+- `maxQuantity()` now reads oracle text for "a deck can have any number of cards named"
+- Replaces hardcoded name list — works for any language and future cards automatically
+- Nazgûl (×9) and Seven Dwarves (×7) remain as capped exceptions
+
+### Fixed — 2026-03-21: Mana Symbols in Color Filter
+- Color filter (Show Filters) now uses Scryfall SVG mana symbols instead of emoji
+
 ### Added — 2026-03-21: Card Quantity Editor
 - **+/- quantity buttons** in list view (hover to reveal) — basic lands and Commander-legal multiples can be adjusted
 - **`multiples.ts`** — encodes Commander multi-copy rules: Relentless Rats, Shadowborn Apostle, Persistent Petitioners, Nazgûl (max 9), Seven Dwarves (max 7), etc.
