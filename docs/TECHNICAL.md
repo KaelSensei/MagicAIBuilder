@@ -442,6 +442,27 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 
 ---
 
+## Recent Features (post Phase 4+)
+
+### Card Tooltip — Cursor-Following (`fix/tooltip-follows-cursor`)
+- `CardTooltip.tsx` rewritten with `createPortal` to render tooltip in `document.body`
+- Tooltip position tracks mouse `clientX/Y` with viewport clamping (never overflows screen edges)
+- Replaces previous Radix Tooltip anchor which was pinned to the list row right edge (landing in stats panel)
+
+### Oracle Text Panel in Printing Selector (`feat/oracle-text-in-printing-modal`)
+- `PrintingSelectorModal.tsx` — two-column layout: left panel shows mana cost, type line, oracle text, price; right panel shows printings grid
+- Handles double-faced cards via `card_faces[0]` fallback for oracle text and mana cost
+
+### Dynamic Set Search (`feat/set-search-all-sets`)
+- `SetAutocomplete.tsx` — fetches all sets from `GET /sets` on first focus; module-level in-memory 1h cache
+- Filters to Commander-relevant set types; sorted newest first; year badge per entry
+
+### Mana Symbols in Color Filter (`feat/mana-symbols-color-filter`)
+- By Color mode buttons now use `<img src="https://svgs.scryfall.io/card-symbols/{code}.svg">`
+- Replaces emoji fallbacks (☀️💧💀🔥🌲); colorless (C) merged into the main color list
+
+---
+
 ## Phase Roadmap
 
 | Phase | Focus | Status |
