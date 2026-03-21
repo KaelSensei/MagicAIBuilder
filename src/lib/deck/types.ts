@@ -2,6 +2,7 @@
 
 export type CardCategory =
   | "commander"
+  | "companion"
   | "creature"
   | "instant"
   | "sorcery"
@@ -47,6 +48,7 @@ export interface Deck {
   name: string;
   commander: DeckCard | null;
   partner: DeckCard | null; // For partner commanders
+  companion: DeckCard | null;
   pairingType: CommanderPairingType; // Detected from commander keywords
   cards: DeckCard[]; // The 99 (or 98 with partner)
   format: "commander" | "brawl";

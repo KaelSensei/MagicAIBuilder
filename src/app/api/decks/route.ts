@@ -9,6 +9,7 @@ const createDeckSchema = z.object({
   budget: z.number().positive().nullable().optional(),
   commanderId: z.string().nullable().optional(),
   partnerId: z.string().nullable().optional(),
+  companionId: z.string().nullable().optional(),
   pairingType: z.enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor"]).optional().default("none"),
 });
 
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
     }
-    const { name: rawName, format, targetBracket, budget, commanderId, partnerId, pairingType } = parsed.data;
+    const { name: rawName, format, targetBracket, budget, commanderId, partnerId, companionId, pairingType } = parsed.data;
     const sanitizedName = rawName.replace(/<[^>]*>/g, "").trim();
     if (!sanitizedName) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
         budget: budget ?? null,
         commanderId: commanderId ?? null,
         partnerId: partnerId ?? null,
+        companionId: companionId ?? null,
         pairingType,
       },
       include: { cards: true },

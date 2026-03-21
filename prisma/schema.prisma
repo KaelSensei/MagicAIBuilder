@@ -16,6 +16,7 @@ model Deck {
   budget        Float?
   commanderId   String?
   partnerId     String?
+  companionId   String?
   pairingType   String     @default("none")
   cards         DeckCard[]
   createdAt     DateTime   @default(now())

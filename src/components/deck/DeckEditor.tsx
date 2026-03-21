@@ -188,6 +188,20 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
         )}
       </div>
 
+      {/* Companion zone — sideboard slot, outside the 99 */}
+      {deck.companion && (
+        <div className="px-3 pb-3 border-b border-[var(--border)]">
+          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
+            Companion <span className="text-[10px] normal-case opacity-70">(sideboard)</span>
+          </p>
+          <CardTooltip card={deck.companion}>
+            <span className="text-sm text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors">
+              {deck.companion.name}
+            </span>
+          </CardTooltip>
+        </div>
+      )}
+
       {/* Card count header + view toggle */}
       <div className="px-3 py-2 border-b border-[var(--border)] flex items-center justify-between">
         <p className="text-xs text-[var(--text-secondary)]">Deck Cards</p>
