@@ -1,6 +1,6 @@
 "use client";
 // Hover tooltip with card details — follows mouse cursor
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, cloneElement, isValidElement, Children } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import type { DeckCard } from "@/lib/deck/types";
@@ -47,9 +47,18 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
     setPos(null);
   }, []);
 
+  const child = Children.only(children);
+  const trigger = isValidElement(child)
+    ? cloneElement(child as React.ReactElement<React.HTMLAttributes<HTMLElement>>, {
+        onMouseEnter: handleMouseEnter,
+        onMouseMove: handleMouseMove,
+        onMouseLeave: handleMouseLeave,
+      })
+    : child;
+
   return (
-    <div onMouseEnter={handleMouseEnter} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
-      {children}
+    <>
+      {trigger}
       {pos &&
         createPortal(
           <div
@@ -65,6 +74,6 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
           </div>,
           document.body
         )}
-    </div>
+    </>
   );
 }

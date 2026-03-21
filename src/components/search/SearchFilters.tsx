@@ -76,7 +76,7 @@ export function SearchFilters({ filters, onChange, className }: SearchFiltersPro
           onChange={(e) =>
             onChange({
               ...filters,
-              cmcMin: e.target.value ? parseInt(e.target.value) : null,
+              cmcMin: e.target.value ? Number.parseInt(e.target.value) : null,
             })
           }
           placeholder="Min"
@@ -91,7 +91,7 @@ export function SearchFilters({ filters, onChange, className }: SearchFiltersPro
           onChange={(e) =>
             onChange({
               ...filters,
-              cmcMax: e.target.value ? parseInt(e.target.value) : null,
+              cmcMax: e.target.value ? Number.parseInt(e.target.value) : null,
             })
           }
           placeholder="Max"
@@ -111,7 +111,7 @@ export function SearchFilters({ filters, onChange, className }: SearchFiltersPro
           onChange={(e) =>
             onChange({
               ...filters,
-              priceMax: e.target.value ? parseFloat(e.target.value) : null,
+              priceMax: e.target.value ? Number.parseFloat(e.target.value) : null,
             })
           }
           placeholder="No limit"

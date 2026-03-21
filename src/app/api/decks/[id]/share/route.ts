@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { randomBytes } from "crypto";
+import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 
 /** Generate a URL-safe random token of ~12 chars (base64url, trimmed) */

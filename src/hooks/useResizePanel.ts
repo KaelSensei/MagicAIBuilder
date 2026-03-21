@@ -17,7 +17,7 @@ export function useResizePanel({
   const [width, setWidth] = useState(() => {
     if (storageKey && typeof window !== "undefined") {
       const stored = localStorage.getItem(storageKey);
-      if (stored) return Math.max(minWidth, Math.min(maxWidth, parseInt(stored, 10)));
+      if (stored) return Math.max(minWidth, Math.min(maxWidth, Number.parseInt(stored, 10)));
     }
     return initialWidth;
   });
@@ -65,5 +65,17 @@ export function useResizePanel({
     if (storageKey) localStorage.setItem(storageKey, String(width));
   }, [width, storageKey]);
 
-  return { width, handleMouseDown };
+  /** Keyboard handler: ArrowLeft/ArrowRight resize by 10px steps */
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const STEP = 10;
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      setWidth((w) => Math.max(minWidth, w - STEP));
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      setWidth((w) => Math.min(maxWidth, w + STEP));
+    }
+  }, [minWidth, maxWidth]);
+
+  return { width, handleMouseDown, handleKeyDown };
 }
