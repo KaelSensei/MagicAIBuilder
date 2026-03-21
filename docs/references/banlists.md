@@ -21,7 +21,7 @@ https://api.scryfall.com/cards/named?exact={card_name}
 
 ---
 
-## Commander Banlist (44 individually named cards + categories)
+## Commander Banlist (42 individually named cards + categories)
 
 ### Category Bans
 - **All cards with the Conspiracy card type** (e.g., Backup Plan, Brago's Favor)
@@ -40,7 +40,6 @@ https://api.scryfall.com/cards/named?exact={card_name}
 | Emrakul, the Aeons Torn | Colorless | Extra turn + annihilator 6 + uncounterable, unfun |
 | Falling Star | R | Physical dexterity card |
 | Flash | U | Enables turn-0 wins (Flash + Protean Hulk) |
-| Gifts Ungiven | U | Wait, this was moved to Game Changers. Verify on Scryfall. |
 | Golos, Tireless Pilgrim | Colorless | 5-color goodstuff commander, homogenized deckbuilding |
 | Griselbrand | B | Draws 7+ cards per activation, trivially enables combos |
 | Hullbreacher | U | Combines with wheels to lock opponents out of cards + generate treasure |
@@ -58,7 +57,6 @@ https://api.scryfall.com/cards/named?exact={card_name}
 | Mox Ruby | R | Free mana (Power Nine) |
 | Mox Sapphire | U | Free mana (Power Nine) |
 | Nadu, Winged Wisdom | UG | Generates uncontrollable value, warps games around it |
-| Panoptic Mirror | Colorless | Copies spells every upkeep, enables free extra turns |
 | Paradox Engine | Colorless | Untaps everything on each spell cast, infinite combo machine |
 | Primeval Titan | G | Fetches any 2 lands on ETB and attack, too much value |
 | Prophet of Kruphix | UG | Seedborn Muse + flash for creatures, oppressive advantage |
@@ -77,6 +75,8 @@ https://api.scryfall.com/cards/named?exact={card_name}
 
 ### Recent Changes (Feb 2026)
 - **Unbanned:** Biorhythm (moved to Game Changers list instead)
+- **Unbanned:** Gifts Ungiven (moved to Game Changers list instead)
+- **Unbanned:** Panoptic Mirror (moved to Game Changers list instead)
 - **Unbanned:** Lutri, the Spellchaser (banned as companion only, legal everywhere else)
 - **New category:** "Banned as companion" (currently only Lutri)
 

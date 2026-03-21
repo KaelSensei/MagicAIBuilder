@@ -38,95 +38,95 @@ Community mirrors (secondary, may lag):
 
 ## Current List (53 cards — verified March 2026)
 
-> Prices from Scryfall (USD, paper). `—` = reserved list / no regular printing.
+> Prices below are approximate reference only. The builder fetches live prices from Scryfall API. `—` = Reserved List / no regular printing.
 
 ### White (7)
 
 | Card | CMC | Price | Why |
 |------|-----|-------|-----|
-| Drannith Magistrate | 2 | $11 | Locks opponents out of casting from anywhere but hand — shuts commanders, cascades, flashback |
-| Enlightened Tutor | 1 | $33 | Efficient unrestricted artifact/enchantment tutor at instant speed |
-| Farewell | 6 | $7 | Modal exile board wipe hitting multiple permanent types; answers graveyard strategies simultaneously |
+| Drannith Magistrate | 2 | $14 | Locks opponents out of casting from anywhere but hand — shuts commanders, cascades, flashback |
+| Enlightened Tutor | 1 | $43 | Efficient unrestricted artifact/enchantment tutor at instant speed |
+| Farewell | 6 | $6 | Modal exile board wipe hitting multiple permanent types; answers graveyard strategies simultaneously |
 | Humility | 4 | — | Removes all creature abilities from everything on the board, warps the entire game |
-| Serra's Sanctum | 0 | $363 | Generates obscene mana in enchantment-heavy decks; scales exponentially |
-| Smothering Tithe | 4 | $50 | Generates massive treasure advantage passively; snowballs without immediate answer |
-| Teferi's Protection | 3 | $52 | Complete immunity for a full turn cycle; hard counters nearly every win attempt |
+| Serra's Sanctum | 0 | — | Generates obscene mana in enchantment-heavy decks; scales exponentially (Reserved List) |
+| Smothering Tithe | 4 | $65 | Generates massive treasure advantage passively; snowballs without immediate answer |
+| Teferi's Protection | 3 | $60 | Complete immunity for a full turn cycle; hard counters nearly every win attempt |
 
 ### Blue (10)
 
 | Card | CMC | Price | Why |
 |------|-----|-------|-----|
-| Consecrated Sphinx | 6 | $33 | Draws 2 cards for every 1 each opponent draws; snowballs in multiplayer |
-| Cyclonic Rift | 2 | $42 | One-sided instant-speed bounce of all nonland permanents; wins games on the spot |
-| Fierce Guardianship | 3 | $55 | Free counterspell when you control your commander — asymmetric protection from turn 0 |
-| Force of Will | 5 | $69 | Free counterspell from turn 0; stops any single spell with no mana investment |
-| Gifts Ungiven | 4 | $5 | Finds any 4 cards and enables graveyard combos regardless of what opponent picks |
-| Intuition | 3 | — | Finds any 3 cards and guarantees graveyard access regardless of what opponent picks |
-| Mystical Tutor | 1 | $16 | Efficient instant/sorcery tutor for 1 mana at instant speed |
+| Consecrated Sphinx | 6 | $43 | Draws 2 cards for every 1 each opponent draws; snowballs in multiplayer |
+| Cyclonic Rift | 2 | $55 | One-sided instant-speed bounce of all nonland permanents; wins games on the spot |
+| Fierce Guardianship | 3 | $75 | Free counterspell when you control your commander — asymmetric protection from turn 0 |
+| Force of Will | 5 | $100 | Free counterspell from turn 0; stops any single spell with no mana investment |
+| Gifts Ungiven | 4 | $5.50 | Finds any 4 cards and enables graveyard combos regardless of what opponent picks (unbanned Feb 2026) |
+| Intuition | 3 | — | Finds any 3 cards and guarantees graveyard access regardless of what opponent picks (Reserved List) |
+| Mystical Tutor | 1 | $20 | Efficient instant/sorcery tutor for 1 mana at instant speed |
 | Narset, Parter of Veils | 3 | $2 | Passive effect shuts down all opponents' extra card draw |
-| Rhystic Study | 3 | $58 | Persistent card draw pressure every time an opponent casts a spell |
-| Thassa's Oracle | 2 | $23 | Compact combo win condition (Thassa + Demonic Consultation / Tainted Pact) |
+| Rhystic Study | 3 | $70 | Persistent card draw pressure every time an opponent casts a spell |
+| Thassa's Oracle | 2 | $30 | Compact combo win condition (Thassa + Demonic Consultation / Tainted Pact) |
 
 ### Black (10)
 
 | Card | CMC | Price | Why |
 |------|-----|-------|-----|
-| Ad Nauseam | 5 | $32 | Draws enormous cards at instant speed by paying life; often draws 20+ cards |
-| Bolas's Citadel | 6 | $16 | Play from top of library using life; typically wins the turn it resolves |
-| Braids, Cabal Minion | 4 | $1 | Forces every player to sacrifice a permanent each upkeep; asymmetric in stax shells |
-| Demonic Tutor | 2 | $63 | Finds any card for 2 mana with no downside |
-| Imperial Seal | 1 | $147 | Vampiric Tutor as a sorcery; any-card tutor for 1 mana |
-| Necropotence | 3 | $33 | Converts life to cards at an absurd rate; fully replaces your draw step |
-| Opposition Agent | 3 | $26 | Hijacks opponents' tutors and all searches during your turn |
-| Orcish Bowmasters | 2 | $44 | Punishes all card draw with damage + tokens; wrecks draw-heavy strategies |
+| Ad Nauseam | 5 | $38 | Draws enormous cards at instant speed by paying life; often draws 20+ cards |
+| Bolas's Citadel | 6 | $15 | Play from top of library using life; typically wins the turn it resolves |
+| Braids, Cabal Minion | 4 | $0.70 | Forces every player to sacrifice a permanent each upkeep; asymmetric in stax shells |
+| Demonic Tutor | 2 | $75 | Finds any card for 2 mana with no downside |
+| Imperial Seal | 1 | $180 | Vampiric Tutor as a sorcery; any-card tutor for 1 mana |
+| Necropotence | 3 | $38 | Converts life to cards at an absurd rate; fully replaces your draw step |
+| Opposition Agent | 3 | $33 | Hijacks opponents' tutors and all searches during your turn |
+| Orcish Bowmasters | 2 | $55 | Punishes all card draw with damage + tokens; wrecks draw-heavy strategies |
 | Tergrid, God of Fright | 5 | $22 | Steals everything opponents sacrifice or discard; oppressive in discard/sacrifice pods |
-| Vampiric Tutor | 1 | $69 | Finds any card at instant speed for 1 mana |
+| Vampiric Tutor | 1 | $80 | Finds any card at instant speed for 1 mana |
 
 ### Red (3)
 
 | Card | CMC | Price | Why |
 |------|-----|-------|-----|
-| Gamble | 1 | $14 | 1-mana unrestricted tutor with random discard downside; mitigated by graveyard synergies |
-| Jeska's Will | 3 | $43 | Generates massive mana + impulse draw with your commander in play |
-| Underworld Breach | 2 | $13 | Enables graveyard combo loops for cheap; fuels storm and reanimator lines |
+| Gamble | 1 | $19 | 1-mana unrestricted tutor with random discard downside; mitigated by graveyard synergies |
+| Jeska's Will | 3 | $58 | Generates massive mana + impulse draw with your commander in play |
+| Underworld Breach | 2 | $16 | Enables graveyard combo loops for cheap; fuels storm and reanimator lines |
 
 ### Green (7)
 
 | Card | CMC | Price | Why |
 |------|-----|-------|-----|
-| Biorhythm | 8 | $42 | Sets each player's life total equal to their creature count; can instantly eliminate token-light players |
-| Crop Rotation | 1 | $4 | Instant-speed land tutor; finds Gaea's Cradle, Dark Depths, Urborg |
-| Gaea's Cradle | 0 | $1,174 | Scales mana with creature count; generates 5–15+ mana in creature-heavy decks |
-| Natural Order | 4 | $30 | Sacrifice a green creature, tutor any green creature directly to the battlefield |
-| Seedborn Muse | 5 | $11 | Untaps all your permanents on each opponent's turn; effectively multiplies your mana |
-| Survival of the Fittest | 2 | — | Repeatable creature tutor that also fills the graveyard; enables reanimator and combo |
-| Worldly Tutor | 1 | $26 | Efficient instant-speed creature tutor for 1 mana |
+| Biorhythm | 8 | $35 | Sets each player's life total equal to their creature count; can instantly eliminate token-light players (unbanned Feb 2026) |
+| Crop Rotation | 1 | $4.50 | Instant-speed land tutor; finds Gaea's Cradle, Dark Depths, Urborg |
+| Gaea's Cradle | 0 | — | Scales mana with creature count; generates 5–15+ mana in creature-heavy decks (Reserved List) |
+| Natural Order | 4 | $35 | Sacrifice a green creature, tutor any green creature directly to the battlefield |
+| Seedborn Muse | 5 | $14 | Untaps all your permanents on each opponent's turn; effectively multiplies your mana |
+| Survival of the Fittest | 2 | — | Repeatable creature tutor that also fills the graveyard; enables reanimator and combo (Reserved List) |
+| Worldly Tutor | 1 | $33 | Efficient instant-speed creature tutor for 1 mana |
 
 ### Multicolor (4)
 
 | Card | Colors | CMC | Price | Why |
 |------|--------|-----|-------|-----|
-| Aura Shards | GW | 3 | $26 | Destroys an artifact or enchantment on every creature ETB; passively dismantles boards |
-| Coalition Victory | WUBRG | 8 | $5 | Instant win if you control one land and one creature of each basic land type and color |
-| Grand Arbiter Augustin IV | WU | 4 | $17 | Taxes opponents' spells while discounting yours; warps the cost structure of the game |
-| Notion Thief | UB | 4 | $2 | Steals all card draw from opponents at instant speed; flips wheels into one-sided draws |
+| Aura Shards | GW | 3 | $33 | Destroys an artifact or enchantment on every creature ETB; passively dismantles boards |
+| Coalition Victory | WUBRG | 8 | $6 | Instant win if you control one land and one creature of each basic land type and color |
+| Grand Arbiter Augustin IV | WU | 4 | $18 | Taxes opponents' spells while discounting yours; warps the cost structure of the game |
+| Notion Thief | UB | 4 | $3.50 | Steals all card draw from opponents at instant speed; flips wheels into one-sided draws |
 
 ### Colorless / Artifacts / Lands (12)
 
 | Card | CMC | Price | Why |
 |------|-----|-------|-----|
-| Ancient Tomb | 0 | $113 | Taps for 2 colorless mana; accelerates by a full turn at cost of 2 life |
-| Chrome Mox | 0 | $145 | Free mana turn 1 by exiling a colored card from hand |
-| Field of the Dead | 0 | $36 | Passively generates zombies whenever 7+ differently named lands are in play; hard to interact with |
-| Glacial Chasm | 0 | — | Prevents all damage to you; pairs with life-gain to stay indefinitely |
-| Grim Monolith | 2 | $425 | Taps for 3 colorless; fast mana that accelerates first few turns significantly |
-| Lion's Eye Diamond | 0 | — | Generates 3 mana of any color by discarding hand; enables storm and zero-land combo lines |
-| Mana Vault | 1 | $100 | Taps for 3 colorless for 1 mana; fast mana staple |
-| Mishra's Workshop | 0 | — | Taps for 3 mana usable only for artifacts; broken in artifact-heavy lists |
-| Mox Diamond | 0 | — | Free mana (discard a land); 0-mana artifact acceleration |
-| Panoptic Mirror | 5 | $28 | Imprint an instant or sorcery; copy and cast it every upkeep for free |
-| The One Ring | 4 | $107 | Protection for a turn + card draw engine that scales; generates 3–6+ cards in a few turns |
-| The Tabernacle at Pendrell Vale | 0 | — | Each creature costs 1 mana to keep each upkeep; taxes creature-dependent strategies |
+| Ancient Tomb | 0 | $160 | Taps for 2 colorless mana; accelerates by a full turn at cost of 2 life |
+| Chrome Mox | 0 | $200 | Free mana turn 1 by exiling a colored card from hand |
+| Field of the Dead | 0 | $38 | Passively generates zombies whenever 7+ differently named lands are in play; hard to interact with |
+| Glacial Chasm | 0 | — | Prevents all damage to you; pairs with life-gain to stay indefinitely (Reserved List) |
+| Grim Monolith | 2 | — | Taps for 3 colorless; fast mana that accelerates first few turns significantly (Reserved List) |
+| Lion's Eye Diamond | 0 | — | Generates 3 mana of any color by discarding hand; enables storm and zero-land combo lines (Reserved List) |
+| Mana Vault | 1 | $140 | Taps for 3 colorless for 1 mana; fast mana staple |
+| Mishra's Workshop | 0 | — | Taps for 3 mana usable only for artifacts; broken in artifact-heavy lists (Reserved List) |
+| Mox Diamond | 0 | — | Free mana (discard a land); 0-mana artifact acceleration (Reserved List) |
+| Panoptic Mirror | 5 | $25 | Imprint an instant or sorcery; copy and cast it every upkeep for free (unbanned Feb 2026) |
+| The One Ring | 4 | $130 | Protection for a turn + card draw engine that scales; generates 3–6+ cards in a few turns |
+| The Tabernacle at Pendrell Vale | 0 | — | Each creature costs 1 mana to keep each upkeep; taxes creature-dependent strategies (Reserved List) |
 
 ---
 
@@ -144,24 +144,27 @@ From WotC, a card qualifies as a Game Changer if it:
 
 ## Version History
 
-### February 9, 2026 (+2 added)
+### February 9, 2026 (+5 added)
 - **Farewell** added (modal exile board wipe)
-- **Biorhythm** added (unbanned + added to Game Changers simultaneously)
+- **Biorhythm** added (unbanned from Commander banlist → moved to Game Changers)
+- **Gifts Ungiven** added (unbanned from Commander banlist → moved to Game Changers)
+- **Panoptic Mirror** added (unbanned from Commander banlist → moved to Game Changers)
+- **Fierce Guardianship** re-added (was removed in Oct 2025, back on the list)
 - Lutri, the Spellchaser unbanned from the Commander banlist (banned as companion only now)
 - New category introduced: "banned as companion"
 
-### October 21, 2025 (−10 removed)
+### October 21, 2025 (−11 removed)
 Philosophy shift: high-CMC cards and legendary creatures delisted. Focus moved to early-turn warps.
 
 | Removed | Reason |
 |---------|--------|
 | Deflecting Swat | High-CMC, conditional |
 | Expropriate | High-CMC |
-| Fierce Guardianship | Re-added later |
+| Fierce Guardianship | Removed, then re-added in Feb 2026 |
 | Food Chain | Combo enabler, not standalone warp |
 | Jin-Gitaxias, Core Augur | High-CMC legendary |
 | Kinnan, Bonder Prodigy | Legendary commander |
-| Sway of the Stars | High-CMC, niche |
+| Sway of the Stars | High-CMC, niche (remains banned in Commander) |
 | Urza, Lord High Artificer | Legendary commander |
 | Vorinclex, Voice of Hunger | High-CMC legendary |
 | Winota, Joiner of Forces | Legendary commander |

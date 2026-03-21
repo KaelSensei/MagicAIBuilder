@@ -176,7 +176,9 @@ The LLM is the reasoning layer, not the source of truth. All card data must be v
 
 ### Pre-LLM (before sending the prompt)
 1. Parse the decklist into individual card names
-2. Validate each card against Scryfall API (`/cards/named?exact={name}`)
+2. Batch-validate via Scryfall `POST /cards/collection` (up to 75 cards per request — a 100-card Commander deck = 2 calls instead of 100)
+   - Cards in `not_found[]` = don't exist (likely hallucinated or misspelled)
+   - Response includes: legality, color identity, prices, oracle text, `game_changer` flag
 3. Check Commander legality, color identity, and current prices
 4. Compute deck statistics (land count, ramp count, avg CMC, etc.)
 5. Run heuristic checks (see benchmarks below)
@@ -184,9 +186,9 @@ The LLM is the reasoning layer, not the source of truth. All card data must be v
 
 ### Post-LLM (after receiving the response)
 1. Extract every card name mentioned in CUT/ADD/Maybeboard sections
-2. Validate each against Scryfall:
-   - Does the card exist?
-   - Is it legal in Commander?
+2. Batch-validate against Scryfall (`POST /cards/collection`):
+   - Does the card exist? (not in `not_found[]`)
+   - Is it legal in Commander? (`legalities.commander === "legal"`)
    - Does it match the commander's color identity?
    - Is the price accurate and within budget?
 3. Remove or flag any card that fails validation
