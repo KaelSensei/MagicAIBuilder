@@ -1,6 +1,6 @@
 "use client";
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   DndContext,
@@ -27,7 +27,7 @@ import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, build
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { ArrowLeft, Crown, Download } from "lucide-react";
+import { ArrowLeft, Check, Crown, Download, Pencil } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
@@ -53,6 +53,7 @@ export default function BuilderPage() {
 
   // Ensure this deck is active
   const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory } = useDeck();
+  const renameDeck = useDeckStore((s) => s.renameDeck);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
   const isSyncing = useDeckStore((s) => s.isSyncing);
@@ -87,6 +88,11 @@ export default function BuilderPage() {
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
   const [selectedSet, setSelectedSet] = useState<string>("");
   const [colorFilter, setColorFilter] = useState<string[]>([]);
+
+  // Inline deck name editing
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
@@ -201,6 +207,20 @@ export default function BuilderPage() {
     [addCard, updateCardCategory, deck]
   );
 
+  const handleStartEditName = () => {
+    setNameInput(deck?.name ?? "");
+    setIsEditingName(true);
+    setTimeout(() => nameInputRef.current?.select(), 0);
+  };
+
+  const handleSaveName = async () => {
+    const trimmed = nameInput.trim();
+    if (trimmed && deck && trimmed !== deck.name) {
+      await renameDeck(deckId, trimmed);
+    }
+    setIsEditingName(false);
+  };
+
   if (!deck) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -240,9 +260,37 @@ export default function BuilderPage() {
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <h1 className="text-sm font-semibold text-[var(--text-primary)]">
-            {deck.name}
-          </h1>
+          {isEditingName ? (
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <input
+                ref={nameInputRef}
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onBlur={handleSaveName}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveName();
+                  if (e.key === "Escape") setIsEditingName(false);
+                }}
+                className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] outline-none min-w-0"
+                maxLength={200}
+                autoFocus
+              />
+              <button onClick={handleSaveName} className="text-green-400 hover:text-green-300 shrink-0">
+                <Check className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleStartEditName}
+              className="group flex items-center gap-1.5"
+              title="Click to rename"
+            >
+              <h1 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                {deck.name}
+              </h1>
+              <Pencil className="w-3 h-3 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          )}
           <span className="text-xs text-[var(--text-secondary)]">
             {(deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
           </span>
