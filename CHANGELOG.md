@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-21: Card Quantity Editor
+- **+/- quantity buttons** in list view (hover to reveal) — basic lands and Commander-legal multiples can be adjusted
+- **`multiples.ts`** — encodes Commander multi-copy rules: Relentless Rats, Shadowborn Apostle, Persistent Petitioners, Nazgûl (max 9), Seven Dwarves (max 7), etc.
+- **`addCard` now increments** quantity instead of silently blocking when a card allows multiples
+
 ### Added — 2026-03-21: Commander in Grid View + Build Fixes
 - **Commander visible in grid view** — commander (and partner) now appear pinned first in the card grid with a gold ring and `CMD` badge
 - **`updateDeckDescription`, `addTag`, `removeTag`** actions added to DeckStore
