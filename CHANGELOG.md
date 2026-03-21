@@ -9,7 +9,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-### Changed — feat/mana-symbols-color-filter
+### Fixed — 2026-03-21
+- **Card tooltip position** — tooltip now follows the mouse cursor via `createPortal` instead of anchoring to the right edge of the full-width list item row (which landed it in the stats panel)
+
+### Added — 2026-03-21: Oracle text in printing selector
+- `src/components/card/PrintingSelectorModal.tsx` — two-column layout: oracle text panel (mana cost, type line, card text, price) on the left, printings grid on the right; handles double-faced cards via `card_faces[0]` fallback
+
+### Changed — 2026-03-21: Mana symbols in color filter
 - **By Color search** — remplacé les emojis (☀️💧💀🔥🌲) par les vrais SVGs officiels Scryfall (`svgs.scryfall.io/card-symbols/{W,U,B,R,G,C}.svg`); colorless intégré dans la liste principale
 
 ### Added — feat/set-search-all-sets
@@ -61,6 +67,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `src/components/deck/AISuggestionsPanel.tsx` — panel in stats column with analyze button + suggestions
 - `src/app/api/ai/suggest/route.ts` — Next.js API route proxying AI provider calls
 - Requires commander to be set before AI analysis is available
+
+### Fixed — 2026-03-21: Security (#29)
+- `next.config.ts` — upgrade Next.js to patch RCE CVE, restrict `images.remotePatterns` to Scryfall domains only, add `X-Content-Type-Options` / `X-Frame-Options` security headers
+- `src/app/api/**` — input validation with Zod on all API routes, log sanitization to prevent log injection
+
+### Added — 2026-03-21: Card Grid Hover Overlay (#28)
+- `src/components/card/CardImage.tsx` — hover overlay shows card name, mana cost, and "+" add-to-deck indicator on search result grid cards
+- `src/components/card/CardGrid.tsx` — overlay wired to grid items
+
+### Added — 2026-03-21: Deck Grid View + Commander Hover Tooltip (#23)
+- `src/components/deck/DeckEditor.tsx` — deck card grid view with card images (alongside existing list view)
+- Commander card shows hover tooltip with full card details
+
+### Added — 2026-03-21: Game Changer Toast Warning (#21)
+- `src/lib/deck/store.ts` — `addCard` triggers toast notification when a Game Changer card is added
+- `src/hooks/useToast.ts` — toast hook extended with GC-specific warning
 
 ### Added — Phase 3: Database & Prisma Integration
 
