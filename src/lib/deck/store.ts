@@ -498,7 +498,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!deck) return;
 
     const { maxQuantity } = await import("@/lib/deck/multiples");
-    const max = maxQuantity(card.name, card.type_line);
+    const max = maxQuantity(card.name, card.type_line, card.oracle_text ?? "");
     const exists = deck.cards.find((c) => c.name === card.name);
     if (exists) {
       // Already at max → skip
@@ -599,7 +599,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
     const { maxQuantity } = await import("@/lib/deck/multiples");
-    const max = maxQuantity(card.name, card.typeLine);
+    const max = maxQuantity(card.name, card.typeLine, card.oracleText ?? "");
     const exists = deck.cards.find((c) => c.name === card.name);
     if (exists) {
       if (exists.quantity >= max) return;
@@ -737,7 +737,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!card) return;
 
     const { maxQuantity } = await import("@/lib/deck/multiples");
-    const max = maxQuantity(card.name, card.typeLine);
+    const max = maxQuantity(card.name, card.typeLine, card.oracleText ?? "");
     const newQty = Math.max(1, Math.min(max, card.quantity + delta));
     if (newQty === card.quantity) return;
 
