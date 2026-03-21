@@ -1,24 +1,55 @@
 "use client";
-// Scryfall search input with debounce
+// Scryfall search input with debounce + keyboard shortcut hints
 import { useState, useEffect, useRef } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import { useUIStore } from "@/lib/ui/store";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
   placeholder?: string;
   isLoading?: boolean;
   className?: string;
+  showKeyboardHint?: boolean;
 }
 
 export function SearchBar({
   onSearch,
-  placeholder = 'Search cards... (try "sol ring" or "type:creature cmc:2")',
+  onFocus,
+  onBlur,
+  placeholder = "Search cards…",
   isLoading = false,
   className,
+  showKeyboardHint = true,
 }: SearchBarProps) {
   const [value, setValue] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Subscribe to focus / clear signals from UI store
+  const searchFocusSignal = useUIStore((s) => s.searchFocusSignal);
+  const searchClearSignal = useUIStore((s) => s.searchClearSignal);
+
+  // Trigger focus when signal fires
+  useEffect(() => {
+    if (searchFocusSignal > 0) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchFocusSignal]);
+
+  // Trigger clear when signal fires
+  useEffect(() => {
+    if (searchClearSignal > 0) {
+      setValue("");
+      onSearch("");
+      inputRef.current?.blur();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchClearSignal]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -50,13 +81,22 @@ export function SearchBar({
         )}
       </span>
       <input
+        ref={inputRef}
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         placeholder={placeholder}
-        className="flex-1 bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none"
+        className="flex-1 bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none min-w-0"
         data-testid="search-input"
       />
+      {/* Keyboard hint badge — hidden when typing */}
+      {!value && showKeyboardHint && (
+        <span className="pr-2 text-[10px] text-[var(--text-secondary)]/60 font-mono shrink-0 select-none">
+          ⌨ /
+        </span>
+      )}
       {value && (
         <button
           onClick={handleClear}

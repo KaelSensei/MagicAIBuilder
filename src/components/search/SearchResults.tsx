@@ -1,9 +1,11 @@
 "use client";
-// Search results panel with grid/list toggle
+// Search results panel with grid/list toggle + keyboard navigation highlight
+import { useEffect, useRef } from "react";
 import { Loader2, AlertCircle, LayoutGrid, List } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
 import { CardSearchListItem } from "@/components/card/CardSearchListItem";
 import { useDeckStore } from "@/lib/deck/store";
+import { useUIStore } from "@/lib/ui/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface SearchResultsProps {
@@ -25,6 +27,21 @@ export function SearchResults({
 }: SearchResultsProps) {
   const viewMode = useDeckStore((s) => s.searchViewMode);
   const setViewMode = useDeckStore((s) => s.setSearchViewMode);
+  const keyboardSelectedIndex = useUIStore((s) => s.keyboardSelectedIndex);
+  const resetKeyboardSelection = useUIStore((s) => s.resetKeyboardSelection);
+
+  const selectedRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [keyboardSelectedIndex]);
+
+  // Reset keyboard selection when cards change
+  useEffect(() => {
+    resetKeyboardSelection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards]);
 
   if (isLoading) {
     return (
@@ -88,16 +105,27 @@ export function SearchResults({
       </div>
 
       {viewMode === "grid" ? (
-        <CardGrid cards={cards} onCardClick={onCardClick} draggable={draggable} />
+        <CardGrid
+          cards={cards}
+          onCardClick={onCardClick}
+          draggable={draggable}
+          selectedIndex={keyboardSelectedIndex}
+          selectedRef={selectedRef}
+        />
       ) : (
         <div className="px-1 py-1">
-          {cards.map((card) => (
-            <CardSearchListItem
+          {cards.map((card, idx) => (
+            <div
               key={card.id}
-              card={card}
-              onClick={onCardClick}
-              draggable={draggable}
-            />
+              ref={idx === keyboardSelectedIndex ? selectedRef : undefined}
+            >
+              <CardSearchListItem
+                card={card}
+                onClick={onCardClick}
+                draggable={draggable}
+                isSelected={idx === keyboardSelectedIndex}
+              />
+            </div>
           ))}
         </div>
       )}
