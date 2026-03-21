@@ -32,6 +32,8 @@ src/
     page.tsx                    # Home / deck list (commander art card backgrounds)
     builder/[deckId]/
       page.tsx                  # 3-panel builder view (Search | DeckEditor | Stats)
+    share/[token]/
+      page.tsx                  # Public read-only deck view (server component + OG meta)
     api/
       decks/
         route.ts                # GET /api/decks, POST /api/decks
@@ -41,6 +43,11 @@ src/
             route.ts            # POST /api/decks/[id]/cards
             [cardId]/
               route.ts          # DELETE/PATCH /api/decks/[id]/cards/[cardId]
+          share/
+            route.ts            # POST (enable sharing) / DELETE (disable sharing)
+      share/
+        [token]/
+          route.ts              # GET /api/share/[token] — public, no auth
       cache/
         cards/
           route.ts              # GET/POST /api/cache/cards
@@ -75,6 +82,8 @@ src/
       AISuggestionsPanel.tsx    # AI-assisted deck suggestions
       ImportDialog.tsx          # Text decklist import modal
       ExportModal.tsx           # Multi-format export (MTGO, Arena, plain text)
+      SharePopover.tsx          # Builder header share toggle + copy link popover
+      ShareDeckView.tsx         # Public read-only deck view (cards, stats, import)
     layout/
       Header.tsx                # Logo, nav, theme toggle, actions
       Footer.tsx                # Legal notices (WotC + Scryfall disclaimers)

@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-21: Deck sharing (public read-only links)
+
+- **Prisma schema** — `shareToken String? @unique` and `shareEnabled Boolean @default(false)` on `Deck` model
+- **Migration** `20260321150000_add_deck_sharing` — adds the two columns with unique index
+- **POST `/api/decks/[id]/share`** — generates a 12-char base64url token via `crypto.randomBytes`, enables sharing, returns `{ shareUrl, shareToken }`
+- **DELETE `/api/decks/[id]/share`** — disables sharing (sets `shareToken = null`, `shareEnabled = false`)
+- **GET `/api/share/[token]`** — public endpoint, no auth required; returns deck JSON (token stripped from response) or 404 if not found / not enabled
+- **`/share/[token]` page** — server-rendered read-only deck view with OG meta tags (title, description, image from commander art crop) for Discord/Twitter preview
+- **`ShareDeckView` component** — commander zone, cards grouped by category, mana curve, color distribution, stat panel, "Import this deck" button (creates a copy in the user's account)
+- **`SharePopover` component** — toggle switch in builder header; shows copy-to-clipboard URL when enabled; "Public" badge when sharing is active
+
 ### Fixed — 2026-03-21
 - **Card tooltip position** — tooltip now follows the mouse cursor via `createPortal` instead of anchoring to the right edge of the full-width list item row (which landed it in the stats panel)
 

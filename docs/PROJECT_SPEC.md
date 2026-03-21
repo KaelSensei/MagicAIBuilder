@@ -147,6 +147,7 @@ interface Deck {
 |---|---|---|
 | US-18 | Hover a card to see it full-size with oracle text and price | ✅ Done |
 | US-19 | Filter by color/type/CMC/price via UI controls | ✅ Done |
+| US-20 | Share a deck via public read-only URL (with OG preview, import button) | ✅ Done |
 | US-20 | Persist multiple decks across sessions | ✅ Done (PostgreSQL) |
 | US-21 | Detect combos for current commander via Commander Spellbook | ✅ Done |
 | US-22 | AI deck suggestions with reasoning (Claude / GPT fallback) | ✅ Done |

@@ -67,6 +67,7 @@
 - [x] Commander pairing types (partner, friends-forever, etc.)
 - [x] AI-assisted deck suggestions (Phase 4)
 - [x] Combo detection via Commander Spellbook API
+- [x] **Deck sharing** — public read-only links (`/share/[token]`) with OG meta tags, import button, share popover in builder
 
 ### Infrastructure
 
