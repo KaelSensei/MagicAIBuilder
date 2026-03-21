@@ -32,11 +32,12 @@
 - [x] removeCard HTTP 404 — `toDeckCard` was using `scryfallId` instead of DB `id`
 - [x] Hydration mismatch on `<html>` — `data-theme` set by inline script before React hydrates
 - [x] Missing `zod` dependency in package.json
+- [x] Card tooltip shown far right — now follows mouse cursor via `createPortal` with viewport clamping
 
 ### UI Enhancements
 
 - [x] Inline deck rename in builder title bar (click name → input → Enter/Escape)
-- [x] Card printing selector modal (choose art before adding to deck)
+- [x] Card printing selector modal with oracle text panel (mana cost, type line, card text, price)
 - [x] Search mode tabs: By Name / By Set / By Color
 - [x] Dynamic set search — all sets fetched from Scryfall API (replaces static list), 1h cache, sorted newest first
 - [x] Commander art crop as background on home deck cards
