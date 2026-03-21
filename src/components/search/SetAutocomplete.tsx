@@ -1,54 +1,67 @@
 "use client";
 // Set code autocomplete for "By Set" search mode
-import { useState, useEffect, useRef } from "react";
-import { Search, X } from "lucide-react";
+// Dynamically loads all sets from Scryfall API
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Search, X, Loader2 } from "lucide-react";
 
 interface SetOption {
   code: string;
   name: string;
+  set_type: string;
+  released_at?: string;
+  card_count: number;
+  icon_svg_uri?: string;
 }
 
-// A curated list of popular Commander-legal sets for quick access
-// Scryfall doesn't have a simple "all sets" endpoint that's easy to parse, so we use a static list
-// User can also type any set code directly
-const POPULAR_SETS: SetOption[] = [
-  { code: "dsk", name: "Duskmourn" },
-  { code: "blb", name: "Bloomburrow" },
-  { code: "mh3", name: "Modern Horizons 3" },
-  { code: "otj", name: "Outlaws of Thunder Junction" },
-  { code: "mkm", name: "Murders at Karlov Manor" },
-  { code: "lci", name: "The Lost Caverns of Ixalan" },
-  { code: "woe", name: "Wilds of Eldraine" },
-  { code: "mom", name: "March of the Machine" },
-  { code: "one", name: "Phyrexia: All Will Be One" },
-  { code: "bro", name: "The Brothers' War" },
-  { code: "dmr", name: "Dominaria Remastered" },
-  { code: "snc", name: "Streets of New Capenna" },
-  { code: "neo", name: "Kamigawa: Neon Dynasty" },
-  { code: "vow", name: "Innistrad: Crimson Vow" },
-  { code: "mid", name: "Innistrad: Midnight Hunt" },
-  { code: "afr", name: "Adventures in the Forgotten Realms" },
-  { code: "stx", name: "Strixhaven" },
-  { code: "khm", name: "Kaldheim" },
-  { code: "znr", name: "Zendikar Rising" },
-  { code: "m21", name: "Core Set 2021" },
-  { code: "iko", name: "Ikoria" },
-  { code: "thb", name: "Theros Beyond Death" },
-  { code: "eld", name: "Throne of Eldraine" },
-  { code: "c21", name: "Commander 2021" },
-  { code: "cmr", name: "Commander Legends" },
-  { code: "cmd", name: "Commander 2011" },
-  { code: "2x2", name: "Double Masters 2022" },
-  { code: "clb", name: "Commander Legends: Battle for Baldur's Gate" },
-  { code: "dmc", name: "Dominaria United Commander" },
-  { code: "ncc", name: "New Capenna Commander" },
-  { code: "nec", name: "Neon Dynasty Commander" },
-  { code: "afc", name: "Forgotten Realms Commander" },
-  { code: "moc", name: "March of the Machine Commander" },
-  { code: "woc", name: "Wilds of Eldraine Commander" },
-  { code: "otc", name: "Thunder Junction Commander" },
-  { code: "blc", name: "Bloomburrow Commander" },
-];
+// Set types that are relevant for Commander deck building
+const COMMANDER_SET_TYPES = new Set([
+  "core",
+  "expansion",
+  "masters",
+  "commander",
+  "draft_innovation",
+  "funny",
+  "starter",
+  "box",
+  "promo",
+  "memorabilia",
+  "reprint",
+  "masterpiece",
+]);
+
+// Cache the sets in memory to avoid re-fetching
+let setsCache: SetOption[] | null = null;
+let setsCacheTime = 0;
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
+async function fetchAllSets(): Promise<SetOption[]> {
+  const now = Date.now();
+  if (setsCache && now - setsCacheTime < CACHE_TTL) {
+    return setsCache;
+  }
+
+  const res = await fetch("https://api.scryfall.com/sets");
+  if (!res.ok) throw new Error("Failed to fetch sets");
+  const data = await res.json();
+
+  // Filter to sets that have cards and are relevant for Commander
+  const sets: SetOption[] = (data.data as SetOption[])
+    .filter(
+      (s) =>
+        s.card_count > 0 &&
+        COMMANDER_SET_TYPES.has(s.set_type)
+    )
+    .sort((a, b) => {
+      // Sort by release date descending (newest first)
+      const dateA = a.released_at ?? "";
+      const dateB = b.released_at ?? "";
+      return dateB.localeCompare(dateA);
+    });
+
+  setsCache = sets;
+  setsCacheTime = now;
+  return sets;
+}
 
 interface SetAutocompleteProps {
   value: string;
@@ -59,7 +72,25 @@ interface SetAutocompleteProps {
 export function SetAutocomplete({ value, onChange, onClear }: SetAutocompleteProps) {
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
+  const [allSets, setAllSets] = useState<SetOption[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+
+  // Load sets on first open
+  const loadSets = useCallback(async () => {
+    if (allSets.length > 0) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const sets = await fetchAllSets();
+      setAllSets(sets);
+    } catch {
+      setError("Failed to load sets");
+    } finally {
+      setLoading(false);
+    }
+  }, [allSets.length]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -71,14 +102,16 @@ export function SetAutocomplete({ value, onChange, onClear }: SetAutocompletePro
 
   const filtered =
     input.length > 0
-      ? POPULAR_SETS.filter(
-          (s) =>
-            s.name.toLowerCase().includes(input.toLowerCase()) ||
-            s.code.toLowerCase().includes(input.toLowerCase())
-        ).slice(0, 8)
-      : POPULAR_SETS.slice(0, 8);
+      ? allSets
+          .filter(
+            (s) =>
+              s.name.toLowerCase().includes(input.toLowerCase()) ||
+              s.code.toLowerCase().includes(input.toLowerCase())
+          )
+          .slice(0, 12)
+      : allSets.slice(0, 12);
 
-  const selectedSet = POPULAR_SETS.find((s) => s.code === value);
+  const selectedSet = allSets.find((s) => s.code === value);
 
   if (value) {
     return (
@@ -110,29 +143,67 @@ export function SetAutocomplete({ value, onChange, onClear }: SetAutocompletePro
             setInput(e.target.value);
             setOpen(true);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setOpen(true);
+            loadSets();
+          }}
           placeholder="Search set (e.g. dsk, mh3…)"
           className="flex-1 bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none"
         />
+        {loading && (
+          <span className="pr-3 text-[var(--text-secondary)]">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          </span>
+        )}
       </div>
-      {open && filtered.length > 0 && (
+      {open && (
         <div className="absolute top-full mt-1 left-0 right-0 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg z-20 overflow-hidden">
-          {filtered.map((s) => (
-            <button
-              key={s.code}
-              onClick={() => {
-                onChange(s.code, s.name);
-                setInput("");
-                setOpen(false);
-              }}
-              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[var(--surface-hover)] text-left transition-colors"
-            >
-              <span className="text-xs font-mono text-[var(--accent)] uppercase w-10 shrink-0">
-                {s.code}
-              </span>
-              <span className="text-sm text-[var(--text-primary)] truncate">{s.name}</span>
-            </button>
-          ))}
+          {loading && (
+            <div className="px-3 py-3 text-sm text-[var(--text-secondary)] flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Loading sets…
+            </div>
+          )}
+          {error && (
+            <div className="px-3 py-3 text-sm text-red-400">{error}</div>
+          )}
+          {!loading && !error && filtered.length === 0 && input.length > 0 && (
+            <div className="px-3 py-3 text-sm text-[var(--text-secondary)]">
+              No sets found for &quot;{input}&quot;
+            </div>
+          )}
+          {!loading && !error && filtered.length > 0 && (
+            <div className="max-h-64 overflow-y-auto">
+              {filtered.map((s) => (
+                <button
+                  key={s.code}
+                  onClick={() => {
+                    onChange(s.code, s.name);
+                    setInput("");
+                    setOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[var(--surface-hover)] text-left transition-colors"
+                >
+                  <span className="text-xs font-mono text-[var(--accent)] uppercase w-10 shrink-0">
+                    {s.code}
+                  </span>
+                  <span className="flex-1 text-sm text-[var(--text-primary)] truncate">
+                    {s.name}
+                  </span>
+                  {s.released_at && (
+                    <span className="text-xs text-[var(--text-secondary)] shrink-0">
+                      {s.released_at.slice(0, 4)}
+                    </span>
+                  )}
+                </button>
+              ))}
+              {input.length === 0 && allSets.length > 12 && (
+                <div className="px-3 py-2 text-xs text-[var(--text-secondary)] border-t border-[var(--border)]">
+                  {allSets.length} sets available — type to search
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
