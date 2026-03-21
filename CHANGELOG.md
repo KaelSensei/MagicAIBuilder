@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — feat/export-audit-fix: Export audit & companion support
+- **Companion in all export formats** — companion card was silently dropped from every format; now included:
+  - Plain Text / Moxfield: `Companion` / `// Companion` section before `Deck`
+  - MTG Arena: `Companion` section (spec-compliant for Brawl/Standard companion import)
+  - MTGO `.dek`: companion placed in `Sideboard="true"` element per MTGO convention
+  - TappedOut: companion marked with `*SB*` tag
+  - Archidekt: companion gets its own `Companion (1)` section
+- **Manabox format** — added export support for Manabox (popular iOS/Android MTG collection app); Arena-compatible layout with Commander/Companion/Deck sections
+- **ExportModal card count fix** — total card count in export modal preview now includes the companion
+
 ### Fixed — 2026-03-21
 - **Card tooltip position** — tooltip now follows the mouse cursor via `createPortal` instead of anchoring to the right edge of the full-width list item row (which landed it in the stats panel)
 

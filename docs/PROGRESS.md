@@ -45,7 +45,11 @@
 - [x] Favicon SVG + OG image (1200×630)
 - [x] Page metadata: title template, keywords, openGraph
 - [x] Light / dark theme toggle with persistence
-- [x] Export deck (multiple formats)
+- [x] Export deck (multiple formats: Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, Manabox, Plain Text)
+- [x] Export — companion card included in all formats (was silently dropped before)
+- [x] Export — Manabox format added (popular iOS/Android app)
+- [x] Export — MTGO companion placed in sideboard correctly
+- [x] ExportModal — card count includes companion
 - [x] Delete deck with confirmation
 - [x] Deck card grid view with card images (alongside list view)
 - [x] Commander hover tooltip with full card details
