@@ -14,9 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MagicAIBuilder — Commander Deck Builder",
-  description:
-    "Build Commander decks with live bracket scoring, Game Changers detection, and Scryfall-powered card search.",
+  title: {
+    default: "MagicAIBuilder — Commander Deck Builder",
+    template: "%s | MagicAIBuilder",
+  },
+  description: "Build Commander decks with live bracket scoring, AI suggestions, and Scryfall integration.",
+  keywords: ["MTG", "Magic the Gathering", "Commander", "EDH", "deck builder", "bracket scoring"],
+  openGraph: {
+    title: "MagicAIBuilder — Commander Deck Builder",
+    description: "Build Commander decks with live bracket scoring, AI suggestions, and Scryfall integration.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
