@@ -34,6 +34,13 @@
 - [x] Missing `zod` dependency in package.json
 - [x] Card tooltip shown far right — now follows mouse cursor via `createPortal` with viewport clamping
 
+### SEO
+- [x] robots.txt (bloque pages privées, autorise pages publiques)
+- [x] Sitemap dynamique avec decks partagés
+- [x] Metadata enrichie (keywords, Twitter card, canonical)
+- [x] JSON-LD structured data (SoftwareApplication)
+- [x] Image OG dynamique via edge route `/api/og`
+
 ### UI Enhancements
 
 - [x] Inline deck rename in builder title bar (click name → input → Enter/Escape)
