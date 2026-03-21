@@ -3,6 +3,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import Image from "next/image";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { CardTooltip } from "@/components/card/CardTooltip";
@@ -10,7 +11,7 @@ import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import type { CardCategory } from "@/lib/deck/types";
-import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, X } from "lucide-react";
+import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical } from "lucide-react";
 import { useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
@@ -86,7 +87,7 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
       {/* Category header */}
       <button
         onClick={() => setCollapsed((c) => !c)}
-        className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] transition-colors group"
+        className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--surface-hover)] transition-colors group"
       >
         {collapsed ? (
           <ChevronRight className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
@@ -127,6 +128,59 @@ function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionPro
   );
 }
 
+// Art crop banner for a single commander slot
+function CommanderBanner({
+  name,
+  artCropUri,
+  imageUri,
+  onRemove,
+  label,
+}: {
+  name: string;
+  artCropUri: string;
+  imageUri: string;
+  onRemove: () => void;
+  label?: string;
+}) {
+  // Prefer artCropUri; fall back to full card image (cropped from top to show face)
+  const src = artCropUri || imageUri;
+  return (
+    <div className="relative rounded-lg overflow-hidden h-[82px] group/banner flex-1">
+      <Image
+        src={src}
+        alt={name}
+        fill
+        className="object-cover object-top"
+        draggable={false}
+        unoptimized
+      />
+      {/* Gradient overlay so the name is readable */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+      {/* Commander label badge */}
+      {label && (
+        <div className="absolute top-1 left-1 bg-yellow-400/90 text-black text-[8px] font-bold px-1 rounded leading-tight">
+          {label}
+        </div>
+      )}
+      {/* Commander name */}
+      <p
+        className="absolute bottom-1.5 left-2 right-6 text-white text-xs font-semibold leading-tight truncate"
+        style={{ textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}
+      >
+        {name}
+      </p>
+      {/* Remove button */}
+      <button
+        onClick={onRemove}
+        className="absolute top-1 right-1 opacity-0 group-hover/banner:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
+        title={`Remove ${name}`}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
   const viewMode = useDeckStore((s) => s.deckViewMode);
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
@@ -153,62 +207,50 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
     (deck.commander ? 1 : 0) +
     (deck.partner ? 1 : 0);
 
+  // Whether we have a partner to show alongside the commander
+  const hasPartner =
+    supportsPartner(deck.pairingType) &&
+    deck.partner &&
+    deck.partner.name !== deck.commander?.name;
+
   return (
     <div className={cn("flex flex-col h-full", className)}>
-      {/* Commander zone */}
-      <div className="p-3 border-b border-[var(--border)]">
-        <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
-          Commander
-        </p>
+      {/* Commander zone — art crop banner */}
+      <div className="p-2 border-b border-[var(--border)]">
         {deck.commander ? (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 group/cmd">
-              <CardTooltip card={deck.commander}>
-                <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors text-sm flex-1">
-                  {deck.commander.name}
+          <div className="flex gap-1.5">
+            <CommanderBanner
+              name={deck.commander.name}
+              artCropUri={deck.commander.artCropUri}
+              imageUri={deck.commander.imageUri}
+              onRemove={clearCommander}
+              label="CMD"
+            />
+            {/* Partner banner (side by side, 50/50) */}
+            {hasPartner && deck.partner && (
+              <CommanderBanner
+                name={deck.partner.name}
+                artCropUri={deck.partner.artCropUri}
+                imageUri={deck.partner.imageUri}
+                onRemove={() => setPartner(null)}
+                label={partnerSlotLabel(deck.pairingType)}
+              />
+            )}
+            {/* Partner placeholder when slot is open but not filled */}
+            {!hasPartner && supportsPartner(deck.pairingType) && (
+              <div className="flex-1 rounded-lg border border-dashed border-[var(--border)] h-[82px] flex items-center justify-center px-2">
+                <span className="text-[10px] text-[var(--text-secondary)] italic text-center leading-tight">
+                  Search for a {partnerSlotLabel(deck.pairingType)}
                 </span>
-              </CardTooltip>
-              <button
-                onClick={() => clearCommander()}
-                className="opacity-0 group-hover/cmd:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
-                title="Remove commander"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-            {/* Partner slot — only shown when commander supports it */}
-            {supportsPartner(deck.pairingType) && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-[var(--text-secondary)]">
-                  {partnerSlotLabel(deck.pairingType)}:
-                </span>
-                {deck.partner && deck.partner.name !== deck.commander?.name ? (
-                  <div className="flex items-center gap-1 group/prt">
-                    <CardTooltip card={deck.partner}>
-                      <span className="text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors text-sm">
-                        {deck.partner.name}
-                      </span>
-                    </CardTooltip>
-                    <button
-                      onClick={() => setPartner(null)}
-                      className="opacity-0 group-hover/prt:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
-                      title="Remove partner"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <span className="text-xs text-[var(--text-secondary)] italic">
-                    Enable Commander mode and search for a {partnerSlotLabel(deck.pairingType)}
-                  </span>
-                )}
               </div>
             )}
           </div>
         ) : (
-          <p className="text-xs text-[var(--text-secondary)] italic">
-            Search for a commander above
-          </p>
+          <div className="rounded-lg border border-dashed border-[var(--border)] h-[82px] flex items-center justify-center">
+            <p className="text-xs text-[var(--text-secondary)] italic">
+              Search for a commander above
+            </p>
+          </div>
         )}
       </div>
 
@@ -271,7 +313,7 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
       <div className="flex-1 overflow-y-auto p-2">
         {viewMode === "grid" ? (
           /* Grid view — commander + partner first, then all deck cards */
-          <div className="grid grid-cols-3 gap-1.5 p-1">
+          <div className="grid grid-cols-4 gap-1 p-1">
             {/* Commander card(s) pinned at top with gold ring */}
             {deck.commander && (
               <div className="relative group/card">
@@ -344,7 +386,7 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
               </div>
             ))}
             {!deck.commander && deck.cards.length === 0 && (
-              <div className="col-span-3 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
+              <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
                 No cards yet
               </div>
             )}

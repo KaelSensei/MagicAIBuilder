@@ -2,13 +2,15 @@
 import type { Deck, DeckCard, CardCategory, CommanderPairingType } from "@/lib/deck/types";
 
 /** Shape returned by the API (dates as ISO strings) */
-export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "commander" | "partner" | "cards"> {
+export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "commander" | "partner" | "cards" | "manualBracket"> {
   createdAt: string;
   updatedAt: string;
   commanderId: string | null;
   partnerId: string | null;
   companionId: string | null;
   pairingType: CommanderPairingType;
+  /** Raw DB value — cast to 1|2|3|4|null in store */
+  manualBracket: number | null;
   cards: ApiDeckCard[];
 }
 
@@ -57,6 +59,7 @@ export async function updateDeck(
     name: string;
     format: string;
     targetBracket: number;
+    manualBracket: number | null;
     budget: number | null;
     commanderId: string | null;
     partnerId: string | null;

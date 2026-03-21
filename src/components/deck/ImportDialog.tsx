@@ -72,7 +72,8 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
     for (const { name, quantity } of parsed.cards) {
       const card = byName.get(name.toLowerCase());
       if (!card) continue;
-      for (let q = 0; q < quantity; q++) { addCard(card); }
+      // Pass quantity directly — addCard handles basics with quantity > 1 in a single call
+      addCard(card, quantity);
       added++;
     }
     return added;
@@ -91,10 +92,11 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
 
     try {
       const parsed = parseTextDecklist(text);
+      // Deduplicate card names before sending to Scryfall batch (user may list same card twice)
       const allCardNames = [
         ...(parsed.commander ? [{ name: parsed.commander }] : []),
         ...(parsed.partner ? [{ name: parsed.partner }] : []),
-        ...parsed.cards.map((c) => ({ name: c.name })),
+        ...Array.from(new Set(parsed.cards.map((c) => c.name))).map((name) => ({ name })),
       ];
 
       if (allCardNames.length === 0) {

@@ -56,6 +56,7 @@ export interface Deck {
   cards: DeckCard[]; // The 99 (or 98 with partner)
   format: "commander" | "brawl";
   targetBracket: 1 | 2 | 3 | 4;
+  manualBracket: 1 | 2 | 3 | 4 | null; // null = use auto-calculated score
   budget: number | null; // Max price per card in USD
   description: string; // Deck description / notes
   tags: string[]; // Deck tags
