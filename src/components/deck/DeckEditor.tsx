@@ -240,12 +240,16 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
                   imageUri={card.imageUri}
                   largeUri={card.imageUri}
                   name={card.name}
-                  zoomOnHover={true}
+                  manaCost={card.manaCost}
+                  cmc={card.cmc}
+                  showOverlay={true}
+                  zoomOnHover={false}
                   className="w-full"
                 />
+                {/* Remove button — top-left, shown on hover */}
                 <button
                   onClick={() => onRemoveCard(card.id)}
-                  className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 hover:bg-red-600/80 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
                   aria-label={`Remove ${card.name}`}
                 >
                   ×
