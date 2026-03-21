@@ -21,12 +21,13 @@ export const useToastStore = create<ToastStore>((set) => ({
   add: (type, message) => {
     const id = crypto.randomUUID();
     set((state) => ({ toasts: [...state.toasts, { id, type, message }] }));
-    // Auto-dismiss after 3s
+    // Auto-dismiss after 5s for warnings, 3s for others
+    const duration = type === "warning" ? 5000 : 3000;
     setTimeout(() => {
       set((state) => ({
         toasts: state.toasts.filter((t) => t.id !== id),
       }));
-    }, 3000);
+    }, duration);
   },
   remove: (id) => {
     set((state) => ({
