@@ -1,7 +1,7 @@
 "use client";
 // App header with nav
 import Link from "next/link";
-import { Layers, Moon, Plus, Sun, Upload } from "lucide-react";
+import { Layers, Moon, Package, Plus, Sun, Upload } from "lucide-react";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -30,6 +30,13 @@ export function Header({ deckId }: HeaderProps = {}) {
           className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           My Decks
+        </Link>
+        <Link
+          href="/collection"
+          className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          <Package className="w-3.5 h-3.5" />
+          Collection
         </Link>
       </nav>
 

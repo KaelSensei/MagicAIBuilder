@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { DraggableCard } from "./DraggableCard";
+import { CollectionBadge } from "@/components/collection/CollectionBadge";
 
 interface CardSearchListItemProps {
   card: ScryfallCard;
@@ -32,6 +33,7 @@ function ListItemContent({
       <span className="flex-1 text-sm truncate text-[var(--text-primary)]">
         {card.name}
       </span>
+      <CollectionBadge scryfallId={card.id} compact className="shrink-0" />
       <span className="text-xs text-[var(--text-secondary)] shrink-0">
         {card.cmc > 0 ? card.cmc : "—"}
       </span>

@@ -19,7 +19,8 @@ export type CardCategory =
   | "other";
 
 export interface DeckCard {
-  id: string; // Scryfall card ID
+  id: string; // DB CUID (after save) or Scryfall card ID (before save)
+  scryfallId?: string; // Scryfall card ID (populated from DB)
   name: string;
   manaCost: string; // e.g., "{2}{U}{U}"
   cmc: number;
@@ -100,4 +101,5 @@ export interface SearchFilters {
   cmcMin: number | null;
   cmcMax: number | null;
   priceMax: number | null;
+  collectionOnly?: boolean;
 }

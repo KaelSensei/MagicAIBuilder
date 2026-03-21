@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { EnrichmentProvider } from "@/components/providers/EnrichmentProvider";
+import { CollectionProvider } from "@/components/providers/CollectionProvider";
 import { ThemeSync } from "@/components/providers/ThemeSync";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeSync />
-      <EnrichmentProvider>{children}</EnrichmentProvider>
+      <CollectionProvider>
+        <EnrichmentProvider>{children}</EnrichmentProvider>
+      </CollectionProvider>
     </QueryClientProvider>
   );
 }

@@ -6,6 +6,7 @@ import { DraggableCard } from "./DraggableCard";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
+import { CollectionBadge } from "@/components/collection/CollectionBadge";
 
 interface CardGridProps {
   cards: ScryfallCard[];
@@ -75,6 +76,11 @@ export function CardGrid({
               onClick={() => onCardClick?.(card)}
             />
           )}
+          <CollectionBadge
+            scryfallId={card.id}
+            compact
+            className="absolute bottom-6 left-1 z-10"
+          />
         </motion.div>
       ))}
     </motion.div>

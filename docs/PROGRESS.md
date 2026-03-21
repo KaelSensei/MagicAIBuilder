@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| Current Phase | Post Phase 4 — Polish & Stability |
+| Current Phase | Phase 5 — Collection Mode |
 | Last Updated | 2026-03-21 |
 | Status | 🚀 Active Development |
 | Main Branch | `main` |
@@ -21,6 +21,7 @@
 | Phase 3 | Database & Prisma | ✅ Complete |
 | Phase 4 | AI Suggestions | ✅ Complete |
 | Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
+| Phase 5 | Collection Mode | ✅ Complete |
 
 ---
 
@@ -234,3 +235,22 @@
 | Phase 1 P0 completion | 100% |
 | Phase 1–4 completion | 100% |
 | Build | ✅ Passing |
+
+---
+
+## Phase 5: Collection Mode ✅
+
+### Implemented
+
+- [x] **Prisma model** — CollectionCard with scryfallId, name, quantity, foil, condition, price, acquiredAt, imageUri
+- [x] **Migration** — 20260321140000_add_collection_card (unique index on scryfallId+foil)
+- [x] **API routes** — GET/POST /api/collection + PATCH/DELETE /api/collection/[id]
+- [x] **Zustand store** — collectionStore with collectionCards, collectionCardsFoil maps
+- [x] **CollectionProvider** — pre-loads collection at app startup
+- [x] **/collection page** — grid/list, search, stats (unique cards, total, value), qty controls
+- [x] **AddToCollectionDialog** — search + add with quantity/foil/condition form
+- [x] **CollectionBadge** — "In Collection (xN)" on search results (grid + list)
+- [x] **DeckCardOwnershipBadge** — "Owned" / "Buy" on deck editor list items
+- [x] **Search filter** — "Show only collection cards" toggle
+- [x] **Header nav** — Collection link
+

@@ -19,6 +19,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **Manabox format** — added export support for Manabox (popular iOS/Android MTG collection app); Arena-compatible layout with Commander/Companion/Deck sections
 - **ExportModal card count fix** — total card count in export modal preview now includes the companion
 
+### Added — 2026-03-21: Collection Mode
+
+- **CollectionCard Prisma model** — tracks owned cards with scryfallId, name, quantity, foil, condition, price, acquiredAt
+- **Database migration** — 20260321140000_add_collection_card with unique index on (scryfallId, foil)
+- **GET /api/collection** — list all collection cards
+- **POST /api/collection** — add card (upserts by scryfallId+foil, increments quantity if exists)
+- **PATCH /api/collection/[id]** — update quantity/condition/foil (quantity=0 auto-deletes)
+- **DELETE /api/collection/[id]** — remove card from collection
+- **collectionStore (Zustand)** — collectionCards + collectionCardsFoil maps; actions: addToCollection, removeFromCollection, updateQuantity, updateCondition, getTotalOwned
+- **CollectionProvider** — loads collection from DB on app startup
+- **/collection page** — grid/list view, search, stat cards (unique cards, total cards, total value), quantity controls
+- **AddToCollectionDialog** — search for any card, set quantity/condition/foil, add to collection
+- **CollectionBadge** — shows "In Collection (xN)" badge on search result cards (grid and list views)
+- **DeckCardOwnershipBadge** — shows "Owned" or "Buy" badge on deck editor card list items
+- **Collection filter** — "Show only collection cards" toggle in SearchFilters (only visible when collection is non-empty)
+- **Header nav** — Collection link added next to My Decks
+
 ### Fixed — 2026-03-21
 - **Card tooltip position** — tooltip now follows the mouse cursor via `createPortal` instead of anchoring to the right edge of the full-width list item row (which landed it in the stats panel)
 
