@@ -9,6 +9,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-21: Deck Snapshots (feat/deck-snapshots)
+- **DeckSnapshot model** — Prisma model with `id`, `deckId`, `name`, `cardList` (JSON), `commander`, `cardCount`, `createdAt`; `onDelete: Cascade` from Deck
+- **Migration** `20260321140000_add_deck_snapshots` — creates `DeckSnapshot` table with index on `deckId`
+- **API** `GET /api/decks/[id]/snapshots` — list all snapshots (sorted newest-first; `cardList` omitted for perf)
+- **API** `POST /api/decks/[id]/snapshots` — create snapshot from current deck state (body: `{ name }`)
+- **API** `DELETE /api/decks/[id]/snapshots/[snapshotId]` — delete a specific snapshot
+- **API** `POST /api/decks/[id]/snapshots/[snapshotId]/restore` — transactional restore: replaces all DeckCard rows from snapshot's `cardList`
+- **Client helper** `src/lib/db/snapshot-api.ts` — typed fetch wrappers (`listSnapshots`, `createSnapshot`, `deleteSnapshot`, `restoreSnapshot`)
+- **SnapshotsPanel** component — collapsible "History" panel in builder stats column:
+  - "Save" button opens a popover with name input (Enter/Escape support)
+  - Snapshot list: name, date, card count, commander name
+  - Diff badge showing `+N / -N cards` vs current deck
+  - Restore button with inline confirmation (`Confirm / No`)
+  - Delete button with inline confirmation
+- **Builder integration** — SnapshotsPanel rendered in Panel 3 (stats); `onRestore` triggers `loadDecks()` to refresh store
+
 ### Fixed — 2026-03-21
 - **Card tooltip position** — tooltip now follows the mouse cursor via `createPortal` instead of anchoring to the right edge of the full-width list item row (which landed it in the stats panel)
 

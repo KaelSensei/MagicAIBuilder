@@ -41,6 +41,12 @@ src/
             route.ts            # POST /api/decks/[id]/cards
             [cardId]/
               route.ts          # DELETE/PATCH /api/decks/[id]/cards/[cardId]
+          snapshots/
+            route.ts            # GET/POST /api/decks/[id]/snapshots
+            [snapshotId]/
+              route.ts          # DELETE /api/decks/[id]/snapshots/[snapshotId]
+              restore/
+                route.ts        # POST /api/decks/[id]/snapshots/[snapshotId]/restore
       cache/
         cards/
           route.ts              # GET/POST /api/cache/cards
@@ -73,6 +79,7 @@ src/
       BanlistAlert.tsx          # Animated banned/color identity alert
       CombosPanel.tsx           # Commander Spellbook combo detection
       AISuggestionsPanel.tsx    # AI-assisted deck suggestions
+      SnapshotsPanel.tsx        # Named deck snapshots — save/restore/delete + diff badge
       ImportDialog.tsx          # Text decklist import modal
       ExportModal.tsx           # Multi-format export (MTGO, Arena, plain text)
     layout/
@@ -314,6 +321,17 @@ model CardCache {
   data        Json         // Full ScryfallCard JSON
   cachedAt    DateTime @default(now())
 }
+
+model DeckSnapshot {
+  id        String   @id @default(cuid())
+  deckId    String
+  name      String
+  cardList  Json     // Full DeckCard array at snapshot time
+  commander String?  // Commander name at snapshot time
+  cardCount Int
+  createdAt DateTime @default(now())
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+}
 ```
 
 ---
@@ -333,6 +351,10 @@ model CardCache {
 | GET | `/api/cache/cards` | Lookup card in DB cache |
 | POST | `/api/cache/cards` | Store card in DB cache |
 | POST | `/api/ai/suggest` | Get AI suggestions for deck |
+| GET | `/api/decks/[id]/snapshots` | List snapshots (newest first, no cardList) |
+| POST | `/api/decks/[id]/snapshots` | Create snapshot from current deck state |
+| DELETE | `/api/decks/[id]/snapshots/[snapshotId]` | Delete a snapshot |
+| POST | `/api/decks/[id]/snapshots/[snapshotId]/restore` | Restore deck to snapshot (transactional) |
 
 ---
 

@@ -13,6 +13,7 @@ A desktop-first Commander (EDH) deck builder with:
 - Persistent multi-deck storage (PostgreSQL + Prisma)
 - Card printing/art selector
 - Import/export (plain text, MTGO, Arena)
+- **Deck snapshots** — named version history (save/restore/delete + diff badges)
 - Light/dark theme with persistence
 - Legal, accessible, fan-site compliant
 
@@ -152,15 +153,25 @@ interface Deck {
 | US-22 | AI deck suggestions with reasoning (Claude / GPT fallback) | ✅ Done |
 | US-23 | Light/dark theme toggle with persistence | ✅ Done |
 
+### P2 (continued) — Snapshots
+
+| # | Story | Status |
+|---|---|---|
+| US-24 | Save a named snapshot of the current deck (e.g. "v1 budget") | ✅ Done |
+| US-25 | Browse version history of a deck with date, card count, commander | ✅ Done |
+| US-26 | Restore a deck to a previous snapshot (with confirmation) | ✅ Done |
+| US-27 | Delete a snapshot | ✅ Done |
+| US-28 | Diff badge: `+N / -N cards` vs snapshot compared to current | ✅ Done |
+
 ### P3 — Future
 
 | # | Story | Status |
 |---|---|---|
-| US-24 | Onboarding tutorial for new users | 📋 Planned |
-| US-25 | Mobile-responsive layout | 📋 Planned |
-| US-26 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
-| US-27 | Moxfield / Archidekt import from URL | 📋 Planned |
-| US-28 | User accounts and deck sharing | 📋 Planned |
+| US-29 | Onboarding tutorial for new users | 📋 Planned |
+| US-30 | Mobile-responsive layout | 📋 Planned |
+| US-31 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
+| US-32 | Moxfield / Archidekt import from URL | 📋 Planned |
+| US-33 | User accounts and deck sharing | 📋 Planned |
 
 ---
 
