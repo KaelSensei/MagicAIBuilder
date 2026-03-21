@@ -48,7 +48,7 @@ export interface Deck {
   name: string;
   commander: DeckCard | null;
   partner: DeckCard | null; // For partner commanders
-  companion: DeckCard | null;
+  companion: DeckCard | null; // Companion (sideboard, outside the 99)
   pairingType: CommanderPairingType; // Detected from commander keywords
   cards: DeckCard[]; // The 99 (or 98 with partner)
   format: "commander" | "brawl";
