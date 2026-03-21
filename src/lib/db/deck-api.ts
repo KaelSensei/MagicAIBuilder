@@ -62,6 +62,8 @@ export async function updateDeck(
     partnerId: string | null;
     companionId?: string | null;
     pairingType: CommanderPairingType;
+    description: string;
+    tags: string[];
   }>
 ): Promise<ApiDeck> {
   const res = await fetch(`/api/decks/${id}`, {
@@ -133,6 +135,20 @@ export async function updateCardCategory(
     body: JSON.stringify({ category }),
   });
   if (!res.ok) handleApiError(res, "updateCardCategory");
+  return res.json();
+}
+
+export async function updateCardNotes(
+  deckId: string,
+  cardId: string,
+  notes: string | null
+): Promise<ApiDeckCard> {
+  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notes }),
+  });
+  if (!res.ok) handleApiError(res, "updateCardNotes");
   return res.json();
 }
 

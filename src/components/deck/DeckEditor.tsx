@@ -246,8 +246,43 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
       {/* Categories — uses parent DndContext from BuilderPage */}
       <div className="flex-1 overflow-y-auto p-2">
         {viewMode === "grid" ? (
-          /* Grid view — flat image grid of all deck cards */
+          /* Grid view — commander + partner first, then all deck cards */
           <div className="grid grid-cols-3 gap-1.5 p-1">
+            {/* Commander card(s) pinned at top with gold ring */}
+            {deck.commander && (
+              <div className="relative group/card">
+                <CardImage
+                  imageUri={deck.commander.imageUri}
+                  largeUri={deck.commander.imageUri}
+                  name={deck.commander.name}
+                  manaCost={deck.commander.manaCost}
+                  cmc={deck.commander.cmc}
+                  showOverlay={true}
+                  zoomOnHover={false}
+                  className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
+                />
+                <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
+                  CMD
+                </div>
+              </div>
+            )}
+            {deck.partner && (
+              <div className="relative group/card">
+                <CardImage
+                  imageUri={deck.partner.imageUri}
+                  largeUri={deck.partner.imageUri}
+                  name={deck.partner.name}
+                  manaCost={deck.partner.manaCost}
+                  cmc={deck.partner.cmc}
+                  showOverlay={true}
+                  zoomOnHover={false}
+                  className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
+                />
+                <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
+                  CMD
+                </div>
+              </div>
+            )}
             {deck.cards.map((card) => (
               <div key={card.id} className="relative group/card">
                 <CardImage
@@ -270,7 +305,7 @@ export function DeckEditor({ deck, onRemoveCard, className }: DeckEditorProps) {
                 </button>
               </div>
             ))}
-            {deck.cards.length === 0 && (
+            {!deck.commander && deck.cards.length === 0 && (
               <div className="col-span-3 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
                 No cards yet
               </div>

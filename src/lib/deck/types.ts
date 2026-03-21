@@ -34,6 +34,7 @@ export interface DeckCard {
   artCropUri: string; // Art crop for backgrounds
   category: CardCategory; // Auto-assigned or manual
   quantity: number; // Always 1 in Commander (except basics)
+  notes?: string | null; // Optional per-card notes
 }
 
 export type CommanderPairingType =
@@ -55,6 +56,10 @@ export interface Deck {
   format: "commander" | "brawl";
   targetBracket: 1 | 2 | 3 | 4;
   budget: number | null; // Max price per card in USD
+  description: string; // Deck description / notes
+  tags: string[]; // Deck tags
+  shareToken: string | null;
+  shareEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -91,6 +96,13 @@ export interface BracketScore {
   };
   gameChangers: number;
   warnings: string[]; // Human-readable bracket warnings
+}
+
+export interface PlaytestState {
+  hand: DeckCard[];
+  library: DeckCard[];
+  turn: number;
+  mulliganCount: number;
 }
 
 export type ViewMode = "grid" | "list";

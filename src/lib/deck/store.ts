@@ -47,6 +47,10 @@ function createEmptyDeck(id: string, name: string): Deck {
     format: "commander",
     targetBracket: 2,
     budget: null,
+    description: "",
+    tags: [],
+    shareToken: null,
+    shareEnabled: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -91,6 +95,7 @@ export interface DeckStore {
   addDeckCard: (card: DeckCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
+  updateCardNotes: (cardId: string, notes: string | null) => Promise<void>;
 
   // Force save (sync) — triggers a full DB refresh for the active deck
   forceSave: () => Promise<void>;
@@ -102,6 +107,11 @@ export interface DeckStore {
   // Game Changer / banlist enrichment
   markGameChanger: (cardName: string) => void;
   markBanned: (cardName: string) => void;
+
+  // Description, tags
+  updateDeckDescription: (deckId: string, description: string) => Promise<void>;
+  addTag: (deckId: string, tag: string) => Promise<void>;
+  removeTag: (deckId: string, tag: string) => Promise<void>;
 
   // Computed getters
   getActiveDeck: () => Deck | null;
@@ -234,6 +244,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           artCropUri: c.artCropUri,
           category: c.category as CardCategory,
           quantity: c.quantity,
+          notes: c.notes ?? null,
         });
 
         decks[d.id] = {
@@ -242,6 +253,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           format: d.format as "commander" | "brawl",
           targetBracket: d.targetBracket as 1 | 2 | 3 | 4,
           budget: d.budget,
+          description: d.description ?? "",
+          tags: d.tags ?? [],
+          shareToken: d.shareToken ?? null,
+          shareEnabled: d.shareEnabled ?? false,
           commander: commanderCard ? toDeckCard(commanderCard) : null,
           partner: partnerCard ? toDeckCard(partnerCard) : null,
           companion: companionCard ? toDeckCard(companionCard) : null,
@@ -696,6 +711,34 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
+  updateCardNotes: async (cardId: string, notes: string | null) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.map((c) =>
+            c.id === cardId ? { ...c, notes } : c
+          ),
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateCardNotes(activeDeckId, cardId, notes);
+    } catch (err) {
+      console.error("[updateCardNotes]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
   setTargetBracket: async (bracket) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
@@ -778,6 +821,57 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         },
       },
     }));
+  },
+
+  updateDeckDescription: async (deckId: string, description: string) => {
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [deckId]: { ...state.decks[deckId], description },
+      },
+    }));
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(deckId, { description });
+    } catch (err) {
+      console.error("[updateDeckDescription]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  addTag: async (deckId: string, tag: string) => {
+    const deck = get().decks[deckId];
+    if (!deck) return;
+    const tags = [...(deck.tags ?? []), tag];
+    set((state) => ({
+      decks: { ...state.decks, [deckId]: { ...state.decks[deckId], tags } },
+    }));
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(deckId, { tags });
+    } catch (err) {
+      console.error("[addTag]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  removeTag: async (deckId: string, tag: string) => {
+    const deck = get().decks[deckId];
+    if (!deck) return;
+    const tags = (deck.tags ?? []).filter((t) => t !== tag);
+    set((state) => ({
+      decks: { ...state.decks, [deckId]: { ...state.decks[deckId], tags } },
+    }));
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(deckId, { tags });
+    } catch (err) {
+      console.error("[removeTag]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
   },
 
   getActiveDeck: () => {
