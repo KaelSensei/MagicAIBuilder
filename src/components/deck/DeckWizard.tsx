@@ -78,15 +78,15 @@ const transition = { duration: 0.28, ease: [0.4, 0, 0.2, 1] as number[] };
 function ProgressBar({ step, total }: { step: number; total: number }) {
   return (
     <div className="flex gap-1.5 w-full">
-      {Array.from({ length: total }).map((_, i) => (
+      {Array.from({ length: total }, (_, i) => i).map((stepIdx) => (
         <div
-          key={i}
+          key={`progress-${stepIdx}`}
           className="h-1 flex-1 rounded-full overflow-hidden bg-white/10"
         >
           <motion.div
             className="h-full rounded-full bg-[var(--accent)]"
             initial={false}
-            animate={{ width: i < step ? "100%" : "0%" }}
+            animate={{ width: stepIdx < step ? "100%" : "0%" }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           />
         </div>
@@ -414,6 +414,57 @@ function StepLoading({
 // ---------------------------------------------------------------------------
 
 const TOTAL_WIZARD_STEPS = 4;
+/** Max cards per Scryfall collection lookup request */
+const BATCH_SIZE = 75;
+
+/** Tries to resolve a commander name and set it — non-fatal if it fails. */
+async function tryResolveCommander(
+  commanderName: string,
+  setCommander: (card: ScryfallCard) => Promise<void>,
+): Promise<void> {
+  try {
+    const card = await getCardByNameFuzzy(commanderName);
+    await setCommander(card);
+  } catch {
+    // Non-fatal — commander name might not resolve exactly
+  }
+}
+
+/** Fetches and imports cards from Scryfall in batches of BATCH_SIZE. */
+async function importCardsInBatches(
+  uniqueNames: readonly string[],
+  categoryMap: ReadonlyMap<string, string>,
+  addDeckCard: (card: DeckCard) => Promise<void>,
+): Promise<void> {
+  for (let i = 0; i < uniqueNames.length; i += BATCH_SIZE) {
+    const batch = uniqueNames.slice(i, i + BATCH_SIZE);
+    try {
+      const result = await getCardCollection(batch.map((name) => ({ name })));
+      for (const sc of result.data) {
+        const deckCard: DeckCard = {
+          id: sc.id,
+          scryfallId: sc.id,
+          name: sc.name,
+          manaCost: sc.mana_cost ?? "",
+          cmc: sc.cmc,
+          typeLine: sc.type_line,
+          oracleText: sc.oracle_text ?? "",
+          colorIdentity: sc.color_identity,
+          isGameChanger: false,
+          isBanned: false,
+          price: sc.prices?.usd ? Number.parseFloat(sc.prices.usd) : null,
+          imageUri: getCardImageUri(sc, "normal"),
+          artCropUri: getCardImageUri(sc, "art_crop"),
+          category: (categoryMap.get(sc.name) as DeckCard["category"]) ?? categorizeCard(sc),
+          quantity: 1,
+        };
+        await addDeckCard(deckCard);
+      }
+    } catch (err) {
+      console.error("[DeckWizard] batch import error", err);
+    }
+  }
+}
 
 export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   const [step, setStep] = useState(1);
@@ -496,68 +547,20 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         budget: budget === "unset" ? null : budget,
         colors,
         strategy,
-        commanderName: commanderSkipped || !commanderName ? null : commanderName,
+        commanderName: (commanderSkipped || !commanderName) ? null : commanderName,
       });
 
-      if (!cards) {
-        setBuildError("Build was cancelled or failed.");
-        return;
-      }
+      if (!cards) { setBuildError("Build was cancelled or failed."); return; }
 
-      // Create deck
       const deckId = await createDeck(`AI Deck — ${strategy}`);
       setActiveDeck(deckId);
 
-      // Set commander if one was returned
       const commander = buildState.commander;
-      if (commander) {
-        try {
-          const card = await getCardByNameFuzzy(commander);
-          await setCommander(card);
-        } catch {
-          // Non-fatal — commander name might not resolve exactly
-        }
-      }
+      if (commander) await tryResolveCommander(commander, setCommander);
 
-      // Batch-import cards via Scryfall collection endpoint (max 75 per call)
       const uniqueNames = [...new Set(cards.map((c) => c.name))];
       const categoryMap = new Map(cards.map((c) => [c.name, c.category]));
-
-      // Chunk into batches of 75
-      const BATCH_SIZE = 75;
-      for (let i = 0; i < uniqueNames.length; i += BATCH_SIZE) {
-        const batch = uniqueNames.slice(i, i + BATCH_SIZE);
-        try {
-          const result = await getCardCollection(
-            batch.map((name) => ({ name }))
-          );
-          for (const sc of result.data) {
-            const deckCard: DeckCard = {
-              id: sc.id,
-              scryfallId: sc.id,
-              name: sc.name,
-              manaCost: sc.mana_cost ?? "",
-              cmc: sc.cmc,
-              typeLine: sc.type_line,
-              oracleText: sc.oracle_text ?? "",
-              colorIdentity: sc.color_identity,
-              isGameChanger: false,
-              isBanned: false,
-              price: sc.prices?.usd ? parseFloat(sc.prices.usd) : null,
-              imageUri: getCardImageUri(sc, "normal"),
-              artCropUri: getCardImageUri(sc, "art_crop"),
-              category:
-                (categoryMap.get(sc.name) as DeckCard["category"]) ??
-                categorizeCard(sc),
-              quantity: 1,
-            };
-            await addDeckCard(deckCard);
-          }
-        } catch (err) {
-          console.error("[DeckWizard] batch import error", err);
-          // Continue with remaining batches
-        }
-      }
+      await importCardsInBatches(uniqueNames, categoryMap, addDeckCard);
 
       onComplete(deckId);
     } catch (err) {

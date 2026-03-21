@@ -24,6 +24,58 @@ export type AIDeckBuildParams = BuildRequest;
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
+type BuildAcc = {
+  commander: string | null;
+  cards: BuildCard[];
+  messages: string[];
+};
+
+/** Reads a NDJSON build stream and applies events, calling onUpdate after each state change. */
+async function processBuildStream(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  onUpdate: (acc: BuildAcc) => void,
+): Promise<BuildCard[] | null> {
+  const decoder = new TextDecoder();
+  const acc: BuildAcc = { commander: null, cards: [], messages: [] };
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      let event: BuildEvent;
+      try { event = JSON.parse(trimmed) as BuildEvent; } catch { continue; }
+
+      switch (event.type) {
+        case "status":
+          acc.messages.push(event.message);
+          onUpdate(acc);
+          break;
+        case "commander":
+          acc.commander = event.name;
+          onUpdate(acc);
+          break;
+        case "card":
+          acc.cards.push({ name: event.name, category: event.category });
+          if (acc.cards.length % 5 === 0) onUpdate(acc);
+          break;
+        case "done":
+          onUpdate(acc);
+          return acc.cards;
+        case "error":
+          throw new Error(event.message);
+      }
+    }
+  }
+  return acc.cards;
+}
+
 export function useAIDeckBuild() {
   const [state, setState] = useState<AIDeckBuildState>({
     statusMessages: [],
@@ -72,84 +124,20 @@ export function useAIDeckBuild() {
           signal: abort.signal,
         });
 
-        if (!response.ok) {
-          throw new Error(`Build request failed (${response.status})`);
-        }
+        if (!response.ok) throw new Error(`Build request failed (${response.status})`);
         if (!response.body) throw new Error("No response body");
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
+        const cards = await processBuildStream(response.body.getReader(), (acc) => {
+          setState((prev) => ({
+            ...prev,
+            statusMessages: [...acc.messages],
+            commander: acc.commander,
+            cards: [...acc.cards],
+          }));
+        });
 
-        // Accumulated result (avoids stale closures in setState callbacks)
-        let accCommander: string | null = null;
-        const accCards: BuildCard[] = [];
-        const accMessages: string[] = [];
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() ?? "";
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-
-            let event: BuildEvent;
-            try {
-              event = JSON.parse(trimmed) as BuildEvent;
-            } catch {
-              continue;
-            }
-
-            switch (event.type) {
-              case "status":
-                accMessages.push(event.message);
-                setState((prev) => ({
-                  ...prev,
-                  statusMessages: [...accMessages],
-                }));
-                break;
-
-              case "commander":
-                accCommander = event.name;
-                setState((prev) => ({ ...prev, commander: event.name }));
-                break;
-
-              case "card":
-                accCards.push({ name: event.name, category: event.category });
-                // Throttle re-renders — update every 5 cards
-                if (accCards.length % 5 === 0) {
-                  setState((prev) => ({ ...prev, cards: [...accCards] }));
-                }
-                break;
-
-              case "done":
-                setState((prev) => ({
-                  ...prev,
-                  cards: [...accCards],
-                  totalCards: event.totalCards,
-                  isLoading: false,
-                }));
-                return accCards;
-
-              case "error":
-                throw new Error(event.message);
-            }
-          }
-        }
-
-        // Stream ended without "done" — return what we have
-        setState((prev) => ({
-          ...prev,
-          cards: [...accCards],
-          commander: accCommander,
-          isLoading: false,
-        }));
-        return accCards;
+        setState((prev) => ({ ...prev, cards: cards ?? [], isLoading: false }));
+        return cards;
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return null;
         const message = err instanceof Error ? err.message : "Unknown error";
