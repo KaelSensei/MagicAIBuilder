@@ -38,6 +38,7 @@ import { ExportModal } from "@/components/deck/ExportModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
+import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
@@ -158,6 +159,11 @@ export default function BuilderPage() {
     if (!deck || !stats) return;
     analyzeAI(deck, stats, bracketScore?.overall ?? deck.targetBracket);
   }, [deck, stats, bracketScore, analyzeAI]);
+
+  const handleSnapshotRestore = useCallback(() => {
+    // Reload all decks from DB so the builder reflects the restored state
+    loadDecks();
+  }, [loadDecks]);
 
   const handleAIAddCard = useCallback((cardName: string) => {
     // Search for the card by name and add it
@@ -474,6 +480,12 @@ export default function BuilderPage() {
               count={stats?.gameChangersCount ?? 0}
               names={stats?.gameChangersList ?? []}
               targetBracket={deck.targetBracket}
+            />
+
+            <SnapshotsPanel
+              deckId={deckId}
+              currentCardCount={deck.cards.length}
+              onRestore={handleSnapshotRestore}
             />
 
             <AISuggestionsPanel
