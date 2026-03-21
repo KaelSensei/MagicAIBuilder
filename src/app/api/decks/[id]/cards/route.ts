@@ -69,7 +69,7 @@ export async function POST(request: Request, { params }: Params) {
 
     return NextResponse.json(card, { status: 201 });
   } catch (error) {
-    console.error(`[POST /api/decks/${deckId}/cards]`, error);
+    console.error("[POST /api/decks/:id/cards]", { deckId: String(deckId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
     return NextResponse.json(
       { error: "Failed to add card" },
       { status: 500 }
@@ -94,7 +94,7 @@ export async function DELETE(_req: Request, { params }: Params) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(`[DELETE /api/decks/${deckId}/cards]`, error);
+    console.error("[DELETE /api/decks/:id/cards]", { deckId: String(deckId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
     return NextResponse.json(
       { error: "Failed to remove cards" },
       { status: 500 }

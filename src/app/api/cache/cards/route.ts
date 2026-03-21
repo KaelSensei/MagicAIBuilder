@@ -2,17 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const SCRYFALL_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // GET /api/cache/cards?id=<scryfallId> — lookup cached card
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const scryfallId = searchParams.get("id");
 
-  if (!scryfallId) {
-    return NextResponse.json(
-      { error: "id query param is required" },
-      { status: 400 }
-    );
+  if (!scryfallId || !SCRYFALL_UUID_REGEX.test(scryfallId)) {
+    return NextResponse.json({ hit: false });
   }
 
   try {
@@ -33,7 +31,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ hit: true, data: cached.data });
   } catch (error) {
-    console.error(`[GET /api/cache/cards?id=${scryfallId}]`, error);
+    console.error("[GET /api/cache/cards]", { id: String(scryfallId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
     return NextResponse.json({ hit: false });
   }
 }
@@ -51,6 +49,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const MAX_CACHE_BYTES = 50 * 1024; // 50KB
+    if (JSON.stringify(data).length > MAX_CACHE_BYTES) {
+      return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+    }
+    if (!SCRYFALL_UUID_REGEX.test(scryfallId)) {
+      return NextResponse.json({ error: "Invalid scryfallId" }, { status: 400 });
+    }
+
     const entry = await prisma.cardCache.upsert({
       where: { scryfallId },
       update: { data, cachedAt: new Date() },
@@ -59,7 +65,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/cache/cards]", error);
+    console.error("[POST /api/cache/cards]", error instanceof Error ? error.message : "unknown");
     return NextResponse.json(
       { error: "Failed to cache card" },
       { status: 500 }

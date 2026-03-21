@@ -5,9 +5,10 @@ services:
     environment:
       POSTGRES_DB: magicaibuilder
       POSTGRES_USER: magic
-      POSTGRES_PASSWORD: magic
+      # Override via POSTGRES_PASSWORD env var in production — never use default in prod
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-magic_dev_only}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

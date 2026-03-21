@@ -23,7 +23,7 @@ export async function DELETE(_req: Request, { params }: Params) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(`[DELETE /api/decks/${deckId}/cards/${cardId}]`, error);
+    console.error("[DELETE /api/decks/:id/cards/:cardId]", { deckId: String(deckId).slice(0, 50), cardId: String(cardId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
     return NextResponse.json(
       { error: "Failed to remove card" },
       { status: 500 }
@@ -75,7 +75,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error(`[PATCH /api/decks/${deckId}/cards/${cardId}]`, error);
+    console.error("[PATCH /api/decks/:id/cards/:cardId]", { deckId: String(deckId).slice(0, 50), cardId: String(cardId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
     return NextResponse.json(
       { error: "Failed to update card" },
       { status: 500 }
