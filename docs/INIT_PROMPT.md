@@ -78,11 +78,13 @@ Implemente `src/lib/scryfall/client.ts` avec :
 ### 8. Creer le Zustand store
 
 Implemente `src/lib/deck/store.ts` avec les types de la spec et les actions :
-- setCommander, setPartner
+- setCommander, setPartner, setCompanion
 - addCard, removeCard, moveCard (entre categories)
 - setTargetBracket, setBudget
 - importDeck, exportDeck
 - computed: getStats, getBracketScore
+- Partner validation : verifier le keyword (Partner, Partner with, Friends Forever, Background, Doctor's companion) et valider la paire
+- Companion validation : verifier la restriction du companion contre le deck entier
 
 ### 9. Creer la page builder
 
@@ -106,6 +108,9 @@ Objectif : pouvoir chercher une carte sur Scryfall, voir l'image, et l'ajouter a
 - Rate limit Scryfall : 10 req/s max, implemente un debounce sur la recherche (300ms)
 - Ne fetch PAS tout au demarrage. Lazy load, recherche a la demande
 - Pas de localStorage pour les decks en Phase 1 (on gere en memoire)
+- Double-faced cards (DFC/MDFC) : Scryfall retourne `card_faces[]` au lieu de `oracle_text`/`mana_cost` au top level. Toujours checker `card.layout` et utiliser `card_faces[0]` pour le front
+- Partner : supporter les 5 variantes (Partner, Partner with, Friends Forever, Choose a Background, Doctor's companion). La color identity du deck = union des deux commanders
+- Companion : le companion est EN DEHORS des 100 cartes. Sa restriction doit etre satisfaite par TOUTES les cartes du deck. Lutri est banni comme companion uniquement
 ```
 
 ---
