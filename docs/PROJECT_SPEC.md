@@ -152,15 +152,23 @@ interface Deck {
 | US-22 | AI deck suggestions with reasoning (Claude / GPT fallback) | ✅ Done |
 | US-23 | Light/dark theme toggle with persistence | ✅ Done |
 
+### P2+ — Deck Annotations (complete)
+
+| # | Story | Status |
+|---|---|---|
+| US-24 | Add a text description to a deck (collapsible, markdown-friendly) | ✅ Done |
+| US-25 | Annotate individual cards with private notes | ✅ Done |
+| US-26 | Tag decks with labels (casual, cEDH, WIP…) and filter by tag on home page | ✅ Done |
+
 ### P3 — Future
 
 | # | Story | Status |
 |---|---|---|
-| US-24 | Onboarding tutorial for new users | 📋 Planned |
-| US-25 | Mobile-responsive layout | 📋 Planned |
-| US-26 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
-| US-27 | Moxfield / Archidekt import from URL | 📋 Planned |
-| US-28 | User accounts and deck sharing | 📋 Planned |
+| US-27 | Onboarding tutorial for new users | 📋 Planned |
+| US-28 | Mobile-responsive layout | 📋 Planned |
+| US-29 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
+| US-30 | Moxfield / Archidekt import from URL | 📋 Planned |
+| US-31 | User accounts and deck sharing | 📋 Planned |
 
 ---
 

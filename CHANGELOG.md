@@ -9,6 +9,39 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — feat/deck-notes-description
+
+#### Deck Description
+- `prisma/schema.prisma` — `description String? @default("")` field on `Deck`
+- `src/components/deck/DeckDescriptionEditor.tsx` — collapsible textarea below deck name; collapsed by default with first-line preview; supports Ctrl+Enter to save, Esc to cancel
+- `src/lib/deck/store.ts` — `updateDeckDescription(deckId, description)` action with optimistic update
+- `src/lib/db/deck-api.ts` — `description` field in `updateDeck()` patch type and `ApiDeck` type
+- `src/app/api/decks/[id]/route.ts` — PATCH handler accepts and sanitizes `description` (max 2000 chars)
+
+#### Card Notes
+- `prisma/schema.prisma` — `notes String?` field on `DeckCard`
+- `src/components/card/CardNoteInline.tsx` — 📝 icon on each card in list view; click opens inline textarea popover; note preview shown below card name when non-empty
+- `src/components/card/CardListItem.tsx` — `showNotes` prop wires up `CardNoteInline`; note preview line in amber below card name
+- `src/lib/deck/store.ts` — `updateCardNotes(cardId, notes)` action with optimistic update
+- `src/lib/db/deck-api.ts` — `updateCardNotes()` function; `notes` field in `ApiDeckCard`
+- `src/app/api/decks/[id]/cards/[cardId]/route.ts` — PATCH handler accepts `notes` (max 1000 chars)
+- `src/lib/deck/export.ts` — `exportPlainText()` emits card notes as `// note` comment lines
+
+#### Deck Tags
+- `prisma/schema.prisma` — `tags String[] @default([])` field on `Deck`
+- `src/components/deck/DeckTagsEditor.tsx` — pill tags with color coding; suggestions: casual / cEDH / WIP / budget / tuned / theme; Tab autocompletes first suggestion; X removes tag
+- `src/lib/deck/store.ts` — `addTag(deckId, tag)` and `removeTag(deckId, tag)` with optimistic updates and deduplication guard
+- `src/lib/db/deck-api.ts` — `tags` field in `updateDeck()` patch type and `ApiDeck` type
+- `src/app/api/decks/[id]/route.ts` — PATCH handler accepts `tags` array with per-tag sanitization (trim + max 50 chars)
+- `src/app/page.tsx` — tag filter bar on home page; tag pills on deck cards (clickable to filter); active tag highlighting
+
+#### Migration & Tests
+- `prisma/migrations/20260321140000_feat_deck_description_notes_tags/migration.sql` — ALTER TABLE adds description, tags, notes
+- `__tests__/lib/deck/store-notes.test.ts` — 20 tests: updateDeckDescription, addTag, removeTag, updateCardNotes (with mocked deck-api)
+- `__tests__/lib/deck/export-notes.test.ts` — 10 tests: note export as comments, edge cases (null/empty/whitespace notes)
+- `__tests__/lib/deck/tags.test.ts` — 21 tests: normaliseTag, shouldAddTag, sanitiseTags, suggestions coverage
+- **Total tests: 111 (all passing)**
+
 ### Fixed — 2026-03-21
 - **Card tooltip position** — tooltip now follows the mouse cursor via `createPortal` instead of anchoring to the right edge of the full-width list item row (which landed it in the stats panel)
 

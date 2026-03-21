@@ -463,6 +463,21 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 
 ---
 
+## Deck Annotations (feat/deck-notes-description)
+
+### Deck Description
+Field `description String? @default("")` on `Deck`. Stored in DB and synced via `PATCH /api/decks/[id]`. The `DeckDescriptionEditor` component is a collapsible textarea in the deck sidebar, collapsed by default showing the first line as a preview. Supports Ctrl+Enter to save and Esc to cancel. Max 2000 chars (server-enforced).
+
+### Card Notes
+Field `notes String?` on `DeckCard`. Synced via `PATCH /api/decks/[id]/cards/[cardId]`. The `CardNoteInline` component renders a 📝 icon (amber when note exists, invisible until hover when empty) on each list-view card. Clicking opens an inline textarea popover. Note text is shown below the card name in amber. Max 1000 chars (server-enforced).
+
+**Export**: `exportPlainText()` emits notes as `// comment` lines immediately after the card line. Other formats (Moxfield, Arena, MTGO) do not include notes.
+
+### Deck Tags
+Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array. The `DeckTagsEditor` component shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. The home page renders a tag filter bar when any decks have tags, and tag pills on deck cards are clickable to activate filtering.
+
+---
+
 ## Phase Roadmap
 
 | Phase | Focus | Status |
@@ -473,4 +488,5 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 | Phase 3 | Database & Prisma — persistent storage, migrations, DB cache | ✅ Complete |
 | Phase 4 | AI Suggestions — Anthropic/OpenAI integration, deck analysis | ✅ Complete |
 | Phase 4+ | Polish — UI enhancements, export, companion, legal, light/dark theme | ✅ Complete |
-| Phase 5 | Onboarding & Tutorial (planned) | 📋 Planned |
+| Phase 5 | Deck Annotations — description, card notes, tags | ✅ Complete |
+| Phase 6 | Onboarding & Tutorial (planned) | 📋 Planned |

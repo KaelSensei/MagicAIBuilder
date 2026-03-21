@@ -21,6 +21,37 @@
 | Phase 3 | Database & Prisma | ✅ Complete |
 | Phase 4 | AI Suggestions | ✅ Complete |
 | Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
+| Phase 5 | Deck Annotations (feat/deck-notes-description) | ✅ Complete |
+
+---
+
+## Phase 5 Checklist (Deck Annotations)
+
+### Deck Description
+- [x] `description` field on `Deck` (Prisma schema + migration)
+- [x] `DeckDescriptionEditor` — collapsible textarea in DeckEditor sidebar
+- [x] `updateDeckDescription` store action with optimistic update
+- [x] API PATCH sanitisation (max 2000 chars)
+
+### Card Notes
+- [x] `notes` field on `DeckCard` (Prisma schema + migration)
+- [x] `CardNoteInline` — 📝 icon + inline popover textarea in list view
+- [x] Note preview shown below card name (amber text) when non-empty
+- [x] `updateCardNotes` store action with optimistic update
+- [x] API PATCH sanitisation (max 1000 chars)
+- [x] `exportPlainText` emits notes as `// comment` after card line
+
+### Deck Tags
+- [x] `tags` field on `Deck` (Prisma schema + migration, PostgreSQL array)
+- [x] `DeckTagsEditor` — pill UI with color coding and suggestions
+- [x] Tag suggestions: casual / cEDH / WIP / budget / tuned / theme
+- [x] `addTag` / `removeTag` store actions with deduplication guard
+- [x] API PATCH sanitisation (trim + max 50 chars per tag)
+- [x] Home page tag filter bar + tag pills on deck cards
+
+### Tests
+- [x] 51 new tests (store-notes, export-notes, tags)
+- [x] Total: 111 tests, all passing
 
 ---
 
@@ -67,6 +98,9 @@
 - [x] Commander pairing types (partner, friends-forever, etc.)
 - [x] AI-assisted deck suggestions (Phase 4)
 - [x] Combo detection via Commander Spellbook API
+- [x] Deck description (collapsible editor, markdown-friendly)
+- [x] Card notes (inline popover, note preview, export as comments)
+- [x] Deck tags (pills, color-coded, home-page tag filter)
 
 ### Infrastructure
 
@@ -222,11 +256,13 @@
 
 | Metric | Value |
 |---|---|
-| Source files | ~70 |
+| Source files | ~75 |
 | API routes | 7 |
 | Prisma models | 3 |
 | Hooks | 9 |
-| Components | ~35 |
+| Components | ~38 |
+| Test files | 9 |
+| Tests passing | 111 |
 | Phase 1 P0 completion | 100% |
-| Phase 1–4 completion | 100% |
+| Phase 1–5 completion | 100% |
 | Build | ✅ Passing |
