@@ -1,7 +1,7 @@
 "use client";
 // Compact list view for deck cards
 import { motion } from "framer-motion";
-import { X, AlertTriangle, Zap, Layers } from "lucide-react";
+import { X, AlertTriangle, Zap, Layers, Plus, Minus } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
@@ -9,6 +9,7 @@ import { CardTooltip } from "@/components/card/CardTooltip";
 import { DeckCardOwnershipBadge } from "@/components/collection/DeckCardOwnershipBadge";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useDeckStore } from "@/lib/deck/store";
+import { maxQuantity } from "@/lib/deck/multiples";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface CardListItemProps {
@@ -65,6 +66,10 @@ function deckCardToScryfall(card: DeckCard): ScryfallCard {
 export function CardListItem({ card, onRemove, className }: CardListItemProps) {
   const [showPrintings, setShowPrintings] = useState(false);
   const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
+  const updateCardQuantity = useDeckStore((s) => s.updateCardQuantity);
+  const max = maxQuantity(card.name, card.typeLine);
+  const canIncrement = card.quantity < max;
+  const canDecrement = card.quantity > 1;
 
   const handleSelectPrinting = (printing: ScryfallCard) => {
     swapCardPrinting(card.id, printing);
@@ -84,10 +89,34 @@ export function CardListItem({ card, onRemove, className }: CardListItemProps) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -10 }}
         >
-          {/* Quantity */}
-          <span className="text-xs text-[var(--text-secondary)] w-4 text-center shrink-0">
-            {card.quantity}
-          </span>
+          {/* Quantity controls */}
+          <div className="flex items-center gap-0.5 shrink-0">
+            {canDecrement ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); updateCardQuantity(card.id, -1); }}
+                className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                aria-label="Decrease quantity"
+              >
+                <Minus className="w-2.5 h-2.5" />
+              </button>
+            ) : (
+              <span className="w-4" />
+            )}
+            <span className="text-xs text-[var(--text-secondary)] w-4 text-center">
+              {card.quantity}
+            </span>
+            {canIncrement ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); updateCardQuantity(card.id, 1); }}
+                className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                aria-label="Increase quantity"
+              >
+                <Plus className="w-2.5 h-2.5" />
+              </button>
+            ) : (
+              <span className="w-4" />
+            )}
+          </div>
 
           {/* Card name */}
           <span className="flex-1 text-sm truncate text-[var(--text-primary)]">
