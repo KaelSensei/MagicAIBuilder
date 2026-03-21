@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { useDeckStore } from "@/lib/deck/store";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Plus, Layers, Clock, Loader2, Trash2, Copy } from "lucide-react";
+import { Plus, Layers, Clock, Loader2, Trash2, Copy, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import type { Deck } from "@/lib/deck/types";
+import { DeckWizard } from "@/components/deck/DeckWizard";
 
 interface DeckCardItemProps {
   deck: Deck;
@@ -130,6 +131,7 @@ export default function HomePage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const deckList = Object.values(decks);
 
   // Load decks from DB on mount
@@ -190,18 +192,29 @@ export default function HomePage() {
               {getDeckSubtitle(isLoading, deckList.length)}
             </p>
           </div>
-          <button
-            onClick={handleNewDeck}
-            disabled={isCreating || isSyncing}
-            className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isCreating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Plus className="w-4 h-4" />
-            )}
-            New Deck
-          </button>
+          <div className="flex items-center gap-2">
+            {/* AI wizard button */}
+            <button
+              onClick={() => setWizardOpen(true)}
+              className="flex items-center gap-2 border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Sparkles className="w-4 h-4" />
+              Build with AI
+            </button>
+            {/* Manual new deck */}
+            <button
+              onClick={handleNewDeck}
+              disabled={isCreating || isSyncing}
+              className="flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isCreating ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
+              New Deck
+            </button>
+          </div>
         </div>
 
         {isLoading && (
@@ -274,6 +287,16 @@ export default function HomePage() {
         )}
       </main>
       <Footer />
+
+      {/* AI Deck Builder Wizard */}
+      <DeckWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onComplete={(id) => {
+          setWizardOpen(false);
+          router.push(`/builder/${id}`);
+        }}
+      />
     </div>
   );
 }
