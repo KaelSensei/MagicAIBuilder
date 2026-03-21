@@ -38,12 +38,13 @@ export interface DeckCard {
 }
 
 export type CommanderPairingType =
-  | "none"            // Single commander
-  | "partner"         // Generic "Partner" keyword
-  | "partner_with"    // "Partner with [specific card]"
-  | "friends_forever" // "Friends forever"
-  | "background"      // "Choose a Background"
-  | "doctor";         // "Doctor's companion"
+  | "none"             // Single commander
+  | "partner"          // Generic "Partner" keyword
+  | "partner_with"     // "Partner with [specific card]"
+  | "friends_forever"  // "Friends forever"
+  | "background"       // "Choose a Background"
+  | "doctor"           // "Doctor's companion"
+  | "character_select"; // "Partner—Character select" (TMNT set — only pairs with other Character Select)
 
 export interface Deck {
   id: string;

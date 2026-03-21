@@ -11,6 +11,9 @@ export function detectPairingType(card: ScryfallCard): CommanderPairingType {
   if (keywordsLower.includes("friends forever")) return "friends_forever";
   if (keywordsLower.includes("partner with") || oracle.includes("partner with"))
     return "partner_with";
+  // "Partner—Character select" (TMNT) — only pairs with other Character Select cards
+  if (oracle.includes("partner—character select") || oracle.includes("partner\u2014character select"))
+    return "character_select";
   if (keywordsLower.includes("partner")) return "partner";
   if (oracle.includes("choose a background")) return "background";
   if (
@@ -31,6 +34,9 @@ export function canPairWith(
   if (commanderPairing === "partner_with" && partnerPairing === "partner_with") return true;
   if (commanderPairing === "friends_forever" && partnerPairing === "friends_forever")
     return true;
+  // Character select only pairs with other character select
+  if (commanderPairing === "character_select" && partnerPairing === "character_select")
+    return true;
   // Background is not a commander itself — type line contains "Background"
   if (commanderPairing === "background" && partnerPairing === "none") return true;
   if (commanderPairing === "doctor" && partnerPairing === "none") return true;
@@ -50,6 +56,8 @@ export function partnerSlotLabel(pairingType: CommanderPairingType): string {
       return "Background";
     case "doctor":
       return "Doctor's Companion";
+    case "character_select":
+      return "Character Select Partner";
     default:
       return "Partner";
   }
