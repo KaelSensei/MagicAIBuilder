@@ -33,6 +33,7 @@ export interface DeckCard {
   artCropUri: string; // Art crop for backgrounds
   category: CardCategory; // Auto-assigned or manual
   quantity: number; // Always 1 in Commander (except basics)
+  notes?: string | null; // Private annotation on this card slot
 }
 
 export type CommanderPairingType =
@@ -46,12 +47,13 @@ export type CommanderPairingType =
 export interface Deck {
   id: string;
   name: string;
+  description?: string | null; // Optional deck description (markdown)
+  tags: string[]; // Deck tags e.g. "casual", "cEDH", "WIP"
   commander: DeckCard | null;
   partner: DeckCard | null; // For partner commanders
   companion: DeckCard | null; // Companion (sideboard, outside the 99)
   pairingType: CommanderPairingType; // Detected from commander keywords
   cards: DeckCard[]; // The 99 (or 98 with partner)
-  maybeboard: DeckCard[]; // Considered cards, not counted in the 99
   format: "commander" | "brawl";
   targetBracket: 1 | 2 | 3 | 4;
   budget: number | null; // Max price per card in USD
