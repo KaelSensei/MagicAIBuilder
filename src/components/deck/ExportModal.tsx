@@ -11,7 +11,6 @@ import {
   exportMTGO,
   exportTappedOut,
   exportArchidekt,
-  exportManabox,
   copyToClipboard,
   downloadFile,
 } from "@/lib/deck/export";
@@ -21,7 +20,7 @@ interface ExportModalProps {
   onClose: () => void;
 }
 
-type ExportFormat = "moxfield" | "arena" | "mtgo" | "tappedout" | "archidekt" | "manabox" | "plaintext";
+type ExportFormat = "moxfield" | "arena" | "mtgo" | "tappedout" | "archidekt" | "plaintext";
 
 const FORMAT_LABELS: Record<ExportFormat, string> = {
   moxfield: "Moxfield",
@@ -29,14 +28,7 @@ const FORMAT_LABELS: Record<ExportFormat, string> = {
   mtgo: "MTGO",
   tappedout: "TappedOut",
   archidekt: "Archidekt",
-  manabox: "Manabox",
   plaintext: "Plain Text",
-};
-
-/** File extension / mime for each format */
-const FORMAT_DOWNLOAD: Partial<Record<ExportFormat, { ext: string; mime: string }>> = {
-  mtgo: { ext: ".dek", mime: "application/xml" },
-  plaintext: { ext: ".txt", mime: "text/plain" },
 };
 
 function getExportText(deck: Deck, format: ExportFormat): string {
@@ -46,7 +38,6 @@ function getExportText(deck: Deck, format: ExportFormat): string {
     case "mtgo": return exportMTGO(deck);
     case "tappedout": return exportTappedOut(deck);
     case "archidekt": return exportArchidekt(deck);
-    case "manabox": return exportManabox(deck);
     case "plaintext": return exportPlainText(deck);
   }
 }
@@ -64,22 +55,19 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
   const handleDownload = (format: ExportFormat) => {
     const text = getExportText(deck, format);
     const deckName = deck.name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-    const info = FORMAT_DOWNLOAD[format];
-    if (info) {
-      downloadFile(text, `${deckName}${info.ext}`, info.mime);
+    if (format === "mtgo") {
+      downloadFile(text, `${deckName}.dek`, "application/xml");
     } else {
       downloadFile(text, `${deckName}_${format}.txt`);
     }
   };
 
   const previewText = exportPlainText(deck);
-  const totalCards =
-    deck.cards.reduce((s, c) => s + c.quantity, 0) +
-    (deck.commander ? 1 : 0) +
-    (deck.partner ? 1 : 0) +
-    (deck.companion ? 1 : 0);
+  const totalCards = deck.cards.reduce((s, c) => s + c.quantity, 0)
+    + (deck.commander ? 1 : 0)
+    + (deck.partner ? 1 : 0);
 
-  const copyFormats: ExportFormat[] = ["moxfield", "arena", "mtgo", "tappedout", "archidekt", "manabox", "plaintext"];
+  const copyFormats: ExportFormat[] = ["moxfield", "arena", "mtgo", "tappedout", "archidekt", "plaintext"];
 
   return (
     <AnimatePresence>
@@ -135,14 +123,14 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
                   )}
                   {copied === format ? "Copied!" : `Copy for ${FORMAT_LABELS[format]}`}
                 </button>
-                {FORMAT_DOWNLOAD[format] && (
+                {(format === "mtgo" || format === "plaintext") && (
                   <button
                     onClick={() => handleDownload(format)}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors"
                     title={`Download ${FORMAT_LABELS[format]} file`}
                   >
                     <Download className="w-3.5 h-3.5" />
-                    {FORMAT_DOWNLOAD[format]!.ext}
+                    {format === "mtgo" ? ".dek" : ".txt"}
                   </button>
                 )}
               </div>
