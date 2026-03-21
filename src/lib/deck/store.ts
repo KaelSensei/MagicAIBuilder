@@ -6,6 +6,7 @@ import { categorizeCard } from "./categories";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import * as deckApi from "@/lib/db/deck-api";
+import { useToastStore } from "@/hooks/useToast";
 
 function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
   return {
@@ -217,6 +218,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     deckCard.isGameChanger = gameChangerNames.has(card.name);
     deckCard.isBanned = bannedNames.has(card.name);
 
+    if (deckCard.isGameChanger) {
+      useToastStore.getState().add(
+        "warning",
+        `⚡ ${card.name} is a Game Changer — your deck is automatically Bracket 3 minimum.`
+      );
+    }
+
     // Optimistic update
     set((state) => ({
       decks: {
@@ -319,6 +327,31 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deckCard = makeDeckCard(card);
     deckCard.isGameChanger = gameChangerNames.has(card.name);
     deckCard.isBanned = bannedNames.has(card.name);
+
+    // Warn user when adding a Game Changer card
+    if (deckCard.isGameChanger) {
+      const { cards: currentCards, commander } = deck;
+      const existingGCCount = currentCards.filter((c) => c.isGameChanger).length
+        + (commander?.isGameChanger ? 1 : 0);
+      const newTotal = existingGCCount + 1;
+
+      if (newTotal === 1) {
+        useToastStore.getState().add(
+          "warning",
+          `⚡ ${card.name} is a Game Changer — your deck is now Bracket 3 minimum.`
+        );
+      } else if (newTotal <= 3) {
+        useToastStore.getState().add(
+          "warning",
+          `⚡ ${card.name} is a Game Changer (${newTotal}/3). Bracket 3 minimum applies.`
+        );
+      } else {
+        useToastStore.getState().add(
+          "warning",
+          `⚡ ${card.name} is a Game Changer — you now have ${newTotal} Game Changers, pushing the deck to Bracket 4.`
+        );
+      }
+    }
 
     // Optimistic update
     set((state) => ({
