@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+  <rect x="40" y="40" width="1120" height="550" rx="24" fill="#111111" stroke="#222222" stroke-width="2"/>
+  <rect x="80" y="80" width="64" height="64" rx="16" fill="#7c3aed"/>
+  <path d="M96 128V88l16 12 16-12v40" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="164" y="122" font-family="system-ui,sans-serif" font-size="40" font-weight="700" fill="white">MagicAIBuilder</text>
+  <text x="80" y="220" font-family="system-ui,sans-serif" font-size="28" fill="#888">Commander Deck Builder</text>
+  <rect x="80" y="280" width="220" height="44" rx="22" fill="#7c3aed" fill-opacity="0.2" stroke="#7c3aed" stroke-opacity="0.4"/>
+  <text x="190" y="308" font-family="system-ui,sans-serif" font-size="18" fill="#a78bfa" text-anchor="middle">Bracket Scoring</text>
+  <rect x="320" y="280" width="200" height="44" rx="22" fill="#7c3aed" fill-opacity="0.2" stroke="#7c3aed" stroke-opacity="0.4"/>
+  <text x="420" y="308" font-family="system-ui,sans-serif" font-size="18" fill="#a78bfa" text-anchor="middle">AI Suggestions</text>
+  <rect x="540" y="280" width="240" height="44" rx="22" fill="#7c3aed" fill-opacity="0.2" stroke="#7c3aed" stroke-opacity="0.4"/>
+  <text x="660" y="308" font-family="system-ui,sans-serif" font-size="18" fill="#a78bfa" text-anchor="middle">Scryfall Powered</text>
+  <text x="600" y="520" font-family="system-ui,sans-serif" font-size="22" fill="#555" text-anchor="middle">Build smarter decks, faster.</text>
+</svg>

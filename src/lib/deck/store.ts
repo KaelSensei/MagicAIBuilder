@@ -34,6 +34,7 @@ function createEmptyDeck(id: string, name: string): Deck {
     name,
     commander: null,
     partner: null,
+    companion: null,
     pairingType: "none",
     cards: [],
     format: "commander",
@@ -74,6 +75,7 @@ export interface DeckStore {
   // Card management
   setCommander: (card: ScryfallCard) => Promise<void>;
   setPartner: (card: ScryfallCard | null) => Promise<void>;
+  setCompanion: (card: ScryfallCard | null) => Promise<void>;
   addCard: (card: ScryfallCard) => Promise<void>;
   addDeckCard: (card: DeckCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
@@ -116,6 +118,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         const allCards = d.cards ?? [];
         const commanderCard = allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
         const partnerCard = allCards.find((c) => c.isPartner) ?? null;
+        const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
         const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner);
 
         const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => ({
@@ -143,6 +146,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           budget: d.budget,
           commander: commanderCard ? toDeckCard(commanderCard) : null,
           partner: partnerCard ? toDeckCard(partnerCard) : null,
+          companion: companionCard ? toDeckCard(companionCard) : null,
           pairingType: (d.pairingType as CommanderPairingType) ?? "none",
           cards: mainCards.map(toDeckCard),
           createdAt: new Date(d.createdAt),
@@ -317,6 +321,53 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } catch (err) {
       console.error("[setPartner]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  setCompanion: async (card: ScryfallCard | null) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    const deckCard = card ? makeDeckCard(card) : null;
+    if (deckCard) deckCard.category = "companion" as import("./types").CardCategory;
+
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          companion: deckCard,
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await deckApi.updateDeck(activeDeckId, { companionId: card?.id ?? null });
+      if (card && deckCard) {
+        await deckApi.addCard(activeDeckId, {
+          scryfallId: card.id,
+          name: deckCard.name,
+          manaCost: deckCard.manaCost,
+          cmc: deckCard.cmc,
+          typeLine: deckCard.typeLine,
+          oracleText: deckCard.oracleText,
+          colorIdentity: deckCard.colorIdentity,
+          isGameChanger: deckCard.isGameChanger,
+          isBanned: deckCard.isBanned,
+          price: deckCard.price,
+          imageUri: deckCard.imageUri,
+          artCropUri: deckCard.artCropUri,
+          category: "companion" as import("./types").CardCategory,
+          quantity: 1,
+          isCommander: false,
+          isPartner: false,
+        });
+      }
+    } catch (err) {
+      console.error("[setCompanion]", err);
     } finally {
       set({ isSyncing: false });
     }

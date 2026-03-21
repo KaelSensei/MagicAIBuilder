@@ -19,11 +19,16 @@ export const metadata: Metadata = {
     template: "%s | MagicAIBuilder",
   },
   description: "Build Commander decks with live bracket scoring, AI suggestions, and Scryfall integration.",
-  keywords: ["MTG", "Magic the Gathering", "Commander", "EDH", "deck builder", "bracket scoring"],
+  keywords: ["MTG", "Magic the Gathering", "Commander", "EDH", "deck builder"],
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
   openGraph: {
     title: "MagicAIBuilder — Commander Deck Builder",
     description: "Build Commander decks with live bracket scoring, AI suggestions, and Scryfall integration.",
     type: "website",
+    images: [{ url: "/og-image.svg", width: 1200, height: 630 }],
   },
 };
 

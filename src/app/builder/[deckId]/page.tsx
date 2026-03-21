@@ -52,7 +52,8 @@ export default function BuilderPage() {
   const deckId = params.deckId as string;
 
   // Ensure this deck is active
-  const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory, renameDeck } = useDeck();
+  const { setActiveDeck, addCard, removeCard, setCommander, updateCardCategory } = useDeck();
+  const renameDeck = useDeckStore((s) => s.renameDeck);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
   const isSyncing = useDeckStore((s) => s.isSyncing);
@@ -88,13 +89,15 @@ export default function BuilderPage() {
   const [selectedSet, setSelectedSet] = useState<string>("");
   const [colorFilter, setColorFilter] = useState<string[]>([]);
 
+  // Inline deck name editing
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState("");
-  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const query = (() => {
     if (commanderMode) return buildCommanderSearchQuery(searchText, filters);
@@ -231,9 +234,10 @@ export default function BuilderPage() {
     setIsEditingName(true);
     setTimeout(() => nameInputRef.current?.select(), 0);
   };
+
   const handleSaveName = async () => {
-    const t = nameInput.trim();
-    if (t && t !== deck.name) await renameDeck(deckId, t);
+    const trimmed = nameInput.trim();
+    if (trimmed && trimmed !== deck.name) await renameDeck(deckId, trimmed);
     setIsEditingName(false);
   };
 
@@ -274,8 +278,14 @@ export default function BuilderPage() {
               </button>
             </div>
           ) : (
-            <button onClick={handleStartEditName} className="group flex items-center gap-1.5" title="Click to rename">
-              <h1 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">{deck.name}</h1>
+            <button
+              onClick={handleStartEditName}
+              className="group flex items-center gap-1.5"
+              title="Click to rename"
+            >
+              <h1 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                {deck.name}
+              </h1>
               <Pencil className="w-3 h-3 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           )}
