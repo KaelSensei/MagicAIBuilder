@@ -1,4 +1,4 @@
-// Deck import from text format
+// Deck import from text format — with input sanitization
 import type { DeckCard } from "./types";
 
 export interface ImportResult {
@@ -7,48 +7,58 @@ export interface ImportResult {
   errors: string[];
 }
 
+const MAX_LINES = 500;
+const MAX_NAME_LENGTH = 200;
+const MAX_QUANTITY = 99;
+const MIN_QUANTITY = 1;
+
+/** Strip HTML tags and control characters from a string */
+function sanitizeName(raw: string): string {
+  return raw
+    .replace(/<[^>]*>/g, "") // strip HTML tags
+    .replace(/[^\x20-\x7E\u00C0-\u017E]/g, "") // printable ASCII + latin extended
+    .trim()
+    .slice(0, MAX_NAME_LENGTH);
+}
+
+/** Clamp quantity to [1, 99] */
+function clampQuantity(n: number): number {
+  if (!Number.isFinite(n) || n < MIN_QUANTITY) return MIN_QUANTITY;
+  if (n > MAX_QUANTITY) return MAX_QUANTITY;
+  return Math.floor(n);
+}
+
 /** Parse a plain-text decklist (1x Card Name or 1 Card Name format) */
 export function parseTextDecklist(text: string): ImportResult {
+  if (typeof text !== "string") {
+    return { commander: null, cards: [], errors: ["Invalid input"] };
+  }
+
   const lines = text
     .split("\n")
+    .slice(0, MAX_LINES)
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith("//") && !l.startsWith("#"));
 
   const cards: Array<{ name: string; quantity: number }> = [];
   const errors: string[] = [];
   let commander: string | null = null;
-
-  // Detect commander section
   let inCommanderSection = false;
 
   for (const line of lines) {
-    // Section headers
-    if (/^commander/i.test(line)) {
-      inCommanderSection = true;
-      continue;
-    }
-    if (/^(deck|main|mainboard|99)/i.test(line)) {
-      inCommanderSection = false;
-      continue;
-    }
+    if (/^commander/i.test(line)) { inCommanderSection = true; continue; }
+    if (/^(deck|main|mainboard|99)/i.test(line)) { inCommanderSection = false; continue; }
 
-    // Parse card line: "1 Card Name" or "1x Card Name" or just "Card Name"
     const match = line.match(/^(\d+)x?\s+(.+)$/);
     if (match) {
-      const quantity = parseInt(match[1], 10);
-      const name = match[2].trim();
-      if (inCommanderSection && !commander) {
-        commander = name;
-      } else {
-        cards.push({ name, quantity });
-      }
+      const quantity = clampQuantity(parseInt(match[1], 10));
+      const name = sanitizeName(match[2]);
+      if (!name) { errors.push(`Skipped empty card name on line: ${line.slice(0, 50)}`); continue; }
+      if (inCommanderSection && !commander) { commander = name; } else { cards.push({ name, quantity }); }
     } else if (line) {
-      // Just a card name with no quantity
-      if (inCommanderSection && !commander) {
-        commander = line;
-      } else {
-        cards.push({ name: line, quantity: 1 });
-      }
+      const name = sanitizeName(line);
+      if (!name) continue;
+      if (inCommanderSection && !commander) { commander = name; } else { cards.push({ name, quantity: 1 }); }
     }
   }
 
@@ -62,23 +72,9 @@ export function exportToText(
   cards: DeckCard[]
 ): string {
   const lines: string[] = [];
-
-  if (commander) {
-    lines.push("Commander");
-    lines.push(`1 ${commander.name}`);
-    lines.push("");
-  }
-
-  if (partner) {
-    lines.push("Partner");
-    lines.push(`1 ${partner.name}`);
-    lines.push("");
-  }
-
+  if (commander) { lines.push("Commander"); lines.push(`1 ${commander.name}`); lines.push(""); }
+  if (partner) { lines.push("Partner"); lines.push(`1 ${partner.name}`); lines.push(""); }
   lines.push("Deck");
-  for (const card of cards) {
-    lines.push(`${card.quantity} ${card.name}`);
-  }
-
+  for (const card of cards) { lines.push(`${card.quantity} ${card.name}`); }
   return lines.join("\n");
 }
