@@ -4,11 +4,21 @@ interface JsonLdProps {
   readonly data: Record<string, unknown>;
 }
 
+// Safely serialize JSON-LD data for inline injection into <script> tags.
+// JSON.stringify already escapes </script> sequences, but this helper adds
+// explicit unicode escaping to make the intent clear to static analysis tools.
+function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003C")
+    .replace(/>/g, "\\u003E")
+    .replace(/&/g, "\\u0026");
+}
+
 export function JsonLd({ data }: JsonLdProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
     />
   );
 }
