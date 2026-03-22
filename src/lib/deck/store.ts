@@ -93,8 +93,10 @@ export interface DeckStore {
   // View preferences
   searchViewMode: "grid" | "list";
   deckViewMode: "grid" | "list";
+  deckGridCols: 2 | 3 | 4 | 6 | 8;
   setSearchViewMode: (mode: "grid" | "list") => void;
   setDeckViewMode: (mode: "grid" | "list") => void;
+  setDeckGridCols: (cols: 2 | 3 | 4 | 6 | 8) => void;
 
   // Deck management
   createDeck: (name: string, opts?: { isAIGenerated?: boolean }) => Promise<string>;
@@ -155,11 +157,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   bannedNames: new Set<string>(),
   searchViewMode: "grid",
   deckViewMode: "list",
+  deckGridCols: 4,
 
   setGameChangerNames: (names) => set({ gameChangerNames: names }),
   setBannedNames: (names) => set({ bannedNames: names }),
   setSearchViewMode: (mode) => set({ searchViewMode: mode }),
   setDeckViewMode: (mode) => set({ deckViewMode: mode }),
+  setDeckGridCols: (cols) => set({ deckGridCols: cols }),
 
   undo: async () => {
     const { undoStack } = get();
