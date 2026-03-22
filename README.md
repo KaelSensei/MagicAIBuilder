@@ -9,6 +9,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+[![CI](https://github.com/KaelSensei/MagicAIBuilder/actions/workflows/sonar.yml/badge.svg?branch=main)](https://github.com/KaelSensei/MagicAIBuilder/actions/workflows/sonar.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=alert_status)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=coverage)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=bugs)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
