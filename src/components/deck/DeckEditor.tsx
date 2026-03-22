@@ -422,13 +422,14 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
                     cmc={deck.commander.cmc}
                     showOverlay={true}
                     zoomOnHover={false}
-                    className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
+                    className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer"
+                    onClick={() => onCardClick?.(deck.commander!)}
                   />
                   <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
                     CMD
                   </div>
                   <button
-                    onClick={() => clearCommander()}
+                    onClick={(e) => { e.stopPropagation(); clearCommander(); }}
                     className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
                     title="Remove commander"
                   >
@@ -446,13 +447,14 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
                     cmc={deck.partner.cmc}
                     showOverlay={true}
                     zoomOnHover={false}
-                    className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
+                    className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer"
+                    onClick={() => onCardClick?.(deck.partner!)}
                   />
                   <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
                     CMD
                   </div>
                   <button
-                    onClick={() => setPartner(null)}
+                    onClick={(e) => { e.stopPropagation(); setPartner(null); }}
                     className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
                     title="Remove partner"
                   >
