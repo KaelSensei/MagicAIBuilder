@@ -6,6 +6,7 @@ import {
   DndContext,
   DragEndEvent,
   DragOverlay,
+  MeasuringStrategy,
   PointerSensor,
   useSensor,
   useSensors,
@@ -281,7 +282,13 @@ export default function BuilderPage() {
           addCard(searchCard, undefined, "maybeboard");
           return;
         }
-        // Fallback: drop anywhere on deck area → use active zone
+        // Fallback: drop anywhere on deck panel → use the zone encoded in the id
+        if (overId.startsWith("deck-panel-")) {
+          const zone = overId.replace("deck-panel-", "") as "main" | "sideboard" | "maybeboard";
+          addCard(searchCard, undefined, zone);
+          return;
+        }
+        // Last resort fallback
         if (overId.startsWith("deck-")) {
           addCard(searchCard, undefined, activeZone);
           return;
@@ -350,6 +357,7 @@ export default function BuilderPage() {
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
     >
       <div className="flex flex-col h-screen overflow-hidden">
         <Header deckId={deckId} />

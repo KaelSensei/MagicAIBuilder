@@ -249,8 +249,11 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
     deck.partner &&
     deck.partner.name !== deck.commander?.name;
 
+  // Top-level droppable — catches any search card dropped anywhere on the deck panel
+  const { setNodeRef: setDeckPanelRef } = useDroppable({ id: `deck-panel-${activeZone}` });
+
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div ref={setDeckPanelRef} className={cn("flex flex-col h-full", className)}>
       {/* Commander zone — art crop banner */}
       <div className="p-2 border-b border-[var(--border)]">
         {deck.commander ? (
