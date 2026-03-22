@@ -44,9 +44,9 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
     <Modal
       open
       onClose={onClose}
-      maxWidth="max-w-3xl"
+      maxWidth="max-w-5xl"
       showClose={false}
-      className="max-h-[85vh] flex flex-col"
+      className="max-h-[90vh] flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-(--border) shrink-0">
@@ -67,7 +67,7 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
       {/* Body: two columns */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left — Oracle text */}
-        <div className="w-56 shrink-0 border-r border-(--border) p-4 flex flex-col gap-3 overflow-y-auto">
+        <div className="w-64 shrink-0 border-r border-(--border) p-4 flex flex-col gap-3 overflow-y-auto">
           {manaCost && (
             <div>
               <ManaCost cost={manaCost} />
@@ -99,9 +99,9 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
               <Loader2 className="w-6 h-6 animate-spin text-(--accent)" />
             </div>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4">
               {printings.map((printing) => (
-                <div key={printing.id} className="flex flex-col gap-1">
+                <div key={printing.id} className="flex flex-col gap-1.5">
                   <button
                     onClick={() => {
                       onSelect(printing);
@@ -114,13 +114,14 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
                       borderColor:
                         hovered === printing.id ? "var(--accent)" : "transparent",
                       transform: hovered === printing.id ? "scale(1.04)" : "scale(1)",
+                      boxShadow: hovered === printing.id ? "0 0 12px var(--accent)40" : "none",
                     }}
                   >
                     <Image
                       src={getCardImageUri(printing, "normal")}
                       alt={`${printing.name} — ${printing.set_name}`}
-                      width={150}
-                      height={209}
+                      width={220}
+                      height={308}
                       className="block w-full h-auto"
                       unoptimized
                     />
