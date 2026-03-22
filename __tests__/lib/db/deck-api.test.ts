@@ -8,7 +8,7 @@ import {
   removeCard,
   updateCardCategory,
   updateCardNotes,
-  updateCardMaybeboard,
+  updateCardZone,
   removeAllCards,
 } from "@/lib/db/deck-api";
 
@@ -131,18 +131,24 @@ describe("updateCardNotes", () => {
   });
 });
 
-describe("updateCardMaybeboard", () => {
-  it("patches isMaybeboard status", async () => {
-    mockFetch({ id: "card-1", isMaybeboard: true });
-    const result = await updateCardMaybeboard("deck-1", "card-1", true);
-    expect(result.isMaybeboard).toBe(true);
+describe("updateCardZone", () => {
+  it("patches card zone to maybeboard", async () => {
+    mockFetch({ id: "card-1", zone: "maybeboard" });
+    const result = await updateCardZone("deck-1", "card-1", "maybeboard");
+    expect(result.zone).toBe("maybeboard");
     const body = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
-    expect(body.isMaybeboard).toBe(true);
+    expect(body.zone).toBe("maybeboard");
+  });
+
+  it("patches card zone to main", async () => {
+    mockFetch({ id: "card-1", zone: "main" });
+    const result = await updateCardZone("deck-1", "card-1", "main");
+    expect(result.zone).toBe("main");
   });
 
   it("throws on error", async () => {
     mockFetch(null, false, 500);
-    await expect(updateCardMaybeboard("deck-1", "card-1", true)).rejects.toThrow("HTTP 500");
+    await expect(updateCardZone("deck-1", "card-1", "maybeboard")).rejects.toThrow("HTTP 500");
   });
 });
 
