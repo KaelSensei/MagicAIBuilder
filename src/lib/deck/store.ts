@@ -157,7 +157,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   bannedNames: new Set<string>(),
   searchViewMode: "grid",
   deckViewMode: "list",
-  deckGridCols: 4,
+  deckGridCols: 6,
 
   setGameChangerNames: (names) => set({ gameChangerNames: names }),
   setBannedNames: (names) => set({ bannedNames: names }),
