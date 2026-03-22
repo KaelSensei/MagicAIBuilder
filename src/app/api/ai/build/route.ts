@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildSchema, sanitizeForPrompt } from "@/lib/validation/ai";
 
 export const runtime = "nodejs";
 
@@ -281,16 +282,30 @@ async function streamDeck(
 // Route handler
 // ---------------------------------------------------------------------------
 export async function POST(request: Request) {
-  let body: BuildRequest;
+  let raw: unknown;
   try {
-    body = await request.json();
+    raw = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (!Array.isArray(body.colors) || typeof body.strategy !== "string") {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  const parsed = buildSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid request body", details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
+
+  // Sanitize user-provided strings before injecting into prompts (prompt injection prevention)
+  const body: BuildRequest = {
+    ...parsed.data,
+    strategy: sanitizeForPrompt(parsed.data.strategy, 50),
+    commanderName: parsed.data.commanderName
+      ? sanitizeForPrompt(parsed.data.commanderName, 200)
+      : null,
+    bracket: parsed.data.bracket as 1 | 2 | 3 | 4,
+  };
 
   const encoder = new TextEncoder();
 

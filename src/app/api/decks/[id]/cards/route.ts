@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { addCardSchema } from "@/lib/validation/card";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -12,7 +13,15 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = addCardSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
     const {
       scryfallId,
       name,
@@ -30,34 +39,29 @@ export async function POST(request: Request, { params }: Params) {
       quantity,
       isCommander,
       isPartner,
-    } = body;
-
-    if (!scryfallId || !name) {
-      return NextResponse.json(
-        { error: "scryfallId and name are required" },
-        { status: 400 }
-      );
-    }
+      zone,
+    } = parsed.data;
 
     const card = await prisma.deckCard.create({
       data: {
         deckId,
         scryfallId,
         name,
-        manaCost: manaCost ?? "",
-        cmc: cmc ?? 0,
-        typeLine: typeLine ?? "",
-        oracleText: oracleText ?? "",
-        colorIdentity: colorIdentity ?? [],
-        isGameChanger: isGameChanger ?? false,
-        isBanned: isBanned ?? false,
-        price: price ?? null,
-        imageUri: imageUri ?? "",
-        artCropUri: artCropUri ?? "",
-        category: category ?? "other",
-        quantity: quantity ?? 1,
-        isCommander: isCommander ?? false,
-        isPartner: isPartner ?? false,
+        manaCost,
+        cmc,
+        typeLine,
+        oracleText,
+        colorIdentity,
+        isGameChanger,
+        isBanned,
+        price,
+        imageUri,
+        artCropUri,
+        category,
+        quantity,
+        isCommander,
+        isPartner,
+        zone,
       },
     });
 

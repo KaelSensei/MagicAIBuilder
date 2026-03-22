@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { patchDeckSchema, PatchDeckInput } from "@/lib/validation/deck";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -26,17 +27,14 @@ export async function GET(_req: Request, { params }: Params) {
   }
 }
 
-type DeckPatchFields = {
-  name?: string; format?: string; targetBracket?: number; manualBracket?: number | null; budget?: number;
-  commanderId?: string; partnerId?: string; companionId?: string;
-  pairingType?: string; description?: string; tags?: string[];
-};
-
-function buildDeckPatchData(fields: DeckPatchFields, sanitizedName: string | undefined) {
+function buildDeckPatchData(fields: PatchDeckInput) {
   const data: Record<string, unknown> = {};
-  if (sanitizedName !== undefined) data.name = sanitizedName;
-  const simple = ["format", "targetBracket", "manualBracket", "budget", "commanderId", "partnerId", "companionId", "pairingType", "description", "tags"] as const;
-  for (const key of simple) {
+  const keys = [
+    "name", "format", "targetBracket", "manualBracket", "budget",
+    "commanderId", "partnerId", "companionId", "pairingType",
+    "isAIGenerated", "description", "tags", "shareEnabled", "shareToken",
+  ] as const;
+  for (const key of keys) {
     if (fields[key] !== undefined) data[key] = fields[key];
   }
   return data;
@@ -46,28 +44,24 @@ function buildDeckPatchData(fields: DeckPatchFields, sanitizedName: string | und
 export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   try {
-    const body = await request.json() as DeckPatchFields;
-    const { name } = body;
+    const raw = await request.json();
+    const parsed = patchDeckSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
     const existing = await prisma.deck.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    const sanitizedName = name !== undefined
-      ? name.replaceAll(/<[^>]*>/g, "").trim().slice(0, 200)
-      : undefined;
-
-    if (name !== undefined && !sanitizedName) {
-      return NextResponse.json(
-        { error: "name must be a non-empty string" },
-        { status: 400 }
-      );
-    }
 
     const updated = await prisma.deck.update({
       where: { id },
-      data: buildDeckPatchData(body, sanitizedName),
+      data: buildDeckPatchData(parsed.data),
       include: { cards: true },
     });
 

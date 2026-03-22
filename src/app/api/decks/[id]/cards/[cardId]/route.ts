@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { patchCardSchema } from "@/lib/validation/card";
 
 type Params = { params: Promise<{ id: string; cardId: string }> };
 
@@ -31,24 +32,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   }
 }
 
-type CardPatchFields = {
-  category?: string; quantity?: number; isGameChanger?: boolean; isBanned?: boolean;
-  isCommander?: boolean; isPartner?: boolean; notes?: string | null;
-  scryfallId?: string; imageUri?: string; artCropUri?: string;
-  zone?: string;
-};
-
-function buildCardPatchData(fields: CardPatchFields) {
-  const data: Record<string, unknown> = {};
-  const simple = ["category", "quantity", "isGameChanger", "isBanned", "isCommander", "isPartner", "scryfallId", "imageUri", "artCropUri", "zone"] as const;
-  for (const key of simple) {
-    if (fields[key] !== undefined) data[key] = fields[key];
-  }
-  if (fields.notes !== undefined) data.notes = fields.notes ?? null;
-  return data;
-}
-
-// PATCH /api/decks/[id]/cards/[cardId] — update card category (or other fields)
+// PATCH /api/decks/[id]/cards/[cardId] — update card category or zone
 export async function PATCH(request: Request, { params }: Params) {
   const { id: deckId, cardId } = await params;
   try {
@@ -60,19 +44,22 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Card not found" }, { status: 404 });
     }
 
-    const body = await request.json() as CardPatchFields;
-    const { category } = body;
-
-    if (category !== undefined && typeof category !== "string") {
+    const raw = await request.json();
+    const parsed = patchCardSchema.safeParse(raw);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "category must be a string" },
+        { error: "Invalid request body", details: parsed.error.flatten() },
         { status: 400 }
       );
     }
 
+    const data: Record<string, unknown> = {};
+    if (parsed.data.category !== undefined) data.category = parsed.data.category;
+    if (parsed.data.zone !== undefined) data.zone = parsed.data.zone;
+
     const updated = await prisma.deckCard.update({
       where: { id: cardId },
-      data: buildCardPatchData(body),
+      data,
     });
 
     await prisma.deck.update({

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sanitizeForPrompt } from "@/lib/validation/ai";
 
 export const runtime = "nodejs";
 
@@ -218,6 +219,10 @@ export async function POST(request: Request) {
   let body: SuggestRequest;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   if (!body.colorIdentity || !Array.isArray(body.cardNames)) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+  // Sanitize user-provided strings before injecting into prompts (prompt injection prevention)
+  if (body.commanderName) body.commanderName = sanitizeForPrompt(body.commanderName, 200);
+  if (body.partnerName) body.partnerName = sanitizeForPrompt(body.partnerName, 200);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
