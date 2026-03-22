@@ -98,6 +98,9 @@ export default function BuilderPage() {
   const bracketScore = useBracketScore(deck, combos);
   const { result: aiResult, isLoading: aiLoading, error: aiError, analyze: analyzeAI } = useAISuggestions();
 
+  // Active zone state — lifted from DeckEditor so card adds target the right zone
+  const [activeZone, setActiveZone] = useState<"main" | "sideboard" | "maybeboard">("main");
+
   // Search state
   const [searchText, setSearchText] = useState("");
   const { width: searchPanelWidth, handleMouseDown: handleSearchResize, handleKeyDown: handleSearchResizeKeyDown } = useResizePanel({
@@ -184,10 +187,10 @@ export default function BuilderPage() {
 
   const handlePrintingSelect = useCallback(
     (card: ScryfallCard) => {
-      addCard(card);
+      addCard(card, undefined, activeZone);
       setPrintingCard(null);
     },
-    [addCard]
+    [addCard, activeZone]
   );
 
   // Open printing selector when clicking a card in the deck grid
@@ -265,7 +268,7 @@ export default function BuilderPage() {
       // Case 1: drag from search results → drop on deck category zone
       const searchCard = active.data.current?.card as ScryfallCard | undefined;
       if (searchCard && overId.startsWith("deck-category-")) {
-        addCard(searchCard);
+        addCard(searchCard, undefined, activeZone);
         return;
       }
 
@@ -289,7 +292,7 @@ export default function BuilderPage() {
         }
       }
     },
-    [addCard, updateCardCategory, deck]
+    [addCard, updateCardCategory, deck, activeZone]
   );
 
   if (!deck) {
@@ -601,6 +604,8 @@ export default function BuilderPage() {
               onRemoveCard={removeCard}
               onCardClick={handleDeckCardClick}
               className="flex-1 overflow-hidden"
+              activeZone={activeZone}
+              onActiveZoneChange={setActiveZone}
             />
           </motion.div>
 
