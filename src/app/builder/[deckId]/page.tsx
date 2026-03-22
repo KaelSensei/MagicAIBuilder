@@ -94,8 +94,8 @@ export default function BuilderPage() {
   }, [deckId]);
 
   const { stats } = useDeck();
-  const bracketScore = useBracketScore(deck);
   const { data: combos, isLoading: combosLoading } = useCombos(deck);
+  const bracketScore = useBracketScore(deck, combos);
   const { result: aiResult, isLoading: aiLoading, error: aiError, analyze: analyzeAI } = useAISuggestions();
 
   // Search state

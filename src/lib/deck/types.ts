@@ -99,6 +99,7 @@ export interface BracketScore {
     avgCmc: number;
   };
   gameChangers: number;
+  twoCardInfiniteCombos: number; // Count of infinite combos with exactly 2 cards → forces Bracket 4
   warnings: string[]; // Human-readable bracket warnings
 }
 

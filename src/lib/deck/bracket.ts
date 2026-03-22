@@ -1,5 +1,6 @@
 // Bracket scoring engine
 import type { Deck, DeckStats, BracketScore } from "./types";
+import type { SpellbookVariant } from "@/lib/combos/spellbook";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -84,10 +85,15 @@ function scoreCmc(avgCmc: number): number {
   return 1;
 }
 
+function countTwoCardInfiniteCombos(combos: SpellbookVariant[]): number {
+  return combos.filter((c) => c.isInfinite && c.cards.length === 2).length;
+}
+
 function generateWarnings(
   deck: Deck,
   stats: DeckStats,
-  dimensions: BracketScore["dimensions"]
+  dimensions: BracketScore["dimensions"],
+  twoCardInfiniteCombos: number
 ): string[] {
   const warnings: string[] = [];
 
@@ -100,6 +106,12 @@ function generateWarnings(
   if (stats.colorIdentityViolations.length > 0) {
     warnings.push(
       `Color identity violations: ${stats.colorIdentityViolations.join(", ")}`
+    );
+  }
+
+  if (twoCardInfiniteCombos > 0) {
+    warnings.push(
+      `${twoCardInfiniteCombos} infinite 2-card combo${twoCardInfiniteCombos > 1 ? "s" : ""} detected — deck is Bracket 4 (RC rule)`
     );
   }
 
@@ -144,7 +156,7 @@ function generateWarnings(
 }
 
 /** Score a deck and return its bracket with dimension breakdown */
-export function scoreBracket(deck: Deck, stats: DeckStats): BracketScore {
+export function scoreBracket(deck: Deck, stats: DeckStats, combos: SpellbookVariant[] = []): BracketScore {
   // Only score main-zone cards (sideboard/maybeboard don't affect bracket)
   const mainCards = deck.cards.filter((c) => c.zone === "main");
   const dimensions = {
@@ -158,6 +170,12 @@ export function scoreBracket(deck: Deck, stats: DeckStats): BracketScore {
 
   let overall = Math.round(average(Object.values(dimensions)));
 
+  // 2-card infinite combos → Bracket 4 (RC rule)
+  const twoCardInfiniteCombos = countTwoCardInfiniteCombos(combos);
+  if (twoCardInfiniteCombos > 0) {
+    overall = 4;
+  }
+
   // Game Changers force minimum bracket
   // Bracket 1 & 2: 0 allowed → any GC forces bracket 3
   // Bracket 3: max 3 → more than 3 forces bracket 4
@@ -167,12 +185,13 @@ export function scoreBracket(deck: Deck, stats: DeckStats): BracketScore {
     overall = Math.max(overall, 3);
   }
 
-  const warnings = generateWarnings(deck, stats, dimensions);
+  const warnings = generateWarnings(deck, stats, dimensions, twoCardInfiniteCombos);
 
   return {
     overall: clamp(overall, 1, 4) as 1 | 2 | 3 | 4,
     dimensions,
     gameChangers: stats.gameChangersCount,
+    twoCardInfiniteCombos,
     warnings,
   };
 }
