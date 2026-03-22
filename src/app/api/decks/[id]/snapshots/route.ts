@@ -42,7 +42,8 @@ export async function POST(request: Request, { params }: Params) {
     if (!rawName || typeof rawName !== "string") {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
     }
-    const name = rawName.replaceAll(/<[^>]*>/g, "").trim().slice(0, 100);
+    // Bounded quantifier prevents ReDoS on HTML tag stripping
+    const name = rawName.replaceAll(/<[^>]{0,200}>/g, "").trim().slice(0, 100);
     if (!name) {
       return NextResponse.json({ error: "name must be a non-empty string" }, { status: 400 });
     }

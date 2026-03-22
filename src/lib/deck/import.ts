@@ -16,7 +16,8 @@ const MIN_QUANTITY = 1;
 /** Strip HTML tags and control characters from a string */
 function sanitizeName(raw: string): string {
   return raw
-    .replaceAll(/<[^>]*>/g, "") // strip HTML tags
+    // Bounded quantifier prevents ReDoS: HTML tags are at most ~200 chars
+    .replaceAll(/<[^>]{0,200}>/g, "") // strip HTML tags
     .replaceAll(/[^\x20-\x7E\u00C0-\u017E]/g, "") // printable ASCII + latin extended
     .trim()
     .slice(0, MAX_NAME_LENGTH);
@@ -30,7 +31,8 @@ function clampQuantity(n: number): number {
 }
 
 /** Strip trailing set code + collector number: "Card Name (SET) 123" or "... 123p" or "... 123★" */
-const SET_CODE_PATTERN = /\s+\([A-Z0-9]+\)\s+\d+[a-z*★]*\s*$/i;
+// Bounded quantifiers prevent ReDoS: set codes ≤6 chars, collector numbers ≤6 digits
+const SET_CODE_PATTERN = /\s{1,5}\([A-Z0-9]{1,6}\)\s{1,5}\d{1,6}[a-z*★]{0,3}\s*$/i;
 
 type ParseState = {
   commander: string | null;

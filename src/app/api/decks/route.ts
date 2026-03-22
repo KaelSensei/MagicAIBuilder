@@ -40,7 +40,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid input", details: parsed.error.issues.map((i) => i.message) }, { status: 400 });
     }
     const { name: rawName, format, targetBracket, budget, commanderId, partnerId, companionId, pairingType, isAIGenerated } = parsed.data;
-    const sanitizedName = rawName.replaceAll(/<[^>]*>/g, "").trim();
+    // Bounded quantifier prevents ReDoS on HTML tag stripping
+    const sanitizedName = rawName.replaceAll(/<[^>]{0,200}>/g, "").trim();
     if (!sanitizedName) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
     }
