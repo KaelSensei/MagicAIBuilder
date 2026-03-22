@@ -24,6 +24,23 @@ The builder has three panels:
 - Click a card to add it to your deck
 - Drag a card from search into the deck editor
 - The printing selector lets you pick your preferred art
+- **Cards are added to the active zone** — if you're on the Sideboard tab, clicking or dragging adds there
+
+#### Deck Zones (Main / Sideboard / Considering)
+The deck editor has three tabs:
+- **Main** — your 99-card main deck
+- **Sideboard** — cards available for sideboard play
+- **Considering** — cards you're evaluating but haven't committed to
+
+Switch tabs to view, add, or move cards between zones. The card count in the header only reflects Main zone cards.
+
+#### Grid vs List View
+Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
+
+In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default is 6.
+
+- Hover a card to see the **remove** button (×) and zone move shortcuts
+- Click any card (including commander) to open the **printing selector**
 
 #### Setting Your Commander
 1. Enable **Commander** mode in the search panel
@@ -34,6 +51,8 @@ The builder has three panels:
 The right panel shows:
 - **Bracket score** (1–4) based on your deck's power level
 - **Game Changers** count (cards that push bracket to 3+)
+- **⚡ Game Changer badge** — any GC forces Bracket 3 minimum; >3 forces Bracket 4
+- **∞ 2-card combo badge** — if your deck contains an infinite combo with exactly 2 cards, Bracket 4 is forced automatically (RC rule), shown with a red ∞ icon
 - **AI suggestions** for improvement
 - **Combo detection** via Commander Spellbook
 - **Mana curve**, color distribution, category breakdown
