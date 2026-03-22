@@ -67,11 +67,14 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
     <dialog
       aria-label="Card note editor"
       open
-      role="dialog"
-      className="absolute left-0 right-0 top-full z-30 m-0 p-2 mt-0.5 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
-      onClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => e.stopPropagation()}
+      className="absolute left-0 right-0 top-full z-30 m-0 p-0 bg-transparent border-none shadow-none w-full"
     >
+      <div
+        className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        role="presentation"
+      >
       <textarea
         ref={textareaRef}
         value={draft}
@@ -83,8 +86,9 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
         maxLength={1000}
         className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 resize-none outline-none"
       />
-      <div className="text-[10px] text-[var(--text-secondary)]/50 mt-1">
+      <div className="text-[10px] text-(--text-secondary)/50 mt-1">
         Ctrl+Enter to save · Esc to cancel
+      </div>
       </div>
     </dialog>
   );
