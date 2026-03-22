@@ -78,6 +78,10 @@ export function CardImage({
         whileHover={zoomOnHover ? { scale: 1.03 } : undefined}
         transition={{ duration: 0.15 }}
         onClick={onClick}
+        role={onClick ? "button" : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") onClick(); } : undefined}
+        aria-label={onClick ? `Add ${name} to deck` : undefined}
       >
         <Image
           src={src}

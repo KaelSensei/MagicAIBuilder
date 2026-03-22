@@ -4,22 +4,11 @@ import { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle, FileText } from "lucide-react";
 import { exportToText, parseTextDecklist } from "@/lib/deck/import";
-import { getCardCollection } from "@/lib/scryfall/client";
+import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { useDeckStore } from "@/lib/deck/store";
 import * as deckApi from "@/lib/db/deck-api";
 import type { Deck } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-
-/** Fetch Scryfall cards in batches of 75 */
-async function fetchInBatches(names: Array<{ name: string }>): Promise<ScryfallCard[]> {
-  const BATCH_SIZE = 75;
-  const found: ScryfallCard[] = [];
-  for (let i = 0; i < names.length; i += BATCH_SIZE) {
-    const result = await getCardCollection(names.slice(i, i + BATCH_SIZE));
-    found.push(...result.data);
-  }
-  return found;
-}
 
 interface BulkEditModalProps {
   readonly deck: Deck;

@@ -1,8 +1,9 @@
 "use client";
 // Share popover — toggle sharing on/off, copy link to clipboard
-import { useState, useRef, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Share2, Copy, Check, Globe, Lock, Loader2, X } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 interface SharePopoverProps {
   readonly deckId: string;
@@ -13,7 +14,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [isEnabled, setIsEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, copy] = useCopyToClipboard();
   const ref = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -57,13 +58,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
 
   const handleCopy = async () => {
     if (!shareUrl) return;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // fallback — select text manually
-    }
+    await copy(shareUrl);
   };
 
   return (

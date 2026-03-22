@@ -32,7 +32,7 @@ export const addCardSchema = z.object({
     .min(1)
     .max(200)
     // Bounded quantifier prevents ReDoS: HTML tags are at most ~200 chars
-    .transform((v) => v.replace(/<[^>]{0,200}>/g, "").trim()),
+    .transform((v) => v.replaceAll(/<[^>]{0,200}>/g, "").trim()),
   manaCost: z.string().max(100).optional().default(""),
   cmc: z.number().min(0).max(20).optional().default(0),
   typeLine: z.string().max(300).optional().default(""),

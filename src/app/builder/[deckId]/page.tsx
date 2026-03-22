@@ -70,6 +70,10 @@ export default function BuilderPage() {
   const { setActiveDeck, addCard, removeCard, setCommander, setPartner, updateCardCategory } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
+  const handleDuplicate = useCallback(async () => {
+    const newId = await duplicateDeck(deckId);
+    router.push(`/builder/${newId}`);
+  }, [duplicateDeck, deckId, router]);
   const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
@@ -381,10 +385,7 @@ export default function BuilderPage() {
           <div className="ml-auto flex items-center gap-2">
             {/* Duplicate deck */}
             <button
-              onClick={async () => {
-                const newId = await duplicateDeck(deckId);
-                router.push(`/builder/${newId}`);
-              }}
+              onClick={handleDuplicate}
               className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
             >
               <Copy className="w-3 h-3" />

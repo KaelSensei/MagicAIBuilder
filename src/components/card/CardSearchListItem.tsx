@@ -22,9 +22,10 @@ function ListItemContent({
   onClick?: (card: ScryfallCard) => void;
 }) {
   return (
-    <motion.div
+    <motion.button
+      type="button"
       className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded hover:bg-[var(--surface-hover)] group transition-colors cursor-pointer"
+        "flex w-full items-center gap-2 px-3 py-2 rounded hover:bg-[var(--surface-hover)] group transition-colors cursor-pointer"
       )}
       onClick={() => onClick?.(card)}
       initial={{ opacity: 0, x: -8 }}
@@ -38,7 +39,7 @@ function ListItemContent({
         {card.cmc > 0 ? card.cmc : "—"}
       </span>
       <Plus className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 shrink-0 transition-opacity" />
-    </motion.div>
+    </motion.button>
   );
 }
 
