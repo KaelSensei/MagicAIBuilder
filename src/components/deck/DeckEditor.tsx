@@ -24,6 +24,8 @@ interface DeckEditorProps {
   readonly onRemoveCard: (id: string) => void;
   readonly onCardClick?: (card: DeckCard) => void;
   readonly className?: string;
+  readonly activeZone?: "main" | "sideboard" | "maybeboard";
+  readonly onActiveZoneChange?: (zone: "main" | "sideboard" | "maybeboard") => void;
 }
 
 interface CategorySectionProps {
@@ -185,7 +187,7 @@ function CommanderBanner({
   );
 }
 
-export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckEditorProps) {
+export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZone: activeZoneProp, onActiveZoneChange }: DeckEditorProps) {
   const viewMode = useDeckStore((s) => s.deckViewMode);
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
   const gridCols = useDeckStore((s) => s.deckGridCols);
@@ -195,8 +197,13 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckE
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
 
-  // Active zone tab state
-  const [activeZone, setActiveZone] = useState<DeckZone>("main");
+  // Active zone tab — controlled from parent when props provided, otherwise local state
+  const [activeZoneLocal, setActiveZoneLocal] = useState<DeckZone>("main");
+  const activeZone = activeZoneProp ?? activeZoneLocal;
+  const setActiveZone = (zone: DeckZone) => {
+    setActiveZoneLocal(zone);
+    onActiveZoneChange?.(zone);
+  };
 
   // Deduplicate cards by id (guard against import bugs creating duplicate rows)
   const uniqueCards = deck.cards.filter((card, index, arr) =>

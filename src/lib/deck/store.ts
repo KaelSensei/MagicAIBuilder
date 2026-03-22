@@ -111,7 +111,7 @@ export interface DeckStore {
   clearCommander: () => Promise<void>;
   setPartner: (card: ScryfallCard | null) => Promise<void>;
   setCompanion: (card: ScryfallCard | null) => Promise<void>;
-  addCard: (card: ScryfallCard, quantity?: number) => Promise<void>;
+  addCard: (card: ScryfallCard, quantity?: number, zone?: "main" | "sideboard" | "maybeboard") => Promise<void>;
   addDeckCard: (card: DeckCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
@@ -580,7 +580,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  addCard: async (card: ScryfallCard, quantity?: number) => {
+  addCard: async (card: ScryfallCard, quantity?: number, zone: "main" | "sideboard" | "maybeboard" = "main") => {
     const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
     if (!activeDeckId) return;
     const deck = decks[activeDeckId];
@@ -606,6 +606,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (quantity && quantity > 1) {
       deckCard.quantity = quantity;
     }
+    // Apply target zone (sideboard / maybeboard / main)
+    deckCard.zone = zone;
     deckCard.isGameChanger = gameChangerNames.has(card.name);
     deckCard.isBanned = bannedNames.has(card.name);
 
@@ -648,6 +650,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         quantity: deckCard.quantity,
         isCommander: false,
         isPartner: false,
+        zone: deckCard.zone,
       });
       // Update the card's local id to the DB-generated CUID for future ops
       set((state) => ({
