@@ -15,39 +15,39 @@ import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ApiCard {
-  id: string;
-  scryfallId: string;
-  name: string;
-  manaCost: string;
-  cmc: number;
-  typeLine: string;
-  oracleText: string;
+  readonly id: string;
+  readonly scryfallId: string;
+  readonly name: string;
+  readonly manaCost: string;
+  readonly cmc: number;
+  readonly typeLine: string;
+  readonly oracleText: string;
   readonly colorIdentity: readonly string[];
-  isGameChanger: boolean;
-  isBanned: boolean;
-  price: number | null;
-  imageUri: string;
-  artCropUri: string;
-  category: string;
-  quantity: number;
-  isCommander: boolean;
-  isPartner: boolean;
+  readonly isGameChanger: boolean;
+  readonly isBanned: boolean;
+  readonly price: number | null;
+  readonly imageUri: string;
+  readonly artCropUri: string;
+  readonly category: string;
+  readonly quantity: number;
+  readonly isCommander: boolean;
+  readonly isPartner: boolean;
 }
 
 interface ApiSharedDeck {
-  id: string;
-  name: string;
-  format: string;
-  targetBracket: number;
-  budget: number | null;
-  commanderId: string | null;
-  partnerId: string | null;
-  companionId: string | null;
-  pairingType: string;
-  shareEnabled: boolean;
+  readonly id: string;
+  readonly name: string;
+  readonly format: string;
+  readonly targetBracket: number;
+  readonly budget: number | null;
+  readonly commanderId: string | null;
+  readonly partnerId: string | null;
+  readonly companionId: string | null;
+  readonly pairingType: string;
+  readonly shareEnabled: boolean;
   readonly cards: readonly ApiCard[];
-  createdAt: string;
-  updatedAt: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -119,7 +119,7 @@ function CardRow({ card }: { card: ApiCard }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface ShareDeckViewProps {
-  deck: ApiSharedDeck;
+  readonly deck: ApiSharedDeck;
 }
 
 export function ShareDeckView({ deck }: ShareDeckViewProps) {
@@ -140,8 +140,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
     const groups: Partial<Record<CardCategory, ApiCard[]>> = {};
     for (const card of mainCards) {
       const cat = card.category as CardCategory;
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat]!.push(card);
+      (groups[cat] ??= []).push(card);
     }
     return groups;
   }, [mainCards]);
@@ -434,9 +433,9 @@ function StatRow({
   value,
   highlight,
 }: {
-  label: string;
-  value: string;
-  highlight?: boolean;
+  readonly label: string;
+  readonly value: string;
+  readonly highlight?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -458,7 +457,7 @@ function ShareUrlCopy() {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(globalThis.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

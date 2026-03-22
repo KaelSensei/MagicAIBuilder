@@ -23,7 +23,7 @@ function ManaCost({ cost }: { cost: string }) {
   const tokens = cost.match(/\{[^}]+\}|[^{]+/g) ?? [cost];
   return (
     <span className="font-mono text-xs text-(--text-secondary) tracking-wider">
-      {tokens.join(" ").replace(/[{}]/g, "")}
+      {tokens.join(" ").replaceAll(/[{}]/g, "")}
     </span>
   );
 }

@@ -22,7 +22,7 @@ const SHORTCUTS: ShortcutEntry[] = [
 ];
 
 interface KeybadgeProps {
-  label: string;
+  readonly label: string;
 }
 
 function Keybadge({ label }: KeybadgeProps) {

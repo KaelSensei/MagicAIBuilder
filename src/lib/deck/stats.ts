@@ -59,11 +59,9 @@ export function computeDeckStats(deck: Deck): DeckStats {
     0
   );
   const overBudgetCards =
-    deck.budget != null
-      ? allCards
-          .filter((c) => (c.price ?? 0) > deck.budget!)
-          .map((c) => c.name)
-      : [];
+    deck.budget === null || deck.budget === undefined
+      ? []
+      : allCards.filter((c) => (c.price ?? 0) > deck.budget!).map((c) => c.name);
 
   // Banned cards
   const bannedCards = allCards.filter((c) => c.isBanned).map((c) => c.name);

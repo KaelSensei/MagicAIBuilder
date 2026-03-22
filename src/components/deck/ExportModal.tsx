@@ -54,7 +54,7 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
 
   const handleDownload = (format: ExportFormat) => {
     const text = getExportText(deck, format);
-    const deckName = deck.name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    const deckName = deck.name.replaceAll(/[^a-z0-9]/gi, "_").toLowerCase();
     if (format === "mtgo") {
       downloadFile(text, `${deckName}.dek`, "application/xml");
     } else {

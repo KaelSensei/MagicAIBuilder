@@ -5,7 +5,7 @@ import { useGameChangersSet } from "@/hooks/useGameChangers";
 import { useBanlistSet } from "@/hooks/useBanlist";
 import { useDeckStore } from "@/lib/deck/store";
 
-export function EnrichmentProvider({ children }: { children: React.ReactNode }) {
+export function EnrichmentProvider({ children }: { readonly children: React.ReactNode }) {
   const { gameChangerNames, isLoaded: gcLoaded } = useGameChangersSet();
   const { bannedNames, isLoaded: banLoaded } = useBanlistSet();
   const setGameChangerNames = useDeckStore((s) => s.setGameChangerNames);

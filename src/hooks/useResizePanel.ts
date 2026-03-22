@@ -15,7 +15,7 @@ export function useResizePanel({
   storageKey,
 }: UseResizePanelOptions) {
   const [width, setWidth] = useState(() => {
-    if (storageKey && typeof window !== "undefined") {
+    if (storageKey && typeof globalThis.window !== "undefined") {
       const stored = localStorage.getItem(storageKey);
       if (stored) return Math.max(minWidth, Math.min(maxWidth, Number.parseInt(stored, 10)));
     }
@@ -52,11 +52,11 @@ export function useResizePanel({
       }
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    globalThis.addEventListener("mousemove", handleMouseMove);
+    globalThis.addEventListener("mouseup", handleMouseUp);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      globalThis.removeEventListener("mousemove", handleMouseMove);
+      globalThis.removeEventListener("mouseup", handleMouseUp);
     };
   }, [minWidth, maxWidth, storageKey]);
 

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useCollectionStore } from "@/lib/collection/store";
 
-export function CollectionProvider({ children }: { children: React.ReactNode }) {
+export function CollectionProvider({ children }: { readonly children: React.ReactNode }) {
   const loadCollection = useCollectionStore((s) => s.loadCollection);
 
   useEffect(() => {

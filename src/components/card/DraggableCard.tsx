@@ -5,8 +5,8 @@ import { CSS } from "@dnd-kit/utilities";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface DraggableCardProps {
-  card: ScryfallCard;
-  children: React.ReactNode;
+  readonly card: ScryfallCard;
+  readonly children: React.ReactNode;
 }
 
 export function DraggableCard({ card, children }: DraggableCardProps) {

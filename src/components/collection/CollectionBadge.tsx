@@ -5,9 +5,9 @@ import { useCollectionStore } from "@/lib/collection/store";
 import { cn } from "@/components/ui/utils";
 
 interface CollectionBadgeProps {
-  scryfallId: string;
-  className?: string;
-  compact?: boolean;
+  readonly scryfallId: string;
+  readonly className?: string;
+  readonly compact?: boolean;
 }
 
 export function CollectionBadge({ scryfallId, className, compact = false }: CollectionBadgeProps) {

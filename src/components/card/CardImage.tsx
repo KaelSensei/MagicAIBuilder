@@ -25,7 +25,7 @@ function ManaPips({ manaCost, cmc }: { manaCost?: string; cmc?: number }) {
   if (!manaCost && cmc == null) return null;
   // Just show CMC as a number if no mana cost string
   const display = manaCost
-    ? manaCost.replace(/[{}]/g, "").replace(/\//g, "")
+    ? manaCost.replaceAll(/[{}]/g, "").replaceAll(/\//g, "")
     : String(cmc ?? "");
   return (
     <span className="text-[10px] font-mono text-white/80 bg-black/40 rounded px-1 py-0.5 leading-none">

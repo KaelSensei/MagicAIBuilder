@@ -6,7 +6,7 @@ import { EnrichmentProvider } from "@/components/providers/EnrichmentProvider";
 import { CollectionProvider } from "@/components/providers/CollectionProvider";
 import { ThemeSync } from "@/components/providers/ThemeSync";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children }: { readonly children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({

@@ -4,10 +4,10 @@ import { Zap } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 
 interface GameChangersBadgeProps {
-  count: number;
-  names?: string[];
-  targetBracket?: 1 | 2 | 3 | 4;
-  className?: string;
+  readonly count: number;
+  readonly names?: string[];
+  readonly targetBracket?: 1 | 2 | 3 | 4;
+  readonly className?: string;
 }
 
 const BRACKET_MAX_GC: Record<number, number> = {

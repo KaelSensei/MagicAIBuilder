@@ -169,9 +169,9 @@ function StatCard({
   value,
   highlight,
 }: {
-  label: string;
-  value: string;
-  highlight?: boolean;
+  readonly label: string;
+  readonly value: string;
+  readonly highlight?: boolean;
 }) {
   return (
     <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4">
@@ -193,9 +193,9 @@ function CollectionGridCard({
   onRemove,
   onQuantityChange,
 }: {
-  card: CollectionCard;
-  onRemove: (id: string) => void;
-  onQuantityChange: (id: string, qty: number) => void;
+  readonly card: CollectionCard;
+  readonly onRemove: (id: string) => void;
+  readonly onQuantityChange: (id: string, qty: number) => void;
 }) {
   return (
     <div className="relative group/card">
@@ -255,11 +255,11 @@ function CollectionListRow({
   onRemove,
   onQuantityChange,
 }: {
-  card: CollectionCard;
-  onRemove: (id: string) => void;
-  onQuantityChange: (id: string, qty: number) => void;
+  readonly card: CollectionCard;
+  readonly onRemove: (id: string) => void;
+  readonly onQuantityChange: (id: string, qty: number) => void;
 }) {
-  const value = card.price != null ? `$${(card.price * card.quantity).toFixed(2)}` : "—";
+  const value = card.price === null || card.price === undefined ? "—" : `$${(card.price * card.quantity).toFixed(2)}`;
 
   return (
     <div className="grid grid-cols-[1fr_80px_80px_80px_100px_40px] gap-2 px-3 py-2 rounded hover:bg-[var(--surface-hover)] items-center group">

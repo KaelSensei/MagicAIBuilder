@@ -102,7 +102,7 @@ export function CombosPanel({
       {isEnabled && !isLoading && combos && combos.length > 0 && (
         <div className="space-y-2">
           {/* Infinite combos first */}
-          {combos.filter((c) => c.isInfinite).length > 0 && (
+          {combos.some((c) => c.isInfinite) && (
             <div className="flex items-center gap-1.5 mb-1">
               <Zap className="w-3.5 h-3.5 text-red-400" />
               <span className="text-xs font-medium text-red-400">
