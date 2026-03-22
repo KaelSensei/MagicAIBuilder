@@ -64,12 +64,13 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
   }
 
   return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- #sonar: <dialog> is the semantic equivalent of role="dialog"; stopPropagation prevents card click-through
     <dialog
       aria-label="Card note editor"
       open
+      role="dialog"
       className="absolute left-0 right-0 top-full z-30 m-0 p-2 mt-0.5 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
       onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
     >
       <textarea
         ref={textareaRef}
