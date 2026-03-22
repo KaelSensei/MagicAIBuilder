@@ -47,6 +47,7 @@ function makeBracketScore(): BracketScore {
     overall: 2,
     dimensions: { ramp: 0, draw: 0, removal: 0, tutors: 0, winSpeed: 0, avgCmc: 0 },
     gameChangers: 0,
+    twoCardInfiniteCombos: 0,
     warnings: [],
   };
 }

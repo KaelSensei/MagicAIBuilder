@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import type { BracketScore } from "@/lib/deck/types";
 import { BRACKET_DEFINITIONS } from "@/lib/constants/brackets";
-import { AlertTriangle, Zap, X } from "lucide-react";
+import { AlertTriangle, Zap, X, Infinity } from "lucide-react";
 
 interface BracketIndicatorProps {
   readonly score: BracketScore | null;
@@ -277,6 +277,17 @@ export function BracketIndicator({
           />
         ))}
       </div>
+
+      {/* 2-card infinite combo badge — forces Bracket 4 per RC rules */}
+      {score.twoCardInfiniteCombos > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Infinity className="w-3.5 h-3.5 text-red-400" />
+          <span className="text-xs text-red-400 font-medium">
+            {score.twoCardInfiniteCombos} infinite 2-card combo{score.twoCardInfiniteCombos > 1 ? "s" : ""}
+            {" → Bracket 4 (RC rule)"}
+          </span>
+        </div>
+      )}
 
       {/* Game Changers badge */}
       {score.gameChangers > 0 && (
