@@ -185,6 +185,207 @@ function CommanderBanner({
   );
 }
 
+// ─── Zone content sub-component ───────────────────────────────────────────────
+// Extracted to reduce cognitive complexity of DeckEditor and avoid nested ternaries
+
+interface ZoneContentProps {
+  readonly activeZone: DeckZone;
+  readonly viewMode: "grid" | "list";
+  readonly deck: Deck;
+  readonly mainCards: Deck["cards"];
+  readonly sideboardCards: Deck["cards"];
+  readonly maybeboardCards: Deck["cards"];
+  readonly cardsByCategory: Record<CardCategory, Deck["cards"]>;
+  readonly onRemoveCard: (id: string) => void;
+  readonly onCardClick?: (card: DeckCard) => void;
+  readonly moveCardToZone: (cardId: string, zone: DeckZone) => void;
+  readonly clearCommander: () => void;
+  readonly setPartner: (partner: null) => void;
+}
+
+function ZoneContent({
+  activeZone,
+  viewMode,
+  deck,
+  mainCards,
+  sideboardCards,
+  maybeboardCards,
+  cardsByCategory,
+  onRemoveCard,
+  onCardClick,
+  moveCardToZone,
+  clearCommander,
+  setPartner,
+}: ZoneContentProps) {
+  if (activeZone === "sideboard") {
+    return (
+      <div>
+        {sideboardCards.length === 0 ? (
+          <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
+            No sideboard cards — move cards here from the Main tab
+          </div>
+        ) : (
+          sideboardCards.map((card) => (
+            <div key={card.id} className="flex items-center gap-1 group/zone">
+              <div className="flex-1 min-w-0">
+                <CardListItem card={card} onRemove={onRemoveCard} />
+              </div>
+              <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
+                <button
+                  onClick={() => moveCardToZone(card.id, "main")}
+                  className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                  title="Move to Main Deck"
+                >
+                  → Main
+                </button>
+                <button
+                  onClick={() => moveCardToZone(card.id, "maybeboard")}
+                  className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                  title="Move to Considering"
+                >
+                  → Maybe
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    );
+  }
+
+  if (activeZone === "maybeboard") {
+    return (
+      <div>
+        {maybeboardCards.length === 0 ? (
+          <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
+            No cards under consideration — move cards here from other tabs
+          </div>
+        ) : (
+          maybeboardCards.map((card) => (
+            <div key={card.id} className="flex items-center gap-1 group/zone">
+              <div className="flex-1 min-w-0">
+                <CardListItem card={card} onRemove={onRemoveCard} />
+              </div>
+              <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
+                <button
+                  onClick={() => moveCardToZone(card.id, "main")}
+                  className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                  title="Move to Main Deck"
+                >
+                  → Main
+                </button>
+                <button
+                  onClick={() => moveCardToZone(card.id, "sideboard")}
+                  className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                  title="Move to Sideboard"
+                >
+                  → Side
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    );
+  }
+
+  // Main zone
+  if (viewMode === "grid") {
+    return (
+      <div className="grid grid-cols-4 gap-1 p-1">
+        {deck.commander && (
+          <div className="relative group/card">
+            <CardImage
+              imageUri={deck.commander.imageUri}
+              largeUri={deck.commander.imageUri}
+              name={deck.commander.name}
+              manaCost={deck.commander.manaCost}
+              cmc={deck.commander.cmc}
+              showOverlay={true}
+              zoomOnHover={false}
+              className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
+            />
+            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
+              CMD
+            </div>
+            <button
+              onClick={() => clearCommander()}
+              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+              title="Remove commander"
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {deck.partner && deck.partner.name !== deck.commander?.name && (
+          <div className="relative group/card">
+            <CardImage
+              imageUri={deck.partner.imageUri}
+              largeUri={deck.partner.imageUri}
+              name={deck.partner.name}
+              manaCost={deck.partner.manaCost}
+              cmc={deck.partner.cmc}
+              showOverlay={true}
+              zoomOnHover={false}
+              className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
+            />
+            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
+              CMD
+            </div>
+            <button
+              onClick={() => setPartner(null)}
+              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+              title="Remove partner"
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {mainCards.map((card) => (
+          <div key={card.id} className="relative group/card">
+            <CardImage
+              imageUri={card.imageUri}
+              largeUri={card.imageUri}
+              name={card.name}
+              manaCost={card.manaCost}
+              cmc={card.cmc}
+              showOverlay={true}
+              zoomOnHover={false}
+              className="w-full cursor-pointer"
+              onClick={() => onCardClick?.(card)}
+            />
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }}
+              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+              aria-label={`Remove ${card.name}`}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        {!deck.commander && mainCards.length === 0 && (
+          <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
+            No cards yet
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
+        <DroppableCategory
+          key={category}
+          category={category}
+          cards={cardsByCategory[category] ?? []}
+          onRemoveCard={onRemoveCard}
+        />
+      ))}
+    </>
+  );
+}
+
 export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckEditorProps) {
   const viewMode = useDeckStore((s) => s.deckViewMode);
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
@@ -355,166 +556,20 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckE
 
       {/* Zone content — uses parent DndContext from BuilderPage (main zone only) */}
       <div className="flex-1 overflow-y-auto p-2">
-        {activeZone === "main" ? (
-          viewMode === "grid" ? (
-            /* Grid view — commander + partner first, then main-zone cards */
-            <div className="grid grid-cols-4 gap-1 p-1">
-              {deck.commander && (
-                <div className="relative group/card">
-                  <CardImage
-                    imageUri={deck.commander.imageUri}
-                    largeUri={deck.commander.imageUri}
-                    name={deck.commander.name}
-                    manaCost={deck.commander.manaCost}
-                    cmc={deck.commander.cmc}
-                    showOverlay={true}
-                    zoomOnHover={false}
-                    className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
-                  />
-                  <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
-                    CMD
-                  </div>
-                  <button
-                    onClick={() => clearCommander()}
-                    className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-                    title="Remove commander"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {deck.partner && deck.partner.name !== deck.commander?.name && (
-                <div className="relative group/card">
-                  <CardImage
-                    imageUri={deck.partner.imageUri}
-                    largeUri={deck.partner.imageUri}
-                    name={deck.partner.name}
-                    manaCost={deck.partner.manaCost}
-                    cmc={deck.partner.cmc}
-                    showOverlay={true}
-                    zoomOnHover={false}
-                    className="w-full ring-2 ring-yellow-400/70 rounded-[4%]"
-                  />
-                  <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
-                    CMD
-                  </div>
-                  <button
-                    onClick={() => setPartner(null)}
-                    className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-                    title="Remove partner"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {mainCards.map((card) => (
-                <div key={card.id} className="relative group/card">
-                  <CardImage
-                    imageUri={card.imageUri}
-                    largeUri={card.imageUri}
-                    name={card.name}
-                    manaCost={card.manaCost}
-                    cmc={card.cmc}
-                    showOverlay={true}
-                    zoomOnHover={false}
-                    className="w-full cursor-pointer"
-                    onClick={() => onCardClick?.(card)}
-                  />
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }}
-                    className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-                    aria-label={`Remove ${card.name}`}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              {!deck.commander && mainCards.length === 0 && (
-                <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
-                  No cards yet
-                </div>
-              )}
-            </div>
-          ) : (
-            /* List view — categorized droppable zones (main zone only) */
-            CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
-              <DroppableCategory
-                key={category}
-                category={category}
-                cards={cardsByCategory[category] ?? []}
-                onRemoveCard={onRemoveCard}
-              />
-            ))
-          )
-        ) : activeZone === "sideboard" ? (
-          /* Sideboard — simple list with move buttons */
-          <div>
-            {sideboardCards.length === 0 ? (
-              <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
-                No sideboard cards — move cards here from the Main tab
-              </div>
-            ) : (
-              sideboardCards.map((card) => (
-                <div key={card.id} className="flex items-center gap-1 group/zone">
-                  <div className="flex-1 min-w-0">
-                    <CardListItem card={card} onRemove={onRemoveCard} />
-                  </div>
-                  {/* Move to zone buttons */}
-                  <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => moveCardToZone(card.id, "main")}
-                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                      title="Move to Main Deck"
-                    >
-                      → Main
-                    </button>
-                    <button
-                      onClick={() => moveCardToZone(card.id, "maybeboard")}
-                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                      title="Move to Considering"
-                    >
-                      → Maybe
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          /* Maybeboard (Considering) — simple list with move buttons */
-          <div>
-            {maybeboardCards.length === 0 ? (
-              <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
-                No cards under consideration — move cards here from other tabs
-              </div>
-            ) : (
-              maybeboardCards.map((card) => (
-                <div key={card.id} className="flex items-center gap-1 group/zone">
-                  <div className="flex-1 min-w-0">
-                    <CardListItem card={card} onRemove={onRemoveCard} />
-                  </div>
-                  {/* Move to zone buttons */}
-                  <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => moveCardToZone(card.id, "main")}
-                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                      title="Move to Main Deck"
-                    >
-                      → Main
-                    </button>
-                    <button
-                      onClick={() => moveCardToZone(card.id, "sideboard")}
-                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                      title="Move to Sideboard"
-                    >
-                      → Side
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        <ZoneContent
+          activeZone={activeZone}
+          viewMode={viewMode}
+          deck={deck}
+          mainCards={mainCards}
+          sideboardCards={sideboardCards}
+          maybeboardCards={maybeboardCards}
+          cardsByCategory={cardsByCategory}
+          onRemoveCard={onRemoveCard}
+          onCardClick={onCardClick}
+          moveCardToZone={moveCardToZone}
+          clearCommander={clearCommander}
+          setPartner={setPartner}
+        />
       </div>
     </div>
   );

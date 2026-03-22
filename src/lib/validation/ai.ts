@@ -5,7 +5,7 @@ import { z } from "zod";
 export function sanitizeForPrompt(input: string, maxLen = 100): string {
   return input
     .replaceAll(/[`'"\\{}[\]]/g, "") // strip quotes, backticks, brackets
-    .replaceAll(/\n|\r/g, " ") // no newlines
+    .replaceAll(/[\n\r]/g, " ") // no newlines
     .trim()
     .slice(0, maxLen);
 }
