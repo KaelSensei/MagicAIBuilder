@@ -265,11 +265,27 @@ export default function BuilderPage() {
 
       const overId = over.id.toString();
 
-      // Case 1: drag from search results → drop on deck category zone
+      // Case 1: drag from search results → drop on deck category zone or sideboard/maybeboard zone
       const searchCard = active.data.current?.card as ScryfallCard | undefined;
-      if (searchCard && overId.startsWith("deck-category-")) {
-        addCard(searchCard, undefined, activeZone);
-        return;
+      if (searchCard) {
+        if (overId.startsWith("deck-category-")) {
+          // Dropped on a category → always main
+          addCard(searchCard, undefined, "main");
+          return;
+        }
+        if (overId === "deck-zone-sideboard") {
+          addCard(searchCard, undefined, "sideboard");
+          return;
+        }
+        if (overId === "deck-zone-maybeboard") {
+          addCard(searchCard, undefined, "maybeboard");
+          return;
+        }
+        // Fallback: drop anywhere on deck area → use active zone
+        if (overId.startsWith("deck-")) {
+          addCard(searchCard, undefined, activeZone);
+          return;
+        }
       }
 
       // Case 2: intra-deck drag — move card between categories
