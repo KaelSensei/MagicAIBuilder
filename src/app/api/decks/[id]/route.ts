@@ -55,7 +55,7 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
     const sanitizedName = name !== undefined
-      ? name.replace(/<[^>]*>/g, "").trim().slice(0, 200)
+      ? name.replaceAll(/<[^>]*>/g, "").trim().slice(0, 200)
       : undefined;
 
     if (name !== undefined && !sanitizedName) {

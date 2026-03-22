@@ -58,7 +58,7 @@ export function exportMTGO(deck: Deck): string {
   }
 
   const cardXml = allCards
-    .map((c) => `  <Cards CatID="0" Quantity="${c.qty}" Sideboard="false" Name="${c.name.replace(/"/g, "&quot;")}" />`)
+    .map((c) => `  <Cards CatID="0" Quantity="${c.qty}" Sideboard="false" Name="${c.name.replaceAll(/"/g, "&quot;")}" />`)
     .join("\n");
 
   return `<?xml version="1.0" encoding="utf-8"?>

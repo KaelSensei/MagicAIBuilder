@@ -19,10 +19,10 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const computePos = useCallback((e: React.MouseEvent) => {
-    const x = Math.min(e.clientX + OFFSET_X, window.innerWidth - TOOLTIP_WIDTH - 8);
+    const x = Math.min(e.clientX + OFFSET_X, globalThis.innerWidth - TOOLTIP_WIDTH - 8);
     const y = Math.min(
       Math.max(e.clientY - TOOLTIP_HEIGHT / 2, 8),
-      window.innerHeight - TOOLTIP_HEIGHT - 8
+      globalThis.innerHeight - TOOLTIP_HEIGHT - 8
     );
     return { x, y };
   }, []);

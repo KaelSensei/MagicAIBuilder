@@ -12,11 +12,11 @@ import type { Deck } from "@/lib/deck/types";
 import { DeckWizard } from "@/components/deck/DeckWizard";
 
 interface DeckCardItemProps {
-  deck: Deck;
-  onDelete: (e: React.MouseEvent, id: string) => void;
-  onDuplicate: (e: React.MouseEvent, id: string) => void;
-  deletingId: string | null;
-  duplicatingId: string | null;
+  readonly deck: Deck;
+  readonly onDelete: (e: React.MouseEvent, id: string) => void;
+  readonly onDuplicate: (e: React.MouseEvent, id: string) => void;
+  readonly deletingId: string | null;
+  readonly duplicatingId: string | null;
 }
 
 /** Colors per bracket level — consistent with BracketIndicator.tsx */

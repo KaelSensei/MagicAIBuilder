@@ -23,7 +23,7 @@ function scoreLinear(
 
 function cmcToScore(avgCmc: number): number {
   if (avgCmc <= 2.5) return 4;
-  if (avgCmc <= 3.0) return 3;
+  if (avgCmc <= 3) return 3;
   if (avgCmc <= 3.5) return 2;
   return 1;
 }
@@ -78,7 +78,7 @@ function scoreWinSpeed(cards: Deck["cards"], avgCmc: number): number {
 
 function scoreCmc(avgCmc: number): number {
   // Lower avg cmc = higher bracket (faster decks)
-  if (avgCmc <= 2.0) return 4;
+  if (avgCmc <= 2) return 4;
   if (avgCmc <= 2.5) return 3;
   if (avgCmc <= 3.2) return 2;
   return 1;
