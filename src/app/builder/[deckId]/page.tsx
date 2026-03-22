@@ -6,6 +6,7 @@ import {
   DndContext,
   DragEndEvent,
   DragOverlay,
+  MeasuringStrategy,
   PointerSensor,
   useSensor,
   useSensors,
@@ -265,11 +266,33 @@ export default function BuilderPage() {
 
       const overId = over.id.toString();
 
-      // Case 1: drag from search results → drop on deck category zone
+      // Case 1: drag from search results → drop on deck category zone or sideboard/maybeboard zone
       const searchCard = active.data.current?.card as ScryfallCard | undefined;
-      if (searchCard && overId.startsWith("deck-category-")) {
-        addCard(searchCard, undefined, activeZone);
-        return;
+      if (searchCard) {
+        if (overId.startsWith("deck-category-")) {
+          // Dropped on a category → always main
+          addCard(searchCard, undefined, "main");
+          return;
+        }
+        if (overId === "deck-zone-sideboard") {
+          addCard(searchCard, undefined, "sideboard");
+          return;
+        }
+        if (overId === "deck-zone-maybeboard") {
+          addCard(searchCard, undefined, "maybeboard");
+          return;
+        }
+        // Fallback: drop anywhere on deck panel → use the zone encoded in the id
+        if (overId.startsWith("deck-panel-")) {
+          const zone = overId.replace("deck-panel-", "") as "main" | "sideboard" | "maybeboard";
+          addCard(searchCard, undefined, zone);
+          return;
+        }
+        // Last resort fallback
+        if (overId.startsWith("deck-")) {
+          addCard(searchCard, undefined, activeZone);
+          return;
+        }
       }
 
       // Case 2: intra-deck drag — move card between categories
@@ -334,6 +357,7 @@ export default function BuilderPage() {
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
     >
       <div className="flex flex-col h-screen overflow-hidden">
         <Header deckId={deckId} />

@@ -12,7 +12,7 @@ import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import type { CardCategory } from "@/lib/deck/types";
 import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, Rows3 } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 
@@ -76,6 +76,18 @@ function getDropZoneClass(isOver: boolean, isEmpty: boolean): string {
   if (isOver) return "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40";
   if (isEmpty) return "min-h-[32px] border border-dashed border-[var(--border)] rounded opacity-40";
   return "min-h-[8px]";
+}
+
+function DroppableZone({ zone, children }: { zone: "sideboard" | "maybeboard"; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `deck-zone-${zone}` });
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn("min-h-24 rounded transition-colors", isOver && "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40")}
+    >
+      {children}
+    </div>
+  );
 }
 
 function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionProps) {
@@ -237,8 +249,11 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
     deck.partner &&
     deck.partner.name !== deck.commander?.name;
 
+  // Top-level droppable — catches any search card dropped anywhere on the deck panel
+  const { setNodeRef: setDeckPanelRef } = useDroppable({ id: `deck-panel-${activeZone}` });
+
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div ref={setDeckPanelRef} className={cn("flex flex-col h-full", className)}>
       {/* Commander zone — art crop banner */}
       <div className="p-2 border-b border-[var(--border)]">
         {deck.commander ? (
@@ -486,10 +501,10 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
           )
         ) : activeZone === "sideboard" ? (
           /* Sideboard — simple list with move buttons */
-          <div>
+          <DroppableZone zone="sideboard">
             {sideboardCards.length === 0 ? (
               <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
-                No sideboard cards — move cards here from the Main tab
+                Drop cards here or use search to add to sideboard
               </div>
             ) : (
               sideboardCards.map((card) => (
@@ -517,13 +532,13 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
                 </div>
               ))
             )}
-          </div>
+          </DroppableZone>
         ) : (
           /* Maybeboard (Considering) — simple list with move buttons */
-          <div>
+          <DroppableZone zone="maybeboard">
             {maybeboardCards.length === 0 ? (
               <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
-                No cards under consideration — move cards here from other tabs
+                Drop cards here or use search to add to considering
               </div>
             ) : (
               maybeboardCards.map((card) => (
@@ -551,7 +566,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
                 </div>
               ))
             )}
-          </div>
+          </DroppableZone>
         )}
       </div>
     </div>
