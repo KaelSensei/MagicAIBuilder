@@ -500,68 +500,106 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
             ))
           )
         ) : activeZone === "sideboard" ? (
-          /* Sideboard — simple list with move buttons */
+          /* Sideboard — grid or list */
           <DroppableZone zone="sideboard">
             {sideboardCards.length === 0 ? (
               <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
                 Drop cards here or use search to add to sideboard
               </div>
+            ) : viewMode === "grid" ? (
+              <div className={cn("grid gap-1 p-1", {
+                "grid-cols-2": gridCols === 2,
+                "grid-cols-3": gridCols === 3,
+                "grid-cols-4": gridCols === 4,
+                "grid-cols-6": gridCols === 6,
+                "grid-cols-8": gridCols === 8,
+              })}>
+                {sideboardCards.map((card) => (
+                  <div key={card.id} className="relative group/card">
+                    <CardImage
+                      imageUri={card.imageUri}
+                      largeUri={card.imageUri}
+                      name={card.name}
+                      manaCost={card.manaCost}
+                      cmc={card.cmc}
+                      showOverlay={true}
+                      zoomOnHover={false}
+                      className="w-full cursor-pointer"
+                      onClick={() => onCardClick?.(card)}
+                    />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }}
+                      className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                      aria-label={`Remove ${card.name}`}
+                    >×</button>
+                    <button
+                      onClick={() => moveCardToZone(card.id, "main")}
+                      className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10"
+                      title="Move to Main"
+                    >→M</button>
+                  </div>
+                ))}
+              </div>
             ) : (
               sideboardCards.map((card) => (
                 <div key={card.id} className="flex items-center gap-1 group/zone">
-                  <div className="flex-1 min-w-0">
-                    <CardListItem card={card} onRemove={onRemoveCard} />
-                  </div>
-                  {/* Move to zone buttons */}
+                  <div className="flex-1 min-w-0"><CardListItem card={card} onRemove={onRemoveCard} /></div>
                   <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => moveCardToZone(card.id, "main")}
-                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                      title="Move to Main Deck"
-                    >
-                      → Main
-                    </button>
-                    <button
-                      onClick={() => moveCardToZone(card.id, "maybeboard")}
-                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                      title="Move to Considering"
-                    >
-                      → Maybe
-                    </button>
+                    <button onClick={() => moveCardToZone(card.id, "main")} className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Move to Main Deck">→ Main</button>
+                    <button onClick={() => moveCardToZone(card.id, "maybeboard")} className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Move to Considering">→ Maybe</button>
                   </div>
                 </div>
               ))
             )}
           </DroppableZone>
         ) : (
-          /* Maybeboard (Considering) — simple list with move buttons */
+          /* Maybeboard (Considering) — grid or list */
           <DroppableZone zone="maybeboard">
             {maybeboardCards.length === 0 ? (
               <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
                 Drop cards here or use search to add to considering
               </div>
+            ) : viewMode === "grid" ? (
+              <div className={cn("grid gap-1 p-1", {
+                "grid-cols-2": gridCols === 2,
+                "grid-cols-3": gridCols === 3,
+                "grid-cols-4": gridCols === 4,
+                "grid-cols-6": gridCols === 6,
+                "grid-cols-8": gridCols === 8,
+              })}>
+                {maybeboardCards.map((card) => (
+                  <div key={card.id} className="relative group/card">
+                    <CardImage
+                      imageUri={card.imageUri}
+                      largeUri={card.imageUri}
+                      name={card.name}
+                      manaCost={card.manaCost}
+                      cmc={card.cmc}
+                      showOverlay={true}
+                      zoomOnHover={false}
+                      className="w-full cursor-pointer"
+                      onClick={() => onCardClick?.(card)}
+                    />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }}
+                      className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                      aria-label={`Remove ${card.name}`}
+                    >×</button>
+                    <button
+                      onClick={() => moveCardToZone(card.id, "main")}
+                      className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10"
+                      title="Move to Main"
+                    >→M</button>
+                  </div>
+                ))}
+              </div>
             ) : (
               maybeboardCards.map((card) => (
                 <div key={card.id} className="flex items-center gap-1 group/zone">
-                  <div className="flex-1 min-w-0">
-                    <CardListItem card={card} onRemove={onRemoveCard} />
-                  </div>
-                  {/* Move to zone buttons */}
+                  <div className="flex-1 min-w-0"><CardListItem card={card} onRemove={onRemoveCard} /></div>
                   <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => moveCardToZone(card.id, "main")}
-                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                      title="Move to Main Deck"
-                    >
-                      → Main
-                    </button>
-                    <button
-                      onClick={() => moveCardToZone(card.id, "sideboard")}
-                      className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                      title="Move to Sideboard"
-                    >
-                      → Side
-                    </button>
+                    <button onClick={() => moveCardToZone(card.id, "main")} className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Move to Main Deck">→ Main</button>
+                    <button onClick={() => moveCardToZone(card.id, "sideboard")} className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title="Move to Sideboard">→ Side</button>
                   </div>
                 </div>
               ))
