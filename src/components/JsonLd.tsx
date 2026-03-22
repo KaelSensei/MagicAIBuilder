@@ -9,9 +9,9 @@ interface JsonLdProps {
 // explicit unicode escaping to make the intent clear to static analysis tools.
 function safeJsonLd(data: unknown): string {
   return JSON.stringify(data)
-    .replace(/</g, "\\u003C")
-    .replace(/>/g, "\\u003E")
-    .replace(/&/g, "\\u0026");
+    .replaceAll(/</g, "\\u003C")
+    .replaceAll(/>/g, "\\u003E")
+    .replaceAll(/&/g, "\\u0026");
 }
 
 export function JsonLd({ data }: JsonLdProps) {

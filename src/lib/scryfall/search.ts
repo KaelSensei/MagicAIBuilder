@@ -28,15 +28,15 @@ export function buildSearchQuery(
     parts.push(`(${typeQuery})`);
   }
 
-  if (filters.cmcMin != null) {
+  if (filters.cmcMin !== null && filters.cmcMin !== undefined) {
     parts.push(`cmc>=${filters.cmcMin}`);
   }
 
-  if (filters.cmcMax != null) {
+  if (filters.cmcMax !== null && filters.cmcMax !== undefined) {
     parts.push(`cmc<=${filters.cmcMax}`);
   }
 
-  if (filters.priceMax != null) {
+  if (filters.priceMax !== null && filters.priceMax !== undefined) {
     parts.push(`usd<=${filters.priceMax}`);
   }
 

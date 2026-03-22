@@ -209,7 +209,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className }: DeckE
   // Group main-zone cards by category (for list view with categories)
   const cardsByCategory = mainCards.reduce<Record<CardCategory, Deck["cards"]>>(
     (acc, card) => {
-      if (!acc[card.category]) acc[card.category] = [];
+      acc[card.category] ??= [];
       acc[card.category].push(card);
       return acc;
     },

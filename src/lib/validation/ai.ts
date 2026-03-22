@@ -4,8 +4,8 @@ import { z } from "zod";
 // Strips characters that could be used for prompt injection.
 export function sanitizeForPrompt(input: string, maxLen = 100): string {
   return input
-    .replace(/[`'"\\{}[\]]/g, "") // strip quotes, backticks, brackets
-    .replace(/\n|\r/g, " ") // no newlines
+    .replaceAll(/[`'"\\{}[\]]/g, "") // strip quotes, backticks, brackets
+    .replaceAll(/\n|\r/g, " ") // no newlines
     .trim()
     .slice(0, maxLen);
 }
