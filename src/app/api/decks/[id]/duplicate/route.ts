@@ -46,6 +46,7 @@ export async function POST(_req: Request, { params }: Params) {
             quantity: card.quantity,
             isCommander: card.isCommander,
             isPartner: card.isPartner,
+            zone: card.zone,
           })),
         },
       },
