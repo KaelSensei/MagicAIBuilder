@@ -9,6 +9,36 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-22: Grid density selector
+- Deck grid view now has a density picker (2 / 3 / 4 / 6 / 8 columns) in the toolbar, visible in grid mode only
+- Default changed from 4 → **6 columns**
+- `deckGridCols` state + `setDeckGridCols` action added to deck store
+
+### Added — 2026-03-22: Grid view for Sideboard and Maybeboard
+- Sideboard and Considering tabs now support grid/list toggle with the same density selector as Main
+- Hover overlay shows remove (×) and quick move (→M) buttons in grid mode
+
+### Fixed — 2026-03-22: Add card respects active zone
+- Clicking or drag-dropping a card while on Sideboard/Considering now adds it to the active zone instead of always Main
+- `addCard()` accepts optional `zone` parameter (default: `"main"`)
+- `activeZone` state lifted from `DeckEditor` to `BuilderPage`
+
+### Fixed — 2026-03-22: Drag & drop cross-panel reliability
+- `MeasuringStrategy.Always` on `DndContext` — drop targets remeasured continuously during drag
+- `DroppableZone` wrapper on Sideboard and Maybeboard — visual highlight on hover + proper target detection
+- `deck-panel-{zone}` droppable on the full deck panel as fallback
+
+### Fixed — 2026-03-22: Commander/Partner clickable in grid view
+- Commander and partner cards in grid view now open the printing selector on click (same as regular cards)
+- Remove button has `stopPropagation` to avoid triggering the printing selector
+
+### Added — 2026-03-22: Bracket 4 forced for infinite 2-card combos
+- `scoreBracket()` now accepts `combos: SpellbookVariant[]` — if any combo is infinite and uses exactly 2 cards, bracket is forced to 4 (RC rule)
+- New `twoCardInfiniteCombos` field on `BracketScore`
+- Warning added: _"N infinite 2-card combo(s) detected — deck is Bracket 4 (RC rule)"_
+- Red ∞ badge in `BracketIndicator`
+- `useBracketScore(deck, combos)` — combos passed from `useCombos` in BuilderPage
+
 ### Added — 2026-03-21: SonarCloud CI
 - `sonar-project.properties` — SonarCloud project config (sources, exclusions, coverage path)
 - `.github/workflows/sonar.yml` — GitHub Actions: runs on push/PR to main, installs deps, runs coverage, uploads to SonarCloud

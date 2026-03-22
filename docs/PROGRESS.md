@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| Current Phase | Phase 5+ — AI Builder Improvements |
-| Last Updated | 2026-03-21 |
+| Current Phase | Phase 6 — UX Polish & Deck Zone Improvements |
+| Last Updated | 2026-03-22 |
 | Status | 🚀 Active Development |
 | Main Branch | `main` |
 
@@ -22,6 +22,7 @@
 | Phase 4 | AI Suggestions | ✅ Complete |
 | Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
 | Phase 5 | Collection Mode | ✅ Complete |
+| Phase 6 | UX Polish — Grid Density, Zone D&D, Bracket Rules | 🔄 In Progress |
 
 ---
 
@@ -268,4 +269,24 @@
 - [x] **DeckCardOwnershipBadge** — "Owned" / "Buy" on deck editor list items
 - [x] **Search filter** — "Show only collection cards" toggle
 - [x] **Header nav** — Collection link
+
+---
+
+## Phase 6: UX Polish — Grid Density, Zone D&D, Bracket Rules 🔄
+
+### Implemented
+
+- [x] **Grid density selector** — 2/3/4/6/8 columns, default 6, persisted in store
+- [x] **Grid view for Sideboard & Maybeboard** — same grid/density as Main zone
+- [x] **Active zone–aware card add** — click/D&D adds to current tab (Main/Sideboard/Considering)
+- [x] **Drag & drop cross-panel** — `MeasuringStrategy.Always` + `DroppableZone` wrappers
+- [x] **Commander/Partner clickable in grid** — opens printing selector like regular cards
+- [x] **Bracket 4 for 2-card infinite combos** — RC rule enforced via Spellbook data
+- [x] **∞ badge in BracketIndicator** — red badge when 2-card infinite combo detected
+
+### In Progress / Next
+
+- [ ] Mobile responsiveness — 3-panel layout
+- [ ] Persist deck zone (sideboard/maybeboard) state to DB
+- [ ] E2E tests (Playwright) for new drag & drop flows
 

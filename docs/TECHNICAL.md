@@ -167,9 +167,16 @@ interface DeckStore {
 
   // Card management (synced to DB via /api/decks/[id]/cards)
   setCommander(card: ScryfallCard): Promise<void>;
-  addCard(card: ScryfallCard): Promise<void>;
+  addCard(card: ScryfallCard, quantity?: number, zone?: "main" | "sideboard" | "maybeboard"): Promise<void>;
   removeCard(cardId: string): Promise<void>;
   updateCardCategory(cardId: string, category: CardCategory): Promise<void>;
+  moveCardToZone(cardId: string, zone: "main" | "sideboard" | "maybeboard"): Promise<void>;
+
+  // View preferences
+  deckViewMode: "grid" | "list";
+  deckGridCols: 2 | 3 | 4 | 6 | 8;  // Default: 6
+  setDeckViewMode(mode: "grid" | "list"): void;
+  setDeckGridCols(cols: 2 | 3 | 4 | 6 | 8): void;
 
   // Settings
   setTargetBracket(bracket: 1 | 2 | 3 | 4): void;
@@ -240,7 +247,11 @@ scoreBracket(deck, stats) → BracketScore
 
 2. overall = round(average(dimensions))
 
-3. Game Changers override (2025 bracket rules):
+3. 2-card infinite combo override (RC rule):
+   - If any combo from Spellbook has isInfinite=true AND cards.length===2 → overall = 4
+   - Counted as `twoCardInfiniteCombos` in BracketScore
+
+4. Game Changers override (2025 bracket rules):
    - B1/B2 → 0 GC allowed
    - B3    → max 3 GC
    - count > 3 → overall = max(overall, 4)

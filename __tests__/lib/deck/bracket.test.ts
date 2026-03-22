@@ -140,6 +140,39 @@ describe("scoreBracket", () => {
     expect(result.warnings.filter((w) => w.includes("ramp") || w.includes("land count")).length).toBe(0);
   });
 
+  it("forces bracket 4 when a 2-card infinite combo is present", () => {
+    const deck = makeDeck();
+    const stats = makeStats({ ramp: 2, draw: 2, avgCmc: 4.5, gameChangersCount: 0 });
+    const combos = [
+      { id: "c1", cards: ["Chatterfang, Squirrel General", "Pitiless Plunderer"], isInfinite: true, effects: ["Infinite tokens"], uses: [], produces: [], description: "" },
+    ];
+    const result = scoreBracket(deck, stats, combos as import("@/lib/combos/spellbook").SpellbookVariant[]);
+    expect(result.overall).toBe(4);
+    expect(result.twoCardInfiniteCombos).toBe(1);
+    expect(result.warnings.some((w) => w.includes("2-card combo"))).toBe(true);
+  });
+
+  it("does NOT force bracket 4 for a 3-card infinite combo", () => {
+    const deck = makeDeck();
+    const stats = makeStats({ ramp: 2, draw: 2, avgCmc: 4.5, gameChangersCount: 0 });
+    const combos = [
+      { id: "c2", cards: ["A", "B", "C"], isInfinite: true, effects: ["Infinite mana"], uses: [], produces: [], description: "" },
+    ];
+    const result = scoreBracket(deck, stats, combos as import("@/lib/combos/spellbook").SpellbookVariant[]);
+    expect(result.twoCardInfiniteCombos).toBe(0);
+    expect(result.overall).toBeLessThanOrEqual(3); // may still be low bracket
+  });
+
+  it("does NOT force bracket 4 for a non-infinite 2-card combo", () => {
+    const deck = makeDeck();
+    const stats = makeStats({ ramp: 2, draw: 2, avgCmc: 4.5, gameChangersCount: 0 });
+    const combos = [
+      { id: "c3", cards: ["A", "B"], isInfinite: false, effects: ["Draw cards"], uses: [], produces: [], description: "" },
+    ];
+    const result = scoreBracket(deck, stats, combos as import("@/lib/combos/spellbook").SpellbookVariant[]);
+    expect(result.twoCardInfiniteCombos).toBe(0);
+  });
+
   it("score clamps to 4 even with extreme stats", () => {
     const deck = makeDeck();
     const stats = makeStats({
