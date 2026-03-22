@@ -25,9 +25,9 @@ import type { DeckCard } from "@/lib/deck/types";
 // Types
 // ---------------------------------------------------------------------------
 interface DeckWizardProps {
-  open: boolean;
-  onClose: () => void;
-  onComplete: (deckId: string) => void;
+  readonly open: boolean;
+  readonly onClose: () => void;
+  readonly onComplete: (deckId: string) => void;
 }
 
 type Budget = null | 50 | 200 | 500;

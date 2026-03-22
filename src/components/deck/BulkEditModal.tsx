@@ -22,8 +22,8 @@ async function fetchInBatches(names: Array<{ name: string }>): Promise<ScryfallC
 }
 
 interface BulkEditModalProps {
-  deck: Deck;
-  children: React.ReactNode;
+  readonly deck: Deck;
+  readonly children: React.ReactNode;
 }
 
 type SaveStatus = "idle" | "saving" | "reloading" | "done" | "error";

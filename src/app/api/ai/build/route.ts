@@ -111,7 +111,7 @@ async function callAnthropic(prompt: string): Promise<AIDeckResponse> {
   const data = await response.json();
   const text: string = data.content?.[0]?.text ?? "{}";
   // Strip markdown fences if the model wrapped output anyway
-  const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+  const cleaned = text.replaceAll(/^```(?:json)?\s*/i, "").replaceAll(/\s*```\s*$/i, "").trim();
   return JSON.parse(cleaned) as AIDeckResponse;
 }
 

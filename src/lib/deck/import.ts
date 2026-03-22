@@ -16,8 +16,8 @@ const MIN_QUANTITY = 1;
 /** Strip HTML tags and control characters from a string */
 function sanitizeName(raw: string): string {
   return raw
-    .replace(/<[^>]*>/g, "") // strip HTML tags
-    .replace(/[^\x20-\x7E\u00C0-\u017E]/g, "") // printable ASCII + latin extended
+    .replaceAll(/<[^>]*>/g, "") // strip HTML tags
+    .replaceAll(/[^\x20-\x7E\u00C0-\u017E]/g, "") // printable ASCII + latin extended
     .trim()
     .slice(0, MAX_NAME_LENGTH);
 }

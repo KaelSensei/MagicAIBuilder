@@ -8,11 +8,11 @@ import { BRACKET_DEFINITIONS } from "@/lib/constants/brackets";
 import { AlertTriangle, Zap, X } from "lucide-react";
 
 interface BracketIndicatorProps {
-  score: BracketScore | null;
-  targetBracket?: 1 | 2 | 3 | 4;
-  manualBracket?: 1 | 2 | 3 | 4 | null;
-  onManualBracketChange?: (bracket: 1 | 2 | 3 | 4 | null) => void;
-  className?: string;
+  readonly score: BracketScore | null;
+  readonly targetBracket?: 1 | 2 | 3 | 4;
+  readonly manualBracket?: 1 | 2 | 3 | 4 | null;
+  readonly onManualBracketChange?: (bracket: 1 | 2 | 3 | 4 | null) => void;
+  readonly className?: string;
 }
 
 const DIMENSION_LABELS: Record<string, string> = {
