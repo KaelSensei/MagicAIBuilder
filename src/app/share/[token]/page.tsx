@@ -2,47 +2,10 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ShareDeckView } from "@/components/deck/ShareDeckView";
+import type { ApiSharedDeck } from "@/lib/deck/share-types";
 
 interface Params {
   params: Promise<{ token: string }>;
-}
-
-// ─── Types matching the API response ─────────────────────────────────────────
-
-interface ApiCard {
-  readonly id: string;
-  readonly scryfallId: string;
-  readonly name: string;
-  readonly manaCost: string;
-  readonly cmc: number;
-  readonly typeLine: string;
-  readonly oracleText: string;
-  readonly colorIdentity: readonly string[];
-  readonly isGameChanger: boolean;
-  readonly isBanned: boolean;
-  readonly price: number | null;
-  readonly imageUri: string;
-  readonly artCropUri: string;
-  readonly category: string;
-  readonly quantity: number;
-  readonly isCommander: boolean;
-  readonly isPartner: boolean;
-}
-
-interface ApiSharedDeck {
-  readonly id: string;
-  readonly name: string;
-  readonly format: string;
-  readonly targetBracket: number;
-  readonly budget: number | null;
-  readonly commanderId: string | null;
-  readonly partnerId: string | null;
-  readonly companionId: string | null;
-  readonly pairingType: string;
-  readonly shareEnabled: boolean;
-  readonly cards: readonly ApiCard[];
-  readonly createdAt: string;
-  readonly updatedAt: string;
 }
 
 // ─── Server-side data fetching ────────────────────────────────────────────────
@@ -76,8 +39,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const commander = deck.cards.find((c) => c.isCommander && !c.isPartner);
   const partner = deck.cards.find((c) => c.isPartner);
-  const cardCount =
-    deck.cards.length;
+  const cardCount = deck.cards.length;
+
   let commanderLabel: string;
   if (!commander) { commanderLabel = "No commander"; }
   else if (partner) { commanderLabel = `${commander.name} + ${partner.name}`; }

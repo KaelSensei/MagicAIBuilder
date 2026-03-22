@@ -1,0 +1,262 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useCollectionStore } from "@/lib/collection/store";
+import type { CollectionCard } from "@/lib/collection/types";
+
+function makeCollectionCard(overrides: Partial<CollectionCard> = {}): CollectionCard {
+  return {
+    id: "card-1",
+    scryfallId: "scryfall-1",
+    name: "Sol Ring",
+    quantity: 1,
+    foil: false,
+    condition: "NM",
+    acquiredAt: null,
+    price: 1.5,
+    imageUri: "https://example.com/img.jpg",
+    createdAt: new Date("2024-01-01"),
+    ...overrides,
+  };
+}
+
+describe("Collection store — getByScryfall / getTotalOwned", () => {
+  beforeEach(() => {
+    useCollectionStore.setState({
+      collectionCards: {},
+      collectionCardsFoil: {},
+      isLoading: false,
+      isSyncing: false,
+    });
+  });
+
+  it("getByScryfall returns null when card not in collection", () => {
+    const { normal, foil } = useCollectionStore.getState().getByScryfall("unknown");
+    expect(normal).toBeNull();
+    expect(foil).toBeNull();
+  });
+
+  it("getByScryfall returns the card when it exists", () => {
+    const card = makeCollectionCard();
+    useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
+    const { normal } = useCollectionStore.getState().getByScryfall("scryfall-1");
+    expect(normal?.name).toBe("Sol Ring");
+  });
+
+  it("getByScryfall returns foil card from foil map", () => {
+    const foilCard = makeCollectionCard({ foil: true, id: "foil-1" });
+    useCollectionStore.setState({ collectionCardsFoil: { "scryfall-1": foilCard } });
+    const { foil } = useCollectionStore.getState().getByScryfall("scryfall-1");
+    expect(foil?.foil).toBe(true);
+  });
+
+  it("getTotalOwned returns 0 when not in collection", () => {
+    expect(useCollectionStore.getState().getTotalOwned("unknown")).toBe(0);
+  });
+
+  it("getTotalOwned sums normal + foil quantities", () => {
+    const normal = makeCollectionCard({ quantity: 2 });
+    const foil = makeCollectionCard({ foil: true, id: "foil-1", quantity: 3 });
+    useCollectionStore.setState({
+      collectionCards: { "scryfall-1": normal },
+      collectionCardsFoil: { "scryfall-1": foil },
+    });
+    expect(useCollectionStore.getState().getTotalOwned("scryfall-1")).toBe(5);
+  });
+});
+
+describe("Collection store — addToCollection", () => {
+  beforeEach(() => {
+    useCollectionStore.setState({
+      collectionCards: {},
+      collectionCardsFoil: {},
+      isLoading: false,
+      isSyncing: false,
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("adds a non-foil card to collectionCards", async () => {
+    const response = {
+      id: "new-1",
+      scryfallId: "sf-1",
+      name: "Sol Ring",
+      quantity: 1,
+      foil: false,
+      condition: "NM",
+      acquiredAt: null,
+      price: 1.5,
+      imageUri: "",
+      createdAt: "2024-01-01T00:00:00.000Z",
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => response }));
+    await useCollectionStore.getState().addToCollection({ scryfallId: "sf-1", name: "Sol Ring" });
+    expect(useCollectionStore.getState().collectionCards["sf-1"]?.name).toBe("Sol Ring");
+  });
+
+  it("adds a foil card to collectionCardsFoil", async () => {
+    const response = {
+      id: "foil-1",
+      scryfallId: "sf-1",
+      name: "Sol Ring",
+      quantity: 1,
+      foil: true,
+      condition: null,
+      acquiredAt: null,
+      price: null,
+      imageUri: "",
+      createdAt: "2024-01-01T00:00:00.000Z",
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => response }));
+    await useCollectionStore.getState().addToCollection({ scryfallId: "sf-1", name: "Sol Ring", foil: true });
+    expect(useCollectionStore.getState().collectionCardsFoil["sf-1"]?.foil).toBe(true);
+  });
+});
+
+describe("Collection store — removeFromCollection", () => {
+  beforeEach(() => {
+    useCollectionStore.setState({
+      collectionCards: {},
+      collectionCardsFoil: {},
+      isLoading: false,
+      isSyncing: false,
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("removes a non-foil card from collectionCards", async () => {
+    const card = makeCollectionCard({ id: "card-1" });
+    useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+    await useCollectionStore.getState().removeFromCollection("card-1");
+    expect(useCollectionStore.getState().collectionCards["scryfall-1"]).toBeUndefined();
+  });
+
+  it("removes a foil card from collectionCardsFoil", async () => {
+    const foilCard = makeCollectionCard({ id: "foil-1", foil: true });
+    useCollectionStore.setState({ collectionCardsFoil: { "scryfall-1": foilCard } });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+    await useCollectionStore.getState().removeFromCollection("foil-1");
+    expect(useCollectionStore.getState().collectionCardsFoil["scryfall-1"]).toBeUndefined();
+  });
+});
+
+describe("Collection store — updateQuantity", () => {
+  beforeEach(() => {
+    useCollectionStore.setState({
+      collectionCards: {},
+      collectionCardsFoil: {},
+      isLoading: false,
+      isSyncing: false,
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("updates quantity for a non-foil card", async () => {
+    const card = makeCollectionCard({ id: "card-1", quantity: 1 });
+    useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
+    const updatedCard = { ...card, quantity: 3, createdAt: "2024-01-01T00:00:00.000Z", acquiredAt: null };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => updatedCard }));
+    await useCollectionStore.getState().updateQuantity("card-1", 3);
+    expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.quantity).toBe(3);
+  });
+
+  it("removes card when deleted=true returned", async () => {
+    const card = makeCollectionCard({ id: "card-1" });
+    useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ deleted: true }) }));
+    await useCollectionStore.getState().updateQuantity("card-1", 0);
+    expect(useCollectionStore.getState().collectionCards["scryfall-1"]).toBeUndefined();
+  });
+});
+
+describe("Collection store — updateCondition", () => {
+  beforeEach(() => {
+    useCollectionStore.setState({
+      collectionCards: {},
+      collectionCardsFoil: {},
+      isLoading: false,
+      isSyncing: false,
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("updates condition for a non-foil card", async () => {
+    const card = makeCollectionCard({ id: "card-1", condition: "NM" });
+    useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
+    const updated = { ...card, condition: "LP", foil: false, createdAt: "2024-01-01T00:00:00.000Z", acquiredAt: null };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => updated }));
+    await useCollectionStore.getState().updateCondition("card-1", "LP");
+    expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.condition).toBe("LP");
+  });
+});
+
+describe("Collection store — loadCollection", () => {
+  beforeEach(() => {
+    useCollectionStore.setState({
+      collectionCards: {},
+      collectionCardsFoil: {},
+      isLoading: false,
+      isSyncing: false,
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("populates collectionCards from API response", async () => {
+    const card: Omit<CollectionCard, "createdAt" | "acquiredAt"> & { createdAt: string; acquiredAt: string | null } = {
+      id: "card-1",
+      scryfallId: "scryfall-1",
+      name: "Sol Ring",
+      quantity: 1,
+      foil: false,
+      condition: "NM",
+      acquiredAt: null,
+      price: 1.5,
+      imageUri: "",
+      createdAt: "2024-01-01T00:00:00.000Z",
+    };
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [card],
+    }));
+
+    await useCollectionStore.getState().loadCollection();
+    const { collectionCards } = useCollectionStore.getState();
+    expect(collectionCards["scryfall-1"]?.name).toBe("Sol Ring");
+    expect(collectionCards["scryfall-1"]?.createdAt).toBeInstanceOf(Date);
+  });
+
+  it("populates collectionCardsFoil for foil cards", async () => {
+    const card = {
+      id: "foil-1",
+      scryfallId: "scryfall-foil-1",
+      name: "Lightning Bolt",
+      quantity: 2,
+      foil: true,
+      condition: null,
+      acquiredAt: null,
+      price: null,
+      imageUri: "",
+      createdAt: "2024-01-01T00:00:00.000Z",
+    };
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [card],
+    }));
+
+    await useCollectionStore.getState().loadCollection();
+    const { collectionCardsFoil } = useCollectionStore.getState();
+    expect(collectionCardsFoil["scryfall-foil-1"]?.foil).toBe(true);
+  });
+
+  it("handles fetch failure gracefully", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    }));
+
+    await useCollectionStore.getState().loadCollection();
+    expect(useCollectionStore.getState().isLoading).toBe(false);
+  });
+});
