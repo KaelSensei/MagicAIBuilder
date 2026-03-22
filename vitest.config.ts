@@ -16,7 +16,16 @@ export default defineConfig({
       reporter: ["text", "json", "html", "lcov"],
       reportOnFailure: true,
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/app/**", "src/components/**"],
+      exclude: [
+        // Next.js app shell — not unit-testable without full Next.js runtime
+        "src/app/**",
+        // React components — covered by E2E/integration tests (Playwright)
+        "src/components/**",
+        // Generated files
+        "src/generated/**",
+        // Type-only files
+        "**/*.d.ts",
+      ],
     },
   },
   resolve: {
