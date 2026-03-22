@@ -4,6 +4,14 @@ Tracked features and improvements for future development.
 
 ---
 
+## Card Type Support
+
+- [ ] **MDFC (Modal Double-Faced Cards)** — full support for MDFCs (e.g. Shatterskull Smashing // Shatterskull, the Hammer Pass): display both faces, let the player choose which face to show in the deck list and grid, count CMC correctly (front face only), and flag them in mana curve/statistics as flexible land-or-spell cards
+
+- [ ] **Double-faced cards (DFC) — flip/transform** — cards with two faces where only one is playable at a given time (e.g. Delver of Secrets // Insectile Aberration, werewolves): show the front face by default, allow flipping the preview, and correctly handle image fetching for both faces via Scryfall (`card_faces`)
+
+- [ ] **Hybrid cards** — cards with hybrid mana costs (e.g. {W/U}, {2/W}) where the caster can pay either color: correctly parse hybrid symbols in mana cost display, attribute both colors to the color identity, and account for hybrid pips in mana symbol proportion statistics (each hybrid pip counts as 0.5 toward each color, or as the chosen color)
+
 ## Deck Editor
 
 - [ ] **Bulk edit on Sideboard & Considering** — select multiple cards at once and move/remove them in bulk; currently only one card at a time can be managed in the Sideboard and Considering zones
