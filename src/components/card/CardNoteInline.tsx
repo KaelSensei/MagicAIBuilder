@@ -73,7 +73,6 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
         className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
-        role="presentation"
       >
       <textarea
         ref={textareaRef}

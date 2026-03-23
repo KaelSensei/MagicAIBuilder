@@ -691,7 +691,7 @@ describe("useDeckStore — markGameChanger / markBanned", () => {
   it("markGameChanger does nothing when no active deck", () => {
     useDeckStore.setState({ activeDeckId: null });
     useDeckStore.getState().markGameChanger("Rhystic Study");
-    // No crash expected
+    expect(Object.keys(useDeckStore.getState().decks)).toHaveLength(1);
   });
 
   it("markBanned sets isBanned=true for matching card name", () => {
@@ -709,7 +709,7 @@ describe("useDeckStore — markGameChanger / markBanned", () => {
   it("markBanned does nothing when no active deck", () => {
     useDeckStore.setState({ activeDeckId: null });
     useDeckStore.getState().markBanned("Some Card");
-    // No crash expected
+    expect(Object.keys(useDeckStore.getState().decks)).toHaveLength(1);
   });
 
   it("markGameChanger is idempotent when called twice", () => {
