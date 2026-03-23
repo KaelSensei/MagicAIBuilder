@@ -80,6 +80,7 @@ function makeDeckCard(id: string, name: string, extra: Partial<DeckCard> = {}): 
     artCropUri: "",
     category: "creature",
     quantity: 1,
+    zone: "main" as const,
     ...extra,
   };
 }
@@ -95,8 +96,14 @@ function seedDeck(): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
-    targetBracket: 2,
+    targetBracket: 2 as 1 | 2 | 3 | 4,
+    manualBracket: null as 1 | 2 | 3 | 4 | null,
     budget: null,
+    description: "",
+    tags: [],
+    shareToken: null,
+    shareEnabled: false,
+    isAIGenerated: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

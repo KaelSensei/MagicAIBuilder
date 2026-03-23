@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useDeck } from "./useDeck";
 import { useDeckStore } from "@/lib/deck/store";
@@ -54,7 +54,7 @@ describe("useDeck", () => {
       partner: null,
       companion: null,
       cards: [],
-      targetBracket: 2,
+      targetBracket: 2 as 1 | 2 | 3 | 4,
       manualBracket: null,
       budget: null,
       tags: [],
@@ -62,9 +62,10 @@ describe("useDeck", () => {
       isAIGenerated: false,
       shareEnabled: false,
       shareToken: null,
-      description: null,
-      createdAt: "2026-01-01",
-      updatedAt: "2026-01-01",
+      description: "",
+      maybeboard: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     useDeckStore.setState({ decks: { "deck-1": testDeck }, activeDeckId: "deck-1" });
     const { result } = renderHook(() => useDeck());

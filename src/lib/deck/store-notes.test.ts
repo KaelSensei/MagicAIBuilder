@@ -48,8 +48,13 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
     companion: null,
     pairingType: "none",
     cards: [],
+    maybeboard: [],
     format: "commander",
-    targetBracket: 2,
+    targetBracket: 2 as 1 | 2 | 3 | 4,
+    manualBracket: null as 1 | 2 | 3 | 4 | null,
+    shareToken: null,
+    shareEnabled: false,
+    isAIGenerated: false,
     budget: null,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -74,6 +79,7 @@ function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
     category: "instant",
     quantity: 1,
     notes: null,
+    zone: "main" as const,
     ...overrides,
   };
 }
