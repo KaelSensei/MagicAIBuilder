@@ -36,6 +36,7 @@ export interface DeckCard {
   quantity: number; // Always 1 in Commander (except basics)
   notes?: string | null; // Optional per-card notes
   zone: "main" | "sideboard" | "maybeboard"; // Deck zone (main deck, sideboard, or maybeboard)
+  isMaybeboard?: boolean; // True when stored in the maybeboard list
 }
 
 export type CommanderPairingType =
@@ -55,6 +56,7 @@ export interface Deck {
   companion: DeckCard | null; // Companion (sideboard, outside the 99)
   pairingType: CommanderPairingType; // Detected from commander keywords
   cards: DeckCard[]; // The 99 (or 98 with partner)
+  maybeboard: DeckCard[]; // Cards being considered for the deck
   format: "commander" | "brawl";
   targetBracket: 1 | 2 | 3 | 4;
   manualBracket: 1 | 2 | 3 | 4 | null; // null = use auto-calculated score

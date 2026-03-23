@@ -18,6 +18,7 @@ function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
     artCropUri: "",
     category: "creature",
     quantity: 1,
+    zone: "main" as const,
     ...overrides,
   };
 }

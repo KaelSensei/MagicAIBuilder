@@ -124,7 +124,7 @@ describe("usePlaytest", () => {
     let state: ReturnType<typeof result.current.startPlaytest>;
     act(() => { state = result.current.startPlaytest(deck); });
     // Empty the library
-    const emptyLibraryState = { ...state, library: [] };
+    const emptyLibraryState = { ...state!, library: [] };
     let newState: typeof state;
     act(() => { newState = result.current.drawCard(emptyLibraryState); });
     expect(newState!).toBe(emptyLibraryState);
@@ -155,7 +155,7 @@ describe("usePlaytest", () => {
     const { result } = renderHook(() => usePlaytest());
     let state: ReturnType<typeof result.current.startPlaytest>;
     act(() => { state = result.current.startPlaytest(deck); });
-    const emptyLibraryState = { ...state, library: [] };
+    const emptyLibraryState = { ...state!, library: [] };
     act(() => { state = result.current.nextTurn(emptyLibraryState); });
     expect(state!.turn).toBe(2);
     expect(state!.hand).toHaveLength(emptyLibraryState.hand.length);

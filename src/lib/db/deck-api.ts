@@ -183,6 +183,20 @@ export async function updateCardZone(
   return res.json();
 }
 
+export async function updateCardMaybeboard(
+  deckId: string,
+  cardId: string,
+  isMaybeboard: boolean
+): Promise<ApiDeckCard> {
+  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isMaybeboard }),
+  });
+  if (!res.ok) handleApiError(res, "updateCardMaybeboard");
+  return res.json();
+}
+
 export async function removeAllCards(deckId: string): Promise<void> {
   const res = await fetch(`/api/decks/${deckId}/cards`, {
     method: "DELETE",

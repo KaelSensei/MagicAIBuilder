@@ -25,6 +25,7 @@ function makeCard(name: string, qty = 1, overrides: Partial<DeckCard> = {}): Dec
     artCropUri: "",
     category: "other" as const,
     quantity: qty,
+    zone: "main" as const,
     ...overrides,
   };
 }
@@ -40,12 +41,14 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
-    targetBracket: 2,
+    targetBracket: 2 as 1 | 2 | 3 | 4,
+    manualBracket: null as 1 | 2 | 3 | 4 | null,
     budget: null,
     description: "",
     tags: [],
     shareToken: null,
     shareEnabled: false,
+    isAIGenerated: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

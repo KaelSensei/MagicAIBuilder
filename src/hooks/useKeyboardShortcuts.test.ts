@@ -30,10 +30,9 @@ function makeCard(name: string, id = name): ScryfallCard {
     set: "test",
     set_name: "Test Set",
     rarity: "common",
-    prices: { usd: null, usd_foil: null, eur: null, tix: null },
+    prices: { usd: null, usd_foil: null, eur: null },
     image_uris: { normal: "", large: "", art_crop: "" },
     card_faces: undefined,
-    layout: "normal",
   };
 }
 
