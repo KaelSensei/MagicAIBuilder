@@ -29,7 +29,7 @@ import { BanlistAlert } from "@/components/deck/BanlistAlert";
 import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery } from "@/lib/scryfall/search";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
-import type { SearchFilters as Filters, DeckCard } from "@/lib/deck/types";
+import type { SearchFilters as Filters, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { ArrowLeft, Check, Copy, Crown, Download, FileText, Pencil } from "lucide-react";
 import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
@@ -258,6 +258,42 @@ export default function BuilderPage() {
     });
   }, [addCard]);
 
+  const dropSearchCard = useCallback(
+    (searchCard: ScryfallCard, overId: string) => {
+      if (overId.startsWith("deck-category-")) {
+        addCard(searchCard, undefined, "main");
+      } else if (overId === "deck-zone-sideboard") {
+        addCard(searchCard, undefined, "sideboard");
+      } else if (overId === "deck-zone-maybeboard") {
+        addCard(searchCard, undefined, "maybeboard");
+      } else if (overId.startsWith("deck-panel-")) {
+        const zone = overId.replace("deck-panel-", "") as "main" | "sideboard" | "maybeboard";
+        addCard(searchCard, undefined, zone);
+      } else if (overId.startsWith("deck-")) {
+        addCard(searchCard, undefined, activeZone);
+      }
+    },
+    [addCard, activeZone]
+  );
+
+  const moveIntraDeck = useCallback(
+    (cardId: string, overId: string, sourceCategory: string | undefined, deckCards: readonly DeckCard[]) => {
+      if (overId.startsWith("deck-category-")) {
+        const newCategory = overId.replace("deck-category-", "");
+        if (newCategory !== sourceCategory) {
+          updateCardCategory(cardId, newCategory as CardCategory);
+        }
+      } else if (overId.startsWith("deck-card-")) {
+        const targetCardId = overId.replace("deck-card-", "");
+        const targetCard = deckCards.find((c) => c.id === targetCardId);
+        if (targetCard && targetCard.category !== sourceCategory) {
+          updateCardCategory(cardId, targetCard.category);
+        }
+      }
+    },
+    [updateCardCategory]
+  );
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setActiveDragCard(null);
@@ -265,57 +301,19 @@ export default function BuilderPage() {
       if (!over) return;
 
       const overId = over.id.toString();
-
-      // Case 1: drag from search results → drop on deck category zone or sideboard/maybeboard zone
       const searchCard = active.data.current?.card as ScryfallCard | undefined;
       if (searchCard) {
-        if (overId.startsWith("deck-category-")) {
-          // Dropped on a category → always main
-          addCard(searchCard, undefined, "main");
-          return;
-        }
-        if (overId === "deck-zone-sideboard") {
-          addCard(searchCard, undefined, "sideboard");
-          return;
-        }
-        if (overId === "deck-zone-maybeboard") {
-          addCard(searchCard, undefined, "maybeboard");
-          return;
-        }
-        // Fallback: drop anywhere on deck panel → use the zone encoded in the id
-        if (overId.startsWith("deck-panel-")) {
-          const zone = overId.replace("deck-panel-", "") as "main" | "sideboard" | "maybeboard";
-          addCard(searchCard, undefined, zone);
-          return;
-        }
-        // Last resort fallback
-        if (overId.startsWith("deck-")) {
-          addCard(searchCard, undefined, activeZone);
-          return;
-        }
+        dropSearchCard(searchCard, overId);
+        return;
       }
 
-      // Case 2: intra-deck drag — move card between categories
       const cardId = active.data.current?.cardId as string | undefined;
       if (cardId) {
-        if (overId.startsWith("deck-category-")) {
-          const newCategory = overId.replace("deck-category-", "");
-          const sourceCategory = active.data.current?.sourceCategory as string | undefined;
-          if (newCategory !== sourceCategory) {
-            updateCardCategory(cardId, newCategory as import("@/lib/deck/types").CardCategory);
-          }
-        } else if (overId.startsWith("deck-card-")) {
-          // Dropped over another card → move to that card's category
-          const targetCardId = overId.replace("deck-card-", "");
-          const targetCard = deck?.cards.find((c) => c.id === targetCardId);
-          const sourceCategory = active.data.current?.sourceCategory as string | undefined;
-          if (targetCard && targetCard.category !== sourceCategory) {
-            updateCardCategory(cardId, targetCard.category);
-          }
-        }
+        const sourceCategory = active.data.current?.sourceCategory as string | undefined;
+        moveIntraDeck(cardId, overId, sourceCategory, deck?.cards ?? []);
       }
     },
-    [addCard, updateCardCategory, deck, activeZone]
+    [dropSearchCard, moveIntraDeck, deck]
   );
 
   if (!deck) {
