@@ -20,6 +20,8 @@ Tracked features and improvements for future development.
 
 - [ ] **Enhance Scryfall API usage** — smarter caching, request batching, better error recovery, and rate-limit handling to reduce redundant calls and improve load times
 
+- [ ] **Public external API** — expose MagicAIBuilder data and deck operations as a versioned REST (or GraphQL) API, likely in a separate repository; enables third-party integrations, mobile clients, and CLI tooling; requires auth (API keys or OAuth2), rate limiting, OpenAPI documentation, and versioning strategy
+
 ## Search & Filtering
 
 - [ ] **Enhanced deck-building filters** — filter cards by subtype, keyword, power/toughness, price range, set legality, and interaction type while building; add saved filter presets
@@ -62,6 +64,34 @@ Tracked features and improvements for future development.
 ## UI / UX
 
 - [ ] **Visual redesign** — modernize the interface; improve mobile responsiveness, card hover interactions, drag-and-drop UX, and overall polish
+
+## Observability
+
+Set up progressively — start with Level 1 immediately, add Level 2 when real users arrive, Level 3 when the product is serious.
+
+### Level 1 — Minimum viable (recommended now)
+
+- [ ] **Sentry** (`@sentry/nextjs`) — automatic error capture on frontend and backend; free for side projects; install takes ~5 minutes; the single most impactful observability tool to add first
+
+- [ ] **Health check endpoint + UptimeRobot** — expose `/api/health` returning DB connectivity status; configure UptimeRobot (free, 50 monitors) to ping it every 5 minutes and alert via Discord or email when the app goes down
+
+- [ ] **Bundle analyzer** (`@next/bundle-analyzer`) — visual map of JS bundle size per dependency; run once a month to catch bloat before it impacts load times
+
+### Level 2 — When you have real users
+
+- [ ] **Vercel Analytics** — real-world performance metrics per page and device: LCP, CLS, INP (Core Web Vitals); free on the hobby plan if deploying to Vercel
+
+- [ ] **PostHog** — open-source product analytics, self-hostable; track which features users actually use, identify abandoned flows (e.g. "80% of users never click AI Suggestions → UX problem"); free up to 1M events/month
+
+- [ ] **Structured logging** — replace `console.error("[GET /api/decks]", error)` with a structured JSON logger (Pino is the Node standard); emit `level`, `timestamp`, `requestId`, `route`, and `error` fields so logs are searchable after the fact
+
+### Level 3 — When it's serious
+
+- [ ] **Grafana + Prometheus** — custom monitoring dashboards: Scryfall requests per minute, API route response times, decks created per day; self-hosted, powerful, significant setup cost
+
+- [ ] **OpenTelemetry** — distributed tracing across the full request path (click → API route → Prisma query → Scryfall call → response); pinpoints exactly where latency comes from; Next.js 15 has experimental native support
+
+- [ ] **PagerDuty / OpsGenie** — serious alerting with on-call rotation and escalation policies; relevant for teams, not needed as a solo developer
 
 ## Partnerships & Integrations
 
