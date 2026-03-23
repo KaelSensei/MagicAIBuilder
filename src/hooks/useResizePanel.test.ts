@@ -145,4 +145,115 @@ describe("useResizePanel", () => {
     );
     expect(typeof result.current.handleMouseDown).toBe("function");
   });
+
+  it("handleMouseDown sets cursor style to col-resize", () => {
+    const { result } = renderHook(() =>
+      useResizePanel({ initialWidth: 300, minWidth: 200, maxWidth: 600 })
+    );
+
+    act(() => {
+      result.current.handleMouseDown({ clientX: 100 } as React.MouseEvent);
+    });
+
+    expect(document.body.style.cursor).toBe("col-resize");
+  });
+
+  it("mousemove event updates width based on delta", () => {
+    const { result } = renderHook(() =>
+      useResizePanel({ initialWidth: 300, minWidth: 200, maxWidth: 600 })
+    );
+
+    // Start dragging from x=100
+    act(() => {
+      result.current.handleMouseDown({ clientX: 100 } as React.MouseEvent);
+    });
+
+    // Move mouse 50px to the right
+    act(() => {
+      globalThis.dispatchEvent(new MouseEvent("mousemove", { clientX: 150 }));
+    });
+
+    expect(result.current.width).toBe(350);
+  });
+
+  it("mousemove clamps to maxWidth", () => {
+    const { result } = renderHook(() =>
+      useResizePanel({ initialWidth: 580, minWidth: 200, maxWidth: 600 })
+    );
+
+    act(() => {
+      result.current.handleMouseDown({ clientX: 100 } as React.MouseEvent);
+    });
+
+    act(() => {
+      globalThis.dispatchEvent(new MouseEvent("mousemove", { clientX: 200 }));
+    });
+
+    expect(result.current.width).toBe(600);
+  });
+
+  it("mousemove clamps to minWidth", () => {
+    const { result } = renderHook(() =>
+      useResizePanel({ initialWidth: 210, minWidth: 200, maxWidth: 600 })
+    );
+
+    act(() => {
+      result.current.handleMouseDown({ clientX: 100 } as React.MouseEvent);
+    });
+
+    act(() => {
+      globalThis.dispatchEvent(new MouseEvent("mousemove", { clientX: -100 }));
+    });
+
+    expect(result.current.width).toBe(200);
+  });
+
+  it("mouseup stops dragging and resets cursor", () => {
+    const { result } = renderHook(() =>
+      useResizePanel({ initialWidth: 300, minWidth: 200, maxWidth: 600 })
+    );
+
+    act(() => {
+      result.current.handleMouseDown({ clientX: 100 } as React.MouseEvent);
+    });
+
+    act(() => {
+      globalThis.dispatchEvent(new MouseEvent("mouseup"));
+    });
+
+    expect(document.body.style.cursor).toBe("");
+  });
+
+  it("mouseup saves width to localStorage when storageKey provided", () => {
+    const { result } = renderHook(() =>
+      useResizePanel({ initialWidth: 300, minWidth: 200, maxWidth: 600, storageKey: "resize-test" })
+    );
+
+    act(() => {
+      result.current.handleMouseDown({ clientX: 100 } as React.MouseEvent);
+    });
+
+    act(() => {
+      globalThis.dispatchEvent(new MouseEvent("mousemove", { clientX: 150 }));
+    });
+
+    act(() => {
+      globalThis.dispatchEvent(new MouseEvent("mouseup"));
+    });
+
+    // localStorage is updated by the width-change effect
+    expect(localStorage.getItem("resize-test")).toBeTruthy();
+  });
+
+  it("mousemove does nothing when not dragging", () => {
+    const { result } = renderHook(() =>
+      useResizePanel({ initialWidth: 300, minWidth: 200, maxWidth: 600 })
+    );
+
+    act(() => {
+      globalThis.dispatchEvent(new MouseEvent("mousemove", { clientX: 500 }));
+    });
+
+    expect(result.current.width).toBe(300);
+  });
 });
