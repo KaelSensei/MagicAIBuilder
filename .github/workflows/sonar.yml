@@ -6,10 +6,10 @@ on:
   pull_request:
     branches: [main]
 
-# Cancel in-progress runs for the same branch/PR — only the latest commit runs
+# Cancel in-progress runs on PRs only (keeps badge green on main)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   sonar:
