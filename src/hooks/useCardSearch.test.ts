@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { useCardSearch, useCardAutocomplete } from "./useCardSearch";
+import { useCardSearch, useCardAutocomplete, useCardSearchInfinite } from "./useCardSearch";
 import * as scryfallClient from "@/lib/scryfall/client";
 
 vi.mock("@/lib/scryfall/client");
@@ -74,6 +74,64 @@ describe("useCardSearch retry behavior", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
     // Only 1 call — no retries for 404
     expect(scryfallClient.searchCards).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("useCardSearchInfinite", () => {
+  it("does not fetch when query is empty", () => {
+    const { result } = renderHook(() => useCardSearchInfinite(""), {
+      wrapper: createWrapper(),
+    });
+    expect(result.current.fetchStatus).toBe("idle");
+    expect(scryfallClient.searchCards).not.toHaveBeenCalled();
+  });
+
+  it("does not fetch when query is 1 char", () => {
+    const { result } = renderHook(() => useCardSearchInfinite("a"), {
+      wrapper: createWrapper(),
+    });
+    expect(result.current.fetchStatus).toBe("idle");
+  });
+
+  it("fetches first page when query has 2+ chars", async () => {
+    const page1 = { data: [{ id: "1", name: "Lightning Bolt" }], has_more: false };
+    vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce(page1 as never);
+
+    const { result } = renderHook(() => useCardSearchInfinite("lightning"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.pages).toHaveLength(1);
+    expect(scryfallClient.searchCards).toHaveBeenCalledWith("lightning", 1);
+  });
+
+  it("getNextPageParam returns undefined when has_more is false", async () => {
+    const page = { data: [], has_more: false };
+    vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce(page as never);
+
+    const { result } = renderHook(() => useCardSearchInfinite("bolt"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.hasNextPage).toBe(false);
+  });
+
+  it("getNextPageParam extracts page number from next_page URL", async () => {
+    const page = {
+      data: [{ id: "1", name: "Bolt" }],
+      has_more: true,
+      next_page: "https://api.scryfall.com/cards/search?q=bolt&page=2",
+    };
+    vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce(page as never);
+
+    const { result } = renderHook(() => useCardSearchInfinite("bolt"), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.hasNextPage).toBe(true);
   });
 });
 
