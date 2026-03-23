@@ -150,13 +150,13 @@ describe("addCardSchema", () => {
   });
 
   it("rejects missing name", () => {
-    const { name: _, ...withoutName } = validCard;
+    const { name: _name, ...withoutName } = validCard;
     const result = addCardSchema.safeParse(withoutName);
     expect(result.success).toBe(false);
   });
 
   it("rejects missing scryfallId", () => {
-    const { scryfallId: _, ...withoutId } = validCard;
+    const { scryfallId: _id, ...withoutId } = validCard;
     const result = addCardSchema.safeParse(withoutId);
     expect(result.success).toBe(false);
   });
