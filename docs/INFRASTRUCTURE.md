@@ -183,27 +183,44 @@ The Zustand store performs **optimistic updates** for instant UI feedback, then 
 ### 2. Get the connection string
 
 1. In your Supabase project → click **Connect** (top center)
-2. Tab **Connection String** → Type: `URI` → Method: **Session pooler** (required for Vercel — direct connection is IPv4-only and incompatible)
+2. Tab **Connection String** → Type: `URI` → Method: **Transaction pooler**
+
+   > **Why Transaction pooler and not the others?**
+   >
+   > - **Direct connection** (`db.*` host, port 5432): IPv4-only — Vercel runs on IPv6, so this always fails with `Can't reach database server`
+   > - **Session pooler** (port 5432 via pooler host): limited concurrent connections — hits `MaxClientsInSessionMode` quickly on serverless because each Vercel function invocation opens a new connection
+   > - **Transaction pooler** (port 6543): designed for serverless — connections are released after each transaction, no limit issues
+
 3. Copy the URL — it looks like:
    ```
-   postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:5432/postgres
+   postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
    ```
-4. Replace `[PASSWORD]` with your database password
+4. Replace `[PASSWORD]` with your database password and append `?pgbouncer=true`:
+   ```
+   postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+   ```
 
 > **Important:** never commit this URL. Set it as an environment variable only.
+> If your password contains special characters, percent-encode them: `/` → `%2F`, `@` → `%40`, `#` → `%23`, `*` → `%2A`
 
 ### 3. Run migrations on Supabase
 
+Run this once from your local machine to apply all Prisma migrations to the Supabase DB:
+
 ```bash
-DATABASE_URL="postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:5432/postgres" \
+DATABASE_URL="postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true" \
   npx prisma migrate deploy
 ```
+
+You should see `All migrations have been successfully applied.`
+
+> If you see `The table 'public.Deck' does not exist`, the migrations were not applied — run the command above again.
 
 ### 4. Deploy to Vercel
 
 1. Go to [vercel.com](https://vercel.com) → **Add New Project** → import `MagicAIBuilder` from GitHub
 2. Before clicking Deploy, expand **Environment Variables** and add:
-   - `DATABASE_URL` = your Supabase Session Pooler URL (with password filled in)
+   - `DATABASE_URL` = your Supabase Transaction Pooler URL (with `?pgbouncer=true`)
    - `ANTHROPIC_API_KEY` = your key (if using AI features)
 3. Click **Deploy**
 
@@ -217,7 +234,7 @@ See the UptimeRobot instructions in [ROADMAP.md](./ROADMAP.md) under **Observabi
 
 ## Production Considerations
 
-- Always use the **Session Pooler** URL (port 5432 via pooler host) with Vercel — the direct connection (port 5432 via `db.*` host) is IPv4-only and will fail
+- Always use the **Transaction Pooler** URL (port 6543, `?pgbouncer=true`) with Vercel — session and direct connections both fail in serverless
 - Use `npx prisma migrate deploy` (not `dev`) in CI/CD pipelines
+- Run migrations manually from your local machine when deploying schema changes
 - The `CardCache` table should be periodically pruned (rows older than 24h are stale)
-- If the password contains special characters, percent-encode them: `/` → `%2F`, `@` → `%40`, `#` → `%23`
