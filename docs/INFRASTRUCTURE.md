@@ -95,6 +95,7 @@ pnpm db:migrate
 ```
 
 This will:
+
 - Apply all pending migrations from `prisma/migrations/`
 - Regenerate the Prisma Client
 
@@ -108,24 +109,24 @@ pnpm dev
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `DATABASE_URL` | ✅ Yes | — | PostgreSQL connection string |
+| Variable       | Required | Default | Description                  |
+| -------------- | -------- | ------- | ---------------------------- |
+| `DATABASE_URL` | ✅ Yes   | —       | PostgreSQL connection string |
 
 ---
 
 ## Prisma Commands
 
-| Command | Description |
-|---|---|
-| `pnpm db:up` | Start Docker Postgres |
-| `pnpm db:down` | Stop Docker Postgres |
-| `pnpm db:migrate` | Run pending migrations & regenerate client |
-| `pnpm db:studio` | Open Prisma Studio (visual DB browser) |
-| `pnpm db:reset` | Drop + recreate DB + re-run all migrations |
-| `pnpm prisma generate` | Regenerate client only (no migration) |
-| `pnpm prisma migrate dev --name <name>` | Create a named migration |
-| `pnpm prisma migrate deploy` | Apply migrations in production |
+| Command                                 | Description                                |
+| --------------------------------------- | ------------------------------------------ |
+| `pnpm db:up`                            | Start Docker Postgres                      |
+| `pnpm db:down`                          | Stop Docker Postgres                       |
+| `pnpm db:migrate`                       | Run pending migrations & regenerate client |
+| `pnpm db:studio`                        | Open Prisma Studio (visual DB browser)     |
+| `pnpm db:reset`                         | Drop + recreate DB + re-run all migrations |
+| `pnpm prisma generate`                  | Regenerate client only (no migration)      |
+| `pnpm prisma migrate dev --name <name>` | Create a named migration                   |
+| `pnpm prisma migrate deploy`            | Apply migrations in production             |
 
 ---
 
@@ -133,19 +134,19 @@ pnpm dev
 
 All CRUD operations go through Next.js App Router API routes:
 
-| Method | Route | Description |
-|---|---|---|
-| GET | `/api/decks` | List all decks |
-| POST | `/api/decks` | Create a deck |
-| GET | `/api/decks/[id]` | Get one deck (with cards) |
-| PATCH | `/api/decks/[id]` | Update deck metadata |
-| DELETE | `/api/decks/[id]` | Delete deck + cascade cards |
-| POST | `/api/decks/[id]/cards` | Add a card |
-| DELETE | `/api/decks/[id]/cards` | Remove all cards |
-| DELETE | `/api/decks/[id]/cards/[cardId]` | Remove one card |
-| PATCH | `/api/decks/[id]/cards/[cardId]` | Update card (category, etc.) |
-| GET | `/api/cache/cards?id=<id>` | Lookup cached Scryfall card |
-| POST | `/api/cache/cards` | Store Scryfall card in cache |
+| Method | Route                            | Description                  |
+| ------ | -------------------------------- | ---------------------------- |
+| GET    | `/api/decks`                     | List all decks               |
+| POST   | `/api/decks`                     | Create a deck                |
+| GET    | `/api/decks/[id]`                | Get one deck (with cards)    |
+| PATCH  | `/api/decks/[id]`                | Update deck metadata         |
+| DELETE | `/api/decks/[id]`                | Delete deck + cascade cards  |
+| POST   | `/api/decks/[id]/cards`          | Add a card                   |
+| DELETE | `/api/decks/[id]/cards`          | Remove all cards             |
+| DELETE | `/api/decks/[id]/cards/[cardId]` | Remove one card              |
+| PATCH  | `/api/decks/[id]/cards/[cardId]` | Update card (category, etc.) |
+| GET    | `/api/cache/cards?id=<id>`       | Lookup cached Scryfall card  |
+| POST   | `/api/cache/cards`               | Store Scryfall card in cache |
 
 ---
 
@@ -170,9 +171,53 @@ The Zustand store performs **optimistic updates** for instant UI feedback, then 
 
 ---
 
+## Production Deployment (Vercel + Supabase)
+
+### 1. Create a Supabase project
+
+1. Go to [supabase.com](https://supabase.com) → sign in with GitHub → **New project**
+2. Choose a strong password (letters and numbers only — avoid `/`, `*`, `@`, `#` to prevent URL encoding issues)
+3. Region: pick the closest to your users (e.g. Europe West)
+4. Uncheck **Enable Data API** and **Enable automatic RLS** — not needed when using Prisma directly
+
+### 2. Get the connection string
+
+1. In your Supabase project → click **Connect** (top center)
+2. Tab **Connection String** → Type: `URI` → Method: **Session pooler** (required for Vercel — direct connection is IPv4-only and incompatible)
+3. Copy the URL — it looks like:
+   ```
+   postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:5432/postgres
+   ```
+4. Replace `[PASSWORD]` with your database password
+
+> **Important:** never commit this URL. Set it as an environment variable only.
+
+### 3. Run migrations on Supabase
+
+```bash
+DATABASE_URL="postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:5432/postgres" \
+  npx prisma migrate deploy
+```
+
+### 4. Deploy to Vercel
+
+1. Go to [vercel.com](https://vercel.com) → **Add New Project** → import `MagicAIBuilder` from GitHub
+2. Before clicking Deploy, expand **Environment Variables** and add:
+   - `DATABASE_URL` = your Supabase Session Pooler URL (with password filled in)
+   - `ANTHROPIC_API_KEY` = your key (if using AI features)
+3. Click **Deploy**
+
+> Vercel redeploys automatically on every push to `main`.
+
+### 5. Monitor uptime (once deployed)
+
+See the UptimeRobot instructions in [ROADMAP.md](./ROADMAP.md) under **Observability → Level 1**.
+
+---
+
 ## Production Considerations
 
-- Set `DATABASE_URL` as a secret in your deployment environment
-- Use `pnpm prisma migrate deploy` (not `dev`) in CI/CD pipelines
+- Always use the **Session Pooler** URL (port 5432 via pooler host) with Vercel — the direct connection (port 5432 via `db.*` host) is IPv4-only and will fail
+- Use `npx prisma migrate deploy` (not `dev`) in CI/CD pipelines
 - The `CardCache` table should be periodically pruned (rows older than 24h are stale)
-- Consider connection pooling (PgBouncer / Prisma Accelerate) for serverless deployments
+- If the password contains special characters, percent-encode them: `/` → `%2F`, `@` → `%40`, `#` → `%23`
