@@ -75,7 +75,8 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [ ] **Sentry** (`@sentry/nextjs`): automatic error capture on frontend and backend; free for side projects; install takes ~5 minutes; the single most impactful observability tool to add first
 
-- [ ] **Health check endpoint + UptimeRobot**: expose `/api/health` returning DB connectivity status; configure UptimeRobot (free, 50 monitors) to ping it every 5 minutes and alert via Discord or email when the app goes down
+- [x] **Health check endpoint**: `GET /api/health` returns DB connectivity status (`200 ok` / `503 degraded`)
+- [ ] **UptimeRobot** (once deployed): go to uptimerobot.com, create a free account, add a new HTTP(s) monitor pointing to `https://<your-domain>/api/health`, set interval to 5 minutes, and add an alert contact (email or Discord webhook) — free plan includes 50 monitors
 
 - [ ] **Bundle analyzer** (`@next/bundle-analyzer`): visual map of JS bundle size per dependency; run once a month to catch bloat before it impacts load times
 
