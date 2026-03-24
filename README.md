@@ -9,7 +9,8 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-[![CI](https://github.com/KaelSensei/MagicAIBuilder/actions/workflows/sonar.yml/badge.svg?branch=main)](https://github.com/KaelSensei/MagicAIBuilder/actions/workflows/sonar.yml)
+[![CI](https://github.com/KaelSensei/MagicAIBuilder/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/KaelSensei/MagicAIBuilder/actions/workflows/ci.yml)
+[![SonarCloud](https://github.com/KaelSensei/MagicAIBuilder/actions/workflows/sonar.yml/badge.svg?branch=main)](https://github.com/KaelSensei/MagicAIBuilder/actions/workflows/sonar.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=alert_status)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=coverage)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=KaelSensei_MagicAIBuilder&metric=bugs)](https://sonarcloud.io/project/overview?id=KaelSensei_MagicAIBuilder)
@@ -51,60 +52,6 @@
 | Data fetching | TanStack Query 5        |
 | Database      | PostgreSQL 16 + Prisma  |
 | Drag & Drop   | dnd-kit 6               |
-
-## Architecture
-
-```mermaid
-graph TB
-    subgraph Dev["💻 Local Development"]
-        DEV[Developer]
-        DOCKER[Docker\nPostgreSQL]
-        HUSKY[Husky\npre-commit]
-        LINT[lint-staged\nnext lint + prettier]
-    end
-
-    subgraph CI["⚙️ GitHub Actions CI"]
-        LINT_CI[Lint]
-        TSC[Typecheck\ntsc --noEmit]
-        TEST[Vitest\n+ coverage]
-        BUILD[next build]
-        SONAR[SonarCloud\nquality gate]
-    end
-
-    subgraph GitHub["🐙 GitHub"]
-        REPO[Repository\nmain branch]
-        PR[Pull Request]
-        PROTECT[Branch Protection\nCI must be green]
-    end
-
-    subgraph Prod["🚀 Production"]
-        VERCEL[Vercel\nNext.js 15]
-        SUPABASE[Supabase\nPostgreSQL]
-        POOLER[Transaction Pooler\nport 6543]
-    end
-
-    subgraph Observability["📡 Observability"]
-        SENTRY[Sentry EU\nerror tracking]
-        HEALTH[GET /api/health\nDB status]
-        UPTIME[UptimeRobot\nping every 5min]
-        SCRYFALL[Scryfall API\ncard data]
-    end
-
-    DEV -->|git commit| HUSKY
-    HUSKY --> LINT
-    LINT -->|ok| REPO
-    DEV -->|git push branch| PR
-    PR --> CI
-    CI --> PROTECT
-    PROTECT -->|merge| REPO
-    REPO -->|push to main| VERCEL
-    VERCEL -->|pgbouncer| POOLER
-    POOLER --> SUPABASE
-    VERCEL -->|errors| SENTRY
-    HEALTH -->|200/503| UPTIME
-    VERCEL --> SCRYFALL
-    DEV -->|prisma migrate deploy\ndirect connection| SUPABASE
-```
 
 ## Getting Started
 
