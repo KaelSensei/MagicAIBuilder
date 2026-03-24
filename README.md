@@ -40,21 +40,76 @@
 
 ## Stack
 
-| Layer | Tech |
-|-------|------|
-| Framework | Next.js 15 (App Router) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS 4 |
-| Components | shadcn/ui + Radix |
-| Animations | Framer Motion |
-| State | Zustand 5 |
-| Data fetching | TanStack Query 5 |
-| Database | PostgreSQL 16 + Prisma |
-| Drag & Drop | dnd-kit 6 |
+| Layer         | Tech                    |
+| ------------- | ----------------------- |
+| Framework     | Next.js 15 (App Router) |
+| Language      | TypeScript 5            |
+| Styling       | Tailwind CSS 4          |
+| Components    | shadcn/ui + Radix       |
+| Animations    | Framer Motion           |
+| State         | Zustand 5               |
+| Data fetching | TanStack Query 5        |
+| Database      | PostgreSQL 16 + Prisma  |
+| Drag & Drop   | dnd-kit 6               |
+
+## Architecture
+
+```mermaid
+graph TB
+    subgraph Dev["💻 Local Development"]
+        DEV[Developer]
+        DOCKER[Docker\nPostgreSQL]
+        HUSKY[Husky\npre-commit]
+        LINT[lint-staged\nnext lint + prettier]
+    end
+
+    subgraph CI["⚙️ GitHub Actions CI"]
+        LINT_CI[Lint]
+        TSC[Typecheck\ntsc --noEmit]
+        TEST[Vitest\n+ coverage]
+        BUILD[next build]
+        SONAR[SonarCloud\nquality gate]
+    end
+
+    subgraph GitHub["🐙 GitHub"]
+        REPO[Repository\nmain branch]
+        PR[Pull Request]
+        PROTECT[Branch Protection\nCI must be green]
+    end
+
+    subgraph Prod["🚀 Production"]
+        VERCEL[Vercel\nNext.js 15]
+        SUPABASE[Supabase\nPostgreSQL]
+        POOLER[Transaction Pooler\nport 6543]
+    end
+
+    subgraph Observability["📡 Observability"]
+        SENTRY[Sentry EU\nerror tracking]
+        HEALTH[GET /api/health\nDB status]
+        UPTIME[UptimeRobot\nping every 5min]
+        SCRYFALL[Scryfall API\ncard data]
+    end
+
+    DEV -->|git commit| HUSKY
+    HUSKY --> LINT
+    LINT -->|ok| REPO
+    DEV -->|git push branch| PR
+    PR --> CI
+    CI --> PROTECT
+    PROTECT -->|merge| REPO
+    REPO -->|push to main| VERCEL
+    VERCEL -->|pgbouncer| POOLER
+    POOLER --> SUPABASE
+    VERCEL -->|errors| SENTRY
+    HEALTH -->|200/503| UPTIME
+    VERCEL --> SCRYFALL
+    DEV -->|prisma migrate deploy\ndirect connection| SUPABASE
+```
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 22+
 - pnpm 10+
 - Docker (for PostgreSQL)
@@ -99,18 +154,18 @@ Without a key, the AI panel uses curated generic suggestions.
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start dev server |
-| `pnpm build` | Production build |
-| `pnpm lint` | ESLint check |
-| `pnpm test` | Unit tests (Vitest) |
-| `pnpm test:e2e` | E2E tests (Playwright) |
-| `pnpm db:up` | Start PostgreSQL via Docker |
-| `pnpm db:down` | Stop PostgreSQL |
-| `pnpm db:migrate` | Apply pending migrations |
-| `pnpm db:studio` | Open Prisma Studio |
-| `pnpm db:reset` | Reset database |
+| Command           | Description                 |
+| ----------------- | --------------------------- |
+| `pnpm dev`        | Start dev server            |
+| `pnpm build`      | Production build            |
+| `pnpm lint`       | ESLint check                |
+| `pnpm test`       | Unit tests (Vitest)         |
+| `pnpm test:e2e`   | E2E tests (Playwright)      |
+| `pnpm db:up`      | Start PostgreSQL via Docker |
+| `pnpm db:down`    | Stop PostgreSQL             |
+| `pnpm db:migrate` | Apply pending migrations    |
+| `pnpm db:studio`  | Open Prisma Studio          |
+| `pnpm db:reset`   | Reset database              |
 
 ## Architecture
 
@@ -123,6 +178,7 @@ PostgreSQL 16 (Docker)
 ```
 
 External APIs:
+
 - **Scryfall** — card search, images, Game Changers list, banlist (direct from browser, CORS allowed)
 - **Commander Spellbook** — combo detection (proxied via /api/combos)
 - **Anthropic / OpenAI** — AI suggestions (server-side only, key never exposed to client)
@@ -132,6 +188,7 @@ External APIs:
 See [docs/SECURITY.md](docs/SECURITY.md) for the full security architecture.
 
 Key points:
+
 - All API keys are server-side only
 - Input validation via Zod on all API routes
 - HTML sanitization on user-controlled strings
