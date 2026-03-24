@@ -2,27 +2,28 @@
 
 ## Overview
 
-| Field | Value |
-|---|---|
-| Current Phase | Phase 6 — UX Polish & Deck Zone Improvements |
-| Last Updated | 2026-03-22 |
-| Status | 🚀 Active Development |
-| Main Branch | `main` |
+| Field         | Value                                    |
+| ------------- | ---------------------------------------- |
+| Current Phase | Phase 7 — Infrastructure & Observability |
+| Last Updated  | 2026-03-24                               |
+| Status        | 🚀 Active Development                    |
+| Main Branch   | `main`                                   |
 
 ---
 
 ## Phase Completion Summary
 
-| Phase | Name | Status |
-|---|---|---|
-| Phase 1 | Foundation Scaffold | ✅ Complete |
-| Phase 1+ | Integration (DB, DnD, Import) | ✅ Complete |
-| Phase 2 | Intelligence (Combos, Theme, Pairing) | ✅ Complete |
-| Phase 3 | Database & Prisma | ✅ Complete |
-| Phase 4 | AI Suggestions | ✅ Complete |
-| Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
-| Phase 5 | Collection Mode | ✅ Complete |
-| Phase 6 | UX Polish — Grid Density, Zone D&D, Bracket Rules | 🔄 In Progress |
+| Phase    | Name                                              | Status         |
+| -------- | ------------------------------------------------- | -------------- |
+| Phase 1  | Foundation Scaffold                               | ✅ Complete    |
+| Phase 1+ | Integration (DB, DnD, Import)                     | ✅ Complete    |
+| Phase 2  | Intelligence (Combos, Theme, Pairing)             | ✅ Complete    |
+| Phase 3  | Database & Prisma                                 | ✅ Complete    |
+| Phase 4  | AI Suggestions                                    | ✅ Complete    |
+| Phase 4+ | Polish, Bug Fixes & UI Enhancements               | ✅ Complete    |
+| Phase 5  | Collection Mode                                   | ✅ Complete    |
+| Phase 6  | UX Polish — Grid Density, Zone D&D, Bracket Rules | ✅ Complete    |
+| Phase 7  | Infrastructure & Observability                    | 🔄 In Progress |
 
 ---
 
@@ -37,7 +38,6 @@
 - [x] Deck state hash cache to avoid redundant API calls
 - [x] BracketScore passed to hook instead of just number
 - [x] Animated streaming card entries in panel
-
 
 ---
 
@@ -192,41 +192,41 @@
 
 ## P0 User Stories
 
-| # | User Story | Status |
-|---|---|---|
-| US-1 | Search cards using Scryfall syntax | ✅ Done |
-| US-2 | Pick a commander | ✅ Done |
-| US-3 | Add cards to deck (click/drag) | ✅ Done |
-| US-4 | See live deck stats | ✅ Done |
-| US-5 | See bracket score update live | ✅ Done |
-| US-6 | Warn about banned cards | ✅ Done |
-| US-7 | Warn about Game Changers | ✅ Done |
+| #    | User Story                           | Status  |
+| ---- | ------------------------------------ | ------- |
+| US-1 | Search cards using Scryfall syntax   | ✅ Done |
+| US-2 | Pick a commander                     | ✅ Done |
+| US-3 | Add cards to deck (click/drag)       | ✅ Done |
+| US-4 | See live deck stats                  | ✅ Done |
+| US-5 | See bracket score update live        | ✅ Done |
+| US-6 | Warn about banned cards              | ✅ Done |
+| US-7 | Warn about Game Changers             | ✅ Done |
 | US-8 | Warn about color identity violations | ✅ Done |
 
 ## P1 User Stories
 
-| # | User Story | Status |
-|---|---|---|
-| US-9 | Set a budget with per-card flagging | ✅ Done |
+| #     | User Story                                            | Status  |
+| ----- | ----------------------------------------------------- | ------- |
+| US-9  | Set a budget with per-card flagging                   | ✅ Done |
 | US-10 | Manually recategorize cards (drag between categories) | ✅ Done |
-| US-11 | Import decklist from plain text | ✅ Done |
-| US-12 | Export deck | ✅ Done |
-| US-13 | Toggle grid/list view | ✅ Done |
-| US-14 | Inline deck rename | ✅ Done |
-| US-15 | Choose card printing/art | ✅ Done |
-| US-16 | Search by set or color | ✅ Done |
-| US-17 | Companion card support | ✅ Done |
+| US-11 | Import decklist from plain text                       | ✅ Done |
+| US-12 | Export deck                                           | ✅ Done |
+| US-13 | Toggle grid/list view                                 | ✅ Done |
+| US-14 | Inline deck rename                                    | ✅ Done |
+| US-15 | Choose card printing/art                              | ✅ Done |
+| US-16 | Search by set or color                                | ✅ Done |
+| US-17 | Companion card support                                | ✅ Done |
 
 ## P2 User Stories
 
-| # | User Story | Status |
-|---|---|---|
-| US-18 | Hover card to see full-size | ✅ Done |
-| US-19 | Filter by color/type/CMC/price | ✅ Done |
-| US-20 | Persist multiple decks | ✅ Done (PostgreSQL) |
-| US-21 | Combo detection | ✅ Done |
-| US-22 | AI deck suggestions | ✅ Done |
-| US-23 | Light/dark theme | ✅ Done |
+| #     | User Story                     | Status               |
+| ----- | ------------------------------ | -------------------- |
+| US-18 | Hover card to see full-size    | ✅ Done              |
+| US-19 | Filter by color/type/CMC/price | ✅ Done              |
+| US-20 | Persist multiple decks         | ✅ Done (PostgreSQL) |
+| US-21 | Combo detection                | ✅ Done              |
+| US-22 | AI deck suggestions            | ✅ Done              |
+| US-23 | Light/dark theme               | ✅ Done              |
 
 ---
 
@@ -241,16 +241,16 @@
 
 ## Metrics
 
-| Metric | Value |
-|---|---|
-| Source files | ~70 |
-| API routes | 7 |
-| Prisma models | 3 |
-| Hooks | 9 |
-| Components | ~35 |
-| Phase 1 P0 completion | 100% |
-| Phase 1–4 completion | 100% |
-| Build | ✅ Passing |
+| Metric                | Value      |
+| --------------------- | ---------- |
+| Source files          | ~70        |
+| API routes            | 7          |
+| Prisma models         | 3          |
+| Hooks                 | 9          |
+| Components            | ~35        |
+| Phase 1 P0 completion | 100%       |
+| Phase 1–4 completion  | 100%       |
+| Build                 | ✅ Passing |
 
 ---
 
@@ -290,3 +290,22 @@
 - [ ] Persist deck zone (sideboard/maybeboard) state to DB
 - [ ] E2E tests (Playwright) for new drag & drop flows
 
+---
+
+## Phase 7: Infrastructure & Observability 🔄
+
+### Completed
+
+- [x] **Vercel deployment** — app live, auto-deploy on push to `main`
+- [x] **Supabase** — PostgreSQL hosted, Transaction Pooler configured for Vercel (IPv4 compatible)
+- [x] **GitHub Actions CI** — lint + typecheck + test coverage + build on every PR
+- [x] **Branch protection** — `main` requires CI green before merge
+- [x] **Husky pre-commit hooks** — lint-staged runs `next lint --fix` + `prettier --write`
+- [x] **Health check endpoint** — `GET /api/health` returns DB status
+- [x] **Sentry** — error tracking on frontend + backend (EU data center)
+
+### In Progress / Next
+
+- [ ] UptimeRobot — configure monitor on `/api/health`
+- [ ] Sentry source maps — add `SENTRY_AUTH_TOKEN` to Vercel
+- [ ] Fix CI typecheck errors in test files
