@@ -53,60 +53,6 @@
 | Database      | PostgreSQL 16 + Prisma  |
 | Drag & Drop   | dnd-kit 6               |
 
-## Architecture
-
-```mermaid
-graph TB
-    subgraph Dev["💻 Local Development"]
-        DEV[Developer]
-        DOCKER[Docker\nPostgreSQL]
-        HUSKY[Husky\npre-commit]
-        LINT[lint-staged\nnext lint + prettier]
-    end
-
-    subgraph CI["⚙️ GitHub Actions CI"]
-        LINT_CI[Lint]
-        TSC[Typecheck\ntsc --noEmit]
-        TEST[Vitest\n+ coverage]
-        BUILD[next build]
-        SONAR[SonarCloud\nquality gate]
-    end
-
-    subgraph GitHub["🐙 GitHub"]
-        REPO[Repository\nmain branch]
-        PR[Pull Request]
-        PROTECT[Branch Protection\nCI must be green]
-    end
-
-    subgraph Prod["🚀 Production"]
-        VERCEL[Vercel\nNext.js 15]
-        SUPABASE[Supabase\nPostgreSQL]
-        POOLER[Transaction Pooler\nport 6543]
-    end
-
-    subgraph Observability["📡 Observability"]
-        SENTRY[Sentry EU\nerror tracking]
-        HEALTH[GET /api/health\nDB status]
-        UPTIME[UptimeRobot\nping every 5min]
-        SCRYFALL[Scryfall API\ncard data]
-    end
-
-    DEV -->|git commit| HUSKY
-    HUSKY --> LINT
-    LINT -->|ok| REPO
-    DEV -->|git push branch| PR
-    PR --> CI
-    CI --> PROTECT
-    PROTECT -->|merge| REPO
-    REPO -->|push to main| VERCEL
-    VERCEL -->|pgbouncer| POOLER
-    POOLER --> SUPABASE
-    VERCEL -->|errors| SENTRY
-    HEALTH -->|200/503| UPTIME
-    VERCEL --> SCRYFALL
-    DEV -->|prisma migrate deploy\ndirect connection| SUPABASE
-```
-
 ## Getting Started
 
 ### Prerequisites
