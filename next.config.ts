@@ -30,7 +30,7 @@ export default withSentryConfig(nextConfig, {
   project: "magic-ai-builder",
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  hideSourceMaps: true,
+  sourcemaps: { disable: false },
   disableLogger: true,
   automaticVercelMonitors: true,
 });
