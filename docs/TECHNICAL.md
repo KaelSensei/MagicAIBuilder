@@ -2,23 +2,23 @@
 
 ## Stack
 
-| Layer | Technology | Version | Why |
-|---|---|---|---|
-| Framework | Next.js App Router | 15.x | Server components, file-based routing, image optimization |
-| Language | TypeScript | 5.x | Strict typing, full project coverage |
-| Styling | Tailwind CSS | 4.x | Utility-first, v4 CSS-native (no config file needed) |
-| Components | shadcn/ui + Radix | latest | Accessible primitives, dark theme ready |
-| Animations | Framer Motion | 11.x | Card hover zoom, stagger grids, panel transitions |
-| State | Zustand | 5.x | Simple, minimal boilerplate vs. Redux |
-| Data Fetching | TanStack Query | 5.x | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
-| Drag & Drop | dnd-kit | 6.x | Actively maintained, better perf than react-beautiful-dnd |
-| Database | PostgreSQL 16 | — | Persistent deck storage via Docker Compose |
-| ORM | Prisma | 6.x | Type-safe DB client, migrations, schema |
-| Validation | Zod | 3.x | Runtime schema validation on API boundaries |
-| Icons | Lucide React | latest | Consistent, tree-shakeable |
-| Package Manager | pnpm | 10.x | Fast, disk-efficient |
-| Testing (unit) | Vitest | 3.x | Vite-native, fast, ESM-compatible |
-| Testing (E2E) | Playwright | 1.51.x | Cross-browser, reliable |
+| Layer           | Technology         | Version | Why                                                                        |
+| --------------- | ------------------ | ------- | -------------------------------------------------------------------------- |
+| Framework       | Next.js App Router | 15.x    | Server components, file-based routing, image optimization                  |
+| Language        | TypeScript         | 5.x     | Strict typing, full project coverage                                       |
+| Styling         | Tailwind CSS       | 4.x     | Utility-first, v4 CSS-native (no config file needed)                       |
+| Components      | shadcn/ui + Radix  | latest  | Accessible primitives, dark theme ready                                    |
+| Animations      | Framer Motion      | 11.x    | Card hover zoom, stagger grids, panel transitions                          |
+| State           | Zustand            | 5.x     | Simple, minimal boilerplate vs. Redux                                      |
+| Data Fetching   | TanStack Query     | 5.x     | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
+| Drag & Drop     | dnd-kit            | 6.x     | Actively maintained, better perf than react-beautiful-dnd                  |
+| Database        | PostgreSQL 16      | —       | Persistent deck storage via Docker Compose                                 |
+| ORM             | Prisma             | 6.x     | Type-safe DB client, migrations, schema                                    |
+| Validation      | Zod                | 3.x     | Runtime schema validation on API boundaries                                |
+| Icons           | Lucide React       | latest  | Consistent, tree-shakeable                                                 |
+| Package Manager | pnpm               | 10.x    | Fast, disk-efficient                                                       |
+| Testing (unit)  | Vitest             | 3.x     | Vite-native, fast, ESM-compatible                                          |
+| Testing (E2E)   | Playwright         | 1.51.x  | Cross-browser, reliable                                                    |
 
 ---
 
@@ -155,26 +155,33 @@ prisma/
 // lib/deck/store.ts
 interface DeckStore {
   // State
-  decks: Record<string, Deck>;      // All decks by ID (loaded from DB)
-  activeDeckId: string | null;      // Currently edited deck
+  decks: Record<string, Deck>; // All decks by ID (loaded from DB)
+  activeDeckId: string | null; // Currently edited deck
 
   // Deck CRUD (all synced to DB via /api/decks)
   createDeck(name: string): Promise<string>;
   deleteDeck(id: string): Promise<void>;
   renameDeck(id: string, name: string): Promise<void>;
   setActiveDeck(id: string): void;
-  loadDecks(): Promise<void>;       // Hydrate from DB on mount
+  loadDecks(): Promise<void>; // Hydrate from DB on mount
 
   // Card management (synced to DB via /api/decks/[id]/cards)
   setCommander(card: ScryfallCard): Promise<void>;
-  addCard(card: ScryfallCard, quantity?: number, zone?: "main" | "sideboard" | "maybeboard"): Promise<void>;
+  addCard(
+    card: ScryfallCard,
+    quantity?: number,
+    zone?: "main" | "sideboard" | "maybeboard"
+  ): Promise<void>;
   removeCard(cardId: string): Promise<void>;
   updateCardCategory(cardId: string, category: CardCategory): Promise<void>;
-  moveCardToZone(cardId: string, zone: "main" | "sideboard" | "maybeboard"): Promise<void>;
+  moveCardToZone(
+    cardId: string,
+    zone: "main" | "sideboard" | "maybeboard"
+  ): Promise<void>;
 
   // View preferences
   deckViewMode: "grid" | "list";
-  deckGridCols: 2 | 3 | 4 | 6 | 8;  // Default: 6
+  deckGridCols: 2 | 3 | 4 | 6 | 8; // Default: 6
   setDeckViewMode(mode: "grid" | "list"): void;
   setDeckGridCols(cols: 2 | 3 | 4 | 6 | 8): void;
 
@@ -193,15 +200,15 @@ interface DeckStore {
 
 ### TanStack Query Keys
 
-| Hook | Query Key | Cache TTL |
-|---|---|---|
-| `useCardSearch(query)` | `["scryfall", "search", query]` | 5 min |
-| `useCardSearchInfinite(query)` | `["scryfall", "search", "infinite", query]` | 5 min |
-| `useCardLookup(id)` | `["scryfall", "card", "id", id]` | 24h |
-| `useCardLookupByName(name)` | `["scryfall", "card", "name", name]` | 24h |
-| `useGameChangers()` | `["scryfall", "game-changers"]` | 24h |
-| `useBanlist()` | `["scryfall", "banlist"]` | 24h |
-| `useCombos(commanderName)` | `["combos", commanderName]` | 30 min |
+| Hook                           | Query Key                                   | Cache TTL |
+| ------------------------------ | ------------------------------------------- | --------- |
+| `useCardSearch(query)`         | `["scryfall", "search", query]`             | 5 min     |
+| `useCardSearchInfinite(query)` | `["scryfall", "search", "infinite", query]` | 5 min     |
+| `useCardLookup(id)`            | `["scryfall", "card", "id", id]`            | 24h       |
+| `useCardLookupByName(name)`    | `["scryfall", "card", "name", name]`        | 24h       |
+| `useGameChangers()`            | `["scryfall", "game-changers"]`             | 24h       |
+| `useBanlist()`                 | `["scryfall", "banlist"]`                   | 24h       |
+| `useCombos(commanderName)`     | `["combos", commanderName]`                 | 30 min    |
 
 ### Scryfall Rate Limiting
 
@@ -215,10 +222,13 @@ async function rateLimitedFetch(url: string, options?: RequestInit) {
   const now = Date.now();
   const elapsed = now - lastRequestTime;
   if (elapsed < 100) {
-    await new Promise(resolve => setTimeout(resolve, 100 - elapsed));
+    await new Promise((resolve) => setTimeout(resolve, 100 - elapsed));
   }
   lastRequestTime = Date.now();
-  return fetch(url, { ...options, headers: { "User-Agent": "MagicAIBuilder/1.0", ...headers } });
+  return fetch(url, {
+    ...options,
+    headers: { "User-Agent": "MagicAIBuilder/1.0", ...headers },
+  });
 }
 ```
 
@@ -226,10 +236,10 @@ TanStack Query's deduplication prevents duplicate concurrent requests. `getCardB
 
 ### Search Modes (3 tabs)
 
-| Tab | Scryfall Query | Hook |
-|---|---|---|
-| By Name | `name:"{query}"` | `useCardSearch` |
-| By Set | `set:{setCode}` | `useCardSearch` |
+| Tab      | Scryfall Query                     | Hook            |
+| -------- | ---------------------------------- | --------------- |
+| By Name  | `name:"{query}"`                   | `useCardSearch` |
+| By Set   | `set:{setCode}`                    | `useCardSearch` |
 | By Color | `id<={colorString} commander:true` | `useCardSearch` |
 
 ### Bracket Scoring Algorithm
@@ -266,12 +276,12 @@ scoreBracket(deck, stats) → BracketScore
 
 ```typescript
 type CommanderPairingType =
-  | "none"           // Single commander
-  | "partner"        // Generic "Partner" keyword
-  | "partner_with"   // "Partner with [specific name]"
+  | "none" // Single commander
+  | "partner" // Generic "Partner" keyword
+  | "partner_with" // "Partner with [specific name]"
   | "friends_forever" // Doctor Who sets
-  | "background"     // "Choose a Background" + Background enchantment
-  | "doctor";        // "Doctor's companion"
+  | "background" // "Choose a Background" + Background enchantment
+  | "doctor"; // "Doctor's companion"
 ```
 
 ### dnd-kit Drag & Drop Architecture
@@ -352,29 +362,30 @@ model DeckSnapshot {
 
 ## API Routes
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/decks` | List all decks |
-| POST | `/api/decks` | Create new deck |
-| GET | `/api/decks/[id]` | Get deck with cards |
-| PATCH | `/api/decks/[id]` | Rename deck |
-| DELETE | `/api/decks/[id]` | Delete deck (cascade cards) |
-| POST | `/api/decks/[id]/cards` | Add card to deck |
-| DELETE | `/api/decks/[id]/cards/[cardId]` | Remove card (uses DB CUID, not scryfallId) |
-| PATCH | `/api/decks/[id]/cards/[cardId]` | Update card category |
-| GET | `/api/cache/cards` | Lookup card in DB cache |
-| POST | `/api/cache/cards` | Store card in DB cache |
-| POST | `/api/ai/suggest` | Get AI suggestions for deck |
-| GET | `/api/decks/[id]/snapshots` | List snapshots (newest first, no cardList) |
-| POST | `/api/decks/[id]/snapshots` | Create snapshot from current deck state |
-| DELETE | `/api/decks/[id]/snapshots/[snapshotId]` | Delete a snapshot |
-| POST | `/api/decks/[id]/snapshots/[snapshotId]/restore` | Restore deck to snapshot (transactional) |
+| Method | Path                                             | Description                                |
+| ------ | ------------------------------------------------ | ------------------------------------------ |
+| GET    | `/api/decks`                                     | List all decks                             |
+| POST   | `/api/decks`                                     | Create new deck                            |
+| GET    | `/api/decks/[id]`                                | Get deck with cards                        |
+| PATCH  | `/api/decks/[id]`                                | Rename deck                                |
+| DELETE | `/api/decks/[id]`                                | Delete deck (cascade cards)                |
+| POST   | `/api/decks/[id]/cards`                          | Add card to deck                           |
+| DELETE | `/api/decks/[id]/cards/[cardId]`                 | Remove card (uses DB CUID, not scryfallId) |
+| PATCH  | `/api/decks/[id]/cards/[cardId]`                 | Update card category                       |
+| GET    | `/api/cache/cards`                               | Lookup card in DB cache                    |
+| POST   | `/api/cache/cards`                               | Store card in DB cache                     |
+| POST   | `/api/ai/suggest`                                | Get AI suggestions for deck                |
+| GET    | `/api/decks/[id]/snapshots`                      | List snapshots (newest first, no cardList) |
+| POST   | `/api/decks/[id]/snapshots`                      | Create snapshot from current deck state    |
+| DELETE | `/api/decks/[id]/snapshots/[snapshotId]`         | Delete a snapshot                          |
+| POST   | `/api/decks/[id]/snapshots/[snapshotId]/restore` | Restore deck to snapshot (transactional)   |
 
 ---
 
 ## Code Conventions
 
 ### TypeScript
+
 - Strict mode enabled
 - `interface` for object shapes, `type` for unions/aliases
 - No `any` — use `unknown` + type guards
@@ -382,17 +393,20 @@ model DeckSnapshot {
 - Zod for API boundary validation
 
 ### Components
+
 - `"use client"` directive where needed (all interactive components)
 - Props interfaces defined inline above the component
 - `cn()` (clsx + tailwind-merge) for conditional class names
 - CSS custom properties for theme colors — never hardcoded hex in className
 
 ### Naming
+
 - Files: `PascalCase` for components, `camelCase` for utilities/hooks
 - Hooks: prefix `use`
 - Test files: `*.test.ts` for unit, `*.spec.ts` for E2E
 
 ### Commits
+
 - Conventional Commits: `type(scope): description`
 - Types: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`, `style`
 
@@ -442,11 +456,11 @@ pnpm lint     # ESLint check
 
 ### Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_URL` | ✅ Yes | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/magicai`) |
-| `ANTHROPIC_API_KEY` | ⚠️ Optional | Enables Claude AI suggestions (falls back to mock) |
-| `OPENAI_API_KEY` | ⚠️ Optional | Secondary AI provider fallback |
+| Variable            | Required    | Description                                                                         |
+| ------------------- | ----------- | ----------------------------------------------------------------------------------- |
+| `DATABASE_URL`      | ✅ Yes      | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/magicai`) |
+| `ANTHROPIC_API_KEY` | ⚠️ Optional | Enables Claude AI suggestions (falls back to mock)                                  |
+| `OPENAI_API_KEY`    | ⚠️ Optional | Secondary AI provider fallback                                                      |
 
 See `docs/INFRASTRUCTURE.md` for Docker + full infra setup.
 
@@ -456,15 +470,15 @@ See `docs/INFRASTRUCTURE.md` for Docker + full infra setup.
 
 ### Scryfall
 
-| Endpoint | Used For |
-|---|---|
-| `GET /cards/search?q={query}` | Card search (name/set/color modes) |
-| `GET /cards/named?exact={name}` | Single card lookup |
-| `GET /cards/named?fuzzy={name}` | Fuzzy match |
-| `POST /cards/collection` | Batch lookup (up to 75) |
-| `GET /cards/autocomplete?q={partial}` | Name autocomplete |
-| `GET /cards/search?q=is:gamechanger` | Game Changers list |
-| `GET /cards/search?q=banned:commander` | Commander banlist |
+| Endpoint                               | Used For                           |
+| -------------------------------------- | ---------------------------------- |
+| `GET /cards/search?q={query}`          | Card search (name/set/color modes) |
+| `GET /cards/named?exact={name}`        | Single card lookup                 |
+| `GET /cards/named?fuzzy={name}`        | Fuzzy match                        |
+| `POST /cards/collection`               | Batch lookup (up to 75)            |
+| `GET /cards/autocomplete?q={partial}`  | Name autocomplete                  |
+| `GET /cards/search?q=is:gamechanger`   | Game Changers list                 |
+| `GET /cards/search?q=banned:commander` | Commander banlist                  |
 
 Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported — be respectful.
 
@@ -472,8 +486,8 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 
 ### Commander Spellbook
 
-| Endpoint | Used For |
-|---|---|
+| Endpoint                                  | Used For                          |
+| ----------------------------------------- | --------------------------------- |
 | `GET /api/v2/variants/?commanders={name}` | Combo detection by commander name |
 
 ---
@@ -481,45 +495,107 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 ## Recent Features (post Phase 4+)
 
 ### Card Tooltip — Cursor-Following (`fix/tooltip-follows-cursor`)
+
 - `CardTooltip.tsx` rewritten with `createPortal` to render tooltip in `document.body`
 - Tooltip position tracks mouse `clientX/Y` with viewport clamping (never overflows screen edges)
 - Replaces previous Radix Tooltip anchor which was pinned to the list row right edge (landing in stats panel)
 
 ### Oracle Text Panel in Printing Selector (`feat/oracle-text-in-printing-modal`)
+
 - `PrintingSelectorModal.tsx` — two-column layout: left panel shows mana cost, type line, oracle text, price; right panel shows printings grid
 - Handles double-faced cards via `card_faces[0]` fallback for oracle text and mana cost
 
 ### Dynamic Set Search (`feat/set-search-all-sets`)
+
 - `SetAutocomplete.tsx` — fetches all sets from `GET /sets` on first focus; module-level in-memory 1h cache
 - Filters to Commander-relevant set types; sorted newest first; year badge per entry
 
 ### Mana Symbols in Color Filter (`feat/mana-symbols-color-filter`)
+
 - By Color mode buttons now use `<img src="https://svgs.scryfall.io/card-symbols/{code}.svg">`
 - Replaces emoji fallbacks (☀️💧💀🔥🌲); colorless (C) merged into the main color list
 
 ### Card Quantity Editor (`feat/card-quantity-editor`)
+
 - `multiples.ts` — encodes Commander singleton rules: `maxQuantity(name, typeLine)` returns 1 by default, 99 for basic lands and special cards, 9 for Nazgûl, 7 for Seven Dwarves
 - `+` / `−` buttons appear on hover in list view; `+` only shown when card allows multiples and current qty < max
 - `addCard` / `addDeckCard` now call `updateCardQuantity` instead of silently blocking when a card is already present and allows multiples
 - `updateCardQuantity(cardId, delta)` — optimistic update + PATCH `/api/decks/:id/cards/:cardId`
 
 ### Edition Picker in Deck List (`feat/import-fix-and-edition-picker`)
+
 - Layers icon on hover in list view → `PrintingSelectorModal` (same modal as search results)
 - `swapCardPrinting(cardId, ScryfallCard)` — updates `scryfallId`, `imageUri`, `artCropUri` optimistically and persists via PATCH
 
 ### Commander in Grid View (`feat/commander-card-in-grid-view`)
+
 - Commander (and partner) pinned at top of card grid with gold ring (`ring-yellow-400/70`) and `CMD` badge
 
 ---
 
 ## Phase Roadmap
 
-| Phase | Focus | Status |
-|---|---|---|
-| Phase 1 | Foundation — Scryfall search, drag & drop, stats, bracket scoring | ✅ Complete |
-| Phase 1+ | Integration — PostgreSQL/Prisma, DnD full pipeline, text import | ✅ Complete |
-| Phase 2 | Intelligence — combo detection, theme analysis, commander pairing | ✅ Complete |
-| Phase 3 | Database & Prisma — persistent storage, migrations, DB cache | ✅ Complete |
-| Phase 4 | AI Suggestions — Anthropic/OpenAI integration, deck analysis | ✅ Complete |
+| Phase    | Focus                                                                | Status      |
+| -------- | -------------------------------------------------------------------- | ----------- |
+| Phase 1  | Foundation — Scryfall search, drag & drop, stats, bracket scoring    | ✅ Complete |
+| Phase 1+ | Integration — PostgreSQL/Prisma, DnD full pipeline, text import      | ✅ Complete |
+| Phase 2  | Intelligence — combo detection, theme analysis, commander pairing    | ✅ Complete |
+| Phase 3  | Database & Prisma — persistent storage, migrations, DB cache         | ✅ Complete |
+| Phase 4  | AI Suggestions — Anthropic/OpenAI integration, deck analysis         | ✅ Complete |
 | Phase 4+ | Polish — UI enhancements, export, companion, legal, light/dark theme | ✅ Complete |
-| Phase 5 | Onboarding & Tutorial (planned) | 📋 Planned |
+| Phase 5  | Onboarding & Tutorial (planned)                                      | 📋 Planned  |
+
+---
+
+## Infrastructure & Deployment
+
+### Stack
+
+| Layer             | Service     | Plan         | Notes                            |
+| ----------------- | ----------- | ------------ | -------------------------------- |
+| Hosting           | Vercel      | Hobby (free) | Auto-deploy on push to `main`    |
+| Database          | Supabase    | Free         | PostgreSQL 16, West EU (Ireland) |
+| Error tracking    | Sentry      | Free         | `@sentry/nextjs`, EU data center |
+| Uptime monitoring | UptimeRobot | Free         | Ping `/api/health` every 5 min   |
+
+### Database connections
+
+Two different URLs are required — one for migrations, one for the running app:
+
+| Usage              | URL type           | Host                                  | Port | Extra param       |
+| ------------------ | ------------------ | ------------------------------------- | ---- | ----------------- |
+| Migrations (local) | Direct connection  | `db.[ref].supabase.co`                | 5432 | —                 |
+| App on Vercel      | Transaction pooler | `aws-0-eu-west-1.pooler.supabase.com` | 6543 | `?pgbouncer=true` |
+
+> The migration engine does not support `pgbouncer=true`. Always use Direct connection for `prisma migrate deploy`.
+> Vercel is IPv6-only — Direct connection fails. Use Transaction Pooler for the app.
+> The username in the Transaction Pooler URL is `postgres.[project-ref]` (not just `postgres`).
+> Use alphanumeric-only passwords — special characters (`'`, `"`, `/`, `@`, `#`) break shell commands and require percent-encoding.
+
+### Environment variables
+
+| Variable                 | Where to set                  | Description                                            |
+| ------------------------ | ----------------------------- | ------------------------------------------------------ |
+| `DATABASE_URL`           | `.env.local` (local) + Vercel | Supabase Transaction Pooler URL with `?pgbouncer=true` |
+| `NEXT_PUBLIC_SENTRY_DSN` | `.env.local` (local) + Vercel | Sentry DSN (public, safe to expose)                    |
+| `SENTRY_AUTH_TOKEN`      | Vercel only                   | Sentry auth token for source maps upload               |
+| `ANTHROPIC_API_KEY`      | `.env.local` (local) + Vercel | AI suggestions (optional)                              |
+
+### CI / Quality gates
+
+- GitHub Actions CI on every push and PR: lint → typecheck → test with coverage → build
+- Branch protection on `main`: CI must be green before merge
+- Pre-commit hooks via Husky + lint-staged: `next lint --fix` + `prettier --write`
+- SonarCloud quality gate on every PR
+
+### Health check
+
+`GET /api/health` — returns `200 { status: "ok", db: "ok", latencyMs }` or `503 { status: "degraded" }`.
+Used by UptimeRobot (configure once app is deployed).
+
+### Error tracking (Sentry)
+
+- `sentry.client.config.ts` — browser error capture, 10% trace sampling
+- `sentry.server.config.ts` — server/API route error capture
+- `sentry.edge.config.ts` — edge runtime error capture
+- Source maps uploaded automatically on Vercel deploy via `SENTRY_AUTH_TOKEN`
