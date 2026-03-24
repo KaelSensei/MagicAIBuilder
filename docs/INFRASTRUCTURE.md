@@ -205,22 +205,39 @@ The Zustand store performs **optimistic updates** for instant UI feedback, then 
 
 ### 3. Run migrations on Supabase
 
-Run this once from your local machine to apply all Prisma migrations to the Supabase DB:
+> **Two different URLs are needed** — one for migrations (run locally), one for the app (Vercel):
+>
+> | Usage                         | URL type           | Host                                  | Port | Extra             |
+> | ----------------------------- | ------------------ | ------------------------------------- | ---- | ----------------- |
+> | Migrations from local machine | Direct connection  | `db.[project-ref].supabase.co`        | 5432 | —                 |
+> | App on Vercel                 | Transaction pooler | `aws-0-eu-west-1.pooler.supabase.com` | 6543 | `?pgbouncer=true` |
+>
+> The migration engine does not support `pgbouncer=true` — always use the Direct connection URL for `prisma migrate deploy`.
+> The Direct connection works from your local machine (IPv4). Vercel is IPv6-only so it needs the pooler.
+
+Run this once from your local machine:
 
 ```bash
-DATABASE_URL="postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true" \
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[project-ref].supabase.co:5432/postgres" \
   npx prisma migrate deploy
 ```
 
 You should see `All migrations have been successfully applied.`
 
-> If you see `The table 'public.Deck' does not exist`, the migrations were not applied — run the command above again.
+> **Password tip:** use letters and numbers only — no special characters (`'`, `"`, `(`, `/`, `@`, `#`, `*`).
+> Special characters break the shell command and require percent-encoding.
+> If you already have a password with special characters, reset it in Supabase → Connect → **Reset your database password**.
+
+> If you see `The table 'public.Deck' does not exist`, the migrations were not applied — run the command above.
 
 ### 4. Deploy to Vercel
 
 1. Go to [vercel.com](https://vercel.com) → **Add New Project** → import `MagicAIBuilder` from GitHub
 2. Before clicking Deploy, expand **Environment Variables** and add:
-   - `DATABASE_URL` = your Supabase Transaction Pooler URL (with `?pgbouncer=true`)
+   - `DATABASE_URL` = your Transaction Pooler URL:
+     ```
+     postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+     ```
    - `ANTHROPIC_API_KEY` = your key (if using AI features)
 3. Click **Deploy**
 
