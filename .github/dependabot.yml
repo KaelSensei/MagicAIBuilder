@@ -6,8 +6,19 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    # Only allow patch and minor updates — major versions are reviewed manually
+    # to avoid breaking changes (TypeScript, Prisma, ESLint, Next.js, etc.)
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       dev-dependencies:
         dependency-type: development
+        update-types:
+          - minor
+          - patch
       production-dependencies:
         dependency-type: production
+        update-types:
+          - minor
+          - patch
