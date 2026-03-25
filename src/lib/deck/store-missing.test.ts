@@ -284,3 +284,101 @@ describe("useDeckStore — moveToDeck error path", () => {
     expect(state.cards).toHaveLength(1);
   });
 });
+
+// ── addToMaybeboard error path ────────────────────────────────────────────────
+
+describe("useDeckStore — addToMaybeboard error path", () => {
+  it("keeps optimistic state when API throws", async () => {
+    vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("api error"));
+
+    const scryfallCard = {
+      id: "scryfall-1",
+      name: "Sol Ring",
+      mana_cost: "{1}",
+      cmc: 1,
+      type_line: "Artifact",
+      oracle_text: "{T}: Add {C}{C}.",
+      color_identity: [] as string[],
+      colors: [] as string[],
+      set: "lea",
+      set_name: "Limited Edition Alpha",
+      rarity: "uncommon" as const,
+      prices: { usd: "50.00", usd_foil: null },
+      image_uris: {
+        small: "",
+        normal: "https://example.com/normal.jpg",
+        large: "",
+        art_crop: "https://example.com/art.jpg",
+        border_crop: "",
+        png: "",
+      },
+      card_faces: undefined,
+      keywords: [] as string[],
+      legalities: { commander: "legal" as const },
+    };
+
+    await useDeckStore.getState().addToMaybeboard(scryfallCard);
+
+    // Card was added optimistically even though API failed
+    const state = useDeckStore.getState().decks["deck-1"];
+    expect(state.maybeboard).toHaveLength(1);
+  });
+});
+
+// ── removeFromMaybeboard error path ──────────────────────────────────────────
+
+describe("useDeckStore — removeFromMaybeboard error path", () => {
+  it("keeps optimistic removal when API throws", async () => {
+    vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("api error"));
+
+    const card = makeDeckCard("maybe-1", "Lightning Bolt");
+    useDeckStore.setState({
+      decks: { "deck-1": seedDeck({ maybeboard: [card] }) },
+      activeDeckId: "deck-1",
+    });
+
+    await useDeckStore.getState().removeFromMaybeboard("maybe-1");
+
+    const state = useDeckStore.getState().decks["deck-1"];
+    expect(state.maybeboard).toHaveLength(0);
+  });
+});
+
+// ── setBudget error path ──────────────────────────────────────────────────────
+
+describe("useDeckStore — setBudget error path", () => {
+  it("keeps optimistic value when API throws", async () => {
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("api error"));
+
+    await useDeckStore.getState().setBudget(200);
+
+    expect(useDeckStore.getState().decks["deck-1"].budget).toBe(200);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+});
+
+// ── addTag / removeTag error paths ────────────────────────────────────────────
+
+describe("useDeckStore — addTag / removeTag error paths", () => {
+  it("addTag keeps optimistic tag when API throws", async () => {
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("api error"));
+
+    await useDeckStore.getState().addTag("deck-1", "stax");
+
+    expect(useDeckStore.getState().decks["deck-1"].tags).toContain("stax");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("removeTag keeps optimistic removal when API throws", async () => {
+    useDeckStore.setState({
+      decks: { "deck-1": seedDeck({ tags: ["stax", "budget"] }) },
+      activeDeckId: "deck-1",
+    });
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("api error"));
+
+    await useDeckStore.getState().removeTag("deck-1", "stax");
+
+    expect(useDeckStore.getState().decks["deck-1"].tags).not.toContain("stax");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+});
