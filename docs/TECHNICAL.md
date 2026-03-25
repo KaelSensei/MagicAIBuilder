@@ -638,9 +638,15 @@ Two different URLs are required — one for migrations, one for the running app:
 ### CI / Quality gates
 
 - GitHub Actions CI on every push and PR: lint → typecheck → test with coverage → build
-- Branch protection on `main`: CI must be green before merge
+- Branch protection on `main`: `CI / Lint, Typecheck, Test, Build` is the **only required** status check
 - Pre-commit hooks via Husky + lint-staged: `next lint --fix` + `prettier --write`
-- SonarCloud quality gate on every PR
+- SonarCloud quality gate runs on every PR via `sonar.yml` but is **NOT a required check** in branch protection
+
+> **Do not add `SonarCloud Code Analysis` as a required branch protection check.**
+> SonarCloud already runs automatically via `sonar.yml` on every PR and its result appears in the PR
+> checks list. Making it "Required" creates a duplicate gate and blocks merges when SonarCloud is slow,
+> unavailable, or when the PR was opened before the first Sonar scan completes.
+> If you ever reconfigure branch protection, keep only `CI / Lint, Typecheck, Test, Build` as required.
 
 ### Health check
 
