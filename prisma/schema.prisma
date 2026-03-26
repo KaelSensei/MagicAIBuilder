@@ -24,8 +24,6 @@ model Deck {
   shareToken    String?        @unique
   shareEnabled  Boolean        @default(false)
   isAIGenerated Boolean        @default(false)
-  description   String         @default("")
-  tags          String[]       @default([])
   cards         DeckCard[]
   snapshots     DeckSnapshot[]
   createdAt     DateTime       @default(now())
