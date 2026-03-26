@@ -13,6 +13,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **Modal Double-Faced Cards (MDFC)**: e.g. _Shatterskull Smashing // Shatterskull, the Hammer Pass_ — both faces display with a Moxfield-style 3D CSS flip animation (350ms `rotateY`)
 - **Transform cards (DFC)**: e.g. _Delver of Secrets // Insectile Aberration_ — front face shown by default, flip button reveals back face
+- **Modal Double-Faced Cards (MDFC)**: e.g. *Shatterskull Smashing // Shatterskull, the Hammer Pass* — both faces display with a Moxfield-style 3D CSS flip animation (350ms `rotateY`)
+- **Transform cards (DFC)**: e.g. *Delver of Secrets // Insectile Aberration* — front face shown by default, flip button reveals back face
 - **CardFlip component**: circular `↻` button overlay in bottom-right corner of card image (visible on hover), triggers 3D flip
 - **CardListItem**: "Turn Over" outlined secondary button + `△▽` badge for DFC/MDFC cards
 - **CardGrid**: passes `cardFaces`/`isFlexibleLand` props to `CardImage`
