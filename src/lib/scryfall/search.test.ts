@@ -5,184 +5,327 @@ import {
   buildPartnerSearchQuery,
   buildSetSearchQuery,
   buildColorSearchQuery,
+  buildInteractionQuery,
+  buildColorQuery,
 } from "./search";
 
+describe("buildColorQuery", () => {
+  it("OR mode → id<= (within identity, permissive)", () => {
+    expect(buildColorQuery(["W", "U"], "or")).toBe("id<=WU");
+  });
+  it("AND mode → c>= (all selected colors present)", () => {
+    expect(buildColorQuery(["R", "G"], "and")).toBe("c>=RG");
+  });
+  it("EXACT mode → c= (exactly these colors, no more)", () => {
+    expect(buildColorQuery(["R", "G"], "exact")).toBe("c=RG");
+  });
+  it("returns empty string for empty color array", () => {
+    expect(buildColorQuery([], "or")).toBe("");
+    expect(buildColorQuery([], "exact")).toBe("");
+  });
+});
+
+describe("buildInteractionQuery", () => {
+  it("removal → destroy/exile target oracle text", () => {
+    const q = buildInteractionQuery("removal");
+    expect(q).toContain('o:"destroy target"');
+    expect(q).toContain('o:"exile target"');
+  });
+  it("counterspell → t:instant + counter target", () => {
+    const q = buildInteractionQuery("counterspell");
+    expect(q).toContain("t:instant");
+    expect(q).toContain('o:"counter target"');
+  });
+  it("wipe → destroy all / exile all", () => {
+    const q = buildInteractionQuery("wipe");
+    expect(q).toContain('o:"destroy all"');
+    expect(q).toContain('o:"exile all"');
+  });
+  it("tutor → search your library", () => {
+    expect(buildInteractionQuery("tutor")).toContain('o:"search your library"');
+  });
+  it("draw → draw a card", () => {
+    expect(buildInteractionQuery("draw")).toContain('o:"draw a card"');
+  });
+  it("ramp → t:land or add { mana oracle", () => {
+    const q = buildInteractionQuery("ramp");
+    expect(q).toContain("t:land");
+    expect(q).toContain('o:"add {"');
+  });
+});
+
 describe("buildSearchQuery", () => {
-  it("adds legal:commander always", () => {
-    const q = buildSearchQuery("", {});
-    expect(q).toContain("legal:commander");
+  it("always appends legal:commander", () => {
+    expect(buildSearchQuery("", {})).toContain("legal:commander");
   });
-
   it("wraps plain text in name regex", () => {
-    const q = buildSearchQuery("bolt", {});
-    expect(q).toContain("name:/bolt/");
+    expect(buildSearchQuery("bolt", {})).toContain("name:/bolt/");
   });
-
-  it("passes through Scryfall syntax (contains :)", () => {
+  it("passes through raw Scryfall syntax (contains :)", () => {
     const q = buildSearchQuery("type:instant", {});
     expect(q).toContain("type:instant");
     expect(q).not.toContain("name:/");
   });
-
-  it("adds color identity filter", () => {
-    const q = buildSearchQuery("", { colors: ["W", "U"] });
-    expect(q).toContain("id<=WU");
+  it("trims whitespace from text", () => {
+    expect(buildSearchQuery("  sol ring  ", {})).toContain("name:/sol ring/");
+  });
+  it("handles empty text with no filters → only legal:commander", () => {
+    expect(buildSearchQuery("", {})).toBe("legal:commander");
   });
 
-  it("adds type filter", () => {
+  // Color modes
+  it("color OR mode → id<=WUBRG (permissive, default)", () => {
+    const q = buildSearchQuery("", { colors: ["W", "U"], colorMode: "or" });
+    expect(q).toContain("id<=WU");
+    expect(q).not.toContain("c>=");
+  });
+  it("color AND mode → c>=WUBRG (all colors present)", () => {
+    const q = buildSearchQuery("", { colors: ["R", "G"], colorMode: "and" });
+    expect(q).toContain("c>=RG");
+    expect(q).not.toContain("id<=");
+  });
+  it("color EXACT mode → c=WUBRG (exactly these colors)", () => {
+    const q = buildSearchQuery("", { colors: ["R", "G"], colorMode: "exact" });
+    expect(q).toContain("c=RG");
+    expect(q).not.toContain("id<=");
+  });
+  it("falls back to OR (id<=) when colorMode is undefined", () => {
+    expect(buildSearchQuery("", { colors: ["U"] })).toContain("id<=U");
+  });
+
+  // Colorless & lands
+  it("colorlessFilter → c:c (truly colorless)", () => {
+    const q = buildSearchQuery("", { colorlessFilter: true });
+    expect(q).toContain("c:c");
+    expect(q).not.toContain("id<=");
+  });
+  it("colorlessFilter takes priority over WUBRG colors", () => {
+    const q = buildSearchQuery("", { colors: ["W"], colorMode: "or", colorlessFilter: true });
+    expect(q).toContain("c:c");
+    expect(q).not.toContain("id<=");
+  });
+  it("landFilter → t:land", () => {
+    expect(buildSearchQuery("", { landFilter: true })).toContain("t:land");
+  });
+  it("landFilter combines with color filter", () => {
+    const q = buildSearchQuery("", { colors: ["G"], colorMode: "or", landFilter: true });
+    expect(q).toContain("id<=G");
+    expect(q).toContain("t:land");
+  });
+
+  // Card types
+  it("adds type filter (OR-joined)", () => {
     const q = buildSearchQuery("", { types: ["instant", "sorcery"] });
     expect(q).toContain("type:instant");
     expect(q).toContain("type:sorcery");
     expect(q).toContain(" OR ");
   });
 
-  it("adds cmcMin filter", () => {
-    const q = buildSearchQuery("", { cmcMin: 2 });
+  // CMC modes
+  it("CMC range mode → cmc>=min cmc<=max", () => {
+    const q = buildSearchQuery("", { cmcMode: "range", cmcMin: 2, cmcMax: 5 });
     expect(q).toContain("cmc>=2");
+    expect(q).toContain("cmc<=5");
   });
-
-  it("adds cmcMax filter", () => {
-    const q = buildSearchQuery("", { cmcMax: 4 });
-    expect(q).toContain("cmc<=4");
-  });
-
-  it("adds priceMax filter", () => {
-    const q = buildSearchQuery("", { priceMax: 10 });
-    expect(q).toContain("usd<=10");
-  });
-
-  it("ignores null cmcMin", () => {
-    const q = buildSearchQuery("", { cmcMin: null });
+  it("CMC exact mode → cmc=N", () => {
+    const q = buildSearchQuery("", { cmcMode: "exact", cmcExact: 3 });
+    expect(q).toContain("cmc=3");
     expect(q).not.toContain("cmc>=");
-  });
-
-  it("ignores null cmcMax", () => {
-    const q = buildSearchQuery("", { cmcMax: null });
     expect(q).not.toContain("cmc<=");
   });
-
-  it("handles empty text with no filters", () => {
-    const q = buildSearchQuery("", {});
-    expect(q).toBe("legal:commander");
+  it("CMC min mode → cmc>=N only", () => {
+    const q = buildSearchQuery("", { cmcMode: "min", cmcMin: 2 });
+    expect(q).toContain("cmc>=2");
+    expect(q).not.toContain("cmc<=");
+  });
+  it("CMC max mode → cmc<=N only", () => {
+    const q = buildSearchQuery("", { cmcMode: "max", cmcMax: 4 });
+    expect(q).toContain("cmc<=4");
+    expect(q).not.toContain("cmc>=");
+  });
+  it("defaults to range mode when cmcMode undefined", () => {
+    const q = buildSearchQuery("", { cmcMin: 1, cmcMax: 3 });
+    expect(q).toContain("cmc>=1");
+    expect(q).toContain("cmc<=3");
+  });
+  it("ignores null cmcMin in range mode", () => {
+    expect(buildSearchQuery("", { cmcMin: null })).not.toContain("cmc>=");
+  });
+  it("ignores null cmcMax in range mode", () => {
+    expect(buildSearchQuery("", { cmcMax: null })).not.toContain("cmc<=");
+  });
+  it("ignores null cmcExact in exact mode", () => {
+    expect(buildSearchQuery("", { cmcMode: "exact", cmcExact: null })).not.toContain("cmc=");
   });
 
-  it("trims whitespace from text", () => {
-    const q = buildSearchQuery("  sol ring  ", {});
-    expect(q).toContain("name:/sol ring/");
+  // Price
+  it("priceMin → usd>=N", () => {
+    expect(buildSearchQuery("", { priceMin: 2 })).toContain("usd>=2");
+  });
+  it("priceMax → usd<=N", () => {
+    expect(buildSearchQuery("", { priceMax: 10 })).toContain("usd<=10");
+  });
+  it("price range → both bounds", () => {
+    const q = buildSearchQuery("", { priceMin: 1, priceMax: 50 });
+    expect(q).toContain("usd>=1");
+    expect(q).toContain("usd<=50");
+  });
+
+  // Subtype
+  it("subtype → t:<value> (Scryfall subtype syntax)", () => {
+    expect(buildSearchQuery("", { subtype: "Elf" })).toContain("t:Elf");
+  });
+  it("subtype lowercase: t:elf", () => {
+    expect(buildSearchQuery("", { subtype: "elf" })).toContain("t:elf");
+  });
+  it("ignores empty subtype", () => {
+    expect(buildSearchQuery("", { subtype: "" })).not.toContain("t:Elf");
+  });
+  it("ignores whitespace-only subtype", () => {
+    expect(buildSearchQuery("", { subtype: "   " })).not.toContain("t:");
+  });
+
+  // Keyword
+  it("keyword → keyword:<value> (Scryfall keyword syntax)", () => {
+    expect(buildSearchQuery("", { keyword: "Flying" })).toContain("keyword:Flying");
+  });
+  it("keyword lowercase: keyword:flying", () => {
+    expect(buildSearchQuery("", { keyword: "flying" })).toContain("keyword:flying");
+  });
+  it("ignores empty keyword", () => {
+    expect(buildSearchQuery("", { keyword: "" })).not.toContain("keyword:");
+  });
+
+  // Power / Toughness
+  it("powerMin → pow>=N", () => {
+    expect(buildSearchQuery("", { powerMin: 3 })).toContain("pow>=3");
+  });
+  it("powerMax → pow<=N", () => {
+    expect(buildSearchQuery("", { powerMax: 5 })).toContain("pow<=5");
+  });
+  it("power range → both bounds", () => {
+    const q = buildSearchQuery("", { powerMin: 2, powerMax: 6 });
+    expect(q).toContain("pow>=2");
+    expect(q).toContain("pow<=6");
+  });
+  it("toughnessMin → tou>=N", () => {
+    expect(buildSearchQuery("", { toughnessMin: 2 })).toContain("tou>=2");
+  });
+  it("toughnessMax → tou<=N", () => {
+    expect(buildSearchQuery("", { toughnessMax: 4 })).toContain("tou<=4");
+  });
+  it("toughness range → both bounds", () => {
+    const q = buildSearchQuery("", { toughnessMin: 1, toughnessMax: 4 });
+    expect(q).toContain("tou>=1");
+    expect(q).toContain("tou<=4");
+  });
+
+  // Interaction type
+  it("removal → oracle text for destroy/exile target", () => {
+    const q = buildSearchQuery("", { interactionType: "removal" });
+    expect(q).toContain('o:"destroy target"');
+    expect(q).toContain('o:"exile target"');
+  });
+  it("counterspell → oracle text for counter target instant", () => {
+    const q = buildSearchQuery("", { interactionType: "counterspell" });
+    expect(q).toContain('o:"counter target"');
+    expect(q).toContain("t:instant");
+  });
+  it("wipe → oracle text for destroy/exile all", () => {
+    const q = buildSearchQuery("", { interactionType: "wipe" });
+    expect(q).toContain('o:"destroy all"');
+    expect(q).toContain('o:"exile all"');
+  });
+  it("tutor → oracle text for search your library", () => {
+    expect(buildSearchQuery("", { interactionType: "tutor" })).toContain('o:"search your library"');
+  });
+  it("draw → oracle text for draw a card", () => {
+    expect(buildSearchQuery("", { interactionType: "draw" })).toContain('o:"draw a card"');
+  });
+  it("ramp → oracle text for land or mana production", () => {
+    const q = buildSearchQuery("", { interactionType: "ramp" });
+    expect(q).toContain('o:"add {"');
+    expect(q).toContain("t:land");
+  });
+  it("null interactionType adds nothing", () => {
+    expect(buildSearchQuery("", { interactionType: null })).not.toContain('o:"');
   });
 });
 
 describe("buildCommanderSearchQuery", () => {
   it("always includes is:commander", () => {
-    const q = buildCommanderSearchQuery("", {});
-    expect(q).toContain("is:commander");
+    expect(buildCommanderSearchQuery("", {})).toContain("is:commander");
   });
-
   it("adds name regex when text provided", () => {
-    const q = buildCommanderSearchQuery("atraxa", {});
-    expect(q).toContain("name:/atraxa/");
+    expect(buildCommanderSearchQuery("atraxa", {})).toContain("name:/atraxa/");
   });
-
   it("adds color filter when provided", () => {
-    const q = buildCommanderSearchQuery("", { colors: ["G", "W"] });
-    expect(q).toContain("id<=GW");
+    expect(buildCommanderSearchQuery("", { colors: ["G", "W"] })).toContain("id<=GW");
   });
-
   it("skips name part when text is empty", () => {
-    const q = buildCommanderSearchQuery("", {});
-    expect(q).not.toContain("name:/");
+    expect(buildCommanderSearchQuery("", {})).not.toContain("name:/");
   });
 });
 
 describe("buildPartnerSearchQuery", () => {
-  it("handles generic partner type", () => {
+  it("partner type includes Partner oracle text", () => {
     const q = buildPartnerSearchQuery("partner", "");
     expect(q).toContain('o:"Partner"');
     expect(q).toContain('-o:"Partner with"');
     expect(q).toContain("is:commander");
   });
-
-  it("handles friends_forever type", () => {
-    const q = buildPartnerSearchQuery("friends_forever", "");
-    expect(q).toContain('o:"Friends forever"');
+  it("friends_forever type", () => {
+    expect(buildPartnerSearchQuery("friends_forever", "")).toContain('o:"Friends forever"');
   });
-
-  it("handles character_select type", () => {
-    const q = buildPartnerSearchQuery("character_select", "");
-    expect(q).toContain('o:"Character select"');
+  it("character_select type", () => {
+    expect(buildPartnerSearchQuery("character_select", "")).toContain('o:"Character select"');
   });
-
-  it("handles partner_with type", () => {
-    const q = buildPartnerSearchQuery("partner_with", "");
-    expect(q).toContain('o:"Partner with"');
+  it("partner_with type", () => {
+    expect(buildPartnerSearchQuery("partner_with", "")).toContain('o:"Partner with"');
   });
-
-  it("handles unknown type as default", () => {
-    const q = buildPartnerSearchQuery("unknown", "");
-    expect(q).toBe("is:commander");
+  it("unknown type → is:commander only", () => {
+    expect(buildPartnerSearchQuery("unknown", "")).toBe("is:commander");
   });
-
   it("adds name filter when text provided", () => {
-    const q = buildPartnerSearchQuery("partner", "korvold");
-    expect(q).toContain("name:/korvold/");
+    expect(buildPartnerSearchQuery("partner", "korvold")).toContain("name:/korvold/");
   });
-
   it("adds color filter for partner type", () => {
-    const q = buildPartnerSearchQuery("partner", "", { colors: ["R"] });
-    expect(q).toContain("id<=R");
+    expect(buildPartnerSearchQuery("partner", "", { colors: ["R"] })).toContain("id<=R");
   });
 });
 
 describe("buildSetSearchQuery", () => {
   it("includes set code", () => {
-    const q = buildSetSearchQuery("DOM");
-    expect(q).toContain("set:DOM");
+    expect(buildSetSearchQuery("DOM")).toContain("set:DOM");
   });
-
   it("includes legal:commander", () => {
-    const q = buildSetSearchQuery("DOM");
-    expect(q).toContain("legal:commander");
+    expect(buildSetSearchQuery("DOM")).toContain("legal:commander");
   });
-
   it("adds color filter when provided", () => {
-    const q = buildSetSearchQuery("DOM", ["B", "G"]);
-    expect(q).toContain("id<=BG");
+    expect(buildSetSearchQuery("DOM", ["B", "G"])).toContain("id<=BG");
   });
-
   it("skips color filter when empty", () => {
-    const q = buildSetSearchQuery("DOM", []);
-    expect(q).not.toContain("id<=");
+    expect(buildSetSearchQuery("DOM", [])).not.toContain("id<=");
   });
 });
 
 describe("buildColorSearchQuery", () => {
   it("includes legal:commander", () => {
-    const q = buildColorSearchQuery(["W"]);
-    expect(q).toContain("legal:commander");
+    expect(buildColorSearchQuery(["W"])).toContain("legal:commander");
   });
-
   it("uses id<= for non-exact match", () => {
-    const q = buildColorSearchQuery(["U", "B"]);
-    expect(q).toContain("id<=UB");
+    expect(buildColorSearchQuery(["U", "B"])).toContain("id<=UB");
   });
-
   it("uses c= for exact match", () => {
-    const q = buildColorSearchQuery(["R", "G"], "", true);
-    expect(q).toContain("c=RG");
+    expect(buildColorSearchQuery(["R", "G"], "", true)).toContain("c=RG");
   });
-
   it("adds name filter when text provided", () => {
-    const q = buildColorSearchQuery(["W"], "sol ring");
-    expect(q).toContain("name:/sol ring/");
+    expect(buildColorSearchQuery(["W"], "sol ring")).toContain("name:/sol ring/");
   });
-
   it("handles empty colors (colorless)", () => {
-    const q = buildColorSearchQuery([]);
-    expect(q).toBe("legal:commander");
+    expect(buildColorSearchQuery([])).toBe("legal:commander");
   });
-
   it("handles no text with colors", () => {
-    const q = buildColorSearchQuery(["G"]);
-    expect(q).not.toContain("name:/");
+    expect(buildColorSearchQuery(["G"])).not.toContain("name:/");
   });
 });

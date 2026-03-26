@@ -347,3 +347,20 @@
 - `CardFlip` 3D component; `useCardFlip` hook; `CardListItem` Turn Over; `CardGrid` cardFaces
 - Tests: `useCardFlip.test.ts` (6+), MDFC section in `categories.test.ts`
 - `docs/ROADMAP.md`: MDFC and DFC items marked done
+## feat/advanced-search-filters: Enhanced Search Filters ✅
+
+### Implemented (2026-03-26)
+
+- [x] **Color AND/OR/EXACT mode** — match toggle appears when 2+ colors selected; OR=`id<=`, AND=`c>=`, Exact=`c=`
+- [x] **Colorless filter** — C mana button → `c:c`, mutually exclusive with WUBRG
+- [x] **Lands toggle** — `t:land`, composable with color/colorless
+- [x] **CMC mode tabs** — Range / Exact / Min / Max
+- [x] **Price range** — `priceMin` + `priceMax`
+- [x] **Subtype filter** — `t:<subtype>`
+- [x] **Keyword filter** — `keyword:<ability>`
+- [x] **Power/Toughness range** — shown only for Creature type
+- [x] **Interaction archetype** — Removal / Counterspell / Board Wipe / Tutor / Draw / Ramp
+- [x] **Filter presets** — localStorage save/load
+- [x] `buildSearchQuery()` refactored with focused helpers (cognitive complexity < 15)
+- [x] 47 tests covering all new behaviors
+- [x] `ROADMAP.md`: marked ✅ done
