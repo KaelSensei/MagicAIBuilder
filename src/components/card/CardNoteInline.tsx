@@ -68,11 +68,12 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       aria-label="Card note editor"
       open
       className="absolute left-0 right-0 top-full z-30 m-0 p-0 bg-transparent border-none shadow-none w-full"
-      onClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => e.stopPropagation()}
     >
-      <div
+      <form
         className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        onSubmit={(e) => { e.preventDefault(); handleSave(); }}
       >
       <textarea
         ref={textareaRef}
@@ -88,7 +89,7 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       <div className="text-[10px] text-(--text-secondary)/50 mt-1">
         Ctrl+Enter to save · Esc to cancel
       </div>
-      </div>
+      </form>
     </dialog>
   );
 }

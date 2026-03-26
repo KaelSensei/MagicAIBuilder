@@ -9,6 +9,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Fixed — 2026-03-26: SonarCloud issues (#180)
+
+- `fix: resolve 2 SonarCloud issues (1 MEDIUM, 1 LOW)` — S6582: use optional chain in `store.ts` instead of explicit undefined check; S6847: move event listeners from non-interactive `<dialog>` to interactive `<form>` in `CardNoteInline.tsx` for accessibility
+
 ### Fixed — 2026-03-26: MDFC/DFC flip in search results & deck editor (#176, #178)
 
 - `fix: MDFC/DFC cards not showing flip in search results (#176)` — the draggable code path in `CardGrid` computed `dfcFaces` but never passed `cardFaces` or `isFlexibleLand` to `CardImage`, so MDFC/DFC cards displayed as static single-face images in search results grid view

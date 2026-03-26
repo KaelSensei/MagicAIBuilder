@@ -294,7 +294,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
         const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => {
           const cardFaces = rebuildCardFaces(c.scryfallId, c.name, c.typeLine, c.manaCost, c.oracleText);
-          const isFlexibleLand = cardFaces !== undefined && (cardFaces[1].typeLine).toLowerCase().includes("land");
+          const isFlexibleLand = cardFaces?.[1].typeLine.toLowerCase().includes("land") ?? false;
           return {
             id: c.id,
             scryfallId: c.scryfallId,
