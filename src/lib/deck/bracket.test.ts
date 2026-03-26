@@ -45,6 +45,7 @@ function makeStats(overrides: Partial<DeckStats> = {}): DeckStats {
     overBudgetCards: [],
     bannedCards: [],
     colorIdentityViolations: [],
+    flexibleLands: 0,
     ...overrides,
   };
 }
