@@ -9,6 +9,77 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-26: Batch — Deck Snapshots, Playtest Mode, Maybeboard, Deck Annotations, Enhanced Stats, Advanced Filters
+
+#### Deck Snapshots (#154)
+
+- **`DeckSnapshot` Prisma model** — stores named versions of a deck (cardList JSON, commander, cardCount, createdAt)
+- **API** — `GET/POST /api/decks/[id]/snapshots`, `DELETE /api/decks/[id]/snapshots/[snapshotId]`, `POST /api/decks/[id]/snapshots/[snapshotId]/restore` (transactional restore)
+- **`snapshot-api.ts`** — typed client helper for snapshot operations
+- **`SnapshotsPanel`** — collapsible save popover, versioned history list with diff badge (+/- cards vs current deck), restore and delete with confirmation
+
+#### Playtest Mode (#152)
+
+- **`usePlaytest` hook** — Fisher-Yates shuffle, `startPlaytest`, London mulligan, `drawCard`, `nextTurn` actions
+- **`PlaytestModal`** — fullscreen overlay with fan hand display, card hover preview, library pile counter, and control buttons (Draw, Mulligan, Next Turn, End)
+- **London mulligan** implemented — auto-keep all drawn cards for simplicity
+- **Playtest button** (Dices icon) added to `DeckEditor` toolbar
+
+#### Maybeboard (#155)
+
+- **`isMaybeboard` field** on `DeckCard` Prisma model + migration
+- **Store** — `addToMaybeboard`, `removeFromMaybeboard`, `moveToMaybeboard`, `moveToDeck` actions
+- **API** — `POST /cards` and `PATCH /cards/:id` accept `isMaybeboard`
+- **`MaybeboardPanel`** — list with Move to Deck / Remove actions per card
+- **`CardListItem`** — Bookmark button to move card to Maybeboard (hover), In Maybeboard badge
+- **`CardGrid`** — Maybeboard overlay badge + bookmark hover button
+- **Stats** — maybeboard cards excluded from all totals (totalCards, price, mana curve)
+- **Tests** — 20 new tests (8 stats exclusion + 12 store actions)
+
+#### Deck Description, Card Notes & Tags (#156)
+
+- **Deck description** — `description String?` on `Deck`; collapsible `DeckDescriptionEditor` textarea below deck name; first-line preview when collapsed; Ctrl+Enter to save, Esc to cancel; API sanitisation (max 2000 chars)
+- **Card notes** — `notes String?` on `DeckCard`; `CardNoteInline` 📝 icon + inline popover per card; amber note preview below card name; exported as `// comment` in plain text format; API sanitisation (max 1000 chars)
+- **Deck tags** — `tags String[]` on `Deck`; `DeckTagsEditor` pill UI with colour coding; suggestions: casual / cEDH / WIP / budget / tuned / theme; Tab autocompletes first suggestion; home page tag filter bar + clickable tag pills on deck cards; API sanitisation (trim + max 50 chars per tag)
+- **51 new tests** — store-notes, export-notes, tags (111 total, all passing)
+
+#### Enhanced Deck Statistics (#163)
+
+- **Dual CMC rows** — `avgCmcWithLands` and `avgCmcWithoutLands` (non-land average); `avgCmc` kept as deprecated backward-compat alias
+- **Turn 1 Playable** — count of cards with CMC ≤ 1 (castable turn 1)
+- **Mana Alignment** — per-colour symbol ratio vs. land production ratio; flags colour imbalances (e.g. 48% blue symbols but only 30% blue mana produced); collapsible panel in DeckStats UI
+- **`recommendedLandsByColor`** — per-colour land recommendations based on mana requirements
+- **Hybrid pips** — counted as 0.5 toward each colour in symbol ratios
+- **`MDFC_LAYOUTS` / `MANA_IMBALANCE_THRESHOLD`** constants extracted
+
+#### Enhanced Search Filters (#161)
+
+- **Color AND/OR/EXACT mode toggle** — _Any_ (OR, default), _All_ (AND), _Exact_ matching when 2+ colors selected
+- **Colorless filter** (C symbol) — mutually exclusive with WUBRG, filters `c:c`
+- **Lands toggle** — `t:land`, composable with color/colorless
+- **CMC mode tabs** — Range / Exact / Min / Max with appropriate inputs
+- **Price range** — `priceMin` + `priceMax` (`usd>=N` / `usd<=N`)
+- **Subtype** — free-text → `t:<subtype>` (e.g. Elf, Dragon)
+- **Keyword** — free-text → `keyword:<keyword>` (e.g. Flying, Trample)
+- **Power/Toughness range** — shown only when Creature type selected
+- **Interaction archetype** — Removal, Counterspell, Board Wipe, Tutor, Draw, Ramp presets
+- **Filter presets** — save/load named filter configurations to `localStorage`
+- **47 tests** in `search.test.ts` covering all new filter behaviors
+
+### Documentation — 2026-03-26
+
+- `chore: no changelog/progress/roadmap edits in feature branches (#164)` — policy documented in git workflow
+- `chore: add documentation discipline rule to CLAUDE.md (#165)` — docs-only PRs mandated after each feature batch
+- `docs: comprehensive MTG competitive landscape report (#159)` — competitive analysis added to docs
+- `docs: add tournament decks import roadmap section (#158)` — MTGTop8, MTGDecks, Moxfield, EDHRec import plan
+- `docs: add DX/CI-CD overview document (#150)` — CI pipeline and DX tooling documented
+
+### Changed — 2026-03-26
+
+- `chore(deps): bump production-dependencies group (#149)` — two production dependency bumps
+- `chore(deps-dev): bump dev-dependencies group (#148)` — two dev dependency bumps
+- `chore: restrict Dependabot to minor/patch updates only (#147)` — major version bumps now require manual review
+
 ### Added — 2026-03-26: MDFC / DFC Support with 3D Flip Animation
 
 - **Modal Double-Faced Cards (MDFC)**: e.g. _Shatterskull Smashing // Shatterskull, the Hammer Pass_ — both faces display with a Moxfield-style 3D CSS flip animation (350ms `rotateY`)

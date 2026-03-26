@@ -14,6 +14,12 @@ Tracked features and improvements for future development.
 
 ## Deck Editor
 
+- [x] **Deck Snapshots** _(done — 2026-03-26)_: save named versions of a deck with full card list; restore any snapshot transactionally; diff badge shows +/- cards vs. current deck
+
+- [x] **Maybeboard** _(done — 2026-03-26)_: track considered cards outside the 99; move cards between Maybeboard and Main; excluded from all stats and export totals
+
+- [x] **Deck annotations** _(done — 2026-03-26)_: deck description (collapsible textarea), card notes (inline popover, exported as comments), deck tags (pill UI, home-page filter bar)
+
 - [ ] **Bulk edit on Sideboard & Considering**: select multiple cards at once and move/remove them in bulk; currently only one card at a time can be managed in the Sideboard and Considering zones
 
 ## API & Data
@@ -38,16 +44,16 @@ Tracked features and improvements for future development.
 
 ## Statistics
 
-- [ ] **Enhanced deck statistics** including:
-  - Cards playable on turn 1 (based on CMC and mana production)
-  - Corrected CMC split: with lands vs. without lands (non-land average)
-  - Mana production vs. mana curve alignment: flag color imbalances (e.g. 48% blue symbols but only 30% blue mana production on lands)
-  - Proportion of each mana symbol in card costs vs. proportion of that mana produced by lands
-  - Mana base recommendations based on color requirements
+- [x] **Enhanced deck statistics** _(done — 2026-03-26)_:
+  - Cards playable on turn 1 (`turn1Playable` stat)
+  - Corrected CMC split: `avgCmcWithLands` and `avgCmcWithoutLands`
+  - Mana Alignment panel: per-colour symbol ratio vs. land production ratio with imbalance warnings
+  - `recommendedLandsByColor` per-colour land recommendations
+  - Hybrid pips counted as 0.5 toward each colour
 
 ## Playtesting
 
-- [ ] **Hand draw & goldfishing**: draw opening hands with mulligan simulation (Vancouver / London rules), track mana available per turn, simulate solo turns (goldfish), similar to Moxfield or TappedOut playtester
+- [x] **Hand draw & goldfishing** _(done — 2026-03-26)_: `usePlaytest` hook with Fisher-Yates shuffle, London mulligan, `drawCard`, `nextTurn`; `PlaytestModal` fullscreen with fan hand display, hover card preview, library pile counter
 
 ## Formats
 
@@ -73,7 +79,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ### Level 1: Minimum viable (recommended now)
 
-- [ ] **Sentry** (`@sentry/nextjs`): automatic error capture on frontend and backend; free for side projects; install takes ~5 minutes; the single most impactful observability tool to add first
+- [x] **Sentry** (`@sentry/nextjs`) _(done — 2026-03-25)_: automatic error capture on frontend and backend; EU data center
 
 - [x] **Health check endpoint**: `GET /api/health` returns DB connectivity status (`200 ok` / `503 degraded`)
 - [ ] **UptimeRobot** (once deployed): go to uptimerobot.com, create a free account, add a new HTTP(s) monitor pointing to `https://<your-domain>/api/health`, set interval to 5 minutes, and add an alert contact (email or Discord webhook) — free plan includes 50 monitors

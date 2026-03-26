@@ -4,10 +4,59 @@
 
 | Field         | Value                                    |
 | ------------- | ---------------------------------------- |
-| Current Phase | Phase 7 — Infrastructure & Observability |
-| Last Updated  | 2026-03-24                               |
+| Current Phase | Phase 8 — Feature Batch (Deck Tools)     |
+| Last Updated  | 2026-03-26                               |
 | Status        | 🚀 Active Development                    |
 | Main Branch   | `main`                                   |
+
+---
+
+## Phase 8: Feature Batch — Deck Tools (2026-03-26) ✅
+
+### Deck Snapshots (#154)
+- [x] `DeckSnapshot` Prisma model (cardList JSON, commander, cardCount, createdAt)
+- [x] API: `GET/POST /api/decks/[id]/snapshots` + `DELETE` + transactional `/restore`
+- [x] `snapshot-api.ts` typed client helper
+- [x] `SnapshotsPanel` — save popover, version history list, diff badge (+/- cards), restore/delete with confirmation
+
+### Playtest Mode (#152)
+- [x] `usePlaytest` hook — Fisher-Yates shuffle, London mulligan, drawCard, nextTurn
+- [x] `PlaytestModal` — fullscreen fan hand display, hover card preview, library pile, control buttons
+- [x] Playtest button (Dices icon) in DeckEditor toolbar
+
+### Maybeboard (#155)
+- [x] `isMaybeboard Boolean` field on DeckCard (Prisma + migration)
+- [x] Store: `addToMaybeboard`, `removeFromMaybeboard`, `moveToMaybeboard`, `moveToDeck`
+- [x] API routes: POST/PATCH support `isMaybeboard`
+- [x] `MaybeboardPanel` with Move to Deck / Remove per card
+- [x] `CardListItem` Bookmark button + In Maybeboard badge
+- [x] `CardGrid` Maybeboard overlay badge + bookmark hover button
+- [x] Stats: maybeboard cards excluded from all totals
+- [x] 20 new tests (stats exclusion + store actions)
+
+### Deck Annotations — Description, Card Notes, Tags (#156)
+- [x] `description String?` on `Deck` + `DeckDescriptionEditor` collapsible textarea
+- [x] `notes String?` on `DeckCard` + `CardNoteInline` inline popover + export as `// comment`
+- [x] `tags String[]` on `Deck` + `DeckTagsEditor` pill UI + home tag filter bar
+- [x] 51 new tests (store-notes, export-notes, tags) — 111 total
+
+### Enhanced Deck Statistics (#163)
+- [x] `avgCmcWithLands` / `avgCmcWithoutLands` dual CMC rows
+- [x] `turn1Playable` — CMC ≤ 1 card count
+- [x] Mana Alignment — symbol ratio vs. production ratio, per-colour imbalance flags
+- [x] `recommendedLandsByColor` per-colour land recommendations
+- [x] Hybrid pip support (0.5 per colour in ratios)
+- [x] Collapsible Mana Alignment panel in DeckStats UI
+
+### Enhanced Search Filters (#161)
+- [x] Color AND/OR/EXACT mode toggle
+- [x] Colorless filter (C symbol, mutually exclusive with WUBRG)
+- [x] Lands toggle, CMC mode tabs (Range/Exact/Min/Max)
+- [x] Price range (min + max), subtype, keyword filters
+- [x] Power/Toughness range (Creature only)
+- [x] Interaction archetype presets (Removal, Counterspell, Board Wipe, Tutor, Draw, Ramp)
+- [x] Filter presets saved to `localStorage`
+- [x] 47 tests in `search.test.ts`
 
 ---
 
@@ -41,7 +90,8 @@
 | Phase 4+ | Polish, Bug Fixes & UI Enhancements               | ✅ Complete    |
 | Phase 5  | Collection Mode                                   | ✅ Complete    |
 | Phase 6  | UX Polish — Grid Density, Zone D&D, Bracket Rules | ✅ Complete    |
-| Phase 7  | Infrastructure & Observability                    | 🔄 In Progress |
+| Phase 7  | Infrastructure & Observability                    | ✅ Complete    |
+| Phase 8  | Feature Batch — Deck Tools                        | ✅ Complete    |
 
 ---
 
@@ -295,6 +345,17 @@
 | US-22 | AI deck suggestions            | ✅ Done              |
 | US-23 | Light/dark theme               | ✅ Done              |
 
+## P3 User Stories
+
+| #     | User Story                                      | Status  |
+| ----- | ----------------------------------------------- | ------- |
+| US-24 | Save named snapshots (deck versions)            | ✅ Done |
+| US-25 | Playtest — draw hand, mulligan, simulate turns  | ✅ Done |
+| US-26 | Maybeboard — track considered cards             | ✅ Done |
+| US-27 | Annotate deck with description, notes, and tags | ✅ Done |
+| US-28 | Enhanced stats — CMC split, Turn 1, alignment   | ✅ Done |
+| US-29 | Advanced search filters with presets            | ✅ Done |
+
 ---
 
 ## Known Issues / Next Steps
@@ -310,13 +371,15 @@
 
 | Metric                | Value      |
 | --------------------- | ---------- |
-| Source files          | ~70        |
-| API routes            | 7          |
-| Prisma models         | 3          |
-| Hooks                 | 9          |
-| Components            | ~35        |
+| Source files          | ~85        |
+| API routes            | 12         |
+| Prisma models         | 5          |
+| Hooks                 | 11         |
+| Components            | ~45        |
+| Test files            | ~14        |
+| Tests passing         | 158+       |
 | Phase 1 P0 completion | 100%       |
-| Phase 1–4 completion  | 100%       |
+| Phase 1–8 completion  | 100%       |
 | Build                 | ✅ Passing |
 
 ---
