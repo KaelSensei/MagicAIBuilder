@@ -224,6 +224,48 @@ export function buildSetSearchQuery(
   return parts.join(" ");
 }
 
+/**
+ * Card type filter options for the "By Type" search mode.
+ *
+ * Each entry maps to a Scryfall query fragment:
+ * - Standard types use `t:<type>` (e.g. `t:creature`)
+ * - MDFC uses `is:mdfc` (Modal Double-Faced Cards)
+ * - DFC uses `is:transform` (Transform / double-faced cards)
+ */
+export const CARD_TYPE_FILTERS = [
+  { code: "creature", label: "Creature", query: "t:creature" },
+  { code: "instant", label: "Instant", query: "t:instant" },
+  { code: "sorcery", label: "Sorcery", query: "t:sorcery" },
+  { code: "enchantment", label: "Enchantment", query: "t:enchantment" },
+  { code: "artifact", label: "Artifact", query: "t:artifact" },
+  { code: "planeswalker", label: "Planeswalker", query: "t:planeswalker" },
+  { code: "land", label: "Land", query: "t:land" },
+  { code: "battle", label: "Battle", query: "t:battle" },
+  { code: "mdfc", label: "MDFC", query: "is:mdfc" },
+  { code: "dfc", label: "DFC (Transform)", query: "is:transform" },
+] as const;
+
+/** Build a query for filtering by card type checkboxes + optional name text */
+export function buildTypeSearchQuery(
+  typeFilters: readonly string[],
+  text: string = ""
+): string {
+  const parts: string[] = ["legal:commander"];
+  if (text.trim()) parts.push(`name:/${text.trim()}/`);
+  if (typeFilters.length > 0) {
+    const fragments = typeFilters.map((code) => {
+      const entry = CARD_TYPE_FILTERS.find((t) => t.code === code);
+      return entry?.query ?? `t:${code}`;
+    });
+    if (fragments.length === 1) {
+      parts.push(fragments[0]);
+    } else {
+      parts.push(`(${fragments.join(" OR ")})`);
+    }
+  }
+  return parts.join(" ");
+}
+
 /** Build a query for filtering by color */
 export function buildColorSearchQuery(
   colors: string[],

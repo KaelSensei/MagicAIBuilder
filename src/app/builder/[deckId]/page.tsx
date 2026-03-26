@@ -26,7 +26,7 @@ import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
-import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery } from "@/lib/scryfall/search";
+import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildTypeSearchQuery, buildPartnerSearchQuery, CARD_TYPE_FILTERS } from "@/lib/scryfall/search";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters, DeckCard, CardCategory } from "@/lib/deck/types";
@@ -49,11 +49,16 @@ import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 
-type SearchMode = "name" | "set" | "color";
+type SearchMode = "name" | "set" | "color" | "type";
 function getSearchModeLabel(mode: SearchMode): string {
-  if (mode === "name") return "Name";
-  if (mode === "set") return "By Set";
-  return "By Color";
+  switch (mode) {
+    case "name": return "Name";
+    case "set": return "By Set";
+    case "color": return "By Color";
+    case "type": return "By Type";
+  }
+  const _exhaustive: never = mode;
+  return _exhaustive;
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -139,6 +144,12 @@ export default function BuilderPage() {
     setColorFilter((prev) => prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]);
   }, []);
 
+  // Type filter state (for "By Type" mode)
+  const [typeFilter, setTypeFilter] = useState<string[]>([]);
+  const toggleTypeFilter = useCallback((code: string) => {
+    setTypeFilter((prev) => prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]);
+  }, []);
+
   // Inline deck name editing
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
@@ -171,6 +182,10 @@ export default function BuilderPage() {
       case "color":
         return colorFilter.length > 0 || searchText
           ? buildColorSearchQuery(colorFilter, searchText)
+          : "";
+      case "type":
+        return typeFilter.length > 0 || searchText
+          ? buildTypeSearchQuery(typeFilter, searchText)
           : "";
       default:
         return buildSearchQuery(searchText, filters);
@@ -478,7 +493,7 @@ export default function BuilderPage() {
             <div className="p-3 border-b border-[var(--border)] space-y-2">
               {/* Search mode tabs */}
               <div className="flex gap-1 p-0.5 bg-[var(--background)] rounded-lg">
-                {(["name", "set", "color"] as const).map((mode) => (
+                {(["name", "set", "color", "type"] as const).map((mode) => (
                   <button
                     key={mode}
                     onClick={() => {
@@ -486,6 +501,7 @@ export default function BuilderPage() {
                       setSearchText("");
                       setSelectedSet("");
                       setColorFilter([]);
+                      setTypeFilter([]);
                     }}
                     className={cn(
                       "flex-1 text-xs py-1.5 rounded-md font-medium transition-all capitalize",
@@ -600,6 +616,45 @@ export default function BuilderPage() {
                   {colorFilter.length === 0 && !searchText && (
                     <p className="text-xs text-[var(--text-secondary)] italic">
                       Select colors to browse cards
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {searchMode === "type" && (
+                <div className="space-y-2">
+                  <SearchBar
+                    onSearch={handleSearch}
+                    isLoading={searchLoading}
+                    placeholder="Filter by name (optional)…"
+                    showKeyboardHint={false}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
+                  />
+                  <div className="grid grid-cols-2 gap-1">
+                    {CARD_TYPE_FILTERS.map((t) => (
+                      <label
+                        key={t.code}
+                        className={cn(
+                          "flex items-center gap-1.5 text-xs px-2 py-1.5 rounded cursor-pointer transition-all select-none",
+                          typeFilter.includes(t.code)
+                            ? "bg-[var(--accent)]/15 text-[var(--text-primary)]"
+                            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--background)]"
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={typeFilter.includes(t.code)}
+                          onChange={() => toggleTypeFilter(t.code)}
+                          className="w-3.5 h-3.5 rounded border-[var(--border)] accent-[var(--accent)]"
+                        />
+                        {t.label}
+                      </label>
+                    ))}
+                  </div>
+                  {typeFilter.length === 0 && !searchText && (
+                    <p className="text-xs text-[var(--text-secondary)] italic">
+                      Select card types to browse
                     </p>
                   )}
                 </div>

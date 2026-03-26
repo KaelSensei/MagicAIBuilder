@@ -5,8 +5,10 @@ import {
   buildPartnerSearchQuery,
   buildSetSearchQuery,
   buildColorSearchQuery,
+  buildTypeSearchQuery,
   buildInteractionQuery,
   buildColorQuery,
+  CARD_TYPE_FILTERS,
 } from "./search";
 
 describe("buildColorQuery", () => {
@@ -306,6 +308,57 @@ describe("buildSetSearchQuery", () => {
   });
   it("skips color filter when empty", () => {
     expect(buildSetSearchQuery("DOM", [])).not.toContain("id<=");
+  });
+});
+
+describe("buildTypeSearchQuery", () => {
+  it("includes legal:commander", () => {
+    expect(buildTypeSearchQuery(["creature"])).toContain("legal:commander");
+  });
+  it("single type → no OR wrapper", () => {
+    const q = buildTypeSearchQuery(["creature"]);
+    expect(q).toContain("t:creature");
+    expect(q).not.toContain("OR");
+  });
+  it("multiple types → OR-joined in parens", () => {
+    const q = buildTypeSearchQuery(["instant", "sorcery"]);
+    expect(q).toContain("(t:instant OR t:sorcery)");
+  });
+  it("MDFC → is:mdfc", () => {
+    expect(buildTypeSearchQuery(["mdfc"])).toContain("is:mdfc");
+  });
+  it("DFC → is:transform", () => {
+    expect(buildTypeSearchQuery(["dfc"])).toContain("is:transform");
+  });
+  it("combines MDFC with standard types", () => {
+    const q = buildTypeSearchQuery(["enchantment", "mdfc"]);
+    expect(q).toContain("t:enchantment");
+    expect(q).toContain("is:mdfc");
+    expect(q).toContain("OR");
+  });
+  it("adds name filter when text provided", () => {
+    expect(buildTypeSearchQuery(["creature"], "dragon")).toContain("name:/dragon/");
+  });
+  it("empty types + text → name filter only", () => {
+    const q = buildTypeSearchQuery([], "bolt");
+    expect(q).toContain("name:/bolt/");
+    expect(q).not.toContain("t:");
+  });
+  it("empty types + no text → only legal:commander", () => {
+    expect(buildTypeSearchQuery([])).toBe("legal:commander");
+  });
+  it("all standard types are mapped in CARD_TYPE_FILTERS", () => {
+    const codes = CARD_TYPE_FILTERS.map((t) => t.code);
+    expect(codes).toContain("creature");
+    expect(codes).toContain("instant");
+    expect(codes).toContain("sorcery");
+    expect(codes).toContain("enchantment");
+    expect(codes).toContain("artifact");
+    expect(codes).toContain("planeswalker");
+    expect(codes).toContain("land");
+    expect(codes).toContain("battle");
+    expect(codes).toContain("mdfc");
+    expect(codes).toContain("dfc");
   });
 });
 
