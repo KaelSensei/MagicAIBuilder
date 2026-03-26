@@ -610,7 +610,7 @@ export default function BuilderPage() {
               <SearchResults
                 cards={searchData?.data ?? []}
                 isLoading={searchLoading}
-                error={searchError as Error | null}
+                error={searchError instanceof Error ? searchError : null}
                 totalCards={searchData?.total_cards}
                 onCardClick={handleCardClick}
                 onAddToMaybeboard={addToMaybeboard}

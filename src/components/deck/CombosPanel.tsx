@@ -11,7 +11,7 @@ interface CombosPanelProps {
   readonly className?: string;
 }
 
-function ComboCard({ combo }: { combo: SpellbookVariant }) {
+function ComboCard({ combo }: { readonly combo: SpellbookVariant }) {
   return (
     <div className="rounded bg-[var(--surface-hover)] border border-[var(--border)] p-3 space-y-2">
       {/* Cards involved */}

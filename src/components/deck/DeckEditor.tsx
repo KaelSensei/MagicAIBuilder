@@ -8,9 +8,8 @@ import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { CardTooltip } from "@/components/card/CardTooltip";
 import { cn } from "@/components/ui/utils";
-import type { Deck, DeckCard } from "@/lib/deck/types";
+import type { Deck, DeckCard ,CardCategory} from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
-import type { CardCategory } from "@/lib/deck/types";
 import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, Rows3 } from "lucide-react";
 import React, { useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
@@ -42,9 +41,9 @@ function DraggableDeckCard({
   onRemove,
   onMoveToMaybeboard: _onMoveToMaybeboard,
 }: {
-  card: DeckCard;
-  onRemove: (id: string) => void;
-  onMoveToMaybeboard?: (id: string) => void;
+  readonly card: DeckCard;
+  readonly onRemove: (id: string) => void;
+  readonly onMoveToMaybeboard?: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
@@ -82,7 +81,7 @@ function getDropZoneClass(isOver: boolean, isEmpty: boolean): string {
   return "min-h-[8px]";
 }
 
-function DroppableZone({ zone, children }: { zone: "sideboard" | "maybeboard"; children: React.ReactNode }) {
+function DroppableZone({ zone, children }: { readonly zone: "sideboard" | "maybeboard"; readonly children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: `deck-zone-${zone}` });
   return (
     <div
@@ -159,11 +158,11 @@ function CommanderBanner({
   onRemove,
   label,
 }: {
-  name: string;
-  artCropUri: string;
-  imageUri: string;
-  onRemove: () => void;
-  label?: string;
+  readonly name: string;
+  readonly artCropUri: string;
+  readonly imageUri: string;
+  readonly onRemove: () => void;
+  readonly label?: string;
 }) {
   // Prefer artCropUri; fall back to full card image (cropped from top to show face)
   const src = artCropUri || imageUri;

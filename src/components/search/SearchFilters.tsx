@@ -51,7 +51,7 @@ interface FilterPreset {
 }
 
 function loadPresets(): FilterPreset[] {
-  if (typeof window === "undefined") return [];
+  if (typeof globalThis.window === "undefined") return [];
   try {
     const raw = localStorage.getItem(PRESETS_STORAGE_KEY);
     return raw ? (JSON.parse(raw) as FilterPreset[]) : [];
@@ -71,7 +71,7 @@ const inputCls =
 function TabButton({
   active, onClick, title, children,
 }: {
-  active: boolean; onClick: () => void; title?: string; children: React.ReactNode;
+  readonly active: boolean; readonly onClick: () => void; readonly title?: string; readonly children: React.ReactNode;
 }) {
   return (
     <button
@@ -94,8 +94,8 @@ TabButton.displayName = "TabButton";
 function NumInput({
   value, onChange, placeholder, min = 0, max, className,
 }: {
-  value: number | null; onChange: (v: number | null) => void;
-  placeholder: string; min?: number; max?: number; className?: string;
+  readonly value: number | null; readonly onChange: (v: number | null) => void;
+  readonly placeholder: string; readonly min?: number; readonly max?: number; readonly className?: string;
 }) {
   return (
     <input
@@ -104,7 +104,7 @@ function NumInput({
       max={max}
       value={value ?? ""}
       placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value !== "" ? Number(e.target.value) : null)}
+      onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
       className={cn(inputCls, className)}
     />
   );

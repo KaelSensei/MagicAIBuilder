@@ -22,10 +22,10 @@ function ListItemContent({
   onAddToMaybeboard: _onAddToMaybeboard,
   isInMaybeboard: _isInMaybeboard,
 }: {
-  card: ScryfallCard;
-  onClick?: (card: ScryfallCard) => void;
-  onAddToMaybeboard?: (card: ScryfallCard) => void;
-  isInMaybeboard?: boolean;
+  readonly card: ScryfallCard;
+  readonly onClick?: (card: ScryfallCard) => void;
+  readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
+  readonly isInMaybeboard?: boolean;
 }) {
   return (
     <motion.button

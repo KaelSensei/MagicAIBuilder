@@ -1,12 +1,13 @@
 // Core deck and card types for MagicAIBuilder
 export type CardCategory = | "commander" | "companion" | "creature" | "instant" | "sorcery" | "artifact" | "enchantment" | "planeswalker" | "land" | "ramp" | "draw" | "removal" | "boardWipe" | "winCondition" | "protection" | "other";
+export type DeckZone = "main" | "sideboard" | "maybeboard";
 export interface CardFace { name: string; manaCost: string; typeLine: string; oracleText: string; imageUri: string; artCropUri: string; }
 export interface DeckCard {
   id: string; scryfallId?: string; name: string; manaCost: string; cmc: number;
   typeLine: string; oracleText: string; colorIdentity: string[];
   isGameChanger: boolean; isBanned: boolean; price: number | null;
   imageUri: string; artCropUri: string; category: CardCategory;
-  quantity: number; notes?: string | null; zone: "main" | "sideboard" | "maybeboard";
+  quantity: number; notes?: string | null; zone: DeckZone;
   isMaybeboard?: boolean; layout?: string; cardFaces?: [CardFace, CardFace]; isFlexibleLand?: boolean;
 }
 export type CommanderPairingType = | "none" | "partner" | "partner_with" | "friends_forever" | "background" | "doctor" | "character_select";
