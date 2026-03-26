@@ -89,7 +89,7 @@ function computeAvgCmc(cards: ApiCard[]): number {
 
 // ─── Card row ─────────────────────────────────────────────────────────────────
 
-function CardRow({ card }: { card: ApiCard }) {
+function CardRow({ card }: { readonly card: ApiCard }) {
   return (
     <div className="flex items-center gap-2 py-1 text-sm hover:bg-[var(--surface-hover)] rounded px-1 transition-colors group">
       {card.artCropUri ? (
@@ -140,8 +140,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
     const groups: Partial<Record<CardCategory, ApiCard[]>> = {};
     for (const card of mainCards) {
       const cat = card.category as CardCategory;
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(card);
+      (groups[cat] ??= []).push(card);
     }
     return groups;
   }, [mainCards]);

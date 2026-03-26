@@ -47,7 +47,7 @@ function processImportLine(line: string, state: ParseState): void {
   if (/^commander/i.test(line)) { state.inCommanderSection = true; return; }
   if (/^(deck|main|mainboard|99)/i.test(line)) { state.inCommanderSection = false; return; }
 
-  const match = line.match(/^(\d+)x?\s+(.+)$/);
+  const match = /^(\d+)x?\s+(.+)$/.exec(line);
   const rawName = match
     ? match[2].replace(SET_CODE_PATTERN, "").trim()
     : line.replace(SET_CODE_PATTERN, "").trim();
@@ -101,8 +101,8 @@ export function exportToText(
   cards: DeckCard[]
 ): string {
   const lines: string[] = [];
-  if (commander) { lines.push("Commander"); lines.push(`1 ${commander.name}`); lines.push(""); }
-  if (partner) { lines.push("Partner"); lines.push(`1 ${partner.name}`); lines.push(""); }
+  if (commander) { lines.push("Commander", `1 ${commander.name}`, ""); }
+  if (partner) { lines.push("Partner", `1 ${partner.name}`, ""); }
   lines.push("Deck");
   for (const card of cards) { lines.push(`${card.quantity} ${card.name}`); }
   return lines.join("\n");

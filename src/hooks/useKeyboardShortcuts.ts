@@ -52,7 +52,7 @@ function handleEnterKey(
   if (searchResults.length === 0) return;
   e.preventDefault();
   const idx = useUIStore.getState().keyboardSelectedIndex;
-  const card = searchResults[idx >= 0 ? idx : 0];
+  const card = searchResults[Math.max(idx, 0)];
   if (card) { onAddCard(card); useUIStore.getState().resetKeyboardSelection(); }
 }
 
@@ -107,7 +107,7 @@ export function useKeyboardShortcuts({
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      const isMac = navigator.userAgent.toUpperCase().includes("MAC");
       const modKey = isMac ? e.metaKey : e.ctrlKey;
       if (handleModifierShortcut(e, modKey, undo, forceSave)) return;
 

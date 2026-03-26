@@ -1,7 +1,7 @@
 "use client";
 // Zustand deck store — manages all deck state (synced to DB via API routes)
 import { create } from "zustand";
-import type { Deck, DeckCard, CardCategory, CommanderPairingType, CardFace } from "./types";
+import type { Deck, DeckCard, DeckZone, CardCategory, CardFace } from "./types";
 import { categorizeCard, categorizeDfcCard } from "./categories";
 import { detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -36,11 +36,11 @@ function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
     id: scryfallCard.id, name: scryfallCard.name, manaCost, cmc: scryfallCard.cmc,
     typeLine: scryfallCard.type_line, oracleText: scryfallCard.oracle_text ?? cardFaces?.[0].oracleText ?? "",
     colorIdentity: scryfallCard.color_identity, isGameChanger: false, isBanned: false,
-    price: scryfallCard.prices?.usd ? parseFloat(scryfallCard.prices.usd) : null,
+    price: scryfallCard.prices?.usd ? Number.parseFloat(scryfallCard.prices.usd) : null,
     imageUri: cardFaces?.[0].imageUri ?? getCardImageUri(scryfallCard, "normal"),
     artCropUri: cardFaces?.[0].artCropUri ?? getCardImageUri(scryfallCard, "art_crop"),
     category: isDfc ? categorizeDfcCard(scryfallCard) : categorizeCard(scryfallCard),
-    quantity: 1, zone: "main" as const, layout: scryfallCard.layout, cardFaces, isFlexibleLand,
+    quantity: 1, zone: "main", layout: scryfallCard.layout, cardFaces, isFlexibleLand,
   };
 }
 
@@ -124,7 +124,7 @@ export interface DeckStore {
   clearCommander: () => Promise<void>;
   setPartner: (card: ScryfallCard | null) => Promise<void>;
   setCompanion: (card: ScryfallCard | null) => Promise<void>;
-  addCard: (card: ScryfallCard, quantity?: number, zone?: "main" | "sideboard" | "maybeboard") => Promise<void>;
+  addCard: (card: ScryfallCard, quantity?: number, zone?: DeckZone) => Promise<void>;
   addDeckCard: (card: DeckCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
   updateCardCategory: (cardId: string, category: CardCategory) => Promise<void>;
@@ -176,7 +176,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   undo: async () => {
     const { undoStack } = get();
     if (undoStack.length === 0) return;
-    const last = undoStack[undoStack.length - 1];
+    const last = undoStack.at(-1);
+    if (!last) return;
     // Pop the action
     set((s) => ({ undoStack: s.undoStack.slice(0, -1) }));
 
@@ -287,18 +288,18 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           price: c.price,
           imageUri: c.imageUri,
           artCropUri: c.artCropUri,
-          category: c.category as CardCategory,
+          category: c.category,
           quantity: c.quantity,
           notes: c.notes ?? null,
-          zone: (c.zone as "main" | "sideboard" | "maybeboard") ?? "main",
+          zone: c.zone ?? "main",
         });
 
         decks[d.id] = {
           id: d.id,
           name: d.name,
-          format: d.format as "commander" | "brawl",
-          targetBracket: d.targetBracket as 1 | 2 | 3 | 4,
-          manualBracket: (d.manualBracket as 1 | 2 | 3 | 4 | null) ?? null,
+          format: d.format,
+          targetBracket: d.targetBracket,
+          manualBracket: (d.manualBracket ?? null) as 1 | 2 | 3 | 4 | null,
           budget: d.budget,
           description: d.description ?? "",
           tags: d.tags ?? [],
@@ -308,7 +309,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           commander: commanderCard ? toDeckCard(commanderCard) : null,
           partner: partnerCard ? toDeckCard(partnerCard) : null,
           companion: companionCard ? toDeckCard(companionCard) : null,
-          pairingType: (d.pairingType as CommanderPairingType) ?? "none",
+          pairingType: d.pairingType ?? "none",
           cards: mainCards.map(toDeckCard),
           maybeboard: [],
           createdAt: new Date(d.createdAt),
