@@ -12,14 +12,20 @@ interface CardSearchListItemProps {
   readonly onClick?: (card: ScryfallCard) => void;
   readonly draggable?: boolean;
   readonly className?: string;
+  readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
+  readonly isInMaybeboard?: boolean;
 }
 
 function ListItemContent({
   card,
   onClick,
+  onAddToMaybeboard: _onAddToMaybeboard,
+  isInMaybeboard: _isInMaybeboard,
 }: {
   card: ScryfallCard;
   onClick?: (card: ScryfallCard) => void;
+  onAddToMaybeboard?: (card: ScryfallCard) => void;
+  isInMaybeboard?: boolean;
 }) {
   return (
     <motion.button
@@ -38,6 +44,8 @@ function ListItemContent({
       <span className="text-xs text-[var(--text-secondary)] shrink-0">
         {card.cmc > 0 ? card.cmc : "—"}
       </span>
+
+      {/* Add to deck */}
       <Plus className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 shrink-0 transition-opacity" />
     </motion.button>
   );
@@ -46,6 +54,8 @@ function ListItemContent({
 export function CardSearchListItem({
   card,
   onClick,
+  onAddToMaybeboard,
+  isInMaybeboard = false,
   draggable = false,
   className,
 }: CardSearchListItemProps) {
@@ -53,14 +63,24 @@ export function CardSearchListItem({
     return (
       <div className={className}>
         <DraggableCard card={card}>
-          <ListItemContent card={card} onClick={onClick} />
+          <ListItemContent
+            card={card}
+            onClick={onClick}
+            onAddToMaybeboard={onAddToMaybeboard}
+            isInMaybeboard={isInMaybeboard}
+          />
         </DraggableCard>
       </div>
     );
   }
   return (
     <div className={className}>
-      <ListItemContent card={card} onClick={onClick} />
+      <ListItemContent
+        card={card}
+        onClick={onClick}
+        onAddToMaybeboard={onAddToMaybeboard}
+        isInMaybeboard={isInMaybeboard}
+      />
     </div>
   );
 }
