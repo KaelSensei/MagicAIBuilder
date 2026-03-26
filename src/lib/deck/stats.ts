@@ -2,7 +2,7 @@
 import type { Deck, DeckStats } from "./types";
 import { detectThemes } from "./themes";
 
-/** Compute comprehensive deck statistics */
+/** Compute comprehensive deck statistics (maybeboard cards are excluded) */
 export function computeDeckStats(deck: Deck): DeckStats {
   // Only include main-zone cards in stats (sideboard/maybeboard are excluded)
   const mainCards = deck.cards.filter((c) => c.zone === "main");

@@ -28,6 +28,22 @@
 | useCardFlip hook                                               | ✅ Complete |
 | CSS: backface-hidden, preserve-3d utilities                    | ✅ Complete |
 | Tests: 20 new DFC tests                                        | ✅ Complete |
+| Item | Status |
+|------|--------|
+| CardFace type + DeckCard fields | ✅ Complete |
+| ScryfallCard.layout + DFC_LAYOUTS | ✅ Complete |
+| getCardImageUri face param | ✅ Complete |
+| categories: isDfcLayout, isMdfcWithLandBack, categorizeDfcCard | ✅ Complete |
+| store: buildCardFaces, makeDeckCard DFC fields | ✅ Complete |
+| stats: flexibleLands count | ✅ Complete |
+| CardFlip: 3D Moxfield-style flip animation | ✅ Complete |
+| CardImage: delegates to CardFlip | ✅ Complete |
+| CardListItem: Turn Over button + △▽ badge | ✅ Complete |
+| CardGrid: DFC support | ✅ Complete |
+| useCardFlip hook | ✅ Complete |
+| CSS: backface-hidden, preserve-3d utilities | ✅ Complete |
+| Tests: 20 new DFC tests | ✅ Complete |
+
 
 ## Phase Completion Summary
 
@@ -110,6 +126,7 @@
 - [x] Commander pairing types (partner, friends-forever, etc.)
 - [x] AI-assisted deck suggestions (Phase 4)
 - [x] Combo detection via Commander Spellbook API
+- [x] **Maybeboard** — considered cards outside the 99 with Move to Deck / Remove actions
 
 ### Infrastructure
 

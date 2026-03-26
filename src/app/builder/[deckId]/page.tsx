@@ -73,6 +73,7 @@ export default function BuilderPage() {
   const { setActiveDeck, addCard, removeCard, setCommander, setPartner, updateCardCategory } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
+  const addToMaybeboard = useDeckStore((s) => s.addToMaybeboard);
   const handleDuplicate = useCallback(async () => {
     const newId = await duplicateDeck(deckId);
     router.push(`/builder/${newId}`);
@@ -599,6 +600,7 @@ export default function BuilderPage() {
                 error={searchError as Error | null}
                 totalCards={searchData?.total_cards}
                 onCardClick={handleCardClick}
+                onAddToMaybeboard={addToMaybeboard}
                 draggable={true}
               />
             </div>
