@@ -5,6 +5,8 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import { cn } from "@/components/ui/utils";
+import type { CardFace } from "@/lib/deck/types";
+import { CardFlip } from "./CardFlip";
 
 interface CardImageProps {
   readonly imageUri: string;
@@ -18,6 +20,8 @@ interface CardImageProps {
   readonly showOverlay?: boolean;
   readonly className?: string;
   readonly onClick?: () => void;
+  readonly cardFaces?: [CardFace, CardFace];
+  readonly isFlexibleLand?: boolean;
 }
 
 /** Render mana cost as colored pips — simplified text version */
@@ -44,6 +48,8 @@ export function CardImage({
   showOverlay = false,
   className,
   onClick,
+  cardFaces,
+  isFlexibleLand = false,
 }: CardImageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
@@ -59,6 +65,12 @@ export function CardImage({
     }
     return () => clearTimeout(timer);
   }, [isHovered, zoomOnHover]);
+
+  if (cardFaces) {
+    return (
+      <CardFlip frontFace={cardFaces[0]} backFace={cardFaces[1]} isFlexibleLand={isFlexibleLand} className={className} onClick={onClick} />
+    );
+  }
 
   const src = imgError ? CARD_BACK_URL : imageUri;
 

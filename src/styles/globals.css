@@ -95,3 +95,7 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
+
+/* 3D card flip */
+@utility backface-hidden { backface-visibility: hidden; }
+@utility preserve-3d { transform-style: preserve-3d; }

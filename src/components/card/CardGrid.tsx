@@ -5,7 +5,10 @@ import { CardImage } from "./CardImage";
 import { DraggableCard } from "./DraggableCard";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { DFC_LAYOUTS } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
+import { isMdfcWithLandBack } from "@/lib/deck/categories";
+import type { CardFace } from "@/lib/deck/types";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
 
 interface CardGridProps {
@@ -16,6 +19,13 @@ interface CardGridProps {
   readonly draggable?: boolean;
 }
 
+function buildDfcFaces(card: ScryfallCard): [CardFace, CardFace] | undefined {
+  if (!DFC_LAYOUTS.has(card.layout ?? "")) return undefined;
+  const faces = card.card_faces;
+  if (!faces || faces.length < 2) return undefined;
+  const [f0, f1] = faces;
+  return [{ name:f0.name, manaCost:f0.mana_cost??"", typeLine:f0.type_line??"", oracleText:f0.oracle_text??"", imageUri:f0.image_uris?.normal??getCardImageUri(card,"normal","front"), artCropUri:f0.image_uris?.art_crop??getCardImageUri(card,"art_crop","front") },{ name:f1.name, manaCost:f1.mana_cost??"", typeLine:f1.type_line??"", oracleText:f1.oracle_text??"", imageUri:f1.image_uris?.normal??getCardImageUri(card,"normal","back"), artCropUri:f1.image_uris?.art_crop??getCardImageUri(card,"art_crop","back") }];
+}
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
@@ -61,8 +71,10 @@ export function CardGrid({
                 name={card.name}
                 manaCost={card.mana_cost}
                 cmc={card.cmc}
-                showOverlay={true}
+                showOverlay={!buildDfcFaces(card)}
                 onClick={() => onCardClick?.(card)}
+                cardFaces={buildDfcFaces(card)}
+                isFlexibleLand={isMdfcWithLandBack(card)}
               />
             </DraggableCard>
           ) : (

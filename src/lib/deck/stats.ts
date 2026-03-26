@@ -83,6 +83,8 @@ export function computeDeckStats(deck: Deck): DeckStats {
   // Theme detection (on all non-land cards)
   const themes = detectThemes(allCards.filter((c) => c.category !== "land"));
 
+  const flexibleLands = allCards.filter((c) => c.isFlexibleLand === true).reduce((s, c) => s + c.quantity, 0);
+
   return {
     totalCards,
     lands,
@@ -101,5 +103,6 @@ export function computeDeckStats(deck: Deck): DeckStats {
     bannedCards,
     colorIdentityViolations,
     themes,
+    flexibleLands,
   };
 }

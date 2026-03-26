@@ -9,23 +9,33 @@ export type ImageSize =
   | "art_crop"
   | "border_crop";
 
-/** Get card image URL for a given size, handling double-faced cards */
+/**
+ * Get card image URL for a given size.
+ * @param face - "front" (default) or "back" for DFC/MDFC cards
+ */
 export function getCardImageUri(
   card: ScryfallCard,
-  size: ImageSize = "normal"
+  size: ImageSize = "normal",
+  face: "front" | "back" = "front"
 ): string {
-  // Single-faced card
+  // Single-faced card — top-level image_uris
   if (card.image_uris) {
     return card.image_uris[size] ?? card.image_uris.normal ?? "";
   }
 
-  // Double-faced card — use front face
-  if (card.card_faces?.[0]?.image_uris) {
+  // DFC/MDFC — image_uris live on each face
+  const faceIndex = face === "back" ? 1 : 0;
+  const faceData = card.card_faces?.[faceIndex];
+  if (faceData?.image_uris) {
+    return faceData.image_uris[size] ?? faceData.image_uris.normal ?? "";
+  }
+
+  // Fallback: front face if back face not available
+  if (face === "back" && card.card_faces?.[0]?.image_uris) {
     return card.card_faces[0].image_uris[size] ?? card.card_faces[0].image_uris.normal ?? "";
   }
 
-  // Fallback: construct URL from ID
-  return buildScryfallImageUrl(card.id, size);
+  return buildScryfallImageUrl(card.id, size, face);
 }
 
 /** Construct a Scryfall image URL from card ID */
