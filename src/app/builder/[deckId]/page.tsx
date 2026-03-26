@@ -31,7 +31,7 @@ import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { ArrowLeft, Check, Copy, Crown, Download, FileText, Pencil } from "lucide-react";
+import { ArrowLeft, Check, Copy, Crown, Dices, Download, FileText, Pencil } from "lucide-react";
 import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -46,6 +46,7 @@ import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
 import { useResizePanel } from "@/hooks/useResizePanel";
+import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 
 type SearchMode = "name" | "set" | "color";
 function getSearchModeLabel(mode: SearchMode): string {
@@ -130,6 +131,7 @@ export default function BuilderPage() {
 
   // Track active drag card for overlay
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
+  const [showPlaytest, setShowPlaytest] = useState(false);
   const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
 
   // State for changing the printing/edition of an existing deck card
@@ -423,6 +425,15 @@ export default function BuilderPage() {
                 Bulk Edit
               </button>
             </BulkEditModal>
+            {/* Playtest deck */}
+            <button
+              onClick={() => setShowPlaytest(true)}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-purple-500 text-[var(--text-secondary)] hover:text-purple-400 transition-all"
+              title="Playtest this deck"
+            >
+              <Dices className="w-3 h-3" />
+              Playtest
+            </button>
             {/* Export deck */}
             <button
               onClick={() => setShowExport(true)}
@@ -680,6 +691,11 @@ export default function BuilderPage() {
 
       {/* Keyboard shortcuts modal */}
       <KeyboardShortcutsModal />
+
+      {/* Playtest modal */}
+      {showPlaytest && deck && (
+        <PlaytestModal deck={deck} onClose={() => setShowPlaytest(false)} />
+      )}
 
       {/* Export modal */}
       {showExport && deck && (

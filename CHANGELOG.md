@@ -187,12 +187,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **DeckCardOwnershipBadge** — shows "Owned" or "Buy" badge on deck editor card list items
 - **Collection filter** — "Show only collection cards" toggle in SearchFilters (only visible when collection is non-empty)
 - **Header nav** — Collection link added next to My Decks
-### Added — feat/seo-optimization
-- **`app/robots.ts`** — robots.txt : autorise `/` et `/share/`, bloque `/api/`, `/builder/`, `/collection/`
-- **`app/sitemap.ts`** — sitemap dynamique incluant toutes les pages de decks publiquement partagés
-- **`app/layout.tsx`** — metadata enrichie : title template, description longue, 10 keywords MTG/EDH, Twitter card, canonical URL, `robots: index/follow`
-- **`components/JsonLd.tsx`** — composant JSON-LD réutilisable + structured data `SoftwareApplication`
-- **`app/api/og/route.tsx`** — image OG dynamique (edge runtime) avec nom du deck, commander, pips de couleur, design dark MTG-themed 1200×630
+### Added — 2026-03-21: Playtest Mode
+
+- **`PlaytestState` type** — `src/lib/deck/types.ts`: `{ hand, library, turn, mulliganCount }`
+- **`usePlaytest` hook** — `src/hooks/usePlaytest.ts`:
+  - `startPlaytest(deck)` — Fisher-Yates shuffle, draw 7 into hand
+  - `mulligan(state, deck)` — London mulligan: reshuffle full deck, draw `7 - mulliganCount`
+  - `drawCard(state)` — draw 1 from library into hand
+  - `nextTurn(state)` — increment turn + draw a card
+- **`PlaytestModal`** — `src/components/playtest/PlaytestModal.tsx`:
+  - Fullscreen overlay with animated card fan (Fisher-Yates spread)
+  - Hover card preview (full-size image tooltip)
+  - Library pile with face-down stack visual and count
+  - Control buttons: Mulligan (up to 6), Draw Card, End Turn
+  - Stats bar: hand count, library count, turn number, mulligan count
+  - Restart button to re-draw opening hand
+- **Playtest button** in deck builder toolbar (Dices icon, next to Export)
 
 ### Fixed — 2026-03-21
 
