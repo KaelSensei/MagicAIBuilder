@@ -9,30 +9,49 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-26: MDFC/DFC card flip support
+
+- `CardFace` interface; `DeckCard.cardFaces?`, `isFlexibleLand?`; `DeckStats.flexibleLands`
+- `MDFC_LAYOUTS` constant in `src/lib/deck/constants.ts`
+- `isDfcLayout()`, `isMdfcWithLandBack()`, `categorizeDfcCard()` in `categories.ts`
+- `buildCardFaces()` + `computeCmc()` in store — correct CMC for modal_dfc
+- `CardFlip` component: 3D CSS flip, hover flip button, `///`/`/// LAND` badges
+- `useCardFlip` hook: `canFlip`, `isFlipped`, `currentFace`, stable `toggle`
+- `CardListItem`: Turn Over button + DFC badges + active face name
+- `CardGrid`: `cardFaces` forwarded to `CardImage`/`CardFlip`
+- `useCardFlip.test.ts` (6 tests); MDFC/DFC tests in `categories.test.ts`
+- `docs/ROADMAP.md`: MDFC and DFC items marked done
+
 ### Added — 2026-03-22: Grid density selector
+
 - Deck grid view now has a density picker (2 / 3 / 4 / 6 / 8 columns) in the toolbar, visible in grid mode only
 - Default changed from 4 → **6 columns**
 - `deckGridCols` state + `setDeckGridCols` action added to deck store
 
 ### Added — 2026-03-22: Grid view for Sideboard and Maybeboard
+
 - Sideboard and Considering tabs now support grid/list toggle with the same density selector as Main
 - Hover overlay shows remove (×) and quick move (→M) buttons in grid mode
 
 ### Fixed — 2026-03-22: Add card respects active zone
+
 - Clicking or drag-dropping a card while on Sideboard/Considering now adds it to the active zone instead of always Main
 - `addCard()` accepts optional `zone` parameter (default: `"main"`)
 - `activeZone` state lifted from `DeckEditor` to `BuilderPage`
 
 ### Fixed — 2026-03-22: Drag & drop cross-panel reliability
+
 - `MeasuringStrategy.Always` on `DndContext` — drop targets remeasured continuously during drag
 - `DroppableZone` wrapper on Sideboard and Maybeboard — visual highlight on hover + proper target detection
 - `deck-panel-{zone}` droppable on the full deck panel as fallback
 
 ### Fixed — 2026-03-22: Commander/Partner clickable in grid view
+
 - Commander and partner cards in grid view now open the printing selector on click (same as regular cards)
 - Remove button has `stopPropagation` to avoid triggering the printing selector
 
 ### Added — 2026-03-22: Bracket 4 forced for infinite 2-card combos
+
 - `scoreBracket()` now accepts `combos: SpellbookVariant[]` — if any combo is infinite and uses exactly 2 cards, bracket is forced to 4 (RC rule)
 - New `twoCardInfiniteCombos` field on `BracketScore`
 - Warning added: _"N infinite 2-card combo(s) detected — deck is Bracket 4 (RC rule)"_
@@ -40,61 +59,74 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `useBracketScore(deck, combos)` — combos passed from `useCombos` in BuilderPage
 
 ### Added — 2026-03-21: SonarCloud CI
+
 - `sonar-project.properties` — SonarCloud project config (sources, exclusions, coverage path)
 - `.github/workflows/sonar.yml` — GitHub Actions: runs on push/PR to main, installs deps, runs coverage, uploads to SonarCloud
 
 ### Changed — 2026-03-21: pairing.ts refactor
+
 - `src/lib/deck/pairing.ts` — `detectPairingType()` simplifié: helper `has()` extrait, double check em-dash supprimé
 
 ### Added — 2026-03-21: Remove Commander / Partner
+
 - **✕ button on commander and partner** — hover in grid view (on the card image) or list view (next to the name) to remove
 - **`clearCommander()`** action in DeckStore — removes both commander and partner, resets pairingType to "none"
 - **`setPartner(null)`** removes only the partner without affecting the commander
 
 ### Fixed — 2026-03-21: Partner & Pairing Bugs
+
 - **Partner search now filters by pairing type** — Character Select TMNT shows only other Character Select cards; generic Partner shows only Partner keyword cards (not Character Select)
 - **Self-partner bug fixed** — if commander and partner have the same name (import artifact), the duplicate is hidden in grid and list view, and filtered out at hydration time
 - **`clearCommander` clears partner too** — can't have a partner without a commander
 - **`setCommander` clears self-partner** — if partner name equals commander name, partner is reset to null
 
 ### Added — 2026-03-21: TMNT Character Select Partner Type
+
 - New `character_select` value in `CommanderPairingType` for TMNT "Partner—Character select" mechanic
 - `detectPairingType()` detects `partner—character select` in oracle text
 - `canPairWith()` only allows character_select + character_select (not with generic Partner)
 - Partner button label shows "Character Select Partner" for these commanders
 
 ### Fixed — 2026-03-21: Partner Search Mode
+
 - **Partner mode stays active** after selecting a partner (consistent with Commander mode behavior)
 - **Partner button appears** next to Commander button when current commander supports a pairing type
 - Partner mode and Commander mode are mutually exclusive
 
 ### Fixed — 2026-03-21: Color Identity with Partner
+
 - `stats.ts` was only checking `commander.colorIdentity`, ignoring `partner.colorIdentity`
 - Combined identity now used for violation checks — Tymna + Reyhan = 5-color
 
 ### Fixed — 2026-03-21: Import Formats
+
 - Import parser now strips trailing `(SET) collector_number` suffix (Moxfield/Archidekt format)
 - No Commander section required — works without it
 - Handles promo suffixes: 123p, 123s, 123★
 
 ### Added — 2026-03-21: Set as Commander from Deck
+
 - **Crown icon** on hover in list view → removes card from deck and sets it as commander
 - **`promoteToCommander(cardId)`** action in DeckStore
 
 ### Fixed — 2026-03-21: Multiples Detection via Oracle Text
+
 - `maxQuantity()` now reads oracle text for "a deck can have any number of cards named"
 - Replaces hardcoded name list — works for any language and future cards automatically
 - Nazgûl (×9) and Seven Dwarves (×7) remain as capped exceptions
 
 ### Fixed — 2026-03-21: Mana Symbols in Color Filter
+
 - Color filter (Show Filters) now uses Scryfall SVG mana symbols instead of emoji
 
 ### Added — 2026-03-21: Card Quantity Editor
+
 - **+/- quantity buttons** in list view (hover to reveal) — basic lands and Commander-legal multiples can be adjusted
 - **`multiples.ts`** — encodes Commander multi-copy rules: Relentless Rats, Shadowborn Apostle, Persistent Petitioners, Nazgûl (max 9), Seven Dwarves (max 7), etc.
 - **`addCard` now increments** quantity instead of silently blocking when a card allows multiples
 
 ### Added — 2026-03-21: Commander in Grid View + Build Fixes
+
 - **Commander visible in grid view** — commander (and partner) now appear pinned first in the card grid with a gold ring and `CMD` badge
 - **`updateDeckDescription`, `addTag`, `removeTag`** actions added to DeckStore
 - **`PlaytestState`** type added to `types.ts`
@@ -105,6 +137,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **Deck PATCH route** now accepts `description` and `tags`
 
 ### Fixed — 2026-03-21: Edition Picker + Import
+
 - **Edition picker in list view** — hover a card in list view → Layers icon → opens printing selector; swaps `scryfallId` + image optimistically and persists to DB
 - **Import dialog** now shows a clear error message when no deck is active instead of silently doing nothing
 - **`analyzeAI` call signature** fixed (was passing a raw number instead of `BracketScore | null`)
@@ -112,6 +145,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **Duplicate init migration** (`20260321002006_init`) removed — was causing `P3018` errors on `prisma migrate reset`
 
 ### Added — feat/export-audit-fix: Export audit & companion support
+
 - **Companion in all export formats** — companion card was silently dropped from every format; now included:
   - Plain Text / Moxfield: `Companion` / `// Companion` section before `Deck`
   - MTG Arena: `Companion` section (spec-compliant for Brawl/Standard companion import)
@@ -149,15 +183,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **Header nav** — Collection link added next to My Decks
 
 ### Fixed — 2026-03-21
+
 - **Card tooltip position** — tooltip now follows the mouse cursor via `createPortal` instead of anchoring to the right edge of the full-width list item row (which landed it in the stats panel)
 
 ### Added — 2026-03-21: Oracle text in printing selector
+
 - `src/components/card/PrintingSelectorModal.tsx` — two-column layout: oracle text panel (mana cost, type line, card text, price) on the left, printings grid on the right; handles double-faced cards via `card_faces[0]` fallback
 
 ### Changed — 2026-03-21: Mana symbols in color filter
+
 - **By Color search** — remplacé les emojis (☀️💧💀🔥🌲) par les vrais SVGs officiels Scryfall (`svgs.scryfall.io/card-symbols/{W,U,B,R,G,C}.svg`); colorless intégré dans la liste principale
 
 ### Added — feat/set-search-all-sets
+
 - **SetAutocomplete** — replaced static hardcoded list (~35 sets) with dynamic fetch from Scryfall `GET /sets`; filters to Commander-relevant set types (core, expansion, masters, commander…), sorted newest first, in-memory 1h cache
 - **SetAutocomplete** — scroll container (max-h-64), year badge per set, loading spinner, "X sets available — type to search" footer hint
 
@@ -208,18 +246,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Requires commander to be set before AI analysis is available
 
 ### Fixed — 2026-03-21: Security (#29)
+
 - `next.config.ts` — upgrade Next.js to patch RCE CVE, restrict `images.remotePatterns` to Scryfall domains only, add `X-Content-Type-Options` / `X-Frame-Options` security headers
 - `src/app/api/**` — input validation with Zod on all API routes, log sanitization to prevent log injection
 
 ### Added — 2026-03-21: Card Grid Hover Overlay (#28)
+
 - `src/components/card/CardImage.tsx` — hover overlay shows card name, mana cost, and "+" add-to-deck indicator on search result grid cards
 - `src/components/card/CardGrid.tsx` — overlay wired to grid items
 
 ### Added — 2026-03-21: Deck Grid View + Commander Hover Tooltip (#23)
+
 - `src/components/deck/DeckEditor.tsx` — deck card grid view with card images (alongside existing list view)
 - Commander card shows hover tooltip with full card details
 
 ### Added — 2026-03-21: Game Changer Toast Warning (#21)
+
 - `src/lib/deck/store.ts` — `addCard` triggers toast notification when a Game Changer card is added
 - `src/hooks/useToast.ts` — toast hook extended with GC-specific warning
 
@@ -267,26 +309,32 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### Added — Phase 1: Integration (feat/phase-1-integration)
 
 #### Game Changers & Banlist Enrichment
+
 - `useBanlist.ts` — new hook fetching `banned:commander` cards from Scryfall (24h cache)
 - `useGameChangers.ts` — extended with `useGameChangersSet()` exposing `isGameChanger(name)` helper
 - `EnrichmentProvider.tsx` — syncs GC and banlist Sets into Zustand store at startup
 - `store.ts` — `addCard` and `setCommander` auto-mark `isGameChanger` and `isBanned`
 
 #### dnd-kit Drag-and-Drop
+
 - `DraggableCard.tsx` — search cards wrapped with `useDraggable` (8px activation distance)
 - `DeckEditor.tsx` — category sections use `useDroppable` with visual highlight on drag-over
 - `builder/[deckId]/page.tsx` — `DndContext` + `DragOverlay` wrapping entire page
 
 #### Import UI
+
 - `ImportDialog.tsx` — Radix Dialog, plain text format, Scryfall batch lookup
 
 #### Color Distribution Chart
+
 - `ColorDistribution.tsx` — CSS-only bar chart for W/U/B/R/G/C color pips
 
 #### Commander Auto-Detection
+
 - Commander mode toggle (Crown icon): filters search with `is:commander`, clicking sets commander
 
 #### Grid/List View Toggle
+
 - `SearchResults.tsx` + `DeckEditor.tsx` — grid/list toggle, persisted in Zustand store
 
 ---
@@ -294,10 +342,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### Added — Phase 1: Foundation Scaffold
 
 #### Project Setup
+
 - Next.js 15 App Router, TypeScript 5, Tailwind CSS 4, pnpm, ESLint 9 + Prettier 3
 - Dark theme (CSS custom properties), MTG design tokens
 
 #### Core Types, Scryfall Integration, Deck Logic, Hooks, Components
+
 - Full details in `docs/PROGRESS.md`
 
 ---
@@ -305,6 +355,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ## [0.1.0] — 2026-03-20
 
 ### Added
+
 - Initial repository setup with README and project documentation
 - Game Changers card list documentation (`docs/game-changers.md`)
 

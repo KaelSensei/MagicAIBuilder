@@ -1,10 +1,11 @@
 "use client";
 // Zustand deck store — manages all deck state (synced to DB via API routes)
 import { create } from "zustand";
-import type { Deck, DeckCard, CardCategory, CommanderPairingType } from "./types";
-import { categorizeCard } from "./categories";
+import type { Deck, DeckCard, CardCategory, CommanderPairingType, CardFace } from "./types";
+import { categorizeCard, categorizeDfcCard } from "./categories";
 import { detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { DFC_LAYOUTS } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import * as deckApi from "@/lib/db/deck-api";
 import { useToastStore } from "@/hooks/useToast";
@@ -16,23 +17,30 @@ export type DeckAction =
   | { type: "ADD_CARD"; deckId: string; card: DeckCard }
   | { type: "REMOVE_CARD"; deckId: string; card: DeckCard };
 
+function buildCardFaces(sc: ScryfallCard): [CardFace, CardFace] | undefined {
+  if (!DFC_LAYOUTS.has(sc.layout ?? "")) return undefined;
+  const faces = sc.card_faces;
+  if (!faces || faces.length < 2) return undefined;
+  const [f0, f1] = faces;
+  return [
+    { name: f0.name, manaCost: f0.mana_cost ?? "", typeLine: f0.type_line ?? "", oracleText: f0.oracle_text ?? "", imageUri: f0.image_uris?.normal ?? getCardImageUri(sc, "normal", "front"), artCropUri: f0.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop", "front") },
+    { name: f1.name, manaCost: f1.mana_cost ?? "", typeLine: f1.type_line ?? "", oracleText: f1.oracle_text ?? "", imageUri: f1.image_uris?.normal ?? getCardImageUri(sc, "normal", "back"), artCropUri: f1.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop", "back") },
+  ];
+}
 function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
+  const cardFaces = buildCardFaces(scryfallCard);
+  const isDfc = cardFaces !== undefined;
+  const manaCost = scryfallCard.mana_cost ?? cardFaces?.[0].manaCost ?? "";
+  const isFlexibleLand = isDfc && scryfallCard.layout === "modal_dfc" && (cardFaces?.[1].typeLine ?? "").toLowerCase().includes("land");
   return {
-    id: scryfallCard.id,
-    name: scryfallCard.name,
-    manaCost: scryfallCard.mana_cost ?? "",
-    cmc: scryfallCard.cmc,
-    typeLine: scryfallCard.type_line,
-    oracleText: scryfallCard.oracle_text ?? "",
-    colorIdentity: scryfallCard.color_identity,
-    isGameChanger: false,
-    isBanned: false,
-    price: scryfallCard.prices?.usd ? Number.parseFloat(scryfallCard.prices.usd) : null,
-    imageUri: getCardImageUri(scryfallCard, "normal"),
-    artCropUri: getCardImageUri(scryfallCard, "art_crop"),
-    category: categorizeCard(scryfallCard),
-    quantity: 1,
-    zone: "main" as const,
+    id: scryfallCard.id, name: scryfallCard.name, manaCost, cmc: scryfallCard.cmc,
+    typeLine: scryfallCard.type_line, oracleText: scryfallCard.oracle_text ?? cardFaces?.[0].oracleText ?? "",
+    colorIdentity: scryfallCard.color_identity, isGameChanger: false, isBanned: false,
+    price: scryfallCard.prices?.usd ? parseFloat(scryfallCard.prices.usd) : null,
+    imageUri: cardFaces?.[0].imageUri ?? getCardImageUri(scryfallCard, "normal"),
+    artCropUri: cardFaces?.[0].artCropUri ?? getCardImageUri(scryfallCard, "art_crop"),
+    category: isDfc ? categorizeDfcCard(scryfallCard) : categorizeCard(scryfallCard),
+    quantity: 1, zone: "main" as const, layout: scryfallCard.layout, cardFaces, isFlexibleLand,
   };
 }
 

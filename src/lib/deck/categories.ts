@@ -2,6 +2,14 @@
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { CardCategory } from "./types";
 
+export function isDfcLayout(card: ScryfallCard): boolean {
+  return (card.layout === "modal_dfc" || card.layout === "transform" || card.layout === "reversible_card" || card.layout === "double_faced_token") && (card.card_faces?.length ?? 0) >= 2;
+}
+export function isMdfcWithLandBack(card: ScryfallCard): boolean {
+  if (card.layout !== "modal_dfc") return false;
+  return (card.card_faces?.[1]?.type_line ?? "").toLowerCase().includes("land");
+}
+
 function isRamp(card: ScryfallCard): boolean {
   const text = (card.oracle_text ?? "").toLowerCase();
   const type = card.type_line.toLowerCase();
@@ -122,6 +130,12 @@ export function categorizeCard(card: ScryfallCard): CardCategory {
   return "other";
 }
 
+export function categorizeDfcCard(card: ScryfallCard): CardCategory {
+  const faces = card.card_faces;
+  if (!faces || faces.length === 0) return categorizeCard(card);
+  const f = faces[0];
+  return categorizeCard({ ...card, mana_cost: f.mana_cost ?? "", type_line: f.type_line ?? card.type_line, oracle_text: f.oracle_text ?? "", card_faces: undefined });
+}
 /** Display label for each category */
 export const CATEGORY_LABELS: Record<CardCategory, string> = {
   commander: "Commander",

@@ -309,3 +309,16 @@
 - [ ] UptimeRobot — configure monitor on `/api/health`
 - [ ] Sentry source maps — add `SENTRY_AUTH_TOKEN` to Vercel
 - [ ] Fix CI typecheck errors in test files
+
+---
+
+## MDFC/DFC Card Flip Support
+
+### Implemented (2026-03-26)
+
+- CardFace interface; cardFaces; isFlexibleLand; flexibleLands stat
+- isDfcLayout, isMdfcWithLandBack, categorizeDfcCard, MDFC_LAYOUTS constant
+- buildCardFaces + computeCmc in store
+- CardFlip 3D component, useCardFlip hook, CardListItem/CardGrid DFC support
+- Tests: useCardFlip.test.ts (6), MDFC section in categories.test.ts
+- ROADMAP MDFC and DFC marked done
