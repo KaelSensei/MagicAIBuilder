@@ -32,7 +32,16 @@ export interface BracketScore {
   dimensions: { ramp: number; draw: number; removal: number; tutors: number; winSpeed: number; avgCmc: number };
   gameChangers: number; twoCardInfiniteCombos: number; warnings: string[];
 }
-export interface PlaytestState { hand: DeckCard[]; library: DeckCard[]; turn: number; mulliganCount: number; }
+
+// ─── Playtest ───────────────────────────────────────────────────────────────
+
+export interface PlaytestState {
+  hand: DeckCard[];
+  library: DeckCard[]; // remaining shuffled deck
+  turn: number;
+  mulliganCount: number;
+}
+
 export type ViewMode = "grid" | "list";
 export type ColorMode = "or" | "and" | "exact";
 export type CmcMode = "range" | "exact" | "min" | "max";

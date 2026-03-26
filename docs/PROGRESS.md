@@ -2,12 +2,12 @@
 
 ## Overview
 
-| Field         | Value                                    |
-| ------------- | ---------------------------------------- |
-| Current Phase | Phase 7 — Infrastructure & Observability |
-| Last Updated  | 2026-03-24                               |
-| Status        | 🚀 Active Development                    |
-| Main Branch   | `main`                                   |
+| Field | Value |
+|---|---|
+| Current Phase | Post Phase 4 — Polish & Stability |
+| Last Updated | 2026-03-21 |
+| Status | 🚀 Active Development |
+| Main Branch | `main` |
 
 ---
 
@@ -31,31 +31,15 @@
 
 ## Phase Completion Summary
 
-| Phase    | Name                                              | Status         |
-| -------- | ------------------------------------------------- | -------------- |
-| Phase 1  | Foundation Scaffold                               | ✅ Complete    |
-| Phase 1+ | Integration (DB, DnD, Import)                     | ✅ Complete    |
-| Phase 2  | Intelligence (Combos, Theme, Pairing)             | ✅ Complete    |
-| Phase 3  | Database & Prisma                                 | ✅ Complete    |
-| Phase 4  | AI Suggestions                                    | ✅ Complete    |
-| Phase 4+ | Polish, Bug Fixes & UI Enhancements               | ✅ Complete    |
-| Phase 5  | Collection Mode                                   | ✅ Complete    |
-| Phase 6  | UX Polish — Grid Density, Zone D&D, Bracket Rules | ✅ Complete    |
-| Phase 7  | Infrastructure & Observability                    | 🔄 In Progress |
-
----
-
-## Phase 4+ AI Builder Improvements
-
-### Status: ✅ Complete
-
-- [x] Streaming NDJSON API response (analysis → suggestions → removals → done)
-- [x] Improved prompt with all deck cards, bracket dimensions, themes, gaps
-- [x] Cards to Remove (4 removal suggestions per analysis)
-- [x] AISuggestionsPanel "Cards to Cut" section with Remove button
-- [x] Deck state hash cache to avoid redundant API calls
-- [x] BracketScore passed to hook instead of just number
-- [x] Animated streaming card entries in panel
+| Phase | Name | Status |
+|---|---|---|
+| Phase 1 | Foundation Scaffold | ✅ Complete |
+| Phase 1+ | Integration (DB, DnD, Import) | ✅ Complete |
+| Phase 2 | Intelligence (Combos, Theme, Pairing) | ✅ Complete |
+| Phase 3 | Database & Prisma | ✅ Complete |
+| Phase 4 | AI Suggestions | ✅ Complete |
+| Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
+| Phase 5 | Deck Snapshots / Version History | ✅ Complete |
 
 ---
 
@@ -87,11 +71,7 @@
 - [x] Favicon SVG + OG image (1200×630)
 - [x] Page metadata: title template, keywords, openGraph
 - [x] Light / dark theme toggle with persistence
-- [x] Export deck (multiple formats: Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, Manabox, Plain Text)
-- [x] Export — companion card included in all formats (was silently dropped before)
-- [x] Export — Manabox format added (popular iOS/Android app)
-- [x] Export — MTGO companion placed in sideboard correctly
-- [x] ExportModal — card count includes companion
+- [x] Export deck (multiple formats)
 - [x] Delete deck with confirmation
 - [x] Deck card grid view with card images (alongside list view)
 - [x] Commander hover tooltip with full card details
@@ -99,6 +79,23 @@
 - [x] Game Changer toast warning on addCard
 - [x] Mana symbols as official Scryfall SVGs in color filter
 - [x] Oracle text panel in printing selector modal
+
+---
+
+## Phase 5 Checklist (Deck Snapshots)
+
+### Snapshot Feature
+- [x] `DeckSnapshot` Prisma model (`id`, `deckId`, `name`, `cardList` JSON, `commander`, `cardCount`, `createdAt`)
+- [x] Migration `20260321140000_add_deck_snapshots`
+- [x] `GET /api/decks/[id]/snapshots` — list snapshots (newest first, no cardList in list view)
+- [x] `POST /api/decks/[id]/snapshots` — create snapshot from current deck state
+- [x] `DELETE /api/decks/[id]/snapshots/[snapshotId]` — delete a snapshot
+- [x] `POST /api/decks/[id]/snapshots/[snapshotId]/restore` — transactional restore
+- [x] `src/lib/db/snapshot-api.ts` — typed client-side helpers
+- [x] `SnapshotsPanel` component — save popover, history list, diff badges, restore/delete with confirmation
+- [x] Builder integration — panel in stats column, `onRestore` reloads deck store
+
+---
 
 ### Security
 
@@ -217,41 +214,41 @@
 
 ## P0 User Stories
 
-| #    | User Story                           | Status  |
-| ---- | ------------------------------------ | ------- |
-| US-1 | Search cards using Scryfall syntax   | ✅ Done |
-| US-2 | Pick a commander                     | ✅ Done |
-| US-3 | Add cards to deck (click/drag)       | ✅ Done |
-| US-4 | See live deck stats                  | ✅ Done |
-| US-5 | See bracket score update live        | ✅ Done |
-| US-6 | Warn about banned cards              | ✅ Done |
-| US-7 | Warn about Game Changers             | ✅ Done |
+| # | User Story | Status |
+|---|---|---|
+| US-1 | Search cards using Scryfall syntax | ✅ Done |
+| US-2 | Pick a commander | ✅ Done |
+| US-3 | Add cards to deck (click/drag) | ✅ Done |
+| US-4 | See live deck stats | ✅ Done |
+| US-5 | See bracket score update live | ✅ Done |
+| US-6 | Warn about banned cards | ✅ Done |
+| US-7 | Warn about Game Changers | ✅ Done |
 | US-8 | Warn about color identity violations | ✅ Done |
 
 ## P1 User Stories
 
-| #     | User Story                                            | Status  |
-| ----- | ----------------------------------------------------- | ------- |
-| US-9  | Set a budget with per-card flagging                   | ✅ Done |
+| # | User Story | Status |
+|---|---|---|
+| US-9 | Set a budget with per-card flagging | ✅ Done |
 | US-10 | Manually recategorize cards (drag between categories) | ✅ Done |
-| US-11 | Import decklist from plain text                       | ✅ Done |
-| US-12 | Export deck                                           | ✅ Done |
-| US-13 | Toggle grid/list view                                 | ✅ Done |
-| US-14 | Inline deck rename                                    | ✅ Done |
-| US-15 | Choose card printing/art                              | ✅ Done |
-| US-16 | Search by set or color                                | ✅ Done |
-| US-17 | Companion card support                                | ✅ Done |
+| US-11 | Import decklist from plain text | ✅ Done |
+| US-12 | Export deck | ✅ Done |
+| US-13 | Toggle grid/list view | ✅ Done |
+| US-14 | Inline deck rename | ✅ Done |
+| US-15 | Choose card printing/art | ✅ Done |
+| US-16 | Search by set or color | ✅ Done |
+| US-17 | Companion card support | ✅ Done |
 
 ## P2 User Stories
 
-| #     | User Story                     | Status               |
-| ----- | ------------------------------ | -------------------- |
-| US-18 | Hover card to see full-size    | ✅ Done              |
-| US-19 | Filter by color/type/CMC/price | ✅ Done              |
-| US-20 | Persist multiple decks         | ✅ Done (PostgreSQL) |
-| US-21 | Combo detection                | ✅ Done              |
-| US-22 | AI deck suggestions            | ✅ Done              |
-| US-23 | Light/dark theme               | ✅ Done              |
+| # | User Story | Status |
+|---|---|---|
+| US-18 | Hover card to see full-size | ✅ Done |
+| US-19 | Filter by color/type/CMC/price | ✅ Done |
+| US-20 | Persist multiple decks | ✅ Done (PostgreSQL) |
+| US-21 | Combo detection | ✅ Done |
+| US-22 | AI deck suggestions | ✅ Done |
+| US-23 | Light/dark theme | ✅ Done |
 
 ---
 
@@ -347,20 +344,13 @@
 - `CardFlip` 3D component; `useCardFlip` hook; `CardListItem` Turn Over; `CardGrid` cardFaces
 - Tests: `useCardFlip.test.ts` (6+), MDFC section in `categories.test.ts`
 - `docs/ROADMAP.md`: MDFC and DFC items marked done
-## feat/advanced-search-filters: Enhanced Search Filters ✅
-
-### Implemented (2026-03-26)
-
-- [x] **Color AND/OR/EXACT mode** — match toggle appears when 2+ colors selected; OR=`id<=`, AND=`c>=`, Exact=`c=`
-- [x] **Colorless filter** — C mana button → `c:c`, mutually exclusive with WUBRG
-- [x] **Lands toggle** — `t:land`, composable with color/colorless
-- [x] **CMC mode tabs** — Range / Exact / Min / Max
-- [x] **Price range** — `priceMin` + `priceMax`
-- [x] **Subtype filter** — `t:<subtype>`
-- [x] **Keyword filter** — `keyword:<ability>`
-- [x] **Power/Toughness range** — shown only for Creature type
-- [x] **Interaction archetype** — Removal / Counterspell / Board Wipe / Tutor / Draw / Ramp
-- [x] **Filter presets** — localStorage save/load
-- [x] `buildSearchQuery()` refactored with focused helpers (cognitive complexity < 15)
-- [x] 47 tests covering all new behaviors
-- [x] `ROADMAP.md`: marked ✅ done
+| Metric | Value |
+|---|---|
+| Source files | ~70 |
+| API routes | 7 |
+| Prisma models | 3 |
+| Hooks | 9 |
+| Components | ~35 |
+| Phase 1 P0 completion | 100% |
+| Phase 1–4 completion | 100% |
+| Build | ✅ Passing |
