@@ -38,3 +38,12 @@ export interface SearchFilters {
   colors: string[]; types: string[]; cmcMin: number|null; cmcMax: number|null;
   priceMax: number|null; collectionOnly?: boolean;
 }
+
+export interface CardFace {
+  name: string;
+  manaCost: string;
+  typeLine: string;
+  oracleText: string;
+  imageUri: string;
+  artCropUri: string;
+}
