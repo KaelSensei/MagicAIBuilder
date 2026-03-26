@@ -126,7 +126,7 @@ const TAG_COLORS: Record<string, string> = {
   theme: "bg-pink-500/20 text-pink-400 border-pink-500/30",
 };
 const DEFAULT_TAG_COLOR = "bg-[var(--border)] text-[var(--text-secondary)] border-[var(--border)]";
-const tagColor = (tag: string) => TAG_COLORS[tag] ?? DEFAULT_TAG_COLOR;
+const _tagColor = (tag: string) => TAG_COLORS[tag] ?? DEFAULT_TAG_COLOR;
 
 function DeckCardSkeleton() {
   return (

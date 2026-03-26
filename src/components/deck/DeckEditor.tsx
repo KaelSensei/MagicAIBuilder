@@ -15,8 +15,7 @@ import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, Rows3 } from
 import React, { useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
-import { DeckDescriptionEditor } from "@/components/deck/DeckDescriptionEditor";
-import { DeckTagsEditor } from "@/components/deck/DeckTagsEditor";
+
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type DeckZone = "main" | "sideboard" | "maybeboard";

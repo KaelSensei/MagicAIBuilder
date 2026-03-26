@@ -60,8 +60,6 @@ function createEmptyDeck(id: string, name: string): Deck {
   return {
     id,
     name,
-    description: "",
-    tags: [],
     commander: null,
     partner: null,
     companion: null,
@@ -153,11 +151,6 @@ export interface DeckStore {
   // Game Changer / banlist enrichment
   markGameChanger: (cardName: string) => void;
   markBanned: (cardName: string) => void;
-
-  // Description, tags
-  updateDeckDescription: (deckId: string, description: string) => Promise<void>;
-  addTag: (deckId: string, tag: string) => Promise<void>;
-  removeTag: (deckId: string, tag: string) => Promise<void>;
 
   // Computed getters
   getActiveDeck: () => Deck | null;
@@ -303,8 +296,6 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         decks[d.id] = {
           id: d.id,
           name: d.name,
-          description: d.description ?? "",
-          tags: d.tags ?? [],
           format: d.format as "commander" | "brawl",
           targetBracket: d.targetBracket as 1 | 2 | 3 | 4,
           manualBracket: (d.manualBracket as 1 | 2 | 3 | 4 | null) ?? null,
@@ -1159,61 +1150,6 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         },
       },
     }));
-  },
-
-  updateDeckDescription: async (deckId: string, description: string) => {
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [deckId]: { ...state.decks[deckId], description },
-      },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(deckId, { description });
-    } catch (err) {
-      console.error("[updateDeckDescription]", err);
-    } finally {
-      set({ isSyncing: false });
-    }
-  },
-
-  addTag: async (deckId: string, tag: string) => {
-    const deck = get().decks[deckId];
-    if (!deck) return;
-    const trimmed = tag.trim();
-    if (!trimmed) return;
-    const existingTags = deck.tags ?? [];
-    if (existingTags.includes(trimmed)) return;
-    const tags = [...existingTags, trimmed];
-    set((state) => ({
-      decks: { ...state.decks, [deckId]: { ...state.decks[deckId], tags } },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(deckId, { tags });
-    } catch (err) {
-      console.error("[addTag]", err);
-    } finally {
-      set({ isSyncing: false });
-    }
-  },
-
-  removeTag: async (deckId: string, tag: string) => {
-    const deck = get().decks[deckId];
-    if (!deck) return;
-    const tags = (deck.tags ?? []).filter((t) => t !== tag);
-    set((state) => ({
-      decks: { ...state.decks, [deckId]: { ...state.decks[deckId], tags } },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(deckId, { tags });
-    } catch (err) {
-      console.error("[removeTag]", err);
-    } finally {
-      set({ isSyncing: false });
-    }
   },
 
   addToMaybeboard: async (card: ScryfallCard) => {
