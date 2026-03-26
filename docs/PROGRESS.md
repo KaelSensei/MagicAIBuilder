@@ -11,6 +11,24 @@
 
 ---
 
+## MDFC / DFC Support (2026-03-26)
+
+| Item                                                           | Status      |
+| -------------------------------------------------------------- | ----------- |
+| CardFace type + DeckCard fields                                | ✅ Complete |
+| ScryfallCard.layout + DFC_LAYOUTS                              | ✅ Complete |
+| getCardImageUri face param                                     | ✅ Complete |
+| categories: isDfcLayout, isMdfcWithLandBack, categorizeDfcCard | ✅ Complete |
+| store: buildCardFaces, makeDeckCard DFC fields                 | ✅ Complete |
+| stats: flexibleLands count                                     | ✅ Complete |
+| CardFlip: 3D Moxfield-style flip animation                     | ✅ Complete |
+| CardImage: delegates to CardFlip                               | ✅ Complete |
+| CardListItem: Turn Over button + △▽ badge                      | ✅ Complete |
+| CardGrid: DFC support                                          | ✅ Complete |
+| useCardFlip hook                                               | ✅ Complete |
+| CSS: backface-hidden, preserve-3d utilities                    | ✅ Complete |
+| Tests: 20 new DFC tests                                        | ✅ Complete |
+
 ## Phase Completion Summary
 
 | Phase    | Name                                              | Status         |
@@ -230,16 +248,6 @@
 
 ---
 
-## Enhanced Deck Statistics (2026-03-26)
-
-- Dual CMC: `avgCmcWithLands` / `avgCmcWithoutLands`
-- `turn1Playable` count
-- Per-color `manaSymbolRatio`, `manaProductionRatio`, `manaImbalance`
-- `recommendedLandsByColor`, `flexibleLands`
-- Collapsible Mana Alignment panel; amber warning on gaps > 15%
-
----
-
 ## Known Issues / Next Steps
 
 1. **E2E tests** — Playwright tests need updates for new UI (search tabs, printing selector, companion)
@@ -326,9 +334,9 @@
 
 ### Implemented (2026-03-26)
 
-- CardFace interface; cardFaces; isFlexibleLand; flexibleLands stat
-- isDfcLayout, isMdfcWithLandBack, categorizeDfcCard, MDFC_LAYOUTS constant
-- buildCardFaces + computeCmc in store
-- CardFlip 3D component, useCardFlip hook, CardListItem/CardGrid DFC support
-- Tests: useCardFlip.test.ts (6), MDFC section in categories.test.ts
-- ROADMAP MDFC and DFC marked done
+- `CardFace` interface; `cardFaces?`; `isFlexibleLand?`; `flexibleLands` stat
+- `isDfcLayout()`, `isMdfcWithLandBack()`, `categorizeDfcCard()`, `MDFC_LAYOUTS`
+- `buildCardFaces()` + `computeCmc()` in store; `getCardImageUri` face param
+- `CardFlip` 3D component; `useCardFlip` hook; `CardListItem` Turn Over; `CardGrid` cardFaces
+- Tests: `useCardFlip.test.ts` (6+), MDFC section in `categories.test.ts`
+- `docs/ROADMAP.md`: MDFC and DFC items marked done

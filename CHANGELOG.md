@@ -9,26 +9,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-### Added - feat/enhanced-deck-stats (2026-03-26)
+### Added — 2026-03-26: MDFC / DFC Support with 3D Flip Animation
 
-- `DeckStats` interface: `avgCmcWithLands`, `avgCmcWithoutLands`, `turn1Playable`, `manaSymbolRatio`, `manaProductionRatio`, `manaImbalance`, `recommendedLandsByColor`, `flexibleLands`
-- `avgCmc` kept as `@deprecated` backward-compatible alias for `avgCmcWithoutLands`
-- `computeDeckStats`: parses colored mana pips (hybrid {W/U}=0.5 per color), derives production ratio from land colorIdentity
-- `DeckStats` UI: dual CMC rows, Turn 1 playable, collapsible Mana Alignment section; gaps >15% flagged amber
-- `ROADMAP.md`: Enhanced deck statistics marked done
-
-### Added — 2026-03-26: MDFC/DFC card flip support
-
-- `CardFace` interface; `DeckCard.cardFaces?`, `isFlexibleLand?`; `DeckStats.flexibleLands`
-- `MDFC_LAYOUTS` constant in `src/lib/deck/constants.ts`
-- `isDfcLayout()`, `isMdfcWithLandBack()`, `categorizeDfcCard()` in `categories.ts`
-- `buildCardFaces()` + `computeCmc()` in store — correct CMC for modal_dfc
-- `CardFlip` component: 3D CSS flip, hover flip button, `///`/`/// LAND` badges
-- `useCardFlip` hook: `canFlip`, `isFlipped`, `currentFace`, stable `toggle`
-- `CardListItem`: Turn Over button + DFC badges + active face name
-- `CardGrid`: `cardFaces` forwarded to `CardImage`/`CardFlip`
-- `useCardFlip.test.ts` (6 tests); MDFC/DFC tests in `categories.test.ts`
-- `docs/ROADMAP.md`: MDFC and DFC items marked done
+- **Modal Double-Faced Cards (MDFC)**: e.g. _Shatterskull Smashing // Shatterskull, the Hammer Pass_ — both faces display with a Moxfield-style 3D CSS flip animation (350ms `rotateY`)
+- **Transform cards (DFC)**: e.g. _Delver of Secrets // Insectile Aberration_ — front face shown by default, flip button reveals back face
+- **CardFlip component**: circular `↻` button overlay in bottom-right corner of card image (visible on hover), triggers 3D flip
+- **CardListItem**: "Turn Over" outlined secondary button + `△▽` badge for DFC/MDFC cards
+- **CardGrid**: passes `cardFaces`/`isFlexibleLand` props to `CardImage`
+- **`CardFace` type** and `cardFaces?: [CardFace, CardFace]` field on `DeckCard`
+- **`isFlexibleLand`** flag on MDFC cards with a Land back face (e.g. spell//land MDFCs)
+- **`categorizeDfcCard()`**: categorizes by front face only — MDFCs with land backs are NOT classified as lands
+- **`isDfcLayout()`, `isMdfcWithLandBack()`** utility functions in `categories.ts`
+- **`buildCardFaces()`** in store — populates DFC fields when adding cards from Scryfall
+- **`flexibleLands`** count in `DeckStats` — MDFCs with land back for mana-base flexibility display
+- **`getCardImageUri()`** now accepts `face: "front" | "back"` parameter for per-face image fetching
+- **`DFC_LAYOUTS`** constant (`modal_dfc`, `transform`, `reversible_card`, `double_faced_token`)
+- **`useCardFlip` hook**: reusable flip state management for any component
+- **CSS utilities**: `backface-hidden` and `preserve-3d` Tailwind `@utility` classes
+- **Tests**: 20 new tests — `isDfcLayout`, `isMdfcWithLandBack`, `categorizeDfcCard`, CMC correctness, `useCardFlip` hook
 
 ### Added — 2026-03-22: Grid density selector
 
