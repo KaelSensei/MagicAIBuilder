@@ -119,3 +119,33 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 ## Partnerships & Integrations
 
 - [ ] **Tool integrations**: explore partnerships or API integrations with Mythic Tool, EDHRec, Moxfield, Commander Spellbook, and other community tools for richer data and cross-platform syncing
+
+
+---
+
+## Tournament Decks Import
+
+Import competitive decklists directly from tournament databases to use as references, inspiration, or starting points for deck building.
+
+### Sources to support
+
+- [ ] **MTGTop8** (`https://www.mtgtop8.com`) — one of the largest tournament deck databases; supports Commander, Legacy, Modern, Vintage, etc.; fetch top decks by format/archetype
+- [ ] **MTGDecks.net** (`https://mtgdecks.net`) — tournament results aggregator with Commander support
+- [ ] **Moxfield** (`https://www.moxfield.com`) — popular deck builder with public API; import deck by URL
+- [ ] **EDHRec** (`https://edhrec.com`) — Commander-specific; top commanders, popular cards, theme-based recommendations
+- [ ] **Archidekt** (`https://archidekt.com`) — deck builder with public deck sharing; import by URL
+- [ ] **TappedOut** (`https://tappedout.net`) — community deck builder; import via their export format
+
+### Implementation approach
+
+- Add an "Import from URL" field in the import dialog alongside the existing plain text import
+- Detect source from URL (regex match per domain) and use the appropriate parser/fetcher
+- Rate-limit requests, respect `robots.txt`
+- Show a "Tournament Deck" badge on imported decks
+- Optionally show win rate / event context if available from the source
+
+### Tournament meta analysis (future)
+
+- For a given commander, fetch and aggregate top tournament decks from MTGTop8/MTGDecks
+- Show most popular cards across meta decks as AI suggestions complement
+- Track meta shifts over time (card frequency in/out)
