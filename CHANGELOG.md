@@ -29,6 +29,29 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **`useCardFlip` hook**: reusable flip state management for any component
 - **CSS utilities**: `backface-hidden` and `preserve-3d` Tailwind `@utility` classes
 - **Tests**: 20 new tests — `isDfcLayout`, `isMdfcWithLandBack`, `categorizeDfcCard`, CMC correctness, `useCardFlip` hook
+### Added — feat/advanced-search-filters (2026-03-26)
+
+- **Color AND/OR/EXACT mode toggle** — when 2+ colors selected, a "Match:" row appears:
+  - _Any_ (OR, default): `id<=WUBRG` — cards within the selected color identity
+  - _All_ (AND): `c>=WUBRG` — cards containing all selected colors
+  - _Exact_: `c=WUBRG` — cards with precisely these colors, nothing more
+- **Colorless filter** (C mana symbol) — filters truly colorless cards (`c:c`), mutually exclusive with WUBRG
+- **Lands toggle** — filter to lands (`t:land`), composable with color/colorless filters
+- **CMC mode tabs** — Range / Exact / Min / Max; each mode renders appropriate input(s)
+- **Price range** — `priceMin` added alongside existing `priceMax` (`usd>=N`, `usd<=N`)
+- **Subtype filter** — free-text → Scryfall `t:<subtype>` (e.g. Elf, Dragon)
+- **Keyword filter** — free-text → Scryfall `keyword:<keyword>` (e.g. Flying, Trample)
+- **Power/Toughness range** — min/max inputs for `pow>=` / `pow<=` / `tou>=` / `tou<=`, shown only when Creature type is selected
+- **Interaction archetype dropdown** — Removal, Counterspell, Board Wipe, Tutor, Draw, Ramp → oracle-text Scryfall queries
+- **Filter presets** — save/load named filter configurations to `localStorage` (`magicaibuilder:filter-presets`)
+- New `SearchFilters` type fields: `colorMode`, `colorlessFilter`, `landFilter`, `cmcMode`, `cmcExact`, `priceMin`, `subtype`, `keyword`, `powerMin/Max`, `toughnessMin/Max`, `interactionType`
+- New exported types: `ColorMode`, `CmcMode`, `InteractionType`
+- New exported helpers: `buildInteractionQuery()`, `buildColorQuery()`
+- `buildSearchQuery()` split into `buildCmcParts()`, `buildPriceParts()`, `buildPowerToughnessParts()` — cognitive complexity below 15
+- All React sub-components (`TabButton`, `NumInput`, `SearchFilters`) have explicit `displayName`
+- `PRESETS_STORAGE_KEY` named constant (no magic strings)
+- docs/ROADMAP.md: "Enhanced deck-building filters" marked ✅ done
+- 47 tests in `src/lib/scryfall/search.test.ts` covering all new filter behaviors
 
 ### Added — 2026-03-22: Grid density selector
 

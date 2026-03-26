@@ -43,7 +43,37 @@ export interface PlaytestState {
 }
 
 export type ViewMode = "grid" | "list";
+export type ColorMode = "or" | "and" | "exact";
+export type CmcMode = "range" | "exact" | "min" | "max";
+export type InteractionType = "removal" | "counterspell" | "wipe" | "tutor" | "draw" | "ramp";
+
 export interface SearchFilters {
-  colors: string[]; types: string[]; cmcMin: number|null; cmcMax: number|null;
-  priceMax: number|null; collectionOnly?: boolean;
+  colors: string[];
+  colorMode?: ColorMode;
+  colorlessFilter?: boolean;
+  landFilter?: boolean;
+  types: string[];
+  cmcMin: number | null;
+  cmcMax: number | null;
+  cmcMode?: CmcMode;
+  cmcExact: number | null;
+  priceMin: number | null;
+  priceMax: number | null;
+  powerMin: number | null;
+  powerMax: number | null;
+  toughnessMin: number | null;
+  toughnessMax: number | null;
+  subtype: string;
+  keyword: string;
+  interactionType: InteractionType | null;
+  collectionOnly?: boolean;
+}
+
+export interface CardFace {
+  name: string;
+  manaCost: string;
+  typeLine: string;
+  oracleText: string;
+  imageUri: string;
+  artCropUri: string;
 }

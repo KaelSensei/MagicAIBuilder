@@ -58,10 +58,23 @@ function getSearchModeLabel(mode: SearchMode): string {
 
 const DEFAULT_FILTERS: Filters = {
   colors: [],
+  colorMode: "or",
+  colorlessFilter: false,
+  landFilter: false,
   types: [],
+  cmcMode: "range",
   cmcMin: null,
   cmcMax: null,
+  cmcExact: null,
+  priceMin: null,
   priceMax: null,
+  subtype: "",
+  keyword: "",
+  powerMin: null,
+  powerMax: null,
+  toughnessMin: null,
+  toughnessMax: null,
+  interactionType: null,
 };
 
 export default function BuilderPage() {
