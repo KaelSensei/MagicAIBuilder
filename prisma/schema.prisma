@@ -9,15 +9,15 @@ datasource db {
 
 /// A Commander (or Brawl) deck with its metadata
 model Deck {
-  id            String     @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String
-  format        String     @default("commander")
-  targetBracket Int        @default(2)
+  format        String         @default("commander")
+  targetBracket Int            @default(2)
   budget        Float?
   commanderId   String?
   partnerId     String?
   companionId   String?
-  pairingType   String     @default("none")
+  pairingType   String         @default("none")
   manualBracket Int?                // null = use calculated score, 1-4 = manual override
   shareToken    String?        @unique
   shareEnabled  Boolean        @default(false)
@@ -30,15 +30,16 @@ model Deck {
   updatedAt     DateTime       @updatedAt
 }
 
+/// A named snapshot (version) of a deck at a point in time
 model DeckSnapshot {
-  id        String   @id @default(cuid())
-  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  deckId    String
-  name      String
-  cardList  Json
-  commander String?
-  cardCount Int
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  deckId     String
+  deck       Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  name       String
+  cardList   Json
+  commander  String?
+  cardCount  Int
+  createdAt  DateTime @default(now())
 
   @@index([deckId])
 }
