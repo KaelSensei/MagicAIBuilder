@@ -95,8 +95,10 @@ export function CardGrid({
                   name={card.name}
                   manaCost={card.mana_cost}
                   cmc={card.cmc}
-                  showOverlay={true}
+                  showOverlay={!dfcFaces}
                   onClick={() => onCardClick?.(card)}
+                  cardFaces={dfcFaces}
+                  isFlexibleLand={isMdfcWithLandBack(card)}
                 />
               </DraggableCard>
             ) : (
