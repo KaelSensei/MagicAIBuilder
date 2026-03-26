@@ -101,18 +101,19 @@ Without a key, the AI panel uses curated generic suggestions.
 
 ## Scripts
 
-| Command           | Description                 |
-| ----------------- | --------------------------- |
-| `pnpm dev`        | Start dev server            |
-| `pnpm build`      | Production build            |
-| `pnpm lint`       | ESLint check                |
-| `pnpm test`       | Unit tests (Vitest)         |
-| `pnpm test:e2e`   | E2E tests (Playwright)      |
-| `pnpm db:up`      | Start PostgreSQL via Docker |
-| `pnpm db:down`    | Stop PostgreSQL             |
-| `pnpm db:migrate` | Apply pending migrations    |
-| `pnpm db:studio`  | Open Prisma Studio          |
-| `pnpm db:reset`   | Reset database              |
+| Command           | Description                               |
+| ----------------- | ----------------------------------------- |
+| `pnpm dev`        | Start dev server                          |
+| `pnpm build`      | Production build                          |
+| `pnpm analyze`    | Production build + interactive bundle map |
+| `pnpm lint`       | ESLint check                              |
+| `pnpm test`       | Unit tests (Vitest)                       |
+| `pnpm test:e2e`   | E2E tests (Playwright)                    |
+| `pnpm db:up`      | Start PostgreSQL via Docker               |
+| `pnpm db:down`    | Stop PostgreSQL                           |
+| `pnpm db:migrate` | Apply pending migrations                  |
+| `pnpm db:studio`  | Open Prisma Studio                        |
+| `pnpm db:reset`   | Reset database                            |
 
 ## Architecture
 
