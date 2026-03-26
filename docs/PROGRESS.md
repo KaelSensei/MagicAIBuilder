@@ -126,6 +126,7 @@
 - [x] Commander pairing types (partner, friends-forever, etc.)
 - [x] AI-assisted deck suggestions (Phase 4)
 - [x] Combo detection via Commander Spellbook API
+- [x] **Maybeboard** — considered cards outside the 99 with Move to Deck / Remove actions
 
 ### Infrastructure
 
