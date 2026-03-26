@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
-import type { BracketScore } from "@/lib/deck/types";
+import type { BracketLevel, BracketScore } from "@/lib/deck/types";
 import { BRACKET_DEFINITIONS } from "@/lib/constants/brackets";
 import { AlertTriangle, Zap, X, Infinity } from "lucide-react";
 
 interface BracketIndicatorProps {
   readonly score: BracketScore | null;
-  readonly targetBracket?: 1 | 2 | 3 | 4;
-  readonly manualBracket?: 1 | 2 | 3 | 4 | null;
-  readonly onManualBracketChange?: (bracket: 1 | 2 | 3 | 4 | null) => void;
+  readonly targetBracket?: BracketLevel;
+  readonly manualBracket?: BracketLevel | null;
+  readonly onManualBracketChange?: (bracket: BracketLevel | null) => void;
   readonly className?: string;
 }
 
@@ -24,14 +24,14 @@ const DIMENSION_LABELS: Record<string, string> = {
   avgCmc: "Avg CMC",
 };
 
-const BRACKET_BG: Record<1 | 2 | 3 | 4, string> = {
+const BRACKET_BG: Record<BracketLevel, string> = {
   1: "bg-green-500/10 border-green-500/30",
   2: "bg-blue-500/10 border-blue-500/30",
   3: "bg-amber-500/10 border-amber-500/30",
   4: "bg-red-500/10 border-red-500/30",
 };
 
-const BRACKET_TEXT: Record<1 | 2 | 3 | 4, string> = {
+const BRACKET_TEXT: Record<BracketLevel, string> = {
   1: "text-green-400",
   2: "text-blue-400",
   3: "text-amber-400",
@@ -102,7 +102,7 @@ export function BracketIndicator({
   const bgClass = BRACKET_BG[displayBracket];
   const textClass = BRACKET_TEXT[displayBracket];
 
-  const handleSelectManual = (b: 1 | 2 | 3 | 4) => {
+  const handleSelectManual = (b: BracketLevel) => {
     onManualBracketChange?.(b);
     setShowPicker(false);
   };

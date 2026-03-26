@@ -138,7 +138,7 @@ export interface DeckStore {
   moveToDeck: (cardId: string) => Promise<void>;
   swapCardPrinting: (cardId: string, printing: import("@/lib/scryfall/types").ScryfallCard) => Promise<void>;
   updateCardNotes: (cardId: string, notes: string | null) => Promise<void>;
-  moveCardToZone: (cardId: string, zone: "main" | "sideboard" | "maybeboard") => Promise<void>;
+  moveCardToZone: (cardId: string, zone: DeckZone) => Promise<void>;
 
   // Force save (sync) — triggers a full DB refresh for the active deck
   forceSave: () => Promise<void>;
@@ -651,7 +651,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  addCard: async (card: ScryfallCard, quantity?: number, zone: "main" | "sideboard" | "maybeboard" = "main") => {
+  addCard: async (card: ScryfallCard, quantity?: number, zone: DeckZone = "main") => {
     const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
     if (!activeDeckId) return;
     const deck = decks[activeDeckId];
@@ -1015,7 +1015,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  moveCardToZone: async (cardId: string, zone: "main" | "sideboard" | "maybeboard") => {
+  moveCardToZone: async (cardId: string, zone: DeckZone) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
 

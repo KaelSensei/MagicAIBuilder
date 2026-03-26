@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { patchDeckSchema, PatchDeckInput } from "@/lib/validation/deck";
 
@@ -48,7 +49,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const parsed = patchDeckSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid request body", details: parsed.error.flatten() },
+        { error: "Invalid request body", details: z.flattenError(parsed.error) },
         { status: 400 }
       );
     }

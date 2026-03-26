@@ -60,28 +60,25 @@ export function buildColorQuery(colors: string[], mode: ColorMode): string {
 
 // ─── CMC helpers ──────────────────────────────────────────────────────────────
 
+/** Returns true if value is neither null nor undefined */
+function isDefined(value: number | null | undefined): value is number {
+  return value !== null && value !== undefined;
+}
+
 /** Build CMC query parts based on mode. Returns [] when no values are set. */
 function buildCmcParts(filters: Partial<SearchFilters>): string[] {
   const mode = filters.cmcMode ?? "range";
   switch (mode) {
     case "exact":
-      return filters.cmcExact !== null && filters.cmcExact !== undefined
-        ? [`cmc=${filters.cmcExact}`]
-        : [];
+      return isDefined(filters.cmcExact) ? [`cmc=${filters.cmcExact}`] : [];
     case "min":
-      return filters.cmcMin !== null && filters.cmcMin !== undefined
-        ? [`cmc>=${filters.cmcMin}`]
-        : [];
+      return isDefined(filters.cmcMin) ? [`cmc>=${filters.cmcMin}`] : [];
     case "max":
-      return filters.cmcMax !== null && filters.cmcMax !== undefined
-        ? [`cmc<=${filters.cmcMax}`]
-        : [];
+      return isDefined(filters.cmcMax) ? [`cmc<=${filters.cmcMax}`] : [];
     default: {
       const parts: string[] = [];
-      if (filters.cmcMin !== null && filters.cmcMin !== undefined)
-        parts.push(`cmc>=${filters.cmcMin}`);
-      if (filters.cmcMax !== null && filters.cmcMax !== undefined)
-        parts.push(`cmc<=${filters.cmcMax}`);
+      if (isDefined(filters.cmcMin)) parts.push(`cmc>=${filters.cmcMin}`);
+      if (isDefined(filters.cmcMax)) parts.push(`cmc<=${filters.cmcMax}`);
       return parts;
     }
   }
@@ -158,11 +155,11 @@ export function buildSearchQuery(
   if (filters.landFilter) parts.push("t:land");
 
   if (filters.types && filters.types.length > 0) {
-    parts.push(`(${filters.types.map((t) => `type:${t}`).join(" OR ")})`);
+    const typeFragments = filters.types.map((t) => `type:${t}`).join(" OR ");
+    parts.push(`(${typeFragments})`);
   }
 
-  parts.push(...buildCmcParts(filters));
-  parts.push(...buildPriceParts(filters));
+  parts.push(...buildCmcParts(filters), ...buildPriceParts(filters));
 
   if (filters.subtype?.trim()) parts.push(`t:${filters.subtype.trim()}`);
   if (filters.keyword?.trim()) parts.push(`keyword:${filters.keyword.trim()}`);

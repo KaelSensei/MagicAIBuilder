@@ -71,6 +71,7 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
     >
       <div
         className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
+        role="group"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >

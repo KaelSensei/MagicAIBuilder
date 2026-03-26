@@ -51,7 +51,7 @@ interface FilterPreset {
 }
 
 function loadPresets(): FilterPreset[] {
-  if (typeof globalThis.window === "undefined") return [];
+  if (globalThis.window === undefined) return [];
   try {
     const raw = localStorage.getItem(PRESETS_STORAGE_KEY);
     return raw ? (JSON.parse(raw) as FilterPreset[]) : [];
@@ -358,7 +358,7 @@ export function SearchFilters({ filters, onChange, className }: SearchFiltersPro
         {presets.length > 0 && (
           <select
             defaultValue=""
-            onChange={(e) => { if (e.target.value) handleLoadPreset(e.target.value); e.target.value = ""; }}
+            onChange={(e) => { if (e.target.value) { handleLoadPreset(e.target.value); e.target.value = ""; } }}
             className={cn(inputCls, "w-full")}
           >
             <option value="" disabled>Load a preset…</option>
