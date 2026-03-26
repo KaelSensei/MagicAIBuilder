@@ -161,9 +161,6 @@ export interface DeckStore {
   // Force save (sync) — triggers a full DB refresh for the active deck
   forceSave: () => Promise<void>;
 
-  // Force save (sync) — triggers a full DB refresh for the active deck
-  forceSave: () => Promise<void>;
-
   // Deck settings
   setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
   setManualBracket: (bracket: 1 | 2 | 3 | 4 | null) => Promise<void>;
@@ -282,90 +279,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  undo: async () => {
-    const { undoStack } = get();
-    if (undoStack.length === 0) return;
-    const last = undoStack[undoStack.length - 1];
-    // Pop the action
-    set((s) => ({ undoStack: s.undoStack.slice(0, -1) }));
-
-    if (last.type === "ADD_CARD") {
-      // Undo add → remove card (skip recording in undo stack)
-      const { activeDeckId } = get();
-      if (!activeDeckId) return;
-      const deck = get().decks[activeDeckId];
-      const card = deck?.cards.find((c) => c.name === last.card.name);
-      if (!card) return;
-      set((state) => ({
-        decks: {
-          ...state.decks,
-          [activeDeckId]: {
-            ...state.decks[activeDeckId],
-            cards: state.decks[activeDeckId].cards.filter((c) => c.id !== card.id),
-            updatedAt: new Date(),
-          },
-        },
-      }));
-      try {
-        await deckApi.removeCard(activeDeckId, card.id);
-      } catch (err) {
-        console.error("[undo:ADD_CARD]", err);
-      }
-    } else if (last.type === "REMOVE_CARD") {
-      // Undo remove → re-add card
-      const { activeDeckId } = get();
-      if (!activeDeckId) return;
-      set((state) => ({
-        decks: {
-          ...state.decks,
-          [activeDeckId]: {
-            ...state.decks[activeDeckId],
-            cards: [...state.decks[activeDeckId].cards, last.card],
-            updatedAt: new Date(),
-          },
-        },
-      }));
-      try {
-        await deckApi.addCard(activeDeckId, {
-          scryfallId: last.card.id,
-          name: last.card.name,
-          manaCost: last.card.manaCost,
-          cmc: last.card.cmc,
-          typeLine: last.card.typeLine,
-          oracleText: last.card.oracleText,
-          colorIdentity: last.card.colorIdentity,
-          isGameChanger: last.card.isGameChanger,
-          isBanned: last.card.isBanned,
-          price: last.card.price,
-          imageUri: last.card.imageUri,
-          artCropUri: last.card.artCropUri,
-          category: last.card.category,
-          quantity: last.card.quantity,
-          isCommander: false,
-          isPartner: false,
-        });
-      } catch (err) {
-        console.error("[undo:REMOVE_CARD]", err);
-      }
-    }
-    useToastStore.getState().add("info", "↩ Undo applied");
-  },
-
-  forceSave: async () => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    set({ isSyncing: true });
-    try {
-      await get().loadDecks();
-      useToastStore.getState().add("success", "✓ Deck saved");
-    } catch (err) {
-      console.error("[forceSave]", err);
-    } finally {
-      set({ isSyncing: false });
-    }
-  },
-
-  // Load all decks from the DB
+    // Load all decks from the DB
   loadDecks: async () => {
     set({ isSyncing: true });
     try {

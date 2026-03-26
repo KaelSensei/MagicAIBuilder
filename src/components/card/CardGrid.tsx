@@ -13,7 +13,7 @@ import type { CardFace } from "@/lib/deck/types";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
 
 interface CardGridProps {
-  cards: ScryfallCard[];
+  cards: readonly ScryfallCard[];
   onCardClick?: (card: ScryfallCard) => void;
   className?: string;
   emptyMessage?: string;
