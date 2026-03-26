@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
+import { requireAuth } from "@/lib/auth/helpers";
 
 const addCardSchema = z.object({
   scryfallId: z.string().min(1),
@@ -13,10 +14,14 @@ const addCardSchema = z.object({
   imageUri: z.string().optional().default(""),
 });
 
-// GET /api/collection — list all collection cards
+// GET /api/collection — list current user's collection cards
 export async function GET() {
   try {
+    const result = await requireAuth();
+    if (result.error) return result.error;
+
     const cards = await prisma.collectionCard.findMany({
+      where: { userId: result.session.user.id },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(cards);
@@ -26,9 +31,12 @@ export async function GET() {
   }
 }
 
-// POST /api/collection — add a card (upsert by scryfallId+foil)
+// POST /api/collection — add a card (upsert by scryfallId+foil+userId)
 export async function POST(request: Request) {
   try {
+    const result = await requireAuth();
+    if (result.error) return result.error;
+
     const body = await request.json();
     const parsed = addCardSchema.safeParse(body);
     if (!parsed.success) {
@@ -40,10 +48,11 @@ export async function POST(request: Request) {
 
     const { scryfallId, name, quantity, foil, condition, acquiredAt, price, imageUri } =
       parsed.data;
+    const userId = result.session.user.id;
 
-    // Upsert: if the same card+foil variant already exists, increment quantity
+    // Upsert: if the same card+foil+user variant already exists, increment quantity
     const existing = await prisma.collectionCard.findUnique({
-      where: { scryfallId_foil: { scryfallId, foil } },
+      where: { scryfallId_foil_userId: { scryfallId, foil, userId } },
     });
 
     if (existing) {
@@ -64,6 +73,7 @@ export async function POST(request: Request) {
         acquiredAt: acquiredAt ? new Date(acquiredAt) : null,
         price: price ?? null,
         imageUri,
+        userId,
       },
     });
     return NextResponse.json(card, { status: 201 });

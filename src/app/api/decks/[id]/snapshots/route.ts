@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { requireDeckOwner } from "@/lib/auth/helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -7,10 +8,8 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params;
   try {
-    const deck = await prisma.deck.findUnique({ where: { id } });
-    if (!deck) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
+    const ownership = await requireDeckOwner(id);
+    if (ownership.error) return ownership.error;
 
     const snapshots = await prisma.deckSnapshot.findMany({
       where: { deckId: id },
@@ -36,6 +35,9 @@ export async function GET(_req: Request, { params }: Params) {
 export async function POST(request: Request, { params }: Params) {
   const { id } = await params;
   try {
+    const ownership = await requireDeckOwner(id);
+    if (ownership.error) return ownership.error;
+
     const body = await request.json();
     const rawName = body?.name;
 

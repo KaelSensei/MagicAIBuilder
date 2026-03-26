@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
+import { requireAuth } from "@/lib/auth/helpers";
 
 const patchSchema = z.object({
   quantity: z.number().int().min(0).optional(),
@@ -16,7 +17,20 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const result = await requireAuth();
+    if (result.error) return result.error;
+
     const { id } = await params;
+
+    // Verify ownership
+    const card = await prisma.collectionCard.findUnique({ where: { id } });
+    if (!card) {
+      return NextResponse.json({ error: "Card not found" }, { status: 404 });
+    }
+    if (card.userId && card.userId !== result.session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const body = await request.json();
     const parsed = patchSchema.safeParse(body);
     if (!parsed.success) {
@@ -59,7 +73,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const result = await requireAuth();
+    if (result.error) return result.error;
+
     const { id } = await params;
+
+    // Verify ownership
+    const card = await prisma.collectionCard.findUnique({ where: { id } });
+    if (!card) {
+      return NextResponse.json({ error: "Card not found" }, { status: 404 });
+    }
+    if (card.userId && card.userId !== result.session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     await prisma.collectionCard.delete({ where: { id } });
     return NextResponse.json({ deleted: true });
   } catch (error) {

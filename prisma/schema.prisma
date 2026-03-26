@@ -7,6 +7,61 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── NextAuth Models ────────────────────────────────────────────────
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?         // hashed password for credentials provider (null for OAuth-only users)
+  accounts      Account[]
+  sessions      Session[]
+  decks         Deck[]
+  collection    CollectionCard[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Application Models ─────────────────────────────────────────────
+
 /// A Commander (or Brawl) deck with its metadata
 model Deck {
   id            String         @id @default(cuid())
@@ -24,10 +79,14 @@ model Deck {
   shareToken    String?        @unique
   shareEnabled  Boolean        @default(false)
   isAIGenerated Boolean        @default(false)
+  userId        String?
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards         DeckCard[]
   snapshots     DeckSnapshot[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@index([userId])
 }
 
 /// A named snapshot (version) of a deck at a point in time
@@ -89,8 +148,11 @@ model CollectionCard {
   acquiredAt DateTime?
   price      Float?
   imageUri   String    @default("")
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime  @default(now())
 
-  @@unique([scryfallId, foil])
+  @@unique([scryfallId, foil, userId])
   @@index([scryfallId])
+  @@index([userId])
 }

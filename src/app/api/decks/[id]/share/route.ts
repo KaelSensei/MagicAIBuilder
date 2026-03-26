@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
+import { requireDeckOwner } from "@/lib/auth/helpers";
 
 /** Generate a URL-safe random token of ~12 chars (base64url, trimmed) */
 function generateToken(): string {
-  return randomBytes(9).toString("base64url"); // 9 bytes → 12 base64url chars
+  return randomBytes(9).toString("base64url"); // 9 bytes -> 12 base64url chars
 }
 
 type Params = { params: Promise<{ id: string }> };
@@ -13,6 +14,9 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(_req: Request, { params }: Params) {
   const { id } = await params;
   try {
+    const ownership = await requireDeckOwner(id);
+    if (ownership.error) return ownership.error;
+
     const existing = await prisma.deck.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
@@ -45,10 +49,8 @@ export async function POST(_req: Request, { params }: Params) {
 export async function DELETE(_req: Request, { params }: Params) {
   const { id } = await params;
   try {
-    const existing = await prisma.deck.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
+    const ownership = await requireDeckOwner(id);
+    if (ownership.error) return ownership.error;
 
     await prisma.deck.update({
       where: { id },

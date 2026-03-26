@@ -1,6 +1,7 @@
 "use client";
-// TanStack Query provider
+// TanStack Query + NextAuth providers
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SessionProvider } from "next-auth/react";
 import { useState } from "react";
 import { EnrichmentProvider } from "@/components/providers/EnrichmentProvider";
 import { CollectionProvider } from "@/components/providers/CollectionProvider";
@@ -21,11 +22,13 @@ export function Providers({ children }: { readonly children: React.ReactNode }) 
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeSync />
-      <CollectionProvider>
-        <EnrichmentProvider>{children}</EnrichmentProvider>
-      </CollectionProvider>
-    </QueryClientProvider>
+    <SessionProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeSync />
+        <CollectionProvider>
+          <EnrichmentProvider>{children}</EnrichmentProvider>
+        </CollectionProvider>
+      </QueryClientProvider>
+    </SessionProvider>
   );
 }

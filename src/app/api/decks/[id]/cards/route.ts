@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { addCardSchema } from "@/lib/validation/card";
+import { requireDeckOwner } from "@/lib/auth/helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -9,10 +10,8 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(request: Request, { params }: Params) {
   const { id: deckId } = await params;
   try {
-    const deck = await prisma.deck.findUnique({ where: { id: deckId } });
-    if (!deck) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
+    const ownership = await requireDeckOwner(deckId);
+    if (ownership.error) return ownership.error;
 
     const raw = await request.json();
     const parsed = addCardSchema.safeParse(raw);
@@ -86,10 +85,8 @@ export async function POST(request: Request, { params }: Params) {
 export async function DELETE(_req: Request, { params }: Params) {
   const { id: deckId } = await params;
   try {
-    const deck = await prisma.deck.findUnique({ where: { id: deckId } });
-    if (!deck) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
+    const ownership = await requireDeckOwner(deckId);
+    if (ownership.error) return ownership.error;
 
     await prisma.deckCard.deleteMany({ where: { deckId } });
     await prisma.deck.update({

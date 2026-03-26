@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { requireDeckOwner } from "@/lib/auth/helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -7,6 +8,9 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(_req: Request, { params }: Params) {
   const { id } = await params;
   try {
+    const ownership = await requireDeckOwner(id);
+    if (ownership.error) return ownership.error;
+
     const original = await prisma.deck.findUnique({
       where: { id },
       include: { cards: true },
@@ -27,6 +31,7 @@ export async function POST(_req: Request, { params }: Params) {
         partnerId: original.partnerId,
         companionId: original.companionId,
         pairingType: original.pairingType,
+        userId: ownership.userId,
         // Don't copy share settings — new deck starts private
         cards: {
           create: original.cards.map((card) => ({

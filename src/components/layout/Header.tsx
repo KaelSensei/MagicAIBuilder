@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Layers, Moon, Package, Plus, Sun, Upload } from "lucide-react";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import { useTheme } from "@/hooks/useTheme";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 interface HeaderProps {
   readonly deckId?: string;
@@ -70,6 +71,7 @@ export function Header({ deckId }: HeaderProps = {}) {
           <Plus className="w-3.5 h-3.5" />
           New Deck
         </Link>
+        <UserMenu />
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { requireDeckOwner } from "@/lib/auth/helpers";
 
 type Params = { params: Promise<{ id: string; snapshotId: string }> };
 
@@ -7,16 +8,14 @@ type Params = { params: Promise<{ id: string; snapshotId: string }> };
 export async function POST(_req: Request, { params }: Params) {
   const { id, snapshotId } = await params;
   try {
+    const ownership = await requireDeckOwner(id);
+    if (ownership.error) return ownership.error;
+
     const snapshot = await prisma.deckSnapshot.findFirst({
       where: { id: snapshotId, deckId: id },
     });
     if (!snapshot) {
       return NextResponse.json({ error: "Snapshot not found" }, { status: 404 });
-    }
-
-    const deck = await prisma.deck.findUnique({ where: { id } });
-    if (!deck) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
     // cardList is the serialized array of DeckCard rows
