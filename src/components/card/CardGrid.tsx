@@ -10,7 +10,7 @@ import { DFC_LAYOUTS } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { isMdfcWithLandBack } from "@/lib/deck/categories";
 import type { CardFace } from "@/lib/deck/types";
-import { CollectionBadge } from "@/components/collection/CollectionBadge";
+
 
 interface CardGridProps {
   cards: readonly ScryfallCard[];
