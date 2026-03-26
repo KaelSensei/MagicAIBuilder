@@ -69,7 +69,13 @@ Tracked features and improvements for future development.
 
 - [ ] **Deck suggestions from other players**: for a given commander, show community-submitted decks; filter by bracket, strategy, budget; upvote/comment system
 
+## SEO & Discoverability
+
+- [x] **SEO optimization** _(done — 2026-03-26, #153)_: `robots.txt` (blocks private routes), dynamic sitemap with shared decks, enriched metadata (keywords, Twitter card, canonical URL), JSON-LD `SoftwareApplication` structured data, dynamic Open Graph image via `/api/og` edge route
+
 ## UI / UX
+
+- [x] **Footer layout** _(done — 2026-03-26, #166)_: Shortcuts button aligned inline with copyright line in footer
 
 - [ ] **Visual redesign**: modernize the interface; improve mobile responsiveness, card hover interactions, drag-and-drop UX, and overall polish
 

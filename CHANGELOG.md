@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-26: MDFC/DFC, SEO, Footer Fix
+
+- `feat: MDFC/DFC support with 3D flip animation (#162)` — Modal Double-Faced Cards and transform cards with Moxfield-style 3D CSS flip animation, `CardFlip` component, `useCardFlip` hook, `isDfcLayout`/`isMdfcWithLandBack` utilities, flexible land detection, 20 new tests
+- `feat: SEO optimization — robots.txt, sitemap, metadata, JSON-LD, OG image (#153)` — `robots.txt` blocking private routes, dynamic sitemap with shared decks, enriched metadata (keywords, Twitter card, canonical), JSON-LD `SoftwareApplication` structured data, dynamic OG image via `/api/og` edge route
+- `fix: align Shortcuts button inline with copyright in footer (#166)` — Shortcuts button is now inline with the copyright line in the footer instead of being on a separate row
+
+---
+
 ### Added — 2026-03-26: Batch — Deck Snapshots, Playtest Mode, Maybeboard, Deck Annotations, Enhanced Stats, Advanced Filters
 
 #### Deck Snapshots (#154)
