@@ -18,6 +18,11 @@
 - [x] Fix: `CardGrid` draggable branch now passes `cardFaces` and `isFlexibleLand` to `CardImage`
 - [x] MDFC/DFC cards show 3D flip animation in search results grid view (was static single-face)
 
+### MDFC/DFC flip in deck editor (#178)
+
+- [x] Fix: `DeckEditor` now passes `cardFaces` and `isFlexibleLand` to `CardImage` in all 4 grid locations (commander, partner, main zone, sideboard/maybeboard)
+- [x] MDFC/DFC cards show 3D flip animation in deck editor grid view
+
 ---
 
 ## Search By Type (#174) — 2026-03-26 ✅
