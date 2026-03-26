@@ -39,6 +39,7 @@
 | Phase 3 | Database & Prisma | ✅ Complete |
 | Phase 4 | AI Suggestions | ✅ Complete |
 | Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
+| Phase 5 | Deck Snapshots / Version History | ✅ Complete |
 
 ---
 
@@ -78,6 +79,23 @@
 - [x] Game Changer toast warning on addCard
 - [x] Mana symbols as official Scryfall SVGs in color filter
 - [x] Oracle text panel in printing selector modal
+
+---
+
+## Phase 5 Checklist (Deck Snapshots)
+
+### Snapshot Feature
+- [x] `DeckSnapshot` Prisma model (`id`, `deckId`, `name`, `cardList` JSON, `commander`, `cardCount`, `createdAt`)
+- [x] Migration `20260321140000_add_deck_snapshots`
+- [x] `GET /api/decks/[id]/snapshots` — list snapshots (newest first, no cardList in list view)
+- [x] `POST /api/decks/[id]/snapshots` — create snapshot from current deck state
+- [x] `DELETE /api/decks/[id]/snapshots/[snapshotId]` — delete a snapshot
+- [x] `POST /api/decks/[id]/snapshots/[snapshotId]/restore` — transactional restore
+- [x] `src/lib/db/snapshot-api.ts` — typed client-side helpers
+- [x] `SnapshotsPanel` component — save popover, history list, diff badges, restore/delete with confirmation
+- [x] Builder integration — panel in stats column, `onRestore` reloads deck store
+
+---
 
 ### Security
 
@@ -231,7 +249,6 @@
 | US-21 | Combo detection | ✅ Done |
 | US-22 | AI deck suggestions | ✅ Done |
 | US-23 | Light/dark theme | ✅ Done |
-| US-24 | Playtest mode — draw hand, mulligan, simulate turns | ✅ Done |
 
 ---
 
@@ -329,11 +346,11 @@
 - `docs/ROADMAP.md`: MDFC and DFC items marked done
 | Metric | Value |
 |---|---|
-| Source files | ~72 |
+| Source files | ~70 |
 | API routes | 7 |
 | Prisma models | 3 |
-| Hooks | 10 |
-| Components | ~36 |
+| Hooks | 9 |
+| Components | ~35 |
 | Phase 1 P0 completion | 100% |
 | Phase 1–4 completion | 100% |
 | Build | ✅ Passing |

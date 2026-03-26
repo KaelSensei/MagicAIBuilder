@@ -47,6 +47,7 @@ import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
+import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 
 type SearchMode = "name" | "set" | "color";
 function getSearchModeLabel(mode: SearchMode): string {
@@ -249,6 +250,11 @@ export default function BuilderPage() {
     if (!deck || !stats) return;
     analyzeAI(deck, stats, bracketScore);
   }, [deck, stats, bracketScore, analyzeAI]);
+
+  const handleSnapshotRestore = useCallback(() => {
+    // Reload all decks from DB so the builder reflects the restored state
+    loadDecks();
+  }, [loadDecks]);
 
   const handleAIAddCard = useCallback((cardName: string) => {
     // Search for the card by name and add it
@@ -660,6 +666,12 @@ export default function BuilderPage() {
               count={stats?.gameChangersCount ?? 0}
               names={stats?.gameChangersList ?? []}
               targetBracket={deck.targetBracket}
+            />
+
+            <SnapshotsPanel
+              deckId={deckId}
+              currentCardCount={deck.cards.length}
+              onRestore={handleSnapshotRestore}
             />
 
             <AISuggestionsPanel
