@@ -2,29 +2,41 @@
 
 ## Overview
 
-| Field         | Value                                    |
-| ------------- | ---------------------------------------- |
-| Current Phase | Phase 8 — Feature Batch (Deck Tools)     |
-| Last Updated  | 2026-03-26                               |
-| Status        | 🚀 Active Development                    |
-| Main Branch   | `main`                                   |
+| Field         | Value                                |
+| ------------- | ------------------------------------ |
+| Current Phase | Phase 8 — Feature Batch (Deck Tools) |
+| Last Updated  | 2026-03-26                           |
+| Status        | 🚀 Active Development                |
+| Main Branch   | `main`                               |
+
+---
+
+## Search By Type (#174) — 2026-03-26 ✅
+
+- [x] `CARD_TYPE_FILTERS` constant — 10 card type entries (Creature, Instant, Sorcery, Enchantment, Artifact, Planeswalker, Land, Battle, MDFC, DFC Transform)
+- [x] `buildTypeSearchQuery()` — Scryfall query builder with OR-joined type filters + optional name
+- [x] "By Type" tab in builder search panel — checkbox grid, optional name search bar
+- [x] 11 new tests in `search.test.ts` — 857 total passing
 
 ---
 
 ## Phase 8: Feature Batch — Deck Tools (2026-03-26) ✅
 
 ### Deck Snapshots (#154)
+
 - [x] `DeckSnapshot` Prisma model (cardList JSON, commander, cardCount, createdAt)
 - [x] API: `GET/POST /api/decks/[id]/snapshots` + `DELETE` + transactional `/restore`
 - [x] `snapshot-api.ts` typed client helper
 - [x] `SnapshotsPanel` — save popover, version history list, diff badge (+/- cards), restore/delete with confirmation
 
 ### Playtest Mode (#152)
+
 - [x] `usePlaytest` hook — Fisher-Yates shuffle, London mulligan, drawCard, nextTurn
 - [x] `PlaytestModal` — fullscreen fan hand display, hover card preview, library pile, control buttons
 - [x] Playtest button (Dices icon) in DeckEditor toolbar
 
 ### Maybeboard (#155)
+
 - [x] `isMaybeboard Boolean` field on DeckCard (Prisma + migration)
 - [x] Store: `addToMaybeboard`, `removeFromMaybeboard`, `moveToMaybeboard`, `moveToDeck`
 - [x] API routes: POST/PATCH support `isMaybeboard`
@@ -35,12 +47,14 @@
 - [x] 20 new tests (stats exclusion + store actions)
 
 ### Deck Annotations — Description, Card Notes, Tags (#156)
+
 - [x] `description String?` on `Deck` + `DeckDescriptionEditor` collapsible textarea
 - [x] `notes String?` on `DeckCard` + `CardNoteInline` inline popover + export as `// comment`
 - [x] `tags String[]` on `Deck` + `DeckTagsEditor` pill UI + home tag filter bar
 - [x] 51 new tests (store-notes, export-notes, tags) — 111 total
 
 ### Enhanced Deck Statistics (#163)
+
 - [x] `avgCmcWithLands` / `avgCmcWithoutLands` dual CMC rows
 - [x] `turn1Playable` — CMC ≤ 1 card count
 - [x] Mana Alignment — symbol ratio vs. production ratio, per-colour imbalance flags
@@ -49,6 +63,7 @@
 - [x] Collapsible Mana Alignment panel in DeckStats UI
 
 ### Enhanced Search Filters (#161)
+
 - [x] Color AND/OR/EXACT mode toggle
 - [x] Colorless filter (C symbol, mutually exclusive with WUBRG)
 - [x] Lands toggle, CMC mode tabs (Range/Exact/Min/Max)
@@ -80,18 +95,18 @@
 
 ## Phase Completion Summary
 
-| Phase    | Name                                              | Status         |
-| -------- | ------------------------------------------------- | -------------- |
-| Phase 1  | Foundation Scaffold                               | ✅ Complete    |
-| Phase 1+ | Integration (DB, DnD, Import)                     | ✅ Complete    |
-| Phase 2  | Intelligence (Combos, Theme, Pairing)             | ✅ Complete    |
-| Phase 3  | Database & Prisma                                 | ✅ Complete    |
-| Phase 4  | AI Suggestions                                    | ✅ Complete    |
-| Phase 4+ | Polish, Bug Fixes & UI Enhancements               | ✅ Complete    |
-| Phase 5  | Collection Mode                                   | ✅ Complete    |
-| Phase 6  | UX Polish — Grid Density, Zone D&D, Bracket Rules | ✅ Complete    |
-| Phase 7  | Infrastructure & Observability                    | ✅ Complete    |
-| Phase 8  | Feature Batch — Deck Tools                        | ✅ Complete    |
+| Phase    | Name                                              | Status      |
+| -------- | ------------------------------------------------- | ----------- |
+| Phase 1  | Foundation Scaffold                               | ✅ Complete |
+| Phase 1+ | Integration (DB, DnD, Import)                     | ✅ Complete |
+| Phase 2  | Intelligence (Combos, Theme, Pairing)             | ✅ Complete |
+| Phase 3  | Database & Prisma                                 | ✅ Complete |
+| Phase 4  | AI Suggestions                                    | ✅ Complete |
+| Phase 4+ | Polish, Bug Fixes & UI Enhancements               | ✅ Complete |
+| Phase 5  | Collection Mode                                   | ✅ Complete |
+| Phase 6  | UX Polish — Grid Density, Zone D&D, Bracket Rules | ✅ Complete |
+| Phase 7  | Infrastructure & Observability                    | ✅ Complete |
+| Phase 8  | Feature Batch — Deck Tools                        | ✅ Complete |
 
 ---
 
@@ -106,27 +121,29 @@
 - [x] Deck state hash cache to avoid redundant API calls
 - [x] BracketScore passed to hook instead of just number
 - [x] Animated streaming card entries in panel
-| Phase | Name | Status |
-|---|---|---|
-| Phase 1 | Foundation Scaffold | ✅ Complete |
-| Phase 1+ | Integration (DB, DnD, Import) | ✅ Complete |
-| Phase 2 | Intelligence (Combos, Theme, Pairing) | ✅ Complete |
-| Phase 3 | Database & Prisma | ✅ Complete |
-| Phase 4 | AI Suggestions | ✅ Complete |
-| Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
-| Phase 5 | Deck Annotations (feat/deck-notes-description) | ✅ Complete |
+      | Phase | Name | Status |
+      |---|---|---|
+      | Phase 1 | Foundation Scaffold | ✅ Complete |
+      | Phase 1+ | Integration (DB, DnD, Import) | ✅ Complete |
+      | Phase 2 | Intelligence (Combos, Theme, Pairing) | ✅ Complete |
+      | Phase 3 | Database & Prisma | ✅ Complete |
+      | Phase 4 | AI Suggestions | ✅ Complete |
+      | Phase 4+ | Polish, Bug Fixes & UI Enhancements | ✅ Complete |
+      | Phase 5 | Deck Annotations (feat/deck-notes-description) | ✅ Complete |
 
 ---
 
 ## Phase 5 Checklist (Deck Annotations)
 
 ### Deck Description
+
 - [x] `description` field on `Deck` (Prisma schema + migration)
 - [x] `DeckDescriptionEditor` — collapsible textarea in DeckEditor sidebar
 - [x] `updateDeckDescription` store action with optimistic update
 - [x] API PATCH sanitisation (max 2000 chars)
 
 ### Card Notes
+
 - [x] `notes` field on `DeckCard` (Prisma schema + migration)
 - [x] `CardNoteInline` — 📝 icon + inline popover textarea in list view
 - [x] Note preview shown below card name (amber text) when non-empty
@@ -135,6 +152,7 @@
 - [x] `exportPlainText` emits notes as `// comment` after card line
 
 ### Deck Tags
+
 - [x] `tags` field on `Deck` (Prisma schema + migration, PostgreSQL array)
 - [x] `DeckTagsEditor` — pill UI with color coding and suggestions
 - [x] Tag suggestions: casual / cEDH / WIP / budget / tuned / theme
@@ -143,6 +161,7 @@
 - [x] Home page tag filter bar + tag pills on deck cards
 
 ### Tests
+
 - [x] 51 new tests (store-notes, export-notes, tags)
 - [x] Total: 111 tests, all passing
 
@@ -159,6 +178,7 @@
 - [x] Card tooltip shown far right — now follows mouse cursor via `createPortal` with viewport clamping
 
 ### SEO (#153)
+
 - [x] `robots.txt` — blocks private routes, allows public pages
 - [x] Dynamic sitemap with shared decks
 - [x] Enriched metadata (keywords, Twitter card, canonical)
@@ -166,6 +186,7 @@
 - [x] Dynamic OG image via `/api/og` edge route
 
 ### Footer Fix (#166)
+
 - [x] Shortcuts button aligned inline with copyright in footer (was on a separate row)
 
 ### UI Enhancements
@@ -380,7 +401,7 @@
 | Hooks                 | 11         |
 | Components            | ~45        |
 | Test files            | ~14        |
-| Tests passing         | 158+       |
+| Tests passing         | 857+       |
 | Phase 1 P0 completion | 100%       |
 | Phase 1–8 completion  | 100%       |
 | Build                 | ✅ Passing |
@@ -455,15 +476,15 @@
 - `CardFlip` 3D component; `useCardFlip` hook; `CardListItem` Turn Over; `CardGrid` cardFaces
 - Tests: `useCardFlip.test.ts` (6+), MDFC section in `categories.test.ts`
 - `docs/ROADMAP.md`: MDFC and DFC items marked done
-| Metric | Value |
-|---|---|
-| Source files | ~75 |
-| API routes | 7 |
-| Prisma models | 3 |
-| Hooks | 9 |
-| Components | ~38 |
-| Test files | 9 |
-| Tests passing | 111 |
-| Phase 1 P0 completion | 100% |
-| Phase 1–5 completion | 100% |
-| Build | ✅ Passing |
+  | Metric | Value |
+  |---|---|
+  | Source files | ~75 |
+  | API routes | 7 |
+  | Prisma models | 3 |
+  | Hooks | 9 |
+  | Components | ~38 |
+  | Test files | 9 |
+  | Tests passing | 111 |
+  | Phase 1 P0 completion | 100% |
+  | Phase 1–5 completion | 100% |
+  | Build | ✅ Passing |

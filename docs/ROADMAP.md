@@ -32,6 +32,8 @@ Tracked features and improvements for future development.
 
 - [x] **Enhanced deck-building filters**: filter cards by subtype, keyword, power/toughness, price range, set legality, and interaction type while building; add saved filter presets _(done — color OR/AND/EXACT modes, colorless filter, lands toggle, CMC exact/min/max/range modes, price range, subtype, keyword, power/toughness, interaction archetypes, localStorage presets)_
 
+- [x] **Search By Type tab** _(done — 2026-03-26, #174)_: new "By Type" search mode in the builder with checkbox filters for Creature, Instant, Sorcery, Enchantment, Artifact, Planeswalker, Land, Battle, MDFC, and DFC (Transform); OR-joined Scryfall queries; optional name filter
+
 ## AI
 
 - [ ] **Enhance AI deck builder**: improve card suggestion quality, add archetype templates (stax, combo, voltron…), support budget constraints, and explain each suggestion with a rationale
@@ -131,7 +133,6 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 ## Partnerships & Integrations
 
 - [ ] **Tool integrations**: explore partnerships or API integrations with Mythic Tool, EDHRec, Moxfield, Commander Spellbook, and other community tools for richer data and cross-platform syncing
-
 
 ---
 

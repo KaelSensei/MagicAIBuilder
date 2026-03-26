@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-26: Search By Type tab (#174)
+
+- `feat: add "By Type" search tab with card type checkboxes` — new search mode in builder alongside Name / By Set / By Color; 10 checkboxes in a 2-column grid (Creature, Instant, Sorcery, Enchantment, Artifact, Planeswalker, Land, Battle, MDFC, DFC Transform); OR-joined Scryfall queries; optional name filter; `buildTypeSearchQuery()` + `CARD_TYPE_FILTERS` constant; 11 new tests
+
+---
+
 ### Added — 2026-03-26: MDFC/DFC, SEO, Footer Fix
 
 - `feat: MDFC/DFC support with 3D flip animation (#162)` — Modal Double-Faced Cards and transform cards with Moxfield-style 3D CSS flip animation, `CardFlip` component, `useCardFlip` hook, `isDfcLayout`/`isMdfcWithLandBack` utilities, flexible land detection, 20 new tests
@@ -106,6 +112,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **`useCardFlip` hook**: reusable flip state management for any component
 - **CSS utilities**: `backface-hidden` and `preserve-3d` Tailwind `@utility` classes
 - **Tests**: 20 new tests — `isDfcLayout`, `isMdfcWithLandBack`, `categorizeDfcCard`, CMC correctness, `useCardFlip` hook
+
 ### Added — feat/advanced-search-filters (2026-03-26)
 
 - **Color AND/OR/EXACT mode toggle** — when 2+ colors selected, a "Match:" row appears:
@@ -289,9 +296,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **DeckCardOwnershipBadge** — shows "Owned" or "Buy" badge on deck editor card list items
 - **Collection filter** — "Show only collection cards" toggle in SearchFilters (only visible when collection is non-empty)
 - **Header nav** — Collection link added next to My Decks
+
 ### Added — feat/deck-notes-description
 
 #### Deck Description
+
 - `prisma/schema.prisma` — `description String? @default("")` field on `Deck`
 - `src/components/deck/DeckDescriptionEditor.tsx` — collapsible textarea below deck name; collapsed by default with first-line preview; supports Ctrl+Enter to save, Esc to cancel
 - `src/lib/deck/store.ts` — `updateDeckDescription(deckId, description)` action with optimistic update
@@ -299,6 +308,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `src/app/api/decks/[id]/route.ts` — PATCH handler accepts and sanitizes `description` (max 2000 chars)
 
 #### Card Notes
+
 - `prisma/schema.prisma` — `notes String?` field on `DeckCard`
 - `src/components/card/CardNoteInline.tsx` — 📝 icon on each card in list view; click opens inline textarea popover; note preview shown below card name when non-empty
 - `src/components/card/CardListItem.tsx` — `showNotes` prop wires up `CardNoteInline`; note preview line in amber below card name
@@ -308,6 +318,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `src/lib/deck/export.ts` — `exportPlainText()` emits card notes as `// note` comment lines
 
 #### Deck Tags
+
 - `prisma/schema.prisma` — `tags String[] @default([])` field on `Deck`
 - `src/components/deck/DeckTagsEditor.tsx` — pill tags with color coding; suggestions: casual / cEDH / WIP / budget / tuned / theme; Tab autocompletes first suggestion; X removes tag
 - `src/lib/deck/store.ts` — `addTag(deckId, tag)` and `removeTag(deckId, tag)` with optimistic updates and deduplication guard
@@ -316,6 +327,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `src/app/page.tsx` — tag filter bar on home page; tag pills on deck cards (clickable to filter); active tag highlighting
 
 #### Migration & Tests
+
 - `prisma/migrations/20260321140000_feat_deck_description_notes_tags/migration.sql` — ALTER TABLE adds description, tags, notes
 - `__tests__/lib/deck/store-notes.test.ts` — 20 tests: updateDeckDescription, addTag, removeTag, updateCardNotes (with mocked deck-api)
 - `__tests__/lib/deck/export-notes.test.ts` — 10 tests: note export as comments, edge cases (null/empty/whitespace notes)
