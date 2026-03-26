@@ -23,8 +23,8 @@ function buildCardFaces(sc: ScryfallCard): [CardFace, CardFace] | undefined {
   if (!faces || faces.length < 2) return undefined;
   const [f0, f1] = faces;
   return [
-    { name: f0.name, manaCost: f0.mana_cost ?? "", typeLine: f0.type_line ?? "", oracleText: f0.oracle_text ?? "", imageUri: f0.image_uris?.normal ?? getCardImageUri(sc, "normal", "front"), artCropUri: f0.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop", "front") },
-    { name: f1.name, manaCost: f1.mana_cost ?? "", typeLine: f1.type_line ?? "", oracleText: f1.oracle_text ?? "", imageUri: f1.image_uris?.normal ?? getCardImageUri(sc, "normal", "back"), artCropUri: f1.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop", "back") },
+    { name: f0.name, manaCost: f0.mana_cost ?? "", typeLine: f0.type_line ?? "", oracleText: f0.oracle_text ?? "", imageUri: f0.image_uris?.normal ?? getCardImageUri(sc, "normal"), artCropUri: f0.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop") },
+    { name: f1.name, manaCost: f1.mana_cost ?? "", typeLine: f1.type_line ?? "", oracleText: f1.oracle_text ?? "", imageUri: f1.image_uris?.normal ?? getCardImageUri(sc, "normal"), artCropUri: f1.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop") },
   ];
 }
 function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {

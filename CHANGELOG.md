@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added - feat/enhanced-deck-stats (2026-03-26)
+
+- `DeckStats` interface: `avgCmcWithLands`, `avgCmcWithoutLands`, `turn1Playable`, `manaSymbolRatio`, `manaProductionRatio`, `manaImbalance`, `recommendedLandsByColor`, `flexibleLands`
+- `avgCmc` kept as `@deprecated` backward-compatible alias for `avgCmcWithoutLands`
+- `computeDeckStats`: parses colored mana pips (hybrid {W/U}=0.5 per color), derives production ratio from land colorIdentity
+- `DeckStats` UI: dual CMC rows, Turn 1 playable, collapsible Mana Alignment section; gaps >15% flagged amber
+- `ROADMAP.md`: Enhanced deck statistics marked done
+
 ### Added — 2026-03-26: MDFC/DFC card flip support
 
 - `CardFace` interface; `DeckCard.cardFaces?`, `isFlexibleLand?`; `DeckStats.flexibleLands`

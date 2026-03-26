@@ -230,6 +230,16 @@
 
 ---
 
+## Enhanced Deck Statistics (2026-03-26)
+
+- Dual CMC: `avgCmcWithLands` / `avgCmcWithoutLands`
+- `turn1Playable` count
+- Per-color `manaSymbolRatio`, `manaProductionRatio`, `manaImbalance`
+- `recommendedLandsByColor`, `flexibleLands`
+- Collapsible Mana Alignment panel; amber warning on gaps > 15%
+
+---
+
 ## Known Issues / Next Steps
 
 1. **E2E tests** — Playwright tests need updates for new UI (search tabs, printing selector, companion)

@@ -38,7 +38,7 @@ Tracked features and improvements for future development.
 
 ## Statistics
 
-- [ ] **Enhanced deck statistics** including:
+- [x] **Enhanced deck statistics** (shipped in `feat/enhanced-deck-stats`):
   - Cards playable on turn 1 (based on CMC and mana production)
   - Corrected CMC split: with lands vs. without lands (non-land average)
   - Mana production vs. mana curve alignment: flag color imbalances (e.g. 48% blue symbols but only 30% blue mana production on lands)

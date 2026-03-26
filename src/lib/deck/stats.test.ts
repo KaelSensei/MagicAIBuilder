@@ -267,4 +267,142 @@ describe("computeDeckStats", () => {
     // No entry for 10
     expect(stats.manaCurve[10]).toBeUndefined();
   });
+  // -- Enhanced stats --------------------------------------------------------
+
+  it("avgCmc is backward-compat alias for avgCmcWithoutLands", () => {
+    const deck = emptyDeck();
+    deck.cards = [
+      makeDeckCard({ id: "c1", name: "Spell A", cmc: 2, category: "instant", zone: "main" }),
+      makeDeckCard({ id: "c2", name: "Spell B", cmc: 4, category: "sorcery", zone: "main" }),
+    ];
+    const stats = computeDeckStats(deck);
+    expect(stats.avgCmc).toBe(stats.avgCmcWithoutLands);
+  });
+
+  it("avgCmcWithLands is lower than avgCmcWithoutLands when lands are present", () => {
+    const deck = emptyDeck();
+    deck.cards = [
+      makeDeckCard({ id: "c1", name: "Big Spell", cmc: 5, category: "creature", zone: "main" }),
+      makeDeckCard({ id: "l1", name: "Forest", cmc: 0, category: "land", colorIdentity: ["G"], zone: "main" }),
+      makeDeckCard({ id: "l2", name: "Plains", cmc: 0, category: "land", colorIdentity: ["W"], zone: "main" }),
+    ];
+    const stats = computeDeckStats(deck);
+    expect(stats.avgCmcWithLands).toBeLessThan(stats.avgCmcWithoutLands);
+  });
+
+  it("avgCmcWithLands is 0 when main zone is empty", () => {
+    const deck = emptyDeck();
+    const stats = computeDeckStats(deck);
+    expect(stats.avgCmcWithLands).toBe(0);
+  });
+
+  it("turn1Playable counts non-land cards with cmc <= 1", () => {
+    const deck = emptyDeck();
+    deck.cards = [
+      makeDeckCard({ id: "c1", name: "Sol Ring",     cmc: 1, category: "ramp",     zone: "main" }),
+      makeDeckCard({ id: "c2", name: "Mox Pearl",    cmc: 0, category: "artifact", zone: "main" }),
+      makeDeckCard({ id: "c3", name: "Big Creature", cmc: 5, category: "creature", zone: "main" }),
+      makeDeckCard({ id: "l1", name: "Forest",       cmc: 0, category: "land", colorIdentity: ["G"], zone: "main" }),
+    ];
+    const stats = computeDeckStats(deck);
+    expect(stats.turn1Playable).toBe(2);
+  });
+
+  it("turn1Playable is 0 when no cheap spells exist", () => {
+    const deck = emptyDeck();
+    deck.cards = [makeDeckCard({ id: "c1", name: "Expensive", cmc: 4, category: "creature", zone: "main" })];
+    const stats = computeDeckStats(deck);
+    expect(stats.turn1Playable).toBe(0);
+  });
+
+  it("manaSymbolRatio: {2}{R}{G} gives R:50% and G:50%", () => {
+    const deck = emptyDeck();
+    deck.commander = makeDeckCard({ id: "cmd", name: "Colorless Commander", manaCost: "{5}", cmc: 5, category: "commander", colorIdentity: [], zone: "main" });
+    deck.cards = [makeDeckCard({ id: "c1", name: "RG Spell", manaCost: "{2}{R}{G}", cmc: 4, category: "creature", colorIdentity: ["R", "G"], zone: "main" })];
+    const stats = computeDeckStats(deck);
+    expect(stats.manaSymbolRatio["R"]).toBe(50);
+    expect(stats.manaSymbolRatio["G"]).toBe(50);
+  });
+
+  it("manaSymbolRatio is empty when no colored pips exist", () => {
+    const deck = emptyDeck();
+    deck.commander = makeDeckCard({ id: "cmd", name: "Colorless Commander", manaCost: "{5}", cmc: 5, category: "commander", colorIdentity: [], zone: "main" });
+    deck.cards = [makeDeckCard({ id: "c1", name: "Wastes", manaCost: "{3}", cmc: 3, colorIdentity: [], zone: "main" })];
+    const stats = computeDeckStats(deck);
+    expect(Object.keys(stats.manaSymbolRatio)).toHaveLength(0);
+  });
+
+  it("manaProductionRatio reflects land color identities", () => {
+    const deck = emptyDeck();
+    deck.cards = [
+      makeDeckCard({ id: "l1", name: "Forest 1", cmc: 0, category: "land", colorIdentity: ["G"], zone: "main" }),
+      makeDeckCard({ id: "l2", name: "Forest 2", cmc: 0, category: "land", colorIdentity: ["G"], zone: "main" }),
+      makeDeckCard({ id: "l3", name: "Island",   cmc: 0, category: "land", colorIdentity: ["U"], zone: "main" }),
+    ];
+    const stats = computeDeckStats(deck);
+    expect(stats.manaProductionRatio["G"]!).toBeGreaterThan(stats.manaProductionRatio["U"]!);
+  });
+
+  it("manaImbalance flags a color with |diff| > 15", () => {
+    const deck = emptyDeck();
+    deck.commander = makeDeckCard({ id: "cmd", name: "Mono-Red Commander", manaCost: "{3}{R}{R}", cmc: 5, category: "commander", colorIdentity: ["R"], zone: "main" });
+    deck.cards = [
+      makeDeckCard({ id: "c1", name: "Red 1", manaCost: "{R}{R}", cmc: 2, category: "instant",  colorIdentity: ["R"], zone: "main" }),
+      makeDeckCard({ id: "c2", name: "Red 2", manaCost: "{2}{R}", cmc: 3, category: "creature", colorIdentity: ["R"], zone: "main" }),
+    ];
+    const stats = computeDeckStats(deck);
+    expect(stats.manaImbalance["R"]).toBeDefined();
+    expect(Math.abs(stats.manaImbalance["R"]!)).toBeGreaterThan(15);
+  });
+
+  it("manaImbalance is 0 when symbols and production perfectly align", () => {
+    const deck = emptyDeck();
+    deck.commander = makeDeckCard({ id: "cmd", name: "Green Commander", manaCost: "{3}{G}{G}", cmc: 5, category: "commander", colorIdentity: ["G"], zone: "main" });
+    deck.cards = Array.from({ length: 10 }, (_, i) =>
+      makeDeckCard({ id: `l${i}`, name: `Forest ${i}`, cmc: 0, category: "land", colorIdentity: ["G"], zone: "main" })
+    );
+    const stats = computeDeckStats(deck);
+    expect(stats.manaImbalance["G"] ?? 0).toBe(0);
+  });
+
+  it("recommendedLandsByColor is proportional to symbol ratio", () => {
+    const deck = emptyDeck();
+    deck.commander = makeDeckCard({ id: "cmd", name: "RG Commander", manaCost: "{2}{R}{G}", cmc: 4, category: "commander", colorIdentity: ["R", "G"], zone: "main" });
+    const rLands = Array.from({ length: 18 }, (_, i) =>
+      makeDeckCard({ id: `rl${i}`, name: `Mountain ${i}`, cmc: 0, category: "land", colorIdentity: ["R"], zone: "main" })
+    );
+    const gLands = Array.from({ length: 18 }, (_, i) =>
+      makeDeckCard({ id: `gl${i}`, name: `Forest ${i}`,   cmc: 0, category: "land", colorIdentity: ["G"], zone: "main" })
+    );
+    deck.cards = [...rLands, ...gLands];
+    const stats = computeDeckStats(deck);
+    expect(stats.recommendedLandsByColor["R"]).toBeDefined();
+    expect(stats.recommendedLandsByColor["G"]).toBeDefined();
+    expect(stats.recommendedLandsByColor["R"]).toBe(stats.recommendedLandsByColor["G"]);
+  });
+
+  it("flexibleLands counts modal_dfc cards with a Land back face", () => {
+    const deck = emptyDeck();
+    deck.cards = [
+      makeDeckCard({
+        id: "mdfc1", name: "Shatterskull Smashing", layout: "modal_dfc",
+        cardFaces: [
+          { name: "Shatterskull Smashing",        manaCost: "{X}{R}{R}", typeLine: "Sorcery", oracleText: "", imageUri: "", artCropUri: "" },
+          { name: "Shatterskull, the Hammer Pass", manaCost: "",          typeLine: "Land",    oracleText: "", imageUri: "", artCropUri: "" },
+        ],
+        category: "sorcery", zone: "main",
+      }),
+      makeDeckCard({ id: "c1", name: "Normal Spell", layout: "normal", category: "instant", zone: "main" }),
+    ];
+    const stats = computeDeckStats(deck);
+    expect(stats.flexibleLands).toBe(1);
+  });
+
+  it("flexibleLands is 0 when no MDFCs with land back exist", () => {
+    const deck = emptyDeck();
+    deck.cards = [makeDeckCard({ id: "c1", name: "Normal Card", layout: "normal", zone: "main" })];
+    const stats = computeDeckStats(deck);
+    expect(stats.flexibleLands).toBe(0);
+  });
+
 });

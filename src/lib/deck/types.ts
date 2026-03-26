@@ -19,32 +19,13 @@ export interface Deck {
   shareEnabled: boolean; isAIGenerated: boolean; createdAt: Date; updatedAt: Date;
 }
 export interface DeckStats {
-  totalCards: number; // Should be 100
-  lands: number;
-  creatures: number;
-  ramp: number;
-  draw: number;
-  removal: number;
-  boardWipes: number;
-  /** @deprecated Use avgCmcWithoutLands instead */
-  avgCmc: number;
-  avgCmcWithLands: number;
-  avgCmcWithoutLands: number;
-  turn1Playable: number;
-  manaSymbolRatio: Record<string, number>;
-  manaProductionRatio: Record<string, number>;
-  manaImbalance: Record<string, number>;
-  recommendedLandsByColor: Record<string, number>;
-  flexibleLands: number;
-  manaCurve: Record<number, number>;
-  colorDistribution: Record<string, number>;
-  gameChangersCount: number;
-  gameChangersList: string[];
-  totalPrice: number;
-  overBudgetCards: string[];
-  bannedCards: string[];
-  colorIdentityViolations: string[];
+  totalCards: number; lands: number; creatures: number; ramp: number; draw: number;
+  removal: number; boardWipes: number; avgCmc: number;
+  manaCurve: Record<number, number>; colorDistribution: Record<string, number>;
+  gameChangersCount: number; gameChangersList: string[]; totalPrice: number;
+  overBudgetCards: string[]; bannedCards: string[]; colorIdentityViolations: string[];
   themes?: import("./themes").DetectedTheme[];
+  flexibleLands: number;
 }
 export interface BracketScore {
   overall: 1|2|3|4;
