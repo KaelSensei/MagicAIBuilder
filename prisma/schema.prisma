@@ -11,6 +11,8 @@ datasource db {
 model Deck {
   id            String         @id @default(cuid())
   name          String
+  description   String?        @default("")
+  tags          String[]       @default([])
   format        String         @default("commander")
   targetBracket Int            @default(2)
   budget        Float?
@@ -22,8 +24,6 @@ model Deck {
   shareToken    String?        @unique
   shareEnabled  Boolean        @default(false)
   isAIGenerated Boolean        @default(false)
-  description   String         @default("")
-  tags          String[]       @default([])
   cards         DeckCard[]
   snapshots     DeckSnapshot[]
   createdAt     DateTime       @default(now())

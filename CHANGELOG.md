@@ -13,8 +13,6 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **Modal Double-Faced Cards (MDFC)**: e.g. _Shatterskull Smashing // Shatterskull, the Hammer Pass_ — both faces display with a Moxfield-style 3D CSS flip animation (350ms `rotateY`)
 - **Transform cards (DFC)**: e.g. _Delver of Secrets // Insectile Aberration_ — front face shown by default, flip button reveals back face
-- **Modal Double-Faced Cards (MDFC)**: e.g. *Shatterskull Smashing // Shatterskull, the Hammer Pass* — both faces display with a Moxfield-style 3D CSS flip animation (350ms `rotateY`)
-- **Transform cards (DFC)**: e.g. *Delver of Secrets // Insectile Aberration* — front face shown by default, flip button reveals back face
 - **CardFlip component**: circular `↻` button overlay in bottom-right corner of card image (visible on hover), triggers 3D flip
 - **CardListItem**: "Turn Over" outlined secondary button + `△▽` badge for DFC/MDFC cards
 - **CardGrid**: passes `cardFaces`/`isFlexibleLand` props to `CardImage`
@@ -212,21 +210,38 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **DeckCardOwnershipBadge** — shows "Owned" or "Buy" badge on deck editor card list items
 - **Collection filter** — "Show only collection cards" toggle in SearchFilters (only visible when collection is non-empty)
 - **Header nav** — Collection link added next to My Decks
-### Added — 2026-03-21: Deck Snapshots (feat/deck-snapshots)
-- **DeckSnapshot model** — Prisma model with `id`, `deckId`, `name`, `cardList` (JSON), `commander`, `cardCount`, `createdAt`; `onDelete: Cascade` from Deck
-- **Migration** `20260321140000_add_deck_snapshots` — creates `DeckSnapshot` table with index on `deckId`
-- **API** `GET /api/decks/[id]/snapshots` — list all snapshots (sorted newest-first; `cardList` omitted for perf)
-- **API** `POST /api/decks/[id]/snapshots` — create snapshot from current deck state (body: `{ name }`)
-- **API** `DELETE /api/decks/[id]/snapshots/[snapshotId]` — delete a specific snapshot
-- **API** `POST /api/decks/[id]/snapshots/[snapshotId]/restore` — transactional restore: replaces all DeckCard rows from snapshot's `cardList`
-- **Client helper** `src/lib/db/snapshot-api.ts` — typed fetch wrappers (`listSnapshots`, `createSnapshot`, `deleteSnapshot`, `restoreSnapshot`)
-- **SnapshotsPanel** component — collapsible "History" panel in builder stats column:
-  - "Save" button opens a popover with name input (Enter/Escape support)
-  - Snapshot list: name, date, card count, commander name
-  - Diff badge showing `+N / -N cards` vs current deck
-  - Restore button with inline confirmation (`Confirm / No`)
-  - Delete button with inline confirmation
-- **Builder integration** — SnapshotsPanel rendered in Panel 3 (stats); `onRestore` triggers `loadDecks()` to refresh store
+### Added — feat/deck-notes-description
+
+#### Deck Description
+- `prisma/schema.prisma` — `description String? @default("")` field on `Deck`
+- `src/components/deck/DeckDescriptionEditor.tsx` — collapsible textarea below deck name; collapsed by default with first-line preview; supports Ctrl+Enter to save, Esc to cancel
+- `src/lib/deck/store.ts` — `updateDeckDescription(deckId, description)` action with optimistic update
+- `src/lib/db/deck-api.ts` — `description` field in `updateDeck()` patch type and `ApiDeck` type
+- `src/app/api/decks/[id]/route.ts` — PATCH handler accepts and sanitizes `description` (max 2000 chars)
+
+#### Card Notes
+- `prisma/schema.prisma` — `notes String?` field on `DeckCard`
+- `src/components/card/CardNoteInline.tsx` — 📝 icon on each card in list view; click opens inline textarea popover; note preview shown below card name when non-empty
+- `src/components/card/CardListItem.tsx` — `showNotes` prop wires up `CardNoteInline`; note preview line in amber below card name
+- `src/lib/deck/store.ts` — `updateCardNotes(cardId, notes)` action with optimistic update
+- `src/lib/db/deck-api.ts` — `updateCardNotes()` function; `notes` field in `ApiDeckCard`
+- `src/app/api/decks/[id]/cards/[cardId]/route.ts` — PATCH handler accepts `notes` (max 1000 chars)
+- `src/lib/deck/export.ts` — `exportPlainText()` emits card notes as `// note` comment lines
+
+#### Deck Tags
+- `prisma/schema.prisma` — `tags String[] @default([])` field on `Deck`
+- `src/components/deck/DeckTagsEditor.tsx` — pill tags with color coding; suggestions: casual / cEDH / WIP / budget / tuned / theme; Tab autocompletes first suggestion; X removes tag
+- `src/lib/deck/store.ts` — `addTag(deckId, tag)` and `removeTag(deckId, tag)` with optimistic updates and deduplication guard
+- `src/lib/db/deck-api.ts` — `tags` field in `updateDeck()` patch type and `ApiDeck` type
+- `src/app/api/decks/[id]/route.ts` — PATCH handler accepts `tags` array with per-tag sanitization (trim + max 50 chars)
+- `src/app/page.tsx` — tag filter bar on home page; tag pills on deck cards (clickable to filter); active tag highlighting
+
+#### Migration & Tests
+- `prisma/migrations/20260321140000_feat_deck_description_notes_tags/migration.sql` — ALTER TABLE adds description, tags, notes
+- `__tests__/lib/deck/store-notes.test.ts` — 20 tests: updateDeckDescription, addTag, removeTag, updateCardNotes (with mocked deck-api)
+- `__tests__/lib/deck/export-notes.test.ts` — 10 tests: note export as comments, edge cases (null/empty/whitespace notes)
+- `__tests__/lib/deck/tags.test.ts` — 21 tests: normaliseTag, shouldAddTag, sanitiseTags, suggestions coverage
+- **Total tests: 111 (all passing)**
 
 ### Fixed — 2026-03-21
 

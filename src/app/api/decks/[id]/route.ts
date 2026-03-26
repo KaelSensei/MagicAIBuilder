@@ -58,7 +58,6 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-
     const updated = await prisma.deck.update({
       where: { id },
       data: buildDeckPatchData(parsed.data),

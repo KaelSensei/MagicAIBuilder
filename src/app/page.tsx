@@ -117,6 +117,17 @@ function getDeckSubtitle(isLoading: boolean, count: number): string {
 
 const SKELETON_KEYS = ["sk-1", "sk-2", "sk-3"] as const;
 
+const TAG_COLORS: Record<string, string> = {
+  casual: "bg-green-500/20 text-green-400 border-green-500/30",
+  cEDH: "bg-red-500/20 text-red-400 border-red-500/30",
+  WIP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  budget: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  tuned: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  theme: "bg-pink-500/20 text-pink-400 border-pink-500/30",
+};
+const DEFAULT_TAG_COLOR = "bg-[var(--border)] text-[var(--text-secondary)] border-[var(--border)]";
+const _tagColor = (tag: string) => TAG_COLORS[tag] ?? DEFAULT_TAG_COLOR;
+
 function DeckCardSkeleton() {
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 animate-pulse">
