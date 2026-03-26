@@ -6,7 +6,7 @@ import { categorizeCard, categorizeDfcCard } from "./categories";
 import { detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { DFC_LAYOUTS } from "@/lib/scryfall/types";
-import { getCardImageUri } from "@/lib/scryfall/images";
+import { getCardImageUri, buildScryfallImageUrl } from "@/lib/scryfall/images";
 import * as deckApi from "@/lib/db/deck-api";
 import { useToastStore } from "@/hooks/useToast";
 
@@ -42,6 +42,23 @@ function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
     category: isDfc ? categorizeDfcCard(scryfallCard) : categorizeCard(scryfallCard),
     quantity: 1, zone: "main", layout: scryfallCard.layout, cardFaces, isFlexibleLand,
   };
+}
+
+/**
+ * Reconstruct cardFaces from DB-stored fields for DFC/MDFC cards.
+ * DFC cards have names like "Front Name // Back Name" and their images
+ * can be fetched via Scryfall's front/back face URLs using the scryfallId.
+ */
+function rebuildCardFaces(scryfallId: string, name: string, typeLine: string, manaCost: string, oracleText: string): [CardFace, CardFace] | undefined {
+  if (!name.includes(" // ")) return undefined;
+  const [frontName, backName] = name.split(" // ");
+  const [frontType, backType] = typeLine.includes(" // ") ? typeLine.split(" // ") : [typeLine, ""];
+  const [frontOracle, backOracle] = oracleText.includes(" // ") ? oracleText.split(" // ") : [oracleText, ""];
+  const [frontMana, backMana] = manaCost.includes(" // ") ? manaCost.split(" // ") : [manaCost, ""];
+  return [
+    { name: frontName, manaCost: frontMana, typeLine: frontType, oracleText: frontOracle, imageUri: buildScryfallImageUrl(scryfallId, "normal", "front"), artCropUri: buildScryfallImageUrl(scryfallId, "art_crop", "front") },
+    { name: backName, manaCost: backMana, typeLine: backType, oracleText: backOracle, imageUri: buildScryfallImageUrl(scryfallId, "normal", "back"), artCropUri: buildScryfallImageUrl(scryfallId, "art_crop", "back") },
+  ];
 }
 
 /** Displays a toast warning when a Game Changer card is added to the deck. */
@@ -275,24 +292,31 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
         const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
 
-        const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => ({
-          id: c.id,
-          name: c.name,
-          manaCost: c.manaCost,
-          cmc: c.cmc,
-          typeLine: c.typeLine,
-          oracleText: c.oracleText,
-          colorIdentity: c.colorIdentity,
-          isGameChanger: c.isGameChanger,
-          isBanned: c.isBanned,
-          price: c.price,
-          imageUri: c.imageUri,
-          artCropUri: c.artCropUri,
-          category: c.category,
-          quantity: c.quantity,
-          notes: c.notes ?? null,
-          zone: c.zone ?? "main",
-        });
+        const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => {
+          const cardFaces = rebuildCardFaces(c.scryfallId, c.name, c.typeLine, c.manaCost, c.oracleText);
+          const isFlexibleLand = cardFaces !== undefined && (cardFaces[1].typeLine).toLowerCase().includes("land");
+          return {
+            id: c.id,
+            scryfallId: c.scryfallId,
+            name: c.name,
+            manaCost: c.manaCost,
+            cmc: c.cmc,
+            typeLine: c.typeLine,
+            oracleText: c.oracleText,
+            colorIdentity: c.colorIdentity,
+            isGameChanger: c.isGameChanger,
+            isBanned: c.isBanned,
+            price: c.price,
+            imageUri: c.imageUri,
+            artCropUri: c.artCropUri,
+            category: c.category,
+            quantity: c.quantity,
+            notes: c.notes ?? null,
+            zone: c.zone ?? "main",
+            cardFaces,
+            isFlexibleLand: isFlexibleLand || undefined,
+          };
+        };
 
         decks[d.id] = {
           id: d.id,

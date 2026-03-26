@@ -21,6 +21,7 @@
 ### MDFC/DFC flip in deck editor (#178)
 
 - [x] Fix: `DeckEditor` now passes `cardFaces` and `isFlexibleLand` to `CardImage` in all 4 grid locations (commander, partner, main zone, sideboard/maybeboard)
+- [x] Fix: `rebuildCardFaces()` in store reconstructs face data from DB fields (name `//` split + Scryfall image URLs) so flip persists after page reload
 - [x] MDFC/DFC cards show 3D flip animation in deck editor grid view
 
 ---

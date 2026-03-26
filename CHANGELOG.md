@@ -12,7 +12,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### Fixed — 2026-03-26: MDFC/DFC flip in search results & deck editor (#176, #178)
 
 - `fix: MDFC/DFC cards not showing flip in search results (#176)` — the draggable code path in `CardGrid` computed `dfcFaces` but never passed `cardFaces` or `isFlexibleLand` to `CardImage`, so MDFC/DFC cards displayed as static single-face images in search results grid view
-- `fix: MDFC/DFC flip missing in deck editor grid views (#178)` — `DeckEditor` had `cardFaces` data on each `DeckCard` but never passed it to `CardImage`; fixed in all 4 grid locations: commander, partner, main zone, sideboard/maybeboard
+- `fix: MDFC/DFC flip missing in deck editor grid views (#178)` — `DeckEditor` had `cardFaces` data on each `DeckCard` but never passed it to `CardImage`; fixed in all 4 grid locations: commander, partner, main zone, sideboard/maybeboard; also added `rebuildCardFaces()` in store to reconstruct face data from DB-stored fields (name `//` split + Scryfall image URLs) so flip works after page reload
 
 ### Added — 2026-03-26: Search By Type tab (#174)
 
