@@ -11,6 +11,7 @@ These rules apply to ALL code written in this project. Read `docs/references/typ
 ## Type Safety — Non-Negotiable Rules
 
 ### No type assertions (`as`)
+
 Type assertions bypass the compiler. Use type guards or discriminated unions instead:
 
 ```typescript
@@ -21,10 +22,13 @@ const cat = value as CardCategory;
 function isCardCategory(v: string): v is CardCategory {
   return CARD_CATEGORIES.includes(v as CardCategory);
 }
-if (isCardCategory(value)) { /* value is now CardCategory */ }
+if (isCardCategory(value)) {
+  /* value is now CardCategory */
+}
 ```
 
 ### No non-null assertions (`!`)
+
 They crash at runtime. Use optional chaining + nullish coalescing or early returns:
 
 ```typescript
@@ -36,6 +40,7 @@ const name = card?.name ?? "Unknown";
 ```
 
 ### No `eslint-disable` without a ticket/issue reference
+
 Every disable MUST have a comment explaining WHY and linking to the issue that will fix it:
 
 ```typescript
@@ -43,13 +48,16 @@ Every disable MUST have a comment explaining WHY and linking to the issue that w
 ```
 
 ### Exhaustive switch with `never` guard
+
 Every `switch` on a union type MUST have an exhaustive check:
 
 ```typescript
 function getPairingLabel(type: CommanderPairingType): string {
   switch (type) {
-    case "none": return "Aucun";
-    case "partner": return "Partner";
+    case "none":
+      return "Aucun";
+    case "partner":
+      return "Partner";
     // ... all cases
   }
   const _exhaustive: never = type;
@@ -58,33 +66,47 @@ function getPairingLabel(type: CommanderPairingType): string {
 ```
 
 ### Discriminated unions over boolean flags
+
 Prefer `{ role: "commander" }` over `{ isCommander: true, isPartner: false }`:
 
 ```typescript
 // ❌ Allows invalid states (isCommander && isPartner both true)
-interface DeckCard { isCommander: boolean; isPartner: boolean; }
+interface DeckCard {
+  isCommander: boolean;
+  isPartner: boolean;
+}
 
 // ✅ Only valid states are representable
 type CardRole = "commander" | "partner" | "companion" | "main";
-interface DeckCard { role: CardRole; /* ... */ }
+interface DeckCard {
+  role: CardRole; /* ... */
+}
 ```
 
 ### `readonly` by default
+
 Arrays and objects returned from stores or utils should be `readonly`:
 
 ```typescript
-function getCards(): readonly DeckCard[] { /* ... */ }
+function getCards(): readonly DeckCard[] {
+  /* ... */
+}
 ```
 
 ## Algorithm & Performance
 
 ### Single-pass over collections
+
 Never iterate the same array multiple times when one pass suffices:
 
 ```typescript
 // ❌ O(n × categories) — iterates allCards once per category
-const lands = allCards.filter(c => c.category === "land").reduce((s, c) => s + c.quantity, 0);
-const creatures = allCards.filter(c => c.category === "creature").reduce((s, c) => s + c.quantity, 0);
+const lands = allCards
+  .filter((c) => c.category === "land")
+  .reduce((s, c) => s + c.quantity, 0);
+const creatures = allCards
+  .filter((c) => c.category === "creature")
+  .reduce((s, c) => s + c.quantity, 0);
 
 // ✅ O(n) — single pass
 const counts = new Map<CardCategory, number>();
@@ -94,36 +116,48 @@ for (const card of allCards) {
 ```
 
 ### Use Map/Set for lookups
+
 If you `.find()` or `.includes()` on an array more than once, convert to Map/Set first:
 
 ```typescript
 // ❌ O(n) per lookup
-const isBanned = bannedCards.find(c => c.name === name);
+const isBanned = bannedCards.find((c) => c.name === name);
 
 // ✅ O(1) per lookup
-const bannedSet = new Set(bannedCards.map(c => c.name));
+const bannedSet = new Set(bannedCards.map((c) => c.name));
 const isBanned = bannedSet.has(name);
 ```
 
 ### Pre-compute expensive transforms
+
 `.toLowerCase()`, `.normalize()`, JSON parse — do them once, cache the result:
 
 ```typescript
 // ❌ Recomputes on every theme × every card
-themes.forEach(t => cards.forEach(c => {
-  if (c.oracle_text.toLowerCase().includes(t.keyword.toLowerCase())) { /* ... */ }
-}));
+themes.forEach((t) =>
+  cards.forEach((c) => {
+    if (c.oracle_text.toLowerCase().includes(t.keyword.toLowerCase())) {
+      /* ... */
+    }
+  })
+);
 
 // ✅ Pre-lowercased
-const lowerTexts = cards.map(c => ({ ...c, lowerOracle: c.oracle_text.toLowerCase() }));
-const lowerKeywords = themes.map(t => ({ ...t, lowerKw: t.keyword.toLowerCase() }));
+const lowerTexts = cards.map((c) => ({
+  ...c,
+  lowerOracle: c.oracle_text.toLowerCase(),
+}));
+const lowerKeywords = themes.map((t) => ({
+  ...t,
+  lowerKw: t.keyword.toLowerCase(),
+}));
 ```
 
 ### Operator precedence — always use parentheses with mixed `&&`/`||`
 
 ```typescript
 // ❌ Bug-prone: && binds tighter than ||
-return a && b || c && d;
+return (a && b) || (c && d);
 
 // ✅ Intent is clear
 return (a && b) || (c && d);
@@ -132,6 +166,7 @@ return (a && b) || (c && d);
 ## React / Next.js Patterns
 
 ### Memoize derived state
+
 Any computation on arrays/objects in a component MUST be wrapped in `useMemo`:
 
 ```typescript
@@ -147,12 +182,16 @@ const cardsByCategory = useMemo(() => {
 ### Callbacks passed as props MUST be `useCallback`
 
 ```typescript
-const handleAddCard = useCallback((card: ScryfallCard) => {
-  addCard(card);
-}, [addCard]);
+const handleAddCard = useCallback(
+  (card: ScryfallCard) => {
+    addCard(card);
+  },
+  [addCard]
+);
 ```
 
 ### Error Boundaries are mandatory
+
 Every route segment and every panel that fetches data MUST have an Error Boundary:
 
 ```typescript
@@ -164,9 +203,11 @@ export default function BuilderError({ error, reset }: { error: Error; reset: ()
 ```
 
 ### Component size limit: 200 lines max
+
 If a component exceeds 200 lines, extract sub-components or custom hooks. God components are forbidden.
 
 ### No prop drilling beyond 2 levels
+
 Use React Context or Zustand selectors instead:
 
 ```typescript
@@ -177,12 +218,15 @@ Use React Context or Zustand selectors instead:
 ## Zustand Store Rules
 
 ### One store per domain, max 300 lines
+
 Split large stores into focused slices:
+
 - `useDeckStore` — deck CRUD + active deck
 - `useCardStore` — card operations, undo/redo
 - `useUIStore` — view modes, preferences
 
 ### Selectors MUST be fine-grained
+
 Never `const store = useDeckStore()` — always select what you need:
 
 ```typescript
@@ -190,12 +234,13 @@ Never `const store = useDeckStore()` — always select what you need:
 const store = useDeckStore();
 
 // ✅ Re-renders only when cards change
-const cards = useDeckStore(s => s.activeDeck?.cards ?? []);
+const cards = useDeckStore((s) => s.activeDeck?.cards ?? []);
 ```
 
 ## Async & Concurrency
 
 ### Serialize shared state mutations
+
 Race conditions with global variables are bugs. Use a Promise chain:
 
 ```typescript
@@ -221,6 +266,7 @@ function rateLimited(url: string) {
 ```
 
 ### All API route handlers MUST have try/catch
+
 Return proper HTTP error codes, never let exceptions bubble:
 
 ```typescript
@@ -260,15 +306,28 @@ const SCRYFALL_MIN_DELAY_MS = 100;
 
 ```typescript
 describe("validatePartner", () => {
-  it("rejects non-Partner cards as partner", () => { /* ... */ });
-  it("allows generic Partner keyword pairing", () => { /* ... */ });
-  it("validates Partner with specific name match", () => { /* ... */ });
+  it("rejects non-Partner cards as partner", () => {
+    /* ... */
+  });
+  it("allows generic Partner keyword pairing", () => {
+    /* ... */
+  });
+  it("validates Partner with specific name match", () => {
+    /* ... */
+  });
 });
 ```
+
+## Documentation Discipline
+
+Feature branches must **NOT** modify `CHANGELOG.md`, `docs/PROGRESS.md`, or `docs/ROADMAP.md`.
+These files are updated in a dedicated `chore/docs` or `docs/changelog-update` PR after each merge batch.
+This prevents rebase conflicts when multiple branches touch the same doc files.
 
 ## Before Submitting Code
 
 Checklist (run mentally or via script):
+
 1. `npx tsc --noEmit` passes
 2. `pnpm lint` passes (zero warnings)
 3. `pnpm test` passes
