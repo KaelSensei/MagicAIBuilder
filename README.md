@@ -107,12 +107,25 @@ Without a key, the AI panel uses curated generic suggestions.
 | `pnpm build`      | Production build            |
 | `pnpm lint`       | ESLint check                |
 | `pnpm test`       | Unit tests (Vitest)         |
-| `pnpm test:e2e`   | E2E tests (Playwright)      |
+| `pnpm test:e2e`        | E2E tests (Playwright, local)           |
+| `pnpm test:e2e:docker` | E2E tests in Docker (identical to CI)   |
+| `pnpm test:e2e:ui`     | E2E tests with interactive UI           |
+| `pnpm test:e2e:report` | Open last Playwright HTML report        |
 | `pnpm db:up`      | Start PostgreSQL via Docker |
 | `pnpm db:down`    | Stop PostgreSQL             |
 | `pnpm db:migrate` | Apply pending migrations    |
 | `pnpm db:studio`  | Open Prisma Studio          |
 | `pnpm db:reset`   | Reset database              |
+
+## E2E Testing with Docker
+
+Run the full Playwright suite in Docker — works identically on any machine:
+
+```bash
+pnpm test:e2e:docker
+```
+
+This matches what runs in GitHub Actions CI exactly. No more "works on my machine".
 
 ## Architecture
 

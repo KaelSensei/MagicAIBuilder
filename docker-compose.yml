@@ -17,5 +17,38 @@ services:
       timeout: 5s
       retries: 5
 
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://magic:magic_dev_only@db:5432/magicaibuilder
+      - NODE_ENV=test
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.52.0-jammy
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "pnpm install && pnpm exec playwright test"
+    environment:
+      - BASE_URL=http://nextjs:3000
+      - CI=true
+    depends_on:
+      nextjs:
+        condition: service_healthy
+
 volumes:
   pgdata:

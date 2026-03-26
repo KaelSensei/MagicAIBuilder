@@ -27,6 +27,21 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **`useCardFlip` hook**: reusable flip state management for any component
 - **CSS utilities**: `backface-hidden` and `preserve-3d` Tailwind `@utility` classes
 - **Tests**: 20 new tests — `isDfcLayout`, `isMdfcWithLandBack`, `categorizeDfcCard`, CMC correctness, `useCardFlip` hook
+### Added — feat/e2e-docker-playwright
+
+#### Dockerized E2E Testing Infrastructure
+
+- Added `docker-compose.yml` services: `nextjs` (app under test) and `playwright` (test runner)
+- Added `Dockerfile.e2e` — lightweight Node 22 Alpine build for running Next.js in E2E tests
+- Added `.dockerignore` to exclude `node_modules`, `.next`, `.git`, `playwright-report`, `test-results`
+- Updated `playwright.config.ts` to be Docker-aware: reads `BASE_URL` env var; skips `webServer` when running in Docker
+- Added `screenshot: 'only-on-failure'` and `video: 'retain-on-failure'` to Playwright config
+- Added npm scripts: `test:e2e:docker`, `test:e2e:report`, `test:e2e:ui`
+- Added `e2e` job in `.github/workflows/ci.yml` with Docker Compose and Playwright report artifact upload
+- Updated E2E tests for current UI: search mode tabs (Name / By Set / By Color), filter toggle, Commander mode
+- Added collection page smoke tests (`e2e/search.spec.ts`)
+- Updated `docs/INFRASTRUCTURE.md` with Docker E2E section
+- Updated `README.md` with E2E Docker run instructions
 
 ### Added — 2026-03-22: Grid density selector
 

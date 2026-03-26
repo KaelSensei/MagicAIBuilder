@@ -255,3 +255,31 @@ See the UptimeRobot instructions in [ROADMAP.md](./ROADMAP.md) under **Observabi
 - Use `npx prisma migrate deploy` (not `dev`) in CI/CD pipelines
 - Run migrations manually from your local machine when deploying schema changes
 - The `CardCache` table should be periodically pruned (rows older than 24h are stale)
+
+
+---
+
+## E2E Testing Infrastructure (Docker Compose)
+
+MagicAIBuilder uses Playwright for E2E tests, running in Docker Compose to ensure consistent execution across all environments (local dev, CI, Windows/Mac/Linux).
+
+### Architecture
+
+| Service | Image | Role |
+|---------|-------|------|
+| `db` | `postgres:16-alpine` | Test database |
+| `nextjs` | `Dockerfile.e2e` | Built Next.js app under test |
+| `playwright` | `mcr.microsoft.com/playwright:v1.52.0-jammy` | Runs the test suite |
+
+Startup sequence: `db` healthy → `nextjs` starts → `playwright` runs tests.
+
+### Docker-Aware playwright.config.ts
+
+Reads `BASE_URL` from env:
+- **Docker**: `BASE_URL=http://nextjs:3000` — no `webServer` spawned
+- **Local**: `BASE_URL` unset → Playwright starts `pnpm dev` automatically
+
+### CI Integration
+
+The `e2e` job in `.github/workflows/ci.yml` runs `docker compose run --rm playwright`.
+Playwright HTML reports are uploaded as CI artifacts (retained 7 days).

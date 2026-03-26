@@ -42,6 +42,7 @@
 | Phase 5  | Collection Mode                                   | ✅ Complete    |
 | Phase 6  | UX Polish — Grid Density, Zone D&D, Bracket Rules | ✅ Complete    |
 | Phase 7  | Infrastructure & Observability                    | 🔄 In Progress |
+| Phase 8  | E2E Docker Testing (feat/e2e-docker-playwright)   | ✅ Complete    |
 
 ---
 
