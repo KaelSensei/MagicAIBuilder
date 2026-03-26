@@ -62,11 +62,11 @@ function processImportLine(line: string, state: ParseState): void {
   if (state.inCommanderSection) {
     if (!state.commander) {
       state.commander = name;
-    } else if (!state.partner) {
+    } else if (state.partner) {
+      state.cards.push({ name, quantity });
+    } else {
       // Second card in Commander section = partner
       state.partner = name;
-    } else {
-      state.cards.push({ name, quantity });
     }
   } else {
     state.cards.push({ name, quantity });

@@ -43,9 +43,9 @@ function MiniBar({
   value,
   bracketColor,
 }: {
-  label: string;
-  value: number;
-  bracketColor: string;
+  readonly label: string;
+  readonly value: number;
+  readonly bracketColor: string;
 }) {
   return (
     <div className="flex items-center gap-2">

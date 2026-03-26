@@ -6,15 +6,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 
 interface ModalProps {
-  open: boolean;
-  onClose: () => void;
-  title?: string;
+  readonly open: boolean;
+  readonly onClose: () => void;
+  readonly title?: string;
   /** Max width class, defaults to "max-w-lg" */
-  maxWidth?: string;
-  className?: string;
-  children: ReactNode;
+  readonly maxWidth?: string;
+  readonly className?: string;
+  readonly children: ReactNode;
   /** Show X close button in top-right corner (default true) */
-  showClose?: boolean;
+  readonly showClose?: boolean;
 }
 
 export function Modal({
@@ -30,8 +30,8 @@ export function Modal({
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    globalThis.window.addEventListener("keydown", handler);
+    return () => globalThis.window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
   return (

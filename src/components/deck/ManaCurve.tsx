@@ -84,7 +84,7 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
                 key={cmc}
                 type="button"
                 className="relative flex flex-col items-center flex-1 h-full justify-end bg-transparent border-0 p-0 cursor-default focus:outline-none"
-                aria-label={`CMC ${cmc === 7 ? "7+" : cmc}: ${count} card${count !== 1 ? "s" : ""}`}
+                aria-label={`CMC ${cmc === 7 ? "7+" : cmc}: ${count} card${count === 1 ? "" : "s"}`}
                 onMouseEnter={() => setHoveredCmc(cmc)}
                 onMouseLeave={() => setHoveredCmc(null)}
                 onFocus={() => setHoveredCmc(cmc)}
@@ -100,7 +100,7 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
                       exit={{ opacity: 0, y: 4 }}
                       transition={{ duration: 0.15 }}
                     >
-                      {count} card{count !== 1 ? "s" : ""} at CMC {cmc === 7 ? "7+" : cmc}
+                      {count} card{count === 1 ? "" : "s"} at CMC {cmc === 7 ? "7+" : cmc}
                     </motion.div>
                   )}
                 </AnimatePresence>

@@ -29,7 +29,7 @@ const THEME_COLORS: Record<string, string> = {
   Treasure: "bg-yellow-600/20 text-yellow-200 border-yellow-600/30",
 };
 
-function ConfidenceBar({ confidence }: { confidence: number }) {
+function ConfidenceBar({ confidence }: { readonly confidence: number }) {
   const pct = Math.round(confidence * 100);
   return (
     <div className="w-12 h-1.5 rounded-full bg-[var(--border)] overflow-hidden">

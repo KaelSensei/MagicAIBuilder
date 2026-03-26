@@ -30,12 +30,12 @@ function HandCard({
   onHover,
   onLeave,
 }: {
-  card: DeckCard;
-  index: number;
-  total: number;
-  isHovered: boolean;
-  onHover: () => void;
-  onLeave: () => void;
+  readonly card: DeckCard;
+  readonly index: number;
+  readonly total: number;
+  readonly isHovered: boolean;
+  readonly onHover: () => void;
+  readonly onLeave: () => void;
 }) {
   // Spread cards in a fan: rotate from -30° to +30°
   const maxAngle = Math.min(30, total * 4);
@@ -93,7 +93,7 @@ function HandCard({
 }
 
 // Library top-card preview (face-down)
-function LibraryPile({ count }: { count: number }) {
+function LibraryPile({ count }: { readonly count: number }) {
   return (
     <div className="flex flex-col items-center gap-1">
       <div className="relative w-[60px] h-[84px]">
@@ -120,7 +120,7 @@ function LibraryPile({ count }: { count: number }) {
   );
 }
 
-function PlaytestStartScreen({ onStart }: { onStart: () => void }) {
+function PlaytestStartScreen({ onStart }: { readonly onStart: () => void }) {
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="text-center">
