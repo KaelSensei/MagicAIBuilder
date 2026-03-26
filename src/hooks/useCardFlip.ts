@@ -16,7 +16,10 @@ export interface UseCardFlipResult {
 export function useCardFlip(cardFaces: [CardFace, CardFace] | undefined): UseCardFlipResult {
   const [isFlipped, setIsFlipped] = useState(false);
   const canFlip = cardFaces !== undefined;
-  const currentFace = canFlip ? (isFlipped ? cardFaces[1] : cardFaces[0]) : null;
+  let currentFace: CardFace | null = null;
+  if (canFlip) {
+    currentFace = isFlipped ? cardFaces[1] : cardFaces[0];
+  }
   const toggle = useCallback(() => setIsFlipped((f) => !f), []);
   return { isFlipped, canFlip, currentFace, toggle };
 }
