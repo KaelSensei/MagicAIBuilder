@@ -231,21 +231,21 @@ function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardsByCategory,
       <div className={gridColsClass(gridCols)}>
         {deck.commander && (
           <div className="relative group/card">
-            <CardImage imageUri={deck.commander.imageUri} largeUri={deck.commander.imageUri} name={deck.commander.name} manaCost={deck.commander.manaCost} cmc={deck.commander.cmc} showOverlay={true} zoomOnHover={false} className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer" onClick={() => onCardClick?.(deck.commander!)} />
+            <CardImage imageUri={deck.commander.imageUri} largeUri={deck.commander.imageUri} name={deck.commander.name} manaCost={deck.commander.manaCost} cmc={deck.commander.cmc} showOverlay={!deck.commander.cardFaces} zoomOnHover={false} className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer" onClick={() => onCardClick?.(deck.commander!)} cardFaces={deck.commander.cardFaces} isFlexibleLand={deck.commander.isFlexibleLand} />
             <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">CMD</div>
             <button onClick={(e) => { e.stopPropagation(); clearCommander(); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title="Remove commander">×</button>
           </div>
         )}
         {deck.partner && deck.partner.name !== deck.commander?.name && (
           <div className="relative group/card">
-            <CardImage imageUri={deck.partner.imageUri} largeUri={deck.partner.imageUri} name={deck.partner.name} manaCost={deck.partner.manaCost} cmc={deck.partner.cmc} showOverlay={true} zoomOnHover={false} className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer" onClick={() => onCardClick?.(deck.partner!)} />
+            <CardImage imageUri={deck.partner.imageUri} largeUri={deck.partner.imageUri} name={deck.partner.name} manaCost={deck.partner.manaCost} cmc={deck.partner.cmc} showOverlay={!deck.partner.cardFaces} zoomOnHover={false} className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer" onClick={() => onCardClick?.(deck.partner!)} cardFaces={deck.partner.cardFaces} isFlexibleLand={deck.partner.isFlexibleLand} />
             <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">CMD</div>
             <button onClick={(e) => { e.stopPropagation(); setPartner(null); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title="Remove partner">×</button>
           </div>
         )}
         {mainCards.map((card) => (
           <div key={card.id} className="relative group/card">
-            <CardImage imageUri={card.imageUri} largeUri={card.imageUri} name={card.name} manaCost={card.manaCost} cmc={card.cmc} showOverlay={true} zoomOnHover={false} className="w-full cursor-pointer" onClick={() => onCardClick?.(card)} />
+            <CardImage imageUri={card.imageUri} largeUri={card.imageUri} name={card.name} manaCost={card.manaCost} cmc={card.cmc} showOverlay={!card.cardFaces} zoomOnHover={false} className="w-full cursor-pointer" onClick={() => onCardClick?.(card)} cardFaces={card.cardFaces} isFlexibleLand={card.isFlexibleLand} />
             <button onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" aria-label={`Remove ${card.name}`}>×</button>
           </div>
         ))}
@@ -307,7 +307,7 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
       <div className={gridColsClass(gridCols)}>
         {cards.map((card) => (
           <div key={card.id} className="relative group/card">
-            <CardImage imageUri={card.imageUri} largeUri={card.imageUri} name={card.name} manaCost={card.manaCost} cmc={card.cmc} showOverlay={true} zoomOnHover={false} className="w-full cursor-pointer" onClick={() => onCardClick?.(card)} />
+            <CardImage imageUri={card.imageUri} largeUri={card.imageUri} name={card.name} manaCost={card.manaCost} cmc={card.cmc} showOverlay={!card.cardFaces} zoomOnHover={false} className="w-full cursor-pointer" onClick={() => onCardClick?.(card)} cardFaces={card.cardFaces} isFlexibleLand={card.isFlexibleLand} />
             <button onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" aria-label={`Remove ${card.name}`}>×</button>
             <button onClick={() => moveCardToZone(card.id, "main")} className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10" title="Move to Main">→M</button>
           </div>
