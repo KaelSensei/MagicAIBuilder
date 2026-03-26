@@ -26,6 +26,9 @@ services:
     environment:
       - DATABASE_URL=postgresql://magic:magic_dev_only@db:5432/magicaibuilder
       - NODE_ENV=test
+      - SKIP_ENV_VALIDATION=true
+      - NEXTAUTH_SECRET=e2e-test-secret-not-for-production
+      - NEXTAUTH_URL=http://localhost:3000
     depends_on:
       db:
         condition: service_healthy
