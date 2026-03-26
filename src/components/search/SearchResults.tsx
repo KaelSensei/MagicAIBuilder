@@ -13,6 +13,7 @@ interface SearchResultsProps {
   readonly totalCards?: number;
   readonly onCardClick?: (card: ScryfallCard) => void;
   readonly draggable?: boolean;
+  readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
 }
 
 export function SearchResults({
@@ -21,10 +22,13 @@ export function SearchResults({
   error,
   totalCards,
   onCardClick,
+  onAddToMaybeboard,
   draggable = false,
 }: SearchResultsProps) {
   const viewMode = useDeckStore((s) => s.searchViewMode);
   const setViewMode = useDeckStore((s) => s.setSearchViewMode);
+  const activeDeck = useDeckStore((s) => s.activeDeckId ? s.decks[s.activeDeckId] : null);
+  const maybeboardNames = new Set(activeDeck?.maybeboard.map((c) => c.name) ?? []);
 
   if (isLoading) {
     return (
@@ -88,7 +92,13 @@ export function SearchResults({
       </div>
 
       {viewMode === "grid" ? (
-        <CardGrid cards={cards} onCardClick={onCardClick} draggable={draggable} />
+        <CardGrid
+          cards={cards}
+          onCardClick={onCardClick}
+          onAddToMaybeboard={onAddToMaybeboard}
+          maybeboardNames={maybeboardNames}
+          draggable={draggable}
+        />
       ) : (
         <div className="px-1 py-1">
           {cards.map((card) => (
@@ -96,6 +106,8 @@ export function SearchResults({
               key={card.id}
               card={card}
               onClick={onCardClick}
+              onAddToMaybeboard={onAddToMaybeboard}
+              isInMaybeboard={maybeboardNames.has(card.name)}
               draggable={draggable}
             />
           ))}
