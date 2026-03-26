@@ -2,23 +2,24 @@
 
 ## Stack
 
-| Layer           | Technology         | Version | Why                                                                        |
-| --------------- | ------------------ | ------- | -------------------------------------------------------------------------- |
-| Framework       | Next.js App Router | 15.x    | Server components, file-based routing, image optimization                  |
-| Language        | TypeScript         | 5.x     | Strict typing, full project coverage                                       |
-| Styling         | Tailwind CSS       | 4.x     | Utility-first, v4 CSS-native (no config file needed)                       |
-| Components      | shadcn/ui + Radix  | latest  | Accessible primitives, dark theme ready                                    |
-| Animations      | Framer Motion      | 11.x    | Card hover zoom, stagger grids, panel transitions                          |
-| State           | Zustand            | 5.x     | Simple, minimal boilerplate vs. Redux                                      |
-| Data Fetching   | TanStack Query     | 5.x     | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
-| Drag & Drop     | dnd-kit            | 6.x     | Actively maintained, better perf than react-beautiful-dnd                  |
-| Database        | PostgreSQL 16      | —       | Persistent deck storage via Docker Compose                                 |
-| ORM             | Prisma             | 6.x     | Type-safe DB client, migrations, schema                                    |
-| Validation      | Zod                | 3.x     | Runtime schema validation on API boundaries                                |
-| Icons           | Lucide React       | latest  | Consistent, tree-shakeable                                                 |
-| Package Manager | pnpm               | 10.x    | Fast, disk-efficient                                                       |
-| Testing (unit)  | Vitest             | 3.x     | Vite-native, fast, ESM-compatible                                          |
-| Testing (E2E)   | Playwright         | 1.51.x  | Cross-browser, reliable                                                    |
+| Layer           | Technology            | Version | Why                                                                        |
+| --------------- | --------------------- | ------- | -------------------------------------------------------------------------- |
+| Framework       | Next.js App Router    | 15.x    | Server components, file-based routing, image optimization                  |
+| Language        | TypeScript            | 5.x     | Strict typing, full project coverage                                       |
+| Styling         | Tailwind CSS          | 4.x     | Utility-first, v4 CSS-native (no config file needed)                       |
+| Components      | shadcn/ui + Radix     | latest  | Accessible primitives, dark theme ready                                    |
+| Animations      | Framer Motion         | 11.x    | Card hover zoom, stagger grids, panel transitions                          |
+| State           | Zustand               | 5.x     | Simple, minimal boilerplate vs. Redux                                      |
+| Data Fetching   | TanStack Query        | 5.x     | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
+| Drag & Drop     | dnd-kit               | 6.x     | Actively maintained, better perf than react-beautiful-dnd                  |
+| Database        | PostgreSQL 16         | —       | Persistent deck storage via Docker Compose                                 |
+| ORM             | Prisma                | 6.x     | Type-safe DB client, migrations, schema                                    |
+| Validation      | Zod                   | 4.x     | Runtime schema validation on API boundaries                                |
+| Icons           | Lucide React          | latest  | Consistent, tree-shakeable                                                 |
+| Bundle Analysis | @next/bundle-analyzer | 16.x    | Visual treemap of JS bundles — run `pnpm analyze`                          |
+| Package Manager | pnpm                  | 10.x    | Fast, disk-efficient                                                       |
+| Testing (unit)  | Vitest                | 3.x     | Vite-native, fast, ESM-compatible                                          |
+| Testing (E2E)   | Playwright            | 1.51.x  | Cross-browser, reliable                                                    |
 
 ---
 
@@ -454,6 +455,33 @@ pnpm start    # Start production server
 pnpm lint     # ESLint check
 ```
 
+### Bundle Analysis
+
+The project includes `@next/bundle-analyzer` to visualize the JavaScript bundle composition. This helps catch oversized dependencies, duplicated modules, and unnecessary client-side code before they impact load times.
+
+```bash
+pnpm analyze
+```
+
+This runs a production build with the `ANALYZE=true` flag. When the build finishes, two interactive treemap HTML pages open automatically in the browser:
+
+- **Client bundle** — everything shipped to the user's browser. Look for large dependencies that could be lazy-loaded or replaced with lighter alternatives.
+- **Server bundle** — code running on the server (API routes, server components). Less critical for user performance but worth checking for accidental client-side library leaks.
+
+**When to run it:**
+
+- After adding a new dependency — verify it doesn't bloat the client bundle unexpectedly
+- Before a release — quick sanity check on overall bundle health
+- When investigating slow page loads — identify which modules dominate the bundle
+
+**What to look for:**
+
+- Disproportionately large rectangles — a single dependency taking 30%+ of the bundle is worth investigating
+- Duplicated modules — the same library appearing in multiple chunks (tree-shaking issue)
+- Server-only code in the client bundle — libraries like `prisma` or `@sentry/node` should never appear in the client treemap
+
+The analyzer is disabled by default and has zero impact on normal builds (`pnpm build`).
+
 ### Environment Variables
 
 | Variable            | Required    | Description                                                                         |
@@ -536,14 +564,17 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 ## Deck Annotations (feat/deck-notes-description)
 
 ### Deck Description
+
 Field `description String? @default("")` on `Deck`. Stored in DB and synced via `PATCH /api/decks/[id]`. The `DeckDescriptionEditor` component is a collapsible textarea in the deck sidebar, collapsed by default showing the first line as a preview. Supports Ctrl+Enter to save and Esc to cancel. Max 2000 chars (server-enforced).
 
 ### Card Notes
+
 Field `notes String?` on `DeckCard`. Synced via `PATCH /api/decks/[id]/cards/[cardId]`. The `CardNoteInline` component renders a 📝 icon (amber when note exists, invisible until hover when empty) on each list-view card. Clicking opens an inline textarea popover. Note text is shown below the card name in amber. Max 1000 chars (server-enforced).
 
 **Export**: `exportPlainText()` emits notes as `// comment` lines immediately after the card line. Other formats (Moxfield, Arena, MTGO) do not include notes.
 
 ### Deck Tags
+
 Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array. The `DeckTagsEditor` component shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. The home page renders a tag filter bar when any decks have tags, and tag pills on deck cards are clickable to activate filtering.
 
 ---
@@ -674,5 +705,5 @@ Used by UptimeRobot (configure once app is deployed).
 - `sentry.server.config.ts` — server/API route error capture
 - `sentry.edge.config.ts` — edge runtime error capture
 - Source maps uploaded automatically on Vercel deploy via `SENTRY_AUTH_TOKEN`
-| Phase 5 | Deck Annotations — description, card notes, tags | ✅ Complete |
-| Phase 6 | Onboarding & Tutorial (planned) | 📋 Planned |
+  | Phase 5 | Deck Annotations — description, card notes, tags | ✅ Complete |
+  | Phase 6 | Onboarding & Tutorial (planned) | 📋 Planned |
