@@ -266,6 +266,19 @@ describe("validatePartner", () => {
 });
 ```
 
+## Changelog & Docs Policy
+
+**Feature branches MUST NOT modify these files:**
+- `CHANGELOG.md`
+- `PROGRESS.md`
+- `ROADMAP.md`
+
+These are updated in a dedicated `chore/docs` PR after each merge batch.
+
+**Why:** Multiple parallel branches all touching these files causes guaranteed rebase conflicts. Keep feature PRs focused on code only.
+
+**When to update:** After merging a batch of PRs, open a single `chore/docs` PR that updates CHANGELOG, PROGRESS, and ROADMAP in one shot.
+
 ## Before Submitting Code
 
 Checklist (run mentally or via script):
