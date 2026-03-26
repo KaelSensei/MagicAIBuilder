@@ -40,7 +40,7 @@ interface CategorySectionProps {
 function DraggableDeckCard({
   card,
   onRemove,
-  onMoveToMaybeboard,
+  onMoveToMaybeboard: _onMoveToMaybeboard,
 }: {
   card: DeckCard;
   onRemove: (id: string) => void;
