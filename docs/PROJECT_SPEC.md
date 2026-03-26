@@ -9,12 +9,10 @@ A desktop-first Commander (EDH) deck builder with:
 - Real-time bracket scoring (MTG Commander Brackets 1–4) with 6 dimensions
 - Game Changers detection and banlist enforcement
 - Combo detection via Commander Spellbook
-- Maybeboard (considered cards outside the 99, with move-to-deck / remove)
 - AI-assisted deck suggestions (Anthropic Claude / OpenAI fallback)
 - Persistent multi-deck storage (PostgreSQL + Prisma)
 - Card printing/art selector
 - Import/export (plain text, MTGO, Arena)
-- **Deck snapshots** — named version history (save/restore/delete + diff badges)
 - Light/dark theme with persistence
 - Legal, accessible, fan-site compliant
 
@@ -114,39 +112,6 @@ interface Deck {
 
 ---
 
-## Commander Card Quantity Rules
-
-Commander is a **singleton** format — max 1 copy per card — with the following exceptions enforced by `src/lib/deck/multiples.ts`:
-
-### Unlimited copies (up to 99)
-- All **basic lands** (type line contains "Basic Land")
-- Templar Knight
-- Tempest Hawk
-- Hare Apparent
-- Persistent Petitioners
-- Shadowborn Apostle
-- Rat Colony
-- Relentless Rats
-- Dragon's Approach
-- Slime Against Humanity
-- Vazal, the Compleat
-- Cid, Timeless Artificer
-
-### Capped copies
-| Card | Max copies |
-|---|---|
-| Nazgûl | 9 |
-| Seven Dwarves | 7 |
-
-### Implementation
-- `maxQuantity(cardName, typeLine): number` — returns the max allowed quantity for a card
-- `allowsMultiples(cardName, typeLine): boolean` — true if max > 1
-- `addCard` / `addDeckCard` increment quantity up to `maxQuantity` instead of blocking
-- `updateCardQuantity(cardId, delta)` enforces bounds client-side before persisting
-- `+` / `−` buttons appear on hover in list view only when the card allows multiples
-
----
-
 ## User Stories
 
 ### P0 — Must Have (all complete)
@@ -186,26 +151,17 @@ Commander is a **singleton** format — max 1 copy per card — with the followi
 | US-21 | Detect combos for current commander via Commander Spellbook | ✅ Done |
 | US-22 | AI deck suggestions with reasoning (Claude / GPT fallback) | ✅ Done |
 | US-23 | Light/dark theme toggle with persistence | ✅ Done |
-
-### P2 (continued) — Snapshots
-
-| # | Story | Status |
-|---|---|---|
-| US-24 | Save a named snapshot of the current deck (e.g. "v1 budget") | ✅ Done |
-| US-25 | Browse version history of a deck with date, card count, commander | ✅ Done |
-| US-26 | Restore a deck to a previous snapshot (with confirmation) | ✅ Done |
-| US-27 | Delete a snapshot | ✅ Done |
-| US-28 | Diff badge: `+N / -N cards` vs snapshot compared to current | ✅ Done |
+| US-24 | Playtest mode — draw opening hand, London mulligan, simulate turns | ✅ Done |
 
 ### P3 — Future
 
 | # | Story | Status |
 |---|---|---|
-| US-29 | Onboarding tutorial for new users | 📋 Planned |
-| US-30 | Mobile-responsive layout | 📋 Planned |
-| US-31 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
-| US-32 | Moxfield / Archidekt import from URL | 📋 Planned |
-| US-33 | User accounts and deck sharing | 📋 Planned |
+| US-25 | Onboarding tutorial for new users | 📋 Planned |
+| US-26 | Mobile-responsive layout | 📋 Planned |
+| US-27 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
+| US-28 | Moxfield / Archidekt import from URL | 📋 Planned |
+| US-29 | User accounts and deck sharing | 📋 Planned |
 
 ---
 
