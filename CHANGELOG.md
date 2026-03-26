@@ -9,6 +9,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Fixed — 2026-03-26: MDFC/DFC flip in search results (#176)
+
+- `fix: MDFC/DFC cards not showing flip in search results` — the draggable code path in `CardGrid` computed `dfcFaces` but never passed `cardFaces` or `isFlexibleLand` to `CardImage`, so MDFC/DFC cards displayed as static single-face images in search results grid view
+
 ### Added — 2026-03-26: Search By Type tab (#174)
 
 - `feat: add "By Type" search tab with card type checkboxes` — new search mode in builder alongside Name / By Set / By Color; 10 checkboxes in a 2-column grid (Creature, Instant, Sorcery, Enchantment, Artifact, Planeswalker, Land, Battle, MDFC, DFC Transform); OR-joined Scryfall queries; optional name filter; `buildTypeSearchQuery()` + `CARD_TYPE_FILTERS` constant; 11 new tests
