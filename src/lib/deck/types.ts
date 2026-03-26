@@ -1,6 +1,7 @@
 // Core deck and card types for MagicAIBuilder
 export type CardCategory = | "commander" | "companion" | "creature" | "instant" | "sorcery" | "artifact" | "enchantment" | "planeswalker" | "land" | "ramp" | "draw" | "removal" | "boardWipe" | "winCondition" | "protection" | "other";
 export type DeckZone = "main" | "sideboard" | "maybeboard";
+export type BracketLevel = 1 | 2 | 3 | 4;
 export interface CardFace { name: string; manaCost: string; typeLine: string; oracleText: string; imageUri: string; artCropUri: string; }
 export interface DeckCard {
   id: string; scryfallId?: string; name: string; manaCost: string; cmc: number;

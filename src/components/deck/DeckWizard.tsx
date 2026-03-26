@@ -434,7 +434,7 @@ function StepLoading({
   readonly totalCards: number | null;
   readonly error: string | null;
 }) {
-  const lastMsg = statusMessages[statusMessages.length - 1] ?? "Thinking…";
+  const lastMsg = statusMessages.at(-1) ?? "Thinking…";
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto text-center">

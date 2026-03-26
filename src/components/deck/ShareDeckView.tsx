@@ -140,7 +140,8 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
     const groups: Partial<Record<CardCategory, ApiCard[]>> = {};
     for (const card of mainCards) {
       const cat = card.category as CardCategory;
-      (groups[cat] ??= []).push(card);
+      if (groups[cat] === undefined) groups[cat] = [];
+      groups[cat].push(card);
     }
     return groups;
   }, [mainCards]);
