@@ -1,7 +1,7 @@
 "use client";
 // List view row for search results
 import { motion } from "framer-motion";
-import { Plus, Bookmark } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { DraggableCard } from "./DraggableCard";
@@ -12,13 +12,15 @@ interface CardSearchListItemProps {
   readonly onClick?: (card: ScryfallCard) => void;
   readonly draggable?: boolean;
   readonly className?: string;
+  readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
+  readonly isInMaybeboard?: boolean;
 }
 
 function ListItemContent({
   card,
   onClick,
-  onAddToMaybeboard,
-  isInMaybeboard,
+  onAddToMaybeboard: _onAddToMaybeboard,
+  isInMaybeboard: _isInMaybeboard,
 }: {
   card: ScryfallCard;
   onClick?: (card: ScryfallCard) => void;

@@ -138,12 +138,6 @@ export interface DeckStore {
   // Force save (sync) — triggers a full DB refresh for the active deck
   forceSave: () => Promise<void>;
 
-  // Maybeboard
-  addToMaybeboard: (card: ScryfallCard) => Promise<void>;
-  removeFromMaybeboard: (cardId: string) => Promise<void>;
-  moveToMaybeboard: (cardId: string) => Promise<void>;
-  moveToDeck: (cardId: string) => Promise<void>;
-
   // Deck settings
   setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
   setManualBracket: (bracket: 1 | 2 | 3 | 4 | null) => Promise<void>;

@@ -13,6 +13,7 @@ interface SearchResultsProps {
   readonly totalCards?: number;
   readonly onCardClick?: (card: ScryfallCard) => void;
   readonly draggable?: boolean;
+  readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
 }
 
 export function SearchResults({

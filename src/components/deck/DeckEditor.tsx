@@ -7,7 +7,6 @@ import Image from "next/image";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { CardTooltip } from "@/components/card/CardTooltip";
-import { MaybeboardPanel } from "@/components/deck/MaybeboardPanel";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
@@ -33,6 +32,7 @@ interface CategorySectionProps {
   readonly category: CardCategory;
   readonly cards: Deck["cards"];
   readonly onRemoveCard: (id: string) => void;
+  readonly onMoveToMaybeboard?: (id: string) => void;
 }
 
 // Draggable card list item (for intra-deck category drag)
@@ -93,7 +93,7 @@ function DroppableZone({ zone, children }: { zone: "sideboard" | "maybeboard"; c
   );
 }
 
-function DroppableCategory({ category, cards, onRemoveCard }: CategorySectionProps) {
+function DroppableCategory({ category, cards, onRemoveCard, onMoveToMaybeboard }: CategorySectionProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
     id: `deck-category-${category}`,
@@ -222,9 +222,10 @@ interface MainZoneContentProps {
   readonly onCardClick?: (card: DeckCard) => void;
   readonly clearCommander: () => void;
   readonly setPartner: (p: null) => void;
+  readonly onMoveToMaybeboard?: (id: string) => void;
 }
 
-function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardsByCategory, onRemoveCard, onCardClick, clearCommander, setPartner }: MainZoneContentProps) {
+function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardsByCategory, onRemoveCard, onCardClick, clearCommander, setPartner, onMoveToMaybeboard }: MainZoneContentProps) {
   if (viewMode === "grid") {
     return (
       <div className={gridColsClass(gridCols)}>
@@ -257,7 +258,7 @@ function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardsByCategory,
   return (
     <>
       {CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
-        <DroppableCategory key={category} category={category} cards={cardsByCategory[category] ?? []} onRemoveCard={onRemoveCard} />
+        <DroppableCategory key={category} category={category} cards={cardsByCategory[category] ?? []} onRemoveCard={onRemoveCard} onMoveToMaybeboard={onMoveToMaybeboard} />
       ))}
     </>
   );
@@ -342,6 +343,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
   const setPartner = useDeckStore((s) => s.setPartner);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
+  const moveToMaybeboard = useDeckStore((s) => s.moveToMaybeboard);
 
   // Active zone tab — controlled from parent when props provided, otherwise local state
   const [activeZoneLocal, setActiveZoneLocal] = useState<DeckZone>("main");
@@ -537,7 +539,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
       {/* Zone content — uses parent DndContext from BuilderPage (main zone only) */}
       <div className="flex-1 overflow-y-auto p-2">
         {activeZone === "main" && (
-          <MainZoneContent deck={deck} mainCards={mainCards} viewMode={viewMode} gridCols={gridCols} cardsByCategory={cardsByCategory} onRemoveCard={onRemoveCard} onCardClick={onCardClick} clearCommander={clearCommander} setPartner={setPartner} />
+          <MainZoneContent deck={deck} mainCards={mainCards} viewMode={viewMode} gridCols={gridCols} cardsByCategory={cardsByCategory} onRemoveCard={onRemoveCard} onCardClick={onCardClick} clearCommander={clearCommander} setPartner={setPartner} onMoveToMaybeboard={moveToMaybeboard} />
         )}
         {activeZone === "sideboard" && (
           <SecondaryZoneContent zone="sideboard" cards={sideboardCards} viewMode={viewMode} gridCols={gridCols} onRemoveCard={onRemoveCard} onCardClick={onCardClick} moveCardToZone={moveCardToZone} />
@@ -547,63 +549,6 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
         )}
       </div>
 
-      {/* Tab content */}
-      {activeTab === "deck" ? (
-        /* Deck tab — Categories or Grid */
-        <div className="flex-1 overflow-y-auto p-2">
-          {viewMode === "grid" ? (
-            /* Grid view — flat image grid of all deck cards */
-            <div className="grid grid-cols-3 gap-1.5 p-1">
-              {deck.cards.map((card) => (
-                <div key={card.id} className="relative group/card">
-                  <CardImage
-                    imageUri={card.imageUri}
-                    largeUri={card.imageUri}
-                    name={card.name}
-                    manaCost={card.manaCost}
-                    cmc={card.cmc}
-                    showOverlay={true}
-                    zoomOnHover={false}
-                    className="w-full"
-                  />
-                  {/* Remove button — top-left, shown on hover */}
-                  <button
-                    onClick={() => onRemoveCard(card.id)}
-                    className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-                    aria-label={`Remove ${card.name}`}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              {deck.cards.length === 0 && (
-                <div className="col-span-3 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
-                  No cards yet
-                </div>
-              )}
-            </div>
-          ) : (
-            /* List view — categorized droppable zones */
-            CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
-              <DroppableCategory
-                key={category}
-                category={category}
-                cards={cardsByCategory[category] ?? []}
-                onRemoveCard={onRemoveCard}
-                onMoveToMaybeboard={onMoveToMaybeboard}
-              />
-            ))
-          )}
-        </div>
-      ) : (
-        /* Maybeboard tab */
-        <MaybeboardPanel
-          cards={deck.maybeboard}
-          onMoveToDecks={(cardId) => onMoveFromMaybeboard?.(cardId)}
-          onRemove={(cardId) => onRemoveFromMaybeboard?.(cardId)}
-          className="flex-1 overflow-hidden"
-        />
-      )}
     </div>
   );
 }
