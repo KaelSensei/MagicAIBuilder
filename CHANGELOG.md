@@ -13,6 +13,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **Modal Double-Faced Cards (MDFC)**: e.g. _Shatterskull Smashing // Shatterskull, the Hammer Pass_ — both faces display with a Moxfield-style 3D CSS flip animation (350ms `rotateY`)
 - **Transform cards (DFC)**: e.g. _Delver of Secrets // Insectile Aberration_ — front face shown by default, flip button reveals back face
+- **Modal Double-Faced Cards (MDFC)**: e.g. *Shatterskull Smashing // Shatterskull, the Hammer Pass* — both faces display with a Moxfield-style 3D CSS flip animation (350ms `rotateY`)
+- **Transform cards (DFC)**: e.g. *Delver of Secrets // Insectile Aberration* — front face shown by default, flip button reveals back face
 - **CardFlip component**: circular `↻` button overlay in bottom-right corner of card image (visible on hover), triggers 3D flip
 - **CardListItem**: "Turn Over" outlined secondary button + `△▽` badge for DFC/MDFC cards
 - **CardGrid**: passes `cardFaces`/`isFlexibleLand` props to `CardImage`
@@ -187,23 +189,21 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **DeckCardOwnershipBadge** — shows "Owned" or "Buy" badge on deck editor card list items
 - **Collection filter** — "Show only collection cards" toggle in SearchFilters (only visible when collection is non-empty)
 - **Header nav** — Collection link added next to My Decks
-### Added — 2026-03-21: Maybeboard
-
-- `src/lib/deck/types.ts` — `maybeboard: DeckCard[]` field on `Deck` (cards considered but not in the 99)
-- `src/lib/deck/store.ts` — four new actions: `addToMaybeboard`, `removeFromMaybeboard`, `moveToMaybeboard`, `moveToDeck`
-- `prisma/schema.prisma` — `isMaybeboard Boolean @default(false)` on `DeckCard`; migration `20260321140000_add_maybeboard`
-- `src/lib/db/deck-api.ts` — `isMaybeboard` field in `ApiDeckCard` + `AddCardPayload`; `updateCardMaybeboard()` helper
-- `src/app/api/decks/[id]/cards/route.ts` — POST accepts `isMaybeboard`
-- `src/app/api/decks/[id]/cards/[cardId]/route.ts` — PATCH accepts `isMaybeboard`
-- `src/components/deck/MaybeboardPanel.tsx` — list view with "Move to Deck" and "Remove" actions
-- `src/components/deck/DeckEditor.tsx` — **Deck / Maybeboard** tab switcher; tab badge counts; Maybeboard tab renders `MaybeboardPanel`
-- `src/components/card/CardListItem.tsx` — Bookmark button (hover) to move deck card to Maybeboard
-- `src/components/card/CardSearchListItem.tsx` — Bookmark button + **In Maybeboard** badge on search results
-- `src/components/card/CardGrid.tsx` — **Maybe** badge overlay + Bookmark hover button on search grid
-- `src/components/search/SearchResults.tsx` — passes `onAddToMaybeboard` and `maybeboardNames` to card display components
-- `src/lib/deck/stats.ts` — `computeDeckStats` explicitly excludes `deck.maybeboard` from all totals
-- `__tests__/lib/deck/stats.test.ts` — 8 new tests verifying maybeboard exclusion from stats
-- `__tests__/lib/deck/store-maybeboard.test.ts` — 12 new tests covering all four store actions + round-trip; **80/80 tests green**
+### Added — 2026-03-21: Deck Snapshots (feat/deck-snapshots)
+- **DeckSnapshot model** — Prisma model with `id`, `deckId`, `name`, `cardList` (JSON), `commander`, `cardCount`, `createdAt`; `onDelete: Cascade` from Deck
+- **Migration** `20260321140000_add_deck_snapshots` — creates `DeckSnapshot` table with index on `deckId`
+- **API** `GET /api/decks/[id]/snapshots` — list all snapshots (sorted newest-first; `cardList` omitted for perf)
+- **API** `POST /api/decks/[id]/snapshots` — create snapshot from current deck state (body: `{ name }`)
+- **API** `DELETE /api/decks/[id]/snapshots/[snapshotId]` — delete a specific snapshot
+- **API** `POST /api/decks/[id]/snapshots/[snapshotId]/restore` — transactional restore: replaces all DeckCard rows from snapshot's `cardList`
+- **Client helper** `src/lib/db/snapshot-api.ts` — typed fetch wrappers (`listSnapshots`, `createSnapshot`, `deleteSnapshot`, `restoreSnapshot`)
+- **SnapshotsPanel** component — collapsible "History" panel in builder stats column:
+  - "Save" button opens a popover with name input (Enter/Escape support)
+  - Snapshot list: name, date, card count, commander name
+  - Diff badge showing `+N / -N cards` vs current deck
+  - Restore button with inline confirmation (`Confirm / No`)
+  - Delete button with inline confirmation
+- **Builder integration** — SnapshotsPanel rendered in Panel 3 (stats); `onRestore` triggers `loadDecks()` to refresh store
 
 ### Fixed — 2026-03-21
 
