@@ -9,6 +9,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-26: NextAuth.js v5 Authentication (#181)
+
+- `feat: NextAuth.js v5 authentication (Google OAuth + credentials)` — full multi-user auth system:
+  - **Prisma models**: `User`, `Account`, `Session`, `VerificationToken` with Prisma adapter
+  - **Providers**: Google OAuth + email/password (bcryptjs hashed, cost 12)
+  - **JWT sessions** with `userId` propagated to all routes via callbacks
+  - **Middleware** — page routes redirect to `/auth/signin`, API routes return 401
+  - **Ownership enforcement** on all deck and collection API routes (`requireAuth()`, `requireDeckOwner()`)
+  - **Sign-in / Sign-up pages** with Google button + email/password form, responsive design
+  - **UserMenu** dropdown in Header (avatar, profile link, sign out)
+  - **User profile API** — `GET/PATCH/DELETE /api/user/profile`
+  - **Registration API** — `POST /api/auth/signup` with Zod validation, email normalization
+  - **`userId` FK** on `Deck` and `CollectionCard` (nullable for backward compat)
+  - **Public endpoints** preserved: `/api/share/*`, `/api/health`, `/api/auth/*`
+  - **33 new unit tests** (helpers, signup, profile) — 880 total passing
+
 ### Fixed — 2026-03-26: SonarCloud issues (#180)
 
 - `fix: resolve 2 SonarCloud issues (1 MEDIUM, 1 LOW)` — S6582: use optional chain in `store.ts` instead of explicit undefined check; S6847: move event listeners from non-interactive `<dialog>` to interactive `<form>` in `CardNoteInline.tsx` for accessibility

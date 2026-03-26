@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { patchCardSchema } from "@/lib/validation/card";
+import { requireDeckOwner } from "@/lib/auth/helpers";
 
 type Params = { params: Promise<{ id: string; cardId: string }> };
 
@@ -9,6 +10,9 @@ type Params = { params: Promise<{ id: string; cardId: string }> };
 export async function DELETE(_req: Request, { params }: Params) {
   const { id: deckId, cardId } = await params;
   try {
+    const ownership = await requireDeckOwner(deckId);
+    if (ownership.error) return ownership.error;
+
     const card = await prisma.deckCard.findFirst({
       where: { id: cardId, deckId },
     });
@@ -37,6 +41,9 @@ export async function DELETE(_req: Request, { params }: Params) {
 export async function PATCH(request: Request, { params }: Params) {
   const { id: deckId, cardId } = await params;
   try {
+    const ownership = await requireDeckOwner(deckId);
+    if (ownership.error) return ownership.error;
+
     const card = await prisma.deckCard.findFirst({
       where: { id: cardId, deckId },
     });

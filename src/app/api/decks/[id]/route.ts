@@ -2,13 +2,17 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { patchDeckSchema, PatchDeckInput } from "@/lib/validation/deck";
+import { requireAuth } from "@/lib/auth/helpers";
 
 type Params = { params: Promise<{ id: string }> };
 
-// GET /api/decks/[id] — get a single deck
+// GET /api/decks/[id] — get a single deck (must own it)
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params;
   try {
+    const result = await requireAuth();
+    if (result.error) return result.error;
+
     const deck = await prisma.deck.findUnique({
       where: { id },
       include: { cards: true },
@@ -16,6 +20,10 @@ export async function GET(_req: Request, { params }: Params) {
 
     if (!deck) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
+
+    if (deck.userId && deck.userId !== result.session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json(deck);
@@ -41,10 +49,13 @@ function buildDeckPatchData(fields: PatchDeckInput) {
   return data;
 }
 
-// PATCH /api/decks/[id] — update deck metadata
+// PATCH /api/decks/[id] — update deck metadata (must own it)
 export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   try {
+    const result = await requireAuth();
+    if (result.error) return result.error;
+
     const raw = await request.json();
     const parsed = patchDeckSchema.safeParse(raw);
     if (!parsed.success) {
@@ -57,6 +68,10 @@ export async function PATCH(request: Request, { params }: Params) {
     const existing = await prisma.deck.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
+
+    if (existing.userId && existing.userId !== result.session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const updated = await prisma.deck.update({
@@ -75,13 +90,20 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 }
 
-// DELETE /api/decks/[id] — delete a deck and all its cards
+// DELETE /api/decks/[id] — delete a deck and all its cards (must own it)
 export async function DELETE(_req: Request, { params }: Params) {
   const { id } = await params;
   try {
+    const result = await requireAuth();
+    if (result.error) return result.error;
+
     const existing = await prisma.deck.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
+
+    if (existing.userId && existing.userId !== result.session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.deck.delete({ where: { id } });

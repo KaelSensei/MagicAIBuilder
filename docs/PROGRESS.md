@@ -2,12 +2,62 @@
 
 ## Overview
 
-| Field         | Value                                |
-| ------------- | ------------------------------------ |
-| Current Phase | Phase 8 — Feature Batch (Deck Tools) |
-| Last Updated  | 2026-03-26                           |
-| Status        | 🚀 Active Development                |
-| Main Branch   | `main`                               |
+| Field         | Value                                 |
+| ------------- | ------------------------------------- |
+| Current Phase | Phase 9 — Authentication & Multi-User |
+| Last Updated  | 2026-03-26                            |
+| Status        | 🚀 Active Development                 |
+| Main Branch   | `main`                                |
+
+---
+
+## Phase 9: Authentication & Multi-User (#181) — 2026-03-26 ✅
+
+### NextAuth.js v5 Integration
+
+- [x] Install `next-auth@beta`, `@auth/prisma-adapter`, `bcryptjs`
+- [x] Prisma models: `User`, `Account`, `Session`, `VerificationToken`
+- [x] Migration: `20260326000000_add_nextauth_users` (applied to Supabase)
+- [x] `userId` FK on `Deck` and `CollectionCard` (nullable for backward compat)
+- [x] Cleanup: drop legacy `isMaybeboard` column drift
+
+### Auth Configuration
+
+- [x] `src/lib/auth/config.ts` — NextAuth config with Prisma adapter, JWT strategy
+- [x] Google OAuth provider + Credentials (email/password) provider
+- [x] JWT callbacks propagate `user.id` to session
+- [x] `src/lib/auth/types.ts` — Session type augmentation
+
+### Route Protection
+
+- [x] `src/middleware.ts` — redirects pages to `/auth/signin`, returns 401 JSON for API
+- [x] Public endpoints exempted: `/api/auth/*`, `/api/health`, `/api/share/*`, `/share/*`
+- [x] `requireAuth()` helper — returns session or 401
+- [x] `requireDeckOwner(deckId)` helper — loads deck, verifies ownership or returns 403/404
+
+### API Route Updates
+
+- [x] `GET /api/decks` — filters by `userId`
+- [x] `POST /api/decks` — sets `userId` on creation
+- [x] All `/api/decks/[id]/*` routes — ownership verification via `requireDeckOwner()`
+- [x] All `/api/collection/*` routes — scoped by `userId`
+- [x] New: `POST /api/auth/signup` — registration with Zod validation, bcrypt, email normalization
+- [x] New: `GET/PATCH/DELETE /api/user/profile` — profile CRUD
+
+### UI Components
+
+- [x] `SignInForm` — Google OAuth button + email/password form, error handling
+- [x] `SignUpForm` — registration form, auto sign-in after success
+- [x] `UserMenu` — avatar dropdown (initials fallback), profile link, sign out
+- [x] `SessionProvider` wrapping app in `providers.tsx`
+- [x] Auth pages: `/auth/signin`, `/auth/signup`
+
+### Tests
+
+- [x] `helpers.test.ts` — 7 tests (requireAuth, requireDeckOwner)
+- [x] `signup/route.test.ts` — 11 tests (validation, creation, conflict, errors)
+- [x] `profile/route.test.ts` — 15 tests (GET, PATCH, DELETE, auth checks)
+- [x] All 880 tests passing (33 new)
 
 ---
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
+import { requireAuth } from "@/lib/auth/helpers";
 
 const createDeckSchema = z.object({
   name: z.string().min(1).max(200),
@@ -14,10 +15,14 @@ const createDeckSchema = z.object({
   isAIGenerated: z.boolean().optional().default(false),
 });
 
-// GET /api/decks — list all decks
+// GET /api/decks — list current user's decks
 export async function GET() {
   try {
+    const result = await requireAuth();
+    if (result.error) return result.error;
+
     const decks = await prisma.deck.findMany({
+      where: { userId: result.session.user.id },
       include: { cards: true },
       orderBy: { updatedAt: "desc" },
     });
@@ -34,6 +39,9 @@ export async function GET() {
 // POST /api/decks — create a new deck
 export async function POST(request: Request) {
   try {
+    const result = await requireAuth();
+    if (result.error) return result.error;
+
     const body = await request.json();
     const parsed = createDeckSchema.safeParse(body);
     if (!parsed.success) {
@@ -56,6 +64,7 @@ export async function POST(request: Request) {
         companionId: companionId ?? null,
         pairingType,
         isAIGenerated: isAIGenerated ?? false,
+        userId: result.session.user.id,
       },
       include: { cards: true },
     });
