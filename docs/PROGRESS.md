@@ -11,6 +11,15 @@
 
 ---
 
+## Bug Fixes — 2026-03-26
+
+### MDFC/DFC flip in search results (#176)
+
+- [x] Fix: `CardGrid` draggable branch now passes `cardFaces` and `isFlexibleLand` to `CardImage`
+- [x] MDFC/DFC cards show 3D flip animation in search results grid view (was static single-face)
+
+---
+
 ## Search By Type (#174) — 2026-03-26 ✅
 
 - [x] `CARD_TYPE_FILTERS` constant — 10 card type entries (Creature, Instant, Sorcery, Enchantment, Artifact, Planeswalker, Land, Battle, MDFC, DFC Transform)
