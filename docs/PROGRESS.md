@@ -158,12 +158,15 @@
 - [x] Missing `zod` dependency in package.json
 - [x] Card tooltip shown far right — now follows mouse cursor via `createPortal` with viewport clamping
 
-### SEO
-- [x] robots.txt (bloque pages privées, autorise pages publiques)
-- [x] Sitemap dynamique avec decks partagés
-- [x] Metadata enrichie (keywords, Twitter card, canonical)
-- [x] JSON-LD structured data (SoftwareApplication)
-- [x] Image OG dynamique via edge route `/api/og`
+### SEO (#153)
+- [x] `robots.txt` — blocks private routes, allows public pages
+- [x] Dynamic sitemap with shared decks
+- [x] Enriched metadata (keywords, Twitter card, canonical)
+- [x] JSON-LD structured data (`SoftwareApplication`)
+- [x] Dynamic OG image via `/api/og` edge route
+
+### Footer Fix (#166)
+- [x] Shortcuts button aligned inline with copyright in footer (was on a separate row)
 
 ### UI Enhancements
 
