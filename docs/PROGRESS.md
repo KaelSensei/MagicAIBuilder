@@ -24,6 +24,11 @@
 - [x] Fix: `rebuildCardFaces()` in store reconstructs face data from DB fields (name `//` split + Scryfall image URLs) so flip persists after page reload
 - [x] MDFC/DFC cards show 3D flip animation in deck editor grid view
 
+### SonarCloud issues (#180)
+
+- [x] S6582 (MEDIUM): optional chain in `store.ts` — `cardFaces?.[1].typeLine` instead of `!== undefined &&`
+- [x] S6847 (LOW): `CardNoteInline.tsx` — event listeners moved from `<dialog>` to `<form>` for a11y
+
 ---
 
 ## Search By Type (#174) — 2026-03-26 ✅
