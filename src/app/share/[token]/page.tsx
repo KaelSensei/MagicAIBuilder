@@ -5,7 +5,7 @@ import { ShareDeckView } from "@/components/deck/ShareDeckView";
 import type { ApiSharedDeck } from "@/lib/deck/share-types";
 
 interface Params {
-  params: Promise<{ token: string }>;
+  readonly params: Promise<{ token: string }>;
 }
 
 // ─── Server-side data fetching ────────────────────────────────────────────────

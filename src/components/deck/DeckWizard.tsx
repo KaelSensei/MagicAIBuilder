@@ -12,11 +12,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, X, Loader2, Sparkles, Check } from "lucide-react";
-import { autocompleteCardName, getCardByNameFuzzy } from "@/lib/scryfall/client";
+import { autocompleteCardName, getCardByNameFuzzy, getCardCollection } from "@/lib/scryfall/client";
 import { useAIDeckBuild } from "@/hooks/useAIDeckBuild";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { getCardCollection } from "@/lib/scryfall/client";
 import { categorizeCard } from "@/lib/deck/categories";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import type { DeckCard } from "@/lib/deck/types";
@@ -75,7 +74,7 @@ const transition = { duration: 0.28, ease: [0.4, 0, 0.2, 1] as number[] };
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function ProgressBar({ step, total }: { step: number; total: number }) {
+function ProgressBar({ step, total }: { readonly step: number; readonly total: number }) {
   return (
     <div className="flex gap-1.5 w-full">
       {Array.from({ length: total }, (_, i) => i).map((stepIdx) => (
@@ -101,9 +100,9 @@ function ColorButton({
   selected,
   onToggle,
 }: {
-  colorKey: ColorKey;
-  selected: boolean;
-  onToggle: () => void;
+  readonly colorKey: ColorKey;
+  readonly selected: boolean;
+  readonly onToggle: () => void;
 }) {
   return (
     <button
@@ -136,8 +135,8 @@ function StepBudget({
   value,
   onChange,
 }: {
-  value: Budget;
-  onChange: (v: Budget) => void;
+  readonly value: Budget;
+  readonly onChange: (v: Budget) => void;
 }) {
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
@@ -171,8 +170,8 @@ function StepColors({
   selected,
   onToggle,
 }: {
-  selected: ColorKey[];
-  onToggle: (c: ColorKey) => void;
+  readonly selected: ColorKey[];
+  readonly onToggle: (c: ColorKey) => void;
 }) {
   return (
     <div className="flex flex-wrap justify-center gap-4 max-w-xs mx-auto">
@@ -192,8 +191,8 @@ function StepStrategy({
   value,
   onChange,
 }: {
-  value: string | null;
-  onChange: (v: string) => void;
+  readonly value: string | null;
+  readonly onChange: (v: string) => void;
 }) {
   return (
     <div className="grid grid-cols-2 gap-3 w-full max-w-md mx-auto">
@@ -263,8 +262,8 @@ function StepBracket({
   value,
   onChange,
 }: {
-  value: 1 | 2 | 3 | 4 | null;
-  onChange: (v: 1 | 2 | 3 | 4) => void;
+  readonly value: 1 | 2 | 3 | 4 | null;
+  readonly onChange: (v: 1 | 2 | 3 | 4) => void;
 }) {
   return (
     <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
@@ -302,10 +301,10 @@ function StepCommander({
   onSelect,
   onSkip,
 }: {
-  commanderName: string;
-  commanderCard: ScryfallCard | null;
-  onSelect: (name: string, card: ScryfallCard | null) => void;
-  onSkip: () => void;
+  readonly commanderName: string;
+  readonly commanderCard: ScryfallCard | null;
+  readonly onSelect: (name: string, card: ScryfallCard | null) => void;
+  readonly onSkip: () => void;
 }) {
   const [query, setQuery] = useState(commanderName);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -429,11 +428,11 @@ function StepLoading({
   totalCards,
   error,
 }: {
-  statusMessages: string[];
-  commander: string | null;
-  cardCount: number;
-  totalCards: number | null;
-  error: string | null;
+  readonly statusMessages: string[];
+  readonly commander: string | null;
+  readonly cardCount: number;
+  readonly totalCards: number | null;
+  readonly error: string | null;
 }) {
   const lastMsg = statusMessages[statusMessages.length - 1] ?? "Thinking…";
 

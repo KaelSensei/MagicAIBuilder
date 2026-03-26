@@ -43,7 +43,9 @@ function getRatioStatus(ratio: number): "ok" | "warn" | "error" {
   return "error";
 }
 
-function getStatusColor(status: "ok" | "warn" | "error" | "neutral"): string {
+type StatusLevel = "ok" | "warn" | "error" | "neutral";
+
+function getStatusColor(status: StatusLevel): string {
   if (status === "ok") return "text-green-400";
   if (status === "warn") return "text-amber-400";
   if (status === "error") return "text-red-400";

@@ -23,7 +23,7 @@ function formatDate(iso: string) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-function DiffBadge({ snapshotCount, currentCount }: { snapshotCount: number; currentCount: number }) {
+function DiffBadge({ snapshotCount, currentCount }: { readonly snapshotCount: number; readonly currentCount: number }) {
   const diff = currentCount - snapshotCount;
   if (diff === 0) return null;
   return (

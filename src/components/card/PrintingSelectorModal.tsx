@@ -9,7 +9,7 @@ import { getCardImageUri } from "@/lib/scryfall/images";
 import { Modal } from "@/components/ui/Modal";
 
 function getPrintingsLabel(count: number): string {
-  return `${count} printing${count !== 1 ? "s" : ""} available`;
+  return `${count} printing${count === 1 ? "" : "s"} available`;
 }
 
 interface PrintingSelectorModalProps {
@@ -19,7 +19,7 @@ interface PrintingSelectorModalProps {
 }
 
 /** Render a raw mana cost string like "{2}{U}{B}" with thin spans */
-function ManaCost({ cost }: { cost: string }) {
+function ManaCost({ cost }: { readonly cost: string }) {
   const tokens = cost.match(/\{[^}]+\}|[^{]+/g) ?? [cost];
   return (
     <span className="font-mono text-xs text-(--text-secondary) tracking-wider">

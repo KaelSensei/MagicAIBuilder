@@ -1,5 +1,5 @@
 // HTTP client for the deck API routes
-import type { Deck, DeckCard, CardCategory, CommanderPairingType } from "@/lib/deck/types";
+import type { Deck, DeckCard, DeckZone, CardCategory, CommanderPairingType } from "@/lib/deck/types";
 
 /** Shape returned by the API (dates as ISO strings) */
 export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "commander" | "partner" | "cards" | "manualBracket"> {
@@ -21,7 +21,7 @@ export interface ApiDeckCard extends Omit<DeckCard, "id" | "zone"> {
   scryfallId: string;
   isCommander: boolean;
   isPartner: boolean;
-  zone: "main" | "sideboard" | "maybeboard";
+  zone: DeckZone;
 }
 
 function handleApiError(res: Response, context: string): never {
@@ -208,7 +208,7 @@ export async function removeAllCards(deckId: string): Promise<void> {
 
 export async function lookupCardCache(
   scryfallId: string
-): Promise<unknown | null> {
+): Promise<unknown> {
   try {
     const res = await fetch(`/api/cache/cards?id=${encodeURIComponent(scryfallId)}`);
     if (!res.ok) return null;

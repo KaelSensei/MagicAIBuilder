@@ -15,7 +15,7 @@ export function useResizePanel({
   storageKey,
 }: UseResizePanelOptions) {
   const [width, setWidth] = useState(() => {
-    if (storageKey && typeof globalThis.window !== "undefined") {
+    if (storageKey && globalThis.window !== undefined) {
       const stored = localStorage.getItem(storageKey);
       if (stored) return Math.max(minWidth, Math.min(maxWidth, Number.parseInt(stored, 10)));
     }
