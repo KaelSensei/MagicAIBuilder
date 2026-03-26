@@ -6,6 +6,7 @@
     "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
+    "analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
@@ -59,6 +60,7 @@
     }
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.1",
     "@playwright/test": "^1.51.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.6.3",
