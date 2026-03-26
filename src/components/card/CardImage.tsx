@@ -20,6 +20,10 @@ interface CardImageProps {
   readonly showOverlay?: boolean;
   readonly className?: string;
   readonly onClick?: () => void;
+  /**
+   * Both faces of a DFC/MDFC card.
+   * When provided, renders a 3D flip card instead of a static image.
+   */
   readonly cardFaces?: [CardFace, CardFace];
   readonly isFlexibleLand?: boolean;
 }
@@ -51,6 +55,7 @@ export function CardImage({
   cardFaces,
   isFlexibleLand = false,
 }: CardImageProps) {
+  // Hooks must be called unconditionally — before any early returns
   const [isHovered, setIsHovered] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
   const [imgError, setImgError] = useState(false);
