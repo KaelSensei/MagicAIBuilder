@@ -69,9 +69,16 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       aria-label="Card note editor"
       open
       className="absolute left-0 right-0 top-full z-30 m-0 p-0 bg-transparent border-none shadow-none w-full"
-      onClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => e.stopPropagation()}
     >
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Enter" || e.key === " ") e.preventDefault();
+        }}
+      >
       <form
         className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
         onSubmit={(e) => {
@@ -94,6 +101,7 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
         Ctrl+Enter to save · Esc to cancel
       </div>
       </form>
+      </div>
     </dialog>
   );
 }
