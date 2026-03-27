@@ -2,7 +2,7 @@
 // App header with nav — responsive with hamburger menu on mobile
 import { useState } from "react";
 import Link from "next/link";
-import { Layers, Menu, Moon, Package, Plus, Sun, Upload, X } from "lucide-react";
+import { Layers, Menu, Moon, Package, Plus, Shield, Sun, Upload, X } from "lucide-react";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import { useTheme } from "@/hooks/useTheme";
 import { UserMenu } from "@/components/auth/UserMenu";
@@ -40,6 +40,13 @@ export function Header({ deckId }: HeaderProps = {}) {
         >
           <Package className="w-3.5 h-3.5" />
           Collection
+        </Link>
+        <Link
+          href="/rules/game-changers"
+          className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          <Shield className="w-3.5 h-3.5" />
+          Rules
         </Link>
       </nav>
 
@@ -112,6 +119,14 @@ export function Header({ deckId }: HeaderProps = {}) {
             >
               <Package className="w-3.5 h-3.5" />
               Collection
+            </Link>
+            <Link
+              href="/rules/game-changers"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors py-2"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Rules
             </Link>
             <hr className="border-[var(--border)]" />
             {deckId ? (
