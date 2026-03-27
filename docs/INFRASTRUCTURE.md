@@ -249,6 +249,38 @@ See the UptimeRobot instructions in [ROADMAP.md](./ROADMAP.md) under **Observabi
 
 ---
 
+## Resetting the Database
+
+Use this when you need to **wipe all data** and recreate tables from the Prisma schema (e.g., during development or before launch).
+
+### Local (Docker)
+
+```bash
+pnpm db:reset
+```
+
+This drops and recreates the local database, re-runs all migrations, and regenerates the Prisma Client.
+
+### Production (Supabase / Neon)
+
+```bash
+npx prisma db push --force-reset
+```
+
+This connects to the database defined in `DATABASE_URL` (from `.env`), drops all tables, and recreates them from the schema.
+
+> **Warning:** This is a destructive operation — all data is permanently deleted. Only run this if you are certain the database has no data you need to keep.
+
+To reset a specific remote database without changing `.env`:
+
+```bash
+DATABASE_URL="postgresql://user:password@host:port/dbname" npx prisma db push --force-reset
+```
+
+After resetting production, redeploy if needed so the app picks up the clean state.
+
+---
+
 ## Production Considerations
 
 - Always use the **Transaction Pooler** URL (port 6543, `?pgbouncer=true`) with Vercel — session and direct connections both fail in serverless
