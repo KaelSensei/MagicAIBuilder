@@ -142,6 +142,22 @@ Key points:
 - HTML sanitization on user-controlled strings
 - Commander Spellbook proxied to avoid CORS and SSRF vectors
 
+## Quality Gate 🧪
+
+> Maintained by Marco — The Bug Whisperer. See [QUALITY_GATE.md](QUALITY_GATE.md) for full details and history.
+
+| Metric | Baseline | Minimum |
+|---|---|---|
+| **Coverage** | 94.3% | ≥ 90% |
+| **Bugs** | 0 | = 0 |
+| **Vulnerabilities** | 0 | = 0 |
+| **Code Smells** | 1 | ≤ 5 |
+| **Duplicated Lines** | 1.8% | ≤ 3.0% |
+| **Reliability** | A | A |
+| **Security** | A | A |
+
+A PR that degrades any of these metrics is blocked until fixed.
+
 ## License
 
 MIT
