@@ -11,6 +11,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { Search, LayoutGrid, BarChart3 } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 import { useUIStore } from "@/lib/ui/store";
 import { useDeck } from "@/hooks/useDeck";
@@ -117,6 +118,9 @@ export default function BuilderPage() {
 
   // Active zone state — lifted from DeckEditor so card adds target the right zone
   const [activeZone, setActiveZone] = useState<"main" | "sideboard" | "maybeboard">("main");
+
+  // Mobile panel state — which panel is visible on small screens
+  const [mobilePanel, setMobilePanel] = useState<"search" | "deck" | "stats">("deck");
 
   // Search state
   const [searchText, setSearchText] = useState("");
@@ -383,7 +387,7 @@ export default function BuilderPage() {
         <Header deckId={deckId} />
 
         {/* Deck title bar */}
-        <div className="border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2 flex items-center gap-3">
+        <div className="border-b border-[var(--border)] bg-[var(--surface)] px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3">
           <Link
             href="/"
             className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -429,48 +433,54 @@ export default function BuilderPage() {
           <span className="text-xs text-[var(--text-secondary)]">
             {(deck.cards.filter((c) => c.zone === "main").reduce((s, c) => s + c.quantity, 0) + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
           </span>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1 md:gap-2">
             {/* Duplicate deck */}
             <button
               onClick={handleDuplicate}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+              className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+              title="Duplicate deck"
             >
               <Copy className="w-3 h-3" />
-              Duplicate
+              <span className="hidden sm:inline">Duplicate</span>
             </button>
             {/* Bulk edit — edit deck as plain text */}
             <BulkEditModal deck={deck}>
-              <button className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">
+              <button className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all" title="Bulk edit">
                 <FileText className="w-3 h-3" />
-                Bulk Edit
+                <span className="hidden sm:inline">Bulk Edit</span>
               </button>
             </BulkEditModal>
             {/* Playtest deck */}
             <button
               onClick={() => setShowPlaytest(true)}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-purple-500 text-[var(--text-secondary)] hover:text-purple-400 transition-all"
+              className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-purple-500 text-[var(--text-secondary)] hover:text-purple-400 transition-all"
               title="Playtest this deck"
             >
               <Dices className="w-3 h-3" />
-              Playtest
+              <span className="hidden sm:inline">Playtest</span>
             </button>
             {/* Export deck */}
             <button
               onClick={() => setShowExport(true)}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+              className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+              title="Export deck"
             >
               <Download className="w-3 h-3" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </button>
           </div>
         </div>
 
-        {/* 3-panel layout */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Panel 1: Search (resizable) */}
+        {/* 3-panel layout — desktop: side-by-side, mobile: tabbed */}
+        <div className="flex flex-1 overflow-hidden relative">
+          {/* Panel 1: Search (resizable on desktop, full-width on mobile) */}
           <motion.div
             style={{ width: searchPanelWidth, minWidth: 220, maxWidth: 520 }}
-            className="shrink-0 border-r border-[var(--border)] flex flex-col bg-[var(--surface)] relative"
+            className={cn(
+              "shrink-0 border-r border-[var(--border)] flex flex-col bg-[var(--surface)] relative",
+              "max-lg:absolute max-lg:inset-0 max-lg:w-full max-lg:z-20 max-lg:border-r-0",
+              mobilePanel !== "search" && "max-lg:hidden"
+            )}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
@@ -619,7 +629,7 @@ export default function BuilderPage() {
             </div>
           </motion.div>
 
-          {/* Resize handle between panel 1 and 2 */}
+          {/* Resize handle between panel 1 and 2 — hidden on mobile */}
           <div
             role="slider"
             aria-label="Search panel width"
@@ -630,7 +640,7 @@ export default function BuilderPage() {
             tabIndex={0}
             onMouseDown={handleSearchResize}
             onKeyDown={handleSearchResizeKeyDown}
-            className="w-1 shrink-0 cursor-col-resize hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 transition-colors group relative z-10"
+            className="hidden lg:block w-1 shrink-0 cursor-col-resize hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 transition-colors group relative z-10"
             title="Drag to resize — use arrow keys to adjust"
           >
             <div className="absolute inset-y-0 -left-0.5 -right-0.5" />
@@ -638,7 +648,11 @@ export default function BuilderPage() {
 
           {/* Panel 2: Deck Editor (flex-1) */}
           <motion.div
-            className="flex-1 border-r border-[var(--border)] flex flex-col overflow-hidden"
+            className={cn(
+              "flex-1 border-r border-[var(--border)] flex flex-col overflow-hidden",
+              "max-lg:absolute max-lg:inset-0 max-lg:border-r-0",
+              mobilePanel !== "deck" && "max-lg:hidden"
+            )}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: 0.1 }}
@@ -663,9 +677,13 @@ export default function BuilderPage() {
             />
           </motion.div>
 
-          {/* Panel 3: Stats (280px) */}
+          {/* Panel 3: Stats (280px on desktop, full-width on mobile) */}
           <motion.div
-            className="w-[280px] shrink-0 flex flex-col bg-[var(--surface)] overflow-y-auto p-3 gap-3"
+            className={cn(
+              "w-[280px] shrink-0 flex flex-col bg-[var(--surface)] overflow-y-auto p-3 gap-3",
+              "max-lg:absolute max-lg:inset-0 max-lg:w-full",
+              mobilePanel !== "stats" && "max-lg:hidden"
+            )}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.15 }}
@@ -710,6 +728,29 @@ export default function BuilderPage() {
 
             <DeckStats stats={stats} targetBracket={deck.targetBracket} />
           </motion.div>
+
+          {/* Mobile bottom tab bar */}
+          <div className="lg:hidden absolute bottom-0 left-0 right-0 z-30 border-t border-[var(--border)] bg-[var(--surface)] flex">
+            {([
+              { id: "search" as const, icon: Search, label: "Search" },
+              { id: "deck" as const, icon: LayoutGrid, label: "Deck" },
+              { id: "stats" as const, icon: BarChart3, label: "Stats" },
+            ]).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setMobilePanel(tab.id)}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-0.5 py-2 text-xs transition-colors",
+                  mobilePanel === tab.id
+                    ? "text-[var(--accent)] border-t-2 border-[var(--accent)] -mt-px"
+                    : "text-[var(--text-secondary)]"
+                )}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
