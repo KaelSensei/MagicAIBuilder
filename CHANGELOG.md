@@ -25,9 +25,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   - **Public endpoints** preserved: `/api/share/*`, `/api/health`, `/api/auth/*`
   - **33 new unit tests** (helpers, signup, profile) — 880 total passing
 
+### Fixed — 2026-03-26: cardFaces reconstruction on deck load (#179)
+
+- `fix: reconstruct cardFaces from DB fields on deck load (#179)` — `loadDeck` now calls `rebuildCardFaces()` for every card after fetching from the API, ensuring MDFC/DFC flip data is correctly rebuilt from stored `name //` split + Scryfall image URLs when a deck is loaded or the page is refreshed
+
+### Fixed — 2026-03-26: SonarCloud issues — batch (#168, #169, #170, #171)
+
+- `fix: reduce cognitive complexity in CardFlip and useCardFlip (#168)` — extracted helpers to keep cyclomatic complexity below 15; avoids SonarCloud maintainability warnings
+- `fix: resolve SonarCloud LOW issues across 16 files (#169)` — addressed 13 LOW-severity issues (unused variables, prefer-optional-chain, missing return types) flagged across the codebase
+- `fix: resolve all 18 SonarCloud issues (1 HIGH, 4 MEDIUM, 13 LOW) (#170)` — batch fix clearing full SonarCloud backlog: removed dead code, fixed async patterns, corrected type annotations
+- `fix: resolve remaining 3 SonarCloud issues (2 MEDIUM, 1 LOW) (#171)` — final pass on SonarCloud queue: addressed 2 MEDIUM (redundant null checks) and 1 LOW (missing accessibility attribute)
+
 ### Fixed — 2026-03-26: SonarCloud issues (#180)
 
 - `fix: resolve 2 SonarCloud issues (1 MEDIUM, 1 LOW)` — S6582: use optional chain in `store.ts` instead of explicit undefined check; S6847: move event listeners from non-interactive `<dialog>` to interactive `<form>` in `CardNoteInline.tsx` for accessibility
+
+### Changed — 2026-03-26: Bundle analyzer (#172)
+
+- `chore: add @next/bundle-analyzer (#172)` — `@next/bundle-analyzer` added as dev dependency; `ANALYZE=true pnpm build` generates webpack bundle visualisations for `client.html`, `edge.html`, and `nodejs.html`
 
 ### Fixed — 2026-03-26: MDFC/DFC flip in search results & deck editor (#176, #178)
 
