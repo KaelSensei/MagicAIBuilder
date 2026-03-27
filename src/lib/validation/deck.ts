@@ -18,6 +18,7 @@ export const patchDeckSchema = z.object({
   tags: z.array(z.string().max(50)).max(20).optional(),
   shareEnabled: z.boolean().optional(),
   shareToken: z.string().nullable().optional(),
+  isPublic: z.boolean().optional(),
 });
 
 export type PatchDeckInput = z.infer<typeof patchDeckSchema>;

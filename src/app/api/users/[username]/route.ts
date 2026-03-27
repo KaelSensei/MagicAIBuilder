@@ -1,0 +1,59 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db/prisma";
+
+type Params = { params: Promise<{ username: string }> };
+
+// GET /api/users/[username] — public profile (no auth required)
+export async function GET(_req: Request, { params }: Params) {
+  const { username } = await params;
+
+  if (!username || username.length > 50 || !/^[a-zA-Z0-9_-]+$/.test(username)) {
+    return NextResponse.json({ error: "Invalid username" }, { status: 400 });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        image: true,
+        createdAt: true,
+        decks: {
+          where: { isPublic: true },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            format: true,
+            targetBracket: true,
+            commanderId: true,
+            isAIGenerated: true,
+            createdAt: true,
+            updatedAt: true,
+            cards: {
+              where: { isCommander: true },
+              select: { name: true, artCropUri: true, imageUri: true },
+              take: 1,
+            },
+          },
+          orderBy: { updatedAt: "desc" },
+        },
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(user);
+  } catch (error) {
+    console.error(
+      "[GET /api/users/:username]",
+      { username: String(username).slice(0, 50) },
+      error instanceof Error ? error.message : "unknown"
+    );
+    return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
+  }
+}

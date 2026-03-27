@@ -12,6 +12,7 @@ export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "command
   /** Raw DB value — cast to 1|2|3|4|null in store */
   manualBracket: number | null;
   isAIGenerated: boolean;
+  isPublic: boolean;
   cards: ApiDeckCard[];
 }
 
@@ -71,6 +72,7 @@ export async function updateDeck(
     description: string;
     tags: string[];
     isAIGenerated?: boolean;
+    isPublic?: boolean;
   }>
 ): Promise<ApiDeck> {
   const res = await fetch(`/api/decks/${id}`, {

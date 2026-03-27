@@ -41,7 +41,7 @@ function buildDeckPatchData(fields: PatchDeckInput) {
   const keys = [
     "name", "format", "targetBracket", "manualBracket", "budget",
     "commanderId", "partnerId", "companionId", "pairingType",
-    "isAIGenerated", "description", "tags", "shareEnabled", "shareToken",
+    "isAIGenerated", "description", "tags", "shareEnabled", "shareToken", "isPublic",
   ] as const;
   for (const key of keys) {
     if (fields[key] !== undefined) data[key] = fields[key];

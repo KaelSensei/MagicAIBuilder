@@ -19,6 +19,7 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
     pairingType: "none",
     isAIGenerated: false,
     shareEnabled: false,
+    isPublic: false,
     shareToken: null,
     description: null,
     createdAt: "2026-01-01",

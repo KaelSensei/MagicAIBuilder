@@ -12,6 +12,7 @@ datasource db {
 model User {
   id            String          @id @default(cuid())
   name          String?
+  username      String?         @unique // public profile slug (e.g. /u/kael)
   email         String          @unique
   emailVerified DateTime?
   image         String?
@@ -78,6 +79,7 @@ model Deck {
   manualBracket Int?                // null = use calculated score, 1-4 = manual override
   shareToken    String?        @unique
   shareEnabled  Boolean        @default(false)
+  isPublic      Boolean        @default(false) // visible on public profile page
   isAIGenerated Boolean        @default(false)
   userId        String?
   user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)

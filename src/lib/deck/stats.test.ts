@@ -53,6 +53,7 @@ function emptyDeck(): Deck {
     tags: [],
     shareToken: null,
     shareEnabled: false,
+    isPublic: false,
     isAIGenerated: false,
     createdAt: new Date(),
     updatedAt: new Date(),
