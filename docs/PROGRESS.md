@@ -74,10 +74,26 @@
 - [x] Fix: `rebuildCardFaces()` in store reconstructs face data from DB fields (name `//` split + Scryfall image URLs) so flip persists after page reload
 - [x] MDFC/DFC cards show 3D flip animation in deck editor grid view
 
+### cardFaces reconstruction on deck load (#179)
+
+- [x] Fix: `loadDeck` now calls `rebuildCardFaces()` on every loaded card — MDFC/DFC flip persists after page refresh
+
+### SonarCloud cleanup — batch (#168, #169, #170, #171)
+
+- [x] Reduced cognitive complexity in `CardFlip` and `useCardFlip` (#168)
+- [x] Resolved LOW issues across 16 files (#169)
+- [x] Cleared full SonarCloud backlog — 18 issues (1 HIGH, 4 MEDIUM, 13 LOW) (#170)
+- [x] Final 3 issues (2 MEDIUM, 1 LOW) resolved (#171)
+
 ### SonarCloud issues (#180)
 
 - [x] S6582 (MEDIUM): optional chain in `store.ts` — `cardFaces?.[1].typeLine` instead of `!== undefined &&`
 - [x] S6847 (LOW): `CardNoteInline.tsx` — event listeners moved from `<dialog>` to `<form>` for a11y
+
+### Bundle analyzer (#172)
+
+- [x] `@next/bundle-analyzer` installed as dev dependency
+- [x] `ANALYZE=true pnpm build` generates client/edge/nodejs bundle visualisations
 
 ---
 
