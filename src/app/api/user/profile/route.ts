@@ -33,7 +33,7 @@ export async function GET() {
 
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  image: z.string().url().max(2048).nullable().optional(),
+  image: z.string().url({ message: "Invalid image URL" }).max(2048).nullable().optional(),
 });
 
 /** PATCH /api/user/profile — Update current user's profile */
