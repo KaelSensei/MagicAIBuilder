@@ -159,6 +159,23 @@ describe("Collection store — updateQuantity", () => {
     expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.quantity).toBe(3);
   });
 
+  it("updates quantity for a foil card", async () => {
+    const foilCard = makeCollectionCard({ id: "foil-1", foil: true });
+    useCollectionStore.setState({ collectionCardsFoil: { "scryfall-1": foilCard } });
+    const updatedCard = { ...foilCard, quantity: 5, foil: true, createdAt: "2024-01-01T00:00:00.000Z", acquiredAt: null };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => updatedCard }));
+    await useCollectionStore.getState().updateQuantity("foil-1", 5);
+    expect(useCollectionStore.getState().collectionCardsFoil["scryfall-1"]?.quantity).toBe(5);
+  });
+
+  it("handles updateQuantity failure gracefully", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500, statusText: "Error" }));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await useCollectionStore.getState().updateQuantity("card-1", 5);
+    expect(useCollectionStore.getState().isSyncing).toBe(false);
+    consoleSpy.mockRestore();
+  });
+
   it("removes card when deleted=true returned", async () => {
     const card = makeCollectionCard({ id: "card-1" });
     useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
@@ -186,6 +203,23 @@ describe("Collection store — updateCondition", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => updated }));
     await useCollectionStore.getState().updateCondition("card-1", "LP");
     expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.condition).toBe("LP");
+  });
+
+  it("updates condition for a foil card", async () => {
+    const foilCard = makeCollectionCard({ id: "foil-1", foil: true });
+    useCollectionStore.setState({ collectionCardsFoil: { "scryfall-1": foilCard } });
+    const updated = { ...foilCard, condition: "MP", foil: true, createdAt: "2024-01-01T00:00:00.000Z", acquiredAt: null };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => updated }));
+    await useCollectionStore.getState().updateCondition("foil-1", "MP");
+    expect(useCollectionStore.getState().collectionCardsFoil["scryfall-1"]?.condition).toBe("MP");
+  });
+
+  it("handles updateCondition failure gracefully", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500, statusText: "Error" }));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await useCollectionStore.getState().updateCondition("card-1", "LP");
+    expect(useCollectionStore.getState().isSyncing).toBe(false);
+    consoleSpy.mockRestore();
   });
 });
 

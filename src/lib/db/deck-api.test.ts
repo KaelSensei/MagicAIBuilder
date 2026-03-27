@@ -4,11 +4,13 @@ import {
   createDeck,
   updateDeck,
   deleteDeck,
+  duplicateDeck,
   addCard,
   removeCard,
   updateCardCategory,
   updateCardNotes,
   updateCardZone,
+  updateCardMaybeboard,
   removeAllCards,
 } from "@/lib/db/deck-api";
 
@@ -79,6 +81,37 @@ describe("deleteDeck", () => {
   it("throws on error", async () => {
     mockFetch(null, false, 404);
     await expect(deleteDeck("missing")).rejects.toThrow("HTTP 404");
+  });
+});
+
+describe("duplicateDeck", () => {
+  it("POSTs to the duplicate endpoint", async () => {
+    mockFetch({ id: "copy-1", name: "Copy of Deck" });
+    const result = await duplicateDeck("deck-1");
+    expect(result.id).toBe("copy-1");
+    const call = vi.mocked(global.fetch).mock.calls[0];
+    expect(call[0]).toContain("/api/decks/deck-1/duplicate");
+    expect((call[1] as RequestInit).method).toBe("POST");
+  });
+
+  it("throws on error", async () => {
+    mockFetch(null, false, 500);
+    await expect(duplicateDeck("deck-1")).rejects.toThrow("HTTP 500");
+  });
+});
+
+describe("updateCardMaybeboard", () => {
+  it("patches isMaybeboard flag on a card", async () => {
+    mockFetch({ id: "card-1", isMaybeboard: true });
+    const result = await updateCardMaybeboard("deck-1", "card-1", true);
+    expect(result.isMaybeboard).toBe(true);
+    const body = JSON.parse(vi.mocked(global.fetch).mock.calls[0][1]?.body as string);
+    expect(body.isMaybeboard).toBe(true);
+  });
+
+  it("throws on error", async () => {
+    mockFetch(null, false, 500);
+    await expect(updateCardMaybeboard("deck-1", "card-1", true)).rejects.toThrow("HTTP 500");
   });
 });
 

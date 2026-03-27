@@ -109,6 +109,20 @@ describe("parseTextDecklist", () => {
     const result = parseTextDecklist("4 \n2 Island");
     expect(result.cards.some((c) => c.name === "")).toBe(false);
   });
+
+  it("adds an error when a numbered line has an empty name after sanitization", () => {
+    const result = parseTextDecklist("4 <>");
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors[0]).toContain("Skipped empty");
+  });
+
+  it("puts third+ commander-section cards into the main deck", () => {
+    const text = "Commander\n1 Thrasios\n1 Tymna\n1 Sol Ring\nDeck\n1 Forest";
+    const result = parseTextDecklist(text);
+    expect(result.commander).toBe("Thrasios");
+    expect(result.partner).toBe("Tymna");
+    expect(result.cards.some((c) => c.name === "Sol Ring")).toBe(true);
+  });
 });
 
 describe("exportToText", () => {
