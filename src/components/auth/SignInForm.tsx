@@ -18,8 +18,8 @@ export function SignInForm() {
   const [error, setError] = useState(errorParam ?? "");
   const [loading, setLoading] = useState(false);
 
-  const handleCredentials = useCallback<React.FormEventHandler<HTMLFormElement>>(
-    async (e) => {
+  const handleCredentials = useCallback(
+    async (e: React.SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault();
       setError("");
       setLoading(true);
