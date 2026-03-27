@@ -191,7 +191,8 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [x] **Footer layout** _(done — 2026-03-26, #166)_: Shortcuts button aligned inline with copyright line in footer
 
-- [ ] **Visual redesign**: modernize the interface; improve mobile responsiveness, card hover interactions, drag-and-drop UX, and overall polish
+- [x] **Mobile-responsive layout** _(done — 2026-03-27, #189)_: header hamburger menu, builder tab navigation, collection grid
+- [ ] **Visual redesign**: modernize the interface; improve card hover interactions, drag-and-drop UX, and overall polish
 
 ---
 
