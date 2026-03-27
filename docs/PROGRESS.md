@@ -472,7 +472,7 @@
 
 1. **E2E tests** — Playwright tests need updates for new UI (search tabs, printing selector, companion)
 2. **Paginated GC/banlist** — only first page fetched (Scryfall 175 cards/page limit)
-3. **Mobile responsiveness** — 3-panel layout not optimized for small screens
+3. ~~**Mobile responsiveness** — 3-panel layout not optimized for small screens~~ ✅ Fixed in #189
 4. **AI provider config** — requires `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` env var; falls back to mock
 
 ---
@@ -526,7 +526,7 @@
 
 ### In Progress / Next
 
-- [ ] Mobile responsiveness — 3-panel layout
+- [x] **Mobile responsiveness** — header hamburger menu, builder tab navigation, collection grid (#189)
 - [ ] Persist deck zone (sideboard/maybeboard) state to DB
 - [ ] E2E tests (Playwright) for new drag & drop flows
 
