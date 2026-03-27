@@ -1,5 +1,5 @@
 "use client";
-// Import deck from plain text — Radix Dialog
+// Import deck from plain text or URL — Radix Dialog
 // Supports both trigger-based (children) and controlled (open/onOpenChange) usage
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -7,7 +7,10 @@ import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { parseTextDecklist } from "@/lib/deck/import";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { useDeckStore } from "@/lib/deck/store";
+import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+
+type ImportTab = "text" | "url";
 
 type ImportDialogProps =
   | { children: React.ReactNode; open?: never; onOpenChange?: never }
@@ -23,6 +26,7 @@ function getStatusTextClass(status: ImportStatus): string {
 
 export function ImportDialog({ children, open: controlledOpen, onOpenChange: controlledOnOpenChange }: ImportDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<ImportTab>("text");
   const [text, setText] = useState("");
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [message, setMessage] = useState("");
@@ -112,6 +116,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
       setText("");
       setStatus("idle");
       setMessage("");
+      setActiveTab("text");
     }, 200);
   };
 
@@ -134,6 +139,48 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
             </Dialog.Close>
           </div>
 
+          {/* Tab switcher */}
+          <div className="flex gap-1 p-1 rounded-lg bg-[var(--background)] border border-[var(--border)] w-fit">
+            <button
+              onClick={() => setActiveTab("text")}
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                activeTab === "text"
+                  ? "bg-[var(--accent)] text-white"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              }`}
+            >
+              Plain Text
+            </button>
+            <button
+              onClick={() => setActiveTab("url")}
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                activeTab === "url"
+                  ? "bg-[var(--accent)] text-white"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              }`}
+            >
+              From URL
+            </button>
+          </div>
+
+          {/* URL tab */}
+          {activeTab === "url" && (
+            <>
+              <ImportFromUrlTab onSuccess={() => setOpen(false)} />
+              <div className="flex justify-end">
+                <button
+                  onClick={handleClose}
+                  className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Plain text tab */}
+          {activeTab === "text" && (
+          <>
           <Dialog.Description className="text-sm text-[var(--text-secondary)]">
             Paste a decklist in plain text format. Use{" "}
             <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">
@@ -173,7 +220,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
             </div>
           )}
 
-          {/* Actions */}
+          {/* Actions — plain text only */}
           <div className="flex items-center justify-end gap-2">
             <button
               onClick={handleClose}
@@ -194,6 +241,8 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
               </button>
             )}
           </div>
+          </>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
