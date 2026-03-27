@@ -3,11 +3,13 @@
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { LogIn, LogOut, User } from "lucide-react";
+import { BookOpen, LogIn, LogOut, User } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useOnboardingContext } from "@/components/onboarding/OnboardingProvider";
 
 export function UserMenu() {
   const { data: session, status } = useSession();
+  const { resetOnboarding } = useOnboardingContext();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +97,14 @@ export function UserMenu() {
             <User className="w-4 h-4" />
             Profile
           </Link>
+
+          <button
+            onClick={async () => { handleClose(); await resetOnboarding(); }}
+            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+          >
+            <BookOpen className="w-4 h-4" />
+            Replay tutorial
+          </button>
 
           <button
             onClick={() => signOut({ callbackUrl: "/auth/signin" })}

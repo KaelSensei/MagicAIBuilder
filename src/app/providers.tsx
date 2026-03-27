@@ -6,6 +6,7 @@ import { useState } from "react";
 import { EnrichmentProvider } from "@/components/providers/EnrichmentProvider";
 import { CollectionProvider } from "@/components/providers/CollectionProvider";
 import { ThemeSync } from "@/components/providers/ThemeSync";
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 
 export function Providers({ children }: { readonly children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -26,7 +27,9 @@ export function Providers({ children }: { readonly children: React.ReactNode }) 
       <QueryClientProvider client={queryClient}>
         <ThemeSync />
         <CollectionProvider>
-          <EnrichmentProvider>{children}</EnrichmentProvider>
+          <EnrichmentProvider>
+            <OnboardingProvider>{children}</OnboardingProvider>
+          </EnrichmentProvider>
         </CollectionProvider>
       </QueryClientProvider>
     </SessionProvider>
