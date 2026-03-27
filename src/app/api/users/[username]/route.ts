@@ -12,8 +12,10 @@ export async function GET(_req: Request, { params }: Params) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { username },
+    // Use findFirst with mode:insensitive to handle case-insensitive lookup
+    // (e.g. /u/Kael and /u/kael both resolve to the same profile)
+    const user = await prisma.user.findFirst({
+      where: { username: { equals: username, mode: "insensitive" } },
       select: {
         id: true,
         name: true,

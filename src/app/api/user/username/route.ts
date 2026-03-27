@@ -29,7 +29,8 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const { username } = parsed.data;
+    // Normalize to lowercase for consistent storage — /u/Kael and /u/kael are the same
+    const username = parsed.data.username.toLowerCase();
 
     // Check uniqueness (case-insensitive)
     const existing = await prisma.user.findFirst({
