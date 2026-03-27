@@ -1,26 +1,39 @@
-# MagicAIBuilder: Roadmap & TODO
+# MagicAIBuilder: Roadmap
 
-Tracked features and improvements for future development.
+Tracked features and improvements for future development, split into **Technical** (infrastructure, tooling, stack) and **Functional** (user-facing features, gameplay).
 
 ---
 
-## Card Type Support
+# Part 1 — Technical Roadmap
 
-- [x] **MDFC (Modal Double-Faced Cards)**: full support for MDFCs (e.g. Shatterskull Smashing // Shatterskull, the Hammer Pass): display both faces, let the player choose which face to show in the deck list and grid, count CMC correctly (front face only), and flag them in mana curve/statistics as flexible land-or-spell cards
+## Tech Stack Decisions
 
-- [x] **Double-faced cards (DFC): flip/transform**: cards with two faces where only one is playable at a given time (e.g. Delver of Secrets // Insectile Aberration, werewolves): show the front face by default, allow flipping the preview, and correctly handle image fetching for both faces via Scryfall (`card_faces`)
+Preferred technology choices for new infrastructure. Based on cost, DX, and reliability.
 
-- [ ] **Hybrid cards**: cards with hybrid mana costs (e.g. {W/U}, {2/W}) where the caster can pay either color: correctly parse hybrid symbols in mana cost display, attribute both colors to the color identity, and account for hybrid pips in mana symbol proportion statistics (each hybrid pip counts as 0.5 toward each color, or as the chosen color)
+### Database
 
-## Deck Editor
+- [ ] **Use Neon (PostgreSQL)** for managed database — serverless Postgres, generous free tier, branches for preview environments. Avoid Supabase (vendor lock-in, mixed reviews on scaling) and MongoDB (poor fit for relational deck/card data).
+- Current: Prisma + SQLite (dev) / PostgreSQL (prod). Neon is the recommended hosted Postgres provider.
 
-- [x] **Deck Snapshots** _(done — 2026-03-26)_: save named versions of a deck with full card list; restore any snapshot transactionally; diff badge shows +/- cards vs. current deck
+### Authentication
 
-- [x] **Maybeboard** _(done — 2026-03-26)_: track considered cards outside the 99; move cards between Maybeboard and Main; excluded from all stats and export totals
+- [x] **NextAuth.js v5** _(done — 2026-03-27)_: Google OAuth + credentials auth already implemented.
+- [ ] **Evaluate Better-Auth** as a future replacement or complement — simpler API, better DX than Clerk or Auth0. Clerk is explicitly not recommended (pricing, complexity, lock-in).
 
-- [x] **Deck annotations** _(done — 2026-03-26)_: deck description (collapsible textarea), card notes (inline popover, exported as comments), deck tags (pill UI, home-page filter bar)
+### File Storage
 
-- [ ] **Bulk edit on Sideboard & Considering**: select multiple cards at once and move/remove them in bulk; currently only one card at a time can be managed in the Sideboard and Considering zones
+- [ ] **Cloudflare R2** for file/image storage — S3-compatible API, zero egress fees, cheapest option available. Avoid AWS S3 (egress costs) and Supabase Storage (tied to Supabase ecosystem).
+- Use cases: deck thumbnails, user avatars, exported deck images, proxy sheet PDFs.
+
+### Domain & DNS
+
+- [ ] **Porkbun or Cloudflare** for domain registration and DNS — better UX, cheaper, faster than Namecheap. Cloudflare also provides free CDN, DDoS protection, and R2 integration.
+
+### Hosting
+
+- Current: Vercel (Next.js native). No change planned.
+
+---
 
 ## API & Data
 
@@ -28,58 +41,7 @@ Tracked features and improvements for future development.
 
 - [ ] **Public external API**: expose MagicAIBuilder data and deck operations as a versioned REST (or GraphQL) API, likely in a separate repository; enables third-party integrations, mobile clients, and CLI tooling; requires auth (API keys or OAuth2), rate limiting, OpenAPI documentation, and versioning strategy
 
-## Search & Filtering
-
-- [x] **Enhanced deck-building filters**: filter cards by subtype, keyword, power/toughness, price range, set legality, and interaction type while building; add saved filter presets _(done — color OR/AND/EXACT modes, colorless filter, lands toggle, CMC exact/min/max/range modes, price range, subtype, keyword, power/toughness, interaction archetypes, localStorage presets)_
-
-- [x] **Search By Type tab** _(done — 2026-03-26, #174)_: new "By Type" search mode in the builder with checkbox filters for Creature, Instant, Sorcery, Enchantment, Artifact, Planeswalker, Land, Battle, MDFC, and DFC (Transform); OR-joined Scryfall queries; optional name filter
-
-## AI
-
-- [ ] **Enhance AI deck builder**: improve card suggestion quality, add archetype templates (stax, combo, voltron…), support budget constraints, and explain each suggestion with a rationale
-
-- [ ] **Local AI model for deck building via MageZero**: use [MageZero](https://github.com/WillWroble/MageZero) — a reinforcement-learning engine that plays Magic — to generate training data (game states, card evaluations, winning lines) and fine-tune a local model (Ollama or equivalent) specialized in Commander deck building; the local model would power card suggestions, synergy detection, and archetype recommendations without relying on a cloud API
-
-## Export / Print / Proxy
-
-- [ ] **Enhance export, print & proxy support**: add print-ready proxy sheets (configurable layout: 3×3, A4…), PDF export, image-only export, and richer format options (EDHRec, Goldfish, Archidekt import/export)
-
-## Statistics
-
-- [x] **Enhanced deck statistics** _(done — 2026-03-26)_:
-  - Cards playable on turn 1 (`turn1Playable` stat)
-  - Corrected CMC split: `avgCmcWithLands` and `avgCmcWithoutLands`
-  - Mana Alignment panel: per-colour symbol ratio vs. land production ratio with imbalance warnings
-  - `recommendedLandsByColor` per-colour land recommendations
-  - Hybrid pips counted as 0.5 toward each colour
-
-## Playtesting
-
-- [x] **Hand draw & goldfishing** _(done — 2026-03-26)_: `usePlaytest` hook with Fisher-Yates shuffle, London mulligan, `drawCard`, `nextTurn`; `PlaytestModal` fullscreen with fan hand display, hover card preview, library pile counter
-
-## Formats
-
-- [ ] **Support all MTG formats**: not only Commander/Multiplayer; add Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Brawl, Oathbreaker, etc. with correct deck size and banlist enforcement per format
-
-- [ ] **Per-format deck statistics**: bracket scoring is Commander-specific; provide relevant stats for each format (curve quality, threat density, interaction ratio, etc.)
-
-## User Accounts
-
-- [ ] **User account system**: registration, login, profile management (CRUD), secure authentication (OAuth2 / JWT), deck ownership and private/public visibility, GDPR compliance
-
-## Community
-
-- [ ] **Deck suggestions from other players**: for a given commander, show community-submitted decks; filter by bracket, strategy, budget; upvote/comment system
-
-## SEO & Discoverability
-
-- [x] **SEO optimization** _(done — 2026-03-26, #153)_: `robots.txt` (blocks private routes), dynamic sitemap with shared decks, enriched metadata (keywords, Twitter card, canonical URL), JSON-LD `SoftwareApplication` structured data, dynamic Open Graph image via `/api/og` edge route
-
-## UI / UX
-
-- [x] **Footer layout** _(done — 2026-03-26, #166)_: Shortcuts button aligned inline with copyright line in footer
-
-- [ ] **Visual redesign**: modernize the interface; improve mobile responsiveness, card hover interactions, drag-and-drop UX, and overall polish
+---
 
 ## Observability
 
@@ -100,7 +62,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [ ] **Vercel Analytics**: real-world performance metrics per page and device: LCP, CLS, INP (Core Web Vitals); free on the hobby plan if deploying to Vercel
 
-- [ ] **PostHog**: open-source product analytics, self-hostable; track which features users actually use, identify abandoned flows (e.g. "80% of users never click AI Suggestions → UX problem"); free up to 1M events/month — **recommended second: understand how people actually use the tool**
+- [ ] **PostHog**: open-source product analytics, self-hostable; track which features users actually use, identify abandoned flows (e.g. "80% of users never click AI Suggestions -> UX problem"); free up to 1M events/month — **recommended second: understand how people actually use the tool**
 
 - [ ] **Plausible**: simple, privacy-friendly traffic analytics (GDPR compliant, no cookies); good alternative to PostHog if you only need page views and referrers, not event tracking
 
@@ -120,15 +82,118 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [ ] **Grafana + Prometheus**: custom monitoring dashboards: Scryfall requests per minute, API route response times, decks created per day; self-hosted, powerful, significant setup cost
 
-- [ ] **OpenTelemetry**: distributed tracing across the full request path (click → API route → Prisma query → Scryfall call → response); pinpoints exactly where latency comes from; Next.js 15 has experimental native support
+- [ ] **OpenTelemetry**: distributed tracing across the full request path (click -> API route -> Prisma query -> Scryfall call -> response); pinpoints exactly where latency comes from; Next.js 15 has experimental native support
 
 - [ ] **PagerDuty / OpsGenie**: serious alerting with on-call rotation and escalation policies; relevant for teams, not needed as a solo developer
+
+---
+
+## SEO & Discoverability
+
+- [x] **SEO optimization** _(done — 2026-03-26, #153)_: `robots.txt` (blocks private routes), dynamic sitemap with shared decks, enriched metadata (keywords, Twitter card, canonical URL), JSON-LD `SoftwareApplication` structured data, dynamic Open Graph image via `/api/og` edge route
+
+---
 
 ## Internationalization (i18n)
 
 - [ ] **Multi-language support**: add i18n support (next-intl or next-i18next) covering the languages Magic: The Gathering is officially printed in; base set: English, Japanese, Simplified Chinese, French, Italian, German, Spanish, Portuguese; to be added later: Russian, Korean
 - [ ] **Localized card data**: fetch and display card names, oracle text, and type lines in the user's language via Scryfall's `lang` parameter
 - [ ] **UI translations**: translate all interface labels, tooltips, error messages, and navigation using a locale file system; keep English as the fallback
+
+---
+
+---
+
+# Part 2 — Functional Roadmap
+
+## Card Type Support
+
+- [x] **MDFC (Modal Double-Faced Cards)**: full support for MDFCs (e.g. Shatterskull Smashing // Shatterskull, the Hammer Pass): display both faces, let the player choose which face to show in the deck list and grid, count CMC correctly (front face only), and flag them in mana curve/statistics as flexible land-or-spell cards
+
+- [x] **Double-faced cards (DFC): flip/transform**: cards with two faces where only one is playable at a given time (e.g. Delver of Secrets // Insectile Aberration, werewolves): show the front face by default, allow flipping the preview, and correctly handle image fetching for both faces via Scryfall (`card_faces`)
+
+- [ ] **Hybrid cards**: cards with hybrid mana costs (e.g. {W/U}, {2/W}) where the caster can pay either color: correctly parse hybrid symbols in mana cost display, attribute both colors to the color identity, and account for hybrid pips in mana symbol proportion statistics (each hybrid pip counts as 0.5 toward each color, or as the chosen color)
+
+---
+
+## Deck Editor
+
+- [x] **Deck Snapshots** _(done — 2026-03-26)_: save named versions of a deck with full card list; restore any snapshot transactionally; diff badge shows +/- cards vs. current deck
+
+- [x] **Maybeboard** _(done — 2026-03-26)_: track considered cards outside the 99; move cards between Maybeboard and Main; excluded from all stats and export totals
+
+- [x] **Deck annotations** _(done — 2026-03-26)_: deck description (collapsible textarea), card notes (inline popover, exported as comments), deck tags (pill UI, home-page filter bar)
+
+- [ ] **Bulk edit on Sideboard & Considering**: select multiple cards at once and move/remove them in bulk; currently only one card at a time can be managed in the Sideboard and Considering zones
+
+---
+
+## Search & Filtering
+
+- [x] **Enhanced deck-building filters**: filter cards by subtype, keyword, power/toughness, price range, set legality, and interaction type while building; add saved filter presets _(done — color OR/AND/EXACT modes, colorless filter, lands toggle, CMC exact/min/max/range modes, price range, subtype, keyword, power/toughness, interaction archetypes, localStorage presets)_
+
+- [x] **Search By Type tab** _(done — 2026-03-26, #174)_: new "By Type" search mode in the builder with checkbox filters for Creature, Instant, Sorcery, Enchantment, Artifact, Planeswalker, Land, Battle, MDFC, and DFC (Transform); OR-joined Scryfall queries; optional name filter
+
+---
+
+## AI
+
+- [ ] **Enhance AI deck builder**: improve card suggestion quality, add archetype templates (stax, combo, voltron...), support budget constraints, and explain each suggestion with a rationale
+
+- [ ] **Local AI model for deck building via MageZero**: use [MageZero](https://github.com/WillWroble/MageZero) — a reinforcement-learning engine that plays Magic — to generate training data (game states, card evaluations, winning lines) and fine-tune a local model (Ollama or equivalent) specialized in Commander deck building; the local model would power card suggestions, synergy detection, and archetype recommendations without relying on a cloud API
+
+---
+
+## Export / Print / Proxy
+
+- [ ] **Enhance export, print & proxy support**: add print-ready proxy sheets (configurable layout: 3x3, A4...), PDF export, image-only export, and richer format options (EDHRec, Goldfish, Archidekt import/export)
+
+---
+
+## Statistics
+
+- [x] **Enhanced deck statistics** _(done — 2026-03-26)_:
+  - Cards playable on turn 1 (`turn1Playable` stat)
+  - Corrected CMC split: `avgCmcWithLands` and `avgCmcWithoutLands`
+  - Mana Alignment panel: per-colour symbol ratio vs. land production ratio with imbalance warnings
+  - `recommendedLandsByColor` per-colour land recommendations
+  - Hybrid pips counted as 0.5 toward each colour
+
+---
+
+## Playtesting
+
+- [x] **Hand draw & goldfishing** _(done — 2026-03-26)_: `usePlaytest` hook with Fisher-Yates shuffle, London mulligan, `drawCard`, `nextTurn`; `PlaytestModal` fullscreen with fan hand display, hover card preview, library pile counter
+
+---
+
+## Formats
+
+- [ ] **Support all MTG formats**: not only Commander/Multiplayer; add Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Brawl, Oathbreaker, etc. with correct deck size and banlist enforcement per format
+
+- [ ] **Per-format deck statistics**: bracket scoring is Commander-specific; provide relevant stats for each format (curve quality, threat density, interaction ratio, etc.)
+
+---
+
+## User Accounts
+
+- [ ] **User account system**: registration, login, profile management (CRUD), secure authentication (OAuth2 / JWT), deck ownership and private/public visibility, GDPR compliance
+
+---
+
+## Community
+
+- [ ] **Deck suggestions from other players**: for a given commander, show community-submitted decks; filter by bracket, strategy, budget; upvote/comment system
+
+---
+
+## UI / UX
+
+- [x] **Footer layout** _(done — 2026-03-26, #166)_: Shortcuts button aligned inline with copyright line in footer
+
+- [ ] **Visual redesign**: modernize the interface; improve mobile responsiveness, card hover interactions, drag-and-drop UX, and overall polish
+
+---
 
 ## Partnerships & Integrations
 
