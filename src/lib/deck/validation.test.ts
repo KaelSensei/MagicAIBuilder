@@ -166,6 +166,41 @@ describe("validateDeck", () => {
     const result = validateDeck(deck);
     expect(result.warnings.some((w) => w.includes("Game Changer"))).toBe(true);
   });
+
+  it("warns about Bracket 4 when more than 3 game changers", () => {
+    const gcCards = Array.from({ length: 4 }, (_, i) =>
+      makeCard({ id: `gc-${i}`, name: `GC Card ${i}`, isGameChanger: true })
+    );
+    const deck = makeDeck({
+      commander: makeCommander([]),
+      cards: gcCards,
+    });
+    const result = validateDeck(deck);
+    expect(result.warnings.some((w) => w.includes("Bracket 4"))).toBe(true);
+  });
+
+  it("reports singleton violations for duplicate non-basic cards", () => {
+    const card1 = makeCard({ id: "c1", name: "Sol Ring" });
+    const card2 = makeCard({ id: "c2", name: "Sol Ring" });
+    const deck = makeDeck({
+      commander: makeCommander([]),
+      cards: [card1, card2],
+    });
+    const result = validateDeck(deck);
+    expect(result.errors.some((e) => e.includes("singleton") || e.includes("Duplicate"))).toBe(true);
+  });
+
+  it("reports too many cards (over 100)", () => {
+    const cards = Array.from({ length: 5 }, (_, i) =>
+      makeCard({ id: `c-${i}`, name: `Card ${i}`, quantity: 25 })
+    );
+    const deck = makeDeck({
+      commander: makeCommander([]),
+      cards,
+    });
+    const result = validateDeck(deck);
+    expect(result.errors.some((e) => e.includes("remove"))).toBe(true);
+  });
 });
 
 describe("checkColorIdentity", () => {

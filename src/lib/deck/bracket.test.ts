@@ -176,6 +176,66 @@ describe("scoreBracket", () => {
     expect(result.twoCardInfiniteCombos).toBe(0);
   });
 
+  it("scores high win speed when many fast-win cards present", () => {
+    const fastWinCards = Array.from({ length: 5 }, (_, i) => ({
+      id: `fw-${i}`,
+      name: `Win Card ${i}`,
+      manaCost: "{1}",
+      cmc: 1,
+      typeLine: "Instant",
+      oracleText: "You win the game.",
+      colorIdentity: [],
+      isGameChanger: false,
+      isBanned: false,
+      price: null,
+      imageUri: "",
+      artCropUri: "",
+      category: "winCondition" as const,
+      quantity: 1,
+      zone: "main" as const,
+    }));
+    const deck = makeDeck({ cards: fastWinCards });
+    const stats = makeStats({ avgCmc: 2.0, ramp: 12, draw: 12 });
+    const result = scoreBracket(deck, stats);
+    expect(result.dimensions.winSpeed).toBe(4);
+  });
+
+  it("warns when computed bracket exceeds target bracket", () => {
+    const deck = makeDeck({ targetBracket: 1 as 1 | 2 | 3 | 4 });
+    const stats = makeStats({
+      ramp: 15,
+      draw: 15,
+      avgCmc: 1.5,
+      removal: 12,
+      boardWipes: 5,
+    });
+    const result = scoreBracket(deck, stats);
+    if (result.overall > 1) {
+      expect(result.warnings.some((w) => w.includes("target is Bracket 1"))).toBe(true);
+    }
+  });
+
+  it("warns about low card draw", () => {
+    const deck = makeDeck();
+    const stats = makeStats({ draw: 2 });
+    const result = scoreBracket(deck, stats);
+    expect(result.warnings.some((w) => w.includes("card draw"))).toBe(true);
+  });
+
+  it("warns about incomplete deck", () => {
+    const deck = makeDeck();
+    const stats = makeStats({ totalCards: 60 });
+    const result = scoreBracket(deck, stats);
+    expect(result.warnings.some((w) => w.includes("60/100"))).toBe(true);
+  });
+
+  it("warns about color identity violations", () => {
+    const deck = makeDeck();
+    const stats = makeStats({ colorIdentityViolations: ["Lightning Bolt"] });
+    const result = scoreBracket(deck, stats);
+    expect(result.warnings.some((w) => w.includes("Lightning Bolt"))).toBe(true);
+  });
+
   it("score clamps to 4 even with extreme stats", () => {
     const deck = makeDeck();
     const stats = makeStats({

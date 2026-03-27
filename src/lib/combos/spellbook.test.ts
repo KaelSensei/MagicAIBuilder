@@ -74,6 +74,69 @@ describe("fetchCombosForDeck", () => {
     expect(parsed!.isInfinite).toBe(true);
   });
 
+  it("returns cached result on second call within TTL", async () => {
+    const variant = makeVariant("cache-test", ["Card A"], ["Draw cards"]);
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => makeVariantResponse([variant]),
+    });
+
+    // First call — populates cache
+    const first = await fetchCombosForCard("Card A");
+    expect(first).toHaveLength(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    // Second call — should use cache, not fetch again
+    const second = await fetchCombosForCard("Card A");
+    expect(second).toHaveLength(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1); // Still 1 call
+  });
+
+  it("returns empty array when response is not ok", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+    const result = await fetchCombosForCard("Bad Card");
+    expect(result).toEqual([]);
+  });
+
+  it("sorts by card count when isInfinite is equal", async () => {
+    const twoCard = makeVariant("v-2", ["Card A", "Card B"], ["Draw cards"]);
+    const threeCard = makeVariant("v-3", ["Card A", "Card B", "Card C"], ["Draw more cards"]);
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => makeVariantResponse([threeCard, twoCard]),
+    });
+
+    const result = await fetchCombosForDeck(["Card A", "Card B", "Card C"]);
+    expect(result).toHaveLength(2);
+    // Shorter combo (2 cards) should come first when both are non-infinite
+    expect(result[0].cards).toHaveLength(2);
+    expect(result[1].cards).toHaveLength(3);
+  });
+
+  it("returns empty array when fetch throws a network error", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Network error"));
+    const result = await fetchCombosForCard("Sol Ring");
+    expect(result).toEqual([]);
+  });
+
+  it("sorts infinite combos before non-infinite, then by card count", async () => {
+    const nonInfinite = makeVariant("v-noninf", ["Card A", "Card B"], ["Draw cards"]);
+    const infinite = makeVariant("v-inf", ["Card A", "Card B", "Card C"], ["Infinite mana"]);
+
+    // Each card fetch returns both variants
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => makeVariantResponse([nonInfinite, infinite]),
+    });
+
+    const result = await fetchCombosForDeck(["Card A", "Card B", "Card C"]);
+    expect(result).toHaveLength(2);
+    // Infinite should come first
+    expect(result[0].isInfinite).toBe(true);
+    expect(result[1].isInfinite).toBe(false);
+  });
+
   it("only returns combos where all required cards are in deck", async () => {
     // Combo requires Card A + Card B + Card C
     const variant = makeVariant(

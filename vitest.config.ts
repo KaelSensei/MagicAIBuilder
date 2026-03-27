@@ -23,8 +23,16 @@ export default defineConfig({
         "src/components/**",
         // Generated files
         "src/generated/**",
-        // Type-only files
+        // Type-only files (no runtime code)
         "**/*.d.ts",
+        "src/lib/auth/types.ts",
+        "src/lib/deck/types.ts",
+        "src/lib/deck/share-types.ts",
+        "src/lib/collection/types.ts",
+        // Infrastructure singletons (require live DB connection)
+        "src/lib/db/prisma.ts",
+        // Edge middleware (requires full Next.js edge runtime)
+        "src/middleware.ts",
       ],
     },
   },

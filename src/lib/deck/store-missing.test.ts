@@ -6,6 +6,10 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("@/lib/scryfall/types", () => ({
+  DFC_LAYOUTS: new Set(["modal_dfc", "transform", "reversible_card"]),
+}));
+
 vi.mock("@/lib/db/deck-api", () => ({
   fetchDecks: vi.fn(async () => []),
   createDeck: vi.fn(async () => ({
@@ -33,6 +37,17 @@ vi.mock("@/lib/db/deck-api", () => ({
     isMaybeboard,
   })),
   removeAllCards: vi.fn(async () => undefined),
+  updateCardZone: vi.fn(async (_deckId: string, cardId: string, zone: string) => ({
+    id: cardId,
+    zone,
+  })),
+  duplicateDeck: vi.fn(async () => ({
+    id: "deck-copy",
+    name: "Copy of Test Deck",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    cards: [],
+  })),
 }));
 
 vi.mock("@/hooks/useToast", () => ({
@@ -42,6 +57,9 @@ vi.mock("@/hooks/useToast", () => ({
 vi.mock("@/lib/scryfall/images", () => ({
   getCardImageUri: vi.fn((_card: unknown, size: string) =>
     size === "art_crop" ? "https://example.com/art.jpg" : "https://example.com/normal.jpg"
+  ),
+  buildScryfallImageUrl: vi.fn((id: string, size: string, face: string) =>
+    `https://cards.scryfall.io/${size}/${face}/${id}.jpg`
   ),
 }));
 
@@ -380,5 +398,299 @@ describe("useDeckStore — addTag / removeTag error paths", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].tags).not.toContain("stax");
     expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+});
+
+// ── loadDecks ─────────────────────────────────────────────────────────────────
+
+describe("useDeckStore — loadDecks", () => {
+  it("hydrates decks from API response", async () => {
+    const apiDeck = {
+      id: "deck-api",
+      name: "API Deck",
+      format: "commander",
+      targetBracket: 2,
+      manualBracket: null,
+      budget: null,
+      commanderId: null,
+      partnerId: null,
+      companionId: null,
+      pairingType: "none",
+      description: "",
+      tags: [],
+      shareToken: null,
+      shareEnabled: false,
+      isAIGenerated: false,
+      createdAt: "2024-01-01T00:00:00.000Z",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+      cards: [
+        {
+          id: "card-db-1",
+          deckId: "deck-api",
+          scryfallId: "sf-1",
+          name: "Sol Ring",
+          manaCost: "{1}",
+          cmc: 1,
+          typeLine: "Artifact",
+          oracleText: "{T}: Add {C}{C}.",
+          colorIdentity: [],
+          isGameChanger: false,
+          isBanned: false,
+          price: 1.5,
+          imageUri: "https://example.com/sol.jpg",
+          artCropUri: "https://example.com/sol-art.jpg",
+          category: "ramp",
+          quantity: 1,
+          isCommander: false,
+          isPartner: false,
+          zone: "main",
+        },
+        {
+          id: "commander-db",
+          deckId: "deck-api",
+          scryfallId: "sf-cmdr",
+          name: "Atraxa",
+          manaCost: "{W}{U}{B}{G}",
+          cmc: 4,
+          typeLine: "Legendary Creature",
+          oracleText: "Proliferate.",
+          colorIdentity: ["W", "U", "B", "G"],
+          isGameChanger: false,
+          isBanned: false,
+          price: null,
+          imageUri: "https://example.com/atraxa.jpg",
+          artCropUri: "https://example.com/atraxa-art.jpg",
+          category: "commander",
+          quantity: 1,
+          isCommander: true,
+          isPartner: false,
+          zone: "main",
+        },
+      ],
+    };
+
+    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce([apiDeck] as unknown as deckApi.ApiDeck[]);
+    await useDeckStore.getState().loadDecks();
+
+    const decks = useDeckStore.getState().decks;
+    expect(decks["deck-api"]).toBeDefined();
+    expect(decks["deck-api"].name).toBe("API Deck");
+    expect(decks["deck-api"].commander?.name).toBe("Atraxa");
+    expect(decks["deck-api"].cards).toHaveLength(1);
+    expect(decks["deck-api"].cards[0].name).toBe("Sol Ring");
+  });
+
+  it("rebuilds card faces for DFC cards with // in name", async () => {
+    const apiDeck = {
+      id: "deck-dfc",
+      name: "DFC Deck",
+      format: "commander",
+      targetBracket: 2,
+      manualBracket: null,
+      budget: null,
+      commanderId: null,
+      partnerId: null,
+      companionId: null,
+      pairingType: "none",
+      description: "",
+      tags: [],
+      shareToken: null,
+      shareEnabled: false,
+      isAIGenerated: false,
+      createdAt: "2024-01-01T00:00:00.000Z",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+      cards: [
+        {
+          id: "dfc-card",
+          deckId: "deck-dfc",
+          scryfallId: "sf-dfc",
+          name: "Delver of Secrets // Insectile Aberration",
+          manaCost: "{U}",
+          cmc: 1,
+          typeLine: "Creature — Human Wizard // Creature — Human Insect",
+          oracleText: "At the beginning... // Flying",
+          colorIdentity: ["U"],
+          isGameChanger: false,
+          isBanned: false,
+          price: null,
+          imageUri: "",
+          artCropUri: "",
+          category: "creature",
+          quantity: 1,
+          isCommander: false,
+          isPartner: false,
+          zone: "main",
+        },
+      ],
+    };
+
+    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce([apiDeck] as unknown as deckApi.ApiDeck[]);
+    await useDeckStore.getState().loadDecks();
+
+    const card = useDeckStore.getState().decks["deck-dfc"].cards[0];
+    expect(card.cardFaces).toBeDefined();
+    expect(card.cardFaces?.[0].name).toBe("Delver of Secrets");
+    expect(card.cardFaces?.[1].name).toBe("Insectile Aberration");
+  });
+
+  it("resets isSyncing on loadDecks failure", async () => {
+    vi.mocked(deckApi.fetchDecks).mockRejectedValueOnce(new Error("network"));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await useDeckStore.getState().loadDecks();
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    consoleSpy.mockRestore();
+  });
+
+  it("handles partner deduplication (same name as commander)", async () => {
+    const apiDeck = {
+      id: "deck-dup",
+      name: "Dup Deck",
+      format: "commander",
+      targetBracket: 2,
+      manualBracket: null,
+      budget: null,
+      commanderId: null,
+      partnerId: null,
+      companionId: null,
+      pairingType: "none",
+      description: "",
+      tags: [],
+      shareToken: null,
+      shareEnabled: false,
+      isAIGenerated: false,
+      createdAt: "2024-01-01T00:00:00.000Z",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+      cards: [
+        {
+          id: "cmdr-1",
+          deckId: "deck-dup",
+          scryfallId: "sf-1",
+          name: "Commander Card",
+          manaCost: "",
+          cmc: 3,
+          typeLine: "Legendary Creature",
+          oracleText: "",
+          colorIdentity: [],
+          isGameChanger: false,
+          isBanned: false,
+          price: null,
+          imageUri: "",
+          artCropUri: "",
+          category: "commander",
+          quantity: 1,
+          isCommander: true,
+          isPartner: false,
+          zone: "main",
+        },
+        {
+          id: "partner-dup",
+          deckId: "deck-dup",
+          scryfallId: "sf-2",
+          name: "Commander Card",
+          manaCost: "",
+          cmc: 3,
+          typeLine: "Legendary Creature",
+          oracleText: "",
+          colorIdentity: [],
+          isGameChanger: false,
+          isBanned: false,
+          price: null,
+          imageUri: "",
+          artCropUri: "",
+          category: "commander",
+          quantity: 1,
+          isCommander: false,
+          isPartner: true,
+          zone: "main",
+        },
+      ],
+    };
+
+    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce([apiDeck] as unknown as deckApi.ApiDeck[]);
+    await useDeckStore.getState().loadDecks();
+
+    const deck = useDeckStore.getState().decks["deck-dup"];
+    expect(deck.commander?.name).toBe("Commander Card");
+    // Partner should be null since same name as commander
+    expect(deck.partner).toBeNull();
+  });
+});
+
+// ── addDeckCard ──────────────────────────────────────────────────────────────
+
+describe("useDeckStore — addDeckCard", () => {
+  it("does nothing when no active deck", async () => {
+    useDeckStore.setState({ activeDeckId: null });
+    const card = makeDeckCard("card-1", "Sol Ring");
+    await useDeckStore.getState().addDeckCard(card);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("adds a new card optimistically and persists", async () => {
+    const card = makeDeckCard("card-1", "Sol Ring");
+    await useDeckStore.getState().addDeckCard(card);
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.cards.some((c) => c.name === "Sol Ring")).toBe(true);
+    expect(deckApi.addCard).toHaveBeenCalled();
+  });
+
+  it("enriches card with gameChanger/banned status", async () => {
+    useDeckStore.setState({
+      gameChangerNames: new Set(["Sol Ring"]),
+      bannedNames: new Set(),
+    });
+    const card = makeDeckCard("card-1", "Sol Ring");
+    await useDeckStore.getState().addDeckCard(card);
+    const deck = useDeckStore.getState().decks["deck-1"];
+    const added = deck.cards.find((c) => c.name === "Sol Ring");
+    expect(added?.isGameChanger).toBe(true);
+  });
+});
+
+// ── notifyGameChangerAdded (via addCard flow) ───────────────────────────────
+
+describe("useDeckStore — game changer notification", () => {
+  it("notifies on first game changer", async () => {
+    const toastAdd = vi.fn();
+    vi.mocked(await import("@/hooks/useToast")).useToastStore.getState = () => ({ add: toastAdd }) as ReturnType<typeof import("@/hooks/useToast").useToastStore.getState>;
+
+    useDeckStore.setState({
+      gameChangerNames: new Set(["Mana Crypt"]),
+      bannedNames: new Set(),
+    });
+
+    const scryfallCard = {
+      id: "sf-gc",
+      name: "Mana Crypt",
+      mana_cost: "{0}",
+      cmc: 0,
+      type_line: "Artifact",
+      oracle_text: "At the beginning of your upkeep, flip a coin.",
+      color_identity: [] as string[],
+      colors: [] as string[],
+      set: "2xm",
+      set_name: "Double Masters",
+      rarity: "mythic" as const,
+      prices: { usd: "150.00", usd_foil: null },
+      image_uris: {
+        small: "",
+        normal: "https://example.com/mc.jpg",
+        large: "",
+        art_crop: "https://example.com/mc-art.jpg",
+        border_crop: "",
+        png: "",
+      },
+      card_faces: undefined,
+      keywords: [] as string[],
+      legalities: { commander: "legal" as const },
+    };
+
+    await useDeckStore.getState().addCard(scryfallCard);
+
+    // The toast should have been called with a game changer warning
+    expect(toastAdd).toHaveBeenCalledWith(
+      "warning",
+      expect.stringContaining("Game Changer")
+    );
   });
 });

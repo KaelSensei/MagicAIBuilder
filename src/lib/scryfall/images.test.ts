@@ -143,6 +143,74 @@ describe("getCardImageUri", () => {
     expect(getCardImageUri(card, "normal")).toBe("https://example.com/front-normal.jpg");
   });
 
+  it("uses back face image for double-faced cards when face=back", () => {
+    const card = makeCard({
+      image_uris: undefined,
+      card_faces: [
+        {
+          name: "Front",
+          mana_cost: "{1}",
+          type_line: "Creature",
+          oracle_text: "",
+          image_uris: {
+            small: "",
+            normal: "https://example.com/front-normal.jpg",
+            large: "",
+            art_crop: "",
+            border_crop: "",
+            png: "",
+          },
+        },
+        {
+          name: "Back",
+          mana_cost: "",
+          type_line: "Land",
+          oracle_text: "",
+          image_uris: {
+            small: "",
+            normal: "https://example.com/back-normal.jpg",
+            large: "",
+            art_crop: "",
+            border_crop: "",
+            png: "",
+          },
+        },
+      ],
+    });
+    expect(getCardImageUri(card, "normal", "back")).toBe("https://example.com/back-normal.jpg");
+  });
+
+  it("falls back to front face when back face has no image_uris", () => {
+    const card = makeCard({
+      image_uris: undefined,
+      card_faces: [
+        {
+          name: "Front",
+          mana_cost: "{1}",
+          type_line: "Creature",
+          oracle_text: "",
+          image_uris: {
+            small: "",
+            normal: "https://example.com/front.jpg",
+            large: "",
+            art_crop: "",
+            border_crop: "",
+            png: "",
+          },
+        },
+        {
+          name: "Back",
+          mana_cost: "",
+          type_line: "Land",
+          oracle_text: "",
+          image_uris: undefined as unknown as typeof card.image_uris,
+        },
+      ],
+    });
+    const url = getCardImageUri(card, "normal", "back");
+    expect(url).toBe("https://example.com/front.jpg");
+  });
+
   it("falls back to buildScryfallImageUrl when no image_uris or card_faces", () => {
     const card = makeCard({ image_uris: undefined, card_faces: undefined });
     const url = getCardImageUri(card, "normal");

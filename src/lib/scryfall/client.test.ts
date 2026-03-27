@@ -151,6 +151,36 @@ describe("getCardById", () => {
   });
 });
 
+describe("handleResponse edge cases", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  it("falls back to statusText when error response JSON parsing fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      statusText: "Service Unavailable",
+      json: () => Promise.reject(new Error("invalid json")),
+    }));
+    const promise = searchCards("fail");
+    vi.runAllTimers();
+    await expect(promise).rejects.toThrow("Service Unavailable");
+  });
+});
+
+describe("getCardById — cache failure", () => {
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("falls through to Scryfall when cache lookup throws", async () => {
+    vi.mocked(lookupCardCache).mockRejectedValueOnce(new Error("cache down"));
+    const card = makeScryfallCard("fallback-card");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => card }));
+
+    const result = await getCardById("fallback-card");
+    expect(result.id).toBe("fallback-card");
+  });
+});
+
 describe("autocompleteCardName", () => {
   beforeEach(() => { vi.useFakeTimers(); });
   afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
