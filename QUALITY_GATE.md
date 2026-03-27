@@ -38,6 +38,7 @@ Une PR est **bloquée** si elle fait régresser une des métriques suivantes :
 |---|---|---|---|---|---|---|---|---|
 | 2026-03-27 | #183 (sonar fix + auth refacto) | 94.3% | 0 | 0 | 1 | 1.8% | A | A |
 | 2026-03-27 | #189 (mobile responsive) | 94.3% | 0 | 0 | 1 | 1.8% | A | A |
+| 2026-03-27 | #192 (US-01: Game Changers page) | 94.3% | 0 | 0 | 1 | 1.8% | A | A |
 
 ## Protocole de review (Marco ↔ Joyce)
 

@@ -9,6 +9,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-27: Mobile-responsive layout (#189)
+
+- `feat: mobile-responsive layout — header hamburger menu, builder tab navigation, collection grid (#189)` — full mobile-first responsive redesign:
+  - **Header**: hamburger menu for small screens, navigation links collapse into a mobile drawer
+  - **Builder**: tab navigation for the 3-panel layout on mobile (Search / Editor / Stats)
+  - **Collection**: responsive grid adapts columns to screen width
+
 ### Added — 2026-03-26: NextAuth.js v5 Authentication (#181)
 
 - `feat: NextAuth.js v5 authentication (Google OAuth + credentials)` — full multi-user auth system:
