@@ -41,8 +41,8 @@ export function DeckVisibilityToggle({
   };
 
   const publicUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/deck/${deckId}`
+    typeof globalThis.location !== "undefined"
+      ? `${globalThis.location.origin}/deck/${deckId}`
       : `/deck/${deckId}`;
 
   return (
