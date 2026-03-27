@@ -13,7 +13,7 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(notes ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { updateCardNotes } = useDeckStore();
+  const updateCardNotes = useDeckStore((s) => s.updateCardNotes);
 
   // Sync draft when notes prop changes (e.g. store reload)
   useEffect(() => {
@@ -46,13 +46,14 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
     }
   };
 
-  const hasNote = notes?.trim();
+  const noteText = notes?.trim() ?? "";
+  const hasNote = noteText.length > 0;
 
   if (!open) {
     return (
       <button
         onClick={handleOpen}
-        title={hasNote ? notes! : "Add note"}
+        title={hasNote ? noteText : "Add note"}
         className={`p-0.5 rounded transition-opacity hover:text-amber-400 ${
           hasNote ? "text-amber-400" : "opacity-0 group-hover:opacity-60 text-[var(--text-secondary)]"
         }`}
@@ -69,16 +70,21 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       open
       className="absolute left-0 right-0 top-full z-30 m-0 p-0 bg-transparent border-none shadow-none w-full"
     >
-      {/* role="presentation" wrapper absorbs click/key events to prevent propagation to the card */}
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        role="presentation"
+        role="button"
+        tabIndex={0}
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Enter" || e.key === " ") e.preventDefault();
+        }}
       >
       <form
         className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
-        onSubmit={(e) => { e.preventDefault(); handleSave(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}
       >
       <textarea
         ref={textareaRef}
