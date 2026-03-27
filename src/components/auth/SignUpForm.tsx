@@ -13,7 +13,7 @@ export function SignUpForm() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setError("");
       setLoading(true);
@@ -46,7 +46,7 @@ export function SignUpForm() {
         return;
       }
 
-      window.location.href = "/";
+      globalThis.location.href = "/";
     },
     [name, email, password]
   );

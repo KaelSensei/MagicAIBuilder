@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 
 const signupSchema = z.object({
   name: z.string().min(1).max(100),
-  email: z.string().email().max(255),
+  email: z.string().email({ message: "Invalid email address" }).max(255),
   password: z.string().min(8).max(128),
 });
 

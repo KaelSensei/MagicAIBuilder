@@ -69,10 +69,15 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       open
       className="absolute left-0 right-0 top-full z-30 m-0 p-0 bg-transparent border-none shadow-none w-full"
     >
-      <form
-        className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
+      {/* role="presentation" wrapper absorbs click/key events to prevent propagation to the card */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+      <div
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
+      >
+      <form
+        className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
         onSubmit={(e) => { e.preventDefault(); handleSave(); }}
       >
       <textarea
@@ -90,6 +95,7 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
         Ctrl+Enter to save · Esc to cancel
       </div>
       </form>
+      </div>
     </dialog>
   );
 }

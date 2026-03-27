@@ -17,7 +17,7 @@ export function SignInForm() {
   const [loading, setLoading] = useState(false);
 
   const handleCredentials = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setError("");
       setLoading(true);
@@ -36,7 +36,7 @@ export function SignInForm() {
         return;
       }
 
-      window.location.href = callbackUrl;
+      globalThis.location.href = callbackUrl;
     },
     [email, password, callbackUrl]
   );
