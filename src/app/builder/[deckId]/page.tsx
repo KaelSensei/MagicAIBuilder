@@ -48,6 +48,8 @@ import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
+import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
+import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 
 type SearchMode = "name" | "set" | "color";
@@ -82,6 +84,7 @@ export default function BuilderPage() {
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
+  const { data: sessionData } = useSession();
 
   // Ensure this deck is active
   const { setActiveDeck, addCard, removeCard, setCommander, setPartner, updateCardCategory } = useDeck();
@@ -468,6 +471,13 @@ export default function BuilderPage() {
               <Download className="w-3 h-3" />
               <span className="hidden sm:inline">Export</span>
             </button>
+            {/* Visibility toggle — public / private */}
+            <DeckVisibilityToggle
+              deckId={deckId}
+              initialIsPublic={deck.isPublic ?? false}
+              username={(sessionData?.user as { username?: string } | undefined)?.username}
+              className="hidden sm:flex"
+            />
           </div>
         </div>
 

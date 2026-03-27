@@ -46,6 +46,7 @@ function makeDeck(cards: DeckCard[], overrides: Partial<Deck> = {}): Deck {
     budget: null,
     shareToken: null,
     shareEnabled: false,
+    isPublic: false,
     isAIGenerated: false,
     createdAt: new Date(),
     updatedAt: new Date(),

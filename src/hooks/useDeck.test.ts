@@ -61,6 +61,7 @@ describe("useDeck", () => {
       pairingType: "none" as const,
       isAIGenerated: false,
       shareEnabled: false,
+    isPublic: false,
       shareToken: null,
       description: "",
       maybeboard: [],

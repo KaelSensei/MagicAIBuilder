@@ -54,6 +54,7 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
     manualBracket: null as 1 | 2 | 3 | 4 | null,
     shareToken: null,
     shareEnabled: false,
+    isPublic: false,
     isAIGenerated: false,
     budget: null,
     createdAt: new Date(),

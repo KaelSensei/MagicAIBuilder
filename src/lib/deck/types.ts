@@ -18,7 +18,7 @@ export interface Deck {
   cards: DeckCard[]; maybeboard: DeckCard[]; format: "commander" | "brawl";
   targetBracket: 1|2|3|4; manualBracket: 1|2|3|4|null; budget: number | null;
   description: string; tags: string[]; shareToken: string | null;
-  shareEnabled: boolean; isAIGenerated: boolean; createdAt: Date; updatedAt: Date;
+  shareEnabled: boolean; isPublic: boolean; isAIGenerated: boolean; createdAt: Date; updatedAt: Date;
 }
 export interface DeckStats {
   totalCards: number; lands: number; creatures: number; ramp: number; draw: number;
