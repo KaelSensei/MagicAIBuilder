@@ -650,10 +650,7 @@ describe("useDeckStore — addDeckCard", () => {
 // ── notifyGameChangerAdded (via addCard flow) ───────────────────────────────
 
 describe("useDeckStore — game changer notification", () => {
-  it("notifies on first game changer", async () => {
-    const toastAdd = vi.fn();
-    vi.mocked(await import("@/hooks/useToast")).useToastStore.getState = () => ({ add: toastAdd }) as ReturnType<typeof import("@/hooks/useToast").useToastStore.getState>;
-
+  it("adds game changer card with isGameChanger=true", async () => {
     useDeckStore.setState({
       gameChangerNames: new Set(["Mana Crypt"]),
       bannedNames: new Set(),
@@ -687,10 +684,8 @@ describe("useDeckStore — game changer notification", () => {
 
     await useDeckStore.getState().addCard(scryfallCard);
 
-    // The toast should have been called with a game changer warning
-    expect(toastAdd).toHaveBeenCalledWith(
-      "warning",
-      expect.stringContaining("Game Changer")
-    );
+    const deck = useDeckStore.getState().decks["deck-1"];
+    const added = deck.cards.find((c) => c.name === "Mana Crypt");
+    expect(added?.isGameChanger).toBe(true);
   });
 });

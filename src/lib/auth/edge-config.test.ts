@@ -44,14 +44,14 @@ describe("edgeAuthConfig.callbacks.session", () => {
   it("sets session.user.id from token.id", async () => {
     const session = { user: { id: "", name: "Test", email: "test@test.com" }, expires: "" };
     const token = { id: "user-123", sub: "abc" };
-    const result = await sessionCallback({ session, token } as Parameters<typeof sessionCallback>[0]);
+    const result = await sessionCallback({ session, token } as unknown as Parameters<typeof sessionCallback>[0]);
     expect(result.user.id).toBe("user-123");
   });
 
   it("does not set session.user.id when token has no id", async () => {
     const session = { user: { id: "", name: "Test", email: "test@test.com" }, expires: "" };
     const token = { sub: "abc" };
-    const result = await sessionCallback({ session, token } as Parameters<typeof sessionCallback>[0]);
+    const result = await sessionCallback({ session, token } as unknown as Parameters<typeof sessionCallback>[0]);
     expect(result.user.id).toBe("");
   });
 });
