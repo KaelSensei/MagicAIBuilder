@@ -49,6 +49,7 @@ import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 import { MetaPanel } from "@/components/deck/MetaPanel";
+import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
@@ -757,6 +758,8 @@ export default function BuilderPage() {
               deckCardNames={new Set(deck.cards.map((c) => c.name))}
               onAddCard={handleAIAddCard}
             />
+
+            <CollectionStatsPanel deck={deck} />
 
             <DeckStats stats={stats} targetBracket={deck.targetBracket} />
           </motion.div>
