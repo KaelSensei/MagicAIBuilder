@@ -90,19 +90,35 @@ function CardTile({ card, badge, onClickZoom }: CardTileProps) {
 // ---------------------------------------------------------------------------
 interface CardZoomModalProps {
   readonly card: ScryfallCard;
+  readonly cards: readonly ScryfallCard[];
   readonly onClose: () => void;
+  readonly onNavigate: (card: ScryfallCard) => void;
   readonly onOpenPrintings: () => void;
 }
 
-function CardZoomModal({ card, onClose, onOpenPrintings }: CardZoomModalProps) {
-  // Close on Escape key (a11y standard for dialogs)
+function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: CardZoomModalProps) {
+  const currentIndex = cards.findIndex((c) => c.id === card.id);
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex < cards.length - 1;
+
+  const goPrev = useCallback(() => {
+    if (hasPrev) onNavigate(cards[currentIndex - 1]);
+  }, [hasPrev, cards, currentIndex, onNavigate]);
+
+  const goNext = useCallback(() => {
+    if (hasNext) onNavigate(cards[currentIndex + 1]);
+  }, [hasNext, cards, currentIndex, onNavigate]);
+
+  // Keyboard: Escape to close, Arrow keys to navigate
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, goPrev, goNext]);
 
   const largeUri =
     card.image_uris?.large ??
@@ -116,6 +132,28 @@ function CardZoomModal({ card, onClose, onOpenPrintings }: CardZoomModalProps) {
       role="dialog"
       aria-label={`${card.name} — zoom`}
     >
+      {/* Previous arrow */}
+      {hasPrev && (
+        <button
+          onClick={(e) => { e.stopPropagation(); goPrev(); }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          aria-label="Previous card"
+        >
+          ‹
+        </button>
+      )}
+
+      {/* Next arrow */}
+      {hasNext && (
+        <button
+          onClick={(e) => { e.stopPropagation(); goNext(); }}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          aria-label="Next card"
+        >
+          ›
+        </button>
+      )}
+
       <div
         className="relative max-w-[400px] w-full"
         onClick={(e) => e.stopPropagation()}
@@ -139,11 +177,18 @@ function CardZoomModal({ card, onClose, onOpenPrintings }: CardZoomModalProps) {
           />
         )}
 
-        {/* Card info + printings button */}
+        {/* Card info + nav counter + printings button */}
         <div className="mt-3 flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold text-white">{card.name}</p>
-            <p className="text-xs text-white/60">{card.type_line}</p>
+            <p className="text-xs text-white/60">
+              {card.type_line}
+              {cards.length > 1 && (
+                <span className="ml-2 text-white/40">
+                  {currentIndex + 1} / {cards.length}
+                </span>
+              )}
+            </p>
           </div>
           <button
             onClick={onOpenPrintings}
@@ -242,11 +287,13 @@ export function GameChangersPageClient() {
 
   return (
     <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-8 flex flex-col gap-6">
-      {/* Zoom modal */}
+      {/* Zoom modal with carousel navigation */}
       {zoomedCard && (
         <CardZoomModal
           card={zoomedCard}
+          cards={pageSlice}
           onClose={() => setZoomedCard(null)}
+          onNavigate={setZoomedCard}
           onOpenPrintings={handleOpenPrintings}
         />
       )}
