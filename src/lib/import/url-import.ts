@@ -170,7 +170,7 @@ async function importTappedOut(slug: string): Promise<UrlImportResult> {
   const cards = parsePlainTextDecklist(text);
   if (cards.length === 0) throw new Error("No cards found in this deck.");
 
-  const nameMatch = /^#\s*(.+)$/m.exec(text);
+  const nameMatch = /^#\s*(\S.*)$/m.exec(text);
   const name = nameMatch ? nameMatch[1].trim() : `TappedOut deck (${slug})`;
 
   return { name, source: "tappedout", cards, ignored: [] };
