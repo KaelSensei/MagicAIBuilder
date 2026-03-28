@@ -117,7 +117,7 @@ export default function BuilderPage() {
   const { stats } = useDeck();
   const { data: combos, isLoading: combosLoading } = useCombos(deck);
   const bracketScore = useBracketScore(deck, combos);
-  const { result: aiResult, isLoading: aiLoading, error: aiError, analyze: analyzeAI } = useAISuggestions();
+  const { result: aiResult, isLoading: aiLoading, error: aiError, analyze: analyzeAI, detectedArchetype, analysedAt, ignoredSuggestions, ignoreSuggestion, clearIgnored } = useAISuggestions();
 
   // Active zone state — lifted from DeckEditor so card adds target the right zone
   const [activeZone, setActiveZone] = useState<"main" | "sideboard" | "maybeboard">("main");
@@ -267,10 +267,16 @@ export default function BuilderPage() {
     if (card) setActiveDragCard(card);
   }, []);
 
+  const [aiArchetypeOverride, setAIArchetypeOverride] = useState<import("@/lib/ai/archetypes").Archetype | null>(null);
+  const [aiBudgetPerCard, setAIBudgetPerCard] = useState<number | null>(null);
+
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
-    analyzeAI(deck, stats, bracketScore);
-  }, [deck, stats, bracketScore, analyzeAI]);
+    analyzeAI(deck, stats, bracketScore, {
+      archetypeOverride: aiArchetypeOverride,
+      budgetPerCard: aiBudgetPerCard,
+    });
+  }, [deck, stats, bracketScore, analyzeAI, aiArchetypeOverride, aiBudgetPerCard]);
 
   const handleSnapshotRestore = useCallback(() => {
     // Reload all decks from DB so the builder reflects the restored state
@@ -728,6 +734,15 @@ export default function BuilderPage() {
                 if (card) removeCard(card.id);
               }}
               disabled={!deck?.commander}
+              detectedArchetype={detectedArchetype}
+              archetypeOverride={aiArchetypeOverride}
+              onArchetypeChange={setAIArchetypeOverride}
+              budgetPerCard={aiBudgetPerCard}
+              onBudgetPerCardChange={setAIBudgetPerCard}
+              analysedAt={analysedAt}
+              ignoredSuggestions={ignoredSuggestions}
+              onIgnoreSuggestion={ignoreSuggestion}
+              onClearIgnored={clearIgnored}
             />
 
             <CombosPanel

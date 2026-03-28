@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { sanitizeForPrompt } from "@/lib/validation/ai";
+import { ARCHETYPE_PROMPT_HINTS, ARCHETYPES } from "@/lib/ai/archetypes";
+import type { Archetype } from "@/lib/ai/archetypes";
 
 export const runtime = "nodejs";
 
@@ -27,6 +29,9 @@ interface SuggestRequest {
   gameChangersCount: number;
   gameChangersList?: string[];
   detectedThemes?: string[];
+  archetype?: string;
+  budgetPerCard?: number | null;
+  cardPrices?: Record<string, number | null>; // name → price for budget filtering
 }
 
 export interface CardSuggestion {
@@ -89,6 +94,15 @@ function buildPrompt(req: SuggestRequest): string {
   const gcInfo =
     req.gameChangersList && req.gameChangersList.length > 0 ? req.gameChangersList.join(", ") : "None";
 
+  // Resolve archetype
+  const archetype: Archetype | undefined = req.archetype && (ARCHETYPES as readonly string[]).includes(req.archetype)
+    ? req.archetype as Archetype
+    : undefined;
+  const archetypeHint = archetype ? ARCHETYPE_PROMPT_HINTS[archetype] : ARCHETYPE_PROMPT_HINTS["Goodstuff"];
+  const budgetConstraint = req.budgetPerCard != null
+    ? `$${req.budgetPerCard.toFixed(2)} max per card — NEVER suggest a card above this price. If the ideal card exceeds budget, suggest a budget alternative and say why.`
+    : (req.budget ? `$${req.budget} total deck budget` : "No per-card budget limit");
+
   return `You are a Magic: The Gathering Commander expert. Analyze this deck and suggest targeted improvements.
 
 DECK INFO:
@@ -98,7 +112,8 @@ DECK INFO:
 - Average CMC: ${req.avgCmc.toFixed(2)}
 - Current Bracket: ${req.bracket}/4
 - Target Bracket: ${req.targetBracket}/4
-- Budget: ${req.budget ? `$${req.budget} max per card` : "No limit"}
+- Budget: ${budgetConstraint}
+- Archetype: ${archetype ?? "Auto-detect from deck composition"}
 - Detected Themes: ${themesInfo}
 
 CATEGORY BREAKDOWN:
@@ -116,9 +131,12 @@ ${warningsInfo}
 ALL CURRENT CARDS (${req.cardNames.length}):
 ${cardList || "(none)"}
 
+ARCHETYPE GUIDANCE (${archetype ?? "Goodstuff"}):
+${archetypeHint}
+
 TASK:
-1. Suggest exactly 8 cards to ADD. They should synergize with ${commander}, fill the gaps above, match bracket ${req.targetBracket}, respect budget, and NOT already be in the deck.
-2. Suggest exactly 4 cards to REMOVE. They must be actual cards from the deck above that have low synergy, are redundant, or push the bracket too high.
+1. Suggest exactly 8 cards to ADD. They should synergize with ${commander}, align with the archetype above, fill the gaps, match bracket ${req.targetBracket}, respect budget, and NOT already be in the deck. Include 2–4 sentences of rationale per card.
+2. Suggest exactly 4 cards to REMOVE. They must be actual cards from the deck above that have low synergy with the archetype, are redundant, or push the bracket too high. Include an explanation per removal.
 
 Respond ONLY in this JSON format (no markdown):
 {

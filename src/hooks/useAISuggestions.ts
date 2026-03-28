@@ -2,6 +2,8 @@
 import { useState, useRef, useCallback } from "react";
 import type { Deck, DeckStats, BracketScore } from "@/lib/deck/types";
 import type { StreamEvent } from "@/app/api/ai/suggest/route";
+import { detectArchetypes } from "@/lib/ai/archetypes";
+import type { Archetype } from "@/lib/ai/archetypes";
 
 export interface CardSuggestion {
   name: string;
@@ -29,7 +31,37 @@ function hashDeckState(deck: Deck, stats: DeckStats, bracket: number): string {
   return `${commander}|${partner}|${bracket}|${deck.targetBracket}|${deck.budget ?? ""}|${cardNames}`;
 }
 
-function buildSuggestPayload(deck: Deck, stats: DeckStats, bracketScore: BracketScore | null, bracket: number) {
+function buildSuggestPayload(
+  deck: Deck,
+  stats: DeckStats,
+  bracketScore: BracketScore | null,
+  bracket: number,
+  archetypeOverride?: Archetype | null,
+  budgetPerCard?: number | null
+) {
+  const cardNames = deck.cards.map((c) => c.name);
+  const categories = {
+    ramp: stats.ramp,
+    draw: stats.draw,
+    removal: stats.removal,
+    boardWipe: stats.boardWipes,
+    creatures: stats.creatures,
+    lands: stats.lands,
+  };
+  const detectedThemes = stats.themes?.map((t) => t.name);
+
+  const archetype = archetypeOverride ?? detectArchetypes({
+    cardNames,
+    categories,
+    detectedThemes,
+  })[0];
+
+  // Build card price map for budget filtering (server-side)
+  const cardPrices: Record<string, number | null> = {};
+  for (const card of deck.cards) {
+    cardPrices[card.name] = card.price ?? null;
+  }
+
   return {
     commanderName: deck.commander?.name ?? null,
     partnerName: deck.partner?.name ?? null,
@@ -37,15 +69,8 @@ function buildSuggestPayload(deck: Deck, stats: DeckStats, bracketScore: Bracket
       ...(deck.commander?.colorIdentity ?? []),
       ...(deck.partner?.colorIdentity ?? []),
     ].filter((v, i, a) => a.indexOf(v) === i),
-    cardNames: deck.cards.map((c) => c.name),
-    categories: {
-      ramp: stats.ramp,
-      draw: stats.draw,
-      removal: stats.removal,
-      boardWipe: stats.boardWipes,
-      creatures: stats.creatures,
-      lands: stats.lands,
-    },
+    cardNames,
+    categories,
     avgCmc: stats.avgCmc,
     bracket,
     bracketDimensions: bracketScore?.dimensions,
@@ -54,9 +79,14 @@ function buildSuggestPayload(deck: Deck, stats: DeckStats, bracketScore: Bracket
     budget: deck.budget,
     gameChangersCount: stats.gameChangersCount,
     gameChangersList: stats.gameChangersList,
-    detectedThemes: stats.themes?.map((t) => t.name),
+    detectedThemes,
+    archetype,
+    budgetPerCard: budgetPerCard ?? null,
+    cardPrices,
   };
 }
+
+export type { Archetype };
 
 type StreamAcc = {
   suggestions: CardSuggestion[];
@@ -110,33 +140,56 @@ async function processStream(
   return acc;
 }
 
+export interface AIAnalysisOptions {
+  archetypeOverride?: Archetype | null;
+  budgetPerCard?: number | null;
+}
+
 export function useAISuggestions() {
   const [result, setResult] = useState<AISuggestionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detectedArchetype, setDetectedArchetype] = useState<Archetype | null>(null);
+  const [analysedAt, setAnalysedAt] = useState<Date | null>(null);
+  const [ignoredSuggestions, setIgnoredSuggestions] = useState<Set<string>>(new Set());
 
   const lastHash = useRef<string | null>(null);
   const lastResult = useRef<AISuggestionResult | null>(null);
+
+  const ignoreSuggestion = useCallback((name: string) => {
+    setIgnoredSuggestions((prev) => new Set([...prev, name]));
+  }, []);
+
+  const clearIgnored = useCallback(() => {
+    setIgnoredSuggestions(new Set());
+  }, []);
 
   const analyze = useCallback(async (
     deck: Deck,
     stats: DeckStats,
     bracketScore: BracketScore | null,
+    options?: AIAnalysisOptions,
   ) => {
     const bracket = bracketScore?.overall ?? deck.targetBracket;
     const hash = hashDeckState(deck, stats, bracket);
 
-    if (hash === lastHash.current && lastResult.current) {
+    if (hash === lastHash.current && lastResult.current && !options?.archetypeOverride) {
       setResult(lastResult.current);
       return;
     }
+
+    // Detect archetype client-side for display
+    const cardNames = deck.cards.map((c) => c.name);
+    const categories = { ramp: stats.ramp, draw: stats.draw, removal: stats.removal, boardWipe: stats.boardWipes, creatures: stats.creatures, lands: stats.lands };
+    const auto = detectArchetypes({ cardNames, categories, detectedThemes: stats.themes?.map((t) => t.name) });
+    setDetectedArchetype(options?.archetypeOverride ?? auto[0] ?? null);
 
     setIsLoading(true);
     setError(null);
     setResult({ suggestions: [], removals: [], analysis: "", provider: "mock" });
 
     try {
-      const payload = buildSuggestPayload(deck, stats, bracketScore, bracket);
+      const payload = buildSuggestPayload(deck, stats, bracketScore, bracket, options?.archetypeOverride, options?.budgetPerCard);
       const response = await fetch("/api/ai/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -152,6 +205,7 @@ export function useAISuggestions() {
       });
       lastHash.current = hash;
       lastResult.current = { suggestions: acc.suggestions, removals: acc.removals, analysis: acc.analysis, provider: acc.provider };
+      setAnalysedAt(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
       setResult(null);
@@ -165,5 +219,16 @@ export function useAISuggestions() {
     lastResult.current = null;
   }, []);
 
-  return { result, isLoading, error, analyze, invalidateCache };
+  return {
+    result,
+    isLoading,
+    error,
+    analyze,
+    invalidateCache,
+    detectedArchetype,
+    analysedAt,
+    ignoredSuggestions,
+    ignoreSuggestion,
+    clearIgnored,
+  };
 }
