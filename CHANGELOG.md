@@ -9,12 +9,49 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-27: Onboarding wizard, URL import & user profile [Phase 10 — US-02, US-03, US-04]
+
+- `feat(onboarding): first-run wizard, tooltips & replay [US-04]` — guided onboarding experience for new users:
+  - **First-run wizard**: step-by-step tour triggered on first login, covers key app sections
+  - **Tooltips**: contextual help icons throughout the UI with descriptive popovers
+  - **Replay**: "Show me again" option in user settings to re-run the onboarding flow
+- `feat(import): URL import from Moxfield & Archidekt [US-03]` — import decks directly from external services:
+  - **Moxfield** URL parsing and deck import
+  - **Archidekt** URL parsing and deck import
+  - Unified `importDeckFromUrl()` helper; error handling for unsupported or private decks
+- `feat(profile): user accounts & deck sharing [US-02]` — extended user profile and public deck sharing:
+  - **Profile page** with avatar, display name, and username (case-insensitive lookup)
+  - **Deck sharing**: public/private toggle on decks; shareable `/share/[deckId]` link
+  - **Username storage**: case-insensitive slug stored and resolved via profile API
+
+### Added — 2026-03-27: Paginated Game Changers & Banlist page [US-01]
+
+- `feat(rules): paginated Game Changers & Banlist page [US-01]` — dedicated rules reference page:
+  - Paginated display of all Game Changer cards (bypasses Scryfall 175-card page limit)
+  - Full Commander banlist with search and filter
+  - Accessible at `/rules` route in main navigation
+
 ### Added — 2026-03-27: Mobile-responsive layout (#189)
 
 - `feat: mobile-responsive layout — header hamburger menu, builder tab navigation, collection grid (#189)` — full mobile-first responsive redesign:
   - **Header**: hamburger menu for small screens, navigation links collapse into a mobile drawer
   - **Builder**: tab navigation for the 3-panel layout on mobile (Search / Editor / Stats)
   - **Collection**: responsive grid adapts columns to screen width
+
+### Fixed — 2026-03-27: Profile username lookup and SonarCloud issues
+
+- `fix(profile): case-insensitive username lookup and storage` — username lookups now normalised to lowercase at read and write time; prevents duplicate profiles differing only in casing
+- `fix(auth): force Google account picker on every sign-in (#186)` — added `prompt: "select_account"` to Google OAuth provider so users can switch accounts without signing out first
+- `fix(sonar): resolve deprecated Zod/React types and a11y warning (#184)` — updated Zod v3 API usage, fixed React type deprecations, resolved accessibility warning flagged by SonarCloud
+- `fix(sonar): resolve 7 SonarCloud issues in auth and card components (#183)` — addressed 7 issues (dead code, type safety, async patterns) in auth helpers and card-related components
+
+### Changed — 2026-03-27: Test coverage & docs
+
+- `test: increase unit test coverage from 91% to 98% (#188)` — added tests for previously uncovered paths; 98% line coverage across all source files
+- `docs: add database reset instructions to INFRASTRUCTURE.md (#187)` — step-by-step guide for resetting the Supabase database in dev and production environments
+- `docs: split roadmap into Technical and Functional sections (#185)` — `docs/ROADMAP.md` restructured with separate Technical Roadmap and Functional Roadmap sections for clarity
+- `chore(qa): update quality gate history — PR #192 merged (US-01) (#193)` — `QUALITY_GATE.md` updated with metrics snapshot after US-01 merge
+- `chore(qa): quality gate baseline and metrics tracking` — established baseline metrics snapshot in `QUALITY_GATE.md` for ongoing Phase 10 tracking
 
 ### Added — 2026-03-26: NextAuth.js v5 Authentication (#181)
 

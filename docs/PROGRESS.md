@@ -4,10 +4,51 @@
 
 | Field         | Value                                 |
 | ------------- | ------------------------------------- |
-| Current Phase | Phase 9 — Authentication & Multi-User |
-| Last Updated  | 2026-03-26                            |
+| Current Phase | Phase 10 — User Stories (US-01 → US-04) |
+| Last Updated  | 2026-03-28                              |
 | Status        | 🚀 Active Development                 |
 | Main Branch   | `main`                                |
+
+---
+
+## Phase 10: User Stories — US-01 → US-04 — 2026-03-27 ✅
+
+### US-01: Paginated Game Changers & Banlist Page
+
+- [x] Dedicated `/rules` route added to main navigation
+- [x] Paginated Game Changers list — full dataset fetched (bypasses Scryfall 175-card limit)
+- [x] Commander banlist with search/filter UI
+- [x] Quality gate metrics updated post-merge (#193)
+
+### US-02: User Accounts & Deck Sharing
+
+- [x] Profile page — avatar, display name, username field
+- [x] Case-insensitive username lookup and storage (slug normalised to lowercase)
+- [x] Deck sharing — public/private toggle, shareable `/share/[deckId]` links
+- [x] Profile API extended (`GET/PATCH` username, display name)
+
+### US-03: URL Import — Moxfield & Archidekt
+
+- [x] `importDeckFromUrl()` helper — detects Moxfield vs. Archidekt from URL structure
+- [x] Moxfield URL parser and deck fetch
+- [x] Archidekt URL parser and deck fetch
+- [x] Error handling for unsupported URLs, private decks, and network failures
+
+### US-04: First-Run Onboarding Wizard
+
+- [x] Onboarding wizard component — step-by-step tour on first login
+- [x] Contextual tooltip system — help icons with descriptive popovers
+- [x] Replay option — "Show me again" in user settings
+- [x] Wizard state persisted in user profile (won't re-trigger unless explicitly replayed)
+
+### Supporting work — 2026-03-27
+
+- [x] `fix(auth)`: force Google account picker on every sign-in (#186)
+- [x] `fix(sonar)`: deprecated Zod/React types and a11y warning (#184)
+- [x] `fix(sonar)`: 7 SonarCloud issues in auth and card components (#183)
+- [x] `test`: coverage raised from 91% to 98% (#188)
+- [x] `docs`: database reset instructions in INFRASTRUCTURE.md (#187)
+- [x] `docs`: roadmap split into Technical and Functional sections (#185)
 
 ---
 
@@ -487,9 +528,10 @@
 | Hooks                 | 11         |
 | Components            | ~45        |
 | Test files            | ~14        |
-| Tests passing         | 857+       |
+| Tests passing         | 880+       |
+| Test coverage         | 98%        |
 | Phase 1 P0 completion | 100%       |
-| Phase 1–8 completion  | 100%       |
+| Phase 1–10 completion | 100%       |
 | Build                 | ✅ Passing |
 
 ---
