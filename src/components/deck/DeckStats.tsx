@@ -114,7 +114,7 @@ function StatRow({ label, value, status = "neutral" }: StatRowProps) {
   );
 }
 
-export function DeckStats({ stats, targetBracket = 2, className }: DeckStatsProps) {
+export function DeckStats({ stats, targetBracket = 3, className }: DeckStatsProps) {
   if (!stats) {
     return (
       <div className={cn("rounded-lg bg-[var(--surface)] p-4", className)}>

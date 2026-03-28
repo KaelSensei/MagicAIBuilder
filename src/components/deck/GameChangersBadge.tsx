@@ -20,7 +20,7 @@ const BRACKET_MAX_GC: Record<number, number> = {
 export function GameChangersBadge({
   count,
   names = [],
-  targetBracket = 2,
+  targetBracket = 3,
   className,
 }: GameChangersBadgeProps) {
   const maxAllowed = BRACKET_MAX_GC[targetBracket] ?? Infinity;
@@ -52,8 +52,11 @@ export function GameChangersBadge({
           <span className="text-xs text-[var(--text-secondary)]">
             / {maxAllowed === Infinity ? "∞" : maxAllowed} Game Changers
           </span>
-          {isOverLimit && (
-            <span className="text-xs text-amber-400 font-medium">⚠ Over limit</span>
+          {isOverLimit && targetBracket <= 2 && (
+            <span className="text-xs text-amber-400 font-medium">⚠ Over limit for B{targetBracket}</span>
+          )}
+          {isOverLimit && targetBracket >= 3 && (
+            <span className="text-xs text-amber-400 font-medium">→ Bracket {count > 3 ? 4 : 3} minimum</span>
           )}
         </div>
         {names.length > 0 && (

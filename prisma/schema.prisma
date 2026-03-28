@@ -71,7 +71,7 @@ model Deck {
   description   String?        @default("")
   tags          String[]       @default([])
   format        String         @default("commander")
-  targetBracket Int            @default(2)
+  targetBracket Int            @default(3)
   budget        Float?
   commanderId   String?
   partnerId     String?
