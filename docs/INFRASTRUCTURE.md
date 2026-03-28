@@ -249,6 +249,44 @@ See the UptimeRobot instructions in [ROADMAP.md](./ROADMAP.md) under **Observabi
 
 ---
 
+## Applying Schema Changes to Production (without migration history)
+
+When a PR adds new columns or tables to `prisma/schema.prisma` and the production database **has no migration history** (common with Supabase), use `db push` instead of `migrate deploy`:
+
+```bash
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[project-ref].supabase.co:5432/postgres" \
+  npx prisma db push
+```
+
+This synchronises the Prisma schema with the live database:
+
+- Adds missing columns and tables
+- Does **not** drop existing data
+- Does **not** require a `_prisma_migrations` table
+
+### When to use which command
+
+| Situation                                                    | Command                     |
+| ------------------------------------------------------------ | --------------------------- |
+| DB has migration history (`_prisma_migrations` table exists) | `npx prisma migrate deploy` |
+| DB has no migration history / baseline error (P3005)         | `npx prisma db push`        |
+| First deploy to empty DB                                     | `npx prisma migrate deploy` |
+| Dev environment (creates migration files)                    | `npx prisma migrate dev`    |
+
+### ⚠️ Checklist after any schema change
+
+Every PR that modifies `prisma/schema.prisma` **must** include:
+
+1. ✅ Migration SQL file in `prisma/migrations/`
+2. ✅ `prisma generate` passes
+3. ✅ PR description mentions the schema change
+4. ✅ **After merge**: run `db push` or `migrate deploy` on production before the Vercel build goes live
+5. ✅ Verify auth still works (sign in with Google) — NextAuth uses `User` table heavily
+
+> **Why this matters:** `prisma generate` (which runs during Vercel build) updates the TypeScript client to expect the new columns. If the database doesn't have them yet, **all auth breaks** with `PrismaClientKnownRequestError: The column X does not exist`. This happened on 2026-03-28 when `User.username` was added but not applied to prod DB.
+
+---
+
 ## Resetting the Database
 
 Use this when you need to **wipe all data** and recreate tables from the Prisma schema (e.g., during development or before launch).
