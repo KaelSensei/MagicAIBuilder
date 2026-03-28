@@ -95,6 +95,15 @@ interface CardZoomModalProps {
 }
 
 function CardZoomModal({ card, onClose, onOpenPrintings }: CardZoomModalProps) {
+  // Close on Escape key (a11y standard for dialogs)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const largeUri =
     card.image_uris?.large ??
     card.card_faces?.[0]?.image_uris?.large ??
