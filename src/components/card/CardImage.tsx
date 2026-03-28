@@ -7,6 +7,7 @@ import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import { cn } from "@/components/ui/utils";
 import type { CardFace } from "@/lib/deck/types";
 import { CardFlip } from "./CardFlip";
+import { ManaCostDisplay } from "./ManaSymbol";
 
 interface CardImageProps {
   readonly imageUri: string;
@@ -28,18 +29,19 @@ interface CardImageProps {
   readonly isFlexibleLand?: boolean;
 }
 
-/** Render mana cost as colored pips — simplified text version */
+/** Render mana cost as colored pip icons, with CMC fallback */
 function ManaPips({ manaCost, cmc }: { readonly manaCost?: string; readonly cmc?: number }) {
-  if (!manaCost && cmc == null) return null;
-  // Just show CMC as a number if no mana cost string
-  const display = manaCost
-    ? manaCost.replaceAll(/[{}]/g, "").replaceAll("/", "")
-    : String(cmc ?? "");
-  return (
-    <span className="text-[10px] font-mono text-white/80 bg-black/40 rounded px-1 py-0.5 leading-none">
-      {display}
-    </span>
-  );
+  if (manaCost) {
+    return <ManaCostDisplay manaCost={manaCost} className="bg-black/40 rounded px-1 py-0.5" />;
+  }
+  if (cmc != null) {
+    return (
+      <span className="text-[10px] font-mono text-white/80 bg-black/40 rounded px-1 py-0.5 leading-none">
+        {cmc}
+      </span>
+    );
+  }
+  return null;
 }
 
 export function CardImage({
