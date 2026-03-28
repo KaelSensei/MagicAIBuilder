@@ -285,8 +285,8 @@ function parsePlainTextDecklist(text: string): UrlImportCard[] {
 
     const quantity = Math.min(Math.max(1, Number.parseInt(m[1], 10)), 99);
     const name = m[2]
-      .replace(/\s+\/\/\s+.+$/, "") // strip back face "Foo // Bar" → "Foo"
-      .replace(/\s*\([A-Z0-9]{2,6}\)\s*\d*\s*$/, "") // strip set codes
+      .replace(/\s+\/\/\s+\S.*$/, "") // strip back face "Foo // Bar" → "Foo"
+      .replace(/\s*\([A-Z0-9]{2,6}\)[\s\d]*$/, "") // strip set codes
       .trim();
 
     if (!name) continue;
