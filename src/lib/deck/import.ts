@@ -47,7 +47,7 @@ function processImportLine(line: string, state: ParseState): void {
   if (/^commander/i.test(line)) { state.inCommanderSection = true; return; }
   if (/^(deck|main|mainboard|99)/i.test(line)) { state.inCommanderSection = false; return; }
 
-  const match = /^(\d+)x?\s+(.+)$/.exec(line);
+  const match = /^(\d+)x?\s+(\S.*)$/.exec(line);
   const rawName = match
     ? match[2].replace(SET_CODE_PATTERN, "").trim()
     : line.replace(SET_CODE_PATTERN, "").trim();
