@@ -9,6 +9,56 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-28: Phase 11 features — bulk edit, hybrid mana, AI archetypes, proxy PDF, URL import, meta panel
+
+- `feat(editor): bulk select in sideboard & maybeboard (#199) [US-A]` — select multiple cards at once in the Sideboard and Maybeboard zones:
+  - Checkbox multi-select per card in both zones
+  - Bulk move to Main / Maybeboard / Sideboard
+  - Bulk remove with single confirmation
+- `feat(mana): hybrid mana support (#200) [US-B]` — full hybrid mana cost handling:
+  - Parse `{W/U}`, `{2/W}`, `{B/G}` hybrid symbols in mana costs
+  - Both colors attributed to card's color identity
+  - Hybrid pips counted as 0.5 toward each color in mana proportion statistics
+  - Hybrid symbols rendered using official Scryfall SVGs
+- `feat(ai): enhanced AI deck builder — archetypes, budget & rationale (#201) [US-C]` — improved AI deck suggestions:
+  - Archetype templates: stax, combo, voltron, control, aggro, midrange
+  - Budget constraint parameter passed to AI prompt
+  - Per-card rationale explaining why each suggestion fits the deck
+  - Improved prompt with archetype context + budget filter
+- `feat(export): proxy sheet export — print-ready PDF (#202) [US-D]` — print-ready proxy sheet generation:
+  - Configurable layout: 3×3 (A4/Letter), 2×2, 1×1
+  - PDF export via browser print API (landscape/portrait)
+  - Image-only export with card art cropped to proxy size
+  - Card-by-card HTML rendering fixed (follow-up from #203)
+- `feat(import): URL import extended — 6 sources + rate limiting (#204) [US-E]` — deck URL import extended:
+  - Added support for: MTGTop8, MTGDecks.net, TappedOut, Goldfish (alongside Moxfield & Archidekt)
+  - Rate limiting on import requests (respect `robots.txt` and source fair-use policies)
+  - "Tournament Deck" badge displayed on imported decks
+  - Unified error handling for private/deleted/unsupported URLs
+- `feat(meta): commander meta analysis panel — EDHRec + tournament (#205) [US-F]` — new Commander meta panel in deck editor:
+  - Fetch and display top cards from EDHRec for the current commander
+  - Aggregate top-played cards across recent MTGTop8/MTGDecks tournament results
+  - Show card frequency % and meta rank alongside deck-builder suggestions
+  - Panel accessible from the Stats sidebar in the builder
+
+### Fixed — 2026-03-28: proxy rendering, SonarCloud batch, regex ReDoS
+
+- `fix(profile): case-insensitive username lookup & normalize on save (#196)` — username now normalized to lowercase on both read and write paths; prevents duplicate profiles differing only in casing
+- `fix(proxy): card-by-card HTML rendering (#203)` — corrected card rendering in proxy sheet HTML output; each card now generates an independent `<figure>` block with correct image URL and layout
+- `fix(quality): SonarCloud smells — unsafe casts, duplication, coverage (#206)` — resolved code smell batch: replaced unsafe `as` type casts, eliminated duplicated utility logic, increased branch coverage for flagged paths
+- `fix(sonar): resolve 38 SonarCloud issues across 19 files (#207)` — batch fix clearing 38 issues (MEDIUM + LOW) across 19 source files: dead code, async patterns, missing return types, optional chain, unnecessary spread
+- `fix(security): regex backtracking in TappedOut parser (#208)` — replaced vulnerable regex with linear-time alternative; prevents ReDoS on crafted deck import input
+- `fix(security): regex backtracking in decklist parser (#209)` — refactored plain-text decklist parser regex; catastrophic backtracking eliminated
+- `fix(security): regex backtracking in card name strip pattern (#210)` — replaced strip-name regex with possessive quantifier pattern; safe under all inputs
+- `fix(security): regex backtracking in deck import parser (#212)` — final ReDoS fix pass on the deck import orchestration layer; all import parsers now use linear-time patterns
+
+### Docs — 2026-03-28
+
+- `docs(infra): production schema sync guide + checklist (#211)` — new `docs/INFRASTRUCTURE.md` section covering:
+  - Step-by-step Supabase ↔ Prisma schema sync procedure
+  - Pre-deploy checklist for schema migrations in production
+  - Rollback instructions and migration verification queries
+
 ### Added — 2026-03-27: Onboarding wizard, URL import & user profile [Phase 10 — US-02, US-03, US-04]
 
 - `feat(onboarding): first-run wizard, tooltips & replay [US-04]` — guided onboarding experience for new users:
