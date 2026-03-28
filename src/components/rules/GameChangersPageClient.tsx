@@ -48,12 +48,10 @@ function CardTile({ card, badge, onClickZoom }: CardTileProps) {
   const imageUri = getCardNormalImage(card);
 
   return (
-    <div
-      className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--accent)]/50 transition-colors cursor-pointer"
+    <button
+      type="button"
+      className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--accent)]/50 transition-colors cursor-pointer text-left w-full"
       onClick={() => onClickZoom(card)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter") onClickZoom(card); }}
       aria-label={`View ${card.name}`}
     >
       {/* Card image — aspect ratio ~63:88 */}
@@ -81,7 +79,7 @@ function CardTile({ card, badge, onClickZoom }: CardTileProps) {
         </div>
         {badge}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -126,10 +124,10 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
     getCardNormalImage(card);
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm"
+    <dialog
+      open
+      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm w-full h-full max-w-none max-h-none m-0 border-none"
       onClick={onClose}
-      role="dialog"
       aria-label={`${card.name} — zoom`}
     >
       {/* Previous arrow */}
@@ -198,7 +196,7 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
