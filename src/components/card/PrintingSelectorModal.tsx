@@ -18,15 +18,7 @@ interface PrintingSelectorModalProps {
   readonly onClose: () => void;
 }
 
-/** Render a raw mana cost string like "{2}{U}{B}" with thin spans */
-function ManaCost({ cost }: { readonly cost: string }) {
-  const tokens = cost.match(/\{[^}]+\}|[^{]+/g) ?? [cost];
-  return (
-    <span className="font-mono text-xs text-(--text-secondary) tracking-wider">
-      {tokens.join(" ").replaceAll(/[{}]/g, "")}
-    </span>
-  );
-}
+import { ManaCostDisplay } from "./ManaSymbol";
 
 export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelectorModalProps) {
   const { data, isLoading } = useCardPrintings(card.name);
@@ -70,7 +62,7 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
         <div className="w-64 shrink-0 border-r border-(--border) p-4 flex flex-col gap-3 overflow-y-auto">
           {manaCost && (
             <div>
-              <ManaCost cost={manaCost} />
+              <ManaCostDisplay manaCost={manaCost} />
             </div>
           )}
           <p className="text-xs font-medium text-(--text-primary) italic border-b border-(--border) pb-2">

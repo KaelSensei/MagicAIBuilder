@@ -1,6 +1,7 @@
 // Deck statistics computation
 import type { Deck, DeckStats } from "./types";
 import { detectThemes } from "./themes";
+import { extractColorPips } from "@/lib/mana/parse";
 
 /** Compute comprehensive deck statistics (maybeboard cards are excluded) */
 export function computeDeckStats(deck: Deck): DeckStats {
@@ -21,11 +22,22 @@ export function computeDeckStats(deck: Deck): DeckStats {
     manaCurve[cmc] = (manaCurve[cmc] ?? 0) + card.quantity;
   }
 
-  // Color distribution
+  // Color distribution — use mana cost pip analysis for hybrid-aware counts.
+  // Falls back to colorIdentity if manaCost is unavailable (e.g. lands).
   const colorDistribution: Record<string, number> = {};
-  for (const card of allCards) {
-    for (const color of card.colorIdentity) {
-      colorDistribution[color] = (colorDistribution[color] ?? 0) + 1;
+  for (const card of nonLandCards) {
+    if (card.manaCost) {
+      const pips = extractColorPips(card.manaCost);
+      for (const [color, count] of Object.entries(pips)) {
+        colorDistribution[color] = (colorDistribution[color] ?? 0) + count * card.quantity;
+      }
+    } else {
+      // Fallback: count via colorIdentity (lands, tokens, etc.)
+      for (const color of card.colorIdentity) {
+        if (color !== "C") {
+          colorDistribution[color] = (colorDistribution[color] ?? 0) + card.quantity;
+        }
+      }
     }
   }
 

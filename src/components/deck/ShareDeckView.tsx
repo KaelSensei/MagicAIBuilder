@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useDeckStore } from "@/lib/deck/store";
+import { ManaCostDisplay } from "@/components/card/ManaSymbol";
 import { Layers, Copy, Check, ExternalLink, Users, BarChart2 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -110,7 +111,7 @@ function CardRow({ card }: { readonly card: ApiCard }) {
         )}
       </span>
       {card.manaCost && (
-        <span className="text-xs text-[var(--text-secondary)] shrink-0">{card.manaCost}</span>
+        <ManaCostDisplay manaCost={card.manaCost} className="shrink-0" />
       )}
     </div>
   );
