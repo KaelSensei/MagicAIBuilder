@@ -157,6 +157,8 @@ export interface DeckStore {
   swapCardPrinting: (cardId: string, printing: import("@/lib/scryfall/types").ScryfallCard) => Promise<void>;
   updateCardNotes: (cardId: string, notes: string | null) => Promise<void>;
   moveCardToZone: (cardId: string, zone: DeckZone) => Promise<void>;
+  bulkMoveToZone: (cardIds: readonly string[], zone: DeckZone) => Promise<void>;
+  bulkRemoveCards: (cardIds: readonly string[]) => Promise<void>;
 
   // Force save (sync) — triggers a full DB refresh for the active deck
   forceSave: () => Promise<void>;
@@ -1064,6 +1066,66 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateCardZone(activeDeckId, cardId, zone);
     } catch (err) {
       console.error("[moveCardToZone]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  bulkMoveToZone: async (cardIds, zone) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId || cardIds.length === 0) return;
+
+    const idSet = new Set(cardIds);
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.map((c) =>
+            idSet.has(c.id) ? { ...c, zone } : c
+          ),
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await Promise.all(
+        cardIds.map((id) => deckApi.updateCardZone(activeDeckId, id, zone))
+      );
+    } catch (err) {
+      console.error("[bulkMoveToZone]", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  bulkRemoveCards: async (cardIds) => {
+    const { activeDeckId } = get();
+    if (!activeDeckId || cardIds.length === 0) return;
+
+    const idSet = new Set(cardIds);
+    // Optimistic update
+    set((state) => ({
+      decks: {
+        ...state.decks,
+        [activeDeckId]: {
+          ...state.decks[activeDeckId],
+          cards: state.decks[activeDeckId].cards.filter((c) => !idSet.has(c.id)),
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    set({ isSyncing: true });
+    try {
+      await Promise.all(
+        cardIds.map((id) => deckApi.removeCard(activeDeckId, id))
+      );
+    } catch (err) {
+      console.error("[bulkRemoveCards]", err);
     } finally {
       set({ isSyncing: false });
     }
