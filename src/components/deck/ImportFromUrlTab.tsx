@@ -113,9 +113,8 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       const { added, ignoredNames } = await addUrlCards(result.cards, foundCards);
       setIgnored(ignoredNames);
       setStatus("done");
-      setMessage(
-        `Imported "${result.name}" — ${added} cards added${ignoredNames.length > 0 ? `, ${ignoredNames.length} ignored` : ""}.`
-      );
+      const ignoredSuffix = ignoredNames.length > 0 ? `, ${ignoredNames.length} ignored` : "";
+      setMessage(`Imported "${result.name}" — ${added} cards added${ignoredSuffix}.`);
       if (ignoredNames.length === 0) onSuccess?.();
     } catch (err) {
       setStatus("error");

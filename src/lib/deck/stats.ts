@@ -3,27 +3,16 @@ import type { Deck, DeckStats } from "./types";
 import { detectThemes } from "./themes";
 import { extractColorPips } from "@/lib/mana/parse";
 
-/** Compute comprehensive deck statistics (maybeboard cards are excluded) */
-export function computeDeckStats(deck: Deck): DeckStats {
-  // Only include main-zone cards in stats (sideboard/maybeboard are excluded)
-  const mainCards = deck.cards.filter((c) => c.zone === "main");
-  const allCards = [
-    ...(deck.commander ? [deck.commander] : []),
-    ...(deck.partner ? [deck.partner] : []),
-    ...mainCards,
-  ];
-
-  const nonLandCards = allCards.filter((c) => c.category !== "land");
-
-  // Mana curve (exclude lands)
+function buildManaCurve(nonLandCards: ReturnType<typeof buildAllCards>): Record<number, number> {
   const manaCurve: Record<number, number> = {};
   for (const card of nonLandCards) {
-    const cmc = Math.min(card.cmc, 7); // Cap at 7+
+    const cmc = Math.min(card.cmc, 7);
     manaCurve[cmc] = (manaCurve[cmc] ?? 0) + card.quantity;
   }
+  return manaCurve;
+}
 
-  // Color distribution — use mana cost pip analysis for hybrid-aware counts.
-  // Falls back to colorIdentity if manaCost is unavailable (e.g. lands).
+function buildColorDistribution(nonLandCards: ReturnType<typeof buildAllCards>): Record<string, number> {
   const colorDistribution: Record<string, number> = {};
   for (const card of nonLandCards) {
     if (card.manaCost) {
@@ -32,7 +21,6 @@ export function computeDeckStats(deck: Deck): DeckStats {
         colorDistribution[color] = (colorDistribution[color] ?? 0) + count * card.quantity;
       }
     } else {
-      // Fallback: count via colorIdentity (lands, tokens, etc.)
       for (const color of card.colorIdentity) {
         if (color !== "C") {
           colorDistribution[color] = (colorDistribution[color] ?? 0) + card.quantity;
@@ -40,6 +28,26 @@ export function computeDeckStats(deck: Deck): DeckStats {
       }
     }
   }
+  return colorDistribution;
+}
+
+function buildAllCards(deck: Deck) {
+  const mainCards = deck.cards.filter((c) => c.zone === "main");
+  return [
+    ...(deck.commander ? [deck.commander] : []),
+    ...(deck.partner ? [deck.partner] : []),
+    ...mainCards,
+  ];
+}
+
+/** Compute comprehensive deck statistics (maybeboard cards are excluded) */
+export function computeDeckStats(deck: Deck): DeckStats {
+  const mainCards = deck.cards.filter((c) => c.zone === "main");
+  const allCards = buildAllCards(deck);
+  const nonLandCards = allCards.filter((c) => c.category !== "land");
+
+  const manaCurve = buildManaCurve(nonLandCards);
+  const colorDistribution = buildColorDistribution(nonLandCards);
 
   // Avg CMC (excluding lands and commander, main zone only)
   const cmcCards = mainCards.filter((c) => c.category !== "land");

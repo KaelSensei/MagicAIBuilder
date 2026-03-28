@@ -205,7 +205,7 @@ export function GameChangersPageClient() {
         <>
           {/* Results count */}
           <p className="text-xs text-[var(--text-secondary)]">
-            {filtered.length} carte{filtered.length !== 1 ? "s" : ""}
+            {filtered.length} carte{filtered.length === 1 ? "" : "s"}
             {search && ` pour « ${search} »`}
           </p>
 

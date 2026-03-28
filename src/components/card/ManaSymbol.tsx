@@ -33,7 +33,7 @@ interface ManaSymbolProps {
   readonly className?: string;
 }
 
-function GenericPip({ value, className }: { value: string; className?: string }) {
+function GenericPip({ value, className }: { readonly value: string; readonly className?: string }) {
   return (
     <span className={cn(BASE, "bg-gray-600 text-white border-gray-500", className)}>
       {value}
@@ -41,7 +41,7 @@ function GenericPip({ value, className }: { value: string; className?: string })
   );
 }
 
-function ColorPip({ color, className }: { color: string; className?: string }) {
+function ColorPip({ color, className }: { readonly color: string; readonly className?: string }) {
   const cls = COLOR_CLASSES[color.toUpperCase()] ?? "bg-gray-500 text-white border-gray-400";
   return (
     <span
@@ -53,7 +53,7 @@ function ColorPip({ color, className }: { color: string; className?: string }) {
   );
 }
 
-function HybridPip({ left, right, className }: { left: string; right: string; className?: string }) {
+function HybridPip({ left, right, className }: { readonly left: string; readonly right: string; readonly className?: string }) {
   // Split pill: left half + right half
   const leftCls = COLOR_CLASSES[left.toUpperCase()] ?? "bg-gray-600 text-white border-gray-500";
   const rightCls = COLOR_CLASSES[right.toUpperCase()] ?? "bg-gray-500 text-white border-gray-400";
@@ -140,7 +140,9 @@ export function ManaCostDisplay({ manaCost, className }: ManaCostDisplayProps) {
   return (
     <span className={cn("inline-flex items-center gap-0.5 flex-wrap", className)} aria-label={manaCost}>
       {tokens.map((token, i) => (
-        <ManaSymbol key={i} token={token} />
+        // Index key is safe here: tokens derive from a static manaCost string and are never reordered
+        // eslint-disable-next-line react/no-array-index-key
+        <ManaSymbol key={`${token.kind}-${i}`} token={token} />
       ))}
     </span>
   );

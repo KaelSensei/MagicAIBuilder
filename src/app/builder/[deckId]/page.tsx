@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Search, LayoutGrid, BarChart3 } from "lucide-react";
+import { Search, LayoutGrid, BarChart3, ArrowLeft, Check, Copy, Crown, Dices, Download, FileText, Pencil } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 import { useUIStore } from "@/lib/ui/store";
 import { useDeck } from "@/hooks/useDeck";
@@ -32,7 +32,7 @@ import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
-import { ArrowLeft, Check, Copy, Crown, Dices, Download, FileText, Pencil } from "lucide-react";
+
 import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
 import Link from "next/link";
 import { motion } from "framer-motion";

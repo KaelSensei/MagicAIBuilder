@@ -50,7 +50,7 @@ export function BulkSelectBar({
         <>
           <span className="text-xs text-[var(--text-secondary)]">·</span>
           <span className="text-xs font-medium text-[var(--accent)]">
-            {selectedCount} card{selectedCount !== 1 ? "s" : ""} selected
+            {selectedCount} card{selectedCount === 1 ? "" : "s"} selected
           </span>
 
           {/* Move actions */}

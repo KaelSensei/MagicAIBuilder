@@ -131,9 +131,9 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
           <div className="px-8 pb-6 flex items-center justify-between gap-4">
             {/* Step dots */}
             <div className="flex items-center gap-1.5">
-              {STEPS.map((_, i) => (
+              {STEPS.map((s, i) => (
                 <div
-                  key={i}
+                  key={s.title}
                   className={cn(
                     "rounded-full transition-all duration-200",
                     i === step

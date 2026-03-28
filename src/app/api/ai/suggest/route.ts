@@ -64,13 +64,31 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function buildPrompt(req: SuggestRequest): string {
-  let commander: string;
-  if (!req.commanderName) { commander = "No commander set"; }
-  else if (req.partnerName) { commander = `${req.commanderName} + ${req.partnerName}`; }
-  else { commander = req.commanderName; }
+function resolveCommanderLabel(req: SuggestRequest): string {
+  if (!req.commanderName) return "No commander set";
+  if (req.partnerName) return `${req.commanderName} + ${req.partnerName}`;
+  return req.commanderName;
+}
 
+function resolveBudgetConstraint(req: SuggestRequest): string {
+  if (req.budgetPerCard != null) {
+    return `$${req.budgetPerCard.toFixed(2)} max per card — NEVER suggest a card above this price. If the ideal card exceeds budget, suggest a budget alternative and say why.`;
+  }
+  return req.budget ? `$${req.budget} total deck budget` : "No per-card budget limit";
+}
+
+function resolveArchetype(req: SuggestRequest): Archetype | undefined {
+  return req.archetype && (ARCHETYPES as readonly string[]).includes(req.archetype)
+    ? req.archetype as Archetype
+    : undefined;
+}
+
+function buildPrompt(req: SuggestRequest): string {
+  const commander = resolveCommanderLabel(req);
   const colors = req.colorIdentity.length > 0 ? req.colorIdentity.join("") : "Colorless";
+  const budgetConstraint = resolveBudgetConstraint(req);
+  const archetype = resolveArchetype(req);
+  const archetypeHint = archetype ? ARCHETYPE_PROMPT_HINTS[archetype] : ARCHETYPE_PROMPT_HINTS["Goodstuff"];
 
   const categoryBreakdown = Object.entries(req.categories)
     .filter(([, count]) => count > 0)
@@ -93,15 +111,6 @@ function buildPrompt(req: SuggestRequest): string {
 
   const gcInfo =
     req.gameChangersList && req.gameChangersList.length > 0 ? req.gameChangersList.join(", ") : "None";
-
-  // Resolve archetype
-  const archetype: Archetype | undefined = req.archetype && (ARCHETYPES as readonly string[]).includes(req.archetype)
-    ? req.archetype as Archetype
-    : undefined;
-  const archetypeHint = archetype ? ARCHETYPE_PROMPT_HINTS[archetype] : ARCHETYPE_PROMPT_HINTS["Goodstuff"];
-  const budgetConstraint = req.budgetPerCard != null
-    ? `$${req.budgetPerCard.toFixed(2)} max per card — NEVER suggest a card above this price. If the ideal card exceeds budget, suggest a budget alternative and say why.`
-    : (req.budget ? `$${req.budget} total deck budget` : "No per-card budget limit");
 
   return `You are a Magic: The Gathering Commander expert. Analyze this deck and suggest targeted improvements.
 
