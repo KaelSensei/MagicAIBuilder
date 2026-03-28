@@ -48,6 +48,7 @@ import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
+import { MetaPanel } from "@/components/deck/MetaPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
@@ -749,6 +750,12 @@ export default function BuilderPage() {
               combos={combos}
               isLoading={combosLoading}
               isEnabled={(deck?.cards.length ?? 0) >= 10}
+            />
+
+            <MetaPanel
+              commanderName={deck.commander?.name ?? null}
+              deckCardNames={new Set(deck.cards.map((c) => c.name))}
+              onAddCard={handleAIAddCard}
             />
 
             <DeckStats stats={stats} targetBracket={deck.targetBracket} />
