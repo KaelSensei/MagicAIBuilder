@@ -79,6 +79,19 @@ const LAYOUT_COLS: Record<ProxyConfig["layout"], number> = {
   "2x2": 2,
 };
 
+/** Render a single card slot to HTML — no newlines inside the string */
+function renderCardSlot(slot: ProxySlot, imageMap: Map<string, string>): string {
+  const src = imageMap.get(slot.imageUri);
+  if (src) {
+    const alt = slot.name.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+    return `<div class="card-slot"><img src="${src}" alt="${alt}" class="card-img" /></div>`;
+  }
+  const name = slot.name.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const cost = slot.manaCost.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const type = slot.typeLine.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  return `<div class="card-slot"><div class="card-fallback"><div class="fallback-name">${name}</div><div class="fallback-cost">${cost}</div><div class="fallback-type">${type}</div></div></div>`;
+}
+
 function buildPrintHtml(
   slots: ProxySlot[],
   imageMap: Map<string, string>,
@@ -88,20 +101,6 @@ function buildPrintHtml(
   const paper = PAPER_SIZES[config.paper];
   const cols = LAYOUT_COLS[config.layout];
   const perPage = cardsPerPage(config.layout);
-
-  const cardHtml = slots
-    .map((slot) => {
-      const src = imageMap.get(slot.imageUri);
-      const cardContent = src
-        ? `<img src="${src}" alt="${slot.name.replace(/"/g, "&quot;")}" class="card-img" />`
-        : `<div class="card-fallback">
-            <div class="fallback-name">${slot.name}</div>
-            <div class="fallback-cost">${slot.manaCost}</div>
-            <div class="fallback-type">${slot.typeLine}</div>
-          </div>`;
-      return `<div class="card-slot">${cardContent}</div>`;
-    })
-    .join("\n");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -189,10 +188,7 @@ function buildPrintHtml(
 <body>
 ${chunkArray(slots, perPage)
   .map(
-    (page, pi) => `<div class="page">
-  ${page.map((_, si) => cardHtml.split("\n")[pi * perPage + si] ?? "").join("\n")}
-  <div class="page-footer">Unofficial proxy — Not for sale — MagicAIBuilder</div>
-</div>`
+    (page) => `<div class="page">${page.map((slot) => renderCardSlot(slot, imageMap)).join("")}<div class="page-footer">Unofficial proxy — Not for sale — MagicAIBuilder</div></div>`
   )
   .join("\n")}
 </body>
