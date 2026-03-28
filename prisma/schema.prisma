@@ -140,6 +140,20 @@ model CardCache {
   @@index([cachedAt])
 }
 
+/// Cache for meta analysis data (EDHRec, tournament results)
+model MetaCache {
+  id             String   @id @default(cuid())
+  commanderSlug  String
+  source         String   // "edhrec" | "tournament"
+  data           Json
+  cachedAt       DateTime @default(now())
+  expiresAt      DateTime
+
+  @@unique([commanderSlug, source])
+  @@index([commanderSlug])
+  @@index([expiresAt])
+}
+
 /// A card owned by the user in their physical collection
 model CollectionCard {
   id         String    @id @default(cuid())
