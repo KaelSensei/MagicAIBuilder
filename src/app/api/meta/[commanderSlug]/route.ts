@@ -50,7 +50,7 @@ export async function GET(request: Request, { params }: Params) {
       });
       if (cached && cached.expiresAt > new Date()) {
         return NextResponse.json({
-          ...(cached.data as object),
+          ...(cached.data as Record<string, unknown>),
           _meta: { cached: true, cachedAt: cached.cachedAt.toISOString() },
         });
       }
@@ -76,8 +76,8 @@ export async function GET(request: Request, { params }: Params) {
     try {
       await prisma.metaCache.upsert({
         where: { commanderSlug_source: { commanderSlug, source } },
-        create: { commanderSlug, source, data: data as object, expiresAt },
-        update: { data: data as object, cachedAt: new Date(), expiresAt },
+        create: { commanderSlug, source, data: JSON.parse(JSON.stringify(data)), expiresAt },
+        update: { data: JSON.parse(JSON.stringify(data)), cachedAt: new Date(), expiresAt },
       });
     } catch {
       // Cache write failure is non-fatal
@@ -95,7 +95,7 @@ export async function GET(request: Request, { params }: Params) {
       });
       if (stale) {
         return NextResponse.json({
-          ...(stale.data as object),
+          ...(stale.data as Record<string, unknown>),
           _meta: { cached: true, stale: true, cachedAt: stale.cachedAt.toISOString() },
         });
       }

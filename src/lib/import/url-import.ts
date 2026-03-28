@@ -85,27 +85,7 @@ export function detectSource(
   return null;
 }
 
-// ─── Shared HTTP helper ────────────────────────────────────────────────────────
-
-async function fetchWithTimeout(
-  url: string,
-  options: RequestInit = {}
-): Promise<Response> {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "User-Agent": "MagicAIBuilder/1.0 (deck import; +https://magicaibuilder.com)",
-      Accept: "application/json, text/html",
-      ...options.headers,
-    },
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (res.status === 404) throw new Error("Deck not found or is private.");
-  if (res.status === 403) throw new Error("Deck is private or access denied.");
-  if (!res.ok)
-    throw new Error(`Source returned HTTP ${res.status}.`);
-  return res;
-}
+import { httpGet, parseJson } from "@/lib/http";
 
 // ─── Moxfield ─────────────────────────────────────────────────────────────────
 
@@ -122,10 +102,10 @@ interface MoxfieldDeck {
 }
 
 async function importMoxfield(id: string): Promise<UrlImportResult> {
-  const res = await fetchWithTimeout(
+  const res = await httpGet(
     `https://api2.moxfield.com/v3/decks/all/${id}`
   );
-  const data = (await res.json()) as MoxfieldDeck;
+  const data = parseJson<MoxfieldDeck>(await res.json());
   const cards: UrlImportCard[] = [];
 
   for (const entry of Object.values(data.commanders ?? {})) {
@@ -158,8 +138,8 @@ interface ArchidektDeck {
 }
 
 async function importArchidekt(id: string): Promise<UrlImportResult> {
-  const res = await fetchWithTimeout(`https://archidekt.com/api/decks/${id}/`);
-  const data = (await res.json()) as ArchidektDeck;
+  const res = await httpGet(`https://archidekt.com/api/decks/${id}/`);
+  const data = parseJson<ArchidektDeck>(await res.json());
   const cards: UrlImportCard[] = [];
 
   for (const entry of data.cards ?? []) {
@@ -179,7 +159,7 @@ async function importArchidekt(id: string): Promise<UrlImportResult> {
 // TappedOut exposes a plain-text export at /mtg-decks/[slug]/?fmt=txt
 
 async function importTappedOut(slug: string): Promise<UrlImportResult> {
-  const res = await fetchWithTimeout(
+  const res = await httpGet(
     `https://tappedout.net/mtg-decks/${slug}/?fmt=txt`,
     { headers: { Accept: "text/plain" } }
   );
@@ -203,7 +183,7 @@ async function importTappedOut(slug: string): Promise<UrlImportResult> {
 
 async function importMtgTop8(deckId: string): Promise<UrlImportResult> {
   // Try text export endpoint first
-  const res = await fetchWithTimeout(
+  const res = await httpGet(
     `https://www.mtgtop8.com/mtg-decks/${deckId}/export.txt`,
     { headers: { Accept: "text/plain, text/html" } }
   );
@@ -212,7 +192,7 @@ async function importMtgTop8(deckId: string): Promise<UrlImportResult> {
 
   if (cards.length === 0) {
     // Fall back: parse HTML for deck content
-    const htmlRes = await fetchWithTimeout(
+    const htmlRes = await httpGet(
       `https://www.mtgtop8.com/event?e=${deckId}&d=${deckId}`
     );
     const html = await htmlRes.text();
@@ -228,7 +208,7 @@ async function importMtgTop8(deckId: string): Promise<UrlImportResult> {
 // mtgdecks.net provides a text export at /[format]/[slug]/txt
 
 async function importMtgDecks(slug: string): Promise<UrlImportResult> {
-  const res = await fetchWithTimeout(
+  const res = await httpGet(
     `https://mtgdecks.net/Commander/${slug}/txt`,
     { headers: { Accept: "text/plain, text/html" } }
   );
@@ -244,20 +224,18 @@ async function importMtgDecks(slug: string): Promise<UrlImportResult> {
 // EDHRec average deck JSON: /json_to_card.json?commanders=[slug]
 
 async function importEdhrec(commanderSlug: string): Promise<UrlImportResult> {
-  const res = await fetchWithTimeout(
+  const res = await httpGet(
     `https://json.edhrec.com/pages/commanders/${commanderSlug}.json`
   );
-  const data = await res.json() as {
+  interface EdhrecImportJson {
     container?: {
       json_dict?: {
-        cardlists?: Array<{
-          tag: string;
-          cardviews: Array<{ name: string }>;
-        }>;
+        cardlists?: Array<{ tag: string; cardviews: Array<{ name: string }> }>;
         card?: { name: string };
       };
     };
-  };
+  }
+  const data = parseJson<EdhrecImportJson>(await res.json());
 
   const dict = data.container?.json_dict;
   if (!dict) throw new Error("EDHRec returned unexpected data.");

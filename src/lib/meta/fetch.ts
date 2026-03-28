@@ -58,23 +58,20 @@ interface EdhrecJson {
   };
 }
 
+import { httpGet, parseJson } from "@/lib/http";
+
 export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData> {
-  const res = await fetch(
-    `https://json.edhrec.com/pages/commanders/${commanderSlug}.json`,
-    {
-      headers: { "User-Agent": "MagicAIBuilder/1.0 (meta analysis)" },
-      signal: AbortSignal.timeout(10_000),
+  let res: Response;
+  try {
+    res = await httpGet(`https://json.edhrec.com/pages/commanders/${commanderSlug}.json`);
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("not found")) {
+      return { cards: [] };
     }
-  );
-
-  if (res.status === 404) {
-    return { cards: [] };
-  }
-  if (!res.ok) {
-    throw new Error(`EDHRec returned HTTP ${res.status}`);
+    throw err;
   }
 
-  const json = (await res.json()) as EdhrecJson;
+  const json = parseJson<EdhrecJson>(await res.json());
   const cardlists = json.container?.json_dict?.cardlists ?? [];
 
   const seen = new Set<string>();
@@ -107,20 +104,14 @@ export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData
 export async function fetchTournamentData(
   commanderName: string
 ): Promise<TournamentData> {
-  // MTGTop8 search: format EDH (f=EDH), search by commander name
-  const encodedName = encodeURIComponent(commanderName);
-  const searchUrl = `https://www.mtgtop8.com/format?f=EDH&meta=150&a=&cp=`;
+  const searchUrl = "https://www.mtgtop8.com/format?f=EDH&meta=150&a=&cp=";
 
-  // Attempt a lightweight search — scrape deck links from HTML
-  const res = await fetch(searchUrl, {
-    headers: {
-      "User-Agent": "MagicAIBuilder/1.0 (meta analysis)",
-      Accept: "text/html",
-    },
-    signal: AbortSignal.timeout(10_000),
-  });
-
-  if (!res.ok) return { decks: [] };
+  let res: Response;
+  try {
+    res = await httpGet(searchUrl, { headers: { Accept: "text/html" } });
+  } catch {
+    return { decks: [] };
+  }
 
   const html = await res.text();
 
@@ -147,8 +138,5 @@ export async function fetchTournamentData(
     });
   }
 
-  // Fallback: return empty with no error if no relevant decks found
-  // (MTGTop8 commander coverage is limited)
-  void encodedName; // suppress unused var lint
   return { decks };
 }
