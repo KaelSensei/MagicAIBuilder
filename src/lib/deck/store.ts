@@ -84,7 +84,7 @@ function createEmptyDeck(id: string, name: string): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
-    targetBracket: 2,
+    targetBracket: 3,
     manualBracket: null,
     budget: null,
     description: "",
