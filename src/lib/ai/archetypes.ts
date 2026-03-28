@@ -83,7 +83,7 @@ export function detectArchetypes(input: DetectionInput): Archetype[] {
   const cardNamesLower = input.cardNames.map((n) => n.toLowerCase());
   const themeNames = (input.detectedThemes ?? []).map((t) => t.toLowerCase());
 
-  const scores: Record<Archetype, number> = {} as Record<Archetype, number>;
+  const scores = Object.fromEntries(ARCHETYPES.map((a) => [a, 0])) as Record<Archetype, number>;
 
   for (const archetype of ARCHETYPES) {
     let score = 0;
@@ -110,7 +110,7 @@ export function detectArchetypes(input: DetectionInput): Archetype[] {
   }
 
   // Sort and return top 2 with score > 0, fallback to Goodstuff
-  const sorted = (Object.entries(scores) as [Archetype, number][])
+  const sorted = (Object.entries(scores) as Array<[Archetype, number]>)
     .filter(([, s]) => s > 0)
     .sort(([, a], [, b]) => b - a)
     .map(([arch]) => arch)

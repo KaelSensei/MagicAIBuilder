@@ -133,7 +133,11 @@ async function processStream(
       const trimmed = line.trim();
       if (!trimmed) continue;
       let event: StreamEvent;
-      try { event = JSON.parse(trimmed) as StreamEvent; } catch { continue; }
+      try {
+        const parsed: unknown = JSON.parse(trimmed);
+        if (!parsed || typeof parsed !== "object" || !("type" in parsed)) continue;
+        event = parsed as StreamEvent;
+      } catch { continue; }
       if (applyStreamEvent(event, acc)) { onUpdate(acc); }
     }
   }
