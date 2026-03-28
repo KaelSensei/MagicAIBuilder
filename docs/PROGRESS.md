@@ -2,12 +2,69 @@
 
 ## Overview
 
-| Field         | Value                                 |
-| ------------- | ------------------------------------- |
-| Current Phase | Phase 10 — User Stories (US-01 → US-04) |
-| Last Updated  | 2026-03-28                              |
-| Status        | 🚀 Active Development                 |
-| Main Branch   | `main`                                |
+| Field         | Value                                          |
+| ------------- | ---------------------------------------------- |
+| Current Phase | Phase 11 — User Stories (US-A → US-F)          |
+| Last Updated  | 2026-03-28                                     |
+| Status        | 🚀 Active Development                          |
+| Main Branch   | `main`                                         |
+
+---
+
+## Phase 11: User Stories — US-A → US-F — 2026-03-28 ✅
+
+### US-A: Bulk Select in Sideboard & Maybeboard (#199)
+
+- [x] Checkbox multi-select per card in Sideboard and Maybeboard zones
+- [x] Bulk move to Main / Maybeboard / Sideboard
+- [x] Bulk remove with single confirmation dialog
+
+### US-B: Hybrid Mana Support (#200)
+
+- [x] Parse `{W/U}`, `{2/W}`, `{B/G}` hybrid symbols in mana costs
+- [x] Both colors attributed to card's color identity for validation
+- [x] Hybrid pips counted as 0.5 toward each color in mana proportion stats
+- [x] Hybrid symbols rendered using official Scryfall SVGs
+
+### US-C: Enhanced AI Deck Builder — Archetypes, Budget & Rationale (#201)
+
+- [x] Archetype templates: stax, combo, voltron, control, aggro, midrange
+- [x] Budget constraint parameter passed to AI prompt
+- [x] Per-card rationale explaining why each suggestion fits the deck
+- [x] Improved prompt with archetype context + budget filter
+
+### US-D: Proxy Sheet Export — Print-Ready PDF (#202)
+
+- [x] Configurable layout: 3×3 (A4/Letter), 2×2, 1×1
+- [x] PDF export via browser print API (landscape/portrait)
+- [x] Image-only export with card art cropped to proxy size
+- [x] Card-by-card HTML rendering fixed (#203)
+
+### US-E: URL Import Extended — 6 Sources + Rate Limiting (#204)
+
+- [x] Added MTGTop8, MTGDecks.net, TappedOut, Goldfish (alongside existing Moxfield & Archidekt)
+- [x] Rate limiting on import requests; respects `robots.txt` and source fair-use policies
+- [x] "Tournament Deck" badge displayed on imported decks
+- [x] Unified error handling for private/deleted/unsupported URLs
+
+### US-F: Commander Meta Analysis Panel — EDHRec + Tournament (#205)
+
+- [x] Fetch and display top cards from EDHRec for current commander
+- [x] Aggregate top-played cards from MTGTop8/MTGDecks tournament results
+- [x] Card frequency % and meta rank displayed alongside suggestions
+- [x] Panel accessible from Stats sidebar in the builder
+
+### Supporting work — 2026-03-28
+
+- [x] `fix(profile)`: case-insensitive username lookup & normalize on save (#196)
+- [x] `fix(proxy)`: card-by-card HTML rendering (#203)
+- [x] `fix(quality)`: SonarCloud smells — unsafe casts, duplication, coverage (#206)
+- [x] `fix(sonar)`: resolve 38 SonarCloud issues across 19 files (#207)
+- [x] `fix(security)`: regex backtracking in TappedOut parser — ReDoS prevention (#208)
+- [x] `fix(security)`: regex backtracking in decklist parser — ReDoS prevention (#209)
+- [x] `fix(security)`: regex backtracking in card name strip pattern — ReDoS prevention (#210)
+- [x] `fix(security)`: regex backtracking in deck import parser — ReDoS prevention (#212)
+- [x] `docs(infra)`: production schema sync guide + checklist (#211)
 
 ---
 
@@ -234,6 +291,9 @@
 | Phase 6  | UX Polish — Grid Density, Zone D&D, Bracket Rules | ✅ Complete |
 | Phase 7  | Infrastructure & Observability                    | ✅ Complete |
 | Phase 8  | Feature Batch — Deck Tools                        | ✅ Complete |
+| Phase 9  | Authentication & Multi-User                       | ✅ Complete |
+| Phase 10 | User Stories — US-01 → US-04                      | ✅ Complete |
+| Phase 11 | User Stories — US-A → US-F                        | ✅ Complete |
 
 ---
 
@@ -531,7 +591,7 @@
 | Tests passing         | 880+       |
 | Test coverage         | 98%        |
 | Phase 1 P0 completion | 100%       |
-| Phase 1–10 completion | 100%       |
+| Phase 1–11 completion | 100%       |
 | Build                 | ✅ Passing |
 
 ---

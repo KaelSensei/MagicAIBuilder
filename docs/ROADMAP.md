@@ -112,7 +112,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [x] **Double-faced cards (DFC): flip/transform**: cards with two faces where only one is playable at a given time (e.g. Delver of Secrets // Insectile Aberration, werewolves): show the front face by default, allow flipping the preview, and correctly handle image fetching for both faces via Scryfall (`card_faces`)
 
-- [ ] **Hybrid cards**: cards with hybrid mana costs (e.g. {W/U}, {2/W}) where the caster can pay either color: correctly parse hybrid symbols in mana cost display, attribute both colors to the color identity, and account for hybrid pips in mana symbol proportion statistics (each hybrid pip counts as 0.5 toward each color, or as the chosen color)
+- [x] **Hybrid cards** _(done — 2026-03-28, #200)_: cards with hybrid mana costs (e.g. {W/U}, {2/W}) where the caster can pay either color: correctly parse hybrid symbols in mana cost display, attribute both colors to the color identity, and account for hybrid pips in mana symbol proportion statistics (each hybrid pip counts as 0.5 toward each color, or as the chosen color)
 
 ---
 
@@ -124,7 +124,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [x] **Deck annotations** _(done — 2026-03-26)_: deck description (collapsible textarea), card notes (inline popover, exported as comments), deck tags (pill UI, home-page filter bar)
 
-- [ ] **Bulk edit on Sideboard & Considering**: select multiple cards at once and move/remove them in bulk; currently only one card at a time can be managed in the Sideboard and Considering zones
+- [x] **Bulk edit on Sideboard & Maybeboard** _(done — 2026-03-28, #199)_: select multiple cards at once and move/remove them in bulk; checkbox multi-select with bulk move to Main / Maybeboard / Sideboard and bulk remove
 
 ---
 
@@ -138,7 +138,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ## AI
 
-- [ ] **Enhance AI deck builder**: improve card suggestion quality, add archetype templates (stax, combo, voltron...), support budget constraints, and explain each suggestion with a rationale
+- [x] **Enhance AI deck builder** _(done — 2026-03-28, #201)_: archetype templates (stax, combo, voltron, control, aggro, midrange), budget constraint parameter, per-card rationale explaining each suggestion
 
 - [ ] **Local AI model for deck building via MageZero**: use [MageZero](https://github.com/WillWroble/MageZero) — a reinforcement-learning engine that plays Magic — to generate training data (game states, card evaluations, winning lines) and fine-tune a local model (Ollama or equivalent) specialized in Commander deck building; the local model would power card suggestions, synergy detection, and archetype recommendations without relying on a cloud API
 
@@ -146,7 +146,8 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ## Export / Print / Proxy
 
-- [ ] **Enhance export, print & proxy support**: add print-ready proxy sheets (configurable layout: 3x3, A4...), PDF export, image-only export, and richer format options (EDHRec, Goldfish, Archidekt import/export)
+- [x] **Proxy sheet export — print-ready PDF** _(done — 2026-03-28, #202)_: configurable layout (3×3 A4/Letter, 2×2, 1×1), PDF via browser print API, image-only export with cropped card art
+- [ ] **Richer export format options**: EDHRec, Goldfish (import only), extended Archidekt import/export
 
 ---
 
@@ -208,23 +209,24 @@ Import competitive decklists directly from tournament databases to use as refere
 
 ### Sources to support
 
-- [ ] **MTGTop8** (`https://www.mtgtop8.com`) — one of the largest tournament deck databases; supports Commander, Legacy, Modern, Vintage, etc.; fetch top decks by format/archetype
-- [ ] **MTGDecks.net** (`https://mtgdecks.net`) — tournament results aggregator with Commander support
-- [ ] **Moxfield** (`https://www.moxfield.com`) — popular deck builder with public API; import deck by URL
-- [ ] **EDHRec** (`https://edhrec.com`) — Commander-specific; top commanders, popular cards, theme-based recommendations
-- [ ] **Archidekt** (`https://archidekt.com`) — deck builder with public deck sharing; import by URL
-- [ ] **TappedOut** (`https://tappedout.net`) — community deck builder; import via their export format
+- [x] **MTGTop8** (`https://www.mtgtop8.com`) _(done — 2026-03-28, #204)_
+- [x] **MTGDecks.net** (`https://mtgdecks.net`) _(done — 2026-03-28, #204)_
+- [x] **Moxfield** (`https://www.moxfield.com`) _(done — 2026-03-27, #198)_
+- [x] **EDHRec** (`https://edhrec.com`) _(meta panel done — 2026-03-28, #205)_
+- [x] **Archidekt** (`https://archidekt.com`) _(done — 2026-03-27, #198)_
+- [x] **TappedOut** (`https://tappedout.net`) _(done — 2026-03-28, #204)_
+- [ ] **Goldfish** (`https://mtggoldfish.com`) — import by URL (planned)
 
 ### Implementation approach
 
-- Add an "Import from URL" field in the import dialog alongside the existing plain text import
-- Detect source from URL (regex match per domain) and use the appropriate parser/fetcher
-- Rate-limit requests, respect `robots.txt`
-- Show a "Tournament Deck" badge on imported decks
-- Optionally show win rate / event context if available from the source
+- [x] "Import from URL" field in import dialog alongside plain text import
+- [x] Source detection from URL (regex match per domain) with appropriate parser/fetcher
+- [x] Rate-limited requests, respecting `robots.txt` and fair-use policies (#204)
+- [x] "Tournament Deck" badge displayed on imported decks (#204)
+- Optionally show win rate / event context if available from the source (future)
 
-### Tournament meta analysis (future)
+### Tournament meta analysis
 
-- For a given commander, fetch and aggregate top tournament decks from MTGTop8/MTGDecks
-- Show most popular cards across meta decks as AI suggestions complement
-- Track meta shifts over time (card frequency in/out)
+- [x] Commander meta analysis panel — EDHRec + tournament aggregation _(done — 2026-03-28, #205)_
+- [x] Most popular cards across meta decks shown as complement to AI suggestions
+- [ ] Track meta shifts over time (card frequency in/out) — future
