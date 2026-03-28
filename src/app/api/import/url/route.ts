@@ -1,14 +1,31 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { importFromUrl } from "@/lib/import/url-import";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
+const RATE_LIMIT = 10;        // max requests
+const RATE_WINDOW = 60_000;   // per 60 seconds
 
 const bodySchema = z.object({
   url: z.string().url().max(500),
 });
 
-// POST /api/import/url — proxy import from Moxfield or Archidekt
+// POST /api/import/url — proxy import from supported deck sources
 // No auth required: importing is a public feature
 export async function POST(request: Request) {
+  // Rate limiting: 10 imports/min/IP
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`import:${ip}`, RATE_LIMIT, RATE_WINDOW);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: `Too many requests. Please wait ${Math.ceil(rl.retryAfterMs / 1000)}s before retrying.` },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
+      }
+    );
+  }
+
   let raw: unknown;
   try {
     raw = await request.json();
@@ -29,12 +46,14 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Import failed.";
-    // Surface user-facing errors as 422, unexpected ones as 500
     const isUserError =
       message.includes("not found") ||
       message.includes("private") ||
+      message.includes("access denied") ||
       message.includes("not recognised") ||
-      message.includes("HTTP 4");
+      message.includes("HTTP 4") ||
+      message.includes("No cards") ||
+      message.includes("empty");
 
     return NextResponse.json(
       { error: message },

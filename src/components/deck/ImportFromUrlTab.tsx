@@ -1,11 +1,21 @@
 "use client";
-// Import deck from Moxfield / Archidekt URL tab
+// Import deck from supported URL sources (Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec)
 import { useState } from "react";
-import { Loader2, CheckCircle2, AlertCircle, Link2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, Link2, CheckCheck, AlertTriangle } from "lucide-react";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { UrlImportCard, UrlImportResult } from "@/lib/import/url-import";
+import { detectSource } from "@/lib/import/url-import";
+
+const SOURCE_LABELS: Record<string, string> = {
+  moxfield: "Moxfield",
+  archidekt: "Archidekt",
+  tappedout: "TappedOut",
+  mtgtop8: "MTGTop8",
+  mtgdecks: "MTGDecks",
+  edhrec: "EDHRec",
+};
 
 type ImportStatus = "idle" | "loading" | "done" | "error";
 
@@ -24,6 +34,10 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [message, setMessage] = useState("");
   const [ignored, setIgnored] = useState<readonly string[]>([]);
+  const [formatWarning, setFormatWarning] = useState<string | null>(null);
+
+  // Detect source from URL for live badge
+  const detected = url.trim() ? detectSource(url.trim()) : null;
 
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
@@ -88,6 +102,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       }
 
       const result = (await res.json()) as UrlImportResult;
+      setFormatWarning(result.formatWarning ?? null);
       const cardNames = Array.from(
         new Set(result.cards.map((c) => c.name))
       ).map((name) => ({ name }));
@@ -104,6 +119,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       if (ignoredNames.length === 0) onSuccess?.();
     } catch (err) {
       setStatus("error");
+      setFormatWarning(null);
       setMessage(err instanceof Error ? err.message : "Import failed.");
     }
   };
@@ -111,7 +127,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-[var(--text-secondary)]">
-        Paste a Moxfield or Archidekt deck URL to import directly.
+        Paste a deck URL to import. Supported: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec.
       </p>
 
       {/* URL input */}
@@ -120,7 +136,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
           <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
           <input
             type="url"
-            placeholder="https://www.moxfield.com/decks/… or https://archidekt.com/decks/…"
+            placeholder="https://www.moxfield.com/decks/… or https://edhrec.com/commanders/…"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleImport()}
@@ -137,6 +153,27 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
           Import
         </button>
       </div>
+
+      {/* Source badge */}
+      {detected && (
+        <div className="flex items-center gap-1.5 text-xs text-green-400">
+          <CheckCheck className="w-3.5 h-3.5" />
+          <span>{SOURCE_LABELS[detected.source] ?? detected.source} detected ✓</span>
+        </div>
+      )}
+      {url.trim() && !detected && (
+        <p className="text-xs text-amber-400">
+          Source not recognised. Supported: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec.
+        </p>
+      )}
+
+      {/* Format warning */}
+      {formatWarning && (
+        <div className="flex items-start gap-2 text-xs text-amber-300 rounded border border-amber-500/30 bg-amber-500/10 p-2">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <span>{formatWarning}</span>
+        </div>
+      )}
 
       {/* Status message */}
       {message && (
