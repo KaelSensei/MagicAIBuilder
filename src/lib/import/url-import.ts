@@ -280,7 +280,7 @@ function parsePlainTextDecklist(text: string): UrlImportCard[] {
       continue;
     }
 
-    const m = /^(\d+)x?\s+(.+)$/.exec(line);
+    const m = /^(\d+)x?\s+(\S.*)$/.exec(line);
     if (!m) continue;
 
     const quantity = Math.min(Math.max(1, Number.parseInt(m[1], 10)), 99);
