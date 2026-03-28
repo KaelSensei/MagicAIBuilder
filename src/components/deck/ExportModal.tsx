@@ -1,7 +1,8 @@
 "use client";
 // Export modal with multiple format support
 import { useState } from "react";
-import { Copy, Download, Check } from "lucide-react";
+import { Copy, Download, Check, Printer } from "lucide-react";
+import { ProxyExportModal } from "./ProxyExportModal";
 import type { Deck } from "@/lib/deck/types";
 import {
   exportPlainText,
@@ -44,6 +45,7 @@ function getExportText(deck: Deck, format: ExportFormat): string {
 
 export function ExportModal({ deck, onClose }: ExportModalProps) {
   const [copied, setCopied] = useState<ExportFormat | null>(null);
+  const [showProxy, setShowProxy] = useState(false);
 
   const handleCopy = async (format: ExportFormat) => {
     const text = getExportText(deck, format);
@@ -62,6 +64,9 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
     }
   };
 
+  const totalDeckCards = deck.cards.filter((c) => c.zone === "main").reduce((s, c) => s + c.quantity, 0)
+    + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0);
+
   const previewText = exportPlainText(deck);
   const totalCards = deck.cards.reduce((s, c) => s + c.quantity, 0)
     + (deck.commander ? 1 : 0)
@@ -70,6 +75,8 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
   const copyFormats: ExportFormat[] = ["moxfield", "arena", "mtgo", "tappedout", "archidekt", "plaintext"];
 
   return (
+    <>
+    {showProxy && <ProxyExportModal deck={deck} onClose={() => setShowProxy(false)} />}
     <Modal open onClose={onClose} title="Export Options">
       {/* Preview */}
       <div className="px-5 pt-4">
@@ -110,7 +117,20 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
             )}
           </div>
         ))}
+        {/* Proxy export */}
+        <div className="pt-2 border-t border-[var(--border)]">
+          <button
+            onClick={() => setShowProxy(true)}
+            disabled={totalDeckCards === 0}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--surface-hover)] transition-all text-sm text-[var(--text-primary)] disabled:opacity-40 disabled:cursor-not-allowed"
+            title={totalDeckCards === 0 ? "Add cards to export proxies" : "Export print-ready proxy sheets"}
+          >
+            <Printer className="w-3.5 h-3.5 text-[var(--text-secondary)] shrink-0" />
+            Export Proxy Sheets (Print / PDF)
+          </button>
+        </div>
       </div>
     </Modal>
+    </>
   );
 }
