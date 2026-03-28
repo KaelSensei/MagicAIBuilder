@@ -70,14 +70,11 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       open
       className="absolute left-0 right-0 top-full z-30 m-0 p-0 bg-transparent border-none shadow-none w-full"
     >
+      {/* role="presentation" wrapper absorbs pointer/key events to prevent propagation to card */}
       <div
-        role="button"
-        tabIndex={0}
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => {
-          e.stopPropagation();
-          if (e.key === "Enter" || e.key === " ") e.preventDefault();
-        }}
+        onKeyDown={(e) => e.stopPropagation()}
       >
       <form
         className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"

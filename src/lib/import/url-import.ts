@@ -283,7 +283,7 @@ function parsePlainTextDecklist(text: string): UrlImportCard[] {
     const m = /^(\d+)x?\s+(.+)$/.exec(line);
     if (!m) continue;
 
-    const quantity = Math.min(Math.max(1, parseInt(m[1], 10)), 99);
+    const quantity = Math.min(Math.max(1, Number.parseInt(m[1], 10)), 99);
     const name = m[2]
       .replace(/\s+\/\/\s+.+$/, "") // strip back face "Foo // Bar" → "Foo"
       .replace(/\s*\([A-Z0-9]{2,6}\)\s*\d*\s*$/, "") // strip set codes
@@ -305,7 +305,7 @@ function extractCardsFromHtml(html: string): UrlImportCard[] {
   const cards: UrlImportCard[] = [];
   const matches = html.matchAll(/\b(\d+)\s+([A-Z][A-Za-z0-9', /()-]{1,60}?)(?=<|&nbsp;|\s{2,})/g);
   for (const m of matches) {
-    const quantity = parseInt(m[1], 10);
+    const quantity = Number.parseInt(m[1], 10);
     const name = m[2].trim();
     if (quantity > 0 && quantity <= 20 && name.length > 2) {
       cards.push({ name, quantity, isCommander: false, isPartner: false });

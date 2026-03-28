@@ -314,9 +314,10 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
           if (next.has(ids[i])) next.delete(ids[i]);
           else next.add(ids[i]);
         }
+      } else if (next.has(id)) {
+        next.delete(id);
       } else {
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
+        next.add(id);
       }
       return next;
     });

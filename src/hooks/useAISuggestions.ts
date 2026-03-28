@@ -4,6 +4,7 @@ import type { Deck, DeckStats, BracketScore } from "@/lib/deck/types";
 import type { StreamEvent } from "@/app/api/ai/suggest/route";
 import { detectArchetypes } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
+export type { Archetype } from "@/lib/ai/archetypes";
 
 export interface CardSuggestion {
   name: string;
@@ -85,8 +86,6 @@ function buildSuggestPayload(
     cardPrices,
   };
 }
-
-export type { Archetype };
 
 type StreamAcc = {
   suggestions: CardSuggestion[];

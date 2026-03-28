@@ -86,12 +86,12 @@ const LAYOUT_COLS: Record<ProxyConfig["layout"], number> = {
 function renderCardSlot(slot: ProxySlot, imageMap: Map<string, string>): string {
   const src = imageMap.get(slot.imageUri);
   if (src) {
-    const alt = slot.name.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+    const alt = slot.name.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
     return `<div class="card-slot"><img src="${src}" alt="${alt}" class="card-img" /></div>`;
   }
-  const name = slot.name.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  const cost = slot.manaCost.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  const type = slot.typeLine.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const name = slot.name.replaceAll("&", "&amp;").replaceAll("<", "&lt;");
+  const cost = slot.manaCost.replaceAll("&", "&amp;").replaceAll("<", "&lt;");
+  const type = slot.typeLine.replaceAll("&", "&amp;").replaceAll("<", "&lt;");
   return `<div class="card-slot"><div class="card-fallback"><div class="fallback-name">${name}</div><div class="fallback-cost">${cost}</div><div class="fallback-type">${type}</div></div></div>`;
 }
 
@@ -259,6 +259,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     const html = buildPrintHtml(slots, imageMapRef.current, config, deckName);
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) { setError("Pop-up blocked — allow pop-ups for this site"); return; }
+    win.document.open();
     win.document.write(html);
     win.document.close();
     win.focus();
@@ -383,9 +384,9 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                   : "border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10")}>
               {isPreparing ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Loading…</> : "Preload Images"}
             </button>
-            <button onClick={handlePrint} disabled={!imagesReady && imgState === null || slots.length === 0}
+            <button onClick={handlePrint} disabled={slots.length === 0 || (imgState === null && !imagesReady)}
               className={cn("flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all",
-                ((!imagesReady && imgState === null) || slots.length === 0)
+                (slots.length === 0 || (imgState === null && !imagesReady))
                   ? "bg-[var(--border)] text-[var(--text-secondary)] cursor-not-allowed opacity-50"
                   : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white")}>
               <Printer className="w-3.5 h-3.5" />

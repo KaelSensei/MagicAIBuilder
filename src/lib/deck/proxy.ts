@@ -48,6 +48,35 @@ function isBasicLand(card: DeckCard): boolean {
   );
 }
 
+function makeCommanderSlot(cmd: DeckCard): ProxySlot {
+  return {
+    id: `cmd-${cmd.id}`,
+    name: cmd.name,
+    imageUri: cmd.imageUri,
+    manaCost: cmd.manaCost,
+    typeLine: cmd.typeLine,
+    isCommander: true,
+  };
+}
+
+function shouldExcludeCard(card: DeckCard, config: ProxyConfig): boolean {
+  if (card.zone !== "main") return true;
+  if (!config.includeLands && isBasicLand(card)) return true;
+  return false;
+}
+
+function makeCardSlots(card: DeckCard): ProxySlot[] {
+  const qty = Math.max(1, card.quantity);
+  return Array.from({ length: qty }, (_, i) => ({
+    id: `${card.id}-${i}`,
+    name: card.name,
+    imageUri: card.imageUri,
+    manaCost: card.manaCost,
+    typeLine: card.typeLine,
+    isCommander: false,
+  }));
+}
+
 /** Build the flat list of print slots from a deck */
 export function buildProxySlots(
   cards: readonly DeckCard[],
@@ -57,36 +86,15 @@ export function buildProxySlots(
 ): ProxySlot[] {
   const slots: ProxySlot[] = [];
 
-  // Commanders
   if (config.includeCommander) {
     for (const cmd of [commander, partner]) {
-      if (!cmd) continue;
-      slots.push({
-        id: `cmd-${cmd.id}`,
-        name: cmd.name,
-        imageUri: config.quality === "high" ? cmd.imageUri : cmd.imageUri,
-        manaCost: cmd.manaCost,
-        typeLine: cmd.typeLine,
-        isCommander: true,
-      });
+      if (cmd) slots.push(makeCommanderSlot(cmd));
     }
   }
 
-  // Deck cards (main zone only, exclude sideboard/maybeboard)
   for (const card of cards) {
-    if (card.zone !== "main") continue;
-    if (!config.includeLands && isBasicLand(card)) continue;
-
-    const qty = Math.max(1, card.quantity);
-    for (let i = 0; i < qty; i++) {
-      slots.push({
-        id: `${card.id}-${i}`,
-        name: card.name,
-        imageUri: card.imageUri,
-        manaCost: card.manaCost,
-        typeLine: card.typeLine,
-        isCommander: false,
-      });
+    if (!shouldExcludeCard(card, config)) {
+      slots.push(...makeCardSlots(card));
     }
   }
 

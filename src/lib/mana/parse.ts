@@ -35,7 +35,7 @@ export function parseSingleSymbol(sym: string): ManaToken {
   }
 
   // Generic numeric or X/Y/Z variable
-  if (/^[0-9]+$/.test(sym) || /^[XYZ]$/i.test(sym)) {
+  if (/^\d+$/.test(sym) || /^[XYZ]$/i.test(sym)) {
     return { kind: "generic", value: sym.toUpperCase() };
   }
 
@@ -58,34 +58,38 @@ export function parseManaCost(manaCost: string): ManaToken[] {
  *   {W/P} → { W: 1 }   (phyrexian — counts as color)
  *   {W}   → { W: 1 }
  */
+function isManaColor(sym: string): boolean {
+  return COLORS.has(sym.toUpperCase()) && sym.toUpperCase() !== "C" && sym.toUpperCase() !== "P";
+}
+
+function addPip(result: Record<string, number>, color: string, value: number): void {
+  result[color.toUpperCase()] = (result[color.toUpperCase()] ?? 0) + value;
+}
+
+function applyHybridPips(result: Record<string, number>, left: string, right: string): void {
+  const leftIsColor = isManaColor(left);
+  const rightIsColor = isManaColor(right) && right.toUpperCase() !== "S";
+
+  if (leftIsColor && rightIsColor) {
+    addPip(result, left, 0.5);
+    addPip(result, right, 0.5);
+  } else if (leftIsColor) {
+    addPip(result, left, 1);
+  } else if (rightIsColor) {
+    addPip(result, right, 1);
+  }
+}
+
 export function extractColorPips(manaCost: string): Record<string, number> {
   const tokens = parseManaCost(manaCost);
   const result: Record<string, number> = {};
 
   for (const token of tokens) {
-    if (token.kind === "color") {
-      if (token.color !== "C" && token.color !== "S") {
-        result[token.color] = (result[token.color] ?? 0) + 1;
-      }
+    if (token.kind === "color" && token.color !== "C" && token.color !== "S") {
+      addPip(result, token.color, 1);
     } else if (token.kind === "hybrid") {
-      const { left, right } = token;
-      const leftIsColor = COLORS.has(left.toUpperCase()) && left !== "C";
-      const rightIsColor = COLORS.has(right.toUpperCase()) && right !== "P" && right !== "C";
-
-      if (leftIsColor && rightIsColor) {
-        // Bicolor hybrid: {W/U} → 0.5 each
-        result[left.toUpperCase()] = (result[left.toUpperCase()] ?? 0) + 0.5;
-        result[right.toUpperCase()] = (result[right.toUpperCase()] ?? 0) + 0.5;
-      } else if (leftIsColor) {
-        // {P/W} or unusual — color side counts as 1
-        result[left.toUpperCase()] = (result[left.toUpperCase()] ?? 0) + 1;
-      } else if (rightIsColor) {
-        // {2/W} or {P/W} — color side counts as 1
-        result[right.toUpperCase()] = (result[right.toUpperCase()] ?? 0) + 1;
-      }
-      // {2/3} or fully generic hybrid — no color pips
+      applyHybridPips(result, token.left, token.right);
     }
-    // generic, unknown: no color pips
   }
 
   return result;

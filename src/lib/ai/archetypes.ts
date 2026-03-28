@@ -79,38 +79,40 @@ const ARCHETYPE_SIGNALS: Record<Archetype, readonly string[]> = {
  * Detect the most likely archetype(s) from deck composition.
  * Returns up to 2 archetypes sorted by match strength.
  */
+function scoreArchetype(
+  archetype: Archetype,
+  cardNamesLower: string[],
+  themeNames: string[]
+): number {
+  const signalScore = ARCHETYPE_SIGNALS[archetype].reduce((acc, signal) => {
+    return acc + (cardNamesLower.some((n) => n.includes(signal.toLowerCase())) ? 2 : 0);
+  }, 0);
+  const themeBoost = themeNames.some((t) => t.includes(archetype.toLowerCase())) ? 3 : 0;
+  return signalScore + themeBoost;
+}
+
+function applyHeuristics(
+  scores: Record<Archetype, number>,
+  categories: DetectionInput["categories"]
+): void {
+  const total = Object.values(categories).reduce((s, v) => s + v, 0);
+  if (total === 0) return;
+  if (categories.ramp / total > 0.15) scores.Ramp += 1;
+  if (categories.creatures / total > 0.4) scores.Aggro += 1;
+  if (categories.removal > 6) scores.Control += 1;
+}
+
 export function detectArchetypes(input: DetectionInput): Archetype[] {
   const cardNamesLower = input.cardNames.map((n) => n.toLowerCase());
   const themeNames = (input.detectedThemes ?? []).map((t) => t.toLowerCase());
 
-  const scores = Object.fromEntries(ARCHETYPES.map((a) => [a, 0])) as Record<Archetype, number>;
+  const scores = Object.fromEntries(
+    ARCHETYPES.map((arch) => [arch, scoreArchetype(arch, cardNamesLower, themeNames)])
+  ) as Record<Archetype, number>;
 
-  for (const archetype of ARCHETYPES) {
-    let score = 0;
-    for (const signal of ARCHETYPE_SIGNALS[archetype]) {
-      if (cardNamesLower.some((n) => n.includes(signal.toLowerCase()))) {
-        score += 2;
-      }
-    }
-    // Boost from detected themes
-    if (themeNames.some((t) => t.includes(archetype.toLowerCase()))) {
-      score += 3;
-    }
-    scores[archetype] = score;
-  }
+  applyHeuristics(scores, input.categories);
 
-  // Heuristic fallbacks based on category ratios
-  const total = Object.values(input.categories).reduce((s, v) => s + v, 0);
-  if (total > 0) {
-    const creatureRatio = input.categories.creatures / total;
-    const rampRatio = input.categories.ramp / total;
-    if (rampRatio > 0.15) scores.Ramp += 1;
-    if (creatureRatio > 0.4) scores.Aggro += 1;
-    if (input.categories.removal > 6) scores.Control += 1;
-  }
-
-  // Sort and return top 2 with score > 0, fallback to Goodstuff
-  const sorted = (Object.entries(scores) as Array<[Archetype, number]>)
+  const sorted = (Object.entries(scores) as [Archetype, number][])
     .filter(([, s]) => s > 0)
     .sort(([, a], [, b]) => b - a)
     .map(([arch]) => arch)

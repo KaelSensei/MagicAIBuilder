@@ -3,7 +3,7 @@
  * OnboardingProvider — wraps the app, shows the wizard on first-run.
  * Exposes `useOnboardingContext` so any component can read/reset onboarding state.
  */
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { OnboardingWizard } from "./OnboardingWizard";
 
@@ -25,9 +25,10 @@ interface OnboardingProviderProps {
 
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const { showWizard, completeOnboarding, resetOnboarding } = useOnboarding();
+  const contextValue = useMemo(() => ({ resetOnboarding }), [resetOnboarding]);
 
   return (
-    <OnboardingContext.Provider value={{ resetOnboarding }}>
+    <OnboardingContext.Provider value={contextValue}>
       {children}
       {showWizard && (
         <OnboardingWizard
