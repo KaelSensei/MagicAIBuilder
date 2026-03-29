@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { DeckTemplate } from "@/lib/deck/templates";
+import type { DeckTemplate as _DeckTemplate } from "@/lib/deck/templates";
 
 // Mock API response types
 interface TemplateResponse {
@@ -17,7 +17,7 @@ describe("Templates API", () => {
   describe("GET /api/templates", () => {
     it("returns templates for a given commander", async () => {
       // Expected behavior: query param commander → return filtered templates
-      const query = new URLSearchParams({ commander: "Atraxa, Grand Unifier" });
+      const _query = new URLSearchParams({ commander: "Atraxa, Grand Unifier" });
       
       // Mock response structure
       const expected: TemplateResponse[] = [
