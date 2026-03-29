@@ -110,6 +110,69 @@ function applyStreamEvent(event: StreamEvent, acc: StreamAcc): boolean {
       return false;
     case "error":
       throw new Error(event.message);
+    default: {
+      const _exhaustive: never = event;
+      return _exhaustive;
+    }
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isStreamEvent(value: unknown): value is StreamEvent {
+  if (!isRecord(value) || typeof value.type !== "string") return false;
+  switch (value.type) {
+    case "analysis": {
+      const p = value.provider;
+      return (
+        typeof value.content === "string" &&
+        (p === "anthropic" || p === "openai" || p === "mock")
+      );
+    }
+    case "suggestion": {
+      const d = value.data;
+      if (!isRecord(d)) return false;
+      const priority = d.priority;
+      return (
+        typeof d.name === "string" &&
+        typeof d.reason === "string" &&
+        typeof d.category === "string" &&
+        (priority === "high" || priority === "medium" || priority === "low")
+      );
+    }
+    case "removal": {
+      const d = value.data;
+      return isRecord(d) && typeof d.name === "string" && typeof d.reason === "string";
+    }
+    case "done":
+      return true;
+    case "error":
+      return typeof value.message === "string";
+    default:
+      return false;
+  }
+}
+
+function parseNdjsonLineToEvent(line: string): StreamEvent | undefined {
+  const trimmed = line.trim();
+  if (!trimmed) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    return undefined;
+  }
+  if (!isStreamEvent(parsed)) return undefined;
+  return parsed;
+}
+
+function applyNdjsonLine(line: string, acc: StreamAcc, onUpdate: (acc: StreamAcc) => void): void {
+  const event = parseNdjsonLineToEvent(line);
+  if (event === undefined) return;
+  if (applyStreamEvent(event, acc)) {
+    onUpdate(acc);
   }
 }
 
@@ -129,15 +192,7 @@ async function processStream(
     const lines = buffer.split("\n");
     buffer = lines.pop() ?? "";
     for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      let event: StreamEvent;
-      try {
-        const parsed: unknown = JSON.parse(trimmed);
-        if (!parsed || typeof parsed !== "object" || !("type" in parsed)) continue;
-        event = parsed as StreamEvent;
-      } catch { continue; }
-      if (applyStreamEvent(event, acc)) { onUpdate(acc); }
+      applyNdjsonLine(line, acc, onUpdate);
     }
   }
   return acc;

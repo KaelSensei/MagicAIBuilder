@@ -149,8 +149,10 @@ function findFavoriteArchetype(decks: readonly Deck[]): string | null {
   const entries = Object.entries(dist);
   if (entries.length === 0) return null;
 
-  return entries.reduce((best, curr) =>
-    curr[1] > best[1] ? curr : best
+  const [first, ...rest] = entries;
+  return rest.reduce<[string, number]>(
+    (best, curr) => (curr[1] > best[1] ? curr : best),
+    first
   )[0];
 }
 

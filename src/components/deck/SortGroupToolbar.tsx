@@ -65,10 +65,11 @@ export function SortGroupToolbar() {
               title={`Sort by ${label} ${isActive ? (sortDirection === "asc" ? "(ascending)" : "(descending)") : ""}`}
             >
               {label}
-              {isActive && (
-                sortDirection === "asc"
-                  ? <ArrowUpAZ className="w-3 h-3" />
-                  : <ArrowDownAZ className="w-3 h-3" />
+              {isActive && sortDirection === "asc" && (
+                <ArrowUpAZ className="w-3 h-3" />
+              )}
+              {isActive && sortDirection === "desc" && (
+                <ArrowDownAZ className="w-3 h-3" />
               )}
             </button>
           );

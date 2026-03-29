@@ -256,8 +256,8 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
 
                     {tournamentDecks.length > 0 && (
                       <div className="space-y-0.5">
-                        {tournamentDecks.map((deck, i) => (
-                          <TournamentDeckRow key={i} deck={deck} />
+                        {tournamentDecks.map((deck) => (
+                          <TournamentDeckRow key={deck.url} deck={deck} />
                         ))}
                       </div>
                     )}

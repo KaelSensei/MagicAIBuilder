@@ -60,6 +60,39 @@ interface EdhrecJson {
 
 import { httpGet, parseJson } from "@/lib/http";
 
+function inclusionFromEdhrecView(view: EdhrecCardView): number {
+  if (view.inclusion != null) return view.inclusion;
+  if (
+    view.num_decks != null &&
+    view.potential_decks != null &&
+    view.potential_decks > 0
+  ) {
+    return view.num_decks / view.potential_decks;
+  }
+  return 0;
+}
+
+function collectMetaCardsFromEdhrecLists(
+  cardlists:
+    | Array<{ tag: string; cardviews?: EdhrecCardView[] }>
+    | undefined
+): MetaCard[] {
+  const lists = cardlists ?? [];
+  const seen = new Set<string>();
+  const cards: MetaCard[] = [];
+
+  outer: for (const list of lists) {
+    for (const view of list.cardviews ?? []) {
+      if (!view.name || seen.has(view.name)) continue;
+      if (cards.length >= 20) break outer;
+      seen.add(view.name);
+      cards.push({ name: view.name, inclusion: inclusionFromEdhrecView(view) });
+    }
+  }
+
+  return cards;
+}
+
 export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData> {
   let res: Response;
   try {
@@ -72,29 +105,8 @@ export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData
   }
 
   const json = parseJson<EdhrecJson>(await res.json());
-  const cardlists = json.container?.json_dict?.cardlists ?? [];
-
-  const seen = new Set<string>();
-  const cards: MetaCard[] = [];
-
-  for (const list of cardlists) {
-    for (const view of list.cardviews ?? []) {
-      if (!view.name || seen.has(view.name)) continue;
-      if (cards.length >= 20) break;
-      seen.add(view.name);
-
-      // inclusion = fraction, fallback to computed ratio
-      const inclusion =
-        view.inclusion != null
-          ? view.inclusion
-          : view.num_decks != null && view.potential_decks != null && view.potential_decks > 0
-          ? view.num_decks / view.potential_decks
-          : 0;
-
-      cards.push({ name: view.name, inclusion });
-    }
-    if (cards.length >= 20) break;
-  }
+  const cardlists = json.container?.json_dict?.cardlists;
+  const cards = collectMetaCardsFromEdhrecLists(cardlists);
 
   return { cards };
 }
