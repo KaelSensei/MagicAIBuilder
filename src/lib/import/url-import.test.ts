@@ -224,6 +224,7 @@ describe("importFromUrl", () => {
       "1 Kenrith, the Returned King",
       "// Mainboard",
       "10 Island  (TMP) 1",
+      "1 Discovery // Dispersal | note",
       "2x Sol Ring",
     ].join("\n");
 
@@ -235,6 +236,7 @@ describe("importFromUrl", () => {
     const commander = result.cards.find((c) => c.name.includes("Kenrith"));
     expect(commander?.isCommander).toBe(true);
     expect(result.cards.some((c) => c.name === "Island")).toBe(true);
+    expect(result.cards.some((c) => c.name === "Discovery")).toBe(true);
     expect(result.cards.some((c) => c.name === "Sol Ring")).toBe(true);
   });
 

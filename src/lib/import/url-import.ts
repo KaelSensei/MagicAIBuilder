@@ -268,6 +268,69 @@ async function importEdhrec(commanderSlug: string): Promise<UrlImportResult> {
 
 // ─── Plain-text parser (shared by TappedOut, MTGTop8, MTGDecks) ────────────────
 
+/** ECMA-262 whitespace (`\s`), single code unit — used instead of ReDoS-prone `\s*….*$` patterns */
+function isEcmaWhitespaceChar(c: string): boolean {
+  return /\s/.test(c);
+}
+
+/**
+ * Drop a suffix starting at the leftmost “optional whitespace + `//` or `|`”.
+ * Replaces legacy `.replace(/\s*(\/\/|\|).*$/, "")` with linear-time scanning.
+ */
+function stripSlashOrPipeCommentSuffix(name: string): string {
+  for (let i = 0; i < name.length; i++) {
+    let j = i;
+    while (j < name.length && isEcmaWhitespaceChar(name[j] ?? "")) j++;
+    if (j < name.length && name[j] === "|") {
+      return name.slice(0, i).trimEnd();
+    }
+    if (j + 1 < name.length && name[j] === "/" && name[j + 1] === "/") {
+      return name.slice(0, i).trimEnd();
+    }
+  }
+  return name;
+}
+
+/**
+ * Remove a trailing set code ` (ABC)` optionally followed by spaces/digits (ReDoS-safe).
+ * Mirrors `.replace(/\s*\([A-Z0-9]{2,6}\)[\s\d]*$/, "")`.
+ */
+function stripTrailingSetCodeSuffix(name: string): string {
+  let i = name.length;
+  while (i > 0) {
+    const ch = name[i - 1] ?? "";
+    if (
+      isEcmaWhitespaceChar(ch) ||
+      (ch >= "0" && ch <= "9")
+    ) {
+      i--;
+      continue;
+    }
+    break;
+  }
+  if (i === 0 || name[i - 1] !== ")") return name;
+
+  let k = i - 2;
+  let alnumLen = 0;
+  while (k >= 0 && alnumLen < 6) {
+    const c = name[k] ?? "";
+    if ((c >= "A" && c <= "Z") || (c >= "0" && c <= "9")) {
+      alnumLen++;
+      k--;
+      continue;
+    }
+    break;
+  }
+  if (alnumLen < 2 || alnumLen > 6) return name;
+  if (k < 0 || name[k] !== "(") return name;
+
+  let beforeParen = k;
+  while (beforeParen > 0 && isEcmaWhitespaceChar(name[beforeParen - 1] ?? "")) {
+    beforeParen--;
+  }
+  return name.slice(0, beforeParen);
+}
+
 function parsePlainTextDecklist(text: string): UrlImportCard[] {
   const cards: UrlImportCard[] = [];
   let inCommanderSection = false;
@@ -284,10 +347,9 @@ function parsePlainTextDecklist(text: string): UrlImportCard[] {
     if (!m) continue;
 
     const quantity = Math.min(Math.max(1, Number.parseInt(m[1], 10)), 99);
-    const name = m[2]
-      .replace(/\s+\/\/\s+\S.*$/, "") // strip back face "Foo // Bar" → "Foo"
-      .replace(/\s*\([A-Z0-9]{2,6}\)[\s\d]*$/, "") // strip set codes
-      .trim();
+    const name = stripTrailingSetCodeSuffix(
+      stripSlashOrPipeCommentSuffix(m[2])
+    ).trim();
 
     if (!name) continue;
 
