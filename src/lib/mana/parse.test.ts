@@ -59,6 +59,12 @@ describe("parseManaCost", () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({ kind: "hybrid", left: "2", right: "G" });
   });
+
+  it("ignores unclosed brace tail (same as previous regex behaviour)", () => {
+    expect(parseManaCost("{2}{W")).toEqual([
+      { kind: "generic", value: "2" },
+    ]);
+  });
 });
 
 // ─── extractColorPips ─────────────────────────────────────────────────────────

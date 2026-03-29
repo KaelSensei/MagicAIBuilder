@@ -42,11 +42,29 @@ export function parseSingleSymbol(sym: string): ManaToken {
   return { kind: "unknown", raw: sym };
 }
 
+/**
+ * Split `{…}{…}` segments without regex (avoids Sonar ReDoS warnings on `\{[^}]+\}`).
+ */
+function extractBracedManaSegments(manaCost: string): readonly string[] {
+  const segments: string[] = [];
+  let i = 0;
+  while (i < manaCost.length) {
+    const open = manaCost.indexOf("{", i);
+    if (open === -1) break;
+    const close = manaCost.indexOf("}", open + 1);
+    if (close === -1) break;
+    segments.push(manaCost.slice(open, close + 1));
+    i = close + 1;
+  }
+  return segments;
+}
+
 /** Parse a full mana cost string like "{2}{W/U}{B}" into an array of tokens */
 export function parseManaCost(manaCost: string): ManaToken[] {
   if (!manaCost) return [];
-  const matches = manaCost.match(/\{[^}]+\}/g) ?? [];
-  return matches.map((m) => parseSingleSymbol(m.slice(1, -1)));
+  return extractBracedManaSegments(manaCost).map((m) =>
+    parseSingleSymbol(m.slice(1, -1))
+  );
 }
 
 /**
