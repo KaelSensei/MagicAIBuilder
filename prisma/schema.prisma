@@ -173,3 +173,21 @@ model CollectionCard {
   @@index([scryfallId])
   @@index([userId])
 }
+
+// Deck templates for reusable archetypes
+model DeckTemplate {
+  id            String    @id @default(cuid())
+  name          String
+  commanderName String
+  archetype     String    // Combo, Control, Voltron, etc.
+  deckList      Json      // Array of DeckCard objects (99 cards)
+  author        String
+  upvotes       Int       @default(0)
+  source        String    @default("community") // "official" or "community"
+  userId        String?   // Creator (if community)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([commanderName])
+  @@index([upvotes])
+}
