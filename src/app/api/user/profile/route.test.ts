@@ -2,8 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockUserFindUnique, mockUserUpdate, mockUserDelete } = vi.hoisted(() => ({
+const { mockUserFindUnique, mockUserUpsert, mockUserUpdate, mockUserDelete } = vi.hoisted(() => ({
   mockUserFindUnique: vi.fn(),
+  mockUserUpsert: vi.fn(),
   mockUserUpdate: vi.fn(),
   mockUserDelete: vi.fn(),
 }));
@@ -12,6 +13,7 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     user: {
       findUnique: mockUserFindUnique,
+      upsert: mockUserUpsert,
       update: mockUserUpdate,
       delete: mockUserDelete,
     },
@@ -48,6 +50,15 @@ function authed() {
   });
 }
 
+function mockResolvedSessionUser() {
+  mockUserFindUnique.mockResolvedValueOnce({
+    id: "user-1",
+    name: "Kael",
+    email: "kael@test.com",
+    image: null,
+  });
+}
+
 function unauthed() {
   mockAuth.mockResolvedValueOnce(null);
 }
@@ -61,6 +72,7 @@ describe("GET /api/user/profile", () => {
 
   it("returns the current user's profile", async () => {
     authed();
+    mockResolvedSessionUser();
     mockUserFindUnique.mockResolvedValueOnce(USER_FIXTURE);
 
     const res = await GET();
@@ -83,6 +95,7 @@ describe("GET /api/user/profile", () => {
 
   it("returns 404 when user not found in DB", async () => {
     authed();
+    mockResolvedSessionUser();
     mockUserFindUnique.mockResolvedValueOnce(null);
 
     const res = await GET();
@@ -98,6 +111,7 @@ describe("PATCH /api/user/profile", () => {
 
   it("updates user name", async () => {
     authed();
+    mockResolvedSessionUser();
     mockUserUpdate.mockResolvedValueOnce({ ...USER_FIXTURE, name: "New Name" });
 
     const res = await PATCH(
@@ -115,6 +129,7 @@ describe("PATCH /api/user/profile", () => {
 
   it("updates user image to a URL", async () => {
     authed();
+    mockResolvedSessionUser();
     mockUserUpdate.mockResolvedValueOnce({
       ...USER_FIXTURE,
       image: "https://example.com/avatar.jpg",
@@ -135,6 +150,7 @@ describe("PATCH /api/user/profile", () => {
 
   it("clears user image with null", async () => {
     authed();
+    mockResolvedSessionUser();
     mockUserUpdate.mockResolvedValueOnce({ ...USER_FIXTURE, image: null });
 
     const res = await PATCH(
@@ -150,6 +166,7 @@ describe("PATCH /api/user/profile", () => {
 
   it("returns 400 for empty name", async () => {
     authed();
+    mockResolvedSessionUser();
 
     const res = await PATCH(
       new Request("http://localhost:3000/api/user/profile", {
@@ -165,6 +182,7 @@ describe("PATCH /api/user/profile", () => {
 
   it("returns 400 for image that is not a valid URL", async () => {
     authed();
+    mockResolvedSessionUser();
 
     const res = await PATCH(
       new Request("http://localhost:3000/api/user/profile", {
@@ -199,6 +217,7 @@ describe("DELETE /api/user/profile", () => {
 
   it("deletes the current user's account", async () => {
     authed();
+    mockResolvedSessionUser();
     mockUserDelete.mockResolvedValueOnce({ id: "user-1" });
 
     const res = await DELETE();
@@ -222,6 +241,7 @@ describe("DELETE /api/user/profile", () => {
 
   it("returns 500 when Prisma throws", async () => {
     authed();
+    mockResolvedSessionUser();
     mockUserDelete.mockRejectedValueOnce(new Error("DB error"));
 
     const res = await DELETE();
