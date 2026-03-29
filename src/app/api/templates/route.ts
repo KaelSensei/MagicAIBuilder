@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-// TODO: Uncomment after DB migration
+// Uncomment when the templates table migration lands.
 // import { prisma } from "@/lib/db/prisma";
 
 // ─── Validation Schemas ────────────────────────────────────────────────────
@@ -50,8 +50,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // For MVP: Return mock templates (DB integration in Phase 3)
-    // TODO: Replace with prisma.deckTemplate.findMany() after migration
+    // MVP fallback: serve mock templates until the templates table is available.
     const mockTemplates = [
       {
         id: "tmpl-atraxa-voltron",
@@ -105,8 +104,7 @@ export async function POST(request: NextRequest) {
 
     const { templateName, archetype } = validation.data;
 
-    // For MVP: Return mock success (DB integration in Phase 3)
-    // TODO: Replace with prisma.deckTemplate.create() after migration
+    // MVP fallback: echo a mock template response until persistence is wired in.
     const mockTemplate = {
       id: `tmpl-${Date.now()}`,
       name: templateName,
