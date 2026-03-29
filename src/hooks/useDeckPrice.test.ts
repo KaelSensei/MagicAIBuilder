@@ -19,7 +19,7 @@ function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
     price: null,
     imageUri: "",
     artCropUri: "",
-    category: "creatures",
+    category: "creature",
     quantity: 1,
     zone: "main",
     ...overrides,
