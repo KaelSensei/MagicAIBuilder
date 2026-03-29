@@ -1,6 +1,6 @@
 "use client";
 // Modal to select a card printing — shows oracle text alongside all printings
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -22,15 +22,20 @@ import { ManaCostDisplay } from "./ManaSymbol";
 
 export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelectorModalProps) {
   const { data, isLoading } = useCardPrintings(card.name);
-  const [hovered, setHovered] = useState<string | null>(null);
+  const [previewedPrintingId, setPreviewedPrintingId] = useState(card.id);
 
   const printings = useMemo(() => data?.data ?? [card], [card, data?.data]);
-  const hoveredPrinting = useMemo(() => {
-    if (!hovered) {
-      return null;
-    }
-    return printings.find((printing) => printing.id === hovered) ?? null;
-  }, [hovered, printings]);
+  const previewedPrinting = useMemo(
+    () =>
+      printings.find((printing) => printing.id === previewedPrintingId) ??
+      printings[0] ??
+      card,
+    [card, previewedPrintingId, printings]
+  );
+
+  useEffect(() => {
+    setPreviewedPrintingId(card.id);
+  }, [card.id]);
 
   // Resolve oracle text — handle double-faced cards
   const face = card.card_faces?.[0];
@@ -107,14 +112,17 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
                           onSelect(printing);
                           onClose();
                         }}
-                        onMouseEnter={() => setHovered(printing.id)}
-                        onMouseLeave={() => setHovered(null)}
+                        onMouseEnter={() => setPreviewedPrintingId(printing.id)}
                         className="relative rounded-[4.75%] overflow-hidden border-2 transition-all focus:outline-none"
                         style={{
                           borderColor:
-                            hovered === printing.id ? "var(--accent)" : "transparent",
-                          transform: hovered === printing.id ? "scale(1.04)" : "scale(1)",
-                          boxShadow: hovered === printing.id ? "0 0 12px var(--accent)40" : "none",
+                            previewedPrinting.id === printing.id ? "var(--accent)" : "transparent",
+                          transform:
+                            previewedPrinting.id === printing.id ? "scale(1.04)" : "scale(1)",
+                          boxShadow:
+                            previewedPrinting.id === printing.id
+                              ? "0 0 12px var(--accent)40"
+                              : "none",
                         }}
                       >
                         <Image
@@ -135,32 +143,24 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
               </div>
 
               <aside className="hidden lg:flex w-72 shrink-0 flex-col rounded-xl border border-(--border) bg-(--surface) p-3">
-                {hoveredPrinting ? (
-                  <>
-                    <div className="overflow-hidden rounded-[4.75%] border border-(--border)">
-                      <Image
-                        src={getCardImageUri(hoveredPrinting, "large")}
-                        alt={`${hoveredPrinting.name} — enlarged preview`}
-                        width={336}
-                        height={468}
-                        className="block w-full h-auto"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="pt-3">
-                      <p className="text-sm font-medium text-(--text-primary)">
-                        {hoveredPrinting.set_name ?? hoveredPrinting.name}
-                      </p>
-                      <p className="mt-1 text-xs uppercase tracking-wide text-(--text-secondary)">
-                        {hoveredPrinting.set}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-(--border) px-4 text-center text-xs text-(--text-secondary)">
-                    Survole une impression pour afficher son zoom ici.
-                  </div>
-                )}
+                <div className="overflow-hidden rounded-[4.75%] border border-(--border)">
+                  <Image
+                    src={getCardImageUri(previewedPrinting, "large")}
+                    alt={`${previewedPrinting.name} — enlarged preview`}
+                    width={336}
+                    height={468}
+                    className="block w-full h-auto"
+                    unoptimized
+                  />
+                </div>
+                <div className="pt-3">
+                  <p className="text-sm font-medium text-(--text-primary)">
+                    {previewedPrinting.set_name ?? previewedPrinting.name}
+                  </p>
+                  <p className="mt-1 text-xs uppercase tracking-wide text-(--text-secondary)">
+                    {previewedPrinting.set}
+                  </p>
+                </div>
               </aside>
             </div>
           )}
