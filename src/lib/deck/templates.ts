@@ -4,6 +4,7 @@
  */
 
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { randomAlphanumericId } from "@/lib/crypto-random";
 
 /**
  * A template is a pre-built deck configuration that players can use as a starting point.
@@ -36,7 +37,7 @@ export function createTemplate(
   const mainDeckCards = deck.cards.slice(0, 99);
 
   return {
-    id: `tmpl-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    id: `tmpl-${Date.now()}-${randomAlphanumericId(9)}`,
     name: templateName,
     commanderName: deck.commander?.name || "Unknown Commander",
     archetype,
@@ -64,7 +65,7 @@ export function applyTemplate(
   );
 
   return {
-    id: `deck-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    id: `deck-${Date.now()}-${randomAlphanumericId(9)}`,
     name: deckName,
     description: `Based on template: ${template.name} by ${template.author}`,
     commander: commanderCard ?? null,
