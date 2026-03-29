@@ -1,6 +1,6 @@
 "use client";
 // Modal to select a card printing — shows oracle text alongside all printings
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -24,7 +24,13 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
   const { data, isLoading } = useCardPrintings(card.name);
   const [hovered, setHovered] = useState<string | null>(null);
 
-  const printings = data?.data ?? [card];
+  const printings = useMemo(() => data?.data ?? [card], [card, data?.data]);
+  const hoveredPrinting = useMemo(() => {
+    if (!hovered) {
+      return null;
+    }
+    return printings.find((printing) => printing.id === hovered) ?? null;
+  }, [hovered, printings]);
 
   // Resolve oracle text — handle double-faced cards
   const face = card.card_faces?.[0];
@@ -84,45 +90,78 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
           )}
         </div>
 
-        {/* Right — Printings grid */}
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* Right — Printings grid + desktop hover preview */}
+        <div className="flex-1 overflow-hidden p-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-40">
               <Loader2 className="w-6 h-6 animate-spin text-(--accent)" />
             </div>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4">
-              {printings.map((printing) => (
-                <div key={printing.id} className="flex flex-col gap-1.5">
-                  <button
-                    onClick={() => {
-                      onSelect(printing);
-                      onClose();
-                    }}
-                    onMouseEnter={() => setHovered(printing.id)}
-                    onMouseLeave={() => setHovered(null)}
-                    className="relative rounded-[4.75%] overflow-hidden border-2 transition-all focus:outline-none"
-                    style={{
-                      borderColor:
-                        hovered === printing.id ? "var(--accent)" : "transparent",
-                      transform: hovered === printing.id ? "scale(1.04)" : "scale(1)",
-                      boxShadow: hovered === printing.id ? "0 0 12px var(--accent)40" : "none",
-                    }}
-                  >
-                    <Image
-                      src={getCardImageUri(printing, "normal")}
-                      alt={`${printing.name} — ${printing.set_name}`}
-                      width={220}
-                      height={308}
-                      className="block w-full h-auto"
-                      unoptimized
-                    />
-                  </button>
-                  <p className="text-[10px] text-(--text-secondary) text-center truncate uppercase tracking-wide">
-                    {printing.set}
-                  </p>
+            <div className="flex h-full gap-4">
+              <div className="min-w-0 flex-1 overflow-y-auto">
+                <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {printings.map((printing) => (
+                    <div key={printing.id} className="flex flex-col gap-1.5">
+                      <button
+                        onClick={() => {
+                          onSelect(printing);
+                          onClose();
+                        }}
+                        onMouseEnter={() => setHovered(printing.id)}
+                        onMouseLeave={() => setHovered(null)}
+                        className="relative rounded-[4.75%] overflow-hidden border-2 transition-all focus:outline-none"
+                        style={{
+                          borderColor:
+                            hovered === printing.id ? "var(--accent)" : "transparent",
+                          transform: hovered === printing.id ? "scale(1.04)" : "scale(1)",
+                          boxShadow: hovered === printing.id ? "0 0 12px var(--accent)40" : "none",
+                        }}
+                      >
+                        <Image
+                          src={getCardImageUri(printing, "normal")}
+                          alt={`${printing.name} — ${printing.set_name}`}
+                          width={220}
+                          height={308}
+                          className="block w-full h-auto"
+                          unoptimized
+                        />
+                      </button>
+                      <p className="text-[10px] text-(--text-secondary) text-center truncate uppercase tracking-wide">
+                        {printing.set}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              <aside className="hidden lg:flex w-72 shrink-0 flex-col rounded-xl border border-(--border) bg-(--surface) p-3">
+                {hoveredPrinting ? (
+                  <>
+                    <div className="overflow-hidden rounded-[4.75%] border border-(--border)">
+                      <Image
+                        src={getCardImageUri(hoveredPrinting, "large")}
+                        alt={`${hoveredPrinting.name} — enlarged preview`}
+                        width={336}
+                        height={468}
+                        className="block w-full h-auto"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="pt-3">
+                      <p className="text-sm font-medium text-(--text-primary)">
+                        {hoveredPrinting.set_name ?? hoveredPrinting.name}
+                      </p>
+                      <p className="mt-1 text-xs uppercase tracking-wide text-(--text-secondary)">
+                        {hoveredPrinting.set}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-(--border) px-4 text-center text-xs text-(--text-secondary)">
+                    Survole une impression pour afficher son zoom ici.
+                  </div>
+                )}
+              </aside>
             </div>
           )}
         </div>
