@@ -70,9 +70,10 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       open
       className="absolute left-0 right-0 top-full z-30 m-0 p-0 bg-transparent border-none shadow-none w-full"
     >
-      {/* role="presentation" wrapper absorbs pointer/key events to prevent propagation to card */}
+      {/* Stops clicks inside the note editor from activating the parent card row */}
       <div
-        role="presentation"
+        role="group"
+        aria-label="Card note editor"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >

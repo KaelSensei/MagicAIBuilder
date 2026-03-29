@@ -4,7 +4,7 @@
  * Displayed when user creates a new deck or manually selects a template
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, ThumbsUp, Clock } from "lucide-react";
@@ -55,6 +55,118 @@ export function TemplatesModal({
     [onSelectTemplate, onClose]
   );
 
+  function templatesScrollBody(): ReactNode {
+    if (isLoading) {
+      return (
+        <div className="text-center py-12 text-white/60">Loading templates...</div>
+      );
+    }
+    if (error) {
+      return (
+        <div className="text-center py-12 text-red-400">Failed to load templates</div>
+      );
+    }
+    if (templates.length === 0) {
+      return (
+        <div className="text-center py-12 text-white/60">
+          No templates available for this commander yet
+        </div>
+      );
+    }
+    return (
+      <>
+        {archetypes.length > 1 && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase text-white/60">
+              Filter by archetype
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedArchetype(null)}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                  selectedArchetype === null
+                    ? "bg-blue-600 text-white"
+                    : "bg-white/10 text-white/70 hover:bg-white/20"
+                )}
+              >
+                All
+              </button>
+              {archetypes.map((arch) => (
+                <button
+                  type="button"
+                  key={arch}
+                  onClick={() => setSelectedArchetype(arch)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                    selectedArchetype === arch
+                      ? "bg-blue-600 text-white"
+                      : "bg-white/10 text-white/70 hover:bg-white/20"
+                  )}
+                >
+                  {arch}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {filteredTemplates.map((template) => (
+            <motion.div
+              key={template.id}
+              className="border border-white/10 rounded-lg p-4 hover:border-white/30 hover:bg-white/5 transition-all cursor-pointer"
+              onClick={() => handleApply(template)}
+              whileHover={{ x: 4 }}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-base font-semibold text-white truncate">
+                      {template.name}
+                    </h3>
+                    {template.source === "official" && (
+                      <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-600/30 text-blue-200 flex-shrink-0">
+                        Official
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-white/60 mb-2">
+                    {template.archetype} by {template.author}
+                  </p>
+                  <div className="flex items-center gap-4 text-xs text-white/50">
+                    <div className="flex items-center gap-1">
+                      <ThumbsUp size={14} />
+                      <span>{template.upvotes}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock size={14} />
+                      <span>
+                        {new Date(template.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm flex items-center gap-2 flex-shrink-0 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApply(template);
+                  }}
+                >
+                  <Download size={16} />
+                  Use
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
   if (!isOpen) return null;
 
   return (
@@ -94,106 +206,7 @@ export function TemplatesModal({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {isLoading ? (
-              <div className="text-center py-12 text-white/60">
-                Loading templates...
-              </div>
-            ) : error ? (
-              <div className="text-center py-12 text-red-400">
-                Failed to load templates
-              </div>
-            ) : templates.length === 0 ? (
-              <div className="text-center py-12 text-white/60">
-                No templates available for this commander yet
-              </div>
-            ) : (
-              <>
-                {/* Archetype Filter */}
-                {archetypes.length > 1 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase text-white/60">
-                      Filter by archetype
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => setSelectedArchetype(null)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                          selectedArchetype === null
-                            ? "bg-blue-600 text-white"
-                            : "bg-white/10 text-white/70 hover:bg-white/20"
-                        )}
-                      >
-                        All
-                      </button>
-                      {archetypes.map((arch) => (
-                        <button
-                          key={arch}
-                          onClick={() => setSelectedArchetype(arch)}
-                          className={cn(
-                            "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                            selectedArchetype === arch
-                              ? "bg-blue-600 text-white"
-                              : "bg-white/10 text-white/70 hover:bg-white/20"
-                          )}
-                        >
-                          {arch}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Template List */}
-                <div className="space-y-3">
-                  {filteredTemplates.map((template) => (
-                    <motion.div
-                      key={template.id}
-                      className="border border-white/10 rounded-lg p-4 hover:border-white/30 hover:bg-white/5 transition-all cursor-pointer"
-                      onClick={() => handleApply(template)}
-                      whileHover={{ x: 4 }}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-base font-semibold text-white truncate">
-                              {template.name}
-                            </h3>
-                            {template.source === "official" && (
-                              <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-600/30 text-blue-200 flex-shrink-0">
-                                Official
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-white/60 mb-2">
-                            {template.archetype} by {template.author}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-white/50">
-                            <div className="flex items-center gap-1">
-                              <ThumbsUp size={14} />
-                              <span>{template.upvotes}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock size={14} />
-                              <span>
-                                {new Date(template.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm flex items-center gap-2 flex-shrink-0 transition-colors"
-                          onClick={() => handleApply(template)}
-                        >
-                          <Download size={16} />
-                          Use
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </>
-            )}
+            {templatesScrollBody()}
           </div>
         </motion.div>
       </motion.div>

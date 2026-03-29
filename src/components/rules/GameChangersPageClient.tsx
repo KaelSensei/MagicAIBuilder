@@ -126,74 +126,78 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
   return (
     <dialog
       open
-      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm w-full h-full max-w-none max-h-none m-0 border-none"
-      onClick={onClose}
+      className="fixed inset-0 z-50 m-0 flex h-full w-full max-h-none max-w-none items-center justify-center border-none bg-transparent p-4"
       aria-label={`${card.name} — zoom`}
     >
-      {/* Previous arrow */}
-      {hasPrev && (
+      <div className="relative flex h-full w-full max-h-full items-center justify-center">
         <button
-          onClick={(e) => { e.stopPropagation(); goPrev(); }}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-          aria-label="Previous card"
-        >
-          ‹
-        </button>
-      )}
-
-      {/* Next arrow */}
-      {hasNext && (
-        <button
-          onClick={(e) => { e.stopPropagation(); goNext(); }}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-          aria-label="Next card"
-        >
-          ›
-        </button>
-      )}
-
-      <div
-        className="relative max-w-[400px] w-full"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button
+          type="button"
+          className="absolute inset-0 z-0 cursor-default border-0 bg-black/80 p-0 backdrop-blur-sm"
+          aria-label="Close preview"
           onClick={onClose}
-          className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shadow-lg transition-colors"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        />
 
-        {/* Large image */}
-        {largeUri && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={largeUri}
-            alt={card.name}
-            className="w-full rounded-xl shadow-2xl"
-          />
+        {hasPrev && (
+          <button
+            type="button"
+            onClick={goPrev}
+            className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white/70 transition-colors hover:bg-black/80 hover:text-white"
+            aria-label="Previous card"
+          >
+            ‹
+          </button>
         )}
 
-        {/* Card info + nav counter + printings button */}
-        <div className="mt-3 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-white">{card.name}</p>
-            <p className="text-xs text-white/60">
-              {card.type_line}
-              {cards.length > 1 && (
-                <span className="ml-2 text-white/40">
-                  {currentIndex + 1} / {cards.length}
-                </span>
-              )}
-            </p>
-          </div>
+        {hasNext && (
           <button
-            onClick={onOpenPrintings}
-            className="text-xs px-3 py-1.5 rounded-lg border border-white/20 text-white/80 hover:text-white hover:border-white/40 transition-colors"
+            type="button"
+            onClick={goNext}
+            className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white/70 transition-colors hover:bg-black/80 hover:text-white"
+            aria-label="Next card"
           >
-            View all arts
+            ›
           </button>
+        )}
+
+        <div className="relative z-10 w-full max-w-[400px]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute -right-3 -top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] shadow-lg transition-colors hover:text-[var(--text-primary)]"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {largeUri && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={largeUri}
+              alt={card.name}
+              className="w-full rounded-xl shadow-2xl"
+            />
+          )}
+
+          <div className="mt-3 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-white">{card.name}</p>
+              <p className="text-xs text-white/60">
+                {card.type_line}
+                {cards.length > 1 && (
+                  <span className="ml-2 text-white/40">
+                    {currentIndex + 1} / {cards.length}
+                  </span>
+                )}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenPrintings}
+              className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-white/80 transition-colors hover:border-white/40 hover:text-white"
+            >
+              View all arts
+            </button>
+          </div>
         </div>
       </div>
     </dialog>
