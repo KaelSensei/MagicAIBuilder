@@ -12,6 +12,49 @@ export interface AuthenticatedSession {
   };
 }
 
+interface SessionUserCandidate {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
+async function resolveAuthenticatedUser(
+  sessionUser: SessionUserCandidate
+): Promise<AuthenticatedSession["user"] | null> {
+  if (sessionUser.id) {
+    const userById = await prisma.user.findUnique({
+      where: { id: sessionUser.id },
+      select: { id: true, name: true, email: true, image: true },
+    });
+    if (userById) {
+      return userById;
+    }
+  }
+
+  const normalizedEmail = sessionUser.email?.trim().toLowerCase();
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const userByEmail = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: { id: true, name: true, email: true, image: true },
+  });
+  if (userByEmail) {
+    return userByEmail;
+  }
+
+  return prisma.user.create({
+    data: {
+      email: normalizedEmail,
+      name: sessionUser.name ?? null,
+      image: sessionUser.image ?? null,
+    },
+    select: { id: true, name: true, email: true, image: true },
+  });
+}
+
 /**
  * Get authenticated session or return a 401 response.
  * Use in API route handlers that require authentication.
@@ -24,13 +67,20 @@ export async function requireAuth(): Promise<
 > {
   const session = await auth();
 
-  if (!session?.user?.id) {
+  if (!session?.user) {
     return {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     };
   }
 
-  return { session: session as AuthenticatedSession };
+  const user = await resolveAuthenticatedUser(session.user);
+  if (!user) {
+    return {
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  return { session: { user } };
 }
 
 /**
