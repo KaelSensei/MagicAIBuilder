@@ -1,4 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
+
+vi.mock("next-auth/react", () => ({
+  useSession: vi.fn(),
+}));
+
+import { useSession } from "next-auth/react";
+import { useOnboarding } from "./useOnboarding";
 
 // ─── localStorage mock ────────────────────────────────────────────────────────
 const LS_KEY = "mab-onboarding-done";
@@ -99,5 +107,180 @@ describe("onboarding replay flow", () => {
     const done = localStorage.getItem(LS_KEY) === "true";
     const showWizard = !done;
     expect(showWizard).toBe(true);
+  });
+});
+
+// ─── useOnboarding hook (session + fetch) ────────────────────────────────────
+describe("useOnboarding", () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+    vi.restoreAllMocks();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ onboardingDone: true }), { status: 200 })
+      )
+    );
+    vi.mocked(useSession).mockReturnValue({
+      data: null,
+      status: "unauthenticated",
+      update: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps loading while auth session status is loading", () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: null,
+      status: "loading",
+      update: vi.fn(),
+    });
+    const { result } = renderHook(() => useOnboarding());
+    expect(result.current.loading).toBe(true);
+  });
+
+  it("unauthenticated: showWizard when localStorage not done", async () => {
+    const { result } = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.showWizard).toBe(true);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it("unauthenticated: hide wizard when localStorage marks done", async () => {
+    localStorage.setItem(LS_KEY, "true");
+    const { result } = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.showWizard).toBe(false);
+  });
+
+  it("authenticated: showWizard when profile says onboarding not done", async () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: {
+        expires: "future",
+        user: { id: "user-1", name: "T", email: "t@t.com" },
+      },
+      status: "authenticated",
+      update: vi.fn(),
+    });
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ onboardingDone: false }), { status: 200 })
+    );
+
+    const { result } = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.showWizard).toBe(true);
+    expect(globalThis.fetch).toHaveBeenCalledWith("/api/user/profile");
+  });
+
+  it("authenticated: hide wizard when profile onboardingDone is true", async () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: { expires: "future", user: { id: "user-2", name: "T" } },
+      status: "authenticated",
+      update: vi.fn(),
+    });
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ onboardingDone: true }), { status: 200 })
+    );
+
+    const { result } = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    expect(result.current.showWizard).toBe(false);
+  });
+
+  it("authenticated: profile fetch failure still ends loading", async () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: { expires: "future", user: { id: "user-3", name: "T" } },
+      status: "authenticated",
+      update: vi.fn(),
+    });
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(new Error("network"));
+
+    const { result } = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+  });
+
+  it("completeOnboarding unauthenticated sets localStorage", async () => {
+    const { result } = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    await act(async () => {
+      await result.current.completeOnboarding();
+    });
+    expect(localStorage.getItem(LS_KEY)).toBe("true");
+    expect(result.current.showWizard).toBe(false);
+  });
+
+  it("completeOnboarding authenticated POSTs onboarding endpoint", async () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: { expires: "future", user: { id: "user-4", name: "T" } },
+      status: "authenticated",
+      update: vi.fn(),
+    });
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      new Response(JSON.stringify({ onboardingDone: true }), { status: 200 })
+    );
+
+    const { result } = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.completeOnboarding();
+    });
+
+    expect(globalThis.fetch).toHaveBeenCalledWith("/api/user/onboarding", { method: "POST" });
+  });
+
+  it("resetOnboarding authenticated DELETEs and shows wizard", async () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: { expires: "future", user: { id: "user-5", name: "T" } },
+      status: "authenticated",
+      update: vi.fn(),
+    });
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      new Response(JSON.stringify({ onboardingDone: true }), { status: 200 })
+    );
+
+    const { result } = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.resetOnboarding();
+    });
+
+    expect(globalThis.fetch).toHaveBeenCalledWith("/api/user/onboarding", { method: "DELETE" });
+    expect(result.current.showWizard).toBe(true);
+  });
+
+  it("resetOnboarding unauthenticated clears localStorage", async () => {
+    localStorage.setItem(LS_KEY, "true");
+    const { result } = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.resetOnboarding();
+    });
+
+    expect(localStorage.getItem(LS_KEY)).toBeNull();
+    expect(result.current.showWizard).toBe(true);
   });
 });

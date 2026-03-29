@@ -174,4 +174,157 @@ describe("importFromUrl", () => {
     expect(result.source).toBe("archidekt");
     expect(result.cards.find((c) => c.name === "Niv-Mizzet")?.isCommander).toBe(true);
   });
+
+  it("Archidekt: formatWarning when deck is not Commander format", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "Casual 60",
+          deckFormat: 1,
+          cards: [
+            {
+              quantity: 4,
+              categories: [],
+              card: { oracleCard: { name: "Forest" } },
+            },
+          ],
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://archidekt.com/decks/777");
+    expect(result.formatWarning).toContain("Commander");
+  });
+
+  it("TappedOut: throws when export is empty", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response("  \n\t  ", { status: 200 })
+    );
+
+    await expect(
+      importFromUrl("https://tappedout.net/mtg-decks/empty-deck")
+    ).rejects.toThrow("empty");
+  });
+
+  it("TappedOut: throws when no card lines", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response("# Only comments\n// no cards\n", { status: 200 })
+    );
+
+    await expect(
+      importFromUrl("https://www.tappedout.net/mtg-decks/nocards")
+    ).rejects.toThrow("No cards found");
+  });
+
+  it("TappedOut: parses deck name and card lines", async () => {
+    const txt = [
+      "# My Cool List",
+      "# Commander",
+      "1 Kenrith, the Returned King",
+      "// Mainboard",
+      "10 Island  (TMP) 1",
+      "2x Sol Ring",
+    ].join("\n");
+
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(new Response(txt, { status: 200 }));
+
+    const result = await importFromUrl("https://tappedout.net/mtg-decks/cool-list");
+    expect(result.source).toBe("tappedout");
+    expect(result.name).toBe("My Cool List");
+    const commander = result.cards.find((c) => c.name.includes("Kenrith"));
+    expect(commander?.isCommander).toBe(true);
+    expect(result.cards.some((c) => c.name === "Island")).toBe(true);
+    expect(result.cards.some((c) => c.name === "Sol Ring")).toBe(true);
+  });
+
+  it("MTGTop8: uses plain-text export when present", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response("15 Island\n1 Sol Ring\n", { status: 200 })
+    );
+
+    const result = await importFromUrl("https://www.mtgtop8.com/event?e=9&d=4242");
+    expect(result.source).toBe("mtgtop8");
+    expect(result.cards.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("MTGTop8: falls back to HTML card extraction when export empty", async () => {
+    const spy = vi.spyOn(http, "httpGet");
+    spy.mockResolvedValueOnce(new Response("", { status: 200 }));
+    const html =
+      '<div class="deck">2 Lightning Bolt  &nbsp;1 Forest  </div>';
+    spy.mockResolvedValueOnce(new Response(html, { status: 200 }));
+
+    const result = await importFromUrl("https://mtgtop8.com/event?d=8001&e=1");
+    expect(result.source).toBe("mtgtop8");
+    expect(result.cards.some((c) => c.name === "Lightning Bolt")).toBe(true);
+  });
+
+  it("MTGTop8: throws when export and HTML yield no cards", async () => {
+    const spy = vi.spyOn(http, "httpGet");
+    spy.mockResolvedValueOnce(new Response("\n", { status: 200 }));
+    spy.mockResolvedValueOnce(new Response("<html></html>", { status: 200 }));
+
+    await expect(
+      importFromUrl("https://www.mtgtop8.com/event?e=2&d=8002")
+    ).rejects.toThrow("Could not parse deck from MTGTop8");
+  });
+
+  it("MTGDecks: imports txt list", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response("1 Forest\n40 Island\n", { status: 200 })
+    );
+
+    const result = await importFromUrl("https://mtgdecks.net/Commander/sea-monster");
+    expect(result.source).toBe("mtgdecks");
+    expect(result.name).toContain("sea-monster");
+    expect(result.cards.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("MTGDecks: throws when txt has no cards", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response("# header only\n", { status: 200 })
+    );
+
+    await expect(
+      importFromUrl("https://www.mtgdecks.net/Commander/bare")
+    ).rejects.toThrow("No cards found");
+  });
+
+  it("EDHRec: builds deck from json", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          container: {
+            json_dict: {
+              card: { name: "Wilhelt, the Rotcleaver" },
+              cardlists: [
+                {
+                  tag: "cards",
+                  cardviews: [{ name: "Zombie Token" }, { name: "Undead Augur" }],
+                },
+              ],
+            },
+          },
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://edhrec.com/commanders/wilhelt-the-rotcleaver");
+    expect(result.source).toBe("edhrec");
+    expect(result.formatWarning).toContain("average deck");
+    expect(result.cards[0].isCommander).toBe(true);
+    expect(result.cards.some((c) => c.name === "Undead Augur")).toBe(true);
+  });
+
+  it("EDHRec: throws when json_dict missing", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(JSON.stringify({ container: {} }), { status: 200 })
+    );
+
+    await expect(
+      importFromUrl("https://edhrec.com/commanders/broken")
+    ).rejects.toThrow("unexpected");
+  });
 });

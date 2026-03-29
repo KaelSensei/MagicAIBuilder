@@ -202,4 +202,17 @@ describe("loadSortPreference / saveSortPreference", () => {
     expect(pref.sortDirection).toBe(DEFAULT_SORT_PREFERENCE.sortDirection);
     expect(pref.groupBy).toBe(DEFAULT_SORT_PREFERENCE.groupBy);
   });
+
+  it("saveSortPreference swallows localStorage errors", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("quota");
+    });
+    expect(() =>
+      saveSortPreference({
+        sortField: "name",
+        sortDirection: "asc",
+        groupBy: "none",
+      })
+    ).not.toThrow();
+  });
 });
