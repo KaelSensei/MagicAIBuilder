@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { commanderToSlug, fetchEdhrecData } from "./fetch";
+import * as http from "@/lib/http";
+import { commanderToSlug, fetchEdhrecData, fetchTournamentData } from "./fetch";
 
 // ─── commanderToSlug ──────────────────────────────────────────────────────────
 describe("commanderToSlug", () => {
@@ -98,6 +99,60 @@ describe("fetchEdhrecData", () => {
     expect(result.cards[0].inclusion).toBeCloseTo(0.8);
   });
 
+  it("uses inclusion field when present", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          container: {
+            json_dict: {
+              cardlists: [{
+                tag: "staples",
+                cardviews: [{ name: "Rhystic Study", inclusion: 0.42 }],
+              }],
+            },
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    const result = await fetchEdhrecData("test");
+    expect(result.cards[0].inclusion).toBe(0.42);
+  });
+
+  it("returns 0 inclusion when potential_decks is zero", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          container: {
+            json_dict: {
+              cardlists: [{
+                tag: "x",
+                cardviews: [{ name: "X", num_decks: 5, potential_decks: 0 }],
+              }],
+            },
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    const result = await fetchEdhrecData("test");
+    expect(result.cards[0].inclusion).toBe(0);
+  });
+
+  it("handles missing cardlists", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ container: { json_dict: {} } }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    const result = await fetchEdhrecData("test");
+    expect(result.cards).toHaveLength(0);
+  });
+
   it("deduplicates cards with same name", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(
@@ -117,5 +172,48 @@ describe("fetchEdhrecData", () => {
 
     const result = await fetchEdhrecData("test");
     expect(result.cards.filter((c) => c.name === "Sol Ring")).toHaveLength(1);
+  });
+});
+
+// ─── fetchTournamentData ─────────────────────────────────────────────────────
+describe("fetchTournamentData", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns empty decks when httpGet throws", async () => {
+    vi.spyOn(http, "httpGet").mockRejectedValueOnce(new Error("network down"));
+    const result = await fetchTournamentData("Kenrith, the Returned King");
+    expect(result.decks).toEqual([]);
+  });
+
+  it("parses deck links when commander context matches slug", async () => {
+    const html =
+      '<div class="wrap">competitive kenrith cEDH meta</div>' +
+      '<a href="/event?e=111&d=222">Kenrith Combo</a>' +
+      "<p>more html</p>";
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(html, { status: 200, headers: { "Content-Type": "text/html" } })
+    );
+
+    const result = await fetchTournamentData("Kenrith, the Returned King");
+    expect(result.decks).toHaveLength(1);
+    expect(result.decks[0].url).toContain("e=111");
+    expect(result.decks[0].url).toContain("d=222");
+    expect(result.decks[0].source).toBe("mtgtop8");
+  });
+
+  it("skips first match when context is unrelated and no decks yet", async () => {
+    const html =
+      '<a href="/event?e=1&d=1">Random Deck</a>' +
+      '<div>kenrith tournament here</div>' +
+      '<a href="/event?e=2&d=2">Kenrith Lists</a>';
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(html, { status: 200 })
+    );
+
+    const result = await fetchTournamentData("Kenrith");
+    expect(result.decks.length).toBeGreaterThanOrEqual(1);
+    expect(result.decks.some((d) => d.url.includes("d=2"))).toBe(true);
   });
 });
