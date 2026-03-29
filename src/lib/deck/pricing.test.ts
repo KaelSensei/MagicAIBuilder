@@ -5,8 +5,8 @@ import {
   suggestBudgetReductions,
   getCardsSortedByPrice,
   findCheaperAlternatives,
-  type DeckPricing,
-  type PriceBreakdown,
+  type DeckPricing as _DeckPricing,
+  type PriceBreakdown as _PriceBreakdown,
 } from "./pricing";
 import type { DeckCard } from "@/lib/deck/types";
 
