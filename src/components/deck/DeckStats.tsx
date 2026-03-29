@@ -5,6 +5,7 @@ import type { DeckStats } from "@/lib/deck/types";
 import { ManaCurve } from "./ManaCurve";
 import { ColorDistribution } from "./ColorDistribution";
 import { ThemeDetector } from "./ThemeDetector";
+import { DeckPriceDisplay } from "./DeckPriceDisplay";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 
 type BracketLevel = 1 | 2 | 3 | 4;
@@ -196,25 +197,21 @@ export function DeckStats({ stats, targetBracket = 3, className }: DeckStatsProp
         </div>
       </div>
 
-      {/* Budget */}
-      {stats.totalPrice > 0 && (
+      {/* Deck price — live total from store via useDeckPrice */}
+      <DeckPriceDisplay />
+
+      {/* Budget warning (over-budget cards, only when a budget is set) */}
+      {stats.overBudgetCards.length > 0 && (
         <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
           <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
             Budget
           </p>
           <div className="divide-y divide-[var(--border)]">
             <StatRow
-              label="Total value"
-              value={`$${stats.totalPrice.toFixed(2)}`}
-              status="neutral"
+              label="Over budget"
+              value={stats.overBudgetCards.length}
+              status="warn"
             />
-            {stats.overBudgetCards.length > 0 && (
-              <StatRow
-                label="Over budget"
-                value={stats.overBudgetCards.length}
-                status="warn"
-              />
-            )}
           </div>
         </div>
       )}
