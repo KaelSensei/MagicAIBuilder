@@ -2,6 +2,8 @@
 // Zustand deck store — manages all deck state (synced to DB via API routes)
 import { create } from "zustand";
 import type { Deck, DeckCard, DeckZone, CardCategory, CardFace } from "./types";
+import { loadSortPreference, saveSortPreference } from "./sort";
+import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
 import { categorizeCard, categorizeDfcCard } from "./categories";
 import { detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -124,6 +126,15 @@ export interface DeckStore {
   setDeckViewMode: (mode: "grid" | "list") => void;
   setDeckGridCols: (cols: 2 | 3 | 4 | 6 | 8) => void;
 
+  // Sort & group preferences
+  sortField: SortField;
+  sortDirection: SortDirection;
+  groupBy: GroupBy;
+  setSortField: (field: SortField) => void;
+  setSortDirection: (dir: SortDirection) => void;
+  setGroupBy: (groupBy: GroupBy) => void;
+  setSortPreference: (pref: SortPreference) => void;
+
   // Deck management
   createDeck: (name: string, opts?: { isAIGenerated?: boolean }) => Promise<string>;
   duplicateDeck: (id: string) => Promise<string>;
@@ -187,11 +198,37 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   deckViewMode: "list",
   deckGridCols: 6,
 
+  // Sort & group — initialised from localStorage for persistence
+  ...((): Pick<DeckStore, "sortField" | "sortDirection" | "groupBy"> => {
+    const pref = loadSortPreference();
+    return { sortField: pref.sortField, sortDirection: pref.sortDirection, groupBy: pref.groupBy };
+  })(),
+
   setGameChangerNames: (names) => set({ gameChangerNames: names }),
   setBannedNames: (names) => set({ bannedNames: names }),
   setSearchViewMode: (mode) => set({ searchViewMode: mode }),
   setDeckViewMode: (mode) => set({ deckViewMode: mode }),
   setDeckGridCols: (cols) => set({ deckGridCols: cols }),
+
+  setSortField: (field) => {
+    set({ sortField: field });
+    const { sortDirection, groupBy } = get();
+    saveSortPreference({ sortField: field, sortDirection, groupBy });
+  },
+  setSortDirection: (dir) => {
+    set({ sortDirection: dir });
+    const { sortField, groupBy } = get();
+    saveSortPreference({ sortField, sortDirection: dir, groupBy });
+  },
+  setGroupBy: (groupBy) => {
+    set({ groupBy });
+    const { sortField, sortDirection } = get();
+    saveSortPreference({ sortField, sortDirection, groupBy });
+  },
+  setSortPreference: (pref) => {
+    set({ sortField: pref.sortField, sortDirection: pref.sortDirection, groupBy: pref.groupBy });
+    saveSortPreference(pref);
+  },
 
   undo: async () => {
     const { undoStack } = get();

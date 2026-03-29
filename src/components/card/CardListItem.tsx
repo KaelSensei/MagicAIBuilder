@@ -24,6 +24,14 @@ export function CardListItem({ card, onRemove, onMoveToMaybeboard, className, sh
         {isDfc&&<DfcBadge isFlexibleLand={card.isFlexibleLand??false} />}
         <span className="flex-1 text-sm truncate text-[var(--text-primary)]">{activeName}</span>
         <span className="text-xs text-[var(--text-secondary)] shrink-0">{card.cmc>0?card.cmc:"—"}</span>
+        {card.price !== null && (
+          <span
+            className="shrink-0 text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-600/20 text-emerald-400 leading-none"
+            title={`Price: $${card.price.toFixed(2)}`}
+          >
+            ${card.price.toFixed(2)}
+          </span>
+        )}
         {card.isGameChanger&&<span title="Game Changer"><Zap className="w-3 h-3 text-amber-400" /></span>}
         {card.isBanned&&<span title="Banned"><AlertTriangle className="w-3 h-3 text-red-500" /></span>}
         {isDfc&&card.cardFaces&&<TurnOverButton isFlipped={isFlipped} frontName={card.cardFaces[0].name} backName={card.cardFaces[1].name} onFlip={flip} />}
