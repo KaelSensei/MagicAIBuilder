@@ -15,7 +15,7 @@ const TemplateQuerySchema = z.object({
 });
 
 const CreateTemplateSchema = z.object({
-  deckId: z.string().uuid("Invalid deck ID"),
+  deckId: z.uuid("Invalid deck ID"),
   templateName: z.string().min(3, "Name must be 3+ chars").max(100, "Name max 100 chars"),
   archetype: z.enum([
     "Combo",
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: validation.error.flatten().fieldErrors },
+        { error: z.flattenError(validation.error).fieldErrors },
         { status: 400 }
       );
     }

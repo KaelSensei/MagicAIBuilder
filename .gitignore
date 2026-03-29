@@ -41,10 +41,18 @@ desktop.ini
 .claude/settings.json
 .claude/settings.local.json
 
+# Cursor settings (contains personal paths and permissions)
+.cursor/
+
 # Test & coverage
 coverage/
 .nyc_output/
 
+# Playwright / E2E
+playwright-report/
+test-results/
+
 # Misc
 *.tsbuildinfo
 next-env.d.ts
+.pr-body*.md

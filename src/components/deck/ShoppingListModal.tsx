@@ -68,7 +68,7 @@ export function ShoppingListModal({
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
             <Dialog.Title className="text-base font-semibold text-[var(--text-primary)]">
-              Shopping List — {items.length} card{items.length !== 1 ? "s" : ""}
+              Shopping List — {items.length} card{items.length === 1 ? "" : "s"}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button className="p-1.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors">
@@ -135,7 +135,7 @@ export function ShoppingListModal({
 }
 
 function ShoppingRow({ item }: { readonly item: ShoppingListItem }) {
-  const lineTotal = item.price !== null ? item.price * item.quantity : null;
+  const lineTotal = item.price === null ? null : item.price * item.quantity;
 
   return (
     <div className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] transition-colors">
@@ -146,13 +146,13 @@ function ShoppingRow({ item }: { readonly item: ShoppingListItem }) {
         {item.name}
       </span>
       <span className="text-xs text-[var(--text-secondary)] shrink-0 tabular-nums">
-        {item.price !== null ? `$${item.price.toFixed(2)}` : "—"}
+        {item.price === null ? "—" : `$${item.price.toFixed(2)}`}
       </span>
-      {lineTotal !== null && item.quantity > 1 && (
+      {typeof lineTotal === "number" && item.quantity > 1 ? (
         <span className="text-[10px] text-[var(--text-secondary)] shrink-0 tabular-nums w-14 text-right">
           (${lineTotal.toFixed(2)})
         </span>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -258,12 +258,21 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
   const handlePrint = useCallback(() => {
     const html = buildPrintHtml(slots, imageMapRef.current, config, deckName);
     const win = window.open("", "_blank", "width=900,height=700");
-    if (!win) { setError("Pop-up blocked — allow pop-ups for this site"); return; }
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    setTimeout(() => win.print(), 500);
+    if (!win) {
+      setError("Pop-up blocked — allow pop-ups for this site");
+      return;
+    }
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const objectUrl = URL.createObjectURL(blob);
+    const onLoad = (): void => {
+      win.focus();
+      setTimeout(() => {
+        win.print();
+        URL.revokeObjectURL(objectUrl);
+      }, 500);
+    };
+    win.addEventListener("load", onLoad, { once: true });
+    win.location.assign(objectUrl);
   }, [slots, config, deckName]);
 
   const imagesReady =
@@ -348,7 +357,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
 
           {/* Summary */}
           <div className="rounded-lg bg-[var(--background)] border border-[var(--border)] px-4 py-3 text-xs text-[var(--text-secondary)] flex items-center justify-between">
-            <span>{slots.length} cards → <strong className="text-[var(--text-primary)]">{pageCount} page{pageCount !== 1 ? "s" : ""}</strong> ({config.layout} layout)</span>
+            <span>{slots.length} cards → <strong className="text-[var(--text-primary)]">{pageCount} page{pageCount === 1 ? "" : "s"}</strong> ({config.layout} layout)</span>
             {slots.length === 0 && <span className="text-amber-400">No cards to print</span>}
           </div>
 

@@ -35,9 +35,9 @@ export interface TournamentData {
 export function commanderToSlug(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "") // strip punctuation
+    .replaceAll(/[^a-z0-9\s-]/g, "") // strip punctuation
     .trim()
-    .replace(/\s+/g, "-");        // spaces → hyphens
+    .replaceAll(/\s+/g, "-"); // spaces → hyphens
 }
 
 interface EdhrecCardView {

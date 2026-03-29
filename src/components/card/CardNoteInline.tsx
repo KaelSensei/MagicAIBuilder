@@ -70,36 +70,31 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       open
       className="absolute left-0 right-0 top-full z-30 m-0 p-0 bg-transparent border-none shadow-none w-full"
     >
-      {/* Stops clicks inside the note editor from activating the parent card row */}
-      <div
-        role="group"
-        aria-label="Card note editor"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-      >
+      {/* Form stops clicks/keys inside the editor from reaching the parent card row */}
       <form
         className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
         onSubmit={(e) => {
           e.preventDefault();
           handleSave();
         }}
       >
-      <textarea
-        ref={textareaRef}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onBlur={handleSave}
-        placeholder="Add a private note for this card…"
-        rows={3}
-        maxLength={1000}
-        className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 resize-none outline-none"
-      />
-      <div className="text-[10px] text-(--text-secondary)/50 mt-1">
-        Ctrl+Enter to save · Esc to cancel
-      </div>
+        <textarea
+          ref={textareaRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleSave}
+          placeholder="Add a private note for this card…"
+          rows={3}
+          maxLength={1000}
+          className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 resize-none outline-none"
+        />
+        <div className="text-[10px] text-(--text-secondary)/50 mt-1">
+          Ctrl+Enter to save · Esc to cancel
+        </div>
       </form>
-      </div>
     </dialog>
   );
 }

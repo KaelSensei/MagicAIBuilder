@@ -143,9 +143,9 @@ export function groupCards(cards: DeckCard[], groupBy: GroupBy): CardGroup[] {
 const LS_KEY = "deckSortPreference";
 
 export function loadSortPreference(): SortPreference {
-  if (typeof window === "undefined") return DEFAULT_SORT_PREFERENCE;
+  if (globalThis.window === undefined) return DEFAULT_SORT_PREFERENCE;
   try {
-    const raw = window.localStorage.getItem(LS_KEY);
+    const raw = globalThis.window.localStorage.getItem(LS_KEY);
     if (!raw) return DEFAULT_SORT_PREFERENCE;
     const parsed = JSON.parse(raw) as Partial<SortPreference>;
     return {
@@ -159,9 +159,9 @@ export function loadSortPreference(): SortPreference {
 }
 
 export function saveSortPreference(pref: SortPreference): void {
-  if (typeof window === "undefined") return;
+  if (globalThis.window === undefined) return;
   try {
-    window.localStorage.setItem(LS_KEY, JSON.stringify(pref));
+    globalThis.window.localStorage.setItem(LS_KEY, JSON.stringify(pref));
   } catch {
     // Storage quota exceeded or private mode — fail silently
   }

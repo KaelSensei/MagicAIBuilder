@@ -52,6 +52,10 @@ export function SortGroupToolbar() {
       <div className="flex items-center gap-0.5">
         {SORT_OPTIONS.map(({ field, label }) => {
           const isActive = sortField === field;
+          let activeSortHint = "";
+          if (isActive) {
+            activeSortHint = sortDirection === "asc" ? "(ascending)" : "(descending)";
+          }
           return (
             <button
               key={field}
@@ -62,7 +66,7 @@ export function SortGroupToolbar() {
                   ? "bg-[var(--accent)]/20 text-[var(--accent)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
               )}
-              title={`Sort by ${label} ${isActive ? (sortDirection === "asc" ? "(ascending)" : "(descending)") : ""}`}
+              title={`Sort by ${label} ${activeSortHint}`.trim()}
             >
               {label}
               {isActive && sortDirection === "asc" && (

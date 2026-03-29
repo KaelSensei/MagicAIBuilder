@@ -40,10 +40,8 @@ export function DeckVisibilityToggle({
     }
   };
 
-  const publicUrl =
-    globalThis.location !== undefined
-      ? `${globalThis.location.origin}/deck/${deckId}`
-      : `/deck/${deckId}`;
+  const origin = globalThis.window?.location?.origin;
+  const publicUrl = origin ? `${origin}/deck/${deckId}` : `/deck/${deckId}`;
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
