@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { fetchEdhrecData, fetchTournamentData } from "@/lib/meta/fetch";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
@@ -46,13 +47,19 @@ async function readFreshMetaCache(commanderSlug: string, source: MetaSource): Pr
   return null;
 }
 
+function metaCachePayload(data: EdhrecData | TournamentData): Prisma.InputJsonValue {
+  const encoded = JSON.stringify(data);
+  return JSON.parse(encoded);
+}
+
 async function persistMetaCache(commanderSlug: string, source: MetaSource, data: EdhrecData | TournamentData) {
   const expiresAt = new Date(Date.now() + CACHE_TTL_MS);
+  const payload = metaCachePayload(data);
   try {
     await prisma.metaCache.upsert({
       where: { commanderSlug_source: { commanderSlug, source } },
-      create: { commanderSlug, source, data: JSON.parse(JSON.stringify(data)), expiresAt },
-      update: { data: JSON.parse(JSON.stringify(data)), cachedAt: new Date(), expiresAt },
+      create: { commanderSlug, source, data: payload, expiresAt },
+      update: { data: payload, cachedAt: new Date(), expiresAt },
     });
   } catch {
     // Cache write failure is non-fatal
@@ -63,7 +70,7 @@ async function loadLiveMeta(commanderSlug: string, source: MetaSource): Promise<
   if (source === "edhrec") {
     return fetchEdhrecData(commanderSlug);
   }
-  const commanderName = commanderSlug.replace(/-/g, " ");
+  const commanderName = commanderSlug.replaceAll("-", " ");
   return fetchTournamentData(commanderName);
 }
 

@@ -36,7 +36,7 @@ export function createTemplate(
   const mainDeckCards = deck.cards.slice(0, 99);
 
   return {
-    id: `tmpl-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `tmpl-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     name: templateName,
     commanderName: deck.commander?.name || "Unknown Commander",
     archetype,
@@ -64,7 +64,7 @@ export function applyTemplate(
   );
 
   return {
-    id: `deck-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `deck-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     name: deckName,
     description: `Based on template: ${template.name} by ${template.author}`,
     commander: commanderCard ?? null,

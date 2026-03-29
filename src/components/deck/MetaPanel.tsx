@@ -153,11 +153,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
             className="overflow-hidden"
           >
             <div className="px-3 pb-3 space-y-4">
-              {!commanderName ? (
-                <p className="text-xs text-[var(--text-secondary)] text-center py-4">
-                  Select a commander to see meta data
-                </p>
-              ) : (
+              {commanderName ? (
                 <>
                   {/* Refresh + stale notice */}
                   <div className="flex items-center justify-between">
@@ -263,6 +259,10 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                     )}
                   </div>
                 </>
+              ) : (
+                <p className="text-xs text-[var(--text-secondary)] text-center py-4">
+                  Select a commander to see meta data
+                </p>
               )}
             </div>
           </motion.div>

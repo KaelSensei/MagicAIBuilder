@@ -7,7 +7,7 @@ const RATE_LIMIT = 10;        // max requests
 const RATE_WINDOW = 60_000;   // per 60 seconds
 
 const bodySchema = z.object({
-  url: z.string().url({ message: "Invalid URL" }).max(500),
+  url: z.url({ message: "Invalid URL" }).max(500),
 });
 
 // POST /api/import/url — proxy import from supported deck sources

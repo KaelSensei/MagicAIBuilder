@@ -20,6 +20,9 @@ export const PHASES = [
 
 export type Phase = (typeof PHASES)[number];
 
+/** Library / hand / battlefield / GY / exile zone id (playtest engine). */
+export type CardZone = "hand" | "library" | "battlefield" | "graveyard" | "exile";
+
 // ─── Types ────────────────────────────────────────────────────────────────
 /**
  * A card on the battlefield with state (tapped, counters).
@@ -71,6 +74,11 @@ export interface PlaytestEngine {
   // Undo
   readonly history: readonly UndoHistoryEntry[];
 }
+
+/** Writable patch for immutable engine updates (undo stack). */
+type PlaytestEnginePatch = {
+  -readonly [K in keyof PlaytestEngine]?: PlaytestEngine[K];
+};
 
 // ─── Initial State ────────────────────────────────────────────────────────
 /**
@@ -144,7 +152,8 @@ export function applyNextPhase(state: PlaytestEngine): PlaytestEngine {
   }
 
   // Advance to next phase
-  const nextPhase = PHASES[currentIndex + 1] as Phase;
+  const nextPhase = PHASES[currentIndex + 1];
+  if (nextPhase === undefined) return state;
   return pushHistory(state, { phase: nextPhase });
 }
 
@@ -182,16 +191,14 @@ export function applyDamage(
   description = "damage"
 ): PlaytestEngine {
   const newLife = state.lifeTotal - amount;
-  const newHistory = [
-    ...state.lifeHistory,
-    {
-      turn: state.turn,
-      phase: state.phase,
-      timestamp: Date.now(),
-      delta: -amount,
-      description,
-    } as LifeHistoryEntry,
-  ];
+  const entry: LifeHistoryEntry = {
+    turn: state.turn,
+    phase: state.phase,
+    timestamp: Date.now(),
+    delta: -amount,
+    description,
+  };
+  const newHistory = [...state.lifeHistory, entry];
 
   return pushHistory(state, {
     lifeTotal: newLife,
@@ -205,16 +212,14 @@ export function applyHeal(
   amount: number
 ): PlaytestEngine {
   const newLife = state.lifeTotal + amount;
-  const newHistory = [
-    ...state.lifeHistory,
-    {
-      turn: state.turn,
-      phase: state.phase,
-      timestamp: Date.now(),
-      delta: amount,
-      description: "heal",
-    } as LifeHistoryEntry,
-  ];
+  const entry: LifeHistoryEntry = {
+    turn: state.turn,
+    phase: state.phase,
+    timestamp: Date.now(),
+    delta: amount,
+    description: "heal",
+  };
+  const newHistory = [...state.lifeHistory, entry];
 
   return pushHistory(state, {
     lifeTotal: newLife,
@@ -243,50 +248,82 @@ export function applyUntapAll(state: PlaytestEngine): PlaytestEngine {
 export function applyMoveToZone(
   state: PlaytestEngine,
   cardId: string,
-  from: "hand" | "library" | "battlefield" | "graveyard" | "exile",
-  to: "hand" | "library" | "battlefield" | "graveyard" | "exile"
+  from: CardZone,
+  to: CardZone
 ): PlaytestEngine {
-  // Find card in source zone
-  const sourceZone = getZone(state, from);
-  const cardIndex = sourceZone.findIndex((c) => c.id === cardId);
-  if (cardIndex === -1) return state;
+  const updates: PlaytestEnginePatch = {};
+  let card: DeckCard | BattlefieldCard;
 
-  const card = sourceZone[cardIndex];
+  switch (from) {
+    case "hand": {
+      const zone = state.hand;
+      const cardIndex = zone.findIndex((c) => c.id === cardId);
+      if (cardIndex === -1) return state;
+      card = zone[cardIndex];
+      updates.hand = zone.filter((_, i) => i !== cardIndex);
+      break;
+    }
+    case "library": {
+      const zone = state.library;
+      const cardIndex = zone.findIndex((c) => c.id === cardId);
+      if (cardIndex === -1) return state;
+      card = zone[cardIndex];
+      updates.library = zone.filter((_, i) => i !== cardIndex);
+      break;
+    }
+    case "battlefield": {
+      const zone = state.battlefield;
+      const cardIndex = zone.findIndex((c) => c.id === cardId);
+      if (cardIndex === -1) return state;
+      card = zone[cardIndex];
+      updates.battlefield = zone.filter((_, i) => i !== cardIndex);
+      break;
+    }
+    case "graveyard": {
+      const zone = state.graveyard;
+      const cardIndex = zone.findIndex((c) => c.id === cardId);
+      if (cardIndex === -1) return state;
+      card = zone[cardIndex];
+      updates.graveyard = zone.filter((_, i) => i !== cardIndex);
+      break;
+    }
+    case "exile": {
+      const zone = state.exile;
+      const cardIndex = zone.findIndex((c) => c.id === cardId);
+      if (cardIndex === -1) return state;
+      card = zone[cardIndex];
+      updates.exile = zone.filter((_, i) => i !== cardIndex);
+      break;
+    }
+    default: {
+      const _exhaustive: never = from;
+      return _exhaustive;
+    }
+  }
 
-  // Remove from source
-  const newFromZone = sourceZone.filter((_, i) => i !== cardIndex);
+  switch (to) {
+    case "hand":
+      updates.hand = [...state.hand, toDeckCard(card)];
+      break;
+    case "library":
+      updates.library = [...state.library, toDeckCard(card)];
+      break;
+    case "battlefield":
+      updates.battlefield = [...state.battlefield, toBattlefieldCard(card)];
+      break;
+    case "graveyard":
+      updates.graveyard = [...state.graveyard, toDeckCard(card)];
+      break;
+    case "exile":
+      updates.exile = [...state.exile, toDeckCard(card)];
+      break;
+    default: {
+      const _exhaustive: never = to;
+      return _exhaustive;
+    }
+  }
 
-  // Add to destination (wrap in BattlefieldCard if going to battlefield)
-  const newToZone =
-    to === "battlefield"
-      ? [
-          ...getZone(state, to),
-          {
-            ...(card as DeckCard),
-            tapped: false,
-            counters: 0,
-          } as BattlefieldCard,
-        ]
-      : [...getZone(state, to), card];
-
-  // Build updates object — handle both from and to zones
-  const updates: Record<string, readonly (DeckCard | BattlefieldCard)[]> = {};
-
-  // Remove from source zone
-  if (from === "hand") updates.hand = newFromZone;
-  if (from === "library") updates.library = newFromZone;
-  if (from === "battlefield") updates.battlefield = newFromZone;
-  if (from === "graveyard") updates.graveyard = newFromZone;
-  if (from === "exile") updates.exile = newFromZone;
-
-  // Add to destination zone
-  if (to === "hand") updates.hand = newToZone;
-  if (to === "library") updates.library = newToZone;
-  if (to === "battlefield") updates.battlefield = newToZone;
-  if (to === "graveyard") updates.graveyard = newToZone;
-  if (to === "exile") updates.exile = newToZone;
-
-  return pushHistory(state, updates as Partial<PlaytestEngine>);
+  return pushHistory(state, updates);
 }
 
 // ─── Counters ─────────────────────────────────────────────────────────────
@@ -315,22 +352,12 @@ export function applyUndo(state: PlaytestEngine): PlaytestEngine {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
-function getZone(
-  state: PlaytestEngine,
-  zone: "hand" | "library" | "battlefield" | "graveyard" | "exile"
-): readonly (DeckCard | BattlefieldCard)[] {
-  switch (zone) {
-    case "hand":
-      return state.hand;
-    case "library":
-      return state.library;
-    case "battlefield":
-      return state.battlefield;
-    case "graveyard":
-      return state.graveyard;
-    case "exile":
-      return state.exile;
-  }
+function toDeckCard(card: DeckCard | BattlefieldCard): DeckCard {
+  return card;
+}
+
+function toBattlefieldCard(card: DeckCard | BattlefieldCard): BattlefieldCard {
+  return { ...card, tapped: false, counters: 0 };
 }
 
 /**
@@ -338,7 +365,7 @@ function getZone(
  */
 function pushHistory(
   state: PlaytestEngine,
-  updates: Partial<PlaytestEngine>
+  updates: PlaytestEnginePatch
 ): PlaytestEngine {
   const newState: PlaytestEngine = {
     ...state,
@@ -346,10 +373,8 @@ function pushHistory(
   };
 
   // Push to undo history, limit to 10
-  const newHistory = [
-    { timestamp: Date.now(), state } as UndoHistoryEntry,
-    ...state.history,
-  ].slice(0, 10);
+  const historyEntry: UndoHistoryEntry = { timestamp: Date.now(), state };
+  const newHistory = [historyEntry, ...state.history].slice(0, 10);
 
   return {
     ...newState,
