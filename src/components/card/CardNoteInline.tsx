@@ -73,8 +73,6 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       {/* Form stops clicks/keys inside the editor from reaching the parent card row */}
       <form
         className="p-2 bg-(--surface-elevated,var(--surface)) border border-(--border) rounded-lg shadow-lg w-full"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
         onSubmit={(e) => {
           e.preventDefault();
           handleSave();
@@ -84,14 +82,18 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
           ref={textareaRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            handleKeyDown(e);
+          }}
           onBlur={handleSave}
           placeholder="Add a private note for this card…"
           rows={3}
           maxLength={1000}
           className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 resize-none outline-none"
         />
-        <div className="text-[10px] text-(--text-secondary)/50 mt-1">
+        <div className="pointer-events-none text-[10px] text-(--text-secondary)/50 mt-1">
           Ctrl+Enter to save · Esc to cancel
         </div>
       </form>

@@ -11,6 +11,9 @@ function getWebCrypto(): Crypto {
   return c;
 }
 
+/** Size of the Uint32 space used for rejection sampling. */
+const UINT32_RANGE = 2 ** 32;
+
 /**
  * Uniform integer in `[0, upperExclusive)` without modulo bias.
  *
@@ -23,8 +26,7 @@ export function randomIntBelow(upperExclusive: number): number {
   }
 
   const crypto = getWebCrypto();
-  const max = 0x1_0000_0000;
-  const limit = Math.floor(max / upperExclusive) * upperExclusive;
+  const limit = Math.floor(UINT32_RANGE / upperExclusive) * upperExclusive;
   const buf = new Uint32Array(1);
 
   let n: number;
