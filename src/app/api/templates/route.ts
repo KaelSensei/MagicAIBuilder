@@ -1,0 +1,129 @@
+/**
+ * Templates API Routes
+ * GET /api/templates — list templates for a commander
+ * POST /api/templates — create a new template (admin/creator)
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+// TODO: Uncomment after DB migration
+// import { prisma } from "@/lib/db/prisma";
+
+// ─── Validation Schemas ────────────────────────────────────────────────────
+const TemplateQuerySchema = z.object({
+  commander: z.string().min(1, "Commander name required"),
+});
+
+const CreateTemplateSchema = z.object({
+  deckId: z.string().uuid("Invalid deck ID"),
+  templateName: z.string().min(3, "Name must be 3+ chars").max(100, "Name max 100 chars"),
+  archetype: z.enum([
+    "Combo",
+    "Control",
+    "Stax",
+    "Voltron",
+    "Tokens",
+    "Aggro",
+    "Reanimator",
+    "Goodstuff",
+  ]),
+  description: z.string().optional(),
+});
+
+// ─── GET /api/templates ────────────────────────────────────────────────────
+/**
+ * Retrieve templates for a given commander.
+ * Query: ?commander=Atraxa, Grand Unifier
+ * Returns: templates sorted by upvotes (descending)
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const commander = searchParams.get("commander");
+
+    // Validate input
+    const validation = TemplateQuerySchema.safeParse({ commander });
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Invalid commander name" },
+        { status: 400 }
+      );
+    }
+
+    // For MVP: Return mock templates (DB integration in Phase 3)
+    // TODO: Replace with prisma.deckTemplate.findMany() after migration
+    const mockTemplates = [
+      {
+        id: "tmpl-atraxa-voltron",
+        name: "Atraxa Voltron Budget",
+        commanderName: validation.data.commander,
+        archetype: "Voltron",
+        author: "CommunityBuilder",
+        upvotes: 15,
+        source: "community",
+        createdAt: new Date(),
+      },
+      {
+        id: "tmpl-atraxa-stax",
+        name: "Atraxa Stax cEDH",
+        commanderName: validation.data.commander,
+        archetype: "Stax",
+        author: "TopPlayer",
+        upvotes: 8,
+        source: "community",
+        createdAt: new Date(),
+      },
+    ];
+
+    return NextResponse.json(mockTemplates, { status: 200 });
+  } catch (error) {
+    console.error("[templates GET]", error);
+    return NextResponse.json(
+      { error: "Failed to fetch templates" },
+      { status: 500 }
+    );
+  }
+}
+
+// ─── POST /api/templates ───────────────────────────────────────────────────
+/**
+ * Create a new template from an existing deck.
+ * MVP: No auth check (auth handled at component level).
+ * Body: { deckId, templateName, archetype, description? }
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validation = CreateTemplateSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const { templateName, archetype } = validation.data;
+
+    // For MVP: Return mock success (DB integration in Phase 3)
+    // TODO: Replace with prisma.deckTemplate.create() after migration
+    const mockTemplate = {
+      id: `tmpl-${Date.now()}`,
+      name: templateName,
+      commanderName: "Your Commander",
+      archetype,
+      author: "You",
+      upvotes: 0,
+      source: "community",
+      createdAt: new Date(),
+    };
+
+    return NextResponse.json(mockTemplate, { status: 201 });
+  } catch (error) {
+    console.error("[templates POST]", error);
+    return NextResponse.json(
+      { error: "Failed to create template" },
+      { status: 500 }
+    );
+  }
+}
