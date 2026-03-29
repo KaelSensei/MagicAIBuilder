@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { checkRateLimit } from "./rate-limit";
+import { checkRateLimit, getClientIp } from "./rate-limit";
 
 describe("checkRateLimit", () => {
   beforeEach(() => {
@@ -56,5 +56,25 @@ describe("checkRateLimit", () => {
     for (let i = 0; i < 3; i++) checkRateLimit("key-a", 3, 60_000);
     expect(checkRateLimit("key-a", 3, 60_000).allowed).toBe(false);
     expect(checkRateLimit("key-b", 3, 60_000).allowed).toBe(true);
+  });
+});
+
+describe("getClientIp", () => {
+  it("prefers first x-forwarded-for entry", () => {
+    const req = new Request("https://example.com", {
+      headers: { "x-forwarded-for": "  203.0.113.1, 10.0.0.1 " },
+    });
+    expect(getClientIp(req)).toBe("203.0.113.1");
+  });
+
+  it("falls back to x-real-ip", () => {
+    const req = new Request("https://example.com", {
+      headers: { "x-real-ip": "198.51.100.2" },
+    });
+    expect(getClientIp(req)).toBe("198.51.100.2");
+  });
+
+  it("returns unknown when no proxy headers", () => {
+    expect(getClientIp(new Request("https://example.com"))).toBe("unknown");
   });
 });
