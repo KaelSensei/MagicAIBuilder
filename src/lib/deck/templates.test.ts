@@ -4,6 +4,11 @@ import {
   createTemplate,
   applyTemplate,
   getTemplatesForCommander,
+  getTopTemplatesForCommander,
+  searchTemplates,
+  filterByArchetype,
+  filterBySource,
+  getPopularTemplates,
   type DeckTemplate,
 } from "./templates";
 
@@ -90,6 +95,18 @@ describe("createTemplate", () => {
 
     expect(template.upvotes).toBe(0);
     expect(template.createdAt).toBeDefined();
+  });
+
+  it("uses Unknown Commander when deck has no commander", () => {
+    const deck = makeDeck({ commander: null });
+    const template = createTemplate(deck, "Anon", "Goodstuff", "community");
+    expect(template.commanderName).toBe("Unknown Commander");
+  });
+
+  it("uses authorOverride when provided", () => {
+    const deck = makeDeck();
+    const template = createTemplate(deck, "T", "Aggro", "official", "Pro Author");
+    expect(template.author).toBe("Pro Author");
   });
 });
 
@@ -212,6 +229,106 @@ describe("getTemplatesForCommander", () => {
 
     expect(result[0].upvotes).toBe(15);
     expect(result[1].upvotes).toBe(8);
+  });
+
+  it("getTopTemplatesForCommander respects limit", () => {
+    const result = getTopTemplatesForCommander(templates, "Atraxa, Grand Unifier", 1);
+    expect(result).toHaveLength(1);
+    expect(result[0].upvotes).toBe(15);
+  });
+});
+
+// ─── searchTemplates ─────────────────────────────────────────────────────────
+describe("searchTemplates", () => {
+  const sample: DeckTemplate[] = [
+    {
+      id: "a",
+      name: "Budget Elves",
+      commanderName: "Lathril",
+      archetype: "Tokens",
+      deckList: [],
+      author: "p",
+      upvotes: 3,
+      source: "community",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: "b",
+      name: "cEDH Thoracle",
+      commanderName: "Thrasios",
+      archetype: "Combo",
+      deckList: [],
+      author: "q",
+      upvotes: 40,
+      source: "official",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
+  it("matches name substring", () => {
+    const r = searchTemplates(sample, "budget");
+    expect(r).toHaveLength(1);
+    expect(r[0].id).toBe("a");
+  });
+
+  it("matches commander name", () => {
+    const r = searchTemplates(sample, "thrasios");
+    expect(r).toHaveLength(1);
+    expect(r[0].id).toBe("b");
+  });
+
+  it("matches archetype", () => {
+    const r = searchTemplates(sample, "combo");
+    expect(r).toHaveLength(1);
+    expect(r[0].id).toBe("b");
+  });
+});
+
+// ─── filterByArchetype / filterBySource / getPopularTemplates ───────────────
+describe("filterByArchetype, filterBySource, getPopularTemplates", () => {
+  const lot: DeckTemplate[] = [
+    {
+      id: "1",
+      name: "A",
+      commanderName: "X",
+      archetype: "Stax",
+      deckList: [],
+      author: "u1",
+      upvotes: 2,
+      source: "community",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: "2",
+      name: "B",
+      commanderName: "Y",
+      archetype: "Stax",
+      deckList: [],
+      author: "u2",
+      upvotes: 10,
+      source: "official",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
+  it("filterByArchetype", () => {
+    expect(filterByArchetype(lot, "Stax")).toHaveLength(2);
+    expect(filterByArchetype(lot, "Combo")).toHaveLength(0);
+  });
+
+  it("filterBySource", () => {
+    expect(filterBySource(lot, "official")).toHaveLength(1);
+    expect(filterBySource(lot, "official")[0].id).toBe("2");
+  });
+
+  it("getPopularTemplates filters and sorts", () => {
+    const popular = getPopularTemplates(lot, 5);
+    expect(popular).toHaveLength(1);
+    expect(popular[0].id).toBe("2");
   });
 });
 

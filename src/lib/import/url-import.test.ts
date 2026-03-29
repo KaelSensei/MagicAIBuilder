@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { detectSource } from "./url-import";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import * as http from "@/lib/http";
+import { detectSource, importFromUrl } from "./url-import";
 
 describe("detectSource", () => {
   // ─── Moxfield ───────────────────────────────────────────────────────────────
@@ -86,5 +87,91 @@ describe("detectSource", () => {
 
   it("returns null for edhrec non-commander URL", () => {
     expect(detectSource("https://edhrec.com/cards/sol-ring")).toBeNull();
+  });
+});
+
+// ─── importFromUrl ──────────────────────────────────────────────────────────
+describe("importFromUrl", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("throws when URL is not recognised", async () => {
+    await expect(importFromUrl("https://example.com/deck/1")).rejects.toThrow(
+      "URL not recognised"
+    );
+  });
+
+  it("imports Moxfield deck JSON", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "Mox Test",
+          format: "commander",
+          commanders: {
+            k: { quantity: 1, card: { name: "Kenrith" } },
+          },
+          mainboard: {
+            s: { quantity: 1, card: { name: "Sol Ring" } },
+          },
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://moxfield.com/decks/abc123");
+    expect(result.source).toBe("moxfield");
+    expect(result.name).toBe("Mox Test");
+    expect(result.cards.some((c) => c.isCommander && c.name === "Kenrith")).toBe(true);
+    expect(result.formatWarning).toBeUndefined();
+  });
+
+  it("sets formatWarning for non-commander Moxfield format", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "Standard pile",
+          format: "Standard",
+          commanders: {},
+          mainboard: { a: { quantity: 1, card: { name: "Plains" } } },
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://www.moxfield.com/decks/z99");
+    expect(result.formatWarning).toContain("Standard");
+  });
+
+  it("imports Archidekt deck", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "Arch Test",
+          deckFormat: 3,
+          cards: [
+            {
+              quantity: 1,
+              categories: ["Commander"],
+              card: { oracleCard: { name: "Niv-Mizzet" } },
+            },
+            {
+              quantity: 1,
+              categories: ["Maybeboard"],
+              card: { oracleCard: { name: "Mountain" } },
+            },
+          ],
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://archidekt.com/decks/555");
+    expect(result.source).toBe("archidekt");
+    expect(result.cards.find((c) => c.name === "Niv-Mizzet")?.isCommander).toBe(true);
   });
 });
