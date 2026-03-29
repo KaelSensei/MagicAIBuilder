@@ -9,12 +9,15 @@ import { CardListItem } from "@/components/card/CardListItem";
 import { CardTooltip } from "@/components/card/CardTooltip";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard ,CardCategory} from "@/lib/deck/types";
-import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
+import { CATEGORY_LABELS } from "@/lib/deck/categories";
 import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, Rows3 } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
 import { BulkSelectBar } from "@/components/deck/BulkSelectBar";
+import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
+import { sortCards, groupCards } from "@/lib/deck/sort";
+import type { CardGroup } from "@/lib/deck/sort";
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -72,6 +75,51 @@ function DraggableDeckCard({
       <div className="flex-1 min-w-0">
         <CardListItem card={card} onRemove={onRemove} showNotes />
       </div>
+    </div>
+  );
+}
+
+// Generic collapsible group (for CMC/color groupings that don't map to a DnD category)
+function GenericGroup({
+  label,
+  cards,
+  onRemoveCard,
+  onMoveToMaybeboard,
+}: {
+  readonly label: string;
+  readonly cards: Deck["cards"];
+  readonly onRemoveCard: (id: string) => void;
+  readonly onMoveToMaybeboard?: (id: string) => void;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  return (
+    <div className="mb-2">
+      <button
+        onClick={() => setCollapsed((c) => !c)}
+        className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--surface-hover)] transition-colors group"
+      >
+        {collapsed ? (
+          <ChevronRight className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+        ) : (
+          <ChevronDown className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+        )}
+        <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{label}</span>
+        <span className="text-xs text-[var(--text-secondary)] ml-auto">
+          {cards.reduce((sum, c) => sum + c.quantity, 0)}
+        </span>
+      </button>
+      {!collapsed && (
+        <div className="pl-1">
+          {cards.map((card) => (
+            <DraggableDeckCard
+              key={card.id}
+              card={card}
+              onRemove={onRemoveCard}
+              onMoveToMaybeboard={onMoveToMaybeboard}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -218,7 +266,7 @@ interface MainZoneContentProps {
   readonly mainCards: Deck["cards"];
   readonly viewMode: "grid" | "list";
   readonly gridCols: number;
-  readonly cardsByCategory: Record<CardCategory, Deck["cards"]>;
+  readonly cardGroups: CardGroup[];
   readonly onRemoveCard: (id: string) => void;
   readonly onCardClick?: (card: DeckCard) => void;
   readonly clearCommander: () => void;
@@ -226,7 +274,7 @@ interface MainZoneContentProps {
   readonly onMoveToMaybeboard?: (id: string) => void;
 }
 
-function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardsByCategory, onRemoveCard, onCardClick, clearCommander, setPartner, onMoveToMaybeboard }: MainZoneContentProps) {
+function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardGroups, onRemoveCard, onCardClick, clearCommander, setPartner, onMoveToMaybeboard }: MainZoneContentProps) {
   if (viewMode === "grid") {
     return (
       <div className={gridColsClass(gridCols)}>
@@ -256,11 +304,37 @@ function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardsByCategory,
       </div>
     );
   }
+
+  // List view: render sorted + grouped sections
   return (
     <>
-      {CATEGORY_ORDER.filter((c) => c !== "commander").map((category) => (
-        <DroppableCategory key={category} category={category} cards={cardsByCategory[category] ?? []} onRemoveCard={onRemoveCard} onMoveToMaybeboard={onMoveToMaybeboard} />
-      ))}
+      {cardGroups.map((group) => {
+        // Use DroppableCategory (with DnD support) only when grouping by type
+        // and the group key matches a valid CardCategory
+        const isCategoryKey = (key: string): key is CardCategory =>
+          key !== "all" && group.cards.length > 0 && group.cards[0].category === key;
+
+        if (isCategoryKey(group.key)) {
+          return (
+            <DroppableCategory
+              key={group.key}
+              category={group.key}
+              cards={group.cards}
+              onRemoveCard={onRemoveCard}
+              onMoveToMaybeboard={onMoveToMaybeboard}
+            />
+          );
+        }
+        return (
+          <GenericGroup
+            key={group.key}
+            label={group.label}
+            cards={group.cards}
+            onRemoveCard={onRemoveCard}
+            onMoveToMaybeboard={onMoveToMaybeboard}
+          />
+        );
+      })}
     </>
   );
 }
@@ -461,6 +535,9 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const moveToMaybeboard = useDeckStore((s) => s.moveToMaybeboard);
+  const sortField = useDeckStore((s) => s.sortField);
+  const sortDirection = useDeckStore((s) => s.sortDirection);
+  const groupBy = useDeckStore((s) => s.groupBy);
 
   // Active zone tab — controlled from parent when props provided, otherwise local state
   const [activeZoneLocal, setActiveZoneLocal] = useState<DeckZone>("main");
@@ -480,15 +557,9 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
   const sideboardCards = uniqueCards.filter((c) => c.zone === "sideboard");
   const maybeboardCards = uniqueCards.filter((c) => c.zone === "maybeboard");
 
-  // Group main-zone cards by category (for list view with categories)
-  const cardsByCategory = mainCards.reduce<Record<CardCategory, Deck["cards"]>>(
-    (acc, card) => {
-      acc[card.category] ??= [];
-      acc[card.category].push(card);
-      return acc;
-    },
-    {} as Record<CardCategory, Deck["cards"]>
-  );
+  // Sort then group main-zone cards for list view
+  const sortedMainCards = sortCards(mainCards, sortField, sortDirection);
+  const cardGroups = groupCards(sortedMainCards, groupBy);
 
   // Total only counts main deck + commander/partner (sideboard/maybeboard excluded)
   const totalCards =
@@ -653,10 +724,13 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
         )}
       </div>
 
+      {/* Sort & group toolbar — only for main zone */}
+      {activeZone === "main" && <SortGroupToolbar />}
+
       {/* Zone content — uses parent DndContext from BuilderPage (main zone only) */}
       <div className="flex-1 overflow-y-auto p-2">
         {activeZone === "main" && (
-          <MainZoneContent deck={deck} mainCards={mainCards} viewMode={viewMode} gridCols={gridCols} cardsByCategory={cardsByCategory} onRemoveCard={onRemoveCard} onCardClick={onCardClick} clearCommander={clearCommander} setPartner={setPartner} onMoveToMaybeboard={moveToMaybeboard} />
+          <MainZoneContent deck={deck} mainCards={sortedMainCards} viewMode={viewMode} gridCols={gridCols} cardGroups={cardGroups} onRemoveCard={onRemoveCard} onCardClick={onCardClick} clearCommander={clearCommander} setPartner={setPartner} onMoveToMaybeboard={moveToMaybeboard} />
         )}
         {activeZone === "sideboard" && (
           <SecondaryZoneContent zone="sideboard" cards={sideboardCards} viewMode={viewMode} gridCols={gridCols} onRemoveCard={onRemoveCard} onCardClick={onCardClick} moveCardToZone={moveCardToZone} />
