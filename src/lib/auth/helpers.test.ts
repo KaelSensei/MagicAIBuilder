@@ -2,12 +2,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockDeckFindUnique } = vi.hoisted(() => ({
+const { mockDeckFindUnique, mockUserFindUnique, mockUserUpsert } = vi.hoisted(() => ({
   mockDeckFindUnique: vi.fn(),
+  mockUserFindUnique: vi.fn(),
+  mockUserUpsert: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    user: {
+      findUnique: mockUserFindUnique,
+      upsert: mockUserUpsert,
+    },
     deck: {
       findUnique: mockDeckFindUnique,
     },
@@ -39,6 +45,12 @@ describe("requireAuth", () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "user-1", name: "Kael", email: "kael@test.com" },
     });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-1",
+      name: "Kael",
+      email: "kael@test.com",
+      image: null,
+    });
 
     const result = await requireAuth();
 
@@ -69,10 +81,45 @@ describe("requireAuth", () => {
     mockAuth.mockResolvedValueOnce({
       user: { name: "Kael", email: "kael@test.com" },
     });
+    mockUserUpsert.mockResolvedValueOnce({
+      id: "user-1",
+      name: "Kael",
+      email: "kael@test.com",
+      image: null,
+    });
 
     const result = await requireAuth();
 
-    expect(result.error?.status).toBe(401);
+    expect(result.error).toBeUndefined();
+    expect(result.session?.user.id).toBe("user-1");
+  });
+
+  it("creates a missing database user from the session email", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "oauth-user", name: "Kael", email: "Kael@Test.com", image: "https://example.com/avatar.png" },
+    });
+    mockUserFindUnique.mockResolvedValueOnce(null);
+    mockUserUpsert.mockResolvedValueOnce({
+      id: "db-user-1",
+      name: "Kael",
+      email: "kael@test.com",
+      image: "https://example.com/avatar.png",
+    });
+
+    const result = await requireAuth();
+
+    expect(result.error).toBeUndefined();
+    expect(result.session?.user.id).toBe("db-user-1");
+    expect(mockUserUpsert).toHaveBeenCalledWith({
+      where: { email: "kael@test.com" },
+      update: {},
+      create: {
+        email: "kael@test.com",
+        name: "Kael",
+        image: "https://example.com/avatar.png",
+      },
+      select: { id: true, name: true, email: true, image: true },
+    });
   });
 });
 
@@ -84,6 +131,12 @@ describe("requireDeckOwner", () => {
   it("returns userId and deck when user owns the deck", async () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "user-1" },
+    });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-1",
+      name: null,
+      email: "kael@test.com",
+      image: null,
     });
     mockDeckFindUnique.mockResolvedValueOnce({
       id: "deck-1",
@@ -101,6 +154,12 @@ describe("requireDeckOwner", () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "user-1" },
     });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-1",
+      name: null,
+      email: "kael@test.com",
+      image: null,
+    });
     mockDeckFindUnique.mockResolvedValueOnce({
       id: "deck-legacy",
       userId: null,
@@ -116,6 +175,12 @@ describe("requireDeckOwner", () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "user-1" },
     });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-1",
+      name: null,
+      email: "kael@test.com",
+      image: null,
+    });
     mockDeckFindUnique.mockResolvedValueOnce({
       id: "deck-2",
       userId: "user-other",
@@ -130,6 +195,12 @@ describe("requireDeckOwner", () => {
   it("returns 404 when deck is not found", async () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "user-1" },
+    });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-1",
+      name: null,
+      email: "kael@test.com",
+      image: null,
     });
     mockDeckFindUnique.mockResolvedValueOnce(null);
 
@@ -151,6 +222,12 @@ describe("requireDeckOwner", () => {
   it("queries Prisma with correct deck id and select fields", async () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "user-1" },
+    });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-1",
+      name: null,
+      email: "kael@test.com",
+      image: null,
     });
     mockDeckFindUnique.mockResolvedValueOnce({
       id: "deck-1",
