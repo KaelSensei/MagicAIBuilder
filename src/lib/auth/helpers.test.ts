@@ -2,17 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockDeckFindUnique, mockUserFindUnique, mockUserCreate } = vi.hoisted(() => ({
+const { mockDeckFindUnique, mockUserFindUnique, mockUserUpsert } = vi.hoisted(() => ({
   mockDeckFindUnique: vi.fn(),
   mockUserFindUnique: vi.fn(),
-  mockUserCreate: vi.fn(),
+  mockUserUpsert: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     user: {
       findUnique: mockUserFindUnique,
-      create: mockUserCreate,
+      upsert: mockUserUpsert,
     },
     deck: {
       findUnique: mockDeckFindUnique,
@@ -81,7 +81,7 @@ describe("requireAuth", () => {
     mockAuth.mockResolvedValueOnce({
       user: { name: "Kael", email: "kael@test.com" },
     });
-    mockUserFindUnique.mockResolvedValueOnce({
+    mockUserUpsert.mockResolvedValueOnce({
       id: "user-1",
       name: "Kael",
       email: "kael@test.com",
@@ -98,10 +98,8 @@ describe("requireAuth", () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "oauth-user", name: "Kael", email: "Kael@Test.com", image: "https://example.com/avatar.png" },
     });
-    mockUserFindUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(null);
-    mockUserCreate.mockResolvedValueOnce({
+    mockUserFindUnique.mockResolvedValueOnce(null);
+    mockUserUpsert.mockResolvedValueOnce({
       id: "db-user-1",
       name: "Kael",
       email: "kael@test.com",
@@ -112,8 +110,10 @@ describe("requireAuth", () => {
 
     expect(result.error).toBeUndefined();
     expect(result.session?.user.id).toBe("db-user-1");
-    expect(mockUserCreate).toHaveBeenCalledWith({
-      data: {
+    expect(mockUserUpsert).toHaveBeenCalledWith({
+      where: { email: "kael@test.com" },
+      update: {},
+      create: {
         email: "kael@test.com",
         name: "Kael",
         image: "https://example.com/avatar.png",

@@ -37,16 +37,10 @@ async function resolveAuthenticatedUser(
     return null;
   }
 
-  const userByEmail = await prisma.user.findUnique({
+  return prisma.user.upsert({
     where: { email: normalizedEmail },
-    select: { id: true, name: true, email: true, image: true },
-  });
-  if (userByEmail) {
-    return userByEmail;
-  }
-
-  return prisma.user.create({
-    data: {
+    update: {},
+    create: {
       email: normalizedEmail,
       name: sessionUser.name ?? null,
       image: sessionUser.image ?? null,
