@@ -31,6 +31,62 @@ export interface ScatteredSynergy {
   readonly deckIds: readonly string[];
 }
 
+interface BudgetSavingsAccumulator {
+  readonly name: string;
+  readonly price: number;
+  readonly count: number;
+}
+
+/**
+ * Update the aggregate counter for an expensive card seen in one deck.
+ *
+ * @param cardDeckCount Aggregate counts by stable card identifier.
+ * @param key Stable card identifier for cross-deck grouping.
+ * @param name Human-readable card name.
+ * @param price Current card price.
+ * @returns Nothing. The accumulator map is updated in place.
+ */
+function updateBudgetSavingsAccumulator(
+  cardDeckCount: Map<string, BudgetSavingsAccumulator>,
+  key: string,
+  name: string,
+  price: number
+): void {
+  const existing = cardDeckCount.get(key);
+  if (existing === undefined) {
+    cardDeckCount.set(key, { name, price, count: 1 });
+    return;
+  }
+
+  cardDeckCount.set(key, { ...existing, count: existing.count + 1 });
+}
+
+/**
+ * Convert aggregated deck counts into a recommendation when a card spans multiple decks.
+ *
+ * @param scryfallId Stable card identifier.
+ * @param data Aggregated card metadata.
+ * @returns A recommendation or `null` when the card appears in fewer than two decks.
+ */
+function toBudgetSavingsRecommendation(
+  scryfallId: string,
+  data: BudgetSavingsAccumulator
+): BudgetSavingsRecommendation | null {
+  if (data.count < 2) {
+    return null;
+  }
+
+  const savingsPerDeck = data.price * 0.7;
+  const totalSavings = savingsPerDeck * data.count;
+  return {
+    cardName: data.name,
+    scryfallId,
+    currentPrice: data.price,
+    deckCount: data.count,
+    totalSavingsPotential: Math.round(totalSavings * 100) / 100,
+  };
+}
+
 // ─── Missing meta cards ───────────────────────────────────────────────────
 /**
  * Find cards that appear in meta but are missing from user's decks.
@@ -75,48 +131,28 @@ export function findCrossDeckBudgetSavings(
   priceThreshold = 10
 ): BudgetSavingsRecommendation[] {
   // Count how many decks each expensive card appears in
-  const cardDeckCount: Map<string, { name: string; price: number; count: number }> = new Map();
+  const cardDeckCount = new Map<string, BudgetSavingsAccumulator>();
 
   for (const deck of decks) {
     const seenInDeck = new Set<string>();
 
     for (const card of deck.cards) {
-      if ((card.price ?? 0) < priceThreshold) continue;
+      const price = card.price ?? 0;
+      if (price < priceThreshold) continue;
 
       const key = card.scryfallId ?? card.id;
       if (seenInDeck.has(key)) continue;
       seenInDeck.add(key);
 
-      const existing = cardDeckCount.get(key);
-      if (existing) {
-        cardDeckCount.set(key, { ...existing, count: existing.count + 1 });
-      } else {
-        cardDeckCount.set(key, { name: card.name, price: card.price ?? 0, count: 1 });
-      }
+      updateBudgetSavingsAccumulator(cardDeckCount, key, card.name, price);
     }
   }
 
-  // Build recommendations for cards in 2+ decks
-  const recommendations: BudgetSavingsRecommendation[] = [];
-
-  for (const [scryfallId, data] of cardDeckCount.entries()) {
-    if (data.count < 2) continue;
-
-    // Estimate savings: replace with 30% of current price
-    const savingsPerDeck = data.price * 0.7;
-    const totalSavings = savingsPerDeck * data.count;
-
-    recommendations.push({
-      cardName: data.name,
-      scryfallId,
-      currentPrice: data.price,
-      deckCount: data.count,
-      totalSavingsPotential: Math.round(totalSavings * 100) / 100,
-    });
-  }
-
-  // Sort by total savings potential descending
-  return recommendations.sort((a, b) => b.totalSavingsPotential - a.totalSavingsPotential);
+  return Array.from(cardDeckCount.entries(), ([scryfallId, data]) =>
+    toBudgetSavingsRecommendation(scryfallId, data)
+  )
+    .filter((recommendation): recommendation is BudgetSavingsRecommendation => recommendation !== null)
+    .sort((a, b) => b.totalSavingsPotential - a.totalSavingsPotential);
 }
 
 // ─── Scattered synergy detection ──────────────────────────────────────────

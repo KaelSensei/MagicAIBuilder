@@ -32,12 +32,14 @@ export function BudgetOptimizationModal({
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div
-        role="dialog"
-        aria-modal="true"
+      <dialog
+        open
         aria-labelledby="budget-optimization-title"
-        className="relative z-10 bg-[var(--background)] rounded-xl shadow-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        onCancel={(event) => {
+          event.preventDefault();
+          onClose();
+        }}
+        className="relative z-10 m-0 rounded-xl border-none bg-[var(--background)] p-0 shadow-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/10">
@@ -115,7 +117,7 @@ export function BudgetOptimizationModal({
             </div>
           )}
         </div>
-      </div>
+      </dialog>
     </div>
   );
 }

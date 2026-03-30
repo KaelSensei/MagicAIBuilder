@@ -38,8 +38,8 @@ export function LifeTracker({
   const isGameOver = lifeTotal <= 0;
 
   function handleCustomSubmit() {
-    const val = parseInt(customInput, 10);
-    if (!isNaN(val) && val !== 0) {
+    const val = Number.parseInt(customInput, 10);
+    if (!Number.isNaN(val) && val !== 0) {
       if (val > 0) onHeal(val);
       else onDamage(Math.abs(val));
       setCustomInput("");
@@ -120,9 +120,9 @@ export function LifeTracker({
       {lifeHistory.length > 0 && (
         <div className="space-y-1 max-h-36 overflow-y-auto">
           <p className="text-xs font-semibold text-white/50 uppercase">History</p>
-          {[...lifeHistory].reverse().map((entry, i) => (
+          {[...lifeHistory].reverse().map((entry) => (
             <div
-              key={i}
+              key={`${entry.timestamp}-${entry.turn}-${entry.phase}-${entry.delta}`}
               className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white/5"
             >
               <span className="text-white/60">

@@ -60,7 +60,7 @@ export function buildRatingHistogram(ratings: readonly DeckRating[]): RatingHist
 // ─── Quality badges ────────────────────────────────────────────────────────
 const HIGHLY_RATED_MIN_AVG = 4.5;
 const HIGHLY_RATED_MIN_COUNT = 10;
-const LOW_RATED_MAX_AVG = 2.0;
+const LOW_RATED_MAX_AVG = 2;
 const LOW_RATED_MIN_COUNT = 5;
 
 export function isHighlyRated(ratings: readonly DeckRating[]): boolean {

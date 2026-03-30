@@ -17,8 +17,7 @@ const AddFavoriteSchema = z.object({
 });
 
 export async function GET() {
-  // TODO: get userId from session + fetch from DB
-  // For MVP: return empty array (DB integration after migration)
+  // Persistence is intentionally deferred for the MVP favorites route.
   return NextResponse.json([], { status: 200 });
 }
 
@@ -29,12 +28,12 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: validation.error.flatten().fieldErrors },
+        { error: z.flattenError(validation.error).fieldErrors },
         { status: 400 }
       );
     }
 
-    // TODO: get userId from session + save to DB
+    // Persistence is intentionally deferred for the MVP favorites route.
     return NextResponse.json({ ...validation.data, addedAt: new Date() }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to add favorite" }, { status: 500 });

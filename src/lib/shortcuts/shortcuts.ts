@@ -22,10 +22,10 @@ export interface ShortcutValidation {
 }
 
 // ─── Browser-reserved shortcuts to warn about ─────────────────────────────
-const BROWSER_RESERVED: string[] = [
+const BROWSER_RESERVED = new Set([
   "ctrl+w", "ctrl+t", "ctrl+n", "ctrl+r", "ctrl+f5",
   "ctrl+shift+n", "ctrl+tab", "alt+f4", "ctrl+l",
-];
+]);
 
 // ─── Default shortcut definitions ─────────────────────────────────────────
 export const DEFAULT_SHORTCUTS: readonly ShortcutDef[] = [
@@ -94,7 +94,7 @@ export function validateShortcut(shortcut: ShortcutDef): ShortcutValidation {
   }
 
   const label = getShortcutLabel(shortcut).toLowerCase();
-  if (BROWSER_RESERVED.includes(label)) {
+  if (BROWSER_RESERVED.has(label)) {
     return {
       valid: true,
       warning: `"${label}" conflicts with a browser default. Use anyway or pick a different shortcut.`,

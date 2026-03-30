@@ -43,7 +43,7 @@ function escapeCSV(value: string | number | null): string {
   if (value === null || value === undefined) return "";
   const str = String(value);
   if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-    return `"${str.replace(/"/g, '""')}"`;
+    return `"${str.replaceAll('"', '""')}"`;
   }
   return str;
 }
@@ -62,7 +62,7 @@ export function generateDeckCSV(cards: readonly DeckCard[]): string {
       c.cmc,
       c.typeLine.split("—")[0].trim(),
       c.colorIdentity.join("/") || "Colorless",
-      c.price !== null ? c.price.toFixed(2) : "N/A"
+      c.price === null ? "N/A" : c.price.toFixed(2)
     )
   );
   return [header, ...rows].join("\n");
@@ -90,7 +90,7 @@ export function generateDeckCSVFull(deck: Deck): string {
         c.cmc,
         c.typeLine.split("—")[0].trim(),
         c.colorIdentity.join("/") || "Colorless",
-        c.price !== null ? c.price.toFixed(2) : "N/A"
+        c.price === null ? "N/A" : c.price.toFixed(2)
       )
     ),
     "",
