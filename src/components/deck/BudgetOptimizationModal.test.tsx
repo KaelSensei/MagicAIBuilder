@@ -80,7 +80,14 @@ describe("BudgetOptimizationModal", () => {
   it("calls onClose when close button clicked", () => {
     const onClose = vi.fn();
     render(<BudgetOptimizationModal {...defaultProps} onClose={onClose} />);
-    fireEvent.click(screen.getByRole("button", { name: /close/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("calls onClose when backdrop button is clicked", () => {
+    const onClose = vi.fn();
+    render(<BudgetOptimizationModal {...defaultProps} onClose={onClose} />);
+    fireEvent.click(screen.getByRole("button", { name: /close budget optimization modal/i }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

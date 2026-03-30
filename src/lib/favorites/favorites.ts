@@ -3,6 +3,8 @@
  * Zero framework dependencies. All state transitions are immutable.
  */
 
+import { randomAlphanumericId } from "@/lib/crypto-random";
+
 // ─── Types ────────────────────────────────────────────────────────────────
 export interface CardFavorite {
   readonly scryfallId: string;
@@ -99,7 +101,7 @@ export function sortFavorites(
 // ─── Custom lists ─────────────────────────────────────────────────────────
 export function createFavoriteList(name: string): FavoriteList {
   return {
-    id: `list-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: `list-${Date.now()}-${randomAlphanumericId(5)}`,
     name,
     cards: [],
     createdAt: new Date(),

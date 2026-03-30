@@ -64,7 +64,14 @@ describe("PricingShoppingListModal", () => {
   it("calls onClose when close button clicked", () => {
     const onClose = vi.fn();
     render(<PricingShoppingListModal {...defaultProps} onClose={onClose} />);
-    fireEvent.click(screen.getByRole("button", { name: /close/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("calls onClose when backdrop button is clicked", () => {
+    const onClose = vi.fn();
+    render(<PricingShoppingListModal {...defaultProps} onClose={onClose} />);
+    fireEvent.click(screen.getByRole("button", { name: /close shopping list modal/i }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 

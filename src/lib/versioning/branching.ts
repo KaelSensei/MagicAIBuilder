@@ -1,4 +1,5 @@
 import type { DeckCard } from "@/lib/deck/types";
+import { randomAlphanumericId } from "@/lib/crypto-random";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,7 @@ export interface Conflict {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  return `${Date.now()}-${randomAlphanumericId(7)}`;
 }
 
 function cardKey(card: DeckCard): string {
