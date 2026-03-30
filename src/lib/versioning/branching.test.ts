@@ -73,6 +73,12 @@ describe("createBranch", () => {
     expect(b1.id).not.toBe(b2.id);
   });
 
+  it("uses timestamped crypto-safe ids", () => {
+    const branch = createBranch(baseDeck, "main", "Initial version");
+    expect(branch.id).toMatch(/^\d+-[a-z0-9]{7}$/);
+    expect(branch.versions[0].id).toMatch(/^\d+-[a-z0-9]{7}$/);
+  });
+
   it("cardList is a snapshot (not reference)", () => {
     const cards = [cardA, cardB];
     const deck = { id: "d", name: "D", cards };

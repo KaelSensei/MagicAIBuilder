@@ -148,6 +148,11 @@ describe("createFavoriteList", () => {
     const b = createFavoriteList("B");
     expect(a.id).not.toBe(b.id);
   });
+
+  it("uses timestamped crypto-safe list ids", () => {
+    const list = createFavoriteList("Budget Staples");
+    expect(list.id).toMatch(/^list-\d+-[a-z0-9]{5}$/);
+  });
 });
 
 describe("addToFavoriteList", () => {
