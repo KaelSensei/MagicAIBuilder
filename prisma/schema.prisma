@@ -191,3 +191,42 @@ model DeckTemplate {
   @@index([commanderName])
   @@index([upvotes])
 }
+
+// Card favorites & wishlists
+model CardFavorite {
+  id         String   @id @default(cuid())
+  scryfallId String
+  name       String
+  typeLine   String
+  cmc        Float    @default(0)
+  price      Float?
+  imageUri   String   @default("")
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addedAt    DateTime @default(now())
+
+  @@unique([scryfallId, userId])
+  @@index([userId])
+}
+
+model FavoriteList {
+  id        String              @id @default(cuid())
+  name      String
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards     CardInFavoriteList[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([userId])
+}
+
+model CardInFavoriteList {
+  id         String       @id @default(cuid())
+  listId     String
+  list       FavoriteList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  scryfallId String
+  order      Int          @default(0)
+
+  @@unique([listId, scryfallId])
+}
