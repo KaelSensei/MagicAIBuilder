@@ -4,10 +4,75 @@
 
 | Field         | Value                                          |
 | ------------- | ---------------------------------------------- |
-| Current Phase | Phase 11 — User Stories (US-A → US-F)          |
-| Last Updated  | 2026-03-28                                     |
+| Current Phase | Phase 12 — User Stories (US-I → US-X)          |
+| Last Updated  | 2026-03-30                                     |
 | Status        | 🚀 Active Development                          |
 | Main Branch   | `main`                                         |
+
+---
+
+## Phase 12: User Stories — US-I → US-X — 2026-03-29 ✅
+
+### US-I: Advanced Card Sorting & Grouping (#221)
+
+- [x] `sortCards()` with CMC, name, price, color, type + asc/desc direction
+- [x] `groupCards()` by type, CMC, color, or none
+- [x] `loadSortPreference` / `saveSortPreference` with localStorage persistence per deck
+- [x] `SortGroupToolbar` wired into DeckEditor main zone toolbar
+- [x] `GenericGroup` component for CMC/color non-DnD groupings
+- [x] Compatible with both grid and list view modes
+
+### US-H: Deck Price Tracking (#220 + #221)
+
+- [x] `useDeckPrice` hook: total USD, missingPriceCount, hasCards (via Zustand)
+- [x] `DeckPriceDisplay` component in Stats Panel with live total
+- [x] Per-card `$X.XX` green badge in `CardListItem`
+
+### US-K: Playtest Mode (#222 + #236)
+
+- [x] **Engine** (`src/lib/playtest/engine.ts`): pure immutable game state machine
+  - `createPlaytestState` (shuffle + draw 7), `applyDrawCard`, `applyNextPhase`, `applyNextTurn`
+  - `applyDamage`, `applyHeal` with life history log
+  - `applyTap`, `applyUntapAll`, `applyMoveToZone`, `applyAddCounter`
+  - `applyUndo` (max 10 entries)
+- [x] **Store** (`src/lib/playtest/store.ts`): Zustand store isolated from main deck store
+- [x] **UI Components**: LifeTracker, PhaseTracker, HandZone, BattlefieldZone, GraveyardZone
+- [x] 64 tests total (28 engine + 36 UI) ✅
+
+### US-U: Deck Templates (#223)
+
+- [x] `DeckTemplate` Prisma model added to schema
+- [x] `createTemplate`, `applyTemplate`, `getTemplatesForCommander`, `searchTemplates`, `filterByArchetype`, `getPopularTemplates`
+- [x] `TemplatesModal` UI: browse, filter, apply
+- [x] API `GET /api/templates`, `POST /api/templates` with Zod validation
+- [x] 26 tests passing ✅
+
+### US-X: Analytics Dashboard (#225)
+
+- [x] `aggregateDeckStats`: total decks, total value, avg cost, favorite archetype
+- [x] `getFormatDistribution`, `getArchetypeDistribution`
+- [x] `getBudgetDistribution` (Budget ≤$100 / Mid-range ≤$300 / Optimized ≤$600 / cEDH)
+- [x] `getRecentlyModified` with pagination
+- [x] 16 tests passing ✅
+
+### US-W: Budget Optimization & Pricing UI (#224 + #237)
+
+- [x] `calculateDeckPrice`, `getPriceBreakdown`, `suggestBudgetReductions`, `getCardsSortedByPrice`, `findCheaperAlternatives`, `generateShoppingListCSV`
+- [x] **BudgetOptimizationModal**: current vs target budget, savings-sorted suggestions, Apply per suggestion
+- [x] **PricingShoppingListModal**: cost table, subtotal, CSV download, copy to clipboard
+- [x] 39 tests total (20 engine + 19 UI) ✅
+
+### Supporting work — 2026-03-29
+
+- [x] `fix`: reconcile authenticated users with Prisma records — race-safe upsert (#233)
+- [x] `fix`: stabilize printings hover preview (#235)
+- [x] `feat`: hover zoom in printings modal (#234)
+- [x] `fix`: replace ReDoS-prone regex in url-import and mana parse (#230)
+- [x] `fix`: Web Crypto instead of Math.random for IDs and deck shuffle (#231)
+- [x] `fix(sonar)`: resolve open LOW/MEDIUM issues — A11y, Zod v4, nested ternaries (#227)
+- [x] `fix(sonar)`: resolve 12 HIGH/MEDIUM impact issues — complexity, reduce, stable keys (#226)
+- [x] `test`: raise coverage for meta, import, playtest, templates (#228)
+- [x] `test`: expand coverage for onboarding, url-import, sort, rate-limit (#229)
 
 ---
 
