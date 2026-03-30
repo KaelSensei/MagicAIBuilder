@@ -9,6 +9,67 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-29: Phase 12 — Playtest mode, Deck Templates, Analytics Dashboard, Pricing UI
+
+- `feat(usk): playtest mode — engine + store foundation (#222)` — full playtest game engine built with TDD:
+  - Pure immutable state machine: `createPlaytestState`, `applyDrawCard`, `applyNextPhase`, `applyNextTurn`
+  - Life tracking with history log and undo support (max 10 entries)
+  - Zone management: hand, battlefield, graveyard, exile; `applyMoveToZone`, `applyTap`, `applyUntapAll`, `applyAddCounter`
+  - Zustand store (`usePlaytestStore`) isolated from main deck store
+  - 28 tests passing ✅ (1107 total)
+- `feat(usk): playtest UI — LifeTracker, PhaseTracker, HandZone, BattlefieldZone, GraveyardZone (#236)` — full UI for playtest mode:
+  - **LifeTracker**: life total display, ±1/±5 buttons, custom input, game over state, life history with undo
+  - **PhaseTracker**: turn badge, 7-phase list with active highlight, Next Phase / Next Turn buttons
+  - **HandZone**: hand + library counts, draw button, show/hide toggle, card context menu (→ Battlefield / → Graveyard)
+  - **BattlefieldZone**: responsive grid, tap/untap with rotate animation, +1/-1 counters, remove button
+  - **GraveyardZone**: graveyard + exile collapsible zones, restore to hand / battlefield
+  - 36 tests passing ✅ (1297 total)
+- `feat(usu): deck templates — library and application system (#223)` — template management system:
+  - `DeckTemplate` interface with commander, archetype, deck list (99 cards), upvotes, source (official/community)
+  - Pure functions: `createTemplate`, `applyTemplate`, `getTemplatesForCommander`, `searchTemplates`, `filterByArchetype`, `getPopularTemplates`
+  - `TemplatesModal` UI component: browse, filter, apply templates
+  - API routes: `GET /api/templates` (list by commander), `POST /api/templates` (create from deck)
+  - `DeckTemplate` Prisma model added to schema
+  - 26 tests passing ✅ (1131 total)
+- `feat(usx): analytics dashboard — aggregated deck statistics (#225)` — deck analytics with TDD:
+  - `aggregateDeckStats`: total decks, total value, avg cost, favorite archetype
+  - `getFormatDistribution`, `getArchetypeDistribution`, `getBudgetDistribution` (Budget/Mid-range/Optimized/cEDH tiers)
+  - `getRecentlyModified` with pagination support
+  - 16 tests passing ✅ (1195 total)
+- `feat(usw): pricing — deck price tracking and budget optimization (#224)` — Scryfall-powered pricing engine:
+  - `calculateDeckPrice`, `getPriceBreakdown` (by card type with percentages)
+  - `suggestBudgetReductions` (sorted by savings impact), `getCardsSortedByPrice`, `findCheaperAlternatives`
+  - `generateShoppingListCSV` export helper
+  - `useDeckPrice` hook: total USD value, missingPriceCount, hasCards
+  - `DeckPriceDisplay` component in Stats Panel with live total + missing-price notice
+  - Per-card green `$X.XX` badge in `CardListItem`
+  - 20 tests passing ✅
+- `feat(usw): pricing UI — BudgetOptimizationModal + PricingShoppingListModal (#237)` — pricing UI components:
+  - **BudgetOptimizationModal**: current vs target budget, suggestions sorted by savings, per-suggestion Apply button, "Budget goal reached!" empty state
+  - **PricingShoppingListModal**: card table sorted by total cost, subtotal display, missing-price count, CSV download (`deck-name-shopping.csv`), copy to clipboard
+  - 19 tests passing ✅ (1316 total)
+- `feat: US-I — Advanced card sorting & grouping (#221)` — powerful sorting and grouping in the deck editor:
+  - `sortCards()`: CMC, name, price, color, type with asc/desc direction
+  - `groupCards()`: by type, CMC, color, or none
+  - `loadSortPreference` / `saveSortPreference` with localStorage persistence per deck
+  - `SortGroupToolbar` wired into DeckEditor; `GenericGroup` component for dynamic groupings
+  - 18 tests passing ✅
+
+### Fixed — 2026-03-29: Security hardening, auth reconciliation, Sonar cleanup
+
+- `fix: reconcile authenticated users with Prisma records (#233)` — race-safe auth reconciliation: upsert on first login prevents duplicate user records; test mocks updated for strict typing
+- `fix: stabilize printings hover preview (#235)` — resolved flickering/instability in the printings modal hover card preview
+- `fix: add hover zoom in printings modal (#234)` — card zoom on hover in the printings modal for better print selection UX
+- `fix: replace ReDoS-prone regex in url-import and mana parse (#230)` — strip MDFC/pipe suffixes and set codes via linear `indexOf` loops (Sonar S5852); `parseManaCost` refactored to avoid catastrophic backtracking
+- `fix: use Web Crypto instead of Math.random for ids and shuffle (#231)` — `crypto.getRandomValues`-backed `randomIntBelow` and `randomAlphanumericId` helpers; Fisher–Yates shuffle via unbiased CSPRNG (Sonar pseudorandom hotspot)
+- `fix(sonar): resolve open LOW/MEDIUM issues (#227)` — A11y, Zod v4 migration (`z.uuid`, `z.url`, `z.flattenError`), nested ternary removal, `globalThis.window` guard, proxy print via `Blob` + `load`
+- `fix(sonar): resolve 12 HIGH/MEDIUM impact issues (#226)` — reduce complexity in meta route, EDHRec fetch, AI stream parsing; fix `reduce` initial value; stable list keys in MetaPanel; A11y fixes (GameChangers modal backdrop, CardNoteInline role)
+
+### Tests — 2026-03-29
+
+- `test: raise coverage for meta, import, playtest, templates (#228)` — `usePlaytestStore` Zustand tests, `useMetaAnalysis` hook with fetch mocks, fetch edge cases, templates helpers, `importFromUrl` Moxfield/Archidekt paths
+- `test: expand coverage for onboarding, url-import, sort, rate-limit (#229)` — `useOnboarding` Session mock fixes, url-import/sort preference/`getClientIp` edge cases
+
 ### Added — 2026-03-28: Phase 11 features — bulk edit, hybrid mana, AI archetypes, proxy PDF, URL import, meta panel
 
 - `feat(editor): bulk select in sideboard & maybeboard (#199) [US-A]` — select multiple cards at once in the Sideboard and Maybeboard zones:
