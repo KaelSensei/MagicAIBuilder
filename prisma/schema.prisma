@@ -20,10 +20,12 @@ model User {
   password      String?         // hashed password for credentials provider (null for OAuth-only users)
   accounts      Account[]
   sessions      Session[]
-  decks         Deck[]
-  collection    CollectionCard[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  decks          Deck[]
+  collection     CollectionCard[]
+  favorites      CardFavorite[]
+  favoriteLists  FavoriteList[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Account {
