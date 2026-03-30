@@ -54,7 +54,7 @@ export type ChallengeStatus = "upcoming" | "active" | "ended";
 // ─── Score multipliers ────────────────────────────────────────────────────
 
 const SCORE_MULTIPLIERS: Record<Challenge["type"], number> = {
-  deckbuilding: 1.0,
+  deckbuilding: 1,
   performance: 1.2,
   creativity: 1.5,
   speed: 0.8,

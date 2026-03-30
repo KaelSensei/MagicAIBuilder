@@ -171,8 +171,8 @@ export function filterByDifficulty(
 export function getArchetypeForDeck(
   deckTags: readonly string[]
 ): Archetype | undefined {
-  const lowerTags = deckTags.map((t) => t.toLowerCase());
+  const lowerTags = new Set(deckTags.map((tag) => tag.toLowerCase()));
   return ARCHETYPES.find((arch) =>
-    arch.tags.some((tag) => lowerTags.includes(tag.toLowerCase()))
+    arch.tags.some((tag) => lowerTags.has(tag.toLowerCase()))
   );
 }

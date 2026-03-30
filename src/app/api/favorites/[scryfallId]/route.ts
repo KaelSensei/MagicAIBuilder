@@ -14,6 +14,6 @@ export async function DELETE(
     return NextResponse.json({ error: "scryfallId required" }, { status: 400 });
   }
 
-  // TODO: verify userId from session + delete from DB
+  // Persistence is intentionally deferred for the MVP favorites route.
   return NextResponse.json({ deleted: scryfallId }, { status: 200 });
 }

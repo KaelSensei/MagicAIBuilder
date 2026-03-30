@@ -35,7 +35,7 @@ export function PricingShoppingListModal({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${deckName.replace(/\s+/g, "-").toLowerCase()}-shopping.csv`;
+    a.download = `${deckName.replaceAll(/\s+/g, "-").toLowerCase()}-shopping.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -58,12 +58,14 @@ export function PricingShoppingListModal({
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div
-        role="dialog"
-        aria-modal="true"
+      <dialog
+        open
         aria-labelledby="pricing-shopping-list-title"
-        className="relative z-10 bg-[var(--background)] rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        onCancel={(event) => {
+          event.preventDefault();
+          onClose();
+        }}
+        className="relative z-10 m-0 rounded-xl border-none bg-[var(--background)] p-0 shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/10">
@@ -143,7 +145,7 @@ export function PricingShoppingListModal({
             </div>
           </div>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 }
