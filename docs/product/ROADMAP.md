@@ -4,6 +4,27 @@ Tracked features and improvements for future development, split into **Technical
 
 ---
 
+## Rough weighting (quick prioritization)
+
+This is a **rough** first-pass weighting using a lightweight RICE/MoSCoW hybrid:
+
+- **Weight 5**: Must-have / unblocks core product / high leverage
+- **Weight 4**: High value soon, but not blocking
+- **Weight 3**: Useful improvement, can wait
+- **Weight 2**: Nice-to-have / polish
+- **Weight 1**: Experimental / long-term / speculative
+
+Top candidates right now (subject to change):
+
+- **Dependabot** — Weight **5** (low effort, high security value)
+- **Enhance Scryfall API usage (caching/batching/error recovery)** — Weight **5** (core perf + UX)
+- **UptimeRobot** — Weight **4** (early production safety net)
+- **Structured logging (Pino)** — Weight **4** (debuggability once real users arrive)
+- **Bundle analyzer (monthly)** — Weight **3**
+- **Visual redesign** — Weight **3** (big surface area, schedule when stable)
+- **Multi-language support (i18n)** — Weight **2** (valuable, but big effort; after MVP traction)
+- **Local AI model via MageZero** — Weight **1** (very high effort / research)
+
 # Part 1 — Technical Roadmap
 
 ## Tech Stack Decisions

@@ -160,9 +160,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - `test: increase unit test coverage from 91% to 98% (#188)` — added tests for previously uncovered paths; 98% line coverage across all source files
 - `docs: add database reset instructions to INFRASTRUCTURE.md (#187)` — step-by-step guide for resetting the Supabase database in dev and production environments
-- `docs: split roadmap into Technical and Functional sections (#185)` — `docs/ROADMAP.md` restructured with separate Technical Roadmap and Functional Roadmap sections for clarity
-- `chore(qa): update quality gate history — PR #192 merged (US-01) (#193)` — `QUALITY_GATE.md` updated with metrics snapshot after US-01 merge
-- `chore(qa): quality gate baseline and metrics tracking` — established baseline metrics snapshot in `QUALITY_GATE.md` for ongoing Phase 10 tracking
+- `docs: split roadmap into Technical and Functional sections (#185)` — `docs/product/ROADMAP.md` restructured with separate Technical Roadmap and Functional Roadmap sections for clarity
+- `chore(qa): update quality gate history — PR #192 merged (US-01) (#193)` — `docs/engineering/QUALITY_GATE.md` updated with metrics snapshot after US-01 merge
+- `chore(qa): quality gate baseline and metrics tracking` — established baseline metrics snapshot in `docs/engineering/QUALITY_GATE.md` for ongoing Phase 10 tracking
 
 ### Added — 2026-03-26: NextAuth.js v5 Authentication (#181)
 
@@ -329,7 +329,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `buildSearchQuery()` split into `buildCmcParts()`, `buildPriceParts()`, `buildPowerToughnessParts()` — cognitive complexity below 15
 - All React sub-components (`TabButton`, `NumInput`, `SearchFilters`) have explicit `displayName`
 - `PRESETS_STORAGE_KEY` named constant (no magic strings)
-- docs/ROADMAP.md: "Enhanced deck-building filters" marked ✅ done
+- docs/product/ROADMAP.md: "Enhanced deck-building filters" marked ✅ done
 - 47 tests in `src/lib/scryfall/search.test.ts` covering all new filter behaviors
 
 ### Added — 2026-03-22: Grid density selector
@@ -695,7 +695,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 #### Core Types, Scryfall Integration, Deck Logic, Hooks, Components
 
-- Full details in `docs/PROGRESS.md`
+- Full details in `docs/project/PROGRESS.md`
 
 ---
 
