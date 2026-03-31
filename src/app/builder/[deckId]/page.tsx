@@ -1,6 +1,6 @@
 "use client";
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   DndContext,
@@ -157,6 +157,7 @@ export default function BuilderPage() {
   const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
   const [showPlaytest, setShowPlaytest] = useState(false);
   const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
+  const [isBanlistAlertDismissed, setIsBanlistAlertDismissed] = useState(false);
 
   // State for changing the printing/edition of an existing deck card
   const [deckCardForPrinting, setDeckCardForPrinting] = useState<DeckCard | null>(null);
@@ -170,6 +171,18 @@ export default function BuilderPage() {
 
   // Input focus tracking — suppresses single-key shortcuts when typing
   const [isInputFocused, setIsInputFocused] = useState(false);
+
+  const banlistAlertKey = useMemo(() => {
+    if (!stats) {
+      return "";
+    }
+
+    return `${stats.bannedCards.join("\u0000")}::${stats.colorIdentityViolations.join("\u0000")}`;
+  }, [stats]);
+
+  useEffect(() => {
+    setIsBanlistAlertDismissed(false);
+  }, [banlistAlertKey]);
 
   const query = (() => {
     if (commanderMode) return buildCommanderSearchQuery(searchText, filters);
@@ -676,11 +689,12 @@ export default function BuilderPage() {
             transition={{ duration: 0.3, delay: 0.1 }}
           >
             {/* Banlist alert */}
-            {stats && (stats.bannedCards.length > 0 || stats.colorIdentityViolations.length > 0) && (
+            {stats && !isBanlistAlertDismissed && (stats.bannedCards.length > 0 || stats.colorIdentityViolations.length > 0) && (
               <div className="p-3 border-b border-[var(--border)]">
                 <BanlistAlert
                   bannedCards={stats.bannedCards}
                   colorViolations={stats.colorIdentityViolations}
+                  onDismiss={() => setIsBanlistAlertDismissed(true)}
                 />
               </div>
             )}

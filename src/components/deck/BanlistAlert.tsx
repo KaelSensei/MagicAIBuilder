@@ -62,7 +62,8 @@ export function BanlistAlert({
             {onDismiss && (
               <button
                 onClick={onDismiss}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                aria-label="Dismiss deck warnings"
+                className="rounded-md p-1 text-[var(--text-secondary)] hover:bg-white/5 hover:text-[var(--text-primary)] transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
