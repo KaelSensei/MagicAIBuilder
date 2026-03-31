@@ -9,6 +9,32 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-03-30/31: Phase 13 features — Challenges, Deck Branching, Archetypes, Playtest Analytics, Social, Keyboard Shortcuts, Ratings, Favorites
+
+- `feat(usai): challenges — validation, scoring, ranking, status (#247)` — deck building challenges system with pure functions `validateChallenge`, `scoreChallenge`, `getRankings`; challenge completion tracking with badge rewards; 308 tests
+- `feat(usaj): deck branching — create, diff, merge, conflict detection (#246)` — deck versioning: create branches from deck states, diff (added/removed/changed cards), merge with conflict detection; 222 tests
+- `feat(usaf): archetypes library — 10 official archetypes` — Control, Aggro, Combo, Midrange, Ramp, Stax, Voltron, Tokens, Reanimator, Lands; archetype metadata, helpers `getArchetypesForCommander()`, `filterDeckByArchetype()`; 97 tests
+- `feat(usag): Playtest Analytics — win rate, mulligan stats, matchup stats, trends` — advanced playtest statistics: win rate calculation, historical trends, mulligan metrics, matchup performance; 217 tests
+- `feat(usah): social follow system — follow/unfollow + player badges` — follow other players, "Following" badge on profiles, notifications when followed players publish decks; 110 tests
+- `feat(usab): deck ratings & reviews — pure logic + validation` — 5-star rating system + text reviews, review validation (length, profanity filtering), aggregate ratings; 131 tests
+- `feat(usaa): card favorites & wishlist` — favorite cards across decks, wishlist for planned acquisitions; 183 tests
+- `feat(usac+usad): stats export + smart recommendations engine (#241)` — export deck stats to CSV/JSON, recommendation engine with `getSmartRecommendations` and `rankRecommendationsByMetaplay`; 166 tests
+- `feat(usae): keyboard shortcuts — definitions + utilities` — 15+ keyboard shortcuts, shortcut help modal (`?` key), `useKeyboardShortcuts` hook; 127 tests
+- `feat: polish color identity banner symbols (#254)` — color identity mana symbols (W/U/B/R/G circles) in deck headers
+- `feat: add mana symbols to home deck cards (#256)` — mana symbols on deck preview cards in home view
+
+### Fixed — 2026-03-30/31: UI Polish, Sonar Hardening
+
+- `fix: neutralize color identity banner background (#255)` — color banner contrast/legibility
+- `fix: make builder warnings dismissible (#252)` — users can close non-critical alerts
+- `fix: resolve remaining Sonar issues (#249)` — 8+ MEDIUM/LOW issues resolved
+- `fix: resolve Sonar low bugs and harden ids (#248)` — crypto-random ID generation, no insecure random
+
+### Chore — 2026-03-30: Infrastructure & Documentation
+
+- `chore(docs): reorganize docs and update references (#251)` — docs split into `/engineering` (INFRASTRUCTURE, TECHNICAL, dx-ci-overview), `/product` (ROADMAP, PROJECT_SPEC, USER_GUIDE), `/project` (CHANGELOG, PROGRESS), `/security`; cross-references updated
+- `chore(deps): bump @sentry/nextjs in production-dependencies (#250)` — error tracking dependency upgrade
+
 ### Added — 2026-03-29: Phase 12 — Playtest mode, Deck Templates, Analytics Dashboard, Pricing UI
 
 - `feat(usk): playtest mode — engine + store foundation (#222)` — full playtest game engine built with TDD:
