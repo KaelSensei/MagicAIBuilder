@@ -13,8 +13,8 @@ describe("ColorIdentityBanner", () => {
       />
     );
 
-    expect(screen.getByLabelText("{G}")).toBeDefined();
-    expect(screen.getByLabelText("{U}")).toBeDefined();
+    expect(screen.getByRole("img", { name: "Green mana symbol" })).toBeDefined();
+    expect(screen.getByRole("img", { name: "Blue mana symbol" })).toBeDefined();
   });
 
   it("falls back to a colorless identity banner", () => {
@@ -26,7 +26,7 @@ describe("ColorIdentityBanner", () => {
       />
     );
 
-    expect(screen.getByLabelText("{C}")).toBeDefined();
+    expect(screen.getByRole("img", { name: "Colorless mana symbol" })).toBeDefined();
   });
 
   it("calls onRemove when the banner close button is clicked", () => {
