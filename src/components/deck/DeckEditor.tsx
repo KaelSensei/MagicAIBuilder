@@ -3,16 +3,15 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import Image from "next/image";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { CardTooltip } from "@/components/card/CardTooltip";
-import { ManaSymbol } from "@/components/card/ManaSymbol";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard ,CardCategory} from "@/lib/deck/types";
-import type { ManaColor } from "@/lib/mana/parse";
 import { CATEGORY_LABELS } from "@/lib/deck/categories";
 import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, Rows3 } from "lucide-react";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useDeckStore } from "@/lib/deck/store";
 import { BulkSelectBar } from "@/components/deck/BulkSelectBar";
 import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
@@ -23,6 +22,8 @@ import type { CardGroup } from "@/lib/deck/sort";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type DeckZone = "main" | "sideboard" | "maybeboard";
+
+type BannerManaColor = "W" | "U" | "B" | "R" | "G" | "C";
 
 interface DeckEditorProps {
   readonly deck: Deck;
@@ -209,13 +210,22 @@ const COLOR_IDENTITY_BANNER_STYLES: Record<string, { readonly start: string; rea
   C: { start: "rgba(203,213,225,0.94)", end: "rgba(71,85,105,0.95)", textClassName: "text-white" },
 };
 
+const MANA_SYMBOL_LABELS: Record<BannerManaColor, string> = {
+  W: "White",
+  U: "Blue",
+  B: "Black",
+  R: "Red",
+  G: "Green",
+  C: "Colorless",
+};
+
 /**
  * Check whether a raw identity symbol can be rendered as a mana-color banner pip.
  *
  * @param color Raw identity symbol from deck data.
  * @returns `true` when the value is a supported mana-color symbol.
  */
-function isBannerManaColor(color: string): color is ManaColor {
+function isBannerManaColor(color: string): color is BannerManaColor {
   return ["W", "U", "B", "R", "G", "C"].includes(color);
 }
 
@@ -225,7 +235,7 @@ function isBannerManaColor(color: string): color is ManaColor {
  * @param colorIdentity Raw deck-card color identity.
  * @returns Ordered unique symbols suitable for banner rendering.
  */
-function getDisplayColorIdentity(colorIdentity: readonly string[]): readonly ManaColor[] {
+function getDisplayColorIdentity(colorIdentity: readonly string[]): readonly BannerManaColor[] {
   const normalized = Array.from(
     new Set(
       colorIdentity
@@ -272,6 +282,26 @@ function getColorIdentityBannerStyle(colorIdentity: readonly string[]): {
 }
 
 /**
+ * Build the Scryfall SVG URL for a mana symbol used in the banner.
+ *
+ * @param color Supported mana color symbol.
+ * @returns Remote SVG asset URL.
+ */
+function getBannerManaSymbolUrl(color: BannerManaColor): string {
+  return `https://svgs.scryfall.io/card-symbols/${color}.svg`;
+}
+
+/**
+ * Build accessible alternative text for a banner mana symbol.
+ *
+ * @param color Supported mana color symbol.
+ * @returns Human-readable image label.
+ */
+function getBannerManaSymbolAlt(color: BannerManaColor): string {
+  return `${MANA_SYMBOL_LABELS[color]} mana symbol`;
+}
+
+/**
  * Decorative banner for a commander slot, themed around the slot's color identity.
  *
  * @param props Banner content, colors, and remove action for the slot.
@@ -288,45 +318,60 @@ export function ColorIdentityBanner({
   readonly onRemove: () => void;
   readonly label?: string;
 }) {
-  const displayColors = getDisplayColorIdentity(colorIdentity);
-  const bannerStyle = getColorIdentityBannerStyle(displayColors);
+  const displayColors = useMemo(
+    () => getDisplayColorIdentity(colorIdentity),
+    [colorIdentity]
+  );
+  const bannerStyle = useMemo(
+    () => getColorIdentityBannerStyle(displayColors),
+    [displayColors]
+  );
 
   return (
     <div
       className={cn(
-        "relative flex-1 overflow-hidden rounded-lg h-[82px] group/banner border border-white/10",
+        "relative flex-1 h-[82px] overflow-hidden rounded-lg border border-white/10 shadow-[0_18px_50px_rgba(0,0,0,0.22)] group/banner",
         bannerStyle.textClassName
       )}
       style={{ backgroundImage: bannerStyle.backgroundImage }}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_38%),linear-gradient(135deg,rgba(255,255,255,0.10),transparent_60%)]" />
-      <div className="absolute inset-y-0 right-3 flex items-center gap-2 opacity-80">
-        {displayColors.map((color, index) => (
-          <div
-            key={`${label ?? "slot"}-${color}`}
-            className={cn(
-              "rounded-full bg-black/15 backdrop-blur-sm ring-1 ring-white/20",
-              index === 0 ? "scale-125" : "scale-100 opacity-85"
-            )}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.32),_transparent_35%),linear-gradient(135deg,rgba(255,255,255,0.14),transparent_60%)]" />
+      <div className="absolute inset-y-0 left-0 w-[46%] bg-[linear-gradient(90deg,rgba(15,23,42,0.72),rgba(15,23,42,0.36),transparent)]" />
+      <div className="relative z-10 flex h-full items-end justify-between gap-4 px-3 py-2">
+        <div className="min-w-0 flex-1 space-y-1">
+          {label && (
+            <div className="inline-flex rounded bg-yellow-400/90 px-1 text-[8px] font-bold leading-tight text-black">
+              {label}
+            </div>
+          )}
+          <p
+            className="max-w-[16rem] truncate text-sm font-semibold tracking-[0.01em]"
+            style={{ textShadow: "0 1px 3px rgba(0,0,0,0.35)" }}
           >
-            <ManaSymbol
-              token={{ kind: "color", color }}
-              className="w-8 h-8 border-white/20 text-base shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
-            />
-          </div>
-        ))}
-      </div>
-      {label && (
-        <div className="absolute top-1 left-1 bg-yellow-400/90 text-black text-[8px] font-bold px-1 rounded leading-tight">
-          {label}
+            {name}
+          </p>
         </div>
-      )}
-      <p
-        className="absolute bottom-1.5 left-2 right-24 text-xs font-semibold leading-tight truncate"
-        style={{ textShadow: "0 1px 3px rgba(0,0,0,0.35)" }}
-      >
-        {name}
-      </p>
+        <div className="shrink-0 rounded-full border border-white/15 bg-black/20 px-3 py-2 shadow-[0_12px_28px_rgba(0,0,0,0.22)] backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            {displayColors.map((color) => (
+              <div
+                key={`${label ?? "slot"}-${color}`}
+                className="relative rounded-full ring-1 ring-black/15 shadow-[0_8px_22px_rgba(0,0,0,0.18)]"
+              >
+                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_42%)]" />
+                <Image
+                  src={getBannerManaSymbolUrl(color)}
+                  alt={getBannerManaSymbolAlt(color)}
+                  width={34}
+                  height={34}
+                  unoptimized
+                  className="relative h-8 w-8 drop-shadow-[0_3px_8px_rgba(0,0,0,0.28)]"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       <button
         onClick={onRemove}
         className="absolute top-1 right-1 opacity-0 group-hover/banner:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
