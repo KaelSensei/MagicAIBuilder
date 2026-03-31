@@ -201,15 +201,6 @@ function DroppableCategory({ category, cards, onRemoveCard, onMoveToMaybeboard }
   );
 }
 
-const COLOR_IDENTITY_BANNER_STYLES: Record<string, { readonly start: string; readonly end: string; readonly textClassName: string }> = {
-  W: { start: "rgba(254,243,199,0.96)", end: "rgba(252,211,77,0.88)", textClassName: "text-yellow-950" },
-  U: { start: "rgba(56,189,248,0.92)", end: "rgba(29,78,216,0.92)", textClassName: "text-white" },
-  B: { start: "rgba(82,82,91,0.94)", end: "rgba(9,9,11,0.96)", textClassName: "text-white" },
-  R: { start: "rgba(251,146,60,0.94)", end: "rgba(190,24,93,0.92)", textClassName: "text-white" },
-  G: { start: "rgba(52,211,153,0.92)", end: "rgba(21,128,61,0.95)", textClassName: "text-white" },
-  C: { start: "rgba(203,213,225,0.94)", end: "rgba(71,85,105,0.95)", textClassName: "text-white" },
-};
-
 const MANA_SYMBOL_LABELS: Record<BannerManaColor, string> = {
   W: "White",
   U: "Blue",
@@ -218,6 +209,12 @@ const MANA_SYMBOL_LABELS: Record<BannerManaColor, string> = {
   G: "Green",
   C: "Colorless",
 };
+
+const COLOR_IDENTITY_BANNER_BACKGROUND =
+  "linear-gradient(135deg, rgba(84, 97, 120, 0.74), rgba(28, 34, 46, 0.96))";
+
+const COLOR_IDENTITY_BANNER_OVERLAY =
+  "radial-gradient(circle at top right, rgba(255,255,255,0.16), transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.08), transparent 45%)";
 
 /**
  * Check whether a raw identity symbol can be rendered as a mana-color banner pip.
@@ -248,40 +245,6 @@ function getDisplayColorIdentity(colorIdentity: readonly string[]): readonly Ban
 }
 
 /**
- * Build a gradient background from a card identity, preserving the order of its colors.
- *
- * @param colorIdentity Raw deck-card color identity.
- * @returns Inline background style plus text color class for the banner surface.
- */
-function getColorIdentityBannerStyle(colorIdentity: readonly string[]): {
-  readonly backgroundImage: string;
-  readonly textClassName: string;
-} {
-  const colors = getDisplayColorIdentity(colorIdentity);
-  if (colors.length === 1) {
-    const singleColorStyle =
-      COLOR_IDENTITY_BANNER_STYLES[colors[0]] ?? COLOR_IDENTITY_BANNER_STYLES.C;
-    return {
-      backgroundImage: `linear-gradient(135deg, ${singleColorStyle.start}, ${singleColorStyle.end})`,
-      textClassName: singleColorStyle.textClassName,
-    };
-  }
-
-  const segmentWidth = 100 / colors.length;
-  const gradientStops = colors.flatMap((color, index) => {
-    const style = COLOR_IDENTITY_BANNER_STYLES[color] ?? COLOR_IDENTITY_BANNER_STYLES.C;
-    const start = Math.round(index * segmentWidth);
-    const end = Math.round((index + 1) * segmentWidth);
-    return [`${style.start} ${start}%`, `${style.end} ${end}%`];
-  });
-
-  return {
-    backgroundImage: `linear-gradient(120deg, ${gradientStops.join(", ")})`,
-    textClassName: "text-white",
-  };
-}
-
-/**
  * Build the Scryfall SVG URL for a mana symbol used in the banner.
  *
  * @param color Supported mana color symbol.
@@ -302,7 +265,7 @@ function getBannerManaSymbolAlt(color: BannerManaColor): string {
 }
 
 /**
- * Decorative banner for a commander slot, themed around the slot's color identity.
+ * Decorative banner for a commander slot, using identity symbols on a neutral surface.
  *
  * @param props Banner content, colors, and remove action for the slot.
  * @returns A dismissible slot banner that replaces the old commander art crop.
@@ -322,21 +285,13 @@ export function ColorIdentityBanner({
     () => getDisplayColorIdentity(colorIdentity),
     [colorIdentity]
   );
-  const bannerStyle = useMemo(
-    () => getColorIdentityBannerStyle(displayColors),
-    [displayColors]
-  );
 
   return (
     <div
-      className={cn(
-        "relative flex-1 h-[82px] overflow-hidden rounded-lg border border-white/10 shadow-[0_18px_50px_rgba(0,0,0,0.22)] group/banner",
-        bannerStyle.textClassName
-      )}
-      style={{ backgroundImage: bannerStyle.backgroundImage }}
+      className="group/banner relative flex-1 h-[82px] overflow-hidden rounded-lg border border-white/10 text-white shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
+      style={{ backgroundImage: COLOR_IDENTITY_BANNER_BACKGROUND }}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.32),_transparent_35%),linear-gradient(135deg,rgba(255,255,255,0.14),transparent_60%)]" />
-      <div className="absolute inset-y-0 left-0 w-[46%] bg-[linear-gradient(90deg,rgba(15,23,42,0.72),rgba(15,23,42,0.36),transparent)]" />
+      <div className="absolute inset-0" style={{ backgroundImage: COLOR_IDENTITY_BANNER_OVERLAY }} />
       <div className="relative z-10 flex h-full items-end justify-between gap-4 px-3 py-2">
         <div className="min-w-0 flex-1 space-y-1">
           {label && (
@@ -351,12 +306,12 @@ export function ColorIdentityBanner({
             {name}
           </p>
         </div>
-        <div className="shrink-0 rounded-full border border-white/15 bg-black/20 px-3 py-2 shadow-[0_12px_28px_rgba(0,0,0,0.22)] backdrop-blur-md">
+        <div className="shrink-0 rounded-full border border-white/12 bg-white/10 px-3 py-2 shadow-[0_12px_28px_rgba(0,0,0,0.16)] backdrop-blur-md">
           <div className="flex items-center gap-2">
             {displayColors.map((color) => (
               <div
                 key={`${label ?? "slot"}-${color}`}
-                className="relative rounded-full ring-1 ring-black/15 shadow-[0_8px_22px_rgba(0,0,0,0.18)]"
+                className="relative rounded-full ring-1 ring-black/10 shadow-[0_6px_18px_rgba(0,0,0,0.14)]"
               >
                 <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_42%)]" />
                 <Image
