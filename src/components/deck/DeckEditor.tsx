@@ -3,12 +3,13 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import Image from "next/image";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { CardTooltip } from "@/components/card/CardTooltip";
+import { ManaSymbol } from "@/components/card/ManaSymbol";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard ,CardCategory} from "@/lib/deck/types";
+import type { ManaColor } from "@/lib/mana/parse";
 import { CATEGORY_LABELS } from "@/lib/deck/categories";
 import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, Rows3 } from "lucide-react";
 import React, { useCallback, useState } from "react";
@@ -199,48 +200,133 @@ function DroppableCategory({ category, cards, onRemoveCard, onMoveToMaybeboard }
   );
 }
 
-// Art crop banner for a single commander slot
-function CommanderBanner({
+const COLOR_IDENTITY_BANNER_STYLES: Record<string, { readonly start: string; readonly end: string; readonly textClassName: string }> = {
+  W: { start: "rgba(254,243,199,0.96)", end: "rgba(252,211,77,0.88)", textClassName: "text-yellow-950" },
+  U: { start: "rgba(56,189,248,0.92)", end: "rgba(29,78,216,0.92)", textClassName: "text-white" },
+  B: { start: "rgba(82,82,91,0.94)", end: "rgba(9,9,11,0.96)", textClassName: "text-white" },
+  R: { start: "rgba(251,146,60,0.94)", end: "rgba(190,24,93,0.92)", textClassName: "text-white" },
+  G: { start: "rgba(52,211,153,0.92)", end: "rgba(21,128,61,0.95)", textClassName: "text-white" },
+  C: { start: "rgba(203,213,225,0.94)", end: "rgba(71,85,105,0.95)", textClassName: "text-white" },
+};
+
+/**
+ * Check whether a raw identity symbol can be rendered as a mana-color banner pip.
+ *
+ * @param color Raw identity symbol from deck data.
+ * @returns `true` when the value is a supported mana-color symbol.
+ */
+function isBannerManaColor(color: string): color is ManaColor {
+  return ["W", "U", "B", "R", "G", "C"].includes(color);
+}
+
+/**
+ * Normalize a card color identity into unique display symbols, with `C` for colorless.
+ *
+ * @param colorIdentity Raw deck-card color identity.
+ * @returns Ordered unique symbols suitable for banner rendering.
+ */
+function getDisplayColorIdentity(colorIdentity: readonly string[]): readonly ManaColor[] {
+  const normalized = Array.from(
+    new Set(
+      colorIdentity
+        .map((color) => color.toUpperCase())
+        .filter(isBannerManaColor)
+    )
+  );
+
+  return normalized.length > 0 ? normalized : ["C"];
+}
+
+/**
+ * Build a gradient background from a card identity, preserving the order of its colors.
+ *
+ * @param colorIdentity Raw deck-card color identity.
+ * @returns Inline background style plus text color class for the banner surface.
+ */
+function getColorIdentityBannerStyle(colorIdentity: readonly string[]): {
+  readonly backgroundImage: string;
+  readonly textClassName: string;
+} {
+  const colors = getDisplayColorIdentity(colorIdentity);
+  if (colors.length === 1) {
+    const singleColorStyle =
+      COLOR_IDENTITY_BANNER_STYLES[colors[0]] ?? COLOR_IDENTITY_BANNER_STYLES.C;
+    return {
+      backgroundImage: `linear-gradient(135deg, ${singleColorStyle.start}, ${singleColorStyle.end})`,
+      textClassName: singleColorStyle.textClassName,
+    };
+  }
+
+  const segmentWidth = 100 / colors.length;
+  const gradientStops = colors.flatMap((color, index) => {
+    const style = COLOR_IDENTITY_BANNER_STYLES[color] ?? COLOR_IDENTITY_BANNER_STYLES.C;
+    const start = Math.round(index * segmentWidth);
+    const end = Math.round((index + 1) * segmentWidth);
+    return [`${style.start} ${start}%`, `${style.end} ${end}%`];
+  });
+
+  return {
+    backgroundImage: `linear-gradient(120deg, ${gradientStops.join(", ")})`,
+    textClassName: "text-white",
+  };
+}
+
+/**
+ * Decorative banner for a commander slot, themed around the slot's color identity.
+ *
+ * @param props Banner content, colors, and remove action for the slot.
+ * @returns A dismissible slot banner that replaces the old commander art crop.
+ */
+export function ColorIdentityBanner({
   name,
-  artCropUri,
-  imageUri,
+  colorIdentity,
   onRemove,
   label,
 }: {
   readonly name: string;
-  readonly artCropUri: string;
-  readonly imageUri: string;
+  readonly colorIdentity: readonly string[];
   readonly onRemove: () => void;
   readonly label?: string;
 }) {
-  // Prefer artCropUri; fall back to full card image (cropped from top to show face)
-  const src = artCropUri || imageUri;
+  const displayColors = getDisplayColorIdentity(colorIdentity);
+  const bannerStyle = getColorIdentityBannerStyle(displayColors);
+
   return (
-    <div className="relative rounded-lg overflow-hidden h-[82px] group/banner flex-1">
-      <Image
-        src={src}
-        alt={name}
-        fill
-        className="object-cover object-top"
-        draggable={false}
-        unoptimized
-      />
-      {/* Gradient overlay so the name is readable */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-      {/* Commander label badge */}
+    <div
+      className={cn(
+        "relative flex-1 overflow-hidden rounded-lg h-[82px] group/banner border border-white/10",
+        bannerStyle.textClassName
+      )}
+      style={{ backgroundImage: bannerStyle.backgroundImage }}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_38%),linear-gradient(135deg,rgba(255,255,255,0.10),transparent_60%)]" />
+      <div className="absolute inset-y-0 right-3 flex items-center gap-2 opacity-80">
+        {displayColors.map((color, index) => (
+          <div
+            key={`${label ?? "slot"}-${color}`}
+            className={cn(
+              "rounded-full bg-black/15 backdrop-blur-sm ring-1 ring-white/20",
+              index === 0 ? "scale-125" : "scale-100 opacity-85"
+            )}
+          >
+            <ManaSymbol
+              token={{ kind: "color", color }}
+              className="w-8 h-8 border-white/20 text-base shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
+            />
+          </div>
+        ))}
+      </div>
       {label && (
         <div className="absolute top-1 left-1 bg-yellow-400/90 text-black text-[8px] font-bold px-1 rounded leading-tight">
           {label}
         </div>
       )}
-      {/* Commander name */}
       <p
-        className="absolute bottom-1.5 left-2 right-6 text-white text-xs font-semibold leading-tight truncate"
-        style={{ textShadow: "0 1px 3px rgba(0,0,0,0.9)" }}
+        className="absolute bottom-1.5 left-2 right-24 text-xs font-semibold leading-tight truncate"
+        style={{ textShadow: "0 1px 3px rgba(0,0,0,0.35)" }}
       >
         {name}
       </p>
-      {/* Remove button */}
       <button
         onClick={onRemove}
         className="absolute top-1 right-1 opacity-0 group-hover/banner:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
@@ -582,19 +668,17 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
       <div className="p-2 border-b border-[var(--border)]">
         {deck.commander ? (
           <div className="flex gap-1.5">
-            <CommanderBanner
+            <ColorIdentityBanner
               name={deck.commander.name}
-              artCropUri={deck.commander.artCropUri}
-              imageUri={deck.commander.imageUri}
+              colorIdentity={deck.commander.colorIdentity}
               onRemove={clearCommander}
               label="CMD"
             />
             {/* Partner banner (side by side, 50/50) */}
             {hasPartner && deck.partner && (
-              <CommanderBanner
+              <ColorIdentityBanner
                 name={deck.partner.name}
-                artCropUri={deck.partner.artCropUri}
-                imageUri={deck.partner.imageUri}
+                colorIdentity={deck.partner.colorIdentity}
                 onRemove={() => setPartner(null)}
                 label={partnerSlotLabel(deck.pairingType)}
               />
