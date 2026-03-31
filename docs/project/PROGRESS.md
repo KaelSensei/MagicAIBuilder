@@ -2,12 +2,12 @@
 
 ## Overview
 
-| Field         | Value                                          |
-| ------------- | ---------------------------------------------- |
-| Current Phase | Phase 12 — User Stories (US-I → US-X)          |
-| Last Updated  | 2026-03-30                                     |
-| Status        | 🚀 Active Development                          |
-| Main Branch   | `main`                                         |
+| Field         | Value                                 |
+| ------------- | ------------------------------------- |
+| Current Phase | Phase 12 — User Stories (US-I → US-X) |
+| Last Updated  | 2026-03-30                            |
+| Status        | 🚀 Active Development                 |
+| Main Branch   | `main`                                |
 
 ---
 
@@ -728,7 +728,7 @@
 - `buildCardFaces()` + `computeCmc()` in store; `getCardImageUri` face param
 - `CardFlip` 3D component; `useCardFlip` hook; `CardListItem` Turn Over; `CardGrid` cardFaces
 - Tests: `useCardFlip.test.ts` (6+), MDFC section in `categories.test.ts`
-- `docs/ROADMAP.md`: MDFC and DFC items marked done
+- `docs/product/ROADMAP.md`: MDFC and DFC items marked done
   | Metric | Value |
   |---|---|
   | Source files | ~75 |

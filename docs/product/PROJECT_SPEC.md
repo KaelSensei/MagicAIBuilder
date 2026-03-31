@@ -3,6 +3,7 @@
 ## Objective
 
 A desktop-first Commander (EDH) deck builder with:
+
 - Scryfall-powered card search (name, set, color identity)
 - Drag & drop deck editor with auto-categorization
 - Live deck statistics (mana curve, color distribution, avg CMC)
@@ -22,22 +23,22 @@ A desktop-first Commander (EDH) deck builder with:
 
 ## Stack
 
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| Framework | Next.js (App Router) | 15.x |
-| Language | TypeScript | 5.x strict |
-| Styling | Tailwind CSS | 4.x |
-| Components | shadcn/ui (Radix primitives) | latest |
-| Animations | Framer Motion | 11.x |
-| State | Zustand | 5.x |
-| Data fetching | TanStack Query | 5.x |
-| Drag & Drop | dnd-kit | 6.x |
-| Database | PostgreSQL 16 | via Docker |
-| ORM | Prisma | 6.x |
-| Validation | Zod | 3.x |
-| Icons | Lucide React | latest |
-| Package manager | pnpm | 10.x |
-| Testing | Vitest 3 + Playwright | — |
+| Layer           | Technology                   | Version    |
+| --------------- | ---------------------------- | ---------- |
+| Framework       | Next.js (App Router)         | 15.x       |
+| Language        | TypeScript                   | 5.x strict |
+| Styling         | Tailwind CSS                 | 4.x        |
+| Components      | shadcn/ui (Radix primitives) | latest     |
+| Animations      | Framer Motion                | 11.x       |
+| State           | Zustand                      | 5.x        |
+| Data fetching   | TanStack Query               | 5.x        |
+| Drag & Drop     | dnd-kit                      | 6.x        |
+| Database        | PostgreSQL 16                | via Docker |
+| ORM             | Prisma                       | 6.x        |
+| Validation      | Zod                          | 3.x        |
+| Icons           | Lucide React                 | latest     |
+| Package manager | pnpm                         | 10.x       |
+| Testing         | Vitest 3 + Playwright        | —          |
 
 ---
 
@@ -66,8 +67,8 @@ Anthropic / OpenAI API (AI suggestions)
 
 ```typescript
 interface DeckCard {
-  id: string;                    // DB CUID (from Prisma DeckCard.id)
-  scryfallId: string;            // Scryfall card UUID
+  id: string; // DB CUID (from Prisma DeckCard.id)
+  scryfallId: string; // Scryfall card UUID
   name: string;
   manaCost: string;
   cmc: number;
@@ -87,23 +88,38 @@ interface DeckCard {
 }
 
 type CardCategory =
-  | "commander" | "creature" | "instant" | "sorcery"
-  | "artifact" | "enchantment" | "planeswalker" | "land"
-  | "ramp" | "draw" | "removal" | "boardWipe"
-  | "winCondition" | "protection" | "other";
+  | "commander"
+  | "creature"
+  | "instant"
+  | "sorcery"
+  | "artifact"
+  | "enchantment"
+  | "planeswalker"
+  | "land"
+  | "ramp"
+  | "draw"
+  | "removal"
+  | "boardWipe"
+  | "winCondition"
+  | "protection"
+  | "other";
 
 type CommanderPairingType =
-  | "none" | "partner" | "partner_with"
-  | "friends_forever" | "background" | "doctor";
+  | "none"
+  | "partner"
+  | "partner_with"
+  | "friends_forever"
+  | "background"
+  | "doctor";
 
 interface Deck {
-  id: string;                     // DB CUID
+  id: string; // DB CUID
   name: string;
   commander: DeckCard | null;
   partner: DeckCard | null;
   pairingType: CommanderPairingType;
-  companion: DeckCard | null;     // Outside the 100, sideboard slot
-  cards: DeckCard[];              // The 99 (or 98 with partner)
+  companion: DeckCard | null; // Outside the 100, sideboard slot
+  cards: DeckCard[]; // The 99 (or 98 with partner)
   format: "commander";
   targetBracket: 1 | 2 | 3 | 4;
   budget: number | null;
@@ -119,6 +135,7 @@ interface Deck {
 Commander is a **singleton** format — max 1 copy per card — with the following exceptions enforced by `src/lib/deck/multiples.ts`:
 
 ### Unlimited copies (up to 99)
+
 - All **basic lands** (type line contains "Basic Land")
 - Templar Knight
 - Tempest Hawk
@@ -133,12 +150,14 @@ Commander is a **singleton** format — max 1 copy per card — with the followi
 - Cid, Timeless Artificer
 
 ### Capped copies
-| Card | Max copies |
-|---|---|
-| Nazgûl | 9 |
-| Seven Dwarves | 7 |
+
+| Card          | Max copies |
+| ------------- | ---------- |
+| Nazgûl        | 9          |
+| Seven Dwarves | 7          |
 
 ### Implementation
+
 - `maxQuantity(cardName, typeLine): number` — returns the max allowed quantity for a card
 - `allowsMultiples(cardName, typeLine): boolean` — true if max > 1
 - `addCard` / `addDeckCard` increment quantity up to `maxQuantity` instead of blocking
@@ -151,73 +170,74 @@ Commander is a **singleton** format — max 1 copy per card — with the followi
 
 ### P0 — Must Have (all complete)
 
-| # | Story | Status |
-|---|---|---|
+| #    | Story                                                                    | Status  |
+| ---- | ------------------------------------------------------------------------ | ------- |
 | US-1 | Search cards using Scryfall syntax (name, type, color, CMC, oracle text) | ✅ Done |
-| US-2 | Pick a commander — color identity locks from this choice | ✅ Done |
-| US-3 | Add cards to deck by clicking or dragging from search results | ✅ Done |
+| US-2 | Pick a commander — color identity locks from this choice                 | ✅ Done |
+| US-3 | Add cards to deck by clicking or dragging from search results            | ✅ Done |
 | US-4 | See live deck stats: card count, mana curve, color distribution, avg CMC | ✅ Done |
-| US-5 | See bracket score update live with per-dimension breakdown | ✅ Done |
-| US-6 | Get warned about banned cards (red flag + explanation) | ✅ Done |
-| US-7 | Get warned about Game Changers with bracket-appropriate count | ✅ Done |
-| US-8 | Get warned about color identity violations | ✅ Done |
+| US-5 | See bracket score update live with per-dimension breakdown               | ✅ Done |
+| US-6 | Get warned about banned cards (red flag + explanation)                   | ✅ Done |
+| US-7 | Get warned about Game Changers with bracket-appropriate count            | ✅ Done |
+| US-8 | Get warned about color identity violations                               | ✅ Done |
 
 ### P1 — Should Have (all complete)
 
-| # | Story | Status |
-|---|---|---|
-| US-9 | Set a budget (per card) and get cards over budget flagged | ✅ Done |
-| US-10 | Manually recategorize cards by dragging between category groups | ✅ Done |
-| US-11 | Import a decklist from plain text (1 Card Name format) | ✅ Done |
-| US-12 | Export deck to MTGO, Arena, and plain text formats | ✅ Done |
+| #     | Story                                                               | Status  |
+| ----- | ------------------------------------------------------------------- | ------- |
+| US-9  | Set a budget (per card) and get cards over budget flagged           | ✅ Done |
+| US-10 | Manually recategorize cards by dragging between category groups     | ✅ Done |
+| US-11 | Import a decklist from plain text (1 Card Name format)              | ✅ Done |
+| US-12 | Export deck to MTGO, Arena, and plain text formats                  | ✅ Done |
 | US-13 | Toggle between grid and list view for search results and deck cards | ✅ Done |
-| US-14 | Inline deck rename (click title → input → Enter/Escape) | ✅ Done |
-| US-15 | Choose card printing/art before adding to deck | ✅ Done |
-| US-16 | Search by set code or color identity (dedicated tabs) | ✅ Done |
-| US-17 | Companion card support (sideboard slot, outside the 99) | ✅ Done |
+| US-14 | Inline deck rename (click title → input → Enter/Escape)             | ✅ Done |
+| US-15 | Choose card printing/art before adding to deck                      | ✅ Done |
+| US-16 | Search by set code or color identity (dedicated tabs)               | ✅ Done |
+| US-17 | Companion card support (sideboard slot, outside the 99)             | ✅ Done |
 
 ### P2 — Nice to Have (all complete)
 
-| # | Story | Status |
-|---|---|---|
-| US-18 | Hover a card to see it full-size with oracle text and price | ✅ Done |
-| US-19 | Filter by color/type/CMC/price via UI controls | ✅ Done |
-| US-20 | Persist multiple decks across sessions | ✅ Done (PostgreSQL) |
-| US-21 | Detect combos for current commander via Commander Spellbook | ✅ Done |
-| US-22 | AI deck suggestions with reasoning (Claude / GPT fallback) | ✅ Done |
-| US-23 | Light/dark theme toggle with persistence | ✅ Done |
+| #     | Story                                                       | Status               |
+| ----- | ----------------------------------------------------------- | -------------------- |
+| US-18 | Hover a card to see it full-size with oracle text and price | ✅ Done              |
+| US-19 | Filter by color/type/CMC/price via UI controls              | ✅ Done              |
+| US-20 | Persist multiple decks across sessions                      | ✅ Done (PostgreSQL) |
+| US-21 | Detect combos for current commander via Commander Spellbook | ✅ Done              |
+| US-22 | AI deck suggestions with reasoning (Claude / GPT fallback)  | ✅ Done              |
+| US-23 | Light/dark theme toggle with persistence                    | ✅ Done              |
 
 ### P2 (continued) — Snapshots
 
-| # | Story | Status |
-|---|---|---|
-| US-24 | Save a named snapshot of the current deck (e.g. "v1 budget") | ✅ Done |
+| #     | Story                                                             | Status  |
+| ----- | ----------------------------------------------------------------- | ------- |
+| US-24 | Save a named snapshot of the current deck (e.g. "v1 budget")      | ✅ Done |
 | US-25 | Browse version history of a deck with date, card count, commander | ✅ Done |
-| US-26 | Restore a deck to a previous snapshot (with confirmation) | ✅ Done |
-| US-27 | Delete a snapshot | ✅ Done |
-| US-28 | Diff badge: `+N / -N cards` vs snapshot compared to current | ✅ Done |
+| US-26 | Restore a deck to a previous snapshot (with confirmation)         | ✅ Done |
+| US-27 | Delete a snapshot                                                 | ✅ Done |
+| US-28 | Diff badge: `+N / -N cards` vs snapshot compared to current       | ✅ Done |
+
 ### P2+ — Deck Annotations (complete)
 
-| # | Story | Status |
-|---|---|---|
-| US-24 | Add a text description to a deck (collapsible, markdown-friendly) | ✅ Done |
-| US-25 | Annotate individual cards with private notes | ✅ Done |
+| #     | Story                                                                     | Status  |
+| ----- | ------------------------------------------------------------------------- | ------- |
+| US-24 | Add a text description to a deck (collapsible, markdown-friendly)         | ✅ Done |
+| US-25 | Annotate individual cards with private notes                              | ✅ Done |
 | US-26 | Tag decks with labels (casual, cEDH, WIP…) and filter by tag on home page | ✅ Done |
 
 ### P3 — Future
 
-| # | Story | Status |
-|---|---|---|
-| US-29 | Onboarding tutorial for new users | 📋 Planned |
-| US-30 | Mobile-responsive layout | 📋 Planned |
+| #     | Story                                           | Status     |
+| ----- | ----------------------------------------------- | ---------- |
+| US-29 | Onboarding tutorial for new users               | 📋 Planned |
+| US-30 | Mobile-responsive layout                        | 📋 Planned |
 | US-31 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
-| US-32 | Moxfield / Archidekt import from URL | 📋 Planned |
-| US-33 | User accounts and deck sharing | 📋 Planned |
-| US-27 | Onboarding tutorial for new users | 📋 Planned |
-| US-28 | Mobile-responsive layout | 📋 Planned |
+| US-32 | Moxfield / Archidekt import from URL            | 📋 Planned |
+| US-33 | User accounts and deck sharing                  | 📋 Planned |
+| US-27 | Onboarding tutorial for new users               | 📋 Planned |
+| US-28 | Mobile-responsive layout                        | 📋 Planned |
 | US-29 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
-| US-30 | Moxfield / Archidekt import from URL | 📋 Planned |
-| US-31 | User accounts and deck sharing | 📋 Planned |
+| US-30 | Moxfield / Archidekt import from URL            | 📋 Planned |
+| US-31 | User accounts and deck sharing                  | 📋 Planned |
 
 ---
 
@@ -275,23 +295,23 @@ Dark theme by default. Light theme available via toggle.
 --accent: #6366f1;
 
 /* Bracket colors */
---bracket-1: #22c55e;   /* Green - casual */
---bracket-2: #3b82f6;   /* Blue - core */
---bracket-3: #f59e0b;   /* Amber - upgraded */
---bracket-4: #ef4444;   /* Red - optimized */
+--bracket-1: #22c55e; /* Green - casual */
+--bracket-2: #3b82f6; /* Blue - core */
+--bracket-3: #f59e0b; /* Amber - upgraded */
+--bracket-4: #ef4444; /* Red - optimized */
 ```
 
 ---
 
 ## Scryfall Image Sizes
 
-| Size | Dimensions | Used For |
-|---|---|---|
-| `normal` | 488×680 | Card grid display |
-| `large` | 672×936 | Hover zoom |
-| `art_crop` | variable | Deck card backgrounds on home page |
-| `small` | 146×204 | Thumbnails |
-| `png` | 745×1040 | Highest quality |
+| Size       | Dimensions | Used For                           |
+| ---------- | ---------- | ---------------------------------- |
+| `normal`   | 488×680    | Card grid display                  |
+| `large`    | 672×936    | Hover zoom                         |
+| `art_crop` | variable   | Deck card backgrounds on home page |
+| `small`    | 146×204    | Thumbnails                         |
+| `png`      | 745×1040   | Highest quality                    |
 
 ---
 

@@ -6,14 +6,14 @@ Copy-paste this prompt into OpenClaw pour bootstrapper le projet.
 
 ## Prompt
 
-```
+````
 Tu es un dev senior frontend React/Next.js. Tu vas initialiser le projet MagicAIBuilder, un deck builder Commander (EDH) pour Magic: The Gathering.
 
 ## Context
 
 Lis d'abord ces fichiers dans le repo pour comprendre le projet :
 - README.md : vision generale, deux modes, positionnement
-- docs/PROJECT_SPEC.md : spec technique Phase 1 complete (stack, structure, types, endpoints, UI layout, user stories)
+- docs/product/PROJECT_SPEC.md : spec technique Phase 1 complete (stack, structure, types, endpoints, UI layout, user stories)
 - docs/references/game-changers.md : la Game Changers list pour le systeme de brackets
 - docs/references/banlists.md : la banlist Commander
 - docs/references/edh-themes.md : les themes/archetypes (pour plus tard, Phase 3)
@@ -25,7 +25,7 @@ Lis d'abord ces fichiers dans le repo pour comprendre le projet :
 ```bash
 pnpx create-next-app@latest magic-ai-builder --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
 cd magic-ai-builder
-```
+````
 
 ### 2. Installer les deps
 
@@ -41,17 +41,19 @@ pnpx shadcn@latest init
 ```
 
 Puis ajouter les composants de base :
+
 ```bash
 pnpx shadcn@latest add button input dialog card badge tooltip scroll-area separator sheet command popover
 ```
 
 ### 4. Creer la structure de dossiers
 
-Suis exactement la structure definie dans docs/PROJECT_SPEC.md section "Project Structure".
+Suis exactement la structure definie dans docs/product/PROJECT_SPEC.md section "Project Structure".
 
 ### 5. Configurer le theme dark
 
 Tailwind config avec les design tokens de la spec (section "Theme & Design Tokens") :
+
 - Background near-black (#0a0a0f)
 - Surface panels (#12121a)
 - Accent indigo (#6366f1)
@@ -63,6 +65,7 @@ Le dark mode doit etre le DEFAULT, pas un toggle.
 ### 6. Scaffolder les composants de base
 
 Cree des versions minimales (placeholder) de chaque composant liste dans la spec. Chaque composant doit :
+
 - Avoir les bons props TypeScript
 - Rendre un placeholder visible (pas un div vide)
 - Etre exporte proprement
@@ -70,6 +73,7 @@ Cree des versions minimales (placeholder) de chaque composant liste dans la spec
 ### 7. Creer le Scryfall API client
 
 Implemente `src/lib/scryfall/client.ts` avec :
+
 - Rate limiting (100ms entre les requetes, queue)
 - Headers requis par Scryfall (User-Agent, Accept)
 - Types TypeScript pour les reponses Scryfall
@@ -78,6 +82,7 @@ Implemente `src/lib/scryfall/client.ts` avec :
 ### 8. Creer le Zustand store
 
 Implemente `src/lib/deck/store.ts` avec les types de la spec et les actions :
+
 - setCommander, setPartner, setCompanion
 - addCard, removeCard, moveCard (entre categories)
 - setTargetBracket, setBudget
@@ -89,6 +94,7 @@ Implemente `src/lib/deck/store.ts` avec les types de la spec et les actions :
 ### 9. Creer la page builder
 
 Assemble les composants dans `src/app/builder/[deckId]/page.tsx` en suivant le layout ASCII de la spec :
+
 - Panel gauche : recherche + resultats (300px)
 - Centre : editeur de deck (categories avec cartes)
 - Panel droit : stats + bracket score + checks
@@ -111,6 +117,7 @@ Objectif : pouvoir chercher une carte sur Scryfall, voir l'image, et l'ajouter a
 - Double-faced cards (DFC/MDFC) : Scryfall retourne `card_faces[]` au lieu de `oracle_text`/`mana_cost` au top level. Toujours checker `card.layout` et utiliser `card_faces[0]` pour le front
 - Partner : supporter les 5 variantes (Partner, Partner with, Friends Forever, Choose a Background, Doctor's companion). La color identity du deck = union des deux commanders
 - Companion : le companion est EN DEHORS des 100 cartes. Sa restriction doit etre satisfaite par TOUTES les cartes du deck. Lutri est banni comme companion uniquement
+
 ```
 
 ---
@@ -119,6 +126,7 @@ Objectif : pouvoir chercher une carte sur Scryfall, voir l'image, et l'ajouter a
 
 - Ce prompt est concu pour etre donne tel quel a OpenClaw
 - Il reference les fichiers du repo, donc OpenClaw doit avoir acces au dossier MagicAIBuilder
-- Si OpenClaw demande des precisions, renvoie-le vers `docs/PROJECT_SPEC.md`
+- Si OpenClaw demande des precisions, renvoie-le vers `docs/product/PROJECT_SPEC.md`
 - Phase 1 = Free Build uniquement. L'IA (Phase 3) viendra plus tard
 - Pense a commit regulierement au fur et a mesure que les composants sont fonctionnels
+```

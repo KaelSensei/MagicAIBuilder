@@ -53,6 +53,8 @@ playwright-report/
 test-results/
 
 # Misc
+.agents/
+AGENTS.md
 *.tsbuildinfo
 next-env.d.ts
 .pr-body*.md
