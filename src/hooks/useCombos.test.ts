@@ -96,4 +96,26 @@ describe("useCombos", () => {
     const calledWith = vi.mocked(spellbook.fetchCombosForDeck).mock.calls[0][0];
     expect(calledWith).toContain("Atraxa");
   });
+
+  it("does not include non-main cards (considering/maybeboard) in card list", async () => {
+    const deck = makeDeck(10);
+    deck.cards = [
+      ...deck.cards,
+      {
+        id: "mb-1",
+        name: "Food Chain",
+        quantity: 1,
+        category: "winCondition",
+        zone: "maybeboard",
+      } as unknown as Deck["cards"][number],
+    ];
+
+    vi.mocked(spellbook.fetchCombosForDeck).mockResolvedValueOnce([]);
+    const { result } = renderHook(() => useCombos(deck), {
+      wrapper: createWrapper(),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const calledWith = vi.mocked(spellbook.fetchCombosForDeck).mock.calls[0][0];
+    expect(calledWith).not.toContain("Food Chain");
+  });
 });
