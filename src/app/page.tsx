@@ -1,14 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Layers, Loader2, Plus, Sparkles } from "lucide-react";
+import { Layers, Loader2, Plus } from "lucide-react";
 import { DeckWizard } from "@/components/deck/DeckWizard";
 import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { useDeckStore } from "@/lib/deck/store";
+import { DeckListTable } from "@/components/deck/DeckListTable";
+import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
+import {
+  getStoredDecksViewMode,
+  sortDecks,
+  storeDecksViewMode,
+  type DecksSortDir,
+  type DecksSortKey,
+  type DecksViewMode,
+} from "@/lib/deck/deck-listing";
 
 function getDeckSubtitle(isLoading: boolean, count: number): string {
   if (isLoading) {
@@ -46,13 +56,25 @@ export default function HomePage() {
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<DecksViewMode>("grid");
+  const [sortKey, setSortKey] = useState<DecksSortKey>("updatedAt");
+  const [sortDir, setSortDir] = useState<DecksSortDir>("desc");
   const deckList = Object.values(decks);
+  const sortedDeckList = useMemo(
+    () => sortDecks(deckList, sortKey, sortDir),
+    [deckList, sortKey, sortDir]
+  );
 
   useEffect(() => {
     loadDecks().finally(() => setIsLoading(false));
   }, [loadDecks]);
 
-  const handleDeleteDeck = async (e: React.MouseEvent, id: string) => {
+  useEffect(() => {
+    const stored = getStoredDecksViewMode();
+    if (stored) setViewMode(stored);
+  }, []);
+
+  const handleDeleteDeck = useCallback(async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
     if (!confirm("Delete this deck? This cannot be undone.")) {
@@ -65,9 +87,9 @@ export default function HomePage() {
     } finally {
       setDeletingId(null);
     }
-  };
+  }, [deleteDeck]);
 
-  const handleDuplicateDeck = async (e: React.MouseEvent, id: string) => {
+  const handleDuplicateDeck = useCallback(async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
     setDuplicatingId(id);
@@ -79,9 +101,9 @@ export default function HomePage() {
       console.error("[handleDuplicateDeck]", error);
       setDuplicatingId(null);
     }
-  };
+  }, [duplicateDeck, router]);
 
-  const handleNewDeck = async () => {
+  const handleNewDeck = useCallback(async () => {
     if (isCreating) {
       return;
     }
@@ -95,7 +117,17 @@ export default function HomePage() {
       console.error("[handleNewDeck]", error);
       setIsCreating(false);
     }
-  };
+  }, [createDeck, deckList.length, isCreating, router]);
+
+  const handleSetViewMode = useCallback((mode: DecksViewMode) => {
+    setViewMode(mode);
+    storeDecksViewMode(mode);
+  }, []);
+
+  const handleSetSort = useCallback((key: DecksSortKey, dir: DecksSortDir) => {
+    setSortKey(key);
+    setSortDir(dir);
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -109,27 +141,17 @@ export default function HomePage() {
               {getDeckSubtitle(isLoading, deckList.length)}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setWizardOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/10"
-            >
-              <Sparkles className="h-4 w-4" />
-              Build with AI
-            </button>
-            <button
-              onClick={handleNewDeck}
-              disabled={isCreating || isSyncing}
-              className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isCreating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              New Deck
-            </button>
-          </div>
+          <DecksHomeControls
+            viewMode={viewMode}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSetViewMode={handleSetViewMode}
+            onSetSort={handleSetSort}
+            onOpenWizard={() => setWizardOpen(true)}
+            onNewDeck={handleNewDeck}
+            disableNewDeck={isCreating || isSyncing}
+            isCreating={isCreating}
+          />
         </div>
 
         {isLoading && (
@@ -170,50 +192,64 @@ export default function HomePage() {
         )}
 
         {!isLoading && deckList.length > 0 && (
-          <motion.div
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: 0.08 } },
-            }}
-          >
-            {deckList.map((deck) => (
-              <motion.div
-                key={deck.id}
-                variants={{
-                  hidden: { opacity: 0, y: 16 },
-                  show: { opacity: 1, y: 0 },
-                }}
-              >
-                <HomeDeckCard
-                  deck={deck}
-                  onDelete={handleDeleteDeck}
-                  onDuplicate={handleDuplicateDeck}
+          <>
+            {viewMode === "list" ? (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <DeckListTable
+                  decks={sortedDeckList}
                   deletingId={deletingId}
                   duplicatingId={duplicatingId}
+                  onDelete={handleDeleteDeck}
+                  onDuplicate={handleDuplicateDeck}
                 />
               </motion.div>
-            ))}
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+                initial="hidden"
+                animate="show"
+                variants={{
+                  hidden: {},
+                  show: { transition: { staggerChildren: 0.08 } },
+                }}
+              >
+                {sortedDeckList.map((deck) => (
+                  <motion.div
+                    key={deck.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 16 },
+                      show: { opacity: 1, y: 0 },
+                    }}
+                  >
+                    <HomeDeckCard
+                      deck={deck}
+                      onDelete={handleDeleteDeck}
+                      onDuplicate={handleDuplicateDeck}
+                      deletingId={deletingId}
+                      duplicatingId={duplicatingId}
+                    />
+                  </motion.div>
+                ))}
 
-            <motion.button
-              onClick={handleNewDeck}
-              disabled={isCreating}
-              className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
-              variants={{
-                hidden: { opacity: 0, y: 16 },
-                show: { opacity: 1, y: 0 },
-              }}
-            >
-              {isCreating ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                <Plus className="h-6 w-6" />
-              )}
-              <span className="text-sm font-medium">New Deck</span>
-            </motion.button>
-          </motion.div>
+                <motion.button
+                  onClick={handleNewDeck}
+                  disabled={isCreating}
+                  className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                  variants={{
+                    hidden: { opacity: 0, y: 16 },
+                    show: { opacity: 1, y: 0 },
+                  }}
+                >
+                  {isCreating ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <Plus className="h-6 w-6" />
+                  )}
+                  <span className="text-sm font-medium">New Deck</span>
+                </motion.button>
+              </motion.div>
+            )}
+          </>
         )}
       </main>
 
