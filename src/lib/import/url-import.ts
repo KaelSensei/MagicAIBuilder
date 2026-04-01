@@ -25,6 +25,7 @@ export interface UrlImportCard {
   readonly quantity: number;
   readonly isCommander: boolean;
   readonly isPartner: boolean;
+  readonly zone: "main" | "sideboard" | "maybeboard";
 }
 
 export interface UrlImportResult {
@@ -101,11 +102,21 @@ interface MoxfieldCard {
   card: { name: string };
 }
 
+interface MoxfieldBoard {
+  cards?: Record<string, MoxfieldCard>;
+}
+
 interface MoxfieldDeck {
   name: string;
   commanders?: Record<string, MoxfieldCard>;
   mainboard?: Record<string, MoxfieldCard>;
   format?: string;
+  boards?: {
+    commanders?: MoxfieldBoard;
+    mainboard?: MoxfieldBoard;
+    sideboard?: MoxfieldBoard;
+    maybeboard?: MoxfieldBoard;
+  };
 }
 
 async function importMoxfield(id: string): Promise<UrlImportResult> {
@@ -123,11 +134,54 @@ async function importMoxfield(id: string): Promise<UrlImportResult> {
   const data = parseJson<MoxfieldDeck>(await res.json());
   const cards: UrlImportCard[] = [];
 
-  for (const entry of Object.values(data.commanders ?? {})) {
-    cards.push({ name: entry.card.name, quantity: entry.quantity, isCommander: true, isPartner: false });
+  const commanderEntries =
+    Object.values(data.boards?.commanders?.cards ?? {}).length > 0
+      ? Object.values(data.boards?.commanders?.cards ?? {})
+      : Object.values(data.commanders ?? {});
+
+  const mainEntries =
+    Object.values(data.boards?.mainboard?.cards ?? {}).length > 0
+      ? Object.values(data.boards?.mainboard?.cards ?? {})
+      : Object.values(data.mainboard ?? {});
+
+  const sideEntries = Object.values(data.boards?.sideboard?.cards ?? {});
+  const maybeEntries = Object.values(data.boards?.maybeboard?.cards ?? {});
+
+  for (const entry of commanderEntries) {
+    cards.push({
+      name: entry.card.name,
+      quantity: entry.quantity,
+      isCommander: true,
+      isPartner: false,
+      zone: "main",
+    });
   }
-  for (const entry of Object.values(data.mainboard ?? {})) {
-    cards.push({ name: entry.card.name, quantity: entry.quantity, isCommander: false, isPartner: false });
+  for (const entry of mainEntries) {
+    cards.push({
+      name: entry.card.name,
+      quantity: entry.quantity,
+      isCommander: false,
+      isPartner: false,
+      zone: "main",
+    });
+  }
+  for (const entry of sideEntries) {
+    cards.push({
+      name: entry.card.name,
+      quantity: entry.quantity,
+      isCommander: false,
+      isPartner: false,
+      zone: "sideboard",
+    });
+  }
+  for (const entry of maybeEntries) {
+    cards.push({
+      name: entry.card.name,
+      quantity: entry.quantity,
+      isCommander: false,
+      isPartner: false,
+      zone: "maybeboard",
+    });
   }
 
   const formatWarning =
@@ -159,7 +213,7 @@ async function importArchidekt(id: string): Promise<UrlImportResult> {
 
   for (const entry of data.cards ?? []) {
     const isCommander = entry.categories.some((c) => c.toLowerCase() === "commander");
-    cards.push({ name: entry.card.oracleCard.name, quantity: entry.quantity, isCommander, isPartner: false });
+    cards.push({ name: entry.card.oracleCard.name, quantity: entry.quantity, isCommander, isPartner: false, zone: "main" });
   }
 
   const formatWarning =
@@ -259,7 +313,7 @@ async function importEdhrec(commanderSlug: string): Promise<UrlImportResult> {
 
   // Commander card
   if (dict.card?.name) {
-    cards.push({ name: dict.card.name, quantity: 1, isCommander: true, isPartner: false });
+    cards.push({ name: dict.card.name, quantity: 1, isCommander: true, isPartner: false, zone: "main" });
   }
 
   // Top cards from each category (take first 99 to build a complete deck)
@@ -267,7 +321,7 @@ async function importEdhrec(commanderSlug: string): Promise<UrlImportResult> {
   for (const list of cardlists) {
     for (const view of list.cardviews ?? []) {
       if (cards.filter((c) => !c.isCommander).length >= 99) break;
-      cards.push({ name: view.name, quantity: 1, isCommander: false, isPartner: false });
+      cards.push({ name: view.name, quantity: 1, isCommander: false, isPartner: false, zone: "main" });
     }
   }
 
@@ -368,7 +422,7 @@ function parsePlainTextDecklist(text: string): UrlImportCard[] {
 
     if (!name) continue;
 
-    cards.push({ name, quantity, isCommander: inCommanderSection, isPartner: false });
+    cards.push({ name, quantity, isCommander: inCommanderSection, isPartner: false, zone: "main" });
     if (inCommanderSection) inCommanderSection = false; // only first card in section = commander
   }
 
@@ -385,7 +439,7 @@ function extractCardsFromHtml(html: string): UrlImportCard[] {
     const quantity = Number.parseInt(m[1], 10);
     const name = m[2].trim();
     if (quantity > 0 && quantity <= 20 && name.length > 2) {
-      cards.push({ name, quantity, isCommander: false, isPartner: false });
+      cards.push({ name, quantity, isCommander: false, isPartner: false, zone: "main" });
     }
   }
   // Deduplicate by name

@@ -135,7 +135,36 @@ describe("importFromUrl", () => {
     expect(result.source).toBe("moxfield");
     expect(result.name).toBe("Mox Test");
     expect(result.cards.some((c) => c.isCommander && c.name === "Kenrith")).toBe(true);
+    expect(result.cards.find((c) => c.name === "Kenrith")?.zone).toBe("main");
     expect(result.formatWarning).toBeUndefined();
+  });
+
+  it("Moxfield: imports boards main + sideboard + maybeboard", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "Mox Boards",
+          format: "commander",
+          boards: {
+            commanders: { cards: { c: { quantity: 1, card: { name: "Esika, God of the Tree" } } } },
+            mainboard: { cards: { m: { quantity: 2, card: { name: "Sol Ring" } } } },
+            sideboard: { cards: { s: { quantity: 1, card: { name: "Delver of Secrets" } } } },
+            maybeboard: { cards: { x: { quantity: 1, card: { name: "Ponder" } } } },
+          },
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("8wdob7tqoUujv-Ifp0S3cw");
+    expect(result.source).toBe("moxfield");
+    expect(result.name).toBe("Mox Boards");
+    expect(result.cards).toEqual([
+      { name: "Esika, God of the Tree", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Sol Ring", quantity: 2, isCommander: false, isPartner: false, zone: "main" },
+      { name: "Delver of Secrets", quantity: 1, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", quantity: 1, isCommander: false, isPartner: false, zone: "maybeboard" },
+    ]);
   });
 
   it("sets formatWarning for non-commander Moxfield format", async () => {

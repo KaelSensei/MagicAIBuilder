@@ -42,6 +42,7 @@ export const edgeAuthConfig = {
         "/auth/signup",
         "/api/auth",
         "/api/health",
+        "/api/import",
         "/api/share",
         "/share",
       ];
