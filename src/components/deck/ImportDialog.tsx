@@ -14,7 +14,7 @@ type ImportTab = "text" | "url";
 
 type ImportDialogProps =
   | { children: React.ReactNode; open?: never; onOpenChange?: never }
-  | { children?: never; open: boolean; onOpenChange: (v: boolean) => void };
+  | { children?: React.ReactNode; open: boolean; onOpenChange: (v: boolean) => void };
 
 type ImportStatus = "idle" | "validating" | "done" | "error";
 
