@@ -134,8 +134,8 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
         <div className="relative flex-1">
           <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
           <input
-            type="url"
-            placeholder="https://www.moxfield.com/decks/… or https://edhrec.com/commanders/…"
+            type="text"
+            placeholder="https://www.moxfield.com/decks/… or moxfield publicId (e.g. AbCdEfGhIj)"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleImport()}

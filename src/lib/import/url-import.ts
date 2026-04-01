@@ -82,6 +82,13 @@ export function detectSource(
     const m = re.exec(url);
     if (m) return { source, id: extract(m) };
   }
+
+  // Tolerant Moxfield import: accept raw publicId-like strings (letters + digits + _-).
+  // Avoid treating purely numeric values as Moxfield IDs (those often belong to other sources like Archidekt).
+  if (/^[A-Za-z0-9_-]+$/.test(url) && /[A-Za-z_-]/.test(url)) {
+    return { source: "moxfield", id: url };
+  }
+
   return null;
 }
 
@@ -103,7 +110,15 @@ interface MoxfieldDeck {
 
 async function importMoxfield(id: string): Promise<UrlImportResult> {
   const res = await httpGet(
-    `https://api2.moxfield.com/v3/decks/all/${id}`
+    `https://api2.moxfield.com/v3/decks/all/${id}`,
+    {
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        Origin: "https://moxfield.com",
+        Referer: "https://moxfield.com/",
+      },
+    }
   );
   const data = parseJson<MoxfieldDeck>(await res.json());
   const cards: UrlImportCard[] = [];

@@ -14,6 +14,14 @@ describe("detectSource", () => {
       .toEqual({ source: "moxfield", id: "xyz-123" });
   });
 
+  it("detects raw moxfield publicId (non-numeric)", () => {
+    expect(detectSource("AbCdEfGhIj")).toEqual({ source: "moxfield", id: "AbCdEfGhIj" });
+  });
+
+  it("does not treat purely numeric raw input as moxfield id", () => {
+    expect(detectSource("12345678")).toBeNull();
+  });
+
   // ─── Archidekt ──────────────────────────────────────────────────────────────
   it("detects archidekt /decks/ URL", () => {
     expect(detectSource("https://archidekt.com/decks/12345678"))
