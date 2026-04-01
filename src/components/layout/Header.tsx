@@ -1,11 +1,12 @@
 "use client";
 // App header with nav — responsive with hamburger menu on mobile
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
-import { Layers, Menu, Moon, Package, Plus, Shield, Sun, Upload, X } from "lucide-react";
+import { Layers, Loader2, Menu, Moon, Package, Plus, Shield, Sun, Upload, X } from "lucide-react";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import { useTheme } from "@/hooks/useTheme";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { useDeckStore } from "@/lib/deck/store";
 
 interface HeaderProps {
   readonly deckId?: string;
@@ -14,6 +15,23 @@ interface HeaderProps {
 export function Header({ deckId }: HeaderProps = {}) {
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [isCreatingImportDeck, setIsCreatingImportDeck] = useState(false);
+
+  const createDeck = useDeckStore((s) => s.createDeck);
+  const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
+
+  const handleImportFromHome = useCallback(async () => {
+    if (isCreatingImportDeck) return;
+    setIsCreatingImportDeck(true);
+    try {
+      const id = await createDeck(`Imported Deck — ${new Date().toLocaleString()}`);
+      setActiveDeck(id);
+      setImportOpen(true);
+    } finally {
+      setIsCreatingImportDeck(false);
+    }
+  }, [createDeck, isCreatingImportDeck, setActiveDeck]);
 
   return (
     <header className="h-14 border-b border-[var(--border)] bg-[var(--surface)] flex items-center px-4 md:px-6 gap-3 md:gap-6 shrink-0">
@@ -68,10 +86,20 @@ export function Header({ deckId }: HeaderProps = {}) {
             </button>
           </ImportDialog>
         ) : (
-          <button className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
-            <Upload className="w-3.5 h-3.5" />
-            Import
-          </button>
+          <ImportDialog open={importOpen} onOpenChange={setImportOpen}>
+            <button
+              onClick={handleImportFromHome}
+              disabled={isCreatingImportDeck}
+              className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCreatingImportDeck ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Upload className="w-3.5 h-3.5" />
+              )}
+              Import
+            </button>
+          </ImportDialog>
         )}
         <Link
           href="/"
@@ -140,13 +168,23 @@ export function Header({ deckId }: HeaderProps = {}) {
                 </button>
               </ImportDialog>
             ) : (
-              <button
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-2"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                Import
-              </button>
+              <ImportDialog open={importOpen} onOpenChange={setImportOpen}>
+                <button
+                  onClick={async () => {
+                    setMenuOpen(false);
+                    await handleImportFromHome();
+                  }}
+                  disabled={isCreatingImportDeck}
+                  className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreatingImportDeck ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Upload className="w-3.5 h-3.5" />
+                  )}
+                  Import
+                </button>
+              </ImportDialog>
             )}
             <Link
               href="/"
