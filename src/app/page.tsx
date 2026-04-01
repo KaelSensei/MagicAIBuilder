@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Layers, Loader2, Plus, Sparkles } from "lucide-react";
@@ -9,6 +9,15 @@ import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { useDeckStore } from "@/lib/deck/store";
+import { DeckListTable } from "@/components/deck/DeckListTable";
+import {
+  getStoredDecksViewMode,
+  sortDecks,
+  storeDecksViewMode,
+  type DecksSortDir,
+  type DecksSortKey,
+  type DecksViewMode,
+} from "@/lib/deck/deck-listing";
 
 function getDeckSubtitle(isLoading: boolean, count: number): string {
   if (isLoading) {
@@ -46,11 +55,23 @@ export default function HomePage() {
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<DecksViewMode>("grid");
+  const [sortKey, setSortKey] = useState<DecksSortKey>("updatedAt");
+  const [sortDir, setSortDir] = useState<DecksSortDir>("desc");
   const deckList = Object.values(decks);
+  const sortedDeckList = useMemo(
+    () => sortDecks(deckList, sortKey, sortDir),
+    [deckList, sortKey, sortDir]
+  );
 
   useEffect(() => {
     loadDecks().finally(() => setIsLoading(false));
   }, [loadDecks]);
+
+  useEffect(() => {
+    const stored = getStoredDecksViewMode();
+    if (stored) setViewMode(stored);
+  }, []);
 
   const handleDeleteDeck = async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -110,6 +131,62 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 sm:flex">
+              <div className="inline-flex overflow-hidden rounded-lg border border-[var(--border)]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode("grid");
+                    storeDecksViewMode("grid");
+                  }}
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    viewMode === "grid"
+                      ? "bg-[var(--accent)] text-white"
+                      : "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+                  }`}
+                  aria-pressed={viewMode === "grid"}
+                >
+                  Grid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode("list");
+                    storeDecksViewMode("list");
+                  }}
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    viewMode === "list"
+                      ? "bg-[var(--accent)] text-white"
+                      : "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+                  }`}
+                  aria-pressed={viewMode === "list"}
+                >
+                  List
+                </button>
+              </div>
+
+              <select
+                value={`${sortKey}:${sortDir}`}
+                onChange={(e) => {
+                  const [k, d] = e.target.value.split(":");
+                  if (k === "updatedAt" || k === "name" || k === "bracket") {
+                    setSortKey(k);
+                  }
+                  if (d === "asc" || d === "desc") {
+                    setSortDir(d);
+                  }
+                }}
+                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+                aria-label="Sort decks"
+              >
+                <option value="updatedAt:desc">Updated (newest)</option>
+                <option value="updatedAt:asc">Updated (oldest)</option>
+                <option value="name:asc">Name (A–Z)</option>
+                <option value="name:desc">Name (Z–A)</option>
+                <option value="bracket:asc">Bracket (low→high)</option>
+                <option value="bracket:desc">Bracket (high→low)</option>
+              </select>
+            </div>
             <button
               onClick={() => setWizardOpen(true)}
               className="flex items-center gap-2 rounded-lg border border-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/10"
@@ -170,50 +247,64 @@ export default function HomePage() {
         )}
 
         {!isLoading && deckList.length > 0 && (
-          <motion.div
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: 0.08 } },
-            }}
-          >
-            {deckList.map((deck) => (
-              <motion.div
-                key={deck.id}
-                variants={{
-                  hidden: { opacity: 0, y: 16 },
-                  show: { opacity: 1, y: 0 },
-                }}
-              >
-                <HomeDeckCard
-                  deck={deck}
-                  onDelete={handleDeleteDeck}
-                  onDuplicate={handleDuplicateDeck}
+          <>
+            {viewMode === "list" ? (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <DeckListTable
+                  decks={sortedDeckList}
                   deletingId={deletingId}
                   duplicatingId={duplicatingId}
+                  onDelete={handleDeleteDeck}
+                  onDuplicate={handleDuplicateDeck}
                 />
               </motion.div>
-            ))}
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+                initial="hidden"
+                animate="show"
+                variants={{
+                  hidden: {},
+                  show: { transition: { staggerChildren: 0.08 } },
+                }}
+              >
+                {sortedDeckList.map((deck) => (
+                  <motion.div
+                    key={deck.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 16 },
+                      show: { opacity: 1, y: 0 },
+                    }}
+                  >
+                    <HomeDeckCard
+                      deck={deck}
+                      onDelete={handleDeleteDeck}
+                      onDuplicate={handleDuplicateDeck}
+                      deletingId={deletingId}
+                      duplicatingId={duplicatingId}
+                    />
+                  </motion.div>
+                ))}
 
-            <motion.button
-              onClick={handleNewDeck}
-              disabled={isCreating}
-              className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
-              variants={{
-                hidden: { opacity: 0, y: 16 },
-                show: { opacity: 1, y: 0 },
-              }}
-            >
-              {isCreating ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                <Plus className="h-6 w-6" />
-              )}
-              <span className="text-sm font-medium">New Deck</span>
-            </motion.button>
-          </motion.div>
+                <motion.button
+                  onClick={handleNewDeck}
+                  disabled={isCreating}
+                  className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                  variants={{
+                    hidden: { opacity: 0, y: 16 },
+                    show: { opacity: 1, y: 0 },
+                  }}
+                >
+                  {isCreating ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <Plus className="h-6 w-6" />
+                  )}
+                  <span className="text-sm font-medium">New Deck</span>
+                </motion.button>
+              </motion.div>
+            )}
+          </>
         )}
       </main>
 
