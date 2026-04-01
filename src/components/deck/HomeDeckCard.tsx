@@ -107,7 +107,7 @@ export function HomeDeckCard({
   return (
     <Link
       href={`/builder/${deck.id}`}
-      className="group relative block overflow-hidden rounded-xl border border-[var(--border)] transition-all hover:border-[var(--accent)]"
+      className="group relative block h-full min-h-40 overflow-hidden rounded-xl border border-[var(--border)] transition-all hover:border-[var(--accent)]"
       style={
         hasArt
           ? {
@@ -120,7 +120,7 @@ export function HomeDeckCard({
       data-testid="deck-card"
     >
       <div
-        className={`relative h-full p-5 ${
+        className={`relative flex h-full flex-col p-5 ${
           hasArt
             ? "bg-gradient-to-t from-black/90 via-black/60 to-black/20"
             : "bg-[var(--surface)] group-hover:bg-[var(--surface-hover)]"
@@ -173,14 +173,14 @@ export function HomeDeckCard({
           </div>
         </div>
 
-        <p className={`text-sm ${textMuted}`}>
+        <p className={`truncate text-sm ${textMuted}`}>
           {deck.commander ? `Commander: ${deck.commander.name}` : "No commander yet"}
         </p>
         <p className={`mt-1 text-xs ${textMuted}`}>
           {deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0)} / 100 cards
         </p>
 
-        <div className="mt-3 flex items-end justify-between gap-3">
+        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
           <div className={`flex items-center gap-1 text-xs ${textMuted}`}>
             <Clock className="h-3 w-3" />
             <span>{new Date(deck.updatedAt).toLocaleDateString()}</span>
