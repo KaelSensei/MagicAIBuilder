@@ -250,5 +250,6 @@ describe("searchCardPrintings", () => {
     expect(result.data).toHaveLength(1);
     const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(fetchCall).toContain("unique=prints");
+    expect(fetchCall).toContain("game%3Apaper");
   });
 });

@@ -154,7 +154,8 @@ export async function getCommanderBanlist(): Promise<ScryfallSearchResponse> {
 /** Fetch all printings of a card by exact name (unique=prints) */
 export async function searchCardPrintings(cardName: string): Promise<ScryfallSearchResponse> {
   const params = new URLSearchParams({
-    q: `!"${cardName}" legal:commander`,
+    // Do NOT filter by legality here: banned cards still have many printings/arts (e.g. Black Lotus).
+    q: `!"${cardName}" game:paper`,
     unique: "prints",
     order: "released",
     dir: "desc",
