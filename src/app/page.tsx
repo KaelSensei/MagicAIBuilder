@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Layers, Loader2, Plus, Sparkles } from "lucide-react";
+import { Layers, Loader2, Plus } from "lucide-react";
 import { DeckWizard } from "@/components/deck/DeckWizard";
 import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { useDeckStore } from "@/lib/deck/store";
 import { DeckListTable } from "@/components/deck/DeckListTable";
+import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
 import {
   getStoredDecksViewMode,
   sortDecks,
@@ -73,7 +74,7 @@ export default function HomePage() {
     if (stored) setViewMode(stored);
   }, []);
 
-  const handleDeleteDeck = async (e: React.MouseEvent, id: string) => {
+  const handleDeleteDeck = useCallback(async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
     if (!confirm("Delete this deck? This cannot be undone.")) {
@@ -86,9 +87,9 @@ export default function HomePage() {
     } finally {
       setDeletingId(null);
     }
-  };
+  }, [deleteDeck]);
 
-  const handleDuplicateDeck = async (e: React.MouseEvent, id: string) => {
+  const handleDuplicateDeck = useCallback(async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
     setDuplicatingId(id);
@@ -100,9 +101,9 @@ export default function HomePage() {
       console.error("[handleDuplicateDeck]", error);
       setDuplicatingId(null);
     }
-  };
+  }, [duplicateDeck, router]);
 
-  const handleNewDeck = async () => {
+  const handleNewDeck = useCallback(async () => {
     if (isCreating) {
       return;
     }
@@ -116,7 +117,17 @@ export default function HomePage() {
       console.error("[handleNewDeck]", error);
       setIsCreating(false);
     }
-  };
+  }, [createDeck, deckList.length, isCreating, router]);
+
+  const handleSetViewMode = useCallback((mode: DecksViewMode) => {
+    setViewMode(mode);
+    storeDecksViewMode(mode);
+  }, []);
+
+  const handleSetSort = useCallback((key: DecksSortKey, dir: DecksSortDir) => {
+    setSortKey(key);
+    setSortDir(dir);
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -130,83 +141,17 @@ export default function HomePage() {
               {getDeckSubtitle(isLoading, deckList.length)}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-2 sm:flex">
-              <div className="inline-flex overflow-hidden rounded-lg border border-[var(--border)]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewMode("grid");
-                    storeDecksViewMode("grid");
-                  }}
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
-                    viewMode === "grid"
-                      ? "bg-[var(--accent)] text-white"
-                      : "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
-                  }`}
-                  aria-pressed={viewMode === "grid"}
-                >
-                  Grid
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewMode("list");
-                    storeDecksViewMode("list");
-                  }}
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
-                    viewMode === "list"
-                      ? "bg-[var(--accent)] text-white"
-                      : "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
-                  }`}
-                  aria-pressed={viewMode === "list"}
-                >
-                  List
-                </button>
-              </div>
-
-              <select
-                value={`${sortKey}:${sortDir}`}
-                onChange={(e) => {
-                  const [k, d] = e.target.value.split(":");
-                  if (k === "updatedAt" || k === "name" || k === "bracket") {
-                    setSortKey(k);
-                  }
-                  if (d === "asc" || d === "desc") {
-                    setSortDir(d);
-                  }
-                }}
-                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
-                aria-label="Sort decks"
-              >
-                <option value="updatedAt:desc">Updated (newest)</option>
-                <option value="updatedAt:asc">Updated (oldest)</option>
-                <option value="name:asc">Name (A–Z)</option>
-                <option value="name:desc">Name (Z–A)</option>
-                <option value="bracket:asc">Bracket (low→high)</option>
-                <option value="bracket:desc">Bracket (high→low)</option>
-              </select>
-            </div>
-            <button
-              onClick={() => setWizardOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/10"
-            >
-              <Sparkles className="h-4 w-4" />
-              Build with AI
-            </button>
-            <button
-              onClick={handleNewDeck}
-              disabled={isCreating || isSyncing}
-              className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isCreating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              New Deck
-            </button>
-          </div>
+          <DecksHomeControls
+            viewMode={viewMode}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSetViewMode={handleSetViewMode}
+            onSetSort={handleSetSort}
+            onOpenWizard={() => setWizardOpen(true)}
+            onNewDeck={handleNewDeck}
+            disableNewDeck={isCreating || isSyncing}
+            isCreating={isCreating}
+          />
         </div>
 
         {isLoading && (
