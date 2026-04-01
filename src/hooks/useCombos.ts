@@ -13,7 +13,9 @@ export function useCombos(deck: Deck | null) {
     ? [
         ...(deck.commander ? [deck.commander.name] : []),
         ...(deck.partner ? [deck.partner.name] : []),
-        ...deck.cards.map((c) => c.name),
+        ...deck.cards
+          .filter((c) => c.zone === "main")
+          .map((c) => c.name),
       ]
     : [];
 
