@@ -212,6 +212,11 @@ export default function BuilderPage() {
   const handleCardClick = useCallback(
     (card: ScryfallCard) => {
       if (commanderMode) {
+        const isBackgroundCard = (card.type_line ?? "").toLowerCase().includes("background");
+        if (deck?.pairingType === "background" && isBackgroundCard) {
+          setPartner(card);
+          return;
+        }
         setCommander(card);
         // Stay in commander mode — user may want to change commander again
       } else if (partnerMode) {
@@ -222,7 +227,7 @@ export default function BuilderPage() {
         setPrintingCard(card);
       }
     },
-    [setCommander, setPartner, commanderMode, partnerMode]
+    [setCommander, setPartner, commanderMode, partnerMode, deck?.pairingType]
   );
 
   const handlePrintingSelect = useCallback(

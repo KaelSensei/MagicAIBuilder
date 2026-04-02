@@ -274,6 +274,14 @@ describe("buildPartnerSearchQuery", () => {
     expect(q).toContain('-o:"Partner with"');
     expect(q).toContain("is:commander");
   });
+  it("background type searches for Background enchantments (not commanders)", () => {
+    const q = buildPartnerSearchQuery("background", "agent", { colors: ["G"] });
+    expect(q).toContain("t:background");
+    expect(q).toContain("legal:commander");
+    expect(q).toContain("name:/agent/");
+    expect(q).toContain("id<=G");
+    expect(q).not.toContain("is:commander");
+  });
   it("friends_forever type", () => {
     expect(buildPartnerSearchQuery("friends_forever", "")).toContain('o:"Friends forever"');
   });
