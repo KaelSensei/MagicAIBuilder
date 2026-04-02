@@ -25,7 +25,31 @@ import { cn } from "@/components/ui/utils";
 interface ImageState {
   loaded: number;
   total: number;
-  failed: Set<string>; // card names that failed
+  failed: Set<string>; // Scryfall image URLs that failed (after proxy)
+}
+
+/**
+ * Same-origin proxy: browser `fetch()` to `cards.scryfall.io` is blocked by CORS,
+ * so we load bytes via `/api/proxy-card-image` and convert to data URLs for print.
+ *
+ * @param scryfallImageUrl Absolute Scryfall CDN URL stored on the deck card
+ */
+function proxyImageRequestUrl(scryfallImageUrl: string): string {
+  return `/api/proxy-card-image?url=${encodeURIComponent(scryfallImageUrl)}`;
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+/** Escape oracle text and preserve line breaks for print HTML */
+function oracleToHtml(oracle: string): string {
+  return escapeHtml(oracle).replaceAll("\n", "<br/>");
 }
 
 async function preloadImages(
@@ -43,7 +67,9 @@ async function preloadImages(
     uniqueUrls.map(async (url) => {
       if (signal.aborted) return;
       try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+        const res = await fetch(proxyImageRequestUrl(url), {
+          signal: AbortSignal.timeout(15_000),
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const blob = await res.blob();
         const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -86,13 +112,22 @@ const LAYOUT_COLS: Record<ProxyConfig["layout"], number> = {
 function renderCardSlot(slot: ProxySlot, imageMap: Map<string, string>): string {
   const src = imageMap.get(slot.imageUri);
   if (src) {
-    const alt = slot.name.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
+    const alt = escapeHtml(slot.name);
     return `<div class="card-slot"><img src="${src}" alt="${alt}" class="card-img" /></div>`;
   }
-  const name = slot.name.replaceAll("&", "&amp;").replaceAll("<", "&lt;");
-  const cost = slot.manaCost.replaceAll("&", "&amp;").replaceAll("<", "&lt;");
-  const type = slot.typeLine.replaceAll("&", "&amp;").replaceAll("<", "&lt;");
-  return `<div class="card-slot"><div class="card-fallback"><div class="fallback-name">${name}</div><div class="fallback-cost">${cost}</div><div class="fallback-type">${type}</div></div></div>`;
+  const name = escapeHtml(slot.name);
+  const cost = escapeHtml(slot.manaCost);
+  const type = escapeHtml(slot.typeLine);
+  const oracleHtml = oracleToHtml(slot.oracleText);
+  const oracleBlock =
+    oracleHtml.trim().length > 0
+      ? oracleHtml
+      : `<span class="fallback-empty">(no rules text)</span>`;
+  const ptBox =
+    slot.powerToughness !== null && slot.powerToughness.length > 0
+      ? `<div class="fallback-pt">${escapeHtml(slot.powerToughness)}</div>`
+      : "";
+  return `<div class="card-slot"><div class="card-fallback"><div class="fallback-header"><div class="fallback-name">${name}</div><div class="fallback-cost">${cost}</div></div><div class="fallback-type">${type}</div><div class="fallback-text">${oracleBlock}</div>${ptBox}</div></div>`;
 }
 
 function buildPrintHtml(
@@ -153,20 +188,75 @@ function buildPrintHtml(
   .card-fallback {
     width: 100%;
     height: 100%;
-    background: #111;
-    color: #eee;
+    background: #1a1815;
+    color: #e8e4dc;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 4mm;
-    text-align: center;
-    gap: 2mm;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 2mm 2.5mm 7mm;
+    text-align: left;
+    gap: 1mm;
+    position: relative;
+    border: 0.4mm solid #333;
   }
 
-  .fallback-name { font-size: 9pt; font-weight: bold; line-height: 1.2; }
-  .fallback-cost { font-size: 7pt; color: #aaa; }
-  .fallback-type { font-size: 6pt; color: #888; font-style: italic; }
+  .fallback-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5mm;
+  }
+
+  .fallback-name {
+    font-size: 6.5pt;
+    font-weight: 700;
+    line-height: 1.15;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .fallback-cost {
+    font-size: 6pt;
+    color: #c9c4be;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .fallback-type {
+    font-size: 5.5pt;
+    color: #a39e96;
+    font-style: italic;
+    border-bottom: 0.15mm solid #444;
+    padding-bottom: 0.8mm;
+    margin-bottom: 0.5mm;
+  }
+
+  .fallback-text {
+    font-size: 4.5pt;
+    line-height: 1.2;
+    color: #d5d0c8;
+    flex: 1;
+    overflow: hidden;
+    max-height: 56mm;
+  }
+
+  .fallback-empty { color: #666; font-style: italic; }
+
+  .fallback-pt {
+    position: absolute;
+    bottom: 2mm;
+    right: 2.5mm;
+    font-size: 7pt;
+    font-weight: 800;
+    background: #c9c4be;
+    color: #111;
+    padding: 0.6mm 1.8mm;
+    border-radius: 0.9mm;
+    line-height: 1;
+    border: 0.12mm solid #888;
+  }
 
   .page-footer {
     grid-column: 1 / -1;
@@ -240,7 +330,10 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     abortRef.current = new AbortController();
     setIsPreparing(true);
     setError(null);
-    setImgState({ loaded: 0, total: slots.length, failed: new Set() });
+    const uniqueImageCount = new Set(
+      slots.map((s) => s.imageUri).filter(Boolean)
+    ).size;
+    setImgState({ loaded: 0, total: uniqueImageCount, failed: new Set() });
     imageMapRef.current = new Map();
 
     try {
@@ -367,7 +460,9 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
               <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
                 <span>Loading images… {imgState.loaded}/{imgState.total}</span>
                 {imgState.failed.size > 0 && (
-                  <span className="text-amber-400">{imgState.failed.size} failed (placeholder)</span>
+                  <span className="text-amber-400">
+                    {imgState.failed.size} image{imgState.failed.size === 1 ? "" : "s"} failed — text fallback used
+                  </span>
                 )}
               </div>
               <div className="h-1.5 rounded-full bg-[var(--border)] overflow-hidden">

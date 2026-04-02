@@ -7,7 +7,8 @@
 
 ## External API Calls
 
-- **Scryfall**: Called directly from the browser (public API, no key needed, CORS allowed)
+- **Scryfall JSON API**: Called directly from the browser for search/collection where applicable
+- **Scryfall card images**: Proxied via `GET /api/proxy-card-image?url=…` for print/proxy export only — browser `fetch()` to `cards.scryfall.io` is blocked by CORS; the route only allows `https://cards.scryfall.io/*` (no open SSRF)
 - **Commander Spellbook**: Proxied via `/api/combos` (server-side) to avoid CORS fragility
 - **EDHREC**: If added in future phases, MUST be proxied via a Next.js API route — do not call directly from browser
 
@@ -28,4 +29,4 @@ React escapes all rendered values by default. Do NOT use `dangerouslySetInnerHTM
 
 ## SSRF
 
-The Spellbook proxy only forwards whitelisted query parameters (`cards`, `format`) with a 500-char cap. Never forward raw user-controlled URLs to server-side fetch calls.
+The Spellbook proxy only forwards whitelisted query parameters (`cards`, `format`) with a 500-char cap. The card-image proxy validates the `url` parameter is exactly `https://cards.scryfall.io/…` before fetching. Never forward arbitrary user-controlled URLs to server-side fetch calls.

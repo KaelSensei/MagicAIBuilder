@@ -33,6 +33,9 @@ export interface ProxySlot {
   readonly imageUri: string; // normal or large depending on quality
   readonly manaCost: string;
   readonly typeLine: string;
+  readonly oracleText: string;
+  /** Creature P/T for proxy fallback (bottom-right), e.g. "3/3" */
+  readonly powerToughness: string | null;
   readonly isCommander: boolean;
 }
 
@@ -48,6 +51,22 @@ function isBasicLand(card: DeckCard): boolean {
   );
 }
 
+/**
+ * Extract power/toughness from a type line for print-proxy fallback.
+ * Uses the last power/toughness token (e.g. 3/3, or stars for variable stats).
+ *
+ * @param typeLine Full type line from deck card
+ */
+function parsePowerToughnessFromTypeLine(typeLine: string): string | null {
+  const matches = [...typeLine.matchAll(/\b(\d+|\*)\/(\d+|\*)\b/g)];
+  if (matches.length === 0) return null;
+  const last = matches[matches.length - 1];
+  const p = last?.[1];
+  const t = last?.[2];
+  if (p === undefined || t === undefined) return null;
+  return `${p}/${t}`;
+}
+
 function makeCommanderSlot(cmd: DeckCard): ProxySlot {
   return {
     id: `cmd-${cmd.id}`,
@@ -55,6 +74,8 @@ function makeCommanderSlot(cmd: DeckCard): ProxySlot {
     imageUri: cmd.imageUri,
     manaCost: cmd.manaCost,
     typeLine: cmd.typeLine,
+    oracleText: cmd.oracleText ?? "",
+    powerToughness: parsePowerToughnessFromTypeLine(cmd.typeLine),
     isCommander: true,
   };
 }
@@ -67,12 +88,16 @@ function shouldExcludeCard(card: DeckCard, config: ProxyConfig): boolean {
 
 function makeCardSlots(card: DeckCard): ProxySlot[] {
   const qty = Math.max(1, card.quantity);
+  const powerToughness = parsePowerToughnessFromTypeLine(card.typeLine);
+  const oracleText = card.oracleText ?? "";
   return Array.from({ length: qty }, (_, i) => ({
     id: `${card.id}-${i}`,
     name: card.name,
     imageUri: card.imageUri,
     manaCost: card.manaCost,
     typeLine: card.typeLine,
+    oracleText,
+    powerToughness,
     isCommander: false,
   }));
 }
