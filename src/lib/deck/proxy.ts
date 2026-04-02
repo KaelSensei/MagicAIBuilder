@@ -17,6 +17,8 @@ export interface ProxyConfig {
   includeLands: boolean;
   /** Include commander(s) */
   includeCommander: boolean;
+  /** When false, print sheets use text/oracle placeholders only (no image preload). */
+  includeCardArt: boolean;
 }
 
 export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
@@ -25,6 +27,7 @@ export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
   quality: "standard",
   includeLands: false,
   includeCommander: true,
+  includeCardArt: true,
 };
 
 export interface ProxySlot {

@@ -18,6 +18,7 @@ import {
   DEFAULT_PROXY_CONFIG,
 } from "@/lib/deck/proxy";
 import type { ProxyConfig, ProxySlot } from "@/lib/deck/proxy";
+import { buildProxyPrintDocumentHtml } from "@/lib/deck/proxy-print-html";
 import { cn } from "@/components/ui/utils";
 
 // ─── Image preloading ─────────────────────────────────────────────────────────
@@ -36,20 +37,6 @@ interface ImageState {
  */
 function proxyImageRequestUrl(scryfallImageUrl: string): string {
   return `/api/proxy-card-image?url=${encodeURIComponent(scryfallImageUrl)}`;
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-/** Escape oracle text and preserve line breaks for print HTML */
-function oracleToHtml(oracle: string): string {
-  return escapeHtml(oracle).replaceAll("\n", "<br/>");
 }
 
 async function preloadImages(
@@ -96,206 +83,6 @@ async function preloadImages(
   return urlToDataUrl;
 }
 
-// ─── Print HTML generation ────────────────────────────────────────────────────
-
-const PAPER_SIZES: Record<ProxyConfig["paper"], { w: string; h: string }> = {
-  a4: { w: "210mm", h: "297mm" },
-  letter: { w: "8.5in", h: "11in" },
-};
-
-const LAYOUT_COLS: Record<ProxyConfig["layout"], number> = {
-  "3x3": 3,
-  "2x2": 2,
-};
-
-/** Render a single card slot to HTML — no newlines inside the string */
-function renderCardSlot(slot: ProxySlot, imageMap: Map<string, string>): string {
-  const src = imageMap.get(slot.imageUri);
-  if (src) {
-    const alt = escapeHtml(slot.name);
-    return `<div class="card-slot"><img src="${src}" alt="${alt}" class="card-img" /></div>`;
-  }
-  const name = escapeHtml(slot.name);
-  const cost = escapeHtml(slot.manaCost);
-  const type = escapeHtml(slot.typeLine);
-  const oracleHtml = oracleToHtml(slot.oracleText);
-  const oracleBlock =
-    oracleHtml.trim().length > 0
-      ? oracleHtml
-      : `<span class="fallback-empty">(no rules text)</span>`;
-  const ptBox =
-    slot.powerToughness !== null && slot.powerToughness.length > 0
-      ? `<div class="fallback-pt">${escapeHtml(slot.powerToughness)}</div>`
-      : "";
-  return `<div class="card-slot"><div class="card-fallback"><div class="fallback-header"><div class="fallback-name">${name}</div><div class="fallback-cost">${cost}</div></div><div class="fallback-type">${type}</div><div class="fallback-text">${oracleBlock}</div>${ptBox}</div></div>`;
-}
-
-function buildPrintHtml(
-  slots: ProxySlot[],
-  imageMap: Map<string, string>,
-  config: ProxyConfig,
-  deckName: string
-): string {
-  const paper = PAPER_SIZES[config.paper];
-  const cols = LAYOUT_COLS[config.layout];
-  const perPage = cardsPerPage(config.layout);
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<title>${deckName} — Proxies</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: #fff;
-    font-family: sans-serif;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .page {
-    width: ${paper.w};
-    min-height: ${paper.h};
-    padding: 5mm;
-    display: grid;
-    grid-template-columns: repeat(${cols}, 63mm);
-    gap: 2mm;
-    align-content: start;
-    background: #fff;
-    page-break-after: always;
-  }
-
-  .card-slot {
-    width: 63mm;
-    height: 88mm;
-    overflow: hidden;
-    border-radius: 3mm;
-    border: 0.3mm solid #ccc;
-    break-inside: avoid;
-    background: #111;
-    position: relative;
-  }
-
-  .card-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .card-fallback {
-    width: 100%;
-    height: 100%;
-    background: #1a1815;
-    color: #e8e4dc;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    padding: 2mm 2.5mm 7mm;
-    text-align: left;
-    gap: 1mm;
-    position: relative;
-    border: 0.4mm solid #333;
-  }
-
-  .fallback-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1.5mm;
-  }
-
-  .fallback-name {
-    font-size: 6.5pt;
-    font-weight: 700;
-    line-height: 1.15;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .fallback-cost {
-    font-size: 6pt;
-    color: #c9c4be;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-
-  .fallback-type {
-    font-size: 5.5pt;
-    color: #a39e96;
-    font-style: italic;
-    border-bottom: 0.15mm solid #444;
-    padding-bottom: 0.8mm;
-    margin-bottom: 0.5mm;
-  }
-
-  .fallback-text {
-    font-size: 4.5pt;
-    line-height: 1.2;
-    color: #d5d0c8;
-    flex: 1;
-    overflow: hidden;
-    max-height: 56mm;
-  }
-
-  .fallback-empty { color: #666; font-style: italic; }
-
-  .fallback-pt {
-    position: absolute;
-    bottom: 2mm;
-    right: 2.5mm;
-    font-size: 7pt;
-    font-weight: 800;
-    background: #c9c4be;
-    color: #111;
-    padding: 0.6mm 1.8mm;
-    border-radius: 0.9mm;
-    line-height: 1;
-    border: 0.12mm solid #888;
-  }
-
-  .page-footer {
-    grid-column: 1 / -1;
-    font-size: 5pt;
-    color: #999;
-    text-align: center;
-    padding-top: 1mm;
-  }
-
-  @media print {
-    @page {
-      size: ${paper.w} ${paper.h};
-      margin: 0;
-    }
-    body { background: #fff !important; }
-    .page { page-break-after: always; padding: 5mm; }
-    .card-slot { break-inside: avoid; }
-    .page-footer { display: block; }
-  }
-</style>
-</head>
-<body>
-${chunkArray(slots, perPage)
-  .map(
-    (page) => `<div class="page">${page.map((slot) => renderCardSlot(slot, imageMap)).join("")}<div class="page-footer">Unofficial proxy — Not for sale — MagicAIBuilder</div></div>`
-  )
-  .join("\n")}
-</body>
-</html>`;
-}
-
-function chunkArray<T>(arr: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
-}
-
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
 interface ProxyExportModalProps {
@@ -325,6 +112,21 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     return () => { abortRef.current?.abort(); };
   }, []);
 
+  const includeArtRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (includeArtRef.current === null) {
+      includeArtRef.current = config.includeCardArt;
+      return;
+    }
+    if (includeArtRef.current === config.includeCardArt) return;
+    includeArtRef.current = config.includeCardArt;
+    abortRef.current?.abort();
+    setImgState(null);
+    imageMapRef.current = new Map();
+    setError(null);
+    setIsPreparing(false);
+  }, [config.includeCardArt]);
+
   const handlePrepare = useCallback(async () => {
     abortRef.current?.abort();
     abortRef.current = new AbortController();
@@ -349,7 +151,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
   }, [slots]);
 
   const handlePrint = useCallback(() => {
-    const html = buildPrintHtml(slots, imageMapRef.current, config, deckName);
+    const html = buildProxyPrintDocumentHtml(slots, imageMapRef.current, config, deckName);
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) {
       setError("Pop-up blocked — allow pop-ups for this site");
@@ -372,6 +174,10 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     !isPreparing &&
     imgState !== null &&
     imgState.loaded === imgState.total;
+
+  const canPrint =
+    slots.length > 0 &&
+    (!config.includeCardArt || imagesReady);
 
   return (
     <Dialog.Root open onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -420,16 +226,36 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
               </div>
             </div>
 
-            {/* Quality */}
+            {/* Quality — only affects Scryfall image size when card art is on */}
             <div className="flex items-center gap-3">
               <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">Quality</span>
               <div className="flex gap-1.5">
                 {(["standard", "high"] as const).map((q) => (
-                  <button key={q} onClick={() => setConfig((c) => ({ ...c, quality: q }))}
-                    className={cn("px-3 py-1 rounded text-xs border transition-colors", config.quality === q ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50")}>
+                  <button key={q} type="button" disabled={!config.includeCardArt}
+                    onClick={() => setConfig((c) => ({ ...c, quality: q }))}
+                    className={cn(
+                      "px-3 py-1 rounded text-xs border transition-colors",
+                      !config.includeCardArt && "opacity-40 cursor-not-allowed",
+                      config.quality === q ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
+                    )}>
                     {q === "standard" ? "Standard" : "High"}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Card art vs text-only (no preload for text-only) */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">Content</span>
+              <div className="flex gap-1.5 flex-wrap">
+                <button type="button" onClick={() => setConfig((c) => ({ ...c, includeCardArt: true }))}
+                  className={cn("px-3 py-1 rounded text-xs border transition-colors", config.includeCardArt ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50")}>
+                  Card art
+                </button>
+                <button type="button" onClick={() => setConfig((c) => ({ ...c, includeCardArt: false }))}
+                  className={cn("px-3 py-1 rounded text-xs border transition-colors", !config.includeCardArt ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50")}>
+                  Text only
+                </button>
               </div>
             </div>
 
@@ -454,8 +280,8 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
             {slots.length === 0 && <span className="text-amber-400">No cards to print</span>}
           </div>
 
-          {/* Progress */}
-          {imgState && (
+          {/* Progress — only when loading art */}
+          {config.includeCardArt && imgState && (
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
                 <span>Loading images… {imgState.loaded}/{imgState.total}</span>
@@ -481,16 +307,17 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <button onClick={handlePrepare} disabled={isPreparing || slots.length === 0}
+            <button type="button" onClick={handlePrepare}
+              disabled={isPreparing || slots.length === 0 || !config.includeCardArt}
               className={cn("flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all border",
-                isPreparing || slots.length === 0
+                isPreparing || slots.length === 0 || !config.includeCardArt
                   ? "border-[var(--border)] text-[var(--text-secondary)] cursor-not-allowed opacity-50"
                   : "border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10")}>
               {isPreparing ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Loading…</> : "Preload Images"}
             </button>
-            <button onClick={handlePrint} disabled={slots.length === 0 || (imgState === null && !imagesReady)}
+            <button type="button" onClick={handlePrint} disabled={!canPrint}
               className={cn("flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all",
-                (slots.length === 0 || (imgState === null && !imagesReady))
+                !canPrint
                   ? "bg-[var(--border)] text-[var(--text-secondary)] cursor-not-allowed opacity-50"
                   : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white")}>
               <Printer className="w-3.5 h-3.5" />
@@ -499,7 +326,9 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
           </div>
 
           <p className="text-[10px] text-[var(--text-secondary)] text-center">
-            Opens print dialog — choose &ldquo;Save as PDF&rdquo; to download. Recommended on desktop.
+            {config.includeCardArt
+              ? "Preload images first, then print. Choose &ldquo;Save as PDF&rdquo; in the dialog. Desktop recommended."
+              : "No images — opens print immediately with name, type, and rules text. Choose &ldquo;Save as PDF&rdquo; in the dialog."}
           </p>
         </Dialog.Content>
       </Dialog.Portal>
