@@ -18,6 +18,7 @@ import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { sortCards, groupCards } from "@/lib/deck/sort";
 import type { CardGroup } from "@/lib/deck/sort";
+import { getColorIdentityViolations } from "@/lib/deck/color-identity";
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -46,10 +47,12 @@ function DraggableDeckCard({
   card,
   onRemove,
   onMoveToMaybeboard: _onMoveToMaybeboard,
+  isColorIdentityViolation = false,
 }: {
   readonly card: DeckCard;
   readonly onRemove: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly isColorIdentityViolation?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
@@ -75,7 +78,15 @@ function DraggableDeckCard({
         <GripVertical className="w-3 h-3" />
       </button>
       <div className="flex-1 min-w-0">
-        <CardListItem card={card} onRemove={onRemove} showNotes />
+        <CardListItem
+          card={card}
+          onRemove={onRemove}
+          showNotes
+          className={cn(
+            isColorIdentityViolation &&
+              "ring-1 ring-red-500/60 bg-red-500/5 opacity-80 hover:opacity-100"
+          )}
+        />
       </div>
     </div>
   );
@@ -87,11 +98,13 @@ function GenericGroup({
   cards,
   onRemoveCard,
   onMoveToMaybeboard,
+  violationCardIds,
 }: {
   readonly label: string;
   readonly cards: Deck["cards"];
   readonly onRemoveCard: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly violationCardIds: ReadonlySet<string>;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
@@ -118,6 +131,7 @@ function GenericGroup({
               card={card}
               onRemove={onRemoveCard}
               onMoveToMaybeboard={onMoveToMaybeboard}
+              isColorIdentityViolation={violationCardIds.has(card.id)}
             />
           ))}
         </div>
@@ -144,7 +158,13 @@ function DroppableZone({ zone, children }: { readonly zone: "sideboard" | "maybe
   );
 }
 
-function DroppableCategory({ category, cards, onRemoveCard, onMoveToMaybeboard }: CategorySectionProps) {
+function DroppableCategory({
+  category,
+  cards,
+  onRemoveCard,
+  onMoveToMaybeboard,
+  violationCardIds,
+}: CategorySectionProps & { readonly violationCardIds: ReadonlySet<string> }) {
   const [collapsed, setCollapsed] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
     id: `deck-category-${category}`,
@@ -187,6 +207,7 @@ function DroppableCategory({ category, cards, onRemoveCard, onMoveToMaybeboard }
                 card={card}
                 onRemove={onRemoveCard}
                 onMoveToMaybeboard={onMoveToMaybeboard}
+                isColorIdentityViolation={violationCardIds.has(card.id)}
               />
             ))}
           </SortableContext>
@@ -353,6 +374,7 @@ interface MainZoneContentProps {
   readonly viewMode: "grid" | "list";
   readonly gridCols: number;
   readonly cardGroups: CardGroup[];
+  readonly violationCardIds: ReadonlySet<string>;
   readonly onRemoveCard: (id: string) => void;
   readonly onCardClick?: (card: DeckCard) => void;
   readonly clearCommander: () => void;
@@ -360,7 +382,7 @@ interface MainZoneContentProps {
   readonly onMoveToMaybeboard?: (id: string) => void;
 }
 
-function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardGroups, onRemoveCard, onCardClick, clearCommander, setPartner, onMoveToMaybeboard }: MainZoneContentProps) {
+function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardGroups, violationCardIds, onRemoveCard, onCardClick, clearCommander, setPartner, onMoveToMaybeboard }: MainZoneContentProps) {
   if (viewMode === "grid") {
     return (
       <div className={gridColsClass(gridCols)}>
@@ -380,7 +402,22 @@ function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardGroups, onRe
         )}
         {mainCards.map((card) => (
           <div key={card.id} className="relative group/card">
-            <CardImage imageUri={card.imageUri} largeUri={card.imageUri} name={card.name} manaCost={card.manaCost} cmc={card.cmc} showOverlay={!card.cardFaces} zoomOnHover={false} className="w-full cursor-pointer" onClick={() => onCardClick?.(card)} cardFaces={card.cardFaces} isFlexibleLand={card.isFlexibleLand} />
+            <CardImage
+              imageUri={card.imageUri}
+              largeUri={card.imageUri}
+              name={card.name}
+              manaCost={card.manaCost}
+              cmc={card.cmc}
+              showOverlay={!card.cardFaces}
+              zoomOnHover={false}
+              className={cn(
+                "w-full cursor-pointer transition-opacity",
+                violationCardIds.has(card.id) && "ring-2 ring-red-500/70 opacity-70 hover:opacity-100"
+              )}
+              onClick={() => onCardClick?.(card)}
+              cardFaces={card.cardFaces}
+              isFlexibleLand={card.isFlexibleLand}
+            />
             <button onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" aria-label={`Remove ${card.name}`}>×</button>
           </div>
         ))}
@@ -408,6 +445,7 @@ function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardGroups, onRe
               cards={group.cards}
               onRemoveCard={onRemoveCard}
               onMoveToMaybeboard={onMoveToMaybeboard}
+              violationCardIds={violationCardIds}
             />
           );
         }
@@ -418,6 +456,7 @@ function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardGroups, onRe
             cards={group.cards}
             onRemoveCard={onRemoveCard}
             onMoveToMaybeboard={onMoveToMaybeboard}
+            violationCardIds={violationCardIds}
           />
         );
       })}
@@ -647,6 +686,12 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
   const sortedMainCards = sortCards(mainCards, sortField, sortDirection);
   const cardGroups = groupCards(sortedMainCards, groupBy);
 
+  const violationCardIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const v of getColorIdentityViolations(deck)) ids.add(v.cardId);
+    return ids;
+  }, [deck]);
+
   // Total only counts main deck + commander/partner (sideboard/maybeboard excluded)
   const totalCards =
     mainCards.reduce((sum, c) => sum + c.quantity, 0) +
@@ -814,7 +859,19 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
       {/* Zone content — uses parent DndContext from BuilderPage (main zone only) */}
       <div className="flex-1 overflow-y-auto p-2">
         {activeZone === "main" && (
-          <MainZoneContent deck={deck} mainCards={sortedMainCards} viewMode={viewMode} gridCols={gridCols} cardGroups={cardGroups} onRemoveCard={onRemoveCard} onCardClick={onCardClick} clearCommander={clearCommander} setPartner={setPartner} onMoveToMaybeboard={moveToMaybeboard} />
+          <MainZoneContent
+            deck={deck}
+            mainCards={sortedMainCards}
+            viewMode={viewMode}
+            gridCols={gridCols}
+            cardGroups={cardGroups}
+            violationCardIds={violationCardIds}
+            onRemoveCard={onRemoveCard}
+            onCardClick={onCardClick}
+            clearCommander={clearCommander}
+            setPartner={setPartner}
+            onMoveToMaybeboard={moveToMaybeboard}
+          />
         )}
         {activeZone === "sideboard" && (
           <SecondaryZoneContent zone="sideboard" cards={sideboardCards} viewMode={viewMode} gridCols={gridCols} onRemoveCard={onRemoveCard} onCardClick={onCardClick} moveCardToZone={moveCardToZone} />

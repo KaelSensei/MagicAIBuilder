@@ -3,6 +3,23 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { BanlistAlert } from "./BanlistAlert";
 
 describe("BanlistAlert", () => {
+  it("renders collapsed by default and expands on click", () => {
+    render(
+      <BanlistAlert
+        bannedCards={["Black Lotus"]}
+        colorViolations={["Lightning Bolt"]}
+      />
+    );
+
+    // collapsed: details not shown
+    expect(screen.queryByText(/banned in commander/i)).toBeNull();
+    expect(screen.queryByText(/color identity violations/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /toggle deck warnings/i }));
+    expect(screen.getByText(/banned in commander/i)).toBeDefined();
+    expect(screen.getByText(/color identity violations/i)).toBeDefined();
+  });
+
   it("renders the dismiss button when onDismiss is provided", () => {
     render(
       <BanlistAlert
