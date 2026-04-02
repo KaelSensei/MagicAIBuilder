@@ -63,4 +63,3 @@ describe("buildScryfallNameIndex", () => {
     expect(index.get(normalizeImportedName("Etali, Primal Conqueror"))?.id).toBe("id-1");
   });
 });
-

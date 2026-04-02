@@ -73,4 +73,3 @@ export function buildScryfallNameIndex(
 export function normalizeImportedName(importedName: string): string {
   return normalizeNameKey(importedName);
 }
-
