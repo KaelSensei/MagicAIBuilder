@@ -37,6 +37,20 @@ export const addCardSchema = z.object({
   cmc: z.number().min(0).max(20).optional().default(0),
   typeLine: z.string().max(300).optional().default(""),
   oracleText: z.string().max(2000).optional().default(""),
+  power: z
+    .string()
+    .max(20)
+    .optional()
+    .nullable()
+    .default(null)
+    .transform((v) => (v ? v.replaceAll(/<[^>]{0,200}>/g, "").trim() : null)),
+  toughness: z
+    .string()
+    .max(20)
+    .optional()
+    .nullable()
+    .default(null)
+    .transform((v) => (v ? v.replaceAll(/<[^>]{0,200}>/g, "").trim() : null)),
   colorIdentity: z.array(z.enum(["W", "U", "B", "R", "G", "C"])).optional().default([]),
   isGameChanger: z.boolean().optional().default(false),
   isBanned: z.boolean().optional().default(false),

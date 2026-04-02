@@ -114,24 +114,14 @@ describe("buildProxySlots", () => {
     const bear = makeCard({
       id: "b1",
       name: "Grizzly Bears",
-      typeLine: "Creature — Bear 2/2",
+      typeLine: "Creature — Bear",
       oracleText: "Trample",
+      power: "2",
+      toughness: "2",
       quantity: 1,
     });
     const slots = buildProxySlots([bear], null, null, DEFAULT_PROXY_CONFIG);
     expect(slots[0].oracleText).toBe("Trample");
     expect(slots[0].powerToughness).toBe("2/2");
-  });
-
-  it("uses last P/T token when type line has multiple", () => {
-    const card = makeCard({
-      id: "dfc",
-      name: "Test",
-      typeLine: "Creature — Human 1/1 // Creature — Horror 4/4",
-      oracleText: "N/A",
-      quantity: 1,
-    });
-    const slots = buildProxySlots([card], null, null, DEFAULT_PROXY_CONFIG);
-    expect(slots[0].powerToughness).toBe("4/4");
   });
 });

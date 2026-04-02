@@ -118,6 +118,8 @@ model DeckCard {
   cmc           Float   @default(0)
   typeLine      String  @default("")
   oracleText    String  @default("")
+  power         String?
+  toughness     String?
   colorIdentity String[]
   isGameChanger Boolean @default(false)
   isBanned      Boolean @default(false)

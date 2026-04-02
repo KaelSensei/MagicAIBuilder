@@ -8,6 +8,10 @@ export interface DeckCard {
   typeLine: string; oracleText: string; colorIdentity: string[];
   isGameChanger: boolean; isBanned: boolean; price: number | null;
   imageUri: string; artCropUri: string; category: CardCategory;
+  /** Scryfall power (creatures only). Stored for proxy text-only printing. */
+  power?: string | null;
+  /** Scryfall toughness (creatures only). Stored for proxy text-only printing. */
+  toughness?: string | null;
   quantity: number; notes?: string | null; zone: DeckZone;
   isMaybeboard?: boolean; layout?: string; cardFaces?: [CardFace, CardFace]; isFlexibleLand?: boolean;
 }

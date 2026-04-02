@@ -41,6 +41,8 @@ export async function POST(_req: Request, { params }: Params) {
             cmc: card.cmc,
             typeLine: card.typeLine,
             oracleText: card.oracleText,
+            power: card.power,
+            toughness: card.toughness,
             colorIdentity: card.colorIdentity,
             isGameChanger: card.isGameChanger,
             isBanned: card.isBanned,
