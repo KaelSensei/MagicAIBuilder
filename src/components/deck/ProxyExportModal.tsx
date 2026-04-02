@@ -253,7 +253,12 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                   Card art
                 </button>
                 <button type="button" onClick={() => setConfig((c) => ({ ...c, includeCardArt: false }))}
-                  className={cn("px-3 py-1 rounded text-xs border transition-colors", !config.includeCardArt ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50")}>
+                  className={cn(
+                    "px-3 py-1 rounded text-xs border transition-colors",
+                    config.includeCardArt
+                      ? "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
+                      : "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                  )}>
                   Text only
                 </button>
               </div>
@@ -316,10 +321,12 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
               {isPreparing ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Loading…</> : "Preload Images"}
             </button>
             <button type="button" onClick={handlePrint} disabled={!canPrint}
-              className={cn("flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all",
-                !canPrint
-                  ? "bg-[var(--border)] text-[var(--text-secondary)] cursor-not-allowed opacity-50"
-                  : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white")}>
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all",
+                canPrint
+                  ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white"
+                  : "bg-[var(--border)] text-[var(--text-secondary)] cursor-not-allowed opacity-50"
+              )}>
               <Printer className="w-3.5 h-3.5" />
               Print / Save PDF
             </button>

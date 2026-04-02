@@ -11,7 +11,7 @@ function firstFaceName(name: string): string | null {
   const idx = name.indexOf(" // ");
   if (idx < 0) return null;
   const front = name.slice(0, idx).trim();
-  return front ? front : null;
+  return front || null;
 }
 
 /**
@@ -58,7 +58,7 @@ export function buildScryfallNameIndex(
     if (frontFromFull) index.set(normalizeNameKey(frontFromFull), card);
 
     const face0 = card.card_faces?.[0]?.name;
-    if (face0 && face0.trim()) index.set(normalizeNameKey(face0), card);
+    if (face0?.trim()) index.set(normalizeNameKey(face0), card);
   }
 
   return index;
