@@ -145,22 +145,22 @@ export function buildProxyPrintDocumentHtml(
   }
 
   .fallback-name {
-    font-size: 6.5pt;
+    font-size: 8.25pt;
     font-weight: 700;
-    line-height: 1.15;
+    line-height: 1.18;
     flex: 1;
     min-width: 0;
   }
 
   .fallback-cost {
-    font-size: 6pt;
+    font-size: 7.25pt;
     color: #c9c4be;
     flex-shrink: 0;
     white-space: nowrap;
   }
 
   .fallback-type {
-    font-size: 5.5pt;
+    font-size: 6.5pt;
     color: #a39e96;
     font-style: italic;
     border-bottom: 0.15mm solid #444;
@@ -169,12 +169,12 @@ export function buildProxyPrintDocumentHtml(
   }
 
   .fallback-text {
-    font-size: 4.5pt;
-    line-height: 1.2;
+    font-size: 6.25pt;
+    line-height: 1.25;
     color: #d5d0c8;
     flex: 1;
     overflow: hidden;
-    max-height: 56mm;
+    max-height: 60mm;
   }
 
   .fallback-empty { color: #666; font-style: italic; }
@@ -183,7 +183,7 @@ export function buildProxyPrintDocumentHtml(
     position: absolute;
     bottom: 2mm;
     right: 2.5mm;
-    font-size: 7pt;
+    font-size: 8pt;
     font-weight: 800;
     background: #c9c4be;
     color: #111;

@@ -107,6 +107,8 @@ export interface AddCardPayload {
   cmc?: number;
   typeLine?: string;
   oracleText?: string;
+  power?: string | null;
+  toughness?: string | null;
   colorIdentity?: string[];
   isGameChanger?: boolean;
   isBanned?: boolean;

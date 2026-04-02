@@ -54,23 +54,9 @@ function isBasicLand(card: DeckCard): boolean {
   );
 }
 
-/**
- * Extract power/toughness from a type line for print-proxy fallback.
- * Uses the last power/toughness token (e.g. 3/3, or stars for variable stats).
- *
- * @param typeLine Full type line from deck card
- */
-function parsePowerToughnessFromTypeLine(typeLine: string): string | null {
-  const matches = [...typeLine.matchAll(/\b(\d+|\*)\/(\d+|\*)\b/g)];
-  if (matches.length === 0) return null;
-  const last = matches[matches.length - 1];
-  const p = last?.[1];
-  const t = last?.[2];
-  if (p === undefined || t === undefined) return null;
-  return `${p}/${t}`;
-}
-
 function makeCommanderSlot(cmd: DeckCard): ProxySlot {
+  const powerToughness =
+    cmd.power && cmd.toughness ? `${cmd.power}/${cmd.toughness}` : null;
   return {
     id: `cmd-${cmd.id}`,
     name: cmd.name,
@@ -78,7 +64,7 @@ function makeCommanderSlot(cmd: DeckCard): ProxySlot {
     manaCost: cmd.manaCost,
     typeLine: cmd.typeLine,
     oracleText: cmd.oracleText ?? "",
-    powerToughness: parsePowerToughnessFromTypeLine(cmd.typeLine),
+    powerToughness,
     isCommander: true,
   };
 }
@@ -91,7 +77,8 @@ function shouldExcludeCard(card: DeckCard, config: ProxyConfig): boolean {
 
 function makeCardSlots(card: DeckCard): ProxySlot[] {
   const qty = Math.max(1, card.quantity);
-  const powerToughness = parsePowerToughnessFromTypeLine(card.typeLine);
+  const powerToughness =
+    card.power && card.toughness ? `${card.power}/${card.toughness}` : null;
   const oracleText = card.oracleText ?? "";
   return Array.from({ length: qty }, (_, i) => ({
     id: `${card.id}-${i}`,

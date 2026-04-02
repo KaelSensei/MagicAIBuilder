@@ -34,6 +34,9 @@ function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
   const isDfc = cardFaces !== undefined;
   const manaCost = scryfallCard.mana_cost ?? cardFaces?.[0].manaCost ?? "";
   const isFlexibleLand = isDfc && scryfallCard.layout === "modal_dfc" && (cardFaces?.[1].typeLine ?? "").toLowerCase().includes("land");
+  const face0 = scryfallCard.card_faces?.[0];
+  const power = (face0?.power ?? scryfallCard.power ?? null) || null;
+  const toughness = (face0?.toughness ?? scryfallCard.toughness ?? null) || null;
   return {
     id: scryfallCard.id, name: scryfallCard.name, manaCost, cmc: scryfallCard.cmc,
     typeLine: scryfallCard.type_line, oracleText: scryfallCard.oracle_text ?? cardFaces?.[0].oracleText ?? "",
@@ -42,6 +45,8 @@ function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
     imageUri: cardFaces?.[0].imageUri ?? getCardImageUri(scryfallCard, "normal"),
     artCropUri: cardFaces?.[0].artCropUri ?? getCardImageUri(scryfallCard, "art_crop"),
     category: isDfc ? categorizeDfcCard(scryfallCard) : categorizeCard(scryfallCard),
+    power,
+    toughness,
     quantity: 1, zone: "main", layout: scryfallCard.layout, cardFaces, isFlexibleLand,
   };
 }
@@ -282,6 +287,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           cmc: last.card.cmc,
           typeLine: last.card.typeLine,
           oracleText: last.card.oracleText,
+          power: last.card.power ?? null,
+          toughness: last.card.toughness ?? null,
           colorIdentity: last.card.colorIdentity,
           isGameChanger: last.card.isGameChanger,
           isBanned: last.card.isBanned,
@@ -350,6 +357,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             imageUri: c.imageUri,
             artCropUri: c.artCropUri,
             category: c.category,
+            power: c.power ?? null,
+            toughness: c.toughness ?? null,
             quantity: c.quantity,
             notes: c.notes ?? null,
             zone: c.zone ?? "main",
@@ -569,6 +578,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         cmc: deckCard.cmc,
         typeLine: deckCard.typeLine,
         oracleText: deckCard.oracleText,
+        power: deckCard.power ?? null,
+        toughness: deckCard.toughness ?? null,
         colorIdentity: deckCard.colorIdentity,
         isGameChanger: deckCard.isGameChanger,
         isBanned: deckCard.isBanned,
@@ -650,6 +661,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           cmc: deckCard.cmc,
           typeLine: deckCard.typeLine,
           oracleText: deckCard.oracleText,
+          power: deckCard.power ?? null,
+          toughness: deckCard.toughness ?? null,
           colorIdentity: deckCard.colorIdentity,
           isGameChanger: deckCard.isGameChanger,
           isBanned: deckCard.isBanned,
@@ -697,6 +710,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           cmc: deckCard.cmc,
           typeLine: deckCard.typeLine,
           oracleText: deckCard.oracleText,
+          power: deckCard.power ?? null,
+          toughness: deckCard.toughness ?? null,
           colorIdentity: deckCard.colorIdentity,
           isGameChanger: deckCard.isGameChanger,
           isBanned: deckCard.isBanned,
@@ -776,6 +791,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         cmc: deckCard.cmc,
         typeLine: deckCard.typeLine,
         oracleText: deckCard.oracleText,
+        power: deckCard.power ?? null,
+        toughness: deckCard.toughness ?? null,
         colorIdentity: deckCard.colorIdentity,
         isGameChanger: deckCard.isGameChanger,
         isBanned: deckCard.isBanned,
@@ -852,6 +869,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         cmc: card.cmc,
         typeLine: card.typeLine,
         oracleText: card.oracleText,
+        power: card.power ?? null,
+        toughness: card.toughness ?? null,
         colorIdentity: card.colorIdentity,
         isGameChanger: enriched.isGameChanger,
         isBanned: enriched.isBanned,
@@ -1311,6 +1330,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         cmc: deckCard.cmc,
         typeLine: deckCard.typeLine,
         oracleText: deckCard.oracleText,
+        power: deckCard.power ?? null,
+        toughness: deckCard.toughness ?? null,
         colorIdentity: deckCard.colorIdentity,
         isGameChanger: deckCard.isGameChanger,
         isBanned: deckCard.isBanned,
