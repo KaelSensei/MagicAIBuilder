@@ -330,6 +330,31 @@ describe("useDeckStore — setPartner", () => {
     await useDeckStore.getState().setPartner(makeScryfallCard());
     expect(deckApi.updateDeck).not.toHaveBeenCalled();
   });
+
+  it("supports Choose a Background commander + Background partner without replacing commander", async () => {
+    const jaheira = makeScryfallCard({
+      id: "jaheira-id",
+      name: "Jaheira, Friend of the Forest",
+      type_line: "Legendary Creature — Elf Druid",
+      oracle_text: "Choose a Background",
+      keywords: [],
+    });
+    const clanCrafter = makeScryfallCard({
+      id: "clan-crafter-id",
+      name: "Clan Crafter",
+      type_line: "Legendary Enchantment — Background",
+      oracle_text: "Commander creatures you own have ...",
+      keywords: [],
+    });
+
+    await useDeckStore.getState().setCommander(jaheira);
+    await useDeckStore.getState().setPartner(clanCrafter);
+
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.commander?.name).toBe("Jaheira, Friend of the Forest");
+    expect(deck.partner?.name).toBe("Clan Crafter");
+    expect(deck.pairingType).toBe("background");
+  });
 });
 
 describe("useDeckStore — setCompanion", () => {

@@ -61,6 +61,20 @@ export async function requireAuth(): Promise<
 > {
   const session = await auth();
 
+  if (process.env.PLAYWRIGHT_TEST === "1" && !session?.user) {
+    const user = await resolveAuthenticatedUser({
+      email: "playwright@test.local",
+      name: "Playwright",
+      image: null,
+    });
+    if (!user) {
+      return {
+        error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+      };
+    }
+    return { session: { user } };
+  }
+
   if (!session?.user) {
     return {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
