@@ -97,10 +97,19 @@ export async function fetchCombosForCard(
 export async function fetchCombosForDeck(
   cardNames: string[]
 ): Promise<SpellbookVariant[]> {
-  // Fetch all in parallel
-  const allVariantArrays = await Promise.all(
-    cardNames.map((name) => fetchCombosForCard(name))
+  const uniqueNames = Array.from(
+    new Set(cardNames.map((n) => n.trim()).filter((n) => n.length > 0))
   );
+
+  // Concurrency limit: avoids getting throttled when decks have ~100 cards.
+  const CONCURRENCY = 10;
+  const allVariantArrays: SpellbookVariant[][] = [];
+
+  for (let i = 0; i < uniqueNames.length; i += CONCURRENCY) {
+    const slice = uniqueNames.slice(i, i + CONCURRENCY);
+    const batch = await Promise.all(slice.map((name) => fetchCombosForCard(name)));
+    allVariantArrays.push(...batch);
+  }
 
   // Flatten and deduplicate by variant id
   const seen = new Map<string, SpellbookVariant>();
@@ -113,7 +122,7 @@ export async function fetchCombosForDeck(
   }
 
   // Only return combos where ALL required cards are in the deck
-  const deckSet = new Set(cardNames.map((n) => n.toLowerCase()));
+  const deckSet = new Set(uniqueNames.map((n) => n.toLowerCase()));
   const filteredCombos = Array.from(seen.values()).filter((variant) =>
     variant.cards.every((card) => deckSet.has(card.toLowerCase()))
   );

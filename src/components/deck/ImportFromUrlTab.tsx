@@ -7,6 +7,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { UrlImportCard, UrlImportResult } from "@/lib/import/url-import";
 import { detectSource } from "@/lib/import/url-import";
+import { buildScryfallNameIndex, normalizeImportedName } from "@/lib/scryfall/name-index";
 
 const SOURCE_LABELS: Record<string, string> = {
   moxfield: "Moxfield",
@@ -48,7 +49,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     importedCards: readonly UrlImportCard[],
     foundCards: ScryfallCard[]
   ): Promise<{ added: number; ignoredNames: string[] }> {
-    const byName = new Map(foundCards.map((c) => [c.name.toLowerCase(), c]));
+    const byName = buildScryfallNameIndex(foundCards);
     const ignoredNames: string[] = [];
     let added = 0;
 
@@ -57,19 +58,19 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     const rest = importedCards.filter((c) => !c.isCommander && !c.isPartner);
 
     for (const c of commanders) {
-      const card = byName.get(c.name.toLowerCase());
+      const card = byName.get(normalizeImportedName(c.name));
       if (card) { await setCommander(card); added++; }
       else ignoredNames.push(c.name);
     }
 
     for (const c of partners) {
-      const card = byName.get(c.name.toLowerCase());
+      const card = byName.get(normalizeImportedName(c.name));
       if (card) { await setPartner(card); added++; }
       else ignoredNames.push(c.name);
     }
 
     for (const c of rest) {
-      const card = byName.get(c.name.toLowerCase());
+      const card = byName.get(normalizeImportedName(c.name));
       if (card) { addCard(card, c.quantity, c.zone); added++; }
       else ignoredNames.push(c.name);
     }

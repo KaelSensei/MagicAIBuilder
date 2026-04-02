@@ -9,6 +9,7 @@ import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { useDeckStore } from "@/lib/deck/store";
 import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { buildScryfallNameIndex, normalizeImportedName } from "@/lib/scryfall/name-index";
 
 type ImportTab = "text" | "url";
 
@@ -47,23 +48,23 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
     parsed: ReturnType<typeof parseTextDecklist>,
     foundCards: ScryfallCard[],
   ): Promise<number> {
-    const byName = new Map(foundCards.map((c) => [c.name.toLowerCase(), c]));
+    const byName = buildScryfallNameIndex(foundCards);
     let added = 0;
 
     // Set commander first and await — it updates pairingType which partner needs
     if (parsed.commander) {
-      const cmd = byName.get(parsed.commander.toLowerCase());
+      const cmd = byName.get(normalizeImportedName(parsed.commander));
       if (cmd) { await setCommander(cmd); added++; }
     }
 
     // Set partner after commander is persisted
     if (parsed.partner) {
-      const prt = byName.get(parsed.partner.toLowerCase());
+      const prt = byName.get(normalizeImportedName(parsed.partner));
       if (prt) { await setPartner(prt); added++; }
     }
 
     for (const { name, quantity } of parsed.cards) {
-      const card = byName.get(name.toLowerCase());
+      const card = byName.get(normalizeImportedName(name));
       if (!card) continue;
       // Pass quantity directly — addCard handles basics with quantity > 1 in a single call
       addCard(card, quantity);
