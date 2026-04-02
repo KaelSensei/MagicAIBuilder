@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { buildScryfallNameIndex, normalizeImportedName } from "./name-index";
+import {
+  buildScryfallNameIndex,
+  normalizeImportedName,
+  scryfallCollectionLookupName,
+} from "./name-index";
 import type { ScryfallCard } from "./types";
 
 function makeCard(overrides: Partial<ScryfallCard>): ScryfallCard {
@@ -12,6 +16,22 @@ function makeCard(overrides: Partial<ScryfallCard>): ScryfallCard {
     ...overrides,
   };
 }
+
+describe("scryfallCollectionLookupName", () => {
+  it("strips back face after spaced // for collection API", () => {
+    expect(
+      scryfallCollectionLookupName("Etali, Primal Conqueror // Etali, Primal Sickness")
+    ).toBe("Etali, Primal Conqueror");
+  });
+
+  it("strips back face when // has no surrounding spaces", () => {
+    expect(scryfallCollectionLookupName("Wear//Tear")).toBe("Wear");
+  });
+
+  it("leaves normal card names unchanged", () => {
+    expect(scryfallCollectionLookupName("Sol Ring")).toBe("Sol Ring");
+  });
+});
 
 describe("buildScryfallNameIndex", () => {
   it("indexes full name and front-face name for split cards", () => {
