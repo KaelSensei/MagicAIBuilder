@@ -2,6 +2,7 @@
 import type { Deck, DeckStats } from "./types";
 import { detectThemes } from "./themes";
 import { extractColorPips } from "@/lib/mana/parse";
+import { getColorIdentityViolations } from "./color-identity";
 
 function buildManaCurve(nonLandCards: ReturnType<typeof buildAllCards>): Record<number, number> {
   const manaCurve: Record<number, number> = {};
@@ -86,19 +87,7 @@ export function computeDeckStats(deck: Deck): DeckStats {
   // Banned cards
   const bannedCards = allCards.filter((c) => c.isBanned).map((c) => c.name);
 
-  // Color identity violations — only check if a commander is set
-  // Include partner's color identity (both commanders contribute to the identity)
-  const commanderIdentitySet = new Set([
-    ...(deck.commander?.colorIdentity ?? []),
-    ...(deck.partner?.colorIdentity ?? []),
-  ]);
-  const colorIdentityViolations = deck.commander
-    ? mainCards
-        .filter((c) =>
-          c.colorIdentity.some((color) => !commanderIdentitySet.has(color))
-        )
-        .map((c) => c.name)
-    : [];
+  const colorIdentityViolations = getColorIdentityViolations(deck).map((v) => v.cardName);
 
   // Theme detection (on all non-land cards)
   const themes = detectThemes(allCards.filter((c) => c.category !== "land"));
