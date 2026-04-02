@@ -32,8 +32,28 @@ describe("fetchInBatches", () => {
 
     const result = await fetchInBatches(names);
     expect(scryfallClient.getCardCollection).toHaveBeenCalledTimes(1);
-    expect(scryfallClient.getCardCollection).toHaveBeenCalledWith(names);
+    expect(scryfallClient.getCardCollection).toHaveBeenCalledWith(
+      names.map((n) => ({ name: n.name }))
+    );
     expect(result).toHaveLength(10);
+  });
+
+  it("sends front-face name to collection API for full DFC strings from decklists", async () => {
+    const names = [{ name: "Etali, Primal Conqueror // Etali, Primal Sickness" }];
+    const returned = makeCard("Etali, Primal Conqueror // Etali, Primal Sickness");
+
+    vi.mocked(scryfallClient.getCardCollection).mockResolvedValueOnce({
+      data: [returned],
+      object: "list",
+      not_found: [],
+    });
+
+    const result = await fetchInBatches(names);
+    expect(scryfallClient.getCardCollection).toHaveBeenCalledWith([
+      { name: "Etali, Primal Conqueror" },
+    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe("Etali, Primal Conqueror // Etali, Primal Sickness");
   });
 
   it("splits into multiple batches when over 75 cards", async () => {

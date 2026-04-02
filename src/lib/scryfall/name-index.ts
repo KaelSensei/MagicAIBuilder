@@ -15,6 +15,29 @@ function firstFaceName(name: string): string | null {
 }
 
 /**
+ * Scryfall `POST /cards/collection` with `{ name }` does **not** resolve full
+ * double-faced names (`A // B`). It expects the **front-face** name only.
+ * Deck sources (e.g. Moxfield) often export the full two-face string.
+ *
+ * @param decklistName Name as it appears on imported decklists
+ * @returns Value to use for the collection API `name` identifier
+ */
+export function scryfallCollectionLookupName(decklistName: string): string {
+  const t = decklistName.trim();
+  const spacedIdx = t.indexOf(" // ");
+  if (spacedIdx >= 0) {
+    const front = t.slice(0, spacedIdx).trimEnd();
+    return front.length > 0 ? front : t;
+  }
+  const tightIdx = t.indexOf("//");
+  if (tightIdx >= 0) {
+    const front = t.slice(0, tightIdx).trimEnd();
+    return front.length > 0 ? front : t;
+  }
+  return t;
+}
+
+/**
  * Build a lookup map for resolving imported names to Scryfall cards.
  *
  * Scryfall uses full names for multi-part cards (e.g. "A // B"). Many deck
@@ -50,4 +73,3 @@ export function buildScryfallNameIndex(
 export function normalizeImportedName(importedName: string): string {
   return normalizeNameKey(importedName);
 }
-
