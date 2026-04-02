@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: magicaibuilder
+      POSTGRES_USER: magic
+      POSTGRES_PASSWORD: magic_dev_only
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_e2e:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U magic -d magicaibuilder"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  e2e:
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Prisma / app
+      DATABASE_URL: "postgresql://magic:magic_dev_only@db:5432/magicaibuilder"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      AUTH_SECRET: "playwright-test-secret"
+
+      # NextAuth providers are irrelevant in PLAYWRIGHT_TEST mode, but keep them defined to avoid runtime surprises
+      GOOGLE_CLIENT_ID: "playwright"
+      GOOGLE_CLIENT_SECRET: "playwright"
+
+      # Ensure auth is bypassed for E2E
+      PLAYWRIGHT_TEST: "1"
+      # Default to running the new pairing regression test only.
+      PLAYWRIGHT_SPEC: "e2e/background-commander-pairing.spec.ts"
+    command: >
+      sh -lc "
+        pnpm exec prisma migrate deploy &&
+        pnpm exec playwright test $${PLAYWRIGHT_SPEC}
+      "
+
+volumes:
+  pgdata_e2e:

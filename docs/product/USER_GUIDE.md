@@ -56,6 +56,18 @@ In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default 
 2. Search for your commander
 3. Click to set them as commander
 
+#### Partner / Background / Companion Commanders
+
+Some commanders support a **second slot** (shown next to the Commander button):
+
+- **Partner / Partner With / Friends Forever / Doctor’s Companion**: enable the second-slot button, search, then click the card to set it.
+- **Choose a Background** commanders (e.g. Jaheira): the second-slot button becomes **Background**. Use it to search and select a **Background** enchantment.
+
+Notes:
+
+- The **Background** search targets Background cards (not commanders).
+- If you accidentally click a Background while Commander mode is enabled, the app will treat it as the **Background slot** (it won’t replace your commander).
+
 ### Deck Statistics
 
 The right panel shows:

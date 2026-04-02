@@ -209,6 +209,9 @@ export function buildPartnerSearchQuery(
       return `is:commander o:"Friends forever"${namePart}${colorPart}`;
     case "partner_with":
       return `is:commander o:"Partner with"${namePart}${colorPart}`;
+    case "background":
+      // Backgrounds are not commanders; they are legendary enchantments with subtype Background.
+      return `t:background legal:commander${namePart}${colorPart}`;
     default:
       return `is:commander${namePart}${colorPart}`;
   }

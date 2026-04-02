@@ -115,6 +115,14 @@ Without a key, the AI panel uses curated generic suggestions.
 | `pnpm db:studio`  | Open Prisma Studio                        |
 | `pnpm db:reset`   | Reset database                            |
 
+## E2E in Docker (Playwright)
+
+If running Playwright locally is unreliable, you can run E2E tests fully inside Docker:
+
+```bash
+docker compose -f docker-compose.e2e.yml up --build --exit-code-from e2e
+```
+
 ## Architecture
 
 ```

@@ -1,0 +1,25 @@
+FROM mcr.microsoft.com/playwright:v1.58.2-jammy
+
+WORKDIR /app
+
+# Enable pnpm via corepack (Node is included in the Playwright image)
+RUN corepack enable
+
+# Install deps first for better layer caching
+COPY package.json pnpm-lock.yaml ./
+# Prisma schema is needed during postinstall (prisma generate)
+COPY prisma ./prisma
+RUN pnpm install --frozen-lockfile
+
+# Copy the rest of the repo
+COPY . .
+
+# Prisma client (needed for Next.js server + API routes)
+RUN pnpm exec prisma generate
+
+ENV PLAYWRIGHT_TEST=1
+ENV NODE_ENV=test
+
+# Run E2E (will boot Next dev server via playwright.config.ts)
+CMD ["pnpm", "exec", "playwright", "test"]
+

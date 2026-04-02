@@ -1,0 +1,11 @@
+.git
+.next
+node_modules
+playwright-report
+test-results
+coverage
+.env
+.env.local
+.env.sonar
+pgdata
+assets

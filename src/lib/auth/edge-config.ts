@@ -33,6 +33,7 @@ export const edgeAuthConfig = {
       return session;
     },
     authorized({ auth: session, request: { nextUrl } }) {
+      if (process.env.PLAYWRIGHT_TEST === "1") return true;
       const isLoggedIn = !!session?.user;
       const { pathname } = nextUrl;
 
