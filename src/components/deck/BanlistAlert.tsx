@@ -1,6 +1,7 @@
 "use client";
 // Alert shown when banned or illegal cards are detected
-import { AlertTriangle, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { AlertTriangle, ChevronDown, ChevronRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 
@@ -18,47 +19,50 @@ export function BanlistAlert({
   className,
 }: BanlistAlertProps) {
   const hasIssues = bannedCards.length > 0 || colorViolations.length > 0;
+  const [expanded, setExpanded] = useState(false);
+
+  const issueSummary = useMemo(() => {
+    const parts: string[] = [];
+    if (bannedCards.length > 0) parts.push(`${bannedCards.length} banned`);
+    if (colorViolations.length > 0) parts.push(`${colorViolations.length} color ID`);
+    return parts.join(" • ");
+  }, [bannedCards.length, colorViolations.length]);
 
   return (
     <AnimatePresence>
       {hasIssues && (
         <motion.div
           className={cn(
-            "rounded-lg border border-red-500/40 bg-red-500/10 p-3",
+            "rounded-lg border border-red-500/40 bg-red-500/10",
             className
           )}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
         >
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-            <div className="flex-1 space-y-1">
-              {bannedCards.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-red-400">
-                    Banned in Commander:
-                  </p>
-                  <ul className="text-xs text-red-300/80 mt-0.5 space-y-0.5">
-                    {bannedCards.map((name) => (
-                      <li key={name}>• {name}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {colorViolations.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-orange-400">
-                    Color identity violations:
-                  </p>
-                  <ul className="text-xs text-orange-300/80 mt-0.5 space-y-0.5">
-                    {colorViolations.map((name) => (
-                      <li key={name}>• {name}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+          <div className="flex items-center gap-2 p-2.5">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="min-w-0 flex-1 flex items-center gap-2 text-left"
+              aria-expanded={expanded}
+              aria-label="Toggle deck warnings"
+            >
+              <span className="text-xs font-medium text-red-300">Deck warnings</span>
+              <span className="text-[11px] text-[var(--text-secondary)] truncate">
+                {issueSummary}
+              </span>
+              <span className="ml-auto text-[var(--text-secondary)]">
+                {expanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </span>
+            </button>
+
             {onDismiss && (
               <button
                 onClick={onDismiss}
@@ -69,6 +73,31 @@ export function BanlistAlert({
               </button>
             )}
           </div>
+
+          {expanded && (
+            <div className="border-t border-red-500/20 px-3 pb-3 pt-2.5 space-y-2">
+              {bannedCards.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-red-400">Banned in Commander</p>
+                  <ul className="text-xs text-red-300/80 mt-1 space-y-0.5">
+                    {bannedCards.map((name) => (
+                      <li key={name}>• {name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {colorViolations.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-orange-400">Color identity violations</p>
+                  <ul className="text-xs text-orange-300/80 mt-1 space-y-0.5">
+                    {colorViolations.map((name) => (
+                      <li key={name}>• {name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
