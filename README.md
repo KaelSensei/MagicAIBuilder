@@ -201,7 +201,7 @@ MagicAIBuilder est développé par **Kael** avec l’aide de deux assistants IA�
 - **Claude (Anthropic – Sonnet 4.6 / Opus 4.6)** — structure de départ du projet (boilerplate Next.js/Prisma), architecture TypeScript/React, premières features (création/édition de deck), patterns de store, tests et revue de code, plus la qualité globale (Sonar/CI).
 - **OpenAI Codex / ChatGPT (GPT‑5.4 & GPT‑5.1 “auto”)** — _assistant “bug‑fixer”_ : corrections guidées par la CI, chasse aux régressions, scraping/import Moxfield et autres sources, export de proxies (images + PDF), migrations Prisma, DevOps et features avancées.
 
-Ces assistants travaillent **dans l’éditeur (Cursor)** : ils proposent du code, des migrations et des commandes, mais **tous les commits sont finalement poussés via la configuration Git et les credentials de Kael**. Aucune clé SSH ni secret n’est jamais stocké côté IA.
+Ces assistants travaillent via **plusieurs outils (Cursor, apps desktop, plugins)** : ils proposent du code, des migrations et des commandes, mais **les actions sensibles (commits, push, déploiements) passent toujours par les identifiants Git/CI de Kael**. Les clés SSH et autres secrets restent gérés côté humain/outillage, pas par les modèles eux‑mêmes.
 
 ## License
 
