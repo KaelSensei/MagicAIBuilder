@@ -198,10 +198,9 @@ docs/
 
 MagicAIBuilder est développé par **Kael** avec l’aide de deux assistants IA :
 
-- **Claude (Anthropic – Sonnet 4.6 / Opus 4.6)** — structure de départ du projet (boilerplate Next.js/Prisma), architecture TypeScript/React, premières features (création/édition de deck), patterns de store, tests et revue de code, plus la qualité globale (Sonar/CI).
-- **OpenAI Codex / ChatGPT (GPT‑5.4 & GPT‑5.1 “auto”)** — _assistant “bug‑fixer”_ : corrections guidées par la CI, chasse aux régressions, scraping/import Moxfield et autres sources, export de proxies (images + PDF), migrations Prisma, DevOps et features avancées.
-
-Ces assistants travaillent via **plusieurs outils (Cursor, apps desktop, plugins)** : ils proposent du code, des migrations et des commandes, mais **les actions sensibles (commits, push, déploiements) passent toujours par les identifiants Git/CI de Kael**. Les clés SSH et autres secrets restent gérés côté humain/outillage, pas par les modèles eux‑mêmes.
+- **Claude (Anthropic – Sonnet 4.6 / Opus 4.6)** — initial project scaffold (Next.js/Prisma boilerplate), TypeScript/React architecture, first core features (deck creation/editing), store patterns, tests and code review, plus overall quality (Sonar/CI).
+- **OpenAI Codex / ChatGPT (GPT‑5.4 & GPT‑5.1 “auto”)** — _“bug‑fixer” assistant_: CI‑guided fixes and regression hunting, scraping/import from Moxfield and other sources, proxy export (images + PDF), Prisma migrations, DevOps work, and advanced features.
+  The **Cursor “automatic” model** (GPT‑5.1) is used as the default in‑editor helper for quick bug‑fixing passes and small refactors, then heavier models are pulled in only when needed.
 
 ## License
 
