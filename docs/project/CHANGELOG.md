@@ -358,6 +358,27 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - docs/product/ROADMAP.md: "Enhanced deck-building filters" marked ✅ done
 - 47 tests in `src/lib/scryfall/search.test.ts` covering all new filter behaviors
 
+### Added — 2026-04-03: Text-only proxy mode and P/T fallback
+
+- Proxy export modal now has a **Content: Card art / Text only** toggle
+- Text-only mode skips Scryfall image preloading and prints readable oracle-text placeholders only
+- DeckCard `power` / `toughness` fields added (Scryfall-backed) so P/T is always shown bottom-right on fallback proxies
+- Prisma schema + migrations updated to persist power/toughness safely (idempotent deploy migrations)
+- Deck API validation accepts `character_select` pairing type for TMNT “Partner — Character select” commanders
+- SonarCloud issues (S7735, S6644, S6582) fixed in `ProxyExportModal` and `scryfall/name-index.ts`
+
+### Fixed — 2026-04-02: DFC import + combo detection
+
+- Name-index for Scryfall now maps front-face names (`A`) and full `A // B` strings to the same card
+- Import from Moxfield and other deck sources correctly resolves MDFC/DFC names when hitting Scryfall’s collection API
+- Commander Spellbook combo fetch stabilized (batching / retry) and now ignores Considering zone cards
+
+### Fixed — 2026-04-02: Proxy export with Scryfall art
+
+- Proxy export uses a Next.js API route to fetch Scryfall images server-side and embed them as data URLs (no more CORS failures)
+- Progress indicator shows loaded/failed art count; failed images fall back to text-only card faces instead of blank slots
+- Proxy placeholders upgraded: oracle text shown in a readable block, type line italicized, P/T badge rendered bottom-right when known
+
 ### Added — 2026-03-22: Grid density selector
 
 - Deck grid view now has a density picker (2 / 3 / 4 / 6 / 8 columns) in the toolbar, visible in grid mode only
