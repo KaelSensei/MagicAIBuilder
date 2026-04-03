@@ -194,6 +194,15 @@ docs/
   INIT_PROMPT.md               # Seed prompt / bootstrap notes for agent-assisted work
 ```
 
+## Assistants IA 👾
+
+MagicAIBuilder est développé par **Kael** avec l’aide de deux assistants IA :
+
+- **Claude (Anthropic)** — utilisé surtout pour l’architecture TypeScript/React, les patterns de store, les tests, la revue de code et la qualité (Sonar/CI).
+- **ChatGPT Codex (OpenAI)** — utilisé surtout pour le scraping/import Moxfield, l’export de proxies (images + PDF), les migrations Prisma et l’outillage DevOps.
+
+Ces assistants travaillent **dans l’éditeur (Cursor)** : ils proposent du code, des migrations et des commandes, mais **tous les commits sont finalement poussés via la configuration Git et les credentials de Kael**. Aucune clé SSH ni secret n’est jamais stocké côté IA.
+
 ## License
 
 MIT
