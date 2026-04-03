@@ -342,6 +342,29 @@
 | CSS: backface-hidden, preserve-3d utilities                    | ✅ Complete |
 | Tests: 20 new DFC tests                                        | ✅ Complete |
 
+---
+
+## Phase 12: Import & Proxy Polish (2026-04-02 → 2026-04-03) ✅
+
+### Scryfall Import & Combos
+
+- [x] **Robust DFC/MDFC name resolution**: `name-index.ts` maps `A // B`, `A//B`, and front-face names to a single Scryfall card
+- [x] **Collection API front-face handling**: `scryfallCollectionLookupName()` always sends the front face for `POST /cards/collection`
+- [x] **Combo detection stability**: Commander Spellbook batching + Considering zone exclusion to avoid false positives
+
+### Proxy Export (Images + Text-only)
+
+- [x] **CORS-safe image proxy**: `/api/proxy-card-image?url=` loads Scryfall art server-side, exposes data URLs for the print popup
+- [x] **Progress + graceful failure**: proxy modal shows loaded/failed counts and falls back to text layout when images fail
+- [x] **Text-only mode**: Content toggle (Card art / Text only); text-only skips preload and enables Print / Save PDF immediately
+- [x] **Readable fallback layout**: larger fonts for name, type, and oracle text; P/T badge bottom-right using Scryfall power/toughness
+
+### Schema, API, and Quality
+
+- [x] **DeckCard.power / DeckCard.toughness** stored in Prisma + DB with idempotent migrations
+- [x] **Deck API pairingType** accepts `character_select` (TMNT Character Select partner mechanic)
+- [x] **SonarCloud cleanup**: open issues S7735, S6644, S6582 resolved (ProxyExportModal negated conditions + name-index defaults)
+
 ## Phase Completion Summary
 
 | Phase    | Name                                              | Status      |
