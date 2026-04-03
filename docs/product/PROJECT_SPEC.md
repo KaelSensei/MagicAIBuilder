@@ -23,22 +23,22 @@ A desktop-first Commander (EDH) deck builder with:
 
 ## Stack
 
-| Layer           | Technology                   | Version    |
-| --------------- | ---------------------------- | ---------- |
-| Framework       | Next.js (App Router)         | 15.x       |
-| Language        | TypeScript                   | 5.x strict |
-| Styling         | Tailwind CSS                 | 4.x        |
-| Components      | shadcn/ui (Radix primitives) | latest     |
-| Animations      | Framer Motion                | 11.x       |
-| State           | Zustand                      | 5.x        |
-| Data fetching   | TanStack Query               | 5.x        |
-| Drag & Drop     | dnd-kit                      | 6.x        |
-| Database        | PostgreSQL 16                | via Docker |
-| ORM             | Prisma                       | 6.x        |
-| Validation      | Zod                          | 3.x        |
-| Icons           | Lucide React                 | latest     |
-| Package manager | pnpm                         | 10.x       |
-| Testing         | Vitest 3 + Playwright        | —          |
+| Layer           | Technology                   | Version                   |
+| --------------- | ---------------------------- | ------------------------- |
+| Framework       | Next.js (App Router)         | 15.x                      |
+| Language        | TypeScript                   | 5.x strict                |
+| Styling         | Tailwind CSS                 | 4.x                       |
+| Components      | shadcn/ui (Radix primitives) | latest                    |
+| Animations      | Framer Motion                | 11.x                      |
+| State           | Zustand                      | 5.x                       |
+| Data fetching   | TanStack Query               | 5.x                       |
+| Drag & Drop     | dnd-kit                      | 6.x                       |
+| Database        | PostgreSQL 16                | via Docker                |
+| ORM             | Prisma                       | 6.x (7.x upgrade pending) |
+| Validation      | Zod                          | 3.x                       |
+| Icons           | Lucide React                 | latest                    |
+| Package manager | pnpm                         | 10.x                      |
+| Testing         | Vitest 3 + Playwright        | —                         |
 
 ---
 
@@ -168,76 +168,51 @@ Commander is a **singleton** format — max 1 copy per card — with the followi
 
 ## User Stories
 
-### P0 — Must Have (all complete)
+Track detailed user stories in `docs/product/US_DETAIL_EN.md`. Quick summary below:
 
-| #    | Story                                                                    | Status  |
-| ---- | ------------------------------------------------------------------------ | ------- |
-| US-1 | Search cards using Scryfall syntax (name, type, color, CMC, oracle text) | ✅ Done |
-| US-2 | Pick a commander — color identity locks from this choice                 | ✅ Done |
-| US-3 | Add cards to deck by clicking or dragging from search results            | ✅ Done |
-| US-4 | See live deck stats: card count, mana curve, color distribution, avg CMC | ✅ Done |
-| US-5 | See bracket score update live with per-dimension breakdown               | ✅ Done |
-| US-6 | Get warned about banned cards (red flag + explanation)                   | ✅ Done |
-| US-7 | Get warned about Game Changers with bracket-appropriate count            | ✅ Done |
-| US-8 | Get warned about color identity violations                               | ✅ Done |
+### Phase 9 — Core MVP (✅ all complete)
 
-### P1 — Should Have (all complete)
+| Story                     | Details                                                                                                                               | PR      | Status  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- |
+| **P0 — Core builder**     | Search, add cards, drag-drop, live stats, bracket scoring, banlist/GC warnings                                                        | Various | ✅ Done |
+| **P1 — Persistence & UX** | Deck import (plain text), export (MTGO/Arena), grid/list view, inline rename, card printing selector, companion support               | Various | ✅ Done |
+| **P2 — Features**         | Card hover preview, advanced filters, combo detection (Spellbook), AI suggestions, light/dark theme, deck snapshots, annotations/tags | Various | ✅ Done |
+| **US-01**                 | Game Changers / Banlist pagination (25/page, searchable, tabs)                                                                        | #192    | ✅ Done |
+| **US-02**                 | User accounts & deck sharing (public profiles, share URLs, private/public toggle)                                                     | #194    | ✅ Done |
+| **US-03**                 | Moxfield / Archidekt import from URL                                                                                                  | #195    | ✅ Done |
+| **US-04**                 | Onboarding tutorial for new users (wizard, tooltips, `onboardingDone` flag)                                                           | #197    | ✅ Done |
 
-| #     | Story                                                               | Status  |
-| ----- | ------------------------------------------------------------------- | ------- |
-| US-9  | Set a budget (per card) and get cards over budget flagged           | ✅ Done |
-| US-10 | Manually recategorize cards by dragging between category groups     | ✅ Done |
-| US-11 | Import a decklist from plain text (1 Card Name format)              | ✅ Done |
-| US-12 | Export deck to MTGO, Arena, and plain text formats                  | ✅ Done |
-| US-13 | Toggle between grid and list view for search results and deck cards | ✅ Done |
-| US-14 | Inline deck rename (click title → input → Enter/Escape)             | ✅ Done |
-| US-15 | Choose card printing/art before adding to deck                      | ✅ Done |
-| US-16 | Search by set code or color identity (dedicated tabs)               | ✅ Done |
-| US-17 | Companion card support (sideboard slot, outside the 99)             | ✅ Done |
+### Sprint 2 (✅ all complete)
 
-### P2 — Nice to Have (all complete)
+| Story    | Details                                                                                  | PR   | Status  |
+| -------- | ---------------------------------------------------------------------------------------- | ---- | ------- |
+| **US-A** | Bulk edit Sideboard & Maybeboard (multi-select, bulk move/delete, color validation)      | #199 | ✅ Done |
+| **US-B** | Hybrid mana cards support (correct color identity, symbol display, 0.5 pip distribution) | #200 | ✅ Done |
+| **US-C** | Enhanced AI deck builder (archetype detection, budget constraints, per-card reasoning)   | #201 | ✅ Done |
+| **US-D** | Proxy sheets PDF export (configurable layout, client-side generation, 63×88mm cards)     | #202 | ✅ Done |
 
-| #     | Story                                                       | Status               |
-| ----- | ----------------------------------------------------------- | -------------------- |
-| US-18 | Hover a card to see it full-size with oracle text and price | ✅ Done              |
-| US-19 | Filter by color/type/CMC/price via UI controls              | ✅ Done              |
-| US-20 | Persist multiple decks across sessions                      | ✅ Done (PostgreSQL) |
-| US-21 | Detect combos for current commander via Commander Spellbook | ✅ Done              |
-| US-22 | AI deck suggestions with reasoning (Claude / GPT fallback)  | ✅ Done              |
-| US-23 | Light/dark theme toggle with persistence                    | ✅ Done              |
+### Sprint 3 (✅ all complete)
 
-### P2 (continued) — Snapshots
+| Story    | Details                                                                                           | PR   | Status  |
+| -------- | ------------------------------------------------------------------------------------------------- | ---- | ------- |
+| **US-E** | Import from URL tournament (6 sources: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec) | #204 | ✅ Done |
+| **US-F** | Meta analysis — top cards & competitive decks for commander (EDHRec + tournament aggregation)     | #205 | ✅ Done |
 
-| #     | Story                                                             | Status  |
-| ----- | ----------------------------------------------------------------- | ------- |
-| US-24 | Save a named snapshot of the current deck (e.g. "v1 budget")      | ✅ Done |
-| US-25 | Browse version history of a deck with date, card count, commander | ✅ Done |
-| US-26 | Restore a deck to a previous snapshot (with confirmation)         | ✅ Done |
-| US-27 | Delete a snapshot                                                 | ✅ Done |
-| US-28 | Diff badge: `+N / -N cards` vs snapshot compared to current       | ✅ Done |
+### Sprint 4 (🔄 in progress)
 
-### P2+ — Deck Annotations (complete)
+| Story    | Details                                                                                               | PR  | Status         |
+| -------- | ----------------------------------------------------------------------------------------------------- | --- | -------------- |
+| **US-G** | Collection tracking + shopping list (owned/missing per card, CSV export, `/collection` page)          | —   | 🔄 In Progress |
+| **US-H** | Multiple format support (Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Brawl, Oathbreaker)      | —   | ⏳ Waiting     |
+| **US-I** | Community deck suggestions (upvote/comment, public `/commanders/[slug]/decks`, meta integration)      | —   | ⏳ Waiting     |
+| **US-J** | i18n multi-language (EN, FR, JA, DE, ES, PT, ZH-Hans, IT via `next-intl` + Scryfall `lang` parameter) | —   | ⏳ Waiting     |
 
-| #     | Story                                                                     | Status  |
-| ----- | ------------------------------------------------------------------------- | ------- |
-| US-24 | Add a text description to a deck (collapsible, markdown-friendly)         | ✅ Done |
-| US-25 | Annotate individual cards with private notes                              | ✅ Done |
-| US-26 | Tag decks with labels (casual, cEDH, WIP…) and filter by tag on home page | ✅ Done |
+### Sprint 5 (🔄 planned)
 
-### P3 — Future
-
-| #     | Story                                           | Status     |
-| ----- | ----------------------------------------------- | ---------- |
-| US-29 | Onboarding tutorial for new users               | 📋 Planned |
-| US-30 | Mobile-responsive layout                        | 📋 Planned |
-| US-31 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
-| US-32 | Moxfield / Archidekt import from URL            | 📋 Planned |
-| US-33 | User accounts and deck sharing                  | 📋 Planned |
-| US-27 | Onboarding tutorial for new users               | 📋 Planned |
-| US-28 | Mobile-responsive layout                        | 📋 Planned |
-| US-29 | Paginated Game Changers / banlist (> 175 cards) | 📋 Planned |
-| US-30 | Moxfield / Archidekt import from URL            | 📋 Planned |
-| US-31 | User accounts and deck sharing                  | 📋 Planned |
+| Story    | Details                                                                                             | PR  | Status         |
+| -------- | --------------------------------------------------------------------------------------------------- | --- | -------------- |
+| **US-K** | Enhanced Playtest Mode (hand management, London mulligan, turn phases, full-screen modal)           | —   | 🔄 In Progress |
+| **US-L** | Advanced Deck Analytics (synergy scoring, threat density, interaction ratio, format-specific stats) | —   | ⏳ Waiting     |
 
 ---
 

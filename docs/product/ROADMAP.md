@@ -33,8 +33,8 @@ Preferred technology choices for new infrastructure. Based on cost, DX, and reli
 
 ### Database
 
-- [ ] **Use Neon (PostgreSQL)** for managed database — serverless Postgres, generous free tier, branches for preview environments. Avoid Supabase (vendor lock-in, mixed reviews on scaling) and MongoDB (poor fit for relational deck/card data).
-- Current: Prisma + SQLite (dev) / PostgreSQL (prod). Neon is the recommended hosted Postgres provider.
+- [x] **Use Neon (PostgreSQL)** _(recommended)_ — serverless Postgres, generous free tier, branches for preview environments. Avoid Supabase (vendor lock-in) and MongoDB (poor fit for relational data).
+- **Current**: Prisma 6.x (7.x upgrade pending) + PostgreSQL (prod), SQLite (dev). Neon recommended for hosting.
 
 ### Authentication
 
@@ -71,13 +71,10 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 ### Level 1: Minimum viable (recommended now)
 
 - [x] **Sentry** (`@sentry/nextjs`) _(done — 2026-03-25)_: automatic error capture on frontend and backend; EU data center
-
-- [x] **Health check endpoint**: `GET /api/health` returns DB connectivity status (`200 ok` / `503 degraded`)
-- [ ] **UptimeRobot** (once deployed): go to uptimerobot.com, create a free account, add a new HTTP(s) monitor pointing to `https://<your-domain>/api/health`, set interval to 5 minutes, and add an alert contact (email or Discord webhook) — free plan includes 50 monitors
-
-- [ ] **Bundle analyzer** (`@next/bundle-analyzer`): visual map of JS bundle size per dependency; run once a month to catch bloat before it impacts load times
-
-- [ ] **Dependabot** (GitHub native, zero config): add `.github/dependabot.yml` to get automatic PRs when npm dependencies have security vulnerabilities; free, catches CVEs before they become problems — **recommended first for a solo project**
+- [x] **Health check endpoint** _(done)_: `GET /api/health` returns DB connectivity status (`200 ok` / `503 degraded`)
+- [ ] **UptimeRobot** (once deployed): monitor `https://<your-domain>/api/health` every 5 minutes with email/Discord alerts — free plan includes 50 monitors
+- [ ] **Bundle analyzer** (`@next/bundle-analyzer`): run monthly to catch JS bloat early
+- [ ] **Dependabot** (GitHub native): auto-PRs for CVEs in npm dependencies; **recommended first**
 
 ### Level 2: When you have real users
 
@@ -129,92 +126,82 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ## Card Type Support
 
-- [x] **MDFC (Modal Double-Faced Cards)**: full support for MDFCs (e.g. Shatterskull Smashing // Shatterskull, the Hammer Pass): display both faces, let the player choose which face to show in the deck list and grid, count CMC correctly (front face only), and flag them in mana curve/statistics as flexible land-or-spell cards
-
-- [x] **Double-faced cards (DFC): flip/transform**: cards with two faces where only one is playable at a given time (e.g. Delver of Secrets // Insectile Aberration, werewolves): show the front face by default, allow flipping the preview, and correctly handle image fetching for both faces via Scryfall (`card_faces`)
-
-- [x] **Hybrid cards** _(done — 2026-03-28, #200)_: cards with hybrid mana costs (e.g. {W/U}, {2/W}) where the caster can pay either color: correctly parse hybrid symbols in mana cost display, attribute both colors to the color identity, and account for hybrid pips in mana symbol proportion statistics (each hybrid pip counts as 0.5 toward each color, or as the chosen color)
+- [x] **MDFC (Modal Double-Faced Cards)** _(done)_: display both faces, player chooses which to show, correct CMC (front face), flexible land-or-spell flagging
+- [x] **Double-faced cards (DFC) / Flip / Transform** _(done)_: front face default, flip preview, correct image fetching via Scryfall `card_faces`
+- [x] **Hybrid cards** _(done — #200)_: correct color identity parsing, symbol display, 0.5 pip distribution per color
 
 ---
 
 ## Deck Editor
 
-- [x] **Deck Snapshots** _(done — 2026-03-26)_: save named versions of a deck with full card list; restore any snapshot transactionally; diff badge shows +/- cards vs. current deck
-
-- [x] **Maybeboard** _(done — 2026-03-26)_: track considered cards outside the 99; move cards between Maybeboard and Main; excluded from all stats and export totals
-
-- [x] **Deck annotations** _(done — 2026-03-26)_: deck description (collapsible textarea), card notes (inline popover, exported as comments), deck tags (pill UI, home-page filter bar)
-
-- [x] **Bulk edit on Sideboard & Maybeboard** _(done — 2026-03-28, #199)_: select multiple cards at once and move/remove them in bulk; checkbox multi-select with bulk move to Main / Maybeboard / Sideboard and bulk remove
+- [x] **Deck Snapshots** _(done)_: save/restore/diff versioned decks with card count tracking
+- [x] **Maybeboard & Sideboard** _(done)_: track cards outside the 99/100, excluded from stats
+- [x] **Deck annotations** _(done)_: description (markdown), card notes, tags with home-page filtering
+- [x] **Bulk edit** _(done — #199)_: multi-select with bulk move/delete and color identity validation
 
 ---
 
 ## Search & Filtering
 
-- [x] **Enhanced deck-building filters**: filter cards by subtype, keyword, power/toughness, price range, set legality, and interaction type while building; add saved filter presets _(done — color OR/AND/EXACT modes, colorless filter, lands toggle, CMC exact/min/max/range modes, price range, subtype, keyword, power/toughness, interaction archetypes, localStorage presets)_
-
-- [x] **Search By Type tab** _(done — 2026-03-26, #174)_: new "By Type" search mode in the builder with checkbox filters for Creature, Instant, Sorcery, Enchantment, Artifact, Planeswalker, Land, Battle, MDFC, and DFC (Transform); OR-joined Scryfall queries; optional name filter
+- [x] **Advanced filters** _(done)_: color (OR/AND/EXACT), colorless, lands, CMC (exact/min/max/range), price, subtype, keyword, P/T, interaction archetype, saved presets
+- [x] **Search By Type tab** _(done)_: Creature, Instant, Sorcery, Enchantment, Artifact, Planeswalker, Land, Battle, MDFC, DFC with OR-joined Scryfall queries
 
 ---
 
 ## AI
 
-- [x] **Enhance AI deck builder** _(done — 2026-03-28, #201)_: archetype templates (stax, combo, voltron, control, aggro, midrange), budget constraint parameter, per-card rationale explaining each suggestion
-
-- [ ] **Local AI model for deck building via MageZero**: use [MageZero](https://github.com/WillWroble/MageZero) — a reinforcement-learning engine that plays Magic — to generate training data (game states, card evaluations, winning lines) and fine-tune a local model (Ollama or equivalent) specialized in Commander deck building; the local model would power card suggestions, synergy detection, and archetype recommendations without relying on a cloud API
+- [x] **Enhanced AI deck builder** _(done — #201)_: 10 archetype templates (Stax, Combo, Voltron, Aristocrats, Tokens, Spellslinger, Reanimator, Ramp, Control, Goodstuff), budget constraints, per-card reasoning
+- [ ] **Local AI model via MageZero** _(experimental)_: fine-tune local model for deck building without cloud API dependency
 
 ---
 
 ## Export / Print / Proxy
 
-- [x] **Proxy sheet export — print-ready PDF** _(done — 2026-03-28, #202)_: configurable layout (3×3 A4/Letter, 2×2, 1×1), PDF via browser print API, image-only export with cropped card art
-- [ ] **Richer export format options**: EDHRec, Goldfish (import only), extended Archidekt import/export
+- [x] **Proxy sheet PDF export** _(done — #202)_: configurable layout (3×3 A4/Letter, 2×2), client-side generation, 63×88mm cards, optional basic lands/commander
+- [ ] **Text-only proxy sheets** _(in progress)_: plain-text card list with art-free format
+- [ ] **Richer export formats**: EDHRec, Goldfish (import only), extended Archidekt
 
 ---
 
 ## Statistics
 
-- [x] **Enhanced deck statistics** _(done — 2026-03-26)_:
-  - Cards playable on turn 1 (`turn1Playable` stat)
-  - Corrected CMC split: `avgCmcWithLands` and `avgCmcWithoutLands`
-  - Mana Alignment panel: per-colour symbol ratio vs. land production ratio with imbalance warnings
-  - `recommendedLandsByColor` per-colour land recommendations
-  - Hybrid pips counted as 0.5 toward each colour
+- [x] **Enhanced deck statistics** _(done)_: turn 1 playability, corrected CMC (with/without lands), mana alignment panel with warnings, per-color land recommendations, 0.5 pip hybrid distribution
 
 ---
 
 ## Playtesting
 
-- [x] **Hand draw & goldfishing** _(done — 2026-03-26)_: `usePlaytest` hook with Fisher-Yates shuffle, London mulligan, `drawCard`, `nextTurn`; `PlaytestModal` fullscreen with fan hand display, hover card preview, library pile counter
+- [x] **Hand draw & goldfishing** _(done)_: Fisher-Yates shuffle, London mulligan rules, fullscreen modal, fan hand display, library counter
+- 🔄 **Enhanced Playtest Mode** _(Sprint 5 planned)_: turn phases, step tracking, life total management
 
 ---
 
 ## Formats
 
-- [ ] **Support all MTG formats**: not only Commander/Multiplayer; add Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Brawl, Oathbreaker, etc. with correct deck size and banlist enforcement per format
-
-- [ ] **Per-format deck statistics**: bracket scoring is Commander-specific; provide relevant stats for each format (curve quality, threat density, interaction ratio, etc.)
+- [ ] **Multiple format support** _(Sprint 4 — US-H)_: Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Brawl, Oathbreaker with correct deck size and banlists per format
+- [ ] **Format-specific statistics**: bracket scoring is Commander-only; provide curve quality, threat density, interaction ratio for other formats
 
 ---
 
-## User Accounts
+## User Accounts & Auth
 
-- [ ] **User account system**: registration, login, profile management (CRUD), secure authentication (OAuth2 / JWT), deck ownership and private/public visibility, GDPR compliance
+- [x] **User account system** _(done)_: NextAuth.js v5 with Google OAuth + credentials, public profiles, deck ownership, private/public decks
+- [ ] **Evaluate Better-Auth**: simpler DX than Clerk; future replacement/complement consideration
 
 ---
 
 ## Community
 
-- [ ] **Deck suggestions from other players**: for a given commander, show community-submitted decks; filter by bracket, strategy, budget; upvote/comment system
+- [ ] **Community deck suggestions** _(Sprint 4 — US-I)_: public `/commanders/[slug]/decks`, upvote/downvote, comments, "Community Favorite" badge
+- [ ] **Integration in Meta panel**: show community decks alongside tournament decks
 
 ---
 
 ## UI / UX
 
-- [x] **Footer layout** _(done — 2026-03-26, #166)_: Shortcuts button aligned inline with copyright line in footer
-
-- [x] **Mobile-responsive layout** _(done — 2026-03-27, #189)_: header hamburger menu, builder tab navigation, collection grid
-- [ ] **Visual redesign**: modernize the interface; improve card hover interactions, drag-and-drop UX, and overall polish
+- [x] **Footer layout** _(done)_: Shortcuts button aligned inline with copyright
+- [x] **Mobile-responsive layout** _(done)_: hamburger menu, tab navigation, responsive grid
+- [ ] **Visual redesign**: modernize interface, improve card hover interactions, enhance drag-and-drop UX
 
 ---
 
@@ -224,30 +211,19 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ---
 
-## Tournament Decks Import
+## Tournament Decks & Meta Analysis
 
-Import competitive decklists directly from tournament databases to use as references, inspiration, or starting points for deck building.
+### URL Import Sources (✅ all complete)
 
-### Sources to support
+- [x] **MTGTop8**, **MTGDecks.net**, **Moxfield**, **Archidekt**, **TappedOut** _(done — #204)_
+- [x] **EDHRec** _(meta panel done — #205)_
+- [ ] **Goldfish** (`https://mtggoldfish.com`) — future import source
 
-- [x] **MTGTop8** (`https://www.mtgtop8.com`) _(done — 2026-03-28, #204)_
-- [x] **MTGDecks.net** (`https://mtgdecks.net`) _(done — 2026-03-28, #204)_
-- [x] **Moxfield** (`https://www.moxfield.com`) _(done — 2026-03-27, #198)_
-- [x] **EDHRec** (`https://edhrec.com`) _(meta panel done — 2026-03-28, #205)_
-- [x] **Archidekt** (`https://archidekt.com`) _(done — 2026-03-27, #198)_
-- [x] **TappedOut** (`https://tappedout.net`) _(done — 2026-03-28, #204)_
-- [ ] **Goldfish** (`https://mtggoldfish.com`) — import by URL (planned)
+### Implementation (✅ all complete)
 
-### Implementation approach
-
-- [x] "Import from URL" field in import dialog alongside plain text import
-- [x] Source detection from URL (regex match per domain) with appropriate parser/fetcher
-- [x] Rate-limited requests, respecting `robots.txt` and fair-use policies (#204)
-- [x] "Tournament Deck" badge displayed on imported decks (#204)
-- Optionally show win rate / event context if available from the source (future)
-
-### Tournament meta analysis
-
-- [x] Commander meta analysis panel — EDHRec + tournament aggregation _(done — 2026-03-28, #205)_
-- [x] Most popular cards across meta decks shown as complement to AI suggestions
-- [ ] Track meta shifts over time (card frequency in/out) — future
+- [x] "Import from URL" with auto-detection and parser per domain (#204)
+- [x] Rate-limited requests (10/min/IP), respects `robots.txt`
+- [x] "Tournament Deck" badge on imported decks
+- [x] Commander meta panel — top 20 EDHRec cards + 5 latest tournament decks _(#205)_
+- [ ] Show win rate / event context from tournament sources (future)
+- [ ] Track meta shifts over time (future)
