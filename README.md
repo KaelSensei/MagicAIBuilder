@@ -194,13 +194,13 @@ docs/
   INIT_PROMPT.md               # Seed prompt / bootstrap notes for agent-assisted work
 ```
 
-## Assistants IA 👾
+## AI Assistants 👾
 
-MagicAIBuilder est développé par **Kael** avec l’aide de deux assistants IA :
+MagicAIBuilder was conceived, designed, and developed by **Kael**, with three AI assistants playing different roles in the story:
 
-- **Claude (Anthropic – Sonnet 4.6 / Opus 4.6)** — initial project scaffold (Next.js/Prisma boilerplate), TypeScript/React architecture, first core features (deck creation/editing), store patterns, tests and code review, plus overall quality (Sonar/CI).
-- **OpenAI Codex / ChatGPT (GPT‑5.4 & GPT‑5.1 “auto”)** — _“bug‑fixer” assistant_: CI‑guided fixes and regression hunting, scraping/import from Moxfield and other sources, proxy export (images + PDF), Prisma migrations, DevOps work, and advanced features.
-  The **Cursor “automatic” model** (GPT‑5.1) is used as the default in‑editor helper for quick bug‑fixing passes and small refactors, then heavier models are pulled in only when needed.
+- **Claude (Anthropic – Sonnet 4.6 / Opus 4.6)** — helped bootstrap the project (Next.js + Prisma boilerplate), define the TypeScript/React architecture, and ship the very first features like deck creation and editing.
+- **OpenAI Codex / ChatGPT (GPT‑5.4)** — brought in later for heavier work: complex features, deep refactors, proxy/export flows, database migrations, and DevOps plumbing.
+- **Cursor “automatic” model (GPT‑5.1)** — the everyday in‑editor helper, used for fast bug‑fix passes, small refactors, and making the codebase feel “alive” while Kael iterates.
 
 ## License
 
