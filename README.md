@@ -202,6 +202,16 @@ MagicAIBuilder was conceived, designed, and developed by **Kael**, with three AI
 - **OpenAI Codex / ChatGPT (GPT‑5.4)** — brought in later for heavier work: complex features, deep refactors, proxy/export flows, database migrations, and DevOps plumbing.
 - **Cursor “automatic” model (GPT‑5.1)** — the everyday in‑editor helper, used for fast bug‑fix passes, small refactors, and making the codebase feel “alive” while Kael iterates.
 
+### Git commit attribution (optional)
+
+To show [multiple authors on a commit](https://docs.github.com/en/pull-requests/committing-to-your-project-with-git-and-github/creating-a-commit-with-multiple-authors), add a blank line at the end of the message body, then one or more `Co-authored-by:` trailers (GitHub links avatars only when the email matches an account):
+
+| Assistant                  | Example trailer                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Claude (Anthropic)**     | `Co-authored-by: Claude <noreply@anthropic.com>`                                                                    |
+| **OpenAI Codex / ChatGPT** | `Co-authored-by: OpenAI Codex <email@example.com>` — use an address tied to your GitHub user if you want it linked. |
+| **Cursor (Auto / Agent)**  | `Co-authored-by: Cursor Agent <noreply@cursor.com>`                                                                 |
+
 ## License
 
 MIT
