@@ -90,6 +90,72 @@ function countTwoCardInfiniteCombos(combos: SpellbookVariant[]): number {
   return combos.filter((c) => c.isInfinite && c.cards.length === 2).length;
 }
 
+/** Helper: generate ban/legality warnings */
+function getBanWarnings(stats: DeckStats): string[] {
+  const warnings: string[] = [];
+  if (stats.bannedCards.length > 0) {
+    warnings.push(`Banned cards in deck: ${stats.bannedCards.join(", ")}`);
+  }
+  if (stats.colorIdentityViolations.length > 0) {
+    warnings.push(`Color identity violations: ${stats.colorIdentityViolations.join(", ")}`);
+  }
+  return warnings;
+}
+
+/** Helper: generate combo-related warnings */
+function getComboWarnings(twoCardInfiniteCombos: number): string[] {
+  const warnings: string[] = [];
+  if (twoCardInfiniteCombos > 0) {
+    const plural = twoCardInfiniteCombos > 1 ? "s" : "";
+    warnings.push(
+      `${twoCardInfiniteCombos} infinite 2-card combo${plural} detected — deck is Bracket 4 (RC rule)`
+    );
+  }
+  return warnings;
+}
+
+/** Helper: generate Game Changers warnings */
+function getGameChangersWarnings(gameChangersCount: number, gameChangersList: readonly string[]): string[] {
+  const warnings: string[] = [];
+  if (gameChangersCount > 3) {
+    warnings.push(`${gameChangersCount} Game Changers detected — deck is Bracket 4 minimum`);
+  } else if (gameChangersCount > 0) {
+    warnings.push(`${gameChangersCount} Game Changer(s): ${gameChangersList.join(", ")}`);
+  }
+  return warnings;
+}
+
+/** Helper: generate deck composition warnings */
+function getCompositionWarnings(stats: DeckStats): string[] {
+  const warnings: string[] = [];
+  if (stats.ramp < 6) {
+    warnings.push(`Low ramp count (${stats.ramp}) — recommend 8–12`);
+  }
+  if (stats.draw < 5) {
+    warnings.push(`Low card draw (${stats.draw}) — recommend 8–12`);
+  }
+  if (stats.lands < 33) {
+    warnings.push(`Low land count (${stats.lands}) — recommend 33–38`);
+  }
+  if (stats.totalCards < 100) {
+    warnings.push(`Deck has only ${stats.totalCards}/100 cards`);
+  }
+  return warnings;
+}
+
+/** Helper: generate bracket mismatch warning */
+function getBracketMismatchWarning(
+  deck: Deck,
+  dimensions: BracketScore["dimensions"]
+): string | null {
+  if (!deck.targetBracket || !dimensions) return null;
+  const overall = Math.round(average(Object.values(dimensions)));
+  if (overall > deck.targetBracket) {
+    return `Deck scores Bracket ${overall} but target is Bracket ${deck.targetBracket}`;
+  }
+  return null;
+}
+
 function generateWarnings(
   deck: Deck,
   stats: DeckStats,
@@ -98,64 +164,17 @@ function generateWarnings(
 ): string[] {
   const warnings: string[] = [];
 
-  if (stats.bannedCards.length > 0) {
-    warnings.push(
-      `Banned cards in deck: ${stats.bannedCards.join(", ")}`
-    );
+  warnings.push(...getBanWarnings(stats));
+  warnings.push(...getComboWarnings(twoCardInfiniteCombos));
+  warnings.push(...getGameChangersWarnings(stats.gameChangersCount, stats.gameChangersList));
+  warnings.push(...getCompositionWarnings(stats));
+
+  const bracketWarning = getBracketMismatchWarning(deck, dimensions);
+  if (bracketWarning) {
+    warnings.push(bracketWarning);
   }
 
-  if (stats.colorIdentityViolations.length > 0) {
-    warnings.push(
-      `Color identity violations: ${stats.colorIdentityViolations.join(", ")}`
-    );
-  }
-
-  if (twoCardInfiniteCombos > 0) {
-    warnings.push(
-      `${twoCardInfiniteCombos} infinite 2-card combo${twoCardInfiniteCombos > 1 ? "s" : ""} detected — deck is Bracket 4 (RC rule)`
-    );
-  }
-
-  if (stats.gameChangersCount > 3) {
-    warnings.push(
-      `${stats.gameChangersCount} Game Changers detected — deck is Bracket 4 minimum`
-    );
-  } else if (stats.gameChangersCount > 0) {
-    warnings.push(
-      `${stats.gameChangersCount} Game Changer(s): ${stats.gameChangersList.join(", ")}`
-    );
-  }
-
-  if (stats.ramp < 6) {
-    warnings.push(`Low ramp count (${stats.ramp}) — recommend 8–12`);
-  }
-
-  if (stats.draw < 5) {
-    warnings.push(`Low card draw (${stats.draw}) — recommend 8–12`);
-  }
-
-  if (stats.lands < 33) {
-    warnings.push(`Low land count (${stats.lands}) — recommend 33–38`);
-  }
-
-  if (stats.totalCards < 100) {
-    warnings.push(
-      `Deck has only ${stats.totalCards}/100 cards`
-    );
-  }
-
-  if (deck.targetBracket && dimensions) {
-    const overall = Math.round(average(Object.values(dimensions)));
-    if (overall > deck.targetBracket) {
-      warnings.push(
-        `Deck scores Bracket ${overall} but target is Bracket ${deck.targetBracket}`
-      );
-    }
-  }
-
-  for (const line of getCompanionDeckWarnings(deck)) {
-    warnings.push(line);
-  }
+  warnings.push(...getCompanionDeckWarnings(deck));
 
   return warnings;
 }
