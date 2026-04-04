@@ -55,10 +55,98 @@ import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 
 type SearchMode = "name" | "set" | "color";
+
 function getSearchModeLabel(mode: SearchMode): string {
   if (mode === "name") return "Name";
   if (mode === "set") return "By Set";
   return "By Color";
+}
+
+/** Build Scryfall search query based on current mode and filters */
+function buildSearchQueryFromMode(
+  mode: SearchMode,
+  searchText: string,
+  filters: Filters,
+  selectedSet: string,
+  colorFilter: string[],
+  commanderMode: boolean,
+  partnerMode: boolean,
+  companionMode: boolean,
+  deckPairingType?: string
+): string {
+  if (commanderMode) {
+    return buildCommanderSearchQuery(searchText, filters);
+  }
+  if (partnerMode) {
+    return buildPartnerSearchQuery(deckPairingType ?? "none", searchText, filters);
+  }
+  if (companionMode) {
+    return buildCompanionSearchQuery(searchText, filters);
+  }
+  switch (mode) {
+    case "set":
+      return selectedSet ? buildSetSearchQuery(selectedSet, colorFilter) : "";
+    case "color":
+      return colorFilter.length > 0 || searchText
+        ? buildColorSearchQuery(colorFilter, searchText)
+        : "";
+    default:
+      return buildSearchQuery(searchText, filters);
+  }
+}
+
+type CardClickHandlers = {
+  setCommander: (card: ScryfallCard) => void;
+  setPartner: (card: ScryfallCard) => void;
+  setCompanion: (card: ScryfallCard) => Promise<void>;
+  setPrintingCard: (card: ScryfallCard | null) => void;
+};
+
+/** Handle search result card click based on current mode */
+function handleSearchResultCardClick(
+  card: ScryfallCard,
+  handlers: CardClickHandlers,
+  commanderMode: boolean,
+  partnerMode: boolean,
+  companionMode: boolean,
+  deckPairingType?: string
+): void {
+  if (commanderMode) {
+    const isBackgroundCard = (card.type_line ?? "").toLowerCase().includes("background");
+    if (deckPairingType === "background" && isBackgroundCard) {
+      handlers.setPartner(card);
+      return;
+    }
+    handlers.setCommander(card);
+    return;
+  }
+  if (partnerMode) {
+    handlers.setPartner(card);
+    return;
+  }
+  if (companionMode) {
+    void handlers.setCompanion(card);
+    return;
+  }
+  handlers.setPrintingCard(card);
+}
+
+/** Determine drop zone from drop target ID */
+function getDropZoneFromId(overId: string, defaultZone: "main" | "sideboard" | "maybeboard"): "main" | "sideboard" | "maybeboard" {
+  if (overId === "deck-zone-sideboard") return "sideboard";
+  if (overId === "deck-zone-maybeboard") return "maybeboard";
+  if (overId.startsWith("deck-panel-")) {
+    return overId.replace("deck-panel-", "") as "main" | "sideboard" | "maybeboard";
+  }
+  return defaultZone;
+}
+
+/** Get category name from drop target ID if it's a category drop */
+function getCategoryFromDropId(overId: string): string | null {
+  if (overId.startsWith("deck-category-")) {
+    return overId.replace("deck-category-", "");
+  }
+  return null;
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -185,21 +273,17 @@ export default function BuilderPage() {
     setIsBanlistAlertDismissed(false);
   }, [banlistAlertKey]);
 
-  const query = (() => {
-    if (commanderMode) return buildCommanderSearchQuery(searchText, filters);
-    if (partnerMode && deck) return buildPartnerSearchQuery(deck.pairingType, searchText, filters);
-    if (companionMode) return buildCompanionSearchQuery(searchText, filters);
-    switch (searchMode) {
-      case "set":
-        return selectedSet ? buildSetSearchQuery(selectedSet, colorFilter) : "";
-      case "color":
-        return colorFilter.length > 0 || searchText
-          ? buildColorSearchQuery(colorFilter, searchText)
-          : "";
-      default:
-        return buildSearchQuery(searchText, filters);
-    }
-  })();
+  const query = buildSearchQueryFromMode(
+    searchMode,
+    searchText,
+    filters,
+    selectedSet,
+    colorFilter,
+    commanderMode,
+    partnerMode,
+    companionMode,
+    deck?.pairingType
+  );
 
   const {
     data: searchData,
@@ -213,23 +297,14 @@ export default function BuilderPage() {
 
   const handleCardClick = useCallback(
     (card: ScryfallCard) => {
-      if (commanderMode) {
-        const isBackgroundCard = (card.type_line ?? "").toLowerCase().includes("background");
-        if (deck?.pairingType === "background" && isBackgroundCard) {
-          setPartner(card);
-          return;
-        }
-        setCommander(card);
-        // Stay in commander mode — user may want to change commander again
-      } else if (partnerMode) {
-        setPartner(card);
-        // Stay in partner mode — user may want to change partner again
-      } else if (companionMode) {
-        void setCompanion(card);
-      } else {
-        // Open printing selector so user can pick their preferred art
-        setPrintingCard(card);
-      }
+      handleSearchResultCardClick(
+        card,
+        { setCommander, setPartner, setCompanion, setPrintingCard },
+        commanderMode,
+        partnerMode,
+        companionMode,
+        deck?.pairingType
+      );
     },
     [setCommander, setPartner, setCompanion, commanderMode, partnerMode, companionMode, deck?.pairingType]
   );
@@ -319,30 +394,21 @@ export default function BuilderPage() {
 
   const dropSearchCard = useCallback(
     (searchCard: ScryfallCard, overId: string) => {
-      if (overId.startsWith("deck-category-")) {
-        addCard(searchCard, undefined, "main");
-      } else if (overId === "deck-zone-sideboard") {
-        addCard(searchCard, undefined, "sideboard");
-      } else if (overId === "deck-zone-maybeboard") {
-        addCard(searchCard, undefined, "maybeboard");
-      } else if (overId.startsWith("deck-panel-")) {
-        const zone = overId.replace("deck-panel-", "") as "main" | "sideboard" | "maybeboard";
-        addCard(searchCard, undefined, zone);
-      } else if (overId.startsWith("deck-")) {
-        addCard(searchCard, undefined, activeZone);
-      }
+      const zone = getDropZoneFromId(overId, activeZone);
+      addCard(searchCard, undefined, zone);
     },
     [addCard, activeZone]
   );
 
   const moveIntraDeck = useCallback(
     (cardId: string, overId: string, sourceCategory: string | undefined, deckCards: readonly DeckCard[]) => {
-      if (overId.startsWith("deck-category-")) {
-        const newCategory = overId.replace("deck-category-", "");
-        if (newCategory !== sourceCategory) {
-          updateCardCategory(cardId, newCategory as CardCategory);
-        }
-      } else if (overId.startsWith("deck-card-")) {
+      const categoryFromDrop = getCategoryFromDropId(overId);
+      if (categoryFromDrop && categoryFromDrop !== sourceCategory) {
+        updateCardCategory(cardId, categoryFromDrop as CardCategory);
+        return;
+      }
+
+      if (overId.startsWith("deck-card-")) {
         const targetCardId = overId.replace("deck-card-", "");
         const targetCard = deckCards.find((c) => c.id === targetCardId);
         if (targetCard && targetCard.category !== sourceCategory) {
