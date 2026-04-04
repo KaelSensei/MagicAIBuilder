@@ -33,31 +33,30 @@ You ALWAYS:
 Provide the following structured data to the LLM. Fields marked `(optional)` can be omitted but improve analysis quality.
 
 ```yaml
-Commander: {commander_name}
+Commander: { commander_name }
 
 Deck Stats:
-  Lands: {lands_count}
-  Ramp: {ramp_count}
-  Draw: {draw_count}
-  Removal: {removal_count}
-  Board Wipes: {wipes_count}
-  Avg CMC: {average_cmc}
-  Win Conditions: {brief_description}
+  Lands: { lands_count }
+  Ramp: { ramp_count }
+  Draw: { draw_count }
+  Removal: { removal_count }
+  Board Wipes: { wipes_count }
+  Avg CMC: { average_cmc }
+  Win Conditions: { brief_description }
 
 Bracket:
-  Current: {current_bracket}    # 1-4 or "unknown"
-  Target: {target_bracket}      # 1-4
+  Current: { current_bracket } # 1-4 or "unknown"
+  Target: { target_bracket } # 1-4
 
 Constraints:
-  Budget: {budget_per_card}     # e.g., "$5 per card" or "$50 total upgrades"
-  Theme: {theme}                # e.g., "Aristocrats", "Voltron", "Tribal Elves"
-  Must Keep: {pet_cards}        # (optional) cards the user refuses to cut
-  Must Avoid: {restrictions}    # (optional) e.g., "no infinite combos", "no stax"
+  Budget: { budget_per_card } # e.g., "$5 per card" or "$50 total upgrades"
+  Theme: { theme } # e.g., "Aristocrats", "Voltron", "Tribal Elves"
+  Must Keep: { pet_cards } # (optional) cards the user refuses to cut
+  Must Avoid: { restrictions } # (optional) e.g., "no infinite combos", "no stax"
 
-Meta Context: {meta_description}  # (optional) e.g., "casual pod, one guy plays Korvold"
+Meta Context: { meta_description } # (optional) e.g., "casual pod, one guy plays Korvold"
 
-Decklist:
-  {full_decklist_or_link}
+Decklist: { full_decklist_or_link }
 ```
 
 ### Detected Issues (Engine Output)
@@ -66,9 +65,9 @@ If you have an analysis engine (heuristics, scripts) running before the LLM call
 
 ```yaml
 Detected Issues:
-  - {issue_1}   # e.g., "Only 5 ramp pieces (baseline: 8-10)"
-  - {issue_2}   # e.g., "3 Game Changers detected, exceeds Bracket 2 limit of 0"
-  - {issue_3}   # e.g., "Avg CMC 3.8 is high for target Bracket 3 (target: 2.5-3.0)"
+  - { issue_1 } # e.g., "Only 5 ramp pieces (baseline: 8-10)"
+  - { issue_2 } # e.g., "3 Game Changers detected, exceeds Bracket 2 limit of 0"
+  - { issue_3 } # e.g., "Avg CMC 3.8 is high for target Bracket 3 (target: 2.5-3.0)"
 ```
 
 ---
@@ -78,11 +77,13 @@ Detected Issues:
 ### 1. Diagnostic Summary
 
 5 lines maximum. Hits the three key points:
+
 - What's working
 - What's broken
 - Direction for improvement
 
 **Example:**
+
 > Your Meren aristocrats shell is solid: sac outlets and recursion targets are well-chosen. However, the deck is starved for card draw (4 sources vs. 8-10 baseline), your ramp is too slow (average ramp CMC is 3.2), and you're running 2 Game Changers (Demonic Tutor, Vampiric Tutor) that push you above your target Bracket 2. Fixing the draw engine and downgrading the tutors will bring this in line.
 
 ---
@@ -90,14 +91,17 @@ Detected Issues:
 ### 2. Key Problems (3-5)
 
 Each problem must be:
+
 - **Measurable** (cite a number vs. a baseline)
 - **Consequential** (explain the gameplay impact)
 - **Specific** to this deck (not generic EDH advice)
 
 **Bad example:**
+
 > "You need more card draw"
 
 **Good example:**
+
 > "You're running 4 card draw sources. The EDH baseline for Bracket 2 is 8-10. In a 4-player game, you'll run out of gas by turn 6-7 while opponents with Phyrexian Arena or Sylvan Library keep pulling ahead. Your commander (Meren) needs a full graveyard to function, but without draw you're not filling it fast enough."
 
 ---
@@ -112,6 +116,7 @@ ADD: [Card Name] ($X.XX) -- [Why it solves the identified problem]
 ```
 
 **Rules:**
+
 - Every cut is tied to a problem from Section 2
 - Every addition directly addresses a problem from Section 2
 - Respect budget (never suggest a $20 card for a $5/card budget)
@@ -120,6 +125,7 @@ ADD: [Card Name] ($X.XX) -- [Why it solves the identified problem]
 - Suggest 8-12 swaps total
 
 **Example:**
+
 ```
 CUT: Burnished Hart ($0.25) -- At 6 total mana for 2 basics, this is far too slow for your curve
 ADD: Sakura-Tribe Elder ($0.50) -- 2 mana, instant-speed sac, fills your graveyard for Meren
@@ -148,6 +154,7 @@ Cards that play well with the commander/theme but aren't urgent. "Nice to have" 
 ### 5. Bracket Assessment
 
 Answer three questions:
+
 1. **Where is the deck now?** (cite specific reasons: Game Changers count, win speed, interaction density, avg CMC)
 2. **Where does the user want it?** (restate their target)
 3. **What needs to change?** (specific actions to reach the target bracket, or confirmation that they're on track)
@@ -175,6 +182,7 @@ Status:            ON TRACK (remove tutors to solidify)
 The LLM is the reasoning layer, not the source of truth. All card data must be validated.
 
 ### Pre-LLM (before sending the prompt)
+
 1. Parse the decklist into individual card names
 2. Batch-validate via Scryfall `POST /cards/collection` (up to 75 cards per request — a 100-card Commander deck = 2 calls instead of 100)
    - Cards in `not_found[]` = don't exist (likely hallucinated or misspelled)
@@ -185,6 +193,7 @@ The LLM is the reasoning layer, not the source of truth. All card data must be v
 6. Feed detected issues into the prompt
 
 ### Post-LLM (after receiving the response)
+
 1. Extract every card name mentioned in CUT/ADD/Maybeboard sections
 2. Batch-validate against Scryfall (`POST /cards/collection`):
    - Does the card exist? (not in `not_found[]`)
@@ -214,46 +223,47 @@ Use these as baselines for issue detection. Adjust based on commander and strate
 
 ### Core Category Targets
 
-| Category | Bracket 1-2 | Bracket 3 | Bracket 4 |
-|----------|-------------|-----------|-----------|
-| Lands | 37-40 | 35-37 | 33-36 |
-| Ramp | 8-10 | 10-12 | 12+ |
-| Card Draw | 6-8 | 8-10 | 10+ |
-| Targeted Removal | 5-7 | 7-9 | 8-12 |
-| Board Wipes | 2-3 | 2-4 | 2-3 |
-| Win Conditions | 2-3 | 3-5 | 3-5 (compact) |
-| Avg CMC | 3.0-3.5 | 2.5-3.0 | 2.0-2.5 |
-| Game Changers | 0 | 0-3 | Unlimited |
+| Category         | Bracket 1-2 | Bracket 3 | Bracket 4     |
+| ---------------- | ----------- | --------- | ------------- |
+| Lands            | 37-40       | 35-37     | 33-36         |
+| Ramp             | 8-10        | 10-12     | 12+           |
+| Card Draw        | 6-8         | 8-10      | 10+           |
+| Targeted Removal | 5-7         | 7-9       | 8-12          |
+| Board Wipes      | 2-3         | 2-4       | 2-3           |
+| Win Conditions   | 2-3         | 3-5       | 3-5 (compact) |
+| Avg CMC          | 3.0-3.5     | 2.5-3.0   | 2.0-2.5       |
+| Game Changers    | 0           | 0-3       | Unlimited     |
 
 ### Mana Curve Distribution (Bracket 2-3)
 
 | CMC | Target % |
-|-----|----------|
-| 0-1 | 5-10% |
-| 2 | 20-25% |
-| 3 | 20-25% |
-| 4 | 15-20% |
-| 5 | 10-15% |
-| 6+ | 5-10% |
+| --- | -------- |
+| 0-1 | 5-10%    |
+| 2   | 20-25%   |
+| 3   | 20-25%   |
+| 4   | 15-20%   |
+| 5   | 10-15%   |
+| 6+  | 5-10%    |
 
 ---
 
 ## Reliable Data Sources
 
-| Source | Role | URL |
-|--------|------|-----|
-| **Scryfall** | Card data, oracle text, legality, prices | api.scryfall.com |
-| **EDHREC** | Commander metagame stats, synergy scores, staples | edhrec.com |
-| **Moxfield** | Community decklists, deck sharing | moxfield.com |
-| **Archidekt** | Deck builder with analytics, bracket estimation | archidekt.com |
-| **MTGGoldfish** | Price trends, budget decks, meta analysis | mtggoldfish.com |
-| **WotC Official** | Rules, banned list, bracket updates | magic.wizards.com/en/rules |
+| Source            | Role                                              | URL                        |
+| ----------------- | ------------------------------------------------- | -------------------------- |
+| **Scryfall**      | Card data, oracle text, legality, prices          | api.scryfall.com           |
+| **EDHREC**        | Commander metagame stats, synergy scores, staples | edhrec.com                 |
+| **Moxfield**      | Community decklists, deck sharing                 | moxfield.com               |
+| **Archidekt**     | Deck builder with analytics, bracket estimation   | archidekt.com              |
+| **MTGGoldfish**   | Price trends, budget decks, meta analysis         | mtggoldfish.com            |
+| **WotC Official** | Rules, banned list, bracket updates               | magic.wizards.com/en/rules |
 
 ---
 
 ## Anti-Hallucination Rules
 
 The model MUST NOT:
+
 - Invent cards that don't exist
 - Give vague advice ("add more synergy", "consider better cards")
 - Suggest cards that are banned or illegal in Commander
@@ -264,6 +274,7 @@ The model MUST NOT:
 - Suggest cards outside the commander's color identity
 
 When uncertain about a card:
+
 > "I believe [Card Name] does X, but verify its current oracle text on Scryfall before purchasing."
 
 ---

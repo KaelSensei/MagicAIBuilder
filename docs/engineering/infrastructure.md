@@ -245,7 +245,7 @@ You should see `All migrations have been successfully applied.`
 
 ### 5. Monitor uptime (once deployed)
 
-See the UptimeRobot instructions in [ROADMAP.md](./ROADMAP.md) under **Observability → Level 1**.
+See the UptimeRobot instructions in [roadmap.md](./roadmap.md) under **Observability → Level 1**.
 
 ---
 

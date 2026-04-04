@@ -138,7 +138,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 - [x] **Maybeboard & Sideboard** _(done)_: track cards outside the 99/100, excluded from stats
 - [x] **Deck annotations** _(done)_: description (markdown), card notes, tags with home-page filtering
 - [x] **Bulk edit** _(done — #199)_: multi-select with bulk move/delete and color identity validation
-- [x] **Ikoria Companion (sideboard slot)** _(done — #283)_: dedicated companion zone (not the same as Sideboard pile), **Companion** search mode (`keyword:companion`), rule summaries + warnings (Lurrus / Gyruda / color / Lutri), bracket + `validateDeck` integration — full design & rules notes in [`docs/product/COMPANION_IMPLEMENTATION.md`](./COMPANION_IMPLEMENTATION.md)
+- [x] **Ikoria Companion (sideboard slot)** _(done — #283)_: dedicated companion zone (not the same as Sideboard pile), **Companion** search mode (`keyword:companion`), rule summaries + warnings (Lurrus / Gyruda / color / Lutri), bracket + `validateDeck` integration — full design & rules notes in [`docs/product/companion-implementation.md`](./companion-implementation.md)
 
 ---
 

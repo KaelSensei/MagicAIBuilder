@@ -164,4 +164,4 @@ or `503` if the database is unreachable.
 - [ ] Missing tests: `forceSave`, `promoteToCommander`, `swapCardPrinting`
 - [ ] Lighthouse CI in `ci.yml` (perf/accessibility score on every PR)
 - [ ] Posthog or Plausible for user analytics
-- [ ] Document UptimeRobot setup in TECHNICAL.md
+- [ ] Document UptimeRobot setup in technical.md
