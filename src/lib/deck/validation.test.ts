@@ -208,6 +208,36 @@ describe("validateDeck", () => {
     const result = validateDeck(deck);
     expect(result.companionWarnings).toEqual([]);
   });
+
+  it("merges companion rule failures into warnings and companionWarnings", () => {
+    const deck = makeDeck({
+      commander: makeCommander(["W", "U", "B", "R", "G"]),
+      companion: makeCard({
+        id: "comp",
+        name: "Lurrus of the Dream-Den",
+        category: "companion",
+        colorIdentity: ["W", "B"],
+        cmc: 3,
+        typeLine: "Legendary Creature — Cat Nightmare",
+        oracleText: "",
+        zone: "main",
+      }),
+      cards: [
+        makeCard({
+          id: "big",
+          name: "Sandworm Oracle",
+          cmc: 7,
+          typeLine: "Creature",
+          zone: "main",
+        }),
+      ],
+    });
+    const result = validateDeck(deck);
+    expect(result.companionWarnings.length).toBeGreaterThan(0);
+    expect(result.warnings.length).toBeGreaterThanOrEqual(result.companionWarnings.length);
+    const joined = result.warnings.join("\n");
+    expect(joined.includes("Sandworm") || joined.includes("≤ 2")).toBe(true);
+  });
 });
 
 describe("checkColorIdentity", () => {
