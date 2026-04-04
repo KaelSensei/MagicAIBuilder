@@ -379,10 +379,24 @@ interface MainZoneContentProps {
   readonly onCardClick?: (card: DeckCard) => void;
   readonly clearCommander: () => void;
   readonly setPartner: (p: null) => void;
+  readonly clearCompanion: () => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
 }
 
-function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardGroups, violationCardIds, onRemoveCard, onCardClick, clearCommander, setPartner, onMoveToMaybeboard }: MainZoneContentProps) {
+function MainZoneContent({
+  deck,
+  mainCards,
+  viewMode,
+  gridCols,
+  cardGroups,
+  violationCardIds,
+  onRemoveCard,
+  onCardClick,
+  clearCommander,
+  setPartner,
+  clearCompanion,
+  onMoveToMaybeboard,
+}: MainZoneContentProps) {
   if (viewMode === "grid") {
     return (
       <div className={gridColsClass(gridCols)}>
@@ -398,6 +412,36 @@ function MainZoneContent({ deck, mainCards, viewMode, gridCols, cardGroups, viol
             <CardImage imageUri={deck.partner.imageUri} largeUri={deck.partner.imageUri} name={deck.partner.name} manaCost={deck.partner.manaCost} cmc={deck.partner.cmc} showOverlay={!deck.partner.cardFaces} zoomOnHover={false} className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer" onClick={() => onCardClick?.(deck.partner!)} cardFaces={deck.partner.cardFaces} isFlexibleLand={deck.partner.isFlexibleLand} />
             <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">CMD</div>
             <button onClick={(e) => { e.stopPropagation(); setPartner(null); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title="Remove partner">×</button>
+          </div>
+        )}
+        {deck.companion && (
+          <div className="relative group/card">
+            <CardImage
+              imageUri={deck.companion.imageUri}
+              largeUri={deck.companion.imageUri}
+              name={deck.companion.name}
+              manaCost={deck.companion.manaCost}
+              cmc={deck.companion.cmc}
+              showOverlay={!deck.companion.cardFaces}
+              zoomOnHover={false}
+              className="w-full ring-2 ring-teal-400/75 rounded-[4%] cursor-pointer"
+              onClick={() => onCardClick?.(deck.companion!)}
+              cardFaces={deck.companion.cardFaces}
+              isFlexibleLand={deck.companion.isFlexibleLand}
+            />
+            <div className="absolute bottom-1 left-1 bg-teal-500/90 text-black text-[8px] font-bold px-1 rounded leading-tight">
+              COMP
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                clearCompanion();
+              }}
+              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+              title="Remove companion"
+            >
+              ×
+            </button>
           </div>
         )}
         {mainCards.map((card) => (
@@ -657,6 +701,10 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
   const setGridCols = useDeckStore((s) => s.setDeckGridCols);
   const clearCommander = useDeckStore((s) => s.clearCommander);
   const setPartner = useDeckStore((s) => s.setPartner);
+  const setCompanion = useDeckStore((s) => s.setCompanion);
+  const clearCompanion = useCallback(() => {
+    void setCompanion(null);
+  }, [setCompanion]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const moveToMaybeboard = useDeckStore((s) => s.moveToMaybeboard);
@@ -746,7 +794,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
         )}
       </div>
 
-      <CompanionZone deck={deck} />
+      <CompanionZone deck={deck} deckViewMode={viewMode} />
 
       {/* Zone tabs: Main / Sideboard / Considering */}
       <div className="px-3 py-1.5 border-b border-[var(--border)] flex items-center justify-between gap-1">
@@ -858,6 +906,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
             onCardClick={onCardClick}
             clearCommander={clearCommander}
             setPartner={setPartner}
+            clearCompanion={clearCompanion}
             onMoveToMaybeboard={moveToMaybeboard}
           />
         )}

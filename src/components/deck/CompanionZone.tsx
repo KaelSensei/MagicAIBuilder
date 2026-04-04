@@ -12,12 +12,14 @@ import { useDeckStore } from "@/lib/deck/store";
 
 interface CompanionZoneProps {
   readonly deck: Deck;
+  /** When grid view, companion art is shown in the main deck tile row; hide duplicate name here. */
+  readonly deckViewMode?: "grid" | "list";
 }
 
 /**
  * Shows the deck's Companion (outside the 99), its rule summary, validation hints, and clear.
  */
-export function CompanionZone({ deck }: CompanionZoneProps) {
+export function CompanionZone({ deck, deckViewMode }: CompanionZoneProps) {
   const setCompanion = useDeckStore((s) => s.setCompanion);
   const companion = deck.companion;
   const commander = deck.commander;
@@ -68,11 +70,13 @@ export function CompanionZone({ deck }: CompanionZoneProps) {
           Clear
         </button>
       </div>
-      <CardTooltip card={companion}>
-        <span className="text-sm text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors">
-          {companion.name}
-        </span>
-      </CardTooltip>
+      {deckViewMode !== "grid" && (
+        <CardTooltip card={companion}>
+          <span className="text-sm text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors">
+            {companion.name}
+          </span>
+        </CardTooltip>
+      )}
       {ruleSummary && (
         <p className="text-[10px] text-[var(--text-secondary)] mt-1.5 leading-snug">{ruleSummary}</p>
       )}

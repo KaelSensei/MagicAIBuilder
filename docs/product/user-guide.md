@@ -1,6 +1,6 @@
 # MagicAIBuilder — User Guide
 
-_Last updated: 2026-04-03_
+_Last updated: 2026-04-04_
 
 ## Getting Started
 
@@ -76,7 +76,7 @@ This is **not** the same as the Partner / Background slot — it is the optional
 
 1. Set your **commander** first (the **Companion** button stays disabled until then).
 2. Enable **Companion** in the search row (next to **Commander** / **Partner**). Results are filtered to Companion keyword cards (`keyword:companion`, Commander-legal).
-3. Click a card to set it as your companion. It appears under **Companion (sideboard)** above the zone tabs — **not** inside the Sideboard list.
+3. Click a card to set it as your companion. It appears under **Companion (sideboard)** above the zone tabs — **not** inside the Sideboard list. In **grid (image) view**, the companion’s **card image** is also shown in the main deck grid **right after** your commander (and partner, if any), with a **COMP** badge; hover the tile and use **×** to clear, or use **Clear** in the companion block.
 4. Use **Clear** in that block to remove the companion.
 
 The editor shows a **short rule summary** where the app encodes it (for example Lurrus → each card’s mana value ≤ 2) and **warnings** if commander color identity or that mechanical check fails. For companions we only describe as **custom**, verify the printed **Companion —** rule yourself; **Lutri** is blocked as a companion in Commander in-app.
