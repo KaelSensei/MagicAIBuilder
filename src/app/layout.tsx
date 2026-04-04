@@ -47,7 +47,7 @@ export default function RootLayout({
                 const stored = JSON.parse(localStorage.getItem('magic-ai-builder-theme') || '{}');
                 const theme = stored.state?.theme || 'dark';
                 document.documentElement.setAttribute('data-theme', theme);
-              } catch(e) {}
+              } catch(_e) { /* default theme applied */ }
             `,
           }}
         />

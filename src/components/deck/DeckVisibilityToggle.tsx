@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Globe, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import { logger } from "@/lib/logger";
 
 interface DeckVisibilityToggleProps {
   readonly deckId: string;
@@ -34,7 +35,7 @@ export function DeckVisibilityToggle({
         setIsPublic(next);
       }
     } catch (err) {
-      console.error("[DeckVisibilityToggle] error", err);
+      logger.error("Unexpected error", "DeckVisibilityToggle", err);
     } finally {
       setLoading(false);
     }

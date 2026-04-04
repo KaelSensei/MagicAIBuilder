@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { patchCardSchema } from "@/lib/validation/card";
 import { requireDeckOwner } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 type Params = { params: Promise<{ id: string; cardId: string }> };
 
@@ -29,7 +30,7 @@ export async function DELETE(_req: Request, { params }: Params) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[DELETE /api/decks/:id/cards/:cardId]", { deckId: String(deckId).slice(0, 50), cardId: String(cardId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "DELETE /api/decks/:id/cards/:cardId", { deckId: String(deckId).slice(0, 50), cardId: String(cardId).slice(0, 50) });
     return NextResponse.json(
       { error: "Failed to remove card" },
       { status: 500 }
@@ -77,7 +78,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("[PATCH /api/decks/:id/cards/:cardId]", { deckId: String(deckId).slice(0, 50), cardId: String(cardId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "PATCH /api/decks/:id/cards/:cardId", { deckId: String(deckId).slice(0, 50), cardId: String(cardId).slice(0, 50) });
     return NextResponse.json(
       { error: "Failed to update card" },
       { status: 500 }

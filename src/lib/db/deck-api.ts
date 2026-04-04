@@ -1,5 +1,6 @@
 // HTTP client for the deck API routes
 import type { Deck, DeckCard, DeckZone, CardCategory, CommanderPairingType } from "@/lib/deck/types";
+import { logger } from "@/lib/logger";
 
 /** Shape returned by the API (dates as ISO strings) */
 export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "commander" | "partner" | "cards" | "manualBracket"> {
@@ -234,6 +235,6 @@ export async function storeCardCache(
       body: JSON.stringify({ scryfallId, data }),
     });
   } catch (err) {
-    console.warn("[storeCardCache] Failed to cache card:", err);
+    logger.warn("Failed to cache card", "storeCardCache", err);
   }
 }

@@ -11,6 +11,7 @@ import { DFC_LAYOUTS } from "@/lib/scryfall/types";
 import { getCardImageUri, buildScryfallImageUrl } from "@/lib/scryfall/images";
 import * as deckApi from "@/lib/db/deck-api";
 import { useToastStore } from "@/hooks/useToast";
+import { logger } from "@/lib/logger";
 import {
   isBannedCompanionInCommander,
   isScryfallCompanionCard,
@@ -267,7 +268,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       try {
         await deckApi.removeCard(activeDeckId, card.id);
       } catch (err) {
-        console.error("[undo:ADD_CARD]", err);
+        logger.error("Unexpected error", "undo:ADD_CARD", err);
       }
     } else if (last.type === "REMOVE_CARD") {
       // Undo remove → re-add card
@@ -305,7 +306,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           isPartner: false,
         });
       } catch (err) {
-        console.error("[undo:REMOVE_CARD]", err);
+        logger.error("Unexpected error", "undo:REMOVE_CARD", err);
       }
     }
     useToastStore.getState().add("info", "↩ Undo applied");
@@ -319,7 +320,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await get().loadDecks();
       useToastStore.getState().add("success", "✓ Deck saved");
     } catch (err) {
-      console.error("[forceSave]", err);
+      logger.error("Unexpected error", "forceSave", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -396,7 +397,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
       set({ decks });
     } catch (err) {
-      console.error("[loadDecks]", err);
+      logger.error("Unexpected error", "loadDecks", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -465,7 +466,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateDeck(id, { name });
     } catch (err) {
-      console.error("[renameDeck]", err);
+      logger.error("Unexpected error", "renameDeck", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -487,7 +488,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateDeck(deckId, { description });
     } catch (err) {
-      console.error("[updateDeckDescription]", err);
+      logger.error("Unexpected error", "updateDeckDescription", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -510,7 +511,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateDeck(deckId, { tags });
     } catch (err) {
-      console.error("[addTag]", err);
+      logger.error("Unexpected error", "addTag", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -531,7 +532,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateDeck(deckId, { tags });
     } catch (err) {
-      console.error("[removeTag]", err);
+      logger.error("Unexpected error", "removeTag", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -596,7 +597,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         isPartner: false,
       });
     } catch (err) {
-      console.error("[setCommander]", err);
+      logger.error("Unexpected error", "setCommander", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -621,7 +622,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateDeck(activeDeckId, { commanderId: null, partnerId: null, pairingType: "none" });
     } catch (err) {
-      console.error("[clearCommander]", err);
+      logger.error("Unexpected error", "clearCommander", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -680,7 +681,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         });
       }
     } catch (err) {
-      console.error("[setPartner]", err);
+      logger.error("Unexpected error", "setPartner", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -711,7 +712,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           },
         }));
       } catch (err) {
-        console.error("[setCompanion]", err);
+        logger.error("Unexpected error", "setCompanion", err);
         useToastStore.getState().add("error", "Could not remove companion — try again");
       } finally {
         set({ isSyncing: false });
@@ -778,7 +779,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         },
       }));
     } catch (err) {
-      console.error("[setCompanion]", err);
+      logger.error("Unexpected error", "setCompanion", err);
       useToastStore.getState().add("error", "Could not save companion — try again");
     } finally {
       set({ isSyncing: false });
@@ -877,7 +878,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         ],
       }));
     } catch (err) {
-      console.error("[addCard]", err);
+      logger.error("Unexpected error", "addCard", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -948,7 +949,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         },
       }));
     } catch (err) {
-      console.error("[addDeckCard]", err);
+      logger.error("Unexpected error", "addDeckCard", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -986,7 +987,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.removeCard(activeDeckId, cardId);
     } catch (err) {
-      console.error("[removeCard]", err);
+      logger.error("Unexpected error", "removeCard", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1014,7 +1015,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateCardCategory(activeDeckId, cardId, category);
     } catch (err) {
-      console.error("[updateCardCategory]", err);
+      logger.error("Unexpected error", "updateCardCategory", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1052,7 +1053,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         body: JSON.stringify({ quantity: newQty }),
       });
     } catch (err) {
-      console.error("[updateCardQuantity]", err);
+      logger.error("Unexpected error", "updateCardQuantity", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1119,7 +1120,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         body: JSON.stringify({ scryfallId: printing.id, imageUri, artCropUri }),
       });
     } catch (err) {
-      console.error("[swapCardPrinting]", err);
+      logger.error("Unexpected error", "swapCardPrinting", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1147,7 +1148,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateCardNotes(activeDeckId, cardId, notes);
     } catch (err) {
-      console.error("[updateCardNotes]", err);
+      logger.error("Unexpected error", "updateCardNotes", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1175,7 +1176,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateCardZone(activeDeckId, cardId, zone);
     } catch (err) {
-      console.error("[moveCardToZone]", err);
+      logger.error("Unexpected error", "moveCardToZone", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1206,7 +1207,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         cardIds.map((id) => deckApi.updateCardZone(activeDeckId, id, zone))
       );
     } catch (err) {
-      console.error("[bulkMoveToZone]", err);
+      logger.error("Unexpected error", "bulkMoveToZone", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1235,7 +1236,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         cardIds.map((id) => deckApi.removeCard(activeDeckId, id))
       );
     } catch (err) {
-      console.error("[bulkRemoveCards]", err);
+      logger.error("Unexpected error", "bulkRemoveCards", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1261,7 +1262,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateDeck(activeDeckId, { targetBracket: bracket });
     } catch (err) {
-      console.error("[setTargetBracket]", err);
+      logger.error("Unexpected error", "setTargetBracket", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1287,7 +1288,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateDeck(activeDeckId, { manualBracket: bracket });
     } catch (err) {
-      console.error("[setManualBracket]", err);
+      logger.error("Unexpected error", "setManualBracket", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1313,7 +1314,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateDeck(activeDeckId, { budget });
     } catch (err) {
-      console.error("[setBudget]", err);
+      logger.error("Unexpected error", "setBudget", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -1410,7 +1411,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         },
       }));
     } catch (err) {
-      console.error("[addToMaybeboard]", err);
+      logger.error("Unexpected error", "addToMaybeboard", err);
     }
   },
 
@@ -1432,7 +1433,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.removeCard(activeDeckId, cardId);
     } catch (err) {
-      console.error("[removeFromMaybeboard]", err);
+      logger.error("Unexpected error", "removeFromMaybeboard", err);
     }
   },
 
@@ -1460,7 +1461,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateCardMaybeboard(activeDeckId, cardId, true);
     } catch (err) {
-      console.error("[moveToMaybeboard]", err);
+      logger.error("Unexpected error", "moveToMaybeboard", err);
     }
   },
 
@@ -1492,7 +1493,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     try {
       await deckApi.updateCardMaybeboard(activeDeckId, cardId, false);
     } catch (err) {
-      console.error("[moveToDeck]", err);
+      logger.error("Unexpected error", "moveToDeck", err);
     }
   },
 

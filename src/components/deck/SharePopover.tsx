@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { Share2, Copy, Check, Globe, Lock, Loader2, X } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { logger } from "@/lib/logger";
 
 interface SharePopoverProps {
   readonly deckId: string;
@@ -50,7 +51,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
         }
       }
     } catch (err) {
-      console.error("[SharePopover] toggle error", err);
+      logger.error("Toggle error", "SharePopover", err);
     } finally {
       setLoading(false);
     }

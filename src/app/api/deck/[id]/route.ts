@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth/config";
+import { logger } from "@/lib/logger";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -42,10 +43,10 @@ export async function GET(_req: Request, { params }: Params) {
     const { shareToken: _omitted, ...publicDeck } = deck;
     return NextResponse.json({ ...publicDeck, isOwner });
   } catch (error) {
-    console.error(
-      "[GET /api/deck/:id]",
-      { id: String(id).slice(0, 50) },
-      error instanceof Error ? error.message : "unknown"
+    logger.error(
+      error instanceof Error ? error.message : "unknown",
+      "GET /api/deck/:id",
+      { id: String(id).slice(0, 50) }
     );
     return NextResponse.json({ error: "Failed to fetch deck" }, { status: 500 });
   }

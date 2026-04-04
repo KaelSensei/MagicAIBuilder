@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { logger } from "@/lib/logger";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -27,10 +28,10 @@ export async function GET(_req: Request, { params }: Params) {
     const { shareToken: _omitted, ...publicDeck } = deck;
     return NextResponse.json(publicDeck);
   } catch (error) {
-    console.error(
-      "[GET /api/share/:token]",
-      { token: String(token).slice(0, 20) },
-      error instanceof Error ? error.message : "unknown"
+    logger.error(
+      error instanceof Error ? error.message : "unknown",
+      "GET /api/share/:token",
+      { token: String(token).slice(0, 20) }
     );
     return NextResponse.json(
       { error: "Failed to fetch shared deck" },

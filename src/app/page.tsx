@@ -9,6 +9,7 @@ import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { useDeckStore } from "@/lib/deck/store";
+import { logger } from "@/lib/logger";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
 import {
@@ -98,7 +99,7 @@ export default function HomePage() {
       const newId = await duplicateDeck(id);
       router.push(`/builder/${newId}`);
     } catch (error) {
-      console.error("[handleDuplicateDeck]", error);
+      logger.error("Unexpected error", "handleDuplicateDeck", error);
       setDuplicatingId(null);
     }
   }, [duplicateDeck, router]);
@@ -114,7 +115,7 @@ export default function HomePage() {
       const id = await createDeck(name);
       router.push(`/builder/${id}`);
     } catch (error) {
-      console.error("[handleNewDeck]", error);
+      logger.error("Unexpected error", "handleNewDeck", error);
       setIsCreating(false);
     }
   }, [createDeck, deckList.length, isCreating, router]);
