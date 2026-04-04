@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { scoreBracket } from "@/lib/deck/bracket";
-import type { Deck, DeckStats } from "@/lib/deck/types";
+import type { Deck, DeckCard, DeckStats } from "@/lib/deck/types";
 
 function makeDeck(overrides: Partial<Deck> = {}): Deck {
   return {
@@ -247,5 +247,47 @@ describe("scoreBracket", () => {
     });
     const result = scoreBracket(deck, stats);
     expect(result.overall).toBe(4);
+  });
+
+  it("propagates getCompanionDeckWarnings into bracket warnings", () => {
+    const commander: DeckCard = {
+      id: "cmd",
+      name: "Isamaru, Hound of Konda",
+      manaCost: "{W}",
+      cmc: 1,
+      typeLine: "Legendary Creature — Dog",
+      oracleText: "",
+      colorIdentity: ["W"],
+      isGameChanger: false,
+      isBanned: false,
+      price: null,
+      imageUri: "",
+      artCropUri: "",
+      category: "commander",
+      quantity: 1,
+      zone: "main",
+    };
+    const companion: DeckCard = {
+      id: "comp",
+      name: "Lutri, the Spellchaser",
+      manaCost: "{U}{R}",
+      cmc: 3,
+      typeLine: "Legendary Creature — Elemental Otter",
+      oracleText: "Companion — Each spell in your deck has a different name.",
+      colorIdentity: ["U", "R"],
+      isGameChanger: false,
+      isBanned: false,
+      price: null,
+      imageUri: "",
+      artCropUri: "",
+      category: "companion",
+      quantity: 1,
+      zone: "main",
+    };
+    const deck = makeDeck({ commander, companion, cards: [] });
+    const stats = makeStats({ totalCards: 100 });
+    const result = scoreBracket(deck, stats);
+    expect(result.warnings.some((w) => w.toLowerCase().includes("lutri"))).toBe(true);
+    expect(result.warnings.some((w) => w.toLowerCase().includes("banned"))).toBe(true);
   });
 });

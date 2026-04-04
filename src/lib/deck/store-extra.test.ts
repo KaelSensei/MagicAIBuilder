@@ -358,28 +358,75 @@ describe("useDeckStore — setPartner", () => {
 });
 
 describe("useDeckStore — setCompanion", () => {
-  beforeEach(() => seedDeck());
+  beforeEach(() =>
+    seedDeck(
+      makeActiveDeck({
+        commander: makeDeckCard({
+          id: "cmd-1",
+          name: "Kenrith, the Returned King",
+          category: "commander",
+          colorIdentity: ["W", "U", "B", "R", "G"],
+          cmc: 5,
+        }),
+      })
+    )
+  );
 
   it("sets companion on the active deck", async () => {
-    const card = makeScryfallCard({ name: "Lurrus of the Dream-Den" });
+    const card = makeScryfallCard({
+      id: "lurrus-sf",
+      name: "Lurrus of the Dream-Den",
+      keywords: ["Companion"],
+      type_line: "Legendary Creature — Cat Nightmare",
+      color_identity: ["W", "B"],
+      cmc: 3,
+    });
     await useDeckStore.getState().setCompanion(card);
 
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.companion?.name).toBe("Lurrus of the Dream-Den");
+    expect(deck.companion?.id).toBe("saved-db-id");
   });
 
   it("clears companion when null is passed", async () => {
+    vi.mocked(deckApi.removeCard).mockClear();
     useDeckStore.setState((s) => ({
-      decks: { ...s.decks, "deck-1": { ...s.decks["deck-1"], companion: makeDeckCard({ name: "Lurrus" }) } },
+      decks: {
+        ...s.decks,
+        "deck-1": {
+          ...s.decks["deck-1"],
+          companion: makeDeckCard({ id: "companion-db-id", name: "Lurrus", category: "companion" }),
+        },
+      },
     }));
     await useDeckStore.getState().setCompanion(null);
     expect(useDeckStore.getState().decks["deck-1"].companion).toBeNull();
+    expect(deckApi.removeCard).toHaveBeenCalledWith("deck-1", "companion-db-id");
+    expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", expect.objectContaining({ companionId: null }));
   });
 
   it("calls updateDeck with companionId", async () => {
-    const card = makeScryfallCard({ id: "lurrus-id", name: "Lurrus" });
+    const card = makeScryfallCard({
+      id: "lurrus-id",
+      name: "Lurrus of the Dream-Den",
+      keywords: ["Companion"],
+      type_line: "Legendary Creature — Cat Nightmare",
+      color_identity: ["W", "B"],
+      cmc: 3,
+    });
+    vi.mocked(deckApi.updateDeck).mockClear();
     await useDeckStore.getState().setCompanion(card);
     expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", expect.objectContaining({ companionId: "lurrus-id" }));
+  });
+
+  it("does not set companion without a commander", async () => {
+    seedDeck(makeActiveDeck({ commander: null }));
+    const card = makeScryfallCard({
+      name: "Lurrus of the Dream-Den",
+      keywords: ["Companion"],
+    });
+    await useDeckStore.getState().setCompanion(card);
+    expect(useDeckStore.getState().decks["deck-1"].companion).toBeNull();
   });
 });
 

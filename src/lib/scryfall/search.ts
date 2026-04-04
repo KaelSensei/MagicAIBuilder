@@ -217,6 +217,20 @@ export function buildPartnerSearchQuery(
   }
 }
 
+/** Companion search — cards with the Companion keyword, Commander-legal */
+export function buildCompanionSearchQuery(
+  text: string,
+  filters: Partial<SearchFilters> = {}
+): string {
+  const parts: string[] = ["keyword:companion", "legal:commander"];
+  const name = text.trim();
+  if (name) parts.push(`name:/${name}/`);
+  if (filters.colors && filters.colors.length > 0) {
+    parts.push(`id<=${filters.colors.join("")}`);
+  }
+  return parts.join(" ");
+}
+
 /** Build a query for browsing cards from a specific set */
 export function buildSetSearchQuery(
   setCode: string,

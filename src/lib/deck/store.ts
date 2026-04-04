@@ -11,6 +11,10 @@ import { DFC_LAYOUTS } from "@/lib/scryfall/types";
 import { getCardImageUri, buildScryfallImageUrl } from "@/lib/scryfall/images";
 import * as deckApi from "@/lib/db/deck-api";
 import { useToastStore } from "@/hooks/useToast";
+import {
+  isBannedCompanionInCommander,
+  isScryfallCompanionCard,
+} from "@/lib/deck/companion";
 
 // ---------------------------------------------------------------------------
 // Undo stack types
@@ -683,49 +687,99 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   setCompanion: async (card: ScryfallCard | null) => {
-    const { activeDeckId } = get();
+    const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
-    const deckCard = card ? makeDeckCard(card) : null;
-    if (deckCard) deckCard.category = "companion" as import("./types").CardCategory;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
 
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          companion: deckCard,
-          updatedAt: new Date(),
-        },
-      },
-    }));
+    const prev = deck.companion;
+
+    if (card === null) {
+      if (!prev) return;
+      set({ isSyncing: true });
+      try {
+        await deckApi.removeCard(activeDeckId, prev.id);
+        await deckApi.updateDeck(activeDeckId, { companionId: null });
+        set((state) => ({
+          decks: {
+            ...state.decks,
+            [activeDeckId]: {
+              ...state.decks[activeDeckId],
+              companion: null,
+              updatedAt: new Date(),
+            },
+          },
+        }));
+      } catch (err) {
+        console.error("[setCompanion]", err);
+        useToastStore.getState().add("error", "Could not remove companion — try again");
+      } finally {
+        set({ isSyncing: false });
+      }
+      return;
+    }
+
+    if (!deck.commander) {
+      useToastStore.getState().add("warning", "Choose a commander before setting a companion.");
+      return;
+    }
+
+    if (!isScryfallCompanionCard(card)) {
+      useToastStore.getState().add("warning", "That card does not have Companion.");
+      return;
+    }
+
+    if (isBannedCompanionInCommander(card)) {
+      useToastStore.getState().add("warning", "Lutri cannot be your companion in Commander.");
+      return;
+    }
+
+    const deckCard = makeDeckCard(card);
+    deckCard.category = "companion" as import("./types").CardCategory;
 
     set({ isSyncing: true });
     try {
-      await deckApi.updateDeck(activeDeckId, { companionId: card?.id ?? null });
-      if (card && deckCard) {
-        await deckApi.addCard(activeDeckId, {
-          scryfallId: card.id,
-          name: deckCard.name,
-          manaCost: deckCard.manaCost,
-          cmc: deckCard.cmc,
-          typeLine: deckCard.typeLine,
-          oracleText: deckCard.oracleText,
-          power: deckCard.power ?? null,
-          toughness: deckCard.toughness ?? null,
-          colorIdentity: deckCard.colorIdentity,
-          isGameChanger: deckCard.isGameChanger,
-          isBanned: deckCard.isBanned,
-          price: deckCard.price,
-          imageUri: deckCard.imageUri,
-          artCropUri: deckCard.artCropUri,
-          category: "companion" as import("./types").CardCategory,
-          quantity: 1,
-          isCommander: false,
-          isPartner: false,
-        });
+      if (prev) {
+        await deckApi.removeCard(activeDeckId, prev.id);
       }
+      const created = await deckApi.addCard(activeDeckId, {
+        scryfallId: card.id,
+        name: deckCard.name,
+        manaCost: deckCard.manaCost,
+        cmc: deckCard.cmc,
+        typeLine: deckCard.typeLine,
+        oracleText: deckCard.oracleText,
+        power: deckCard.power ?? null,
+        toughness: deckCard.toughness ?? null,
+        colorIdentity: deckCard.colorIdentity,
+        isGameChanger: deckCard.isGameChanger,
+        isBanned: deckCard.isBanned,
+        price: deckCard.price,
+        imageUri: deckCard.imageUri,
+        artCropUri: deckCard.artCropUri,
+        category: "companion" as import("./types").CardCategory,
+        quantity: 1,
+        isCommander: false,
+        isPartner: false,
+      });
+      await deckApi.updateDeck(activeDeckId, { companionId: card.id });
+      set((state) => ({
+        decks: {
+          ...state.decks,
+          [activeDeckId]: {
+            ...state.decks[activeDeckId],
+            companion: {
+              ...deckCard,
+              id: created.id,
+              scryfallId: created.scryfallId,
+            },
+            updatedAt: new Date(),
+          },
+        },
+      }));
     } catch (err) {
       console.error("[setCompanion]", err);
+      useToastStore.getState().add("error", "Could not save companion — try again");
     } finally {
       set({ isSyncing: false });
     }

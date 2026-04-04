@@ -6,7 +6,6 @@ import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
-import { CardTooltip } from "@/components/card/CardTooltip";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard ,CardCategory} from "@/lib/deck/types";
 import { CATEGORY_LABELS } from "@/lib/deck/categories";
@@ -16,6 +15,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import { BulkSelectBar } from "@/components/deck/BulkSelectBar";
 import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
+import { CompanionZone } from "@/components/deck/CompanionZone";
 import { sortCards, groupCards } from "@/lib/deck/sort";
 import type { CardGroup } from "@/lib/deck/sort";
 import { getColorIdentityViolations } from "@/lib/deck/color-identity";
@@ -746,19 +746,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
         )}
       </div>
 
-      {/* Companion zone — sideboard slot, outside the 99 */}
-      {deck.companion && (
-        <div className="px-3 pb-3 border-b border-[var(--border)]">
-          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
-            Companion <span className="text-[10px] normal-case opacity-70">(sideboard)</span>
-          </p>
-          <CardTooltip card={deck.companion}>
-            <span className="text-sm text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors">
-              {deck.companion.name}
-            </span>
-          </CardTooltip>
-        </div>
-      )}
+      <CompanionZone deck={deck} />
 
       {/* Zone tabs: Main / Sideboard / Considering */}
       <div className="px-3 py-1.5 border-b border-[var(--border)] flex items-center justify-between gap-1">

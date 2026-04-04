@@ -32,6 +32,7 @@ describe("useDeck", () => {
     expect(typeof result.current.renameDeck).toBe("function");
     expect(typeof result.current.setActiveDeck).toBe("function");
     expect(typeof result.current.setCommander).toBe("function");
+    expect(typeof result.current.setCompanion).toBe("function");
     expect(typeof result.current.addCard).toBe("function");
     expect(typeof result.current.removeCard).toBe("function");
     expect(typeof result.current.updateCardCategory).toBe("function");
