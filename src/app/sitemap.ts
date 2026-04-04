@@ -17,19 +17,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let sharedDecks: MetadataRoute.Sitemap = [];
   try {
     // shareEnabled / shareToken fields added in feat/deck-sharing migration
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const decks = await (prisma.deck as any).findMany({
+    const decks: unknown[] = await (prisma.deck as { findMany: (args: unknown) => Promise<unknown[]> }).findMany({
       where: { shareEnabled: true, shareToken: { not: null } },
       select: { shareToken: true, updatedAt: true },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sharedDecks = decks.map((deck: any) => ({
-      url: `${baseUrl}/share/${deck.shareToken}`,
-      lastModified: deck.updatedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    }));
+    sharedDecks = decks
+      .filter((d): d is { shareToken: string; updatedAt: Date } =>
+        typeof d === "object" && d !== null && "shareToken" in d && "updatedAt" in d
+      )
+      .map((deck) => ({
+        url: `${baseUrl}/share/${deck.shareToken}`,
+        lastModified: deck.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }));
   } catch {
     // Prisma not available at build time — skip dynamic entries
   }

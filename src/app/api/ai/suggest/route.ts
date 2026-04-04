@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sanitizeForPrompt } from "@/lib/validation/ai";
 import { ARCHETYPE_PROMPT_HINTS, ARCHETYPES } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -263,7 +264,7 @@ export async function POST(request: Request) {
         await streamResponse(controller, result);
       } catch (error) {
         const message = error instanceof Error ? error.message : "AI suggestion failed";
-        console.error("[POST /api/ai/suggest]", message);
+        logger.error(message, "POST /api/ai/suggest");
         const event: StreamEvent = { type: "error", message };
         controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
       } finally {

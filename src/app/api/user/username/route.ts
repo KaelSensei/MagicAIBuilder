@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 const usernameSchema = z.object({
   username: z
@@ -53,9 +54,9 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error(
-      "[PATCH /api/user/username]",
-      error instanceof Error ? error.message : "unknown"
+    logger.error(
+      error instanceof Error ? error.message : "unknown",
+      "PATCH /api/user/username"
     );
     return NextResponse.json({ error: "Failed to update username" }, { status: 500 });
   }

@@ -13,6 +13,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, X, Loader2, Sparkles, Check } from "lucide-react";
 import { autocompleteCardName, getCardByNameFuzzy, getCardCollection } from "@/lib/scryfall/client";
+import { logger } from "@/lib/logger";
 import { useAIDeckBuild } from "@/hooks/useAIDeckBuild";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -538,7 +539,7 @@ async function importCardsInBatches(
         await addDeckCard(deckCard);
       }
     } catch (err) {
-      console.error("[DeckWizard] batch import error", err);
+      logger.error("Batch import error", "DeckWizard", err);
     }
   }
 }
@@ -649,7 +650,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       onComplete(deckId);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Deck build failed";
-      console.error("[DeckWizard] handleGenerate error", err);
+      logger.error("Generate error", "DeckWizard", err);
       setBuildError(message);
       setIsBuilding(false);
     }

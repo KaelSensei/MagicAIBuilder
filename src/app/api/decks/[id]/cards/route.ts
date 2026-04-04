@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { addCardSchema } from "@/lib/validation/card";
 import { requireDeckOwner } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -77,7 +78,7 @@ export async function POST(request: Request, { params }: Params) {
 
     return NextResponse.json(card, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/decks/:id/cards]", { deckId: String(deckId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "POST /api/decks/:id/cards", { deckId: String(deckId).slice(0, 50) });
     return NextResponse.json(
       { error: "Failed to add card" },
       { status: 500 }
@@ -100,7 +101,7 @@ export async function DELETE(_req: Request, { params }: Params) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[DELETE /api/decks/:id/cards]", { deckId: String(deckId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "DELETE /api/decks/:id/cards", { deckId: String(deckId).slice(0, 50) });
     return NextResponse.json(
       { error: "Failed to remove cards" },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { logger } from "@/lib/logger";
 
 const signupSchema = z.object({
   name: z.string().min(1).max(100),
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("[POST /api/auth/signup]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "POST /api/auth/signup");
     return NextResponse.json(
       { error: "Failed to create account" },
       { status: 500 }

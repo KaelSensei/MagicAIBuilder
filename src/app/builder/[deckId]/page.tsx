@@ -13,6 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { Search, LayoutGrid, BarChart3, ArrowLeft, Check, Copy, Crown, Dices, Download, FileText, Package, Pencil } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
+import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
 import { useDeck } from "@/hooks/useDeck";
 import { useBracketScore } from "@/hooks/useBracketScore";
@@ -325,7 +326,7 @@ export default function BuilderPage() {
       setDeckCardForPrinting(deckCard);
       setDeckCardPrintingCard(scryfallCard);
     } catch {
-      console.warn("Could not find card:", deckCard.name);
+      logger.warn("Could not find card", "builder", deckCard.name);
     }
   }, []);
 
@@ -388,7 +389,7 @@ export default function BuilderPage() {
     import("@/lib/scryfall/client").then(({ getCardByName }) => {
       getCardByName(cardName)
         .then((card) => addCard(card))
-        .catch(() => console.warn(`Could not find card: ${cardName}`));
+        .catch(() => logger.warn("Could not find card", "builder", cardName));
     });
   }, [addCard]);
 

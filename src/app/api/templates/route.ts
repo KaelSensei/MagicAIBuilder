@@ -6,8 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-// Uncomment when the templates table migration lands.
-// import { prisma } from "@/lib/db/prisma";
+import { logger } from "@/lib/logger";
 
 // ─── Validation Schemas ────────────────────────────────────────────────────
 const TemplateQuerySchema = z.object({
@@ -76,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(mockTemplates, { status: 200 });
   } catch (error) {
-    console.error("[templates GET]", error);
+    logger.error("Unexpected error", "templates GET", error);
     return NextResponse.json(
       { error: "Failed to fetch templates" },
       { status: 500 }
@@ -118,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(mockTemplate, { status: 201 });
   } catch (error) {
-    console.error("[templates POST]", error);
+    logger.error("Unexpected error", "templates POST", error);
     return NextResponse.json(
       { error: "Failed to create template" },
       { status: 500 }

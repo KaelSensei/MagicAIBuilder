@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 const patchSchema = z.object({
   quantity: z.number().int().min(0).optional(),
@@ -62,7 +63,7 @@ export async function PATCH(
     });
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("[PATCH /api/collection/:id]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "PATCH /api/collection/:id");
     return NextResponse.json({ error: "Failed to update collection card" }, { status: 500 });
   }
 }
@@ -90,7 +91,7 @@ export async function DELETE(
     await prisma.collectionCard.delete({ where: { id } });
     return NextResponse.json({ deleted: true });
   } catch (error) {
-    console.error("[DELETE /api/collection/:id]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "DELETE /api/collection/:id");
     return NextResponse.json({ error: "Failed to delete collection card" }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 const addCardSchema = z.object({
   scryfallId: z.string().min(1),
@@ -26,7 +27,7 @@ export async function GET() {
     });
     return NextResponse.json(cards);
   } catch (error) {
-    console.error("[GET /api/collection]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "GET /api/collection");
     return NextResponse.json({ error: "Failed to fetch collection" }, { status: 500 });
   }
 }
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(card, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/collection]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "POST /api/collection");
     return NextResponse.json({ error: "Failed to add card to collection" }, { status: 500 });
   }
 }

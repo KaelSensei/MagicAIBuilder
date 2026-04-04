@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 const createDeckSchema = z.object({
   name: z.string().min(1).max(200),
@@ -31,7 +32,7 @@ export async function GET() {
     });
     return NextResponse.json(decks);
   } catch (error) {
-    console.error("[GET /api/decks]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "GET /api/decks");
     return NextResponse.json(
       { error: "Failed to fetch decks" },
       { status: 500 }
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(deck, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/decks]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "POST /api/decks");
     return NextResponse.json(
       { error: "Failed to create deck" },
       { status: 500 }

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { fetchEdhrecData, fetchTournamentData } from "@/lib/meta/fetch";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { EdhrecData, TournamentData } from "@/lib/meta/fetch";
+import { logger } from "@/lib/logger";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const RATE_LIMIT = 30;
@@ -119,7 +120,7 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ ...data, _meta: { cached: false } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Meta fetch failed";
-    console.error("[GET /api/meta/:slug]", { commanderSlug, source }, message);
+    logger.error(message, "GET /api/meta/:slug", { commanderSlug, source });
     const stale = await tryStaleMetaResponse(commanderSlug, source);
     if (stale) return stale;
     return NextResponse.json({ error: message }, { status: 502 });

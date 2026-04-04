@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -26,7 +27,7 @@ export async function GET(_req: Request, { params }: Params) {
 
     return NextResponse.json(snapshots);
   } catch (error) {
-    console.error("[GET /api/decks/:id/snapshots]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "GET /api/decks/:id/snapshots");
     return NextResponse.json({ error: "Failed to fetch snapshots" }, { status: 500 });
   }
 }
@@ -74,7 +75,7 @@ export async function POST(request: Request, { params }: Params) {
 
     return NextResponse.json(snapshot, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/decks/:id/snapshots]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "POST /api/decks/:id/snapshots");
     return NextResponse.json({ error: "Failed to create snapshot" }, { status: 500 });
   }
 }

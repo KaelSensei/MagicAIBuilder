@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { logger } from "@/lib/logger";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const SCRYFALL_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ hit: true, data: cached.data });
   } catch (error) {
-    console.error("[GET /api/cache/cards]", { id: String(scryfallId).slice(0, 50) }, error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "GET /api/cache/cards", { id: String(scryfallId).slice(0, 50) });
     return NextResponse.json({ hit: false });
   }
 }
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/cache/cards]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "POST /api/cache/cards");
     return NextResponse.json(
       { error: "Failed to cache card" },
       { status: 500 }

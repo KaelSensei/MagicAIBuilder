@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 /** GET /api/user/profile — Get current user's profile */
 export async function GET() {
@@ -27,7 +28,7 @@ export async function GET() {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("[GET /api/user/profile]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "GET /api/user/profile");
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
   }
 }
@@ -81,7 +82,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("[PATCH /api/user/profile]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "PATCH /api/user/profile");
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
   }
 }
@@ -98,7 +99,7 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[DELETE /api/user/profile]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "DELETE /api/user/profile");
     return NextResponse.json({ error: "Failed to delete account" }, { status: 500 });
   }
 }

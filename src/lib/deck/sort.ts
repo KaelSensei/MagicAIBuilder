@@ -106,7 +106,7 @@ function buildColorGroups(cards: DeckCard[]): CardGroup[] {
   }
   return COLOR_GROUP_ORDER
     .filter((key) => buckets.has(key))
-    .map((key) => ({ key, label: key, cards: buckets.get(key)! }));
+    .map((key) => ({ key, label: key, cards: buckets.get(key) ?? [] }));
 }
 
 function buildTypeGroups(cards: DeckCard[]): CardGroup[] {

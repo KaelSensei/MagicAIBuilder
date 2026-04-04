@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 type Params = { params: Promise<{ id: string; snapshotId: string }> };
 
@@ -21,7 +22,7 @@ export async function DELETE(_req: Request, { params }: Params) {
     await prisma.deckSnapshot.delete({ where: { id: snapshotId } });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[DELETE /api/decks/:id/snapshots/:snapshotId]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "DELETE /api/decks/:id/snapshots/:snapshotId");
     return NextResponse.json({ error: "Failed to delete snapshot" }, { status: 500 });
   }
 }

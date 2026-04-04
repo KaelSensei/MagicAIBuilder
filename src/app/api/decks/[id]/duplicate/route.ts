@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -62,7 +63,7 @@ export async function POST(_req: Request, { params }: Params) {
 
     return NextResponse.json(copy, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/decks/:id/duplicate]", error instanceof Error ? error.message : "unknown");
+    logger.error(error instanceof Error ? error.message : "unknown", "POST /api/decks/:id/duplicate");
     return NextResponse.json({ error: "Failed to duplicate deck" }, { status: 500 });
   }
 }

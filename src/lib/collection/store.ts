@@ -2,6 +2,7 @@
 // Zustand collection store — tracks cards owned in the physical collection
 import { create } from "zustand";
 import type { CollectionCard, AddToCollectionInput, CardCondition } from "./types";
+import { logger } from "@/lib/logger";
 
 export interface CollectionStore {
   // State
@@ -68,7 +69,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
 
       set({ collectionCards, collectionCardsFoil });
     } catch (err) {
-      console.error("[loadCollection]", err);
+      logger.error("Unexpected error", "loadCollection", err);
     } finally {
       set({ isLoading: false });
     }
@@ -105,7 +106,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
         return { collectionCards: { ...state.collectionCards, [hydrated.scryfallId]: hydrated } };
       });
     } catch (err) {
-      console.error("[addToCollection]", err);
+      logger.error("Unexpected error", "addToCollection", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -132,7 +133,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
         return { collectionCards, collectionCardsFoil };
       });
     } catch (err) {
-      console.error("[removeFromCollection]", err);
+      logger.error("Unexpected error", "removeFromCollection", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -176,7 +177,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
         });
       }
     } catch (err) {
-      console.error("[updateQuantity]", err);
+      logger.error("Unexpected error", "updateQuantity", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -204,7 +205,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
         return { collectionCards: { ...state.collectionCards, [hydrated.scryfallId]: hydrated } };
       });
     } catch (err) {
-      console.error("[updateCondition]", err);
+      logger.error("Unexpected error", "updateCondition", err);
     } finally {
       set({ isSyncing: false });
     }

@@ -12,6 +12,7 @@ import { ColorDistribution } from "./ColorDistribution";
 import { cn } from "@/components/ui/utils";
 import type { CardCategory } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
+import { logger } from "@/lib/logger";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -195,7 +196,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
       setImported(true);
       setTimeout(() => router.push(`/builder/${newId}`), 800);
     } catch (err) {
-      console.error("[ShareDeckView] Import failed", err);
+      logger.error("Import failed", "ShareDeckView", err);
     } finally {
       setImporting(false);
     }

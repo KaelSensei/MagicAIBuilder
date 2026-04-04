@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
+import { logger } from "@/lib/logger";
 
 /** Generate a URL-safe random token of ~12 chars (base64url, trimmed) */
 function generateToken(): string {
@@ -33,10 +34,10 @@ export async function POST(_req: Request, { params }: Params) {
     const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/share/${deck.shareToken}`;
     return NextResponse.json({ shareUrl, shareToken: deck.shareToken });
   } catch (error) {
-    console.error(
-      "[POST /api/decks/:id/share]",
-      { id: String(id).slice(0, 50) },
-      error instanceof Error ? error.message : "unknown"
+    logger.error(
+      error instanceof Error ? error.message : "unknown",
+      "POST /api/decks/:id/share",
+      { id: String(id).slice(0, 50) }
     );
     return NextResponse.json(
       { error: "Failed to enable sharing" },
@@ -59,10 +60,10 @@ export async function DELETE(_req: Request, { params }: Params) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(
-      "[DELETE /api/decks/:id/share]",
-      { id: String(id).slice(0, 50) },
-      error instanceof Error ? error.message : "unknown"
+    logger.error(
+      error instanceof Error ? error.message : "unknown",
+      "DELETE /api/decks/:id/share",
+      { id: String(id).slice(0, 50) }
     );
     return NextResponse.json(
       { error: "Failed to disable sharing" },

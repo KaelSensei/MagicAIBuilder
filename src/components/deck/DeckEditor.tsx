@@ -21,7 +21,7 @@ import type { CardGroup } from "@/lib/deck/sort";
 import { getColorIdentityViolations } from "@/lib/deck/color-identity";
 
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for upcoming zone-based drag-and-drop feature
 type DeckZone = "main" | "sideboard" | "maybeboard";
 
 type BannerManaColor = "W" | "U" | "B" | "R" | "G" | "C";
@@ -705,7 +705,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
   const clearCompanion = useCallback(() => {
     void setCompanion(null);
   }, [setCompanion]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- wired up in upcoming zone-based drag-and-drop feature
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const moveToMaybeboard = useDeckStore((s) => s.moveToMaybeboard);
   const sortField = useDeckStore((s) => s.sortField);
