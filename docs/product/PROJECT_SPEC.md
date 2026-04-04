@@ -171,9 +171,9 @@ Commander is a **singleton** format — max 1 copy per card — with the followi
 
 ## User Stories
 
-Track detailed user stories in [`docs/product/US_DETAIL_EN.md`](./US_DETAIL_EN.md). Quick summary below:
+Track detailed user stories in [`docs/product/US_DETAIL.md`](./US_DETAIL.md). Quick summary below:
 
-**Companion (Ikoria)** — product & rules reference: [`docs/product/COMPANION_IMPLEMENTATION.md`](./COMPANION_IMPLEMENTATION.md) (linked from **US-M** in `US_DETAIL_EN.md`).
+**Companion (Ikoria)** — product & rules reference: [`docs/product/COMPANION_IMPLEMENTATION.md`](./COMPANION_IMPLEMENTATION.md) (linked from **US-M** in `US_DETAIL.md`).
 
 ### Phase 9 — Core MVP (✅ all complete)
 

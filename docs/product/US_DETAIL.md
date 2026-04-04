@@ -1,4 +1,4 @@
-# US_DETAIL_EN.md — All MagicAIBuilder User Stories
+# US_DETAIL.md — All MagicAIBuilder User Stories
 
 > Document maintained by PeeWy 📋
 > Updated after each US sent to Joyce.
