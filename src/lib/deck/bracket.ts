@@ -1,6 +1,7 @@
 // Bracket scoring engine
 import type { Deck, DeckStats, BracketScore } from "./types";
 import type { SpellbookVariant } from "@/lib/combos/spellbook";
+import { getCompanionDeckWarnings } from "./companion";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -150,6 +151,10 @@ function generateWarnings(
         `Deck scores Bracket ${overall} but target is Bracket ${deck.targetBracket}`
       );
     }
+  }
+
+  for (const line of getCompanionDeckWarnings(deck)) {
+    warnings.push(line);
   }
 
   return warnings;

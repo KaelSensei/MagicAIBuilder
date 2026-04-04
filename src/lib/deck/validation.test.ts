@@ -202,6 +202,12 @@ describe("validateDeck", () => {
     const result = validateDeck(deck);
     expect(result.errors.some((e) => e.includes("remove"))).toBe(true);
   });
+
+  it("returns companionWarnings (empty without companion)", () => {
+    const deck = makeDeck({ commander: makeCommander(["R"]) });
+    const result = validateDeck(deck);
+    expect(result.companionWarnings).toEqual([]);
+  });
 });
 
 describe("checkColorIdentity", () => {

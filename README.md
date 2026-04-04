@@ -27,7 +27,7 @@
 - ⚡ **Game Changers detection** — auto-warns when you cross bracket thresholds
 - 🤖 **AI suggestions** — Anthropic Claude or OpenAI GPT analyzes your deck and recommends cards + cuts
 - 🤝 **Partner pairing** — Partner, Partner With, Friends Forever, Background, Doctor's Companion, Character Select (TMNT) — filtered search per pairing type
-- 📦 **Companion support** — sideboard companion slot
+- 📦 **Companion (Ikoria)** — dedicated slot + **Companion** search mode, rule hints, color/mechanical warnings (not the same as Sideboard pile cards)
 - 📤 **Multi-format export** — Moxfield, MTG Arena, MTGO (.dek), TappedOut, Archidekt, Manabox, Plain Text; import from Moxfield format (SET) 123
 - 👑 **Set as commander** — crown icon on any deck card promotes it to commander slot
 - 🔢 **Card quantities** — +/- buttons for basic lands and Commander-legal multiples (auto-detected via oracle text)

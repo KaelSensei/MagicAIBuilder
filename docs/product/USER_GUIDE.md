@@ -1,5 +1,7 @@
 # MagicAIBuilder — User Guide
 
+_Last updated: 2026-04-03_
+
 ## Getting Started
 
 ### Creating a Deck
@@ -56,7 +58,7 @@ In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default 
 2. Search for your commander
 3. Click to set them as commander
 
-#### Partner / Background / Companion Commanders
+#### Partner / Background (second commander slot)
 
 Some commanders support a **second slot** (shown next to the Commander button):
 
@@ -67,6 +69,17 @@ Notes:
 
 - The **Background** search targets Background cards (not commanders).
 - If you accidentally click a Background while Commander mode is enabled, the app will treat it as the **Background slot** (it won’t replace your commander).
+
+#### Ikoria Companion (outside the 99)
+
+This is **not** the same as the Partner / Background slot — it is the optional **[Companion](https://mtg.fandom.com/wiki/Companion)** mechanic: **at most one** card, **outside** your 99, listed in the companion zone for deck registration (separate from arbitrary **Sideboard** tab cards).
+
+1. Set your **commander** first (the **Companion** button stays disabled until then).
+2. Enable **Companion** in the search row (next to **Commander** / **Partner**). Results are filtered to Companion keyword cards (`keyword:companion`, Commander-legal).
+3. Click a card to set it as your companion. It appears under **Companion (sideboard)** above the zone tabs — **not** inside the Sideboard list.
+4. Use **Clear** in that block to remove the companion.
+
+The editor shows a **short rule summary** where the app encodes it (for example Lurrus → each card’s mana value ≤ 2) and **warnings** if commander color identity or that mechanical check fails. For companions we only describe as **custom**, verify the printed **Companion —** rule yourself; **Lutri** is blocked as a companion in Commander in-app.
 
 ### Deck Statistics
 

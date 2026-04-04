@@ -3,6 +3,7 @@ import {
   buildSearchQuery,
   buildCommanderSearchQuery,
   buildPartnerSearchQuery,
+  buildCompanionSearchQuery,
   buildSetSearchQuery,
   buildColorSearchQuery,
   buildInteractionQuery,
@@ -299,6 +300,19 @@ describe("buildPartnerSearchQuery", () => {
   });
   it("adds color filter for partner type", () => {
     expect(buildPartnerSearchQuery("partner", "", { colors: ["R"] })).toContain("id<=R");
+  });
+});
+
+describe("buildCompanionSearchQuery", () => {
+  it("includes keyword companion and commander legality", () => {
+    const q = buildCompanionSearchQuery("");
+    expect(q).toContain("keyword:companion");
+    expect(q).toContain("legal:commander");
+  });
+  it("adds name and color filters", () => {
+    const q = buildCompanionSearchQuery("lurrus", { colors: ["W", "B"] });
+    expect(q).toContain("name:/lurrus/");
+    expect(q).toContain("id<=WB");
   });
 });
 

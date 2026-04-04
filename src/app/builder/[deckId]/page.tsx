@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Search, LayoutGrid, BarChart3, ArrowLeft, Check, Copy, Crown, Dices, Download, FileText, Pencil } from "lucide-react";
+import { Search, LayoutGrid, BarChart3, ArrowLeft, Check, Copy, Crown, Dices, Download, FileText, Package, Pencil } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 import { useUIStore } from "@/lib/ui/store";
 import { useDeck } from "@/hooks/useDeck";
@@ -27,7 +27,7 @@ import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
-import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery } from "@/lib/scryfall/search";
+import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery, buildCompanionSearchQuery } from "@/lib/scryfall/search";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters, DeckCard, CardCategory } from "@/lib/deck/types";
@@ -89,7 +89,7 @@ export default function BuilderPage() {
   const { data: sessionData } = useSession();
 
   // Ensure this deck is active
-  const { setActiveDeck, addCard, removeCard, setCommander, setPartner, updateCardCategory } = useDeck();
+  const { setActiveDeck, addCard, removeCard, setCommander, setPartner, setCompanion, updateCardCategory } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
   const addToMaybeboard = useDeckStore((s) => s.addToMaybeboard);
@@ -139,6 +139,7 @@ export default function BuilderPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [commanderMode, setCommanderMode] = useState(false);
   const [partnerMode, setPartnerMode] = useState(false);
+  const [companionMode, setCompanionMode] = useState(false);
 
   // Search mode
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
@@ -187,6 +188,7 @@ export default function BuilderPage() {
   const query = (() => {
     if (commanderMode) return buildCommanderSearchQuery(searchText, filters);
     if (partnerMode && deck) return buildPartnerSearchQuery(deck.pairingType, searchText, filters);
+    if (companionMode) return buildCompanionSearchQuery(searchText, filters);
     switch (searchMode) {
       case "set":
         return selectedSet ? buildSetSearchQuery(selectedSet, colorFilter) : "";
@@ -222,12 +224,14 @@ export default function BuilderPage() {
       } else if (partnerMode) {
         setPartner(card);
         // Stay in partner mode — user may want to change partner again
+      } else if (companionMode) {
+        void setCompanion(card);
       } else {
         // Open printing selector so user can pick their preferred art
         setPrintingCard(card);
       }
     },
-    [setCommander, setPartner, commanderMode, partnerMode, deck?.pairingType]
+    [setCommander, setPartner, setCompanion, commanderMode, partnerMode, companionMode, deck?.pairingType]
   );
 
   const handlePrintingSelect = useCallback(
@@ -563,7 +567,11 @@ export default function BuilderPage() {
                       {showFilters ? "Hide filters" : "Show filters"}
                     </button>
                     <button
-                      onClick={() => { setCommanderMode((m) => !m); setPartnerMode(false); }}
+                      onClick={() => {
+                        setCommanderMode((m) => !m);
+                        setPartnerMode(false);
+                        setCompanionMode(false);
+                      }}
                       className={cn(
                         "ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
                         commanderMode
@@ -577,7 +585,11 @@ export default function BuilderPage() {
                     </button>
                     {deck && supportsPartner(deck.pairingType) && (
                       <button
-                        onClick={() => { setPartnerMode((m) => !m); setCommanderMode(false); }}
+                        onClick={() => {
+                          setPartnerMode((m) => !m);
+                          setCommanderMode(false);
+                          setCompanionMode(false);
+                        }}
                         className={cn(
                           "flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
                           partnerMode
@@ -590,6 +602,30 @@ export default function BuilderPage() {
                         {partnerSlotLabel(deck.pairingType)}
                       </button>
                     )}
+                    <button
+                      type="button"
+                      disabled={!deck?.commander}
+                      onClick={() => {
+                        setCompanionMode((m) => !m);
+                        setCommanderMode(false);
+                        setPartnerMode(false);
+                      }}
+                      className={cn(
+                        "flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
+                        companionMode
+                          ? "border-cyan-500 text-cyan-400 bg-cyan-500/10"
+                          : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]",
+                        !deck?.commander && "opacity-40"
+                      )}
+                      title={
+                        deck?.commander
+                          ? "Search Companion cards (Ikoria) — one per deck, outside the 99"
+                          : "Set a commander first"
+                      }
+                    >
+                      <Package className="w-3 h-3" />
+                      Companion
+                    </button>
                   </div>
                   {showFilters && <SearchFilters filters={filters} onChange={setFilters} />}
                 </>

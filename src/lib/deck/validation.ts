@@ -1,10 +1,13 @@
 // Deck validation: banlist, Game Changers, color identity
 import type { DeckCard, Deck } from "./types";
+import { getCompanionDeckWarnings } from "./companion";
 
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
+  /** Ikoria-style companion rule checks (also merged into `warnings`). */
+  companionWarnings: readonly string[];
 }
 
 export interface CardValidationResult {
@@ -141,7 +144,15 @@ export function validateDeck(deck: Deck): ValidationResult {
   checkGameChangers(allCards, warnings);
   checkSingleton(allCards, errors);
 
-  return { valid: errors.length === 0, errors, warnings };
+  const companionWarnings = getCompanionDeckWarnings(deck);
+  const mergedWarnings = [...warnings, ...companionWarnings];
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings: mergedWarnings,
+    companionWarnings,
+  };
 }
 
 /** Check color identity compatibility */
