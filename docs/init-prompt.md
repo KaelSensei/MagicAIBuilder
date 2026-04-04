@@ -13,7 +13,7 @@ Tu es un dev senior frontend React/Next.js. Tu vas initialiser le projet MagicAI
 
 Lis d'abord ces fichiers dans le repo pour comprendre le projet :
 - README.md : vision generale, deux modes, positionnement
-- docs/product/PROJECT_SPEC.md : spec technique Phase 1 complete (stack, structure, types, endpoints, UI layout, user stories)
+- docs/product/project-spec.md : spec technique Phase 1 complete (stack, structure, types, endpoints, UI layout, user stories)
 - docs/references/game-changers.md : la Game Changers list pour le systeme de brackets
 - docs/references/banlists.md : la banlist Commander
 - docs/references/edh-themes.md : les themes/archetypes (pour plus tard, Phase 3)
@@ -48,7 +48,7 @@ pnpx shadcn@latest add button input dialog card badge tooltip scroll-area separa
 
 ### 4. Creer la structure de dossiers
 
-Suis exactement la structure definie dans docs/product/PROJECT_SPEC.md section "Project Structure".
+Suis exactement la structure definie dans docs/product/project-spec.md section "Project Structure".
 
 ### 5. Configurer le theme dark
 
@@ -126,7 +126,7 @@ Objectif : pouvoir chercher une carte sur Scryfall, voir l'image, et l'ajouter a
 
 - Ce prompt est concu pour etre donne tel quel a OpenClaw
 - Il reference les fichiers du repo, donc OpenClaw doit avoir acces au dossier MagicAIBuilder
-- Si OpenClaw demande des precisions, renvoie-le vers `docs/product/PROJECT_SPEC.md`
+- Si OpenClaw demande des precisions, renvoie-le vers `docs/product/project-spec.md`
 - Phase 1 = Free Build uniquement. L'IA (Phase 3) viendra plus tard
 - Pense a commit regulierement au fur et a mesure que les composants sont fonctionnels
 ```

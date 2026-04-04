@@ -1,6 +1,6 @@
 # Companion Implementation in MagicAIBuilder
 
-_Product doc (this file): `docs/product/COMPANION_IMPLEMENTATION.md`. Tracked as **US-M** in [`US_DETAIL.md`](./US_DETAIL.md); summarized in [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) and [`ROADMAP.md`](./ROADMAP.md) (Deck Editor)._
+_Product doc (this file): `docs/product/companion-implementation.md`. Tracked as **US-M** in [`us-detail.md`](./us-detail.md); summarized in [`project-spec.md`](./project-spec.md) and [`roadmap.md`](./roadmap.md) (Deck Editor)._
 
 ## Overview
 

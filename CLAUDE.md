@@ -320,7 +320,7 @@ describe("validatePartner", () => {
 
 ## Documentation Discipline
 
-Feature branches must **NOT** modify `docs/project/CHANGELOG.md`, `docs/project/PROGRESS.md`, or `docs/product/ROADMAP.md`.
+Feature branches must **NOT** modify `docs/project/changelog.md`, `docs/project/progress.md`, or `docs/product/roadmap.md`.
 These files are updated in a dedicated `chore/docs` or `docs/changelog-update` PR after each merge batch.
 This prevents rebase conflicts when multiple branches touch the same doc files.
 

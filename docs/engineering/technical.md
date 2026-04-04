@@ -490,7 +490,7 @@ The analyzer is disabled by default and has zero impact on normal builds (`pnpm 
 | `ANTHROPIC_API_KEY` | ⚠️ Optional | Enables Claude AI suggestions (falls back to mock)                                  |
 | `OPENAI_API_KEY`    | ⚠️ Optional | Secondary AI provider fallback                                                      |
 
-See `docs/INFRASTRUCTURE.md` for Docker + full infra setup.
+See `docs/engineering/infrastructure.md` for Docker + full infra setup.
 
 ---
 

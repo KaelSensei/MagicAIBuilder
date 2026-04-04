@@ -120,7 +120,7 @@ interface Deck {
   commander: DeckCard | null;
   partner: DeckCard | null;
   pairingType: CommanderPairingType;
-  /** Ikoria-style companion: outside the 99, registration sideboard slot — not generic Sideboard-tab cards. See [COMPANION_IMPLEMENTATION.md](./COMPANION_IMPLEMENTATION.md). */
+  /** Ikoria-style companion: outside the 99, registration sideboard slot — not generic Sideboard-tab cards. See [companion-implementation.md](./companion-implementation.md). */
   companion: DeckCard | null;
   cards: DeckCard[]; // The 99 (or 98 with partner)
   format: "commander";
@@ -171,16 +171,16 @@ Commander is a **singleton** format — max 1 copy per card — with the followi
 
 ## User Stories
 
-Track detailed user stories in [`docs/product/US_DETAIL.md`](./US_DETAIL.md). Quick summary below:
+Track detailed user stories in [`docs/product/us-detail.md`](./us-detail.md). Quick summary below:
 
-**Companion (Ikoria)** — product & rules reference: [`docs/product/COMPANION_IMPLEMENTATION.md`](./COMPANION_IMPLEMENTATION.md) (linked from **US-M** in `US_DETAIL.md`).
+**Companion (Ikoria)** — product & rules reference: [`docs/product/companion-implementation.md`](./companion-implementation.md) (linked from **US-M** in `us-detail.md`).
 
 ### Phase 9 — Core MVP (✅ all complete)
 
 | Story                     | Details                                                                                                                                                                                   | PR      | Status  |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- |
 | **P0 — Core builder**     | Search, add cards, drag-drop, live stats, bracket scoring, banlist/GC warnings                                                                                                            | Various | ✅ Done |
-| **P1 — Persistence & UX** | Deck import (plain text), export (MTGO/Arena), grid/list view, inline rename, card printing selector, companion data + export ([full Companion UX — US-M](./COMPANION_IMPLEMENTATION.md)) | Various | ✅ Done |
+| **P1 — Persistence & UX** | Deck import (plain text), export (MTGO/Arena), grid/list view, inline rename, card printing selector, companion data + export ([full Companion UX — US-M](./companion-implementation.md)) | Various | ✅ Done |
 | **P2 — Features**         | Card hover preview, advanced filters, combo detection (Spellbook), AI suggestions, light/dark theme, deck snapshots, annotations/tags                                                     | Various | ✅ Done |
 | **US-01**                 | Game Changers / Banlist pagination (25/page, searchable, tabs)                                                                                                                            | #192    | ✅ Done |
 | **US-02**                 | User accounts & deck sharing (public profiles, share URLs, private/public toggle)                                                                                                         | #194    | ✅ Done |
@@ -202,7 +202,7 @@ Track detailed user stories in [`docs/product/US_DETAIL.md`](./US_DETAIL.md). Qu
 | -------- | ------------------------------------------------------------------------------------------------------------- | ---- | ------- |
 | **US-E** | Import from URL tournament (6 sources: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec)             | #204 | ✅ Done |
 | **US-F** | Meta analysis — top cards & competitive decks for commander (EDHRec + tournament aggregation)                 | #205 | ✅ Done |
-| **US-M** | Ikoria Companion — dedicated slot, search mode, validation & warnings ([spec](./COMPANION_IMPLEMENTATION.md)) | #283 | ✅ Done |
+| **US-M** | Ikoria Companion — dedicated slot, search mode, validation & warnings ([spec](./companion-implementation.md)) | #283 | ✅ Done |
 
 ### Sprint 4 (🔄 in progress)
 

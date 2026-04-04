@@ -169,7 +169,7 @@
 - [x] `fix(sonar)`: deprecated Zod/React types and a11y warning (#184)
 - [x] `fix(sonar)`: 7 SonarCloud issues in auth and card components (#183)
 - [x] `test`: coverage raised from 91% to 98% (#188)
-- [x] `docs`: database reset instructions in INFRASTRUCTURE.md (#187)
+- [x] `docs`: database reset instructions in infrastructure.md (#187)
 - [x] `docs`: roadmap split into Technical and Functional sections (#185)
 
 ---
@@ -751,7 +751,7 @@
 - `buildCardFaces()` + `computeCmc()` in store; `getCardImageUri` face param
 - `CardFlip` 3D component; `useCardFlip` hook; `CardListItem` Turn Over; `CardGrid` cardFaces
 - Tests: `useCardFlip.test.ts` (6+), MDFC section in `categories.test.ts`
-- `docs/product/ROADMAP.md`: MDFC and DFC items marked done
+- `docs/product/roadmap.md`: MDFC and DFC items marked done
   | Metric | Value |
   |---|---|
   | Source files | ~75 |

@@ -1,4 +1,4 @@
-# US_DETAIL.md — All MagicAIBuilder User Stories
+# us-detail.md — All MagicAIBuilder User Stories
 
 > Document maintained by PeeWy 📋
 > Updated after each US sent to Joyce.
@@ -315,7 +315,7 @@ EDHRec is the community reference but external. MTGTop8/MTGDecks add tournament 
 As a Commander player, I want to register **one optional Companion** in its own zone (outside my 99), distinct from random Sideboard cards, with clear rule hints when my deck might not satisfy that Companion’s deck-building restriction.
 
 **Product context**
-Companions are a separate registration concept from Partner/Background commanders. The app already stored `companion` + export; this US adds discoverable UX (Companion search mode), persistence fixes, and in-app warnings. Full rules, architecture checklist, and future validation ideas: **[COMPANION_IMPLEMENTATION.md](./COMPANION_IMPLEMENTATION.md)**.
+Companions are a separate registration concept from Partner/Background commanders. The app already stored `companion` + export; this US adds discoverable UX (Companion search mode), persistence fixes, and in-app warnings. Full rules, architecture checklist, and future validation ideas: **[companion-implementation.md](./companion-implementation.md)**.
 
 **Acceptance criteria**
 
@@ -330,11 +330,11 @@ Companions are a separate registration concept from Partner/Background commander
 - `src/lib/deck/companion.ts`, `CompanionZone`, builder UI + `buildCompanionSearchQuery`
 - Store: remove/replace companion rows + sync DB card id from `addCard` response
 - Tests: `companion.test.ts`, updated store/validation/search hooks tests
-- End-user steps: `docs/product/USER_GUIDE.md` (Ikoria Companion section)
+- End-user steps: `docs/product/user-guide.md` (Ikoria Companion section)
 
 **Specification (canonical)**
 
-- [COMPANION_IMPLEMENTATION.md](./COMPANION_IMPLEMENTATION.md) — design notes, MTG references, extension checklist
+- [companion-implementation.md](./companion-implementation.md) — design notes, MTG references, extension checklist
 
 ---
 

@@ -32,7 +32,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Chore — 2026-03-30: Infrastructure & Documentation
 
-- `chore(docs): reorganize docs and update references (#251)` — docs split into `/engineering` (INFRASTRUCTURE, TECHNICAL, dx-ci-overview), `/product` (ROADMAP, PROJECT_SPEC, USER_GUIDE), `/project` (CHANGELOG, PROGRESS), `/security`; cross-references updated
+- `chore(docs): reorganize docs and update references (#251)` — docs split into `/engineering` (infrastructure.md, technical.md, dx-ci-overview.md), `/product` (roadmap.md, project-spec.md, user-guide.md), `/project` (changelog.md, progress.md), `/security`; cross-references updated
 - `chore(deps): bump @sentry/nextjs in production-dependencies (#250)` — error tracking dependency upgrade
 
 ### Added — 2026-03-29: Phase 12 — Playtest mode, Deck Templates, Analytics Dashboard, Pricing UI
@@ -141,7 +141,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Docs — 2026-03-28
 
-- `docs(infra): production schema sync guide + checklist (#211)` — new `docs/INFRASTRUCTURE.md` section covering:
+- `docs(infra): production schema sync guide + checklist (#211)` — new `docs/engineering/infrastructure.md` section covering:
   - Step-by-step Supabase ↔ Prisma schema sync procedure
   - Pre-deploy checklist for schema migrations in production
   - Rollback instructions and migration verification queries
@@ -185,10 +185,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### Changed — 2026-03-27: Test coverage & docs
 
 - `test: increase unit test coverage from 91% to 98% (#188)` — added tests for previously uncovered paths; 98% line coverage across all source files
-- `docs: add database reset instructions to INFRASTRUCTURE.md (#187)` — step-by-step guide for resetting the Supabase database in dev and production environments
-- `docs: split roadmap into Technical and Functional sections (#185)` — `docs/product/ROADMAP.md` restructured with separate Technical Roadmap and Functional Roadmap sections for clarity
-- `chore(qa): update quality gate history — PR #192 merged (US-01) (#193)` — `docs/engineering/QUALITY_GATE.md` updated with metrics snapshot after US-01 merge
-- `chore(qa): quality gate baseline and metrics tracking` — established baseline metrics snapshot in `docs/engineering/QUALITY_GATE.md` for ongoing Phase 10 tracking
+- `docs: add database reset instructions to infrastructure.md (#187)` — step-by-step guide for resetting the Supabase database in dev and production environments
+- `docs: split roadmap into Technical and Functional sections (#185)` — `docs/product/roadmap.md` restructured with separate Technical Roadmap and Functional Roadmap sections for clarity
+- `chore(qa): update quality gate history — PR #192 merged (US-01) (#193)` — `docs/engineering/quality-gate.md` updated with metrics snapshot after US-01 merge
+- `chore(qa): quality gate baseline and metrics tracking` — established baseline metrics snapshot in `docs/engineering/quality-gate.md` for ongoing Phase 10 tracking
 
 ### Added — 2026-03-26: NextAuth.js v5 Authentication (#181)
 
@@ -355,7 +355,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `buildSearchQuery()` split into `buildCmcParts()`, `buildPriceParts()`, `buildPowerToughnessParts()` — cognitive complexity below 15
 - All React sub-components (`TabButton`, `NumInput`, `SearchFilters`) have explicit `displayName`
 - `PRESETS_STORAGE_KEY` named constant (no magic strings)
-- docs/product/ROADMAP.md: "Enhanced deck-building filters" marked ✅ done
+- docs/product/roadmap.md: "Enhanced deck-building filters" marked ✅ done
 - 47 tests in `src/lib/scryfall/search.test.ts` covering all new filter behaviors
 
 ### Added — 2026-04-03: Text-only proxy mode and P/T fallback
@@ -667,7 +667,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Full REST API: `GET/POST /api/decks`, `GET/PATCH/DELETE /api/decks/[id]`, card routes, cache routes
 - `src/lib/db/deck-api.ts` — typed HTTP client
 - `src/lib/deck/store.ts` — migrated from localStorage to DB sync with optimistic updates
-- `docs/INFRASTRUCTURE.md` — full infra documentation
+- `docs/engineering/infrastructure.md` — full infra documentation
 
 ### Added — Phase 2: Intelligence Layer
 
@@ -742,7 +742,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 #### Core Types, Scryfall Integration, Deck Logic, Hooks, Components
 
-- Full details in `docs/project/PROGRESS.md`
+- Full details in `docs/project/progress.md`
 
 ---
 
@@ -751,7 +751,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### Added
 
 - Initial repository setup with README and project documentation
-- Game Changers card list documentation (`docs/game-changers.md`)
+- Game Changers card list documentation (`docs/references/game-changers.md`)
 
 [Unreleased]: https://github.com/KaelSensei/MagicAIBuilder/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/KaelSensei/MagicAIBuilder/releases/tag/v0.1.0

@@ -141,7 +141,7 @@ External APIs:
 
 ## Security
 
-See [`docs/security/SECURITY.md`](docs/security/SECURITY.md) for the full security architecture.
+See [`docs/security/security.md`](docs/security/security.md) for the full security architecture.
 
 Key points:
 
@@ -152,7 +152,7 @@ Key points:
 
 ## Quality Gate 🧪
 
-> Maintained by Marco — The Bug Whisperer. See [`docs/engineering/QUALITY_GATE.md`](docs/engineering/QUALITY_GATE.md) for full details and history.
+> Maintained by Marco — The Bug Whisperer. See [`docs/engineering/quality-gate.md`](docs/engineering/quality-gate.md) for full details and history.
 
 | Metric               | Baseline | Minimum |
 | -------------------- | -------- | ------- |
@@ -174,24 +174,26 @@ A PR that degrades any of these metrics is blocked until fixed.
 docs/
   engineering/
     dx-ci-overview.md          # CI/DX overview: pipelines, local dev checks, quality tooling
-    INFRASTRUCTURE.md          # Infra + hosting notes (Vercel, DB, storage, observability)
-    QUALITY_GATE.md            # Quality thresholds + Sonar/CI expectations
-    TECHNICAL.md               # Technical architecture: modules, data flow, DB, patterns
+    infrastructure.md          # Infra + hosting notes (Vercel, DB, storage, observability)
+    quality-gate.md            # Quality thresholds + Sonar/CI expectations
+    technical.md               # Technical architecture: modules, data flow, DB, patterns
   product/
+    companion-implementation.md  # Ikoria Companion product/rules (linked from user stories)
     competitive-landscape.md   # Competitor analysis / positioning notes
-    PROJECT_SPEC.md            # Product/engineering spec: scope, UX, rules, implementation notes
-    ROADMAP.md                 # Future work backlog: technical + functional roadmap + prioritization
+    project-spec.md            # Product/engineering spec: scope, UX, rules, implementation notes
+    roadmap.md                 # Future work backlog: technical + functional roadmap + prioritization
     user-flows.md              # End-to-end user journeys and flows
-    USER_GUIDE.md              # End-user manual: how to use the app
+    user-guide.md              # End-user manual: how to use the app
+    us-detail.md               # Full user stories backlog
   project/
-    CHANGELOG.md               # Release notes / history of changes
-    PROGRESS.md                # Project checklist / milestones / tracking
+    changelog.md               # Release notes / history of changes
+    progress.md                # Project checklist / milestones / tracking
   security/
-    SECURITY.md                # Threat model + security architecture + hardening rules
+    security.md                # Threat model + security architecture + hardening rules
   prompt-system/               # Prompting system docs (AI behavior, prompts, conventions)
   references/                  # Reference material (patterns, examples)
-  rules/                       # Internal rules / conventions docs
-  INIT_PROMPT.md               # Seed prompt / bootstrap notes for agent-assisted work
+  rules/                       # Internal rules / conventions docs (e.g. magic-comp-rules-*.txt)
+  init-prompt.md               # Seed prompt / bootstrap notes for agent-assisted work
 ```
 
 ## AI Assistants 👾
