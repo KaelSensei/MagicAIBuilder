@@ -1,5 +1,7 @@
 # Companion Implementation in MagicAIBuilder
 
+_Product doc (this file): `docs/product/COMPANION_IMPLEMENTATION.md`. Tracked as **US-M** in [`US_DETAIL_EN.md`](./US_DETAIL_EN.md); summarized in [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) and [`ROADMAP.md`](./ROADMAP.md) (Deck Editor)._
+
 ## Overview
 
 **Companions** are a mechanic introduced in _Ikoria_ (2020) that allows a player to cast a spell from outside the game. Unlike Partners or Backgrounds, a Companion is not a commander — it's an _optional mechanic_ that adds strategic flexibility to the Commander format.

@@ -20,6 +20,7 @@
 | US-D  | Proxy sheets PDF export                       | Sprint 2 | #202 | ✅ Merged      |
 | US-E  | Import from URL tournament (6 sources)        | Sprint 3 | #204 | ✅ Merged      |
 | US-F  | Meta Analysis — top cards for commander       | Sprint 3 | #205 | ✅ Merged      |
+| US-M  | Ikoria Companion — slot, search, validation   | —        | #283 | ✅ Merged      |
 | US-G  | Collection tracking + shopping list           | Sprint 4 | —    | 🔄 In Progress |
 | US-H  | Multiple format support (Standard, Modern...) | Sprint 4 | —    | ⏳ Waiting     |
 | US-I  | Community deck suggestions                    | Sprint 4 | —    | ⏳ Waiting     |
@@ -303,6 +304,37 @@ EDHRec is the community reference but external. MTGTop8/MTGDecks add tournament 
 
 - Prisma cache with stale-on-error, distinct rate limit, slug validation, timeouts
 - CI ✅ SonarCloud ✅
+
+---
+
+### US-M — Ikoria Companion (deck slot, search, validation)
+
+**PR #283** | ✅ Merged
+
+**User story**
+As a Commander player, I want to register **one optional Companion** in its own zone (outside my 99), distinct from random Sideboard cards, with clear rule hints when my deck might not satisfy that Companion’s deck-building restriction.
+
+**Product context**
+Companions are a separate registration concept from Partner/Background commanders. The app already stored `companion` + export; this US adds discoverable UX (Companion search mode), persistence fixes, and in-app warnings. Full rules, architecture checklist, and future validation ideas: **[COMPANION_IMPLEMENTATION.md](./COMPANION_IMPLEMENTATION.md)**.
+
+**Acceptance criteria**
+
+- **Companion** toggle in builder search (after commander exists); Scryfall query uses `keyword:companion` + Commander legality
+- Clicking a result sets the companion; **Clear** removes it and the backing `DeckCard` row
+- **Companion (sideboard)** block above Main/Sideboard tabs: name, short rule summary where encoded (e.g. Lurrus → mana value ≤ 2), warnings for color identity, Lutri-as-companion ban, mechanical checks (e.g. Gyruda even MV on nonlands)
+- Bracket panel and `validateDeck` surface the same companion warnings
+- `useDeck().setCompanion` exposed; non-Companion cards rejected with toast
+
+**Delivered**
+
+- `src/lib/deck/companion.ts`, `CompanionZone`, builder UI + `buildCompanionSearchQuery`
+- Store: remove/replace companion rows + sync DB card id from `addCard` response
+- Tests: `companion.test.ts`, updated store/validation/search hooks tests
+- End-user steps: `docs/product/USER_GUIDE.md` (Ikoria Companion section)
+
+**Specification (canonical)**
+
+- [COMPANION_IMPLEMENTATION.md](./COMPANION_IMPLEMENTATION.md) — design notes, MTG references, extension checklist
 
 ---
 

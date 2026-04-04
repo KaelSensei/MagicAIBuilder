@@ -89,6 +89,7 @@ interface DeckCard {
 
 type CardCategory =
   | "commander"
+  | "companion"
   | "creature"
   | "instant"
   | "sorcery"
@@ -110,7 +111,8 @@ type CommanderPairingType =
   | "partner_with"
   | "friends_forever"
   | "background"
-  | "doctor";
+  | "doctor"
+  | "character_select";
 
 interface Deck {
   id: string; // DB CUID
@@ -118,7 +120,8 @@ interface Deck {
   commander: DeckCard | null;
   partner: DeckCard | null;
   pairingType: CommanderPairingType;
-  companion: DeckCard | null; // Outside the 100, sideboard slot
+  /** Ikoria-style companion: outside the 99, registration sideboard slot — not generic Sideboard-tab cards. See [COMPANION_IMPLEMENTATION.md](./COMPANION_IMPLEMENTATION.md). */
+  companion: DeckCard | null;
   cards: DeckCard[]; // The 99 (or 98 with partner)
   format: "commander";
   targetBracket: 1 | 2 | 3 | 4;
@@ -168,19 +171,21 @@ Commander is a **singleton** format — max 1 copy per card — with the followi
 
 ## User Stories
 
-Track detailed user stories in `docs/product/US_DETAIL_EN.md`. Quick summary below:
+Track detailed user stories in [`docs/product/US_DETAIL_EN.md`](./US_DETAIL_EN.md). Quick summary below:
+
+**Companion (Ikoria)** — product & rules reference: [`docs/product/COMPANION_IMPLEMENTATION.md`](./COMPANION_IMPLEMENTATION.md) (linked from **US-M** in `US_DETAIL_EN.md`).
 
 ### Phase 9 — Core MVP (✅ all complete)
 
-| Story                     | Details                                                                                                                               | PR      | Status  |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- |
-| **P0 — Core builder**     | Search, add cards, drag-drop, live stats, bracket scoring, banlist/GC warnings                                                        | Various | ✅ Done |
-| **P1 — Persistence & UX** | Deck import (plain text), export (MTGO/Arena), grid/list view, inline rename, card printing selector, companion support               | Various | ✅ Done |
-| **P2 — Features**         | Card hover preview, advanced filters, combo detection (Spellbook), AI suggestions, light/dark theme, deck snapshots, annotations/tags | Various | ✅ Done |
-| **US-01**                 | Game Changers / Banlist pagination (25/page, searchable, tabs)                                                                        | #192    | ✅ Done |
-| **US-02**                 | User accounts & deck sharing (public profiles, share URLs, private/public toggle)                                                     | #194    | ✅ Done |
-| **US-03**                 | Moxfield / Archidekt import from URL                                                                                                  | #195    | ✅ Done |
-| **US-04**                 | Onboarding tutorial for new users (wizard, tooltips, `onboardingDone` flag)                                                           | #197    | ✅ Done |
+| Story                     | Details                                                                                                                                                                                   | PR      | Status  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- |
+| **P0 — Core builder**     | Search, add cards, drag-drop, live stats, bracket scoring, banlist/GC warnings                                                                                                            | Various | ✅ Done |
+| **P1 — Persistence & UX** | Deck import (plain text), export (MTGO/Arena), grid/list view, inline rename, card printing selector, companion data + export ([full Companion UX — US-M](./COMPANION_IMPLEMENTATION.md)) | Various | ✅ Done |
+| **P2 — Features**         | Card hover preview, advanced filters, combo detection (Spellbook), AI suggestions, light/dark theme, deck snapshots, annotations/tags                                                     | Various | ✅ Done |
+| **US-01**                 | Game Changers / Banlist pagination (25/page, searchable, tabs)                                                                                                                            | #192    | ✅ Done |
+| **US-02**                 | User accounts & deck sharing (public profiles, share URLs, private/public toggle)                                                                                                         | #194    | ✅ Done |
+| **US-03**                 | Moxfield / Archidekt import from URL                                                                                                                                                      | #195    | ✅ Done |
+| **US-04**                 | Onboarding tutorial for new users (wizard, tooltips, `onboardingDone` flag)                                                                                                               | #197    | ✅ Done |
 
 ### Sprint 2 (✅ all complete)
 
@@ -193,10 +198,11 @@ Track detailed user stories in `docs/product/US_DETAIL_EN.md`. Quick summary bel
 
 ### Sprint 3 (✅ all complete)
 
-| Story    | Details                                                                                           | PR   | Status  |
-| -------- | ------------------------------------------------------------------------------------------------- | ---- | ------- |
-| **US-E** | Import from URL tournament (6 sources: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec) | #204 | ✅ Done |
-| **US-F** | Meta analysis — top cards & competitive decks for commander (EDHRec + tournament aggregation)     | #205 | ✅ Done |
+| Story    | Details                                                                                                       | PR   | Status  |
+| -------- | ------------------------------------------------------------------------------------------------------------- | ---- | ------- |
+| **US-E** | Import from URL tournament (6 sources: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec)             | #204 | ✅ Done |
+| **US-F** | Meta analysis — top cards & competitive decks for commander (EDHRec + tournament aggregation)                 | #205 | ✅ Done |
+| **US-M** | Ikoria Companion — dedicated slot, search mode, validation & warnings ([spec](./COMPANION_IMPLEMENTATION.md)) | #283 | ✅ Done |
 
 ### Sprint 4 (🔄 in progress)
 
