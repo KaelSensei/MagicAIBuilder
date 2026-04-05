@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Search, LayoutGrid, BarChart3, ArrowLeft, Check, Copy, Crown, Dices, Download, FileText, Package, Pencil } from "lucide-react";
+import { Search, LayoutGrid, BarChart3, ArrowLeft, Check, Copy, Dices, Download, FileText, Pencil } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
@@ -29,9 +29,8 @@ import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
 import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery, buildCompanionSearchQuery } from "@/lib/scryfall/search";
-import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
-import type { SearchFilters as Filters, DeckCard, CardCategory } from "@/lib/deck/types";
+import type { SearchFilters as Filters, DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
@@ -54,8 +53,13 @@ import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
+import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
 
 type SearchMode = "name" | "set" | "color";
+
+function isDeckZone(value: string): value is DeckZone {
+  return value === "main" || value === "sideboard" || value === "maybeboard";
+}
 
 function getSearchModeLabel(mode: SearchMode): string {
   if (mode === "name") return "Name";
@@ -63,36 +67,38 @@ function getSearchModeLabel(mode: SearchMode): string {
   return "By Color";
 }
 
+interface BuildSearchQueryFromModeParams {
+  readonly mode: SearchMode;
+  readonly searchText: string;
+  readonly filters: Filters;
+  readonly selectedSet: string;
+  readonly colorFilter: string[];
+  readonly commanderMode: boolean;
+  readonly partnerMode: boolean;
+  readonly companionMode: boolean;
+  readonly deckPairingType?: string;
+}
+
 /** Build Scryfall search query based on current mode and filters */
-function buildSearchQueryFromMode(
-  mode: SearchMode,
-  searchText: string,
-  filters: Filters,
-  selectedSet: string,
-  colorFilter: string[],
-  commanderMode: boolean,
-  partnerMode: boolean,
-  companionMode: boolean,
-  deckPairingType?: string
-): string {
-  if (commanderMode) {
-    return buildCommanderSearchQuery(searchText, filters);
+function buildSearchQueryFromMode(p: BuildSearchQueryFromModeParams): string {
+  if (p.commanderMode) {
+    return buildCommanderSearchQuery(p.searchText, p.filters);
   }
-  if (partnerMode) {
-    return buildPartnerSearchQuery(deckPairingType ?? "none", searchText, filters);
+  if (p.partnerMode) {
+    return buildPartnerSearchQuery(p.deckPairingType ?? "none", p.searchText, p.filters);
   }
-  if (companionMode) {
-    return buildCompanionSearchQuery(searchText, filters);
+  if (p.companionMode) {
+    return buildCompanionSearchQuery(p.searchText, p.filters);
   }
-  switch (mode) {
+  switch (p.mode) {
     case "set":
-      return selectedSet ? buildSetSearchQuery(selectedSet, colorFilter) : "";
+      return p.selectedSet ? buildSetSearchQuery(p.selectedSet, p.colorFilter) : "";
     case "color":
-      return colorFilter.length > 0 || searchText
-        ? buildColorSearchQuery(colorFilter, searchText)
+      return p.colorFilter.length > 0 || p.searchText
+        ? buildColorSearchQuery(p.colorFilter, p.searchText)
         : "";
     default:
-      return buildSearchQuery(searchText, filters);
+      return buildSearchQuery(p.searchText, p.filters);
   }
 }
 
@@ -133,11 +139,12 @@ function handleSearchResultCardClick(
 }
 
 /** Determine drop zone from drop target ID */
-function getDropZoneFromId(overId: string, defaultZone: "main" | "sideboard" | "maybeboard"): "main" | "sideboard" | "maybeboard" {
+function getDropZoneFromId(overId: string, defaultZone: DeckZone): DeckZone {
   if (overId === "deck-zone-sideboard") return "sideboard";
   if (overId === "deck-zone-maybeboard") return "maybeboard";
   if (overId.startsWith("deck-panel-")) {
-    return overId.replace("deck-panel-", "") as "main" | "sideboard" | "maybeboard";
+    const zone = overId.slice("deck-panel-".length);
+    return isDeckZone(zone) ? zone : defaultZone;
   }
   return defaultZone;
 }
@@ -211,7 +218,7 @@ export default function BuilderPage() {
   const { result: aiResult, isLoading: aiLoading, error: aiError, analyze: analyzeAI, detectedArchetype, analysedAt, ignoredSuggestions, ignoreSuggestion, clearIgnored } = useAISuggestions();
 
   // Active zone state — lifted from DeckEditor so card adds target the right zone
-  const [activeZone, setActiveZone] = useState<"main" | "sideboard" | "maybeboard">("main");
+  const [activeZone, setActiveZone] = useState<DeckZone>("main");
 
   // Mobile panel state — which panel is visible on small screens
   const [mobilePanel, setMobilePanel] = useState<"search" | "deck" | "stats">("deck");
@@ -274,8 +281,8 @@ export default function BuilderPage() {
     setIsBanlistAlertDismissed(false);
   }, [banlistAlertKey]);
 
-  const query = buildSearchQueryFromMode(
-    searchMode,
+  const query = buildSearchQueryFromMode({
+    mode: searchMode,
     searchText,
     filters,
     selectedSet,
@@ -283,8 +290,8 @@ export default function BuilderPage() {
     commanderMode,
     partnerMode,
     companionMode,
-    deck?.pairingType
-  );
+    deckPairingType: deck?.pairingType,
+  });
 
   const {
     data: searchData,
@@ -633,66 +640,29 @@ export default function BuilderPage() {
                     >
                       {showFilters ? "Hide filters" : "Show filters"}
                     </button>
-                    <button
-                      onClick={() => {
-                        setCommanderMode((m) => !m);
-                        setPartnerMode(false);
-                        setCompanionMode(false);
-                      }}
-                      className={cn(
-                        "ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
-                        commanderMode
-                          ? "border-amber-500 text-amber-400 bg-amber-500/10"
-                          : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
-                      )}
-                      title="Filter for legendary creatures (commanders)"
-                    >
-                      <Crown className="w-3 h-3" />
-                      Commander
-                    </button>
-                    {deck && supportsPartner(deck.pairingType) && (
-                      <button
-                        onClick={() => {
+                    <div className="ml-auto">
+                      <BuilderNameSearchModeBar
+                        deck={deck}
+                        commanderMode={commanderMode}
+                        partnerMode={partnerMode}
+                        companionMode={companionMode}
+                        onToggleCommander={() => {
+                          setCommanderMode((m) => !m);
+                          setPartnerMode(false);
+                          setCompanionMode(false);
+                        }}
+                        onTogglePartner={() => {
                           setPartnerMode((m) => !m);
                           setCommanderMode(false);
                           setCompanionMode(false);
                         }}
-                        className={cn(
-                          "flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
-                          partnerMode
-                            ? "border-purple-500 text-purple-400 bg-purple-500/10"
-                            : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
-                        )}
-                        title={`Search for a ${partnerSlotLabel(deck.pairingType)}`}
-                      >
-                        <Crown className="w-3 h-3" />
-                        {partnerSlotLabel(deck.pairingType)}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      disabled={!deck?.commander}
-                      onClick={() => {
-                        setCompanionMode((m) => !m);
-                        setCommanderMode(false);
-                        setPartnerMode(false);
-                      }}
-                      className={cn(
-                        "flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors",
-                        companionMode
-                          ? "border-cyan-500 text-cyan-400 bg-cyan-500/10"
-                          : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]",
-                        !deck?.commander && "opacity-40"
-                      )}
-                      title={
-                        deck?.commander
-                          ? "Search Companion cards (Ikoria) — one per deck, outside the 99"
-                          : "Set a commander first"
-                      }
-                    >
-                      <Package className="w-3 h-3" />
-                      Companion
-                    </button>
+                        onToggleCompanion={() => {
+                          setCompanionMode((m) => !m);
+                          setCommanderMode(false);
+                          setPartnerMode(false);
+                        }}
+                      />
+                    </div>
                   </div>
                   {showFilters && <SearchFilters filters={filters} onChange={setFilters} />}
                 </>

@@ -162,21 +162,15 @@ function generateWarnings(
   dimensions: BracketScore["dimensions"],
   twoCardInfiniteCombos: number
 ): string[] {
-  const warnings: string[] = [];
-
-  warnings.push(...getBanWarnings(stats));
-  warnings.push(...getComboWarnings(twoCardInfiniteCombos));
-  warnings.push(...getGameChangersWarnings(stats.gameChangersCount, stats.gameChangersList));
-  warnings.push(...getCompositionWarnings(stats));
-
   const bracketWarning = getBracketMismatchWarning(deck, dimensions);
-  if (bracketWarning) {
-    warnings.push(bracketWarning);
-  }
-
-  warnings.push(...getCompanionDeckWarnings(deck));
-
-  return warnings;
+  return [
+    ...getBanWarnings(stats),
+    ...getComboWarnings(twoCardInfiniteCombos),
+    ...getGameChangersWarnings(stats.gameChangersCount, stats.gameChangersList),
+    ...getCompositionWarnings(stats),
+    ...(bracketWarning ? [bracketWarning] : []),
+    ...getCompanionDeckWarnings(deck),
+  ];
 }
 
 /** Score a deck and return its bracket with dimension breakdown */
