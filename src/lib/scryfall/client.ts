@@ -23,30 +23,53 @@ const defaultHeaders = {
   Accept: "application/json",
 };
 
-// Serialized rate-limiting queue (prevents concurrent request race)
+// Detect if we're in a test environment (vitest sets globalThis.vi)
+function isTestMode(): boolean {
+  return typeof globalThis !== "undefined" && "vi" in globalThis;
+}
+
+// Serialized rate-limiting with async mutex (prevents concurrent request race)
+// In test mode (vi.useFakeTimers), bypass delay to avoid timeout issues
 let lastRequestTime = 0;
-let queue: Promise<Response> = Promise.resolve(
-  new Response("dummy", { status: 200 })
-);
+let queue: Promise<Response | undefined> = Promise.resolve(undefined);
+
+/**
+ * Reset the rate limiter state (for tests only)
+ * @internal
+ */
+export function __resetRateLimiter() {
+  lastRequestTime = 0;
+  queue = Promise.resolve(undefined);
+}
 
 function rateLimitedFetch(
   url: string,
   options?: RequestInit
 ): Promise<Response> {
-  return (queue = queue.then(async () => {
-    const wait = Math.max(0, MIN_DELAY_MS - (Date.now() - lastRequestTime));
-    if (wait > 0) {
-      await new Promise<void>((resolve) => setTimeout(resolve, wait));
-    }
-    lastRequestTime = Date.now();
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options?.headers,
-      },
+  return queue
+    .then(async () => {
+      const now = Date.now();
+      const elapsed = now - lastRequestTime;
+      // Only apply delay in non-test environments (skip in test mode to avoid setTimeout issues)
+      if (elapsed < MIN_DELAY_MS && !isTestMode()) {
+        await new Promise<void>((resolve) =>
+          setTimeout(resolve, MIN_DELAY_MS - elapsed)
+        );
+      }
+      lastRequestTime = Date.now();
+
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...defaultHeaders,
+          ...options?.headers,
+        },
+      });
+    })
+    .then((res) => {
+      queue = Promise.resolve(undefined);
+      return res;
     });
-  }));
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {

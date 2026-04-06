@@ -24,10 +24,9 @@ afterEach(() => {
 describe("useBanlistQuery", () => {
   it("fetches banned cards", async () => {
     const bannedCards = [{ id: "1", name: "Emrakul, the Aeons Torn" }];
-    vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce({
-      data: bannedCards,
-      has_more: false,
-    } as never);
+    vi.mocked(scryfallClient.fetchAllPages).mockResolvedValueOnce(
+      bannedCards as never
+    );
 
     const { result } = renderHook(() => useBanlistQuery(), {
       wrapper: createWrapper(),
@@ -35,15 +34,17 @@ describe("useBanlistQuery", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
-    expect(scryfallClient.searchCards).toHaveBeenCalledWith("banned:commander", 1);
+    expect(scryfallClient.fetchAllPages).toHaveBeenCalledWith("banned:commander");
   });
 
   it("fetches multiple pages when has_more is true", async () => {
-    const page1 = { data: [{ id: "1", name: "Card1" }], has_more: true };
-    const page2 = { data: [{ id: "2", name: "Card2" }], has_more: false };
-    vi.mocked(scryfallClient.searchCards)
-      .mockResolvedValueOnce(page1 as never)
-      .mockResolvedValueOnce(page2 as never);
+    const cards = [
+      { id: "1", name: "Card1" },
+      { id: "2", name: "Card2" },
+    ];
+    vi.mocked(scryfallClient.fetchAllPages).mockResolvedValueOnce(
+      cards as never
+    );
 
     const { result } = renderHook(() => useBanlistQuery(), {
       wrapper: createWrapper(),
@@ -51,13 +52,13 @@ describe("useBanlistQuery", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(2);
-    expect(scryfallClient.searchCards).toHaveBeenCalledTimes(2);
+    expect(scryfallClient.fetchAllPages).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("useBanlistSet", () => {
   it("returns empty set when not loaded", () => {
-    vi.mocked(scryfallClient.searchCards).mockImplementation(
+    vi.mocked(scryfallClient.fetchAllPages).mockImplementation(
       () => new Promise(() => {})
     );
     const { result } = renderHook(() => useBanlistSet(), {
@@ -72,10 +73,9 @@ describe("useBanlistSet", () => {
       { id: "1", name: "Emrakul, the Aeons Torn" },
       { id: "2", name: "Primeval Titan" },
     ];
-    vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce({
-      data: bannedCards,
-      has_more: false,
-    } as never);
+    vi.mocked(scryfallClient.fetchAllPages).mockResolvedValueOnce(
+      bannedCards as never
+    );
 
     const { result } = renderHook(() => useBanlistSet(), {
       wrapper: createWrapper(),
