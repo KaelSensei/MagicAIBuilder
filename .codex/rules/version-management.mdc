@@ -1,0 +1,82 @@
+---
+alwaysApply: true
+---
+# Version Management Rules
+
+Automatically commit and push changes after completing any feature, bug fix, or significant addition.
+
+## Commit Workflow
+
+**CRITICAL: Do this automatically without asking for user confirmation.**
+
+After completing a task (feature, bug fix, or new addition), **immediately and automatically** execute:
+
+0. **Quality gate (required):**
+   - Ensure lint + tests pass
+   - Run `pnpm sonar`
+   - Verify SonarCloud open issues are **0**
+
+1. **Stage all changes:**
+   ```bash
+   git add -A
+   ```
+
+2. **Commit with descriptive message using conventional commits:**
+   ```bash
+   git commit -m "type: brief description"
+   ```
+
+3. **Push to current branch:**
+   ```bash
+   git push origin $(git branch --show-current)
+   ```
+
+**Do NOT ask "Should I commit?" or "Do you want me to push?"** - just do it automatically.
+
+## Commit Message Types
+
+- `feat:` - New feature or functionality
+- `fix:` - Bug fix
+- `docs:` - Documentation changes
+- `refactor:` - Code restructuring without changing functionality
+- `test:` - Adding or updating tests
+- `chore:` - Maintenance tasks, dependencies, config changes
+- `perf:` - Performance improvements
+- `style:` - Code style changes (formatting, no logic change)
+
+## Commit Message Format
+
+```
+type: brief description
+
+- Detailed bullet point 1
+- Detailed bullet point 2
+```
+
+**Examples (MagicTheOfflining):**
+- `feat: add sideboard and considering tabs to deck detail`
+- `fix: show board (mainboard/sideboard/considering) in card search results`
+- `docs: update PLAY_STORE_DEPLOYMENT with keystore steps`
+- `test: add scraping integration tests for Moxfield decks`
+
+## Rules
+
+- **ALWAYS create a branch first** for fixes and features: `fix/description` or `feature/description` — never work directly on main/master
+- **ALWAYS commit automatically** after completing a feature, fixing a bug, or adding something new - **DO NOT ASK FOR PERMISSION**
+- **ALWAYS push immediately** after committing (unless push fails due to permissions) - **DO NOT ASK FOR PERMISSION**
+- **Never commit** to main/master directly - always use feature branches
+- **Use descriptive messages** that explain what and why
+- **Group related changes** in a single commit when they're part of the same task
+- **No confirmation prompts** - the AI assistant must execute git commands automatically as part of completing any task
+
+### Branch selection for new tasks
+
+- On **every new user request**, first check the current branch and whether it is already merged.
+- If the current branch **is merged** (or is one of the special long‑lived branches `main`, `master`, `dev`, or `develop`), **create a fresh feature/fix branch** for the new work before making changes.
+- Only continue committing to an existing feature/fix branch when it is **still open and not yet merged**.
+
+## Branch Management
+
+- Work on feature branches: `feature/description` or `fix/description`
+- Current branch: Check with `git branch --show-current`
+- Push to the current branch, never force push to shared branches

@@ -1,0 +1,55 @@
+---
+alwaysApply: true
+---
+# Security Rules for Cursor
+
+This repository contains a **React Native mobile app with JavaScript/TypeScript code** and uses **HTML scraping, SQLite, and local file storage**.  
+Cursor (or any AI assistant) must treat **security and user privacy as first‑class requirements**, even though this is a personal project.
+
+Before any branch is considered ready for merge, the following rules **must be enforced**.
+
+## General Security Principles
+
+- Never introduce hidden logic, obfuscated code, or unnecessary indirection.
+- Avoid dynamic code execution (`eval`, `Function`, dynamic imports, unsafe reflection).
+- Avoid uncontrolled access to the filesystem or device APIs.
+- Prefer explicit, readable, auditable logic over clever or compact code.
+- Assume all dependencies may be compromised unless verified.
+
+
+## JavaScript / TypeScript / React Native Security
+
+- No post-install scripts, shell execution, or arbitrary filesystem access unless **strictly required** for the app.
+- No new network calls to unknown or undocumented endpoints.  
+  - Allowed domains should stay limited to **Moxfield** (for scraping HTML/JSON) and **Scryfall** (for images), plus standard Android/React Native tooling.
+- Avoid dynamic requires/imports based on user input.
+- Avoid prototype pollution vectors and unsafe object merging.
+- Keep dependencies **minimal and well-known**; prefer built‑ins and lightweight libs.
+- Do not introduce any background tracking, analytics, or hidden telemetry.
+
+## Local Data & Offline Behavior
+
+- SQLite is the **single source of truth**; never leak or sync data to a remote backend.
+- Local image caching should:
+  - Store only card images and app‑needed assets.
+  - Avoid writing arbitrary user-provided paths.
+  - Clean up safely when needed (no recursive deletes outside the app’s sandbox).
+- Scraping logic must treat remote HTML as **untrusted input**:
+  - Validate and sanitize scraped fields before inserting into SQLite.
+  - Handle missing/changed fields defensively (no crashes on bad data).
+
+## Merge Safety Rules
+
+- Never approve or suggest merging code that has not passed security review.
+- Never auto-merge changes involving execution, permissions, or external calls.
+- If a potential vulnerability or suspicious pattern is detected, highlight it explicitly and explain the risk.
+
+## Cursor Behavior
+
+- Always reason explicitly about security when modifying code.
+- Prefer defensive coding patterns.
+- When in doubt, **pause and ask** instead of guessing.
+- Security > convenience > performance.
+
+These rules exist to prevent backdoors, malware, supply-chain attacks, privacy leaks, and critical vulnerabilities.
+They must be applied automatically and consistently.

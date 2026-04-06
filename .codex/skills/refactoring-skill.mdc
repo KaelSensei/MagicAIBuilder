@@ -1,0 +1,34 @@
+---
+alwaysApply: true
+---
+
+# Refactoring Skill
+
+Based on Martin Fowler (Refactoring)
+
+## Principles
+
+- Refactoring must not change behavior
+- Work in small steps
+- Keep code always functional
+
+## Techniques
+
+- Extract function
+- Rename variables
+- Remove duplication
+- Simplify conditionals
+
+## Safety
+
+- Only refactor with confidence (tests or clear reasoning)
+- If unsure, stop and ask
+
+## Cursor Behavior
+
+- Never mix refactor with feature/fix
+- Keep changes small and reviewable
+
+## Sources
+
+- Refactoring – Martin Fowler
