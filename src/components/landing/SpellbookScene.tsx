@@ -1,8 +1,8 @@
 "use client";
 /**
- * SpellbookScene — immersive 3D landing page for unauthenticated users.
- * Renders an ancient open spellbook on a dark altar with glowing runes
- * for Sign In ("ARCHITECT") and Sign Up ("RECRUIT").
+ * SpellbookScene — dark fantasy 3D landing page.
+ * Inspired by Paolo Parente, Brom, and 90s MTG/D&D art:
+ * chiaroscuro lighting, creeping fog, drifting embers, warped parchment.
  */
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useCallback, useState } from "react";
@@ -36,7 +36,7 @@ export default function SpellbookScene() {
   }, [redirectPath, router]);
 
   return (
-    <div className="h-screen w-screen bg-black relative">
+    <div className="h-screen w-screen bg-[#050505] relative">
       <Canvas
         camera={{ position: [0, 2, 5], fov: 45 }}
         gl={{ antialias: true, alpha: false }}
@@ -44,10 +44,30 @@ export default function SpellbookScene() {
         style={{ cursor: isHovering ? "pointer" : "default" }}
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.1} />
-          <pointLight position={[0, 3, 0]} intensity={0.8} color="#e8d5a3" />
-          <pointLight position={[-2, 2, 2]} intensity={0.3} color="#6366f1" />
-          <pointLight position={[2, 2, 2]} intensity={0.3} color="#22c55e" />
+          {/* The Abyss: pitch-black void with creeping mist */}
+          <color attach="background" args={["#050505"]} />
+          <fog attach="fog" args={["#050505", 5, 15]} />
+
+          {/* The Torch: warm, flickering single source */}
+          <pointLight
+            position={[0, 2.5, 1]}
+            intensity={1.5}
+            color="#ffaa44"
+            distance={10}
+            decay={2}
+          />
+
+          {/* The Moonlight: cold rim light to catch edges */}
+          <spotLight
+            position={[5, 5, 5]}
+            angle={0.15}
+            penumbra={1}
+            intensity={0.5}
+            color="#4a5568"
+          />
+
+          {/* Faint fill so the scene isn't pure black */}
+          <ambientLight intensity={0.04} />
 
           <CameraRig zoomTarget={zoomTarget} onZoomComplete={handleZoomComplete} />
           <Altar />
@@ -58,7 +78,7 @@ export default function SpellbookScene() {
           <GlyphSymbol
             position={[-0.45, 0.85, 0.15]}
             label="ARCHITECT"
-            color="#6366f1"
+            color="#d9381e"
             onClick={() =>
               handleGlyphClick("/auth/signin", new THREE.Vector3(-0.45, 0.85, 0.15))
             }
@@ -69,7 +89,7 @@ export default function SpellbookScene() {
           <GlyphSymbol
             position={[0.45, 0.85, 0.15]}
             label="RECRUIT"
-            color="#22c55e"
+            color="#b8860b"
             onClick={() =>
               handleGlyphClick("/auth/signup", new THREE.Vector3(0.45, 0.85, 0.15))
             }
@@ -80,9 +100,11 @@ export default function SpellbookScene() {
         </Suspense>
       </Canvas>
 
-      {/* Bottom attribution */}
+      {/* Bottom attribution — gothic feel */}
       <div className="absolute bottom-6 left-0 right-0 text-center pointer-events-none">
-        <p className="text-xs text-white/30">MagicAIBuilder</p>
+        <p className="text-xs text-amber-900/40 tracking-[0.3em] uppercase font-serif">
+          MagicAIBuilder
+        </p>
       </div>
     </div>
   );

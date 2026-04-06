@@ -12,18 +12,18 @@ interface GlyphSymbolProps {
   readonly onHover: (hovered: boolean) => void;
 }
 
-/** Interactive glowing rune on a spellbook page */
+/** Glowing rune on a spellbook page — gothic, ember-lit */
 export function GlyphSymbol({ position, label, color, onClick, onHover }: GlyphSymbolProps) {
   const [hovered, setHovered] = useState(false);
   const glowRef = useRef<THREE.PointLight>(null);
 
   useFrame((_, delta) => {
     if (!glowRef.current) return;
-    const target = hovered ? 3 : 0.5;
+    const target = hovered ? 4 : 0.8;
     glowRef.current.intensity = THREE.MathUtils.lerp(
       glowRef.current.intensity,
       target,
-      delta * 4
+      delta * 3
     );
   });
 
@@ -37,42 +37,44 @@ export function GlyphSymbol({ position, label, color, onClick, onHover }: GlyphS
   };
 
   return (
-    <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.3}>
+    <Float speed={0.8} rotationIntensity={0.05} floatIntensity={0.15}>
       <group position={position}>
-        {/* Clickable circle */}
+        {/* Rune circle — rough-edged, ember-lit */}
         <mesh
           onPointerEnter={handlePointerEnter}
           onPointerLeave={handlePointerLeave}
           onClick={onClick}
         >
-          <circleGeometry args={[0.25, 32]} />
+          <circleGeometry args={[0.22, 6]} />
           <meshStandardMaterial
             color={color}
             emissive={color}
-            emissiveIntensity={hovered ? 2 : 0.5}
+            emissiveIntensity={hovered ? 3 : 0.8}
             transparent
-            opacity={hovered ? 0.9 : 0.6}
+            opacity={hovered ? 0.95 : 0.5}
+            roughness={0.8}
           />
         </mesh>
 
-        {/* Label text */}
+        {/* Label — gothic uppercase, faint until hovered */}
         <Text
-          position={[0, -0.4, 0.01]}
-          fontSize={0.08}
+          position={[0, -0.38, 0.01]}
+          fontSize={0.065}
           color={color}
           anchorX="center"
           anchorY="middle"
-          fillOpacity={hovered ? 1 : 0.5}
+          fillOpacity={hovered ? 1 : 0.35}
+          letterSpacing={0.15}
         >
           {label}
         </Text>
 
-        {/* Glow light */}
+        {/* Rune glow — warm, close-range */}
         <pointLight
           ref={glowRef}
           color={color}
-          intensity={0.5}
-          distance={2}
+          intensity={0.8}
+          distance={1.5}
           decay={2}
         />
       </group>
