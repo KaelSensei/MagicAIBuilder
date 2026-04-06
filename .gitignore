@@ -37,8 +37,7 @@ yarn-error.log*
 Thumbs.db
 desktop.ini
 
-# Claude settings (contains personal paths and permissions)
-.claude/settings.json
+# Claude settings (local overrides only — project settings.json is committed)
 .claude/settings.local.json
 
 # Cursor settings (contains personal paths and permissions)

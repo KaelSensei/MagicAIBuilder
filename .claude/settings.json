@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "if": "Bash(gh pr create:*)",
+            "prompt": "BEFORE creating a PR, verify: was `pnpm sonar` run (or CI relied upon) AND were SonarCloud open issues confirmed to be 0 in this session? Check the conversation for evidence of either `pnpm sonar` execution or a SonarCloud API check. If NEITHER was done, BLOCK with reason: 'Run `pnpm sonar` or check SonarCloud issues before creating PR (CLAUDE.md checklist item 4-5)'. If sonar WAS checked AND issues are 0, ALLOW. If issues are > 0, BLOCK with reason: 'SonarCloud has open issues — fix them before creating PR'.",
+            "statusMessage": "Checking SonarCloud compliance..."
+          }
+        ]
+      }
+    ]
+  }
+}
