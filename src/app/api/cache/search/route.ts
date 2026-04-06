@@ -1,17 +1,27 @@
+import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
 
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-// GET /api/cache/search?key=<hash> — lookup cached search result
+/** Generate cache key from query and page */
+function generateCacheKey(query: string, page: number): string {
+  return createHash("sha256").update(`${query}|${page}`).digest("hex");
+}
+
+// GET /api/cache/search?query=<string>&page=<number> — lookup cached search result
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const cacheKey = searchParams.get("key");
+  const query = searchParams.get("query");
+  const pageStr = searchParams.get("page");
+  const page = pageStr ? parseInt(pageStr, 10) : 1;
 
-  if (!cacheKey || cacheKey.length > 256) {
+  if (!query || query.length === 0 || Number.isNaN(page)) {
     return NextResponse.json({ hit: false });
   }
+
+  const cacheKey = generateCacheKey(query, page);
 
   try {
     const cached = await prisma.scryfallSearchCache.findUnique({
@@ -44,21 +54,23 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { cacheKey, data } = body;
+    const { query, page, data } = body;
 
-    if (!cacheKey || !data) {
+    if (!query || !data || typeof page !== "number") {
       return NextResponse.json(
-        { error: "cacheKey and data are required" },
+        { error: "query, page (number), and data are required" },
         { status: 400 }
       );
     }
 
-    if (cacheKey.length > 256) {
+    if (query.length === 0 || query.length > 1000) {
       return NextResponse.json(
-        { error: "Cache key too long" },
+        { error: "Query must be 1-1000 characters" },
         { status: 400 }
       );
     }
+
+    const cacheKey = generateCacheKey(query, page);
 
     const MAX_CACHE_BYTES = 500 * 1024; // 500KB for search results (can be large)
     if (JSON.stringify(data).length > MAX_CACHE_BYTES) {
