@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Layers, Loader2, Plus } from "lucide-react";
 import { DeckWizard } from "@/components/deck/DeckWizard";
 import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { LandingPage } from "@/components/landing/LandingPage";
 import { useDeckStore } from "@/lib/deck/store";
 import { logger } from "@/lib/logger";
 import { DeckListTable } from "@/components/deck/DeckListTable";
@@ -50,6 +52,7 @@ function DeckCardSkeleton() {
 }
 
 export default function HomePage() {
+  const { status: sessionStatus } = useSession();
   const router = useRouter();
   const { decks, createDeck, loadDecks, isSyncing, deleteDeck, duplicateDeck } = useDeckStore();
   const [isLoading, setIsLoading] = useState(true);
@@ -129,6 +132,11 @@ export default function HomePage() {
     setSortKey(key);
     setSortDir(dir);
   }, []);
+
+  // Show 3D spellbook landing for unauthenticated visitors
+  if (sessionStatus === "unauthenticated") {
+    return <LandingPage />;
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
