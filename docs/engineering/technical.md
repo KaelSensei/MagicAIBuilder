@@ -586,6 +586,20 @@ LandingPage.tsx          # Detects mobile/reduced-motion → static or 3D
 
 Performance: dpr capped at 1.5, 80 particles, no shadows. Three.js never loads on authenticated pages.
 
+### SonarCloud & React Three Fiber
+
+SonarCloud's `S6747` rule ("Unknown property") does not understand R3F's extended JSX namespace. All R3F intrinsic elements (`<mesh>`, `<boxGeometry>`, `<meshStandardMaterial>`, `<pointLight>`, etc.) use props like `position`, `args`, `roughness`, `emissive`, `intensity` that map to Three.js object properties — not HTML attributes.
+
+These are **verified false positives**: TypeScript and ESLint both pass clean because `@react-three/fiber` provides proper JSX type declarations. The rule is suppressed for `src/components/landing/**` only via `sonar-project.properties`:
+
+```properties
+sonar.issue.ignore.multicriteria=r3f
+sonar.issue.ignore.multicriteria.r3f.ruleKey=typescript:S6747
+sonar.issue.ignore.multicriteria.r3f.resourceKey=src/components/landing/**
+```
+
+If R3F components are added outside `src/components/landing/`, the exclusion scope must be extended.
+
 ---
 
 ## Recent Features (post Phase 4+)

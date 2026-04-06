@@ -101,4 +101,28 @@ Ces gaps ne bloquent pas les merges en cours mais doivent être adressés :
 
 ---
 
+## SonarCloud Rule Exclusions
+
+### S6747 — "Unknown property" in React Three Fiber components
+
+**Scope:** `src/components/landing/**`
+
+**Why excluded:** SonarCloud's S6747 rule flags JSX attributes like `position`, `args`, `roughness`, `emissive`, `intensity`, `decay` as "unknown HTML properties". These are **false positives** — they are valid React Three Fiber (R3F) intrinsic element props, not HTML.
+
+R3F extends the JSX namespace to map Three.js classes (`mesh`, `boxGeometry`, `meshStandardMaterial`, `pointLight`, etc.) to JSX elements. Their props correspond to Three.js constructor arguments and object properties. SonarCloud's static analyzer has no R3F plugin and cannot resolve these extended JSX types.
+
+**Verification:** TypeScript (`pnpm tsc --noEmit`) and ESLint (`pnpm lint`) both pass with zero errors on these files, because `@react-three/fiber` provides proper type declarations for all R3F intrinsic elements.
+
+**Config:** `sonar-project.properties`
+
+```properties
+sonar.issue.ignore.multicriteria=r3f
+sonar.issue.ignore.multicriteria.r3f.ruleKey=typescript:S6747
+sonar.issue.ignore.multicriteria.r3f.resourceKey=src/components/landing/**
+```
+
+**Impact:** 50 false positives suppressed. Only affects `src/components/landing/` — the rule remains active everywhere else in the codebase.
+
+---
+
 _Ce fichier est la source de vérité qualité du projet. Toute dégradation par rapport à la baseline déclenche une action corrective._

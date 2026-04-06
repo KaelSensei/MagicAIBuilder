@@ -39,7 +39,7 @@ function checkCardSingleton(card: DeckCard, deck: Deck): string | null {
     ...(deck.commander ? [deck.commander] : []),
     ...(deck.partner ? [deck.partner] : []),
   ];
-  return allCards.find((c) => c.name === card.name)
+  return allCards.some((c) => c.name === card.name)
     ? `${card.name} is already in the deck (singleton rule)`
     : null;
 }
