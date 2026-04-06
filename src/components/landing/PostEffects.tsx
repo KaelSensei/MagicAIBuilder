@@ -1,17 +1,20 @@
 "use client";
-import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, Vignette, Noise } from "@react-three/postprocessing";
 
-/** Post-processing: bloom for glow + vignette for dramatic framing */
+/** Post-processing: gritty illustrated Parente texture + deep shadows */
 export function PostEffects() {
   return (
     <EffectComposer>
       <Bloom
-        intensity={1.2}
-        luminanceThreshold={0.6}
+        intensity={0.6}
+        luminanceThreshold={0.7}
         luminanceSmoothing={0.9}
         mipmapBlur
       />
-      <Vignette offset={0.3} darkness={0.7} />
+      {/* Film grain — gritty, hand-drawn texture */}
+      <Noise opacity={0.06} />
+      {/* Heavy vignette — crushing dark edges */}
+      <Vignette offset={0.15} darkness={0.85} />
     </EffectComposer>
   );
 }
