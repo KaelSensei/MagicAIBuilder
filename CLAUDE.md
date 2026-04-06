@@ -331,11 +331,15 @@ Checklist (run mentally or via script):
 1. `npx tsc --noEmit` passes
 2. `pnpm lint` passes (zero warnings)
 3. `pnpm test` passes
-4. No `any`, no `as`, no `!`, no `eslint-disable` without justification
-5. No `console.log` left
-6. No file > 300 lines
-7. All new functions have JSDoc with `@param` and `@returns`
-8. Derived state is memoized in components
+4. `pnpm sonar` runs successfully (or rely on CI if it hangs locally)
+5. SonarCloud open issues are **0**:
+   - `https://sonarcloud.io/project/issues?issueStatuses=OPEN&id=KaelSensei_MagicAIBuilder`
+   - `https://sonarcloud.io/api/issues/search?componentKeys=KaelSensei_MagicAIBuilder&statuses=OPEN&ps=100`
+6. No `any`, no `as`, no `!`, no `eslint-disable` without justification
+7. No `console.log` left
+8. No file > 300 lines
+9. All new functions have JSDoc with `@param` and `@returns`
+10. Derived state is memoized in components
 
 ## Reference
 
