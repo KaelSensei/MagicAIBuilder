@@ -223,6 +223,58 @@ describe("Collection store — updateCondition", () => {
   });
 });
 
+describe("Collection store — swapPrinting", () => {
+  beforeEach(() => {
+    useCollectionStore.setState({
+      collectionCards: {},
+      collectionCardsFoil: {},
+      isLoading: false,
+      isSyncing: false,
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("moves a card to the new scryfallId key (non-foil)", async () => {
+    const card = makeCollectionCard({ id: "card-1", scryfallId: "sf-old", foil: false });
+    useCollectionStore.setState({ collectionCards: { "sf-old": card } });
+
+    const response = {
+      merged: false,
+      card: {
+        ...card,
+        scryfallId: "sf-new",
+        imageUri: "https://example.com/new.jpg",
+        createdAt: "2024-01-01T00:00:00.000Z",
+        acquiredAt: null,
+      },
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => response }));
+
+    await useCollectionStore.getState().swapPrinting("card-1", {
+      scryfallId: "sf-new",
+      name: card.name,
+      imageUri: "https://example.com/new.jpg",
+      price: null,
+    });
+
+    expect(useCollectionStore.getState().collectionCards["sf-old"]).toBeUndefined();
+    expect(useCollectionStore.getState().collectionCards["sf-new"]?.imageUri).toBe("https://example.com/new.jpg");
+  });
+
+  it("handles swapPrinting failure gracefully", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500, statusText: "Error" }));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await useCollectionStore.getState().swapPrinting("card-1", {
+      scryfallId: "sf-new",
+      name: "Sol Ring",
+      imageUri: "https://example.com/new.jpg",
+      price: null,
+    });
+    expect(useCollectionStore.getState().isSyncing).toBe(false);
+    consoleSpy.mockRestore();
+  });
+});
+
 describe("Collection store — loadCollection", () => {
   beforeEach(() => {
     useCollectionStore.setState({

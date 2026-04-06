@@ -1,16 +1,20 @@
 "use client";
 // Collection page — lists all owned cards with stats
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Package, Search, LayoutGrid, List, Trash2, Download, Copy, Check } from "lucide-react";
+import { Loader2, Package, Search, LayoutGrid, List, Trash2, Download, Copy, Check, Image as ImageIcon } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
 import { formatCollectionCsv, formatCollectionText } from "@/lib/collection/shopping-list";
 import { cn } from "@/components/ui/utils";
 import type { CollectionCard } from "@/lib/collection/types";
 import { CardImage } from "@/components/card/CardImage";
+import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
+import type { ScryfallCard } from "@/lib/scryfall/types";
+import { getCardImageUri } from "@/lib/scryfall/images";
+import { CollectionCardTooltip } from "@/components/collection/CollectionCardTooltip";
 
 export function CollectionPageClient() {
-  const { collectionCards, collectionCardsFoil, isLoading, loadCollection, removeFromCollection, updateQuantity } =
+  const { collectionCards, collectionCardsFoil, isLoading, loadCollection, removeFromCollection, updateQuantity, swapPrinting } =
     useCollectionStore();
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,6 +39,8 @@ export function CollectionPageClient() {
   );
 
   const [copied, setCopied] = useState(false);
+  const [printingsTarget, setPrintingsTarget] = useState<CollectionCard | null>(null);
+  const [printingsCard, setPrintingsCard] = useState<ScryfallCard | null>(null);
 
   const exportCards = useMemo(
     () =>
@@ -66,6 +72,32 @@ export function CollectionPageClient() {
     URL.revokeObjectURL(url);
   }, [exportCards]);
 
+  const openPrintingsModal = useCallback(async (card: CollectionCard) => {
+    try {
+      const { getCardById } = await import("@/lib/scryfall/client");
+      const scryfallCard = await getCardById(card.scryfallId);
+      setPrintingsTarget(card);
+      setPrintingsCard(scryfallCard);
+    } catch {
+      // If Scryfall lookup fails, do nothing (user can retry)
+    }
+  }, []);
+
+  const handleSelectPrinting = useCallback(
+    async (printing: ScryfallCard) => {
+      if (!printingsTarget) return;
+      await swapPrinting(printingsTarget.id, {
+        scryfallId: printing.id,
+        name: printing.name,
+        imageUri: getCardImageUri(printing, "normal"),
+        price: printing.prices?.usd ? Number.parseFloat(printing.prices.usd) : null,
+      });
+      setPrintingsCard(null);
+      setPrintingsTarget(null);
+    },
+    [printingsTarget, swapPrinting]
+  );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center flex-1 text-[var(--text-secondary)]">
@@ -77,6 +109,17 @@ export function CollectionPageClient() {
 
   return (
     <main className="flex-1 overflow-y-auto p-6">
+      {/* Printings modal */}
+      {printingsCard && (
+        <PrintingSelectorModal
+          card={printingsCard}
+          onSelect={handleSelectPrinting}
+          onClose={() => {
+            setPrintingsCard(null);
+            setPrintingsTarget(null);
+          }}
+        />
+      )}
       {/* Header */}
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
@@ -186,6 +229,7 @@ export function CollectionPageClient() {
                 card={card}
                 onRemove={removeFromCollection}
                 onQuantityChange={updateQuantity}
+                onOpenPrintings={openPrintingsModal}
               />
             ))}
           </div>
@@ -206,6 +250,7 @@ export function CollectionPageClient() {
                 card={card}
                 onRemove={removeFromCollection}
                 onQuantityChange={updateQuantity}
+                onOpenPrintings={openPrintingsModal}
               />
             ))}
           </div>
@@ -245,10 +290,12 @@ function CollectionGridCard({
   card,
   onRemove,
   onQuantityChange,
+  onOpenPrintings,
 }: {
   readonly card: CollectionCard;
   readonly onRemove: (id: string) => void;
   readonly onQuantityChange: (id: string, qty: number) => void;
+  readonly onOpenPrintings: (card: CollectionCard) => void;
 }) {
   return (
     <div className="relative group/card">
@@ -276,6 +323,15 @@ function CollectionGridCard({
       {/* Hover overlay */}
       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/card:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2 p-2">
         <p className="text-white text-xs text-center font-medium leading-tight">{card.name}</p>
+        <button
+          type="button"
+          onClick={() => void onOpenPrintings(card)}
+          className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white/15 hover:bg-white/25 text-white"
+          title="Change art / printing"
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          Art
+        </button>
         <div className="flex items-center gap-1">
           <button
             onClick={() => onQuantityChange(card.id, Math.max(0, card.quantity - 1))}
@@ -307,18 +363,33 @@ function CollectionListRow({
   card,
   onRemove,
   onQuantityChange,
+  onOpenPrintings,
 }: {
   readonly card: CollectionCard;
   readonly onRemove: (id: string) => void;
   readonly onQuantityChange: (id: string, qty: number) => void;
+  readonly onOpenPrintings: (card: CollectionCard) => void;
 }) {
   const value = card.price === null || card.price === undefined ? "—" : `$${(card.price * card.quantity).toFixed(2)}`;
 
   return (
     <div className="grid grid-cols-[1fr_80px_80px_80px_100px_40px] gap-2 px-3 py-2 rounded hover:bg-[var(--surface-hover)] items-center group">
-      <span className="text-sm text-[var(--text-primary)] truncate">
-        {card.name}
-      </span>
+      <div className="min-w-0 flex items-center gap-2">
+        <CollectionCardTooltip card={card}>
+          <span className="text-sm text-[var(--text-primary)] truncate cursor-default">
+            {card.name}
+          </span>
+        </CollectionCardTooltip>
+        <button
+          type="button"
+          onClick={() => void onOpenPrintings(card)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          title="Change art / printing"
+          aria-label={`Change art for ${card.name}`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+        </button>
+      </div>
       {/* Qty controls */}
       <div className="flex items-center gap-1">
         <button

@@ -22,6 +22,7 @@ export interface CollectionStore {
   removeFromCollection: (id: string) => Promise<void>;
   updateQuantity: (id: string, quantity: number) => Promise<void>;
   updateCondition: (id: string, condition: CardCondition | null) => Promise<void>;
+  swapPrinting: (id: string, next: { scryfallId: string; name: string; imageUri: string; price: number | null }) => Promise<void>;
 }
 
 export const useCollectionStore = create<CollectionStore>()((set, get) => ({
@@ -247,6 +248,92 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
       });
     } catch (err) {
       logger.error("Unexpected error", "updateCondition", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  swapPrinting: async (id: string, next: { scryfallId: string; name: string; imageUri: string; price: number | null }) => {
+    set({ isSyncing: true });
+    try {
+      const res = await fetch(`/api/collection/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scryfallId: next.scryfallId,
+          name: next.name,
+          imageUri: next.imageUri,
+          price: next.price,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to swap printing");
+      const data: unknown = await res.json();
+
+      const isRecord = (v: unknown): v is Record<string, unknown> =>
+        typeof v === "object" && v !== null;
+
+      const parseCondition = (v: unknown): CardCondition | null => {
+        if (v === null || v === undefined) return null;
+        if (v === "NM" || v === "LP" || v === "MP" || v === "HP" || v === "DMG") return v;
+        return null;
+      };
+
+      const parse = (v: unknown): CollectionCard | null => {
+        if (!isRecord(v)) return null;
+        const createdAt = v["createdAt"];
+        const acquiredAt = v["acquiredAt"];
+        const price = v["price"];
+        const imageUri = v["imageUri"];
+
+        if (typeof v["id"] !== "string") return null;
+        if (typeof v["scryfallId"] !== "string") return null;
+        if (typeof v["name"] !== "string") return null;
+        if (typeof v["quantity"] !== "number") return null;
+        if (typeof v["foil"] !== "boolean") return null;
+        if (typeof createdAt !== "string") return null;
+        if (acquiredAt !== null && acquiredAt !== undefined && typeof acquiredAt !== "string") return null;
+        if (price !== null && price !== undefined && typeof price !== "number") return null;
+        if (imageUri !== undefined && typeof imageUri !== "string") return null;
+
+        return {
+          id: v["id"],
+          scryfallId: v["scryfallId"],
+          name: v["name"],
+          quantity: v["quantity"],
+          foil: v["foil"],
+          condition: parseCondition(v["condition"]),
+          acquiredAt: acquiredAt ? new Date(acquiredAt) : null,
+          price: typeof price === "number" ? price : null,
+          imageUri: typeof imageUri === "string" ? imageUri : "",
+          createdAt: new Date(createdAt),
+        };
+      };
+
+      if (!isRecord(data)) throw new Error("Invalid response from server");
+      const cardPayload = parse(data["card"]);
+      if (!cardPayload) throw new Error("Invalid response from server");
+
+      set((state) => {
+        const collectionCards = { ...state.collectionCards };
+        const collectionCardsFoil = { ...state.collectionCardsFoil };
+
+        for (const [k, c] of Object.entries(collectionCards)) {
+          if (c.id === id) delete collectionCards[k];
+        }
+        for (const [k, c] of Object.entries(collectionCardsFoil)) {
+          if (c.id === id) delete collectionCardsFoil[k];
+        }
+
+        if (cardPayload.foil) {
+          collectionCardsFoil[cardPayload.scryfallId] = cardPayload;
+        } else {
+          collectionCards[cardPayload.scryfallId] = cardPayload;
+        }
+
+        return { collectionCards, collectionCardsFoil };
+      });
+    } catch (err) {
+      logger.error("Unexpected error", "swapPrinting", err);
     } finally {
       set({ isSyncing: false });
     }
