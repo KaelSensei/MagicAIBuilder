@@ -5,7 +5,7 @@ This document outlines suggested folders and markdown files to enhance AI compre
 ## 📁 Suggested Folder Structure
 
 ```
-.cursor/
+.agents/
 ├── commands/          # ✅ Already exists (start.md, continue.md)
 ├── rules/            # ✅ Already exists (security, technical-stack, etc.)
 └── docs/             # 🆕 NEW: Project-specific documentation

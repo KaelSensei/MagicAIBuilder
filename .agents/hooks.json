@@ -1,0 +1,10 @@
+{
+  "description": "Shared hooks for all AI agents. Each agent reads this differently — see README.",
+  "hooks": {
+    "pre-pr": {
+      "description": "Block PR creation if SonarCloud quality gate is not verified",
+      "check": "Verify that `pnpm sonar` was run (or CI relied upon) AND SonarCloud open issues = 0",
+      "block_message": "Run `pnpm sonar` or check SonarCloud issues before creating PR (CLAUDE.md checklist item 4-5)"
+    }
+  }
+}
