@@ -37,15 +37,11 @@ yarn-error.log*
 Thumbs.db
 desktop.ini
 
-# Claude settings (local overrides only — project settings.json is committed)
-.claude/settings.local.json
-
-# Codex settings (contains personal paths, permissions, and credentials)
-.codex/settings.json
-.codex/settings.local.json
-.codex/mcp.json
-
-# Cursor settings (contains personal paths and permissions)
+# AI Agents — .agents/ is the source of truth (committed)
+# Agent-specific dirs contain only symlinks + local config (all gitignored)
+.claude/*
+!.claude/settings.json
+.codex/
 .cursor/
 
 # Test & coverage
@@ -57,8 +53,6 @@ playwright-report/
 test-results/
 
 # Misc
-.agents/
-AGENTS.md
 *.tsbuildinfo
 next-env.d.ts
 .pr-body*.md

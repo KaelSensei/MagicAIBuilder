@@ -87,6 +87,14 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Seed demo data (optional)
+
+```bash
+pnpm db:seed
+```
+
+Creates an Atraxa Superfriends demo deck with 100 cards, a snapshot, and collection entries.
+
 ### AI Suggestions (optional)
 
 Add one of these to `.env.local` for personalized AI deck analysis:
@@ -114,6 +122,7 @@ Without a key, the AI panel uses curated generic suggestions.
 | `pnpm db:migrate` | Apply pending migrations                  |
 | `pnpm db:studio`  | Open Prisma Studio                        |
 | `pnpm db:reset`   | Reset database                            |
+| `pnpm db:seed`    | Seed demo data (Atraxa deck)              |
 
 ## E2E in Docker (Playwright)
 
@@ -195,6 +204,102 @@ docs/
   rules/                       # Internal rules / conventions docs (e.g. magic-comp-rules-*.txt)
   init-prompt.md               # Seed prompt / bootstrap notes for agent-assisted work
 ```
+
+## AI Agent Configuration
+
+All shared agent resources are centralized in `.agents/` as the **single source of truth**. Agent-specific directories (`.claude/`, `.codex/`, `.cursor/`) contain only symlinks and local config — they are gitignored.
+
+```text
+.agents/                            ← committed, shared across all agents
+  skills/                           ← skill definitions
+    mtg-commander-analysis/         ← Commander deck analysis
+    mtg-learn/                      ← MTG learning guide
+    mtg-rules/                      ← Comprehensive rules engine
+    typescript-craftsmanship/       ← TS + React + Next.js quality rules
+    cursor-rules/                   ← Cursor-specific .mdc rules
+  commands/                         ← shared commands (22 workflows)
+  rules/                            ← shared coding rules (.mdc)
+  docs/                             ← shared documentation
+  hooks.json                        ← pre-PR quality gate hook (reference)
+
+.claude/                            ← gitignored except settings.json
+  settings.json                     ← pre-PR SonarCloud hook (committed)
+  skills → ../.agents/skills        ← symlink
+  settings.local.json               ← personal credentials (gitignored)
+  mcp.json                          ← MCP tokens (gitignored)
+
+.codex/                             ← entirely gitignored
+  skills  → ../.agents/skills       ← symlink
+  commands → ../.agents/commands
+  rules    → ../.agents/rules
+  docs     → ../.agents/docs
+
+.cursor/                            ← entirely gitignored
+  skills  → ../.agents/skills       ← symlink
+  commands → ../.agents/commands
+  rules    → ../.agents/rules
+  docs     → ../.agents/docs
+```
+
+### Setup agent symlinks after cloning
+
+After `pnpm install`, recreate the agent symlinks. A setup script is provided, or run manually:
+
+**Linux / macOS / WSL:**
+
+```bash
+# Skills
+cd .claude && ln -sf ../.agents/skills skills && cd ..
+cd .codex  && ln -sf ../.agents/skills skills && cd ..
+cd .cursor && ln -sf ../.agents/skills skills && cd ..
+
+# Commands, rules, docs (Codex & Cursor only)
+cd .codex && ln -sf ../.agents/commands commands && ln -sf ../.agents/rules rules && ln -sf ../.agents/docs docs && cd ..
+cd .cursor && ln -sf ../.agents/commands commands && ln -sf ../.agents/rules rules && ln -sf ../.agents/docs docs && cd ..
+```
+
+**Windows (CMD, run as Administrator):**
+
+```cmd
+mklink /D .claude\skills .agents\skills
+mklink /D .codex\skills  .agents\skills
+mklink /D .cursor\skills .agents\skills
+mklink /D .codex\commands .agents\commands
+mklink /D .codex\rules    .agents\rules
+mklink /D .codex\docs     .agents\docs
+mklink /D .cursor\commands .agents\commands
+mklink /D .cursor\rules    .agents\rules
+mklink /D .cursor\docs     .agents\docs
+```
+
+**Windows (PowerShell, run as Administrator):**
+
+```powershell
+'claude','codex','cursor' | ForEach-Object {
+  New-Item -ItemType SymbolicLink -Path ".$_\skills" -Target ".agents\skills" -Force
+}
+'codex','cursor' | ForEach-Object {
+  'commands','rules','docs' | ForEach-Object -Begin { $agent = $_ } -Process {
+    New-Item -ItemType SymbolicLink -Path ".$agent\$_" -Target ".agents\$_" -Force
+  }
+}
+```
+
+**Windows (Git Bash):**
+
+```bash
+# Requires: Windows Developer Mode enabled (Settings > For developers), OR run as Administrator
+for dir in .claude .codex .cursor; do
+  cd "$dir" && ln -sf ../.agents/skills skills && cd ..
+done
+for dir in .codex .cursor; do
+  cd "$dir" && ln -sf ../.agents/commands commands && ln -sf ../.agents/rules rules && ln -sf ../.agents/docs docs && cd ..
+done
+```
+
+> **Note Windows**: symlinks require either **Developer Mode** (Settings > For developers > Developer Mode ON) or running the terminal **as Administrator**. Without this, `mklink /D` and `ln -s` will fail with "Permission denied".
+
+Coding standards are defined in `CLAUDE.md` (root) and automatically loaded by Claude Code every session.
 
 ## AI Assistants 👾
 
