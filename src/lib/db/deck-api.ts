@@ -238,3 +238,49 @@ export async function storeCardCache(
     logger.warn("Failed to cache card", "storeCardCache", err);
   }
 }
+
+// ─── Scryfall Search Cache ────────────────────────────────────────────────────
+
+/** Look up a cached search result by query + page */
+export async function lookupSearchCache(
+  query: string,
+  page: number
+): Promise<unknown> {
+  const { createHash } = await import("crypto");
+  const cacheKey = createHash("sha256")
+    .update(`${query}|${page}`)
+    .digest("hex");
+
+  try {
+    const res = await fetch(
+      `/api/cache/search?key=${encodeURIComponent(cacheKey)}`
+    );
+    if (!res.ok) return null;
+    const body = await res.json();
+    return body.hit ? body.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Store a search result in the cache */
+export async function storeSearchCache(
+  query: string,
+  page: number,
+  data: unknown
+): Promise<void> {
+  const { createHash } = await import("crypto");
+  const cacheKey = createHash("sha256")
+    .update(`${query}|${page}`)
+    .digest("hex");
+
+  try {
+    await fetch("/api/cache/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cacheKey, data }),
+    });
+  } catch (err) {
+    logger.warn("Failed to cache search result", "storeSearchCache", err);
+  }
+}

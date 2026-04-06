@@ -12,6 +12,7 @@ export function useCardLookup(id: string) {
     queryFn: () => getCardById(id),
     enabled: !!id,
     staleTime: STALE_TIME_24H,
+    gcTime: STALE_TIME_24H,
   });
 }
 
@@ -22,5 +23,6 @@ export function useCardLookupByName(name: string) {
     queryFn: () => getCardByName(name),
     enabled: name.trim().length >= 2,
     staleTime: STALE_TIME_24H,
+    gcTime: STALE_TIME_24H,
   });
 }
