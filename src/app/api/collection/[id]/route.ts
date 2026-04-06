@@ -15,6 +15,55 @@ const patchSchema = z.object({
   imageUri: z.string().optional(),
 });
 
+/** Build a Prisma update data object from validated patch fields */
+function buildUpdateData(data: z.infer<typeof patchSchema>): Record<string, unknown> {
+  const update: Record<string, unknown> = {};
+  if (data.quantity !== undefined) update.quantity = data.quantity;
+  if (data.condition !== undefined) update.condition = data.condition;
+  if (data.foil !== undefined) update.foil = data.foil;
+  if (data.price !== undefined) update.price = data.price;
+  if (data.scryfallId !== undefined) update.scryfallId = data.scryfallId;
+  if (data.name !== undefined) update.name = data.name;
+  if (data.imageUri !== undefined) update.imageUri = data.imageUri;
+  if (data.acquiredAt !== undefined) {
+    update.acquiredAt = data.acquiredAt ? new Date(data.acquiredAt) : null;
+  }
+  return update;
+}
+
+/** Handle printing swap — may merge into an existing row */
+async function handlePrintingSwap(
+  id: string,
+  card: { scryfallId: string; foil: boolean; quantity: number },
+  data: z.infer<typeof patchSchema>,
+  userId: string
+): Promise<Response | null> {
+  if (!data.scryfallId || data.scryfallId === card.scryfallId) return null;
+
+  const existing = await prisma.collectionCard.findUnique({
+    where: {
+      scryfallId_foil_userId: {
+        scryfallId: data.scryfallId,
+        foil: data.foil ?? card.foil,
+        userId,
+      },
+    },
+  });
+
+  if (!existing) return null;
+
+  const merged = await prisma.collectionCard.update({
+    where: { id: existing.id },
+    data: {
+      quantity: existing.quantity + (data.quantity ?? card.quantity),
+      ...buildUpdateData({ ...data, quantity: undefined, scryfallId: undefined }),
+    },
+  });
+
+  await prisma.collectionCard.delete({ where: { id } });
+  return NextResponse.json({ merged: true, mergedFromId: id, card: merged });
+}
+
 // PATCH /api/collection/[id] — update quantity/condition/etc
 export async function PATCH(
   request: Request,
@@ -26,7 +75,6 @@ export async function PATCH(
 
     const { id } = await params;
 
-    // Verify ownership
     const card = await prisma.collectionCard.findUnique({ where: { id } });
     if (!card) {
       return NextResponse.json({ error: "Card not found" }, { status: 404 });
@@ -46,60 +94,17 @@ export async function PATCH(
 
     const data = parsed.data;
 
-    // If quantity is set to 0, delete instead
     if (data.quantity === 0) {
       await prisma.collectionCard.delete({ where: { id } });
       return NextResponse.json({ deleted: true });
     }
 
-    // Swap printing/art (scryfallId) — may merge into an existing row with same (scryfallId, foil, userId)
-    if (data.scryfallId && data.scryfallId !== card.scryfallId) {
-      const existing = await prisma.collectionCard.findUnique({
-        where: {
-          scryfallId_foil_userId: {
-            scryfallId: data.scryfallId,
-            foil: data.foil ?? card.foil,
-            userId: result.session.user.id,
-          },
-        },
-      });
-
-      // If an existing row matches the target printing, merge quantities and delete the current row.
-      if (existing) {
-        const merged = await prisma.collectionCard.update({
-          where: { id: existing.id },
-          data: {
-            quantity: existing.quantity + (data.quantity ?? card.quantity),
-            ...(data.condition !== undefined && { condition: data.condition }),
-            ...(data.price !== undefined && { price: data.price }),
-            ...(data.acquiredAt !== undefined && {
-              acquiredAt: data.acquiredAt ? new Date(data.acquiredAt) : null,
-            }),
-            ...(data.name !== undefined && { name: data.name }),
-            ...(data.imageUri !== undefined && { imageUri: data.imageUri }),
-          },
-        });
-
-        await prisma.collectionCard.delete({ where: { id } });
-
-        return NextResponse.json({ merged: true, mergedFromId: id, card: merged });
-      }
-    }
+    const mergeResult = await handlePrintingSwap(id, card, data, result.session.user.id);
+    if (mergeResult) return mergeResult;
 
     const updated = await prisma.collectionCard.update({
       where: { id },
-      data: {
-        ...(data.quantity !== undefined && { quantity: data.quantity }),
-        ...(data.condition !== undefined && { condition: data.condition }),
-        ...(data.foil !== undefined && { foil: data.foil }),
-        ...(data.price !== undefined && { price: data.price }),
-        ...(data.acquiredAt !== undefined && {
-          acquiredAt: data.acquiredAt ? new Date(data.acquiredAt) : null,
-        }),
-        ...(data.scryfallId !== undefined && { scryfallId: data.scryfallId }),
-        ...(data.name !== undefined && { name: data.name }),
-        ...(data.imageUri !== undefined && { imageUri: data.imageUri }),
-      },
+      data: buildUpdateData(data),
     });
     return NextResponse.json({ merged: false, card: updated });
   } catch (error) {

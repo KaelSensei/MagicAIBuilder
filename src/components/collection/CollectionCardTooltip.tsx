@@ -50,7 +50,13 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
 
   return (
     <>
-      <span onMouseEnter={handleMouseEnter} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+      <span
+        role="img"
+        aria-label={`Preview of ${card.name}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
         {children}
       </span>
       {pos &&

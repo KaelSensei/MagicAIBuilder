@@ -4,6 +4,46 @@ import { create } from "zustand";
 import type { CollectionCard, AddToCollectionInput, CardCondition } from "./types";
 import { logger } from "@/lib/logger";
 
+const VALID_CONDITIONS = new Set(["NM", "LP", "MP", "HP", "DMG"]);
+
+/** Parse a condition value from an unknown API response */
+function parseCondition(v: unknown): CardCondition | null {
+  if (typeof v === "string" && VALID_CONDITIONS.has(v)) return v as CardCondition;
+  return null;
+}
+
+/** Type guard for plain objects */
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+/** Parse and hydrate a CollectionCard from an unknown API response */
+function parseCollectionCard(v: unknown): CollectionCard | null {
+  if (!isRecord(v)) return null;
+
+  const { id, scryfallId, name, quantity, foil, createdAt, acquiredAt, price, imageUri } = v;
+
+  if (typeof id !== "string") return null;
+  if (typeof scryfallId !== "string") return null;
+  if (typeof name !== "string") return null;
+  if (typeof quantity !== "number") return null;
+  if (typeof foil !== "boolean") return null;
+  if (typeof createdAt !== "string") return null;
+
+  return {
+    id,
+    scryfallId,
+    name,
+    quantity,
+    foil,
+    condition: parseCondition(v["condition"]),
+    acquiredAt: typeof acquiredAt === "string" ? new Date(acquiredAt) : null,
+    price: typeof price === "number" ? price : null,
+    imageUri: typeof imageUri === "string" ? imageUri : "",
+    createdAt: new Date(createdAt),
+  };
+}
+
 export interface CollectionStore {
   // State
   collectionCards: Record<string, CollectionCard>; // keyed by scryfallId (non-foil)
@@ -269,48 +309,8 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
       if (!res.ok) throw new Error("Failed to swap printing");
       const data: unknown = await res.json();
 
-      const isRecord = (v: unknown): v is Record<string, unknown> =>
-        typeof v === "object" && v !== null;
-
-      const parseCondition = (v: unknown): CardCondition | null => {
-        if (v === null || v === undefined) return null;
-        if (v === "NM" || v === "LP" || v === "MP" || v === "HP" || v === "DMG") return v;
-        return null;
-      };
-
-      const parse = (v: unknown): CollectionCard | null => {
-        if (!isRecord(v)) return null;
-        const createdAt = v["createdAt"];
-        const acquiredAt = v["acquiredAt"];
-        const price = v["price"];
-        const imageUri = v["imageUri"];
-
-        if (typeof v["id"] !== "string") return null;
-        if (typeof v["scryfallId"] !== "string") return null;
-        if (typeof v["name"] !== "string") return null;
-        if (typeof v["quantity"] !== "number") return null;
-        if (typeof v["foil"] !== "boolean") return null;
-        if (typeof createdAt !== "string") return null;
-        if (acquiredAt !== null && acquiredAt !== undefined && typeof acquiredAt !== "string") return null;
-        if (price !== null && price !== undefined && typeof price !== "number") return null;
-        if (imageUri !== undefined && typeof imageUri !== "string") return null;
-
-        return {
-          id: v["id"],
-          scryfallId: v["scryfallId"],
-          name: v["name"],
-          quantity: v["quantity"],
-          foil: v["foil"],
-          condition: parseCondition(v["condition"]),
-          acquiredAt: acquiredAt ? new Date(acquiredAt) : null,
-          price: typeof price === "number" ? price : null,
-          imageUri: typeof imageUri === "string" ? imageUri : "",
-          createdAt: new Date(createdAt),
-        };
-      };
-
       if (!isRecord(data)) throw new Error("Invalid response from server");
-      const cardPayload = parse(data["card"]);
+      const cardPayload = parseCollectionCard(data["card"]);
       if (!cardPayload) throw new Error("Invalid response from server");
 
       set((state) => {
