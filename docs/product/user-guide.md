@@ -1,6 +1,6 @@
 # MagicAIBuilder — User Guide
 
-_Last updated: 2026-04-04_
+_Last updated: 2026-04-06_
 
 ## Getting Started
 
@@ -122,6 +122,14 @@ The `/collection` page shows:
 Switch between **Grid view** (card art) and **List view** (table with quantity controls) using the icons in the top right.
 
 Use the **search bar** to filter your collection by card name.
+
+### Seeing Card Art + Changing Printings
+
+- **List view**: hover a card name to see its **image preview**.
+- **Grid view**: hover a card and click **Art** to open the **printings modal**.
+- **List view**: hover a row and click the small **image** icon to open the **printings modal**.
+
+Selecting a printing updates the saved art/printing for that collection entry.
 
 ### Managing Quantities
 
