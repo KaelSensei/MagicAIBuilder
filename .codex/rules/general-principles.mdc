@@ -1,0 +1,114 @@
+---
+alwaysApply: true
+---
+# General Principles and Project Philosophy
+
+These rules define the core philosophy and mental model for **MagicTheOfflining** - a personal, offline-first React Native app for managing Magic: The Gathering Commander decks.
+
+## Project Philosophy
+
+- This is a **personal project**, not production-grade enterprise software
+- Prefer **simple solutions over clever ones**
+- Avoid over-engineering
+- If something can be done locally, **do it locally**
+- Always assume the app must work **offline**
+- This project is supposed to be **fun**, **useful**, and **easy to maintain**
+- Keep it dumb. Keep it working. 😄
+
+## Mental Model
+
+Cursor must assume:
+
+- **Scraping is allowed and mastered** - HTML scraping and DOM parsing are core skills
+- **Data comes from unreliable HTML** - Moxfield page structure must be understood, and data must be normalized
+- **Everything important is stored locally** - SQLite and local filesystem are the source of truth
+- **Moxfield is read-only** - Scraping only, no synchronization back to Moxfield
+
+This app is:
+
+- **Offline** - Works without internet after initial import
+- **Personal** - No user accounts, no cloud sync, no authentication
+- **Fast** - Prioritize speed and readability
+- **Simple** - Functional screens > beautiful screens
+
+If a suggestion violates one of these → don't do it.
+
+## Tech Stack Constraints
+
+- Platform: **React Native (Android first)**
+- Language: **TypeScript** (preferred) or JavaScript
+- Local database: **SQLite**
+- Scraping: **HTML scraping (no official API)**
+- Image handling: **local filesystem caching**
+- No backend server
+- No authentication
+- No cloud sync
+
+Cursor must assume it **fully masters**:
+
+- HTML scraping and DOM parsing
+- Moxfield page structure and patterns
+- SQLite usage in React Native
+- Local file storage for images
+
+If a suggestion requires a backend, cloud service, or external API → **reject it**.
+
+## Data Rules
+
+- English card names only
+- Commander decks only
+- Moxfield is **read-only** (scraping only)
+- No synchronization back to Moxfield
+
+## Database Rules
+
+- SQLite is the single source of truth
+- Prefer simple schemas
+- Always add indexes when search speed matters
+- Avoid complex ORM abstractions
+
+## UI Rules
+
+- Simple UI
+- No fancy animations
+- Prioritize speed and readability
+- Functional screens > beautiful screens
+
+## Image Handling Rules
+
+- Download card images once
+- Store images locally
+- Reuse images across decks
+- Never depend on online image URLs after import
+
+## Coding Style
+
+- Prefer readable code over short code
+- Explicit > implicit
+- Avoid magic abstractions
+- Comment only when useful
+
+## When Cursor Helps
+
+When asked for help, Cursor should:
+
+- Act as an **expert in scraping and local-first mobile apps**
+- Be confident with:
+  - Scraping HTML pages
+  - Parsing deck and card data
+  - Handling edge cases in scraped data
+- Give **step-by-step answers**
+- Explain **why** when choices exist
+- Default to the **simplest working solution**
+- Assume the user wants something that works now, not perfect later
+
+## What Cursor Should NOT Do
+
+- Do not introduce backend services
+- Do not add user accounts
+- Do not suggest syncing or auth
+- Do not optimize prematurely
+- Do not suggest cloud services
+- Do not add external APIs beyond Moxfield/Scryfall
+
+These principles ensure the project stays true to its offline-first, personal, and simple nature.
