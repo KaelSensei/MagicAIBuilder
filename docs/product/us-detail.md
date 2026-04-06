@@ -21,8 +21,8 @@
 | US-E  | Import from URL tournament (6 sources)        | Sprint 3 | #204 | ✅ Merged      |
 | US-F  | Meta Analysis — top cards for commander       | Sprint 3 | #205 | ✅ Merged      |
 | US-M  | Ikoria Companion — slot, search, validation   | —        | #283 | ✅ Merged      |
-| US-G  | Collection tracking + shopping list           | Sprint 4 | —    | 🔄 In Progress |
-| US-H  | Multiple format support (Standard, Modern...) | Sprint 4 | —    | ⏳ Waiting     |
+| US-G  | Collection tracking + shopping list           | Sprint 4 | #290 | ✅ Merged      |
+| US-H  | Multiple format support (Standard, Modern...) | Sprint 4 | #299 | ✅ Merged      |
 | US-I  | Community deck suggestions                    | Sprint 4 | —    | ⏳ Waiting     |
 | US-J  | i18n multi-language                           | Sprint 4 | —    | ⏳ Waiting     |
 | US-K  | Enhanced Playtest Mode                        | Sprint 5 | —    | 🔄 In Progress |
@@ -344,7 +344,7 @@ Companions are a separate registration concept from Partner/Background commander
 
 ### US-G — Collection Tracking + Shopping List
 
-**PR —** | 🔄 In Progress
+**PR #290** | ✅ Merged (2026-04-06)
 
 **User story**
 As a Commander player building decks on a budget with a partial collection, I want to mark cards I already own and see what I'm missing with total price, so I can generate accurate shopping lists.
@@ -376,7 +376,7 @@ Feature absent from Moxfield, partial in Archidekt and Deckbox. Strong retention
 
 ### US-H — Support multiple formats
 
-**PR —** | ⏳ Waiting
+**PR #299** | ✅ Merged (2026-04-06)
 
 **User story**
 As an MTG player playing multiple formats, I want to use MagicAIBuilder to build Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Brawl, and Oathbreaker decks with correct rules and banlists per format.

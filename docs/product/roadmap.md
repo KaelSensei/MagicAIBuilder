@@ -58,7 +58,7 @@ Preferred technology choices for new infrastructure. Based on cost, DX, and reli
 
 ## API & Data
 
-- [ ] **Enhance Scryfall API usage**: smarter caching, request batching, better error recovery, and rate-limit handling to reduce redundant calls and improve load times
+- [x] **Enhance Scryfall API usage** _(done — PR #289)_: server-side search cache (1h TTL), serialized rate limiter, name-based card cache, TanStack Query gcTime fix, shared fetchAllPages utility
 
 - [ ] **Public external API**: expose MagicAIBuilder data and deck operations as a versioned REST (or GraphQL) API, likely in a separate repository; enables third-party integrations, mobile clients, and CLI tooling; requires auth (API keys or OAuth2), rate limiting, OpenAPI documentation, and versioning strategy
 
@@ -179,8 +179,8 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ## Formats
 
-- [ ] **Multiple format support** _(Sprint 4 — US-H)_: Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Brawl, Oathbreaker with correct deck size and banlists per format
-- [ ] **Format-specific statistics**: bracket scoring is Commander-only; provide curve quality, threat density, interaction ratio for other formats
+- [x] **Multiple format support** _(done — PR #299)_: 9 formats (Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, Pauper) with centralized `FORMAT_CONFIG`, format-aware search queries, banlists, validation (deck size, singleton, max copies), and conditional bracket scoring
+- [ ] **Format-specific statistics**: curve quality, threat density, interaction ratio for non-Commander formats
 
 ---
 
@@ -202,6 +202,8 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [x] **Footer layout** _(done)_: Shortcuts button aligned inline with copyright
 - [x] **Mobile-responsive layout** _(done)_: hamburger menu, tab navigation, responsive grid
+- [x] **3D Spellbook landing page** _(done — PR #300)_: Three.js/R3F immersive scene for unauthenticated visitors; procedural book on altar, glowing glyphs, mana particles, cinematic camera zoom, bloom/vignette; mobile/a11y static fallback
+- [x] **Collection tracking enhancements** _(done — PR #290)_: basic lands owned by default, mark all/reset buttons, quick-add from search, full collection CSV/text export
 - [ ] **Visual redesign**: modernize interface, improve card hover interactions, enhance drag-and-drop UX
 
 ---

@@ -123,7 +123,7 @@ interface Deck {
   /** Ikoria-style companion: outside the 99, registration sideboard slot — not generic Sideboard-tab cards. See [companion-implementation.md](./companion-implementation.md). */
   companion: DeckCard | null;
   cards: DeckCard[]; // The 99 (or 98 with partner)
-  format: "commander";
+  format: DeckFormat; // "commander" | "brawl" | "oathbreaker" | "standard" | "pioneer" | "modern" | "legacy" | "vintage" | "pauper"
   targetBracket: 1 | 2 | 3 | 4;
   budget: number | null;
   createdAt: Date;
@@ -206,12 +206,12 @@ Track detailed user stories in [`docs/product/us-detail.md`](./us-detail.md). Qu
 
 ### Sprint 4 (🔄 in progress)
 
-| Story    | Details                                                                                               | PR  | Status         |
-| -------- | ----------------------------------------------------------------------------------------------------- | --- | -------------- |
-| **US-G** | Collection tracking + shopping list (owned/missing per card, CSV export, `/collection` page)          | —   | 🔄 In Progress |
-| **US-H** | Multiple format support (Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Brawl, Oathbreaker)      | —   | ⏳ Waiting     |
-| **US-I** | Community deck suggestions (upvote/comment, public `/commanders/[slug]/decks`, meta integration)      | —   | ⏳ Waiting     |
-| **US-J** | i18n multi-language (EN, FR, JA, DE, ES, PT, ZH-Hans, IT via `next-intl` + Scryfall `lang` parameter) | —   | ⏳ Waiting     |
+| Story    | Details                                                                                               | PR   | Status     |
+| -------- | ----------------------------------------------------------------------------------------------------- | ---- | ---------- |
+| **US-G** | Collection tracking + shopping list (owned/missing per card, CSV export, `/collection` page)          | #290 | ✅ Done    |
+| **US-H** | Multiple format support (Standard, Pioneer, Modern, Legacy, Vintage, Pauper, Brawl, Oathbreaker)      | #299 | ✅ Done    |
+| **US-I** | Community deck suggestions (upvote/comment, public `/commanders/[slug]/decks`, meta integration)      | —    | ⏳ Waiting |
+| **US-J** | i18n multi-language (EN, FR, JA, DE, ES, PT, ZH-Hans, IT via `next-intl` + Scryfall `lang` parameter) | —    | ⏳ Waiting |
 
 ### Sprint 5 (🔄 planned)
 

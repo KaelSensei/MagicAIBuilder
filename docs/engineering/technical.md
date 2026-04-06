@@ -2,24 +2,27 @@
 
 ## Stack
 
-| Layer           | Technology            | Version | Why                                                                        |
-| --------------- | --------------------- | ------- | -------------------------------------------------------------------------- |
-| Framework       | Next.js App Router    | 15.x    | Server components, file-based routing, image optimization                  |
-| Language        | TypeScript            | 5.x     | Strict typing, full project coverage                                       |
-| Styling         | Tailwind CSS          | 4.x     | Utility-first, v4 CSS-native (no config file needed)                       |
-| Components      | shadcn/ui + Radix     | latest  | Accessible primitives, dark theme ready                                    |
-| Animations      | Framer Motion         | 11.x    | Card hover zoom, stagger grids, panel transitions                          |
-| State           | Zustand               | 5.x     | Simple, minimal boilerplate vs. Redux                                      |
-| Data Fetching   | TanStack Query        | 5.x     | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
-| Drag & Drop     | dnd-kit               | 6.x     | Actively maintained, better perf than react-beautiful-dnd                  |
-| Database        | PostgreSQL 16         | —       | Persistent deck storage via Docker Compose                                 |
-| ORM             | Prisma                | 6.x     | Type-safe DB client, migrations, schema                                    |
-| Validation      | Zod                   | 4.x     | Runtime schema validation on API boundaries                                |
-| Icons           | Lucide React          | latest  | Consistent, tree-shakeable                                                 |
-| Bundle Analysis | @next/bundle-analyzer | 16.x    | Visual treemap of JS bundles — run `pnpm analyze`                          |
-| Package Manager | pnpm                  | 10.x    | Fast, disk-efficient                                                       |
-| Testing (unit)  | Vitest                | 3.x     | Vite-native, fast, ESM-compatible                                          |
-| Testing (E2E)   | Playwright            | 1.51.x  | Cross-browser, reliable                                                    |
+| Layer           | Technology                  | Version | Why                                                                        |
+| --------------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
+| Framework       | Next.js App Router          | 15.x    | Server components, file-based routing, image optimization                  |
+| Language        | TypeScript                  | 5.x     | Strict typing, full project coverage                                       |
+| Styling         | Tailwind CSS                | 4.x     | Utility-first, v4 CSS-native (no config file needed)                       |
+| Components      | shadcn/ui + Radix           | latest  | Accessible primitives, dark theme ready                                    |
+| Animations      | Framer Motion               | 11.x    | Card hover zoom, stagger grids, panel transitions                          |
+| State           | Zustand                     | 5.x     | Simple, minimal boilerplate vs. Redux                                      |
+| Data Fetching   | TanStack Query              | 5.x     | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
+| Drag & Drop     | dnd-kit                     | 6.x     | Actively maintained, better perf than react-beautiful-dnd                  |
+| Database        | PostgreSQL 16               | —       | Persistent deck storage via Docker Compose                                 |
+| ORM             | Prisma                      | 6.x     | Type-safe DB client, migrations, schema                                    |
+| Validation      | Zod                         | 4.x     | Runtime schema validation on API boundaries                                |
+| Icons           | Lucide React                | latest  | Consistent, tree-shakeable                                                 |
+| Bundle Analysis | @next/bundle-analyzer       | 16.x    | Visual treemap of JS bundles — run `pnpm analyze`                          |
+| 3D Engine       | Three.js + R3F + drei       | 0.183.x | Immersive landing page (spellbook scene)                                   |
+| Camera Anim     | gsap                        | 3.14.x  | Cinematic zoom on glyph click                                              |
+| Post-Processing | @react-three/postprocessing | 3.x     | Bloom + vignette effects                                                   |
+| Package Manager | pnpm                        | 10.x    | Fast, disk-efficient                                                       |
+| Testing (unit)  | Vitest                      | 3.x     | Vite-native, fast, ESM-compatible                                          |
+| Testing (E2E)   | Playwright                  | 1.51.x  | Cross-browser, reliable                                                    |
 
 ---
 
@@ -30,7 +33,7 @@ src/
   app/                          # Next.js App Router pages
     layout.tsx                  # Root layout: fonts, dark theme, suppressHydrationWarning
     providers.tsx               # TanStack Query client + EnrichmentProvider
-    page.tsx                    # Home / deck list (commander art card backgrounds)
+    page.tsx                    # Home: 3D spellbook (unauth) or deck list (auth)
     builder/[deckId]/
       page.tsx                  # 3-panel builder view (Search | DeckEditor | Stats)
     api/
@@ -51,11 +54,23 @@ src/
       cache/
         cards/
           route.ts              # GET/POST /api/cache/cards
+        search/
+          route.ts              # GET/POST /api/cache/search (1h TTL)
       ai/
         suggest/
           route.ts              # POST /api/ai/suggest
 
   components/
+    landing/
+      SpellbookScene.tsx        # R3F Canvas + scene composition (ssr: false)
+      Spellbook.tsx             # Procedural open book model
+      Altar.tsx                 # Stone altar base
+      GlyphSymbol.tsx           # Interactive glowing runes (Sign In/Up)
+      CameraRig.tsx             # Idle sway + gsap cinematic zoom
+      ManaParticles.tsx         # Sparkles particle system
+      PostEffects.tsx           # Bloom + vignette
+      LandingPage.tsx           # Mobile/a11y detection wrapper
+      StaticLandingPage.tsx     # 2D fallback
     ui/
       utils.ts                  # cn() helper (clsx + tailwind-merge)
     card/
@@ -517,6 +532,59 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 | Endpoint                                  | Used For                          |
 | ----------------------------------------- | --------------------------------- |
 | `GET /api/v2/variants/?commanders={name}` | Combo detection by commander name |
+
+---
+
+## Multi-Format System
+
+All format-specific behavior is driven by `src/lib/deck/formats.ts`:
+
+- `DeckFormat` — union type of 9 supported formats
+- `FORMAT_CONFIG` — per-format rules: deckSize, sideboardSize, isSingleton, hasCommander, hasBracketScoring, hasColorIdentity, maxCopiesPerCard, scryfallLegality, recommendedLands
+- `getFormatConfig(format)` — safe accessor with Commander fallback
+
+**Every layer reads from this single config** instead of hardcoding Commander:
+
+| Layer           | What changes per format                                      |
+| --------------- | ------------------------------------------------------------ |
+| Search queries  | `legal:{format}` instead of `legal:commander`                |
+| Banlist         | `banned:{format}` with per-format cache key                  |
+| Validation      | Deck size (100 vs 60), singleton rule, commander requirement |
+| Card multiples  | maxCopiesPerCard (1 for Commander, 4 for Standard)           |
+| Bracket scoring | Only computed for Commander (returns null otherwise)         |
+
+---
+
+## Scryfall API Caching
+
+Server-side search cache via `ScryfallSearchCache` Prisma model (1h TTL):
+
+- `searchCards()` checks `/api/cache/search` before hitting Scryfall
+- Cache key: `sha256(query|page)` computed server-side (browser-safe)
+- Rate limiter: serialized Promise queue with error recovery
+- Name-based lookups (`getCardByName`, `getCardByNameFuzzy`) store results in `CardCache`
+
+TanStack Query `gcTime` matches `staleTime` (24h for cards/lists, 5min for search) to prevent re-fetches on component remount.
+
+---
+
+## 3D Landing Page Architecture
+
+`src/components/landing/` — Three.js scene for unauthenticated visitors:
+
+```
+LandingPage.tsx          # Detects mobile/reduced-motion → static or 3D
+  ├── SpellbookScene.tsx # R3F Canvas (dynamic import, ssr: false)
+  │     ├── Altar.tsx    # Stone base (BoxGeometry)
+  │     ├── Spellbook.tsx# Open book (procedural planes)
+  │     ├── GlyphSymbol  # Interactive runes (raycasting + emissive)
+  │     ├── CameraRig    # Idle sway + gsap zoom on click
+  │     ├── ManaParticles# Sparkles from drei
+  │     └── PostEffects  # Bloom + Vignette
+  └── StaticLandingPage  # 2D fallback (CSS gradients + buttons)
+```
+
+Performance: dpr capped at 1.5, 80 particles, no shadows. Three.js never loads on authenticated pages.
 
 ---
 
