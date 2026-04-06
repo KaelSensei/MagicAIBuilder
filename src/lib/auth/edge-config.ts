@@ -47,7 +47,8 @@ export const edgeAuthConfig = {
         "/api/share",
         "/share",
       ];
-      const isPublic = publicPaths.some((p) => pathname.startsWith(p));
+      const isPublic =
+        pathname === "/" || publicPaths.some((p) => pathname.startsWith(p));
       if (isPublic) return true;
 
       // Static assets — always allow
