@@ -40,6 +40,11 @@ desktop.ini
 # Claude settings (local overrides only — project settings.json is committed)
 .claude/settings.local.json
 
+# Codex settings (contains personal paths, permissions, and credentials)
+.codex/settings.json
+.codex/settings.local.json
+.codex/mcp.json
+
 # Cursor settings (contains personal paths and permissions)
 .cursor/
 

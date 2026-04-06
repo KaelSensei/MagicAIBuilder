@@ -325,7 +325,7 @@ function CollectionGridCard({
         <p className="text-white text-xs text-center font-medium leading-tight">{card.name}</p>
         <button
           type="button"
-          onClick={() => void onOpenPrintings(card)}
+          onClick={() => { onOpenPrintings(card); }}
           className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white/15 hover:bg-white/25 text-white"
           title="Change art / printing"
         >
@@ -382,7 +382,7 @@ function CollectionListRow({
         </CollectionCardTooltip>
         <button
           type="button"
-          onClick={() => void onOpenPrintings(card)}
+          onClick={() => { onOpenPrintings(card); }}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           title="Change art / printing"
           aria-label={`Change art for ${card.name}`}
