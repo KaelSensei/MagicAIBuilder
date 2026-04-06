@@ -53,6 +53,8 @@ import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
+import { useGameChangersSet } from "@/hooks/useGameChangers";
+import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
 
 type SearchMode = "name" | "set" | "color";
@@ -211,6 +213,20 @@ export default function BuilderPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-run when deckId changes; loadDecks is stable
   }, [deckId]);
+
+  // Lazy-load Game Changers + Banlist (only on builder page, not globally)
+  const { gameChangerNames, isLoaded: gcLoaded } = useGameChangersSet();
+  const { bannedNames, isLoaded: banLoaded } = useBanlistSet();
+  const setGameChangerNames = useDeckStore((s) => s.setGameChangerNames);
+  const setBannedNames = useDeckStore((s) => s.setBannedNames);
+
+  useEffect(() => {
+    if (gcLoaded) setGameChangerNames(gameChangerNames);
+  }, [gcLoaded, gameChangerNames, setGameChangerNames]);
+
+  useEffect(() => {
+    if (banLoaded) setBannedNames(bannedNames);
+  }, [banLoaded, bannedNames, setBannedNames]);
 
   const { stats } = useDeck();
   const { data: combos, isLoading: combosLoading } = useCombos(deck);
