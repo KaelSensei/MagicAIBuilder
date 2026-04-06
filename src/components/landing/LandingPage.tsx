@@ -21,9 +21,9 @@ const SpellbookScene = dynamic(
 
 /** Detect if the device should get the static fallback */
 function shouldUseStaticFallback(): boolean {
-  if (typeof window === "undefined") return true;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
-  if (/iPhone|iPad|Android/i.test(navigator.userAgent)) return true;
+  if (typeof globalThis.window === "undefined") return true;
+  if (globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
+  if (/iPhone|iPad|Android/i.test(globalThis.navigator.userAgent)) return true;
   return false;
 }
 
