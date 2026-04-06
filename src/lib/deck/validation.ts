@@ -19,7 +19,7 @@ export interface CardValidationResult {
   isGameChanger: boolean;
 }
 
-/** Check color identity violation for a card against commander identity */
+/** Check color identity violation against commander identity */
 function checkCardColorIdentity(card: DeckCard, deck: Deck): string | null {
   if (!deck.commander) return null;
   const identitySet = new Set([
@@ -31,7 +31,7 @@ function checkCardColorIdentity(card: DeckCard, deck: Deck): string | null {
   return `${card.name} has colors outside your commander's identity (${violations.join(", ")})`;
 }
 
-/** Check singleton violation for a card in the deck */
+/** Check singleton violation */
 function checkCardSingleton(card: DeckCard, deck: Deck): string | null {
   if (card.typeLine.toLowerCase().includes("basic land")) return null;
   const allCards = [
@@ -39,8 +39,9 @@ function checkCardSingleton(card: DeckCard, deck: Deck): string | null {
     ...(deck.commander ? [deck.commander] : []),
     ...(deck.partner ? [deck.partner] : []),
   ];
-  const existing = allCards.find((c) => c.name === card.name);
-  return existing ? `${card.name} is already in the deck (singleton rule)` : null;
+  return allCards.find((c) => c.name === card.name)
+    ? `${card.name} is already in the deck (singleton rule)`
+    : null;
 }
 
 /** Validate whether a card can be added to a deck */
@@ -48,8 +49,9 @@ export function validateCardForDeck(
   card: DeckCard,
   deck: Deck
 ): CardValidationResult {
-  const errors: string[] = [];
   const config = getFormatConfig(deck.format);
+  const errors: string[] = [];
+  let isColorViolation = false;
 
   if (card.isBanned) {
     errors.push(`${card.name} is banned in ${config.label}`);
@@ -57,7 +59,10 @@ export function validateCardForDeck(
 
   if (config.hasColorIdentity) {
     const colorError = checkCardColorIdentity(card, deck);
-    if (colorError) errors.push(colorError);
+    if (colorError) {
+      isColorViolation = true;
+      errors.push(colorError);
+    }
   }
 
   if (config.isSingleton) {
@@ -69,7 +74,7 @@ export function validateCardForDeck(
     canAdd: errors.length === 0,
     reason: errors[0],
     isBanned: card.isBanned,
-    isColorViolation: config.hasColorIdentity && errors.some((e) => e.includes("colors outside")),
+    isColorViolation,
     isGameChanger: card.isGameChanger,
   };
 }
