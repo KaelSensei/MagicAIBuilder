@@ -144,6 +144,15 @@ model CardCache {
   @@index([cachedAt])
 }
 
+/// Cache for Scryfall search results (1h TTL)
+model ScryfallSearchCache {
+  cacheKey String   @id // sha256(query|page)
+  data     Json     // ScryfallSearchResponse
+  cachedAt DateTime @default(now())
+
+  @@index([cachedAt])
+}
+
 /// Cache for meta analysis data (EDHRec, tournament results)
 model MetaCache {
   id             String   @id @default(cuid())

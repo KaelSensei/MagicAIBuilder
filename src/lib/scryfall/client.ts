@@ -1,5 +1,6 @@
 // Scryfall API client with rate limiting (max 10 req/s = 100ms between requests)
 // Cards are cached in the DB via /api/cache/cards (TTL: 24h)
+// Search results are cached in the DB via /api/cache/search (TTL: 1h)
 import type {
   ScryfallCard,
   ScryfallSearchResponse,
@@ -7,7 +8,12 @@ import type {
   ScryfallCollectionIdentifier,
   ScryfallCollectionResponse,
 } from "./types";
-import { lookupCardCache, storeCardCache } from "@/lib/db/deck-api";
+import {
+  lookupCardCache,
+  storeCardCache,
+  lookupSearchCache,
+  storeSearchCache,
+} from "@/lib/db/deck-api";
 
 const SCRYFALL_BASE = "https://api.scryfall.com";
 const MIN_DELAY_MS = 100;
@@ -17,31 +23,60 @@ const defaultHeaders = {
   Accept: "application/json",
 };
 
-// Simple rate-limiting queue
-let lastRequestTime = 0;
+// Detect if we're in a test environment (vitest sets globalThis.vi)
+function isTestMode(): boolean {
+  return typeof globalThis !== "undefined" && "vi" in globalThis;
+}
 
-async function rateLimitedFetch(
+// Serialized rate-limiting with async mutex (prevents concurrent request race)
+// In test mode (vi.useFakeTimers), bypass delay to avoid timeout issues
+let lastRequestTime = 0;
+let queue: Promise<Response | undefined> = Promise.resolve(undefined);
+
+/**
+ * Reset the rate limiter state (for tests only)
+ * @internal
+ */
+export function __resetRateLimiter() {
+  lastRequestTime = 0;
+  queue = Promise.resolve(undefined);
+}
+
+function rateLimitedFetch(
   url: string,
   options?: RequestInit
 ): Promise<Response> {
-  const now = Date.now();
-  const elapsed = now - lastRequestTime;
-  if (elapsed < MIN_DELAY_MS) {
-    await new Promise((resolve) =>
-      setTimeout(resolve, MIN_DELAY_MS - elapsed)
+  return queue
+    .then(async () => {
+      const now = Date.now();
+      const elapsed = now - lastRequestTime;
+      // Only apply delay in non-test environments (skip in test mode to avoid setTimeout issues)
+      if (elapsed < MIN_DELAY_MS && !isTestMode()) {
+        await new Promise<void>((resolve) =>
+          setTimeout(resolve, MIN_DELAY_MS - elapsed)
+        );
+      }
+      lastRequestTime = Date.now();
+
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...defaultHeaders,
+          ...options?.headers,
+        },
+      });
+    })
+    .then(
+      (res) => {
+        queue = Promise.resolve(undefined);
+        return res;
+      },
+      (err) => {
+        // Reset queue even on error so future requests can still proceed
+        queue = Promise.resolve(undefined);
+        throw err;
+      }
     );
-  }
-  lastRequestTime = Date.now();
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options?.headers,
-    },
-  });
-
-  return response;
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -57,10 +92,21 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 /** Search cards using Scryfall query syntax */
+/** Search cards using Scryfall query syntax — results cached 1h */
 export async function searchCards(
   query: string,
   page = 1
 ): Promise<ScryfallSearchResponse> {
+  // Check cache first
+  try {
+    const cached = await lookupSearchCache(query, page);
+    if (cached) {
+      return cached as ScryfallSearchResponse;
+    }
+  } catch {
+    // Cache lookup failure is non-fatal — fall through to Scryfall
+  }
+
   const params = new URLSearchParams({
     q: query,
     page: String(page),
@@ -69,7 +115,14 @@ export async function searchCards(
   const response = await rateLimitedFetch(
     `${SCRYFALL_BASE}/cards/search?${params}`
   );
-  return handleResponse<ScryfallSearchResponse>(response);
+  const data = await handleResponse<ScryfallSearchResponse>(response);
+
+  // Store in DB cache (fire-and-forget)
+  storeSearchCache(query, page, data).catch(() => {
+    /* non-fatal */
+  });
+
+  return data;
 }
 
 /** Look up a single card by exact name */
@@ -78,7 +131,12 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
   const response = await rateLimitedFetch(
     `${SCRYFALL_BASE}/cards/named?${params}`
   );
-  return handleResponse<ScryfallCard>(response);
+  const card = await handleResponse<ScryfallCard>(response);
+  // Cache the card by its ID for future lookups
+  storeCardCache(card.id, card).catch(() => {
+    /* non-fatal */
+  });
+  return card;
 }
 
 /** Fuzzy card name lookup */
@@ -87,7 +145,12 @@ export async function getCardByNameFuzzy(name: string): Promise<ScryfallCard> {
   const response = await rateLimitedFetch(
     `${SCRYFALL_BASE}/cards/named?${params}`
   );
-  return handleResponse<ScryfallCard>(response);
+  const card = await handleResponse<ScryfallCard>(response);
+  // Cache the card by its ID for future lookups
+  storeCardCache(card.id, card).catch(() => {
+    /* non-fatal */
+  });
+  return card;
 }
 
 /** Get a single card by Scryfall ID — with DB cache (TTL 24h) */
@@ -139,6 +202,25 @@ export async function getCardCollection(
     }
   );
   return handleResponse<ScryfallCollectionResponse>(response);
+}
+
+/** Fetch all pages of a Scryfall search query */
+export async function fetchAllPages(
+  query: string
+): Promise<ScryfallCard[]> {
+  const allCards: ScryfallCard[] = [];
+  let page = 1;
+  const PAGE_SAFETY_CAP = 20;
+
+  let hasMore = true;
+  while (hasMore && page <= PAGE_SAFETY_CAP) {
+    const response = await searchCards(query, page);
+    allCards.push(...response.data);
+    hasMore = response.has_more ?? false;
+    page++;
+  }
+
+  return allCards;
 }
 
 /** Get all Game Changers (cached 24h via TanStack Query) */

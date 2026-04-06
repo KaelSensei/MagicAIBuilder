@@ -58,23 +58,22 @@ function makeDeck(cards: DeckCard[], commander: DeckCard | null = null): Deck {
 describe("useGameChangersList", () => {
   it("fetches game changers list", async () => {
     const cards = [{ id: "1", name: "Sol Ring" }];
-    vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce({
-      data: cards,
-      has_more: false,
-    } as never);
+    vi.mocked(scryfallClient.fetchAllPages).mockResolvedValueOnce(
+      cards as never
+    );
 
     const { result } = renderHook(() => useGameChangersList(), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(scryfallClient.searchCards).toHaveBeenCalledWith("is:gamechanger", 1);
+    expect(scryfallClient.fetchAllPages).toHaveBeenCalledWith("is:gamechanger");
   });
 });
 
 describe("useGameChangersSet", () => {
   it("returns empty set when data is not loaded", () => {
-    vi.mocked(scryfallClient.searchCards).mockImplementation(
+    vi.mocked(scryfallClient.fetchAllPages).mockImplementation(
       () => new Promise(() => {})
     );
     const { result } = renderHook(() => useGameChangersSet(), {
@@ -85,11 +84,13 @@ describe("useGameChangersSet", () => {
   });
 
   it("returns set of game changer names when loaded", async () => {
-    const cards = [{ id: "1", name: "Sol Ring" }, { id: "2", name: "Mana Crypt" }];
-    vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce({
-      data: cards,
-      has_more: false,
-    } as never);
+    const cards = [
+      { id: "1", name: "Sol Ring" },
+      { id: "2", name: "Mana Crypt" },
+    ];
+    vi.mocked(scryfallClient.fetchAllPages).mockResolvedValueOnce(
+      cards as never
+    );
 
     const { result } = renderHook(() => useGameChangersSet(), {
       wrapper: createWrapper(),
@@ -104,7 +105,7 @@ describe("useGameChangersSet", () => {
 
 describe("useGameChangers", () => {
   it("returns empty array when deck is null", () => {
-    vi.mocked(scryfallClient.searchCards).mockImplementation(
+    vi.mocked(scryfallClient.fetchAllPages).mockImplementation(
       () => new Promise(() => {})
     );
     const { result } = renderHook(() => useGameChangers(null), {
@@ -115,10 +116,7 @@ describe("useGameChangers", () => {
   });
 
   it("detects cards flagged as isGameChanger in deck", async () => {
-    vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce({
-      data: [],
-      has_more: false,
-    } as never);
+    vi.mocked(scryfallClient.fetchAllPages).mockResolvedValueOnce([] as never);
 
     const deck = makeDeck([
       makeCard("Sol Ring", true),
@@ -135,10 +133,7 @@ describe("useGameChangers", () => {
   });
 
   it("detects commander as game changer", async () => {
-    vi.mocked(scryfallClient.searchCards).mockResolvedValueOnce({
-      data: [],
-      has_more: false,
-    } as never);
+    vi.mocked(scryfallClient.fetchAllPages).mockResolvedValueOnce([] as never);
 
     const commander = makeCard("Atraxa", true);
     const deck = makeDeck([makeCard("Island")], commander);

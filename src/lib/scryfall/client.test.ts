@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 vi.mock("@/lib/db/deck-api", () => ({
   lookupCardCache: vi.fn(async () => null),
   storeCardCache: vi.fn(async () => undefined),
+  lookupSearchCache: vi.fn(async () => null),
+  storeSearchCache: vi.fn(async () => undefined),
 }));
 
 import {
@@ -16,6 +18,7 @@ import {
   getGameChangers,
   getCommanderBanlist,
   searchCardPrintings,
+  __resetRateLimiter,
 } from "@/lib/scryfall/client";
 import { lookupCardCache } from "@/lib/db/deck-api";
 import type { ScryfallCard, ScryfallSearchResponse } from "@/lib/scryfall/types";
@@ -68,7 +71,7 @@ function mockFetchError(status = 404, statusText = "Not Found") {
 
 describe("searchCards", () => {
   beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
 
   it("calls the correct Scryfall endpoint", async () => {
     const searchResponse = makeSearchResponse([makeScryfallCard()]);
@@ -95,7 +98,7 @@ describe("searchCards", () => {
 
 describe("getCardByName", () => {
   beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
 
   it("fetches a card by exact name", async () => {
     const card = makeScryfallCard();
@@ -112,7 +115,7 @@ describe("getCardByName", () => {
 
 describe("getCardByNameFuzzy", () => {
   beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
 
   it("fetches a card by fuzzy name", async () => {
     const card = makeScryfallCard();
@@ -212,7 +215,7 @@ describe("getCardCollection", () => {
 
 describe("getGameChangers", () => {
   beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
 
   it("searches for is:gamechanger", async () => {
     mockFetchSuccess(makeSearchResponse());
@@ -226,7 +229,7 @@ describe("getGameChangers", () => {
 
 describe("getCommanderBanlist", () => {
   beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
 
   it("searches for banned:commander", async () => {
     mockFetchSuccess(makeSearchResponse());
@@ -240,7 +243,7 @@ describe("getCommanderBanlist", () => {
 
 describe("searchCardPrintings", () => {
   beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
 
   it("searches printings with unique=prints", async () => {
     mockFetchSuccess(makeSearchResponse([makeScryfallCard()]));
