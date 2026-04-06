@@ -1,0 +1,38 @@
+---
+alwaysApply: true
+---
+
+# Clean Code Skill
+
+Based on Robert C. Martin (Clean Code)
+
+## Principles
+
+- Functions must be small and do one thing
+- Use meaningful and intention-revealing names
+- Prefer clarity over comments
+- Avoid deep nesting (use early returns)
+- Eliminate duplication (DRY)
+
+## Detailed Guidance
+
+- One level of abstraction per function
+- Avoid boolean flags → split functions instead
+- Keep code readable like prose
+- Prefer composition over conditionals
+
+## Error Handling
+
+- Fail fast
+- Never swallow errors
+- Use explicit handling
+
+## Cursor Behavior
+
+- Rewrite unclear code
+- Refuse messy but working code
+- Optimize for readability and maintainability
+
+## Sources
+
+- Clean Code – Robert C. Martin

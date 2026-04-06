@@ -1,0 +1,414 @@
+# NOTE: Cursor `.cursor/skills/*.mdc` files use `alwaysApply` frontmatter.
+# Set to false so it only applies when relevant.
+---
+alwaysApply: false
+---
+
+# User Story Prioritization & Weighting
+
+Master the three core frameworks for prioritizing user stories, estimating effort, and making data-driven decisions about what to build next.
+
+## Overview
+
+Three complementary methodologies exist for prioritization, each optimized for different contexts:
+
+| Framework | Best For | Core Metric | Effort | Data Need |
+|-----------|----------|-------------|--------|-----------|
+| **Story Points** | Team capacity planning | Relative complexity | Low | Internal only |
+| **MoSCoW** | Risk/scope management | Business category | Minimal | Strategic alignment |
+| **RICE Scoring** | Product-led growth | Quantified ROI | Medium | Usage + analytics |
+
+**Best practice**: Use all three in parallel. They answer different questions:
+- Story Points → *Can we deliver this in the sprint?*
+- MoSCoW → *Will this break the product if we skip it?*
+- RICE → *Which delivers the most business value per engineering day?*
+
+---
+
+## Story Points (Planning Poker)
+
+### What It Is
+
+A **Fibonacci-scaled (1, 2, 3, 5, 8, 13, 21)** estimation of *relative complexity*, not time. Forces binary choice between "close to this story" vs. "further away."
+
+### Why Fibonacci?
+
+- **1, 2, 3**: Fine-grain distinctions for small tasks
+- **5, 8, 13**: Clear jumps for complexity gaps
+- **21+**: Signals overscoping — usually needs splitting
+
+### When to Use
+
+✅ Stable team, established velocity
+✅ Predictable feature work (bug fixes, increments)
+✅ Need to track burndown / capacity
+✅ Multiple sprints planned ahead
+
+❌ New team (velocity unknown)
+❌ Emergency/ad-hoc work (can't predict velocity)
+❌ Highly variable task scope (infrastructure, research)
+
+### Running Planning Poker
+
+1. **Read the story** aloud; clarify questions
+2. **Each person silently picks a point value** (1–21) without discussion
+3. **Reveal simultaneously** — outliers explain their thinking
+4. **Re-estimate once** if there was a wide spread
+5. **Accept the estimate** (don't aim for consensus, aim for reasonableness)
+
+### Calibration
+
+Define your Fibonacci anchors once, keep them consistent:
+
+- **1 point** = "Trivial, < 1 hour" (e.g., button color change)
+- **3 points** = "Medium, half day" (e.g., new form field + validation)
+- **5 points** = "Complex, 1+ days" (e.g., new API endpoint + UI)
+- **8 points** = "Very complex, 2–3 days" (e.g., major feature with edge cases)
+- **13 points** = "Substantial, ~1 week" (e.g., new subsystem component)
+- **21 points** = "Consider splitting" (e.g., "build search" — too vague)
+
+### Antipatterns to Avoid
+
+- **"21" as a catch-all** → If nothing is 21 points, you're undersizing. If many are, your backlog needs decomposition.
+- **Conflating points with hours** → "5 points = 5 hours" is wrong. Points are relative; velocity translates to capacity.
+- **Re-pointing stories after they're done** → Story points measure estimation accuracy, not reality. Keep them fixed.
+
+---
+
+## MoSCoW Prioritization
+
+### What It Is
+
+A **categorical framework** dividing the backlog into four buckets based on *business necessity* and *release scope*. No calculation — pure classification.
+
+- **M**ust Have: Blocking release / non-negotiable
+- **S**hould Have: Important, should be included unless time runs out
+- **C**ould Have: Nice-to-have, included if capacity allows
+- **W**on't Have: Out of scope for this cycle; revisit next cycle
+
+### When to Use
+
+✅ Executive/stakeholder alignment required
+✅ Hard deadline or fixed scope
+✅ Simple, binary go/no-go decisions
+✅ Risk-driven backlog (don't ship without X)
+
+❌ Complex arbitrage (many "Shoulds" competing)
+❌ Need to justify *why* one feature beats another
+❌ Data-driven product decisions
+
+### How to Classify
+
+**Must Have**: Ask "Will the product be broken/unsellable without this?"
+- Security fixes
+- Compliance (legal/regulatory)
+- Critical bugs blocking users
+- Contractual obligations
+- MVP feature gate
+
+**Should Have**: Ask "Is this in the original spec but not a blocker?"
+- Planned performance optimization
+- Documented feature request from customers
+- Backwards compatibility
+- Planned deprecation
+
+**Could Have**: Ask "Would users like this, but can we ship v1 without it?"
+- Polish/UX refinement
+- Secondary features
+- Nice-to-have integrations
+
+**Won't Have**: Ask "Is this clearly out of scope for this release?"
+- Future roadmap
+- Research / exploration
+- Low-priority requests
+- Candidate for next cycle
+
+### Running a MoSCoW Session
+
+1. **Agree on the *scope* upfront** — e.g., "Q3 release" or "MVP"
+2. **Go through backlog sequentially**, ask classification question for each
+3. **Flag disagreements** — if stakeholders disagree on Must vs. Should, that's a decision, not an estimation
+4. **Document the scope boundary** — write it down (e.g., "Won't: Feature X because it requires infrastructure we don't have until Q4")
+
+### Antipatterns
+
+- **Treating MoSCoW as priority ranking** → "Must" ≠ "first to build." You might build "Could Have" first if it unblocks "Must Have."
+- **Too many Musts** → If >30% are "Must," your scope isn't constrained. Re-negotiate.
+- **Ignoring "Won't Have" feedback** → Customers will ask why; document the reason so you can explain it in the next cycle.
+
+---
+
+## RICE Scoring
+
+### What It Is
+
+A **formula-driven framework** for product prioritization that quantifies business impact:
+
+```
+RICE Score = (Reach × Impact × Confidence) / Effort
+```
+
+**Result**: A single number per story that ranks highest-impact-per-day of work.
+
+### Components
+
+#### **Reach** (Who)
+Number of users affected in a *timeframe* (month, quarter, year).
+
+Examples:
+- "200 enterprise customers will use this in Q3"
+- "5% of DAU (~50k users) interact with this feature"
+- "1 internal tool, 10 engineers use daily"
+
+**Key**: Use absolute numbers. Convert percentages only if you have a user base size.
+
+#### **Impact** (How Much)
+Effect *per user* on a qualitative scale:
+
+| Level | Definition | Example |
+|-------|-----------|---------|
+| **Massive** | 3x revenue/user or transformational | "Enables new revenue stream" |
+| **High** | Significant improvement, key decision driver | "Solves major pain point" |
+| **Medium** | Notable improvement, users will notice | "Requested frequently, saves 5 min/week" |
+| **Low** | Minor improvement | "Nice polish, helps some users" |
+| **Minimal** | Barely noticeable | "Marginal optimization" |
+
+**Scoring for formulas**: Map to 1–5 (Minimal=1, Low=2, Medium=3, High=4, Massive=5).
+
+#### **Confidence** (Certainty)
+How confident you are in the above estimates, as a percentage (20–100%).
+
+| Level | Data Type | Example |
+|-------|-----------|---------|
+| **90–100%** | Observed behavior or hard data | "Analytics show 200 daily active users" |
+| **70–90%** | User interviews or strong signals | "20 customers asked for this feature" |
+| **50–70%** | Educated guess or extrapolation | "Estimated 3% conversion uplift based on A/B test" |
+| **30–50%** | Weak signal or assumption | "Assume this cuts churn by 10%, but unproven" |
+| **<30%** | Speculative | "Could improve engagement, might even hurt" |
+
+**How to raise confidence**: Run a quick experiment (survey, prototype test, analytics deep-dive).
+
+#### **Effort** (Cost)
+Estimated time-to-deliver in **engineering days** (adjusted for team size/skill).
+
+- 0.5 = Half day
+- 1 = One day
+- 5 = One week
+- 13 = Three weeks
+- 21+ = Likely needs breaking down
+
+### The Formula
+
+```
+RICE = (Reach × Impact_scaled × Confidence%) / Effort
+```
+
+**Example**:
+- Reach: 500 users
+- Impact: High (4)
+- Confidence: 80%
+- Effort: 5 days
+
+RICE = (500 × 4 × 0.8) / 5 = 1600 / 5 = **320**
+
+Compare to another story with RICE = 100 → the first story delivers **3.2× more value per engineering day**.
+
+### When to Use
+
+✅ Product-led growth, scaling product
+✅ Abundant feature requests, need objective prioritization
+✅ Have real usage data / user feedback
+✅ Can measure business impact (revenue, engagement, churn)
+✅ Multiple teams competing for engineering
+✅ Build vs. buy decisions
+
+❌ Early-stage MVP (no usage data yet)
+❌ Compliance/legal must-dos (use MoSCoW instead)
+❌ Exploration/R&D (effort uncertain)
+❌ One-off requests
+
+### Running RICE Scoring
+
+#### **Prep (1–2 hours per sprint)**
+1. **Gather reach data**: Pull from analytics, CRM, support tickets
+2. **Draft impact levels**: Ask PMs/designers "Is this High or Medium?"
+3. **Assess confidence**: "Do we have data or are we guessing?"
+4. **Estimate effort**: Quick t-shirt estimation (don't need precision)
+
+#### **Session (30–60 min for 10–20 stories)**
+1. **Walk through each story** — read description
+2. **Agree on Reach** — sanity-check against data
+3. **Agree on Impact** — debate if needed (e.g., "5k users but Low impact each" = different from "1k users but Massive impact")
+4. **Agree on Confidence** — lower it if there's uncertainty
+5. **Estimate Effort** — "How many engineering days?"
+6. **Calculate RICE** — formula does the math
+7. **Rank by RICE descending** — highest at top
+
+### Handling Disagreements
+
+If the team splits on Impact (High vs. Medium):
+
+- **Don't average** → You lose information
+- **Pick the *lower* number** → Intentional conservatism
+- **Increase confidence down** → Reflects the disagreement
+- **Flag for experiment** → "Let's validate this with a quick survey before committing"
+
+### Antipatterns
+
+- **"We don't have data so RICE is useless"** → That's exactly when RICE helps. Lower your confidence (50%) and estimate conservatively. RICE still beats gut feel.
+- **Confusing Effort with Complexity** → Effort is *calendar days*, not difficulty. A hard, 2-day task = 2 effort. An easy, 10-day task = 10 effort.
+- **Scoring features vs. stories** → RICE works best on *stories* or *outcomes* (not vague features like "improve search"). Break down vague features first.
+- **Ignoring infrastructure/debt** → If a story unblocks 5 future stories, increase its Reach or Impact. If it's pure tech debt, use MoSCoW ("Must fix before Q4") instead.
+
+---
+
+## Combining All Three
+
+### The Workflow
+
+**Week 1: Decomposition**
+- Break down epics into user stories (2–5 pts each)
+- Ensure each story is testable and independent
+
+**Week 2: MoSCoW Classification**
+- Exec alignment session
+- "Is this Must, Should, Could, or Won't for Q3?"
+- Categorize the full backlog
+
+**Week 3: Story Points (Planning Poker)**
+- Team estimates each story's complexity
+- Builds velocity baseline for capacity planning
+
+**Week 4: RICE Scoring**
+- Analytics deep-dive: gather Reach data
+- PM/Design input: Impact levels
+- Effort already known (from Story Points)
+- Score and rank
+
+**Result**: A backlog ranked by RICE, color-coded by MoSCoW, with Story Points attached for capacity planning.
+
+### What Each Answers
+
+| Question | Use This | Why |
+|----------|----------|-----|
+| Can we fit this in Sprint 5? | Story Points + Velocity | Capacity math |
+| Will it break the product if we skip it? | MoSCoW | Risk assessment |
+| Which feature delivers the most value per day? | RICE | ROI ranking |
+| How confident are we in this priority? | RICE Confidence + Story Points agreement | Estimation risk |
+
+---
+
+## Quick Start: Your First Session
+
+### Scenario: You have 30 stories, no prioritization method yet
+
+**30 min: MoSCoW**
+1. Print the 30 stories (or open your backlog tool)
+2. Go through each: Must, Should, Could, or Won't?
+3. Document: "Won't items are deferred to next cycle because of [reason]"
+
+**1 hour: Story Points**
+1. Team gathers (async if remote)
+2. Pick 2–3 anchor stories to calibrate (e.g., "This 3-pointer is a form field")
+3. Run Planning Poker on remaining stories
+4. Note: High spread (1 vs. 13) means the story needs splitting
+
+**1.5 hours: RICE (if you have data)**
+1. Extract Reach from analytics/CRM
+2. Map Impact (discuss in pairs, PMs drive)
+3. Set Confidence (high if data-backed, lower if guessing)
+4. Estimate Effort (use 50th percentile of Story Points ÷ 2 as a proxy)
+5. Rank by RICE descending
+
+**Output**: 
+- A backlog ranked by RICE (strategic order)
+- Color-coded by MoSCoW (risk visibility)
+- With Story Points (team can see capacity)
+
+---
+
+## Decision Tree: Which Framework to Use?
+
+```
+Do you have a hard date or fixed scope?
+├─ YES → Use MoSCoW (constrain scope)
+└─ NO
+   └─ Do you have usage data or user research?
+      ├─ YES → Use RICE (quantified ROI)
+      └─ NO
+         └─ Is this a new team or sprint?
+            ├─ YES → Use Story Points (measure velocity)
+            └─ NO → Use RICE anyway (lower confidence = honesty)
+```
+
+---
+
+## Common Scenarios
+
+### Scenario 1: "We're building an MVP, no usage data"
+- **MoSCoW**: Separate "MVP must-haves" from v1.1 / v2
+- **Story Points**: Estimate for sprint planning
+- **RICE**: Set low confidence (40%), estimate conservatively
+- **Action**: Ship MVP with Musts + key Shoulds; plan feedback cycle for next RICE session
+
+### Scenario 2: "We have 100 feature requests, limited budget"
+- **RICE**: Full scoring; rank by score
+- **MoSCoW**: Quick check — are any Musts below the cut?
+- **Story Points**: Only for what you're actually building
+- **Action**: Take top RICE stories until budget runs out; reject rest as "Won't for now"
+
+### Scenario 3: "Team says everything is urgent"
+- **MoSCoW**: Force discipline — only X% can be Must Have
+- **RICE**: Show the math: "This story has RICE=50, that one is 500. Same urgency?"
+- **Action**: Educate on opportunity cost; use RICE to justify trade-offs
+
+### Scenario 4: "Security/compliance blocker discovered mid-sprint"
+- **MoSCoW**: Immediately Must Have
+- **Story Points**: Re-estimate if scope is new
+- **RICE**: Irrelevant (risk = infinite impact)
+- **Action**: Replan sprint; communicate to stakeholders
+
+### Scenario 5: "Which technical debt should we tackle?"
+- **MoSCoW**: "Must" if it blocks other features; "Should" if it's planned
+- **RICE**: Estimate Reach as "number of future stories unblocked"; Impact as "velocity gain"
+- **Story Points**: Estimate normally
+- **Action**: Tech debt with high RICE gets prioritized; track how many future features it unblocks
+
+---
+
+## Anti-Patterns & How to Fix Them
+
+| Problem | Symptom | Fix |
+|---------|---------|-----|
+| Everything is Must Have | Roadmap bloated, can't prioritize | Re-run MoSCoW with hard scope gate: only 25% can be Must |
+| High variation in Story Points | Same story scored 3 vs. 13 | Story is too vague; break into smaller stories |
+| RICE scores ignored | "We'll do this gut-feel instead" | Low team confidence in data; run a retrospective on past RICE picks vs. actual impact |
+| No one agrees on Impact | Debate drags on | Set Impact based on *customer research*, not HQ opinion. Record disagreement as low confidence. |
+| Effort estimates are always wrong | Sprints fail, velocity is chaos | You're estimating too fine. Use t-shirt sizing (S/M/L/XL) and map to points *after* the sprint |
+
+---
+
+## Template: Your Prioritization Spreadsheet
+
+See the accompanying `Backlog_Prioritization_Template.xlsx` for a ready-to-use:
+- **Backlog sheet**: Columns for ID, title, Story Points, MoSCoW, Reach, Impact, Confidence, Effort, auto-calculated RICE Score
+- **Scoring Guide sheet**: Definitions & examples for all three frameworks
+- **Dashboard sheet**: Summary metrics (total US, avg points, MoSCoW counts, top RICE scores)
+
+Download, fill in your backlog, and auto-ranking happens via Excel formulas.
+
+---
+
+## References & Further Reading
+
+- **Planning Poker**: Cohn, M. "Agile Estimating and Planning" (chapters 5–6)
+- **MoSCoW**: Clegg, D., & Barker, R. "Case Method Fast-Track" (requirements prioritization)
+- **RICE**: Patil, R. "Inspired" (Spotify model, RICE framework intro) + Intercom blog
+- **Capacity Planning**: Williams, L. "Agile Software Development" (velocity & burndown)
+
+---
+
+## One More Thing
+
+The *best* prioritization is the one your team actually uses consistently. Start simple (MoSCoW), add Story Points when you've shipped 2–3 sprints, add RICE when you have data. Don't aim for perfection on day one.
+

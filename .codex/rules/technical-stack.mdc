@@ -1,0 +1,130 @@
+---
+alwaysApply: true
+---
+# Technical Stack Rules
+
+These rules guide the AI assistant when generating or modifying code in **MagicTheOfflining**, a React Native offline MTG deck viewer.
+
+## JavaScript / TypeScript
+
+- Use modern ES modules (`import` / `export`) rather than CommonJS (`require`).
+- Prefer **TypeScript**; avoid `any` and use clear types/interfaces.
+- Follow consistent formatting and typing patterns across all `.ts` and `.tsx` files.
+- Keep logic simple and explicit; avoid magic abstractions.
+
+## React Native
+
+- Target **Android first**; iOS support is planned for future releases.
+- Components should prioritize:
+  - Readability and speed over fancy animations.
+  - Simple layouts and easy‑to‑scan typography.
+- Use functional components with hooks; avoid legacy class components.
+- Keep screens small and focused; share UI via small, well‑named components.
+
+## Android Development
+
+### Build Configuration
+
+- **Gradle Setup**: Use `android/app/build.gradle` for app-level configuration
+- **Signing**: Release builds use `keystore.properties` (never commit this file)
+- **ProGuard/R8**: Enabled for release builds to minimize APK size
+- **Hermes**: Enabled by default for better performance
+- **New Architecture**: Currently disabled (`IS_NEW_ARCHITECTURE_ENABLED = false`)
+
+### Build Commands
+
+- **Debug APK**: `cd android && ./gradlew :app:assembleDebug`
+- **Release APK**: `cd android && ./gradlew :app:assembleRelease`
+- **Release AAB** (for Play Store): `cd android && ./gradlew :app:bundleRelease`
+- **Clean build**: `cd android && ./gradlew clean`
+
+### Android-Specific Considerations
+
+- **Min SDK**: Check `rootProject.ext.minSdkVersion` in `android/build.gradle`
+- **Target SDK**: Must match latest Android requirements for Play Store
+- **Permissions**: Declare in `android/app/src/main/AndroidManifest.xml`
+- **File Storage**: Use `react-native-fs` for local file access (images, SQLite)
+- **SQLite**: Use `react-native-sqlite-storage` (Android-compatible)
+- **Image Caching**: Store in app's internal storage for offline access
+- **Network**: Only allow Moxfield and Scryfall domains; handle offline gracefully
+
+### Release Process
+
+- Generate release keystore: `keytool -genkeypair` (see `PLAY_STORE_DEPLOYMENT.md`)
+- Build AAB: `./gradlew bundleRelease`
+- AAB location: `android/app/build/outputs/bundle/release/app-release.aab`
+- Upload to Google Play Console
+
+## iOS Development (Future Support)
+
+### Prerequisites
+
+- **macOS**: Required for iOS development
+- **Xcode**: Latest version from Mac App Store (includes iOS Simulator)
+- **CocoaPods**: Dependency manager for iOS native modules
+- **Node & Watchman**: Install via Homebrew (Node 18.18+)
+
+### Setup Commands
+
+```bash
+cd ios
+bundle install          # Install Ruby gems
+bundle exec pod install # Install CocoaPods dependencies
+open MagicTheOfflining.xcworkspace  # Open in Xcode
+```
+
+### iOS-Specific Considerations
+
+- **Deployment Target**: Set minimum iOS version in Xcode project settings
+- **Info.plist**: Configure app metadata, permissions, and URL schemes
+- **App Transport Security**: Allow Moxfield and Scryfall domains
+- **File Storage**: Use `react-native-fs` for local file access
+- **SQLite**: Ensure `react-native-sqlite-storage` supports iOS
+- **Image Caching**: Use iOS Documents directory for offline images
+- **Signing**: Configure in Xcode with Apple Developer account
+
+### Release Process (Future)
+
+- Configure signing certificates in Xcode
+- Build archive: Product → Archive in Xcode
+- Upload to App Store Connect
+- Submit for review
+
+### Cross-Platform Considerations
+
+- **Platform Detection**: Use `Platform.OS === 'android'` or `Platform.OS === 'ios'`
+- **Platform-Specific Code**: Use `.android.tsx` and `.ios.tsx` file extensions when needed
+- **Testing**: Test on both platforms when iOS support is added
+- **UI Differences**: Account for platform-specific UI patterns (Material Design vs Human Interface Guidelines)
+
+## Data & Persistence (SQLite + Local Files)
+
+- SQLite is the **single source of truth** for decks and cards.
+- Prefer simple schemas with explicit indexes for queries that affect search or listing performance.
+- Always add indexes when search speed matters.
+- Avoid heavy ORMs; keep SQL queries clear and localized in the `db` layer.
+- Avoid complex ORM abstractions.
+- For images:
+  - Download once, cache locally, and always re‑use paths across decks.
+  - Never depend on remote URLs at runtime after import when offline behavior is expected.
+  - Store images locally and reuse images across decks.
+
+## Scraping
+
+- Treat all scraped Moxfield HTML/JSON as **unreliable**; normalize and validate before use.
+- Keep scraping code isolated in `src/scraping/` and documented with assumptions about page structure.
+- Handle common failure cases (missing fields, layout changes, HTTP errors) gracefully.
+- Cursor must fully master HTML scraping and DOM parsing.
+- Cursor must understand Moxfield page structure and patterns.
+- Moxfield is **read-only** (scraping only) - no synchronization back to Moxfield.
+- Data rules: English card names only, Commander decks only.
+
+## Quality Standards
+
+- Provide clear doc comments for public functions and important utility helpers.
+- Prefer small, testable units for scraping, DB, and image‑handling logic.
+- Add or update tests when changing behavior that touches:
+  - Scraping/parsing
+  - SQLite queries
+  - Import logic
+

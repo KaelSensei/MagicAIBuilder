@@ -1,0 +1,37 @@
+---
+alwaysApply: true
+---
+
+# Architecture Skill
+
+Based on Clean Architecture (Robert C. Martin) and Hexagonal Architecture
+
+## Principles
+
+- Business logic independent of frameworks
+- Dependencies point inward
+- External systems are details
+
+## Layers
+
+- Domain: core logic
+- Application: use cases
+- Infrastructure: external systems
+- Interface: UI/API
+
+## Hexagonal
+
+- Use ports (interfaces)
+- Implement adapters separately
+- Domain must not depend on infrastructure
+
+## Cursor Behavior
+
+- Enforce separation of concerns
+- Reject architecture violations
+- Suggest improvements when needed
+
+## Sources
+
+- Clean Architecture – Robert C. Martin
+- Hexagonal Architecture – Alistair Cockburn
