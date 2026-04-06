@@ -3,15 +3,15 @@
  * CollectionStatsPanel — shows owned/missing status in the deck stats sidebar.
  * Requires auth. Falls back to "sign in" message for anon users.
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Package, ShoppingCart, Check } from "lucide-react";
+import { Package, ShoppingCart, Check, CheckCheck, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import { useCollectionStore } from "@/lib/collection/store";
 import { computeCollectionStats } from "@/lib/collection/shopping-list";
 import { ShoppingListModal } from "./ShoppingListModal";
-import type { Deck } from "@/lib/deck/types";
+import type { Deck, DeckCard } from "@/lib/deck/types";
 
 interface CollectionStatsPanelProps {
   readonly deck: Deck;
@@ -25,6 +25,9 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
 
   const collectionCards = useCollectionStore((s) => s.collectionCards);
   const collectionCardsFoil = useCollectionStore((s) => s.collectionCardsFoil);
+  const bulkAddToCollection = useCollectionStore((s) => s.bulkAddToCollection);
+  const removeFromCollection = useCollectionStore((s) => s.removeFromCollection);
+  const isSyncing = useCollectionStore((s) => s.isSyncing);
 
   const ownedScryfallIds = useMemo(() => {
     const ids = new Set<string>();
@@ -39,6 +42,52 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
   );
 
   const pct = Math.round(stats.completionRatio * 100);
+
+  /** Gather all unique non-basic deck cards not yet in collection */
+  const getMissingCards = useCallback((): DeckCard[] => {
+    const allCards: DeckCard[] = [];
+    if (deck.commander) allCards.push(deck.commander);
+    if (deck.partner) allCards.push(deck.partner);
+    for (const c of deck.cards) {
+      if (c.zone === "main") allCards.push(c);
+    }
+    return allCards.filter(
+      (c) =>
+        !c.typeLine.toLowerCase().includes("basic land") &&
+        !ownedScryfallIds.has(c.scryfallId ?? c.id)
+    );
+  }, [deck, ownedScryfallIds]);
+
+  /** Mark all deck cards as owned */
+  const handleMarkAllOwned = useCallback(async () => {
+    const missing = getMissingCards();
+    if (missing.length === 0) return;
+    const inputs = missing.map((c) => ({
+      scryfallId: c.scryfallId ?? c.id,
+      name: c.name,
+      quantity: 1,
+      price: c.price,
+      imageUri: c.imageUri,
+    }));
+    await bulkAddToCollection(inputs);
+  }, [getMissingCards, bulkAddToCollection]);
+
+  /** Remove all deck cards from collection */
+  const handleResetCollection = useCallback(async () => {
+    const allCards: DeckCard[] = [];
+    if (deck.commander) allCards.push(deck.commander);
+    if (deck.partner) allCards.push(deck.partner);
+    for (const c of deck.cards) {
+      if (c.zone === "main") allCards.push(c);
+    }
+    for (const card of allCards) {
+      const sid = card.scryfallId ?? card.id;
+      const normal = collectionCards[sid];
+      const foil = collectionCardsFoil[sid];
+      if (normal) await removeFromCollection(normal.id);
+      if (foil) await removeFromCollection(foil.id);
+    }
+  }, [deck, collectionCards, collectionCardsFoil, removeFromCollection]);
 
   if (!session?.user) {
     return (
@@ -129,6 +178,30 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
                     Shopping List ({stats.missingCount} cards)
                   </button>
                 )}
+
+                {/* Mark all + Reset */}
+                <div className="flex gap-2">
+                  {stats.missingCount > 0 && (
+                    <button
+                      onClick={handleMarkAllOwned}
+                      disabled={isSyncing}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-green-500/50 text-green-400 text-xs font-medium hover:bg-green-500/10 transition-colors disabled:opacity-50"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      Mark all owned
+                    </button>
+                  )}
+                  {stats.ownedCount > 0 && (
+                    <button
+                      onClick={handleResetCollection}
+                      disabled={isSyncing}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-red-500/30 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Reset
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}

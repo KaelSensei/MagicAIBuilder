@@ -87,7 +87,7 @@ export function buildShoppingList(
 
 // ─── Collection stats ─────────────────────────────────────────────────────────
 
-/** Compute owned/missing counts and missing cost for a deck. */
+/** Compute owned/missing counts and missing cost for a deck. Basic lands are always counted as owned. */
 export function computeCollectionStats(
   deckCards: readonly DeckCard[],
   commander: DeckCard | null,
@@ -100,7 +100,8 @@ export function computeCollectionStats(
   let missingCost = 0;
 
   for (const card of allCards) {
-    const isOwned = ownedScryfallIds.has(card.scryfallId ?? card.id);
+    const isOwned =
+      isBasicLand(card) || ownedScryfallIds.has(card.scryfallId ?? card.id);
     if (isOwned) {
       ownedCount++;
     } else {
@@ -132,6 +133,35 @@ export function formatShoppingListCsv(items: readonly ShoppingListItem[]): strin
   const header = "Name,Quantity,Price (USD)";
   const rows = items.map(
     (item) => `"${item.name}",${item.quantity},${item.price ?? ""}`
+  );
+  return [header, ...rows].join("\n");
+}
+
+// ─── Collection export ───────────────────────────────────────────────────────
+
+export interface CollectionExportCard {
+  readonly name: string;
+  readonly quantity: number;
+  readonly foil: boolean;
+  readonly condition: string | null;
+  readonly price: number | null;
+}
+
+/** Format full collection as plain text: "1× Sol Ring\n2× Island" */
+export function formatCollectionText(cards: readonly CollectionExportCard[]): string {
+  if (cards.length === 0) return "";
+  return cards.map((c) => {
+    const foilTag = c.foil ? " [Foil]" : "";
+    return `${c.quantity}× ${c.name}${foilTag}`;
+  }).join("\n");
+}
+
+/** Format full collection as CSV for download */
+export function formatCollectionCsv(cards: readonly CollectionExportCard[]): string {
+  const header = "Name,Quantity,Foil,Condition,Price (USD)";
+  const rows = cards.map(
+    (c) =>
+      `"${c.name}",${c.quantity},${c.foil ? "Yes" : "No"},${c.condition ?? ""},${c.price ?? ""}`
   );
   return [header, ...rows].join("\n");
 }
