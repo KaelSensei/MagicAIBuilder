@@ -18,6 +18,7 @@ export interface CollectionStore {
   // Actions
   loadCollection: () => Promise<void>;
   addToCollection: (input: AddToCollectionInput) => Promise<void>;
+  bulkAddToCollection: (inputs: readonly AddToCollectionInput[]) => Promise<void>;
   removeFromCollection: (id: string) => Promise<void>;
   updateQuantity: (id: string, quantity: number) => Promise<void>;
   updateCondition: (id: string, condition: CardCondition | null) => Promise<void>;
@@ -107,6 +108,46 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
       });
     } catch (err) {
       logger.error("Unexpected error", "addToCollection", err);
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  bulkAddToCollection: async (inputs: readonly AddToCollectionInput[]) => {
+    if (inputs.length === 0) return;
+    set({ isSyncing: true });
+    try {
+      for (const input of inputs) {
+        const res = await fetch("/api/collection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scryfallId: input.scryfallId,
+            name: input.name,
+            quantity: input.quantity ?? 1,
+            foil: input.foil ?? false,
+            condition: input.condition ?? null,
+            price: input.price ?? null,
+            imageUri: input.imageUri ?? "",
+          }),
+        });
+        if (!res.ok) continue;
+        const card: CollectionCard = await res.json();
+        const hydrated: CollectionCard = {
+          ...card,
+          createdAt: new Date(card.createdAt),
+          acquiredAt: card.acquiredAt ? new Date(card.acquiredAt) : null,
+        };
+
+        set((state) => {
+          if (hydrated.foil) {
+            return { collectionCardsFoil: { ...state.collectionCardsFoil, [hydrated.scryfallId]: hydrated } };
+          }
+          return { collectionCards: { ...state.collectionCards, [hydrated.scryfallId]: hydrated } };
+        });
+      }
+    } catch (err) {
+      logger.error("Unexpected error", "bulkAddToCollection", err);
     } finally {
       set({ isSyncing: false });
     }

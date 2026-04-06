@@ -10,6 +10,7 @@ import { getCardImageUri } from "@/lib/scryfall/images";
 import { isMdfcWithLandBack } from "@/lib/deck/categories";
 import type { CardFace } from "@/lib/deck/types";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
+import { QuickAddCollectionButton } from "@/components/collection/QuickAddCollectionButton";
 
 interface CardGridProps {
   readonly cards: readonly ScryfallCard[];
@@ -118,6 +119,10 @@ export function CardGrid({
               scryfallId={card.id}
               compact
               className="absolute bottom-6 left-1 z-10"
+            />
+            <QuickAddCollectionButton
+              card={card}
+              className="absolute bottom-6 right-1 z-10 opacity-0 group-hover/gridcard:opacity-100 transition-opacity"
             />
           </motion.div>
         );

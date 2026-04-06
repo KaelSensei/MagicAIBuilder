@@ -294,3 +294,88 @@ describe("Collection store — loadCollection", () => {
     expect(useCollectionStore.getState().isLoading).toBe(false);
   });
 });
+
+describe("Collection store — bulkAddToCollection", () => {
+  beforeEach(() => {
+    useCollectionStore.setState({
+      collectionCards: {},
+      collectionCardsFoil: {},
+      isLoading: false,
+      isSyncing: false,
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("adds multiple cards to collection", async () => {
+    let callCount = 0;
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => {
+      callCount++;
+      return {
+        ok: true,
+        json: async () => ({
+          id: `card-${callCount}`,
+          scryfallId: `sf-${callCount}`,
+          name: `Card ${callCount}`,
+          quantity: 1,
+          foil: false,
+          condition: null,
+          acquiredAt: null,
+          price: null,
+          imageUri: "",
+          createdAt: "2024-01-01T00:00:00.000Z",
+        }),
+      };
+    }));
+
+    await useCollectionStore.getState().bulkAddToCollection([
+      { scryfallId: "sf-1", name: "Card 1" },
+      { scryfallId: "sf-2", name: "Card 2" },
+    ]);
+
+    const { collectionCards } = useCollectionStore.getState();
+    expect(Object.keys(collectionCards)).toHaveLength(2);
+    expect(useCollectionStore.getState().isSyncing).toBe(false);
+  });
+
+  it("skips failed requests and continues", async () => {
+    let callCount = 0;
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => {
+      callCount++;
+      if (callCount === 1) return { ok: false, status: 500 };
+      return {
+        ok: true,
+        json: async () => ({
+          id: "card-2",
+          scryfallId: "sf-2",
+          name: "Card 2",
+          quantity: 1,
+          foil: false,
+          condition: null,
+          acquiredAt: null,
+          price: null,
+          imageUri: "",
+          createdAt: "2024-01-01T00:00:00.000Z",
+        }),
+      };
+    }));
+
+    await useCollectionStore.getState().bulkAddToCollection([
+      { scryfallId: "sf-1", name: "Card 1" },
+      { scryfallId: "sf-2", name: "Card 2" },
+    ]);
+
+    const { collectionCards } = useCollectionStore.getState();
+    expect(Object.keys(collectionCards)).toHaveLength(1);
+    expect(collectionCards["sf-2"]?.name).toBe("Card 2");
+  });
+
+  it("does nothing for empty input", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await useCollectionStore.getState().bulkAddToCollection([]);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(useCollectionStore.getState().isSyncing).toBe(false);
+  });
+});

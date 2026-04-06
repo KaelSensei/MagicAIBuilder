@@ -1,9 +1,10 @@
 "use client";
 // Collection page — lists all owned cards with stats
-import { useEffect, useState } from "react";
-import { Loader2, Package, Search, LayoutGrid, List, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2, Package, Search, LayoutGrid, List, Trash2, Download, Copy, Check } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
+import { formatCollectionCsv, formatCollectionText } from "@/lib/collection/shopping-list";
 import { cn } from "@/components/ui/utils";
 import type { CollectionCard } from "@/lib/collection/types";
 import { CardImage } from "@/components/card/CardImage";
@@ -33,6 +34,38 @@ export function CollectionPageClient() {
     0
   );
 
+  const [copied, setCopied] = useState(false);
+
+  const exportCards = useMemo(
+    () =>
+      allCards.map((c) => ({
+        name: c.name,
+        quantity: c.quantity,
+        foil: c.foil,
+        condition: c.condition,
+        price: c.price,
+      })),
+    [allCards]
+  );
+
+  const handleCopyText = useCallback(async () => {
+    const text = formatCollectionText(exportCards);
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  }, [exportCards]);
+
+  const handleExportCsv = useCallback(() => {
+    const csv = formatCollectionCsv(exportCards);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "my-collection.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [exportCards]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center flex-1 text-[var(--text-secondary)]">
@@ -53,7 +86,27 @@ export function CollectionPageClient() {
               My Collection
             </h1>
           </div>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2">
+            {allCards.length > 0 && (
+              <>
+                <button
+                  onClick={handleCopyText}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
+                  title="Copy collection as text"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+                <button
+                  onClick={handleExportCsv}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
+                  title="Export collection as CSV"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  CSV
+                </button>
+              </>
+            )}
             <AddToCollectionDialog />
           </div>
         </div>

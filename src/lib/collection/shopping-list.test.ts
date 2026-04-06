@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { buildShoppingList, formatShoppingListText, computeCollectionStats } from "./shopping-list";
+import {
+  buildShoppingList,
+  formatShoppingListText,
+  computeCollectionStats,
+  formatCollectionText,
+  formatCollectionCsv,
+} from "./shopping-list";
 import type { DeckCard } from "@/lib/deck/types";
 
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
@@ -116,6 +122,23 @@ describe("computeCollectionStats", () => {
     const stats = computeCollectionStats(cards, null, null, new Set());
     expect(stats.missingCost).toBe(0);
   });
+
+  it("treats basic lands as owned by default", () => {
+    const cards = [
+      BASIC_LAND,
+      makeCard({ scryfallId: "a", name: "Sol Ring" }),
+    ];
+    const stats = computeCollectionStats(cards, null, null, new Set());
+    expect(stats.ownedCount).toBe(1);
+    expect(stats.missingCount).toBe(1);
+  });
+
+  it("counts basic land as owned even with empty collection", () => {
+    const cards = [BASIC_LAND];
+    const stats = computeCollectionStats(cards, null, null, new Set());
+    expect(stats.ownedCount).toBe(1);
+    expect(stats.completionRatio).toBe(1);
+  });
 });
 
 describe("formatShoppingListText", () => {
@@ -131,5 +154,58 @@ describe("formatShoppingListText", () => {
 
   it("returns empty string for empty list", () => {
     expect(formatShoppingListText([])).toBe("");
+  });
+});
+
+describe("formatCollectionText", () => {
+  it("formats as quantity + name per line", () => {
+    const cards = [
+      { name: "Sol Ring", quantity: 1, foil: false, condition: "NM", price: 1.5 },
+      { name: "Mana Crypt", quantity: 2, foil: false, condition: null, price: 150 },
+    ];
+    const text = formatCollectionText(cards);
+    expect(text).toContain("1× Sol Ring");
+    expect(text).toContain("2× Mana Crypt");
+  });
+
+  it("includes [Foil] tag for foil cards", () => {
+    const cards = [
+      { name: "Sol Ring", quantity: 1, foil: true, condition: "NM", price: 5 },
+    ];
+    const text = formatCollectionText(cards);
+    expect(text).toBe("1× Sol Ring [Foil]");
+  });
+
+  it("returns empty string for empty collection", () => {
+    expect(formatCollectionText([])).toBe("");
+  });
+});
+
+describe("formatCollectionCsv", () => {
+  it("produces valid CSV with header row", () => {
+    const cards = [
+      { name: "Sol Ring", quantity: 1, foil: false, condition: "NM", price: 1.5 },
+    ];
+    const csv = formatCollectionCsv(cards);
+    const lines = csv.split("\n");
+    expect(lines[0]).toBe("Name,Quantity,Foil,Condition,Price (USD)");
+    expect(lines[1]).toBe('"Sol Ring",1,No,NM,1.5');
+  });
+
+  it("handles null condition and price", () => {
+    const cards = [
+      { name: "Island", quantity: 4, foil: false, condition: null, price: null },
+    ];
+    const csv = formatCollectionCsv(cards);
+    const lines = csv.split("\n");
+    expect(lines[1]).toBe('"Island",4,No,,');
+  });
+
+  it("marks foil cards as Yes", () => {
+    const cards = [
+      { name: "Sol Ring", quantity: 1, foil: true, condition: "LP", price: 5 },
+    ];
+    const csv = formatCollectionCsv(cards);
+    expect(csv).toContain("Yes");
   });
 });
