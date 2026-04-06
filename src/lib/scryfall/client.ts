@@ -66,10 +66,17 @@ function rateLimitedFetch(
         },
       });
     })
-    .then((res) => {
-      queue = Promise.resolve(undefined);
-      return res;
-    });
+    .then(
+      (res) => {
+        queue = Promise.resolve(undefined);
+        return res;
+      },
+      (err) => {
+        // Reset queue even on error so future requests can still proceed
+        queue = Promise.resolve(undefined);
+        throw err;
+      }
+    );
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
