@@ -3,10 +3,11 @@ import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { ALL_FORMATS } from "@/lib/deck/formats";
 
 const createDeckSchema = z.object({
   name: z.string().min(1).max(200),
-  format: z.enum(["commander", "brawl"]).optional().default("commander"),
+  format: z.enum(ALL_FORMATS).optional().default("commander"),
   targetBracket: z.number().int().min(1).max(4).optional().default(3),
   budget: z.number().positive().nullable().optional(),
   commanderId: z.string().nullable().optional(),

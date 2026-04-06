@@ -85,7 +85,7 @@ function notifyGameChangerAdded(cardName: string, newTotal: number): void {
   }
 }
 
-function createEmptyDeck(id: string, name: string): Deck {
+function createEmptyDeck(id: string, name: string, format: Deck["format"] = "commander"): Deck {
   return {
     id,
     name,
@@ -95,7 +95,7 @@ function createEmptyDeck(id: string, name: string): Deck {
     pairingType: "none",
     cards: [],
     maybeboard: [],
-    format: "commander",
+    format,
     targetBracket: 3,
     manualBracket: null,
     budget: null,

@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { ALL_FORMATS } from "@/lib/deck/formats";
 
 // Schema for PATCH /api/decks/[id]
 export const patchDeckSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  format: z.enum(["commander", "brawl"]).optional(),
+  format: z.enum(ALL_FORMATS).optional(),
   targetBracket: z.number().int().min(1).max(4).optional(),
   manualBracket: z.number().int().min(1).max(4).nullable().optional(),
   budget: z.number().positive().nullable().optional(),
@@ -26,7 +27,7 @@ export type PatchDeckInput = z.infer<typeof patchDeckSchema>;
 // Schema for POST /api/decks (create)
 export const createDeckSchema = z.object({
   name: z.string().min(1).max(200),
-  format: z.enum(["commander", "brawl"]).optional().default("commander"),
+  format: z.enum(ALL_FORMATS).optional().default("commander"),
 });
 
 export type CreateDeckInput = z.infer<typeof createDeckSchema>;

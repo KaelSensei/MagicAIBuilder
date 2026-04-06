@@ -1,3 +1,4 @@
+import type { DeckFormat } from "./formats";
 // Core deck and card types for MagicAIBuilder
 export type CardCategory = | "commander" | "companion" | "creature" | "instant" | "sorcery" | "artifact" | "enchantment" | "planeswalker" | "land" | "ramp" | "draw" | "removal" | "boardWipe" | "winCondition" | "protection" | "other";
 export type DeckZone = "main" | "sideboard" | "maybeboard";
@@ -19,7 +20,7 @@ export type CommanderPairingType = | "none" | "partner" | "partner_with" | "frie
 export interface Deck {
   id: string; name: string; commander: DeckCard | null; partner: DeckCard | null;
   companion: DeckCard | null; pairingType: CommanderPairingType;
-  cards: DeckCard[]; maybeboard: DeckCard[]; format: "commander" | "brawl";
+  cards: DeckCard[]; maybeboard: DeckCard[]; format: DeckFormat;
   targetBracket: 1|2|3|4; manualBracket: 1|2|3|4|null; budget: number | null;
   description: string; tags: string[]; shareToken: string | null;
   shareEnabled: boolean; isPublic: boolean; isAIGenerated: boolean; createdAt: Date; updatedAt: Date;

@@ -1,5 +1,7 @@
 // Scryfall search query builder
 import type { ColorMode, InteractionType, SearchFilters } from "@/lib/deck/types";
+import { getFormatConfig } from "@/lib/deck/formats";
+import type { DeckFormat } from "@/lib/deck/formats";
 
 // ─── Interaction helpers ──────────────────────────────────────────────────────
 
@@ -130,11 +132,12 @@ function buildPowerToughnessParts(filters: Partial<SearchFilters>): string[] {
  *  - toughnessMin/Max     → tou>=N / tou<=N
  *  - interactionType      → oracle-text fragments (see buildInteractionQuery)
  *
- * Always appends "legal:commander" to scope results to EDH-legal cards.
+ * Appends `legal:{format}` to scope results to format-legal cards.
  */
 export function buildSearchQuery(
   text: string,
-  filters: Partial<SearchFilters> = {}
+  filters: Partial<SearchFilters> = {},
+  format: DeckFormat = "commander"
 ): string {
   const parts: string[] = [];
 
@@ -168,7 +171,7 @@ export function buildSearchQuery(
 
   if (filters.interactionType) parts.push(buildInteractionQuery(filters.interactionType));
 
-  parts.push("legal:commander");
+  parts.push(`legal:${getFormatConfig(format).scryfallLegality}`);
 
   return parts.join(" ");
 }
@@ -191,7 +194,8 @@ export function buildCommanderSearchQuery(
 export function buildPartnerSearchQuery(
   pairingType: string,
   text: string,
-  filters: Partial<SearchFilters> = {}
+  filters: Partial<SearchFilters> = {},
+  format: DeckFormat = "commander"
 ): string {
   const name = text.trim();
   const namePart = name ? ` name:/${name}/` : "";
@@ -211,18 +215,19 @@ export function buildPartnerSearchQuery(
       return `is:commander o:"Partner with"${namePart}${colorPart}`;
     case "background":
       // Backgrounds are not commanders; they are legendary enchantments with subtype Background.
-      return `t:background legal:commander${namePart}${colorPart}`;
+      return `t:background legal:${getFormatConfig(format).scryfallLegality}${namePart}${colorPart}`;
     default:
       return `is:commander${namePart}${colorPart}`;
   }
 }
 
-/** Companion search — cards with the Companion keyword, Commander-legal */
+/** Companion search — cards with the Companion keyword, format-legal */
 export function buildCompanionSearchQuery(
   text: string,
-  filters: Partial<SearchFilters> = {}
+  filters: Partial<SearchFilters> = {},
+  format: DeckFormat = "commander"
 ): string {
-  const parts: string[] = ["keyword:companion", "legal:commander"];
+  const parts: string[] = ["keyword:companion", `legal:${getFormatConfig(format).scryfallLegality}`];
   const name = text.trim();
   if (name) parts.push(`name:/${name}/`);
   if (filters.colors && filters.colors.length > 0) {
@@ -234,9 +239,10 @@ export function buildCompanionSearchQuery(
 /** Build a query for browsing cards from a specific set */
 export function buildSetSearchQuery(
   setCode: string,
-  colorFilter: string[] = []
+  colorFilter: string[] = [],
+  format: DeckFormat = "commander"
 ): string {
-  const parts: string[] = [`set:${setCode}`, "legal:commander"];
+  const parts: string[] = [`set:${setCode}`, `legal:${getFormatConfig(format).scryfallLegality}`];
   if (colorFilter.length > 0) parts.push(`id<=${colorFilter.join("")}`);
   return parts.join(" ");
 }
@@ -245,9 +251,10 @@ export function buildSetSearchQuery(
 export function buildColorSearchQuery(
   colors: string[],
   text: string = "",
-  exact = false
+  exact = false,
+  format: DeckFormat = "commander"
 ): string {
-  const parts: string[] = ["legal:commander"];
+  const parts: string[] = [`legal:${getFormatConfig(format).scryfallLegality}`];
   if (text.trim()) parts.push(`name:/${text.trim()}/`);
   if (colors.length > 0) {
     parts.push(exact ? `c=${colors.join("")}` : `id<=${colors.join("")}`);

@@ -28,7 +28,7 @@ describe("createDeckSchema", () => {
   });
 
   it("rejects invalid format", () => {
-    const result = createDeckSchema.safeParse({ name: "Test", format: "standard" });
+    const result = createDeckSchema.safeParse({ name: "Test", format: "not_a_real_format" });
     expect(result.success).toBe(false);
   });
 });
