@@ -31,6 +31,7 @@ import { BanlistAlert } from "@/components/deck/BanlistAlert";
 import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery, buildCompanionSearchQuery } from "@/lib/scryfall/search";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
 import type { SearchFilters as Filters, DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
+import type { DeckFormat } from "@/lib/deck/formats";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
@@ -79,28 +80,30 @@ interface BuildSearchQueryFromModeParams {
   readonly partnerMode: boolean;
   readonly companionMode: boolean;
   readonly deckPairingType?: string;
+  readonly format?: DeckFormat;
 }
 
 /** Build Scryfall search query based on current mode and filters */
 function buildSearchQueryFromMode(p: BuildSearchQueryFromModeParams): string {
+  const fmt = p.format ?? "commander";
   if (p.commanderMode) {
     return buildCommanderSearchQuery(p.searchText, p.filters);
   }
   if (p.partnerMode) {
-    return buildPartnerSearchQuery(p.deckPairingType ?? "none", p.searchText, p.filters);
+    return buildPartnerSearchQuery(p.deckPairingType ?? "none", p.searchText, p.filters, fmt);
   }
   if (p.companionMode) {
-    return buildCompanionSearchQuery(p.searchText, p.filters);
+    return buildCompanionSearchQuery(p.searchText, p.filters, fmt);
   }
   switch (p.mode) {
     case "set":
-      return p.selectedSet ? buildSetSearchQuery(p.selectedSet, p.colorFilter) : "";
+      return p.selectedSet ? buildSetSearchQuery(p.selectedSet, p.colorFilter, fmt) : "";
     case "color":
       return p.colorFilter.length > 0 || p.searchText
-        ? buildColorSearchQuery(p.colorFilter, p.searchText)
+        ? buildColorSearchQuery(p.colorFilter, p.searchText, false, fmt)
         : "";
     default:
-      return buildSearchQuery(p.searchText, p.filters);
+      return buildSearchQuery(p.searchText, p.filters, fmt);
   }
 }
 
@@ -216,7 +219,7 @@ export default function BuilderPage() {
 
   // Lazy-load Game Changers + Banlist (only on builder page, not globally)
   const { gameChangerNames, isLoaded: gcLoaded } = useGameChangersSet();
-  const { bannedNames, isLoaded: banLoaded } = useBanlistSet();
+  const { bannedNames, isLoaded: banLoaded } = useBanlistSet(deck?.format ?? "commander");
   const setGameChangerNames = useDeckStore((s) => s.setGameChangerNames);
   const setBannedNames = useDeckStore((s) => s.setBannedNames);
 
@@ -307,6 +310,7 @@ export default function BuilderPage() {
     partnerMode,
     companionMode,
     deckPairingType: deck?.pairingType,
+    format: deck?.format,
   });
 
   const {

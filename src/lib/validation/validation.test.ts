@@ -252,7 +252,7 @@ describe("patchDeckSchema", () => {
   });
 
   it("rejects invalid format value", () => {
-    const result = patchDeckSchema.safeParse({ format: "vintage" });
+    const result = patchDeckSchema.safeParse({ format: "not_a_real_format" });
     expect(result.success).toBe(false);
   });
 

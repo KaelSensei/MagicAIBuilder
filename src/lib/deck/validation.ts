@@ -1,6 +1,7 @@
 // Deck validation: banlist, Game Changers, color identity
 import type { DeckCard, Deck } from "./types";
 import { getCompanionDeckWarnings } from "./companion";
+import { getFormatConfig } from "./formats";
 
 export interface ValidationResult {
   valid: boolean;
@@ -28,14 +29,16 @@ export function validateCardForDeck(
   let isColorViolation = false;
   const isGameChanger = card.isGameChanger;
 
+  const config = getFormatConfig(deck.format);
+
   // Check banned
   if (card.isBanned) {
     isBanned = true;
-    errors.push(`${card.name} is banned in Commander`);
+    errors.push(`${card.name} is banned in ${config.label}`);
   }
 
-  // Check color identity
-  if (deck.commander) {
+  // Check color identity (only for formats with commander)
+  if (config.hasColorIdentity && deck.commander) {
     const commanderIdentitySet = new Set([
       ...deck.commander.colorIdentity,
       ...(deck.partner?.colorIdentity ?? []),
@@ -51,16 +54,18 @@ export function validateCardForDeck(
     }
   }
 
-  // Check duplicate (singleton rule — except basic lands)
-  const isBasicLand = card.typeLine.toLowerCase().includes("basic land");
-  if (!isBasicLand) {
-    const existing = [
-      ...deck.cards,
-      ...(deck.commander ? [deck.commander] : []),
-      ...(deck.partner ? [deck.partner] : []),
-    ].find((c) => c.name === card.name);
-    if (existing) {
-      errors.push(`${card.name} is already in the deck (singleton rule)`);
+  // Check duplicate (singleton formats only — except basic lands)
+  if (config.isSingleton) {
+    const isBasicLand = card.typeLine.toLowerCase().includes("basic land");
+    if (!isBasicLand) {
+      const existing = [
+        ...deck.cards,
+        ...(deck.commander ? [deck.commander] : []),
+        ...(deck.partner ? [deck.partner] : []),
+      ].find((c) => c.name === card.name);
+      if (existing) {
+        errors.push(`${card.name} is already in the deck (singleton rule)`);
+      }
     }
   }
 
@@ -73,13 +78,13 @@ export function validateCardForDeck(
   };
 }
 
-function checkCardCount(allCards: DeckCard[], errors: string[], warnings: string[]): void {
+function checkCardCount(allCards: DeckCard[], deckSize: number, errors: string[], warnings: string[]): void {
   const total = allCards.reduce((sum, c) => sum + c.quantity, 0);
-  if (total === 100) return;
-  if (total < 100) {
-    warnings.push(`Deck has ${total}/100 cards — needs ${100 - total} more`);
+  if (total === deckSize) return;
+  if (total < deckSize) {
+    warnings.push(`Deck has ${total}/${deckSize} cards — needs ${deckSize - total} more`);
   } else {
-    errors.push(`Deck has ${total}/100 cards — remove ${total - 100} cards`);
+    errors.push(`Deck has ${total}/${deckSize} cards — remove ${total - deckSize} cards`);
   }
 }
 
@@ -103,7 +108,7 @@ function checkGameChangers(allCards: DeckCard[], warnings: string[]): void {
   }
 }
 
-function checkSingleton(allCards: DeckCard[], errors: string[]): void {
+function checkSingleton(allCards: DeckCard[], maxCopies: number, errors: string[]): void {
   const nameCounts: Record<string, number> = {};
   for (const card of allCards) {
     if (!card.typeLine.toLowerCase().includes("basic land")) {
@@ -111,15 +116,17 @@ function checkSingleton(allCards: DeckCard[], errors: string[]): void {
     }
   }
   const duplicates = Object.entries(nameCounts)
-    .filter(([, count]) => count > 1)
+    .filter(([, count]) => count > maxCopies)
     .map(([name]) => name);
   if (duplicates.length > 0) {
-    errors.push(`Duplicate cards (singleton violation): ${duplicates.join(", ")}`);
+    const ruleLabel = maxCopies === 1 ? "singleton violation" : `max ${maxCopies} copies`;
+    errors.push(`Duplicate cards (${ruleLabel}): ${duplicates.join(", ")}`);
   }
 }
 
 /** Full deck validation */
 export function validateDeck(deck: Deck): ValidationResult {
+  const config = getFormatConfig(deck.format);
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -129,9 +136,9 @@ export function validateDeck(deck: Deck): ValidationResult {
     ...deck.cards,
   ];
 
-  checkCardCount(allCards, errors, warnings);
+  checkCardCount(allCards, config.deckSize, errors, warnings);
 
-  if (!deck.commander) {
+  if (config.hasCommander && !deck.commander) {
     errors.push("Deck must have a commander");
   }
 
@@ -140,9 +147,13 @@ export function validateDeck(deck: Deck): ValidationResult {
     errors.push(`Banned cards in deck: ${bannedCards.map((c) => c.name).join(", ")}`);
   }
 
-  checkColorIdentityViolations(deck, errors);
-  checkGameChangers(allCards, warnings);
-  checkSingleton(allCards, errors);
+  if (config.hasColorIdentity) {
+    checkColorIdentityViolations(deck, errors);
+  }
+  if (config.hasBracketScoring) {
+    checkGameChangers(allCards, warnings);
+  }
+  checkSingleton(allCards, config.maxCopiesPerCard, errors);
 
   const companionWarnings = getCompanionDeckWarnings(deck);
   const mergedWarnings = [...warnings, ...companionWarnings];

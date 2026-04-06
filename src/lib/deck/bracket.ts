@@ -2,6 +2,7 @@
 import type { Deck, DeckStats, BracketScore } from "./types";
 import type { SpellbookVariant } from "@/lib/combos/spellbook";
 import { getCompanionDeckWarnings } from "./companion";
+import { getFormatConfig } from "./formats";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -174,7 +175,10 @@ function generateWarnings(
 }
 
 /** Score a deck and return its bracket with dimension breakdown */
-export function scoreBracket(deck: Deck, stats: DeckStats, combos: SpellbookVariant[] = []): BracketScore {
+export function scoreBracket(deck: Deck, stats: DeckStats, combos: SpellbookVariant[] = []): BracketScore | null {
+  // Bracket scoring only applies to Commander
+  if (!getFormatConfig(deck.format).hasBracketScoring) return null;
+
   // Only score main-zone cards (sideboard/maybeboard don't affect bracket)
   const mainCards = deck.cards.filter((c) => c.zone === "main");
   const dimensions = {
