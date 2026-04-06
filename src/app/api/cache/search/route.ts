@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("query");
   const pageStr = searchParams.get("page");
-  const page = pageStr ? parseInt(pageStr, 10) : 1;
+  const page = pageStr ? Number.parseInt(pageStr, 10) : 1;
 
   if (!query || query.length === 0 || Number.isNaN(page)) {
     return NextResponse.json({ hit: false });

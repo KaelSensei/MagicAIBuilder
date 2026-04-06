@@ -30,7 +30,7 @@ export function QuickAddCollectionButton({ card, className }: QuickAddCollection
         scryfallId: card.id,
         name: card.name,
         quantity: 1,
-        price: card.prices?.usd ? parseFloat(card.prices.usd) : null,
+        price: card.prices?.usd ? Number.parseFloat(card.prices.usd) : null,
         imageUri: card.image_uris?.normal ?? "",
       });
       setJustAdded(true);
