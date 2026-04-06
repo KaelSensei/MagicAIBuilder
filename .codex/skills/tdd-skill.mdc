@@ -1,0 +1,34 @@
+---
+alwaysApply: true
+---
+
+# TDD Skill
+
+Based on Kent Beck (TDD by Example)
+
+## Cycle
+
+1. Write a failing test (RED)
+2. Write minimal code (GREEN)
+3. Refactor safely
+
+## Rules
+
+- Never write production code without a failing test
+- Tests must be deterministic and fast
+- Test behavior, not implementation
+
+## Coverage
+
+- Include edge cases
+- Include failure scenarios
+
+## Cursor Behavior
+
+- Start with tests for any feature or fix
+- Reproduce bugs via tests before fixing
+- Never skip the TDD cycle
+
+## Sources
+
+- TDD by Example – Kent Beck

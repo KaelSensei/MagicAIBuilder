@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Kael/**)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:jbtiqVVVTyMysMTe@db.wxxpirxopdzjntrmziej.supabase.co:5432/postgres\" npx prisma migrate deploy)",
+      "Bash(ls .env*)",
+      "Bash(node -e \"const c = require\\(''prisma/config''\\); console.log\\(Object.keys\\(c\\)\\)\")",
+      "Bash(gh run:*)",
+      "Bash(\"c:\\\\Users\\\\Kael\\\\Documents\\\\Claude\\\\MagicAIBuilder\\\\docs\\\\project\\\\progress.md\":*)",
+      "Bash(node -e \":*)",
+      "Bash(gh pr:*)",
+      "Bash(sed -n '1040,1052p' src/lib/deck/store.ts)",
+      "Bash(sed -n '1112,1140p' src/lib/deck/store.ts)",
+      "Bash(curl -s \"https://sonarcloud.io/api/issues/search?projects=KaelSensei_MagicAIBuilder&issueStatuses=OPEN&impactSeverities=HIGH&ps=100\")",
+      "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\);const j=JSON.parse\\(d\\);console.log\\(''''HIGH:'''',j.total\\);j.issues.forEach\\(i=>console.log\\(i.component.replace\\(''''KaelSensei_MagicAIBuilder:'''',''''''''\\),'''':'''',i.line,''''|'''',i.rule,''''|'''',i.message.substring\\(0,80\\)\\)\\)\")",
+      "Bash(git cherry-pick:*)",
+      "Bash(sed -i 's/if \\(typeof window === \"\"undefined\"\"\\) return \\\\[\\\\];/if \\(typeof globalThis.window === \"\"undefined\"\"\\) return [];/' src/components/search/SearchFilters.tsx)",
+      "Bash(sed -i 's/  active: boolean; onClick: \\(\\) => void; title?: string; children: React.ReactNode;/  readonly active: boolean; readonly onClick: \\(\\) => void; readonly title?: string; readonly children: React.ReactNode;/' src/components/search/SearchFilters.tsx)",
+      "Bash(sed -i 's/  value: number | null; onChange: \\(v: number | null\\) => void;/  readonly value: number | null; readonly onChange: \\(v: number | null\\) => void;/' src/components/search/SearchFilters.tsx)",
+      "Bash(sed -i 's/  placeholder: string; min?: number; max?: number; className?: string;/  readonly placeholder: string; readonly min?: number; readonly max?: number; readonly className?: string;/' src/components/search/SearchFilters.tsx)",
+      "Bash(sed -i \"s/onChange={\\(e\\) => onChange\\(e.target.value !== \"\"\"\" ? Number\\(e.target.value\\) : null\\)}/onChange={\\(e\\) => onChange\\(e.target.value === \"\"\"\" ? null : Number\\(e.target.value\\)\\)}/\" src/components/search/SearchFilters.tsx)",
+      "Bash(sed -i 's/  open: boolean;/  readonly open: boolean;/' src/components/ui/Modal.tsx)",
+      "Bash(sed -i 's/  onClose: \\(\\) => void;/  readonly onClose: \\(\\) => void;/' src/components/ui/Modal.tsx)",
+      "Bash(sed -i 's/  title?: string;/  readonly title?: string;/' src/components/ui/Modal.tsx)",
+      "Bash(sed -i 's/  maxWidth?: string;/  readonly maxWidth?: string;/' src/components/ui/Modal.tsx)",
+      "Bash(sed -i 's/  className?: string;/  readonly className?: string;/' src/components/ui/Modal.tsx)",
+      "Bash(node -e \"process.stdin.on\\(''''data'''',d=>JSON.parse\\(d\\).forEach\\(p=>console.log\\(''''#''''+p.number,p.headRefName,p.title\\)\\)\\)\")"
+    ],
+    "additionalDirectories": [
+      "\\^import type { CardCategory } from \"@\\lib\\deck\\types\";$",
+      "\\^import { getCardCollection } from \"@\\lib\\scryfall\\client\";$",
+      "C:\\Users\\Kael\\Documents\\Claude\\MagicAIBuilder\\s\\  onChange: (v: string) => void;$",
+      "C:\\Users\\Kael\\Documents\\Claude\\MagicAIBuilder\\s\\{ snapshotCount: number; currentCount: number }",
+      "C:\\Users\\Kael\\Documents\\Claude\\MagicAIBuilder\\s\\  index: number;$",
+      "C:\\Users\\Kael\\Documents\\Claude\\MagicAIBuilder\\src\\app\\share\\[token]",
+      "\\} else if (state.partner) {\\{n;s\\      \\ Second card in Commander section = partner\\      state.cards.push({ name, quantity });\\;n;s\\      state.partner = name;\\    } else {\\n      \\ Second card in Commander section = partner\\n      state.partner = name\\;n;s\\    } else {"
+    ]
+  }
+}

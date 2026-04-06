@@ -1,0 +1,114 @@
+---
+alwaysApply: true
+---
+# Documentation Maintenance Rules
+
+**CRITICAL: Update documentation automatically after every code change.**
+
+After completing any feature, bug fix, refactor, or significant change, **immediately and automatically** update the relevant documentation files.
+
+## Required Documentation Updates
+
+### 1. Project Progress Documentation (Always Required)
+
+After **any** create/change/update/delete operation, update project progress documentation (e.g. `PROGRESS.md`, `CHANGELOG.md`, or similar):
+
+- **For new features**: Add to the completed features section (e.g. "✅ Completed Steps" or "🚀 V2 – New Features") with `[x]` checkbox
+- **For bug fixes**: Note the fix in the relevant section
+- **For refactors**: Update the description if functionality changed
+- **Update "Last updated"** timestamp if the file includes one
+
+**Examples:**
+- `[x] **Search Reset Button**: Clear search query and results with a reset button (X) inside the search input`
+- `[x] **Board Labels in Search**: Show which board (mainboard/sideboard/considering) each card is found in search results`
+
+### 2. Architecture Documentation
+
+If you modify:
+- **Database schema** → Update architecture documentation (e.g. `magic_the_offlining_architecture.md` schema section)
+- **External data sources** → Update architecture doc (data import / scraping section)
+- **Data flow** → Update architecture doc (data flow section)
+- **UI components** → Update architecture doc (UI section) if structure changed significantly
+
+### 3. Development Plan Documentation
+
+If the project maintains a step-by-step development plan (e.g. `magic_the_offlining_step_by_step_dev_plan.md`):
+- Mark completed steps as done
+- Update any notes or implementation details
+
+### 4. README.md
+
+Update `README.md` if:
+- New features change how the application works
+- Build/install instructions change
+- New dependencies are added
+- Usage instructions need updating
+
+### 5. Deployment Documentation
+
+If deployment documentation exists (e.g. `PLAY_STORE_DEPLOYMENT.md`, `DEPLOYMENT.md`, `RELEASE.md`):
+- Update when build process changes
+- Update when signing/configuration changes
+- Update when new deployment steps are needed
+
+### 6. User Guide (USER_GUIDE.md)
+
+After adding a **new feature** (not a bug fix or refactor), **enhance the user guide** so end users know how to use it:
+
+- **If USER_GUIDE.md exists**: Add or update the section that describes the new feature in user-facing terms (steps, screens, options).
+- **If USER_GUIDE.md does not exist**: Create it using `/create-user-guide` (or create it as part of the feature commit with content derived from PROGRESS.md, CHANGELOG.md, and the app).
+- **Scope**: User guide is for **end users** (how to use the app). Do **not** add user-guide sections for internal fixes, refactors, or non–user-visible changes.
+- **Format**: Use clear headings, short steps, and optional screenshots/placeholders. Keep a "Last updated" date at the top.
+- **Consistency**: Treat USER_GUIDE.md like PROGRESS.md and CHANGELOG.md — update it in the same commit as the feature, without asking.
+
+**Commands**: Use `/create-user-guide` to generate the initial user guide from current app state; use `/update-user-guide` to refresh or add sections (e.g. after a feature, or on demand).
+
+## Documentation Update Workflow
+
+**CRITICAL: Do this automatically without asking for user confirmation.**
+
+1. **After completing code changes**, immediately:
+   - Read project progress documentation (if present) to understand current state
+   - Update progress documentation with the new feature/fix/change
+   - **For new features only**: Update USER_GUIDE.md with the new feature (user-facing steps)
+   - Check if architecture docs need updates
+   - Update other relevant docs if needed
+
+2. **Include documentation updates in the same commit** as the code changes:
+   - Stage both code and documentation files together
+   - Commit with a message that includes both code and docs updates
+   - Example: `feat: add search reset button and update docs`
+
+3. **Do NOT ask "Should I update the docs?"** — just do it automatically.
+
+## Documentation Standards
+
+- **Be specific**: Describe what was added/changed, not just "updated feature"
+- **Use checkboxes**: `[x]` for completed items in progress documentation
+- **Keep it concise**: One line per feature/fix in progress documentation
+- **Update timestamps**: Always update "Last updated" timestamps if present (including USER_GUIDE.md)
+- **Link related changes**: If multiple files changed, mention all in documentation
+
+## Examples
+
+**Good documentation update:**
+```markdown
+- [x] **Feature Name**: Clear description of what was added and why
+- [x] **Bug Fix**: Description of the issue that was resolved
+```
+
+**Bad documentation update:**
+```markdown
+- [x] Updated feature
+```
+
+## Rules
+
+- **ALWAYS update project documentation** after any code change — **DO NOT ASK FOR PERMISSION**
+- **ALWAYS include docs in the same commit** as code changes
+- **For new features**: ALWAYS update USER_GUIDE.md with user-facing steps for the new feature
+- **ALWAYS update "Last updated"** timestamps if present in documentation (including USER_GUIDE.md)
+- **Check architecture docs** if database, external data sources, or major UI structure changes
+- **No confirmation prompts** — documentation updates are mandatory, not optional
+
+These rules ensure documentation stays in sync with code and provides accurate project status.
