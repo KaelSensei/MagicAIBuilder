@@ -2,14 +2,45 @@
 
 _Last updated: 2026-04-06_
 
+## Landing Page
+
+When you first visit MagicAIBuilder without being logged in, you'll see an immersive 3D spellbook scene:
+
+- **ARCHITECT** (indigo glyph, left page) — click to Sign In
+- **RECRUIT** (green glyph, right page) — click to Sign Up
+- The camera zooms cinematically into your chosen glyph before redirecting
+
+On mobile devices or with `prefers-reduced-motion`, a clean 2D fallback is shown instead.
+
+---
+
 ## Getting Started
 
 ### Creating a Deck
 
-1. Open the app at `http://localhost:3000`
+1. Open the app and sign in
 2. Click **New Deck** in the header
-3. Name your deck and it will appear in the deck list
-4. Click the deck to open the builder
+3. Choose your **format** (Commander, Standard, Modern, Pioneer, Legacy, Vintage, Pauper, Brawl, Oathbreaker)
+4. Name your deck and it will appear in the deck list
+5. Click the deck to open the builder
+
+### Format Rules
+
+Each format has different rules that are automatically enforced:
+
+| Format      | Deck Size | Copies        | Commander | Bracket |
+| ----------- | --------- | ------------- | --------- | ------- |
+| Commander   | 100       | 1 (singleton) | Required  | Yes     |
+| Brawl       | 60        | 1 (singleton) | Required  | No      |
+| Oathbreaker | 60        | 1 (singleton) | Required  | No      |
+| Standard    | 60        | Up to 4       | No        | No      |
+| Pioneer     | 60        | Up to 4       | No        | No      |
+| Modern      | 60        | Up to 4       | No        | No      |
+| Legacy      | 60        | Up to 4       | No        | No      |
+| Vintage     | 60        | Up to 4       | No        | No      |
+| Pauper      | 60        | Up to 4       | No        | No      |
+
+Search results are automatically filtered to show only cards legal in your deck's format.
 
 ### Building a Deck
 

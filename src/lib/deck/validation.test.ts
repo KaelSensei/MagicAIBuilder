@@ -240,6 +240,76 @@ describe("validateDeck", () => {
   });
 });
 
+describe("validateCardForDeck — multi-format", () => {
+  it("allows duplicate non-basic cards in Standard (max 4 copies)", () => {
+    const existing = makeCard({ id: "orig", name: "Lightning Bolt" });
+    const deck = makeDeck({ format: "standard", cards: [existing] });
+    const duplicate = makeCard({ id: "dup", name: "Lightning Bolt" });
+    const result = validateCardForDeck(duplicate, deck);
+    expect(result.canAdd).toBe(true);
+  });
+
+  it("skips color identity check in Standard", () => {
+    const deck = makeDeck({ format: "standard" });
+    const card = makeCard({ colorIdentity: ["R", "G", "B", "W", "U"] });
+    const result = validateCardForDeck(card, deck);
+    expect(result.canAdd).toBe(true);
+    expect(result.isColorViolation).toBe(false);
+  });
+
+  it("uses format label in ban message", () => {
+    const deck = makeDeck({ format: "modern" });
+    const card = makeCard({ isBanned: true, name: "Griselbrand" });
+    const result = validateCardForDeck(card, deck);
+    expect(result.reason).toContain("Modern");
+  });
+});
+
+describe("validateDeck — multi-format", () => {
+  it("validates at 60 cards for Standard", () => {
+    const cards = Array.from({ length: 15 }, (_, i) =>
+      makeCard({ id: `c-${i}`, name: `Card ${i}`, quantity: 4 })
+    );
+    const deck = makeDeck({ format: "standard", cards });
+    const result = validateDeck(deck);
+    expect(result.warnings.some((w) => w.includes("60"))).toBe(false);
+    expect(result.errors.some((e) => e.includes("60"))).toBe(false);
+  });
+
+  it("does not require commander for Standard", () => {
+    const deck = makeDeck({ format: "standard" });
+    const result = validateDeck(deck);
+    expect(result.errors.some((e) => e.includes("commander"))).toBe(false);
+  });
+
+  it("skips Game Changers check for non-Commander formats", () => {
+    const gcCards = Array.from({ length: 5 }, (_, i) =>
+      makeCard({ id: `gc-${i}`, name: `GC ${i}`, isGameChanger: true })
+    );
+    const deck = makeDeck({ format: "pioneer", cards: gcCards });
+    const result = validateDeck(deck);
+    expect(result.warnings.some((w) => w.includes("Game Changer"))).toBe(false);
+  });
+
+  it("uses max 4 copies for Standard singleton check", () => {
+    const cards = Array.from({ length: 4 }, (_, i) =>
+      makeCard({ id: `sr-${i}`, name: "Sol Ring" })
+    );
+    const deck = makeDeck({ format: "standard", cards });
+    const result = validateDeck(deck);
+    expect(result.errors.some((e) => e.includes("Duplicate") || e.includes("max 4"))).toBe(false);
+  });
+
+  it("flags 5+ copies as duplicate in Standard", () => {
+    const cards = Array.from({ length: 5 }, (_, i) =>
+      makeCard({ id: `sr-${i}`, name: "Sol Ring" })
+    );
+    const deck = makeDeck({ format: "standard", cards });
+    const result = validateDeck(deck);
+    expect(result.errors.some((e) => e.includes("max 4"))).toBe(true);
+  });
+});
+
 describe("checkColorIdentity", () => {
   it("returns true when all card colors are within commander colors", () => {
     expect(checkColorIdentity(["U", "W"], ["W", "U", "B"])).toBe(true);

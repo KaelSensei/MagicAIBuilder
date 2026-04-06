@@ -19,62 +19,63 @@ export interface CardValidationResult {
   isGameChanger: boolean;
 }
 
+/** Check color identity violation against commander identity */
+function checkCardColorIdentity(card: DeckCard, deck: Deck): string | null {
+  if (!deck.commander) return null;
+  const identitySet = new Set([
+    ...deck.commander.colorIdentity,
+    ...(deck.partner?.colorIdentity ?? []),
+  ]);
+  const violations = card.colorIdentity.filter((c) => !identitySet.has(c));
+  if (violations.length === 0) return null;
+  return `${card.name} has colors outside your commander's identity (${violations.join(", ")})`;
+}
+
+/** Check singleton violation */
+function checkCardSingleton(card: DeckCard, deck: Deck): string | null {
+  if (card.typeLine.toLowerCase().includes("basic land")) return null;
+  const allCards = [
+    ...deck.cards,
+    ...(deck.commander ? [deck.commander] : []),
+    ...(deck.partner ? [deck.partner] : []),
+  ];
+  return allCards.find((c) => c.name === card.name)
+    ? `${card.name} is already in the deck (singleton rule)`
+    : null;
+}
+
 /** Validate whether a card can be added to a deck */
 export function validateCardForDeck(
   card: DeckCard,
   deck: Deck
 ): CardValidationResult {
-  const errors: string[] = [];
-  let isBanned = false;
-  let isColorViolation = false;
-  const isGameChanger = card.isGameChanger;
-
   const config = getFormatConfig(deck.format);
+  const errors: string[] = [];
+  let isColorViolation = false;
 
-  // Check banned
   if (card.isBanned) {
-    isBanned = true;
     errors.push(`${card.name} is banned in ${config.label}`);
   }
 
-  // Check color identity (only for formats with commander)
-  if (config.hasColorIdentity && deck.commander) {
-    const commanderIdentitySet = new Set([
-      ...deck.commander.colorIdentity,
-      ...(deck.partner?.colorIdentity ?? []),
-    ]);
-    const violation = card.colorIdentity.filter(
-      (c) => !commanderIdentitySet.has(c)
-    );
-    if (violation.length > 0) {
+  if (config.hasColorIdentity) {
+    const colorError = checkCardColorIdentity(card, deck);
+    if (colorError) {
       isColorViolation = true;
-      errors.push(
-        `${card.name} has colors outside your commander's identity (${violation.join(", ")})`
-      );
+      errors.push(colorError);
     }
   }
 
-  // Check duplicate (singleton formats only — except basic lands)
   if (config.isSingleton) {
-    const isBasicLand = card.typeLine.toLowerCase().includes("basic land");
-    if (!isBasicLand) {
-      const existing = [
-        ...deck.cards,
-        ...(deck.commander ? [deck.commander] : []),
-        ...(deck.partner ? [deck.partner] : []),
-      ].find((c) => c.name === card.name);
-      if (existing) {
-        errors.push(`${card.name} is already in the deck (singleton rule)`);
-      }
-    }
+    const singletonError = checkCardSingleton(card, deck);
+    if (singletonError) errors.push(singletonError);
   }
 
   return {
     canAdd: errors.length === 0,
     reason: errors[0],
-    isBanned,
+    isBanned: card.isBanned,
     isColorViolation,
-    isGameChanger,
+    isGameChanger: card.isGameChanger,
   };
 }
 

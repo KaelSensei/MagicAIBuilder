@@ -36,6 +36,9 @@
 - 🔗 **Deck sharing** — generate a shareable read-only link
 - 🎮 **Playtest mode** — draw opening hand, mulligan, simulate turns
 - ⌨️ **Keyboard shortcuts** — power-user navigation with undo stack
+- 🎴 **Multi-format support** — Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, Pauper with correct rules per format
+- 📦 **Collection tracking** — mark owned cards, shopping list with missing cost, CSV export, bulk "Mark all owned"
+- ✨ **3D Spellbook landing** — immersive Three.js scene for unauthenticated visitors (mobile/a11y fallback)
 - 🌙 **Dark / Light theme** — persisted across sessions
 - 🔒 **Security hardened** — Zod validation, input sanitization, no client-side secrets
 
@@ -52,6 +55,8 @@
 | Data fetching | TanStack Query 5        |
 | Database      | PostgreSQL 16 + Prisma  |
 | Drag & Drop   | dnd-kit 6               |
+| 3D Engine     | Three.js + R3F + drei   |
+| Animations    | gsap (camera), Framer   |
 
 ## Getting Started
 
