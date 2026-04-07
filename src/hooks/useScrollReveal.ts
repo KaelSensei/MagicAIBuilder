@@ -14,7 +14,7 @@ function revealEntry(entry: IntersectionObserverEntry, index: number): void {
 
 /** Observer callback — iterates entries and staggers reveal */
 function handleIntersection(entries: IntersectionObserverEntry[]): void {
-  entries.forEach(revealEntry);
+  entries.forEach((entry, i) => revealEntry(entry, i));
 }
 
 /**
