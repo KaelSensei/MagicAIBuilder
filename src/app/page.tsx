@@ -70,8 +70,9 @@ export default function HomePage() {
   );
 
   useEffect(() => {
+    if (sessionStatus !== "authenticated") return;
     loadDecks().finally(() => setIsLoading(false));
-  }, [loadDecks]);
+  }, [loadDecks, sessionStatus]);
 
   useEffect(() => {
     const stored = getStoredDecksViewMode();
