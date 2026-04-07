@@ -12,9 +12,9 @@ const MANA = [
 export function ManaFloats() {
   return (
     <>
-      {MANA.map((m, i) => (
+      {MANA.map((m) => (
         <div
-          key={`mana-${i}`}
+          key={m.symbol}
           className="mana-float"
           aria-hidden="true"
           style={{

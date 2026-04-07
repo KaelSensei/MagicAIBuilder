@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ManaFloats } from "./ManaFloats";
 
@@ -21,13 +22,14 @@ export function Hero() {
       {/* Real Scryfall mana symbols — W U B R G C */}
       <div className="hero-mana-pips" aria-label="All mana colors">
         {MANA_COLORS.map((c) => (
-          <img
+          <Image
             key={c.code}
             src={`https://svgs.scryfall.io/card-symbols/${c.code}.svg`}
             alt={c.label}
             width={40}
             height={40}
             className="w-10 h-10"
+            unoptimized
           />
         ))}
       </div>

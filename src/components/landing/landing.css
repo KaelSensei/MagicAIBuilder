@@ -239,7 +239,7 @@
 }
 .deck-ui-body { padding: 1.25rem; }
 .ai-prompt-bar {
-  background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.25);
+  background: #0f1520; border: 1px solid rgba(0,229,255,0.25);
   border-radius: 6px; padding: 0.75rem 1rem; font-size: 0.8rem; color: #6af0ff;
   margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
 }
@@ -267,7 +267,7 @@
   color: var(--text); margin-left: 2rem;
 }
 .chat-ai {
-  background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.18);
+  background: #0f1520; border: 1px solid rgba(0,229,255,0.18);
   color: #b8d8e8; display: flex; align-items: flex-start; gap: 0.6rem;
 }
 .chat-ai-content { flex: 1; }
@@ -277,7 +277,7 @@
 }
 .chat-ai-list li { font-size: 0.78rem; color: #b8d8e8; }
 .ai-badge {
-  background: rgba(0,229,255,0.12); border-radius: 3px; padding: 0.2rem 0.5rem;
+  background: #0e1a28; border-radius: 3px; padding: 0.2rem 0.5rem;
   font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em;
   text-transform: uppercase; color: #00e5ff; flex-shrink: 0; margin-top: 0.1rem;
 }
