@@ -1,0 +1,475 @@
+/* ============================================================
+   landing.css — Full marketing landing page styles
+   Violet brand (#7c5cfc) + Cyan AI accent (#00e5ff)
+   ============================================================ */
+
+/* --- Variables --- */
+.landing-page {
+  --gold: #7c5cfc;
+  --gold-light: #a78bfa;
+  --gold-dark: #4f35c2;
+  --accent: #00e5ff;
+  --black: #07060f;
+  --deep: #0c0b18;
+  --card-bg: #100f1e;
+  --surface: #16152a;
+  --border: rgba(124,92,252,0.22);
+  --text: #e2dff5;
+  --muted: #6b6890;
+  --white: #f0eeff;
+
+  background: var(--black);
+  color: var(--text);
+  font-family: var(--font-inter), 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* --- Noise overlay --- */
+.landing-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* --- Nav --- */
+.landing-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 3rem;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.landing-logo {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: 1.1rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  letter-spacing: 0.05em;
+}
+.landing-nav-links {
+  display: flex; gap: 2.5rem; list-style: none;
+  font-size: 0.85rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.landing-nav-links a {
+  color: var(--muted); text-decoration: none;
+  transition: color 0.2s;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+}
+.landing-nav-links a:hover { color: var(--gold); }
+.nav-cta {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #fff !important; padding: 0.55rem 1.4rem; border-radius: 4px;
+  font-weight: 700 !important;
+}
+
+/* --- Hero --- */
+.landing-hero {
+  position: relative; min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 8rem 2rem 6rem; overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 30%, rgba(124,92,252,0.13) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 60%, rgba(0,229,255,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 70%, rgba(124,92,252,0.07) 0%, transparent 60%);
+}
+.mana-float {
+  position: absolute; font-size: 1.5rem; opacity: 0.06;
+  animation: float linear infinite; pointer-events: none; user-select: none;
+}
+.hero-mana-pips {
+  display: flex; gap: 0.75rem; margin-bottom: 1.8rem;
+  opacity: 0; animation: fadeUp 0.8s 0.1s ease forwards;
+}
+.hero-mana-pips span {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+.hero-mana-pips span:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 16px rgba(124,92,252,0.4);
+}
+.hero-eyebrow {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 1.5rem;
+  opacity: 0; animation: fadeUp 0.8s 0.2s ease forwards;
+}
+.landing-hero h1 {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: clamp(2.8rem, 7vw, 6rem); font-weight: 900;
+  line-height: 1.05; letter-spacing: -0.01em; max-width: 900px;
+  opacity: 0; animation: fadeUp 0.8s 0.4s ease forwards;
+}
+.hero-line1 {
+  display: block;
+  background: linear-gradient(135deg, var(--white) 0%, var(--gold-light) 60%, var(--accent) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-line2 {
+  display: block;
+  background: linear-gradient(90deg, var(--gold-light), var(--accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  font-size: 0.7em; margin-top: 0.15em;
+}
+.hero-sub {
+  margin-top: 2rem; font-size: 1.2rem; color: var(--muted);
+  max-width: 560px; line-height: 1.7; font-weight: 300;
+  opacity: 0; animation: fadeUp 0.8s 0.6s ease forwards;
+}
+.hero-sub strong { color: var(--text); font-weight: 500; }
+.hero-actions {
+  margin-top: 3rem; display: flex; gap: 1rem;
+  flex-wrap: wrap; justify-content: center;
+  opacity: 0; animation: fadeUp 0.8s 0.8s ease forwards;
+}
+.hero-note {
+  margin-top: 1rem; font-size: 0.75rem; color: var(--muted);
+  letter-spacing: 0.05em;
+  opacity: 0; animation: fadeUp 0.8s 1s ease forwards;
+}
+
+/* --- Buttons --- */
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--accent));
+  color: #fff; font-family: var(--font-cinzel), 'Cinzel', serif; font-weight: 700;
+  font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 1rem 2.5rem; border: none; border-radius: 4px;
+  cursor: pointer; text-decoration: none; display: inline-block;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 24px rgba(124,92,252,0.45);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(124,92,252,0.65); }
+.btn-secondary {
+  background: transparent; color: var(--gold);
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-weight: 600; font-size: 0.9rem; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 1rem 2.5rem;
+  border: 1px solid var(--border); border-radius: 4px;
+  cursor: pointer; text-decoration: none; display: inline-block;
+  transition: border-color 0.2s, background 0.2s;
+}
+.btn-secondary:hover { border-color: var(--gold); background: rgba(124,92,252,0.05); }
+
+/* --- Section label --- */
+.section-label {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.7rem; letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--gold-dark); margin-bottom: 1.5rem;
+}
+
+/* --- Pain section --- */
+.landing-pain { position: relative; padding: 6rem 2rem; text-align: center; border-top: 1px solid var(--border); }
+.pain-inner { max-width: 760px; margin: 0 auto; }
+.landing-pain h2 {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 700;
+  line-height: 1.2; color: var(--white); margin-bottom: 1.5rem;
+}
+.landing-pain h2 em { font-style: normal; color: var(--gold); }
+.pain-list {
+  list-style: none; display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem; margin-top: 3rem; text-align: left; padding: 0;
+}
+.pain-item {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.5rem; position: relative;
+  overflow: hidden; transition: border-color 0.2s, transform 0.2s;
+}
+.pain-item:hover { border-color: rgba(124,92,252,0.5); transform: translateY(-3px); }
+.pain-item::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--accent), transparent);
+}
+.pain-icon { font-size: 1.8rem; margin-bottom: 0.75rem; }
+.pain-item h3 {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.9rem; font-weight: 600; color: var(--white);
+  margin-bottom: 0.5rem; letter-spacing: 0.03em;
+}
+.pain-item p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+/* --- Product section --- */
+.landing-product { padding: 6rem 2rem; background: var(--deep); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.product-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center;
+}
+.product-text h2 {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.5rem); font-weight: 700;
+  line-height: 1.2; color: var(--white); margin-bottom: 1.5rem;
+}
+.product-text h2 span { color: var(--gold); }
+.product-text p { font-size: 1rem; color: var(--muted); line-height: 1.8; margin-bottom: 1rem; }
+.feature-list { list-style: none; margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; padding: 0; }
+.feature-list li {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  font-size: 0.95rem; color: var(--text); line-height: 1.5;
+}
+.feature-list li::before { content: '\2726'; color: var(--gold); font-size: 0.7rem; margin-top: 0.3rem; flex-shrink: 0; }
+
+/* Deck UI mockup */
+.deck-ui {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,92,252,0.15);
+}
+.deck-ui-header {
+  background: var(--surface); padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-r { background: #c0392b; }
+.dot-y { background: #f39c12; }
+.dot-g { background: #27ae60; }
+.deck-ui-title {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.75rem; color: var(--muted);
+  margin-left: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.deck-ui-body { padding: 1.25rem; }
+.ai-prompt-bar {
+  background: #0f1520; border: 1px solid rgba(0,229,255,0.25);
+  border-radius: 6px; padding: 0.75rem 1rem; font-size: 0.8rem; color: #6af0ff;
+  margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+}
+.ai-cursor {
+  display: inline-block; width: 2px; height: 14px;
+  background: #00e5ff; animation: blink 1s infinite; vertical-align: middle;
+}
+.card-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin-bottom: 1rem; }
+.mtg-card-mini {
+  aspect-ratio: 2/3; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(135deg, #1a1030, #0d2035);
+  transition: transform 0.15s; cursor: pointer;
+}
+.mtg-card-mini:hover { transform: scale(1.08) translateY(-3px); z-index: 2; }
+.mtg-card-mini.card-b  { background: linear-gradient(135deg, #100d1a, #1a1530); }
+.mtg-card-mini.card-gold { background: linear-gradient(135deg, #201505, #352510); }
+/* Chat bubbles */
+.chat-bubble {
+  border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 0.75rem;
+  font-size: 0.82rem; line-height: 1.65;
+}
+.chat-user {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); margin-left: 2rem;
+}
+.chat-ai {
+  background: #0f1520; border: 1px solid rgba(0,229,255,0.18);
+  color: #b8d8e8; display: flex; align-items: flex-start; gap: 0.6rem;
+}
+.chat-ai-content { flex: 1; }
+.chat-ai-content p { margin-bottom: 0.5rem; }
+.chat-ai-list {
+  padding-left: 1.2rem; margin: 0.4rem 0; display: flex; flex-direction: column; gap: 0.35rem;
+}
+.chat-ai-list li { font-size: 0.78rem; color: #b8d8e8; }
+.ai-badge {
+  background: #0e1a28; border-radius: 3px; padding: 0.2rem 0.5rem;
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em;
+  text-transform: uppercase; color: #00e5ff; flex-shrink: 0; margin-top: 0.1rem;
+}
+
+/* --- Stats --- */
+.landing-stats { padding: 5rem 2rem; text-align: center; }
+.stats-grid {
+  max-width: 800px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 2rem;
+}
+.stat-item {
+  padding: 2rem; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--card-bg); position: relative; overflow: hidden;
+}
+.stat-item::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(124,92,252,0.1), transparent 70%);
+}
+.stat-number {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: 3rem; font-weight: 900;
+  background: linear-gradient(135deg, var(--gold-light), var(--accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  line-height: 1; margin-bottom: 0.5rem;
+}
+.stat-label {
+  font-size: 0.8rem; color: var(--muted); letter-spacing: 0.1em;
+  text-transform: uppercase; font-family: var(--font-cinzel), 'Cinzel', serif;
+}
+
+/* --- How it works --- */
+.landing-how { padding: 6rem 2rem; background: var(--deep); border-top: 1px solid var(--border); }
+.how-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+.landing-how h2 {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: clamp(1.8rem,4vw,2.8rem); color: var(--white); margin-bottom: 1rem;
+}
+.how-subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 4rem; line-height: 1.7; }
+.steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 2rem; position: relative; }
+.steps::before {
+  content: ''; position: absolute; top: 2rem;
+  left: calc(16.66% + 1rem); right: calc(16.66% + 1rem); height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--accent), var(--gold), transparent);
+}
+.step { position: relative; padding: 2rem 1.5rem 1.5rem; }
+.step-number {
+  width: 4rem; height: 4rem; border-radius: 50%;
+  background: var(--card-bg); border: 2px solid var(--gold);
+  box-shadow: 0 0 20px rgba(124,92,252,0.4), 0 0 40px rgba(0,229,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: 1.2rem; font-weight: 700;
+  color: var(--gold-light); margin: 0 auto 1.5rem; position: relative; z-index: 1;
+}
+.step h3 {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 1rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem;
+}
+.step p { font-size: 0.875rem; color: var(--muted); line-height: 1.7; }
+
+/* --- Testimonials --- */
+.landing-testimonials {
+  padding: 6rem 2rem; background: var(--deep);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); text-align: center;
+}
+.landing-testimonials h2 {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: clamp(1.6rem,3vw,2.2rem); color: var(--white); margin-bottom: 3rem;
+}
+.testi-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+.testi-card {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1.75rem; text-align: left; transition: border-color 0.2s;
+}
+.testi-card:hover { border-color: rgba(124,92,252,0.4); }
+.testi-stars { color: var(--gold); font-size: 0.8rem; margin-bottom: 1rem; letter-spacing: 0.1em; }
+.testi-text { font-size: 0.9rem; color: var(--text); line-height: 1.7; margin-bottom: 1.25rem; font-style: italic; }
+.testi-author {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.75rem; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.testi-role { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+
+/* --- Pricing --- */
+.landing-pricing { padding: 6rem 2rem; text-align: center; }
+.landing-pricing h2 {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: clamp(1.8rem,4vw,2.8rem); color: var(--white); margin-bottom: 0.75rem;
+}
+.pricing-sub { color: var(--muted); margin-bottom: 3.5rem; font-size: 1rem; }
+.pricing-grid { max-width: 800px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.pricing-card {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
+  padding: 2.5rem 2rem; text-align: left; position: relative;
+  overflow: hidden; transition: transform 0.2s;
+}
+.pricing-card:hover { transform: translateY(-4px); }
+.pricing-card.featured { border-color: var(--gold-dark); background: linear-gradient(135deg, rgba(124,92,252,0.06), var(--card-bg)); }
+.pricing-card.featured::before {
+  content: '\2726 MOST POPULAR'; position: absolute; top: 1rem; right: 1rem;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.6rem; letter-spacing: 0.15em; color: var(--gold);
+  background: rgba(124,92,252,0.2); padding: 0.3rem 0.6rem; border-radius: 3px;
+  border: 1px solid rgba(124,92,252,0.2);
+}
+.plan-name {
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 1rem;
+}
+.plan-price {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: 2.8rem; font-weight: 900; color: var(--white); line-height: 1; margin-bottom: 0.25rem;
+}
+.plan-period { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.75rem; }
+.plan-features { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; padding: 0; }
+.plan-features li { font-size: 0.875rem; color: var(--text); display: flex; align-items: center; gap: 0.6rem; }
+.plan-features li::before { content: '\2713'; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+.plan-features li.off { color: var(--muted); }
+.plan-features li.off::before { content: '\2014'; color: var(--muted); }
+
+/* --- Final CTA --- */
+.landing-final-cta { padding: 8rem 2rem; text-align: center; position: relative; overflow: hidden; }
+.landing-final-cta::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(124,92,252,0.1), transparent 70%);
+}
+.landing-final-cta h2 {
+  font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
+  font-size: clamp(2rem,5vw,4rem); font-weight: 900;
+  line-height: 1.1; max-width: 700px; margin: 0 auto 1.5rem; color: var(--white);
+}
+.landing-final-cta h2 span {
+  background: linear-gradient(135deg, var(--gold-light), var(--accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.landing-final-cta p { font-size: 1.1rem; color: var(--muted); max-width: 480px; margin: 0 auto 2.5rem; line-height: 1.7; }
+
+/* --- Footer --- */
+.landing-footer {
+  border-top: 1px solid var(--border); padding: 2rem 3rem;
+  display: flex; align-items: center; justify-content: space-between;
+  color: var(--muted); font-size: 0.8rem; flex-wrap: wrap; gap: 1rem;
+}
+.landing-footer a { color: var(--muted); text-decoration: none; }
+.landing-footer a:hover { color: var(--gold); }
+.landing-disclaimer {
+  width: 100%; text-align: center; padding-top: 1.5rem;
+  margin-top: 1rem; border-top: 1px solid var(--border);
+  font-size: 0.7rem; color: var(--muted); line-height: 1.7;
+  max-width: 640px; margin-left: auto; margin-right: auto;
+}
+.landing-disclaimer a { text-decoration: underline; }
+
+/* --- Keyframes --- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes float {
+  0%   { transform: translateY(100vh) rotate(0deg);   opacity: 0; }
+  10%  { opacity: 0.06; }
+  90%  { opacity: 0.06; }
+  100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* --- Scroll reveal --- */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .landing-nav { padding: 1rem 1.5rem; }
+  .landing-nav-links { display: none; }
+  .product-inner { grid-template-columns: 1fr; gap: 3rem; }
+  .steps { grid-template-columns: 1fr; }
+  .steps::before { display: none; }
+  .testi-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr; gap: 1rem; }
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .hero-eyebrow, .landing-hero h1, .hero-sub, .hero-actions, .hero-note {
+    animation: none !important;
+    opacity: 1;
+  }
+  .mana-float { animation: none !important; display: none; }
+  .reveal { transition: none; opacity: 1; transform: none; }
+}
