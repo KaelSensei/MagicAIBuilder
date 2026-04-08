@@ -10,7 +10,7 @@ import { AuthDivider } from "./AuthDivider";
 
 export function SignInForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/decks";
   const errorParam = searchParams.get("error");
 
   const [email, setEmail] = useState("");

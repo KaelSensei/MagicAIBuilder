@@ -37,7 +37,7 @@ export function Header({ deckId }: HeaderProps = {}) {
     <header className="h-14 border-b border-[var(--border)] bg-[var(--surface)] flex items-center px-4 md:px-6 gap-3 md:gap-6 shrink-0">
       {/* Logo */}
       <Link
-        href="/"
+        href="/decks"
         className="flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
       >
         <Layers className="w-5 h-5 text-[var(--accent)]" />
@@ -47,7 +47,7 @@ export function Header({ deckId }: HeaderProps = {}) {
       {/* Nav — hidden on mobile */}
       <nav className="hidden md:flex items-center gap-4 ml-4">
         <Link
-          href="/"
+          href="/decks"
           className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           My Decks
@@ -102,7 +102,7 @@ export function Header({ deckId }: HeaderProps = {}) {
           </ImportDialog>
         )}
         <Link
-          href="/"
+          href="/decks"
           className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-1.5 rounded transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
@@ -134,7 +134,7 @@ export function Header({ deckId }: HeaderProps = {}) {
         <div className="absolute top-14 left-0 right-0 z-50 md:hidden bg-[var(--surface)] border-b border-[var(--border)] shadow-lg">
           <nav className="flex flex-col p-4 gap-3">
             <Link
-              href="/"
+              href="/decks"
               onClick={() => setMenuOpen(false)}
               className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors py-2"
             >
@@ -187,7 +187,7 @@ export function Header({ deckId }: HeaderProps = {}) {
               </ImportDialog>
             )}
             <Link
-              href="/"
+              href="/decks"
               onClick={() => setMenuOpen(false)}
               className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-2 rounded transition-colors w-fit"
             >

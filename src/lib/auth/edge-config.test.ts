@@ -115,6 +115,10 @@ describe("edgeAuthConfig.callbacks.authorized", () => {
     expect(authorizedCallback(makeArgs("/builder/deck-1", false))).toBe(false);
   });
 
+  it("blocks unauthenticated access to /decks", () => {
+    expect(authorizedCallback(makeArgs("/decks", false))).toBe(false);
+  });
+
   it("allows authenticated users on protected pages", () => {
     expect(authorizedCallback(makeArgs("/builder/deck-1", true))).toBe(true);
   });

@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Card Search Flow", () => {
   test.beforeEach(async ({ page }) => {
     // Create a deck and navigate to the builder
-    await page.goto("/");
+    await page.goto("/decks");
   });
 
   test("home page loads and shows My Decks heading", async ({ page }) => {

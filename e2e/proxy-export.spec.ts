@@ -22,7 +22,7 @@ async function dismissOnboardingLocalStorage(page: Page): Promise<void> {
 
 /** Empty state uses "Create Deck"; non-empty grid uses the dashed "New Deck" tile (last match). */
 async function createDeckAndOpenBuilder(page: Page): Promise<void> {
-  await page.goto("/");
+  await page.goto("/decks");
   await expect(page.getByRole("heading", { name: "My Decks" })).toBeVisible();
 
   const createDeckBtn = page.getByRole("button", { name: "Create Deck" });

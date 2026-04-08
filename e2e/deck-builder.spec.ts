@@ -2,12 +2,12 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Deck Builder Flow", () => {
   test("can create a deck and see it on home page", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/decks");
     await page.click("text=New Deck");
     await page.waitForURL(/\/builder\//);
 
     // Navigate back to home
-    await page.goto("/");
+    await page.goto("/decks");
 
     // Deck should now appear
     const deckCard = page.getByTestId("deck-card");
@@ -16,7 +16,7 @@ test.describe("Deck Builder Flow", () => {
   });
 
   test("builder shows 3-panel layout", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/decks");
     await page.click("text=New Deck");
     await page.waitForURL(/\/builder\//);
 
@@ -31,7 +31,7 @@ test.describe("Deck Builder Flow", () => {
   });
 
   test("deck shows 0/100 initially", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/decks");
     await page.click("text=New Deck");
     await page.waitForURL(/\/builder\//);
 
@@ -40,7 +40,7 @@ test.describe("Deck Builder Flow", () => {
   });
 
   test("mana curve section is present in stats", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/decks");
     await page.click("text=New Deck");
     await page.waitForURL(/\/builder\//);
 
@@ -48,7 +48,7 @@ test.describe("Deck Builder Flow", () => {
   });
 
   test("game changers badge is present", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/decks");
     await page.click("text=New Deck");
     await page.waitForURL(/\/builder\//);
 
@@ -56,13 +56,13 @@ test.describe("Deck Builder Flow", () => {
   });
 
   test("back navigation returns to home", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/decks");
     await page.click("text=New Deck");
     await page.waitForURL(/\/builder\//);
 
     // Click back arrow
-    await page.locator('a[href="/"]').first().click();
-    await expect(page).toHaveURL("/");
+    await page.locator('a[href="/decks"]').first().click();
+    await expect(page).toHaveURL("/decks");
     await expect(page.getByRole("heading", { name: "My Decks" })).toBeVisible();
   });
 });

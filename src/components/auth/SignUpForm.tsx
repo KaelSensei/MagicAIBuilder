@@ -38,7 +38,7 @@ export function SignUpForm() {
         email,
         password,
         redirect: false,
-        callbackUrl: "/",
+        callbackUrl: "/decks",
       });
 
       setLoading(false);
@@ -48,13 +48,13 @@ export function SignUpForm() {
         return;
       }
 
-      globalThis.location.href = "/";
+      globalThis.location.href = "/decks";
     },
     [name, email, password]
   );
 
   const handleGoogle = useCallback(() => {
-    signIn("google", { callbackUrl: "/" });
+    signIn("google", { callbackUrl: "/decks" });
   }, []);
 
   return (

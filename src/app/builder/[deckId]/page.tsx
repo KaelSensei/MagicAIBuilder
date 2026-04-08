@@ -480,7 +480,7 @@ export default function BuilderPage() {
             ) : (
               <>
                 <p className="text-[var(--text-secondary)] mb-4">Deck not found</p>
-                <Link href="/" className="text-[var(--accent)] hover:underline text-sm">
+                <Link href="/decks" className="text-[var(--accent)] hover:underline text-sm">
                   ← Back to My Decks
                 </Link>
               </>
@@ -516,7 +516,7 @@ export default function BuilderPage() {
         {/* Deck title bar */}
         <div className="border-b border-[var(--border)] bg-[var(--surface)] px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3">
           <Link
-            href="/"
+            href="/decks"
             className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />

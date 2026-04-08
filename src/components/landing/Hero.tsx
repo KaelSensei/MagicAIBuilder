@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { ManaFloats } from "./ManaFloats";
 
 /** Mana colors in WUBRG + Colorless order */
@@ -14,6 +17,11 @@ const MANA_COLORS = [
 
 /** Hero section — gradient headline, CTA, floating mana particles */
 export function Hero() {
+  const { status } = useSession();
+  const isLoggedIn = status === "authenticated";
+  const ctaHref = isLoggedIn ? "/decks" : "/auth/signin";
+  const ctaLabel = isLoggedIn ? "\u2726 Go to My Decks" : "\u2726 Build My First Deck";
+
   return (
     <section className="landing-hero">
       <div className="hero-bg" />
@@ -50,8 +58,8 @@ export function Hero() {
       </p>
 
       <div className="hero-actions">
-        <Link href="/auth/signin" className="btn-primary">
-          {"\u2726"} Build My First Deck
+        <Link href={ctaHref} className="btn-primary">
+          {ctaLabel}
         </Link>
         <Link href="#product" className="btn-secondary">
           See How It Works
