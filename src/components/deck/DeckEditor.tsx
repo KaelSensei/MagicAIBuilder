@@ -18,7 +18,7 @@ import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { CompanionZone } from "@/components/deck/CompanionZone";
 import { sortCards, groupCards } from "@/lib/deck/sort";
 import type { CardGroup } from "@/lib/deck/sort";
-import { getColorIdentityViolations } from "@/lib/deck/color-identity";
+import { getColorIdentityViolations, isCompanionOutsideColorIdentity } from "@/lib/deck/color-identity";
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for upcoming zone-based drag-and-drop feature
@@ -414,7 +414,9 @@ function MainZoneContent({
             <button onClick={(e) => { e.stopPropagation(); setPartner(null); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title="Remove partner">×</button>
           </div>
         )}
-        {deck.companion && (
+        {deck.companion && (() => {
+          const companionViolation = isCompanionOutsideColorIdentity(deck);
+          return (
           <div className="relative group/card">
             <CardImage
               imageUri={deck.companion.imageUri}
@@ -424,12 +426,12 @@ function MainZoneContent({
               cmc={deck.companion.cmc}
               showOverlay={!deck.companion.cardFaces}
               zoomOnHover={false}
-              className="w-full ring-2 ring-teal-400/75 rounded-[4%] cursor-pointer"
+              className={`w-full ring-2 rounded-[4%] cursor-pointer ${companionViolation ? "ring-red-500/70 opacity-70 hover:opacity-100" : "ring-teal-400/75"}`}
               onClick={() => onCardClick?.(deck.companion!)}
               cardFaces={deck.companion.cardFaces}
               isFlexibleLand={deck.companion.isFlexibleLand}
             />
-            <div className="absolute bottom-1 left-1 bg-teal-500/90 text-black text-[8px] font-bold px-1 rounded leading-tight">
+            <div className={`absolute bottom-1 left-1 text-black text-[8px] font-bold px-1 rounded leading-tight ${companionViolation ? "bg-red-500/90" : "bg-teal-500/90"}`}>
               COMP
             </div>
             <button
@@ -443,7 +445,8 @@ function MainZoneContent({
               ×
             </button>
           </div>
-        )}
+          );
+        })()}
         {mainCards.map((card) => (
           <div key={card.id} className="relative group/card">
             <CardImage

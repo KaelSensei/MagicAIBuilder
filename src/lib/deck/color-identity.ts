@@ -30,3 +30,10 @@ export function isCardOutsideColorIdentity(
   return card.colorIdentity.some((color) => !commanderIdentity.has(color));
 }
 
+/** Check whether the companion's color identity violates the commander's. */
+export function isCompanionOutsideColorIdentity(deck: Deck): boolean {
+  if (!deck.commander || !deck.companion) return false;
+  const commanderIdentity = buildCommanderIdentitySet(deck);
+  return deck.companion.colorIdentity.some((color) => !commanderIdentity.has(color));
+}
+

@@ -91,7 +91,7 @@ Rules for suggestions:
 - Every cut must have a reason tied to an identified problem
 - Every addition must directly address an identified problem
 - Respect the budget (check prices via Scryfall)
-- Respect color identity
+- Respect color identity — every card in the deck AND the companion must have a color identity that is a subset of the commander's (+ partner's) color identity
 - Respect the target bracket (don't suggest Game Changers for Bracket 1-2)
 - Prefer cards with high EDHREC synergy scores for the commander when possible
 
@@ -119,7 +119,7 @@ Before including any card in your analysis (cuts, adds, or maybeboard):
 
 1. **Verify the card exists** - Use your knowledge, but flag any card you're less than 95% sure about with "verify on Scryfall"
 2. **Verify Commander legality** - Is it banned?
-3. **Verify color identity** - Does it fit the commander's color identity?
+3. **Verify color identity** - Does it fit the commander's (+ partner's) color identity? This applies to ALL cards including the Companion.
 4. **Check price** - Is it within budget?
 5. **Verify oracle text** - Does the card actually do what you think it does?
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Deck, DeckCard } from "./types";
-import { getColorIdentityViolations } from "./color-identity";
+import { getColorIdentityViolations, isCompanionOutsideColorIdentity } from "./color-identity";
 
 function makeDeckCard(overrides: Partial<DeckCard>): DeckCard {
   return {
@@ -78,6 +78,53 @@ describe("getColorIdentityViolations", () => {
     });
     deck.cards = [makeDeckCard({ id: "ok", name: "Red Card", colorIdentity: ["R"] })];
     expect(getColorIdentityViolations(deck)).toEqual([]);
+  });
+});
+
+describe("isCompanionOutsideColorIdentity", () => {
+  it("returns false when there is no commander", () => {
+    const deck = makeDeck({
+      commander: null,
+      companion: makeDeckCard({ id: "comp", name: "Lurrus", colorIdentity: ["W", "B"] }),
+    });
+    expect(isCompanionOutsideColorIdentity(deck)).toBe(false);
+  });
+
+  it("returns false when there is no companion", () => {
+    const deck = makeDeck({ companion: null });
+    expect(isCompanionOutsideColorIdentity(deck)).toBe(false);
+  });
+
+  it("returns false when companion is within commander identity", () => {
+    const deck = makeDeck({
+      commander: makeDeckCard({ id: "cmd", name: "Cmd", category: "commander", colorIdentity: ["G", "U", "W"] }),
+      companion: makeDeckCard({ id: "comp", name: "Companion", colorIdentity: ["G", "W"] }),
+    });
+    expect(isCompanionOutsideColorIdentity(deck)).toBe(false);
+  });
+
+  it("returns true when companion has colors outside commander identity", () => {
+    const deck = makeDeck({
+      commander: makeDeckCard({ id: "cmd", name: "Cmd", category: "commander", colorIdentity: ["G", "U"] }),
+      companion: makeDeckCard({ id: "comp", name: "Lurrus", colorIdentity: ["W", "B"] }),
+    });
+    expect(isCompanionOutsideColorIdentity(deck)).toBe(true);
+  });
+
+  it("includes partner identity when checking companion", () => {
+    const deck = makeDeck({
+      commander: makeDeckCard({ id: "cmd", name: "Cmd", category: "commander", colorIdentity: ["G"] }),
+      partner: makeDeckCard({ id: "prt", name: "Partner", category: "commander", colorIdentity: ["W"] }),
+      companion: makeDeckCard({ id: "comp", name: "Companion", colorIdentity: ["G", "W"] }),
+    });
+    expect(isCompanionOutsideColorIdentity(deck)).toBe(false);
+  });
+
+  it("returns false for colorless companion with any commander", () => {
+    const deck = makeDeck({
+      companion: makeDeckCard({ id: "comp", name: "Colorless Comp", colorIdentity: [] }),
+    });
+    expect(isCompanionOutsideColorIdentity(deck)).toBe(false);
   });
 });
 
