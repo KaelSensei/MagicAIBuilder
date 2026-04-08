@@ -37,7 +37,7 @@ export function Header({ deckId }: HeaderProps = {}) {
     <header className="h-14 border-b border-[var(--border)] bg-[var(--surface)] flex items-center px-4 md:px-6 gap-3 md:gap-6 shrink-0">
       {/* Logo */}
       <Link
-        href="/"
+        href="/decks"
         className="flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
       >
         <Layers className="w-5 h-5 text-[var(--accent)]" />
