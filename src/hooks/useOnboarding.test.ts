@@ -178,7 +178,7 @@ describe("useOnboarding", () => {
       expect(result.current.loading).toBe(false);
     });
     expect(result.current.showWizard).toBe(true);
-    expect(globalThis.fetch).toHaveBeenCalledWith("/api/user/profile");
+    expect(globalThis.fetch).toHaveBeenCalledWith("/api/user/onboarding");
   });
 
   it("authenticated: hide wizard when profile onboardingDone is true", async () => {
@@ -196,6 +196,27 @@ describe("useOnboarding", () => {
       expect(result.current.loading).toBe(false);
     });
     expect(result.current.showWizard).toBe(false);
+  });
+
+  it("authenticated: reuses the cached onboarding status for the same user", async () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: { expires: "future", user: { id: "user-cache", name: "T" } },
+      status: "authenticated",
+      update: vi.fn(),
+    });
+
+    const firstRender = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(firstRender.result.current.loading).toBe(false);
+    });
+    firstRender.unmount();
+
+    const secondRender = renderHook(() => useOnboarding());
+    await waitFor(() => {
+      expect(secondRender.result.current.loading).toBe(false);
+    });
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
   });
 
   it("authenticated: profile fetch failure still ends loading", async () => {
@@ -243,7 +264,7 @@ describe("useOnboarding", () => {
       await result.current.completeOnboarding();
     });
 
-    expect(globalThis.fetch).toHaveBeenCalledWith("/api/user/onboarding", { method: "POST" });
+    expect(globalThis.fetch).toHaveBeenLastCalledWith("/api/user/onboarding", { method: "POST" });
   });
 
   it("resetOnboarding authenticated DELETEs and shows wizard", async () => {
@@ -265,7 +286,7 @@ describe("useOnboarding", () => {
       await result.current.resetOnboarding();
     });
 
-    expect(globalThis.fetch).toHaveBeenCalledWith("/api/user/onboarding", { method: "DELETE" });
+    expect(globalThis.fetch).toHaveBeenLastCalledWith("/api/user/onboarding", { method: "DELETE" });
     expect(result.current.showWizard).toBe(true);
   });
 

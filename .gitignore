@@ -39,8 +39,7 @@ desktop.ini
 
 # AI Agents — .agents/ is the source of truth (committed)
 # Agent-specific dirs contain only symlinks + local config (all gitignored)
-.claude/*
-!.claude/settings.json
+.claude/
 .codex/
 .cursor/
 
