@@ -7,6 +7,7 @@ import {
   detectCompanionConditionFromDeckCard,
   getCompanionDeckWarnings,
 } from "@/lib/deck/companion";
+import { isCompanionOutsideColorIdentity } from "@/lib/deck/color-identity";
 import type { Deck } from "@/lib/deck/types";
 import { useDeckStore } from "@/lib/deck/store";
 
@@ -35,6 +36,7 @@ export function CompanionZone({ deck, deckViewMode }: CompanionZoneProps) {
   );
 
   const warnings = useMemo(() => getCompanionDeckWarnings(deck), [deck]);
+  const hasColorViolation = useMemo(() => isCompanionOutsideColorIdentity(deck), [deck]);
 
   if (!commander) {
     return null;
@@ -57,7 +59,7 @@ export function CompanionZone({ deck, deckViewMode }: CompanionZoneProps) {
   }
 
   return (
-    <div className="px-3 pb-3 border-b border-[var(--border)]">
+    <div className={`px-3 pb-3 border-b ${hasColorViolation ? "border-red-500/40 bg-red-500/5" : "border-[var(--border)]"}`}>
       <div className="flex items-start justify-between gap-2 mb-1">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
           Companion <span className="text-[10px] normal-case opacity-70">(sideboard)</span>
@@ -81,7 +83,7 @@ export function CompanionZone({ deck, deckViewMode }: CompanionZoneProps) {
         <p className="text-[10px] text-[var(--text-secondary)] mt-1.5 leading-snug">{ruleSummary}</p>
       )}
       {warnings.length > 0 && (
-        <ul className="mt-2 space-y-1 text-[10px] text-amber-400/95 leading-snug list-disc pl-3.5">
+        <ul className={`mt-2 space-y-1 text-[10px] leading-snug list-disc pl-3.5 ${hasColorViolation ? "text-red-400" : "text-amber-400/95"}`}>
           {warnings.map((w, i) => (
             <li key={`${i}-${w.slice(0, 24)}`}>{w}</li>
           ))}

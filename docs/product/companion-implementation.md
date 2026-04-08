@@ -29,9 +29,11 @@ _Product doc (this file): `docs/product/companion-implementation.md`. Tracked as
    - Logic for detecting Companions on import
    - Synchronization with the API
 
-3. **Validation** (`src/lib/deck/validation.ts`)
+3. **Validation** (`src/lib/deck/validation.ts` + `src/lib/deck/color-identity.ts`)
    - Counts cards for the 100-card rule (Companion doesn't count)
    - Validates color identity against the Companion if present
+   - `isCompanionOutsideColorIdentity(deck)` returns true when companion has colors outside commander + partner identity
+   - **Visual enforcement**: companion card gets the same red ring/overlay as any deck card that violates color identity (grid: `ring-red-500/70 opacity-70`, list: `border-red-500/40 bg-red-500/5`)
 
 4. **Pairing System** (`src/lib/deck/pairing.ts`)
    - Handles Partner, Background, Doctor's Companion, etc.
