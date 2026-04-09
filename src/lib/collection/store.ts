@@ -56,6 +56,8 @@ export interface CollectionStore {
   getTotalOwned: (scryfallId: string) => number;
 
   // Actions
+  /** Hydrate from pre-fetched data (used by InitProvider to avoid a second fetch) */
+  hydrateCollection: (rawCards: readonly unknown[]) => void;
   loadCollection: () => Promise<void>;
   addToCollection: (input: AddToCollectionInput) => Promise<void>;
   bulkAddToCollection: (inputs: readonly AddToCollectionInput[]) => Promise<void>;
@@ -84,6 +86,23 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
     const normal = collectionCards[scryfallId]?.quantity ?? 0;
     const foil = collectionCardsFoil[scryfallId]?.quantity ?? 0;
     return normal + foil;
+  },
+
+  hydrateCollection: (rawCards: readonly unknown[]) => {
+    const collectionCards: Record<string, CollectionCard> = {};
+    const collectionCardsFoil: Record<string, CollectionCard> = {};
+
+    for (const raw of rawCards) {
+      const parsed = parseCollectionCard(raw);
+      if (!parsed) continue;
+      if (parsed.foil) {
+        collectionCardsFoil[parsed.scryfallId] = parsed;
+      } else {
+        collectionCards[parsed.scryfallId] = parsed;
+      }
+    }
+
+    set({ collectionCards, collectionCardsFoil, isLoading: false });
   },
 
   loadCollection: async () => {

@@ -5,6 +5,14 @@ vi.mock("next-auth/react", () => ({
   useSession: vi.fn(),
 }));
 
+const { mockInitOnboardingDone } = vi.hoisted(() => ({
+  mockInitOnboardingDone: { value: null as boolean | null },
+}));
+
+vi.mock("@/components/providers/InitProvider", () => ({
+  useInitContext: () => ({ onboardingDone: mockInitOnboardingDone.value }),
+}));
+
 import { useSession } from "next-auth/react";
 import { useOnboarding } from "./useOnboarding";
 
@@ -115,6 +123,7 @@ describe("useOnboarding", () => {
   beforeEach(() => {
     localStorageMock.clear();
     vi.restoreAllMocks();
+    mockInitOnboardingDone.value = null;
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -160,7 +169,7 @@ describe("useOnboarding", () => {
     expect(result.current.showWizard).toBe(false);
   });
 
-  it("authenticated: showWizard when profile says onboarding not done", async () => {
+  it("authenticated: showWizard when InitProvider says onboarding not done", async () => {
     vi.mocked(useSession).mockReturnValue({
       data: {
         expires: "future",
@@ -169,27 +178,22 @@ describe("useOnboarding", () => {
       status: "authenticated",
       update: vi.fn(),
     });
-    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ onboardingDone: false }), { status: 200 })
-    );
+    mockInitOnboardingDone.value = false;
 
     const { result } = renderHook(() => useOnboarding());
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
     expect(result.current.showWizard).toBe(true);
-    expect(globalThis.fetch).toHaveBeenCalledWith("/api/user/onboarding");
   });
 
-  it("authenticated: hide wizard when profile onboardingDone is true", async () => {
+  it("authenticated: hide wizard when InitProvider onboardingDone is true", async () => {
     vi.mocked(useSession).mockReturnValue({
       data: { expires: "future", user: { id: "user-2", name: "T" } },
       status: "authenticated",
       update: vi.fn(),
     });
-    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ onboardingDone: true }), { status: 200 })
-    );
+    mockInitOnboardingDone.value = true;
 
     const { result } = renderHook(() => useOnboarding());
     await waitFor(() => {
@@ -198,39 +202,16 @@ describe("useOnboarding", () => {
     expect(result.current.showWizard).toBe(false);
   });
 
-  it("authenticated: reuses the cached onboarding status for the same user", async () => {
+  it("authenticated: stays loading while InitProvider has not resolved", async () => {
     vi.mocked(useSession).mockReturnValue({
-      data: { expires: "future", user: { id: "user-cache", name: "T" } },
+      data: { expires: "future", user: { id: "user-pending", name: "T" } },
       status: "authenticated",
       update: vi.fn(),
     });
-
-    const firstRender = renderHook(() => useOnboarding());
-    await waitFor(() => {
-      expect(firstRender.result.current.loading).toBe(false);
-    });
-    firstRender.unmount();
-
-    const secondRender = renderHook(() => useOnboarding());
-    await waitFor(() => {
-      expect(secondRender.result.current.loading).toBe(false);
-    });
-
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-  });
-
-  it("authenticated: profile fetch failure still ends loading", async () => {
-    vi.mocked(useSession).mockReturnValue({
-      data: { expires: "future", user: { id: "user-3", name: "T" } },
-      status: "authenticated",
-      update: vi.fn(),
-    });
-    vi.mocked(globalThis.fetch).mockRejectedValueOnce(new Error("network"));
+    mockInitOnboardingDone.value = null;
 
     const { result } = renderHook(() => useOnboarding());
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
+    expect(result.current.loading).toBe(true);
   });
 
   it("completeOnboarding unauthenticated sets localStorage", async () => {
@@ -251,6 +232,7 @@ describe("useOnboarding", () => {
       status: "authenticated",
       update: vi.fn(),
     });
+    mockInitOnboardingDone.value = false;
     vi.mocked(globalThis.fetch).mockResolvedValue(
       new Response(JSON.stringify({ onboardingDone: true }), { status: 200 })
     );
@@ -273,6 +255,7 @@ describe("useOnboarding", () => {
       status: "authenticated",
       update: vi.fn(),
     });
+    mockInitOnboardingDone.value = true;
     vi.mocked(globalThis.fetch).mockResolvedValue(
       new Response(JSON.stringify({ onboardingDone: true }), { status: 200 })
     );

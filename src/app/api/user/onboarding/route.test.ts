@@ -30,15 +30,6 @@ function authed() {
   });
 }
 
-function mockResolvedSessionUser() {
-  mockUserFindUnique.mockResolvedValueOnce({
-    id: "user-1",
-    name: "Kael",
-    email: "kael@test.com",
-    image: null,
-  });
-}
-
 function unauthed() {
   mockAuth.mockResolvedValueOnce(null);
 }
@@ -50,7 +41,6 @@ describe("GET /api/user/onboarding", () => {
 
   it("returns the current onboarding status", async () => {
     authed();
-    mockResolvedSessionUser();
     mockUserFindUnique.mockResolvedValueOnce({ onboardingDone: true });
 
     const response = await GET();
@@ -76,7 +66,6 @@ describe("POST /api/user/onboarding", () => {
 
   it("marks onboarding as done", async () => {
     authed();
-    mockResolvedSessionUser();
     mockUserUpdate.mockResolvedValueOnce({ onboardingDone: true });
 
     const response = await POST();
@@ -96,7 +85,6 @@ describe("DELETE /api/user/onboarding", () => {
 
   it("resets onboarding", async () => {
     authed();
-    mockResolvedSessionUser();
     mockUserUpdate.mockResolvedValueOnce({ onboardingDone: false });
 
     const response = await DELETE();

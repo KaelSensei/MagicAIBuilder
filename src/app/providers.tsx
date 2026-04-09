@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
 import { useState } from "react";
-import { CollectionProvider } from "@/components/providers/CollectionProvider";
+import { InitProvider } from "@/components/providers/InitProvider";
 import { ThemeSync } from "@/components/providers/ThemeSync";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 
@@ -25,9 +25,9 @@ export function Providers({ children }: { readonly children: React.ReactNode }) 
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeSync />
-        <CollectionProvider>
+        <InitProvider>
           <OnboardingProvider>{children}</OnboardingProvider>
-        </CollectionProvider>
+        </InitProvider>
       </QueryClientProvider>
     </SessionProvider>
   );
