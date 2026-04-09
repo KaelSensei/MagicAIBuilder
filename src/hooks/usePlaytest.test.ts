@@ -33,6 +33,7 @@ function makeDeck(cardCount = 20): Deck {
     partner: null,
     companion: null,
     cards: Array.from({ length: cardCount }, (_, i) => makeCard(`Card${i}`)),
+    cardCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,

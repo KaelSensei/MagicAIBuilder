@@ -55,6 +55,7 @@ describe("useDeck", () => {
       partner: null,
       companion: null,
       cards: [],
+      cardCount: 0,
       targetBracket: 2 as 1 | 2 | 3 | 4,
       manualBracket: null,
       budget: null,

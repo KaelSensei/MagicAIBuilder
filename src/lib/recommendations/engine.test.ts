@@ -22,7 +22,7 @@ function makeDeck(id: string, cards: DeckCard[], tags: string[] = [], commanderN
     commander: makeCard(`cmd-${id}`, commanderName),
     partner: null, companion: null, pairingType: "none",
     cards, maybeboard: [], format: "commander",
-    targetBracket: 3, manualBracket: null, budget: null,
+    cardCount: 0, targetBracket: 3, manualBracket: null, budget: null,
     tags, shareToken: null, shareEnabled: false,
     isPublic: false, isAIGenerated: false,
     createdAt: new Date(), updatedAt: new Date(),

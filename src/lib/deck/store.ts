@@ -96,6 +96,7 @@ function createEmptyDeck(id: string, name: string, format: Deck["format"] = "com
     cards: [],
     maybeboard: [],
     format,
+    cardCount: 0,
     targetBracket: 3,
     manualBracket: null,
     budget: null,
@@ -107,6 +108,79 @@ function createEmptyDeck(id: string, name: string, format: Deck["format"] = "com
     isAIGenerated: false,
     createdAt: new Date(),
     updatedAt: new Date(),
+  };
+}
+
+/**
+ * Convert an API deck response to a store Deck object.
+ * Extracts commander/partner/companion from the cards array and builds the Deck.
+ *
+ * @param d - API deck response (may contain all cards or just commander/partner/companion)
+ * @returns Store-ready Deck object
+ */
+function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
+  const allCards = d.cards ?? [];
+  const commanderCard = allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
+  const rawPartnerCard = allCards.find((c) => c.isPartner) ?? null;
+  const partnerCard = (rawPartnerCard && rawPartnerCard.name !== commanderCard?.name)
+    ? rawPartnerCard
+    : null;
+  const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
+  const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
+
+  const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => {
+    const cardFaces = rebuildCardFaces(c.scryfallId, c.name, c.typeLine, c.manaCost, c.oracleText);
+    const isFlexibleLand = cardFaces?.[1].typeLine.toLowerCase().includes("land") ?? false;
+    return {
+      id: c.id,
+      scryfallId: c.scryfallId,
+      name: c.name,
+      manaCost: c.manaCost,
+      cmc: c.cmc,
+      typeLine: c.typeLine,
+      oracleText: c.oracleText,
+      colorIdentity: c.colorIdentity,
+      isGameChanger: c.isGameChanger,
+      isBanned: c.isBanned,
+      price: c.price,
+      imageUri: c.imageUri,
+      artCropUri: c.artCropUri,
+      category: c.category,
+      power: c.power ?? null,
+      toughness: c.toughness ?? null,
+      quantity: c.quantity,
+      notes: c.notes ?? null,
+      zone: c.zone ?? "main",
+      cardFaces,
+      isFlexibleLand: isFlexibleLand || undefined,
+    };
+  };
+
+  // cardCount: use _count from listing endpoint, or derive from full card list
+  const cardCount = d._count?.cards ?? allCards.length;
+
+  return {
+    id: d.id,
+    name: d.name,
+    format: d.format,
+    targetBracket: d.targetBracket,
+    manualBracket: (d.manualBracket ?? null) as 1 | 2 | 3 | 4 | null,
+    budget: d.budget,
+    description: d.description ?? "",
+    tags: d.tags ?? [],
+    shareToken: d.shareToken ?? null,
+    shareEnabled: d.shareEnabled ?? false,
+    isPublic: d.isPublic ?? false,
+    isAIGenerated: d.isAIGenerated ?? false,
+    commander: commanderCard ? toDeckCard(commanderCard) : null,
+    partner: partnerCard ? toDeckCard(partnerCard) : null,
+    companion: companionCard ? toDeckCard(companionCard) : null,
+    pairingType: d.pairingType ?? "none",
+    cards: mainCards.map(toDeckCard),
+    cardCount,
+    maybeboard: [],
+    createdAt: new Date(d.createdAt),
+    updatedAt: new Date(d.updatedAt),
   };
 }
 
@@ -150,7 +224,7 @@ export interface DeckStore {
   duplicateDeck: (id: string) => Promise<string>;
   deleteDeck: (id: string) => Promise<void>;
   renameDeck: (id: string, name: string) => Promise<void>;
-  setActiveDeck: (id: string) => void;
+  setActiveDeck: (id: string) => Promise<void>;
   loadDecks: () => Promise<void>;
 
   // Deck description & tags
@@ -317,7 +391,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!activeDeckId) return;
     set({ isSyncing: true });
     try {
-      await get().loadDecks();
+      const apiDeck = await deckApi.fetchDeck(activeDeckId);
+      const fullDeck = apiDeckToStoreDeck(apiDeck);
+      set((state) => ({
+        decks: { ...state.decks, [activeDeckId]: fullDeck },
+      }));
       useToastStore.getState().add("success", "✓ Deck saved");
     } catch (err) {
       logger.error("Unexpected error", "forceSave", err);
@@ -326,74 +404,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  // Load all decks from the DB
+  // Load deck listing from the DB (lightweight: only commander/partner/companion + card count)
   loadDecks: async () => {
     set({ isSyncing: true });
     try {
-      const apiDecks = await deckApi.fetchDecks();
+      const response = await deckApi.fetchDecks();
       const decks: Record<string, Deck> = {};
-      for (const d of apiDecks) {
-        // Re-hydrate dates and reconstruct commander/partner from cards list
-        const allCards = d.cards ?? [];
-        const commanderCard = allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
-        // Guard: if partner has same name as commander (import bug), treat as no partner
-        const rawPartnerCard = allCards.find((c) => c.isPartner) ?? null;
-        const partnerCard = (rawPartnerCard && rawPartnerCard.name !== commanderCard?.name)
-          ? rawPartnerCard
-          : null;
-        const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
-        const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
-
-        const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => {
-          const cardFaces = rebuildCardFaces(c.scryfallId, c.name, c.typeLine, c.manaCost, c.oracleText);
-          const isFlexibleLand = cardFaces?.[1].typeLine.toLowerCase().includes("land") ?? false;
-          return {
-            id: c.id,
-            scryfallId: c.scryfallId,
-            name: c.name,
-            manaCost: c.manaCost,
-            cmc: c.cmc,
-            typeLine: c.typeLine,
-            oracleText: c.oracleText,
-            colorIdentity: c.colorIdentity,
-            isGameChanger: c.isGameChanger,
-            isBanned: c.isBanned,
-            price: c.price,
-            imageUri: c.imageUri,
-            artCropUri: c.artCropUri,
-            category: c.category,
-            power: c.power ?? null,
-            toughness: c.toughness ?? null,
-            quantity: c.quantity,
-            notes: c.notes ?? null,
-            zone: c.zone ?? "main",
-            cardFaces,
-            isFlexibleLand: isFlexibleLand || undefined,
-          };
-        };
-
-        decks[d.id] = {
-          id: d.id,
-          name: d.name,
-          format: d.format,
-          targetBracket: d.targetBracket,
-          manualBracket: (d.manualBracket ?? null) as 1 | 2 | 3 | 4 | null,
-          budget: d.budget,
-          description: d.description ?? "",
-          tags: d.tags ?? [],
-          shareToken: d.shareToken ?? null,
-          shareEnabled: d.shareEnabled ?? false,
-          isPublic: d.isPublic ?? false,
-          isAIGenerated: d.isAIGenerated ?? false,
-          commander: commanderCard ? toDeckCard(commanderCard) : null,
-          partner: partnerCard ? toDeckCard(partnerCard) : null,
-          companion: companionCard ? toDeckCard(companionCard) : null,
-          pairingType: d.pairingType ?? "none",
-          cards: mainCards.map(toDeckCard),
-          maybeboard: [],
-          createdAt: new Date(d.createdAt),
-          updatedAt: new Date(d.updatedAt),
-        };
+      for (const d of response.decks) {
+        decks[d.id] = apiDeckToStoreDeck(d);
       }
       set({ decks });
     } catch (err) {
@@ -472,8 +490,22 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
-  setActiveDeck: (id: string) => {
+  setActiveDeck: async (id: string) => {
     set({ activeDeckId: id });
+
+    // Lazy-load full card data if the deck was loaded from the lightweight listing
+    const deck = get().decks[id];
+    if (deck?.cards.length === 0 && deck.cardCount > 0) {
+      try {
+        const apiDeck = await deckApi.fetchDeck(id);
+        const fullDeck = apiDeckToStoreDeck(apiDeck);
+        set((state) => ({
+          decks: { ...state.decks, [id]: fullDeck },
+        }));
+      } catch (err) {
+        logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
+      }
+    }
   },
 
   updateDeckDescription: async (deckId: string, description: string) => {

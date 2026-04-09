@@ -144,7 +144,7 @@ function DeckListRow({
       </td>
 
       <td className="min-w-[90px] text-[var(--text-secondary)]">
-        {deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0)} / 100
+        {deck.cardCount} / 100
       </td>
 
       <td className="min-w-[120px] text-[var(--text-secondary)]">

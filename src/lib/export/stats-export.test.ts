@@ -28,7 +28,7 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
       makeCard("c2", "Rhystic Study", 25, "Enchantment", 2),
       makeCard("c3", "Forest", 0.10, "Basic Land", 0),
     ],
-    maybeboard: [], format: "commander", targetBracket: 3, manualBracket: null,
+    maybeboard: [], format: "commander", cardCount: 0, targetBracket: 3, manualBracket: null,
     budget: null, tags: ["Combo"], shareToken: null, shareEnabled: false,
     isPublic: false, isAIGenerated: false,
     createdAt: new Date("2024-01-01"), updatedAt: new Date("2024-06-01"),

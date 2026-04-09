@@ -21,6 +21,8 @@ export interface Deck {
   id: string; name: string; commander: DeckCard | null; partner: DeckCard | null;
   companion: DeckCard | null; pairingType: CommanderPairingType;
   cards: DeckCard[]; maybeboard: DeckCard[]; format: DeckFormat;
+  /** Total card count (including commander/partner/companion). Set from _count on listing, derived from cards on full load. */
+  cardCount: number;
   targetBracket: 1|2|3|4; manualBracket: 1|2|3|4|null; budget: number | null;
   description: string; tags: string[]; shareToken: string | null;
   shareEnabled: boolean; isPublic: boolean; isAIGenerated: boolean; createdAt: Date; updatedAt: Date;

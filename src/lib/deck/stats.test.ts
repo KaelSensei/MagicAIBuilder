@@ -46,6 +46,7 @@ function emptyDeck(): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
+    cardCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,

@@ -11,7 +11,28 @@ vi.mock("@/lib/scryfall/types", () => ({
 }));
 
 vi.mock("@/lib/db/deck-api", () => ({
-  fetchDecks: vi.fn(async () => []),
+  fetchDecks: vi.fn(async () => ({ decks: [], total: 0, page: 0, limit: 20 })),
+  fetchDeck: vi.fn(async () => ({
+    id: "deck-1",
+    name: "Test Deck",
+    format: "commander",
+    targetBracket: 2,
+    manualBracket: null,
+    budget: null,
+    description: "",
+    tags: [],
+    shareToken: null,
+    shareEnabled: false,
+    isPublic: false,
+    isAIGenerated: false,
+    commanderId: null,
+    partnerId: null,
+    companionId: null,
+    pairingType: "none",
+    cards: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  })),
   createDeck: vi.fn(async () => ({
     id: "deck-1",
     name: "Test",
@@ -99,6 +120,7 @@ function seedDeck(extra: Partial<Deck> = {}): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
+    cardCount: 0,
     targetBracket: 2 as 1 | 2 | 3 | 4,
     manualBracket: null as 1 | 2 | 3 | 4 | null,
     budget: null,
@@ -131,18 +153,25 @@ describe("useDeckStore — forceSave", () => {
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
     await useDeckStore.getState().forceSave();
-    expect(deckApi.fetchDecks).not.toHaveBeenCalled();
+    expect(deckApi.fetchDeck).not.toHaveBeenCalled();
   });
 
-  it("calls loadDecks and resets isSyncing on success", async () => {
-    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce([]);
+  it("calls fetchDeck and resets isSyncing on success", async () => {
+    vi.mocked(deckApi.fetchDeck).mockResolvedValueOnce({
+      id: "deck-1", name: "Test Deck", format: "commander",
+      targetBracket: 2, manualBracket: null, budget: null,
+      description: "", tags: [], shareToken: null, shareEnabled: false,
+      isPublic: false, isAIGenerated: false, commanderId: null, partnerId: null,
+      companionId: null, pairingType: "none", cards: [],
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    } as unknown as deckApi.ApiDeck);
     await useDeckStore.getState().forceSave();
-    expect(deckApi.fetchDecks).toHaveBeenCalled();
+    expect(deckApi.fetchDeck).toHaveBeenCalled();
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
-  it("resets isSyncing even when loadDecks throws", async () => {
-    vi.mocked(deckApi.fetchDecks).mockRejectedValueOnce(new Error("network error"));
+  it("resets isSyncing even when fetchDeck throws", async () => {
+    vi.mocked(deckApi.fetchDeck).mockRejectedValueOnce(new Error("network error"));
     await useDeckStore.getState().forceSave();
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
@@ -471,7 +500,7 @@ describe("useDeckStore — loadDecks", () => {
       ],
     };
 
-    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce([apiDeck] as unknown as deckApi.ApiDeck[]);
+    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce({ decks: [apiDeck], total: 1, page: 0, limit: 20 } as unknown as deckApi.ApiDeckListResponse);
     await useDeckStore.getState().loadDecks();
 
     const decks = useDeckStore.getState().decks;
@@ -527,7 +556,7 @@ describe("useDeckStore — loadDecks", () => {
       ],
     };
 
-    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce([apiDeck] as unknown as deckApi.ApiDeck[]);
+    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce({ decks: [apiDeck], total: 1, page: 0, limit: 20 } as unknown as deckApi.ApiDeckListResponse);
     await useDeckStore.getState().loadDecks();
 
     const card = useDeckStore.getState().decks["deck-dfc"].cards[0];
@@ -610,7 +639,7 @@ describe("useDeckStore — loadDecks", () => {
       ],
     };
 
-    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce([apiDeck] as unknown as deckApi.ApiDeck[]);
+    vi.mocked(deckApi.fetchDecks).mockResolvedValueOnce({ decks: [apiDeck], total: 1, page: 0, limit: 20 } as unknown as deckApi.ApiDeckListResponse);
     await useDeckStore.getState().loadDecks();
 
     const deck = useDeckStore.getState().decks["deck-dup"];

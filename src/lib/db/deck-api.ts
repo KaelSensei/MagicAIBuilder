@@ -3,7 +3,7 @@ import type { Deck, DeckCard, DeckZone, CardCategory, CommanderPairingType } fro
 import { logger } from "@/lib/logger";
 
 /** Shape returned by the API (dates as ISO strings) */
-export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "commander" | "partner" | "cards" | "manualBracket"> {
+export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "commander" | "partner" | "cards" | "manualBracket" | "cardCount"> {
   createdAt: string;
   updatedAt: string;
   commanderId: string | null;
@@ -15,6 +15,8 @@ export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "command
   isAIGenerated: boolean;
   isPublic: boolean;
   cards: ApiDeckCard[];
+  /** Prisma _count — present on listing responses */
+  _count?: { cards: number };
 }
 
 export interface ApiDeckCard extends Omit<DeckCard, "id" | "zone"> {
@@ -26,15 +28,30 @@ export interface ApiDeckCard extends Omit<DeckCard, "id" | "zone"> {
   zone: DeckZone;
 }
 
+/** Paginated deck listing response */
+export interface ApiDeckListResponse {
+  decks: ApiDeck[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 function handleApiError(res: Response, context: string): never {
   throw new Error(`[${context}] HTTP ${res.status}: ${res.statusText}`);
 }
 
 // ─── Deck CRUD ────────────────────────────────────────────────────────────────
 
-export async function fetchDecks(): Promise<ApiDeck[]> {
-  const res = await fetch("/api/decks");
+export async function fetchDecks(page = 0, limit = 20): Promise<ApiDeckListResponse> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const res = await fetch(`/api/decks?${params}`);
   if (!res.ok) handleApiError(res, "fetchDecks");
+  return res.json();
+}
+
+export async function fetchDeck(id: string): Promise<ApiDeck> {
+  const res = await fetch(`/api/decks/${id}`);
+  if (!res.ok) handleApiError(res, "fetchDeck");
   return res.json();
 }
 

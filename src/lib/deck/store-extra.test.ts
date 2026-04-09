@@ -10,7 +10,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/db/deck-api", () => ({
-  fetchDecks: vi.fn().mockResolvedValue([]),
+  fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
   createDeck: vi.fn().mockResolvedValue({
     id: "deck-1",
     name: "Test Deck",
@@ -88,6 +88,7 @@ function makeActiveDeck(overrides: Partial<Deck> = {}): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
+    cardCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,
@@ -685,7 +686,7 @@ describe("useDeckStore — setDeckGridCols", () => {
 describe("useDeckStore — duplicateDeck", () => {
   beforeEach(() => {
     seedDeck();
-    vi.mocked(deckApi.fetchDecks).mockResolvedValue([]);
+    vi.mocked(deckApi.fetchDecks).mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 });
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ id: "deck-2", name: "Test Deck (copy)" }),

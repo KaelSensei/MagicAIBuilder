@@ -12,6 +12,7 @@ function makeDeck(): Deck {
     partner: null,
     companion: null,
     cards: [],
+    cardCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,

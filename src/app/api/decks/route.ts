@@ -1,9 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { ALL_FORMATS } from "@/lib/deck/formats";
+
+/** Max decks per page for the listing endpoint */
+const MAX_PAGE_SIZE = 50;
+/** Default decks per page */
+const DEFAULT_PAGE_SIZE = 20;
 
 const createDeckSchema = z.object({
   name: z.string().min(1).max(200),
@@ -20,18 +25,40 @@ const createDeckSchema = z.object({
   isAIGenerated: z.boolean().optional().default(false),
 });
 
-// GET /api/decks — list current user's decks
-export async function GET() {
+// GET /api/decks — paginated lightweight listing (commander/partner/companion only + card count)
+export async function GET(request: NextRequest) {
   try {
     const result = await requireAuth();
     if (result.error) return result.error;
 
-    const decks = await prisma.deck.findMany({
-      where: { userId: result.session.user.id },
-      include: { cards: true },
-      orderBy: { updatedAt: "desc" },
-    });
-    return NextResponse.json(decks);
+    const { searchParams } = request.nextUrl;
+    const page = Math.max(0, Number(searchParams.get("page") ?? "0"));
+    const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(searchParams.get("limit") ?? String(DEFAULT_PAGE_SIZE))));
+    const userId = result.session.user.id;
+
+    const [decks, total] = await Promise.all([
+      prisma.deck.findMany({
+        where: { userId },
+        include: {
+          cards: {
+            where: {
+              OR: [
+                { isCommander: true },
+                { isPartner: true },
+                { category: "companion" },
+              ],
+            },
+          },
+          _count: { select: { cards: true } },
+        },
+        orderBy: { updatedAt: "desc" },
+        skip: page * limit,
+        take: limit,
+      }),
+      prisma.deck.count({ where: { userId } }),
+    ]);
+
+    return NextResponse.json({ decks, total, page, limit });
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "GET /api/decks");
     return NextResponse.json(

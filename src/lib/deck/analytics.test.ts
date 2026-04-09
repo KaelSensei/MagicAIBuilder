@@ -23,7 +23,7 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
     id: `deck-${Math.random()}`, name: "Test Deck", description: "",
     commander: makeCard("cmd"), partner: null, companion: null,
     pairingType: "none", cards: Array.from({ length: 99 }, (_, i) => makeCard(`c${i}`, 2)),
-    maybeboard: [], format: "commander", targetBracket: 3, manualBracket: null,
+    maybeboard: [], format: "commander", cardCount: 0, targetBracket: 3, manualBracket: null,
     budget: null, tags: [], shareToken: null, shareEnabled: false,
     isPublic: false, isAIGenerated: false,
     createdAt: new Date(), updatedAt: new Date(),

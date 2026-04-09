@@ -11,7 +11,7 @@ import type { Mock } from "vitest";
 
 // ─── Mock deck-api before importing the store ─────────────────────────────────
 vi.mock("@/lib/db/deck-api", () => ({
-  fetchDecks: vi.fn().mockResolvedValue([]),
+  fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
   createDeck: vi.fn(),
   updateDeck: vi.fn().mockResolvedValue({}),
   deleteDeck: vi.fn(),
@@ -50,6 +50,7 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
+    cardCount: 0,
     targetBracket: 2 as 1 | 2 | 3 | 4,
     manualBracket: null as 1 | 2 | 3 | 4 | null,
     shareToken: null,

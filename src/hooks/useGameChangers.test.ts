@@ -40,6 +40,7 @@ function makeDeck(cards: DeckCard[], commander: DeckCard | null = null): Deck {
     commander,
     partner: null,
     cards,
+    cardCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,

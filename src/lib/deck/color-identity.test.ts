@@ -34,6 +34,7 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
     pairingType: "none",
     cards: [],
     maybeboard: [],
+    cardCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,

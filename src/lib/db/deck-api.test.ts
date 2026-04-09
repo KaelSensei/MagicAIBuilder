@@ -28,11 +28,14 @@ afterEach(() => {
 });
 
 describe("fetchDecks", () => {
-  it("returns list of decks", async () => {
-    mockFetch([{ id: "deck-1", name: "Test", cards: [] }]);
+  it("returns paginated deck list response", async () => {
+    mockFetch({ decks: [{ id: "deck-1", name: "Test", cards: [] }], total: 1, page: 0, limit: 20 });
     const result = await fetchDecks();
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("deck-1");
+    expect(result.decks).toHaveLength(1);
+    expect(result.decks[0].id).toBe("deck-1");
+    expect(result.total).toBe(1);
+    expect(result.page).toBe(0);
+    expect(result.limit).toBe(20);
   });
 
   it("throws on error", async () => {
