@@ -37,6 +37,7 @@ function makeEmptyDeck(id = "deck-1"): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
+    cardCount: 0,
     targetBracket: 3,
     manualBracket: null,
     budget: null,

@@ -14,7 +14,7 @@ import type { Mock } from "vitest";
 
 // ── Mock deck-api BEFORE importing the store ─────────────────────────────────
 vi.mock("@/lib/db/deck-api", () => ({
-  fetchDecks: vi.fn().mockResolvedValue([]),
+  fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
   createDeck: vi.fn().mockResolvedValue({
     id: "deck-1",
     name: "Test Deck",
@@ -94,6 +94,7 @@ function makeActiveDeck(overrides: Partial<Deck> = {}): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
+    cardCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,
@@ -291,29 +292,34 @@ describe("useDeckStore — loadDecks", () => {
   });
 
   it("populates the decks map from the API response", async () => {
-    (deckApi.fetchDecks as Mock).mockResolvedValueOnce([
-      {
-        id: "api-deck-1",
-        name: "Loaded Deck",
-        format: "commander",
-        targetBracket: 2,
-        manualBracket: null,
-        budget: null,
-        description: "Loaded from API",
-        tags: ["casual"],
-        shareToken: null,
-        shareEnabled: false,
-    isPublic: false,
-        isAIGenerated: false,
-        commanderId: null,
-        partnerId: null,
-        companionId: null,
-        pairingType: "none",
-        cards: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ]);
+    (deckApi.fetchDecks as Mock).mockResolvedValueOnce({
+      decks: [
+        {
+          id: "api-deck-1",
+          name: "Loaded Deck",
+          format: "commander",
+          targetBracket: 2,
+          manualBracket: null,
+          budget: null,
+          description: "Loaded from API",
+          tags: ["casual"],
+          shareToken: null,
+          shareEnabled: false,
+          isPublic: false,
+          isAIGenerated: false,
+          commanderId: null,
+          partnerId: null,
+          companionId: null,
+          pairingType: "none",
+          cards: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+      total: 1,
+      page: 0,
+      limit: 20,
+    });
     await useDeckStore.getState().loadDecks();
     expect(useDeckStore.getState().decks["api-deck-1"]).toBeDefined();
     expect(useDeckStore.getState().decks["api-deck-1"].name).toBe("Loaded Deck");
@@ -332,7 +338,7 @@ describe("useDeckStore — loadDecks", () => {
 
   it("replaces existing decks with the API result", async () => {
     useDeckStore.setState({ decks: { "old-deck": makeActiveDeck({ id: "old-deck" }) } });
-    (deckApi.fetchDecks as Mock).mockResolvedValueOnce([]);
+    (deckApi.fetchDecks as Mock).mockResolvedValueOnce({ decks: [], total: 0, page: 0, limit: 20 });
     await useDeckStore.getState().loadDecks();
     expect(useDeckStore.getState().decks["old-deck"]).toBeUndefined();
   });

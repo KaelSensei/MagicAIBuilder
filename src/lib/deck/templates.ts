@@ -75,6 +75,7 @@ export function applyTemplate(
     cards: [...template.deckList],
     maybeboard: [],
     format: "commander",
+    cardCount: template.deckList.length + (commanderCard ? 1 : 0),
     targetBracket: 3,
     manualBracket: null,
     budget: null,

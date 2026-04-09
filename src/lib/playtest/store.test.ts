@@ -35,6 +35,7 @@ function makeDeck(opts: { cardCount?: number; commander?: DeckCard | null } = {}
     pairingType: "none",
     cards: Array.from({ length: cardCount }, (_, i) => makeCard(`c${i}`, `Card ${i}`)),
     maybeboard: [],
+    cardCount: 0,
     targetBracket: 3,
     manualBracket: null,
     budget: null,

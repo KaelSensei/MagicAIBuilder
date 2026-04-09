@@ -12,6 +12,7 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
     commander: null,
     partner: null,
     companion: null,
+    cardCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,

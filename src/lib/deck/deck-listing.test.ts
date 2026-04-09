@@ -27,6 +27,7 @@ function makeDeck(partial: Partial<Deck>): Deck {
     cards: [],
     maybeboard: [],
     format: "commander",
+    cardCount: 0,
     targetBracket: 3,
     manualBracket: null,
     budget: null,

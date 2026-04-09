@@ -37,6 +37,7 @@ function makeDeck(cardCount: number): Deck {
       category: "other",
       zone: "main",
     })),
+    cardCount: 0,
     targetBracket: 2,
     manualBracket: null,
     budget: null,

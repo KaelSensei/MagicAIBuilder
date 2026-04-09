@@ -177,7 +177,7 @@ export function HomeDeckCard({
           {deck.commander ? `Commander: ${deck.commander.name}` : "No commander yet"}
         </p>
         <p className={`mt-1 text-xs ${textMuted}`}>
-          {deck.cards.length + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0)} / 100 cards
+          {deck.cardCount} / 100 cards
         </p>
 
         <div className="mt-auto flex items-end justify-between gap-3 pt-3">
