@@ -45,18 +45,13 @@ describe("requireAuth", () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "user-1", name: "Kael", email: "kael@test.com" },
     });
-    mockUserFindUnique.mockResolvedValueOnce({
-      id: "user-1",
-      name: "Kael",
-      email: "kael@test.com",
-      image: null,
-    });
 
     const result = await requireAuth();
 
     expect(result.error).toBeUndefined();
     expect(result.session?.user.id).toBe("user-1");
     expect(result.session?.user.name).toBe("Kael");
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
   });
 
   it("returns 401 error when session is null", async () => {
@@ -94,32 +89,17 @@ describe("requireAuth", () => {
     expect(result.session?.user.id).toBe("user-1");
   });
 
-  it("creates a missing database user from the session email", async () => {
+  it("trusts the JWT session ID without DB verification", async () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "oauth-user", name: "Kael", email: "Kael@Test.com", image: "https://example.com/avatar.png" },
-    });
-    mockUserFindUnique.mockResolvedValueOnce(null);
-    mockUserUpsert.mockResolvedValueOnce({
-      id: "db-user-1",
-      name: "Kael",
-      email: "kael@test.com",
-      image: "https://example.com/avatar.png",
     });
 
     const result = await requireAuth();
 
     expect(result.error).toBeUndefined();
-    expect(result.session?.user.id).toBe("db-user-1");
-    expect(mockUserUpsert).toHaveBeenCalledWith({
-      where: { email: "kael@test.com" },
-      update: {},
-      create: {
-        email: "kael@test.com",
-        name: "Kael",
-        image: "https://example.com/avatar.png",
-      },
-      select: { id: true, name: true, email: true, image: true },
-    });
+    expect(result.session?.user.id).toBe("oauth-user");
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
+    expect(mockUserUpsert).not.toHaveBeenCalled();
   });
 });
 

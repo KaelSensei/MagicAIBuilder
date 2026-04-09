@@ -81,6 +81,21 @@ export async function requireAuth(): Promise<
     };
   }
 
+  // Fast path: trust the JWT-verified user ID (avoids a DB round-trip)
+  if (session.user.id) {
+    return {
+      session: {
+        user: {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          email: session.user.email ?? null,
+          image: session.user.image ?? null,
+        },
+      },
+    };
+  }
+
+  // Fallback: resolve by email when ID is missing (e.g. first OAuth sign-in)
   const user = await resolveAuthenticatedUser(session.user);
   if (!user) {
     return {
