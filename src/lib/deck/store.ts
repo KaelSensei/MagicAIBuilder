@@ -495,7 +495,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     // Lazy-load full card data if the deck was loaded from the lightweight listing
     const deck = get().decks[id];
-    if (deck && deck.cards.length === 0 && deck.cardCount > 0) {
+    if (deck?.cards.length === 0 && deck.cardCount > 0) {
       try {
         const apiDeck = await deckApi.fetchDeck(id);
         const fullDeck = apiDeckToStoreDeck(apiDeck);
