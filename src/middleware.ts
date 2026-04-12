@@ -16,5 +16,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: [String.raw`/((?!_next/static|_next/image|api|favicon|og-image|.*\..*).*)` ],
+  matcher: ["/((?!_next/static|_next/image|api|favicon|og-image|.*\\..*).*)"],
 };
