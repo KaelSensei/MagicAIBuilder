@@ -38,7 +38,7 @@ export function Pagination({
         )}
       >
         <ChevronLeft className="w-4 h-4" />
-        Précédent
+        Previous
       </button>
 
       <span
@@ -66,7 +66,7 @@ export function Pagination({
             : "border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
         )}
       >
-        Suivant
+        Next
         <ChevronRight className="w-4 h-4" />
       </button>
     </nav>
