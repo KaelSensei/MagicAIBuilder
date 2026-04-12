@@ -9,6 +9,49 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added — 2026-04-12: i18n Infrastructure
+
+- `feat: add i18n infrastructure with next-intl (#320)` — full internationalization plumbing for 10 locales (en, fr, de, it, es, ja, zh, ko, ru, pt) using next-intl v4 with pathname-prefix routing (as-needed mode):
+  - Install next-intl and wire into next.config.ts plugin chain
+  - Create i18n config: `routing.ts`, `request.ts`, `navigation.ts` with type-safe `SupportedLocale`
+  - Restructure all page routes under `src/app/[locale]/` with `NextIntlClientProvider` in layout
+  - Compose middleware: next-intl locale detection + NextAuth session (edge-compatible)
+  - Update `edge-config.ts` to strip locale prefix from auth path checks
+  - Create message stub files (10 namespaces × 10 locales = 100 JSON files, empty — ready for translation)
+  - 6 unit tests (routing config) + 7 E2E tests (locale routing, fallback, API passthrough)
+
+### Added — 2026-04-07: 3D Landing Page & Marketing Overhaul
+
+- `feat: redesign 3D landing with dark fantasy aesthetic (#305)` — Three.js scene with gritty MTG/D&D aesthetic: chiaroscuro lighting, creeping fog, warped parchment spellbook, stone altar, drifting ember particles, film grain, vignette, hexagonal rune glyphs, gothic typography
+- `feat: replace 3D landing with full marketing landing page (#308)` — remove Three.js/R3F, build 9-section marketing page: hero (Scryfall mana SVGs), pain points, product demo (AI chat mockup), stats, how it works, testimonials, CTA, navbar, footer; Cinzel + Inter fonts, `useScrollReveal` + `useTypewriter` hooks, WotC legal disclaimer
+
+### Fixed — 2026-04-06 → 2026-04-12: Performance, Polish, Sonar
+
+- `fix: translate remaining French UI strings to English (#319)` — translate leftover French strings in GameChangersPageClient and Pagination
+- `fix: slim down /api/decks listing response (#318)` — reduce API payload size for deck listings
+- `fix: optimize /api/decks listing with lightweight query and pagination (#317)` — replace `include { cards: true }` with filtered query (commander/partner/companion only + `_count`); add page/limit pagination; lazy-load full deck data on `setActiveDeck`
+- `fix: reduce onboarding and collection loading latency (#316)` — optimize loading performance
+- `fix: reduce profile loading overhead from onboarding (#315)` — reduce redundant data fetching
+- `fix: Header logo links to landing page instead of /decks (#313)` — correct logo navigation target
+- `fix: companion color identity visual (#310)` — fix companion display in color identity banner
+- `fix: git-prune script handles worktrees and protects main/master/develop/dev (#309)` — safer git cleanup
+- `fix: allow unauthenticated access to / for 3D landing page (#303)` — public landing page access
+- `fix: resolve all 54 SonarCloud issues from 3D landing page (#302)` — bulk Sonar cleanup
+- `fix: use direct undefined comparison instead of typeof (S6635) (#304)` — Sonar rule compliance
+
+### Refactored — 2026-04-08: Route Architecture
+
+- `refactor: split landing page and deck listing into separate routes (#311, #312)` — `/` always shows marketing landing page; `/decks` is auth-protected deck listing; CTAs adapt to session state; post-auth redirects point to `/decks`
+
+### Chore — 2026-04-07 → 2026-04-12: Dependencies & Config
+
+- `chore: suppress sonar S7780 on middleware matcher (#321)` — suppress false-positive Sonar rule on Next.js middleware config
+- `chore: move agent rules from skills/cursor-rules to rules/ (#314)` — reorganize AI agent configuration
+- `chore(deps): bump the production-dependencies group with 3 updates (#307)` — production dependency upgrades
+- `chore(deps-dev): bump the dev-dependencies group with 5 updates (#306)` — dev dependency upgrades
+
+---
+
 ### Added — 2026-03-30/31: Phase 13 features — Challenges, Deck Branching, Archetypes, Playtest Analytics, Social, Keyboard Shortcuts, Ratings, Favorites
 
 - `feat(usai): challenges — validation, scoring, ranking, status (#247)` — deck building challenges system with pure functions `validateChallenge`, `scoreChallenge`, `getRankings`; challenge completion tracking with badge rewards; 308 tests
