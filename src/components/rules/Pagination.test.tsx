@@ -19,21 +19,21 @@ describe("Pagination", () => {
     expect(screen.getByText("8")).toBeInTheDocument();
   });
 
-  it("disables Précédent on first page", () => {
+  it("disables Previous on first page", () => {
     render(
       <Pagination currentPage={1} totalPages={5} onPageChange={vi.fn()} />
     );
     expect(screen.getByLabelText("Previous page")).toBeDisabled();
   });
 
-  it("disables Suivant on last page", () => {
+  it("disables Next on last page", () => {
     render(
       <Pagination currentPage={5} totalPages={5} onPageChange={vi.fn()} />
     );
     expect(screen.getByLabelText("Next page")).toBeDisabled();
   });
 
-  it("calls onPageChange with page - 1 when clicking Précédent", async () => {
+  it("calls onPageChange with page - 1 when clicking Previous", async () => {
     const onPageChange = vi.fn();
     const user = userEvent.setup();
     render(
@@ -43,7 +43,7 @@ describe("Pagination", () => {
     expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
-  it("calls onPageChange with page + 1 when clicking Suivant", async () => {
+  it("calls onPageChange with page + 1 when clicking Next", async () => {
     const onPageChange = vi.fn();
     const user = userEvent.setup();
     render(
@@ -53,7 +53,7 @@ describe("Pagination", () => {
     expect(onPageChange).toHaveBeenCalledWith(4);
   });
 
-  it("does not call onPageChange when Précédent is disabled", async () => {
+  it("does not call onPageChange when Previous is disabled", async () => {
     const onPageChange = vi.fn();
     const user = userEvent.setup();
     render(
@@ -63,7 +63,7 @@ describe("Pagination", () => {
     expect(onPageChange).not.toHaveBeenCalled();
   });
 
-  it("does not call onPageChange when Suivant is disabled", async () => {
+  it("does not call onPageChange when Next is disabled", async () => {
     const onPageChange = vi.fn();
     const user = userEvent.setup();
     render(

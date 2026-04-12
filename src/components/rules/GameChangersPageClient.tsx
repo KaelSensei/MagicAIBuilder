@@ -358,7 +358,7 @@ export function GameChangersPageClient() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
         <input
           type="search"
-          placeholder="Rechercher une carte…"
+          placeholder="Search for a card…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
@@ -369,13 +369,13 @@ export function GameChangersPageClient() {
       {isLoading && (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-[var(--text-secondary)]">
           <Loader2 className="w-6 h-6 animate-spin" />
-          <span className="text-sm">Chargement depuis Scryfall…</span>
+          <span className="text-sm">Loading from Scryfall…</span>
         </div>
       )}
 
       {isError && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
-          Impossible de charger les données depuis Scryfall. Réessaie dans un instant.
+          Failed to load data from Scryfall. Please try again in a moment.
         </div>
       )}
 
@@ -383,8 +383,8 @@ export function GameChangersPageClient() {
         <>
           {/* Results count */}
           <p className="text-xs text-[var(--text-secondary)]">
-            {filtered.length} carte{filtered.length === 1 ? "" : "s"}
-            {search && ` pour « ${search} »`}
+            {filtered.length} card{filtered.length === 1 ? "" : "s"}
+            {search && ` for "${search}"`}
           </p>
 
           {/* Card grid */}
@@ -411,7 +411,7 @@ export function GameChangersPageClient() {
             </div>
           ) : (
             <p className="text-sm text-[var(--text-secondary)] text-center py-8">
-              Aucune carte trouvée.
+              No cards found.
             </p>
           )}
 
