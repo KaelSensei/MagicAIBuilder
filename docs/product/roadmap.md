@@ -22,7 +22,7 @@ Top candidates right now (subject to change):
 - **Structured logging (Pino)** — Weight **4** (debuggability once real users arrive)
 - **Bundle analyzer (monthly)** — Weight **3**
 - **Visual redesign** — Weight **3** (big surface area, schedule when stable)
-- **Multi-language support (i18n)** — Weight **2** (valuable, but big effort; after MVP traction)
+- **Multi-language support (i18n)** — Weight **2** _(in progress — infrastructure done PR #320, string extraction next)_
 - **Local AI model via MageZero** — Weight **1** (very high effort / research)
 
 # Part 1 — Technical Roadmap
@@ -114,9 +114,11 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ## Internationalization (i18n)
 
-- [ ] **Multi-language support**: add i18n support (next-intl or next-i18next) covering the languages Magic: The Gathering is officially printed in; base set: English, Japanese, Simplified Chinese, French, Italian, German, Spanish, Portuguese; to be added later: Russian, Korean
+- [x] **Multi-language support**: next-intl v4 with 10 locales (en, fr, de, it, es, ja, zh, ko, ru, pt), pathname-prefix routing (as-needed mode), `[locale]` App Router segment, composed middleware (next-intl + NextAuth), 100 message stub files, 13 tests _(done — PR #320)_
+- [ ] **String extraction**: extract all hardcoded English strings from components into `en/*.json` message files, wire `useTranslations()` / `getTranslations()` hooks
+- [ ] **Language switcher**: add locale selector UI (navbar dropdown or footer toggle)
+- [ ] **UI translations**: translate all 10 namespace files for 9 non-default locales (fr, de, it, es, ja, zh, ko, ru, pt)
 - [ ] **Localized card data**: fetch and display card names, oracle text, and type lines in the user's language via Scryfall's `lang` parameter
-- [ ] **UI translations**: translate all interface labels, tooltips, error messages, and navigation using a locale file system; keep English as the fallback
 
 ---
 

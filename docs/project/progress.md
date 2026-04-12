@@ -2,12 +2,81 @@
 
 ## Overview
 
-| Field         | Value                                 |
-| ------------- | ------------------------------------- |
-| Current Phase | Phase 12 — User Stories (US-I → US-X) |
-| Last Updated  | 2026-03-30                            |
-| Status        | 🚀 Active Development                 |
-| Main Branch   | `main`                                |
+| Field         | Value                                  |
+| ------------- | -------------------------------------- |
+| Current Phase | Phase 15 — Internationalization (i18n) |
+| Last Updated  | 2026-04-12                             |
+| Status        | 🚀 Active Development                  |
+| Main Branch   | `main`                                 |
+
+---
+
+## Phase 15: Internationalization (i18n) — 2026-04-12 🔄 In Progress
+
+### Infrastructure (#320) ✅
+
+- [x] Install `next-intl` v4, wire into `next.config.ts` plugin chain
+- [x] Create i18n config: `routing.ts` (10 locales, as-needed prefix), `request.ts` (dynamic message loading), `navigation.ts` (locale-aware Link/redirect/usePathname)
+- [x] Restructure all page routes under `src/app/[locale]/`
+- [x] `[locale]/layout.tsx` wraps with `NextIntlClientProvider`, sets `lang` on `<html>`, pre-renders all locales via `generateStaticParams()`
+- [x] Compose middleware: next-intl locale detection + NextAuth session (edge-compatible)
+- [x] Update `edge-config.ts` to strip locale prefix from auth path checks
+- [x] Create message stub files: 10 namespaces × 10 locales = 100 JSON files (empty, ready for content)
+- [x] 6 unit tests (routing config) + 7 E2E tests (locale routing, fallback, API passthrough)
+
+### Supported Locales
+
+en (default), fr, de, it, es, ja, zh, ko, ru, pt
+
+### Message Namespaces
+
+`common`, `auth`, `builder`, `deck`, `landing`, `onboarding`, `search`, `rules`, `collection`, `profile`
+
+### Remaining Work
+
+- [ ] Extract hardcoded English strings from components → populate `en/*.json` message files
+- [ ] Wire `useTranslations()` into client components / `getTranslations()` into server components
+- [ ] Add language switcher UI (dropdown in navbar or footer)
+- [ ] Translate message files for 9 non-default locales
+- [ ] Test dynamic locale switching and message fallback
+
+---
+
+## Phase 14: Landing Page & Performance — 2026-04-06 → 2026-04-12 ✅
+
+### 3D Landing & Marketing Overhaul (#305, #308)
+
+- [x] 3D dark fantasy landing with Three.js (chiaroscuro lighting, parchment spellbook, ember particles)
+- [x] Replace 3D scene with full 9-section marketing page: hero, pain points, AI chat mockup, stats, how it works, testimonials, CTA, navbar, footer
+- [x] Cinzel + Inter fonts, Scryfall mana SVGs, `useScrollReveal` + `useTypewriter` hooks
+- [x] WotC legal disclaimer in footer
+
+### Route Architecture (#311, #312)
+
+- [x] Split `/` (public marketing landing) from `/decks` (auth-protected deck listing)
+- [x] CTAs adapt to session state; post-auth redirects → `/decks`
+
+### Performance Optimization (#315–#318)
+
+- [x] Slim down `/api/decks` listing response — lightweight query, commander/partner/companion only
+- [x] Add page/limit pagination to deck listing API
+- [x] Lazy-load full deck data on `setActiveDeck` via `GET /api/decks/[id]`
+- [x] Reduce onboarding, collection, and profile loading latency
+
+### Polish & Fixes (#302–#304, #309, #310, #313, #319)
+
+- [x] Translate remaining French UI strings to English
+- [x] Fix companion color identity visual
+- [x] Header logo links to landing page
+- [x] Git-prune script handles worktrees safely
+- [x] Resolve 54+ SonarCloud issues from landing page
+- [x] Allow unauthenticated access to `/` for landing page
+
+---
+
+## Phase 13: User Stories — US-A → US-J — 2026-03-30/31 ✅
+
+_(Previously documented as "Phase 13 features" in changelog)_
 
 ---
 
