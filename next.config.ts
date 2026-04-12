@@ -1,10 +1,13 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import withBundleAnalyzer from "@next/bundle-analyzer";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const withAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@prisma/client"],
@@ -30,7 +33,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(withAnalyzer(nextConfig), {
+export default withSentryConfig(withNextIntl(withAnalyzer(nextConfig)), {
   org: "kaelsensei",
   project: "magic-ai-builder",
   silent: !process.env.CI,

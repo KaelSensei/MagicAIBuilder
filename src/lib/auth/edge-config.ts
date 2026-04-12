@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
+import { SUPPORTED_LOCALES } from "@/i18n/routing";
 
 /**
  * Edge-compatible auth config — used by middleware only.
@@ -35,7 +36,12 @@ export const edgeAuthConfig = {
     authorized({ auth: session, request: { nextUrl } }) {
       if (process.env.PLAYWRIGHT_TEST === "1") return true;
       const isLoggedIn = !!session?.user;
-      const { pathname } = nextUrl;
+
+      // Strip locale prefix so route matching works regardless of locale
+      const localePattern = new RegExp(
+        `^/(${SUPPORTED_LOCALES.join("|")})(?:/|$)`
+      );
+      const pathname = nextUrl.pathname.replace(localePattern, "/");
 
       // Public paths — always allow
       const publicPaths = [

@@ -1,12 +1,20 @@
+import createIntlMiddleware from "next-intl/middleware";
 import NextAuth from "next-auth";
 import { edgeAuthConfig } from "@/lib/auth/edge-config";
+import { routing } from "@/i18n/routing";
+
+const intlMiddleware = createIntlMiddleware(routing);
+
+const { auth } = NextAuth(edgeAuthConfig);
 
 /**
- * Middleware using the lightweight edge-compatible auth config.
- * Authorization logic is in edgeAuthConfig.callbacks.authorized.
+ * Composed middleware: NextAuth runs first (attaches session), then
+ * next-intl handles locale detection and pathname rewriting.
  */
-export default NextAuth(edgeAuthConfig).auth;
+export default auth((req) => {
+  return intlMiddleware(req);
+});
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image).*)"],
+  matcher: ["/((?!_next/static|_next/image|api|favicon|og-image|.*\\..*).*)"],
 };
