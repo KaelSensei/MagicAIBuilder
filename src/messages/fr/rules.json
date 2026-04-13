@@ -1,1 +1,28 @@
-{}
+{
+  "title": "Cartes à impact & Liste de ban",
+  "subtitle": "Référence officielle des règles Commander — alimentée en direct depuis Scryfall. Cliquez sur une carte pour zoomer.",
+  "tabs": {
+    "gameChangers": "Cartes à impact",
+    "banlist": "Liste de ban"
+  },
+  "searchPlaceholder": "Rechercher une carte…",
+  "loading": "Chargement depuis Scryfall…",
+  "error": "Impossible de charger les données depuis Scryfall. Veuillez réessayer dans un instant.",
+  "resultsCount": "{count, plural, =1 {1 carte} other {# cartes}}",
+  "resultsFor": "pour « {query} »",
+  "noCards": "Aucune carte trouvée.",
+  "badges": {
+    "gc": "GC",
+    "banned": "Banni"
+  },
+  "zoom": {
+    "viewCard": "Voir {name}",
+    "close": "Fermer l'aperçu",
+    "closeButton": "Fermer",
+    "previousCard": "Carte précédente",
+    "nextCard": "Carte suivante",
+    "viewAllArts": "Voir tous les arts",
+    "noImage": "Pas d'image",
+    "cardPosition": "{current} / {total}"
+  }
+}

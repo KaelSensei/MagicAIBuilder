@@ -4,6 +4,7 @@
  * Two sections: EDHRec popular cards + MTGTop8 tournament decks.
  */
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { BarChart2, RefreshCw, Loader2, Check, Plus, ExternalLink, AlertCircle, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMetaAnalysis } from "@/hooks/useMetaAnalysis";
@@ -93,6 +94,7 @@ function TournamentDeckRow({ deck }: { readonly deck: TournamentDeck }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }: MetaPanelProps) {
+  const t = useTranslations("deck");
   const [expanded, setExpanded] = useState(false);
   const [showOnlyMissing, setShowOnlyMissing] = useState(false);
   const fetched = useRef(false);
@@ -135,7 +137,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
       >
         <BarChart2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
         <span className="text-sm font-medium text-[var(--text-primary)] flex-1 text-left">
-          Meta Analysis
+          {t("meta.title")}
         </span>
         {(isLoadingEdhrec || isLoadingTournament) && (
           <Loader2 className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
@@ -159,7 +161,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                   <div className="flex items-center justify-between">
                     {staleEdhrec && cachedAt && (
                       <p className="text-[10px] text-amber-400">
-                        Stale data from {new Date(cachedAt).toLocaleDateString()}
+                        {t("meta.staleData", { date: new Date(cachedAt).toLocaleDateString() })}
                       </p>
                     )}
                     <button
@@ -168,7 +170,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                       className="ml-auto flex items-center gap-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-40"
                     >
                       <RefreshCw className="w-3 h-3" />
-                      Refresh
+                      {t("meta.refresh")}
                     </button>
                   </div>
 
@@ -176,7 +178,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
-                        Popular (EDHRec)
+                        {t("meta.popularEdhrec")}
                       </p>
                       {edhrecCards.length > 0 && (
                         <label className="flex items-center gap-1 cursor-pointer">
@@ -186,7 +188,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                             onChange={(e) => setShowOnlyMissing(e.target.checked)}
                             className="w-3 h-3 accent-[var(--accent)]"
                           />
-                          <span className="text-[10px] text-[var(--text-secondary)]">Not in deck</span>
+                          <span className="text-[10px] text-[var(--text-secondary)]">{t("meta.notInDeck")}</span>
                         </label>
                       )}
                     </div>
@@ -204,7 +206,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
 
                     {!isLoadingEdhrec && !errorEdhrec && edhrecCards.length === 0 && (
                       <p className="text-xs text-[var(--text-secondary)] text-center py-2">
-                        No EDHRec data for this commander
+                        {t("meta.noEdhrecData")}
                       </p>
                     )}
 
@@ -220,7 +222,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                         ))}
                         {showOnlyMissing && filteredCards.length === 0 && (
                           <p className="text-xs text-green-400 text-center py-2">
-                            ✓ All popular cards already in your deck!
+                            {t("meta.allPopularInDeck")}
                           </p>
                         )}
                       </div>
@@ -230,7 +232,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                   {/* ─ Tournament section ─ */}
                   <div className="space-y-2">
                     <p className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
-                      Competitive (Tournaments)
+                      {t("meta.competitive")}
                     </p>
 
                     {isLoadingTournament && !tournamentDecks.length && (
@@ -246,7 +248,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
 
                     {!isLoadingTournament && !errorTournament && tournamentDecks.length === 0 && (
                       <p className="text-xs text-[var(--text-secondary)] text-center py-2">
-                        No recent tournament decks found
+                        {t("meta.noTournamentDecks")}
                       </p>
                     )}
 
@@ -261,7 +263,7 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                 </>
               ) : (
                 <p className="text-xs text-[var(--text-secondary)] text-center py-4">
-                  Select a commander to see meta data
+                  {t("meta.selectCommander")}
                 </p>
               )}
             </div>

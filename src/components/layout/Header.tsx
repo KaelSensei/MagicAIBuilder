@@ -1,11 +1,13 @@
 "use client";
 // App header with nav — responsive with hamburger menu on mobile
 import { useCallback, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Layers, Loader2, Menu, Moon, Package, Plus, Shield, Sun, Upload, X } from "lucide-react";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import { useTheme } from "@/hooks/useTheme";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { useDeckStore } from "@/lib/deck/store";
 
 interface HeaderProps {
@@ -13,6 +15,7 @@ interface HeaderProps {
 }
 
 export function Header({ deckId }: HeaderProps = {}) {
+  const t = useTranslations("common");
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -41,7 +44,7 @@ export function Header({ deckId }: HeaderProps = {}) {
         className="flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
       >
         <Layers className="w-5 h-5 text-[var(--accent)]" />
-        <span className="font-semibold text-base hidden sm:inline">MagicAIBuilder</span>
+        <span className="font-semibold text-base hidden sm:inline">{t("appName")}</span>
       </Link>
 
       {/* Nav — hidden on mobile */}
@@ -50,21 +53,21 @@ export function Header({ deckId }: HeaderProps = {}) {
           href="/decks"
           className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
-          My Decks
+          {t("nav.myDecks")}
         </Link>
         <Link
           href="/collection"
           className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <Package className="w-3.5 h-3.5" />
-          Collection
+          {t("nav.collection")}
         </Link>
         <Link
           href="/rules/game-changers"
           className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <Shield className="w-3.5 h-3.5" />
-          Rules
+          {t("nav.rules")}
         </Link>
       </nav>
 
@@ -73,8 +76,8 @@ export function Header({ deckId }: HeaderProps = {}) {
         <button
           onClick={toggleTheme}
           className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          aria-label="Toggle theme"
-          title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+          aria-label={t("theme.toggle")}
+          title={theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")}
         >
           {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
@@ -82,7 +85,7 @@ export function Header({ deckId }: HeaderProps = {}) {
           <ImportDialog>
             <button className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
               <Upload className="w-3.5 h-3.5" />
-              Import
+              {t("nav.import")}
             </button>
           </ImportDialog>
         ) : (
@@ -97,7 +100,7 @@ export function Header({ deckId }: HeaderProps = {}) {
               ) : (
                 <Upload className="w-3.5 h-3.5" />
               )}
-              Import
+              {t("nav.import")}
             </button>
           </ImportDialog>
         )}
@@ -106,8 +109,9 @@ export function Header({ deckId }: HeaderProps = {}) {
           className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-1.5 rounded transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
-          New Deck
+          {t("nav.newDeck")}
         </Link>
+        <LocaleSwitcher />
         <UserMenu />
       </div>
 
@@ -116,14 +120,14 @@ export function Header({ deckId }: HeaderProps = {}) {
         <button
           onClick={toggleTheme}
           className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-secondary)]"
-          aria-label="Toggle theme"
+          aria-label={t("theme.toggle")}
         >
           {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
         <button
           onClick={() => setMenuOpen((o) => !o)}
           className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-secondary)]"
-          aria-label="Open menu"
+          aria-label={t("menu.open")}
         >
           {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         </button>
@@ -138,7 +142,7 @@ export function Header({ deckId }: HeaderProps = {}) {
               onClick={() => setMenuOpen(false)}
               className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors py-2"
             >
-              My Decks
+              {t("nav.myDecks")}
             </Link>
             <Link
               href="/collection"
@@ -146,7 +150,7 @@ export function Header({ deckId }: HeaderProps = {}) {
               className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors py-2"
             >
               <Package className="w-3.5 h-3.5" />
-              Collection
+              {t("nav.collection")}
             </Link>
             <Link
               href="/rules/game-changers"
@@ -154,7 +158,7 @@ export function Header({ deckId }: HeaderProps = {}) {
               className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors py-2"
             >
               <Shield className="w-3.5 h-3.5" />
-              Rules
+              {t("nav.rules")}
             </Link>
             <hr className="border-[var(--border)]" />
             {deckId ? (
@@ -164,7 +168,7 @@ export function Header({ deckId }: HeaderProps = {}) {
                   className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-2"
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  Import
+                  {t("nav.import")}
                 </button>
               </ImportDialog>
             ) : (
@@ -182,7 +186,7 @@ export function Header({ deckId }: HeaderProps = {}) {
                   ) : (
                     <Upload className="w-3.5 h-3.5" />
                   )}
-                  Import
+                  {t("nav.import")}
                 </button>
               </ImportDialog>
             )}
@@ -192,7 +196,7 @@ export function Header({ deckId }: HeaderProps = {}) {
               className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-2 rounded transition-colors w-fit"
             >
               <Plus className="w-3.5 h-3.5" />
-              New Deck
+              {t("nav.newDeck")}
             </Link>
             <div className="pt-1">
               <UserMenu />

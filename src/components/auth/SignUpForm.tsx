@@ -1,13 +1,15 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { AuthPageShell } from "./AuthPageShell";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { AuthDivider } from "./AuthDivider";
 
 export function SignUpForm() {
+  const t = useTranslations("auth");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +30,7 @@ export function SignUpForm() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error ?? "Failed to create account");
+        setError(data.error ?? t("signUp.genericError"));
         setLoading(false);
         return;
       }
@@ -44,13 +46,13 @@ export function SignUpForm() {
       setLoading(false);
 
       if (result?.error) {
-        setError("Account created but sign-in failed. Please sign in manually.");
+        setError(t("signUp.signInFailed"));
         return;
       }
 
       globalThis.location.href = "/decks";
     },
-    [name, email, password]
+    [name, email, password, t]
   );
 
   const handleGoogle = useCallback(() => {
@@ -58,7 +60,7 @@ export function SignUpForm() {
   }, []);
 
   return (
-    <AuthPageShell subtitle="Create your account" error={error}>
+    <AuthPageShell subtitle={t("signUp.title")} error={error}>
       <GoogleSignInButton onClick={handleGoogle} />
       <AuthDivider />
 
@@ -68,7 +70,7 @@ export function SignUpForm() {
             htmlFor="name"
             className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
           >
-            Name
+            {t("signUp.nameLabel")}
           </label>
           <input
             id="name"
@@ -77,7 +79,7 @@ export function SignUpForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-            placeholder="Your name"
+            placeholder={t("signUp.namePlaceholder")}
           />
         </div>
 
@@ -86,7 +88,7 @@ export function SignUpForm() {
             htmlFor="email"
             className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
           >
-            Email
+            {t("signUp.emailLabel")}
           </label>
           <input
             id="email"
@@ -95,7 +97,7 @@ export function SignUpForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-            placeholder="you@example.com"
+            placeholder={t("signUp.emailPlaceholder")}
           />
         </div>
 
@@ -104,7 +106,7 @@ export function SignUpForm() {
             htmlFor="password"
             className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
           >
-            Password
+            {t("signUp.authInputLabel")}
           </label>
           <input
             id="password"
@@ -113,7 +115,7 @@ export function SignUpForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-            placeholder="Min. 8 characters"
+            placeholder={t("signUp.authInputHint")}
             minLength={8}
           />
         </div>
@@ -123,14 +125,14 @@ export function SignUpForm() {
           disabled={loading}
           className="w-full py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Creating account..." : "Create Account"}
+          {loading ? t("signUp.submitting") : t("signUp.submit")}
         </button>
       </form>
 
       <p className="text-center text-sm text-[var(--text-secondary)]">
-        Already have an account?{" "}
+        {t("signUp.hasAccount")}{" "}
         <Link href="/auth/signin" className="text-[var(--accent)] hover:underline">
-          Sign in
+          {t("signUp.signInLink")}
         </Link>
       </p>
     </AuthPageShell>

@@ -1,25 +1,29 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
+
+const HEADING_TAGS = {
+  br: () => <br />,
+  span: (chunks: React.ReactNode) => <span>{chunks}</span>,
+};
 
 /** Final call-to-action with gradient text and glow background */
 export function FinalCta() {
+  const t = useTranslations("landing");
   const { status } = useSession();
   const isLoggedIn = status === "authenticated";
   const ctaHref = isLoggedIn ? "/decks" : "/auth/signin";
-  const ctaLabel = isLoggedIn ? "\u2726 Go to My Decks" : "\u2726 Start Building Now";
+  const ctaLabel = isLoggedIn ? t("cta.ctaLoggedIn") : t("cta.ctaLoggedOut");
 
   return (
     <section className="landing-final-cta">
       <h2 className="reveal">
-        Your Next Win
-        <br />
-        Starts <span>Right Here.</span>
+        {t.rich("cta.heading", HEADING_TAGS)}
       </h2>
       <p className="reveal">
-        Stop second-guessing your card choices. Build the deck you meant to
-        build &mdash; and win with it.
+        {t("cta.subtitle")}
       </p>
       <Link href={ctaHref} className="btn-primary reveal">
         {ctaLabel}

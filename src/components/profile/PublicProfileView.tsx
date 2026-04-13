@@ -1,6 +1,7 @@
 "use client";
 // Public profile page — shows user info + list of public decks
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { User, Layers } from "lucide-react";
 
 interface PublicDeckPreview {
@@ -40,6 +41,7 @@ const BRACKET_COLORS: Record<number, string> = {
 };
 
 export function PublicProfileView({ profile }: PublicProfileViewProps) {
+  const t = useTranslations("profile");
   const displayName = profile.name ?? profile.username;
   const memberSince = new Date(profile.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
@@ -65,7 +67,7 @@ export function PublicProfileView({ profile }: PublicProfileViewProps) {
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">{displayName}</h1>
           <p className="text-sm text-[var(--text-secondary)]">
-            @{profile.username} · Member since {memberSince}
+            {t("memberSince", { username: profile.username, date: memberSince })}
           </p>
         </div>
       </div>
@@ -74,7 +76,7 @@ export function PublicProfileView({ profile }: PublicProfileViewProps) {
       <section>
         <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
           <Layers className="w-4 h-4 text-[var(--accent)]" />
-          Public Decks
+          {t("publicDecks")}
           <span className="text-sm font-normal text-[var(--text-secondary)]">
             ({profile.decks.length})
           </span>
@@ -82,7 +84,7 @@ export function PublicProfileView({ profile }: PublicProfileViewProps) {
 
         {profile.decks.length === 0 ? (
           <p className="text-sm text-[var(--text-secondary)] py-8 text-center">
-            No public decks yet.
+            {t("noPublicDecks")}
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -1,10 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { ColorIdentityBanner } from "./DeckEditor";
+import enBuilder from "@/messages/en/builder.json";
+
+function renderWithIntl(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={{ builder: enBuilder }}>
+      {ui}
+    </NextIntlClientProvider>
+  );
+}
 
 describe("ColorIdentityBanner", () => {
   it("renders one mana symbol per identity color", () => {
-    render(
+    renderWithIntl(
       <ColorIdentityBanner
         name="Tatyova"
         colorIdentity={["G", "U"]}
@@ -18,7 +28,7 @@ describe("ColorIdentityBanner", () => {
   });
 
   it("falls back to a colorless identity banner", () => {
-    render(
+    renderWithIntl(
       <ColorIdentityBanner
         name="Kozilek"
         colorIdentity={[]}
@@ -31,7 +41,7 @@ describe("ColorIdentityBanner", () => {
 
   it("calls onRemove when the banner close button is clicked", () => {
     const onRemove = vi.fn();
-    render(
+    renderWithIntl(
       <ColorIdentityBanner
         name="Atraxa"
         colorIdentity={["W", "U", "B", "G"]}

@@ -1,5 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import React from "react";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
+    React.createElement("a", { href, ...props }, children),
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  usePathname: () => "/",
+}));
+
 import { getDeckPresentationManaColors } from "./HomeDeckCard";
 
 function makeCard(

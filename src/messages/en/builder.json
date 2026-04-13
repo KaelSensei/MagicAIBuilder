@@ -1,1 +1,63 @@
-{}
+{
+  "categories": {
+    "commander": "Commander",
+    "companion": "Companion",
+    "creature": "Creatures",
+    "instant": "Instants",
+    "sorcery": "Sorceries",
+    "artifact": "Artifacts",
+    "enchantment": "Enchantments",
+    "planeswalker": "Planeswalkers",
+    "land": "Lands",
+    "ramp": "Ramp",
+    "draw": "Card Draw",
+    "removal": "Removal",
+    "boardWipe": "Board Wipes",
+    "winCondition": "Win Conditions",
+    "protection": "Protection",
+    "other": "Other"
+  },
+  "dropToMove": "Drop here to move to {label}",
+  "noCardsYet": "No cards yet",
+  "searchCommander": "Search for a commander above",
+  "searchPartner": "Search for a {partnerLabel}",
+  "zones": {
+    "main": "Main",
+    "sideboard": "Sideboard",
+    "considering": "Considering"
+  },
+  "zoneEmpty": {
+    "sideboard": "Drop cards here or use search to add to sideboard",
+    "maybeboard": "Drop cards here or use search to add to considering"
+  },
+  "zoneMoveTargets": {
+    "toMain": "Move to Main Deck",
+    "toSideboard": "Move to Sideboard",
+    "toMaybeboard": "Move to Considering"
+  },
+  "viewMode": {
+    "listView": "List view",
+    "gridView": "Grid view",
+    "cardsPerRow": "{count} cards per row"
+  },
+  "actions": {
+    "removeCommander": "Remove commander",
+    "removePartner": "Remove partner",
+    "removeCompanion": "Remove companion",
+    "removeCard": "Remove {name}",
+    "dragToReorder": "Drag to reorder"
+  },
+  "badges": {
+    "cmd": "CMD",
+    "comp": "COMP"
+  },
+  "manaColors": {
+    "W": "White",
+    "U": "Blue",
+    "B": "Black",
+    "R": "Red",
+    "G": "Green",
+    "C": "Colorless"
+  },
+  "manaSymbolAlt": "{color} mana symbol"
+}

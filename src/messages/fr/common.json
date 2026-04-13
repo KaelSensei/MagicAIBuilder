@@ -1,1 +1,39 @@
-{}
+{
+  "appName": "MagicAIBuilder",
+  "nav": {
+    "myDecks": "Mes Decks",
+    "collection": "Collection",
+    "rules": "R\u00e8gles",
+    "newDeck": "Nouveau Deck",
+    "import": "Importer"
+  },
+  "theme": {
+    "toggle": "Changer le th\u00e8me",
+    "switchToLight": "Passer au th\u00e8me clair",
+    "switchToDark": "Passer au th\u00e8me sombre"
+  },
+  "menu": {
+    "open": "Ouvrir le menu"
+  },
+  "footer": {
+    "wizardsTrademarks": "Wizards of the Coast, Magic: The Gathering et leurs logos sont des marques d\u00e9pos\u00e9es de Wizards of the Coast LLC aux \u00c9tats-Unis et dans d\u2019autres pays. \u00a9 1993-2026 Wizards. Tous droits r\u00e9serv\u00e9s.",
+    "notAffiliated": "MagicAIBuilder n\u2019est pas affili\u00e9, approuv\u00e9, sponsoris\u00e9 ou sp\u00e9cifiquement approuv\u00e9 par Wizards of the Coast LLC. MagicAIBuilder peut utiliser les marques et autres propri\u00e9t\u00e9s intellectuelles de Wizards of the Coast LLC, ce qui est autoris\u00e9 par la politique de site de fan de Wizards. MAGIC: THE GATHERING\u00ae est une marque de Wizards of the Coast. Pour plus d\u2019informations sur Wizards of the Coast ou l\u2019une de ses marques ou autres propri\u00e9t\u00e9s intellectuelles, veuillez visiter leur site Web \u00e0 <link>company.wizards.com</link>.",
+    "scryfallDisclaimer": "Certains prix et donn\u00e9es de cartes sont fournis par Scryfall. Scryfall ne garantit pas ses informations tarifaires et recommande de consulter les magasins pour les prix et d\u00e9tails finaux."
+  },
+  "sidebar": {
+    "navigation": "Navigation"
+  },
+  "locale": {
+    "switchLocale": "Changer de langue",
+    "en": "English",
+    "fr": "Fran\u00e7ais",
+    "de": "Deutsch",
+    "it": "Italiano",
+    "es": "Espa\u00f1ol",
+    "ja": "\u65e5\u672c\u8a9e",
+    "zh": "\u4e2d\u6587",
+    "ko": "\ud55c\uad6d\uc5b4",
+    "ru": "\u0420\u0443\u0441\u0441\u043a\u0438\u0439",
+    "pt": "Portugu\u00eas"
+  }
+}

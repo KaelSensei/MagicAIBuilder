@@ -2,6 +2,7 @@
 // Import deck from plain text or URL — Radix Dialog
 // Supports both trigger-based (children) and controlled (open/onOpenChange) usage
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { parseTextDecklist } from "@/lib/deck/import";
@@ -26,6 +27,7 @@ function getStatusTextClass(status: ImportStatus): string {
 }
 
 export function ImportDialog({ children, open: controlledOpen, onOpenChange: controlledOnOpenChange }: ImportDialogProps) {
+  const t = useTranslations("deck");
   const [internalOpen, setInternalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<ImportTab>("text");
   const [text, setText] = useState("");
@@ -77,12 +79,12 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
     if (!text.trim()) return;
     if (!activeDeckId) {
       setStatus("error");
-      setMessage("No deck selected. Create or open a deck first.");
+      setMessage(t("import.noDeckSelected"));
       return;
     }
 
     setStatus("validating");
-    setMessage("Parsing decklist...");
+    setMessage(t("import.parsing"));
 
     try {
       const parsed = parseTextDecklist(text);
@@ -95,19 +97,19 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
 
       if (allCardNames.length === 0) {
         setStatus("error");
-        setMessage("No cards found in the decklist.");
+        setMessage(t("import.noCardsFound"));
         return;
       }
 
-      setMessage(`Validating ${allCardNames.length} cards with Scryfall...`);
+      setMessage(t("import.validating", { count: allCardNames.length }));
       const foundCards = await fetchInBatches(allCardNames);
       const added = await addParsedCards(parsed, foundCards);
 
       setStatus("done");
-      setMessage(`Successfully imported ${added} cards.`);
+      setMessage(t("import.importSuccess", { count: added }));
     } catch (err) {
       setStatus("error");
-      setMessage(err instanceof Error ? err.message : "Failed to import cards.");
+      setMessage(err instanceof Error ? err.message : t("import.importFailed"));
     }
   };
 
@@ -131,7 +133,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
           {/* Header */}
           <div className="flex items-center justify-between">
             <Dialog.Title className="text-base font-semibold text-[var(--text-primary)]">
-              Import Decklist
+              {t("import.title")}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors">
@@ -150,7 +152,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
-              Plain Text
+              {t("import.tabText")}
             </button>
             <button
               onClick={() => setActiveTab("url")}
@@ -160,7 +162,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
-              From URL
+              {t("import.tabUrl")}
             </button>
           </div>
 
@@ -173,7 +175,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
                   onClick={handleClose}
                   className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors"
                 >
-                  Close
+                  {t("import.close")}
                 </button>
               </div>
             </>
@@ -227,7 +229,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
               onClick={handleClose}
               className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors"
             >
-              {status === "done" ? "Close" : "Cancel"}
+              {status === "done" ? t("import.close") : t("import.cancel")}
             </button>
             {status !== "done" && (
               <button
@@ -238,7 +240,7 @@ export function ImportDialog({ children, open: controlledOpen, onOpenChange: con
                 {status === "validating" && (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 )}
-                Import
+                {t("import.import")}
               </button>
             )}
           </div>

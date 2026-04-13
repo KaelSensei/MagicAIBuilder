@@ -2,10 +2,11 @@
 // Read-only public view of a shared deck
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useDeckStore } from "@/lib/deck/store";
 import { ManaCostDisplay } from "@/components/card/ManaSymbol";
 import { Layers, Copy, Check, ExternalLink, Users, BarChart2 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { ManaCurve } from "./ManaCurve";
 import { ColorDistribution } from "./ColorDistribution";
@@ -125,6 +126,7 @@ interface ShareDeckViewProps {
 }
 
 export function ShareDeckView({ deck }: ShareDeckViewProps) {
+  const t = useTranslations("deck");
   const router = useRouter();
   const { createDeck, addDeckCard, setActiveDeck } = useDeckStore();
   const [importing, setImporting] = useState(false);
@@ -233,7 +235,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               <span className="font-semibold">MagicAIBuilder</span>
             </Link>
             <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/20">
-              Read-only
+              {t("share.readOnly")}
             </span>
           </div>
 
@@ -255,13 +257,13 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                     BRACKET_COLORS[deck.targetBracket] ?? BRACKET_COLORS[2]
                   )}
                 >
-                  Bracket {deck.targetBracket}
+                  {t("share.bracketLabel")} {deck.targetBracket}
                 </span>
                 <span className="text-xs text-white/60">{deck.format}</span>
-                <span className="text-xs text-white/60">{totalCards} cards</span>
+                <span className="text-xs text-white/60">{t("share.cardCountLabel", { count: totalCards })}</span>
                 {gameChangers.length > 0 && (
                   <span className="text-xs text-amber-400">
-                    ⚡ {gameChangers.length} Game Changer{gameChangers.length > 1 ? "s" : ""}
+                    {t("share.gameChangerCount", { count: gameChangers.length })}
                   </span>
                 )}
               </div>
@@ -272,7 +274,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                     commander?.artCropUri ? "text-white/70" : "text-[var(--text-secondary)]"
                   )}
                 >
-                  Commander:{" "}
+                  {t("card.commander", { name: "" })}
                   <span className="font-medium text-white/90">{commander.name}</span>
                   {partner && (
                     <>
@@ -298,19 +300,19 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               {imported && (
                 <>
                   <Check className="w-4 h-4" />
-                  Imported!
+                  {t("share.imported")}
                 </>
               )}
               {!imported && importing && (
                 <>
                   <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  Importing…
+                  {t("share.importing")}
                 </>
               )}
               {!imported && !importing && (
                 <>
                   <ExternalLink className="w-4 h-4" />
-                  Import this deck
+                  {t("share.importThisDeck")}
                 </>
               )}
             </button>
@@ -331,7 +333,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
             <div className="mb-6">
               <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 flex items-center gap-2">
                 <Users className="w-3.5 h-3.5" />
-                Command Zone
+                {t("share.commandZone")}
               </h2>
               <div className="space-y-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2">
                 {commander && <CardRow card={commander} />}
@@ -372,37 +374,37 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <BarChart2 className="w-3.5 h-3.5" />
-              Stats
+              {t("share.statsTitle")}
             </h3>
             <div className="space-y-2 text-sm">
-              <StatRow label="Bracket" value={`${deck.targetBracket}`} />
-              <StatRow label="Total cards" value={`${totalCards}`} />
-              <StatRow label="Avg. CMC" value={`${avgCmc}`} />
+              <StatRow label={t("share.bracketLabel")} value={`${deck.targetBracket}`} />
+              <StatRow label={t("share.totalCards")} value={`${totalCards}`} />
+              <StatRow label={t("share.avgCmc")} value={`${avgCmc}`} />
               <StatRow
-                label="Lands"
+                label={t("stats.lands")}
                 value={`${deck.cards.filter((c) => c.category === "land").length}`}
               />
               <StatRow
-                label="Creatures"
+                label={t("share.creatures")}
                 value={`${deck.cards.filter((c) => c.category === "creature").length}`}
               />
               <StatRow
-                label="Ramp"
+                label={t("stats.ramp")}
                 value={`${deck.cards.filter((c) => c.category === "ramp").length}`}
               />
               <StatRow
-                label="Card Draw"
+                label={t("stats.cardDraw")}
                 value={`${deck.cards.filter((c) => c.category === "draw").length}`}
               />
               <StatRow
-                label="Removal"
+                label={t("stats.removal")}
                 value={`${deck.cards.filter((c) => c.category === "removal").length}`}
               />
               {gameChangers.length > 0 && (
-                <StatRow label="Game Changers" value={`${gameChangers.length}`} highlight />
+                <StatRow label={t("share.gameChangers")} value={`${gameChangers.length}`} highlight />
               )}
               {deck.budget !== null && (
-                <StatRow label="Budget" value={`$${deck.budget}/card`} />
+                <StatRow label={t("share.budgetPerCard")} value={`$${deck.budget}/card`} />
               )}
             </div>
           </div>
@@ -410,7 +412,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           {/* Mana Curve */}
           <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
-              Mana Curve
+              {t("share.manaCurve")}
             </h3>
             <ManaCurve curve={manaCurve} />
           </div>
@@ -418,7 +420,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           {/* Color Distribution */}
           <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
-              Color Distribution
+              {t("share.colorDistribution")}
             </h3>
             <ColorDistribution distribution={colorDist} />
           </div>
@@ -456,6 +458,7 @@ function StatRow({
 }
 
 function ShareUrlCopy() {
+  const t = useTranslations("deck");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -471,7 +474,7 @@ function ShareUrlCopy() {
   return (
     <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
       <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-        Share this deck
+        {t("share.shareThisDeck")}
       </h3>
       <button
         onClick={handleCopy}
@@ -479,7 +482,7 @@ function ShareUrlCopy() {
       >
         {copied ? <Check className="w-3.5 h-3.5 text-green-400 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
         <span className="flex-1 text-left truncate">
-          {copied ? "Copied!" : "Copy link"}
+          {copied ? t("share.copiedLink") : t("share.copyLink")}
         </span>
       </button>
     </div>

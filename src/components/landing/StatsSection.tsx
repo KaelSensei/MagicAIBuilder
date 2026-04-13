@@ -1,16 +1,21 @@
-/** Stats section — 3 key metrics */
+"use client";
 
-const STATS = [
-  { number: "3x", label: "Faster deck building" },
-  { number: "50K+", label: "Cards in database" },
-  { number: "98%", label: "Synergy accuracy" },
-] as const;
+import { useTranslations } from "next-intl";
 
+/** Stats section -- 3 key metrics */
 export function StatsSection() {
+  const t = useTranslations("landing");
+
+  const stats = [
+    { number: t("stats.stat1Number"), label: t("stats.stat1Label") },
+    { number: t("stats.stat2Number"), label: t("stats.stat2Label") },
+    { number: t("stats.stat3Number"), label: t("stats.stat3Label") },
+  ];
+
   return (
     <section className="landing-stats">
       <div className="stats-grid reveal">
-        {STATS.map((s) => (
+        {stats.map((s) => (
           <div key={s.label} className="stat-item">
             <div className="stat-number">{s.number}</div>
             <div className="stat-label">{s.label}</div>

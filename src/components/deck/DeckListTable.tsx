@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
 import type { Deck } from "@/lib/deck/types";
 import { getDeckPresentationManaColors } from "./HomeDeckCard";
@@ -48,19 +49,21 @@ export function DeckListTable({
   onDelete,
   onDuplicate,
 }: DeckListTableProps) {
+  const t = useTranslations("deck");
+
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-sm">
           <thead className="bg-[var(--surface-hover)] text-xs uppercase tracking-wide text-[var(--text-secondary)]">
             <tr className="[&>th]:px-4 [&>th]:py-3">
-              <th scope="col">Deck</th>
-              <th scope="col">Colors</th>
-              <th scope="col">Bracket</th>
-              <th scope="col">Cards</th>
-              <th scope="col">Updated</th>
+              <th scope="col">{t("table.deck")}</th>
+              <th scope="col">{t("table.colors")}</th>
+              <th scope="col">{t("table.bracket")}</th>
+              <th scope="col">{t("table.cards")}</th>
+              <th scope="col">{t("table.updated")}</th>
               <th scope="col" className="text-right">
-                Actions
+                {t("table.actions")}
               </th>
             </tr>
           </thead>
@@ -98,6 +101,7 @@ function DeckListRow({
   const bracket = deck.manualBracket ?? deck.targetBracket;
   const isManual = Boolean(deck.manualBracket);
   const manaColors = useMemo(() => getDeckPresentationManaColors(deck), [deck]);
+  const t = useTranslations("deck");
 
   return (
     <tr className="group [&>td]:px-4 [&>td]:py-3">
@@ -108,7 +112,7 @@ function DeckListRow({
         >
           <div className="font-medium">{deck.name}</div>
           <div className="mt-0.5 text-xs text-[var(--text-secondary)]">
-            {deck.commander ? `Commander: ${deck.commander.name}` : "No commander yet"}
+            {deck.commander ? t("card.commander", { name: deck.commander.name }) : t("card.noCommander")}
           </div>
         </Link>
       </td>
@@ -136,7 +140,7 @@ function DeckListRow({
       <td className="min-w-[90px]">
         <span
           className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-bold ${BRACKET_COLORS[bracket]}`}
-          title={isManual ? "Manual bracket override" : "Auto bracket"}
+          title={isManual ? t("card.manualBracket") : t("card.autoBracket")}
         >
           B{bracket}
           {isManual ? " ⚙" : ""}
@@ -160,7 +164,7 @@ function DeckListRow({
             onClick={(e) => onDuplicate(e, deck.id)}
             disabled={duplicatingId === deck.id}
             className="rounded p-1 text-[var(--text-secondary)] hover:bg-[var(--accent)]/20 hover:text-[var(--accent)] disabled:opacity-60"
-            aria-label={`Duplicate ${deck.name}`}
+            aria-label={t("card.duplicate", { name: deck.name })}
           >
             {duplicatingId === deck.id ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -172,7 +176,7 @@ function DeckListRow({
             onClick={(e) => onDelete(e, deck.id)}
             disabled={deletingId === deck.id}
             className="rounded p-1 text-[var(--text-secondary)] hover:bg-red-500/20 hover:text-red-400 disabled:opacity-60"
-            aria-label={`Delete ${deck.name}`}
+            aria-label={t("card.delete", { name: deck.name })}
           >
             {deletingId === deck.id ? (
               <Loader2 className="h-4 w-4 animate-spin" />
