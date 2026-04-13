@@ -41,7 +41,6 @@ export function LocaleSwitcher() {
           {/* Backdrop to close on outside click */}
           <div
             className="fixed inset-0 z-40"
-            role="presentation"
             onClick={() => setOpen(false)}
             onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
           />
