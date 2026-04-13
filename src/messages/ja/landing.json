@@ -1,1 +1,95 @@
-{}
+{
+  "navbar": {
+    "features": "Features",
+    "howItWorks": "How it works",
+    "myDecks": "My Decks",
+    "getStarted": "Get Started"
+  },
+  "hero": {
+    "eyebrow": "The Future of Commander Deckbuilding",
+    "line1": "Stop Guessing.",
+    "line2": "Start Winning.",
+    "subtitle": "You spend <strong>hours building decks</strong> only to sit across the table and realize three cards don\u2019t synergize, your curve is broken, and you\u2019re missing an answer to the meta.<br/><strong>There\u2019s a smarter way.</strong>",
+    "ctaLoggedIn": "\u2726 Go to My Decks",
+    "ctaLoggedOut": "\u2726 Build My First Deck",
+    "secondaryCta": "See How It Works",
+    "note": "100% free \u00b7 Commander \u00b7 Standard \u00b7 Pioneer \u00b7 All formats"
+  },
+  "pain": {
+    "sectionLabel": "The Problem",
+    "heading": "Deckbuilding is <em>broken.</em><br/>And you know it.",
+    "hoursTitle": "Hours Down the Drain",
+    "hoursText": "You open 20 Scryfall tabs, scroll Moxfield for an hour, and still aren\u2019t sure if the deck works.",
+    "synergyTitle": "Blind Synergy Testing",
+    "synergyText": "You only find out your combo doesn\u2019t work at the table. In front of three opponents.",
+    "expensiveTitle": "Expensive Mistakes",
+    "expensiveText": "You buy the cards, build the deck, and a week later realize you built the wrong gameplan.",
+    "curveTitle": "Broken Mana Curves",
+    "curveText": "No tool tells you your curve is top-heavy until you\u2019re stuck on 3 lands on turn 6."
+  },
+  "product": {
+    "sectionLabel": "The Solution",
+    "heading": "Moxfield-level power.<br/><span>Gemini-level intelligence.</span>",
+    "description": "MagicAIBuilder is the deck building tool you always wished existed \u2014 a full-featured deck manager where an AI co-pilot analyzes every card choice, flags synergy gaps, and suggests upgrades in real time.",
+    "feature1": "AI commander analysis \u2014 instant synergy scoring on every card you add",
+    "feature2": "Mana curve optimizer with bracket-aware power budgeting",
+    "feature3": "Real-time \u201cWhat should I cut?\u201d \u2014 context-aware removal suggestions",
+    "feature4": "Full format support: Commander, Standard, Pioneer, Modern, Legacy",
+    "feature5": "Import from Moxfield, Archidekt, MTGO, Arena \u2014 in one click",
+    "feature6": "Price tracker + budget alternatives with similar power level",
+    "mockupTitle": "MagicAIBuilder \u2014 Tinybones EDH",
+    "userPrompt": "I need 5 discard engines under $10 for Tinybones. What\u2019s good?",
+    "aiResponse": "Here are 5 high-synergy discard engines for Tinybones, all under $10:",
+    "aiCard1": "<strong>Burglar Rat</strong> \u2014 ETB discard, recurrable with your 4 reanimation spells (synergy: 94%)",
+    "aiCard2": "<strong>Liliana\u2019s Specter</strong> \u2014 flying + each opponent discards, great with your evasion package (92%)",
+    "aiCard3": "<strong>Oppression</strong> \u2014 symmetrical but you benefit more with 8 recursion pieces (97%)",
+    "aiCard4": "<strong>Bottomless Pit</strong> \u2014 repeatable, triggers Tinybones every upkeep (95%)",
+    "aiCard5": "<strong>Cunning Lethemancer</strong> \u2014 low cmc, consistent trigger, fuels your graveyard plan (91%)",
+    "aiFootnote": "Adding all 5 would lower your avg CMC from 3.2 to 2.9 and increase discard density to optimal range."
+  },
+  "how": {
+    "sectionLabel": "The Process",
+    "heading": "Three Steps to<br/>Your Best Deck",
+    "subtitle": "No tutorials. No friction. Just open it and build.",
+    "step1Title": "Choose Your Commander",
+    "step1Text": "Pick any legendary creature. The AI instantly profiles the archetype, color identity, and top synergy packages for that commander.",
+    "step2Title": "Build with AI Guidance",
+    "step2Text": "Add cards naturally. Every addition is scored in real time. The AI flags weak links, suggests replacements, and keeps your curve in check.",
+    "step3Title": "Export & Dominate",
+    "step3Text": "One-click export to MTGO, Arena, or your LGS buylist. Your deck is bracket-rated and optimized before you even sleeve it up."
+  },
+  "stats": {
+    "stat1Number": "3x",
+    "stat1Label": "Faster deck building",
+    "stat2Number": "50K+",
+    "stat2Label": "Cards in database",
+    "stat3Number": "98%",
+    "stat3Label": "Synergy accuracy"
+  },
+  "testimonials": {
+    "heading": "What Players Are Saying",
+    "review1Text": "I built a Bracket 4 Tinybones deck in 45 minutes. The AI caught three dead cards I would have never noticed until game night.",
+    "review1Author": "Kael M.",
+    "review1Role": "cEDH Player \u00b7 Paris",
+    "review2Text": "Finally a tool that speaks Commander language. It knows what Bracket 3 means. It knows what \u2018goodstuff\u2019 means. It gets it.",
+    "review2Author": "Romain V.",
+    "review2Role": "LGS Regular \u00b7 Lyon",
+    "review3Text": "The curve optimizer alone is worth the subscription. My decks have never been this consistent. I\u2019m not going back to Moxfield alone.",
+    "review3Author": "Julien T.",
+    "review3Role": "Competitive Player \u00b7 Bordeaux"
+  },
+  "cta": {
+    "heading": "Your Next Win<br/>Starts <span>Right Here.</span>",
+    "subtitle": "Stop second-guessing your card choices. Build the deck you meant to build \u2014 and win with it.",
+    "ctaLoggedIn": "\u2726 Go to My Decks",
+    "ctaLoggedOut": "\u2726 Start Building Now"
+  },
+  "footer": {
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact",
+    "discord": "Discord",
+    "copyright": "\u00a9 2025 MagicAIBuilder",
+    "disclaimer": "Magic: The Gathering, the mana symbols, and all associated card names and images are trademarks of Wizards of the Coast LLC. MagicAIBuilder is not produced by, endorsed by, supported by, or affiliated with Wizards of the Coast. Card data provided by <scryfall>Scryfall</scryfall>."
+  }
+}

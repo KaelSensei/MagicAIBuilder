@@ -2,13 +2,17 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
+import { NextIntlClientProvider } from "next-intl";
+import enCommon from "@/messages/en/common.json";
 
 let createDeckImpl: (name: string) => Promise<string> = async (_name: string) => "deck-0";
 let setActiveDeckImpl: (id: string) => void = (_id: string) => {};
 
-vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
     React.createElement("a", { href, ...props }, children),
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  usePathname: () => "/",
 }));
 
 vi.mock("@/hooks/useTheme", () => ({
@@ -17,6 +21,10 @@ vi.mock("@/hooks/useTheme", () => ({
 
 vi.mock("@/components/auth/UserMenu", () => ({
   UserMenu: () => null,
+}));
+
+vi.mock("@/components/layout/LocaleSwitcher", () => ({
+  LocaleSwitcher: () => null,
 }));
 
 vi.mock("@/components/deck/ImportDialog", () => ({
@@ -31,6 +39,14 @@ vi.mock("@/lib/deck/store", () => ({
     }),
 }));
 
+function renderWithIntl(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={{ common: enCommon }}>
+      {ui}
+    </NextIntlClientProvider>
+  );
+}
+
 describe("Header", () => {
   it("creates a deck and activates it when clicking Import on home", async () => {
     const createDeck = vi.fn(async (_name: string) => "deck-123");
@@ -40,11 +56,10 @@ describe("Header", () => {
 
     const { Header } = await import("./Header");
 
-    render(React.createElement(Header));
+    renderWithIntl(React.createElement(Header));
     await userEvent.click(screen.getByRole("button", { name: /import/i }));
 
     await waitFor(() => expect(createDeck).toHaveBeenCalledTimes(1));
     expect(setActiveDeck).toHaveBeenCalledWith("deck-123");
   });
 });
-

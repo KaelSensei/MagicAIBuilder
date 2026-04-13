@@ -1,6 +1,7 @@
 "use client";
 // Scryfall search input with debounce + keyboard shortcut hints
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Search, X, Loader2 } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { useUIStore } from "@/lib/ui/store";
@@ -19,11 +20,13 @@ export function SearchBar({
   onSearch,
   onFocus,
   onBlur,
-  placeholder = "Search cards…",
+  placeholder,
   isLoading = false,
   className,
   showKeyboardHint = true,
 }: SearchBarProps) {
+  const t = useTranslations("search");
+  const resolvedPlaceholder = placeholder ?? t("placeholder");
   const [value, setValue] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -87,7 +90,7 @@ export function SearchBar({
         onChange={(e) => setValue(e.target.value)}
         onFocus={onFocus}
         onBlur={onBlur}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         className="flex-1 bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none min-w-0"
         data-testid="search-input"
       />
@@ -101,7 +104,7 @@ export function SearchBar({
         <button
           onClick={handleClear}
           className="pr-3 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-          aria-label="Clear search"
+          aria-label={t("clearLabel")}
         >
           <X className="w-4 h-4" />
         </button>

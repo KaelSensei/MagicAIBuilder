@@ -1,5 +1,6 @@
 "use client";
 // Live stats panel with bracket-aware benchmarks
+import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { DeckStats } from "@/lib/deck/types";
 import { ManaCurve } from "./ManaCurve";
@@ -54,6 +55,7 @@ function getStatusColor(status: StatusLevel): string {
 }
 
 function BenchmarkRow({ label, value, target, bracket }: BenchmarkRowProps) {
+  const tDeck = useTranslations("deck");
   const ratio = pct(value, target);
   const status = getRatioStatus(ratio);
   const color = getStatusColor(status);
@@ -79,7 +81,7 @@ function BenchmarkRow({ label, value, target, bracket }: BenchmarkRowProps) {
       <span className={cn("text-xs font-medium", color)}>
         {value}/{target}{" "}
         <span className="text-[var(--text-secondary)] font-normal">
-          (target for B{bracket})
+          {tDeck("stats.targetForBracket", { bracket })}
         </span>
       </span>
     </div>
@@ -116,11 +118,13 @@ function StatRow({ label, value, status = "neutral" }: StatRowProps) {
 }
 
 export function DeckStats({ stats, targetBracket = 3, className }: DeckStatsProps) {
+  const t = useTranslations("deck");
+
   if (!stats) {
     return (
       <div className={cn("rounded-lg bg-[var(--surface)] p-4", className)}>
         <p className="text-xs text-[var(--text-secondary)]">
-          Build your deck to see stats
+          {t("stats.buildToSee")}
         </p>
       </div>
     );
@@ -150,46 +154,46 @@ export function DeckStats({ stats, targetBracket = 3, className }: DeckStatsProp
       {/* Deck checks with bracket targets */}
       <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
-          Deck Checks
+          {t("stats.deckChecks")}
         </p>
         <div className="divide-y divide-[var(--border)]">
           <StatRow
-            label="Total cards"
+            label={t("stats.totalCards")}
             value={`${stats.totalCards}/100`}
             status={cardCountStatus}
           />
           <BenchmarkRow
-            label="Lands"
+            label={t("stats.lands")}
             value={stats.lands}
             target={targets.lands}
             bracket={targetBracket}
           />
           <BenchmarkRow
-            label="Ramp"
+            label={t("stats.ramp")}
             value={stats.ramp}
             target={targets.ramp}
             bracket={targetBracket}
           />
           <BenchmarkRow
-            label="Card draw"
+            label={t("stats.cardDraw")}
             value={stats.draw}
             target={targets.draw}
             bracket={targetBracket}
           />
           <BenchmarkRow
-            label="Removal"
+            label={t("stats.removal")}
             value={stats.removal}
             target={targets.removal}
             bracket={targetBracket}
           />
           <StatRow
-            label="Avg CMC"
+            label={t("stats.avgCmc")}
             value={stats.avgCmc.toFixed(2)}
             status={stats.avgCmc <= 3.5 ? "ok" : "warn"}
           />
           {stats.bannedCards.length > 0 && (
             <StatRow
-              label="Banned cards"
+              label={t("stats.bannedCards")}
               value={stats.bannedCards.length}
               status="error"
             />
@@ -204,11 +208,11 @@ export function DeckStats({ stats, targetBracket = 3, className }: DeckStatsProp
       {stats.overBudgetCards.length > 0 && (
         <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
           <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
-            Budget
+            {t("stats.budget")}
           </p>
           <div className="divide-y divide-[var(--border)]">
             <StatRow
-              label="Over budget"
+              label={t("stats.overBudget")}
               value={stats.overBudgetCards.length}
               status="warn"
             />

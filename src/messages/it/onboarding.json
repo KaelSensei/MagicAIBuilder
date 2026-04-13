@@ -1,1 +1,27 @@
-{}
+{
+  "skipTutorial": "Skip tutorial",
+  "back": "Back",
+  "next": "Next",
+  "getStarted": "Get started",
+  "steps": {
+    "welcome": {
+      "title": "Welcome to MagicAIBuilder",
+      "description": "Build Commander decks with live bracket scoring, AI suggestions, and Scryfall integration. Let's walk you through the basics in 4 quick steps."
+    },
+    "createDeck": {
+      "title": "Create your first deck",
+      "description": "Click \"New Deck\" in the top-right corner of any page. Give it a name, choose your format, and set a target bracket.",
+      "hint": "You can also use the AI Wizard to build a full deck from scratch in seconds."
+    },
+    "searchCards": {
+      "title": "Search & add cards",
+      "description": "Use the left search panel to find any MTG card. Click a result to add it to your deck. The first card you add as Commander will set your color identity.",
+      "hint": "Filter by color, type, or CMC to narrow results quickly."
+    },
+    "trackStats": {
+      "title": "Track stats & bracket",
+      "description": "The right panel shows your live bracket score, game changers, mana curve, and AI suggestions. Keep an eye on the bracket indicator to stay in your pod's range.",
+      "hint": "Hover over the bracket badge to see which cards are pushing your score up."
+    }
+  }
+}

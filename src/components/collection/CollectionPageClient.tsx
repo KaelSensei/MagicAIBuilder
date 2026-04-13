@@ -1,6 +1,7 @@
 "use client";
 // Collection page — lists all owned cards with stats
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2, Package, Search, LayoutGrid, List, Trash2, Download, Copy, Check, Image as ImageIcon } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
@@ -14,6 +15,7 @@ import { getCardImageUri } from "@/lib/scryfall/images";
 import { CollectionCardTooltip } from "@/components/collection/CollectionCardTooltip";
 
 export function CollectionPageClient() {
+  const t = useTranslations("collection");
   const { collectionCards, collectionCardsFoil, isLoading, loadCollection, removeFromCollection, updateQuantity, swapPrinting } =
     useCollectionStore();
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
@@ -102,7 +104,7 @@ export function CollectionPageClient() {
     return (
       <div className="flex items-center justify-center flex-1 text-[var(--text-secondary)]">
         <Loader2 className="w-5 h-5 animate-spin mr-2" />
-        Loading collection…
+        {t("loading")}
       </div>
     );
   }
@@ -126,7 +128,7 @@ export function CollectionPageClient() {
           <div className="flex items-center gap-2">
             <Package className="w-6 h-6 text-[var(--accent)]" />
             <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-              My Collection
+              {t("title")}
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -135,18 +137,18 @@ export function CollectionPageClient() {
                 <button
                   onClick={handleCopyText}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
-                  title="Copy collection as text"
+                  title={t("actions.copyText")}
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? "Copied!" : "Copy"}
+                  {copied ? t("actions.copied") : t("actions.copy")}
                 </button>
                 <button
                   onClick={handleExportCsv}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
-                  title="Export collection as CSV"
+                  title={t("actions.exportCsv")}
                 >
                   <Download className="w-3.5 h-3.5" />
-                  CSV
+                  {t("actions.csv")}
                 </button>
               </>
             )}
@@ -156,10 +158,10 @@ export function CollectionPageClient() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <StatCard label="Unique Cards" value={allCards.length.toString()} />
-          <StatCard label="Total Cards" value={totalCards.toString()} />
+          <StatCard label={t("stats.uniqueCards")} value={allCards.length.toString()} />
+          <StatCard label={t("stats.totalCards")} value={totalCards.toString()} />
           <StatCard
-            label="Total Value"
+            label={t("stats.totalValue")}
             value={`$${totalValue.toFixed(2)}`}
             highlight
           />
@@ -171,7 +173,7 @@ export function CollectionPageClient() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
             <input
               type="text"
-              placeholder="Search your collection…"
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] outline-none focus:border-[var(--accent)] placeholder:text-[var(--text-secondary)]"
@@ -186,7 +188,7 @@ export function CollectionPageClient() {
                   ? "text-[var(--accent)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
-              title="Grid view"
+              title={t("viewMode.gridView")}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -198,7 +200,7 @@ export function CollectionPageClient() {
                   ? "text-[var(--accent)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
-              title="List view"
+              title={t("viewMode.listView")}
             >
               <List className="w-4 h-4" />
             </button>
@@ -211,13 +213,13 @@ export function CollectionPageClient() {
             <Package className="w-10 h-10 opacity-40" />
             {allCards.length === 0 ? (
               <>
-                <p className="text-sm">Your collection is empty.</p>
+                <p className="text-sm">{t("empty.title")}</p>
                 <p className="text-xs opacity-70">
-                  Add cards using the button above or from the card search.
+                  {t("empty.hint")}
                 </p>
               </>
             ) : (
-              <p className="text-sm">No cards match your search.</p>
+              <p className="text-sm">{t("empty.noMatch")}</p>
             )}
           </div>
         )}
@@ -237,11 +239,11 @@ export function CollectionPageClient() {
         {filtered.length > 0 && viewMode !== "grid" && (
           <div className="space-y-1">
             <div className="grid grid-cols-[1fr_80px_80px_80px_100px_40px] gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)] uppercase tracking-wide border-b border-[var(--border)]">
-              <span>Card</span>
-              <span>Qty</span>
-              <span>Foil</span>
-              <span>Condition</span>
-              <span>Value</span>
+              <span>{t("listHeaders.card")}</span>
+              <span>{t("listHeaders.qty")}</span>
+              <span>{t("listHeaders.foil")}</span>
+              <span>{t("listHeaders.condition")}</span>
+              <span>{t("listHeaders.value")}</span>
               <span />
             </div>
             {filtered.map((card) => (
@@ -297,6 +299,7 @@ function CollectionGridCard({
   readonly onQuantityChange: (id: string, qty: number) => void;
   readonly onOpenPrintings: (card: CollectionCard) => void;
 }) {
+  const t = useTranslations("collection");
   return (
     <div className="relative group/card">
       {card.imageUri ? (
@@ -317,7 +320,7 @@ function CollectionGridCard({
       {/* Foil badge */}
       {card.foil && (
         <div className="absolute top-1 left-1 bg-purple-500 text-white text-[10px] rounded px-1 shadow-lg">
-          Foil
+          {t("foilBadge")}
         </div>
       )}
       {/* Hover overlay */}
@@ -327,10 +330,10 @@ function CollectionGridCard({
           type="button"
           onClick={() => { onOpenPrintings(card); }}
           className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white/15 hover:bg-white/25 text-white"
-          title="Change art / printing"
+          title={t("actions.changeArt")}
         >
           <ImageIcon className="w-3.5 h-3.5" />
-          Art
+          {t("actions.art")}
         </button>
         <div className="flex items-center gap-1">
           <button
@@ -350,9 +353,9 @@ function CollectionGridCard({
         <button
           onClick={() => onRemove(card.id)}
           className="text-red-400 hover:text-red-300 text-xs"
-          aria-label="Remove from collection"
+          aria-label={t("actions.removeFromCollection")}
         >
-          Remove
+          {t("actions.remove")}
         </button>
       </div>
     </div>
@@ -370,6 +373,7 @@ function CollectionListRow({
   readonly onQuantityChange: (id: string, qty: number) => void;
   readonly onOpenPrintings: (card: CollectionCard) => void;
 }) {
+  const t = useTranslations("collection");
   const value = card.price === null || card.price === undefined ? "—" : `$${(card.price * card.quantity).toFixed(2)}`;
 
   return (
@@ -384,8 +388,8 @@ function CollectionListRow({
           type="button"
           onClick={() => { onOpenPrintings(card); }}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          title="Change art / printing"
-          aria-label={`Change art for ${card.name}`}
+          title={t("actions.changeArt")}
+          aria-label={t("actions.changeArtFor", { name: card.name })}
         >
           <ImageIcon className="w-3.5 h-3.5" />
         </button>
@@ -410,7 +414,7 @@ function CollectionListRow({
       </div>
       <span className="text-sm text-[var(--text-secondary)]">
         {card.foil ? (
-          <span className="text-purple-400 text-xs font-medium">✨ Foil</span>
+          <span className="text-purple-400 text-xs font-medium">✨ {t("foilBadge")}</span>
         ) : (
           "—"
         )}
@@ -422,7 +426,7 @@ function CollectionListRow({
       <button
         onClick={() => onRemove(card.id)}
         className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
-        aria-label="Remove from collection"
+        aria-label={t("actions.removeFromCollection")}
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

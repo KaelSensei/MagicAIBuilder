@@ -35,7 +35,7 @@ import type { DeckFormat } from "@/lib/deck/formats";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import { ToastContainer } from "@/components/ui/Toast";

@@ -1,10 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import enDeck from "@/messages/en/deck.json";
 import { BanlistAlert } from "./BanlistAlert";
+
+function renderWithIntl(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={{ deck: enDeck }}>
+      {ui}
+    </NextIntlClientProvider>
+  );
+}
 
 describe("BanlistAlert", () => {
   it("renders collapsed by default and expands on click", () => {
-    render(
+    renderWithIntl(
       <BanlistAlert
         bannedCards={["Black Lotus"]}
         colorViolations={["Lightning Bolt"]}
@@ -21,7 +31,7 @@ describe("BanlistAlert", () => {
   });
 
   it("renders the dismiss button when onDismiss is provided", () => {
-    render(
+    renderWithIntl(
       <BanlistAlert
         bannedCards={[]}
         colorViolations={["Lightning Bolt"]}
@@ -34,7 +44,7 @@ describe("BanlistAlert", () => {
 
   it("calls onDismiss when the dismiss button is clicked", () => {
     const onDismiss = vi.fn();
-    render(
+    renderWithIntl(
       <BanlistAlert
         bannedCards={["Sol Ring"]}
         colorViolations={[]}

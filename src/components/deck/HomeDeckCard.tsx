@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
 import type { Deck } from "@/lib/deck/types";
 
@@ -103,6 +104,7 @@ export function HomeDeckCard({
   const bracket = deck.manualBracket ?? deck.targetBracket;
   const isManual = Boolean(deck.manualBracket);
   const manaColors = useMemo(() => getDeckPresentationManaColors(deck), [deck]);
+  const t = useTranslations("deck");
 
   return (
     <Link
@@ -131,7 +133,7 @@ export function HomeDeckCard({
             onClick={(e) => onDuplicate(e, deck.id)}
             disabled={duplicatingId === deck.id}
             className="rounded p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-[var(--accent)]/20 hover:text-[var(--accent)] group-hover:opacity-100 disabled:opacity-60"
-            aria-label={`Duplicate ${deck.name}`}
+            aria-label={t("card.duplicate", { name: deck.name })}
           >
             {duplicatingId === deck.id ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -143,7 +145,7 @@ export function HomeDeckCard({
             onClick={(e) => onDelete(e, deck.id)}
             disabled={deletingId === deck.id}
             className="rounded p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100 disabled:opacity-60"
-            aria-label={`Delete ${deck.name}`}
+            aria-label={t("card.delete", { name: deck.name })}
           >
             {deletingId === deck.id ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -174,10 +176,10 @@ export function HomeDeckCard({
         </div>
 
         <p className={`truncate text-sm ${textMuted}`}>
-          {deck.commander ? `Commander: ${deck.commander.name}` : "No commander yet"}
+          {deck.commander ? t("card.commander", { name: deck.commander.name }) : t("card.noCommander")}
         </p>
         <p className={`mt-1 text-xs ${textMuted}`}>
-          {deck.cardCount} / 100 cards
+          {t("card.cardCount", { count: deck.cardCount })}
         </p>
 
         <div className="mt-auto flex items-end justify-between gap-3 pt-3">
@@ -189,7 +191,7 @@ export function HomeDeckCard({
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <span
               className={`rounded border px-1.5 py-0.5 text-xs font-bold ${BRACKET_COLORS[bracket]}`}
-              title={isManual ? "Manual bracket override" : "Auto bracket"}
+              title={isManual ? t("card.manualBracket") : t("card.autoBracket")}
             >
               B{bracket}
               {isManual ? " ⚙" : ""}

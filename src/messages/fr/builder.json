@@ -1,1 +1,63 @@
-{}
+{
+  "categories": {
+    "commander": "Commandant",
+    "companion": "Compagnon",
+    "creature": "Créatures",
+    "instant": "Éphémères",
+    "sorcery": "Rituels",
+    "artifact": "Artefacts",
+    "enchantment": "Enchantements",
+    "planeswalker": "Planeswalkers",
+    "land": "Terrains",
+    "ramp": "Ramp",
+    "draw": "Pioche",
+    "removal": "Retraits",
+    "boardWipe": "Nettoyages de board",
+    "winCondition": "Conditions de victoire",
+    "protection": "Protection",
+    "other": "Autre"
+  },
+  "dropToMove": "Déposez ici pour déplacer vers {label}",
+  "noCardsYet": "Aucune carte pour le moment",
+  "searchCommander": "Recherchez un commandant ci-dessus",
+  "searchPartner": "Recherchez un {partnerLabel}",
+  "zones": {
+    "main": "Principal",
+    "sideboard": "Réserve",
+    "considering": "À considérer"
+  },
+  "zoneEmpty": {
+    "sideboard": "Déposez des cartes ici ou utilisez la recherche pour ajouter à la réserve",
+    "maybeboard": "Déposez des cartes ici ou utilisez la recherche pour ajouter aux cartes à considérer"
+  },
+  "zoneMoveTargets": {
+    "toMain": "Déplacer vers le deck principal",
+    "toSideboard": "Déplacer vers la réserve",
+    "toMaybeboard": "Déplacer vers À considérer"
+  },
+  "viewMode": {
+    "listView": "Vue liste",
+    "gridView": "Vue grille",
+    "cardsPerRow": "{count} cartes par rangée"
+  },
+  "actions": {
+    "removeCommander": "Retirer le commandant",
+    "removePartner": "Retirer le partenaire",
+    "removeCompanion": "Retirer le compagnon",
+    "removeCard": "Retirer {name}",
+    "dragToReorder": "Glisser pour réorganiser"
+  },
+  "badges": {
+    "cmd": "CMD",
+    "comp": "COMP"
+  },
+  "manaColors": {
+    "W": "Blanc",
+    "U": "Bleu",
+    "B": "Noir",
+    "R": "Rouge",
+    "G": "Vert",
+    "C": "Incolore"
+  },
+  "manaSymbolAlt": "Symbole de mana {color}"
+}

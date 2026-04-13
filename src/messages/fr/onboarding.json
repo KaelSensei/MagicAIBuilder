@@ -1,1 +1,27 @@
-{}
+{
+  "skipTutorial": "Passer le tutoriel",
+  "back": "Retour",
+  "next": "Suivant",
+  "getStarted": "Commencer",
+  "steps": {
+    "welcome": {
+      "title": "Bienvenue sur MagicAIBuilder",
+      "description": "Construisez des decks Commander avec un score de bracket en direct, des suggestions IA et l'intégration Scryfall. Découvrons les bases en 4 étapes rapides."
+    },
+    "createDeck": {
+      "title": "Créez votre premier deck",
+      "description": "Cliquez sur « Nouveau Deck » dans le coin supérieur droit de n'importe quelle page. Donnez-lui un nom, choisissez votre format et définissez un bracket cible.",
+      "hint": "Vous pouvez aussi utiliser l'Assistant IA pour construire un deck complet en quelques secondes."
+    },
+    "searchCards": {
+      "title": "Recherchez et ajoutez des cartes",
+      "description": "Utilisez le panneau de recherche à gauche pour trouver n'importe quelle carte MTG. Cliquez sur un résultat pour l'ajouter à votre deck. La première carte ajoutée comme Commandant définira votre identité de couleur.",
+      "hint": "Filtrez par couleur, type ou CMC pour affiner rapidement les résultats."
+    },
+    "trackStats": {
+      "title": "Suivez les stats et le bracket",
+      "description": "Le panneau de droite affiche votre score de bracket en direct, les cartes à impact, la courbe de mana et les suggestions IA. Gardez un œil sur l'indicateur de bracket pour rester dans la plage de votre pod.",
+      "hint": "Survolez le badge de bracket pour voir quelles cartes font monter votre score."
+    }
+  }
+}

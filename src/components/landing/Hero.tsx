@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { ManaFloats } from "./ManaFloats";
 
@@ -15,19 +16,20 @@ const MANA_COLORS = [
   { code: "C", label: "Colorless" },
 ] as const;
 
-/** Hero section — gradient headline, CTA, floating mana particles */
+/** Hero section -- gradient headline, CTA, floating mana particles */
 export function Hero() {
+  const t = useTranslations("landing");
   const { status } = useSession();
   const isLoggedIn = status === "authenticated";
   const ctaHref = isLoggedIn ? "/decks" : "/auth/signin";
-  const ctaLabel = isLoggedIn ? "\u2726 Go to My Decks" : "\u2726 Build My First Deck";
+  const ctaLabel = isLoggedIn ? t("hero.ctaLoggedIn") : t("hero.ctaLoggedOut");
 
   return (
     <section className="landing-hero">
       <div className="hero-bg" />
       <ManaFloats />
 
-      {/* Real Scryfall mana symbols — W U B R G C */}
+      {/* Real Scryfall mana symbols -- W U B R G C */}
       <div className="hero-mana-pips" aria-label="All mana colors">
         {MANA_COLORS.map((c) => (
           <Image
@@ -42,19 +44,18 @@ export function Hero() {
         ))}
       </div>
 
-      <p className="hero-eyebrow">{"\u2726"} The Future of Commander Deckbuilding {"\u2726"}</p>
+      <p className="hero-eyebrow">{"\u2726"} {t("hero.eyebrow")} {"\u2726"}</p>
 
       <h1>
-        <span className="hero-line1">Stop Guessing.</span>
-        <span className="hero-line2">Start Winning.</span>
+        <span className="hero-line1">{t("hero.line1")}</span>
+        <span className="hero-line2">{t("hero.line2")}</span>
       </h1>
 
       <p className="hero-sub">
-        You spend <strong>hours building decks</strong> only to sit across the
-        table and realize three cards don&apos;t synergize, your curve is broken,
-        and you&apos;re missing an answer to the meta.
-        <br />
-        <strong>There&apos;s a smarter way.</strong>
+        {t.rich("hero.subtitle", {
+          strong: (chunks) => <strong>{chunks}</strong>,
+          br: () => <br />,
+        })}
       </p>
 
       <div className="hero-actions">
@@ -62,12 +63,12 @@ export function Hero() {
           {ctaLabel}
         </Link>
         <Link href="#product" className="btn-secondary">
-          See How It Works
+          {t("hero.secondaryCta")}
         </Link>
       </div>
 
       <p className="hero-note">
-        100% free &middot; Commander &middot; Standard &middot; Pioneer &middot; All formats
+        {t("hero.note")}
       </p>
     </section>
   );

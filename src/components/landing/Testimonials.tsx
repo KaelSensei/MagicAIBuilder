@@ -1,29 +1,22 @@
-/** Testimonials — 3 player review cards */
+"use client";
 
-const REVIEWS = [
-  {
-    text: "I built a Bracket 4 Tinybones deck in 45 minutes. The AI caught three dead cards I would have never noticed until game night.",
-    author: "Kael M.",
-    role: "cEDH Player \u00B7 Paris",
-  },
-  {
-    text: "Finally a tool that speaks Commander language. It knows what Bracket 3 means. It knows what \u2018goodstuff\u2019 means. It gets it.",
-    author: "Romain V.",
-    role: "LGS Regular \u00B7 Lyon",
-  },
-  {
-    text: "The curve optimizer alone is worth the subscription. My decks have never been this consistent. I\u2019m not going back to Moxfield alone.",
-    author: "Julien T.",
-    role: "Competitive Player \u00B7 Bordeaux",
-  },
-] as const;
+import { useTranslations } from "next-intl";
 
+/** Testimonials -- 3 player review cards */
 export function Testimonials() {
+  const t = useTranslations("landing");
+
+  const reviews = [
+    { text: t("testimonials.review1Text"), author: t("testimonials.review1Author"), role: t("testimonials.review1Role") },
+    { text: t("testimonials.review2Text"), author: t("testimonials.review2Author"), role: t("testimonials.review2Role") },
+    { text: t("testimonials.review3Text"), author: t("testimonials.review3Author"), role: t("testimonials.review3Role") },
+  ];
+
   return (
     <section className="landing-testimonials">
-      <h2 className="reveal">What Players Are Saying</h2>
+      <h2 className="reveal">{t("testimonials.heading")}</h2>
       <div className="testi-grid reveal">
-        {REVIEWS.map((r) => (
+        {reviews.map((r) => (
           <div key={r.author} className="testi-card">
             <div className="testi-stars">{"\u2605\u2605\u2605\u2605\u2605"}</div>
             <p className="testi-text">&ldquo;{r.text}&rdquo;</p>

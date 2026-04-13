@@ -2,12 +2,14 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { BookOpen, LogIn, LogOut, User } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useOnboardingContext } from "@/components/onboarding/OnboardingProvider";
 
 export function UserMenu() {
+  const t = useTranslations("auth");
   const { data: session, status } = useSession();
   const { resetOnboarding } = useOnboardingContext();
   const [open, setOpen] = useState(false);
@@ -40,7 +42,7 @@ export function UserMenu() {
         className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors"
       >
         <LogIn className="w-3.5 h-3.5" />
-        Sign In
+        {t("userMenu.signIn")}
       </Link>
     );
   }
@@ -59,7 +61,7 @@ export function UserMenu() {
       <button
         onClick={() => setOpen((prev) => !prev)}
         className="flex items-center gap-2 rounded-full hover:ring-2 hover:ring-[var(--accent)] transition-all"
-        aria-label="User menu"
+        aria-label={t("userMenu.menuLabel")}
       >
         {session.user.image ? (
           <Image
@@ -95,7 +97,7 @@ export function UserMenu() {
             className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
           >
             <User className="w-4 h-4" />
-            Profile
+            {t("userMenu.profile")}
           </Link>
 
           <button
@@ -103,7 +105,7 @@ export function UserMenu() {
             className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
           >
             <BookOpen className="w-4 h-4" />
-            Replay tutorial
+            {t("userMenu.replayTutorial")}
           </button>
 
           <button
@@ -111,7 +113,7 @@ export function UserMenu() {
             className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-[var(--surface-hover)] transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            Sign Out
+            {t("userMenu.signOut")}
           </button>
         </div>
       )}

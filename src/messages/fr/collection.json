@@ -1,1 +1,39 @@
-{}
+{
+  "title": "Ma Collection",
+  "loading": "Chargement de la collection…",
+  "stats": {
+    "uniqueCards": "Cartes uniques",
+    "totalCards": "Cartes totales",
+    "totalValue": "Valeur totale"
+  },
+  "searchPlaceholder": "Rechercher dans votre collection…",
+  "actions": {
+    "copyText": "Copier la collection en texte",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "exportCsv": "Exporter la collection en CSV",
+    "csv": "CSV",
+    "changeArt": "Changer l'art / l'édition",
+    "changeArtFor": "Changer l'art pour {name}",
+    "art": "Art",
+    "remove": "Retirer",
+    "removeFromCollection": "Retirer de la collection"
+  },
+  "viewMode": {
+    "gridView": "Vue grille",
+    "listView": "Vue liste"
+  },
+  "empty": {
+    "title": "Votre collection est vide.",
+    "hint": "Ajoutez des cartes en utilisant le bouton ci-dessus ou depuis la recherche de cartes.",
+    "noMatch": "Aucune carte ne correspond à votre recherche."
+  },
+  "listHeaders": {
+    "card": "Carte",
+    "qty": "Qté",
+    "foil": "Foil",
+    "condition": "État",
+    "value": "Valeur"
+  },
+  "foilBadge": "Foil"
+}

@@ -1,5 +1,6 @@
 "use client";
 // Commander Spellbook combo detection panel
+import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { SpellbookVariant } from "@/lib/combos/spellbook";
 import { Zap, Loader2 } from "lucide-react";
@@ -60,6 +61,8 @@ export function CombosPanel({
   isEnabled = true,
   className,
 }: CombosPanelProps) {
+  const t = useTranslations("deck");
+
   return (
     <div
       className={cn(
@@ -69,33 +72,33 @@ export function CombosPanel({
     >
       <div className="flex items-center justify-between">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
-          Combos
+          {t("combos.title")}
         </p>
         {isLoading && (
           <Loader2 className="w-3.5 h-3.5 text-[var(--text-secondary)] animate-spin" />
         )}
         {!isLoading && combos && combos.length > 0 && (
           <span className="text-xs font-medium text-[var(--text-secondary)]">
-            {combos.length} found
+            {t("combos.found", { count: combos.length })}
           </span>
         )}
       </div>
 
       {!isEnabled && (
         <p className="text-xs text-[var(--text-secondary)] italic">
-          Add at least 10 cards to detect combos
+          {t("combos.minCards")}
         </p>
       )}
 
       {isEnabled && isLoading && (
         <p className="text-xs text-[var(--text-secondary)] italic">
-          Checking Commander Spellbook…
+          {t("combos.checking")}
         </p>
       )}
 
       {isEnabled && !isLoading && (combos?.length ?? 0) === 0 && (
         <p className="text-xs text-[var(--text-secondary)] italic">
-          No known combos detected
+          {t("combos.noKnown")}
         </p>
       )}
 
@@ -106,7 +109,7 @@ export function CombosPanel({
             <div className="flex items-center gap-1.5 mb-1">
               <Zap className="w-3.5 h-3.5 text-red-400" />
               <span className="text-xs font-medium text-red-400">
-                Infinite combos
+                {t("combos.infinite")}
               </span>
             </div>
           )}

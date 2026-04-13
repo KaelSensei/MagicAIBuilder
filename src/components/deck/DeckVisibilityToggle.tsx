@@ -1,6 +1,7 @@
 "use client";
 // Toggle deck visibility: Public (visible on profile) vs Private
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Globe, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { logger } from "@/lib/logger";
@@ -18,6 +19,7 @@ export function DeckVisibilityToggle({
   username,
   className,
 }: DeckVisibilityToggleProps) {
+  const t = useTranslations("deck");
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [loading, setLoading] = useState(false);
 
@@ -51,7 +53,7 @@ export function DeckVisibilityToggle({
         disabled={loading}
         role="switch"
         aria-checked={isPublic}
-        aria-label={isPublic ? "Make deck private" : "Make deck public"}
+        aria-label={isPublic ? t("visibility.makePrivate") : t("visibility.makePublic")}
         className={cn(
           "relative w-9 h-5 rounded-full transition-colors duration-200 shrink-0",
           isPublic ? "bg-[var(--accent)]" : "bg-[var(--border)]",
@@ -77,7 +79,7 @@ export function DeckVisibilityToggle({
           <Lock className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
         )}
         <span className="text-xs text-[var(--text-secondary)]">
-          {isPublic ? "Public" : "Private"}
+          {isPublic ? t("visibility.public") : t("visibility.private")}
         </span>
       </div>
 
@@ -88,13 +90,13 @@ export function DeckVisibilityToggle({
           rel="noopener noreferrer"
           className="text-xs text-[var(--accent)] hover:underline ml-1"
         >
-          View
+          {t("visibility.view")}
         </a>
       )}
 
       {isPublic && !username && (
-        <span className="text-xs text-amber-400 ml-1" title="Set a username to appear on your profile">
-          ⚠ No username set
+        <span className="text-xs text-amber-400 ml-1" title={t("visibility.noUsername")}>
+          {t("visibility.noUsername")}
         </span>
       )}
     </div>

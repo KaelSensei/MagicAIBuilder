@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Sparkles } from "lucide-react";
 import type { DecksSortDir, DecksSortKey, DecksViewMode } from "@/lib/deck/deck-listing";
 
@@ -26,6 +27,8 @@ export function DecksHomeControls({
   disableNewDeck,
   isCreating,
 }: DecksHomeControlsProps) {
+  const t = useTranslations("deck");
+
   return (
     <div className="flex items-center gap-2">
       <div className="hidden items-center gap-2 sm:flex">
@@ -40,7 +43,7 @@ export function DecksHomeControls({
             }`}
             aria-pressed={viewMode === "grid"}
           >
-            Grid
+            {t("controls.grid")}
           </button>
           <button
             type="button"
@@ -52,7 +55,7 @@ export function DecksHomeControls({
             }`}
             aria-pressed={viewMode === "list"}
           >
-            List
+            {t("controls.list")}
           </button>
         </div>
 
@@ -69,14 +72,14 @@ export function DecksHomeControls({
             }
           }}
           className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
-          aria-label="Sort decks"
+          aria-label={t("controls.sortDecks")}
         >
-          <option value="updatedAt:desc">Updated (newest)</option>
-          <option value="updatedAt:asc">Updated (oldest)</option>
-          <option value="name:asc">Name (A–Z)</option>
-          <option value="name:desc">Name (Z–A)</option>
-          <option value="bracket:asc">Bracket (low→high)</option>
-          <option value="bracket:desc">Bracket (high→low)</option>
+          <option value="updatedAt:desc">{t("controls.sortUpdatedNewest")}</option>
+          <option value="updatedAt:asc">{t("controls.sortUpdatedOldest")}</option>
+          <option value="name:asc">{t("controls.sortNameAsc")}</option>
+          <option value="name:desc">{t("controls.sortNameDesc")}</option>
+          <option value="bracket:asc">{t("controls.sortBracketAsc")}</option>
+          <option value="bracket:desc">{t("controls.sortBracketDesc")}</option>
         </select>
       </div>
 
@@ -85,7 +88,7 @@ export function DecksHomeControls({
         className="flex items-center gap-2 rounded-lg border border-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/10"
       >
         <Sparkles className="h-4 w-4" />
-        Build with AI
+        {t("controls.buildWithAI")}
       </button>
 
       <button
@@ -99,7 +102,7 @@ export function DecksHomeControls({
         ) : (
           <span className="inline-flex h-4 w-4 items-center justify-center">+</span>
         )}
-        New Deck
+        {t("controls.newDeck")}
       </button>
     </div>
   );

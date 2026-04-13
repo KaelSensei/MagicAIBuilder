@@ -1,6 +1,7 @@
 "use client";
 // Export modal with multiple format support
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Copy, Download, Check, Printer } from "lucide-react";
 import { ProxyExportModal } from "./ProxyExportModal";
 import type { Deck } from "@/lib/deck/types";
@@ -44,6 +45,7 @@ function getExportText(deck: Deck, format: ExportFormat): string {
 }
 
 export function ExportModal({ deck, onClose }: ExportModalProps) {
+  const t = useTranslations("deck");
   const [copied, setCopied] = useState<ExportFormat | null>(null);
   const [showProxy, setShowProxy] = useState(false);
 
@@ -77,11 +79,11 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
   return (
     <>
     {showProxy && <ProxyExportModal deck={deck} onClose={() => setShowProxy(false)} />}
-    <Modal open onClose={onClose} title="Export Options">
+    <Modal open onClose={onClose} title={t("export.title")}>
       {/* Preview */}
       <div className="px-5 pt-4">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
-          Deck List — {totalCards} cards
+          {t("export.deckList", { count: totalCards })}
         </p>
         <textarea
           readOnly
@@ -103,13 +105,13 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
               ) : (
                 <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)] shrink-0" />
               )}
-              {copied === format ? "Copied!" : `Copy for ${FORMAT_LABELS[format]}`}
+              {copied === format ? t("export.copied") : t("export.copyFor", { format: FORMAT_LABELS[format] })}
             </button>
             {(format === "mtgo" || format === "plaintext") && (
               <button
                 onClick={() => handleDownload(format)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors"
-                title={`Download ${FORMAT_LABELS[format]} file`}
+                title={t("export.downloadFormat", { format: FORMAT_LABELS[format] })}
               >
                 <Download className="w-3.5 h-3.5" />
                 {format === "mtgo" ? ".dek" : ".txt"}
@@ -123,10 +125,10 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
             onClick={() => setShowProxy(true)}
             disabled={totalDeckCards === 0}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--surface-hover)] transition-all text-sm text-[var(--text-primary)] disabled:opacity-40 disabled:cursor-not-allowed"
-            title={totalDeckCards === 0 ? "Add cards to export proxies" : "Export print-ready proxy sheets"}
+            title={totalDeckCards === 0 ? t("export.addCardsForProxy") : t("export.proxyTooltip")}
           >
             <Printer className="w-3.5 h-3.5 text-[var(--text-secondary)] shrink-0" />
-            Export Proxy Sheets (Print / PDF)
+            {t("export.proxySheets")}
           </button>
         </div>
       </div>

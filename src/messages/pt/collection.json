@@ -1,1 +1,39 @@
-{}
+{
+  "title": "My Collection",
+  "loading": "Loading collection…",
+  "stats": {
+    "uniqueCards": "Unique Cards",
+    "totalCards": "Total Cards",
+    "totalValue": "Total Value"
+  },
+  "searchPlaceholder": "Search your collection…",
+  "actions": {
+    "copyText": "Copy collection as text",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "exportCsv": "Export collection as CSV",
+    "csv": "CSV",
+    "changeArt": "Change art / printing",
+    "changeArtFor": "Change art for {name}",
+    "art": "Art",
+    "remove": "Remove",
+    "removeFromCollection": "Remove from collection"
+  },
+  "viewMode": {
+    "gridView": "Grid view",
+    "listView": "List view"
+  },
+  "empty": {
+    "title": "Your collection is empty.",
+    "hint": "Add cards using the button above or from the card search.",
+    "noMatch": "No cards match your search."
+  },
+  "listHeaders": {
+    "card": "Card",
+    "qty": "Qty",
+    "foil": "Foil",
+    "condition": "Condition",
+    "value": "Value"
+  },
+  "foilBadge": "Foil"
+}

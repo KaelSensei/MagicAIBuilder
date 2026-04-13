@@ -1,1 +1,5 @@
-{}
+{
+  "memberSince": "@{username} \u00b7 Member since {date}",
+  "publicDecks": "Public Decks",
+  "noPublicDecks": "No public decks yet."
+}

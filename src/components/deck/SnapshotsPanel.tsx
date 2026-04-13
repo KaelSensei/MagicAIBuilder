@@ -1,6 +1,7 @@
 "use client";
 // Deck Snapshots / History panel — save named versions of a deck
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Camera, Clock, RotateCcw, Trash2, Loader2, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import {
@@ -41,6 +42,7 @@ function DiffBadge({ snapshotCount, currentCount }: { readonly snapshotCount: nu
 }
 
 export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: SnapshotsPanelProps) {
+  const t = useTranslations("deck");
   const [snapshots, setSnapshots] = useState<SnapshotMeta[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -125,7 +127,7 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
       {/* Header row */}
       <div className="flex items-center gap-2 px-3 py-2">
         <Clock className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
-        <span className="text-xs font-semibold text-[var(--text-primary)] flex-1">History</span>
+        <span className="text-xs font-semibold text-[var(--text-primary)] flex-1">{t("snapshots.title")}</span>
 
         {/* Save snapshot button / popover trigger */}
         <div className="relative">
@@ -134,16 +136,16 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
               setShowSavePopover((v) => !v);
               setSaveError(null);
             }}
-            title="Save snapshot"
+            title={t("snapshots.saveSnapshot")}
             className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
           >
             <Camera className="w-3.5 h-3.5" />
-            Save
+            {t("snapshots.save")}
           </button>
 
           {showSavePopover && (
             <div className="absolute right-0 top-full mt-1 z-50 w-56 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-xl p-3 space-y-2">
-              <p className="text-xs font-semibold text-[var(--text-primary)]">Save snapshot</p>
+              <p className="text-xs font-semibold text-[var(--text-primary)]">{t("snapshots.saveSnapshot")}</p>
               <input
                 ref={nameInputRef}
                 value={snapshotName}
@@ -152,7 +154,7 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                   if (e.key === "Enter") handleSave();
                   if (e.key === "Escape") setShowSavePopover(false);
                 }}
-                placeholder='e.g. "v1 budget"'
+                placeholder={t("snapshots.placeholder")}
                 maxLength={100}
                 className="w-full text-xs bg-[var(--background)] border border-[var(--border)] rounded px-2 py-1.5 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none focus:border-[var(--accent)]"
               />
@@ -166,13 +168,13 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                   className="flex-1 flex items-center justify-center gap-1 text-xs px-2 py-1.5 rounded bg-[var(--accent)] text-white disabled:opacity-50 hover:opacity-90 transition-opacity"
                 >
                   {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-                  Save
+                  {t("snapshots.save")}
                 </button>
                 <button
                   onClick={() => setShowSavePopover(false)}
                   className="text-xs px-2 py-1.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                 >
-                  Cancel
+                  {t("snapshots.cancel")}
                 </button>
               </div>
             </div>
@@ -198,7 +200,7 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
           )}
           {!isLoading && snapshots.length === 0 && (
             <p className="text-xs text-[var(--text-secondary)] text-center py-6 italic">
-              No snapshots yet. Save one above!
+              {t("snapshots.noSnapshots")}
             </p>
           )}
           {!isLoading && snapshots.length > 0 && (
@@ -230,13 +232,13 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                             disabled={isActioning}
                             className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
                           >
-                            Confirm
+                            {t("snapshots.confirm")}
                           </button>
                           <button
                             onClick={() => setConfirmRestore(null)}
                             className="text-[10px] px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                           >
-                            No
+                            {t("snapshots.no")}
                           </button>
                         </>
                       )}
@@ -247,13 +249,13 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                             disabled={isActioning}
                             className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors disabled:opacity-50"
                           >
-                            Delete?
+                            {t("snapshots.deleteConfirm")}
                           </button>
                           <button
                             onClick={() => setConfirmDelete(null)}
                             className="text-[10px] px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                           >
-                            No
+                            {t("snapshots.no")}
                           </button>
                         </>
                       )}
@@ -261,14 +263,14 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                         <>
                           <button
                             onClick={() => setConfirmRestore(snap.id)}
-                            title="Restore to this snapshot"
+                            title={t("snapshots.restoreTooltip")}
                             className="p-1 rounded hover:bg-[var(--surface)] text-[var(--text-secondary)] hover:text-amber-400 transition-colors"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => setConfirmDelete(snap.id)}
-                            title="Delete snapshot"
+                            title={t("snapshots.deleteTooltip")}
                             className="p-1 rounded hover:bg-[var(--surface)] text-[var(--text-secondary)] hover:text-red-400 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

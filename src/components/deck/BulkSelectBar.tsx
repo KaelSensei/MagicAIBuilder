@@ -1,5 +1,6 @@
 "use client";
 // Action bar shown when cards are selected in sideboard / maybeboard
+import { useTranslations } from "next-intl";
 import { ArrowRight, Trash2, CheckSquare, Square } from "lucide-react";
 import type { DeckZone } from "@/lib/deck/types";
 
@@ -27,6 +28,7 @@ export function BulkSelectBar({
   onBulkMove,
   onBulkDelete,
 }: BulkSelectBarProps) {
+  const t = useTranslations("deck");
   const allSelected = selectedCount === totalCount && totalCount > 0;
 
   return (
@@ -35,14 +37,14 @@ export function BulkSelectBar({
       <button
         onClick={allSelected ? onDeselectAll : onSelectAll}
         className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors shrink-0"
-        aria-label={allSelected ? "Deselect all" : "Select all"}
+        aria-label={allSelected ? t("bulk.deselectAll") : t("bulk.selectAll")}
       >
         {allSelected ? (
           <CheckSquare className="w-3.5 h-3.5 text-[var(--accent)]" />
         ) : (
           <Square className="w-3.5 h-3.5" />
         )}
-        {allSelected ? "Deselect all" : "Select all"}
+        {allSelected ? t("bulk.deselectAll") : t("bulk.selectAll")}
       </button>
 
       {/* Selection counter */}
@@ -50,7 +52,7 @@ export function BulkSelectBar({
         <>
           <span className="text-xs text-[var(--text-secondary)]">·</span>
           <span className="text-xs font-medium text-[var(--accent)]">
-            {selectedCount} card{selectedCount === 1 ? "" : "s"} selected
+            {t("bulk.selectedCount", { count: selectedCount })}
           </span>
 
           {/* Move actions */}
@@ -71,7 +73,7 @@ export function BulkSelectBar({
             className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
           >
             <Trash2 className="w-3 h-3" />
-            Delete
+            {t("bulk.delete")}
           </button>
         </>
       )}

@@ -1,6 +1,6 @@
 "use client";
 // Public read-only deck page — accessible without auth for public decks
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { User, ExternalLink, Layers } from "lucide-react";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import type { CardCategory } from "@/lib/deck/types";

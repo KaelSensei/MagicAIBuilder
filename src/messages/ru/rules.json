@@ -1,1 +1,28 @@
-{}
+{
+  "title": "Game Changers & Banlist",
+  "subtitle": "Official Commander rules reference — sourced live from Scryfall. Click a card to zoom.",
+  "tabs": {
+    "gameChangers": "Game Changers",
+    "banlist": "Banlist"
+  },
+  "searchPlaceholder": "Search for a card…",
+  "loading": "Loading from Scryfall…",
+  "error": "Failed to load data from Scryfall. Please try again in a moment.",
+  "resultsCount": "{count, plural, =1 {1 card} other {# cards}}",
+  "resultsFor": "for \"{query}\"",
+  "noCards": "No cards found.",
+  "badges": {
+    "gc": "GC",
+    "banned": "Banned"
+  },
+  "zoom": {
+    "viewCard": "View {name}",
+    "close": "Close preview",
+    "closeButton": "Close",
+    "previousCard": "Previous card",
+    "nextCard": "Next card",
+    "viewAllArts": "View all arts",
+    "noImage": "No image",
+    "cardPosition": "{current} / {total}"
+  }
+}

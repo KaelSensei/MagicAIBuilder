@@ -1,24 +1,32 @@
-import Link from "next/link";
+"use client";
+
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 /** Simple footer with brand + links */
 export function LandingFooter() {
+  const t = useTranslations("landing");
+
   return (
     <footer className="landing-footer">
       <div className="landing-logo" style={{ fontSize: "0.9rem" }}>
         MagicAIBuilder
       </div>
       <div style={{ display: "flex", gap: "2rem" }}>
-        <Link href="#">Privacy</Link>
-        <Link href="#">Terms</Link>
-        <Link href="#">Contact</Link>
-        <Link href="#">Discord</Link>
+        <Link href="#">{t("footer.privacy")}</Link>
+        <Link href="#">{t("footer.terms")}</Link>
+        <Link href="#">{t("footer.contact")}</Link>
+        <Link href="#">{t("footer.discord")}</Link>
       </div>
-      <div>&copy; 2025 MagicAIBuilder</div>
+      <div>{t("footer.copyright")}</div>
       <div className="landing-disclaimer">
-        Magic: The Gathering, the mana symbols, and all associated card names and images
-        are trademarks of Wizards of the Coast LLC. MagicAIBuilder is not produced by,
-        endorsed by, supported by, or affiliated with Wizards of the Coast.
-        Card data provided by <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a>.
+        {t.rich("footer.disclaimer", {
+          scryfall: (chunks) => (
+            <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">
+              {chunks}
+            </a>
+          ),
+        })}
       </div>
     </footer>
   );

@@ -9,6 +9,7 @@
  * - Card grid with normal-sized images, click-to-zoom, printing selector
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Search, Shield, Zap, X } from "lucide-react";
 import { useGameChangersList } from "@/hooks/useGameChangers";
@@ -45,6 +46,7 @@ function getCardNormalImage(card: ScryfallCard): string {
 }
 
 function CardTile({ card, badge, onClickZoom }: CardTileProps) {
+  const t = useTranslations("rules");
   const imageUri = getCardNormalImage(card);
 
   return (
@@ -52,7 +54,7 @@ function CardTile({ card, badge, onClickZoom }: CardTileProps) {
       type="button"
       className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--accent)]/50 transition-colors cursor-pointer text-left w-full"
       onClick={() => onClickZoom(card)}
-      aria-label={`View ${card.name}`}
+      aria-label={t("zoom.viewCard", { name: card.name })}
     >
       {/* Card image — aspect ratio ~63:88 */}
       <div className="relative aspect-[63/88] bg-[var(--background)] overflow-hidden">
@@ -66,7 +68,7 @@ function CardTile({ card, badge, onClickZoom }: CardTileProps) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-[var(--text-secondary)] text-xs">
-            No image
+            {t("zoom.noImage")}
           </div>
         )}
       </div>
@@ -95,6 +97,7 @@ interface CardZoomModalProps {
 }
 
 function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: CardZoomModalProps) {
+  const t = useTranslations("rules");
   const currentIndex = cards.findIndex((c) => c.id === card.id);
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < cards.length - 1;
@@ -133,7 +136,7 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
         <button
           type="button"
           className="absolute inset-0 z-0 cursor-default border-0 bg-black/80 p-0 backdrop-blur-sm"
-          aria-label="Close preview"
+          aria-label={t("zoom.close")}
           onClick={onClose}
         />
 
@@ -142,7 +145,7 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
             type="button"
             onClick={goPrev}
             className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white/70 transition-colors hover:bg-black/80 hover:text-white"
-            aria-label="Previous card"
+            aria-label={t("zoom.previousCard")}
           >
             ‹
           </button>
@@ -153,7 +156,7 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
             type="button"
             onClick={goNext}
             className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white/70 transition-colors hover:bg-black/80 hover:text-white"
-            aria-label="Next card"
+            aria-label={t("zoom.nextCard")}
           >
             ›
           </button>
@@ -164,7 +167,7 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
             type="button"
             onClick={onClose}
             className="absolute -right-3 -top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] shadow-lg transition-colors hover:text-[var(--text-primary)]"
-            aria-label="Close"
+            aria-label={t("zoom.closeButton")}
           >
             <X className="w-4 h-4" />
           </button>
@@ -185,7 +188,7 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
                 {card.type_line}
                 {cards.length > 1 && (
                   <span className="ml-2 text-white/40">
-                    {currentIndex + 1} / {cards.length}
+                    {t("zoom.cardPosition", { current: currentIndex + 1, total: cards.length })}
                   </span>
                 )}
               </p>
@@ -195,7 +198,7 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
               onClick={onOpenPrintings}
               className="rounded-lg border border-white/20 px-3 py-1.5 text-xs text-white/80 transition-colors hover:border-white/40 hover:text-white"
             >
-              View all arts
+              {t("zoom.viewAllArts")}
             </button>
           </div>
         </div>
@@ -208,6 +211,7 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
 // Main client component
 // ---------------------------------------------------------------------------
 export function GameChangersPageClient() {
+  const t = useTranslations("rules");
   const searchParams = useSearchParams();
   const router = useRouter();
   const topRef = useRef<HTMLDivElement>(null);
@@ -312,10 +316,10 @@ export function GameChangersPageClient() {
       {/* Title */}
       <div ref={topRef}>
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-          Game Changers &amp; Banlist
+          {t("title")}
         </h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Official Commander rules reference — sourced live from Scryfall. Click a card to zoom.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -331,7 +335,7 @@ export function GameChangersPageClient() {
           )}
         >
           <Zap className="w-3.5 h-3.5" />
-          Game Changers
+          {t("tabs.gameChangers")}
           {gameChangers && (
             <span className="ml-1 text-xs opacity-70">({gameChangers.length})</span>
           )}
@@ -346,7 +350,7 @@ export function GameChangersPageClient() {
           )}
         >
           <Shield className="w-3.5 h-3.5" />
-          Banlist
+          {t("tabs.banlist")}
           {banlist && (
             <span className="ml-1 text-xs opacity-70">({banlist.length})</span>
           )}
@@ -358,7 +362,7 @@ export function GameChangersPageClient() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
         <input
           type="search"
-          placeholder="Search for a card…"
+          placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
@@ -369,13 +373,13 @@ export function GameChangersPageClient() {
       {isLoading && (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-[var(--text-secondary)]">
           <Loader2 className="w-6 h-6 animate-spin" />
-          <span className="text-sm">Loading from Scryfall…</span>
+          <span className="text-sm">{t("loading")}</span>
         </div>
       )}
 
       {isError && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
-          Failed to load data from Scryfall. Please try again in a moment.
+          {t("error")}
         </div>
       )}
 
@@ -383,8 +387,8 @@ export function GameChangersPageClient() {
         <>
           {/* Results count */}
           <p className="text-xs text-[var(--text-secondary)]">
-            {filtered.length} card{filtered.length === 1 ? "" : "s"}
-            {search && ` for "${search}"`}
+            {t("resultsCount", { count: filtered.length })}
+            {search && ` ${t("resultsFor", { query: search })}`}
           </p>
 
           {/* Card grid */}
@@ -398,11 +402,11 @@ export function GameChangersPageClient() {
                   badge={
                     activeTab === "game-changers" ? (
                       <span className="shrink-0 text-[10px] text-amber-400 font-medium flex items-center gap-0.5">
-                        <Zap className="w-2.5 h-2.5" /> GC
+                        <Zap className="w-2.5 h-2.5" /> {t("badges.gc")}
                       </span>
                     ) : (
                       <span className="shrink-0 text-[10px] text-red-400 font-medium flex items-center gap-0.5">
-                        <Shield className="w-2.5 h-2.5" /> Banned
+                        <Shield className="w-2.5 h-2.5" /> {t("badges.banned")}
                       </span>
                     )
                   }
@@ -411,7 +415,7 @@ export function GameChangersPageClient() {
             </div>
           ) : (
             <p className="text-sm text-[var(--text-secondary)] text-center py-8">
-              No cards found.
+              {t("noCards")}
             </p>
           )}
 

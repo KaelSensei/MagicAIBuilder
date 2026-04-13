@@ -8,9 +8,10 @@ import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard ,CardCategory} from "@/lib/deck/types";
-import { CATEGORY_LABELS } from "@/lib/deck/categories";
+
 import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, Rows3 } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useDeckStore } from "@/lib/deck/store";
 import { BulkSelectBar } from "@/components/deck/BulkSelectBar";
 import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
@@ -54,6 +55,7 @@ function DraggableDeckCard({
   readonly onMoveToMaybeboard?: (id: string) => void;
   readonly isColorIdentityViolation?: boolean;
 }) {
+  const t = useTranslations("builder");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: `deck-card-${card.id}`,
@@ -73,7 +75,7 @@ function DraggableDeckCard({
         {...listeners}
         className="p-1 cursor-grab active:cursor-grabbing text-[var(--text-secondary)] opacity-0 group-hover/drag:opacity-50 hover:!opacity-100 transition-opacity shrink-0"
         tabIndex={-1}
-        aria-label="Drag to reorder"
+        aria-label={t("actions.dragToReorder")}
       >
         <GripVertical className="w-3 h-3" />
       </button>
@@ -165,6 +167,7 @@ function DroppableCategory({
   onMoveToMaybeboard,
   violationCardIds,
 }: CategorySectionProps & { readonly violationCardIds: ReadonlySet<string> }) {
+  const t = useTranslations("builder");
   const [collapsed, setCollapsed] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
     id: `deck-category-${category}`,
@@ -172,7 +175,7 @@ function DroppableCategory({
   });
 
   const cardIds = cards.map((c) => `deck-card-${c.id}`);
-  const label = CATEGORY_LABELS[category];
+  const label = t(`categories.${category}`);
 
   return (
     <div className="mb-2">
@@ -213,7 +216,7 @@ function DroppableCategory({
           </SortableContext>
           {cards.length === 0 && isOver && (
             <div className="py-2 text-center text-xs text-[var(--accent)]">
-              Drop here to move to {label}
+              {t("dropToMove", { label })}
             </div>
           )}
         </div>
@@ -222,13 +225,13 @@ function DroppableCategory({
   );
 }
 
-const MANA_SYMBOL_LABELS: Record<BannerManaColor, string> = {
-  W: "White",
-  U: "Blue",
-  B: "Black",
-  R: "Red",
-  G: "Green",
-  C: "Colorless",
+const MANA_BANNER_KEYS: Record<BannerManaColor, string> = {
+  W: "W",
+  U: "U",
+  B: "B",
+  R: "R",
+  G: "G",
+  C: "C",
 };
 
 const COLOR_IDENTITY_BANNER_BACKGROUND =
@@ -276,13 +279,13 @@ function getBannerManaSymbolUrl(color: BannerManaColor): string {
 }
 
 /**
- * Build accessible alternative text for a banner mana symbol.
+ * Build the i18n key for a banner mana color label.
  *
  * @param color Supported mana color symbol.
- * @returns Human-readable image label.
+ * @returns The mana-color key used to look up a translated label.
  */
-function getBannerManaSymbolAlt(color: BannerManaColor): string {
-  return `${MANA_SYMBOL_LABELS[color]} mana symbol`;
+function getBannerManaColorKey(color: BannerManaColor): string {
+  return MANA_BANNER_KEYS[color];
 }
 
 /**
@@ -302,6 +305,7 @@ export function ColorIdentityBanner({
   readonly onRemove: () => void;
   readonly label?: string;
 }) {
+  const t = useTranslations("builder");
   const displayColors = useMemo(
     () => getDisplayColorIdentity(colorIdentity),
     [colorIdentity]
@@ -337,7 +341,7 @@ export function ColorIdentityBanner({
                 <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_42%)]" />
                 <Image
                   src={getBannerManaSymbolUrl(color)}
-                  alt={getBannerManaSymbolAlt(color)}
+                  alt={t("manaSymbolAlt", { color: t(`manaColors.${getBannerManaColorKey(color)}`) })}
                   width={34}
                   height={34}
                   unoptimized
@@ -397,21 +401,22 @@ function MainZoneContent({
   clearCompanion,
   onMoveToMaybeboard,
 }: MainZoneContentProps) {
+  const t = useTranslations("builder");
   if (viewMode === "grid") {
     return (
       <div className={gridColsClass(gridCols)}>
         {deck.commander && (
           <div className="relative group/card">
             <CardImage imageUri={deck.commander.imageUri} largeUri={deck.commander.imageUri} name={deck.commander.name} manaCost={deck.commander.manaCost} cmc={deck.commander.cmc} showOverlay={!deck.commander.cardFaces} zoomOnHover={false} className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer" onClick={() => onCardClick?.(deck.commander!)} cardFaces={deck.commander.cardFaces} isFlexibleLand={deck.commander.isFlexibleLand} />
-            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">CMD</div>
-            <button onClick={(e) => { e.stopPropagation(); clearCommander(); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title="Remove commander">×</button>
+            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">{t("badges.cmd")}</div>
+            <button onClick={(e) => { e.stopPropagation(); clearCommander(); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title={t("actions.removeCommander")}>×</button>
           </div>
         )}
         {deck.partner && deck.partner.name !== deck.commander?.name && (
           <div className="relative group/card">
             <CardImage imageUri={deck.partner.imageUri} largeUri={deck.partner.imageUri} name={deck.partner.name} manaCost={deck.partner.manaCost} cmc={deck.partner.cmc} showOverlay={!deck.partner.cardFaces} zoomOnHover={false} className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer" onClick={() => onCardClick?.(deck.partner!)} cardFaces={deck.partner.cardFaces} isFlexibleLand={deck.partner.isFlexibleLand} />
-            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">CMD</div>
-            <button onClick={(e) => { e.stopPropagation(); setPartner(null); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title="Remove partner">×</button>
+            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">{t("badges.cmd")}</div>
+            <button onClick={(e) => { e.stopPropagation(); setPartner(null); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title={t("actions.removePartner")}>×</button>
           </div>
         )}
         {deck.companion && (() => {
@@ -432,7 +437,7 @@ function MainZoneContent({
               isFlexibleLand={deck.companion.isFlexibleLand}
             />
             <div className={`absolute bottom-1 left-1 text-black text-[8px] font-bold px-1 rounded leading-tight ${companionViolation ? "bg-red-500/90" : "bg-teal-500/90"}`}>
-              COMP
+              {t("badges.comp")}
             </div>
             <button
               onClick={(e) => {
@@ -440,7 +445,7 @@ function MainZoneContent({
                 clearCompanion();
               }}
               className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-              title="Remove companion"
+              title={t("actions.removeCompanion")}
             >
               ×
             </button>
@@ -465,11 +470,11 @@ function MainZoneContent({
               cardFaces={card.cardFaces}
               isFlexibleLand={card.isFlexibleLand}
             />
-            <button onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" aria-label={`Remove ${card.name}`}>×</button>
+            <button onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" aria-label={t("actions.removeCard", { name: card.name })}>×</button>
           </div>
         ))}
         {!deck.commander && mainCards.length === 0 && (
-          <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">No cards yet</div>
+          <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">{t("noCardsYet")}</div>
         )}
       </div>
     );
@@ -523,24 +528,22 @@ interface SecondaryZoneContentProps {
   readonly moveCardToZone: (id: string, zone: DeckZone) => void;
 }
 
-const ZONE_MOVE_TARGETS: Record<"sideboard" | "maybeboard", ReadonlyArray<{ zone: DeckZone; label: string; title: string }>> = {
-  sideboard: [
-    { zone: "main", label: "→ Main", title: "Move to Main Deck" },
-    { zone: "maybeboard", label: "→ Maybe", title: "Move to Considering" },
-  ],
-  maybeboard: [
-    { zone: "main", label: "→ Main", title: "Move to Main Deck" },
-    { zone: "sideboard", label: "→ Side", title: "Move to Sideboard" },
-  ],
-};
-
-const ZONE_EMPTY_TEXT: Record<"sideboard" | "maybeboard", string> = {
-  sideboard: "Drop cards here or use search to add to sideboard",
-  maybeboard: "Drop cards here or use search to add to considering",
-};
-
 function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, onCardClick, moveCardToZone }: SecondaryZoneContentProps) {
-  const moveTargets = ZONE_MOVE_TARGETS[zone];
+  const t = useTranslations("builder");
+
+  const moveTargets = useMemo(() => {
+    const targets: Record<"sideboard" | "maybeboard", ReadonlyArray<{ zone: DeckZone; label: string; title: string }>> = {
+      sideboard: [
+        { zone: "main", label: `→ ${t("zones.main")}`, title: t("zoneMoveTargets.toMain") },
+        { zone: "maybeboard", label: `→ ${t("zones.considering")}`, title: t("zoneMoveTargets.toMaybeboard") },
+      ],
+      maybeboard: [
+        { zone: "main", label: `→ ${t("zones.main")}`, title: t("zoneMoveTargets.toMain") },
+        { zone: "sideboard", label: `→ ${t("zones.sideboard")}`, title: t("zoneMoveTargets.toSideboard") },
+      ],
+    };
+    return targets[zone];
+  }, [zone, t]);
   const bulkMoveToZone = useDeckStore((s) => s.bulkMoveToZone);
   const bulkRemoveCards = useDeckStore((s) => s.bulkRemoveCards);
 
@@ -604,7 +607,7 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
   if (cards.length === 0) {
     content = (
       <div className="flex items-center justify-center h-24 text-[var(--text-secondary)] text-xs italic">
-        {ZONE_EMPTY_TEXT[zone]}
+        {t(`zoneEmpty.${zone}`)}
       </div>
     );
   } else if (viewMode === "grid") {
@@ -633,8 +636,8 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
                 <div className="absolute inset-0 rounded ring-2 ring-[var(--accent)] z-10 pointer-events-none" />
               )}
               <CardImage imageUri={card.imageUri} largeUri={card.imageUri} name={card.name} manaCost={card.manaCost} cmc={card.cmc} showOverlay={!card.cardFaces} zoomOnHover={false} className="w-full cursor-pointer" onClick={() => onCardClick?.(card)} cardFaces={card.cardFaces} isFlexibleLand={card.isFlexibleLand} />
-              <button onClick={(e) => { e.stopPropagation(); handleSingleRemove(card.id); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" aria-label={`Remove ${card.name}`}>×</button>
-              <button onClick={() => moveCardToZone(card.id, "main")} className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10" title="Move to Main">→M</button>
+              <button onClick={(e) => { e.stopPropagation(); handleSingleRemove(card.id); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" aria-label={t("actions.removeCard", { name: card.name })}>×</button>
+              <button onClick={() => moveCardToZone(card.id, "main")} className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10" title={t("zoneMoveTargets.toMain")}>→M</button>
             </div>
           );
         })}
@@ -698,6 +701,7 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
 }
 
 export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZone: activeZoneProp, onActiveZoneChange }: DeckEditorProps) {
+  const t = useTranslations("builder");
   const viewMode = useDeckStore((s) => s.deckViewMode);
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
   const gridCols = useDeckStore((s) => s.deckGridCols);
@@ -783,7 +787,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
             {!hasPartner && supportsPartner(deck.pairingType) && (
               <div className="flex-1 rounded-lg border border-dashed border-[var(--border)] h-[82px] flex items-center justify-center px-2">
                 <span className="text-[10px] text-[var(--text-secondary)] italic text-center leading-tight">
-                  Search for a {partnerSlotLabel(deck.pairingType)}
+                  {t("searchPartner", { partnerLabel: partnerSlotLabel(deck.pairingType) })}
                 </span>
               </div>
             )}
@@ -791,7 +795,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
         ) : (
           <div className="rounded-lg border border-dashed border-[var(--border)] h-[82px] flex items-center justify-center">
             <p className="text-xs text-[var(--text-secondary)] italic">
-              Search for a commander above
+              {t("searchCommander")}
             </p>
           </div>
         )}
@@ -804,9 +808,9 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
         <div className="flex items-center gap-0">
           {(
             [
-              { zone: "main" as DeckZone, label: "Main", count: mainCards.reduce((s, c) => s + c.quantity, 0) + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0) },
-              { zone: "sideboard" as DeckZone, label: "Sideboard", count: sideboardCards.reduce((s, c) => s + c.quantity, 0) },
-              { zone: "maybeboard" as DeckZone, label: "Considering", count: maybeboardCards.reduce((s, c) => s + c.quantity, 0) },
+              { zone: "main" as DeckZone, label: t("zones.main"), count: mainCards.reduce((s, c) => s + c.quantity, 0) + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0) },
+              { zone: "sideboard" as DeckZone, label: t("zones.sideboard"), count: sideboardCards.reduce((s, c) => s + c.quantity, 0) },
+              { zone: "maybeboard" as DeckZone, label: t("zones.considering"), count: maybeboardCards.reduce((s, c) => s + c.quantity, 0) },
             ] as const
           ).map(({ zone, label, count }) => (
             <button
@@ -851,7 +855,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
                   ? "text-[var(--accent)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
-              title="List view"
+              title={t("viewMode.listView")}
             >
               <List className="w-3 h-3" />
             </button>
@@ -863,7 +867,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
                   ? "text-[var(--accent)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
-              title="Grid view"
+              title={t("viewMode.gridView")}
             >
               <LayoutGrid className="w-3 h-3" />
             </button>
@@ -881,7 +885,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
                         ? "bg-[var(--accent)]/20 text-[var(--accent)]"
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     )}
-                    title={`${n} cards per row`}
+                    title={t("viewMode.cardsPerRow", { count: n })}
                   >
                     {n}
                   </button>

@@ -9,6 +9,7 @@
  * Step 5: Loading / streaming results
  */
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, X, Loader2, Sparkles, Check } from "lucide-react";
@@ -307,6 +308,7 @@ function StepCommander({
   readonly onSelect: (name: string, card: ScryfallCard | null) => void;
   readonly onSkip: () => void;
 }) {
+  const t = useTranslations("deck");
   const [query, setQuery] = useState(commanderName);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -356,7 +358,7 @@ function StepCommander({
           type="text"
           value={query}
           onChange={handleChange}
-          placeholder="Search for a commander…"
+          placeholder={t("wizard.searchCommander")}
           className="
             w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]
             text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50
@@ -413,7 +415,7 @@ function StepCommander({
         onClick={onSkip}
         className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline underline-offset-2 transition-colors"
       >
-        Skip — let the AI choose
+        {t("wizard.skipLetAI")}
       </button>
     </div>
   );
@@ -435,7 +437,8 @@ function StepLoading({
   readonly totalCards: number | null;
   readonly error: string | null;
 }) {
-  const lastMsg = statusMessages.at(-1) ?? "Thinking…";
+  const t = useTranslations("deck");
+  const lastMsg = statusMessages.at(-1) ?? t("wizard.thinking");
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto text-center">
@@ -457,7 +460,7 @@ function StepLoading({
             <p className="text-[var(--text-secondary)] text-sm">{lastMsg}</p>
             {commander && (
               <p className="text-[var(--text-primary)] font-semibold mt-1">
-                Commander: {commander}
+                {t("wizard.commanderLabel", { name: commander })}
               </p>
             )}
           </div>
@@ -477,8 +480,8 @@ function StepLoading({
 
           <p className="text-xs text-[var(--text-secondary)]">
             {cardCount > 0
-              ? `${cardCount} / 99 cards…`
-              : "Generating deck…"}
+              ? t("wizard.cardProgress", { count: cardCount })
+              : t("wizard.generatingDeck")}
           </p>
         </>
       )}
@@ -545,6 +548,7 @@ async function importCardsInBatches(
 }
 
 export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
+  const t = useTranslations("deck");
   const [step, setStep] = useState(1);
   const [dir, setDir] = useState(1); // animation direction
 
@@ -635,7 +639,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         commanderName: (skipCommander || commanderSkipped || !commanderName) ? null : commanderName,
       });
 
-      if (!cards) { setBuildError("Build was cancelled or failed."); return; }
+      if (!cards) { setBuildError(t("wizard.buildCancelled")); return; }
 
       const deckId = await createDeck(`AI Deck — ${strategy}`, { isAIGenerated: true });
       setActiveDeck(deckId);
@@ -660,14 +664,11 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   // Step content
   // ---------------------------------------------------------------------------
   const stepTitles = [
-    { title: "What's your budget?", subtitle: "Set a per-card spending limit for your deck." },
-    { title: "Choose your colors", subtitle: "Select one or more colors for your Commander identity." },
-    { title: "What kind of deck?", subtitle: "Pick the archetype that matches your playstyle." },
-    { title: "Power level?", subtitle: "Choose the bracket that matches your playgroup." },
-    {
-      title: "Do you have a commander in mind?",
-      subtitle: "Search for a specific commander, or let the AI choose.",
-    },
+    { title: t("wizard.budgetTitle"), subtitle: t("wizard.budgetSubtitle") },
+    { title: t("wizard.colorsTitle"), subtitle: t("wizard.colorsSubtitle") },
+    { title: t("wizard.strategyTitle"), subtitle: t("wizard.strategySubtitle") },
+    { title: t("wizard.bracketTitle"), subtitle: t("wizard.bracketSubtitle") },
+    { title: t("wizard.commanderTitle"), subtitle: t("wizard.commanderSubtitle") },
   ];
 
   const currentTitle = stepTitles[step - 1];
@@ -700,13 +701,13 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[var(--accent)]" />
                 <Dialog.Title className="text-sm font-semibold text-[var(--text-secondary)]">
-                  AI Deck Builder
+                  {t("wizard.title")}
                 </Dialog.Title>
               </div>
               <Dialog.Close
                 onClick={onClose}
                 className="p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                aria-label="Close wizard"
+                aria-label={t("wizard.closeWizard")}
               >
                 <X className="w-4 h-4" />
               </Dialog.Close>
@@ -725,7 +726,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                 /* Loading / streaming step */
                 <div className="flex flex-col items-center justify-center flex-1 py-8">
                   <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-8">
-                    🧠 AI is building your deck…
+                    {t("wizard.aiBuilding")}
                   </h2>
                   <StepLoading
                     statusMessages={buildState.statusMessages}
@@ -743,7 +744,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                       }}
                       className="mt-6 text-sm text-[var(--accent)] hover:underline"
                     >
-                      Try again
+                      {t("wizard.tryAgain")}
                     </button>
                   )}
                 </div>
@@ -813,7 +814,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                     className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    Back
+                    {t("wizard.back")}
                   </button>
                 ) : (
                   <div />
@@ -830,7 +831,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                       disabled:opacity-40 disabled:cursor-not-allowed
                     "
                   >
-                    Continue
+                    {t("wizard.continue")}
                   </button>
                 ) : (
                   <button
@@ -843,7 +844,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                     "
                   >
                     <Sparkles className="w-4 h-4" />
-                    Generate Deck
+                    {t("wizard.generateDeck")}
                   </button>
                 )}
                 {/* Hidden — handleGenerate wired to button above */}

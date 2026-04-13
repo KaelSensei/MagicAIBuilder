@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Layers, Loader2, Plus } from "lucide-react";
 import { DeckWizard } from "@/components/deck/DeckWizard";
@@ -22,18 +23,6 @@ import {
   type DecksViewMode,
 } from "@/lib/deck/deck-listing";
 
-function getDeckSubtitle(isLoading: boolean, count: number): string {
-  if (isLoading) {
-    return "Loading...";
-  }
-
-  if (count === 0) {
-    return "No decks yet - create your first deck!";
-  }
-
-  return `${count} deck${count > 1 ? "s" : ""}`;
-}
-
 const SKELETON_KEYS = ["sk-1", "sk-2", "sk-3"] as const;
 
 function DeckCardSkeleton() {
@@ -51,6 +40,7 @@ function DeckCardSkeleton() {
 }
 
 export default function DecksPage() {
+  const t = useTranslations("deck");
   const { status: sessionStatus } = useSession();
   const router = useRouter();
   const { decks, createDeck, loadDecks, isSyncing, deleteDeck, duplicateDeck } = useDeckStore();
@@ -81,7 +71,7 @@ export default function DecksPage() {
   const handleDeleteDeck = useCallback(async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Delete this deck? This cannot be undone.")) {
+    if (!confirm(t("home.deleteConfirm"))) {
       return;
     }
 
@@ -91,7 +81,7 @@ export default function DecksPage() {
     } finally {
       setDeletingId(null);
     }
-  }, [deleteDeck]);
+  }, [deleteDeck, t]);
 
   const handleDuplicateDeck = useCallback(async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -140,9 +130,13 @@ export default function DecksPage() {
       <main className="mx-auto flex-1 w-full max-w-5xl px-6 py-10">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">My Decks</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t("home.title")}</h1>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              {getDeckSubtitle(isLoading, deckList.length)}
+              {isLoading
+                ? t("home.loading")
+                : deckList.length === 0
+                  ? t("home.empty")
+                  : t("home.deckCount", { count: deckList.length })}
             </p>
           </div>
           <DecksHomeControls
@@ -174,11 +168,10 @@ export default function DecksPage() {
           >
             <Layers className="mb-4 h-12 w-12 text-[var(--accent)] opacity-60" />
             <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
-              Start building
+              {t("home.startBuilding")}
             </h2>
             <p className="mb-6 max-w-sm text-sm text-[var(--text-secondary)]">
-              Create your first Commander deck with live bracket scoring and
-              Game Changers detection.
+              {t("home.startBuildingDescription")}
             </p>
             <button
               onClick={handleNewDeck}
@@ -190,7 +183,7 @@ export default function DecksPage() {
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              Create Deck
+              {t("home.createDeck")}
             </button>
           </motion.div>
         )}
@@ -249,7 +242,7 @@ export default function DecksPage() {
                   ) : (
                     <Plus className="h-6 w-6" />
                   )}
-                  <span className="text-sm font-medium">New Deck</span>
+                  <span className="text-sm font-medium">{t("home.newDeck")}</span>
                 </motion.button>
               </motion.div>
             )}

@@ -1,1 +1,95 @@
-{}
+{
+  "navbar": {
+    "features": "Fonctionnalit\u00e9s",
+    "howItWorks": "Comment \u00e7a marche",
+    "myDecks": "Mes Decks",
+    "getStarted": "Commencer"
+  },
+  "hero": {
+    "eyebrow": "Le Futur du Deckbuilding Commander",
+    "line1": "Arr\u00eatez de deviner.",
+    "line2": "Commencez \u00e0 gagner.",
+    "subtitle": "Vous passez <strong>des heures \u00e0 construire des decks</strong> pour finalement r\u00e9aliser \u00e0 la table que trois cartes ne synergisent pas, votre courbe est cass\u00e9e, et il vous manque une r\u00e9ponse au m\u00e9ta.<br/><strong>Il y a une meilleure fa\u00e7on.</strong>",
+    "ctaLoggedIn": "\u2726 Aller \u00e0 mes Decks",
+    "ctaLoggedOut": "\u2726 Construire mon premier Deck",
+    "secondaryCta": "Voir comment \u00e7a marche",
+    "note": "100% gratuit \u00b7 Commander \u00b7 Standard \u00b7 Pioneer \u00b7 Tous les formats"
+  },
+  "pain": {
+    "sectionLabel": "Le Probl\u00e8me",
+    "heading": "Le deckbuilding est <em>cass\u00e9.</em><br/>Et vous le savez.",
+    "hoursTitle": "Des heures perdues",
+    "hoursText": "Vous ouvrez 20 onglets Scryfall, scrollez Moxfield pendant une heure, et ne savez toujours pas si le deck fonctionne.",
+    "synergyTitle": "Tests de synergie \u00e0 l\u2019aveugle",
+    "synergyText": "Vous ne d\u00e9couvrez que votre combo ne marche pas qu\u2019\u00e0 la table. Devant trois adversaires.",
+    "expensiveTitle": "Erreurs co\u00fbteuses",
+    "expensiveText": "Vous achetez les cartes, construisez le deck, et une semaine plus tard r\u00e9alisez que vous avez construit le mauvais gameplan.",
+    "curveTitle": "Courbes de mana cass\u00e9es",
+    "curveText": "Aucun outil ne vous dit que votre courbe est trop haute jusqu\u2019\u00e0 ce que vous soyez bloqu\u00e9 \u00e0 3 terrains au tour 6."
+  },
+  "product": {
+    "sectionLabel": "La Solution",
+    "heading": "La puissance de Moxfield.<br/><span>L\u2019intelligence de Gemini.</span>",
+    "description": "MagicAIBuilder est l\u2019outil de construction de deck dont vous avez toujours r\u00eav\u00e9 \u2014 un gestionnaire complet o\u00f9 un co-pilote IA analyse chaque choix de carte, signale les lacunes de synergie et sugg\u00e8re des am\u00e9liorations en temps r\u00e9el.",
+    "feature1": "Analyse IA du commandant \u2014 score de synergie instantan\u00e9 sur chaque carte ajout\u00e9e",
+    "feature2": "Optimiseur de courbe de mana avec gestion du budget par bracket",
+    "feature3": "\u00ab Que dois-je couper ? \u00bb en temps r\u00e9el \u2014 suggestions contextuelles",
+    "feature4": "Support complet des formats : Commander, Standard, Pioneer, Modern, Legacy",
+    "feature5": "Import depuis Moxfield, Archidekt, MTGO, Arena \u2014 en un clic",
+    "feature6": "Suivi des prix + alternatives budget \u00e0 niveau de puissance similaire",
+    "mockupTitle": "MagicAIBuilder \u2014 Tinybones EDH",
+    "userPrompt": "J\u2019ai besoin de 5 moteurs de d\u00e9fausse \u00e0 moins de 10$ pour Tinybones. Qu\u2019est-ce qui est bon ?",
+    "aiResponse": "Voici 5 moteurs de d\u00e9fausse \u00e0 haute synergie pour Tinybones, tous sous les 10$ :",
+    "aiCard1": "<strong>Burglar Rat</strong> \u2014 D\u00e9fausse ETB, r\u00e9currable avec vos 4 sorts de r\u00e9animation (synergie : 94%)",
+    "aiCard2": "<strong>Liliana\u2019s Specter</strong> \u2014 Vol + chaque adversaire d\u00e9fausse, excellent avec votre package \u00e9vasion (92%)",
+    "aiCard3": "<strong>Oppression</strong> \u2014 Sym\u00e9trique mais vous en profitez plus avec 8 pi\u00e8ces de r\u00e9cursion (97%)",
+    "aiCard4": "<strong>Bottomless Pit</strong> \u2014 R\u00e9p\u00e9table, d\u00e9clenche Tinybones \u00e0 chaque entretien (95%)",
+    "aiCard5": "<strong>Cunning Lethemancer</strong> \u2014 CMC faible, d\u00e9clencheur constant, alimente votre plan cimeti\u00e8re (91%)",
+    "aiFootnote": "Ajouter les 5 r\u00e9duirait votre CMC moyen de 3.2 \u00e0 2.9 et augmenterait la densit\u00e9 de d\u00e9fausse au niveau optimal."
+  },
+  "how": {
+    "sectionLabel": "Le Processus",
+    "heading": "Trois \u00e9tapes vers<br/>votre meilleur Deck",
+    "subtitle": "Pas de tutoriels. Pas de friction. Ouvrez et construisez.",
+    "step1Title": "Choisissez votre Commandant",
+    "step1Text": "Choisissez n\u2019importe quelle cr\u00e9ature l\u00e9gendaire. L\u2019IA profile instantan\u00e9ment l\u2019arch\u00e9type, l\u2019identit\u00e9 de couleur et les meilleurs packages de synergie.",
+    "step2Title": "Construisez avec l\u2019IA",
+    "step2Text": "Ajoutez des cartes naturellement. Chaque ajout est \u00e9valu\u00e9 en temps r\u00e9el. L\u2019IA signale les maillons faibles, sugg\u00e8re des remplacements et contr\u00f4le votre courbe.",
+    "step3Title": "Exportez et dominez",
+    "step3Text": "Export en un clic vers MTGO, Arena ou votre liste d\u2019achat LGS. Votre deck est \u00e9valu\u00e9 par bracket et optimis\u00e9 avant m\u00eame de le sleever."
+  },
+  "stats": {
+    "stat1Number": "3x",
+    "stat1Label": "Construction plus rapide",
+    "stat2Number": "50K+",
+    "stat2Label": "Cartes en base de donn\u00e9es",
+    "stat3Number": "98%",
+    "stat3Label": "Pr\u00e9cision des synergies"
+  },
+  "testimonials": {
+    "heading": "Ce que disent les joueurs",
+    "review1Text": "J\u2019ai construit un deck Tinybones Bracket 4 en 45 minutes. L\u2019IA a rep\u00e9r\u00e9 trois cartes mortes que je n\u2019aurais jamais remarqu\u00e9es avant la soir\u00e9e.",
+    "review1Author": "Kael M.",
+    "review1Role": "Joueur cEDH \u00b7 Paris",
+    "review2Text": "Enfin un outil qui parle le langage Commander. Il sait ce que Bracket 3 signifie. Il sait ce que \u00ab goodstuff \u00bb veut dire. Il comprend.",
+    "review2Author": "Romain V.",
+    "review2Role": "R\u00e9gulier LGS \u00b7 Lyon",
+    "review3Text": "L\u2019optimiseur de courbe seul vaut l\u2019abonnement. Mes decks n\u2019ont jamais \u00e9t\u00e9 aussi r\u00e9guliers. Je ne retourne pas \u00e0 Moxfield seul.",
+    "review3Author": "Julien T.",
+    "review3Role": "Joueur comp\u00e9titif \u00b7 Bordeaux"
+  },
+  "cta": {
+    "heading": "Votre prochaine victoire<br/>commence <span>ici.</span>",
+    "subtitle": "Arr\u00eatez de douter de vos choix de cartes. Construisez le deck que vous vouliez vraiment \u2014 et gagnez avec.",
+    "ctaLoggedIn": "\u2726 Aller \u00e0 mes Decks",
+    "ctaLoggedOut": "\u2726 Commencer \u00e0 construire"
+  },
+  "footer": {
+    "privacy": "Confidentialit\u00e9",
+    "terms": "Conditions",
+    "contact": "Contact",
+    "discord": "Discord",
+    "copyright": "\u00a9 2025 MagicAIBuilder",
+    "disclaimer": "Magic: The Gathering, les symboles de mana et tous les noms et images de cartes associ\u00e9s sont des marques de Wizards of the Coast LLC. MagicAIBuilder n\u2019est pas produit, approuv\u00e9, soutenu ou affili\u00e9 \u00e0 Wizards of the Coast. Donn\u00e9es de cartes fournies par <scryfall>Scryfall</scryfall>."
+  }
+}

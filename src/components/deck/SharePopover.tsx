@@ -1,6 +1,7 @@
 "use client";
 // Share popover — toggle sharing on/off, copy link to clipboard
 import { useRef, useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Share2, Copy, Check, Globe, Lock, Loader2, X } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
@@ -11,6 +12,7 @@ interface SharePopoverProps {
 }
 
 export function SharePopover({ deckId }: SharePopoverProps) {
+  const t = useTranslations("deck");
   const [open, setOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [isEnabled, setIsEnabled] = useState(false);
@@ -76,10 +78,10 @@ export function SharePopover({ deckId }: SharePopoverProps) {
         title="Share deck"
       >
         <Share2 className="w-3 h-3" />
-        Share
+        {t("share.share")}
         {isEnabled && (
           <span className="ml-0.5 px-1 py-0 rounded-full text-[10px] font-semibold bg-[var(--accent)] text-white leading-none">
-            Public
+            {t("share.public")}
           </span>
         )}
       </button>
@@ -89,7 +91,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
         <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl z-50 p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Share Deck</h3>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("share.title")}</h3>
             <button
               onClick={() => setOpen(false)}
               className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -107,7 +109,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
                 <Lock className="w-4 h-4 text-[var(--text-secondary)]" />
               )}
               <span className="text-sm text-[var(--text-primary)]">
-                {isEnabled ? "Public link active" : "Private"}
+                {isEnabled ? t("share.publicLinkActive") : t("share.private")}
               </span>
             </div>
             <button
@@ -118,7 +120,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
                 isEnabled ? "bg-[var(--accent)]" : "bg-[var(--border)]",
                 loading && "opacity-60 cursor-not-allowed"
               )}
-              aria-label={isEnabled ? "Disable sharing" : "Enable sharing"}
+              aria-label={isEnabled ? t("share.disableSharing") : t("share.enableSharing")}
               role="switch"
               aria-checked={isEnabled}
             >
@@ -139,7 +141,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
           {isEnabled && shareUrl && (
             <div className="space-y-2">
               <p className="text-xs text-[var(--text-secondary)]">
-                Anyone with this link can view your deck.
+                {t("share.anyoneCanView")}
               </p>
               <div className="flex items-center gap-1.5">
                 <input
@@ -165,7 +167,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
 
           {!isEnabled && (
             <p className="text-xs text-[var(--text-secondary)]">
-              Enable sharing to generate a public read-only link for this deck.
+              {t("share.enableToGenerate")}
             </p>
           )}
         </div>
