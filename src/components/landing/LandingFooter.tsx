@@ -3,6 +3,14 @@
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 
+const DISCLAIMER_TAGS = {
+  scryfall: (chunks: React.ReactNode) => (
+    <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">
+      {chunks}
+    </a>
+  ),
+};
+
 /** Simple footer with brand + links */
 export function LandingFooter() {
   const t = useTranslations("landing");
@@ -20,13 +28,7 @@ export function LandingFooter() {
       </div>
       <div>{t("footer.copyright")}</div>
       <div className="landing-disclaimer">
-        {t.rich("footer.disclaimer", {
-          scryfall: (chunks) => (
-            <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">
-              {chunks}
-            </a>
-          ),
-        })}
+        {t.rich("footer.disclaimer", DISCLAIMER_TAGS)}
       </div>
     </footer>
   );

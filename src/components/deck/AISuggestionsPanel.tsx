@@ -191,7 +191,7 @@ export function AISuggestionsPanel({
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="text-xs font-medium text-[var(--text-primary)] truncate">{s.name}</span>
-                                <span className={cn("text-[10px] font-medium shrink-0", PRIORITY_COLORS[s.priority])}>{s.priority === "high" ? t("ai.priorityHigh") : s.priority === "medium" ? t("ai.priorityMedium") : t("ai.priorityLow")}</span>
+                                <span className={cn("text-[10px] font-medium shrink-0", PRIORITY_COLORS[s.priority])}>{t(`ai.priority${s.priority.charAt(0).toUpperCase()}${s.priority.slice(1)}`)}</span>
                               </div>
                               <p className="text-[11px] text-[var(--text-secondary)] leading-tight">{s.reason}</p>
                             </div>

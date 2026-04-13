@@ -132,11 +132,9 @@ export default function DecksPage() {
           <div>
             <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t("home.title")}</h1>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              {isLoading
-                ? t("home.loading")
-                : deckList.length === 0
-                  ? t("home.empty")
-                  : t("home.deckCount", { count: deckList.length })}
+              {isLoading && t("home.loading")}
+              {!isLoading && deckList.length === 0 && t("home.empty")}
+              {!isLoading && deckList.length > 0 && t("home.deckCount", { count: deckList.length })}
             </p>
           </div>
           <DecksHomeControls

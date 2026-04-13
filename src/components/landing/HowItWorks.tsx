@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 
+const BR_TAG = { br: () => <br /> };
+
 /** How it works -- 3 steps with connecting gradient line */
 export function HowItWorks() {
   const t = useTranslations("landing");
@@ -17,9 +19,7 @@ export function HowItWorks() {
       <div className="how-inner">
         <div className="section-label">{t("how.sectionLabel")}</div>
         <h2 className="reveal">
-          {t.rich("how.heading", {
-            br: () => <br />,
-          })}
+          {t.rich("how.heading", BR_TAG)}
         </h2>
         <p className="how-subtitle reveal">
           {t("how.subtitle")}

@@ -39,7 +39,12 @@ export function LocaleSwitcher() {
       {open && (
         <>
           {/* Backdrop to close on outside click */}
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="fixed inset-0 z-40"
+            role="presentation"
+            onClick={() => setOpen(false)}
+            onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
+          />
           <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg py-1">
             {SUPPORTED_LOCALES.map((loc) => (
               <button

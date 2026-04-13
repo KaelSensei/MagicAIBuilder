@@ -106,7 +106,7 @@ export function SignUpForm() {
             htmlFor="password"
             className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
           >
-            {t("signUp.passwordLabel")}
+            {t("signUp.pwdLabel")}
           </label>
           <input
             id="password"
@@ -115,7 +115,7 @@ export function SignUpForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-            placeholder={t("signUp.passwordPlaceholder")}
+            placeholder={t("signUp.pwdPlaceholder")}
             minLength={8}
           />
         </div>

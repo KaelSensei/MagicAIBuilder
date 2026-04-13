@@ -16,6 +16,12 @@ const MANA_COLORS = [
   { code: "C", label: "Colorless" },
 ] as const;
 
+/** Rich-text tag renderers for next-intl t.rich() calls */
+const RICH_TAGS = {
+  strong: (chunks: React.ReactNode) => <strong>{chunks}</strong>,
+  br: () => <br />,
+};
+
 /** Hero section -- gradient headline, CTA, floating mana particles */
 export function Hero() {
   const t = useTranslations("landing");
@@ -52,10 +58,7 @@ export function Hero() {
       </h1>
 
       <p className="hero-sub">
-        {t.rich("hero.subtitle", {
-          strong: (chunks) => <strong>{chunks}</strong>,
-          br: () => <br />,
-        })}
+        {t.rich("hero.subtitle", RICH_TAGS)}
       </p>
 
       <div className="hero-actions">

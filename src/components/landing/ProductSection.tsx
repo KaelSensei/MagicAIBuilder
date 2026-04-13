@@ -3,6 +3,15 @@
 import { useTranslations } from "next-intl";
 import { useTypewriter } from "@/hooks/useTypewriter";
 
+const HEADING_TAGS = {
+  br: () => <br />,
+  span: (chunks: React.ReactNode) => <span>{chunks}</span>,
+};
+
+const AI_CARD_TAGS = {
+  strong: (chunks: React.ReactNode) => <strong style={{ color: "#00e5ff" }}>{chunks}</strong>,
+};
+
 /** Product section -- feature list + AI chat mockup */
 export function ProductSection() {
   const t = useTranslations("landing");
@@ -23,10 +32,7 @@ export function ProductSection() {
         <div className="product-text reveal">
           <div className="section-label">{t("product.sectionLabel")}</div>
           <h2>
-            {t.rich("product.heading", {
-              br: () => <br />,
-              span: (chunks) => <span>{chunks}</span>,
-            })}
+            {t.rich("product.heading", HEADING_TAGS)}
           </h2>
           <p>{t("product.description")}</p>
           <ul className="feature-list">
@@ -63,9 +69,7 @@ export function ProductSection() {
                 <ol className="chat-ai-list">
                   {([1, 2, 3, 4, 5] as const).map((n) => (
                     <li key={n}>
-                      {t.rich(`product.aiCard${n}`, {
-                        strong: (chunks) => <strong style={{ color: "#00e5ff" }}>{chunks}</strong>,
-                      })}
+                      {t.rich(`product.aiCard${n}`, AI_CARD_TAGS)}
                     </li>
                   ))}
                 </ol>

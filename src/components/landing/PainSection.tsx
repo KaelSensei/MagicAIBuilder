@@ -2,6 +2,11 @@
 
 import { useTranslations } from "next-intl";
 
+const RICH_TAGS = {
+  em: (chunks: React.ReactNode) => <em>{chunks}</em>,
+  br: () => <br />,
+};
+
 /** Pain section -- 4 problem cards that resonate with MTG players */
 export function PainSection() {
   const t = useTranslations("landing");
@@ -18,10 +23,7 @@ export function PainSection() {
       <div className="pain-inner">
         <div className="section-label">{t("pain.sectionLabel")}</div>
         <h2>
-          {t.rich("pain.heading", {
-            em: (chunks) => <em>{chunks}</em>,
-            br: () => <br />,
-          })}
+          {t.rich("pain.heading", RICH_TAGS)}
         </h2>
         <ul className="pain-list reveal">
           {pains.map((p) => (

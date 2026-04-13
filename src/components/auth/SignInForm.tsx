@@ -83,7 +83,7 @@ export function SignInForm() {
             htmlFor="password"
             className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
           >
-            {t("signIn.passwordLabel")}
+            {t("signIn.pwdLabel")}
           </label>
           <input
             id="password"
@@ -92,7 +92,7 @@ export function SignInForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-            placeholder={t("signIn.passwordPlaceholder")}
+            placeholder={t("signIn.pwdPlaceholder")}
             minLength={8}
           />
         </div>
