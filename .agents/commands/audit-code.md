@@ -2,7 +2,7 @@
 
 When `/audit-code [target]` is invoked, immediately execute the following steps to analyze code quality, security, and adherence to project standards.
 
-**Skills used:** `web-performance` (PageSpeed and Core Web Vitals — mandatory for every audit since this project ships a web UI).
+**Skills used:** `web-performance` (PageSpeed and Core Web Vitals — required when the audit scope touches the Next.js front-end; see Step 4b).
 
 ---
 
