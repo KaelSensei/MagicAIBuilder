@@ -2,36 +2,70 @@
 alwaysApply: true
 ---
 
-# Architecture Skill
+# Clean Architecture Rule
 
-Based on Clean Architecture (Robert C. Martin) and Hexagonal Architecture
+Based on Robert C. Martin (_Clean Architecture_) and Alistair Cockburn (_Hexagonal
+Architecture_), adapted to Next.js 15 App Router. For the full reference, see the
+`clean-architecture` skill under `.agents/skills/clean-architecture/SKILL.md`.
 
-## Principles
+## Core principle
 
-- Business logic independent of frameworks
-- Dependencies point inward
-- External systems are details
+Dependencies point inward, toward the domain. Outer layers know about inner layers; inner layers
+do NOT know about outer ones.
 
-## Layers
+## Layers in this repo
 
-- Domain: core logic
-- Application: use cases
-- Infrastructure: external systems
-- Interface: UI/API
+- **Domain** — `src/types/`, `src/lib/<domain>/types.ts`, `src/lib/<domain>/constants.ts`. Pure
+  TypeScript, no framework imports.
+- **Use cases** — `src/lib/<domain>/*.ts`. Pure functions, unit-tested.
+- **Infrastructure** — `src/lib/db/*.ts` (Prisma), `src/lib/scryfall.ts`,
+  `src/lib/moxfield.ts`, `src/lib/auth.ts`. Wraps external systems behind domain-shaped APIs.
+- **Interface** — `src/app/**/page.tsx`, `layout.tsx`, route handlers, server actions, and
+  client components in `src/components/`. Thin — delegate to use cases.
 
-## Hexagonal
+## Dependency rules
 
-- Use ports (interfaces)
-- Implement adapters separately
-- Domain must not depend on infrastructure
+- Domain types import nothing.
+- Use cases import domain types only.
+- Infrastructure may import domain + use cases to satisfy ports.
+- Server components may compose use cases + infrastructure.
+- Client components reach infrastructure only through server actions, route handlers, or a typed
+  fetch wrapper — never direct Prisma imports.
+- API route handlers and server actions stay thin: parse with Zod → call a use case → shape the
+  response.
 
-## Cursor Behavior
+## Hexagonal ports and adapters
 
-- Enforce separation of concerns
-- Reject architecture violations
-- Suggest improvements when needed
+- When the domain needs external I/O, define a **port** (interface) in the domain / use-case
+  layer and implement **adapters** in infrastructure.
+- Use cases depend on ports, never on concrete adapters.
+
+## Decision guide — where does this code go?
+
+1. Compute something from domain data, no I/O → `src/lib/<domain>/`.
+2. Persist, read, or call an external service → `src/lib/db/` or `src/lib/<provider>.ts`.
+3. Render UI → `src/components/` (reusable) or `src/app/**` (route-scoped).
+4. Client-side state or effects → `src/hooks/` or a Zustand store under `src/stores/`.
+5. HTTP → domain translation → `src/app/api/**/route.ts` (thin handler) that delegates to
+   `src/lib/`.
+
+## Anti-patterns to reject
+
+- `import { prisma } from "@/lib/prisma"` in a React component.
+- `fetch("https://api.scryfall.com/...")` directly in a component or route handler.
+- Business logic inlined in JSX.
+- Zustand store containing domain rules.
+- Circular imports between layers — if it happens, one module is in the wrong layer.
+
+## AI behavior
+
+- Enforce separation of concerns. Refuse to add a Prisma call in a client component or a
+  Scryfall fetch in a route handler; route it through `src/lib/`.
+- Propose an extraction path (which layer, which file) before modifying cross-layer code.
+- When domain rules appear in UI, extract them to `src/lib/<domain>/` with a unit test.
 
 ## Sources
 
-- Clean Architecture – Robert C. Martin
-- Hexagonal Architecture – Alistair Cockburn
+- _Clean Architecture_ — Robert C. Martin
+- _Hexagonal Architecture_ — Alistair Cockburn
+- _Domain-Driven Design_ — Eric Evans
