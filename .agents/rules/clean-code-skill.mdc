@@ -2,37 +2,59 @@
 alwaysApply: true
 ---
 
-# Clean Code Skill
+# Clean Code Rule
 
-Based on Robert C. Martin (Clean Code)
+Based on Robert C. Martin (_Clean Code_) and enforced by SonarCloud. For the full reference, see
+the `clean-code` skill under `.agents/skills/clean-code/SKILL.md`.
 
-## Principles
+## Non-negotiable principles
 
-- Functions must be small and do one thing
-- Use meaningful and intention-revealing names
-- Prefer clarity over comments
-- Avoid deep nesting (use early returns)
-- Eliminate duplication (DRY)
+- **DRY** — never ship the same logic twice. The second copy must become an extraction.
+- **SRP** — one responsibility per function, component, module. If the name requires "and",
+  split.
+- **Intention-revealing names** — `getFilteredDeckCards` over `process`.
+- **Small functions** — cognitive complexity ≤ 15 (Sonar default). Max nesting depth: 3.
+- **Early returns over nested if/else.**
+- **No commented-out code.** Git has history.
+- **No magic values.** Named constants in `constants/` with a JSDoc.
 
-## Detailed Guidance
+## DRY — how to apply
 
-- One level of abstraction per function
-- Avoid boolean flags → split functions instead
-- Keep code readable like prose
-- Prefer composition over conditionals
+- Run `pnpm sonar` or check the SonarCloud duplication dashboard before merging. Target:
+  `duplicated_lines_density` trending **down**, never up.
+- **Rule of three**: extract on the third real duplication, not the first. Incidental similarity
+  is not duplication.
+- Extract destinations by category:
+  - Domain / business rules → `src/lib/<domain>/*.ts` (pure, tested).
+  - Data access → `src/lib/db/*.ts`.
+  - External APIs → `src/lib/<provider>.ts` (single rate-limited wrapper).
+  - Shared UI structure → `src/components/shared/` or `class-variance-authority` variants.
+  - Shared React logic → custom hook under `src/hooks/`.
+  - Shared API error handling → a `withApiErrorHandler(handler)` wrapper.
 
-## Error Handling
+## Error handling
 
-- Fail fast
-- Never swallow errors
-- Use explicit handling
+- Fail fast at system boundaries (Zod validation on API input and external responses).
+- Inside the domain, assume validated data.
+- Never swallow errors — log, wrap, or rethrow, never ignore.
 
-## Cursor Behavior
+## Anti-patterns to reject
 
-- Rewrite unclear code
-- Refuse messy but working code
-- Optimize for readability and maintainability
+- Parameter list ≥ 4 primitives → introduce an options object.
+- `if` ladder with 5+ branches on the same discriminant → table lookup.
+- `as` type assertions, `!` non-null assertions, `any` — banned per `CLAUDE.md`.
+- `console.log` in production code — use `logger` or remove.
+- Components > 200 lines, stores > 300 lines, files > 300 lines — split.
+
+## AI behavior
+
+- Rewrite unclear code when you see it; don't paper over it with comments.
+- Refuse to accept messy-but-working code into an extraction or refactor commit.
+- When in doubt, prefer extraction into a tested pure function in `src/lib/`.
+- If Sonar flags a duplication block on files you touched, resolve it in the same PR.
 
 ## Sources
 
-- Clean Code – Robert C. Martin
+- _Clean Code_ — Robert C. Martin
+- _Refactoring_ — Martin Fowler
+- SonarCloud rule set (`typescript:S*`)
