@@ -2,6 +2,8 @@
 
 When `/audit-code [target]` is invoked, immediately execute the following steps to analyze code quality, security, and adherence to project standards.
 
+**Skills used:** `web-performance` (PageSpeed and Core Web Vitals — mandatory for every audit since this project ships a web UI).
+
 ---
 
 ## Step 1: Load Project Context
@@ -98,6 +100,22 @@ When `/audit-code [target]` is invoked, immediately execute the following steps 
    - Indexes for performance-critical queries
    - No SQL injection risks
    - Proper migration handling
+
+---
+
+## Step 4b: Web Performance Audit (Mandatory for web-facing changes)
+
+If the audit scope touches the Next.js front-end, run the **`web-performance` skill** checklist
+against the affected pages. Required targets:
+
+- PageSpeed Insights mobile **>= 90 / 100**
+- LCP **<= 2.5 s**, INP **<= 200 ms**, CLS **<= 0.1** (all Core Web Vitals in the green)
+- No new render-blocking CSS, fonts, or third-party scripts on the critical path
+- All `<img>` / `<video>` have explicit dimensions or `aspect-ratio` (no CLS)
+- Hero images preloaded and served as AVIF/WebP
+
+If any Core Web Vital is in the red on field data: treat as a **blocker**, not a low-priority
+finding.
 
 ---
 
