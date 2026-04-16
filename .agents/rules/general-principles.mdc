@@ -74,6 +74,21 @@ If a suggestion requires a backend, cloud service, or external API → **reject 
 - Prioritize speed and readability
 - Functional screens > beautiful screens
 
+## Web Performance Standards (When Applicable)
+
+If the project ships pages to a browser, performance is a first-class quality bar, not an
+afterthought. Treat the following as non-negotiable for any production page:
+
+- **PageSpeed Insights >= 90 / 100** on mobile (Lighthouse).
+- **All Core Web Vitals in the green** on field data (p75):
+  - **LCP** (Largest Contentful Paint) <= 2.5 s
+  - **INP** (Interaction to Next Paint) <= 200 ms
+  - **CLS** (Cumulative Layout Shift) <= 0.1
+
+A page that misses these targets is **not done**. Investigate root cause (hero image, render-
+blocking CSS, third-party scripts, hydration cost, layout shift from late content) and fix before
+merging or releasing. See the `web-performance` skill for the full checklist and how to measure.
+
 ## Image Handling Rules
 
 - Download card images once

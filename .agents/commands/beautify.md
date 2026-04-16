@@ -2,6 +2,8 @@
 
 When `/beautify <component or page description>` is invoked, immediately execute the following steps.
 
+**Skills used:** `web-performance` (PageSpeed and Core Web Vitals checklist for the affected page).
+
 ---
 
 ## Step 1: Load Project Context
@@ -89,11 +91,17 @@ Apply improvements following these priorities:
    - ARIA labels where needed
    - Keyboard navigation support
    - Color contrast ratios
-2. Ensure performance is maintained:
-   - No unnecessary re-renders
-   - Optimized animations (prefer CSS over JS)
-   - No layout shifts (CLS optimization)
-3. Test across different viewport sizes
+2. When the target is a browser-shipped page (Next.js surface), run the **`web-performance`
+   skill** checklist on the affected page. Required targets:
+   - PageSpeed Insights mobile **>= 90 / 100**
+   - LCP **<= 2.5 s**, INP **<= 200 ms**, CLS **<= 0.1** (Core Web Vitals all green)
+   - No new render-blocking CSS, fonts, or scripts introduced by this change
+   - Images have explicit dimensions; hero images preloaded and served as AVIF/WebP
+   - Animations use `transform`/`opacity` (composited), not layout properties
+   - Skip this step entirely for non-browser UI (CLI output, native components, etc.)
+3. If any web target regresses, fix before commit — a beautify that ships a slower page is a
+   regression, not an enhancement
+4. Test across different viewport sizes
 
 ---
 
