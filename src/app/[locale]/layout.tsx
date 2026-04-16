@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { Geist, Geist_Mono, Cinzel, Cinzel_Decorative, Inter } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "@/styles/globals.css";
 import { routing } from "@/i18n/routing";
 import { Providers } from "./providers";
@@ -99,6 +100,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
