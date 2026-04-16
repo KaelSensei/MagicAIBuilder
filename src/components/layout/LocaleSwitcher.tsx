@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "@/i18n/navigation";
 import { SUPPORTED_LOCALES } from "@/i18n/routing";
 import type { SupportedLocale } from "@/i18n/routing";
 import { Globe } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Locale switcher dropdown — shows current locale and a popover with all supported locales */
 export function LocaleSwitcher() {
@@ -24,6 +24,24 @@ export function LocaleSwitcher() {
     [router, pathname]
   );
 
+  useEffect(() => {
+    if (!open) return;
+    const handlePointer = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
+
   return (
     <div className="relative" ref={ref}>
       <button
@@ -37,30 +55,22 @@ export function LocaleSwitcher() {
       </button>
 
       {open && (
-        <>
-          {/* Backdrop to close on outside click */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setOpen(false)}
-            onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
-          />
-          <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg py-1">
-            {SUPPORTED_LOCALES.map((loc) => (
-              <button
-                key={loc}
-                onClick={() => handleSwitch(loc)}
-                className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
-                  loc === locale
-                    ? "text-[var(--accent)] font-medium bg-[var(--accent)]/10"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
-                }`}
-              >
-                <span className="uppercase mr-2 text-xs opacity-60">{loc}</span>
-                {t(`locale.${loc}`)}
-              </button>
-            ))}
-          </div>
-        </>
+        <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg py-1">
+          {SUPPORTED_LOCALES.map((loc) => (
+            <button
+              key={loc}
+              onClick={() => handleSwitch(loc)}
+              className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
+                loc === locale
+                  ? "text-[var(--accent)] font-medium bg-[var(--accent)]/10"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+              }`}
+            >
+              <span className="uppercase mr-2 text-xs opacity-60">{loc}</span>
+              {t(`locale.${loc}`)}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
