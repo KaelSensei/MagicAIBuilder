@@ -91,13 +91,15 @@ Apply improvements following these priorities:
    - ARIA labels where needed
    - Keyboard navigation support
    - Color contrast ratios
-2. Run the **`web-performance` skill** checklist on the affected page. Required targets:
+2. When the target is a browser-shipped page (Next.js surface), run the **`web-performance`
+   skill** checklist on the affected page. Required targets:
    - PageSpeed Insights mobile **>= 90 / 100**
    - LCP **<= 2.5 s**, INP **<= 200 ms**, CLS **<= 0.1** (Core Web Vitals all green)
    - No new render-blocking CSS, fonts, or scripts introduced by this change
    - Images have explicit dimensions; hero images preloaded and served as AVIF/WebP
    - Animations use `transform`/`opacity` (composited), not layout properties
-3. If any target regresses, fix before commit — a beautify that ships a slower page is a
+   - Skip this step entirely for non-browser UI (CLI output, native components, etc.)
+3. If any web target regresses, fix before commit — a beautify that ships a slower page is a
    regression, not an enhancement
 4. Test across different viewport sizes
 

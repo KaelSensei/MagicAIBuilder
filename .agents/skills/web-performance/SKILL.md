@@ -2,7 +2,7 @@
 name: web-performance
 description:
   PageSpeed and Core Web Vitals checklist for web projects. Use when building UI, shipping a page,
-  reviewing front-end code, or running /audit-code, /beautify, /done on a web target.
+  reviewing front-end code, or running /audit-code or /beautify on a web target.
 ---
 
 # Web Performance Skill
@@ -14,7 +14,7 @@ Web Vitals in the green** on real-user data.
 ## When to use this skill
 
 - Before merging any branch that ships or modifies a public web page.
-- When running `/audit-code`, `/beautify`, `/feature`, `/fix`, or `/done` on a web target.
+- When running `/audit-code`, `/beautify`, `/feature`, or `/fix` on a web target.
 - When the user asks "is this fast enough?", "what's the LCP?", or mentions PageSpeed/Lighthouse.
 - When designing or reviewing UI that affects layout, images, fonts, scripts, or third-party tags.
 
@@ -25,8 +25,8 @@ automatically when it detects a matching task, or when a command explicitly says
 `web-performance` skill."
 
 - **Automatic:** The AI loads this skill when working on web pages, UI, or front-end perf.
-- **Referenced by:** `/beautify`, `/audit-code`, `/feature`, `/done` -- these commands include a
-  performance validation step that uses this skill's checklist.
+- **Referenced by:** `/audit-code`, `/beautify` -- these commands include a performance
+  validation step that uses this skill's checklist.
 
 ## Targets (non-negotiable for production web)
 
