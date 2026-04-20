@@ -88,11 +88,20 @@ describe("buildSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects bracket out of range", () => {
+  it("accepts bracket 5 (cEDH)", () => {
     const result = buildSchema.safeParse({
       colors: ["G"],
       strategy: "ramp",
       bracket: 5,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects bracket out of range", () => {
+    const result = buildSchema.safeParse({
+      colors: ["G"],
+      strategy: "ramp",
+      bracket: 6,
     });
     expect(result.success).toBe(false);
   });

@@ -5,8 +5,8 @@ import { ALL_FORMATS } from "@/lib/deck/formats";
 export const patchDeckSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   format: z.enum(ALL_FORMATS).optional(),
-  targetBracket: z.number().int().min(1).max(4).optional(),
-  manualBracket: z.number().int().min(1).max(4).nullable().optional(),
+  targetBracket: z.number().int().min(1).max(5).optional(),
+  manualBracket: z.number().int().min(1).max(5).nullable().optional(),
   budget: z.number().positive().nullable().optional(),
   commanderId: z.string().nullable().optional(),
   partnerId: z.string().nullable().optional(),

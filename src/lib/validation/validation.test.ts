@@ -216,14 +216,14 @@ describe("patchDeckSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects targetBracket above 4", () => {
-    const result = patchDeckSchema.safeParse({ targetBracket: 5 });
+  it("rejects targetBracket above 5", () => {
+    const result = patchDeckSchema.safeParse({ targetBracket: 6 });
     expect(result.success).toBe(false);
   });
 
-  it("accepts targetBracket at boundary values (1 and 4)", () => {
+  it("accepts targetBracket at boundary values (1 and 5)", () => {
     expect(patchDeckSchema.safeParse({ targetBracket: 1 }).success).toBe(true);
-    expect(patchDeckSchema.safeParse({ targetBracket: 4 }).success).toBe(true);
+    expect(patchDeckSchema.safeParse({ targetBracket: 5 }).success).toBe(true);
   });
 
   it("accepts null budget", () => {
@@ -392,9 +392,9 @@ describe("buildSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects bracket outside 1-4", () => {
+  it("rejects bracket outside 1-5", () => {
     expect(buildSchema.safeParse({ ...validBuild, bracket: 0 }).success).toBe(false);
-    expect(buildSchema.safeParse({ ...validBuild, bracket: 5 }).success).toBe(false);
+    expect(buildSchema.safeParse({ ...validBuild, bracket: 6 }).success).toBe(false);
   });
 
   it("applies default null for commanderName", () => {
