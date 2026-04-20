@@ -13,7 +13,7 @@ const DEFAULT_PAGE_SIZE = 20;
 const createDeckSchema = z.object({
   name: z.string().min(1).max(200),
   format: z.enum(ALL_FORMATS).optional().default("commander"),
-  targetBracket: z.number().int().min(1).max(4).optional().default(3),
+  targetBracket: z.number().int().min(1).max(5).optional().default(3),
   budget: z.number().positive().nullable().optional(),
   commanderId: z.string().nullable().optional(),
   partnerId: z.string().nullable().optional(),

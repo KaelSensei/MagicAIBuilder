@@ -59,8 +59,13 @@ describe("patchDeckSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects bracket above 4", () => {
+  it("accepts bracket 5 (cEDH)", () => {
     const result = patchDeckSchema.safeParse({ targetBracket: 5 });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects bracket above 5", () => {
+    const result = patchDeckSchema.safeParse({ targetBracket: 6 });
     expect(result.success).toBe(false);
   });
 

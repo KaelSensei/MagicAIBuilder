@@ -120,8 +120,8 @@ DECK INFO:
 - Color Identity: ${colors}
 - Total cards: ${req.cardNames.length + (req.commanderName ? 1 : 0) + (req.partnerName ? 1 : 0)}
 - Average CMC: ${req.avgCmc.toFixed(2)}
-- Current Bracket: ${req.bracket}/4
-- Target Bracket: ${req.targetBracket}/4
+- Current Bracket: ${req.bracket}/5
+- Target Bracket: ${req.targetBracket}/5
 - Budget: ${budgetConstraint}
 - Archetype: ${archetype ?? "Auto-detect from deck composition"}
 - Detected Themes: ${themesInfo}
@@ -129,7 +129,7 @@ DECK INFO:
 CATEGORY BREAKDOWN:
 ${categoryBreakdown || "  (empty deck)"}
 
-BRACKET DIMENSION SCORES (1=weak, 4=strong):
+BRACKET DIMENSION SCORES (1=weak, 5=strong):
 ${dimensionInfo}
 
 GAME CHANGERS IN DECK (${req.gameChangersCount}):

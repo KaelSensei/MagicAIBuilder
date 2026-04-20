@@ -33,20 +33,21 @@ The bracket system replaced the informal 1-10 power level scale. It provides a s
 
 ### Bracket 4: Optimized
 
-- **Purpose:** High-power Commander. Near-cEDH or strong enough to hang with it
-- **Characteristics:** Maximum efficiency, fast mana, cheap interaction, compact combos
+- **Purpose:** High-power non-competitive Commander. Strong, tuned decks that still aim for multiplayer games
+- **Characteristics:** Efficient card choices, fast mana, cheap interaction, compact combos
 - **Power level:** High. Decks are built to win, with redundancy and consistency
 - **Game pace:** Games can end quickly (turn 4-6 wins possible)
 - **Game Changers:** Unlimited
 - **Typical signals:** Fast mana (Mana Crypt, Chrome Mox), efficient tutors, free counterspells, 2-card infinite combos
 
-### cEDH (Beyond Bracket 4)
+### Bracket 5: cEDH
 
-- **Not officially a bracket** but acknowledged as a distinct metagame
-- **Purpose:** Competitive EDH, playing to win
-- **Characteristics:** Optimized lists with extensive testing, meta-aware card choices
+- **Purpose:** Competitive EDH tournament play
+- **Characteristics:** Maximum efficiency, meta-aware card choices, extensively tested lists
+- **Power level:** Maximum. Every card justifies its slot against the cEDH meta
 - **Game pace:** Games can end turns 2-4
-- **Signals:** Full suite of fast mana, Ad Nauseam, Thoracle + Demonic Consultation, stax pieces
+- **Game Changers:** Unlimited
+- **Typical signals:** Full suite of fast mana, Ad Nauseam, Thassa's Oracle + Demonic Consultation, stax pieces, tournament-proven shells
 
 ## Game Changers List
 
@@ -106,20 +107,20 @@ When analyzing a deck for a target bracket:
 
 1. **Count Game Changers** - Does the deck exceed the bracket's limit?
 2. **Assess win speed** - Can the deck win faster than the bracket's expected pace?
-3. **Check combo density** - Bracket 1-2: no infinites. Bracket 3: 3+ piece combos OK. Bracket 4: anything goes
+3. **Check combo density** - Bracket 1-2: no infinites. Bracket 3: 3+ piece combos OK. Bracket 4-5: anything goes
 4. **Evaluate interaction density** - Higher brackets expect more and cheaper interaction
 5. **Review mana efficiency** - Fast mana pushes decks up brackets regardless of other factors
 6. **Consider social contract** - Brackets 1-2 heavily weight "fun for the table" factor
 
 ## Bracket Assessment Heuristic
 
-Score these dimensions 1-4, average = estimated bracket:
+Score these dimensions 1-5, average = estimated bracket:
 
-| Dimension    | 1 (Exhibition)         | 2 (Core)                   | 3 (Upgraded)                    | 4 (Optimized)               |
-| ------------ | ---------------------- | -------------------------- | ------------------------------- | --------------------------- |
-| **Ramp**     | 5-6 pieces, all 3+ CMC | 8-10 pieces, some 2 CMC    | 10-12 pieces, signets/talismans | 12+, fast mana included     |
-| **Draw**     | 3-5 pieces             | 6-8 pieces                 | 8-10 pieces                     | 10+, includes free draw     |
-| **Removal**  | 3-5 targeted           | 6-8, mix of targeted+board | 8-10, efficient answers         | 10+, free/cheap interaction |
-| **Tutors**   | 0                      | 0-1, narrow                | 2-3, some unrestricted          | 4+, Demonic/Vampiric etc.   |
-| **Win cons** | Incidental/combat      | Focused synergy            | Powerful engines + backup       | Compact combos + redundancy |
-| **Avg CMC**  | 3.5+                   | 3.0-3.5                    | 2.5-3.0                         | 2.0-2.5                     |
+| Dimension    | 1 (Exhibition)         | 2 (Core)                   | 3 (Upgraded)                    | 4 (Optimized)               | 5 (cEDH)                         |
+| ------------ | ---------------------- | -------------------------- | ------------------------------- | --------------------------- | -------------------------------- |
+| **Ramp**     | 5-6 pieces, all 3+ CMC | 8-10 pieces, some 2 CMC    | 10-12 pieces, signets/talismans | 12+, fast mana included     | Full fast-mana suite + rituals   |
+| **Draw**     | 3-5 pieces             | 6-8 pieces                 | 8-10 pieces                     | 10+, includes free draw     | Maximum density, Ad Naus-tier    |
+| **Removal**  | 3-5 targeted           | 6-8, mix of targeted+board | 8-10, efficient answers         | 10+, free/cheap interaction | Dense free counters + protection |
+| **Tutors**   | 0                      | 0-1, narrow                | 2-3, some unrestricted          | 4+, Demonic/Vampiric etc.   | Full tutor package, chained      |
+| **Win cons** | Incidental/combat      | Focused synergy            | Powerful engines + backup       | Compact combos + redundancy | Tournament-tuned combo lines     |
+| **Avg CMC**  | 3.5+                   | 3.0-3.5                    | 2.5-3.0                         | 2.0-2.5                     | ≤ 2.0                            |

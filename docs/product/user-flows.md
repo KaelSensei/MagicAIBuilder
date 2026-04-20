@@ -53,7 +53,7 @@ JWT-based (default NextAuth). Each API route checks `auth()` server-side. Unauth
 | Rename deck        | `PATCH /api/decks/[id]`          | Update name only                                            |
 | Update description | `PATCH /api/decks/[id]`          | Set or clear description                                    |
 | Set format         | `PATCH /api/decks/[id]`          | Commander or Brawl                                          |
-| Set target bracket | `PATCH /api/decks/[id]`          | Power level target 1-4                                      |
+| Set target bracket | `PATCH /api/decks/[id]`          | Power level target 1-5 (1=Exhibition, 5=cEDH)               |
 | Override bracket   | `PATCH /api/decks/[id]`          | Manual bracket override (bypasses auto-calculation)         |
 | Set budget         | `PATCH /api/decks/[id]`          | Budget limit in USD, triggers over-budget warnings          |
 | Add tag            | `PATCH /api/decks/[id]`          | Free-text tags for organization                             |
@@ -167,7 +167,7 @@ These are derived from the current card list, not stored separately.
 
 | Analysis            | Description                                                   |
 | ------------------- | ------------------------------------------------------------- |
-| Bracket score (1-4) | 6 dimensions: ramp, draw, removal, tutors, win speed, avg CMC |
+| Bracket score (1-5) | 6 dimensions: ramp, draw, removal, tutors, win speed, avg CMC |
 | Game Changers       | Auto-detected high-impact cards                               |
 | Banned cards        | Cards flagged as Commander-illegal                            |
 | Mana curve          | Distribution by converted mana cost                           |
