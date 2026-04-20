@@ -16,12 +16,32 @@ Because the app is offline-first and the security rules only allow calls to
 Moxfield and Scryfall, **all analysis runs locally against SQLite** using data
 bundled with the app and refreshed opportunistically when the user is online.
 
+> **⚠ Schema migration required.** The shipped app currently models brackets as
+> `1 | 2 | 3 | 4`. Adopting the WotC 1–5 scale (adding Bracket 5 / cEDH) is a
+> breaking change. The following must be updated in lockstep before the Power
+> Meter ships:
+>
+> - `src/lib/constants/brackets.ts` — extend `BracketLevel` and
+>   `BRACKET_DEFINITIONS` to include Bracket 5
+> - `src/lib/deck/types.ts` — `Deck.targetBracket`, `Deck.manualBracket`, and
+>   `BracketScore.overall` → `1 | 2 | 3 | 4 | 5`
+> - `src/lib/validation/deck.ts` + `src/lib/validation/ai.ts` +
+>   `src/app/api/decks/route.ts` — Zod `.max(4)` → `.max(5)`
+> - `src/lib/deck/bracket.ts` — widen `scoreLinear` thresholds to 4 entries and
+>   change `clamp(overall, 1, 4)` → `clamp(overall, 1, 5)`
+> - `src/components/deck/BracketIndicator.tsx` — picker options `[1,2,3,4]` →
+>   `[1,2,3,4,5]`
+> - `src/lib/validation/deck.test.ts` + `ai.test.ts` — flip the
+>   "rejects bracket above 4" cases to accept 5 and reject 6
+> - Prisma: no column-type change (`targetBracket` is `Int`), but document the
+>   new valid range in `prisma/schema.prisma` comments
+
 ---
 
 ## Reference: What commanderpowermeter.com Does
 
 Reference screenshots captured from the site live under
-`src/assets/competitor/`:
+`assets/competitor/`:
 
 | File                        | Shows                                                                                                                                                                                                                                   |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -86,7 +106,7 @@ SQLite on first launch (or after a refresh).
 
 Pure TypeScript, no React dependencies, fully unit-tested.
 
-```
+```text
 src/analysis/
   bracketAnalyzer.ts        # orchestrator
   detectors/
@@ -107,7 +127,7 @@ src/analysis/
 **Input:** `DeckId` (the engine reads the deck from SQLite itself, respecting
 the single-source-of-truth rule from `security.mdc`).
 
-**Output (discriminated union):**
+**Output:**
 
 ```typescript
 export type AnalysisResult = {
@@ -153,7 +173,7 @@ Mirror commanderpowermeter.com's two-layer model:
 
 Accessible from the deck detail screen via a new **"Power Meter"** action.
 
-```
+```text
 ┌──────────────────────────────────────────┐
 │  ← Bant Draw Counter            ⟳ Refresh│
 ├──────────────────────────────────────────┤
