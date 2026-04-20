@@ -7,7 +7,7 @@ A desktop-first Commander (EDH) deck builder with:
 - Scryfall-powered card search (name, set, color identity)
 - Drag & drop deck editor with auto-categorization
 - Live deck statistics (mana curve, color distribution, avg CMC)
-- Real-time bracket scoring (MTG Commander Brackets 1–4) with 6 dimensions
+- Real-time bracket scoring (MTG Commander Brackets 1–4 today; Bracket 5 / cEDH planned via the [Commander Power Meter](./commander-power-meter.md)) across 6 dimensions: ramp, draw, removal, tutors, win-speed, avg CMC
 - Game Changers detection and banlist enforcement
 - Combo detection via Commander Spellbook
 - Maybeboard (considered cards outside the 99, with move-to-deck / remove)
