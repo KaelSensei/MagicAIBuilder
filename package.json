@@ -66,11 +66,11 @@
   },
   "pnpm": {
     "overrides": {
-      "vite": "^6.4.2"
+      "vite": "^6.4.3"
     }
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.2.6",
+    "@next/bundle-analyzer": "^16.2.7",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.6.3",
@@ -81,19 +81,19 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "4.7.0",
-    "@vitest/coverage-v8": "^3.0.7",
+    "@vitest/coverage-v8": "^3.2.6",
     "cross-env": "^10.1.0",
     "eslint": "^9",
-    "eslint-config-next": "15.5.18",
+    "eslint-config-next": "15.5.19",
     "husky": "^9.1.7",
     "jsdom": "^26.0.0",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
-    "tsx": "^4.22.2",
+    "tsx": "^4.22.4",
     "typescript": "^5",
-    "vite": "^6.4.2",
-    "vitest": "^3.0.7"
+    "vite": "^6.4.3",
+    "vitest": "^3.2.6"
   }
 }
