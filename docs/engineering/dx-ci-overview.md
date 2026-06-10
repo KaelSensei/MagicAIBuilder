@@ -87,6 +87,7 @@ On every `git commit`, automatically runs:
 
 ```bash
 pnpm dev              # local dev server
+pnpm dev:local        # local dev server on 127.0.0.1:3000
 pnpm lint             # full lint
 pnpm test             # unit tests
 pnpm test:coverage    # tests + coverage report
