@@ -86,11 +86,17 @@ pnpm db:up
 # Run migrations
 pnpm db:migrate
 
-# Start dev server
-pnpm dev
+# Start dev server on http://127.0.0.1:3000
+pnpm dev:local
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000/fr](http://localhost:3000/fr) for the French UI.
+The root URL redirects once to the default English locale:
+[http://localhost:3000/en](http://localhost:3000/en).
+
+For a quick landing-page preview without Docker, you can run `pnpm dev:local`
+directly. Authenticated deck, collection, and profile features require
+PostgreSQL via `pnpm db:up` and `pnpm db:migrate`.
 
 ### Seed demo data (optional)
 
@@ -116,7 +122,8 @@ Without a key, the AI panel uses curated generic suggestions.
 
 | Command           | Description                               |
 | ----------------- | ----------------------------------------- |
-| `pnpm dev`        | Start dev server                          |
+| `pnpm dev`        | Start Next.js dev server                  |
+| `pnpm dev:local`  | Start dev server on 127.0.0.1:3000        |
 | `pnpm build`      | Production build                          |
 | `pnpm analyze`    | Production build + interactive bundle map |
 | `pnpm lint`       | ESLint check                              |

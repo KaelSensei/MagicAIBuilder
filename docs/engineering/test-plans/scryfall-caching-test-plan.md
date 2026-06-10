@@ -56,7 +56,7 @@ This test plan covers all automated and manual tests for the Scryfall API cachin
 
 ### Test Setup
 
-1. Start dev server: `pnpm dev`
+1. Start dev server: `pnpm dev:local`
 2. Open browser DevTools (F12) → Network tab
 3. Filter by `/api/cache/*` to watch cache requests
 

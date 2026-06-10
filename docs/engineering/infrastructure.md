@@ -102,8 +102,16 @@ This will:
 ### 4. Start the dev server
 
 ```bash
-pnpm dev
+pnpm dev:local
 ```
+
+This starts Next.js on `http://127.0.0.1:3000`. Open:
+
+- `http://localhost:3000/fr` for the French UI
+- `http://localhost:3000/en` for the default English UI
+
+The landing page can run without Docker. Authenticated deck, collection, and
+profile workflows require PostgreSQL to be running and migrated.
 
 ---
 

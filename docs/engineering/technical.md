@@ -448,10 +448,14 @@ pnpm install
 # Run DB migrations
 pnpm prisma migrate dev
 
-# Start dev server
-pnpm dev
-# → http://localhost:3000
+# Start dev server on http://127.0.0.1:3000
+pnpm dev:local
+# -> http://localhost:3000/fr
 ```
+
+`http://localhost:3000` redirects once to the default English locale
+(`/en`). Use `/fr` directly for the French UI. Docker/PostgreSQL is required
+for authenticated deck, collection, and profile features.
 
 ### Testing
 
