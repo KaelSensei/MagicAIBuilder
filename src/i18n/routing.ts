@@ -18,5 +18,5 @@ export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 export const routing = defineRouting({
   locales: [...SUPPORTED_LOCALES],
   defaultLocale: "en",
-  localePrefix: "as-needed",
+  localePrefix: "always",
 });
