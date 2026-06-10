@@ -29,8 +29,8 @@ describe("i18n routing config", () => {
     expect(routing.defaultLocale).toBe("en");
   });
 
-  it("uses as-needed locale prefix", () => {
-    expect(routing.localePrefix).toBe("as-needed");
+  it("uses explicit locale prefixes", () => {
+    expect(routing.localePrefix).toBe("always");
   });
 
   it("routing.locales matches SUPPORTED_LOCALES", () => {
