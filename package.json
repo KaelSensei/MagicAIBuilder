@@ -71,8 +71,8 @@
     }
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.2.7",
-    "@playwright/test": "^1.60.0",
+    "@next/bundle-analyzer": "^16.2.9",
+    "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -89,7 +89,7 @@
     "husky": "^9.1.7",
     "jsdom": "^26.0.0",
     "lint-staged": "^16.4.0",
-    "prettier": "^3.8.3",
+    "prettier": "^3.8.4",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
