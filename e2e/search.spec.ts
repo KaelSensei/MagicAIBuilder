@@ -42,6 +42,21 @@ test.describe("Card Search Flow", () => {
     expect(hasResults).toBe(true);
   });
 
+  test("a search with no matches shows the empty state, not a raw Scryfall error", async ({
+    page,
+  }) => {
+    await page.click("text=New Deck");
+    await page.waitForURL(/\/builder\//);
+
+    const searchInput = page.getByTestId("search-input");
+    // A nonsense query Scryfall answers with HTTP 404 (valid query, zero matches)
+    await searchInput.fill("zzzzznosuchcardzzzzz");
+
+    await expect(page.getByText("No cards found. Try a different search.")).toBeVisible();
+    // The raw Scryfall API error must never surface to the user
+    await expect(page.getByText(/Scryfall API error/i)).toHaveCount(0);
+  });
+
   test("filter toggle shows and hides filter panel", async ({ page }) => {
     await page.click("text=New Deck");
     await page.waitForURL(/\/builder\//);
