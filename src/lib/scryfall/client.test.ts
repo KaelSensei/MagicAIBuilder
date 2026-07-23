@@ -94,6 +94,16 @@ describe("searchCards", () => {
     vi.runAllTimers();
     await expect(promise).rejects.toThrow("Scryfall API error 400");
   });
+
+  it("returns an empty result set on 404 (no matches) instead of throwing", async () => {
+    mockFetchError(404, "Not Found");
+    const promise = searchCards("zzzzz no match zzzzz");
+    vi.runAllTimers();
+    const result = await promise;
+    expect(result.data).toHaveLength(0);
+    expect(result.total_cards).toBe(0);
+    expect(result.has_more).toBe(false);
+  });
 });
 
 describe("getCardByName", () => {

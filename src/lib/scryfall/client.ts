@@ -91,7 +91,14 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-/** Search cards using Scryfall query syntax */
+/** Empty search response — Scryfall answers 404 when a valid query matches nothing */
+const EMPTY_SEARCH_RESPONSE: ScryfallSearchResponse = {
+  object: "list",
+  total_cards: 0,
+  has_more: false,
+  data: [],
+};
+
 /** Search cards using Scryfall query syntax — results cached 1h */
 export async function searchCards(
   query: string,
@@ -115,6 +122,12 @@ export async function searchCards(
   const response = await rateLimitedFetch(
     `${SCRYFALL_BASE}/cards/search?${params}`
   );
+
+  // Scryfall returns 404 for a valid query with zero matches — treat as empty, not an error
+  if (response.status === 404) {
+    return EMPTY_SEARCH_RESPONSE;
+  }
+
   const data = await handleResponse<ScryfallSearchResponse>(response);
 
   // Store in DB cache (fire-and-forget)
