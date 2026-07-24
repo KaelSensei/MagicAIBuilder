@@ -37,12 +37,12 @@ describe("i18n routing config", () => {
     expect([...routing.locales]).toEqual([...SUPPORTED_LOCALES]);
   });
 
-  it("SupportedLocale type is assignable from valid locales", () => {
+  it("SupportedLocale values are part of the supported locales list", () => {
     const en: SupportedLocale = "en";
     const fr: SupportedLocale = "fr";
     const ja: SupportedLocale = "ja";
-    expect(en).toBe("en");
-    expect(fr).toBe("fr");
-    expect(ja).toBe("ja");
+    expect(SUPPORTED_LOCALES).toContain(en);
+    expect(SUPPORTED_LOCALES).toContain(fr);
+    expect(SUPPORTED_LOCALES).toContain(ja);
   });
 });

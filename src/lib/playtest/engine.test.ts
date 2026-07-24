@@ -127,7 +127,7 @@ describe("applyNextTurn", () => {
   it("draws a card on new turn", () => {
     const state = makeState();
     const next = applyNextTurn(state);
-    expect(next.hand.length).toBe(state.hand.length + 1);
+    expect(next.hand).toHaveLength(state.hand.length + 1);
   });
 
   it("untaps all battlefield permanents", () => {

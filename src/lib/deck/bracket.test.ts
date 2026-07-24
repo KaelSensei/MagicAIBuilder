@@ -154,7 +154,9 @@ describe("scoreBracket", () => {
     });
     const result = assertBracket(scoreBracket(deck, stats));
     // Should not have ramp/land/draw warnings
-    expect(result.warnings.filter((w) => w.includes("ramp") || w.includes("land count")).length).toBe(0);
+    expect(
+      result.warnings.filter((w) => w.includes("ramp") || w.includes("land count"))
+    ).toHaveLength(0);
   });
 
   it("forces bracket 4 when a 2-card infinite combo is present", () => {
