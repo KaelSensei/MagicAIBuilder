@@ -20,7 +20,12 @@ const PHASE_LABELS: Record<Phase, string> = {
   End: "End",
 };
 
-export function PhaseTracker({ turn, phase, onNextPhase, onNextTurn }: PhaseTrackerProps) {
+export function PhaseTracker({
+  turn,
+  phase,
+  onNextPhase,
+  onNextTurn,
+}: PhaseTrackerProps) {
   return (
     <div className="bg-[var(--surface)] rounded-xl p-4 space-y-3">
       {/* Turn badge */}
@@ -53,6 +58,7 @@ export function PhaseTracker({ turn, phase, onNextPhase, onNextTurn }: PhaseTrac
       {/* Action buttons */}
       <div className="flex gap-2">
         <button
+          type="button"
           onClick={onNextPhase}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-sm font-medium transition-colors"
         >
@@ -60,6 +66,7 @@ export function PhaseTracker({ turn, phase, onNextPhase, onNextTurn }: PhaseTrac
           Next Phase
         </button>
         <button
+          type="button"
           onClick={onNextTurn}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 rounded-lg text-sm font-medium transition-colors"
         >

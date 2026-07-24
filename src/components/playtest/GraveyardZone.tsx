@@ -24,6 +24,7 @@ function ZoneList({ label, cards, zone, onRestore }: ZoneListProps) {
     <div className="space-y-2">
       {/* Header toggle */}
       <button
+        type="button"
         onClick={() => setIsOpen((v) => !v)}
         className="w-full flex items-center justify-between py-1.5 px-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
         aria-label={label}
@@ -31,7 +32,11 @@ function ZoneList({ label, cards, zone, onRestore }: ZoneListProps) {
         <span className="text-sm font-medium text-white/70">
           {label}: {cards.length} {cards.length === 1 ? "card" : "cards"}
         </span>
-        {isOpen ? <ChevronUp size={14} className="text-white/40" /> : <ChevronDown size={14} className="text-white/40" />}
+        {isOpen ? (
+          <ChevronUp size={14} className="text-white/40" />
+        ) : (
+          <ChevronDown size={14} className="text-white/40" />
+        )}
       </button>
 
       {/* Card list */}
@@ -50,12 +55,14 @@ function ZoneList({ label, cards, zone, onRestore }: ZoneListProps) {
                 <span className="text-xs text-white truncate">{card.name}</span>
                 <div className="flex gap-1 flex-shrink-0">
                   <button
+                    type="button"
                     onClick={() => onRestore(card.id, zone, "hand")}
                     className="px-2 py-0.5 text-[10px] bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded transition-colors whitespace-nowrap"
                   >
                     Restore to hand
                   </button>
                   <button
+                    type="button"
                     onClick={() => onRestore(card.id, zone, "battlefield")}
                     className="px-2 py-0.5 text-[10px] bg-green-600/20 hover:bg-green-600/40 text-green-300 rounded transition-colors whitespace-nowrap"
                   >
@@ -71,11 +78,25 @@ function ZoneList({ label, cards, zone, onRestore }: ZoneListProps) {
   );
 }
 
-export function GraveyardZone({ graveyard, exile, onRestore }: GraveyardZoneProps) {
+export function GraveyardZone({
+  graveyard,
+  exile,
+  onRestore,
+}: GraveyardZoneProps) {
   return (
     <div className="bg-[var(--surface)] rounded-xl p-4 space-y-3">
-      <ZoneList label="Graveyard" cards={graveyard} zone="graveyard" onRestore={onRestore} />
-      <ZoneList label="Exile" cards={exile} zone="exile" onRestore={onRestore} />
+      <ZoneList
+        label="Graveyard"
+        cards={graveyard}
+        zone="graveyard"
+        onRestore={onRestore}
+      />
+      <ZoneList
+        label="Exile"
+        cards={exile}
+        zone="exile"
+        onRestore={onRestore}
+      />
     </div>
   );
 }

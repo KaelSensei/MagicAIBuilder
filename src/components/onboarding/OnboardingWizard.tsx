@@ -12,7 +12,15 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, X, Layers, Search, BarChart3, Sparkles } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronLeft,
+  X,
+  Layers,
+  Search,
+  BarChart3,
+  Sparkles,
+} from "lucide-react";
 import { cn } from "@/components/ui/utils";
 
 interface OnboardingWizardProps {
@@ -30,13 +38,32 @@ interface StepDef {
 }
 
 const STEP_DEFS: readonly StepDef[] = [
-  { key: "welcome", icon: <Layers className="w-8 h-8 text-[var(--accent)]" />, hasHint: false },
-  { key: "createDeck", icon: <Sparkles className="w-8 h-8 text-purple-400" />, hasHint: true },
-  { key: "searchCards", icon: <Search className="w-8 h-8 text-blue-400" />, hasHint: true },
-  { key: "trackStats", icon: <BarChart3 className="w-8 h-8 text-amber-400" />, hasHint: true },
+  {
+    key: "welcome",
+    icon: <Layers className="w-8 h-8 text-[var(--accent)]" />,
+    hasHint: false,
+  },
+  {
+    key: "createDeck",
+    icon: <Sparkles className="w-8 h-8 text-purple-400" />,
+    hasHint: true,
+  },
+  {
+    key: "searchCards",
+    icon: <Search className="w-8 h-8 text-blue-400" />,
+    hasHint: true,
+  },
+  {
+    key: "trackStats",
+    icon: <BarChart3 className="w-8 h-8 text-amber-400" />,
+    hasHint: true,
+  },
 ];
 
-export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) {
+export function OnboardingWizard({
+  onComplete,
+  onSkip,
+}: OnboardingWizardProps) {
   const t = useTranslations("onboarding");
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
@@ -46,7 +73,10 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
   const current = STEP_DEFS[step];
 
   const goNext = () => {
-    if (isLast) { onComplete(); return; }
+    if (isLast) {
+      onComplete();
+      return;
+    }
     setDirection(1);
     setStep((s) => s + 1);
   };
@@ -58,7 +88,12 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
   };
 
   return (
-    <Dialog.Root open onOpenChange={(v) => { if (!v) onSkip(); }}>
+    <Dialog.Root
+      open
+      onOpenChange={(v) => {
+        if (!v) onSkip();
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" />
         <Dialog.Content
@@ -67,6 +102,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
         >
           {/* Skip button */}
           <button
+            type="button"
             onClick={onSkip}
             className="absolute top-4 right-4 p-1.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors z-10"
             aria-label={t("skipTutorial")}
@@ -93,7 +129,10 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                   <Dialog.Title className="text-lg font-bold text-[var(--text-primary)]">
                     {t(`steps.${current.key}.title`)}
                   </Dialog.Title>
-                  <p id="onboarding-description" className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                  <p
+                    id="onboarding-description"
+                    className="text-sm text-[var(--text-secondary)] leading-relaxed"
+                  >
                     {t(`steps.${current.key}.description`)}
                   </p>
                 </div>
@@ -128,6 +167,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
             <div className="flex items-center gap-2">
               {!isFirst && (
                 <button
+                  type="button"
                   onClick={goPrev}
                   className="flex items-center gap-1 px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-lg transition-colors"
                 >
@@ -136,6 +176,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                 </button>
               )}
               <button
+                type="button"
                 onClick={goNext}
                 className="flex items-center gap-1.5 px-4 py-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg transition-colors font-medium"
               >

@@ -20,7 +20,11 @@ interface PrintingSelectorModalProps {
 
 import { ManaCostDisplay } from "./ManaSymbol";
 
-export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelectorModalProps) {
+export function PrintingSelectorModal({
+  card,
+  onSelect,
+  onClose,
+}: PrintingSelectorModalProps) {
   const { data, isLoading } = useCardPrintings(card.name);
   const [previewedPrintingId, setPreviewedPrintingId] = useState(card.id);
 
@@ -54,12 +58,17 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-(--border) shrink-0">
         <div>
-          <h2 className="text-base font-semibold text-(--text-primary)">{card.name}</h2>
+          <h2 className="text-base font-semibold text-(--text-primary)">
+            {card.name}
+          </h2>
           <p className="text-xs text-(--text-secondary) mt-0.5">
-            {isLoading ? "Loading printings…" : getPrintingsLabel(printings.length)}
+            {isLoading
+              ? "Loading printings…"
+              : getPrintingsLabel(printings.length)}
           </p>
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="text-(--text-secondary) hover:text-(--text-primary) transition-colors"
         >
@@ -85,7 +94,9 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
               {oracleText}
             </p>
           ) : (
-            <p className="text-xs text-(--text-secondary) italic opacity-50">No text</p>
+            <p className="text-xs text-(--text-secondary) italic opacity-50">
+              No text
+            </p>
           )}
 
           {card.prices?.usd && (
@@ -108,6 +119,7 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
                   {printings.map((printing) => (
                     <div key={printing.id} className="flex flex-col gap-1.5">
                       <button
+                        type="button"
                         onClick={() => {
                           onSelect(printing);
                           onClose();
@@ -116,9 +128,13 @@ export function PrintingSelectorModal({ card, onSelect, onClose }: PrintingSelec
                         className="relative rounded-[4.75%] overflow-hidden border-2 transition-all focus:outline-none"
                         style={{
                           borderColor:
-                            previewedPrinting.id === printing.id ? "var(--accent)" : "transparent",
+                            previewedPrinting.id === printing.id
+                              ? "var(--accent)"
+                              : "transparent",
                           transform:
-                            previewedPrinting.id === printing.id ? "scale(1.04)" : "scale(1)",
+                            previewedPrinting.id === printing.id
+                              ? "scale(1.04)"
+                              : "scale(1)",
                           boxShadow:
                             previewedPrinting.id === printing.id
                               ? "0 0 12px var(--accent)40"

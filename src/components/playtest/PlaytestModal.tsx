@@ -39,7 +39,8 @@ function HandCard({
 }) {
   // Spread cards in a fan: rotate from -30° to +30°
   const maxAngle = Math.min(30, total * 4);
-  const angle = total <= 1 ? 0 : -maxAngle + (index / (total - 1)) * maxAngle * 2;
+  const angle =
+    total <= 1 ? 0 : -maxAngle + (index / (total - 1)) * maxAngle * 2;
   const translateY = Math.abs(angle) * 0.5;
 
   return (
@@ -125,9 +126,12 @@ function PlaytestStartScreen({ onStart }: { readonly onStart: () => void }) {
     <div className="flex flex-col items-center gap-6">
       <div className="text-center">
         <p className="text-white/70 text-sm mb-1">Ready to test your deck?</p>
-        <p className="text-white/40 text-xs">Shuffle and draw your opening hand of 7 cards.</p>
+        <p className="text-white/40 text-xs">
+          Shuffle and draw your opening hand of 7 cards.
+        </p>
       </div>
       <button
+        type="button"
         onClick={onStart}
         className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors text-sm shadow-lg shadow-purple-900/50"
       >
@@ -165,7 +169,9 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     onClose();
   }, [stopPlaytest, onClose]);
 
-  const turnBadge = state ? formatTurnBadge(state.turn, state.mulliganCount) : null;
+  const turnBadge = state
+    ? formatTurnBadge(state.turn, state.mulliganCount)
+    : null;
 
   return (
     <AnimatePresence>
@@ -187,6 +193,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
             )}
           </div>
           <button
+            type="button"
             onClick={handleClose}
             className="text-white/50 hover:text-white transition-colors p-1 rounded"
           >
@@ -244,6 +251,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
               {/* Controls */}
               <div className="flex items-center gap-3 mt-4">
                 <button
+                  type="button"
                   onClick={handleMulligan}
                   disabled={state.mulliganCount >= 6}
                   className={cn(
@@ -263,6 +271,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 </button>
 
                 <button
+                  type="button"
                   onClick={handleDraw}
                   disabled={state.library.length === 0}
                   className={cn(
@@ -277,6 +286,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 </button>
 
                 <button
+                  type="button"
                   onClick={handleNextTurn}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors shadow-lg shadow-purple-900/30"
                 >
@@ -287,6 +297,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 <div className="w-px h-6 bg-white/10" />
 
                 <button
+                  type="button"
                   onClick={handleStart}
                   className="text-xs text-white/40 hover:text-white/70 transition-colors"
                 >

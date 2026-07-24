@@ -63,6 +63,7 @@ export function MaybeboardPanel({
                 {/* Actions — visible on hover */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   <button
+                    type="button"
                     onClick={() => onMoveToDecks(card.id)}
                     className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-[var(--accent)]/50 text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors"
                     title="Move to deck"
@@ -71,6 +72,7 @@ export function MaybeboardPanel({
                     <span>Deck</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => onRemove(card.id)}
                     className="p-1 rounded text-[var(--text-secondary)] hover:text-red-400 hover:bg-red-400/10 transition-colors"
                     title="Remove from maybeboard"

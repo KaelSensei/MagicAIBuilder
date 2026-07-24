@@ -59,7 +59,9 @@ export function AddToCollectionDialog() {
       quantity,
       foil,
       condition,
-      price: selected.prices?.usd ? Number.parseFloat(selected.prices.usd) : null,
+      price: selected.prices?.usd
+        ? Number.parseFloat(selected.prices.usd)
+        : null,
       imageUri: getCardImageUri(selected, "normal"),
     });
     setAdded(true);
@@ -87,6 +89,7 @@ export function AddToCollectionDialog() {
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
         className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-1.5 rounded transition-colors"
       >
@@ -122,11 +125,14 @@ export function AddToCollectionDialog() {
               <div className="border border-[var(--border)] rounded-lg overflow-hidden mb-4 max-h-48 overflow-y-auto">
                 {results.map((card) => (
                   <button
+                    type="button"
                     key={card.id}
                     onClick={() => handleSelect(card)}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-[var(--surface-hover)] transition-colors"
                   >
-                    <span className="flex-1 text-[var(--text-primary)] truncate">{card.name}</span>
+                    <span className="flex-1 text-[var(--text-primary)] truncate">
+                      {card.name}
+                    </span>
                     <span className="text-xs text-[var(--text-secondary)] shrink-0">
                       {card.prices?.usd ? `$${card.prices.usd}` : ""}
                     </span>
@@ -144,16 +150,22 @@ export function AddToCollectionDialog() {
 
                 {/* Quantity */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--text-secondary)] w-20">Quantity</span>
+                  <span className="text-xs text-[var(--text-secondary)] w-20">
+                    Quantity
+                  </span>
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                       className="w-7 h-7 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center"
                     >
                       −
                     </button>
-                    <span className="text-sm text-[var(--text-primary)] w-6 text-center">{quantity}</span>
+                    <span className="text-sm text-[var(--text-primary)] w-6 text-center">
+                      {quantity}
+                    </span>
                     <button
+                      type="button"
                       onClick={() => setQuantity((q) => q + 1)}
                       className="w-7 h-7 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center"
                     >
@@ -164,10 +176,13 @@ export function AddToCollectionDialog() {
 
                 {/* Condition */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--text-secondary)] w-20">Condition</span>
+                  <span className="text-xs text-[var(--text-secondary)] w-20">
+                    Condition
+                  </span>
                   <div className="flex gap-1">
                     {CONDITIONS.map((c) => (
                       <button
+                        type="button"
                         key={c}
                         onClick={() => setCondition(c)}
                         className={cn(
@@ -185,8 +200,11 @@ export function AddToCollectionDialog() {
 
                 {/* Foil */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--text-secondary)] w-20">Foil</span>
+                  <span className="text-xs text-[var(--text-secondary)] w-20">
+                    Foil
+                  </span>
                   <button
+                    type="button"
                     onClick={() => setFoil((f) => !f)}
                     className={cn(
                       "px-3 py-1 text-xs rounded border transition-colors",
@@ -204,12 +222,14 @@ export function AddToCollectionDialog() {
             {/* Actions */}
             <div className="flex items-center gap-2 justify-end">
               <button
+                type="button"
                 onClick={handleClose}
                 className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleAdd}
                 disabled={!selected || isSyncing || added}
                 className={cn(
@@ -219,9 +239,24 @@ export function AddToCollectionDialog() {
                     : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
               >
-                {added && <><Check className="w-3.5 h-3.5" />Added!</>}
-                {!added && isSyncing && <><Loader2 className="w-3.5 h-3.5 animate-spin" />Adding…</>}
-                {!added && !isSyncing && <><Plus className="w-3.5 h-3.5" />Add to Collection</>}
+                {added && (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    Added!
+                  </>
+                )}
+                {!added && isSyncing && (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Adding…
+                  </>
+                )}
+                {!added && !isSyncing && (
+                  <>
+                    <Plus className="w-3.5 h-3.5" />
+                    Add to Collection
+                  </>
+                )}
               </button>
             </div>
           </div>

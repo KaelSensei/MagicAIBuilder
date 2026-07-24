@@ -1,15 +1,26 @@
 "use client";
 // Main deck editor with drag & drop zones, category drag, and grid/list toggle
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
 import { cn } from "@/components/ui/utils";
-import type { Deck, DeckCard ,CardCategory} from "@/lib/deck/types";
+import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 
-import { ChevronDown, ChevronRight, LayoutGrid, List, GripVertical, Rows3 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  LayoutGrid,
+  List,
+  GripVertical,
+  Rows3,
+} from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useDeckStore } from "@/lib/deck/store";
@@ -19,8 +30,10 @@ import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { CompanionZone } from "@/components/deck/CompanionZone";
 import { sortCards, groupCards } from "@/lib/deck/sort";
 import type { CardGroup } from "@/lib/deck/sort";
-import { getColorIdentityViolations, isCompanionOutsideColorIdentity } from "@/lib/deck/color-identity";
-
+import {
+  getColorIdentityViolations,
+  isCompanionOutsideColorIdentity,
+} from "@/lib/deck/color-identity";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for upcoming zone-based drag-and-drop feature
 type DeckZone = "main" | "sideboard" | "maybeboard";
@@ -33,7 +46,9 @@ interface DeckEditorProps {
   readonly onCardClick?: (card: DeckCard) => void;
   readonly className?: string;
   readonly activeZone?: "main" | "sideboard" | "maybeboard";
-  readonly onActiveZoneChange?: (zone: "main" | "sideboard" | "maybeboard") => void;
+  readonly onActiveZoneChange?: (
+    zone: "main" | "sideboard" | "maybeboard"
+  ) => void;
 }
 
 interface CategorySectionProps {
@@ -56,11 +71,17 @@ function DraggableDeckCard({
   readonly isColorIdentityViolation?: boolean;
 }) {
   const t = useTranslations("builder");
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({
-      id: `deck-card-${card.id}`,
-      data: { cardId: card.id, sourceCategory: card.category },
-    });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: `deck-card-${card.id}`,
+    data: { cardId: card.id, sourceCategory: card.category },
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -69,8 +90,13 @@ function DraggableDeckCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center group/drag">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center group/drag"
+    >
       <button
+        type="button"
         {...attributes}
         {...listeners}
         className="p-1 cursor-grab active:cursor-grabbing text-[var(--text-secondary)] opacity-0 group-hover/drag:opacity-50 hover:!opacity-100 transition-opacity shrink-0"
@@ -112,6 +138,7 @@ function GenericGroup({
   return (
     <div className="mb-2">
       <button
+        type="button"
         onClick={() => setCollapsed((c) => !c)}
         className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--surface-hover)] transition-colors group"
       >
@@ -120,7 +147,9 @@ function GenericGroup({
         ) : (
           <ChevronDown className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
         )}
-        <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+          {label}
+        </span>
         <span className="text-xs text-[var(--text-secondary)] ml-auto">
           {cards.reduce((sum, c) => sum + c.quantity, 0)}
         </span>
@@ -144,16 +173,26 @@ function GenericGroup({
 
 function getDropZoneClass(isOver: boolean, isEmpty: boolean): string {
   if (isOver) return "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40";
-  if (isEmpty) return "min-h-[32px] border border-dashed border-[var(--border)] rounded opacity-40";
+  if (isEmpty)
+    return "min-h-[32px] border border-dashed border-[var(--border)] rounded opacity-40";
   return "min-h-[8px]";
 }
 
-function DroppableZone({ zone, children }: { readonly zone: "sideboard" | "maybeboard"; readonly children: React.ReactNode }) {
+function DroppableZone({
+  zone,
+  children,
+}: {
+  readonly zone: "sideboard" | "maybeboard";
+  readonly children: React.ReactNode;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: `deck-zone-${zone}` });
   return (
     <div
       ref={setNodeRef}
-      className={cn("min-h-24 rounded transition-colors", isOver && "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40")}
+      className={cn(
+        "min-h-24 rounded transition-colors",
+        isOver && "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40"
+      )}
     >
       {children}
     </div>
@@ -181,6 +220,7 @@ function DroppableCategory({
     <div className="mb-2">
       {/* Category header */}
       <button
+        type="button"
         onClick={() => setCollapsed((c) => !c)}
         className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--surface-hover)] transition-colors group"
       >
@@ -201,9 +241,15 @@ function DroppableCategory({
       {!collapsed && (
         <div
           ref={setNodeRef}
-          className={cn("pl-1 rounded transition-colors", getDropZoneClass(isOver, cards.length === 0))}
+          className={cn(
+            "pl-1 rounded transition-colors",
+            getDropZoneClass(isOver, cards.length === 0)
+          )}
         >
-          <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+          <SortableContext
+            items={cardIds}
+            strategy={verticalListSortingStrategy}
+          >
             {cards.map((card) => (
               <DraggableDeckCard
                 key={card.id}
@@ -256,7 +302,9 @@ function isBannerManaColor(color: string): color is BannerManaColor {
  * @param colorIdentity Raw deck-card color identity.
  * @returns Ordered unique symbols suitable for banner rendering.
  */
-function getDisplayColorIdentity(colorIdentity: readonly string[]): readonly BannerManaColor[] {
+function getDisplayColorIdentity(
+  colorIdentity: readonly string[]
+): readonly BannerManaColor[] {
   const normalized = Array.from(
     new Set(
       colorIdentity
@@ -316,7 +364,10 @@ export function ColorIdentityBanner({
       className="group/banner relative flex-1 h-[82px] overflow-hidden rounded-lg border border-white/10 text-white shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
       style={{ backgroundImage: COLOR_IDENTITY_BANNER_BACKGROUND }}
     >
-      <div className="absolute inset-0" style={{ backgroundImage: COLOR_IDENTITY_BANNER_OVERLAY }} />
+      <div
+        className="absolute inset-0"
+        style={{ backgroundImage: COLOR_IDENTITY_BANNER_OVERLAY }}
+      />
       <div className="relative z-10 flex h-full items-end justify-between gap-4 px-3 py-2">
         <div className="min-w-0 flex-1 space-y-1">
           {label && (
@@ -341,7 +392,9 @@ export function ColorIdentityBanner({
                 <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_42%)]" />
                 <Image
                   src={getBannerManaSymbolUrl(color)}
-                  alt={t("manaSymbolAlt", { color: t(`manaColors.${getBannerManaColorKey(color)}`) })}
+                  alt={t("manaSymbolAlt", {
+                    color: t(`manaColors.${getBannerManaColorKey(color)}`),
+                  })}
                   width={34}
                   height={34}
                   unoptimized
@@ -353,6 +406,7 @@ export function ColorIdentityBanner({
         </div>
       </div>
       <button
+        type="button"
         onClick={onRemove}
         className="absolute top-1 right-1 opacity-0 group-hover/banner:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
         title={`Remove ${name}`}
@@ -365,7 +419,13 @@ export function ColorIdentityBanner({
 
 // ─── Grid class helper ────────────────────────────────────────────────────────
 
-const GRID_COLS_MAP: Record<number, string> = { 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4", 6: "grid-cols-6", 8: "grid-cols-8" };
+const GRID_COLS_MAP: Record<number, string> = {
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  6: "grid-cols-6",
+  8: "grid-cols-8",
+};
 function gridColsClass(cols: number): string {
   return cn("grid gap-1 p-1", GRID_COLS_MAP[cols] ?? "grid-cols-4");
 }
@@ -407,51 +467,103 @@ function MainZoneContent({
       <div className={gridColsClass(gridCols)}>
         {deck.commander && (
           <div className="relative group/card">
-            <CardImage imageUri={deck.commander.imageUri} largeUri={deck.commander.imageUri} name={deck.commander.name} manaCost={deck.commander.manaCost} cmc={deck.commander.cmc} showOverlay={!deck.commander.cardFaces} zoomOnHover={false} className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer" onClick={() => onCardClick?.(deck.commander!)} cardFaces={deck.commander.cardFaces} isFlexibleLand={deck.commander.isFlexibleLand} />
-            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">{t("badges.cmd")}</div>
-            <button onClick={(e) => { e.stopPropagation(); clearCommander(); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title={t("actions.removeCommander")}>×</button>
-          </div>
-        )}
-        {deck.partner && deck.partner.name !== deck.commander?.name && (
-          <div className="relative group/card">
-            <CardImage imageUri={deck.partner.imageUri} largeUri={deck.partner.imageUri} name={deck.partner.name} manaCost={deck.partner.manaCost} cmc={deck.partner.cmc} showOverlay={!deck.partner.cardFaces} zoomOnHover={false} className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer" onClick={() => onCardClick?.(deck.partner!)} cardFaces={deck.partner.cardFaces} isFlexibleLand={deck.partner.isFlexibleLand} />
-            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">{t("badges.cmd")}</div>
-            <button onClick={(e) => { e.stopPropagation(); setPartner(null); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" title={t("actions.removePartner")}>×</button>
-          </div>
-        )}
-        {deck.companion && (() => {
-          const companionViolation = isCompanionOutsideColorIdentity(deck);
-          return (
-          <div className="relative group/card">
             <CardImage
-              imageUri={deck.companion.imageUri}
-              largeUri={deck.companion.imageUri}
-              name={deck.companion.name}
-              manaCost={deck.companion.manaCost}
-              cmc={deck.companion.cmc}
-              showOverlay={!deck.companion.cardFaces}
+              imageUri={deck.commander.imageUri}
+              largeUri={deck.commander.imageUri}
+              name={deck.commander.name}
+              manaCost={deck.commander.manaCost}
+              cmc={deck.commander.cmc}
+              showOverlay={!deck.commander.cardFaces}
               zoomOnHover={false}
-              className={`w-full ring-2 rounded-[4%] cursor-pointer ${companionViolation ? "ring-red-500/70 opacity-70 hover:opacity-100" : "ring-teal-400/75"}`}
-              onClick={() => onCardClick?.(deck.companion!)}
-              cardFaces={deck.companion.cardFaces}
-              isFlexibleLand={deck.companion.isFlexibleLand}
+              className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer"
+              onClick={() => onCardClick?.(deck.commander!)}
+              cardFaces={deck.commander.cardFaces}
+              isFlexibleLand={deck.commander.isFlexibleLand}
             />
-            <div className={`absolute bottom-1 left-1 text-black text-[8px] font-bold px-1 rounded leading-tight ${companionViolation ? "bg-red-500/90" : "bg-teal-500/90"}`}>
-              {t("badges.comp")}
+            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
+              {t("badges.cmd")}
             </div>
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                clearCompanion();
+                clearCommander();
               }}
               className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
-              title={t("actions.removeCompanion")}
+              title={t("actions.removeCommander")}
             >
               ×
             </button>
           </div>
-          );
-        })()}
+        )}
+        {deck.partner && deck.partner.name !== deck.commander?.name && (
+          <div className="relative group/card">
+            <CardImage
+              imageUri={deck.partner.imageUri}
+              largeUri={deck.partner.imageUri}
+              name={deck.partner.name}
+              manaCost={deck.partner.manaCost}
+              cmc={deck.partner.cmc}
+              showOverlay={!deck.partner.cardFaces}
+              zoomOnHover={false}
+              className="w-full ring-2 ring-yellow-400/70 rounded-[4%] cursor-pointer"
+              onClick={() => onCardClick?.(deck.partner!)}
+              cardFaces={deck.partner.cardFaces}
+              isFlexibleLand={deck.partner.isFlexibleLand}
+            />
+            <div className="absolute bottom-1 left-1 bg-yellow-400/90 text-black text-[9px] font-bold px-1 rounded leading-tight">
+              {t("badges.cmd")}
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPartner(null);
+              }}
+              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+              title={t("actions.removePartner")}
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {deck.companion &&
+          (() => {
+            const companionViolation = isCompanionOutsideColorIdentity(deck);
+            return (
+              <div className="relative group/card">
+                <CardImage
+                  imageUri={deck.companion.imageUri}
+                  largeUri={deck.companion.imageUri}
+                  name={deck.companion.name}
+                  manaCost={deck.companion.manaCost}
+                  cmc={deck.companion.cmc}
+                  showOverlay={!deck.companion.cardFaces}
+                  zoomOnHover={false}
+                  className={`w-full ring-2 rounded-[4%] cursor-pointer ${companionViolation ? "ring-red-500/70 opacity-70 hover:opacity-100" : "ring-teal-400/75"}`}
+                  onClick={() => onCardClick?.(deck.companion!)}
+                  cardFaces={deck.companion.cardFaces}
+                  isFlexibleLand={deck.companion.isFlexibleLand}
+                />
+                <div
+                  className={`absolute bottom-1 left-1 text-black text-[8px] font-bold px-1 rounded leading-tight ${companionViolation ? "bg-red-500/90" : "bg-teal-500/90"}`}
+                >
+                  {t("badges.comp")}
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearCompanion();
+                  }}
+                  className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                  title={t("actions.removeCompanion")}
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })()}
         {mainCards.map((card) => (
           <div key={card.id} className="relative group/card">
             <CardImage
@@ -464,17 +576,30 @@ function MainZoneContent({
               zoomOnHover={false}
               className={cn(
                 "w-full cursor-pointer transition-opacity",
-                violationCardIds.has(card.id) && "ring-2 ring-red-500/70 opacity-70 hover:opacity-100"
+                violationCardIds.has(card.id) &&
+                  "ring-2 ring-red-500/70 opacity-70 hover:opacity-100"
               )}
               onClick={() => onCardClick?.(card)}
               cardFaces={card.cardFaces}
               isFlexibleLand={card.isFlexibleLand}
             />
-            <button onClick={(e) => { e.stopPropagation(); onRemoveCard(card.id); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" aria-label={t("actions.removeCard", { name: card.name })}>×</button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveCard(card.id);
+              }}
+              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+              aria-label={t("actions.removeCard", { name: card.name })}
+            >
+              ×
+            </button>
           </div>
         ))}
         {!deck.commander && mainCards.length === 0 && (
-          <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">{t("noCardsYet")}</div>
+          <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">
+            {t("noCardsYet")}
+          </div>
         )}
       </div>
     );
@@ -487,7 +612,9 @@ function MainZoneContent({
         // Use DroppableCategory (with DnD support) only when grouping by type
         // and the group key matches a valid CardCategory
         const isCategoryKey = (key: string): key is CardCategory =>
-          key !== "all" && group.cards.length > 0 && group.cards[0].category === key;
+          key !== "all" &&
+          group.cards.length > 0 &&
+          group.cards[0].category === key;
 
         if (isCategoryKey(group.key)) {
           return (
@@ -528,18 +655,45 @@ interface SecondaryZoneContentProps {
   readonly moveCardToZone: (id: string, zone: DeckZone) => void;
 }
 
-function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, onCardClick, moveCardToZone }: SecondaryZoneContentProps) {
+function SecondaryZoneContent({
+  zone,
+  cards,
+  viewMode,
+  gridCols,
+  onRemoveCard,
+  onCardClick,
+  moveCardToZone,
+}: SecondaryZoneContentProps) {
   const t = useTranslations("builder");
 
   const moveTargets = useMemo(() => {
-    const targets: Record<"sideboard" | "maybeboard", ReadonlyArray<{ zone: DeckZone; label: string; title: string }>> = {
+    const targets: Record<
+      "sideboard" | "maybeboard",
+      ReadonlyArray<{ zone: DeckZone; label: string; title: string }>
+    > = {
       sideboard: [
-        { zone: "main", label: `→ ${t("zones.main")}`, title: t("zoneMoveTargets.toMain") },
-        { zone: "maybeboard", label: `→ ${t("zones.considering")}`, title: t("zoneMoveTargets.toMaybeboard") },
+        {
+          zone: "main",
+          label: `→ ${t("zones.main")}`,
+          title: t("zoneMoveTargets.toMain"),
+        },
+        {
+          zone: "maybeboard",
+          label: `→ ${t("zones.considering")}`,
+          title: t("zoneMoveTargets.toMaybeboard"),
+        },
       ],
       maybeboard: [
-        { zone: "main", label: `→ ${t("zones.main")}`, title: t("zoneMoveTargets.toMain") },
-        { zone: "sideboard", label: `→ ${t("zones.sideboard")}`, title: t("zoneMoveTargets.toSideboard") },
+        {
+          zone: "main",
+          label: `→ ${t("zones.main")}`,
+          title: t("zoneMoveTargets.toMain"),
+        },
+        {
+          zone: "sideboard",
+          label: `→ ${t("zones.sideboard")}`,
+          title: t("zoneMoveTargets.toSideboard"),
+        },
       ],
     };
     return targets[zone];
@@ -550,28 +704,31 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [lastSelected, setLastSelected] = useState<string | null>(null);
 
-  const toggleSelect = useCallback((id: string, shiftKey = false) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (shiftKey && lastSelected) {
-        // Range select: toggle all cards between lastSelected and id
-        const ids = cards.map((c) => c.id);
-        const a = ids.indexOf(lastSelected);
-        const b = ids.indexOf(id);
-        const [from, to] = a <= b ? [a, b] : [b, a];
-        for (let i = from; i <= to; i++) {
-          if (next.has(ids[i])) next.delete(ids[i]);
-          else next.add(ids[i]);
+  const toggleSelect = useCallback(
+    (id: string, shiftKey = false) => {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (shiftKey && lastSelected) {
+          // Range select: toggle all cards between lastSelected and id
+          const ids = cards.map((c) => c.id);
+          const a = ids.indexOf(lastSelected);
+          const b = ids.indexOf(id);
+          const [from, to] = a <= b ? [a, b] : [b, a];
+          for (let i = from; i <= to; i++) {
+            if (next.has(ids[i])) next.delete(ids[i]);
+            else next.add(ids[i]);
+          }
+        } else if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
         }
-      } else if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-    setLastSelected(id);
-  }, [cards, lastSelected]);
+        return next;
+      });
+      setLastSelected(id);
+    },
+    [cards, lastSelected]
+  );
 
   const handleSelectAll = useCallback(() => {
     setSelected(new Set(cards.map((c) => c.id)));
@@ -581,12 +738,15 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
     setSelected(new Set());
   }, []);
 
-  const handleBulkMove = useCallback(async (targetZone: DeckZone) => {
-    const ids = [...selected];
-    setSelected(new Set());
-    setLastSelected(null);
-    await bulkMoveToZone(ids, targetZone);
-  }, [selected, bulkMoveToZone]);
+  const handleBulkMove = useCallback(
+    async (targetZone: DeckZone) => {
+      const ids = [...selected];
+      setSelected(new Set());
+      setLastSelected(null);
+      await bulkMoveToZone(ids, targetZone);
+    },
+    [selected, bulkMoveToZone]
+  );
 
   const handleBulkDelete = useCallback(async () => {
     const ids = [...selected];
@@ -595,12 +755,22 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
     await bulkRemoveCards(ids);
   }, [selected, bulkRemoveCards]);
 
-  const handleSingleRemove = useCallback((id: string) => {
-    setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
-    onRemoveCard(id);
-  }, [onRemoveCard]);
+  const handleSingleRemove = useCallback(
+    (id: string) => {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      onRemoveCard(id);
+    },
+    [onRemoveCard]
+  );
 
-  const bulkMoveTargets = moveTargets.map(({ zone: z, label }) => ({ zone: z, label }));
+  const bulkMoveTargets = moveTargets.map(({ zone: z, label }) => ({
+    zone: z,
+    label,
+  }));
 
   let content: React.ReactNode;
 
@@ -619,25 +789,62 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
             <div key={card.id} className="relative group/card">
               {/* Checkbox overlay */}
               <button
-                onClick={(e) => { e.stopPropagation(); toggleSelect(card.id, e.shiftKey); }}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleSelect(card.id, e.shiftKey);
+                }}
                 className={cn(
                   "absolute top-1 right-1 z-20 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
                   isSelected
                     ? "border-[var(--accent)] bg-[var(--accent)] opacity-100"
                     : "border-white/60 bg-black/40 opacity-0 group-hover/card:opacity-100"
                 )}
-                aria-label={isSelected ? `Deselect ${card.name}` : `Select ${card.name}`}
+                aria-label={
+                  isSelected ? `Deselect ${card.name}` : `Select ${card.name}`
+                }
                 aria-pressed={isSelected}
               >
-                {isSelected && <span className="text-white text-[9px] font-bold">✓</span>}
+                {isSelected && (
+                  <span className="text-white text-[9px] font-bold">✓</span>
+                )}
               </button>
               {/* Highlight ring when selected */}
               {isSelected && (
                 <div className="absolute inset-0 rounded ring-2 ring-[var(--accent)] z-10 pointer-events-none" />
               )}
-              <CardImage imageUri={card.imageUri} largeUri={card.imageUri} name={card.name} manaCost={card.manaCost} cmc={card.cmc} showOverlay={!card.cardFaces} zoomOnHover={false} className="w-full cursor-pointer" onClick={() => onCardClick?.(card)} cardFaces={card.cardFaces} isFlexibleLand={card.isFlexibleLand} />
-              <button onClick={(e) => { e.stopPropagation(); handleSingleRemove(card.id); }} className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10" aria-label={t("actions.removeCard", { name: card.name })}>×</button>
-              <button onClick={() => moveCardToZone(card.id, "main")} className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10" title={t("zoneMoveTargets.toMain")}>→M</button>
+              <CardImage
+                imageUri={card.imageUri}
+                largeUri={card.imageUri}
+                name={card.name}
+                manaCost={card.manaCost}
+                cmc={card.cmc}
+                showOverlay={!card.cardFaces}
+                zoomOnHover={false}
+                className="w-full cursor-pointer"
+                onClick={() => onCardClick?.(card)}
+                cardFaces={card.cardFaces}
+                isFlexibleLand={card.isFlexibleLand}
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSingleRemove(card.id);
+                }}
+                className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                aria-label={t("actions.removeCard", { name: card.name })}
+              >
+                ×
+              </button>
+              <button
+                type="button"
+                onClick={() => moveCardToZone(card.id, "main")}
+                className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10"
+                title={t("zoneMoveTargets.toMain")}
+              >
+                →M
+              </button>
             </div>
           );
         })}
@@ -658,6 +865,7 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
             >
               {/* Checkbox */}
               <button
+                type="button"
                 onClick={(e) => toggleSelect(card.id, e.shiftKey)}
                 className={cn(
                   "shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all ml-1",
@@ -665,16 +873,32 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
                     ? "border-[var(--accent)] bg-[var(--accent)]"
                     : "border-[var(--border)] opacity-0 group-hover/zone:opacity-100"
                 )}
-                aria-label={isSelected ? `Deselect ${card.name}` : `Select ${card.name}`}
+                aria-label={
+                  isSelected ? `Deselect ${card.name}` : `Select ${card.name}`
+                }
                 aria-pressed={isSelected}
               >
-                {isSelected && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
+                {isSelected && (
+                  <span className="text-white text-[8px] font-bold leading-none">
+                    ✓
+                  </span>
+                )}
               </button>
 
-              <div className="flex-1 min-w-0"><CardListItem card={card} onRemove={handleSingleRemove} /></div>
+              <div className="flex-1 min-w-0">
+                <CardListItem card={card} onRemove={handleSingleRemove} />
+              </div>
               <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
                 {moveTargets.map(({ zone: z, label, title }) => (
-                  <button key={z} onClick={() => moveCardToZone(card.id, z)} className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" title={title}>{label}</button>
+                  <button
+                    type="button"
+                    key={z}
+                    onClick={() => moveCardToZone(card.id, z)}
+                    className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                    title={title}
+                  >
+                    {label}
+                  </button>
                 ))}
               </div>
             </div>
@@ -700,7 +924,14 @@ function SecondaryZoneContent({ zone, cards, viewMode, gridCols, onRemoveCard, o
   );
 }
 
-export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZone: activeZoneProp, onActiveZoneChange }: DeckEditorProps) {
+export function DeckEditor({
+  deck,
+  onRemoveCard,
+  onCardClick,
+  className,
+  activeZone: activeZoneProp,
+  onActiveZoneChange,
+}: DeckEditorProps) {
   const t = useTranslations("builder");
   const viewMode = useDeckStore((s) => s.deckViewMode);
   const setViewMode = useDeckStore((s) => s.setDeckViewMode);
@@ -728,8 +959,8 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
   };
 
   // Deduplicate cards by id (guard against import bugs creating duplicate rows)
-  const uniqueCards = deck.cards.filter((card, index, arr) =>
-    arr.findIndex((c) => c.id === card.id) === index
+  const uniqueCards = deck.cards.filter(
+    (card, index, arr) => arr.findIndex((c) => c.id === card.id) === index
   );
 
   // Cards split by zone
@@ -760,10 +991,15 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
     deck.partner.name !== deck.commander?.name;
 
   // Top-level droppable — catches any search card dropped anywhere on the deck panel
-  const { setNodeRef: setDeckPanelRef } = useDroppable({ id: `deck-panel-${activeZone}` });
+  const { setNodeRef: setDeckPanelRef } = useDroppable({
+    id: `deck-panel-${activeZone}`,
+  });
 
   return (
-    <div ref={setDeckPanelRef} className={cn("flex flex-col h-full", className)}>
+    <div
+      ref={setDeckPanelRef}
+      className={cn("flex flex-col h-full", className)}
+    >
       {/* Commander zone — art crop banner */}
       <div className="p-2 border-b border-[var(--border)]">
         {deck.commander ? (
@@ -787,7 +1023,9 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
             {!hasPartner && supportsPartner(deck.pairingType) && (
               <div className="flex-1 rounded-lg border border-dashed border-[var(--border)] h-[82px] flex items-center justify-center px-2">
                 <span className="text-[10px] text-[var(--text-secondary)] italic text-center leading-tight">
-                  {t("searchPartner", { partnerLabel: partnerSlotLabel(deck.pairingType) })}
+                  {t("searchPartner", {
+                    partnerLabel: partnerSlotLabel(deck.pairingType),
+                  })}
                 </span>
               </div>
             )}
@@ -808,12 +1046,28 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
         <div className="flex items-center gap-0">
           {(
             [
-              { zone: "main" as DeckZone, label: t("zones.main"), count: mainCards.reduce((s, c) => s + c.quantity, 0) + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0) },
-              { zone: "sideboard" as DeckZone, label: t("zones.sideboard"), count: sideboardCards.reduce((s, c) => s + c.quantity, 0) },
-              { zone: "maybeboard" as DeckZone, label: t("zones.considering"), count: maybeboardCards.reduce((s, c) => s + c.quantity, 0) },
+              {
+                zone: "main" as DeckZone,
+                label: t("zones.main"),
+                count:
+                  mainCards.reduce((s, c) => s + c.quantity, 0) +
+                  (deck.commander ? 1 : 0) +
+                  (deck.partner ? 1 : 0),
+              },
+              {
+                zone: "sideboard" as DeckZone,
+                label: t("zones.sideboard"),
+                count: sideboardCards.reduce((s, c) => s + c.quantity, 0),
+              },
+              {
+                zone: "maybeboard" as DeckZone,
+                label: t("zones.considering"),
+                count: maybeboardCards.reduce((s, c) => s + c.quantity, 0),
+              },
             ] as const
           ).map(({ zone, label, count }) => (
             <button
+              type="button"
               key={zone}
               onClick={() => setActiveZone(zone)}
               className={cn(
@@ -842,13 +1096,16 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
             <p
               className={cn(
                 "text-xs font-medium mr-1",
-                totalCards === 100 ? "text-green-500" : "text-[var(--text-secondary)]"
+                totalCards === 100
+                  ? "text-green-500"
+                  : "text-[var(--text-secondary)]"
               )}
             >
               {totalCards}/100
             </p>
             {/* List view */}
             <button
+              type="button"
               onClick={() => setViewMode("list")}
               className={`p-1 rounded transition-colors ${
                 viewMode === "list"
@@ -861,6 +1118,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
             </button>
             {/* Grid view */}
             <button
+              type="button"
               onClick={() => setViewMode("grid")}
               className={`p-1 rounded transition-colors ${
                 viewMode === "grid"
@@ -877,6 +1135,7 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
                 <Rows3 className="w-3 h-3 text-[var(--text-secondary)] mr-0.5" />
                 {([2, 3, 4, 6, 8] as const).map((n) => (
                   <button
+                    type="button"
                     key={n}
                     onClick={() => setGridCols(n)}
                     className={cn(
@@ -918,13 +1177,28 @@ export function DeckEditor({ deck, onRemoveCard, onCardClick, className, activeZ
           />
         )}
         {activeZone === "sideboard" && (
-          <SecondaryZoneContent zone="sideboard" cards={sideboardCards} viewMode={viewMode} gridCols={gridCols} onRemoveCard={onRemoveCard} onCardClick={onCardClick} moveCardToZone={moveCardToZone} />
+          <SecondaryZoneContent
+            zone="sideboard"
+            cards={sideboardCards}
+            viewMode={viewMode}
+            gridCols={gridCols}
+            onRemoveCard={onRemoveCard}
+            onCardClick={onCardClick}
+            moveCardToZone={moveCardToZone}
+          />
         )}
         {activeZone === "maybeboard" && (
-          <SecondaryZoneContent zone="maybeboard" cards={maybeboardCards} viewMode={viewMode} gridCols={gridCols} onRemoveCard={onRemoveCard} onCardClick={onCardClick} moveCardToZone={moveCardToZone} />
+          <SecondaryZoneContent
+            zone="maybeboard"
+            cards={maybeboardCards}
+            viewMode={viewMode}
+            gridCols={gridCols}
+            onRemoveCard={onRemoveCard}
+            onCardClick={onCardClick}
+            moveCardToZone={moveCardToZone}
+          />
         )}
       </div>
-
     </div>
   );
 }

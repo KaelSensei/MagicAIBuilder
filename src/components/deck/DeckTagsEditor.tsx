@@ -15,7 +15,8 @@ const TAG_COLORS: Record<string, string> = {
   theme: "bg-pink-500/20 text-pink-400 border-pink-500/30",
 };
 
-const DEFAULT_TAG_COLOR = "bg-[var(--border)] text-[var(--text-secondary)] border-[var(--border)]";
+const DEFAULT_TAG_COLOR =
+  "bg-[var(--border)] text-[var(--text-secondary)] border-[var(--border)]";
 
 interface DeckTagsEditorProps {
   readonly deckId: string;
@@ -29,7 +30,8 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
   const { addTag, removeTag } = useDeckStore();
 
   const suggestions = TAG_SUGGESTIONS.filter(
-    (s) => !tags.includes(s) && s.toLowerCase().startsWith(inputValue.toLowerCase())
+    (s) =>
+      !tags.includes(s) && s.toLowerCase().startsWith(inputValue.toLowerCase())
   );
 
   const handleAddTag = (tag: string) => {
@@ -71,6 +73,7 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
           >
             {tag}
             <button
+              type="button"
               onClick={() => removeTag(deckId, tag)}
               className="hover:opacity-70 transition-opacity"
               aria-label={`Remove tag ${tag}`}
@@ -101,6 +104,7 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
               <div className="absolute top-full left-0 mt-1 z-20 bg-[var(--surface-elevated,var(--surface))] border border-[var(--border)] rounded-lg shadow-lg py-1 min-w-[120px]">
                 {suggestions.map((s) => (
                   <button
+                    type="button"
                     key={s}
                     onMouseDown={() => handleAddTag(s)}
                     className="w-full text-left px-3 py-1 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] transition-colors"
@@ -113,6 +117,7 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
           </div>
         ) : (
           <button
+            type="button"
             onClick={handleShowInput}
             className="inline-flex items-center gap-0.5 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors px-1.5 py-0.5 rounded-full border border-dashed border-[var(--border)] hover:border-[var(--accent)]"
           >
@@ -126,6 +131,7 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
           <div className="flex flex-wrap gap-1">
             {TAG_SUGGESTIONS.map((s) => (
               <button
+                type="button"
                 key={s}
                 onClick={() => addTag(deckId, s)}
                 className={`text-[10px] px-2 py-0.5 rounded-full border opacity-40 hover:opacity-80 transition-opacity ${tagColor(s)}`}

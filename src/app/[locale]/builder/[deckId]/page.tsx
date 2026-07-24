@@ -11,7 +11,18 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Search, LayoutGrid, BarChart3, ArrowLeft, Check, Copy, Dices, Download, FileText, Pencil } from "lucide-react";
+import {
+  Search,
+  LayoutGrid,
+  BarChart3,
+  ArrowLeft,
+  Check,
+  Copy,
+  Dices,
+  Download,
+  FileText,
+  Pencil,
+} from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
@@ -28,9 +39,21 @@ import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
-import { buildSearchQuery, buildCommanderSearchQuery, buildSetSearchQuery, buildColorSearchQuery, buildPartnerSearchQuery, buildCompanionSearchQuery } from "@/lib/scryfall/search";
+import {
+  buildSearchQuery,
+  buildCommanderSearchQuery,
+  buildSetSearchQuery,
+  buildColorSearchQuery,
+  buildPartnerSearchQuery,
+  buildCompanionSearchQuery,
+} from "@/lib/scryfall/search";
 import { SetAutocomplete } from "@/components/search/SetAutocomplete";
-import type { SearchFilters as Filters, DeckCard, CardCategory, DeckZone } from "@/lib/deck/types";
+import type {
+  SearchFilters as Filters,
+  DeckCard,
+  CardCategory,
+  DeckZone,
+} from "@/lib/deck/types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -90,14 +113,21 @@ function buildSearchQueryFromMode(p: BuildSearchQueryFromModeParams): string {
     return buildCommanderSearchQuery(p.searchText, p.filters);
   }
   if (p.partnerMode) {
-    return buildPartnerSearchQuery(p.deckPairingType ?? "none", p.searchText, p.filters, fmt);
+    return buildPartnerSearchQuery(
+      p.deckPairingType ?? "none",
+      p.searchText,
+      p.filters,
+      fmt
+    );
   }
   if (p.companionMode) {
     return buildCompanionSearchQuery(p.searchText, p.filters, fmt);
   }
   switch (p.mode) {
     case "set":
-      return p.selectedSet ? buildSetSearchQuery(p.selectedSet, p.colorFilter, fmt) : "";
+      return p.selectedSet
+        ? buildSetSearchQuery(p.selectedSet, p.colorFilter, fmt)
+        : "";
     case "color":
       return p.colorFilter.length > 0 || p.searchText
         ? buildColorSearchQuery(p.colorFilter, p.searchText, false, fmt)
@@ -124,7 +154,9 @@ function handleSearchResultCardClick(
   deckPairingType?: string
 ): void {
   if (commanderMode) {
-    const isBackgroundCard = (card.type_line ?? "").toLowerCase().includes("background");
+    const isBackgroundCard = (card.type_line ?? "")
+      .toLowerCase()
+      .includes("background");
     if (deckPairingType === "background" && isBackgroundCard) {
       handlers.setPartner(card);
       return;
@@ -190,7 +222,15 @@ export default function BuilderPage() {
   const { data: sessionData } = useSession();
 
   // Ensure this deck is active
-  const { setActiveDeck, addCard, removeCard, setCommander, setPartner, setCompanion, updateCardCategory } = useDeck();
+  const {
+    setActiveDeck,
+    addCard,
+    removeCard,
+    setCommander,
+    setPartner,
+    setCompanion,
+    updateCardCategory,
+  } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
   const addToMaybeboard = useDeckStore((s) => s.addToMaybeboard);
@@ -219,7 +259,9 @@ export default function BuilderPage() {
 
   // Lazy-load Game Changers + Banlist (only on builder page, not globally)
   const { gameChangerNames, isLoaded: gcLoaded } = useGameChangersSet();
-  const { bannedNames, isLoaded: banLoaded } = useBanlistSet(deck?.format ?? "commander");
+  const { bannedNames, isLoaded: banLoaded } = useBanlistSet(
+    deck?.format ?? "commander"
+  );
   const setGameChangerNames = useDeckStore((s) => s.setGameChangerNames);
   const setBannedNames = useDeckStore((s) => s.setBannedNames);
 
@@ -234,17 +276,33 @@ export default function BuilderPage() {
   const { stats } = useDeck();
   const { data: combos, isLoading: combosLoading } = useCombos(deck);
   const bracketScore = useBracketScore(deck, combos);
-  const { result: aiResult, isLoading: aiLoading, error: aiError, analyze: analyzeAI, detectedArchetype, analysedAt, ignoredSuggestions, ignoreSuggestion, clearIgnored } = useAISuggestions();
+  const {
+    result: aiResult,
+    isLoading: aiLoading,
+    error: aiError,
+    analyze: analyzeAI,
+    detectedArchetype,
+    analysedAt,
+    ignoredSuggestions,
+    ignoreSuggestion,
+    clearIgnored,
+  } = useAISuggestions();
 
   // Active zone state — lifted from DeckEditor so card adds target the right zone
   const [activeZone, setActiveZone] = useState<DeckZone>("main");
 
   // Mobile panel state — which panel is visible on small screens
-  const [mobilePanel, setMobilePanel] = useState<"search" | "deck" | "stats">("deck");
+  const [mobilePanel, setMobilePanel] = useState<"search" | "deck" | "stats">(
+    "deck"
+  );
 
   // Search state
   const [searchText, setSearchText] = useState("");
-  const { width: searchPanelWidth, handleMouseDown: handleSearchResize, handleKeyDown: handleSearchResizeKeyDown } = useResizePanel({
+  const {
+    width: searchPanelWidth,
+    handleMouseDown: handleSearchResize,
+    handleKeyDown: handleSearchResizeKeyDown,
+  } = useResizePanel({
     initialWidth: 300,
     minWidth: 220,
     maxWidth: 520,
@@ -261,7 +319,9 @@ export default function BuilderPage() {
   const [selectedSet, setSelectedSet] = useState<string>("");
   const [colorFilter, setColorFilter] = useState<string[]>([]);
   const toggleColorFilter = useCallback((code: string) => {
-    setColorFilter((prev) => prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]);
+    setColorFilter((prev) =>
+      prev.includes(code) ? prev.filter((x) => x !== code) : [...prev, code]
+    );
   }, []);
 
   // Inline deck name editing
@@ -270,14 +330,18 @@ export default function BuilderPage() {
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Track active drag card for overlay
-  const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(null);
+  const [activeDragCard, setActiveDragCard] = useState<ScryfallCard | null>(
+    null
+  );
   const [showPlaytest, setShowPlaytest] = useState(false);
   const [printingCard, setPrintingCard] = useState<ScryfallCard | null>(null);
   const [isBanlistAlertDismissed, setIsBanlistAlertDismissed] = useState(false);
 
   // State for changing the printing/edition of an existing deck card
-  const [deckCardForPrinting, setDeckCardForPrinting] = useState<DeckCard | null>(null);
-  const [deckCardPrintingCard, setDeckCardPrintingCard] = useState<ScryfallCard | null>(null);
+  const [deckCardForPrinting, setDeckCardForPrinting] =
+    useState<DeckCard | null>(null);
+  const [deckCardPrintingCard, setDeckCardPrintingCard] =
+    useState<ScryfallCard | null>(null);
 
   // UI store — modals + keyboard signals
   const showExport = useUIStore((s) => s.showExportModal);
@@ -334,7 +398,15 @@ export default function BuilderPage() {
         deck?.pairingType
       );
     },
-    [setCommander, setPartner, setCompanion, commanderMode, partnerMode, companionMode, deck?.pairingType]
+    [
+      setCommander,
+      setPartner,
+      setCompanion,
+      commanderMode,
+      partnerMode,
+      companionMode,
+      deck?.pairingType,
+    ]
   );
 
   const handlePrintingSelect = useCallback(
@@ -365,9 +437,9 @@ export default function BuilderPage() {
       removeCard(deckCardForPrinting.id);
       await addCard(newCard);
       // Restore original category if it differs from the auto-categorized one
-      const addedCard = useDeckStore.getState().decks[deckId]?.cards.find(
-        (c) => c.name === newCard.name
-      );
+      const addedCard = useDeckStore
+        .getState()
+        .decks[deckId]?.cards.find((c) => c.name === newCard.name);
       if (addedCard && addedCard.category !== originalCategory) {
         updateCardCategory(addedCard.id, originalCategory);
       }
@@ -389,12 +461,17 @@ export default function BuilderPage() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  const handleDragStart = useCallback((event: { active: { data: { current?: { card?: ScryfallCard } } } }) => {
-    const card = event.active.data.current?.card;
-    if (card) setActiveDragCard(card);
-  }, []);
+  const handleDragStart = useCallback(
+    (event: { active: { data: { current?: { card?: ScryfallCard } } } }) => {
+      const card = event.active.data.current?.card;
+      if (card) setActiveDragCard(card);
+    },
+    []
+  );
 
-  const [aiArchetypeOverride, setAIArchetypeOverride] = useState<import("@/lib/ai/archetypes").Archetype | null>(null);
+  const [aiArchetypeOverride, setAIArchetypeOverride] = useState<
+    import("@/lib/ai/archetypes").Archetype | null
+  >(null);
   const [aiBudgetPerCard, setAIBudgetPerCard] = useState<number | null>(null);
 
   const handleAIAnalyze = useCallback(() => {
@@ -403,22 +480,32 @@ export default function BuilderPage() {
       archetypeOverride: aiArchetypeOverride,
       budgetPerCard: aiBudgetPerCard,
     });
-  }, [deck, stats, bracketScore, analyzeAI, aiArchetypeOverride, aiBudgetPerCard]);
+  }, [
+    deck,
+    stats,
+    bracketScore,
+    analyzeAI,
+    aiArchetypeOverride,
+    aiBudgetPerCard,
+  ]);
 
   const handleSnapshotRestore = useCallback(() => {
     // Reload all decks from DB so the builder reflects the restored state
     loadDecks();
   }, [loadDecks]);
 
-  const handleAIAddCard = useCallback((cardName: string) => {
-    // Search for the card by name and add it
-    // We use getCardByName from Scryfall client
-    import("@/lib/scryfall/client").then(({ getCardByName }) => {
-      getCardByName(cardName)
-        .then((card) => addCard(card))
-        .catch(() => logger.warn("Could not find card", "builder", cardName));
-    });
-  }, [addCard]);
+  const handleAIAddCard = useCallback(
+    (cardName: string) => {
+      // Search for the card by name and add it
+      // We use getCardByName from Scryfall client
+      import("@/lib/scryfall/client").then(({ getCardByName }) => {
+        getCardByName(cardName)
+          .then((card) => addCard(card))
+          .catch(() => logger.warn("Could not find card", "builder", cardName));
+      });
+    },
+    [addCard]
+  );
 
   const dropSearchCard = useCallback(
     (searchCard: ScryfallCard, overId: string) => {
@@ -429,7 +516,12 @@ export default function BuilderPage() {
   );
 
   const moveIntraDeck = useCallback(
-    (cardId: string, overId: string, sourceCategory: string | undefined, deckCards: readonly DeckCard[]) => {
+    (
+      cardId: string,
+      overId: string,
+      sourceCategory: string | undefined,
+      deckCards: readonly DeckCard[]
+    ) => {
       const categoryFromDrop = getCategoryFromDropId(overId);
       if (categoryFromDrop && categoryFromDrop !== sourceCategory) {
         updateCardCategory(cardId, categoryFromDrop as CardCategory);
@@ -462,7 +554,8 @@ export default function BuilderPage() {
 
       const cardId = active.data.current?.cardId as string | undefined;
       if (cardId) {
-        const sourceCategory = active.data.current?.sourceCategory as string | undefined;
+        const sourceCategory = active.data.current?.sourceCategory as
+          string | undefined;
         moveIntraDeck(cardId, overId, sourceCategory, deck?.cards ?? []);
       }
     },
@@ -479,8 +572,13 @@ export default function BuilderPage() {
               <p className="text-[var(--text-secondary)]">Loading deck…</p>
             ) : (
               <>
-                <p className="text-[var(--text-secondary)] mb-4">Deck not found</p>
-                <Link href="/decks" className="text-[var(--accent)] hover:underline text-sm">
+                <p className="text-[var(--text-secondary)] mb-4">
+                  Deck not found
+                </p>
+                <Link
+                  href="/decks"
+                  className="text-[var(--accent)] hover:underline text-sm"
+                >
                   ← Back to My Decks
                 </Link>
               </>
@@ -536,12 +634,17 @@ export default function BuilderPage() {
                 maxLength={200}
                 autoFocus
               />
-              <button onClick={handleSaveName} className="text-green-400 hover:text-green-300 shrink-0">
+              <button
+                type="button"
+                onClick={handleSaveName}
+                className="text-green-400 hover:text-green-300 shrink-0"
+              >
                 <Check className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
             <button
+              type="button"
               onClick={handleStartEditName}
               className="group flex items-center gap-1.5"
               title="Click to rename"
@@ -558,11 +661,17 @@ export default function BuilderPage() {
             </span>
           )}
           <span className="text-xs text-[var(--text-secondary)]">
-            {(deck.cards.filter((c) => c.zone === "main").reduce((s, c) => s + c.quantity, 0) + (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0))} / 100
+            {deck.cards
+              .filter((c) => c.zone === "main")
+              .reduce((s, c) => s + c.quantity, 0) +
+              (deck.commander ? 1 : 0) +
+              (deck.partner ? 1 : 0)}{" "}
+            / 100
           </span>
           <div className="ml-auto flex items-center gap-1 md:gap-2">
             {/* Duplicate deck */}
             <button
+              type="button"
               onClick={handleDuplicate}
               className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
               title="Duplicate deck"
@@ -572,13 +681,18 @@ export default function BuilderPage() {
             </button>
             {/* Bulk edit — edit deck as plain text */}
             <BulkEditModal deck={deck}>
-              <button className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all" title="Bulk edit">
+              <button
+                type="button"
+                className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+                title="Bulk edit"
+              >
                 <FileText className="w-3 h-3" />
                 <span className="hidden sm:inline">Bulk Edit</span>
               </button>
             </BulkEditModal>
             {/* Playtest deck */}
             <button
+              type="button"
               onClick={() => setShowPlaytest(true)}
               className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-purple-500 text-[var(--text-secondary)] hover:text-purple-400 transition-all"
               title="Playtest this deck"
@@ -588,6 +702,7 @@ export default function BuilderPage() {
             </button>
             {/* Export deck */}
             <button
+              type="button"
               onClick={() => setShowExport(true)}
               className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
               title="Export deck"
@@ -599,7 +714,10 @@ export default function BuilderPage() {
             <DeckVisibilityToggle
               deckId={deckId}
               initialIsPublic={deck.isPublic ?? false}
-              username={(sessionData?.user as { username?: string } | undefined)?.username}
+              username={
+                (sessionData?.user as { username?: string } | undefined)
+                  ?.username
+              }
               className="hidden sm:flex"
             />
           </div>
@@ -624,6 +742,7 @@ export default function BuilderPage() {
               <div className="flex gap-1 p-0.5 bg-[var(--background)] rounded-lg">
                 {(["name", "set", "color"] as const).map((mode) => (
                   <button
+                    type="button"
                     key={mode}
                     onClick={() => {
                       setSearchMode(mode);
@@ -655,6 +774,7 @@ export default function BuilderPage() {
                   />
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={() => setShowFilters((f) => !f)}
                       className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                     >
@@ -684,7 +804,9 @@ export default function BuilderPage() {
                       />
                     </div>
                   </div>
-                  {showFilters && <SearchFilters filters={filters} onChange={setFilters} />}
+                  {showFilters && (
+                    <SearchFilters filters={filters} onChange={setFilters} />
+                  )}
                 </>
               )}
 
@@ -716,6 +838,7 @@ export default function BuilderPage() {
                       { code: "C", label: "Colorless" },
                     ].map((c) => (
                       <button
+                        type="button"
                         key={c.code}
                         onClick={() => toggleColorFilter(c.code)}
                         className={cn(
@@ -787,15 +910,18 @@ export default function BuilderPage() {
             transition={{ duration: 0.3, delay: 0.1 }}
           >
             {/* Banlist alert */}
-            {stats && !isBanlistAlertDismissed && (stats.bannedCards.length > 0 || stats.colorIdentityViolations.length > 0) && (
-              <div className="p-3 border-b border-[var(--border)]">
-                <BanlistAlert
-                  bannedCards={stats.bannedCards}
-                  colorViolations={stats.colorIdentityViolations}
-                  onDismiss={() => setIsBanlistAlertDismissed(true)}
-                />
-              </div>
-            )}
+            {stats &&
+              !isBanlistAlertDismissed &&
+              (stats.bannedCards.length > 0 ||
+                stats.colorIdentityViolations.length > 0) && (
+                <div className="p-3 border-b border-[var(--border)]">
+                  <BanlistAlert
+                    bannedCards={stats.bannedCards}
+                    colorViolations={stats.colorIdentityViolations}
+                    onDismiss={() => setIsBanlistAlertDismissed(true)}
+                  />
+                </div>
+              )}
 
             <DeckEditor
               deck={deck}
@@ -878,12 +1004,13 @@ export default function BuilderPage() {
 
           {/* Mobile bottom tab bar */}
           <div className="lg:hidden absolute bottom-0 left-0 right-0 z-30 border-t border-[var(--border)] bg-[var(--surface)] flex">
-            {([
+            {[
               { id: "search" as const, icon: Search, label: "Search" },
               { id: "deck" as const, icon: LayoutGrid, label: "Deck" },
               { id: "stats" as const, icon: BarChart3, label: "Stats" },
-            ]).map((tab) => (
+            ].map((tab) => (
               <button
+                type="button"
                 key={tab.id}
                 onClick={() => setMobilePanel(tab.id)}
                 className={cn(

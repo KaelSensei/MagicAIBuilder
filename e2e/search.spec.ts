@@ -29,14 +29,10 @@ test.describe("Card Search Flow", () => {
     const searchInput = page.getByTestId("search-input");
     await searchInput.fill("lightning bolt");
 
-    // Wait for search results to appear (or loading state)
-    await page.waitForTimeout(600); // debounce + load time
-    // Either results appear or loading indicator shows
-    const hasResults =
-      (await page.locator("img[alt]").count()) > 0 ||
-      (await page.locator("text=Searching...").count()) > 0 ||
-      (await page.locator("text=No cards found").count()) > 0;
-    expect(hasResults).toBe(true);
+    // Debounced search then Scryfall round-trip — wait for a result card to render
+    await expect(
+      page.getByRole("button", { name: /Add .* to deck/i }).first()
+    ).toBeVisible({ timeout: 15000 });
   });
 
   test("a search with no matches shows the empty state, not a raw Scryfall error", async ({

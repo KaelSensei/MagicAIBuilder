@@ -102,6 +102,7 @@ export function SearchBar({
       )}
       {value && (
         <button
+          type="button"
           onClick={handleClear}
           className="pr-3 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           aria-label={t("clearLabel")}

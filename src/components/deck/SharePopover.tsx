@@ -38,14 +38,18 @@ export function SharePopover({ deckId }: SharePopoverProps) {
     try {
       if (isEnabled) {
         // Disable sharing
-        const res = await fetch(`/api/decks/${deckId}/share`, { method: "DELETE" });
+        const res = await fetch(`/api/decks/${deckId}/share`, {
+          method: "DELETE",
+        });
         if (res.ok) {
           setIsEnabled(false);
           setShareUrl(null);
         }
       } else {
         // Enable sharing
-        const res = await fetch(`/api/decks/${deckId}/share`, { method: "POST" });
+        const res = await fetch(`/api/decks/${deckId}/share`, {
+          method: "POST",
+        });
         if (res.ok) {
           const data = await res.json();
           setIsEnabled(true);
@@ -68,6 +72,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
     <div className="relative" ref={ref}>
       {/* Trigger button */}
       <button
+        type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border transition-all",
@@ -91,8 +96,11 @@ export function SharePopover({ deckId }: SharePopoverProps) {
         <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl z-50 p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("share.title")}</h3>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+              {t("share.title")}
+            </h3>
             <button
+              type="button"
               onClick={() => setOpen(false)}
               className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
@@ -113,6 +121,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
               </span>
             </div>
             <button
+              type="button"
               onClick={handleToggle}
               disabled={loading}
               className={cn(
@@ -120,7 +129,9 @@ export function SharePopover({ deckId }: SharePopoverProps) {
                 isEnabled ? "bg-[var(--accent)]" : "bg-[var(--border)]",
                 loading && "opacity-60 cursor-not-allowed"
               )}
-              aria-label={isEnabled ? t("share.disableSharing") : t("share.enableSharing")}
+              aria-label={
+                isEnabled ? t("share.disableSharing") : t("share.enableSharing")
+              }
               role="switch"
               aria-checked={isEnabled}
             >
@@ -151,6 +162,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                 />
                 <button
+                  type="button"
                   onClick={handleCopy}
                   className="shrink-0 p-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
                   title="Copy link"

@@ -51,6 +51,7 @@ export function KeyboardShortcutsModal() {
           Keyboard Shortcuts
         </h2>
         <button
+          type="button"
           onClick={() => setShowKeyboardModal(false)}
           className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
           aria-label="Close"
@@ -73,7 +74,9 @@ export function KeyboardShortcutsModal() {
               {entry.keys.map((k, i) => (
                 <span key={k} className="flex items-center gap-1">
                   {i > 0 && (
-                    <span className="text-xs text-[var(--text-secondary)]">/</span>
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      /
+                    </span>
                   )}
                   <Keybadge label={k} />
                 </span>
@@ -86,7 +89,8 @@ export function KeyboardShortcutsModal() {
       {/* Footer hint */}
       <div className="px-5 pb-4">
         <p className="text-xs text-[var(--text-secondary)] text-center">
-          Shortcuts are inactive when a text field is focused (except modifier shortcuts)
+          Shortcuts are inactive when a text field is focused (except modifier
+          shortcuts)
         </p>
       </div>
     </Modal>
@@ -98,6 +102,7 @@ export function KeyboardShortcutsTrigger() {
   const setShowKeyboardModal = useUIStore((s) => s.setShowKeyboardModal);
   return (
     <button
+      type="button"
       onClick={() => setShowKeyboardModal(true)}
       title="Keyboard shortcuts (?)"
       className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"

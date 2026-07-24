@@ -12,7 +12,12 @@ interface BattlefieldZoneProps {
   readonly onRemove: (cardId: string) => void;
 }
 
-export function BattlefieldZone({ battlefield, onTap, onAddCounter, onRemove }: BattlefieldZoneProps) {
+export function BattlefieldZone({
+  battlefield,
+  onTap,
+  onAddCounter,
+  onRemove,
+}: BattlefieldZoneProps) {
   if (battlefield.length === 0) {
     return (
       <div className="bg-[var(--surface)] rounded-xl p-6 flex items-center justify-center">
@@ -50,7 +55,9 @@ export function BattlefieldZone({ battlefield, onTap, onAddCounter, onRemove }: 
 
             {/* Card info */}
             <div className="p-2 space-y-2">
-              <p className="text-xs text-white font-medium truncate">{card.name}</p>
+              <p className="text-xs text-white font-medium truncate">
+                {card.name}
+              </p>
 
               {/* Counter display */}
               {card.counters > 0 && (
@@ -62,6 +69,7 @@ export function BattlefieldZone({ battlefield, onTap, onAddCounter, onRemove }: 
               {/* Action buttons */}
               <div className="flex flex-wrap gap-1">
                 <button
+                  type="button"
                   onClick={() => onTap(card.id)}
                   aria-label={card.tapped ? "Untap" : "Tap"}
                   className="flex items-center gap-0.5 px-1.5 py-1 bg-white/10 hover:bg-white/20 rounded text-[10px] text-white/70 transition-colors"
@@ -70,6 +78,7 @@ export function BattlefieldZone({ battlefield, onTap, onAddCounter, onRemove }: 
                   {card.tapped ? "Untap" : "Tap"}
                 </button>
                 <button
+                  type="button"
                   onClick={() => onAddCounter(card.id, 1)}
                   aria-label="+1"
                   className="px-1.5 py-1 bg-green-600/20 hover:bg-green-600/40 rounded text-[10px] text-green-300 transition-colors"
@@ -77,6 +86,7 @@ export function BattlefieldZone({ battlefield, onTap, onAddCounter, onRemove }: 
                   +1
                 </button>
                 <button
+                  type="button"
                   onClick={() => onAddCounter(card.id, -1)}
                   aria-label="-1 counter"
                   className="px-1.5 py-1 bg-red-600/20 hover:bg-red-600/40 rounded text-[10px] text-red-300 transition-colors"
@@ -84,6 +94,7 @@ export function BattlefieldZone({ battlefield, onTap, onAddCounter, onRemove }: 
                   -1
                 </button>
                 <button
+                  type="button"
                   onClick={() => onRemove(card.id)}
                   aria-label="Remove"
                   className="px-1.5 py-1 bg-red-600/20 hover:bg-red-600/40 rounded text-[10px] text-red-300 transition-colors"

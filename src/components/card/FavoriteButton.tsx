@@ -19,6 +19,7 @@ export function FavoriteButton({
 }: FavoriteButtonProps) {
   return (
     <button
+      type="button"
       onClick={() => onToggle(scryfallId)}
       aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
       aria-pressed={isFavorited}
@@ -30,10 +31,7 @@ export function FavoriteButton({
         className
       )}
     >
-      <Heart
-        size={size}
-        className={cn(isFavorited && "fill-current")}
-      />
+      <Heart size={size} className={cn(isFavorited && "fill-current")} />
     </button>
   );
 }

@@ -109,7 +109,9 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => { abortRef.current?.abort(); };
+    return () => {
+      abortRef.current?.abort();
+    };
   }, []);
 
   const includeArtRef = useRef<boolean | null>(null);
@@ -139,7 +141,11 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     imageMapRef.current = new Map();
 
     try {
-      const map = await preloadImages(slots, setImgState, abortRef.current.signal);
+      const map = await preloadImages(
+        slots,
+        setImgState,
+        abortRef.current.signal
+      );
       imageMapRef.current = map;
     } catch (err) {
       if (!abortRef.current.signal.aborted) {
@@ -151,7 +157,12 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
   }, [slots]);
 
   const handlePrint = useCallback(() => {
-    const html = buildProxyPrintDocumentHtml(slots, imageMapRef.current, config, deckName);
+    const html = buildProxyPrintDocumentHtml(
+      slots,
+      imageMapRef.current,
+      config,
+      deckName
+    );
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) {
       setError("Pop-up blocked — allow pop-ups for this site");
@@ -171,16 +182,17 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
   }, [slots, config, deckName]);
 
   const imagesReady =
-    !isPreparing &&
-    imgState !== null &&
-    imgState.loaded === imgState.total;
+    !isPreparing && imgState !== null && imgState.loaded === imgState.total;
 
-  const canPrint =
-    slots.length > 0 &&
-    (!config.includeCardArt || imagesReady);
+  const canPrint = slots.length > 0 && (!config.includeCardArt || imagesReady);
 
   return (
-    <Dialog.Root open onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog.Root
+      open
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" />
         <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[460px] max-w-[92vw] bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl p-6 flex flex-col gap-5">
@@ -191,22 +203,38 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
               Export Proxy Sheets
             </Dialog.Title>
             <Dialog.Close asChild>
-              <button className="p-1.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors">
+              <button
+                type="button"
+                className="p-1.5 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+              >
                 <X className="w-4 h-4" />
               </button>
             </Dialog.Close>
           </div>
-          <Dialog.Description className="sr-only">Configure and print proxy cards for your deck.</Dialog.Description>
+          <Dialog.Description className="sr-only">
+            Configure and print proxy cards for your deck.
+          </Dialog.Description>
 
           {/* Config */}
           <div className="space-y-4">
             {/* Paper */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">Paper</span>
+              <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">
+                Paper
+              </span>
               <div className="flex gap-1.5">
                 {(["a4", "letter"] as const).map((p) => (
-                  <button key={p} onClick={() => setConfig((c) => ({ ...c, paper: p }))}
-                    className={cn("px-3 py-1 rounded text-xs border transition-colors", config.paper === p ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50")}>
+                  <button
+                    type="button"
+                    key={p}
+                    onClick={() => setConfig((c) => ({ ...c, paper: p }))}
+                    className={cn(
+                      "px-3 py-1 rounded text-xs border transition-colors",
+                      config.paper === p
+                        ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                        : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
+                    )}
+                  >
                     {p === "a4" ? "A4" : "Letter"}
                   </button>
                 ))}
@@ -215,11 +243,22 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
 
             {/* Layout */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">Layout</span>
+              <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">
+                Layout
+              </span>
               <div className="flex gap-1.5">
                 {(["3x3", "2x2"] as const).map((l) => (
-                  <button key={l} onClick={() => setConfig((c) => ({ ...c, layout: l }))}
-                    className={cn("px-3 py-1 rounded text-xs border transition-colors", config.layout === l ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50")}>
+                  <button
+                    type="button"
+                    key={l}
+                    onClick={() => setConfig((c) => ({ ...c, layout: l }))}
+                    className={cn(
+                      "px-3 py-1 rounded text-xs border transition-colors",
+                      config.layout === l
+                        ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                        : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
+                    )}
+                  >
                     {l} ({cardsPerPage(l)}/page)
                   </button>
                 ))}
@@ -228,16 +267,24 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
 
             {/* Quality — only affects Scryfall image size when card art is on */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">Quality</span>
+              <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">
+                Quality
+              </span>
               <div className="flex gap-1.5">
                 {(["standard", "high"] as const).map((q) => (
-                  <button key={q} type="button" disabled={!config.includeCardArt}
+                  <button
+                    key={q}
+                    type="button"
+                    disabled={!config.includeCardArt}
                     onClick={() => setConfig((c) => ({ ...c, quality: q }))}
                     className={cn(
                       "px-3 py-1 rounded text-xs border transition-colors",
                       !config.includeCardArt && "opacity-40 cursor-not-allowed",
-                      config.quality === q ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
-                    )}>
+                      config.quality === q
+                        ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                        : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
+                    )}
+                  >
                     {q === "standard" ? "Standard" : "High"}
                   </button>
                 ))}
@@ -246,19 +293,36 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
 
             {/* Card art vs text-only (no preload for text-only) */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">Content</span>
+              <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">
+                Content
+              </span>
               <div className="flex gap-1.5 flex-wrap">
-                <button type="button" onClick={() => setConfig((c) => ({ ...c, includeCardArt: true }))}
-                  className={cn("px-3 py-1 rounded text-xs border transition-colors", config.includeCardArt ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]" : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50")}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setConfig((c) => ({ ...c, includeCardArt: true }))
+                  }
+                  className={cn(
+                    "px-3 py-1 rounded text-xs border transition-colors",
+                    config.includeCardArt
+                      ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                      : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
+                  )}
+                >
                   Card art
                 </button>
-                <button type="button" onClick={() => setConfig((c) => ({ ...c, includeCardArt: false }))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setConfig((c) => ({ ...c, includeCardArt: false }))
+                  }
                   className={cn(
                     "px-3 py-1 rounded text-xs border transition-colors",
                     config.includeCardArt
                       ? "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                       : "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
-                  )}>
+                  )}
+                >
                   Text only
                 </button>
               </div>
@@ -266,14 +330,27 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
 
             {/* Toggles */}
             <div className="flex items-center gap-6">
-              {([
-                { key: "includeLands", label: "Include basics" },
-                { key: "includeCommander", label: "Include commander" },
-              ] as const).map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={config[key]} onChange={(e) => setConfig((c) => ({ ...c, [key]: e.target.checked }))}
-                    className="w-3.5 h-3.5 accent-[var(--accent)]" />
-                  <span className="text-xs text-[var(--text-secondary)]">{label}</span>
+              {(
+                [
+                  { key: "includeLands", label: "Include basics" },
+                  { key: "includeCommander", label: "Include commander" },
+                ] as const
+              ).map(({ key, label }) => (
+                <label
+                  key={key}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={config[key]}
+                    onChange={(e) =>
+                      setConfig((c) => ({ ...c, [key]: e.target.checked }))
+                    }
+                    className="w-3.5 h-3.5 accent-[var(--accent)]"
+                  />
+                  <span className="text-xs text-[var(--text-secondary)]">
+                    {label}
+                  </span>
                 </label>
               ))}
             </div>
@@ -281,24 +358,43 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
 
           {/* Summary */}
           <div className="rounded-lg bg-[var(--background)] border border-[var(--border)] px-4 py-3 text-xs text-[var(--text-secondary)] flex items-center justify-between">
-            <span>{slots.length} cards → <strong className="text-[var(--text-primary)]">{pageCount} page{pageCount === 1 ? "" : "s"}</strong> ({config.layout} layout)</span>
-            {slots.length === 0 && <span className="text-amber-400">No cards to print</span>}
+            <span>
+              {slots.length} cards →{" "}
+              <strong className="text-[var(--text-primary)]">
+                {pageCount} page{pageCount === 1 ? "" : "s"}
+              </strong>{" "}
+              ({config.layout} layout)
+            </span>
+            {slots.length === 0 && (
+              <span className="text-amber-400">No cards to print</span>
+            )}
           </div>
 
           {/* Progress — only when loading art */}
           {config.includeCardArt && imgState && (
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
-                <span>Loading images… {imgState.loaded}/{imgState.total}</span>
+                <span>
+                  Loading images… {imgState.loaded}/{imgState.total}
+                </span>
                 {imgState.failed.size > 0 && (
                   <span className="text-amber-400">
-                    {imgState.failed.size} image{imgState.failed.size === 1 ? "" : "s"} failed — text fallback used
+                    {imgState.failed.size} image
+                    {imgState.failed.size === 1 ? "" : "s"} failed — text
+                    fallback used
                   </span>
                 )}
               </div>
               <div className="h-1.5 rounded-full bg-[var(--border)] overflow-hidden">
-                <div className="h-full bg-[var(--accent)] transition-all duration-200 rounded-full"
-                  style={{ width: imgState.total > 0 ? `${(imgState.loaded / imgState.total) * 100}%` : "0%" }} />
+                <div
+                  className="h-full bg-[var(--accent)] transition-all duration-200 rounded-full"
+                  style={{
+                    width:
+                      imgState.total > 0
+                        ? `${(imgState.loaded / imgState.total) * 100}%`
+                        : "0%",
+                  }}
+                />
               </div>
             </div>
           )}
@@ -312,21 +408,39 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <button type="button" onClick={handlePrepare}
-              disabled={isPreparing || slots.length === 0 || !config.includeCardArt}
-              className={cn("flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all border",
+            <button
+              type="button"
+              onClick={handlePrepare}
+              disabled={
+                isPreparing || slots.length === 0 || !config.includeCardArt
+              }
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all border",
                 isPreparing || slots.length === 0 || !config.includeCardArt
                   ? "border-[var(--border)] text-[var(--text-secondary)] cursor-not-allowed opacity-50"
-                  : "border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10")}>
-              {isPreparing ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Loading…</> : "Preload Images"}
+                  : "border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10"
+              )}
+            >
+              {isPreparing ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Loading…
+                </>
+              ) : (
+                "Preload Images"
+              )}
             </button>
-            <button type="button" onClick={handlePrint} disabled={!canPrint}
+            <button
+              type="button"
+              onClick={handlePrint}
+              disabled={!canPrint}
               className={cn(
                 "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all",
                 canPrint
                   ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white"
                   : "bg-[var(--border)] text-[var(--text-secondary)] cursor-not-allowed opacity-50"
-              )}>
+              )}
+            >
               <Printer className="w-3.5 h-3.5" />
               Print / Save PDF
             </button>

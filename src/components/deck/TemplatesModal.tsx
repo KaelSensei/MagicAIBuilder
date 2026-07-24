@@ -24,10 +24,16 @@ export function TemplatesModal({
   onClose,
   isOpen,
 }: TemplatesModalProps) {
-  const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
+  const [selectedArchetype, setSelectedArchetype] = useState<string | null>(
+    null
+  );
 
   // Fetch templates for this commander
-  const { data: templates = [], isLoading, error } = useQuery({
+  const {
+    data: templates = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["templates", commanderName],
     queryFn: async () => {
       const res = await fetch(
@@ -58,12 +64,16 @@ export function TemplatesModal({
   function templatesScrollBody(): ReactNode {
     if (isLoading) {
       return (
-        <div className="text-center py-12 text-white/60">Loading templates...</div>
+        <div className="text-center py-12 text-white/60">
+          Loading templates...
+        </div>
       );
     }
     if (error) {
       return (
-        <div className="text-center py-12 text-red-400">Failed to load templates</div>
+        <div className="text-center py-12 text-red-400">
+          Failed to load templates
+        </div>
       );
     }
     if (templates.length === 0) {
@@ -196,6 +206,7 @@ export function TemplatesModal({
               </p>
             </div>
             <button
+              type="button"
               onClick={onClose}
               className="p-2 hover:bg-white/10 rounded-lg transition-colors"
               aria-label="Close"

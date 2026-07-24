@@ -25,8 +25,10 @@ export function BanlistAlert({
 
   const issueSummary = useMemo(() => {
     const parts: string[] = [];
-    if (bannedCards.length > 0) parts.push(t("banlist.banned", { count: bannedCards.length }));
-    if (colorViolations.length > 0) parts.push(t("banlist.colorId", { count: colorViolations.length }));
+    if (bannedCards.length > 0)
+      parts.push(t("banlist.banned", { count: bannedCards.length }));
+    if (colorViolations.length > 0)
+      parts.push(t("banlist.colorId", { count: colorViolations.length }));
     return parts.join(" \u2022 ");
   }, [bannedCards.length, colorViolations.length, t]);
 
@@ -52,7 +54,9 @@ export function BanlistAlert({
               aria-expanded={expanded}
               aria-label={t("banlist.toggleWarnings")}
             >
-              <span className="text-xs font-medium text-red-300">{t("banlist.deckWarnings")}</span>
+              <span className="text-xs font-medium text-red-300">
+                {t("banlist.deckWarnings")}
+              </span>
               <span className="text-[11px] text-[var(--text-secondary)] truncate">
                 {issueSummary}
               </span>
@@ -67,6 +71,7 @@ export function BanlistAlert({
 
             {onDismiss && (
               <button
+                type="button"
                 onClick={onDismiss}
                 aria-label={t("banlist.dismissWarnings")}
                 className="rounded-md p-1 text-[var(--text-secondary)] hover:bg-white/5 hover:text-[var(--text-primary)] transition-colors"
@@ -80,7 +85,9 @@ export function BanlistAlert({
             <div className="border-t border-red-500/20 px-3 pb-3 pt-2.5 space-y-2">
               {bannedCards.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-red-400">{t("banlist.bannedInCommander")}</p>
+                  <p className="text-xs font-medium text-red-400">
+                    {t("banlist.bannedInCommander")}
+                  </p>
                   <ul className="text-xs text-red-300/80 mt-1 space-y-0.5">
                     {bannedCards.map((name) => (
                       <li key={name}>• {name}</li>
@@ -90,7 +97,9 @@ export function BanlistAlert({
               )}
               {colorViolations.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-orange-400">{t("banlist.colorIdentityViolations")}</p>
+                  <p className="text-xs font-medium text-orange-400">
+                    {t("banlist.colorIdentityViolations")}
+                  </p>
                   <ul className="text-xs text-orange-300/80 mt-1 space-y-0.5">
                     {colorViolations.map((name) => (
                       <li key={name}>• {name}</li>

@@ -54,11 +54,12 @@ export function UserMenu() {
         .join("")
         .toUpperCase()
         .slice(0, 2)
-    : session.user.email?.charAt(0).toUpperCase() ?? "?";
+    : (session.user.email?.charAt(0).toUpperCase() ?? "?");
 
   return (
     <div className="relative" ref={menuRef}>
       <button
+        type="button"
         onClick={() => setOpen((prev) => !prev)}
         className="flex items-center gap-2 rounded-full hover:ring-2 hover:ring-[var(--accent)] transition-all"
         aria-label={t("userMenu.menuLabel")}
@@ -101,7 +102,11 @@ export function UserMenu() {
           </Link>
 
           <button
-            onClick={async () => { handleClose(); await resetOnboarding(); }}
+            type="button"
+            onClick={async () => {
+              handleClose();
+              await resetOnboarding();
+            }}
             className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
           >
             <BookOpen className="w-4 h-4" />
@@ -109,6 +114,7 @@ export function UserMenu() {
           </button>
 
           <button
+            type="button"
             onClick={() => signOut({ callbackUrl: "/auth/signin" })}
             className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-[var(--surface-hover)] transition-colors"
           >

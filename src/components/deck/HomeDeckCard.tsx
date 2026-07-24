@@ -50,7 +50,9 @@ function isHomeDeckManaColor(color: string): color is HomeDeckManaColor {
  * @param deck Deck shown on the home page.
  * @returns Unique mana symbols in deck identity order, or `["C"]` for colorless commanders.
  */
-export function getDeckPresentationManaColors(deck: Deck): readonly HomeDeckManaColor[] {
+export function getDeckPresentationManaColors(
+  deck: Deck
+): readonly HomeDeckManaColor[] {
   if (!deck.commander) {
     return [];
   }
@@ -62,9 +64,7 @@ export function getDeckPresentationManaColors(deck: Deck): readonly HomeDeckMana
 
   const normalized = Array.from(
     new Set(
-      identity
-        .map((color) => color.toUpperCase())
-        .filter(isHomeDeckManaColor)
+      identity.map((color) => color.toUpperCase()).filter(isHomeDeckManaColor)
     )
   );
 
@@ -130,6 +130,7 @@ export function HomeDeckCard({
       >
         <div className="absolute right-3 top-3 flex items-center gap-1">
           <button
+            type="button"
             onClick={(e) => onDuplicate(e, deck.id)}
             disabled={duplicatingId === deck.id}
             className="rounded p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-[var(--accent)]/20 hover:text-[var(--accent)] group-hover:opacity-100 disabled:opacity-60"
@@ -142,6 +143,7 @@ export function HomeDeckCard({
             )}
           </button>
           <button
+            type="button"
             onClick={(e) => onDelete(e, deck.id)}
             disabled={deletingId === deck.id}
             className="rounded p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100 disabled:opacity-60"
@@ -156,7 +158,9 @@ export function HomeDeckCard({
         </div>
 
         <div className="mb-3 flex items-start justify-between pr-14">
-          <h3 className={`truncate pr-2 font-semibold ${textPrimary}`}>{deck.name}</h3>
+          <h3 className={`truncate pr-2 font-semibold ${textPrimary}`}>
+            {deck.name}
+          </h3>
           <div className="flex shrink-0 items-center gap-1.5">
             {deck.isAIGenerated && (
               <span className="shrink-0 rounded-full border border-purple-500/30 bg-purple-500/20 px-1.5 py-0.5 text-xs text-purple-400">
@@ -176,7 +180,9 @@ export function HomeDeckCard({
         </div>
 
         <p className={`truncate text-sm ${textMuted}`}>
-          {deck.commander ? t("card.commander", { name: deck.commander.name }) : t("card.noCommander")}
+          {deck.commander
+            ? t("card.commander", { name: deck.commander.name })
+            : t("card.noCommander")}
         </p>
         <p className={`mt-1 text-xs ${textMuted}`}>
           {t("card.cardCount", { count: deck.cardCount })}

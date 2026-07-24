@@ -35,6 +35,7 @@ export function BulkSelectBar({
     <div className="flex items-center gap-2 px-3 py-2 bg-[var(--surface)] border-b border-[var(--border)] flex-wrap">
       {/* Select all / deselect all */}
       <button
+        type="button"
         onClick={allSelected ? onDeselectAll : onSelectAll}
         className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors shrink-0"
         aria-label={allSelected ? t("bulk.deselectAll") : t("bulk.selectAll")}
@@ -58,6 +59,7 @@ export function BulkSelectBar({
           {/* Move actions */}
           {moveTargets.map(({ zone, label }) => (
             <button
+              type="button"
               key={zone}
               onClick={() => onBulkMove(zone)}
               className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-[var(--accent)]/50 text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors shrink-0"
@@ -69,6 +71,7 @@ export function BulkSelectBar({
 
           {/* Delete action */}
           <button
+            type="button"
             onClick={onBulkDelete}
             className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
           >

@@ -43,7 +43,8 @@ export default function DecksPage() {
   const t = useTranslations("deck");
   const { status: sessionStatus } = useSession();
   const router = useRouter();
-  const { decks, createDeck, loadDecks, isSyncing, deleteDeck, duplicateDeck } = useDeckStore();
+  const { decks, createDeck, loadDecks, isSyncing, deleteDeck, duplicateDeck } =
+    useDeckStore();
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
@@ -68,34 +69,40 @@ export default function DecksPage() {
     if (stored) setViewMode(stored);
   }, []);
 
-  const handleDeleteDeck = useCallback(async (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!confirm(t("home.deleteConfirm"))) {
-      return;
-    }
+  const handleDeleteDeck = useCallback(
+    async (e: React.MouseEvent, id: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!confirm(t("home.deleteConfirm"))) {
+        return;
+      }
 
-    setDeletingId(id);
-    try {
-      await deleteDeck(id);
-    } finally {
-      setDeletingId(null);
-    }
-  }, [deleteDeck, t]);
+      setDeletingId(id);
+      try {
+        await deleteDeck(id);
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [deleteDeck, t]
+  );
 
-  const handleDuplicateDeck = useCallback(async (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDuplicatingId(id);
+  const handleDuplicateDeck = useCallback(
+    async (e: React.MouseEvent, id: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDuplicatingId(id);
 
-    try {
-      const newId = await duplicateDeck(id);
-      router.push(`/builder/${newId}`);
-    } catch (error) {
-      logger.error("Unexpected error", "handleDuplicateDeck", error);
-      setDuplicatingId(null);
-    }
-  }, [duplicateDeck, router]);
+      try {
+        const newId = await duplicateDeck(id);
+        router.push(`/builder/${newId}`);
+      } catch (error) {
+        logger.error("Unexpected error", "handleDuplicateDeck", error);
+        setDuplicatingId(null);
+      }
+    },
+    [duplicateDeck, router]
+  );
 
   const handleNewDeck = useCallback(async () => {
     if (isCreating) {
@@ -130,11 +137,15 @@ export default function DecksPage() {
       <main className="mx-auto flex-1 w-full max-w-5xl px-6 py-10">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t("home.title")}</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+              {t("home.title")}
+            </h1>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
               {isLoading && t("home.loading")}
               {!isLoading && deckList.length === 0 && t("home.empty")}
-              {!isLoading && deckList.length > 0 && t("home.deckCount", { count: deckList.length })}
+              {!isLoading &&
+                deckList.length > 0 &&
+                t("home.deckCount", { count: deckList.length })}
             </p>
           </div>
           <DecksHomeControls
@@ -172,6 +183,7 @@ export default function DecksPage() {
               {t("home.startBuildingDescription")}
             </p>
             <button
+              type="button"
               onClick={handleNewDeck}
               disabled={isCreating}
               className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
@@ -189,7 +201,10 @@ export default function DecksPage() {
         {!isLoading && deckList.length > 0 && (
           <>
             {viewMode === "list" ? (
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
                 <DeckListTable
                   decks={sortedDeckList}
                   deletingId={deletingId}
@@ -240,7 +255,9 @@ export default function DecksPage() {
                   ) : (
                     <Plus className="h-6 w-6" />
                   )}
-                  <span className="text-sm font-medium">{t("home.newDeck")}</span>
+                  <span className="text-sm font-medium">
+                    {t("home.newDeck")}
+                  </span>
                 </motion.button>
               </motion.div>
             )}

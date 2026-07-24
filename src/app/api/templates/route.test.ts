@@ -87,7 +87,7 @@ describe("Templates API", () => {
 
     it("validates template name (required, non-empty)", () => {
       const invalidPayload = { templateName: "", archetype: "Voltron" };
-      expect(invalidPayload.templateName.length).toBe(0); // Should fail validation
+      expect(invalidPayload.templateName).toHaveLength(0); // Should fail validation
     });
 
     it("validates archetype from enum", () => {
@@ -114,11 +114,6 @@ describe("Templates API", () => {
       expect(template.name).toBe("Atraxa Voltron");
     });
 
-    it("returns 404 if template not found", () => {
-      // Mock 404 response
-      const statusCode = 404;
-      expect(statusCode).toBe(404);
-    });
   });
 
   // ─── POST /api/templates/[id]/upvote ────────────────────────────────────
@@ -153,10 +148,6 @@ describe("Templates API", () => {
       expect(upvotes).toBe(5);
     });
 
-    it("returns 401 if user not authenticated", () => {
-      const statusCode = 401;
-      expect(statusCode).toBe(401);
-    });
   });
 
   // ─── Edge cases ────────────────────────────────────────────────────────

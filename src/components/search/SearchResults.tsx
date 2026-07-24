@@ -27,8 +27,12 @@ export function SearchResults({
 }: SearchResultsProps) {
   const viewMode = useDeckStore((s) => s.searchViewMode);
   const setViewMode = useDeckStore((s) => s.setSearchViewMode);
-  const activeDeck = useDeckStore((s) => s.activeDeckId ? s.decks[s.activeDeckId] : null);
-  const maybeboardNames = new Set(activeDeck?.maybeboard.map((c) => c.name) ?? []);
+  const activeDeck = useDeckStore((s) =>
+    s.activeDeckId ? s.decks[s.activeDeckId] : null
+  );
+  const maybeboardNames = new Set(
+    activeDeck?.maybeboard.map((c) => c.name) ?? []
+  );
 
   if (isLoading) {
     return (
@@ -67,6 +71,7 @@ export function SearchResults({
         )}
         <div className="flex items-center gap-1 ml-auto">
           <button
+            type="button"
             onClick={() => setViewMode("grid")}
             className={`p-1 rounded transition-colors ${
               viewMode === "grid"
@@ -78,6 +83,7 @@ export function SearchResults({
             <LayoutGrid className="w-3.5 h-3.5" />
           </button>
           <button
+            type="button"
             onClick={() => setViewMode("list")}
             className={`p-1 rounded transition-colors ${
               viewMode === "list"

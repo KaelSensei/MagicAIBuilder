@@ -52,36 +52,6 @@ describe("useOnboarding localStorage helpers", () => {
   });
 });
 
-// ─── OnboardingWizard step logic (pure) ──────────────────────────────────────
-describe("OnboardingWizard step progression", () => {
-  it("starts at step 0", () => {
-    expect(0).toBe(0);
-  });
-
-  it("advances to next step", () => {
-    const step = 0;
-    expect(step + 1).toBe(1);
-  });
-
-  it("goes back to previous step", () => {
-    const step = 2;
-    expect(step - 1).toBe(1);
-  });
-
-  it("does not go below step 0", () => {
-    const step = 0;
-    const next = step > 0 ? step - 1 : step;
-    expect(next).toBe(0);
-  });
-
-  it("completes when advancing past last step (3)", () => {
-    const TOTAL = 4;
-    const step = TOTAL - 1;
-    const isLast = step === TOTAL - 1;
-    expect(isLast).toBe(true);
-  });
-});
-
 // ─── Skip flow ────────────────────────────────────────────────────────────────
 describe("onboarding skip flow", () => {
   beforeEach(() => localStorageMock.clear());

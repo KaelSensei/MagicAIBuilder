@@ -49,9 +49,10 @@ test.describe("Proxy export (print / PDF)", () => {
 
     const search = page.getByTestId("search-input");
     await search.fill("Grizzly Bears");
-    await page.waitForTimeout(1200);
 
-    await page.getByAltText(/^Grizzly Bears$/i).first().click();
+    const grizzly = page.getByAltText(/^Grizzly Bears$/i).first();
+    await expect(grizzly).toBeVisible({ timeout: 15_000 });
+    await grizzly.click();
 
     await expect(page.getByRole("heading", { name: /Grizzly Bears/i })).toBeVisible({
       timeout: 15_000,
@@ -92,8 +93,9 @@ test.describe("Proxy export (print / PDF)", () => {
     await createDeckAndOpenBuilder(page);
 
     await page.getByTestId("search-input").fill("Grizzly Bears");
-    await page.waitForTimeout(1200);
-    await page.getByAltText(/^Grizzly Bears$/i).first().click();
+    const grizzly = page.getByAltText(/^Grizzly Bears$/i).first();
+    await expect(grizzly).toBeVisible({ timeout: 15_000 });
+    await grizzly.click();
     await expect(page.getByRole("heading", { name: /Grizzly Bears/i })).toBeVisible({
       timeout: 15_000,
     });

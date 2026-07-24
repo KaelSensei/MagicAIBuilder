@@ -52,10 +52,13 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
   if (!open) {
     return (
       <button
+        type="button"
         onClick={handleOpen}
         title={hasNote ? noteText : "Add note"}
         className={`p-0.5 rounded transition-opacity hover:text-amber-400 ${
-          hasNote ? "text-amber-400" : "opacity-0 group-hover:opacity-60 text-[var(--text-secondary)]"
+          hasNote
+            ? "text-amber-400"
+            : "opacity-0 group-hover:opacity-60 text-[var(--text-secondary)]"
         }`}
         aria-label={hasNote ? "Edit note" : "Add note"}
       >

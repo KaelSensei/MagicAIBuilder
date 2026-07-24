@@ -16,12 +16,16 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Expose the token at job level so the `if` guard on the scan step can read it
+    # (a step-level env is not visible to that step's own `if` condition).
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history required for blame/new code detection
+          fetch-depth: 0 # Full history required for blame/new code detection
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -32,7 +36,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'  # Cache node_modules between runs
+          cache: "pnpm" # Cache node_modules between runs
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -46,5 +50,4 @@ jobs:
         if: ${{ env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarqube-scan-action@v6
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io

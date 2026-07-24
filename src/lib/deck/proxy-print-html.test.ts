@@ -61,7 +61,7 @@ describe("buildProxyPrintDocumentHtml", () => {
       includeCardArt: false,
     }, "my_deck");
     expect(html).not.toMatch(/<img\b/);
-    expect((html.match(/<div class="card-fallback"/g) ?? []).length).toBe(2);
+    expect(html.match(/<div class="card-fallback"/g) ?? []).toHaveLength(2);
   });
 
   it("includes layout and paper in generated CSS", () => {

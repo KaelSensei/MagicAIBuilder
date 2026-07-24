@@ -2,7 +2,11 @@
 
 import { useTranslations } from "next-intl";
 import { Sparkles } from "lucide-react";
-import type { DecksSortDir, DecksSortKey, DecksViewMode } from "@/lib/deck/deck-listing";
+import type {
+  DecksSortDir,
+  DecksSortKey,
+  DecksViewMode,
+} from "@/lib/deck/deck-listing";
 
 export type DecksHomeControlsProps = {
   readonly viewMode: DecksViewMode;
@@ -74,8 +78,12 @@ export function DecksHomeControls({
           className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
           aria-label={t("controls.sortDecks")}
         >
-          <option value="updatedAt:desc">{t("controls.sortUpdatedNewest")}</option>
-          <option value="updatedAt:asc">{t("controls.sortUpdatedOldest")}</option>
+          <option value="updatedAt:desc">
+            {t("controls.sortUpdatedNewest")}
+          </option>
+          <option value="updatedAt:asc">
+            {t("controls.sortUpdatedOldest")}
+          </option>
           <option value="name:asc">{t("controls.sortNameAsc")}</option>
           <option value="name:desc">{t("controls.sortNameDesc")}</option>
           <option value="bracket:asc">{t("controls.sortBracketAsc")}</option>
@@ -84,6 +92,7 @@ export function DecksHomeControls({
       </div>
 
       <button
+        type="button"
         onClick={onOpenWizard}
         className="flex items-center gap-2 rounded-lg border border-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/10"
       >
@@ -92,6 +101,7 @@ export function DecksHomeControls({
       </button>
 
       <button
+        type="button"
         onClick={onNewDeck}
         disabled={disableNewDeck}
         className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
@@ -100,11 +110,12 @@ export function DecksHomeControls({
           // keep icon local to avoid extra props; lucide import is cheap
           <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         ) : (
-          <span className="inline-flex h-4 w-4 items-center justify-center">+</span>
+          <span className="inline-flex h-4 w-4 items-center justify-center">
+            +
+          </span>
         )}
         {t("controls.newDeck")}
       </button>
     </div>
   );
 }
-

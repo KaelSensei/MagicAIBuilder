@@ -2,7 +2,16 @@
 // Deck Snapshots / History panel — save named versions of a deck
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Camera, Clock, RotateCcw, Trash2, Loader2, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import {
+  Camera,
+  Clock,
+  RotateCcw,
+  Trash2,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+} from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import {
   listSnapshots,
@@ -21,10 +30,20 @@ interface SnapshotsPanelProps {
 
 function formatDate(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
-function DiffBadge({ snapshotCount, currentCount }: { readonly snapshotCount: number; readonly currentCount: number }) {
+function DiffBadge({
+  snapshotCount,
+  currentCount,
+}: {
+  readonly snapshotCount: number;
+  readonly currentCount: number;
+}) {
   const diff = currentCount - snapshotCount;
   if (diff === 0) return null;
   return (
@@ -41,7 +60,11 @@ function DiffBadge({ snapshotCount, currentCount }: { readonly snapshotCount: nu
   );
 }
 
-export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: SnapshotsPanelProps) {
+export function SnapshotsPanel({
+  deckId,
+  currentCardCount,
+  onRestore,
+}: SnapshotsPanelProps) {
   const t = useTranslations("deck");
   const [snapshots, setSnapshots] = useState<SnapshotMeta[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -94,7 +117,9 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
       setShowSavePopover(false);
       if (isExpanded) load();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Failed to save snapshot");
+      setSaveError(
+        err instanceof Error ? err.message : "Failed to save snapshot"
+      );
     } finally {
       setIsSaving(false);
     }
@@ -127,11 +152,14 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
       {/* Header row */}
       <div className="flex items-center gap-2 px-3 py-2">
         <Clock className="w-4 h-4 text-[var(--text-secondary)] shrink-0" />
-        <span className="text-xs font-semibold text-[var(--text-primary)] flex-1">{t("snapshots.title")}</span>
+        <span className="text-xs font-semibold text-[var(--text-primary)] flex-1">
+          {t("snapshots.title")}
+        </span>
 
         {/* Save snapshot button / popover trigger */}
         <div className="relative">
           <button
+            type="button"
             onClick={() => {
               setShowSavePopover((v) => !v);
               setSaveError(null);
@@ -145,7 +173,9 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
 
           {showSavePopover && (
             <div className="absolute right-0 top-full mt-1 z-50 w-56 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-xl p-3 space-y-2">
-              <p className="text-xs font-semibold text-[var(--text-primary)]">{t("snapshots.saveSnapshot")}</p>
+              <p className="text-xs font-semibold text-[var(--text-primary)]">
+                {t("snapshots.saveSnapshot")}
+              </p>
               <input
                 ref={nameInputRef}
                 value={snapshotName}
@@ -163,14 +193,20 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
               )}
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={handleSave}
                   disabled={!snapshotName.trim() || isSaving}
                   className="flex-1 flex items-center justify-center gap-1 text-xs px-2 py-1.5 rounded bg-[var(--accent)] text-white disabled:opacity-50 hover:opacity-90 transition-opacity"
                 >
-                  {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                  {isSaving ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Plus className="w-3 h-3" />
+                  )}
                   {t("snapshots.save")}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setShowSavePopover(false)}
                   className="text-xs px-2 py-1.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                 >
@@ -183,10 +219,15 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
 
         {/* Expand/collapse */}
         <button
+          type="button"
           onClick={() => setIsExpanded((v) => !v)}
           className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
-          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
         </button>
       </div>
 
@@ -206,10 +247,15 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
           {!isLoading && snapshots.length > 0 && (
             <ul className="divide-y divide-[var(--border)]">
               {snapshots.map((snap) => (
-                <li key={snap.id} className="px-3 py-2 hover:bg-[var(--surface-hover)] transition-colors">
+                <li
+                  key={snap.id}
+                  className="px-3 py-2 hover:bg-[var(--surface-hover)] transition-colors"
+                >
                   <div className="flex items-start gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-[var(--text-primary)] truncate">{snap.name}</p>
+                      <p className="text-xs font-medium text-[var(--text-primary)] truncate">
+                        {snap.name}
+                      </p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                         <span className="text-[10px] text-[var(--text-secondary)]">
                           {formatDate(snap.createdAt)} · {snap.cardCount} cards
@@ -219,7 +265,10 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                             {snap.commander}
                           </span>
                         )}
-                        <DiffBadge snapshotCount={snap.cardCount} currentCount={currentCardCount} />
+                        <DiffBadge
+                          snapshotCount={snap.cardCount}
+                          currentCount={currentCardCount}
+                        />
                       </div>
                     </div>
 
@@ -228,6 +277,7 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                       {confirmRestore === snap.id && (
                         <>
                           <button
+                            type="button"
                             onClick={() => handleRestore(snap.id)}
                             disabled={isActioning}
                             className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
@@ -235,6 +285,7 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                             {t("snapshots.confirm")}
                           </button>
                           <button
+                            type="button"
                             onClick={() => setConfirmRestore(null)}
                             className="text-[10px] px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                           >
@@ -242,41 +293,47 @@ export function SnapshotsPanel({ deckId, currentCardCount, onRestore }: Snapshot
                           </button>
                         </>
                       )}
-                      {confirmDelete === snap.id && confirmRestore !== snap.id && (
-                        <>
-                          <button
-                            onClick={() => handleDelete(snap.id)}
-                            disabled={isActioning}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors disabled:opacity-50"
-                          >
-                            {t("snapshots.deleteConfirm")}
-                          </button>
-                          <button
-                            onClick={() => setConfirmDelete(null)}
-                            className="text-[10px] px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                          >
-                            {t("snapshots.no")}
-                          </button>
-                        </>
-                      )}
-                      {confirmRestore !== snap.id && confirmDelete !== snap.id && (
-                        <>
-                          <button
-                            onClick={() => setConfirmRestore(snap.id)}
-                            title={t("snapshots.restoreTooltip")}
-                            className="p-1 rounded hover:bg-[var(--surface)] text-[var(--text-secondary)] hover:text-amber-400 transition-colors"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setConfirmDelete(snap.id)}
-                            title={t("snapshots.deleteTooltip")}
-                            className="p-1 rounded hover:bg-[var(--surface)] text-[var(--text-secondary)] hover:text-red-400 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </>
-                      )}
+                      {confirmDelete === snap.id &&
+                        confirmRestore !== snap.id && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(snap.id)}
+                              disabled={isActioning}
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                            >
+                              {t("snapshots.deleteConfirm")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDelete(null)}
+                              className="text-[10px] px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                            >
+                              {t("snapshots.no")}
+                            </button>
+                          </>
+                        )}
+                      {confirmRestore !== snap.id &&
+                        confirmDelete !== snap.id && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmRestore(snap.id)}
+                              title={t("snapshots.restoreTooltip")}
+                              className="p-1 rounded hover:bg-[var(--surface)] text-[var(--text-secondary)] hover:text-amber-400 transition-colors"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDelete(snap.id)}
+                              title={t("snapshots.deleteTooltip")}
+                              className="p-1 rounded hover:bg-[var(--surface)] text-[var(--text-secondary)] hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                     </div>
                   </div>
                 </li>

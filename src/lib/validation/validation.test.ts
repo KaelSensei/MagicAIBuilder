@@ -340,7 +340,7 @@ describe("sanitizeForPrompt", () => {
   it("truncates to default maxLen (100)", () => {
     const long = "A".repeat(150);
     const result = sanitizeForPrompt(long);
-    expect(result.length).toBe(100);
+    expect(result).toHaveLength(100);
   });
 
   it("truncates to custom maxLen", () => {
