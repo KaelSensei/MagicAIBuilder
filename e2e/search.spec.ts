@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { openBuilder, suppressOnboarding } from "./helpers";
 
 test.describe("Card Search Flow", () => {
   test.beforeEach(async ({ page }) => {
-    // Create a deck and navigate to the builder
+    await suppressOnboarding(page);
     await page.goto("/decks");
   });
 
@@ -12,22 +13,18 @@ test.describe("Card Search Flow", () => {
 
   test("can create a new deck", async ({ page }) => {
     await page.click("text=New Deck");
-    // Should navigate to builder
+    // Should navigate to builder (deck creation can be slow on a cold server)
+    await page.waitForURL(/\/builder\//);
     await expect(page).toHaveURL(/\/builder\//);
   });
 
   test("search input is visible in builder", async ({ page }) => {
-    // Create deck first
-    await page.click("text=New Deck");
-    await page.waitForURL(/\/builder\//);
-
-    const searchInput = page.getByTestId("search-input");
-    await expect(searchInput).toBeVisible();
+    await openBuilder(page);
+    await expect(page.getByTestId("search-input")).toBeVisible();
   });
 
   test("typing in search triggers a search", async ({ page }) => {
-    await page.click("text=New Deck");
-    await page.waitForURL(/\/builder\//);
+    await openBuilder(page);
 
     const searchInput = page.getByTestId("search-input");
     await searchInput.fill("lightning bolt");
@@ -45,21 +42,22 @@ test.describe("Card Search Flow", () => {
   test("a search with no matches shows the empty state, not a raw Scryfall error", async ({
     page,
   }) => {
-    await page.click("text=New Deck");
-    await page.waitForURL(/\/builder\//);
+    await openBuilder(page);
 
     const searchInput = page.getByTestId("search-input");
     // A nonsense query Scryfall answers with HTTP 404 (valid query, zero matches)
     await searchInput.fill("zzzzznosuchcardzzzzz");
 
-    await expect(page.getByText("No cards found. Try a different search.")).toBeVisible();
+    // Debounce + Scryfall round-trip can be slow on a cold server
+    await expect(
+      page.getByText("No cards found. Try a different search.")
+    ).toBeVisible({ timeout: 15000 });
     // The raw Scryfall API error must never surface to the user
     await expect(page.getByText(/Scryfall API error/i)).toHaveCount(0);
   });
 
   test("filter toggle shows and hides filter panel", async ({ page }) => {
-    await page.click("text=New Deck");
-    await page.waitForURL(/\/builder\//);
+    await openBuilder(page);
 
     const toggleBtn = page.getByText("Show filters");
     await expect(toggleBtn).toBeVisible();

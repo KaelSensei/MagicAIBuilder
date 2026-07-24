@@ -2,7 +2,7 @@
 // App header with nav — responsive with hamburger menu on mobile
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { Layers, Loader2, Menu, Moon, Package, Plus, Shield, Sun, Upload, X } from "lucide-react";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import { useTheme } from "@/hooks/useTheme";
@@ -16,13 +16,26 @@ interface HeaderProps {
 
 export function Header({ deckId }: HeaderProps = {}) {
   const t = useTranslations("common");
+  const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [isCreatingImportDeck, setIsCreatingImportDeck] = useState(false);
+  const [isCreatingDeck, setIsCreatingDeck] = useState(false);
 
   const createDeck = useDeckStore((s) => s.createDeck);
   const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
+
+  const handleNewDeck = useCallback(async () => {
+    if (isCreatingDeck) return;
+    setIsCreatingDeck(true);
+    try {
+      const id = await createDeck("New Deck");
+      router.push(`/builder/${id}`);
+    } finally {
+      setIsCreatingDeck(false);
+    }
+  }, [createDeck, isCreatingDeck, router]);
 
   const handleImportFromHome = useCallback(async () => {
     if (isCreatingImportDeck) return;
@@ -104,13 +117,18 @@ export function Header({ deckId }: HeaderProps = {}) {
             </button>
           </ImportDialog>
         )}
-        <Link
-          href="/decks"
-          className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-1.5 rounded transition-colors"
+        <button
+          onClick={handleNewDeck}
+          disabled={isCreatingDeck}
+          className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Plus className="w-3.5 h-3.5" />
+          {isCreatingDeck ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Plus className="w-3.5 h-3.5" />
+          )}
           {t("nav.newDeck")}
-        </Link>
+        </button>
         <LocaleSwitcher />
         <UserMenu />
       </div>
@@ -190,14 +208,21 @@ export function Header({ deckId }: HeaderProps = {}) {
                 </button>
               </ImportDialog>
             )}
-            <Link
-              href="/decks"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-2 rounded transition-colors w-fit"
+            <button
+              onClick={async () => {
+                setMenuOpen(false);
+                await handleNewDeck();
+              }}
+              disabled={isCreatingDeck}
+              className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-2 rounded transition-colors w-fit disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Plus className="w-3.5 h-3.5" />
+              {isCreatingDeck ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Plus className="w-3.5 h-3.5" />
+              )}
               {t("nav.newDeck")}
-            </Link>
+            </button>
             <div className="pt-1">
               <UserMenu />
             </div>
