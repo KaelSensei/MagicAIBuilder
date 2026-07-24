@@ -13,8 +13,10 @@ interface MetaApiResponse extends Partial<EdhrecData>, Partial<TournamentData> {
 }
 
 export interface MetaState {
-  edhrec: (EdhrecData & { _meta?: MetaApiResponse["_meta"] }) | null;
-  tournament: (TournamentData & { _meta?: MetaApiResponse["_meta"] }) | null;
+  edhrec: (EdhrecData & { _meta?: NonNullable<MetaApiResponse["_meta"]> }) | null;
+  tournament:
+    | (TournamentData & { _meta?: NonNullable<MetaApiResponse["_meta"]> })
+    | null;
   isLoadingEdhrec: boolean;
   isLoadingTournament: boolean;
   errorEdhrec: string | null;

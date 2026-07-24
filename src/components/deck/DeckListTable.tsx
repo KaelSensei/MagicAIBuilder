@@ -112,7 +112,9 @@ function DeckListRow({
         >
           <div className="font-medium">{deck.name}</div>
           <div className="mt-0.5 text-xs text-[var(--text-secondary)]">
-            {deck.commander ? t("card.commander", { name: deck.commander.name }) : t("card.noCommander")}
+            {deck.commander
+              ? t("card.commander", { name: deck.commander.name })
+              : t("card.noCommander")}
           </div>
         </Link>
       </td>
@@ -161,6 +163,7 @@ function DeckListRow({
       <td className="min-w-[120px] text-right">
         <div className="inline-flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <button
+            type="button"
             onClick={(e) => onDuplicate(e, deck.id)}
             disabled={duplicatingId === deck.id}
             className="rounded p-1 text-[var(--text-secondary)] hover:bg-[var(--accent)]/20 hover:text-[var(--accent)] disabled:opacity-60"
@@ -173,6 +176,7 @@ function DeckListRow({
             )}
           </button>
           <button
+            type="button"
             onClick={(e) => onDelete(e, deck.id)}
             disabled={deletingId === deck.id}
             className="rounded p-1 text-[var(--text-secondary)] hover:bg-red-500/20 hover:text-red-400 disabled:opacity-60"
@@ -189,4 +193,3 @@ function DeckListRow({
     </tr>
   );
 }
-

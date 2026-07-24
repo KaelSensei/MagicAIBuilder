@@ -230,8 +230,8 @@ export function applyHeal(
 
 // ─── Tap / untap ──────────────────────────────────────────────────────────
 export function applyTap(state: PlaytestEngine, cardId: string): PlaytestEngine {
-  const permanent = state.battlefield.find((c) => c.id === cardId);
-  if (!permanent) return state;
+  const exists = state.battlefield.some((c) => c.id === cardId);
+  if (!exists) return state;
 
   const updated = state.battlefield.map((c) =>
     c.id === cardId ? { ...c, tapped: !c.tapped } : c

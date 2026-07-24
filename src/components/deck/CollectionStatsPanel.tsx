@@ -5,7 +5,13 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Package, ShoppingCart, Check, CheckCheck, RotateCcw } from "lucide-react";
+import {
+  Package,
+  ShoppingCart,
+  Check,
+  CheckCheck,
+  RotateCcw,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import { useCollectionStore } from "@/lib/collection/store";
@@ -18,7 +24,10 @@ interface CollectionStatsPanelProps {
   readonly className?: string;
 }
 
-export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelProps) {
+export function CollectionStatsPanel({
+  deck,
+  className,
+}: CollectionStatsPanelProps) {
   const { data: session } = useSession();
   const [expanded, setExpanded] = useState(false);
   const [showShoppingList, setShowShoppingList] = useState(false);
@@ -26,18 +35,27 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
   const collectionCards = useCollectionStore((s) => s.collectionCards);
   const collectionCardsFoil = useCollectionStore((s) => s.collectionCardsFoil);
   const bulkAddToCollection = useCollectionStore((s) => s.bulkAddToCollection);
-  const removeFromCollection = useCollectionStore((s) => s.removeFromCollection);
+  const removeFromCollection = useCollectionStore(
+    (s) => s.removeFromCollection
+  );
   const isSyncing = useCollectionStore((s) => s.isSyncing);
 
   const ownedScryfallIds = useMemo(() => {
     const ids = new Set<string>();
     for (const scryfallId of Object.keys(collectionCards)) ids.add(scryfallId);
-    for (const scryfallId of Object.keys(collectionCardsFoil)) ids.add(scryfallId);
+    for (const scryfallId of Object.keys(collectionCardsFoil))
+      ids.add(scryfallId);
     return ids;
   }, [collectionCards, collectionCardsFoil]);
 
   const stats = useMemo(
-    () => computeCollectionStats(deck.cards, deck.commander, deck.partner, ownedScryfallIds),
+    () =>
+      computeCollectionStats(
+        deck.cards,
+        deck.commander,
+        deck.partner,
+        ownedScryfallIds
+      ),
     [deck.cards, deck.commander, deck.partner, ownedScryfallIds]
   );
 
@@ -91,7 +109,12 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
 
   if (!session?.user) {
     return (
-      <div className={cn("rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-xs text-[var(--text-secondary)]", className)}>
+      <div
+        className={cn(
+          "rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-xs text-[var(--text-secondary)]",
+          className
+        )}
+      >
         <Package className="w-3.5 h-3.5 inline mr-1.5" />
         Sign in to track your collection
       </div>
@@ -108,8 +131,14 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
         />
       )}
 
-      <div className={cn("rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden", className)}>
+      <div
+        className={cn(
+          "rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden",
+          className
+        )}
+      >
         <button
+          type="button"
           onClick={() => setExpanded((e) => !e)}
           className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[var(--surface-hover)] transition-colors"
         >
@@ -138,13 +167,23 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
                     <span className="text-[var(--text-secondary)]">
                       {stats.ownedCount} owned · {stats.missingCount} missing
                     </span>
-                    <span className={cn("font-medium", pct === 100 ? "text-green-400" : "text-[var(--text-primary)]")}>
+                    <span
+                      className={cn(
+                        "font-medium",
+                        pct === 100
+                          ? "text-green-400"
+                          : "text-[var(--text-primary)]"
+                      )}
+                    >
                       {pct}%
                     </span>
                   </div>
                   <div className="h-2 rounded-full bg-[var(--border)] overflow-hidden">
                     <div
-                      className={cn("h-full rounded-full transition-all duration-500", pct === 100 ? "bg-green-500" : "bg-[var(--accent)]")}
+                      className={cn(
+                        "h-full rounded-full transition-all duration-500",
+                        pct === 100 ? "bg-green-500" : "bg-[var(--accent)]"
+                      )}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -153,7 +192,9 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
                 {/* Missing cost */}
                 {stats.missingCount > 0 && (
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--text-secondary)]">Missing cards cost</span>
+                    <span className="text-[var(--text-secondary)]">
+                      Missing cards cost
+                    </span>
                     <span className="font-medium text-[var(--text-primary)]">
                       ~${stats.missingCost.toFixed(2)}
                     </span>
@@ -171,6 +212,7 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
                 {/* Shopping list button */}
                 {stats.missingCount > 0 && (
                   <button
+                    type="button"
                     onClick={() => setShowShoppingList(true)}
                     className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg border border-[var(--accent)]/50 text-[var(--accent)] text-xs font-medium hover:bg-[var(--accent)]/10 transition-colors"
                   >
@@ -183,6 +225,7 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
                 <div className="flex gap-2">
                   {stats.missingCount > 0 && (
                     <button
+                      type="button"
                       onClick={handleMarkAllOwned}
                       disabled={isSyncing}
                       className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-green-500/50 text-green-400 text-xs font-medium hover:bg-green-500/10 transition-colors disabled:opacity-50"
@@ -193,6 +236,7 @@ export function CollectionStatsPanel({ deck, className }: CollectionStatsPanelPr
                   )}
                   {stats.ownedCount > 0 && (
                     <button
+                      type="button"
                       onClick={handleResetCollection}
                       disabled={isSyncing}
                       className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-red-500/30 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50"

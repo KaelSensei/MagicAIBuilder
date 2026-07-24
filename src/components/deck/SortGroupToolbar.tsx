@@ -16,27 +16,27 @@ interface GroupOption {
 }
 
 const SORT_OPTIONS: SortOption[] = [
-  { field: "cmc",   label: "CMC" },
-  { field: "name",  label: "Name" },
+  { field: "cmc", label: "CMC" },
+  { field: "name", label: "Name" },
   { field: "price", label: "Price" },
   { field: "color", label: "Color" },
-  { field: "type",  label: "Type" },
+  { field: "type", label: "Type" },
 ];
 
 const GROUP_OPTIONS: GroupOption[] = [
-  { value: "none",  label: "Ungrouped" },
-  { value: "type",  label: "By Type" },
-  { value: "cmc",   label: "By CMC" },
+  { value: "none", label: "Ungrouped" },
+  { value: "type", label: "By Type" },
+  { value: "cmc", label: "By CMC" },
   { value: "color", label: "By Color" },
 ];
 
 export function SortGroupToolbar() {
-  const sortField    = useDeckStore((s) => s.sortField);
+  const sortField = useDeckStore((s) => s.sortField);
   const sortDirection = useDeckStore((s) => s.sortDirection);
-  const groupBy      = useDeckStore((s) => s.groupBy);
+  const groupBy = useDeckStore((s) => s.groupBy);
   const setSortField = useDeckStore((s) => s.setSortField);
   const setSortDirection = useDeckStore((s) => s.setSortDirection);
-  const setGroupBy   = useDeckStore((s) => s.setGroupBy);
+  const setGroupBy = useDeckStore((s) => s.setGroupBy);
 
   function handleSortFieldClick(field: SortField) {
     if (field === sortField) {
@@ -54,10 +54,12 @@ export function SortGroupToolbar() {
           const isActive = sortField === field;
           let activeSortHint = "";
           if (isActive) {
-            activeSortHint = sortDirection === "asc" ? "(ascending)" : "(descending)";
+            activeSortHint =
+              sortDirection === "asc" ? "(ascending)" : "(descending)";
           }
           return (
             <button
+              type="button"
               key={field}
               onClick={() => handleSortFieldClick(field)}
               className={cn(
@@ -88,6 +90,7 @@ export function SortGroupToolbar() {
         <Layers className="w-3 h-3 text-[var(--text-secondary)]" />
         {GROUP_OPTIONS.map(({ value, label }) => (
           <button
+            type="button"
             key={value}
             onClick={() => setGroupBy(value)}
             className={cn(

@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useDeckStore } from "@/lib/deck/store";
 import { ManaCostDisplay } from "@/components/card/ManaSymbol";
-import { Layers, Copy, Check, ExternalLink, Users, BarChart2 } from "lucide-react";
+import {
+  Layers,
+  Copy,
+  Check,
+  ExternalLink,
+  Users,
+  BarChart2,
+} from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { ManaCurve } from "./ManaCurve";
@@ -83,7 +90,9 @@ function computeColorDistribution(cards: ApiCard[]): Record<string, number> {
 }
 
 function computeAvgCmc(cards: ApiCard[]): number {
-  const nonLands = cards.filter((c) => c.category !== "land" && !c.isCommander && !c.isPartner);
+  const nonLands = cards.filter(
+    (c) => c.category !== "land" && !c.isCommander && !c.isPartner
+  );
   if (nonLands.length === 0) return 0;
   const total = nonLands.reduce((sum, c) => sum + c.cmc * c.quantity, 0);
   const count = nonLands.reduce((sum, c) => sum + c.quantity, 0);
@@ -105,11 +114,15 @@ function CardRow({ card }: { readonly card: ApiCard }) {
       )}
       <span className="flex-1 text-[var(--text-primary)] truncate">
         {card.quantity > 1 && (
-          <span className="text-[var(--text-secondary)] mr-1">{card.quantity}×</span>
+          <span className="text-[var(--text-secondary)] mr-1">
+            {card.quantity}×
+          </span>
         )}
         {card.name}
         {card.isGameChanger && (
-          <span className="ml-1.5 text-xs text-amber-400" title="Game Changer">⚡</span>
+          <span className="ml-1.5 text-xs text-amber-400" title="Game Changer">
+            ⚡
+          </span>
         )}
       </span>
       {card.manaCost && (
@@ -134,7 +147,9 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
 
   const commander = deck.cards.find((c) => c.isCommander && !c.isPartner);
   const partner = deck.cards.find((c) => c.isPartner);
-  const companion = deck.cards.find((c) => c.category === "companion" && !c.isCommander);
+  const companion = deck.cards.find(
+    (c) => c.category === "companion" && !c.isCommander
+  );
   const mainCards = deck.cards.filter(
     (c) => !c.isCommander && !c.isPartner && c.category !== "companion"
   );
@@ -151,11 +166,18 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
   }, [mainCards]);
 
   const orderedCategories = CATEGORY_ORDER.filter(
-    (cat) => cat !== "commander" && cat !== "companion" && cardsByCategory[cat]?.length
+    (cat) =>
+      cat !== "commander" && cat !== "companion" && cardsByCategory[cat]?.length
   );
 
-  const manaCurve = useMemo(() => computeManaCurve([...deck.cards]), [deck.cards]);
-  const colorDist = useMemo(() => computeColorDistribution([...deck.cards]), [deck.cards]);
+  const manaCurve = useMemo(
+    () => computeManaCurve([...deck.cards]),
+    [deck.cards]
+  );
+  const colorDist = useMemo(
+    () => computeColorDistribution([...deck.cards]),
+    [deck.cards]
+  );
   const avgCmc = useMemo(() => computeAvgCmc([...deck.cards]), [deck.cards]);
   const totalCards = deck.cards.length;
   const gameChangers = deck.cards.filter((c) => c.isGameChanger);
@@ -245,7 +267,9 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               <h1
                 className={cn(
                   "text-3xl font-bold mb-2",
-                  commander?.artCropUri ? "text-white" : "text-[var(--text-primary)]"
+                  commander?.artCropUri
+                    ? "text-white"
+                    : "text-[var(--text-primary)]"
                 )}
               >
                 {deck.name}
@@ -260,10 +284,14 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                   {t("share.bracketLabel")} {deck.targetBracket}
                 </span>
                 <span className="text-xs text-white/60">{deck.format}</span>
-                <span className="text-xs text-white/60">{t("share.cardCountLabel", { count: totalCards })}</span>
+                <span className="text-xs text-white/60">
+                  {t("share.cardCountLabel", { count: totalCards })}
+                </span>
                 {gameChangers.length > 0 && (
                   <span className="text-xs text-amber-400">
-                    {t("share.gameChangerCount", { count: gameChangers.length })}
+                    {t("share.gameChangerCount", {
+                      count: gameChangers.length,
+                    })}
                   </span>
                 )}
               </div>
@@ -271,15 +299,22 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                 <p
                   className={cn(
                     "text-sm mt-2",
-                    commander?.artCropUri ? "text-white/70" : "text-[var(--text-secondary)]"
+                    commander?.artCropUri
+                      ? "text-white/70"
+                      : "text-[var(--text-secondary)]"
                   )}
                 >
                   {t("card.commander", { name: "" })}
-                  <span className="font-medium text-white/90">{commander.name}</span>
+                  <span className="font-medium text-white/90">
+                    {commander.name}
+                  </span>
                   {partner && (
                     <>
                       {" "}
-                      + <span className="font-medium text-white/90">{partner.name}</span>
+                      +{" "}
+                      <span className="font-medium text-white/90">
+                        {partner.name}
+                      </span>
                     </>
                   )}
                 </p>
@@ -288,6 +323,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
 
             {/* Import button */}
             <button
+              type="button"
               onClick={handleImport}
               disabled={importing || imported}
               className={cn(
@@ -351,7 +387,9 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               <div key={cat} className="mb-5">
                 <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 flex items-center gap-2">
                   <span>{CATEGORY_LABELS[cat]}</span>
-                  <span className="text-[var(--border)] font-normal">({total})</span>
+                  <span className="text-[var(--border)] font-normal">
+                    ({total})
+                  </span>
                 </h2>
                 <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 space-y-0.5">
                   {cards.map((card) => (
@@ -377,7 +415,10 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               {t("share.statsTitle")}
             </h3>
             <div className="space-y-2 text-sm">
-              <StatRow label={t("share.bracketLabel")} value={`${deck.targetBracket}`} />
+              <StatRow
+                label={t("share.bracketLabel")}
+                value={`${deck.targetBracket}`}
+              />
               <StatRow label={t("share.totalCards")} value={`${totalCards}`} />
               <StatRow label={t("share.avgCmc")} value={`${avgCmc}`} />
               <StatRow
@@ -401,10 +442,17 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                 value={`${deck.cards.filter((c) => c.category === "removal").length}`}
               />
               {gameChangers.length > 0 && (
-                <StatRow label={t("share.gameChangers")} value={`${gameChangers.length}`} highlight />
+                <StatRow
+                  label={t("share.gameChangers")}
+                  value={`${gameChangers.length}`}
+                  highlight
+                />
               )}
               {deck.budget !== null && (
-                <StatRow label={t("share.budgetPerCard")} value={`$${deck.budget}/card`} />
+                <StatRow
+                  label={t("share.budgetPerCard")}
+                  value={`$${deck.budget}/card`}
+                />
               )}
             </div>
           </div>
@@ -477,10 +525,15 @@ function ShareUrlCopy() {
         {t("share.shareThisDeck")}
       </h3>
       <button
+        type="button"
         onClick={handleCopy}
         className="w-full flex items-center gap-2 text-xs px-3 py-2 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
       >
-        {copied ? <Check className="w-3.5 h-3.5 text-green-400 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
+        {copied ? (
+          <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+        ) : (
+          <Copy className="w-3.5 h-3.5 shrink-0" />
+        )}
         <span className="flex-1 text-left truncate">
           {copied ? t("share.copiedLink") : t("share.copyLink")}
         </span>

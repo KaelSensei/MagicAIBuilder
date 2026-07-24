@@ -27,6 +27,7 @@ export function Pagination({
       className={cn("flex items-center justify-center gap-4", className)}
     >
       <button
+        type="button"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={isFirst}
         aria-label="Previous page"
@@ -56,6 +57,7 @@ export function Pagination({
       </span>
 
       <button
+        type="button"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={isLast}
         aria-label="Next page"

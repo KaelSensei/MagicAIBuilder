@@ -12,6 +12,7 @@ export function GoogleSignInButton({ onClick }: GoogleSignInButtonProps) {
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[var(--border)] rounded-lg text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
     >

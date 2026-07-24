@@ -177,6 +177,7 @@ export function BracketIndicator({
           </div>
           {onManualBracketChange && (
             <button
+              type="button"
               onClick={handleReset}
               className="text-amber-400/70 hover:text-amber-300 transition-colors shrink-0"
               title="Reset to calculated bracket"
@@ -195,6 +196,7 @@ export function BracketIndicator({
           </p>
           {onManualBracketChange && (
             <button
+              type="button"
               onClick={() => setShowPicker((v) => !v)}
               className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] underline underline-offset-2 transition-colors"
             >
@@ -221,6 +223,7 @@ export function BracketIndicator({
             <div className="flex gap-1.5">
               {([1, 2, 3, 4] as const).map((b) => (
                 <button
+                  type="button"
                   key={b}
                   onClick={() => handleSelectManual(b)}
                   className={cn(
@@ -283,7 +286,8 @@ export function BracketIndicator({
         <div className="flex items-center gap-1.5">
           <Infinity className="w-3.5 h-3.5 text-red-400" />
           <span className="text-xs text-red-400 font-medium">
-            {score.twoCardInfiniteCombos} infinite 2-card combo{score.twoCardInfiniteCombos > 1 ? "s" : ""}
+            {score.twoCardInfiniteCombos} infinite 2-card combo
+            {score.twoCardInfiniteCombos > 1 ? "s" : ""}
             {" → Bracket 4 (RC rule)"}
           </span>
         </div>

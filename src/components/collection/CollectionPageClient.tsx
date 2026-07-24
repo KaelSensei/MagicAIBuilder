@@ -2,10 +2,24 @@
 // Collection page — lists all owned cards with stats
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, Package, Search, LayoutGrid, List, Trash2, Download, Copy, Check, Image as ImageIcon } from "lucide-react";
+import {
+  Loader2,
+  Package,
+  Search,
+  LayoutGrid,
+  List,
+  Trash2,
+  Download,
+  Copy,
+  Check,
+  Image as ImageIcon,
+} from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
-import { formatCollectionCsv, formatCollectionText } from "@/lib/collection/shopping-list";
+import {
+  formatCollectionCsv,
+  formatCollectionText,
+} from "@/lib/collection/shopping-list";
 import { cn } from "@/components/ui/utils";
 import type { CollectionCard } from "@/lib/collection/types";
 import { CardImage } from "@/components/card/CardImage";
@@ -16,8 +30,15 @@ import { CollectionCardTooltip } from "@/components/collection/CollectionCardToo
 
 export function CollectionPageClient() {
   const t = useTranslations("collection");
-  const { collectionCards, collectionCardsFoil, isLoading, loadCollection, removeFromCollection, updateQuantity, swapPrinting } =
-    useCollectionStore();
+  const {
+    collectionCards,
+    collectionCardsFoil,
+    isLoading,
+    loadCollection,
+    removeFromCollection,
+    updateQuantity,
+    swapPrinting,
+  } = useCollectionStore();
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -41,7 +62,9 @@ export function CollectionPageClient() {
   );
 
   const [copied, setCopied] = useState(false);
-  const [printingsTarget, setPrintingsTarget] = useState<CollectionCard | null>(null);
+  const [printingsTarget, setPrintingsTarget] = useState<CollectionCard | null>(
+    null
+  );
   const [printingsCard, setPrintingsCard] = useState<ScryfallCard | null>(null);
 
   const exportCards = useMemo(
@@ -92,7 +115,9 @@ export function CollectionPageClient() {
         scryfallId: printing.id,
         name: printing.name,
         imageUri: getCardImageUri(printing, "normal"),
-        price: printing.prices?.usd ? Number.parseFloat(printing.prices.usd) : null,
+        price: printing.prices?.usd
+          ? Number.parseFloat(printing.prices.usd)
+          : null,
       });
       setPrintingsCard(null);
       setPrintingsTarget(null);
@@ -135,14 +160,20 @@ export function CollectionPageClient() {
             {allCards.length > 0 && (
               <>
                 <button
+                  type="button"
                   onClick={handleCopyText}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
                   title={t("actions.copyText")}
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? (
+                    <Check className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
                   {copied ? t("actions.copied") : t("actions.copy")}
                 </button>
                 <button
+                  type="button"
                   onClick={handleExportCsv}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
                   title={t("actions.exportCsv")}
@@ -158,8 +189,14 @@ export function CollectionPageClient() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <StatCard label={t("stats.uniqueCards")} value={allCards.length.toString()} />
-          <StatCard label={t("stats.totalCards")} value={totalCards.toString()} />
+          <StatCard
+            label={t("stats.uniqueCards")}
+            value={allCards.length.toString()}
+          />
+          <StatCard
+            label={t("stats.totalCards")}
+            value={totalCards.toString()}
+          />
           <StatCard
             label={t("stats.totalValue")}
             value={`$${totalValue.toFixed(2)}`}
@@ -181,6 +218,7 @@ export function CollectionPageClient() {
           </div>
           <div className="flex items-center gap-1 ml-auto">
             <button
+              type="button"
               onClick={() => setViewMode("grid")}
               className={cn(
                 "p-2 rounded transition-colors",
@@ -193,6 +231,7 @@ export function CollectionPageClient() {
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("list")}
               className={cn(
                 "p-2 rounded transition-colors",
@@ -214,9 +253,7 @@ export function CollectionPageClient() {
             {allCards.length === 0 ? (
               <>
                 <p className="text-sm">{t("empty.title")}</p>
-                <p className="text-xs opacity-70">
-                  {t("empty.hint")}
-                </p>
+                <p className="text-xs opacity-70">{t("empty.hint")}</p>
               </>
             ) : (
               <p className="text-sm">{t("empty.noMatch")}</p>
@@ -310,7 +347,9 @@ function CollectionGridCard({
         />
       ) : (
         <div className="aspect-[488/680] bg-[var(--surface)] border border-[var(--border)] rounded-lg flex items-center justify-center">
-          <p className="text-xs text-center text-[var(--text-secondary)] px-1">{card.name}</p>
+          <p className="text-xs text-center text-[var(--text-secondary)] px-1">
+            {card.name}
+          </p>
         </div>
       )}
       {/* Quantity badge */}
@@ -325,10 +364,14 @@ function CollectionGridCard({
       )}
       {/* Hover overlay */}
       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/card:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2 p-2">
-        <p className="text-white text-xs text-center font-medium leading-tight">{card.name}</p>
+        <p className="text-white text-xs text-center font-medium leading-tight">
+          {card.name}
+        </p>
         <button
           type="button"
-          onClick={() => { onOpenPrintings(card); }}
+          onClick={() => {
+            onOpenPrintings(card);
+          }}
           className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white/15 hover:bg-white/25 text-white"
           title={t("actions.changeArt")}
         >
@@ -337,13 +380,19 @@ function CollectionGridCard({
         </button>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => onQuantityChange(card.id, Math.max(0, card.quantity - 1))}
+            type="button"
+            onClick={() =>
+              onQuantityChange(card.id, Math.max(0, card.quantity - 1))
+            }
             className="w-6 h-6 rounded bg-white/20 hover:bg-white/40 text-white text-sm flex items-center justify-center"
           >
             −
           </button>
-          <span className="text-white text-sm w-5 text-center">{card.quantity}</span>
+          <span className="text-white text-sm w-5 text-center">
+            {card.quantity}
+          </span>
           <button
+            type="button"
             onClick={() => onQuantityChange(card.id, card.quantity + 1)}
             className="w-6 h-6 rounded bg-white/20 hover:bg-white/40 text-white text-sm flex items-center justify-center"
           >
@@ -351,6 +400,7 @@ function CollectionGridCard({
           </button>
         </div>
         <button
+          type="button"
           onClick={() => onRemove(card.id)}
           className="text-red-400 hover:text-red-300 text-xs"
           aria-label={t("actions.removeFromCollection")}
@@ -374,7 +424,10 @@ function CollectionListRow({
   readonly onOpenPrintings: (card: CollectionCard) => void;
 }) {
   const t = useTranslations("collection");
-  const value = card.price === null || card.price === undefined ? "—" : `$${(card.price * card.quantity).toFixed(2)}`;
+  const value =
+    card.price === null || card.price === undefined
+      ? "—"
+      : `$${(card.price * card.quantity).toFixed(2)}`;
 
   return (
     <div className="grid grid-cols-[1fr_80px_80px_80px_100px_40px] gap-2 px-3 py-2 rounded hover:bg-[var(--surface-hover)] items-center group">
@@ -386,7 +439,9 @@ function CollectionListRow({
         </CollectionCardTooltip>
         <button
           type="button"
-          onClick={() => { onOpenPrintings(card); }}
+          onClick={() => {
+            onOpenPrintings(card);
+          }}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           title={t("actions.changeArt")}
           aria-label={t("actions.changeArtFor", { name: card.name })}
@@ -397,7 +452,10 @@ function CollectionListRow({
       {/* Qty controls */}
       <div className="flex items-center gap-1">
         <button
-          onClick={() => onQuantityChange(card.id, Math.max(0, card.quantity - 1))}
+          type="button"
+          onClick={() =>
+            onQuantityChange(card.id, Math.max(0, card.quantity - 1))
+          }
           className="w-5 h-5 rounded bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs flex items-center justify-center"
         >
           −
@@ -406,6 +464,7 @@ function CollectionListRow({
           {card.quantity}
         </span>
         <button
+          type="button"
           onClick={() => onQuantityChange(card.id, card.quantity + 1)}
           className="w-5 h-5 rounded bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs flex items-center justify-center"
         >
@@ -414,7 +473,9 @@ function CollectionListRow({
       </div>
       <span className="text-sm text-[var(--text-secondary)]">
         {card.foil ? (
-          <span className="text-purple-400 text-xs font-medium">✨ {t("foilBadge")}</span>
+          <span className="text-purple-400 text-xs font-medium">
+            ✨ {t("foilBadge")}
+          </span>
         ) : (
           "—"
         )}
@@ -424,6 +485,7 @@ function CollectionListRow({
       </span>
       <span className="text-sm text-[var(--text-secondary)]">{value}</span>
       <button
+        type="button"
         onClick={() => onRemove(card.id)}
         className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
         aria-label={t("actions.removeFromCollection")}

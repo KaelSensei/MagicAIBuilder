@@ -49,11 +49,14 @@ export function DeckVisibilityToggle({
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <button
+        type="button"
         onClick={handleToggle}
         disabled={loading}
         role="switch"
         aria-checked={isPublic}
-        aria-label={isPublic ? t("visibility.makePrivate") : t("visibility.makePublic")}
+        aria-label={
+          isPublic ? t("visibility.makePrivate") : t("visibility.makePublic")
+        }
         className={cn(
           "relative w-9 h-5 rounded-full transition-colors duration-200 shrink-0",
           isPublic ? "bg-[var(--accent)]" : "bg-[var(--border)]",
@@ -95,7 +98,10 @@ export function DeckVisibilityToggle({
       )}
 
       {isPublic && !username && (
-        <span className="text-xs text-amber-400 ml-1" title={t("visibility.noUsername")}>
+        <span
+          className="text-xs text-amber-400 ml-1"
+          title={t("visibility.noUsername")}
+        >
           {t("visibility.noUsername")}
         </span>
       )}

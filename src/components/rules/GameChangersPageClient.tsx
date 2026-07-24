@@ -76,8 +76,12 @@ function CardTile({ card, badge, onClickZoom }: CardTileProps) {
       {/* Info bar */}
       <div className="p-2 flex items-center gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-[var(--text-primary)] truncate">{card.name}</p>
-          <p className="text-[10px] text-[var(--text-secondary)] truncate">{card.type_line}</p>
+          <p className="text-xs font-medium text-[var(--text-primary)] truncate">
+            {card.name}
+          </p>
+          <p className="text-[10px] text-[var(--text-secondary)] truncate">
+            {card.type_line}
+          </p>
         </div>
         {badge}
       </div>
@@ -96,7 +100,13 @@ interface CardZoomModalProps {
   readonly onOpenPrintings: () => void;
 }
 
-function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: CardZoomModalProps) {
+function CardZoomModal({
+  card,
+  cards,
+  onClose,
+  onNavigate,
+  onOpenPrintings,
+}: CardZoomModalProps) {
   const t = useTranslations("rules");
   const currentIndex = cards.findIndex((c) => c.id === card.id);
   const hasPrev = currentIndex > 0;
@@ -188,7 +198,10 @@ function CardZoomModal({ card, cards, onClose, onNavigate, onOpenPrintings }: Ca
                 {card.type_line}
                 {cards.length > 1 && (
                   <span className="ml-2 text-white/40">
-                    {t("zoom.cardPosition", { current: currentIndex + 1, total: cards.length })}
+                    {t("zoom.cardPosition", {
+                      current: currentIndex + 1,
+                      total: cards.length,
+                    })}
                   </span>
                 )}
               </p>
@@ -326,6 +339,7 @@ export function GameChangersPageClient() {
       {/* Tabs */}
       <div className="flex gap-1 p-1 rounded-lg bg-[var(--surface)] border border-[var(--border)] w-fit">
         <button
+          type="button"
           onClick={() => setActiveTab("game-changers")}
           className={cn(
             "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors",
@@ -337,10 +351,13 @@ export function GameChangersPageClient() {
           <Zap className="w-3.5 h-3.5" />
           {t("tabs.gameChangers")}
           {gameChangers && (
-            <span className="ml-1 text-xs opacity-70">({gameChangers.length})</span>
+            <span className="ml-1 text-xs opacity-70">
+              ({gameChangers.length})
+            </span>
           )}
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("banlist")}
           className={cn(
             "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors",

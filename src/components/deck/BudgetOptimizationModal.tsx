@@ -45,11 +45,15 @@ export function BudgetOptimizationModal({
         <div className="flex items-center justify-between p-5 border-b border-white/10">
           <div className="flex items-center gap-2">
             <TrendingDown size={20} className="text-green-400" />
-            <h2 id="budget-optimization-title" className="text-lg font-bold text-white">
+            <h2
+              id="budget-optimization-title"
+              className="text-lg font-bold text-white"
+            >
               Budget Optimization
             </h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close"
             className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
@@ -61,11 +65,17 @@ export function BudgetOptimizationModal({
         {/* Summary */}
         <div className="flex items-center justify-between px-5 py-3 bg-white/5 text-sm">
           <span className="text-white/60">
-            Current: <span className="text-white font-semibold">€{totalPrice.toFixed(2)}</span>
+            Current:{" "}
+            <span className="text-white font-semibold">
+              €{totalPrice.toFixed(2)}
+            </span>
           </span>
           <span className="text-white/40">→</span>
           <span className="text-white/60">
-            Target: <span className="text-green-400 font-semibold">€{targetBudget.toFixed(2)}</span>
+            Target:{" "}
+            <span className="text-green-400 font-semibold">
+              €{targetBudget.toFixed(2)}
+            </span>
           </span>
           {totalSavings > 0 && (
             <span className="text-green-400 font-bold">
@@ -80,7 +90,9 @@ export function BudgetOptimizationModal({
             <div className="text-center py-10 text-white/50">
               <p className="text-2xl mb-2">✓</p>
               <p className="font-medium">Budget goal reached!</p>
-              <p className="text-sm mt-1 text-white/30">Your deck is already within budget.</p>
+              <p className="text-sm mt-1 text-white/30">
+                Your deck is already within budget.
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -99,13 +111,15 @@ export function BudgetOptimizationModal({
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs text-white/50">
-                      €{s.currentPrice.toFixed(2)} → €{s.suggestedPrice.toFixed(2)}
+                      €{s.currentPrice.toFixed(2)} → €
+                      {s.suggestedPrice.toFixed(2)}
                     </p>
                     <p className="text-xs text-green-400 font-semibold">
                       Save €{s.savingsAmount.toFixed(2)}
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={() => onApplySuggestion(s.cardToReplace.id)}
                     aria-label="Apply"
                     className="px-3 py-1.5 bg-green-600/20 hover:bg-green-600/40 text-green-300 rounded-lg text-xs font-medium transition-colors flex-shrink-0"

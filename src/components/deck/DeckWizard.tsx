@@ -13,7 +13,11 @@ import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, X, Loader2, Sparkles, Check } from "lucide-react";
-import { autocompleteCardName, getCardByNameFuzzy, getCardCollection } from "@/lib/scryfall/client";
+import {
+  autocompleteCardName,
+  getCardByNameFuzzy,
+  getCardCollection,
+} from "@/lib/scryfall/client";
 import { logger } from "@/lib/logger";
 import { useAIDeckBuild } from "@/hooks/useAIDeckBuild";
 import { useDeckStore } from "@/lib/deck/store";
@@ -44,14 +48,54 @@ const COLORS: { key: ColorKey; label: string }[] = [
 ];
 
 const STRATEGIES = [
-  { value: "Aggro", emoji: "⚡", label: "Aggro", subtitle: "Fast and aggressive" },
-  { value: "Control", emoji: "🧠", label: "Control", subtitle: "Counter and control" },
-  { value: "Combo", emoji: "🔄", label: "Combo", subtitle: "Find the winning combo" },
-  { value: "Midrange", emoji: "🤝", label: "Midrange", subtitle: "Balanced power" },
-  { value: "Tokens", emoji: "🔁", label: "Tokens", subtitle: "Go wide with tokens" },
-  { value: "Sacrifice", emoji: "💀", label: "Sacrifice", subtitle: "Death and reanimation" },
-  { value: "Ramp", emoji: "🌿", label: "Ramp", subtitle: "Accelerate your mana" },
-  { value: "Voltron", emoji: "🎯", label: "Voltron", subtitle: "Buff your commander" },
+  {
+    value: "Aggro",
+    emoji: "⚡",
+    label: "Aggro",
+    subtitle: "Fast and aggressive",
+  },
+  {
+    value: "Control",
+    emoji: "🧠",
+    label: "Control",
+    subtitle: "Counter and control",
+  },
+  {
+    value: "Combo",
+    emoji: "🔄",
+    label: "Combo",
+    subtitle: "Find the winning combo",
+  },
+  {
+    value: "Midrange",
+    emoji: "🤝",
+    label: "Midrange",
+    subtitle: "Balanced power",
+  },
+  {
+    value: "Tokens",
+    emoji: "🔁",
+    label: "Tokens",
+    subtitle: "Go wide with tokens",
+  },
+  {
+    value: "Sacrifice",
+    emoji: "💀",
+    label: "Sacrifice",
+    subtitle: "Death and reanimation",
+  },
+  {
+    value: "Ramp",
+    emoji: "🌿",
+    label: "Ramp",
+    subtitle: "Accelerate your mana",
+  },
+  {
+    value: "Voltron",
+    emoji: "🎯",
+    label: "Voltron",
+    subtitle: "Buff your commander",
+  },
 ];
 
 const BUDGET_OPTIONS: { value: Budget; label: string; subtitle: string }[] = [
@@ -76,7 +120,13 @@ const transition = { duration: 0.28, ease: [0.4, 0, 0.2, 1] as number[] };
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function ProgressBar({ step, total }: { readonly step: number; readonly total: number }) {
+function ProgressBar({
+  step,
+  total,
+}: {
+  readonly step: number;
+  readonly total: number;
+}) {
   return (
     <div className="flex gap-1.5 w-full">
       {Array.from({ length: total }, (_, i) => i).map((stepIdx) => (
@@ -108,12 +158,14 @@ function ColorButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onToggle}
       className={`
         w-14 h-14 rounded-full flex items-center justify-center transition-all border-2
-        ${selected
-          ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/30 scale-110"
-          : "border-white/10 hover:border-white/30 opacity-60 hover:opacity-100"
+        ${
+          selected
+            ? "border-[var(--accent)] ring-2 ring-[var(--accent)]/30 scale-110"
+            : "border-white/10 hover:border-white/30 opacity-60 hover:opacity-100"
         }
       `}
       title={COLORS.find((c) => c.key === colorKey)?.label}
@@ -144,6 +196,7 @@ function StepBudget({
     <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
       {BUDGET_OPTIONS.map((opt) => (
         <button
+          type="button"
           key={String(opt.value)}
           onClick={() => onChange(opt.value)}
           className={`
@@ -200,6 +253,7 @@ function StepStrategy({
     <div className="grid grid-cols-2 gap-3 w-full max-w-md mx-auto">
       {STRATEGIES.map((s) => (
         <button
+          type="button"
           key={s.value}
           onClick={() => onChange(s.value)}
           className={`
@@ -235,7 +289,8 @@ const BRACKET_OPTIONS = [
     value: 2 as const,
     label: "Bracket 2",
     subtitle: "Casual",
-    description: "Precons and light upgrades, 0–1 game changers, no infinite combos",
+    description:
+      "Precons and light upgrades, 0–1 game changers, no infinite combos",
     color: "text-blue-400",
     border: "border-blue-500/40",
     bg: "bg-blue-500/10",
@@ -244,7 +299,8 @@ const BRACKET_OPTIONS = [
     value: 3 as const,
     label: "Bracket 3",
     subtitle: "Powered",
-    description: "Optimised synergies, up to 3 game changers, some strong staples",
+    description:
+      "Optimised synergies, up to 3 game changers, some strong staples",
     color: "text-amber-400",
     border: "border-amber-500/40",
     bg: "bg-amber-500/10",
@@ -271,26 +327,36 @@ function StepBracket({
     <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
       {BRACKET_OPTIONS.map((opt) => (
         <button
+          type="button"
           key={opt.value}
           onClick={() => onChange(opt.value)}
           className={`
             w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border transition-all text-left
-            ${value === opt.value
-              ? `${opt.border} ${opt.bg}`
-              : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border)] hover:bg-[var(--surface-hover)]"
+            ${
+              value === opt.value
+                ? `${opt.border} ${opt.bg}`
+                : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border)] hover:bg-[var(--surface-hover)]"
             }
           `}
         >
-          <span className={`text-2xl font-bold w-8 shrink-0 ${value === opt.value ? opt.color : "text-[var(--text-secondary)]"}`}>
+          <span
+            className={`text-2xl font-bold w-8 shrink-0 ${value === opt.value ? opt.color : "text-[var(--text-secondary)]"}`}
+          >
             {opt.value}
           </span>
           <div className="flex-1 min-w-0">
-            <div className={`font-semibold text-sm ${value === opt.value ? opt.color : "text-[var(--text-primary)]"}`}>
+            <div
+              className={`font-semibold text-sm ${value === opt.value ? opt.color : "text-[var(--text-primary)]"}`}
+            >
               {opt.label} — {opt.subtitle}
             </div>
-            <div className="text-xs text-[var(--text-secondary)] mt-0.5">{opt.description}</div>
+            <div className="text-xs text-[var(--text-secondary)] mt-0.5">
+              {opt.description}
+            </div>
           </div>
-          {value === opt.value && <Check className="w-4 h-4 shrink-0 text-[var(--accent)]" />}
+          {value === opt.value && (
+            <Check className="w-4 h-4 shrink-0 text-[var(--accent)]" />
+          )}
         </button>
       ))}
     </div>
@@ -324,7 +390,10 @@ function StepCommander({
     setQuery(val);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (val.length < 2) { setSuggestions([]); return; }
+    if (val.length < 2) {
+      setSuggestions([]);
+      return;
+    }
 
     setIsSearching(true);
     debounceRef.current = setTimeout(async () => {
@@ -376,6 +445,7 @@ function StepCommander({
           <div className="absolute z-10 mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl overflow-hidden">
             {suggestions.map((name) => (
               <button
+                type="button"
                 key={name}
                 onClick={() => handleSelect(name)}
                 className="w-full text-left px-4 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
@@ -412,6 +482,7 @@ function StepCommander({
 
       {/* Skip button */}
       <button
+        type="button"
         onClick={onSkip}
         className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline underline-offset-2 transition-colors"
       >
@@ -500,7 +571,7 @@ const BATCH_SIZE = 75;
 /** Tries to resolve a commander name and set it — non-fatal if it fails. */
 async function tryResolveCommander(
   commanderName: string,
-  setCommander: (card: ScryfallCard) => Promise<void>,
+  setCommander: (card: ScryfallCard) => Promise<void>
 ): Promise<void> {
   try {
     const card = await getCardByNameFuzzy(commanderName);
@@ -514,7 +585,7 @@ async function tryResolveCommander(
 async function importCardsInBatches(
   uniqueNames: readonly string[],
   categoryMap: ReadonlyMap<string, string>,
-  addDeckCard: (card: DeckCard) => Promise<void>,
+  addDeckCard: (card: DeckCard) => Promise<void>
 ): Promise<void> {
   for (let i = 0; i < uniqueNames.length; i += BATCH_SIZE) {
     const batch = uniqueNames.slice(i, i + BATCH_SIZE);
@@ -535,7 +606,9 @@ async function importCardsInBatches(
           price: sc.prices?.usd ? Number.parseFloat(sc.prices.usd) : null,
           imageUri: getCardImageUri(sc, "normal"),
           artCropUri: getCardImageUri(sc, "art_crop"),
-          category: (categoryMap.get(sc.name) as DeckCard["category"]) ?? categorizeCard(sc),
+          category:
+            (categoryMap.get(sc.name) as DeckCard["category"]) ??
+            categorizeCard(sc),
           quantity: 1,
           zone: "main",
         };
@@ -574,7 +647,8 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   const [buildError, setBuildError] = useState<string | null>(null);
 
   const { state: buildState, build, reset: resetBuild } = useAIDeckBuild();
-  const { createDeck, setActiveDeck, addDeckCard, setCommander } = useDeckStore();
+  const { createDeck, setActiveDeck, addDeckCard, setCommander } =
+    useDeckStore();
 
   // Reset wizard on open
   useEffect(() => {
@@ -602,12 +676,18 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   // Can the user proceed from current step?
   const canContinue = useCallback((): boolean => {
     switch (step) {
-      case 1: return budget !== "unset";
-      case 2: return colors.length > 0;
-      case 3: return strategy !== null;
-      case 4: return bracket !== null;
-      case 5: return true; // commander is optional
-      default: return false;
+      case 1:
+        return budget !== "unset";
+      case 2:
+        return colors.length > 0;
+      case 3:
+        return strategy !== null;
+      case 4:
+        return bracket !== null;
+      case 5:
+        return true; // commander is optional
+      default:
+        return false;
     }
   }, [step, budget, colors, strategy, bracket]);
 
@@ -636,12 +716,20 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         colors,
         strategy,
         bracket: bracket ?? 2,
-        commanderName: (skipCommander || commanderSkipped || !commanderName) ? null : commanderName,
+        commanderName:
+          skipCommander || commanderSkipped || !commanderName
+            ? null
+            : commanderName,
       });
 
-      if (!cards) { setBuildError(t("wizard.buildCancelled")); return; }
+      if (!cards) {
+        setBuildError(t("wizard.buildCancelled"));
+        return;
+      }
 
-      const deckId = await createDeck(`AI Deck — ${strategy}`, { isAIGenerated: true });
+      const deckId = await createDeck(`AI Deck — ${strategy}`, {
+        isAIGenerated: true,
+      });
       setActiveDeck(deckId);
 
       const commander = buildState.commander;
@@ -666,9 +754,15 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   const stepTitles = [
     { title: t("wizard.budgetTitle"), subtitle: t("wizard.budgetSubtitle") },
     { title: t("wizard.colorsTitle"), subtitle: t("wizard.colorsSubtitle") },
-    { title: t("wizard.strategyTitle"), subtitle: t("wizard.strategySubtitle") },
+    {
+      title: t("wizard.strategyTitle"),
+      subtitle: t("wizard.strategySubtitle"),
+    },
     { title: t("wizard.bracketTitle"), subtitle: t("wizard.bracketSubtitle") },
-    { title: t("wizard.commanderTitle"), subtitle: t("wizard.commanderSubtitle") },
+    {
+      title: t("wizard.commanderTitle"),
+      subtitle: t("wizard.commanderSubtitle"),
+    },
   ];
 
   const currentTitle = stepTitles[step - 1];
@@ -721,7 +815,10 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
             )}
 
             {/* Body */}
-            <div className="px-6 pb-8 flex flex-col gap-6" style={{ minHeight: 360 }}>
+            <div
+              className="px-6 pb-8 flex flex-col gap-6"
+              style={{ minHeight: 360 }}
+            >
               {isBuilding ? (
                 /* Loading / streaming step */
                 <div className="flex flex-col items-center justify-center flex-1 py-8">
@@ -737,6 +834,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                   />
                   {buildError && (
                     <button
+                      type="button"
                       onClick={() => {
                         setIsBuilding(false);
                         setBuildError(null);
@@ -810,6 +908,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                 {/* Back */}
                 {step > 1 ? (
                   <button
+                    type="button"
                     onClick={() => navigate(step - 1)}
                     className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   >
@@ -823,6 +922,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                 {/* Continue / Generate */}
                 {step < TOTAL_WIZARD_STEPS ? (
                   <button
+                    type="button"
                     onClick={() => navigate(step + 1)}
                     disabled={!canContinue()}
                     className="
@@ -835,6 +935,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                   </button>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => handleGenerateWith(false)}
                     disabled={!canContinue()}
                     className="

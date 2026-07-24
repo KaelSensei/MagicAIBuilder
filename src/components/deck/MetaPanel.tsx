@@ -5,7 +5,16 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { BarChart2, RefreshCw, Loader2, Check, Plus, ExternalLink, AlertCircle, TrendingUp } from "lucide-react";
+import {
+  BarChart2,
+  RefreshCw,
+  Loader2,
+  Check,
+  Plus,
+  ExternalLink,
+  AlertCircle,
+  TrendingUp,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMetaAnalysis } from "@/hooks/useMetaAnalysis";
 import { cn } from "@/components/ui/utils";
@@ -47,12 +56,19 @@ function EdhrecCardRow({
   return (
     <div className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] group transition-colors">
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-[var(--text-primary)] truncate">{card.name}</p>
+        <p className="text-xs font-medium text-[var(--text-primary)] truncate">
+          {card.name}
+        </p>
         <div className="flex items-center gap-1.5 mt-0.5">
           <div className="flex-1 h-1 rounded-full bg-[var(--border)] overflow-hidden">
-            <div className="h-full bg-[var(--accent)]/60 rounded-full" style={{ width: `${pct}%` }} />
+            <div
+              className="h-full bg-[var(--accent)]/60 rounded-full"
+              style={{ width: `${pct}%` }}
+            />
           </div>
-          <span className="text-[10px] text-[var(--text-secondary)] shrink-0">{pct}%</span>
+          <span className="text-[10px] text-[var(--text-secondary)] shrink-0">
+            {pct}%
+          </span>
         </div>
       </div>
       {inDeck || added ? (
@@ -61,7 +77,11 @@ function EdhrecCardRow({
         </span>
       ) : (
         <button
-          onClick={() => { onAdd(card.name); setAdded(true); }}
+          type="button"
+          onClick={() => {
+            onAdd(card.name);
+            setAdded(true);
+          }}
           className="shrink-0 w-5 h-5 rounded-full bg-[var(--accent)]/20 hover:bg-[var(--accent)] flex items-center justify-center text-[var(--accent)] hover:text-white transition-colors opacity-0 group-hover:opacity-100"
           aria-label={`Add ${card.name}`}
         >
@@ -81,7 +101,9 @@ function TournamentDeckRow({ deck }: { readonly deck: TournamentDeck }) {
       className="flex items-start gap-2 px-2 py-2 rounded hover:bg-[var(--surface-hover)] transition-colors group"
     >
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-[var(--text-primary)] truncate">{deck.name}</p>
+        <p className="text-xs font-medium text-[var(--text-primary)] truncate">
+          {deck.name}
+        </p>
         <p className="text-[10px] text-[var(--text-secondary)] truncate">
           {[deck.player, deck.event, deck.date].filter(Boolean).join(" · ")}
         </p>
@@ -93,16 +115,24 @@ function TournamentDeckRow({ deck }: { readonly deck: TournamentDeck }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }: MetaPanelProps) {
+export function MetaPanel({
+  commanderName,
+  deckCardNames,
+  onAddCard,
+  className,
+}: MetaPanelProps) {
   const t = useTranslations("deck");
   const [expanded, setExpanded] = useState(false);
   const [showOnlyMissing, setShowOnlyMissing] = useState(false);
   const fetched = useRef(false);
 
   const {
-    edhrec, tournament,
-    isLoadingEdhrec, isLoadingTournament,
-    errorEdhrec, errorTournament,
+    edhrec,
+    tournament,
+    isLoadingEdhrec,
+    isLoadingTournament,
+    errorEdhrec,
+    errorTournament,
     fetchAll,
   } = useMetaAnalysis(commanderName);
 
@@ -129,9 +159,15 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
   const cachedAt = edhrec?._meta?.cachedAt;
 
   return (
-    <div className={cn("rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden", className)}>
+    <div
+      className={cn(
+        "rounded-lg border border-[var(--border)] bg-[var(--surface)] overflow-hidden",
+        className
+      )}
+    >
       {/* Header */}
       <button
+        type="button"
         onClick={() => setExpanded((e) => !e)}
         className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[var(--surface-hover)] transition-colors"
       >
@@ -142,7 +178,12 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
         {(isLoadingEdhrec || isLoadingTournament) && (
           <Loader2 className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
         )}
-        <TrendingUp className={cn("w-3.5 h-3.5 transition-transform", expanded ? "rotate-180" : "")} />
+        <TrendingUp
+          className={cn(
+            "w-3.5 h-3.5 transition-transform",
+            expanded ? "rotate-180" : ""
+          )}
+        />
       </button>
 
       <AnimatePresence>
@@ -161,11 +202,17 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                   <div className="flex items-center justify-between">
                     {staleEdhrec && cachedAt && (
                       <p className="text-[10px] text-amber-400">
-                        {t("meta.staleData", { date: new Date(cachedAt).toLocaleDateString() })}
+                        {t("meta.staleData", {
+                          date: new Date(cachedAt).toLocaleDateString(),
+                        })}
                       </p>
                     )}
                     <button
-                      onClick={() => { fetched.current = true; fetchAll(true); }}
+                      type="button"
+                      onClick={() => {
+                        fetched.current = true;
+                        fetchAll(true);
+                      }}
                       disabled={isLoadingEdhrec || isLoadingTournament}
                       className="ml-auto flex items-center gap-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-40"
                     >
@@ -185,16 +232,24 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                           <input
                             type="checkbox"
                             checked={showOnlyMissing}
-                            onChange={(e) => setShowOnlyMissing(e.target.checked)}
+                            onChange={(e) =>
+                              setShowOnlyMissing(e.target.checked)
+                            }
                             className="w-3 h-3 accent-[var(--accent)]"
                           />
-                          <span className="text-[10px] text-[var(--text-secondary)]">{t("meta.notInDeck")}</span>
+                          <span className="text-[10px] text-[var(--text-secondary)]">
+                            {t("meta.notInDeck")}
+                          </span>
                         </label>
                       )}
                     </div>
 
                     {isLoadingEdhrec && !edhrecCards.length && (
-                      <div className="space-y-1">{[1, 2, 3, 4, 5].map((i) => <SkeletonRow key={i} />)}</div>
+                      <div className="space-y-1">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <SkeletonRow key={i} />
+                        ))}
+                      </div>
                     )}
 
                     {errorEdhrec && (
@@ -204,11 +259,13 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                       </div>
                     )}
 
-                    {!isLoadingEdhrec && !errorEdhrec && edhrecCards.length === 0 && (
-                      <p className="text-xs text-[var(--text-secondary)] text-center py-2">
-                        {t("meta.noEdhrecData")}
-                      </p>
-                    )}
+                    {!isLoadingEdhrec &&
+                      !errorEdhrec &&
+                      edhrecCards.length === 0 && (
+                        <p className="text-xs text-[var(--text-secondary)] text-center py-2">
+                          {t("meta.noEdhrecData")}
+                        </p>
+                      )}
 
                     {filteredCards.length > 0 && (
                       <div className="space-y-0.5">
@@ -236,7 +293,11 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                     </p>
 
                     {isLoadingTournament && !tournamentDecks.length && (
-                      <div className="space-y-1">{[1, 2].map((i) => <SkeletonRow key={i} />)}</div>
+                      <div className="space-y-1">
+                        {[1, 2].map((i) => (
+                          <SkeletonRow key={i} />
+                        ))}
+                      </div>
                     )}
 
                     {errorTournament && (
@@ -246,11 +307,13 @@ export function MetaPanel({ commanderName, deckCardNames, onAddCard, className }
                       </div>
                     )}
 
-                    {!isLoadingTournament && !errorTournament && tournamentDecks.length === 0 && (
-                      <p className="text-xs text-[var(--text-secondary)] text-center py-2">
-                        {t("meta.noTournamentDecks")}
-                      </p>
-                    )}
+                    {!isLoadingTournament &&
+                      !errorTournament &&
+                      tournamentDecks.length === 0 && (
+                        <p className="text-xs text-[var(--text-secondary)] text-center py-2">
+                          {t("meta.noTournamentDecks")}
+                        </p>
+                      )}
 
                     {tournamentDecks.length > 0 && (
                       <div className="space-y-0.5">

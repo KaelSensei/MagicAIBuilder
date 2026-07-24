@@ -21,8 +21,13 @@ const QUICK_BUTTONS = [
 
 function formatPhase(phase: Phase): string {
   const map: Record<Phase, string> = {
-    Untap: "Untap", Upkeep: "Upkeep", Draw: "Draw",
-    Main1: "Main 1", Combat: "Combat", Main2: "Main 2", End: "End",
+    Untap: "Untap",
+    Upkeep: "Upkeep",
+    Draw: "Draw",
+    Main1: "Main 1",
+    Combat: "Combat",
+    Main2: "Main 2",
+    End: "End",
   };
   return map[phase];
 }
@@ -73,9 +78,12 @@ export function LifeTracker({
       <div className="grid grid-cols-4 gap-2">
         {QUICK_BUTTONS.map(({ label, action, amount }) => (
           <button
+            type="button"
             key={label}
             aria-label={label}
-            onClick={() => action === "heal" ? onHeal(amount) : onDamage(amount)}
+            onClick={() =>
+              action === "heal" ? onHeal(amount) : onDamage(amount)
+            }
             className={cn(
               "py-2 rounded-lg font-bold text-sm transition-colors",
               action === "heal"
@@ -99,6 +107,7 @@ export function LifeTracker({
           className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/40"
         />
         <button
+          type="button"
           onClick={handleCustomSubmit}
           className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm text-white transition-colors"
         >
@@ -109,6 +118,7 @@ export function LifeTracker({
       {/* Undo */}
       {onUndo && (
         <button
+          type="button"
           onClick={onUndo}
           className="w-full py-1.5 rounded-lg text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
         >
@@ -119,7 +129,9 @@ export function LifeTracker({
       {/* Life history */}
       {lifeHistory.length > 0 && (
         <div className="space-y-1 max-h-36 overflow-y-auto">
-          <p className="text-xs font-semibold text-white/50 uppercase">History</p>
+          <p className="text-xs font-semibold text-white/50 uppercase">
+            History
+          </p>
           {[...lifeHistory].reverse().map((entry) => (
             <div
               key={`${entry.timestamp}-${entry.turn}-${entry.phase}-${entry.delta}`}
@@ -134,7 +146,8 @@ export function LifeTracker({
                   entry.delta > 0 ? "text-green-400" : "text-red-400"
                 )}
               >
-                {entry.delta > 0 ? "+" : ""}{entry.delta}
+                {entry.delta > 0 ? "+" : ""}
+                {entry.delta}
               </span>
             </div>
           ))}

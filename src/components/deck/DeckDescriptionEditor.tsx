@@ -9,7 +9,10 @@ interface DeckDescriptionEditorProps {
   readonly description: string | null | undefined;
 }
 
-export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEditorProps) {
+export function DeckDescriptionEditor({
+  deckId,
+  description,
+}: DeckDescriptionEditorProps) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(description ?? "");
@@ -59,6 +62,7 @@ export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEd
     <div className="border-b border-[var(--border)]">
       {/* Header row */}
       <button
+        type="button"
         onClick={handleToggle}
         className="w-full flex items-center gap-1.5 px-3 py-1.5 hover:bg-[var(--surface-hover)] transition-colors group text-left"
       >
@@ -69,12 +73,15 @@ export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEd
         )}
         <span className="text-xs text-[var(--text-secondary)] truncate flex-1">
           {hasContent ? (
-            <span className="text-[var(--text-primary)] italic line-clamp-1">{description!.trim().split("\n")[0]}</span>
+            <span className="text-[var(--text-primary)] italic line-clamp-1">
+              {description!.trim().split("\n")[0]}
+            </span>
           ) : (
             <span className="opacity-50">Add deck description…</span>
           )}
         </span>
         <button
+          type="button"
           onClick={handleEdit}
           className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-0.5 rounded"
           aria-label="Edit description"
@@ -104,6 +111,7 @@ export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEd
                   {draft.length}/2000 · Ctrl+Enter to save · Esc to cancel
                 </span>
                 <button
+                  type="button"
                   onClick={handleSave}
                   className="text-xs px-2 py-0.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors"
                 >
@@ -116,13 +124,19 @@ export function DeckDescriptionEditor({ deckId, description }: DeckDescriptionEd
               type="button"
               className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap cursor-text min-h-[24px] text-left w-full bg-transparent border-none p-0"
               onClick={handleEdit}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") startEditing(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") startEditing();
+              }}
               title="Click to edit"
             >
               {hasContent ? (
-                <span className="text-[var(--text-primary)]">{description!.trim()}</span>
+                <span className="text-[var(--text-primary)]">
+                  {description!.trim()}
+                </span>
               ) : (
-                <span className="italic opacity-50">No description — click to add one</span>
+                <span className="italic opacity-50">
+                  No description — click to add one
+                </span>
               )}
             </button>
           )}

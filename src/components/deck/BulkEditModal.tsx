@@ -45,7 +45,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   /** Add all found cards to the active deck; returns count of added cards */
   async function addParsedCards(
     parsed: ReturnType<typeof parseTextDecklist>,
-    foundCards: ScryfallCard[],
+    foundCards: ScryfallCard[]
   ): Promise<number> {
     const byName = new Map(foundCards.map((c) => [c.name.toLowerCase(), c]));
     let added = 0;
@@ -53,13 +53,19 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
     // Set commander first and await — it updates pairingType which partner needs
     if (parsed.commander) {
       const cmd = byName.get(parsed.commander.toLowerCase());
-      if (cmd) { await setCommander(cmd); added++; }
+      if (cmd) {
+        await setCommander(cmd);
+        added++;
+      }
     }
 
     // Set partner after commander is persisted
     if (parsed.partner) {
       const prt = byName.get(parsed.partner.toLowerCase());
-      if (prt) { await setPartner(prt); added++; }
+      if (prt) {
+        await setPartner(prt);
+        added++;
+      }
     }
 
     for (const { name, quantity } of parsed.cards) {
@@ -90,7 +96,9 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       const allCardNames = [
         ...(parsed.commander ? [{ name: parsed.commander }] : []),
         ...(parsed.partner ? [{ name: parsed.partner }] : []),
-        ...Array.from(new Set(parsed.cards.map((c) => c.name))).map((name) => ({ name })),
+        ...Array.from(new Set(parsed.cards.map((c) => c.name))).map((name) => ({
+          name,
+        })),
       ];
 
       if (allCardNames.length === 0) {
@@ -131,7 +139,9 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       }, 1200);
     } catch (err) {
       setStatus("error");
-      setMessage(err instanceof Error ? err.message : "Failed to save changes.");
+      setMessage(
+        err instanceof Error ? err.message : "Failed to save changes."
+      );
     }
   };
 
@@ -148,7 +158,10 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   const lineCount = text.split("\n").filter((l) => l.trim()).length;
 
   return (
-    <Dialog.Root open={open} onOpenChange={(v) => (v ? setOpen(true) : handleClose())}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(v) => (v ? setOpen(true) : handleClose())}
+    >
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
 
       <Dialog.Portal>
@@ -163,7 +176,10 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
               </Dialog.Title>
             </div>
             <Dialog.Close asChild>
-              <button className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors">
+              <button
+                type="button"
+                className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+              >
                 <X className="w-4 h-4" />
               </button>
             </Dialog.Close>
@@ -171,9 +187,13 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
 
           <Dialog.Description className="text-sm text-[var(--text-secondary)] shrink-0">
             Edit your decklist directly. One card per line:{" "}
-            <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">1 Card Name</code>.
-            Add a{" "}
-            <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">Commander</code>{" "}
+            <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">
+              1 Card Name
+            </code>
+            . Add a{" "}
+            <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">
+              Commander
+            </code>{" "}
             section header to set your commander.
           </Dialog.Description>
 
@@ -195,12 +215,18 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
 
           {/* Status message */}
           {message && (
-            <div className={`flex items-center gap-2 text-sm shrink-0 ${getStatusTextClass(status)}`}>
+            <div
+              className={`flex items-center gap-2 text-sm shrink-0 ${getStatusTextClass(status)}`}
+            >
               {(status === "saving" || status === "reloading") && (
                 <Loader2 className="w-4 h-4 animate-spin shrink-0" />
               )}
-              {status === "done" && <CheckCircle2 className="w-4 h-4 shrink-0" />}
-              {status === "error" && <AlertCircle className="w-4 h-4 shrink-0" />}
+              {status === "done" && (
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              )}
+              {status === "error" && (
+                <AlertCircle className="w-4 h-4 shrink-0" />
+              )}
               {message}
             </div>
           )}
@@ -208,6 +234,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
           {/* Actions */}
           <div className="flex items-center justify-end gap-2 shrink-0">
             <button
+              type="button"
               onClick={handleClose}
               disabled={status === "saving" || status === "reloading"}
               className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -215,8 +242,14 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSave}
-              disabled={!text.trim() || status === "saving" || status === "reloading" || status === "done"}
+              disabled={
+                !text.trim() ||
+                status === "saving" ||
+                status === "reloading" ||
+                status === "done"
+              }
               className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {(status === "saving" || status === "reloading") && (

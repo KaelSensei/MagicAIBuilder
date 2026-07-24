@@ -46,11 +46,7 @@ async function fetchAllSets(): Promise<SetOption[]> {
 
   // Filter to sets that have cards and are relevant for Commander
   const sets: SetOption[] = (data.data as SetOption[])
-    .filter(
-      (s) =>
-        s.card_count > 0 &&
-        COMMANDER_SET_TYPES.has(s.set_type)
-    )
+    .filter((s) => s.card_count > 0 && COMMANDER_SET_TYPES.has(s.set_type))
     .sort((a, b) => {
       // Sort by release date descending (newest first)
       const dateA = a.released_at ?? "";
@@ -69,7 +65,11 @@ interface SetAutocompleteProps {
   readonly onClear: () => void;
 }
 
-export function SetAutocomplete({ value, onChange, onClear }: SetAutocompleteProps) {
+export function SetAutocomplete({
+  value,
+  onChange,
+  onClear,
+}: SetAutocompleteProps) {
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
   const [allSets, setAllSets] = useState<SetOption[]>([]);
@@ -94,7 +94,8 @@ export function SetAutocomplete({ value, onChange, onClear }: SetAutocompletePro
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -116,11 +117,14 @@ export function SetAutocomplete({ value, onChange, onClear }: SetAutocompletePro
   if (value) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--accent)] bg-[var(--surface)]">
-        <span className="text-xs font-mono text-[var(--accent)] uppercase">{value}</span>
+        <span className="text-xs font-mono text-[var(--accent)] uppercase">
+          {value}
+        </span>
         <span className="flex-1 text-sm text-[var(--text-primary)] truncate">
           {selectedSet?.name ?? value}
         </span>
         <button
+          type="button"
           onClick={onClear}
           className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
         >
@@ -176,6 +180,7 @@ export function SetAutocomplete({ value, onChange, onClear }: SetAutocompletePro
             <div className="max-h-64 overflow-y-auto">
               {filtered.map((s) => (
                 <button
+                  type="button"
                   key={s.code}
                   onClick={() => {
                     onChange(s.code, s.name);

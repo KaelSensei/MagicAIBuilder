@@ -15,7 +15,10 @@ interface QuickAddCollectionButtonProps {
   readonly className?: string;
 }
 
-export function QuickAddCollectionButton({ card, className }: QuickAddCollectionButtonProps) {
+export function QuickAddCollectionButton({
+  card,
+  className,
+}: QuickAddCollectionButtonProps) {
   const { data: session } = useSession();
   const getTotalOwned = useCollectionStore((s) => s.getTotalOwned);
   const addToCollection = useCollectionStore((s) => s.addToCollection);
@@ -58,6 +61,7 @@ export function QuickAddCollectionButton({ card, className }: QuickAddCollection
 
   return (
     <button
+      type="button"
       onClick={handleClick}
       className={cn(
         "inline-flex items-center gap-0.5 text-[10px] font-medium text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded px-1.5 py-0.5 hover:bg-[var(--accent)]/20 transition-colors",

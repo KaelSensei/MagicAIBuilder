@@ -29,7 +29,9 @@ export function Modal({
   // Close on Escape
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     globalThis.window.addEventListener("keydown", handler);
     return () => globalThis.window.removeEventListener("keydown", handler);
   }, [open, onClose]);
@@ -58,10 +60,13 @@ export function Modal({
             {(title || showClose) && (
               <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
                 {title && (
-                  <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>
+                  <h2 className="text-base font-semibold text-[var(--text-primary)]">
+                    {title}
+                  </h2>
                 )}
                 {showClose && (
                   <button
+                    type="button"
                     onClick={onClose}
                     className="ml-auto text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                     aria-label="Close"

@@ -3,7 +3,18 @@
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { Layers, Loader2, Menu, Moon, Package, Plus, Shield, Sun, Upload, X } from "lucide-react";
+import {
+  Layers,
+  Loader2,
+  Menu,
+  Moon,
+  Package,
+  Plus,
+  Shield,
+  Sun,
+  Upload,
+  X,
+} from "lucide-react";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import { useTheme } from "@/hooks/useTheme";
 import { UserMenu } from "@/components/auth/UserMenu";
@@ -41,7 +52,9 @@ export function Header({ deckId }: HeaderProps = {}) {
     if (isCreatingImportDeck) return;
     setIsCreatingImportDeck(true);
     try {
-      const id = await createDeck(`Imported Deck — ${new Date().toLocaleString()}`);
+      const id = await createDeck(
+        `Imported Deck — ${new Date().toLocaleString()}`
+      );
       setActiveDeck(id);
       setImportOpen(true);
     } finally {
@@ -57,7 +70,9 @@ export function Header({ deckId }: HeaderProps = {}) {
         className="flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
       >
         <Layers className="w-5 h-5 text-[var(--accent)]" />
-        <span className="font-semibold text-base hidden sm:inline">{t("appName")}</span>
+        <span className="font-semibold text-base hidden sm:inline">
+          {t("appName")}
+        </span>
       </Link>
 
       {/* Nav — hidden on mobile */}
@@ -87,16 +102,28 @@ export function Header({ deckId }: HeaderProps = {}) {
       {/* Desktop actions — hidden on mobile */}
       <div className="ml-auto hidden md:flex items-center gap-2">
         <button
+          type="button"
           onClick={toggleTheme}
           className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           aria-label={t("theme.toggle")}
-          title={theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")}
+          title={
+            theme === "dark"
+              ? t("theme.switchToLight")
+              : t("theme.switchToDark")
+          }
         >
-          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4" />
+          ) : (
+            <Moon className="w-4 h-4" />
+          )}
         </button>
         {deckId ? (
           <ImportDialog>
-            <button className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors">
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors"
+            >
               <Upload className="w-3.5 h-3.5" />
               {t("nav.import")}
             </button>
@@ -104,6 +131,7 @@ export function Header({ deckId }: HeaderProps = {}) {
         ) : (
           <ImportDialog open={importOpen} onOpenChange={setImportOpen}>
             <button
+              type="button"
               onClick={handleImportFromHome}
               disabled={isCreatingImportDeck}
               className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -137,13 +165,19 @@ export function Header({ deckId }: HeaderProps = {}) {
       {/* Mobile: theme toggle + hamburger */}
       <div className="ml-auto flex md:hidden items-center gap-2">
         <button
+          type="button"
           onClick={toggleTheme}
           className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-secondary)]"
           aria-label={t("theme.toggle")}
         >
-          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4" />
+          ) : (
+            <Moon className="w-4 h-4" />
+          )}
         </button>
         <button
+          type="button"
           onClick={() => setMenuOpen((o) => !o)}
           className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-secondary)]"
           aria-label={t("menu.open")}
@@ -183,6 +217,7 @@ export function Header({ deckId }: HeaderProps = {}) {
             {deckId ? (
               <ImportDialog>
                 <button
+                  type="button"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-2"
                 >
@@ -193,6 +228,7 @@ export function Header({ deckId }: HeaderProps = {}) {
             ) : (
               <ImportDialog open={importOpen} onOpenChange={setImportOpen}>
                 <button
+                  type="button"
                   onClick={async () => {
                     setMenuOpen(false);
                     await handleImportFromHome();

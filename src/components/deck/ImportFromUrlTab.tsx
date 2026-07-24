@@ -1,13 +1,23 @@
 "use client";
 // Import deck from supported URL sources (Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec)
 import { useState } from "react";
-import { Loader2, CheckCircle2, AlertCircle, Link2, CheckCheck, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Link2,
+  CheckCheck,
+  AlertTriangle,
+} from "lucide-react";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { UrlImportCard, UrlImportResult } from "@/lib/import/url-import";
 import { detectSource } from "@/lib/import/url-import";
-import { buildScryfallNameIndex, normalizeImportedName } from "@/lib/scryfall/name-index";
+import {
+  buildScryfallNameIndex,
+  normalizeImportedName,
+} from "@/lib/scryfall/name-index";
 
 const SOURCE_LABELS: Record<string, string> = {
   moxfield: "Moxfield",
@@ -53,26 +63,34 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     const ignoredNames: string[] = [];
     let added = 0;
 
-    const commanders = importedCards.filter((c) => c.isCommander && !c.isPartner);
+    const commanders = importedCards.filter(
+      (c) => c.isCommander && !c.isPartner
+    );
     const partners = importedCards.filter((c) => c.isPartner);
     const rest = importedCards.filter((c) => !c.isCommander && !c.isPartner);
 
     for (const c of commanders) {
       const card = byName.get(normalizeImportedName(c.name));
-      if (card) { await setCommander(card); added++; }
-      else ignoredNames.push(c.name);
+      if (card) {
+        await setCommander(card);
+        added++;
+      } else ignoredNames.push(c.name);
     }
 
     for (const c of partners) {
       const card = byName.get(normalizeImportedName(c.name));
-      if (card) { await setPartner(card); added++; }
-      else ignoredNames.push(c.name);
+      if (card) {
+        await setPartner(card);
+        added++;
+      } else ignoredNames.push(c.name);
     }
 
     for (const c of rest) {
       const card = byName.get(normalizeImportedName(c.name));
-      if (card) { addCard(card, c.quantity, c.zone); added++; }
-      else ignoredNames.push(c.name);
+      if (card) {
+        addCard(card, c.quantity, c.zone);
+        added++;
+      } else ignoredNames.push(c.name);
     }
 
     return { added, ignoredNames };
@@ -99,7 +117,9 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`);
+        throw new Error(
+          (data as { error?: string }).error ?? `HTTP ${res.status}`
+        );
       }
 
       const result = (await res.json()) as UrlImportResult;
@@ -111,11 +131,17 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       setMessage(`Validating ${cardNames.length} cards with Scryfall…`);
       const foundCards = await fetchInBatches(cardNames);
 
-      const { added, ignoredNames } = await addUrlCards(result.cards, foundCards);
+      const { added, ignoredNames } = await addUrlCards(
+        result.cards,
+        foundCards
+      );
       setIgnored(ignoredNames);
       setStatus("done");
-      const ignoredSuffix = ignoredNames.length > 0 ? `, ${ignoredNames.length} ignored` : "";
-      setMessage(`Imported "${result.name}" — ${added} cards added${ignoredSuffix}.`);
+      const ignoredSuffix =
+        ignoredNames.length > 0 ? `, ${ignoredNames.length} ignored` : "";
+      setMessage(
+        `Imported "${result.name}" — ${added} cards added${ignoredSuffix}.`
+      );
       if (ignoredNames.length === 0) onSuccess?.();
     } catch (err) {
       setStatus("error");
@@ -127,7 +153,8 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-[var(--text-secondary)]">
-        Paste a deck URL to import. Supported: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec.
+        Paste a deck URL to import. Supported: Moxfield, Archidekt, TappedOut,
+        MTGTop8, MTGDecks, EDHRec.
       </p>
 
       {/* URL input */}
@@ -145,11 +172,14 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
           />
         </div>
         <button
+          type="button"
           onClick={handleImport}
           disabled={!url.trim() || status === "loading"}
           className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
         >
-          {status === "loading" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {status === "loading" && (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          )}
           Import
         </button>
       </div>
@@ -158,12 +188,15 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       {detected && (
         <div className="flex items-center gap-1.5 text-xs text-green-400">
           <CheckCheck className="w-3.5 h-3.5" />
-          <span>{SOURCE_LABELS[detected.source] ?? detected.source} detected ✓</span>
+          <span>
+            {SOURCE_LABELS[detected.source] ?? detected.source} detected ✓
+          </span>
         </div>
       )}
       {url.trim() && !detected && (
         <p className="text-xs text-amber-400">
-          Source not recognised. Supported: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec.
+          Source not recognised. Supported: Moxfield, Archidekt, TappedOut,
+          MTGTop8, MTGDecks, EDHRec.
         </p>
       )}
 
@@ -177,10 +210,18 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
 
       {/* Status message */}
       {message && (
-        <div className={`flex items-start gap-2 text-sm ${statusTextClass(status)}`}>
-          {status === "loading" && <Loader2 className="w-4 h-4 animate-spin shrink-0 mt-0.5" />}
-          {status === "done" && <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />}
-          {status === "error" && <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
+        <div
+          className={`flex items-start gap-2 text-sm ${statusTextClass(status)}`}
+        >
+          {status === "loading" && (
+            <Loader2 className="w-4 h-4 animate-spin shrink-0 mt-0.5" />
+          )}
+          {status === "done" && (
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+          )}
+          {status === "error" && (
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          )}
           <span>{message}</span>
         </div>
       )}
@@ -188,7 +229,9 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       {/* Ignored cards list */}
       {ignored.length > 0 && (
         <div className="rounded border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
-          <p className="font-medium mb-1">Cards not found in Scryfall ({ignored.length}):</p>
+          <p className="font-medium mb-1">
+            Cards not found in Scryfall ({ignored.length}):
+          </p>
           <ul className="space-y-0.5 max-h-24 overflow-y-auto">
             {ignored.map((name) => (
               <li key={name}>• {name}</li>
@@ -201,7 +244,8 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       <p className="text-xs text-[var(--text-secondary)]">
         Supported:{" "}
         <span className="text-[var(--text-primary)]">moxfield.com</span> and{" "}
-        <span className="text-[var(--text-primary)]">archidekt.com</span>. Deck must be public.
+        <span className="text-[var(--text-primary)]">archidekt.com</span>. Deck
+        must be public.
       </p>
     </div>
   );

@@ -61,6 +61,7 @@ export function ToastContainer() {
                 {toast.message}
               </span>
               <button
+                type="button"
                 onClick={() => remove(toast.id)}
                 className="p-0.5 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
                 aria-label="Dismiss"

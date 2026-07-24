@@ -92,8 +92,8 @@ function redirectToSignIn(req: NextRequest) {
  * @param req Incoming request augmented by NextAuth.
  * @returns A response when access is denied or handled, otherwise undefined.
  */
-async function getAuthorizationResponse(req: NextAuthRequest) {
-  const authorization = await edgeAuthConfig.callbacks.authorized({
+function getAuthorizationResponse(req: NextAuthRequest) {
+  const authorization = edgeAuthConfig.callbacks.authorized({
     auth: req.auth,
     request: req,
   });
@@ -114,7 +114,7 @@ async function getAuthorizationResponse(req: NextAuthRequest) {
 export default auth(async (req) => {
   if (isPublicPage(req.nextUrl.pathname)) return intlMiddleware(req);
 
-  const authorizationResponse = await getAuthorizationResponse(req);
+  const authorizationResponse = getAuthorizationResponse(req);
   if (authorizationResponse) return authorizationResponse;
 
   return intlMiddleware(req);
