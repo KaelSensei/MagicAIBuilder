@@ -16,10 +16,12 @@ fi
 
 echo "🔍 Running SonarCloud analysis..."
 
+# All analysis settings (project key, sources, test/coverage exclusions, ignored
+# rules) live in sonar-project.properties so this matches the CI analysis exactly.
+# Only the host URL and the secret token are supplied here. Do NOT re-declare
+# sonar.sources on the CLI — it bypasses the exclusions and pollutes the dashboard
+# with issues from test files.
 npx sonarqube-scanner \
-  -Dsonar.projectKey=KaelSensei_MagicAIBuilder \
-  -Dsonar.organization=kaelsensei \
-  -Dsonar.sources=src \
   -Dsonar.host.url=https://sonarcloud.io \
   -Dsonar.token="$SONAR_TOKEN"
 

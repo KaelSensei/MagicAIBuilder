@@ -118,6 +118,7 @@ export function Header({ deckId }: HeaderProps = {}) {
           </ImportDialog>
         )}
         <button
+          type="button"
           onClick={handleNewDeck}
           disabled={isCreatingDeck}
           className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-1.5 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -209,6 +210,7 @@ export function Header({ deckId }: HeaderProps = {}) {
               </ImportDialog>
             )}
             <button
+              type="button"
               onClick={async () => {
                 setMenuOpen(false);
                 await handleNewDeck();
