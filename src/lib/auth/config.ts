@@ -5,6 +5,10 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { edgeAuthConfig } from "./edge-config";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+const LOGIN_RATE_LIMIT = 10; // max login attempts (successful or not)
+const LOGIN_RATE_WINDOW = 15 * 60_000; // per 15 minutes per email
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...edgeAuthConfig,
@@ -27,8 +31,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const email = credentials.email as string;
-        const password = credentials.password as string;
+        const email = String(credentials.email).trim().toLowerCase();
+        const password = String(credentials.password);
+
+        const rl = checkRateLimit(`login:${email}`, LOGIN_RATE_LIMIT, LOGIN_RATE_WINDOW);
+        if (!rl.allowed) {
+          return null;
+        }
 
         const user = await prisma.user.findUnique({
           where: { email },

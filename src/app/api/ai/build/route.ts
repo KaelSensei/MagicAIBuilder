@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { buildSchema, sanitizeForPrompt } from "@/lib/validation/ai";
+import { requireAuth } from "@/lib/auth/helpers";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+const RATE_LIMIT = 5; // max AI builds
+const RATE_WINDOW = 60_000; // per 60 seconds per user
 
 // ---------------------------------------------------------------------------
 // Request / Response types
@@ -101,7 +106,7 @@ async function callAnthropic(prompt: string): Promise<AIDeckResponse> {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-3-haiku-20240307",
+      model: "claude-haiku-4-5",
       max_tokens: 4096,
       messages: [{ role: "user", content: prompt }],
     }),
@@ -112,7 +117,7 @@ async function callAnthropic(prompt: string): Promise<AIDeckResponse> {
   const data = await response.json();
   const text: string = data.content?.[0]?.text ?? "{}";
   // Strip markdown fences if the model wrapped output anyway
-  const cleaned = text.replaceAll(/^```(?:json)?\s*/i, "").replaceAll(/\s*```\s*$/i, "").trim();
+  const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
   return JSON.parse(cleaned) as AIDeckResponse;
 }
 
@@ -282,6 +287,17 @@ async function streamDeck(
 // Route handler
 // ---------------------------------------------------------------------------
 export async function POST(request: Request) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
+  const rl = checkRateLimit(`ai-build:${auth.session.user.id}`, RATE_LIMIT, RATE_WINDOW);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: `Too many requests. Please wait ${Math.ceil(rl.retryAfterMs / 1000)}s before retrying.` },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+    );
+  }
+
   let raw: unknown;
   try {
     raw = await request.json();

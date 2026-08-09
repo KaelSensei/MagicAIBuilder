@@ -32,10 +32,17 @@ import { POST } from "./route";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeRequest(body: Record<string, unknown>): Request {
+// Each request gets a unique IP so the shared in-memory rate limiter
+// never trips across unrelated tests.
+let ipCounter = 0;
+function makeRequest(body: Record<string, unknown>, ip?: string): Request {
+  ipCounter += 1;
   return new Request("http://localhost:3000/api/auth/signup", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-real-ip": ip ?? `10.0.0.${ipCounter}`,
+    },
     body: JSON.stringify(body),
   });
 }
@@ -179,5 +186,23 @@ describe("POST /api/auth/signup", () => {
     );
 
     expect(res.status).toBe(500);
+  });
+
+  it("returns 429 after too many attempts from the same IP", async () => {
+    mockUserFindUnique.mockResolvedValue(null);
+    mockUserCreate.mockResolvedValue({
+      id: "user-rl",
+      name: "Test",
+      email: "rl@example.com",
+    });
+
+    const body = { name: "Test", email: "rl@example.com", password: "securepass" };
+    let last: Response = new Response(null);
+    for (let i = 0; i < 6; i += 1) {
+      last = await POST(makeRequest(body, "10.99.99.99"));
+    }
+
+    expect(last.status).toBe(429);
+    expect(last.headers.get("Retry-After")).not.toBeNull();
   });
 });

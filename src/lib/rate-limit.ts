@@ -50,11 +50,15 @@ export function checkRateLimit(
   return { allowed: false, retryAfterMs };
 }
 
-/** Extract client IP from a Next.js Request */
+/**
+ * Extract client IP from a Next.js Request.
+ * Prefers x-real-ip (set by the trusted proxy, e.g. Vercel) over
+ * x-forwarded-for, whose first entry is client-spoofable.
+ */
 export function getClientIp(request: Request): string {
   return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     request.headers.get("x-real-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     "unknown"
   );
 }

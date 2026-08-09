@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { requireAuth } from "@/lib/auth/helpers";
 
 // ─── Validation Schemas ────────────────────────────────────────────────────
 const TemplateQuerySchema = z.object({
@@ -86,10 +87,12 @@ export async function GET(request: NextRequest) {
 // ─── POST /api/templates ───────────────────────────────────────────────────
 /**
  * Create a new template from an existing deck.
- * MVP: No auth check (auth handled at component level).
  * Body: { deckId, templateName, archetype, description? }
  */
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
   try {
     const body = await request.json();
     const validation = CreateTemplateSchema.safeParse(body);
