@@ -130,7 +130,7 @@ describe("requireDeckOwner", () => {
     expect(result.deck?.id).toBe("deck-1");
   });
 
-  it("allows access to legacy decks (userId is null)", async () => {
+  it("denies access to ownerless legacy decks (userId is null)", async () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "user-1" },
     });
@@ -147,8 +147,8 @@ describe("requireDeckOwner", () => {
 
     const result = await requireDeckOwner("deck-legacy");
 
-    expect(result.error).toBeUndefined();
-    expect(result.userId).toBe("user-1");
+    expect(result.error).toBeDefined();
+    expect(result.error?.status).toBe(403);
   });
 
   it("returns 403 when user does not own the deck", async () => {

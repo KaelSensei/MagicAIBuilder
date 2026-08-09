@@ -61,7 +61,9 @@ export async function requireAuth(): Promise<
 > {
   const session = await auth();
 
-  if (process.env.PLAYWRIGHT_TEST === "1" && !session?.user) {
+  const isTestBypass =
+    process.env.PLAYWRIGHT_TEST === "1" && process.env.NODE_ENV !== "production";
+  if (isTestBypass && !session?.user) {
     const user = await resolveAuthenticatedUser({
       email: "playwright@test.local",
       name: "Playwright",
@@ -129,8 +131,8 @@ export async function requireDeckOwner(deckId: string): Promise<
     return { error: NextResponse.json({ error: "Deck not found" }, { status: 404 }) };
   }
 
-  // Allow access to legacy decks (no userId) or owned decks
-  if (deck.userId && deck.userId !== result.session.user.id) {
+  // Only the owner may access a deck; ownerless (legacy) decks are denied
+  if (deck.userId !== result.session.user.id) {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
 
