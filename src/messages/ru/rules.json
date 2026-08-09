@@ -24,5 +24,13 @@
     "viewAllArts": "View all arts",
     "noImage": "No image",
     "cardPosition": "{current} / {total}"
+  },
+  "comprehensive": {
+    "tabLabel": "Полные правила",
+    "title": "Полные правила",
+    "subtitle": "Официальные полные правила Magic: The Gathering.",
+    "effectiveDate": "Действуют с {date}.",
+    "contents": "Содержание",
+    "glossary": "Глоссарий"
   }
 }

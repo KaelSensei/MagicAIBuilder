@@ -11,7 +11,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, Search, Shield, Zap, X } from "lucide-react";
+import { BookOpen, Loader2, Search, Shield, Zap, X } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { useGameChangersList } from "@/hooks/useGameChangers";
 import { useBanlistQuery } from "@/hooks/useBanlist";
 import { Pagination } from "@/components/rules/Pagination";
@@ -372,6 +373,13 @@ export function GameChangersPageClient() {
             <span className="ml-1 text-xs opacity-70">({banlist.length})</span>
           )}
         </button>
+        <Link
+          href="/rules/comprehensive"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          {t("comprehensive.tabLabel")}
+        </Link>
       </div>
 
       {/* Search */}
