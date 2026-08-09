@@ -6,7 +6,7 @@
 set -euo pipefail
 
 # Branches that must never be deleted
-PROTECTED="main master develop dev"
+PROTECTED="main master develop dev staging production"
 
 is_protected() {
   local branch="$1"
