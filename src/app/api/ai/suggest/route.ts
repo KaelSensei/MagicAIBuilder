@@ -3,8 +3,13 @@ import { sanitizeForPrompt } from "@/lib/validation/ai";
 import { ARCHETYPE_PROMPT_HINTS, ARCHETYPES } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
 import { logger } from "@/lib/logger";
+import { requireAuth } from "@/lib/auth/helpers";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+const RATE_LIMIT = 10; // max AI suggestion requests
+const RATE_WINDOW = 60_000; // per 60 seconds per user
 
 interface BracketDimensions {
   ramp: number;
@@ -177,7 +182,7 @@ async function callAnthropic(prompt: string): Promise<SuggestResponse> {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-3-haiku-20240307",
+      model: "claude-haiku-4-5",
       max_tokens: 2048,
       messages: [{ role: "user", content: prompt }],
     }),
@@ -244,6 +249,17 @@ async function streamResponse(
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
+  const rl = checkRateLimit(`ai-suggest:${auth.session.user.id}`, RATE_LIMIT, RATE_WINDOW);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: `Too many requests. Please wait ${Math.ceil(rl.retryAfterMs / 1000)}s before retrying.` },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+    );
+  }
+
   let body: SuggestRequest;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   if (!body.colorIdentity || !Array.isArray(body.cardNames)) return NextResponse.json({ error: "Invalid request" }, { status: 400 });

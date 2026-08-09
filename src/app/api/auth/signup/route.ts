@@ -3,6 +3,10 @@ import { hash } from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
+const RATE_LIMIT = 5; // max signup attempts
+const RATE_WINDOW = 15 * 60_000; // per 15 minutes per IP
 
 const signupSchema = z.object({
   name: z.string().min(1).max(100),
@@ -12,6 +16,15 @@ const signupSchema = z.object({
 
 /** POST /api/auth/signup — Register a new user with email + password */
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`signup:${ip}`, RATE_LIMIT, RATE_WINDOW);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many signup attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = signupSchema.safeParse(body);

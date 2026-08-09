@@ -2,6 +2,11 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
+import { requireAuth } from "@/lib/auth/helpers";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+const WRITE_RATE_LIMIT = 60; // max cache writes
+const WRITE_RATE_WINDOW = 60_000; // per 60 seconds per user
 
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -52,6 +57,17 @@ export async function GET(request: Request) {
 
 // POST /api/cache/search — store a search result in the cache
 export async function POST(request: Request) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
+  const rl = checkRateLimit(`cache-search:${auth.session.user.id}`, WRITE_RATE_LIMIT, WRITE_RATE_WINDOW);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const { query, page, data } = body;

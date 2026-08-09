@@ -23,7 +23,7 @@ export async function GET(_req: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    if (deck.userId && deck.userId !== result.session.user.id) {
+    if (deck.userId !== result.session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -42,7 +42,7 @@ function buildDeckPatchData(fields: PatchDeckInput) {
   const keys = [
     "name", "format", "targetBracket", "manualBracket", "budget",
     "commanderId", "partnerId", "companionId", "pairingType",
-    "isAIGenerated", "description", "tags", "shareEnabled", "shareToken", "isPublic",
+    "isAIGenerated", "description", "tags", "isPublic",
   ] as const;
   for (const key of keys) {
     if (fields[key] !== undefined) data[key] = fields[key];
@@ -71,7 +71,7 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    if (existing.userId && existing.userId !== result.session.user.id) {
+    if (existing.userId !== result.session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -103,7 +103,7 @@ export async function DELETE(_req: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    if (existing.userId && existing.userId !== result.session.user.id) {
+    if (existing.userId !== result.session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
