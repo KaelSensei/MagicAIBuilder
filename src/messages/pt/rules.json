@@ -24,5 +24,13 @@
     "viewAllArts": "View all arts",
     "noImage": "No image",
     "cardPosition": "{current} / {total}"
+  },
+  "comprehensive": {
+    "tabLabel": "Regras abrangentes",
+    "title": "Regras abrangentes",
+    "subtitle": "As regras abrangentes oficiais de Magic: The Gathering.",
+    "effectiveDate": "Em vigor desde {date}.",
+    "contents": "Conteúdo",
+    "glossary": "Glossário"
   }
 }
