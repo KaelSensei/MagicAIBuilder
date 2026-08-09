@@ -24,5 +24,13 @@
     "viewAllArts": "View all arts",
     "noImage": "No image",
     "cardPosition": "{current} / {total}"
+  },
+  "comprehensive": {
+    "tabLabel": "Comprehensive Rules",
+    "title": "Comprehensive Rules",
+    "subtitle": "The official Magic: The Gathering Comprehensive Rules.",
+    "effectiveDate": "Effective as of {date}.",
+    "contents": "Contents",
+    "glossary": "Glossary"
   }
 }

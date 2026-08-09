@@ -24,5 +24,13 @@
     "viewAllArts": "Voir tous les arts",
     "noImage": "Pas d'image",
     "cardPosition": "{current} / {total}"
+  },
+  "comprehensive": {
+    "tabLabel": "Règles complètes",
+    "title": "Règles complètes",
+    "subtitle": "Les règles complètes officielles de Magic: The Gathering.",
+    "effectiveDate": "En vigueur depuis le {date}.",
+    "contents": "Sommaire",
+    "glossary": "Glossaire"
   }
 }

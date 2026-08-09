@@ -24,5 +24,13 @@
     "viewAllArts": "View all arts",
     "noImage": "No image",
     "cardPosition": "{current} / {total}"
+  },
+  "comprehensive": {
+    "tabLabel": "総合ルール",
+    "title": "総合ルール",
+    "subtitle": "マジック：ザ・ギャザリングの公式総合ルール。",
+    "effectiveDate": "{date}発効。",
+    "contents": "目次",
+    "glossary": "用語集"
   }
 }

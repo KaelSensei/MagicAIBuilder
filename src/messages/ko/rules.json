@@ -24,5 +24,13 @@
     "viewAllArts": "View all arts",
     "noImage": "No image",
     "cardPosition": "{current} / {total}"
+  },
+  "comprehensive": {
+    "tabLabel": "종합 규칙",
+    "title": "종합 규칙",
+    "subtitle": "매직: 더 개더링 공식 종합 규칙.",
+    "effectiveDate": "{date}부터 적용.",
+    "contents": "목차",
+    "glossary": "용어집"
   }
 }
