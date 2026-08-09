@@ -17,6 +17,14 @@ Skills own the coding standards — no `any`/`as`/`!`, exhaustive `never` guards
 
 ## Project-specific rules (not covered by any skill)
 
+### Branch flow — staging → dev → main
+
+Every feature or fix branch is merged into `staging` first. Promotion follows the chain `staging` → `dev` → `main`:
+
+1. `feature/*` / `fix/*` PRs target **`staging`** (never `dev` or `main` directly).
+2. Only a dev may request the merge from `staging` into `dev`.
+3. Only a dev may request the merge from `dev` into `main`.
+
 ### Documentation discipline
 
 Feature branches MUST NOT modify `docs/project/changelog.md`, `docs/project/progress.md`, or `docs/product/roadmap.md`. These are updated in a dedicated `chore/docs` PR after each merge batch to avoid rebase conflicts.

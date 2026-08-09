@@ -318,6 +318,14 @@ describe("validatePartner", () => {
 });
 ```
 
+## Branch Flow — staging → dev → main
+
+Every feature or fix branch is merged into `staging` first. Promotion follows the chain `staging` → `dev` → `main`:
+
+1. `feature/*` / `fix/*` PRs target **`staging`** (never `dev` or `main` directly).
+2. Only a dev may request the merge from `staging` into `dev`.
+3. Only a dev may request the merge from `dev` into `main`.
+
 ## Documentation Discipline
 
 Feature branches must **NOT** modify `docs/project/changelog.md`, `docs/project/progress.md`, or `docs/product/roadmap.md`.
