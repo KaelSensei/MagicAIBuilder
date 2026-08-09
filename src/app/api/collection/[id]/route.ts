@@ -79,7 +79,7 @@ export async function PATCH(
     if (!card) {
       return NextResponse.json({ error: "Card not found" }, { status: 404 });
     }
-    if (card.userId && card.userId !== result.session.user.id) {
+    if (card.userId !== result.session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -129,7 +129,7 @@ export async function DELETE(
     if (!card) {
       return NextResponse.json({ error: "Card not found" }, { status: 404 });
     }
-    if (card.userId && card.userId !== result.session.user.id) {
+    if (card.userId !== result.session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

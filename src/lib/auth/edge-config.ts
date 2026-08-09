@@ -34,7 +34,12 @@ export const edgeAuthConfig = {
       return session;
     },
     authorized({ auth: session, request: { nextUrl } }) {
-      if (process.env.PLAYWRIGHT_TEST === "1") return true;
+      if (
+        process.env.PLAYWRIGHT_TEST === "1" &&
+        process.env.NODE_ENV !== "production"
+      ) {
+        return true;
+      }
       const isLoggedIn = !!session?.user;
 
       // Strip locale prefix so route matching works regardless of locale

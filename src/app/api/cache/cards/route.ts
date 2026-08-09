@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
+import { requireAuth } from "@/lib/auth/helpers";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+const WRITE_RATE_LIMIT = 120; // max cache writes
+const WRITE_RATE_WINDOW = 60_000; // per 60 seconds per user
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const SCRYFALL_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -39,6 +44,17 @@ export async function GET(request: Request) {
 
 // POST /api/cache/cards — store a card in the cache
 export async function POST(request: Request) {
+  const auth = await requireAuth();
+  if (auth.error) return auth.error;
+
+  const rl = checkRateLimit(`cache-cards:${auth.session.user.id}`, WRITE_RATE_LIMIT, WRITE_RATE_WINDOW);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const { scryfallId, data } = body;
