@@ -4,42 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { User, ExternalLink, Layers } from "lucide-react";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import type { CardCategory } from "@/lib/deck/types";
-
-interface PublicCard {
-  readonly id: string;
-  readonly name: string;
-  readonly manaCost: string;
-  readonly cmc: number;
-  readonly typeLine: string;
-  readonly imageUri: string;
-  readonly artCropUri: string;
-  readonly category: string;
-  readonly quantity: number;
-  readonly isCommander: boolean;
-  readonly isPartner: boolean;
-  readonly isGameChanger: boolean;
-}
-
-interface PublicDeckAuthor {
-  readonly id: string;
-  readonly name: string | null;
-  readonly username: string | null;
-  readonly image: string | null;
-}
-
-interface PublicDeck {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string | null;
-  readonly format: string;
-  readonly targetBracket: number;
-  readonly isAIGenerated: boolean;
-  readonly isOwner: boolean;
-  readonly cards: readonly PublicCard[];
-  readonly user: PublicDeckAuthor | null;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}
+import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
