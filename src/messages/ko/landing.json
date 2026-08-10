@@ -9,7 +9,7 @@
     "eyebrow": "The Future of Commander Deckbuilding",
     "line1": "Stop Guessing.",
     "line2": "Start Winning.",
-    "subtitle": "You spend <strong>hours building decks</strong> only to sit across the table and realize three cards don\u2019t synergize, your curve is broken, and you\u2019re missing an answer to the meta.<br/><strong>There\u2019s a smarter way.</strong>",
+    "subtitle": "You spend <strong>hours building decks</strong> only to sit across the table and realize three cards don\u2019t synergize, your curve is broken, and you\u2019re missing an answer to the meta.<br></br><strong>There\u2019s a smarter way.</strong>",
     "ctaLoggedIn": "\u2726 Go to My Decks",
     "ctaLoggedOut": "\u2726 Build My First Deck",
     "secondaryCta": "See How It Works",
@@ -17,7 +17,7 @@
   },
   "pain": {
     "sectionLabel": "The Problem",
-    "heading": "Deckbuilding is <em>broken.</em><br/>And you know it.",
+    "heading": "Deckbuilding is <em>broken.</em><br></br>And you know it.",
     "hoursTitle": "Hours Down the Drain",
     "hoursText": "You open 20 Scryfall tabs, scroll Moxfield for an hour, and still aren\u2019t sure if the deck works.",
     "synergyTitle": "Blind Synergy Testing",
@@ -29,7 +29,7 @@
   },
   "product": {
     "sectionLabel": "The Solution",
-    "heading": "Moxfield-level power.<br/><span>Gemini-level intelligence.</span>",
+    "heading": "Moxfield-level power.<br></br><span>Gemini-level intelligence.</span>",
     "description": "MagicAIBuilder is the deck building tool you always wished existed \u2014 a full-featured deck manager where an AI co-pilot analyzes every card choice, flags synergy gaps, and suggests upgrades in real time.",
     "feature1": "AI commander analysis \u2014 instant synergy scoring on every card you add",
     "feature2": "Mana curve optimizer with bracket-aware power budgeting",
@@ -49,7 +49,7 @@
   },
   "how": {
     "sectionLabel": "The Process",
-    "heading": "Three Steps to<br/>Your Best Deck",
+    "heading": "Three Steps to<br></br>Your Best Deck",
     "subtitle": "No tutorials. No friction. Just open it and build.",
     "step1Title": "Choose Your Commander",
     "step1Text": "Pick any legendary creature. The AI instantly profiles the archetype, color identity, and top synergy packages for that commander.",
@@ -79,7 +79,7 @@
     "review3Role": "Competitive Player \u00b7 Bordeaux"
   },
   "cta": {
-    "heading": "Your Next Win<br/>Starts <span>Right Here.</span>",
+    "heading": "Your Next Win<br></br>Starts <span>Right Here.</span>",
     "subtitle": "Stop second-guessing your card choices. Build the deck you meant to build \u2014 and win with it.",
     "ctaLoggedIn": "\u2726 Go to My Decks",
     "ctaLoggedOut": "\u2726 Start Building Now"
