@@ -9,7 +9,7 @@
     "eyebrow": "Le Futur du Deckbuilding Commander",
     "line1": "Arr\u00eatez de deviner.",
     "line2": "Commencez \u00e0 gagner.",
-    "subtitle": "Vous passez <strong>des heures \u00e0 construire des decks</strong> pour finalement r\u00e9aliser \u00e0 la table que trois cartes ne synergisent pas, votre courbe est cass\u00e9e, et il vous manque une r\u00e9ponse au m\u00e9ta.<br/><strong>Il y a une meilleure fa\u00e7on.</strong>",
+    "subtitle": "Vous passez <strong>des heures \u00e0 construire des decks</strong> pour finalement r\u00e9aliser \u00e0 la table que trois cartes ne synergisent pas, votre courbe est cass\u00e9e, et il vous manque une r\u00e9ponse au m\u00e9ta.<br></br><strong>Il y a une meilleure fa\u00e7on.</strong>",
     "ctaLoggedIn": "\u2726 Aller \u00e0 mes Decks",
     "ctaLoggedOut": "\u2726 Construire mon premier Deck",
     "secondaryCta": "Voir comment \u00e7a marche",
@@ -17,7 +17,7 @@
   },
   "pain": {
     "sectionLabel": "Le Probl\u00e8me",
-    "heading": "Le deckbuilding est <em>cass\u00e9.</em><br/>Et vous le savez.",
+    "heading": "Le deckbuilding est <em>cass\u00e9.</em><br></br>Et vous le savez.",
     "hoursTitle": "Des heures perdues",
     "hoursText": "Vous ouvrez 20 onglets Scryfall, scrollez Moxfield pendant une heure, et ne savez toujours pas si le deck fonctionne.",
     "synergyTitle": "Tests de synergie \u00e0 l\u2019aveugle",
@@ -29,7 +29,7 @@
   },
   "product": {
     "sectionLabel": "La Solution",
-    "heading": "La puissance de Moxfield.<br/><span>L\u2019intelligence de Gemini.</span>",
+    "heading": "La puissance de Moxfield.<br></br><span>L\u2019intelligence de Gemini.</span>",
     "description": "MagicAIBuilder est l\u2019outil de construction de deck dont vous avez toujours r\u00eav\u00e9 \u2014 un gestionnaire complet o\u00f9 un co-pilote IA analyse chaque choix de carte, signale les lacunes de synergie et sugg\u00e8re des am\u00e9liorations en temps r\u00e9el.",
     "feature1": "Analyse IA du commandant \u2014 score de synergie instantan\u00e9 sur chaque carte ajout\u00e9e",
     "feature2": "Optimiseur de courbe de mana avec gestion du budget par bracket",
@@ -49,7 +49,7 @@
   },
   "how": {
     "sectionLabel": "Le Processus",
-    "heading": "Trois \u00e9tapes vers<br/>votre meilleur Deck",
+    "heading": "Trois \u00e9tapes vers<br></br>votre meilleur Deck",
     "subtitle": "Pas de tutoriels. Pas de friction. Ouvrez et construisez.",
     "step1Title": "Choisissez votre Commandant",
     "step1Text": "Choisissez n\u2019importe quelle cr\u00e9ature l\u00e9gendaire. L\u2019IA profile instantan\u00e9ment l\u2019arch\u00e9type, l\u2019identit\u00e9 de couleur et les meilleurs packages de synergie.",
@@ -79,7 +79,7 @@
     "review3Role": "Joueur comp\u00e9titif \u00b7 Bordeaux"
   },
   "cta": {
-    "heading": "Votre prochaine victoire<br/>commence <span>ici.</span>",
+    "heading": "Votre prochaine victoire<br></br>commence <span>ici.</span>",
     "subtitle": "Arr\u00eatez de douter de vos choix de cartes. Construisez le deck que vous vouliez vraiment \u2014 et gagnez avec.",
     "ctaLoggedIn": "\u2726 Aller \u00e0 mes Decks",
     "ctaLoggedOut": "\u2726 Commencer \u00e0 construire"
