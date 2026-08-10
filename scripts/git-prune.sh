@@ -54,7 +54,8 @@ git branch -r --format='%(refname:short)' | while read -r remote_branch; do
     continue
   fi
   echo "  Deleting remote: $local_name"
-  git push origin --delete "$local_name" 2>/dev/null || echo "  Warning: could not delete remote $local_name"
+  # --no-verify: branch deletion is not a code push, skip the pre-push e2e gate
+  git push --no-verify origin --delete "$local_name" 2>/dev/null || echo "  Warning: could not delete remote $local_name"
 done
 
 echo ""

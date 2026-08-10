@@ -1,31 +1,22 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { PublicDeckView } from "@/components/profile/PublicDeckView";
+import { fetchPublicDeck } from "@/lib/deck/public-deck";
 
 interface Params {
   readonly params: Promise<{ id: string }>;
 }
 
-async function fetchPublicDeck(id: string) {
-  try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-
-    const res = await fetch(`${baseUrl}/api/deck/${id}`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
+async function fetchDeckForViewer(id: string) {
+  const cookieHeader = (await headers()).get("cookie");
+  return fetchPublicDeck(id, cookieHeader);
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
-  const deck = await fetchPublicDeck(id);
+  const deck = await fetchDeckForViewer(id);
 
   if (!deck) return { title: "Deck not found — MagicAIBuilder" };
 
@@ -47,7 +38,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function PublicDeckPage({ params }: Params) {
   const { id } = await params;
-  const deck = await fetchPublicDeck(id);
+  const deck = await fetchDeckForViewer(id);
 
   if (!deck) notFound();
 

@@ -1,6 +1,7 @@
 // HTTP client for the deck API routes
 import type { Deck, DeckCard, DeckZone, CardCategory, CommanderPairingType } from "@/lib/deck/types";
 import { logger } from "@/lib/logger";
+import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
 
 /** Shape returned by the API (dates as ISO strings) */
 export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "commander" | "partner" | "cards" | "manualBracket" | "cardCount"> {
@@ -281,10 +282,13 @@ export async function storeSearchCache(
   data: unknown
 ): Promise<void> {
   try {
+    const body = JSON.stringify({ query, page, data });
+    // The server rejects oversized cache writes with 413 — skip them entirely
+    if (body.length > MAX_SEARCH_CACHE_BYTES) return;
     await fetch("/api/cache/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, page, data }),
+      body,
     });
   } catch (err) {
     logger.warn("Failed to cache search result", "storeSearchCache", err);
