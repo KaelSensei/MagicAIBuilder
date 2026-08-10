@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
 import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
 
 const WRITE_RATE_LIMIT = 60; // max cache writes
 const WRITE_RATE_WINDOW = 60_000; // per 60 seconds per user
@@ -88,8 +89,7 @@ export async function POST(request: Request) {
 
     const cacheKey = generateCacheKey(query, page);
 
-    const MAX_CACHE_BYTES = 500 * 1024; // 500KB for search results (can be large)
-    if (JSON.stringify(data).length > MAX_CACHE_BYTES) {
+    if (JSON.stringify(data).length > MAX_SEARCH_CACHE_BYTES) {
       return NextResponse.json({ error: "Payload too large" }, { status: 413 });
     }
 
