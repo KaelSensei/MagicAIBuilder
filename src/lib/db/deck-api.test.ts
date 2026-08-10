@@ -12,7 +12,9 @@ import {
   updateCardZone,
   updateCardMaybeboard,
   removeAllCards,
+  storeSearchCache,
 } from "@/lib/db/deck-api";
+import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
 
 function mockFetch(data: unknown, ok = true, status = 200) {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
@@ -244,5 +246,27 @@ describe("storeCardCache", () => {
   it("does not throw on fetch error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
     await expect(storeCardCache("id", {})).resolves.toBeUndefined();
+  });
+});
+
+describe("storeSearchCache", () => {
+  it("POSTs the search result to the cache endpoint", async () => {
+    mockFetch({});
+    await storeSearchCache("t:goblin", 1, { cards: ["a"] });
+    const call = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(call[0]).toContain("/api/cache/search");
+    expect(call[1].method).toBe("POST");
+  });
+
+  it("skips the POST when the payload exceeds the server cache limit", async () => {
+    mockFetch({});
+    const oversized = { blob: "x".repeat(MAX_SEARCH_CACHE_BYTES + 1) };
+    await storeSearchCache("t:goblin", 1, oversized);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("does not throw on fetch error", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
+    await expect(storeSearchCache("q", 1, {})).resolves.toBeUndefined();
   });
 });
