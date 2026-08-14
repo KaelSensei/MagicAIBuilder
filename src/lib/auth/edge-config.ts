@@ -3,6 +3,37 @@ import Google from "next-auth/providers/google";
 import { SUPPORTED_LOCALES } from "@/i18n/routing";
 
 /**
+ * Routes reachable without a session: auth screens, share links, and the
+ * public deck / profile / community surfaces.
+ */
+const PUBLIC_API_AND_PAGE_PATHS: readonly string[] = [
+  "/auth/signin",
+  "/auth/signup",
+  "/api/auth",
+  "/api/health",
+  "/api/import",
+  "/api/share",
+  "/api/community",
+  "/api/deck",
+  "/api/users",
+  "/share",
+  "/deck",
+  "/u",
+];
+
+/**
+ * Checks whether a pathname equals a prefix or is nested under it.
+ * Segment-aware so `/deck` never matches the protected `/decks` listing.
+ *
+ * @param pathname Locale-stripped request pathname.
+ * @param prefix Public route prefix.
+ * @returns True when the pathname is the prefix or a child of it.
+ */
+function matchesPathPrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
  * Edge-compatible auth config — used by middleware only.
  * Does NOT import Prisma or bcryptjs (both are Node.js-only).
  * Credentials provider is omitted here; it runs server-side in config.ts.
@@ -49,17 +80,9 @@ export const edgeAuthConfig = {
       const pathname = nextUrl.pathname.replace(localePattern, "/");
 
       // Public paths — always allow
-      const publicPaths = [
-        "/auth/signin",
-        "/auth/signup",
-        "/api/auth",
-        "/api/health",
-        "/api/import",
-        "/api/share",
-        "/share",
-      ];
       const isPublic =
-        pathname === "/" || publicPaths.some((p) => pathname.startsWith(p));
+        pathname === "/" ||
+        PUBLIC_API_AND_PAGE_PATHS.some((p) => matchesPathPrefix(pathname, p));
       if (isPublic) return true;
 
       // Static assets — always allow
