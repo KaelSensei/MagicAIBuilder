@@ -94,6 +94,36 @@ describe("edgeAuthConfig.callbacks.authorized", () => {
     expect(authorizedCallback(makeArgs("/share/abc123", false))).toBe(true);
   });
 
+  it("allows public deck pages", () => {
+    expect(authorizedCallback(makeArgs("/deck/deck-1", false))).toBe(true);
+  });
+
+  it("allows public profile pages", () => {
+    expect(authorizedCallback(makeArgs("/u/kael", false))).toBe(true);
+  });
+
+  it("allows the public deck API", () => {
+    expect(authorizedCallback(makeArgs("/api/deck/deck-1", false))).toBe(true);
+  });
+
+  it("allows the public profile API", () => {
+    expect(authorizedCallback(makeArgs("/api/users/kael", false))).toBe(true);
+  });
+
+  it("allows the community API", () => {
+    expect(
+      authorizedCallback(makeArgs("/api/community/decks/deck-1/ratings", false))
+    ).toBe(true);
+  });
+
+  it("does not treat /decks as public because /deck is", () => {
+    expect(authorizedCallback(makeArgs("/decks", false))).toBe(false);
+  });
+
+  it("does not treat /api/decks as public because /api/deck is", () => {
+    expect(authorizedCallback(makeArgs("/api/decks", false))).toBeInstanceOf(Response);
+  });
+
   it("allows /_next static assets", () => {
     expect(authorizedCallback(makeArgs("/_next/static/chunk.js", false))).toBe(true);
   });
