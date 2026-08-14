@@ -50,8 +50,9 @@ test.describe("i18n Locale Routing", () => {
     const myDecksLink = page.getByRole("link", { name: /My Decks|Mes Decks/i });
     if (await myDecksLink.isVisible()) {
       await myDecksLink.click();
-      await page.waitForLoadState("networkidle");
-      expect(page.url()).toContain("/fr/");
+      // Web-first assertion: retries until the URL carries the locale prefix,
+      // instead of waiting on a network-quiet heuristic.
+      await expect(page).toHaveURL(/\/fr\//);
     }
   });
 });

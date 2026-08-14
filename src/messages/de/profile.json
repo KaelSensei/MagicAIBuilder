@@ -1,5 +1,15 @@
 {
-  "memberSince": "@{username} \u00b7 Member since {date}",
+  "memberSince": "@{username} · Member since {date}",
   "publicDecks": "Public Decks",
-  "noPublicDecks": "No public decks yet."
+  "noPublicDecks": "No public decks yet.",
+  "follow": "Follow",
+  "unfollow": "Unfollow",
+  "following": "Following",
+  "followers": "{count, plural, =1 {# follower} other {# followers}}",
+  "followingCount": "{count} following",
+  "signInToFollow": "Sign in to follow",
+  "followFailed": "Could not update follow. Try again.",
+  "badgeCommunityBuilder": "Community Builder",
+  "badgeHighlyRated": "Highly Rated",
+  "badgeTrending": "Trending"
 }
