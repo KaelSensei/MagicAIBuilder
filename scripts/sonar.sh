@@ -14,6 +14,13 @@ if [ -z "$SONAR_TOKEN" ] || [ "$SONAR_TOKEN" = "your_token_here" ]; then
   exit 1
 fi
 
+# Regenerate coverage first. The scanner uploads coverage/lcov.info as-is, so a
+# stale file silently scores the gate against code that no longer exists — this
+# once reported new_coverage as 44.3% from a five-month-old report when the real
+# figure was 85.5%, failing the gate with no code change behind it.
+echo "🧪 Regenerating coverage report..."
+pnpm test:coverage
+
 echo "🔍 Running SonarCloud analysis..."
 
 # All analysis settings (project key, sources, test/coverage exclusions, ignored
