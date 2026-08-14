@@ -5,9 +5,12 @@ import { User, ExternalLink, Layers } from "lucide-react";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import type { CardCategory } from "@/lib/deck/types";
 import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
+import { DeckRatingPanel } from "@/components/community/DeckRatingPanel";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
+  /** Anonymous viewers see the aggregate but cannot rate. */
+  readonly isSignedIn: boolean;
 }
 
 const BRACKET_COLORS: Record<number, string> = {
@@ -17,7 +20,7 @@ const BRACKET_COLORS: Record<number, string> = {
   4: "text-red-400 border-red-400/30 bg-red-400/10",
 };
 
-export function PublicDeckView({ deck }: PublicDeckViewProps) {
+export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
   const commander = deck.cards.find((c) => c.isCommander && !c.isPartner);
   const partner = deck.cards.find((c) => c.isPartner);
   const nonCommanderCards = deck.cards.filter((c) => !c.isCommander && !c.isPartner);
@@ -115,6 +118,13 @@ export function PublicDeckView({ deck }: PublicDeckViewProps) {
           </div>
         </div>
       </div>
+
+      {/* Community rating */}
+      <DeckRatingPanel
+        deckId={deck.id}
+        isOwner={deck.isOwner}
+        isSignedIn={isSignedIn}
+      />
 
       {/* Card list */}
       <div className="flex flex-col gap-4">
