@@ -30,3 +30,24 @@ export function buildViewerScopedRequestInit(
   }
   return { next: { revalidate: ANONYMOUS_REVALIDATE_SECONDS } };
 }
+
+const LOCAL_BASE_URL = "http://localhost:3000";
+
+/**
+ * Absolute origin for a server component calling this app's own API.
+ *
+ * Node's fetch rejects relative URLs, and an env var that is *present but
+ * empty* (`NEXT_PUBLIC_APP_URL=` in a .env) is a realistic misconfiguration —
+ * so blank values are treated as unset rather than used as an origin.
+ *
+ * @returns The origin to prefix API paths with, without a trailing slash.
+ */
+export function resolveAppBaseUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (explicit) return explicit;
+
+  const vercelHost = process.env.VERCEL_URL?.trim();
+  if (vercelHost) return `https://${vercelHost}`;
+
+  return LOCAL_BASE_URL;
+}

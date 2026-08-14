@@ -35,8 +35,14 @@ services:
 
       # Ensure auth is bypassed for E2E
       PLAYWRIGHT_TEST: "1"
-      # Default to running the new pairing regression test only.
-      PLAYWRIGHT_SPEC: "e2e/background-commander-pairing.spec.ts"
+      # Default to the FULL suite. `:-` would also swallow an explicit empty
+      # value, so use `-`: setting PLAYWRIGHT_SPEC="" deliberately means "all
+      # specs", while naming a file narrows the run to it.
+      #
+      # This was previously a hardcoded single spec with no interpolation, so
+      # host-shell overrides were silently ignored and the pre-push gate ran
+      # 1 of 8 spec files while reporting a full green.
+      PLAYWRIGHT_SPEC: "${PLAYWRIGHT_SPEC-}"
     command: >
       sh -lc "
         pnpm exec prisma migrate deploy &&
