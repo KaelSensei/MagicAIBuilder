@@ -3,6 +3,9 @@
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { User, Layers } from "lucide-react";
+import type { PlayerBadge } from "@/lib/social/follow";
+import { FollowButton } from "@/components/community/FollowButton";
+import { PlayerBadges } from "@/components/community/PlayerBadges";
 
 interface PublicDeckPreview {
   readonly id: string;
@@ -27,10 +30,16 @@ interface PublicProfile {
   readonly image: string | null;
   readonly createdAt: string;
   readonly decks: readonly PublicDeckPreview[];
+  readonly followerCount: number;
+  readonly followingCount: number;
+  readonly isFollowing: boolean;
+  readonly badges: readonly PlayerBadge[];
 }
 
 interface PublicProfileViewProps {
   readonly profile: PublicProfile;
+  /** True when the viewer is signed in and is not the profile owner. */
+  readonly canFollow: boolean;
 }
 
 const BRACKET_COLORS: Record<number, string> = {
@@ -40,7 +49,7 @@ const BRACKET_COLORS: Record<number, string> = {
   4: "text-red-400 border-red-400/30 bg-red-400/10",
 };
 
-export function PublicProfileView({ profile }: PublicProfileViewProps) {
+export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps) {
   const t = useTranslations("profile");
   const displayName = profile.name ?? profile.username;
   const memberSince = new Date(profile.createdAt).toLocaleDateString("en-US", {
@@ -64,11 +73,20 @@ export function PublicProfileView({ profile }: PublicProfileViewProps) {
             <User className="w-8 h-8 text-[var(--text-secondary)]" />
           </div>
         )}
-        <div>
+        <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">{displayName}</h1>
           <p className="text-sm text-[var(--text-secondary)]">
             {t("memberSince", { username: profile.username, date: memberSince })}
+            {" · "}
+            {t("followingCount", { count: profile.followingCount })}
           </p>
+          <PlayerBadges badges={profile.badges} />
+          <FollowButton
+            username={profile.username}
+            initialFollowing={profile.isFollowing}
+            initialFollowerCount={profile.followerCount}
+            canFollow={canFollow}
+          />
         </div>
       </div>
 

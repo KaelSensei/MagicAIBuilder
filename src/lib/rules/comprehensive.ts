@@ -164,13 +164,11 @@ export function parseComprehensiveRules(raw: string): ComprehensiveRules {
 
   const sectionLines =
     glossaryStart >= 0 ? bodyLines.slice(0, glossaryStart) : bodyLines;
+
+  // The glossary runs from its heading to the trailing Credits line, if present.
+  const glossaryEnd = creditsStart > glossaryStart ? creditsStart : undefined;
   const glossaryLines =
-    glossaryStart >= 0
-      ? bodyLines.slice(
-          glossaryStart + 1,
-          creditsStart > glossaryStart ? creditsStart : undefined
-        )
-      : [];
+    glossaryStart >= 0 ? bodyLines.slice(glossaryStart + 1, glossaryEnd) : [];
 
   return {
     effectiveDate,
