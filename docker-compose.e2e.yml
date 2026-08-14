@@ -1,3 +1,12 @@
+# Own Compose project. Without this, the project name is derived from the
+# directory and collides with docker-compose.yml — and since both declare a
+# service called `db`, starting the e2e stack REPLACED the running dev database
+# container with one mounting pgdata_e2e. The dev data survived in its volume,
+# but the app pointed at an empty database until `docker compose up -d db` was
+# run again, which reads as "login suddenly broken". The `down -v` in the
+# pre-push cleanup was likewise scoped to the shared project.
+name: magicaibuilder-e2e
+
 services:
   db:
     image: postgres:16-alpine
