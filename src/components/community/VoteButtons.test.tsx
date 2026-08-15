@@ -59,7 +59,7 @@ describe("VoteButtons", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /upvote/i }));
 
-    await waitFor(() => expect(screen.getByText("4")).toBeDefined());
+    expect(await screen.findByText("4")).toBeDefined();
     expect(fetch).toHaveBeenCalledWith(
       "/api/community/decks/deck-1/vote",
       expect.objectContaining({ method: "POST" })
