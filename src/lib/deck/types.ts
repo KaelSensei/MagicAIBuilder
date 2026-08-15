@@ -35,6 +35,8 @@ export interface DeckStats {
   overBudgetCards: string[]; bannedCards: string[]; colorIdentityViolations: string[];
   themes?: import("./themes").DetectedTheme[];
   flexibleLands: number;
+  /** Curve / threat / interaction measures; null for Commander (bracket scoring instead) */
+  formatStats: import("./format-stats").FormatStats | null;
 }
 export interface BracketScore {
   overall: 1|2|3|4;

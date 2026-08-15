@@ -85,7 +85,13 @@
     "bannedCards": "Cartes bannies",
     "targetForBracket": "(cible pour B{bracket})",
     "budget": "Budget",
-    "overBudget": "Hors budget"
+    "overBudget": "Hors budget",
+    "formatChecks": "Contrôles {format}",
+    "curve": "Courbe",
+    "threatDensity": "Menaces",
+    "interaction": "Interaction",
+    "targetRange": "(cible {min}–{max})",
+    "formatStatsHint": "Proportions des cartes non-terrain. Les repères sont indicatifs, pas des règles."
   },
   "ai": {
     "title": "Suggestions IA",

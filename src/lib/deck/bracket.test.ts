@@ -48,6 +48,8 @@ function makeStats(overrides: Partial<DeckStats> = {}): DeckStats {
     bannedCards: [],
     colorIdentityViolations: [],
     flexibleLands: 0,
+    // Commander is graded by bracket scoring, not format stats.
+    formatStats: null,
     ...overrides,
   };
 }

@@ -85,7 +85,13 @@
     "bannedCards": "Banned cards",
     "targetForBracket": "(target for B{bracket})",
     "budget": "Budget",
-    "overBudget": "Over budget"
+    "overBudget": "Over budget",
+    "formatChecks": "{format} Checks",
+    "curve": "Curve",
+    "threatDensity": "Threats",
+    "interaction": "Interaction",
+    "targetRange": "(target {min}–{max})",
+    "formatStatsHint": "Shares of non-land cards. Benchmarks are guidance, not rules."
   },
   "ai": {
     "title": "AI Suggestions",

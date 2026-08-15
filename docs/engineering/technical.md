@@ -550,14 +550,35 @@ All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 
 **Every layer reads from this single config** instead of hardcoding Commander:
 
-| Layer           | What changes per format                                      |
-| --------------- | ------------------------------------------------------------ |
-| Search queries  | `legal:{format}` instead of `legal:commander`                |
-| Banlist         | `banned:{format}` with per-format cache key                  |
-| Validation      | Deck size (100 vs 60), singleton rule, commander requirement |
-| Card multiples  | maxCopiesPerCard (1 for Commander, 4 for Standard)           |
-| Bracket scoring | Only computed for Commander (returns null otherwise)         |
-| Playtest        | startingLife (40 Commander, 30 Brawl, 20 elsewhere)          |
+| Layer           | What changes per format                                       |
+| --------------- | ------------------------------------------------------------- |
+| Search queries  | `legal:{format}` instead of `legal:commander`                 |
+| Banlist         | `banned:{format}` with per-format cache key                   |
+| Validation      | Deck size (100 vs 60), singleton rule, commander requirement  |
+| Card multiples  | maxCopiesPerCard (1 for Commander, 4 for Standard)            |
+| Bracket scoring | Only computed for Commander (returns null otherwise)          |
+| Playtest        | startingLife (40 Commander, 30 Brawl, 20 elsewhere)           |
+| Deck statistics | Card-count target, and the curve / threat / interaction bands |
+
+---
+
+## Format-Specific Statistics
+
+Commander decks are graded by bracket scoring. Every other format had no equivalent read on whether a list is well-proportioned, so `src/lib/deck/format-stats.ts` adds three measures, computed by `computeDeckStats` and surfaced in `DeckStats.tsx`:
+
+| Measure           | Definition                                                        |
+| ----------------- | ----------------------------------------------------------------- |
+| Curve             | `avgCmc` against the format's `avgCmcTarget` band                 |
+| Threat density    | `creature + planeswalker + winCondition`, as a share of non-lands |
+| Interaction ratio | `removal + boardWipe + protection`, as a share of non-lands       |
+
+Ratios are taken against **non-land cards**, not the whole deck: a 60-card list with 24 lands and a 100-card list with 38 are not comparable on raw counts, but their spell mix is. `benchmarkStatus` places each value in its band and returns `"below" | "on-target" | "above"`.
+
+`buildFormatStats` returns `null` when `hasFormatStats` is false (Commander only), and `DeckStats.formatStats` carries that through, so the UI renders the panel purely on presence.
+
+> The bands in `FORMAT_CONFIG` are **heuristic starting points, not derived from tournament data**. They are meant to prompt a look at the deck, not to grade it. Tune them as real data arrives.
+
+The same `format` prop also fixes two Commander assumptions in the stats panel: the card-count row now reads `totalCards/deckSize` rather than always `/100`, and the bracket benchmark rows (ramp, draw, removal, lands) are hidden for formats without bracket scoring — a Modern deck previously showed "60/100" and "target for B3".
 
 ---
 
