@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # Pre-push e2e runner.
-# Invokes the `e2e-runner` Claude subagent (headless) when the `claude` CLI is on PATH,
-# otherwise falls back to running docker-compose directly. Either path blocks the push
-# on any non-zero exit from the e2e container.
+#
+# The verdict ALWAYS comes from the e2e container's exit code. An earlier
+# version gated on `claude -p ...` instead, but that command exits 0 whenever
+# the CLI itself ran — the agent's PASS/FAIL is only prose on stdout. The gate
+# therefore printed "✓ E2E passed — push allowed" on a run with 27 failures.
+#
+# The agent is still useful, just not as the authority: it is invoked to
+# diagnose a failure after the fact, and cannot turn a red run green.
 
 set -euo pipefail
 
@@ -35,25 +40,19 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if command -v claude >/dev/null 2>&1; then
-  echo "ℹ  Using Claude 'e2e-runner' agent (headless)."
-  # Headless Claude invocation. The agent handles execution + diagnosis.
-  # --dangerously-skip-permissions is intentional: pre-push must be non-interactive.
-  if claude -p "@e2e-runner run the full e2e suite now and report PASS or FAIL" \
-       --dangerously-skip-permissions; then
-    echo "✓ E2E passed — push allowed."
-    exit 0
-  else
-    echo "✗ E2E failed — push blocked."
-    exit 1
-  fi
-fi
-
-echo "ℹ  'claude' CLI not found — running docker-compose directly."
 if run_direct; then
   echo "✓ E2E passed — push allowed."
   exit 0
-else
-  echo "✗ E2E failed — push blocked. Check playwright-report/ for details."
-  exit 1
 fi
+
+echo "✗ E2E failed — push blocked. Check playwright-report/ for details."
+
+# Optional diagnosis pass. Advisory only: the exit code below is unconditional.
+if command -v claude >/dev/null 2>&1; then
+  echo "ℹ  Asking the 'e2e-runner' agent to diagnose (advisory, cannot unblock)."
+  # --dangerously-skip-permissions is intentional: pre-push must be non-interactive.
+  claude -p "The e2e suite just failed. Read playwright-report/ and the compose logs, then explain the distinct root causes. Do not modify files." \
+    --dangerously-skip-permissions || true
+fi
+
+exit 1

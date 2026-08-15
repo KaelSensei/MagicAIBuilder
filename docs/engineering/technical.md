@@ -450,12 +450,13 @@ pnpm prisma migrate dev
 
 # Start dev server on http://127.0.0.1:3000
 pnpm dev:local
-# -> http://localhost:3000/fr
+# -> http://localhost:3000
 ```
 
-`http://localhost:3000` redirects once to the default English locale
-(`/en`). Use `/fr` directly for the French UI. Docker/PostgreSQL is required
-for authenticated deck, collection, and profile features.
+Routing is `localePrefix: "as-needed"`: English is served unprefixed at
+`http://localhost:3000`, and the other nine locales carry a prefix
+(`/fr`, `/ja`, …). Docker/PostgreSQL is required for authenticated deck,
+collection, and profile features.
 
 ### Testing
 

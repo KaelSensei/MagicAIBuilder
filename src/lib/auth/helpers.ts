@@ -19,6 +19,21 @@ interface SessionUserCandidate {
   image?: string | null;
 }
 
+/** Prisma's error code for a unique-constraint violation. */
+const UNIQUE_VIOLATION = "P2002";
+
+/**
+ * @param error - a rejected Prisma promise's reason
+ * @returns whether the write lost a race to a concurrent insert
+ */
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { code?: unknown }).code === UNIQUE_VIOLATION
+  );
+}
+
 async function resolveAuthenticatedUser(
   sessionUser: SessionUserCandidate
 ): Promise<AuthenticatedSession["user"] | null> {
@@ -37,16 +52,30 @@ async function resolveAuthenticatedUser(
     return null;
   }
 
-  return prisma.user.upsert({
-    where: { email: normalizedEmail },
-    update: {},
-    create: {
-      email: normalizedEmail,
-      name: sessionUser.name ?? null,
-      image: sessionUser.image ?? null,
-    },
-    select: { id: true, name: true, email: true, image: true },
-  });
+  const select = { id: true, name: true, email: true, image: true } as const;
+
+  try {
+    return await prisma.user.upsert({
+      where: { email: normalizedEmail },
+      update: {},
+      create: {
+        email: normalizedEmail,
+        name: sessionUser.name ?? null,
+        image: sessionUser.image ?? null,
+      },
+      select,
+    });
+  } catch (error) {
+    // Prisma's upsert is a read-then-write, not an atomic INSERT ... ON
+    // CONFLICT, so concurrent callers for the same email all miss and all
+    // insert. Losing that race is expected, not a failure: read the row the
+    // winner just wrote.
+    if (!isUniqueViolation(error)) {
+      throw error;
+    }
+
+    return prisma.user.findUnique({ where: { email: normalizedEmail }, select });
+  }
 }
 
 /**

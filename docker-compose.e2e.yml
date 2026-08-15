@@ -52,10 +52,23 @@ services:
       # host-shell overrides were silently ignored and the pre-push gate ran
       # 1 of 8 spec files while reporting a full green.
       PLAYWRIGHT_SPEC: "${PLAYWRIGHT_SPEC-}"
+      # Excluded from the blocking gate by default:
+      #   @external — depends on third-party services (e.g. the live Moxfield
+      #     API); a deck going private there once turned the gate red with no
+      #     code change on our side.
+      #   @perf — asserts wall-clock latency against `next dev`, which compiles
+      #     routes on demand; the same endpoint measured 41ms alone and 5163ms
+      #     under full-suite contention.
+      # Set this to "" to run them deliberately.
+      PLAYWRIGHT_GREP_INVERT: "${PLAYWRIGHT_GREP_INVERT-@external|@perf}"
     command: >
       sh -lc "
         pnpm exec prisma migrate deploy &&
-        pnpm exec playwright test $${PLAYWRIGHT_SPEC}
+        if [ -n \"$${PLAYWRIGHT_GREP_INVERT}\" ]; then
+          pnpm exec playwright test $${PLAYWRIGHT_SPEC} --grep-invert \"$${PLAYWRIGHT_GREP_INVERT}\"
+        else
+          pnpm exec playwright test $${PLAYWRIGHT_SPEC}
+        fi
       "
 
 volumes:

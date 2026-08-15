@@ -107,8 +107,9 @@ pnpm dev:local
 
 This starts Next.js on `http://127.0.0.1:3000`. Open:
 
-- `http://localhost:3000/fr` for the French UI
-- `http://localhost:3000/en` for the default English UI
+- `http://localhost:3000` for the default English UI — served unprefixed
+- `http://localhost:3000/fr` for the French UI, and likewise for the other
+  eight locales (`de`, `it`, `es`, `ja`, `zh`, `ko`, `ru`, `pt`)
 
 The landing page can run without Docker. Authenticated deck, collection, and
 profile workflows require PostgreSQL to be running and migrated.
