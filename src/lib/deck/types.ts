@@ -42,14 +42,8 @@ export interface BracketScore {
   gameChangers: number; twoCardInfiniteCombos: number; warnings: string[];
 }
 
-// ─── Playtest ───────────────────────────────────────────────────────────────
-
-export interface PlaytestState {
-  hand: DeckCard[];
-  library: DeckCard[]; // remaining shuffled deck
-  turn: number;
-  mulliganCount: number;
-}
+// Playtest state lives in PlaytestEngine (src/lib/playtest/engine.ts), which
+// also tracks phases, life, and the battlefield / graveyard / exile zones.
 
 export type ViewMode = "grid" | "list";
 export type ColorMode = "or" | "and" | "exact";

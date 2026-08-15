@@ -39,6 +39,8 @@ export interface FormatConfig {
   readonly maxCopiesPerCard: number;
   /** Recommended land count for deck building hints */
   readonly recommendedLands: readonly [number, number];
+  /** Life total each player starts the game on */
+  readonly startingLife: number;
 }
 
 /** All format configs keyed by DeckFormat */
@@ -54,6 +56,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: true,
     maxCopiesPerCard: 1,
     recommendedLands: [33, 38],
+    startingLife: 40,
   },
   brawl: {
     label: "Brawl",
@@ -66,6 +69,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: true,
     maxCopiesPerCard: 1,
     recommendedLands: [22, 26],
+    startingLife: 30,
   },
   oathbreaker: {
     label: "Oathbreaker",
@@ -78,6 +82,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: true,
     maxCopiesPerCard: 1,
     recommendedLands: [22, 26],
+    startingLife: 20,
   },
   standard: {
     label: "Standard",
@@ -90,6 +95,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
+    startingLife: 20,
   },
   pioneer: {
     label: "Pioneer",
@@ -102,6 +108,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
+    startingLife: 20,
   },
   modern: {
     label: "Modern",
@@ -114,6 +121,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
+    startingLife: 20,
   },
   legacy: {
     label: "Legacy",
@@ -126,6 +134,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
+    startingLife: 20,
   },
   vintage: {
     label: "Vintage",
@@ -138,6 +147,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
+    startingLife: 20,
   },
   pauper: {
     label: "Pauper",
@@ -150,6 +160,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     hasColorIdentity: false,
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
+    startingLife: 20,
   },
 };
 

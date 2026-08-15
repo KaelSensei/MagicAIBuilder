@@ -545,7 +545,7 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 
 - `DeckFormat` — union type of 9 supported formats
-- `FORMAT_CONFIG` — per-format rules: deckSize, sideboardSize, isSingleton, hasCommander, hasBracketScoring, hasColorIdentity, maxCopiesPerCard, scryfallLegality, recommendedLands
+- `FORMAT_CONFIG` — per-format rules: deckSize, sideboardSize, isSingleton, hasCommander, hasBracketScoring, hasColorIdentity, maxCopiesPerCard, scryfallLegality, recommendedLands, startingLife
 - `getFormatConfig(format)` — safe accessor with Commander fallback
 
 **Every layer reads from this single config** instead of hardcoding Commander:
@@ -557,6 +557,36 @@ All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 | Validation      | Deck size (100 vs 60), singleton rule, commander requirement |
 | Card multiples  | maxCopiesPerCard (1 for Commander, 4 for Standard)           |
 | Bracket scoring | Only computed for Commander (returns null otherwise)         |
+| Playtest        | startingLife (40 Commander, 30 Brawl, 20 elsewhere)          |
+
+---
+
+## Playtest Engine
+
+`src/lib/playtest/` is a pure state machine with no framework dependency, wrapped by a Zustand store and rendered by the components in `src/components/playtest/`.
+
+**`engine.ts`** — every transition takes a state and returns a new one:
+
+| Export                                           | Role                                                                              |
+| ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `PlaytestEngine`                                 | Turn, phase, life + history, hand/library/battlefield/graveyard/exile, undo stack |
+| `createPlaytestState(cards, overrides)`          | Shuffles and deals; `overrides.lifeTotal` carries the format total                |
+| `applyMulligan`                                  | Reshuffles and keeps one card fewer, capped at `MAX_MULLIGANS`                    |
+| `applyNextPhase` / `applyNextTurn`               | `PHASES` order; End rolls into the next turn and untaps                           |
+| `applyDamage` / `applyHeal`                      | Adjusts life and appends a `LifeHistoryEntry`                                     |
+| `applyTap` / `applyUntapAll` / `applyAddCounter` | Battlefield permanent state                                                       |
+| `applyMoveToZone`                                | Moves a card between any two `CardZone`s, exhaustively checked                    |
+| `applyUndo`                                      | Restores the previous state; `pushHistory` caps the stack at 10                   |
+
+Shuffling uses `randomIntBelow` from `src/lib/crypto-random.ts`, not `Math.random()`.
+
+**`store.ts`** — `usePlaytestStore` exposes each `apply*` as an action and holds the deck as it was dealt (`setup`), so `resetPlaytest` re-deals the original deck. Rebuilding it from the live zones instead would carry battlefield state (tapped, counters) back into the library and lose the commander/partner distinction.
+
+**Mulligan model.** London formally draws seven and bottoms N chosen cards. Goldfishing has no opponent and no choice to make, so the engine keeps `7 - N` random cards — the same distribution, without a bottoming UI that would decide nothing.
+
+**`PlaytestModal`** subscribes with fine-grained selectors and clears the session on unmount: the store outlives the modal, so a stale game would otherwise reappear on reopen.
+
+`analytics.ts` (`calculateWinRate`, `getMulliganDistribution`, …) is written and tested but not reachable — there is no `PlaytestSession` Prisma model to feed it.
 
 ---
 

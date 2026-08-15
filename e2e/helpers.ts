@@ -35,6 +35,72 @@ export async function openBuilder(page: Page): Promise<void> {
 }
 
 /**
+ * Builds a syntactically valid Scryfall UUID for fixture cards.
+ *
+ * `addCardSchema` rejects anything that is not a UUID with a 400, so ad-hoc ids
+ * like "test-card-1" silently produce an empty deck.
+ *
+ * @param n Index of the fixture card.
+ * @returns A deterministic UUID unique to `n`.
+ */
+function fixtureScryfallId(n: number): string {
+  return `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+}
+
+/**
+ * Create a deck owned by the Playwright user and fill it with fixture cards.
+ *
+ * Tests that need a non-empty deck cannot use {@link openBuilder}, which
+ * creates an empty one — a playtest of an empty deck draws no cards at all.
+ *
+ * @param request Playwright API context bound to the app's baseURL.
+ * @param cardCount How many cards to add.
+ * @returns The seeded deck id.
+ */
+export async function seedDeckWithCards(
+  request: APIRequestContext,
+  cardCount: number
+): Promise<string> {
+  const created = await request.post("/api/decks", {
+    data: { name: `Playtest Deck ${cardCount}`, format: "commander" },
+  });
+  if (!created.ok()) {
+    throw new Error(`deck create failed: ${created.status()} ${await created.text()}`);
+  }
+  const { id } = (await created.json()) as { id: string };
+
+  for (let i = 0; i < cardCount; i++) {
+    const added = await request.post(`/api/decks/${id}/cards`, {
+      data: {
+        scryfallId: fixtureScryfallId(i),
+        name: `Fixture Card ${i}`,
+        manaCost: "{1}",
+        cmc: 1,
+        typeLine: "Creature — Test",
+        colorIdentity: ["G"],
+        category: "creature",
+        quantity: 1,
+      },
+    });
+    if (!added.ok()) {
+      throw new Error(`add card ${i} failed: ${added.status()} ${await added.text()}`);
+    }
+  }
+
+  // Confirm the cards actually landed: a silently empty deck makes downstream
+  // failures look like UI bugs.
+  const loaded = await request.get(`/api/decks/${id}`);
+  const deck = (await loaded.json()) as { cards?: readonly unknown[] };
+  if ((deck.cards?.length ?? 0) !== cardCount) {
+    throw new Error(
+      `seeded deck holds ${deck.cards?.length ?? 0} cards, expected ${cardCount}`
+    );
+  }
+
+  return id;
+}
+
+/**
  * A public deck plus the profile slug of the Playwright user who owns it.
  */
 export interface PublicDeckFixture {

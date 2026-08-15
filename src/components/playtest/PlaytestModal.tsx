@@ -1,177 +1,99 @@
 "use client";
-// Fullscreen playtest modal — hand display, mulligan, draw, next turn
-import { useCallback, useState } from "react";
-import Image from "next/image";
+// Fullscreen playtest — phases, life, and the hand / battlefield / graveyard zones
+import { useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RotateCcw, ChevronRight, BookOpen, Layers } from "lucide-react";
-import type { Deck, DeckCard } from "@/lib/deck/types";
-import { usePlaytest } from "@/hooks/usePlaytest";
-import { CARD_BACK_URL } from "@/lib/scryfall/images";
-import { cn } from "@/components/ui/utils";
+import { X, RotateCcw, Layers } from "lucide-react";
+import { useTranslations } from "next-intl";
+import type { Deck } from "@/lib/deck/types";
+import type { CardZone } from "@/lib/playtest/engine";
+import { MAX_MULLIGANS, OPENING_HAND_SIZE } from "@/lib/playtest/engine";
+import { usePlaytestStore } from "@/lib/playtest/store";
+import { PhaseTracker } from "@/components/playtest/PhaseTracker";
+import { LifeTracker } from "@/components/playtest/LifeTracker";
+import { HandZone } from "@/components/playtest/HandZone";
+import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
+import { GraveyardZone } from "@/components/playtest/GraveyardZone";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
   readonly onClose: () => void;
 }
 
-/** Formats the turn badge label shown in the playtest header. */
-function formatTurnBadge(turn: number, mulliganCount: number): string {
-  if (mulliganCount === 0) return `Turn ${turn}`;
-  const suffix = mulliganCount === 1 ? "mulligan" : "mulligans";
-  return `Turn ${turn} · ${mulliganCount} ${suffix}`;
-}
-
-// Single card in the hand "fan"
-function HandCard({
-  card,
-  index,
-  total,
-  isHovered,
-  onHover,
-  onLeave,
-}: {
-  readonly card: DeckCard;
-  readonly index: number;
-  readonly total: number;
-  readonly isHovered: boolean;
-  readonly onHover: () => void;
-  readonly onLeave: () => void;
-}) {
-  // Spread cards in a fan: rotate from -30° to +30°
-  const maxAngle = Math.min(30, total * 4);
-  const angle =
-    total <= 1 ? 0 : -maxAngle + (index / (total - 1)) * maxAngle * 2;
-  const translateY = Math.abs(angle) * 0.5;
-
-  return (
-    <motion.div
-      className="absolute"
-      style={{
-        left: `${(index / Math.max(total - 1, 1)) * 70 + 15}%`,
-        transformOrigin: "bottom center",
-        zIndex: isHovered ? 50 : index,
-      }}
-      animate={{
-        rotate: isHovered ? 0 : angle,
-        y: isHovered ? -40 : translateY,
-        scale: isHovered ? 1.2 : 1,
-      }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      onMouseEnter={onHover}
-      onMouseLeave={onLeave}
-    >
-      <div className="relative w-[80px] cursor-pointer drop-shadow-xl">
-        <Image
-          src={card.imageUri || CARD_BACK_URL}
-          alt={card.name}
-          width={80}
-          height={112}
-          className="rounded-lg w-[80px] h-[112px] object-cover"
-          unoptimized
-        />
-        {isHovered && (
-          <motion.div
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none z-50"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Image
-              src={card.imageUri || CARD_BACK_URL}
-              alt={card.name}
-              width={200}
-              height={280}
-              className="rounded-xl shadow-2xl w-[200px] h-[280px] object-cover border border-white/10"
-              unoptimized
-            />
-            <p className="text-center text-xs text-white mt-1 bg-black/70 rounded px-2 py-0.5 truncate max-w-[200px]">
-              {card.name}
-            </p>
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-// Library top-card preview (face-down)
-function LibraryPile({ count }: { readonly count: number }) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="relative w-[60px] h-[84px]">
-        {[2, 1, 0].map((offset) => (
-          <div
-            key={offset}
-            className="absolute rounded-md border border-white/10"
-            style={{
-              width: 60,
-              height: 84,
-              top: offset * 2,
-              left: offset * 2,
-              backgroundImage: `url(${CARD_BACK_URL})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              opacity: 1 - offset * 0.15,
-              zIndex: 3 - offset,
-            }}
-          />
-        ))}
-      </div>
-      <span className="text-xs text-white/60">{count} cards</span>
-    </div>
-  );
-}
-
 function PlaytestStartScreen({ onStart }: { readonly onStart: () => void }) {
+  const t = useTranslations("playtest");
+
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="text-center">
-        <p className="text-white/70 text-sm mb-1">Ready to test your deck?</p>
-        <p className="text-white/40 text-xs">
-          Shuffle and draw your opening hand of 7 cards.
-        </p>
+        <p className="text-white/70 text-sm mb-1">{t("start.prompt")}</p>
+        <p className="text-white/40 text-xs">{t("start.hint")}</p>
       </div>
       <button
         type="button"
         onClick={onStart}
         className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors text-sm shadow-lg shadow-purple-900/50"
       >
-        Draw Opening Hand
+        {t("start.action")}
       </button>
     </div>
   );
 }
 
 export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
-  const { state, startPlaytest, mulligan, drawCard, nextTurn, stopPlaytest } =
-    usePlaytest();
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [started, setStarted] = useState(false);
+  const t = useTranslations("playtest");
 
-  const handleStart = useCallback(() => {
-    startPlaytest(deck);
-    setStarted(true);
-  }, [deck, startPlaytest]);
+  // Fine-grained selectors: the modal re-renders on engine changes only.
+  const engine = usePlaytestStore((s) => s.engine);
+  const startPlaytest = usePlaytestStore((s) => s.startPlaytest);
+  const stopPlaytest = usePlaytestStore((s) => s.stopPlaytest);
+  const resetPlaytest = usePlaytestStore((s) => s.resetPlaytest);
+  const mulligan = usePlaytestStore((s) => s.mulligan);
+  const drawCard = usePlaytestStore((s) => s.drawCard);
+  const nextPhase = usePlaytestStore((s) => s.nextPhase);
+  const nextTurn = usePlaytestStore((s) => s.nextTurn);
+  const damage = usePlaytestStore((s) => s.damage);
+  const heal = usePlaytestStore((s) => s.heal);
+  const tap = usePlaytestStore((s) => s.tap);
+  const moveToZone = usePlaytestStore((s) => s.moveToZone);
+  const addCounter = usePlaytestStore((s) => s.addCounter);
+  const undo = usePlaytestStore((s) => s.undo);
 
-  const handleMulligan = useCallback(() => {
-    if (state) mulligan(state, deck);
-  }, [state, deck, mulligan]);
-
-  const handleDraw = useCallback(() => {
-    if (state) drawCard(state);
-  }, [state, drawCard]);
-
-  const handleNextTurn = useCallback(() => {
-    if (state) nextTurn(state);
-  }, [state, nextTurn]);
+  // The store outlives the modal, so a stale session would otherwise reappear
+  // the next time it opens.
+  useEffect(() => stopPlaytest, [stopPlaytest]);
 
   const handleClose = useCallback(() => {
     stopPlaytest();
     onClose();
   }, [stopPlaytest, onClose]);
 
-  const turnBadge = state
-    ? formatTurnBadge(state.turn, state.mulliganCount)
-    : null;
+  const handleStart = useCallback(() => startPlaytest(deck), [deck, startPlaytest]);
+
+  const handleMoveFromHand = useCallback(
+    (cardId: string, to: "battlefield" | "graveyard") =>
+      moveToZone(cardId, "hand", to),
+    [moveToZone]
+  );
+
+  const handleRemoveFromBattlefield = useCallback(
+    (cardId: string) => moveToZone(cardId, "battlefield", "graveyard"),
+    [moveToZone]
+  );
+
+  const handleRestore = useCallback(
+    (cardId: string, from: CardZone, to: CardZone) => moveToZone(cardId, from, to),
+    [moveToZone]
+  );
+
+  // Mulliganing is only meaningful before the game is under way; once a turn has
+  // passed or permanents exist, the opening hand is no longer in question.
+  const canMulligan =
+    engine !== null &&
+    engine.mulliganCount < MAX_MULLIGANS &&
+    engine.turn === 1 &&
+    engine.battlefield.length === 0 &&
+    engine.graveyard.length === 0 &&
+    engine.exile.length === 0;
 
   return (
     <AnimatePresence>
@@ -182,131 +104,106 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
         exit={{ opacity: 0 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <Layers className="w-5 h-5 text-purple-400" />
-            <h2 className="text-white font-semibold">Playtest — {deck.name}</h2>
-            {turnBadge && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
-                {turnBadge}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <Layers className="w-5 h-5 text-purple-400 shrink-0" aria-hidden="true" />
+            <h2 className="text-white font-semibold truncate">
+              {t("title")} — {deck.name}
+            </h2>
+            {engine && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 whitespace-nowrap">
+                {t("turn", { turn: engine.turn })}
+                {engine.mulliganCount > 0 &&
+                  ` · ${t("mulliganCount", { count: engine.mulliganCount })}`}
               </span>
             )}
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="text-white/50 hover:text-white transition-colors p-1 rounded"
+            aria-label={t("close")}
+            className="text-white/50 hover:text-white transition-colors p-1 rounded shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-8 p-6">
-          {!started && <PlaytestStartScreen onStart={handleStart} />}
-          {started && state && (
-            <>
-              {/* Stats bar */}
-              <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-2 text-white/60">
-                  <BookOpen className="w-4 h-4" />
-                  <span>{state.hand.length} in hand</span>
-                </div>
-                <div className="w-px h-4 bg-white/20" />
-                <div className="flex items-center gap-2 text-white/60">
-                  <Layers className="w-4 h-4" />
-                  <span>{state.library.length} in library</span>
-                </div>
-                <div className="w-px h-4 bg-white/20" />
-                <div className="text-purple-300 text-xs">
-                  {state.library.length === 0 ? "⚠️ Empty library" : ""}
+        {/* Body */}
+        {engine === null ? (
+          <div className="flex-1 flex items-center justify-center p-6">
+            <PlaytestStartScreen onStart={handleStart} />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="mx-auto max-w-7xl grid gap-4 lg:grid-cols-[20rem_1fr]">
+              {/* Left rail: turn structure and life */}
+              <aside className="space-y-4">
+                <PhaseTracker
+                  turn={engine.turn}
+                  phase={engine.phase}
+                  onNextPhase={nextPhase}
+                  onNextTurn={nextTurn}
+                />
+                <LifeTracker
+                  lifeTotal={engine.lifeTotal}
+                  lifeHistory={engine.lifeHistory}
+                  onDamage={damage}
+                  onHeal={heal}
+                  onUndo={undo}
+                />
+              </aside>
+
+              {/* Board */}
+              <div className="space-y-4">
+                <BattlefieldZone
+                  battlefield={engine.battlefield}
+                  onTap={tap}
+                  onAddCounter={addCounter}
+                  onRemove={handleRemoveFromBattlefield}
+                />
+                <HandZone
+                  hand={engine.hand}
+                  libraryCount={engine.library.length}
+                  onDrawCard={drawCard}
+                  onMoveCard={handleMoveFromHand}
+                />
+                <GraveyardZone
+                  graveyard={engine.graveyard}
+                  exile={engine.exile}
+                  onRestore={handleRestore}
+                />
+
+                {/* Session controls */}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={mulligan}
+                    disabled={!canMulligan}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-sm font-medium text-white/70 transition-all hover:border-purple-500 hover:text-white hover:bg-purple-500/10 disabled:border-white/10 disabled:text-white/30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                    {t("mulligan")}
+                    {canMulligan && (
+                      <span className="text-xs opacity-60">
+                        {t("mulliganDown", {
+                          count: OPENING_HAND_SIZE - engine.mulliganCount - 1,
+                        })}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={resetPlaytest}
+                    className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                  >
+                    {t("restart")}
+                  </button>
                 </div>
               </div>
-
-              {/* Hand + library */}
-              <div className="flex items-end justify-center gap-12 w-full max-w-5xl">
-                {/* Hand fan */}
-                <div className="flex-1 relative h-[200px] flex items-end justify-center">
-                  {state.hand.length === 0 ? (
-                    <p className="text-white/30 text-sm">No cards in hand</p>
-                  ) : (
-                    state.hand.map((card, i) => (
-                      <HandCard
-                        key={`${card.id}-${i}`}
-                        card={card}
-                        index={i}
-                        total={state.hand.length}
-                        isHovered={hoveredIndex === i}
-                        onHover={() => setHoveredIndex(i)}
-                        onLeave={() => setHoveredIndex(null)}
-                      />
-                    ))
-                  )}
-                </div>
-
-                {/* Library pile */}
-                <LibraryPile count={state.library.length} />
-              </div>
-
-              {/* Controls */}
-              <div className="flex items-center gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={handleMulligan}
-                  disabled={state.mulliganCount >= 6}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all",
-                    state.mulliganCount >= 6
-                      ? "border-white/10 text-white/30 cursor-not-allowed"
-                      : "border-white/20 text-white/70 hover:border-purple-500 hover:text-white hover:bg-purple-500/10"
-                  )}
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Mulligan
-                  {state.mulliganCount > 0 && (
-                    <span className="text-xs opacity-60">
-                      (draw {Math.max(0, 7 - state.mulliganCount - 1)})
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleDraw}
-                  disabled={state.library.length === 0}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all",
-                    state.library.length === 0
-                      ? "border-white/10 text-white/30 cursor-not-allowed"
-                      : "border-white/20 text-white/70 hover:border-blue-500 hover:text-white hover:bg-blue-500/10"
-                  )}
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Draw Card
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleNextTurn}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors shadow-lg shadow-purple-900/30"
-                >
-                  End Turn
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-
-                <div className="w-px h-6 bg-white/10" />
-
-                <button
-                  type="button"
-                  onClick={handleStart}
-                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
-                >
-                  Restart
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+            </div>
+          </div>
+        )}
       </motion.div>
     </AnimatePresence>
   );

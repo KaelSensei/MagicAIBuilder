@@ -1,0 +1,18 @@
+{
+  "title": "Test de jeu",
+  "close": "Fermer le test de jeu",
+  "start": {
+    "prompt": "Prêt à tester ton deck ?",
+    "hint": "Mélange et pioche ta main de départ de sept cartes.",
+    "action": "Piocher la main de départ"
+  },
+  "turn": "Tour {turn}",
+  "mulliganCount": "{count, plural, one {# mulligan} other {# mulligans}}",
+  "handCount": "{count} en main",
+  "libraryCount": "{count} dans la bibliothèque",
+  "emptyLibrary": "Bibliothèque vide",
+  "mulligan": "Mulligan",
+  "mulliganDown": "à {count}",
+  "restart": "Recommencer",
+  "gameOver": "Partie terminée"
+}
