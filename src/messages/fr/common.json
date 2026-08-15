@@ -23,6 +23,13 @@
   "sidebar": {
     "navigation": "Navigation"
   },
+  "error": {
+    "title": "Une erreur est survenue",
+    "description": "Une erreur inattendue a interrompu cette page. Le problème a été signalé — tu peux réessayer ou revenir à tes decks.",
+    "retry": "Réessayer",
+    "backToDecks": "Retour à mes decks",
+    "reference": "Référence"
+  },
   "locale": {
     "switchLocale": "Changer de langue",
     "en": "English",
