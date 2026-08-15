@@ -1,7 +1,7 @@
 "use client";
 /**
  * MetaPanel — commander meta analysis.
- * Two sections: EDHRec popular cards + MTGTop8 tournament decks.
+ * EDHRec popular cards, MTGTop8 tournament decks, and community decks.
  */
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -14,11 +14,13 @@ import {
   ExternalLink,
   AlertCircle,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMetaAnalysis } from "@/hooks/useMetaAnalysis";
 import { cn } from "@/components/ui/utils";
-import type { MetaCard, TournamentDeck } from "@/lib/meta/fetch";
+import { Link } from "@/i18n/navigation";
+import { commanderToSlug, type MetaCard, type TournamentDeck } from "@/lib/meta/fetch";
 
 interface MetaPanelProps {
   readonly commanderName: string | null;
@@ -220,6 +222,15 @@ export function MetaPanel({
                       {t("meta.refresh")}
                     </button>
                   </div>
+
+                  {/* ─ Community decks ─ */}
+                  <Link
+                    href={`/commanders/${commanderToSlug(commanderName)}/decks`}
+                    className="flex items-center gap-1.5 text-[11px] text-[var(--accent)] hover:underline"
+                  >
+                    <Users className="w-3 h-3" aria-hidden="true" />
+                    {t("meta.communityDecks")}
+                  </Link>
 
                   {/* ─ EDHRec section ─ */}
                   <div className="space-y-2">

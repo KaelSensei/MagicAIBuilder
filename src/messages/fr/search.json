@@ -1,4 +1,74 @@
 {
-  "placeholder": "Rechercher des cartes\u2026",
-  "clearLabel": "Effacer la recherche"
+  "placeholder": "Rechercher des cartes…",
+  "clearLabel": "Effacer la recherche",
+  "searching": "Recherche…",
+  "noResults": "Aucune carte trouvée. Essaie une autre recherche.",
+  "resultCount": "{count, number} résultats",
+  "gridView": "Vue grille",
+  "listView": "Vue liste",
+  "setPlaceholder": "Rechercher une édition (ex. dsk, mh3…)",
+  "loadingSets": "Chargement des éditions…",
+  "setsLoadFailed": "Échec du chargement des éditions",
+  "noSetsFound": "Aucune édition trouvée pour « {query} »",
+  "clearSet": "Retirer l'édition sélectionnée",
+  "filters": {
+    "colors": "Couleurs",
+    "colorless": "Incolore (c:c) — artefacts, Eldrazi, etc.",
+    "colorlessAlt": "Incolore",
+    "lands": "Terrain",
+    "landsTitle": "Terrains (t:land)",
+    "match": "Filtre :",
+    "cmc": "CMC",
+    "price": "Prix",
+    "type": "Type",
+    "keyword": "MC",
+    "power": "For",
+    "toughness": "End",
+    "role": "Rôle",
+    "min": "Min",
+    "max": "Max",
+    "minPrice": "Min $",
+    "maxPrice": "Max $",
+    "cmcExample": "ex. 3",
+    "atLeast": "≥",
+    "atMost": "≤",
+    "subtypeExample": "ex. Elfe, Dragon",
+    "keywordExample": "ex. Vol, Piétinement",
+    "collectionOnlyActive": "Collection uniquement",
+    "collectionOnlyToggle": "Afficher ma collection",
+    "presets": "Préréglages",
+    "presetNamePlaceholder": "Nom du préréglage…",
+    "savePreset": "Enregistrer",
+    "loadPreset": "Charger un préréglage…"
+  },
+  "colors": {
+    "W": "Blanc",
+    "U": "Bleu",
+    "B": "Noir",
+    "R": "Rouge",
+    "G": "Vert"
+  },
+  "colorMode": {
+    "orLabel": "Au moins une",
+    "orTitle": "Cartes contenant au moins une des couleurs sélectionnées (id<=…)",
+    "andLabel": "Toutes",
+    "andTitle": "Cartes contenant TOUTES les couleurs sélectionnées (c>=…)",
+    "exactLabel": "Exact",
+    "exactTitle": "Cartes exactement de ces couleurs, pas plus (c=…)"
+  },
+  "cmcMode": {
+    "range": "Plage",
+    "exact": "Exact",
+    "min": "Min",
+    "max": "Max"
+  },
+  "interaction": {
+    "none": "Aucun",
+    "removal": "Removal",
+    "counterspell": "Contresort",
+    "wipe": "Board wipe",
+    "tutor": "Tuteur",
+    "draw": "Pioche",
+    "ramp": "Ramp"
+  }
 }

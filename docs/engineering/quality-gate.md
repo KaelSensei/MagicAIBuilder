@@ -1,119 +1,123 @@
 # Quality Gate — MagicAIBuilder 🧪
 
-> Maintained by Marco (`agent:marco`) — The Bug Whisperer.
-> Updated automatically on each PR merge. Do not edit manually.
+> Source of truth for project quality. Any regression against the baseline triggers corrective action.
 
-## Baseline (2026-03-27 — post PR #189)
+## Baseline (2026-08-15)
 
 | Metric                     | Baseline | Minimum | Status |
 | -------------------------- | -------- | ------- | ------ |
-| **Coverage**               | 94.3%    | ≥ 90%   | ✅     |
+| **Coverage**               | 94.5%    | ≥ 90%   | ✅     |
 | **Bugs**                   | 0        | = 0     | ✅     |
 | **Vulnerabilities**        | 0        | = 0     | ✅     |
-| **Code Smells**            | 1        | ≤ 5     | ✅     |
-| **Duplicated Lines**       | 1.8%     | ≤ 3.0%  | ✅     |
-| **Reliability Rating**     | A (1.0)  | A       | ✅     |
-| **Security Rating**        | A (1.0)  | A       | ✅     |
-| **Maintainability Rating** | A (1.0)  | A       | ✅     |
-| **Security Hotspots**      | 3        | ≤ 5     | ✅     |
-| **Lines of Code**          | 14 596   | —       | ℹ️     |
+| **Open issues**            | 0        | = 0     | ✅     |
+| **Duplicated Lines**       | ≤ 3.0%   | ≤ 3.0%  | ✅     |
+| **Reliability Rating**     | A        | A       | ✅     |
+| **Security Rating**        | A        | A       | ✅     |
+| **Maintainability Rating** | A        | A       | ✅     |
+| **Unit tests**             | 1764     | —       | ℹ️     |
+| **E2E tests**              | 51       | —       | ℹ️     |
 
-## Thresholds — règles de blocage
+## Blocking thresholds
 
-Une PR est **bloquée** si elle fait régresser une des métriques suivantes :
+A PR is **blocked** when it regresses any of these:
 
-| Metric             | Seuil dur                          |
-| ------------------ | ---------------------------------- |
-| Coverage           | Ne doit pas descendre sous **90%** |
-| Bugs               | Doit rester à **0**                |
-| Vulnerabilities    | Doit rester à **0**                |
-| Reliability Rating | Doit rester à **A**                |
-| Security Rating    | Doit rester à **A**                |
-| Duplicated Lines   | Ne doit pas dépasser **3.0%**      |
-| Code Smells        | Ne doit pas dépasser **10**        |
+| Metric             | Hard threshold              |
+| ------------------ | --------------------------- |
+| Coverage           | Must not fall below **90%** |
+| Bugs               | Must stay at **0**          |
+| Vulnerabilities    | Must stay at **0**          |
+| Reliability Rating | Must stay at **A**          |
+| Security Rating    | Must stay at **A**          |
+| Duplicated Lines   | Must not exceed **3.0%**    |
+| Code Smells        | Must not exceed **10**      |
 
-## Historique des métriques
+## Pre-PR checklist
 
-| Date       | PR                               | Coverage | Bugs | Vulns | Smells | Dups | Reliability | Security |
-| ---------- | -------------------------------- | -------- | ---- | ----- | ------ | ---- | ----------- | -------- |
-| 2026-03-27 | #183 (sonar fix + auth refacto)  | 94.3%    | 0    | 0     | 1      | 1.8% | A           | A        |
-| 2026-03-27 | #189 (mobile responsive)         | 94.3%    | 0    | 0     | 1      | 1.8% | A           | A        |
-| 2026-03-27 | #192 (US-01: Game Changers page) | 94.3%    | 0    | 0     | 1      | 1.8% | A           | A        |
+Run in this order — see `CLAUDE.md` for the authoritative list:
 
-## Protocole de review (Marco ↔ Joyce)
-
-### Quand une PR arrive
-
-1. Marco lit le code et les diffs
-2. Marco vérifie : CI (lint/typecheck/tests/build) + SonarCloud
-3. Si métriques **stables ou améliorées** + pas de régression → **merge direct**
-4. Si métriques **dégradées** ou problèmes détectés → Marco :
-   - Liste les problèmes avec explication pédagogique (voir format ci-dessous)
-   - Propose des fix
-   - Si fix simples → Marco les applique, explique à Joyce, merge
-   - Si fix structurels → Marco ouvre des comments sur la PR, attend Joyce
-
-### Format de feedback à Joyce
-
-```
-🧪 Marco — Review #XXX
-
-❌ Problème détecté : <métrique ou comportement>
-📍 Fichier : <path>:<ligne>
-🔍 Pourquoi c'est un problème : <explication claire>
-✅ Fix recommandé : <suggestion concrète avec exemple de code si utile>
+```bash
+npx tsc --noEmit      # zero errors
+pnpm lint             # zero warnings
+pnpm test:coverage    # all passing — must run BEFORE sonar
+pnpm sonar            # or rely on CI if it hangs locally
 ```
 
-### Exemples de problèmes courants
+Then confirm SonarCloud reports **zero open issues**:
+<https://sonarcloud.io/api/issues/search?componentKeys=KaelSensei_MagicAIBuilder&statuses=OPEN&ps=100>
 
-**Coverage en baisse**
+> `pnpm sonar` does **not** regenerate coverage. Run `pnpm test:coverage` first, or the quality gate reads a stale `lcov` file.
 
-> Tu as ajouté `handleFoo()` dans `route.ts` mais `route.test.ts` ne teste pas les cas d'erreur.
-> Ajoute au minimum : cas nominal + cas d'erreur Prisma.
+## E2E gate
 
-**Code smell — cognitive complexity trop haute**
+`.husky/pre-push` runs the full Playwright suite in Docker via `scripts/e2e-pre-push.sh` and blocks the push on failure.
 
-> La fonction `buildQuery()` atteint complexity 18 (SonarCloud bloque à 15).
-> Extrait les blocs `if/switch` imbriqués en fonctions nommées.
+**The verdict always comes from the e2e container's exit code.** An earlier version branched on `claude -p "@e2e-runner ..."`, which exits 0 whenever the CLI ran — the agent's PASS/FAIL was only prose on stdout. The gate printed `✓ E2E passed — push allowed` on a run with 27 failures. The agent is still invoked, but only after a failure and purely to diagnose it; it cannot turn a red run green.
 
-**Duplication**
+`SKIP_E2E=1` bypasses the gate in an emergency. CI skips it too, having its own job.
 
-> Les blocs de validation Zod dans `route-a.ts` et `route-b.ts` sont quasi-identiques.
-> Extrait un schema partagé dans `lib/validation/`.
+### Tests excluded from the blocking run
 
-**Bug potentiel**
+| Tag         | Rationale                                                                                                                                                   |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@external` | Depends on a third-party service (e.g. the live Moxfield API). A deck going private there turns the gate red with no code change on our side.               |
+| `@perf`     | Asserts wall-clock latency against `next dev`, which compiles routes on demand — one endpoint measured 41 ms alone and 5163 ms under full-suite contention. |
 
-> `requireDeckOwner` ne catch pas les erreurs Prisma — une erreur DB fait crasher le handler parent.
-> Wrap dans un try/catch ou gère l'erreur dans la fonction.
+Both are opt-out, not silent: `PLAYWRIGHT_GREP_INVERT=""` runs everything. Contract assertions from the same specs still run on every push; only the timing assertions are tagged.
 
-## Open backlog QA (gaps auth — identifiés 2026-03-27)
+### Toolchain pins
 
-Ces gaps ne bloquent pas les merges en cours mais doivent être adressés :
+`Dockerfile.playwright` pins the Playwright image tag and pnpm. Playwright resolves browser binaries by a version-stamped path, so an image tag that drifts from `@playwright/test` makes every browser test fail to launch; unpinned pnpm resolves to whatever is latest, and pnpm 11 dropped `pnpm.overrides`, failing the frozen install outright. `src/lib/toolchain.test.ts` fails the unit suite if either pin diverges.
 
-| Priorité | Cible                               | Description                                                                          |
-| -------- | ----------------------------------- | ------------------------------------------------------------------------------------ |
-| 🚨 P0    | `src/lib/auth/edge-config.ts`       | `authorized` callback — zéro test (paths publics, 401 API, redirect)                 |
-| 🚨 P0    | `src/lib/auth/config.ts`            | `Credentials.authorize` — non testée (user sans mdp, mdp incorrect, user inexistant) |
-| ⚠️ P1    | `src/app/api/collection/route.ts`   | Zéro test auth + isolation user                                                      |
-| ⚠️ P1    | `src/app/api/decks/route.ts`        | Isolation user non testée sur GET                                                    |
-| ℹ️ P2    | `src/lib/auth/helpers.ts`           | `requireDeckOwner` — erreurs Prisma non catchées                                     |
-| ℹ️ P2    | `src/app/api/user/profile/route.ts` | PATCH body vide + 500 Prisma non testés                                              |
+## Review protocol
+
+1. Read the code and the diff.
+2. Verify CI (lint / typecheck / tests / build) and SonarCloud.
+3. Metrics stable or improved, no regression → merge.
+4. Metrics degraded or problems found → list them with a clear explanation, propose fixes, apply simple ones, open comments for structural ones.
+
+### Feedback format
+
+```
+❌ Problem: <metric or behaviour>
+📍 File: <path>:<line>
+🔍 Why it matters: <clear explanation>
+✅ Recommended fix: <concrete suggestion, with code if useful>
+```
+
+### Common problems
+
+**Coverage dropped** — a new branch in a route handler with no test for the error path. Cover at minimum the nominal case plus the Prisma failure.
+
+**Cognitive complexity too high** — SonarCloud blocks above 15. Extract nested `if`/`switch` blocks into named functions.
+
+**Duplication** — near-identical Zod validation across routes belongs in a shared schema under `src/lib/validation/`.
+
+## Open QA backlog
+
+Not blocking current merges, but to be addressed:
+
+| Priority | Target                              | Description                                                                                     |
+| -------- | ----------------------------------- | ----------------------------------------------------------------------------------------------- |
+| ⚠️ P1    | `src/app/api/collection/route.ts`   | No auth or user-isolation tests                                                                 |
+| ⚠️ P1    | `src/app/api/decks/route.ts`        | User isolation untested on GET                                                                  |
+| ℹ️ P2    | `src/app/api/user/profile/route.ts` | Empty PATCH body and Prisma 500 untested                                                        |
+| ℹ️ P2    | Builder deck hydration              | A cold page load of a seeded deck reaches the builder with an empty `cards` array — see PR #394 |
 
 ---
 
-## SonarCloud Rule Exclusions
+## SonarCloud rule exclusions
 
 ### S6747 — "Unknown property" in React Three Fiber components
 
 **Scope:** `src/components/landing/**`
 
-**Why excluded:** SonarCloud's S6747 rule flags JSX attributes like `position`, `args`, `roughness`, `emissive`, `intensity`, `decay` as "unknown HTML properties". These are **false positives** — they are valid React Three Fiber (R3F) intrinsic element props, not HTML.
+SonarCloud flags JSX attributes like `position`, `args`, `roughness`, `emissive`, `intensity` and `decay` as unknown HTML properties. These are **false positives**: they are React Three Fiber intrinsic element props, not HTML.
 
-R3F extends the JSX namespace to map Three.js classes (`mesh`, `boxGeometry`, `meshStandardMaterial`, `pointLight`, etc.) to JSX elements. Their props correspond to Three.js constructor arguments and object properties. SonarCloud's static analyzer has no R3F plugin and cannot resolve these extended JSX types.
+R3F extends the JSX namespace to map Three.js classes (`mesh`, `boxGeometry`, `meshStandardMaterial`, `pointLight`, …) to JSX elements, with props corresponding to Three.js constructor arguments and object properties. SonarCloud's analyzer has no R3F plugin and cannot resolve those extended types.
 
-**Verification:** TypeScript (`pnpm tsc --noEmit`) and ESLint (`pnpm lint`) both pass with zero errors on these files, because `@react-three/fiber` provides proper type declarations for all R3F intrinsic elements.
+**Verification:** `npx tsc --noEmit` and `pnpm lint` both pass on these files, because `@react-three/fiber` ships proper type declarations.
 
-**Config:** `sonar-project.properties`
+**Config** (`sonar-project.properties`):
 
 ```properties
 sonar.issue.ignore.multicriteria=r3f
@@ -121,8 +125,4 @@ sonar.issue.ignore.multicriteria.r3f.ruleKey=typescript:S6747
 sonar.issue.ignore.multicriteria.r3f.resourceKey=src/components/landing/**
 ```
 
-**Impact:** 50 false positives suppressed. Only affects `src/components/landing/` — the rule remains active everywhere else in the codebase.
-
----
-
-_Ce fichier est la source de vérité qualité du projet. Toute dégradation par rapport à la baseline déclenche une action corrective._
+50 false positives suppressed. The rule remains active everywhere else.

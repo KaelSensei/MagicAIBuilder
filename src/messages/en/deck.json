@@ -85,7 +85,26 @@
     "bannedCards": "Banned cards",
     "targetForBracket": "(target for B{bracket})",
     "budget": "Budget",
-    "overBudget": "Over budget"
+    "overBudget": "Over budget",
+    "formatChecks": "{format} Checks",
+    "curve": "Curve",
+    "threatDensity": "Threats",
+    "interaction": "Interaction",
+    "targetRange": "(target {min}–{max})",
+    "formatStatsHint": "Shares of non-land cards. Benchmarks are guidance, not rules."
+  },
+  "community": {
+    "upvote": "Upvote",
+    "downvote": "Downvote",
+    "signInToVote": "Sign in to vote",
+    "commanderDecksTitle": "{commander} decks",
+    "commanderDecksSubtitle": "Public decks led by this commander, ranked by community votes.",
+    "noDecks": "No public decks for this commander yet.",
+    "deckCount": "{count, plural, one {# deck} other {# decks}}",
+    "cards": "{count} cards",
+    "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
+    "unrated": "Not rated yet",
+    "anonymous": "Anonymous"
   },
   "ai": {
     "title": "AI Suggestions",
@@ -129,6 +148,7 @@
     "title": "Meta Analysis",
     "refresh": "Refresh",
     "staleData": "Stale data from {date}",
+    "communityDecks": "Browse community decks for this commander",
     "popularEdhrec": "Popular (EDHRec)",
     "notInDeck": "Not in deck",
     "noEdhrecData": "No EDHRec data for this commander",

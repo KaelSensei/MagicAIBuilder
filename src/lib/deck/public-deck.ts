@@ -8,7 +8,10 @@
  * one owner's view is never cached for anonymous visitors.
  */
 
-import { buildViewerScopedRequestInit } from "@/lib/api/viewer-request";
+import {
+  buildViewerScopedRequestInit,
+  resolveAppBaseUrl,
+} from "@/lib/api/viewer-request";
 
 export interface PublicCard {
   readonly id: string;
@@ -46,15 +49,6 @@ export interface PublicDeck {
   readonly updatedAt: string;
 }
 
-function resolveBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000")
-  );
-}
-
 /** Fetch a deck for the public deck page, forwarding the viewer's cookies. */
 export async function fetchPublicDeck(
   id: string,
@@ -62,7 +56,7 @@ export async function fetchPublicDeck(
 ): Promise<PublicDeck | null> {
   try {
     const res = await fetch(
-      `${resolveBaseUrl()}/api/deck/${id}`,
+      `${resolveAppBaseUrl()}/api/deck/${id}`,
       buildViewerScopedRequestInit(cookieHeader)
     );
     if (!res.ok) return null;

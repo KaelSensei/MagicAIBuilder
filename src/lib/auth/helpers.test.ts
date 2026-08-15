@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ describe("requireAuth", () => {
     expect(result.error?.status).toBe(401);
   });
 
-  it("returns 401 error when user has no id", async () => {
+  it("falls back to resolving by email when the session carries no id", async () => {
     mockAuth.mockResolvedValueOnce({
       user: { name: "Kael", email: "kael@test.com" },
     });
@@ -100,6 +100,143 @@ describe("requireAuth", () => {
     expect(result.session?.user.id).toBe("oauth-user");
     expect(mockUserFindUnique).not.toHaveBeenCalled();
     expect(mockUserUpsert).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 when the session has neither an id nor an email to resolve", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { name: "Nameless" } });
+
+    const result = await requireAuth();
+
+    expect(result.session).toBeUndefined();
+    expect(result.error?.status).toBe(401);
+    expect(mockUserUpsert).not.toHaveBeenCalled();
+  });
+});
+
+// The bypass hands out a session to an unauthenticated caller, so the two
+// conditions guarding it are security boundaries, not conveniences.
+describe("requireAuth — Playwright test bypass", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("authenticates an anonymous caller as the Playwright user when enabled", async () => {
+    vi.stubEnv("PLAYWRIGHT_TEST", "1");
+    vi.stubEnv("NODE_ENV", "test");
+    mockAuth.mockResolvedValueOnce(null);
+    mockUserUpsert.mockResolvedValueOnce({
+      id: "pw-user",
+      name: "Playwright",
+      email: "playwright@test.local",
+      image: null,
+    });
+
+    const result = await requireAuth();
+
+    expect(result.error).toBeUndefined();
+    expect(result.session?.user.id).toBe("pw-user");
+    expect(mockUserUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { email: "playwright@test.local" } })
+    );
+  });
+
+  // Eight Playwright workers hit the bypass at once against an empty database.
+  // They all miss, all try to INSERT, and Postgres rejects every loser on
+  // User_email_key — which surfaced as 7 e2e failures and a cascade of 500s.
+  it("recovers the row when a concurrent insert wins the race", async () => {
+    vi.stubEnv("PLAYWRIGHT_TEST", "1");
+    vi.stubEnv("NODE_ENV", "test");
+    mockAuth.mockResolvedValueOnce(null);
+    mockUserUpsert.mockRejectedValueOnce(
+      Object.assign(new Error("Unique constraint failed"), { code: "P2002" })
+    );
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "pw-user",
+      name: "Playwright",
+      email: "playwright@test.local",
+      image: null,
+    });
+
+    const result = await requireAuth();
+
+    expect(result.error).toBeUndefined();
+    expect(result.session?.user.id).toBe("pw-user");
+  });
+
+  it("propagates database errors that are not a unique-constraint race", async () => {
+    vi.stubEnv("PLAYWRIGHT_TEST", "1");
+    vi.stubEnv("NODE_ENV", "test");
+    mockAuth.mockResolvedValueOnce(null);
+    mockUserUpsert.mockRejectedValueOnce(
+      Object.assign(new Error("connection refused"), { code: "P1001" })
+    );
+
+    await expect(requireAuth()).rejects.toThrow("connection refused");
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 when the race recovery finds no row either", async () => {
+    vi.stubEnv("PLAYWRIGHT_TEST", "1");
+    vi.stubEnv("NODE_ENV", "test");
+    mockAuth.mockResolvedValueOnce(null);
+    mockUserUpsert.mockRejectedValueOnce(
+      Object.assign(new Error("Unique constraint failed"), { code: "P2002" })
+    );
+    mockUserFindUnique.mockResolvedValueOnce(null);
+
+    const result = await requireAuth();
+
+    expect(result.error?.status).toBe(401);
+  });
+
+  it("REFUSES the bypass in production even when the flag is set", async () => {
+    vi.stubEnv("PLAYWRIGHT_TEST", "1");
+    vi.stubEnv("NODE_ENV", "production");
+    mockAuth.mockResolvedValueOnce(null);
+
+    const result = await requireAuth();
+
+    expect(result.session).toBeUndefined();
+    expect(result.error?.status).toBe(401);
+    expect(mockUserUpsert).not.toHaveBeenCalled();
+  });
+
+  it("ignores the bypass when the flag is any value other than exactly '1'", async () => {
+    vi.stubEnv("PLAYWRIGHT_TEST", "true");
+    vi.stubEnv("NODE_ENV", "test");
+    mockAuth.mockResolvedValueOnce(null);
+
+    const result = await requireAuth();
+
+    expect(result.error?.status).toBe(401);
+    expect(mockUserUpsert).not.toHaveBeenCalled();
+  });
+
+  it("never overrides a real session with the Playwright user", async () => {
+    vi.stubEnv("PLAYWRIGHT_TEST", "1");
+    vi.stubEnv("NODE_ENV", "test");
+    mockAuth.mockResolvedValueOnce({ user: { id: "real-user", email: "real@test.com" } });
+
+    const result = await requireAuth();
+
+    expect(result.session?.user.id).toBe("real-user");
+    expect(mockUserUpsert).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 when the Playwright user cannot be resolved", async () => {
+    vi.stubEnv("PLAYWRIGHT_TEST", "1");
+    vi.stubEnv("NODE_ENV", "test");
+    mockAuth.mockResolvedValueOnce(null);
+    mockUserUpsert.mockResolvedValueOnce(null);
+
+    const result = await requireAuth();
+
+    expect(result.error?.status).toBe(401);
   });
 });
 

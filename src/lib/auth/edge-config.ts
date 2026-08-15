@@ -19,6 +19,7 @@ const PUBLIC_API_AND_PAGE_PATHS: readonly string[] = [
   "/share",
   "/deck",
   "/u",
+  "/commanders",
 ];
 
 /**

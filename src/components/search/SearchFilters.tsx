@@ -2,6 +2,7 @@
 // Advanced search filters — color (OR/AND/EXACT), lands, colorless, CMC modes,
 // price range, subtype, keyword, power/toughness, interaction type, presets
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type {
   CmcMode,
@@ -11,48 +12,42 @@ import type {
 } from "@/lib/deck/types";
 import { useCollectionStore } from "@/lib/collection/store";
 
-const WUBRG_COLORS = [
-  { code: "W", label: "White" },
-  { code: "U", label: "Blue" },
-  { code: "B", label: "Black" },
-  { code: "R", label: "Red" },
-  { code: "G", label: "Green" },
-] as const;
+// These tables live at module scope, where useTranslations cannot run, so they
+// carry catalog keys and are resolved at render time.
+const WUBRG_COLORS = ["W", "U", "B", "R", "G"] as const;
 
-const COLOR_MODE_OPTIONS: { value: ColorMode; label: string; title: string }[] =
-  [
-    {
-      value: "or",
-      label: "Any",
-      title: "Cards that include at least one of the selected colors (id<=…)",
-    },
-    {
-      value: "and",
-      label: "All",
-      title: "Cards that include ALL selected colors (c>=…)",
-    },
-    {
-      value: "exact",
-      label: "Exact",
-      title: "Cards that are exactly these colors, no more (c=…)",
-    },
-  ];
-
-const CMC_MODES: { value: CmcMode; label: string }[] = [
-  { value: "range", label: "Range" },
-  { value: "exact", label: "Exact" },
-  { value: "min", label: "Min" },
-  { value: "max", label: "Max" },
+const COLOR_MODE_OPTIONS: readonly {
+  readonly value: ColorMode;
+  readonly labelKey: string;
+  readonly titleKey: string;
+}[] = [
+  { value: "or", labelKey: "colorMode.orLabel", titleKey: "colorMode.orTitle" },
+  { value: "and", labelKey: "colorMode.andLabel", titleKey: "colorMode.andTitle" },
+  {
+    value: "exact",
+    labelKey: "colorMode.exactLabel",
+    titleKey: "colorMode.exactTitle",
+  },
 ];
 
-const INTERACTION_OPTIONS: { value: InteractionType | ""; label: string }[] = [
-  { value: "", label: "None" },
-  { value: "removal", label: "Removal" },
-  { value: "counterspell", label: "Counterspell" },
-  { value: "wipe", label: "Board Wipe" },
-  { value: "tutor", label: "Tutor" },
-  { value: "draw", label: "Draw" },
-  { value: "ramp", label: "Ramp" },
+const CMC_MODES: readonly { readonly value: CmcMode; readonly labelKey: string }[] = [
+  { value: "range", labelKey: "cmcMode.range" },
+  { value: "exact", labelKey: "cmcMode.exact" },
+  { value: "min", labelKey: "cmcMode.min" },
+  { value: "max", labelKey: "cmcMode.max" },
+];
+
+const INTERACTION_OPTIONS: readonly {
+  readonly value: InteractionType | "";
+  readonly labelKey: string;
+}[] = [
+  { value: "", labelKey: "interaction.none" },
+  { value: "removal", labelKey: "interaction.removal" },
+  { value: "counterspell", labelKey: "interaction.counterspell" },
+  { value: "wipe", labelKey: "interaction.wipe" },
+  { value: "tutor", labelKey: "interaction.tutor" },
+  { value: "draw", labelKey: "interaction.draw" },
+  { value: "ramp", labelKey: "interaction.ramp" },
 ];
 
 /** localStorage key for saved filter presets */
@@ -152,6 +147,8 @@ export function SearchFilters({
   onChange,
   className,
 }: SearchFiltersProps) {
+  const t = useTranslations("search");
+  const tf = useTranslations("search.filters");
   const collectionSize = useCollectionStore(
     (s) =>
       Object.keys(s.collectionCards).length +
@@ -209,26 +206,26 @@ export function SearchFilters({
       {/* ── Colors ── */}
       <div>
         <p className="text-xs text-[var(--text-secondary)] mb-1.5 uppercase tracking-wide">
-          Colors
+          {tf("colors")}
         </p>
         <div className="flex gap-1.5 items-center flex-wrap">
-          {WUBRG_COLORS.map((c) => (
+          {WUBRG_COLORS.map((code) => (
             <button
-              key={c.code}
+              key={code}
               type="button"
-              title={c.label}
-              onClick={() => toggleColor(c.code)}
+              title={t(`colors.${code}`)}
+              onClick={() => toggleColor(code)}
               className={cn(
                 "w-8 h-8 rounded-full transition-all border-2 flex items-center justify-center",
-                filters.colors.includes(c.code)
+                filters.colors.includes(code)
                   ? "border-[var(--accent)] scale-110"
                   : "border-transparent opacity-60 hover:opacity-100"
               )}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`https://svgs.scryfall.io/card-symbols/${c.code}.svg`}
-                alt={c.label}
+                src={`https://svgs.scryfall.io/card-symbols/${code}.svg`}
+                alt={t(`colors.${code}`)}
                 width={22}
                 height={22}
                 className="w-[22px] h-[22px]"
@@ -239,7 +236,7 @@ export function SearchFilters({
           {/* Colorless (c:c) — truly colorless, mutually exclusive with WUBRG */}
           <button
             type="button"
-            title="Colorless (c:c) — artifacts, Eldrazi, etc."
+            title={tf("colorless")}
             onClick={toggleColorless}
             className={cn(
               "w-8 h-8 rounded-full transition-all border-2 flex items-center justify-center",
@@ -251,7 +248,7 @@ export function SearchFilters({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://svgs.scryfall.io/card-symbols/C.svg"
-              alt="Colorless"
+              alt={tf("colorlessAlt")}
               width={22}
               height={22}
               className="w-[22px] h-[22px]"
@@ -261,7 +258,7 @@ export function SearchFilters({
           {/* Lands toggle — t:land, composable with color filter */}
           <button
             type="button"
-            title="Lands (t:land)"
+            title={tf("landsTitle")}
             onClick={toggleLands}
             className={cn(
               "px-2 h-8 rounded transition-all border-2 text-xs font-medium",
@@ -270,7 +267,7 @@ export function SearchFilters({
                 : "border-[var(--border)] text-[var(--text-secondary)] opacity-70 hover:opacity-100"
             )}
           >
-            🏔 Land
+            🏔 {tf("lands")}
           </button>
         </div>
 
@@ -281,16 +278,16 @@ export function SearchFilters({
         {filters.colors.length >= 2 && (
           <div className="mt-2 flex gap-1 items-center">
             <span className="text-xs text-[var(--text-secondary)] mr-1">
-              Match:
+              {tf("match")}
             </span>
             {COLOR_MODE_OPTIONS.map((opt) => (
               <TabButton
                 key={opt.value}
                 active={filters.colorMode === opt.value}
-                title={opt.title}
+                title={t(opt.titleKey)}
                 onClick={() => onChange({ ...filters, colorMode: opt.value })}
               >
-                {opt.label}
+                {t(opt.labelKey)}
               </TabButton>
             ))}
           </div>
@@ -301,7 +298,7 @@ export function SearchFilters({
       <div>
         <div className="flex items-center gap-2 mb-1.5">
           <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
-            CMC
+            {tf("cmc")}
           </p>
           <div className="flex gap-0.5">
             {CMC_MODES.map((m) => (
@@ -318,7 +315,7 @@ export function SearchFilters({
                   })
                 }
               >
-                {m.label}
+                {t(m.labelKey)}
               </TabButton>
             ))}
           </div>
@@ -327,7 +324,7 @@ export function SearchFilters({
           <NumInput
             value={filters.cmcExact}
             onChange={(v) => onChange({ ...filters, cmcExact: v })}
-            placeholder="e.g. 3"
+            placeholder={tf("cmcExample")}
             max={20}
             className="w-20"
           />
@@ -336,7 +333,7 @@ export function SearchFilters({
           <NumInput
             value={filters.cmcMin}
             onChange={(v) => onChange({ ...filters, cmcMin: v })}
-            placeholder="≥"
+            placeholder={tf("atLeast")}
             max={20}
             className="w-20"
           />
@@ -345,7 +342,7 @@ export function SearchFilters({
           <NumInput
             value={filters.cmcMax}
             onChange={(v) => onChange({ ...filters, cmcMax: v })}
-            placeholder="≤"
+            placeholder={tf("atMost")}
             max={20}
             className="w-20"
           />
@@ -355,7 +352,7 @@ export function SearchFilters({
             <NumInput
               value={filters.cmcMin}
               onChange={(v) => onChange({ ...filters, cmcMin: v })}
-              placeholder="Min"
+              placeholder={tf("min")}
               max={20}
               className="w-16"
             />
@@ -363,7 +360,7 @@ export function SearchFilters({
             <NumInput
               value={filters.cmcMax}
               onChange={(v) => onChange({ ...filters, cmcMax: v })}
-              placeholder="Max"
+              placeholder={tf("max")}
               max={20}
               className="w-16"
             />
@@ -374,19 +371,19 @@ export function SearchFilters({
       {/* ── Price ── */}
       <div className="flex gap-2 items-center">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
-          Price
+          {tf("price")}
         </p>
         <NumInput
           value={filters.priceMin}
           onChange={(v) => onChange({ ...filters, priceMin: v })}
-          placeholder="Min $"
+          placeholder={tf("minPrice")}
           className="w-20"
         />
         <span className="text-[var(--text-secondary)] text-xs">—</span>
         <NumInput
           value={filters.priceMax}
           onChange={(v) => onChange({ ...filters, priceMax: v })}
-          placeholder="Max $"
+          placeholder={tf("maxPrice")}
           className="w-20"
         />
       </div>
@@ -394,13 +391,13 @@ export function SearchFilters({
       {/* ── Subtype ── */}
       <div className="flex gap-2 items-center">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
-          Type
+          {tf("type")}
         </p>
         <input
           type="text"
           value={filters.subtype}
           onChange={(e) => onChange({ ...filters, subtype: e.target.value })}
-          placeholder="e.g. Elf, Dragon"
+          placeholder={tf("subtypeExample")}
           className={cn(inputCls, "flex-1")}
         />
       </div>
@@ -408,13 +405,13 @@ export function SearchFilters({
       {/* ── Keyword ability ── */}
       <div className="flex gap-2 items-center">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
-          KW
+          {tf("keyword")}
         </p>
         <input
           type="text"
           value={filters.keyword}
           onChange={(e) => onChange({ ...filters, keyword: e.target.value })}
-          placeholder="e.g. Flying, Trample"
+          placeholder={tf("keywordExample")}
           className={cn(inputCls, "flex-1")}
         />
       </div>
@@ -424,37 +421,37 @@ export function SearchFilters({
         <>
           <div className="flex gap-2 items-center">
             <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
-              Pow
+              {tf("power")}
             </p>
             <NumInput
               value={filters.powerMin}
               onChange={(v) => onChange({ ...filters, powerMin: v })}
-              placeholder="Min"
+              placeholder={tf("min")}
               className="w-16"
             />
             <span className="text-[var(--text-secondary)] text-xs">—</span>
             <NumInput
               value={filters.powerMax}
               onChange={(v) => onChange({ ...filters, powerMax: v })}
-              placeholder="Max"
+              placeholder={tf("max")}
               className="w-16"
             />
           </div>
           <div className="flex gap-2 items-center">
             <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
-              Tou
+              {tf("toughness")}
             </p>
             <NumInput
               value={filters.toughnessMin}
               onChange={(v) => onChange({ ...filters, toughnessMin: v })}
-              placeholder="Min"
+              placeholder={tf("min")}
               className="w-16"
             />
             <span className="text-[var(--text-secondary)] text-xs">—</span>
             <NumInput
               value={filters.toughnessMax}
               onChange={(v) => onChange({ ...filters, toughnessMax: v })}
-              placeholder="Max"
+              placeholder={tf("max")}
               className="w-16"
             />
           </div>
@@ -464,7 +461,7 @@ export function SearchFilters({
       {/* ── Interaction archetype ── */}
       <div className="flex gap-2 items-center">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
-          Role
+          {tf("role")}
         </p>
         <select
           value={filters.interactionType ?? ""}
@@ -478,7 +475,7 @@ export function SearchFilters({
         >
           {INTERACTION_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
-              {opt.label}
+              {t(opt.labelKey)}
             </option>
           ))}
         </select>
@@ -501,8 +498,8 @@ export function SearchFilters({
           >
             <span className="text-sm">📦</span>
             {filters.collectionOnly
-              ? "Collection only"
-              : "Show collection only"}
+              ? tf("collectionOnlyActive")
+              : tf("collectionOnlyToggle")}
           </button>
         </div>
       )}
@@ -510,7 +507,7 @@ export function SearchFilters({
       {/* ── Filter presets ── */}
       <div className="pt-1 space-y-2 border-t border-[var(--border)]">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
-          Presets
+          {tf("presets")}
         </p>
         <div className="flex gap-1.5">
           <input
@@ -520,7 +517,7 @@ export function SearchFilters({
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSavePreset();
             }}
-            placeholder="Preset name…"
+            placeholder={tf("presetNamePlaceholder")}
             className={cn(inputCls, "flex-1")}
           />
           <button
@@ -529,7 +526,7 @@ export function SearchFilters({
             disabled={!presetName.trim()}
             className="text-xs px-2 py-1 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Save
+            {tf("savePreset")}
           </button>
         </div>
         {presets.length > 0 && (
@@ -544,7 +541,7 @@ export function SearchFilters({
             className={cn(inputCls, "w-full")}
           >
             <option value="" disabled>
-              Load a preset…
+              {tf("loadPreset")}
             </option>
             {presets.map((p) => (
               <option key={p.name} value={p.name}>

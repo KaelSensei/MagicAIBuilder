@@ -11,8 +11,10 @@ import {
   applyMoveToZone,
   applyUndo,
   applyAddCounter,
+  applyMulligan,
   PHASES,
   STARTING_LIFE,
+  MAX_MULLIGANS,
 } from "./engine";
 import type { PlaytestEngine } from "./engine";
 import type { DeckCard } from "@/lib/deck/types";
@@ -52,6 +54,16 @@ describe("createPlaytestState", () => {
     const state = createPlaytestState(cards);
     expect(state.hand).toHaveLength(7);
     expect(state.library).toHaveLength(13);
+  });
+
+  it("honours a format-specific starting life", () => {
+    const cards = Array.from({ length: 60 }, (_, i) => makeCard(`c${i}`));
+    const state = createPlaytestState(cards, { lifeTotal: 20 });
+    expect(state.lifeTotal).toBe(20);
+  });
+
+  it("starts with no mulligans taken", () => {
+    expect(makeState().mulliganCount).toBe(0);
   });
 
   it("starts with empty battlefield, graveyard, exile", () => {
@@ -243,5 +255,56 @@ describe("applyUndo", () => {
     let state = makeState();
     for (let i = 0; i < 15; i++) state = applyDrawCard(state);
     expect(state.history.length).toBeLessThanOrEqual(10);
+  });
+});
+
+// ─── Mulligan ─────────────────────────────────────────────────────────────────
+describe("applyMulligan", () => {
+  it("counts the mulligan", () => {
+    expect(applyMulligan(makeState()).mulliganCount).toBe(1);
+  });
+
+  it("draws one fewer card per mulligan (London)", () => {
+    let state = makeState();
+
+    state = applyMulligan(state);
+    expect(state.hand).toHaveLength(6);
+
+    state = applyMulligan(state);
+    expect(state.hand).toHaveLength(5);
+  });
+
+  it("returns every card to the deck, so the total never changes", () => {
+    const state = makeState();
+    const before = state.hand.length + state.library.length;
+
+    const after = applyMulligan(state);
+
+    expect(after.hand.length + after.library.length).toBe(before);
+  });
+
+  it("stops at MAX_MULLIGANS, leaving a one-card hand", () => {
+    let state = makeState();
+    for (let i = 0; i < MAX_MULLIGANS + 3; i++) state = applyMulligan(state);
+
+    expect(state.mulliganCount).toBe(MAX_MULLIGANS);
+    expect(state.hand).toHaveLength(7 - MAX_MULLIGANS);
+  });
+
+  it("leaves life, turn and phase untouched", () => {
+    const state = makeState();
+    const after = applyMulligan(state);
+
+    expect(after.lifeTotal).toBe(state.lifeTotal);
+    expect(after.turn).toBe(1);
+    expect(after.phase).toBe("Draw");
+  });
+
+  it("is undoable like any other action", () => {
+    const state = makeState();
+    const after = applyMulligan(state);
+
+    expect(applyUndo(after).mulliganCount).toBe(0);
+    expect(applyUndo(after).hand).toHaveLength(7);
   });
 });

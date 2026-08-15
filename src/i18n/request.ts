@@ -18,6 +18,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const rules = (await import(`@/messages/${locale}/rules.json`)).default;
   const collection = (await import(`@/messages/${locale}/collection.json`)).default;
   const profile = (await import(`@/messages/${locale}/profile.json`)).default;
+  const playtest = (await import(`@/messages/${locale}/playtest.json`)).default;
 
   return {
     locale,
@@ -32,6 +33,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       rules,
       collection,
       profile,
+      playtest,
     },
   };
 });

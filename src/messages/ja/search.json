@@ -1,4 +1,74 @@
 {
-  "placeholder": "Search cards\u2026",
-  "clearLabel": "Clear search"
+  "placeholder": "Search cards…",
+  "clearLabel": "Clear search",
+  "searching": "Searching…",
+  "noResults": "No cards found. Try a different search.",
+  "resultCount": "{count, number} results",
+  "gridView": "Grid view",
+  "listView": "List view",
+  "setPlaceholder": "Search set (e.g. dsk, mh3…)",
+  "loadingSets": "Loading sets…",
+  "setsLoadFailed": "Failed to load sets",
+  "noSetsFound": "No sets found for \"{query}\"",
+  "clearSet": "Clear selected set",
+  "filters": {
+    "colors": "Colors",
+    "colorless": "Colorless (c:c) — artifacts, Eldrazi, etc.",
+    "colorlessAlt": "Colorless",
+    "lands": "Land",
+    "landsTitle": "Lands (t:land)",
+    "match": "Match:",
+    "cmc": "CMC",
+    "price": "Price",
+    "type": "Type",
+    "keyword": "KW",
+    "power": "Pow",
+    "toughness": "Tou",
+    "role": "Role",
+    "min": "Min",
+    "max": "Max",
+    "minPrice": "Min $",
+    "maxPrice": "Max $",
+    "cmcExample": "e.g. 3",
+    "atLeast": "≥",
+    "atMost": "≤",
+    "subtypeExample": "e.g. Elf, Dragon",
+    "keywordExample": "e.g. Flying, Trample",
+    "collectionOnlyActive": "Collection only",
+    "collectionOnlyToggle": "Show collection only",
+    "presets": "Presets",
+    "presetNamePlaceholder": "Preset name…",
+    "savePreset": "Save",
+    "loadPreset": "Load a preset…"
+  },
+  "colors": {
+    "W": "White",
+    "U": "Blue",
+    "B": "Black",
+    "R": "Red",
+    "G": "Green"
+  },
+  "colorMode": {
+    "orLabel": "Any",
+    "orTitle": "Cards that include at least one of the selected colors (id<=…)",
+    "andLabel": "All",
+    "andTitle": "Cards that include ALL selected colors (c>=…)",
+    "exactLabel": "Exact",
+    "exactTitle": "Cards that are exactly these colors, no more (c=…)"
+  },
+  "cmcMode": {
+    "range": "Range",
+    "exact": "Exact",
+    "min": "Min",
+    "max": "Max"
+  },
+  "interaction": {
+    "none": "None",
+    "removal": "Removal",
+    "counterspell": "Counterspell",
+    "wipe": "Board Wipe",
+    "tutor": "Tutor",
+    "draw": "Draw",
+    "ramp": "Ramp"
+  }
 }
