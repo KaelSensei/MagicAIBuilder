@@ -16,12 +16,11 @@ test.describe("Playtest mode", () => {
     await suppressOnboarding(page);
     await page.goto(`/builder/${deckId}`);
 
-    // The deck loads asynchronously. Starting the playtest before its cards
-    // arrive shuffles an empty pool and deals a hand of zero.
-    await page.waitForLoadState("networkidle");
-
     // Targeted by title: the visible label collapses to an icon below the `sm`
-    // breakpoint, so the accessible name is viewport-dependent.
+    // breakpoint, so the accessible name is viewport-dependent. Playwright's
+    // auto-waiting covers the button appearing; a networkidle wait was tried
+    // and did not help, because the deck's cards never reach the builder on a
+    // cold load — see the hand-size note on the mulligan tests below.
     await page.getByTitle("Playtest this deck").click();
   });
 
