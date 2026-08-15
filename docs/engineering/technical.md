@@ -454,9 +454,8 @@ pnpm dev:local
 ```
 
 Routing is `localePrefix: "as-needed"`: English is served unprefixed at
-`http://localhost:3000`, and the other nine locales carry a prefix
-(`/fr`, `/ja`, …). Docker/PostgreSQL is required for authenticated deck,
-collection, and profile features.
+`http://localhost:3000`, French at `/fr`. Docker/PostgreSQL is required for
+authenticated deck, collection, and profile features.
 
 ### Testing
 
@@ -564,7 +563,15 @@ All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 
 ## Internationalisation
 
-Ten locales (`en, fr, de, it, es, ja, zh, ko, ru, pt`) via next-intl v4, `localePrefix: "as-needed"`. Catalogs live in `src/messages/<locale>/<namespace>.json` and are wired in `src/i18n/request.ts`.
+**Two locales are served: `en` and `fr`**, via next-intl v4 with `localePrefix: "as-needed"` — English at `/decks`, French at `/fr/decks`. Catalogs live in `src/messages/<locale>/<namespace>.json` and are wired in `src/i18n/request.ts`.
+
+### Dormant locales
+
+`de, it, es, ja, zh, ko, ru, pt` have catalogs on disk, listed in `DORMANT_LOCALES`, but are **not routed**. They were machine-seeded English copies, and translating the interface around card names and oracle text that are themselves still English — Scryfall's `lang` parameter is not wired — would ship a half-translated product in eight languages instead of a coherent one in two.
+
+A dormant prefix is therefore an ordinary unknown path: `/ja` returns a 404 rendered in English, never a partly-translated page.
+
+Their catalogs are still held at key parity with `en` by `messages.test.ts`, so re-activating one is a single-line move from `DORMANT_LOCALES` into `SUPPORTED_LOCALES` — once someone who speaks the language has translated it.
 
 ### Adding a translated string
 

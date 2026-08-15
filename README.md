@@ -41,6 +41,7 @@
 - 🎴 **Multi-format support** — Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, Pauper with correct rules per format
 - 📦 **Collection tracking** — mark owned cards, shopping list with missing cost, CSV export, bulk "Mark all owned"
 - ✨ **3D Spellbook landing** — immersive Three.js scene for unauthenticated visitors (mobile/a11y fallback)
+- 🌍 **English & French** — full UI in both, with a header language switcher
 - 🌙 **Dark / Light theme** — persisted across sessions
 - 🔒 **Security hardened** — Zod validation, input sanitization, no client-side secrets
 
@@ -92,9 +93,9 @@ pnpm db:migrate
 pnpm dev:local
 ```
 
-English is served without a prefix at [http://localhost:3000](http://localhost:3000).
-The other nine locales carry one — [http://localhost:3000/fr](http://localhost:3000/fr)
-for the French UI. Use the language switcher in the header to move between them.
+English is served without a prefix at [http://localhost:3000](http://localhost:3000);
+French carries one, at [http://localhost:3000/fr](http://localhost:3000/fr).
+Use the language switcher in the header to move between them.
 
 For a quick landing-page preview without Docker, you can run `pnpm dev:local`
 directly. Authenticated deck, collection, and profile features require
