@@ -24,6 +24,7 @@
 - 🎨 **Card printing selector** — choose your preferred art before adding or swap it anytime from the deck list
 - 🃏 **Drag & drop deck builder** — list and grid views, categorized zones; commander pinned first in grid view
 - 📊 **Live bracket scoring** — 6-dimension analysis (ramp, draw, removal, tutors, win speed, CMC)
+- 📐 **Format-specific stats** — curve, threat density and interaction ratio benchmarked per format for non-Commander decks
 - ⚡ **Game Changers detection** — auto-warns when you cross bracket thresholds
 - 🤖 **AI suggestions** — Anthropic Claude or OpenAI GPT analyzes your deck and recommends cards + cuts
 - 🤝 **Partner pairing** — Partner, Partner With, Friends Forever, Background, Doctor's Companion, Character Select (TMNT) — filtered search per pairing type

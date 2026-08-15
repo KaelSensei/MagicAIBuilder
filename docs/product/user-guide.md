@@ -124,6 +124,16 @@ The right panel shows:
 - **Combo detection** via Commander Spellbook
 - **Mana curve**, color distribution, category breakdown
 
+For **non-Commander decks** the panel swaps the Commander benchmarks for checks that fit the format:
+
+- **Curve** — the average mana value your format tends to want. Legacy and Vintage decks are expected to be cheaper than Standard ones.
+- **Threats** — creatures, planeswalkers and win conditions, as a share of your non-land cards. Too few and the deck never closes a game.
+- **Interaction** — removal, board wipes and protection, same share. Too little and you cannot answer what the opponent does.
+
+The card count is also measured against your format's real deck size (60 rather than 100), and the Commander-only bracket targets are hidden.
+
+These bands are **guidance, not rules** — a deliberate combo deck can sit far outside them and still be excellent. Treat an out-of-range reading as a reason to look, not a verdict.
+
 ### Playtesting a Deck
 
 Click **Playtest** in the builder toolbar to goldfish your deck — play it solo, with no opponent, to see how it opens and flows.

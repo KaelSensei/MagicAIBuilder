@@ -3,6 +3,7 @@ import type { Deck, DeckStats } from "./types";
 import { detectThemes } from "./themes";
 import { extractColorPips } from "@/lib/mana/parse";
 import { getColorIdentityViolations } from "./color-identity";
+import { buildFormatStats } from "./format-stats";
 
 function buildManaCurve(nonLandCards: ReturnType<typeof buildAllCards>): Record<number, number> {
   const manaCurve: Record<number, number> = {};
@@ -94,7 +95,10 @@ export function computeDeckStats(deck: Deck): DeckStats {
 
   const flexibleLands = allCards.filter((c) => c.isFlexibleLand === true).reduce((s, c) => s + c.quantity, 0);
 
+  const roundedAvgCmc = Math.round(avgCmc * 100) / 100;
+
   return {
+    formatStats: buildFormatStats(deck.format, allCards, roundedAvgCmc),
     totalCards,
     lands,
     creatures,
@@ -102,7 +106,7 @@ export function computeDeckStats(deck: Deck): DeckStats {
     draw,
     removal,
     boardWipes,
-    avgCmc: Math.round(avgCmc * 100) / 100,
+    avgCmc: roundedAvgCmc,
     manaCurve,
     colorDistribution,
     gameChangersCount,

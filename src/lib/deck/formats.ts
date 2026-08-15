@@ -41,6 +41,17 @@ export interface FormatConfig {
   readonly recommendedLands: readonly [number, number];
   /** Life total each player starts the game on */
   readonly startingLife: number;
+  /**
+   * Whether format-specific deck statistics (curve, threat density,
+   * interaction ratio) apply. False for Commander, which uses bracket scoring.
+   */
+  readonly hasFormatStats: boolean;
+  /** Healthy average mana value band, excluding lands */
+  readonly avgCmcTarget: readonly [number, number];
+  /** Healthy share of non-land cards that pressure the opponent */
+  readonly threatDensityTarget: readonly [number, number];
+  /** Healthy share of non-land cards that answer the opponent */
+  readonly interactionRatioTarget: readonly [number, number];
 }
 
 /** All format configs keyed by DeckFormat */
@@ -57,6 +68,10 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 1,
     recommendedLands: [33, 38],
     startingLife: 40,
+    hasFormatStats: false,
+    avgCmcTarget: [2.8, 3.6],
+    threatDensityTarget: [0.25, 0.45],
+    interactionRatioTarget: [0.15, 0.3],
   },
   brawl: {
     label: "Brawl",
@@ -70,6 +85,10 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 1,
     recommendedLands: [22, 26],
     startingLife: 30,
+    hasFormatStats: true,
+    avgCmcTarget: [2.5, 3.4],
+    threatDensityTarget: [0.3, 0.5],
+    interactionRatioTarget: [0.15, 0.3],
   },
   oathbreaker: {
     label: "Oathbreaker",
@@ -83,6 +102,10 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 1,
     recommendedLands: [22, 26],
     startingLife: 20,
+    hasFormatStats: true,
+    avgCmcTarget: [2.2, 3.2],
+    threatDensityTarget: [0.3, 0.5],
+    interactionRatioTarget: [0.15, 0.3],
   },
   standard: {
     label: "Standard",
@@ -96,6 +119,10 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    hasFormatStats: true,
+    avgCmcTarget: [2, 3.2],
+    threatDensityTarget: [0.3, 0.55],
+    interactionRatioTarget: [0.15, 0.35],
   },
   pioneer: {
     label: "Pioneer",
@@ -109,6 +136,10 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    hasFormatStats: true,
+    avgCmcTarget: [1.9, 3],
+    threatDensityTarget: [0.3, 0.55],
+    interactionRatioTarget: [0.15, 0.35],
   },
   modern: {
     label: "Modern",
@@ -122,6 +153,10 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    hasFormatStats: true,
+    avgCmcTarget: [1.7, 2.8],
+    threatDensityTarget: [0.3, 0.55],
+    interactionRatioTarget: [0.15, 0.35],
   },
   legacy: {
     label: "Legacy",
@@ -135,6 +170,10 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    hasFormatStats: true,
+    avgCmcTarget: [1.4, 2.5],
+    threatDensityTarget: [0.25, 0.5],
+    interactionRatioTarget: [0.2, 0.4],
   },
   vintage: {
     label: "Vintage",
@@ -148,6 +187,10 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    hasFormatStats: true,
+    avgCmcTarget: [1.3, 2.4],
+    threatDensityTarget: [0.25, 0.5],
+    interactionRatioTarget: [0.2, 0.4],
   },
   pauper: {
     label: "Pauper",
@@ -161,6 +204,10 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    hasFormatStats: true,
+    avgCmcTarget: [1.6, 2.6],
+    threatDensityTarget: [0.3, 0.55],
+    interactionRatioTarget: [0.15, 0.35],
   },
 };
 
