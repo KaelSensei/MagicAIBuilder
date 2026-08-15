@@ -55,3 +55,9 @@ test-results/
 *.tsbuildinfo
 next-env.d.ts
 .pr-body*.md
+.vercel
+.env*
+
+# Agent skills installed by marketplace integrations (Vercel/Neon)
+.agents/skills/
+skills-lock.json
