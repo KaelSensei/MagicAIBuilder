@@ -184,6 +184,26 @@ function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
   };
 }
 
+/**
+ * Whether a deck in the store is still the lightweight listing version.
+ *
+ * `GET /api/decks` returns only commander / partner / companion plus a total
+ * count, so a stub reports fewer loaded cards than `cardCount`. The full deck
+ * comes from `GET /api/decks/[id]`.
+ *
+ * @param deck - a deck held in the store
+ * @returns true when its main-deck cards have not been loaded yet
+ */
+function isDeckStub(deck: Deck): boolean {
+  const loaded =
+    deck.cards.length +
+    (deck.commander ? 1 : 0) +
+    (deck.partner ? 1 : 0) +
+    (deck.companion ? 1 : 0);
+
+  return loaded < deck.cardCount;
+}
+
 export interface DeckStore {
   // State
   decks: Record<string, Deck>;
@@ -409,11 +429,22 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     try {
       const response = await deckApi.fetchDecks();
-      const decks: Record<string, Deck> = {};
-      for (const d of response.decks) {
-        decks[d.id] = apiDeckToStoreDeck(d);
-      }
-      set({ decks });
+
+      set((state) => {
+        const decks: Record<string, Deck> = {};
+        for (const d of response.decks) {
+          const incoming = apiDeckToStoreDeck(d);
+          const existing = state.decks[d.id];
+
+          // Keep the fuller copy. The listing is deliberately lightweight, so
+          // overwriting wholesale threw away cards that setActiveDeck had just
+          // fetched — the deck went back to empty moments after loading.
+          decks[d.id] = existing && !isDeckStub(existing) ? existing : incoming;
+        }
+        // Decks absent from the listing were deleted server-side, so the
+        // rebuilt map drops them rather than merging them back in.
+        return { decks };
+      });
     } catch (err) {
       logger.error("Unexpected error", "loadDecks", err);
     } finally {
@@ -493,22 +524,25 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   setActiveDeck: async (id: string) => {
     set({ activeDeckId: id });
 
-    // Lazy-load full card data if the deck was loaded from the lightweight listing
+    // Load full card data when the store does not already hold it. Two cases:
+    // the deck is absent entirely (direct navigation to /builder/<id>, before
+    // loadDecks has run), or it came from the lightweight listing, which
+    // carries only commander/partner/companion plus a count.
+    //
+    // The absent case used to be skipped — the guard required `deck` to exist —
+    // so a bookmark, a refresh or a freshly imported deck opened with no cards
+    // at all, and nothing ever re-triggered the load.
     const deck = get().decks[id];
-    const loadedCardCount = (deck?.cards.length ?? 0)
-      + (deck?.commander ? 1 : 0)
-      + (deck?.partner ? 1 : 0)
-      + (deck?.companion ? 1 : 0);
-    if (deck && loadedCardCount < deck.cardCount) {
-      try {
-        const apiDeck = await deckApi.fetchDeck(id);
-        const fullDeck = apiDeckToStoreDeck(apiDeck);
-        set((state) => ({
-          decks: { ...state.decks, [id]: fullDeck },
-        }));
-      } catch (err) {
-        logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
-      }
+    if (deck && !isDeckStub(deck)) return;
+
+    try {
+      const apiDeck = await deckApi.fetchDeck(id);
+      const fullDeck = apiDeckToStoreDeck(apiDeck);
+      set((state) => ({
+        decks: { ...state.decks, [id]: fullDeck },
+      }));
+    } catch (err) {
+      logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
     }
   },
 
