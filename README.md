@@ -141,11 +141,43 @@ Without a key, the AI panel uses curated generic suggestions.
 
 ## E2E in Docker (Playwright)
 
-If running Playwright locally is unreliable, you can run E2E tests fully inside Docker:
+The suite runs against a disposable PostgreSQL and a Chromium image, so it never
+touches your dev database:
 
 ```bash
 docker compose -f docker-compose.e2e.yml up --build --exit-code-from e2e
 ```
+
+Always pass `--build`: without it Compose reuses the previous image, and the
+container runs the test files as they were when it was last built.
+
+`Dockerfile.playwright` pins both the Playwright image and pnpm. The image tag
+must track `@playwright/test` in `package.json` — Playwright resolves browser
+binaries by a version-stamped path, so any drift makes every browser test fail
+to launch. `src/lib/toolchain.test.ts` fails the unit suite if the pins diverge.
+
+### Excluded tags
+
+Two groups of tests are excluded from the blocking run by default:
+
+| Tag         | Why                                                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@external` | Calls a third-party service (e.g. the live Moxfield API). A deck going private there turns the gate red with no code change on our side.                         |
+| `@perf`     | Asserts wall-clock latency against `next dev`, which compiles routes on demand — the same endpoint measured 41 ms alone and 5163 ms under full-suite contention. |
+
+Run them deliberately:
+
+```bash
+PLAYWRIGHT_GREP_INVERT="" docker compose -f docker-compose.e2e.yml up --build --exit-code-from e2e
+```
+
+Narrow to one spec with `PLAYWRIGHT_SPEC=e2e/playtest.spec.ts`.
+
+### Pre-push gate
+
+`.husky/pre-push` runs the whole suite through `scripts/e2e-pre-push.sh` and
+blocks the push on failure. The verdict always comes from the container's exit
+code. Set `SKIP_E2E=1` to bypass it in an emergency.
 
 ## Architecture
 

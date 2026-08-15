@@ -23,6 +23,13 @@
   "sidebar": {
     "navigation": "Navigation"
   },
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error interrupted this page. The problem has been reported — you can try again, or head back to your decks.",
+    "retry": "Try again",
+    "backToDecks": "Back to my decks",
+    "reference": "Reference"
+  },
   "locale": {
     "switchLocale": "Switch language",
     "en": "English",

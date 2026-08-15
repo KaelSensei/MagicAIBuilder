@@ -107,8 +107,9 @@ pnpm dev:local
 
 This starts Next.js on `http://127.0.0.1:3000`. Open:
 
-- `http://localhost:3000/fr` for the French UI
-- `http://localhost:3000/en` for the default English UI
+- `http://localhost:3000` for the default English UI — served unprefixed
+- `http://localhost:3000/fr` for the French UI, and likewise for the other
+  eight locales (`de`, `it`, `es`, `ja`, `zh`, `ko`, `ru`, `pt`)
 
 The landing page can run without Docker. Authenticated deck, collection, and
 profile workflows require PostgreSQL to be running and migrated.
@@ -254,6 +255,44 @@ You should see `All migrations have been successfully applied.`
 ### 5. Monitor uptime (once deployed)
 
 See the UptimeRobot instructions in [roadmap.md](./roadmap.md) under **Observability → Level 1**.
+
+---
+
+## Error Reporting
+
+### How errors reach Sentry
+
+Three paths, and all three are needed — the first two were missing entirely, which left server-side failures invisible in production.
+
+| Path             | File                            | Covers                                                         |
+| ---------------- | ------------------------------- | -------------------------------------------------------------- |
+| `onRequestError` | `src/instrumentation.ts`        | Unhandled errors in route handlers, server components, actions |
+| `logger.error`   | `src/lib/logger.ts`             | Errors the app catches and turns into a JSON 500               |
+| Error boundaries | `error.tsx`, `global-error.tsx` | Client render failures                                         |
+
+**`src/instrumentation.ts`** exports `register()`, which loads `sentry.server.config.ts` or `sentry.edge.config.ts` depending on `NEXT_RUNTIME`, and `onRequestError = Sentry.captureRequestError`. This is the supported path for App Router server errors with `@sentry/nextjs` v9+; without the file, nothing on the server is reported.
+
+**`src/instrumentation-client.ts`** replaces the deprecated root `sentry.client.config.ts` and adds `onRouterTransitionStart`, so client-side navigations are traced. Do not reintroduce `sentry.client.config.ts` — having both double-initialises the SDK.
+
+**`logger.error` reports to Sentry.** This matters because every API route catches its errors and returns a JSON 500, so `onRequestError` never sees them. The logger recovers the `Error` from either the first argument or the meta list, since call sites use both shapes:
+
+```ts
+logger.error(error, "GET /api/decks"); // preferred — carries the stack
+logger.error("Unexpected error", "addCard", err); // also reported, same stack
+```
+
+If neither yields an `Error`, one is synthesised from the message so the report still groups. `context` becomes a Sentry tag; remaining meta becomes extra context. Reporting is wrapped in a `try/catch`: a Sentry outage must never make a logging call throw.
+
+### Error boundaries
+
+- `src/app/[locale]/error.tsx` — localised, offers retry and a way back to the deck list, shows `error.digest`.
+- `src/app/global-error.tsx` — last resort for root-layout failures. It replaces the whole document, so it renders its own `<html>`/`<body>` and stays in English: no provider, and therefore no translations, are available at that point.
+
+### `/api/health`
+
+`GET /api/health` returns `200 {status:"ok", db:"ok", latencyMs}` or `503 {status:"degraded", db:"unreachable", latencyMs}`.
+
+The failure branch deliberately does **not** return the driver's error message — the endpoint is unauthenticated and that message can name hosts, users and credentials. The detail goes to the logs and to Sentry instead.
 
 ---
 
