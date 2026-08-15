@@ -89,7 +89,7 @@ pnpm db:up
 # Run migrations
 pnpm db:migrate
 
-# Start dev server on http://127.0.0.1:3000
+# Start dev server on http://localhost:3000
 pnpm dev:local
 ```
 
@@ -123,21 +123,21 @@ Without a key, the AI panel uses curated generic suggestions.
 
 ## Scripts
 
-| Command           | Description                               |
-| ----------------- | ----------------------------------------- |
-| `pnpm dev`        | Start Next.js dev server                  |
-| `pnpm dev:local`  | Start dev server on 127.0.0.1:3000        |
-| `pnpm build`      | Production build                          |
-| `pnpm analyze`    | Production build + interactive bundle map |
-| `pnpm lint`       | ESLint check                              |
-| `pnpm test`       | Unit tests (Vitest)                       |
-| `pnpm test:e2e`   | E2E tests (Playwright)                    |
-| `pnpm db:up`      | Start PostgreSQL via Docker               |
-| `pnpm db:down`    | Stop PostgreSQL                           |
-| `pnpm db:migrate` | Apply pending migrations                  |
-| `pnpm db:studio`  | Open Prisma Studio                        |
-| `pnpm db:reset`   | Reset database                            |
-| `pnpm db:seed`    | Seed demo data (Atraxa deck)              |
+| Command           | Description                                 |
+| ----------------- | ------------------------------------------- |
+| `pnpm dev`        | Start Next.js dev server                    |
+| `pnpm dev:local`  | Start dev server on port 3000 (IPv4 + IPv6) |
+| `pnpm build`      | Production build                            |
+| `pnpm analyze`    | Production build + interactive bundle map   |
+| `pnpm lint`       | ESLint check                                |
+| `pnpm test`       | Unit tests (Vitest)                         |
+| `pnpm test:e2e`   | E2E tests (Playwright)                      |
+| `pnpm db:up`      | Start PostgreSQL via Docker                 |
+| `pnpm db:down`    | Stop PostgreSQL                             |
+| `pnpm db:migrate` | Apply pending migrations                    |
+| `pnpm db:studio`  | Open Prisma Studio                          |
+| `pnpm db:reset`   | Reset database                              |
+| `pnpm db:seed`    | Seed demo data (Atraxa deck)                |
 
 ## E2E in Docker (Playwright)
 
