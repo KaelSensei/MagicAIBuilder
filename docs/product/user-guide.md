@@ -124,6 +124,22 @@ The right panel shows:
 - **Combo detection** via Commander Spellbook
 - **Mana curve**, color distribution, category breakdown
 
+### Playtesting a Deck
+
+Click **Playtest** in the builder toolbar to goldfish your deck — play it solo, with no opponent, to see how it opens and flows.
+
+**Starting a game.** Choose _Draw opening hand_ to shuffle and deal seven cards.
+
+**Mulligans.** _Mulligan_ reshuffles and deals one card fewer, following the London rule. Because there is no opponent to play against, the app keeps a random `7 − N` hand rather than asking you to put cards on the bottom — statistically the same result, one step fewer. Mulligans are offered only while the opening hand is still in question: once you advance a turn or put a permanent onto the battlefield, the button greys out. You can take at most six.
+
+**Turn structure.** The phase tracker walks the turn: Untap → Upkeep → Draw → Main 1 → Combat → Main 2 → End. _Next phase_ steps one at a time and rolls into the next turn after End, untapping everything. _Next turn_ skips straight ahead and draws a card.
+
+**Life total.** Starts at the total for your deck's format — 40 in Commander, 30 in Brawl, 20 in Standard, Modern, Pioneer, Legacy, Vintage, Pauper and Oathbreaker. Use the ±1 / ±5 buttons or type any amount. Every change is logged with its turn and phase, and _Undo last action_ steps back through the last ten actions.
+
+**Zones.** Click a card in hand to send it to the **battlefield** or the **graveyard**. On the battlefield you can tap and untap it, add or remove counters, or move it to the graveyard. Graveyard and exile are collapsible lists, and any card in them can be returned to another zone.
+
+**Restart** deals the whole deck again from scratch, clearing mulligans, life changes and every zone. Closing the playtest discards the game — reopening always starts fresh.
+
 ---
 
 ## Collection Mode
