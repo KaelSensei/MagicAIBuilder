@@ -152,6 +152,27 @@ Click **Playtest** in the builder toolbar to goldfish your deck — play it solo
 
 ---
 
+## Community Decks
+
+### Browsing decks for a commander
+
+Every commander has a public page listing the decks other players have shared for it: `/commanders/<commander-slug>/decks` — for example `/commanders/atraxa-praetors-voice/decks`. You can also reach it from the **Meta** panel in the builder, via _Browse community decks for this commander_.
+
+The page is public: anyone can read it, signed in or not. Decks are ordered by community votes, and each row shows the deck's star average and its **Community Favourite** badge when it has earned one.
+
+If nobody has published a deck for that commander yet, the page says so rather than showing an error.
+
+### Voting
+
+Each deck has an up/down arrow. Voting says "this deck belongs near the top of the list" — it is a separate signal from the 1–5 stars, which say "this deck is good".
+
+- Click the arrow again to take your vote back.
+- Changing your mind replaces your vote; you never get two.
+- You cannot vote on your own deck.
+- You need to be signed in — the arrows are visible but disabled otherwise.
+
+---
+
 ## Collection Mode
 
 The Collection Mode lets you track your physical MTG card collection so you can see which cards you already own when building decks.

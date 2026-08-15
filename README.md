@@ -35,6 +35,7 @@
 - 📝 **Deck notes & tags** — per-card notes, deck description, colored tag pills
 - 📸 **Deck snapshots** — save and restore deck states at any point
 - 🔗 **Deck sharing** — generate a shareable read-only link
+- 🌍 **Community discovery** — public deck listing per commander at `/commanders/<slug>/decks`, ranked by up/down votes, with star ratings and reviews
 - 🎮 **Playtest mode** — opening hand and London mulligan, turn phases (Untap → End), life tracking with history and undo, and battlefield / graveyard / exile zones with tap and counters; starting life follows the deck format
 - ⌨️ **Keyboard shortcuts** — power-user navigation with undo stack
 - 🎴 **Multi-format support** — Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, Pauper with correct rules per format

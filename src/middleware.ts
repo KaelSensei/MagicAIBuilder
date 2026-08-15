@@ -19,6 +19,7 @@ const PUBLIC_PATH_PREFIXES: readonly string[] = [
   "/share",
   "/deck", // public deck pages — /api/deck/[id] still 404s private decks
   "/u", // public profile pages
+  "/commanders", // public deck discovery by commander
 ];
 
 /**
