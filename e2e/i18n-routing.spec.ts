@@ -38,10 +38,15 @@ test.describe("i18n Locale Routing", () => {
     expect(lang).toBe("en");
   });
 
-  test("Japanese locale renders correctly", async ({ page }) => {
-    await page.goto("/ja");
-    const lang = await page.getAttribute("html", "lang");
-    expect(lang).toBe("ja");
+  // Only en and fr are routed; the other catalogs are dormant until translated.
+  // A dormant prefix is no longer a locale, so it resolves as an ordinary
+  // unknown path: a 404 rendered in English, never a half-translated page.
+  test("a dormant locale prefix is treated as an unknown path", async ({ page }) => {
+    const response = await page.goto("/ja");
+
+    expect(response?.status()).toBe(404);
+    expect(await page.getAttribute("html", "lang")).toBe("en");
+    await expect(page.getByRole("heading", { name: /page not found/i })).toBeVisible();
   });
 
   test("locale prefix is preserved after navigation", async ({ page }) => {
@@ -50,8 +55,9 @@ test.describe("i18n Locale Routing", () => {
     const myDecksLink = page.getByRole("link", { name: /My Decks|Mes Decks/i });
     if (await myDecksLink.isVisible()) {
       await myDecksLink.click();
-      await page.waitForLoadState("networkidle");
-      expect(page.url()).toContain("/fr/");
+      // Web-first assertion: retries until the URL carries the locale prefix,
+      // instead of waiting on a network-quiet heuristic.
+      await expect(page).toHaveURL(/\/fr\//);
     }
   });
 });

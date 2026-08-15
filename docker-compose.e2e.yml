@@ -1,3 +1,12 @@
+# Own Compose project. Without this, the project name is derived from the
+# directory and collides with docker-compose.yml — and since both declare a
+# service called `db`, starting the e2e stack REPLACED the running dev database
+# container with one mounting pgdata_e2e. The dev data survived in its volume,
+# but the app pointed at an empty database until `docker compose up -d db` was
+# run again, which reads as "login suddenly broken". The `down -v` in the
+# pre-push cleanup was likewise scoped to the shared project.
+name: magicaibuilder-e2e
+
 services:
   db:
     image: postgres:16-alpine
@@ -35,12 +44,31 @@ services:
 
       # Ensure auth is bypassed for E2E
       PLAYWRIGHT_TEST: "1"
-      # Default to running the new pairing regression test only.
-      PLAYWRIGHT_SPEC: "e2e/background-commander-pairing.spec.ts"
+      # Default to the FULL suite. `:-` would also swallow an explicit empty
+      # value, so use `-`: setting PLAYWRIGHT_SPEC="" deliberately means "all
+      # specs", while naming a file narrows the run to it.
+      #
+      # This was previously a hardcoded single spec with no interpolation, so
+      # host-shell overrides were silently ignored and the pre-push gate ran
+      # 1 of 8 spec files while reporting a full green.
+      PLAYWRIGHT_SPEC: "${PLAYWRIGHT_SPEC-}"
+      # Excluded from the blocking gate by default:
+      #   @external — depends on third-party services (e.g. the live Moxfield
+      #     API); a deck going private there once turned the gate red with no
+      #     code change on our side.
+      #   @perf — asserts wall-clock latency against `next dev`, which compiles
+      #     routes on demand; the same endpoint measured 41ms alone and 5163ms
+      #     under full-suite contention.
+      # Set this to "" to run them deliberately.
+      PLAYWRIGHT_GREP_INVERT: "${PLAYWRIGHT_GREP_INVERT-@external|@perf}"
     command: >
       sh -lc "
         pnpm exec prisma migrate deploy &&
-        pnpm exec playwright test $${PLAYWRIGHT_SPEC}
+        if [ -n \"$${PLAYWRIGHT_GREP_INVERT}\" ]; then
+          pnpm exec playwright test $${PLAYWRIGHT_SPEC} --grep-invert \"$${PLAYWRIGHT_GREP_INVERT}\"
+        else
+          pnpm exec playwright test $${PLAYWRIGHT_SPEC}
+        fi
       "
 
 volumes:

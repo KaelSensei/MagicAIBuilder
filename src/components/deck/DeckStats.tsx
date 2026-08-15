@@ -3,6 +3,9 @@
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { DeckStats } from "@/lib/deck/types";
+import type { DeckFormat } from "@/lib/deck/formats";
+import { getFormatConfig } from "@/lib/deck/formats";
+import type { BenchmarkStatus, FormatStats } from "@/lib/deck/format-stats";
 import { ManaCurve } from "./ManaCurve";
 import { ColorDistribution } from "./ColorDistribution";
 import { ThemeDetector } from "./ThemeDetector";
@@ -13,6 +16,7 @@ type BracketLevel = 1 | 2 | 3 | 4;
 
 interface DeckStatsProps {
   readonly stats: DeckStats | null;
+  readonly format: DeckFormat;
   readonly targetBracket?: BracketLevel;
   readonly className?: string;
 }
@@ -117,7 +121,64 @@ function StatRow({ label, value, status = "neutral" }: StatRowProps) {
   );
 }
 
-export function DeckStats({ stats, targetBracket = 3, className }: DeckStatsProps) {
+/** @returns the icon colour matching a benchmark verdict */
+function statusFromBenchmark(status: BenchmarkStatus): StatusLevel {
+  return status === "on-target" ? "ok" : "warn";
+}
+
+/** @returns a 0–1 share rendered as a whole percentage */
+function asPercent(ratio: number): string {
+  return `${Math.round(ratio * 100)}%`;
+}
+
+/**
+ * Curve, threat and interaction readings for non-Commander formats.
+ * Commander gets bracket scoring instead, so `stats.formatStats` is null there.
+ */
+function FormatStatsPanel({
+  formatStats,
+  formatLabel,
+}: {
+  readonly formatStats: FormatStats;
+  readonly formatLabel: string;
+}) {
+  const t = useTranslations("deck");
+
+  return (
+    <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
+      <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
+        {t("stats.formatChecks", { format: formatLabel })}
+      </p>
+      <div className="divide-y divide-[var(--border)]">
+        <StatRow
+          label={t("stats.curve")}
+          value={`${formatStats.avgCmcTarget[0]}–${formatStats.avgCmcTarget[1]}`}
+          status={statusFromBenchmark(formatStats.curveStatus)}
+        />
+        <StatRow
+          label={t("stats.threatDensity")}
+          value={`${formatStats.threats} · ${asPercent(formatStats.threatDensity)}`}
+          status={statusFromBenchmark(formatStats.threatStatus)}
+        />
+        <StatRow
+          label={t("stats.interaction")}
+          value={`${formatStats.interaction} · ${asPercent(formatStats.interactionRatio)}`}
+          status={statusFromBenchmark(formatStats.interactionStatus)}
+        />
+      </div>
+      <p className="mt-2 text-[10px] leading-snug text-[var(--text-secondary)] opacity-70">
+        {t("stats.formatStatsHint")}
+      </p>
+    </div>
+  );
+}
+
+export function DeckStats({
+  stats,
+  format,
+  targetBracket = 3,
+  className,
+}: DeckStatsProps) {
   const t = useTranslations("deck");
 
   if (!stats) {
@@ -130,10 +191,15 @@ export function DeckStats({ stats, targetBracket = 3, className }: DeckStatsProp
     );
   }
 
+  const config = getFormatConfig(format);
   const targets = BRACKET_TARGETS[targetBracket];
+
+  // Sizes and bracket targets are Commander's; a 60-card deck was being shown
+  // "60/100" and "target for B3" before this was gated on the format.
+  const { deckSize } = config;
   let cardCountStatus: "ok" | "warn" | "error";
-  if (stats.totalCards === 100) { cardCountStatus = "ok"; }
-  else if (stats.totalCards > 100) { cardCountStatus = "error"; }
+  if (stats.totalCards === deckSize) { cardCountStatus = "ok"; }
+  else if (stats.totalCards > deckSize) { cardCountStatus = "error"; }
   else { cardCountStatus = "warn"; }
 
   return (
@@ -159,33 +225,37 @@ export function DeckStats({ stats, targetBracket = 3, className }: DeckStatsProp
         <div className="divide-y divide-[var(--border)]">
           <StatRow
             label={t("stats.totalCards")}
-            value={`${stats.totalCards}/100`}
+            value={`${stats.totalCards}/${deckSize}`}
             status={cardCountStatus}
           />
-          <BenchmarkRow
-            label={t("stats.lands")}
-            value={stats.lands}
-            target={targets.lands}
-            bracket={targetBracket}
-          />
-          <BenchmarkRow
-            label={t("stats.ramp")}
-            value={stats.ramp}
-            target={targets.ramp}
-            bracket={targetBracket}
-          />
-          <BenchmarkRow
-            label={t("stats.cardDraw")}
-            value={stats.draw}
-            target={targets.draw}
-            bracket={targetBracket}
-          />
-          <BenchmarkRow
-            label={t("stats.removal")}
-            value={stats.removal}
-            target={targets.removal}
-            bracket={targetBracket}
-          />
+          {config.hasBracketScoring && (
+            <>
+              <BenchmarkRow
+                label={t("stats.lands")}
+                value={stats.lands}
+                target={targets.lands}
+                bracket={targetBracket}
+              />
+              <BenchmarkRow
+                label={t("stats.ramp")}
+                value={stats.ramp}
+                target={targets.ramp}
+                bracket={targetBracket}
+              />
+              <BenchmarkRow
+                label={t("stats.cardDraw")}
+                value={stats.draw}
+                target={targets.draw}
+                bracket={targetBracket}
+              />
+              <BenchmarkRow
+                label={t("stats.removal")}
+                value={stats.removal}
+                target={targets.removal}
+                bracket={targetBracket}
+              />
+            </>
+          )}
           <StatRow
             label={t("stats.avgCmc")}
             value={stats.avgCmc.toFixed(2)}
@@ -200,6 +270,14 @@ export function DeckStats({ stats, targetBracket = 3, className }: DeckStatsProp
           )}
         </div>
       </div>
+
+      {/* Format-specific measures (non-Commander formats) */}
+      {stats.formatStats && (
+        <FormatStatsPanel
+          formatStats={stats.formatStats}
+          formatLabel={config.label}
+        />
+      )}
 
       {/* Deck price — live total from store via useDeckPrice */}
       <DeckPriceDisplay />

@@ -450,12 +450,12 @@ pnpm prisma migrate dev
 
 # Start dev server on http://127.0.0.1:3000
 pnpm dev:local
-# -> http://localhost:3000/fr
+# -> http://localhost:3000
 ```
 
-`http://localhost:3000` redirects once to the default English locale
-(`/en`). Use `/fr` directly for the French UI. Docker/PostgreSQL is required
-for authenticated deck, collection, and profile features.
+Routing is `localePrefix: "as-needed"`: English is served unprefixed at
+`http://localhost:3000`, French at `/fr`. Docker/PostgreSQL is required for
+authenticated deck, collection, and profile features.
 
 ### Testing
 
@@ -544,18 +544,133 @@ Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported 
 All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 
 - `DeckFormat` — union type of 9 supported formats
-- `FORMAT_CONFIG` — per-format rules: deckSize, sideboardSize, isSingleton, hasCommander, hasBracketScoring, hasColorIdentity, maxCopiesPerCard, scryfallLegality, recommendedLands
+- `FORMAT_CONFIG` — per-format rules: deckSize, sideboardSize, isSingleton, hasCommander, hasBracketScoring, hasColorIdentity, maxCopiesPerCard, scryfallLegality, recommendedLands, startingLife
 - `getFormatConfig(format)` — safe accessor with Commander fallback
 
 **Every layer reads from this single config** instead of hardcoding Commander:
 
-| Layer           | What changes per format                                      |
-| --------------- | ------------------------------------------------------------ |
-| Search queries  | `legal:{format}` instead of `legal:commander`                |
-| Banlist         | `banned:{format}` with per-format cache key                  |
-| Validation      | Deck size (100 vs 60), singleton rule, commander requirement |
-| Card multiples  | maxCopiesPerCard (1 for Commander, 4 for Standard)           |
-| Bracket scoring | Only computed for Commander (returns null otherwise)         |
+| Layer           | What changes per format                                       |
+| --------------- | ------------------------------------------------------------- |
+| Search queries  | `legal:{format}` instead of `legal:commander`                 |
+| Banlist         | `banned:{format}` with per-format cache key                   |
+| Validation      | Deck size (100 vs 60), singleton rule, commander requirement  |
+| Card multiples  | maxCopiesPerCard (1 for Commander, 4 for Standard)            |
+| Bracket scoring | Only computed for Commander (returns null otherwise)          |
+| Playtest        | startingLife (40 Commander, 30 Brawl, 20 elsewhere)           |
+| Deck statistics | Card-count target, and the curve / threat / interaction bands |
+
+---
+
+## Internationalisation
+
+**Two locales are served: `en` and `fr`**, via next-intl v4 with `localePrefix: "as-needed"` — English at `/decks`, French at `/fr/decks`. Catalogs live in `src/messages/<locale>/<namespace>.json` and are wired in `src/i18n/request.ts`.
+
+### Dormant locales
+
+`de, it, es, ja, zh, ko, ru, pt` have catalogs on disk, listed in `DORMANT_LOCALES`, but are **not routed**. They were machine-seeded English copies, and translating the interface around card names and oracle text that are themselves still English — Scryfall's `lang` parameter is not wired — would ship a half-translated product in eight languages instead of a coherent one in two.
+
+A dormant prefix is therefore an ordinary unknown path: `/ja` returns a 404 rendered in English, never a partly-translated page.
+
+Their catalogs are still held at key parity with `en` by `messages.test.ts`, so re-activating one is a single-line move from `DORMANT_LOCALES` into `SUPPORTED_LOCALES` — once someone who speaks the language has translated it.
+
+### Adding a translated string
+
+1. Add the key to `src/messages/en/<namespace>.json`, and to `fr` with a real translation.
+2. Propagate the key to the remaining eight locales — the value may stay English until the translation pass, but **the key must exist everywhere**. A missing key renders as its raw dotted path in that locale.
+3. `src/i18n/messages.test.ts` enforces this: it fails the unit suite when any locale's key set diverges from `en`, or when a namespace file is missing.
+
+### Strings in module-scope tables
+
+`useTranslations` is a hook and cannot run at module scope. Constant tables that carry user-facing labels (filter options, mode lists) therefore store **catalog keys**, resolved at render:
+
+```ts
+const CMC_MODES = [{ value: "range", labelKey: "cmcMode.range" }, …];
+// …
+{CMC_MODES.map((m) => <TabButton key={m.value}>{t(m.labelKey)}</TabButton>)}
+```
+
+The same rule applies to error copy held in state: store a flag, not a message, and render the translated string from it.
+
+### Rich text
+
+next-intl's parser does not support self-closing tags — `<br/>` renders as literal text. Write `<br></br>` and supply a tag renderer to `t.rich()`. `messages.test.ts` fails on any self-closing tag in a catalog.
+
+---
+
+## Community Deck Discovery
+
+Two quality signals coexist deliberately:
+
+| Signal              | Model        | Answers                              | Used for           |
+| ------------------- | ------------ | ------------------------------------ | ------------------ |
+| 1–5 stars + reviews | `DeckRating` | "how good is this deck"              | Per-deck quality   |
+| ±1 vote             | `DeckVote`   | "should this deck rank near the top" | Discovery ordering |
+
+`src/lib/community/votes.ts` holds the domain: `isValidVoteValue`, `calculateVoteScore`, `rankDecksByScore`. **Zero is not a valid vote** — clearing a vote deletes the row rather than storing 0, so a stored row always represents a real opinion.
+
+Ranking is score first, then rating count (more ratings means more evidence behind the same score), then recency so a new list is not permanently stuck under an identical older one.
+
+### Routes
+
+| Route                                            | Notes                                                          |
+| ------------------------------------------------ | -------------------------------------------------------------- |
+| `GET/POST/DELETE /api/community/decks/[id]/vote` | POST upserts, so flipping a vote replaces it. 403 on self-vote |
+| `GET /api/community/commanders/[slug]/decks`     | Public decks led by that commander, ranked                     |
+
+Both live under `/api/community` so the edge auth allowlist (`src/lib/auth/edge-config.ts`) can expose `GET` anonymously without opening the protected `/api/decks` tree. `/commanders` is on the page allowlist in both `edge-config.ts` and `middleware.ts`.
+
+> **Known limitation.** Commander identity lives on the deck's _cards_ (`isCommander`), not on the `Deck` row, so the slug cannot be matched in SQL — the route loads public decks with a commander and slugs them in memory. Fine while public decks are few; it needs a denormalised `commanderName` column on `Deck` before that stops being true.
+
+An unknown slug is not a 404: it is a commander nobody has published for yet, so the page renders its empty state.
+
+---
+
+## Format-Specific Statistics
+
+Commander decks are graded by bracket scoring. Every other format had no equivalent read on whether a list is well-proportioned, so `src/lib/deck/format-stats.ts` adds three measures, computed by `computeDeckStats` and surfaced in `DeckStats.tsx`:
+
+| Measure           | Definition                                                        |
+| ----------------- | ----------------------------------------------------------------- |
+| Curve             | `avgCmc` against the format's `avgCmcTarget` band                 |
+| Threat density    | `creature + planeswalker + winCondition`, as a share of non-lands |
+| Interaction ratio | `removal + boardWipe + protection`, as a share of non-lands       |
+
+Ratios are taken against **non-land cards**, not the whole deck: a 60-card list with 24 lands and a 100-card list with 38 are not comparable on raw counts, but their spell mix is. `benchmarkStatus` places each value in its band and returns `"below" | "on-target" | "above"`.
+
+`buildFormatStats` returns `null` when `hasFormatStats` is false (Commander only), and `DeckStats.formatStats` carries that through, so the UI renders the panel purely on presence.
+
+> The bands in `FORMAT_CONFIG` are **heuristic starting points, not derived from tournament data**. They are meant to prompt a look at the deck, not to grade it. Tune them as real data arrives.
+
+The same `format` prop also fixes two Commander assumptions in the stats panel: the card-count row now reads `totalCards/deckSize` rather than always `/100`, and the bracket benchmark rows (ramp, draw, removal, lands) are hidden for formats without bracket scoring — a Modern deck previously showed "60/100" and "target for B3".
+
+---
+
+## Playtest Engine
+
+`src/lib/playtest/` is a pure state machine with no framework dependency, wrapped by a Zustand store and rendered by the components in `src/components/playtest/`.
+
+**`engine.ts`** — every transition takes a state and returns a new one:
+
+| Export                                           | Role                                                                              |
+| ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `PlaytestEngine`                                 | Turn, phase, life + history, hand/library/battlefield/graveyard/exile, undo stack |
+| `createPlaytestState(cards, overrides)`          | Shuffles and deals; `overrides.lifeTotal` carries the format total                |
+| `applyMulligan`                                  | Reshuffles and keeps one card fewer, capped at `MAX_MULLIGANS`                    |
+| `applyNextPhase` / `applyNextTurn`               | `PHASES` order; End rolls into the next turn and untaps                           |
+| `applyDamage` / `applyHeal`                      | Adjusts life and appends a `LifeHistoryEntry`                                     |
+| `applyTap` / `applyUntapAll` / `applyAddCounter` | Battlefield permanent state                                                       |
+| `applyMoveToZone`                                | Moves a card between any two `CardZone`s, exhaustively checked                    |
+| `applyUndo`                                      | Restores the previous state; `pushHistory` caps the stack at 10                   |
+
+Shuffling uses `randomIntBelow` from `src/lib/crypto-random.ts`, not `Math.random()`.
+
+**`store.ts`** — `usePlaytestStore` exposes each `apply*` as an action and holds the deck as it was dealt (`setup`), so `resetPlaytest` re-deals the original deck. Rebuilding it from the live zones instead would carry battlefield state (tapped, counters) back into the library and lose the commander/partner distinction.
+
+**Mulligan model.** London formally draws seven and bottoms N chosen cards. Goldfishing has no opponent and no choice to make, so the engine keeps `7 - N` random cards — the same distribution, without a bottoming UI that would decide nothing.
+
+**`PlaytestModal`** subscribes with fine-grained selectors and clears the session on unmount: the store outlives the modal, so a stale game would otherwise reappear on reopen.
+
+`analytics.ts` (`calculateWinRate`, `getMulliganDistribution`, …) is written and tested but not reachable — there is no `PlaytestSession` Prisma model to feed it.
 
 ---
 

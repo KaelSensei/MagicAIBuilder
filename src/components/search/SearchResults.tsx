@@ -1,5 +1,6 @@
 "use client";
 // Search results panel with grid/list toggle
+import { useTranslations } from "next-intl";
 import { Loader2, AlertCircle, LayoutGrid, List } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
 import { CardSearchListItem } from "@/components/card/CardSearchListItem";
@@ -25,6 +26,7 @@ export function SearchResults({
   onAddToMaybeboard,
   draggable = false,
 }: SearchResultsProps) {
+  const t = useTranslations("search");
   const viewMode = useDeckStore((s) => s.searchViewMode);
   const setViewMode = useDeckStore((s) => s.setSearchViewMode);
   const activeDeck = useDeckStore((s) =>
@@ -38,7 +40,7 @@ export function SearchResults({
     return (
       <div className="flex items-center justify-center h-40 text-[var(--text-secondary)]">
         <Loader2 className="w-5 h-5 animate-spin mr-2" />
-        Searching...
+        {t("searching")}
       </div>
     );
   }
@@ -55,7 +57,7 @@ export function SearchResults({
   if (cards.length === 0) {
     return (
       <div className="flex items-center justify-center h-40 text-[var(--text-secondary)] text-sm">
-        No cards found. Try a different search.
+        {t("noResults")}
       </div>
     );
   }
@@ -66,7 +68,7 @@ export function SearchResults({
       <div className="flex items-center justify-between px-3 py-1.5">
         {totalCards != null && (
           <p className="text-xs text-[var(--text-secondary)]">
-            {totalCards.toLocaleString()} results
+            {t("resultCount", { count: totalCards })}
           </p>
         )}
         <div className="flex items-center gap-1 ml-auto">
@@ -78,7 +80,8 @@ export function SearchResults({
                 ? "text-[var(--accent)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
-            title="Grid view"
+            title={t("gridView")}
+            aria-label={t("gridView")}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
           </button>
@@ -90,7 +93,8 @@ export function SearchResults({
                 ? "text-[var(--accent)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
-            title="List view"
+            title={t("listView")}
+            aria-label={t("listView")}
           >
             <List className="w-3.5 h-3.5" />
           </button>

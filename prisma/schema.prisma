@@ -24,6 +24,10 @@ model User {
   collection     CollectionCard[]
   favorites      CardFavorite[]
   favoriteLists  FavoriteList[]
+  ratings        DeckRating[]
+  votes          DeckVote[]
+  following      UserFollow[]    @relation("Following")
+  followers      UserFollow[]    @relation("Followers")
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 }
@@ -88,6 +92,8 @@ model Deck {
   user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards         DeckCard[]
   snapshots     DeckSnapshot[]
+  ratings       DeckRating[]
+  votes         DeckVote[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -242,4 +248,57 @@ model CardInFavoriteList {
   order      Int          @default(0)
 
   @@unique([listId, scryfallId])
+}
+
+// ─── Community ──────────────────────────────────────────────────────
+
+/// A user's 1–5 star vote on a public deck. A row with a title is also a
+/// written review, so a user's star and their review can never desync.
+model DeckRating {
+  id           String   @id @default(cuid())
+  deckId       String
+  deck         Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating       Int      // 1–5, validated at the route
+  title        String?  // non-null => this row is a review
+  body         String?
+  helpfulCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, deckId]) // one vote per user per deck; POST upserts
+  @@index([deckId])
+}
+
+/// A user's up/down vote on a public deck.
+///
+/// Deliberately separate from DeckRating: stars answer "how good is this deck",
+/// a vote answers "should this deck rank near the top". Discovery ordering uses
+/// the vote score; the star average stays the per-deck quality read.
+model DeckVote {
+  id        String   @id @default(cuid())
+  deckId    String
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  value     Int // +1 or -1; clearing a vote deletes the row rather than storing 0
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, deckId]) // one vote per user per deck; POST upserts
+  @@index([deckId])
+}
+
+/// A directed follow edge between two users.
+model UserFollow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
 }

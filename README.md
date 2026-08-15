@@ -24,6 +24,7 @@
 - 🎨 **Card printing selector** — choose your preferred art before adding or swap it anytime from the deck list
 - 🃏 **Drag & drop deck builder** — list and grid views, categorized zones; commander pinned first in grid view
 - 📊 **Live bracket scoring** — 6-dimension analysis (ramp, draw, removal, tutors, win speed, CMC)
+- 📐 **Format-specific stats** — curve, threat density and interaction ratio benchmarked per format for non-Commander decks
 - ⚡ **Game Changers detection** — auto-warns when you cross bracket thresholds
 - 🤖 **AI suggestions** — Anthropic Claude or OpenAI GPT analyzes your deck and recommends cards + cuts
 - 🤝 **Partner pairing** — Partner, Partner With, Friends Forever, Background, Doctor's Companion, Character Select (TMNT) — filtered search per pairing type
@@ -34,11 +35,13 @@
 - 📝 **Deck notes & tags** — per-card notes, deck description, colored tag pills
 - 📸 **Deck snapshots** — save and restore deck states at any point
 - 🔗 **Deck sharing** — generate a shareable read-only link
-- 🎮 **Playtest mode** — draw opening hand, mulligan, simulate turns
+- 🌍 **Community discovery** — public deck listing per commander at `/commanders/<slug>/decks`, ranked by up/down votes, with star ratings and reviews
+- 🎮 **Playtest mode** — opening hand and London mulligan, turn phases (Untap → End), life tracking with history and undo, and battlefield / graveyard / exile zones with tap and counters; starting life follows the deck format
 - ⌨️ **Keyboard shortcuts** — power-user navigation with undo stack
 - 🎴 **Multi-format support** — Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, Pauper with correct rules per format
 - 📦 **Collection tracking** — mark owned cards, shopping list with missing cost, CSV export, bulk "Mark all owned"
 - ✨ **3D Spellbook landing** — immersive Three.js scene for unauthenticated visitors (mobile/a11y fallback)
+- 🌍 **English & French** — full UI in both, with a header language switcher
 - 🌙 **Dark / Light theme** — persisted across sessions
 - 🔒 **Security hardened** — Zod validation, input sanitization, no client-side secrets
 
@@ -86,13 +89,13 @@ pnpm db:up
 # Run migrations
 pnpm db:migrate
 
-# Start dev server on http://127.0.0.1:3000
+# Start dev server on http://localhost:3000
 pnpm dev:local
 ```
 
-Open [http://localhost:3000/fr](http://localhost:3000/fr) for the French UI.
-The root URL redirects once to the default English locale:
-[http://localhost:3000/en](http://localhost:3000/en).
+English is served without a prefix at [http://localhost:3000](http://localhost:3000);
+French carries one, at [http://localhost:3000/fr](http://localhost:3000/fr).
+Use the language switcher in the header to move between them.
 
 For a quick landing-page preview without Docker, you can run `pnpm dev:local`
 directly. Authenticated deck, collection, and profile features require
@@ -120,29 +123,61 @@ Without a key, the AI panel uses curated generic suggestions.
 
 ## Scripts
 
-| Command           | Description                               |
-| ----------------- | ----------------------------------------- |
-| `pnpm dev`        | Start Next.js dev server                  |
-| `pnpm dev:local`  | Start dev server on 127.0.0.1:3000        |
-| `pnpm build`      | Production build                          |
-| `pnpm analyze`    | Production build + interactive bundle map |
-| `pnpm lint`       | ESLint check                              |
-| `pnpm test`       | Unit tests (Vitest)                       |
-| `pnpm test:e2e`   | E2E tests (Playwright)                    |
-| `pnpm db:up`      | Start PostgreSQL via Docker               |
-| `pnpm db:down`    | Stop PostgreSQL                           |
-| `pnpm db:migrate` | Apply pending migrations                  |
-| `pnpm db:studio`  | Open Prisma Studio                        |
-| `pnpm db:reset`   | Reset database                            |
-| `pnpm db:seed`    | Seed demo data (Atraxa deck)              |
+| Command           | Description                                 |
+| ----------------- | ------------------------------------------- |
+| `pnpm dev`        | Start Next.js dev server                    |
+| `pnpm dev:local`  | Start dev server on port 3000 (IPv4 + IPv6) |
+| `pnpm build`      | Production build                            |
+| `pnpm analyze`    | Production build + interactive bundle map   |
+| `pnpm lint`       | ESLint check                                |
+| `pnpm test`       | Unit tests (Vitest)                         |
+| `pnpm test:e2e`   | E2E tests (Playwright)                      |
+| `pnpm db:up`      | Start PostgreSQL via Docker                 |
+| `pnpm db:down`    | Stop PostgreSQL                             |
+| `pnpm db:migrate` | Apply pending migrations                    |
+| `pnpm db:studio`  | Open Prisma Studio                          |
+| `pnpm db:reset`   | Reset database                              |
+| `pnpm db:seed`    | Seed demo data (Atraxa deck)                |
 
 ## E2E in Docker (Playwright)
 
-If running Playwright locally is unreliable, you can run E2E tests fully inside Docker:
+The suite runs against a disposable PostgreSQL and a Chromium image, so it never
+touches your dev database:
 
 ```bash
 docker compose -f docker-compose.e2e.yml up --build --exit-code-from e2e
 ```
+
+Always pass `--build`: without it Compose reuses the previous image, and the
+container runs the test files as they were when it was last built.
+
+`Dockerfile.playwright` pins both the Playwright image and pnpm. The image tag
+must track `@playwright/test` in `package.json` — Playwright resolves browser
+binaries by a version-stamped path, so any drift makes every browser test fail
+to launch. `src/lib/toolchain.test.ts` fails the unit suite if the pins diverge.
+
+### Excluded tags
+
+Two groups of tests are excluded from the blocking run by default:
+
+| Tag         | Why                                                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@external` | Calls a third-party service (e.g. the live Moxfield API). A deck going private there turns the gate red with no code change on our side.                         |
+| `@perf`     | Asserts wall-clock latency against `next dev`, which compiles routes on demand — the same endpoint measured 41 ms alone and 5163 ms under full-suite contention. |
+
+Run them deliberately:
+
+```bash
+PLAYWRIGHT_GREP_INVERT="" docker compose -f docker-compose.e2e.yml up --build --exit-code-from e2e
+```
+
+Narrow to one spec with `PLAYWRIGHT_SPEC=e2e/playtest.spec.ts`.
+
+### Pre-push gate
+
+`.husky/pre-push` runs the whole suite through `scripts/e2e-pre-push.sh` and
+blocks the push on failure. The verdict always comes from the container's exit
+code. Set `SKIP_E2E=1` to bypass it in an emergency.
 
 ## Architecture
 

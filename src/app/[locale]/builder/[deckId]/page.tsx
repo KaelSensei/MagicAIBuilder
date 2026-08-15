@@ -999,7 +999,11 @@ export default function BuilderPage() {
 
             <CollectionStatsPanel deck={deck} />
 
-            <DeckStats stats={stats} targetBracket={deck.targetBracket} />
+            <DeckStats
+              stats={stats}
+              format={deck.format}
+              targetBracket={deck.targetBracket}
+            />
           </motion.div>
 
           {/* Mobile bottom tab bar */}

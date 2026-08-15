@@ -7,7 +7,14 @@ import type { DeckCard } from "@/lib/deck/types";
 import { randomIntBelow } from "@/lib/crypto-random";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
+/** Commander default; per-format totals live in FORMAT_CONFIG.startingLife. */
 export const STARTING_LIFE = 40;
+
+/** Opening hand size before any mulligan. */
+export const OPENING_HAND_SIZE = 7;
+
+/** Mulliganing past this leaves no playable hand, so the action stops here. */
+export const MAX_MULLIGANS = 6;
 
 export const PHASES = [
   "Untap",
@@ -60,6 +67,9 @@ export interface PlaytestEngine {
   readonly turn: number;
   readonly phase: Phase;
 
+  /** Mulligans taken for the opening hand. */
+  readonly mulliganCount: number;
+
   // Life
   readonly lifeTotal: number;
   readonly lifeHistory: readonly LifeHistoryEntry[];
@@ -93,12 +103,13 @@ export function createPlaytestState(
   const shuffled = shuffleCards([...deckCards]);
 
   // Draw 7, rest to library
-  const hand = shuffled.slice(0, 7);
-  const library = shuffled.slice(7);
+  const hand = shuffled.slice(0, OPENING_HAND_SIZE);
+  const library = shuffled.slice(OPENING_HAND_SIZE);
 
   return {
     turn: 1,
     phase: "Draw" as const,
+    mulliganCount: 0,
     lifeTotal: overrides.lifeTotal ?? STARTING_LIFE,
     lifeHistory: [],
     isGameOver: false,
@@ -130,6 +141,32 @@ export function applyDrawCard(state: PlaytestEngine): PlaytestEngine {
   return pushHistory(state, {
     hand: [...state.hand, drawn],
     library: rest,
+  });
+}
+
+// ─── Mulligan ─────────────────────────────────────────────────────────────
+/**
+ * Take a London mulligan: shuffle hand and library back together, then keep
+ * one card fewer for each mulligan taken.
+ *
+ * London formally draws seven and bottoms N chosen cards. Goldfishing offers no
+ * opponent and no choice to make, and keeping `7 - N` random cards is the same
+ * distribution — so the bottoming step is collapsed rather than shown.
+ *
+ * @param state - current game state
+ * @returns the state with a fresh, smaller opening hand
+ */
+export function applyMulligan(state: PlaytestEngine): PlaytestEngine {
+  if (state.mulliganCount >= MAX_MULLIGANS) return state;
+
+  const mulliganCount = state.mulliganCount + 1;
+  const shuffled = shuffleCards([...state.hand, ...state.library]);
+  const handSize = OPENING_HAND_SIZE - mulliganCount;
+
+  return pushHistory(state, {
+    mulliganCount,
+    hand: shuffled.slice(0, handSize),
+    library: shuffled.slice(handSize),
   });
 }
 

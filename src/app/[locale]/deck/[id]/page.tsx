@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { PublicDeckView } from "@/components/profile/PublicDeckView";
 import { fetchPublicDeck } from "@/lib/deck/public-deck";
+import { auth } from "@/lib/auth/config";
 
 interface Params {
   readonly params: Promise<{ id: string }>;
@@ -38,14 +39,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function PublicDeckPage({ params }: Params) {
   const { id } = await params;
-  const deck = await fetchDeckForViewer(id);
+  const [deck, session] = await Promise.all([fetchDeckForViewer(id), auth()]);
 
   if (!deck) notFound();
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
       <Header />
-      <PublicDeckView deck={deck} />
+      <PublicDeckView deck={deck} isSignedIn={session?.user != null} />
     </div>
   );
 }

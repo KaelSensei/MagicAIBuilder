@@ -8,6 +8,11 @@
  * one owner's view is never cached for anonymous visitors.
  */
 
+import {
+  buildViewerScopedRequestInit,
+  resolveAppBaseUrl,
+} from "@/lib/api/viewer-request";
+
 export interface PublicCard {
   readonly id: string;
   readonly name: string;
@@ -44,30 +49,6 @@ export interface PublicDeck {
   readonly updatedAt: string;
 }
 
-interface PublicDeckRequestInit {
-  readonly headers?: Readonly<Record<string, string>>;
-  readonly cache?: "no-store";
-  readonly next?: { readonly revalidate: number };
-}
-
-export function buildPublicDeckRequestInit(
-  cookieHeader: string | null
-): PublicDeckRequestInit {
-  if (cookieHeader) {
-    return { headers: { cookie: cookieHeader }, cache: "no-store" };
-  }
-  return { next: { revalidate: 60 } };
-}
-
-function resolveBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000")
-  );
-}
-
 /** Fetch a deck for the public deck page, forwarding the viewer's cookies. */
 export async function fetchPublicDeck(
   id: string,
@@ -75,8 +56,8 @@ export async function fetchPublicDeck(
 ): Promise<PublicDeck | null> {
   try {
     const res = await fetch(
-      `${resolveBaseUrl()}/api/deck/${id}`,
-      buildPublicDeckRequestInit(cookieHeader)
+      `${resolveAppBaseUrl()}/api/deck/${id}`,
+      buildViewerScopedRequestInit(cookieHeader)
     );
     if (!res.ok) return null;
     const deck: PublicDeck = await res.json();
