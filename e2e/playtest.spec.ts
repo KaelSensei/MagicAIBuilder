@@ -17,10 +17,7 @@ test.describe("Playtest mode", () => {
     await page.goto(`/builder/${deckId}`);
 
     // Targeted by title: the visible label collapses to an icon below the `sm`
-    // breakpoint, so the accessible name is viewport-dependent. Playwright's
-    // auto-waiting covers the button appearing; a networkidle wait was tried
-    // and did not help, because the deck's cards never reach the builder on a
-    // cold load — see the hand-size note on the mulligan tests below.
+    // breakpoint, so the accessible name is viewport-dependent.
     await page.getByTitle("Playtest this deck").click();
   });
 
@@ -75,31 +72,32 @@ test.describe("Playtest mode", () => {
     await expect(page.getByText("36", { exact: true })).toBeVisible();
   });
 
-  // Exact hand sizes are asserted in PlaytestModal.test.tsx against the real
-  // store. Here the deck reaching the builder is not hydrated with its cards on
-  // a cold page load, so this level checks the mulligan is wired and correctly
-  // gated, not how many cards it leaves.
-  test("records the mulligan and closes it off once the turn advances", async ({
+  test("mulligans to a smaller hand and closes off once the turn advances", async ({
     page,
   }) => {
+    const handHeading = page.getByText(/Hand: \d+ cards/);
+
     await page.getByRole("button", { name: /draw opening hand/i }).click();
-    await expect(page.getByRole("button", { name: /mulligan/i })).toBeEnabled();
+    await expect(handHeading).toHaveText("Hand: 7 cards");
 
     await page.getByRole("button", { name: /mulligan/i }).click();
+    await expect(handHeading).toHaveText("Hand: 6 cards");
     await expect(page.getByText(/1 mulligan/)).toBeVisible();
 
     await page.getByRole("button", { name: /next turn/i }).click();
     await expect(page.getByRole("button", { name: /mulligan/i })).toBeDisabled();
   });
 
-  test("restart clears the mulligans taken", async ({ page }) => {
+  test("restart deals a fresh seven-card hand", async ({ page }) => {
+    const handHeading = page.getByText(/Hand: \d+ cards/);
+
     await page.getByRole("button", { name: /draw opening hand/i }).click();
     await page.getByRole("button", { name: /mulligan/i }).click();
-    await expect(page.getByText(/1 mulligan/)).toBeVisible();
+    await expect(handHeading).toHaveText("Hand: 6 cards");
 
     await page.getByRole("button", { name: /restart/i }).click();
 
-    await expect(page.getByText(/mulligan/i).first()).toBeVisible();
+    await expect(handHeading).toHaveText("Hand: 7 cards");
     await expect(page.getByText(/1 mulligan/)).toBeHidden();
   });
 
