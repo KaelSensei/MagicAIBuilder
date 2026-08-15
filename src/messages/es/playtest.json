@@ -1,0 +1,18 @@
+{
+  "title": "Playtest",
+  "close": "Close playtest",
+  "start": {
+    "prompt": "Ready to test your deck?",
+    "hint": "Shuffle and draw your opening hand of seven cards.",
+    "action": "Draw opening hand"
+  },
+  "turn": "Turn {turn}",
+  "mulliganCount": "{count, plural, one {# mulligan} other {# mulligans}}",
+  "handCount": "{count} in hand",
+  "libraryCount": "{count} in library",
+  "emptyLibrary": "Empty library",
+  "mulligan": "Mulligan",
+  "mulliganDown": "to {count}",
+  "restart": "Restart",
+  "gameOver": "Game over"
+}

@@ -50,6 +50,25 @@ describe("FORMAT_CONFIG", () => {
       expect(FORMAT_CONFIG[format].sideboardSize).toBe(15);
     }
   });
+
+  // The playtest engine reads this instead of hardcoding Commander's 40.
+  it("declares a starting life total for every format", () => {
+    for (const format of ALL_FORMATS) {
+      expect(FORMAT_CONFIG[format].startingLife).toBeGreaterThan(0);
+    }
+  });
+
+  it("uses 40 life for Commander and 20 for constructed formats", () => {
+    expect(FORMAT_CONFIG.commander.startingLife).toBe(40);
+    expect(FORMAT_CONFIG.modern.startingLife).toBe(20);
+    expect(FORMAT_CONFIG.pauper.startingLife).toBe(20);
+  });
+
+  it("uses the format-specific totals for Brawl and Oathbreaker", () => {
+    expect(FORMAT_CONFIG.brawl.startingLife).toBe(30);
+    // Oathbreaker has a commander-style deck but starts at 20, not 40.
+    expect(FORMAT_CONFIG.oathbreaker.startingLife).toBe(20);
+  });
 });
 
 describe("getFormatConfig", () => {

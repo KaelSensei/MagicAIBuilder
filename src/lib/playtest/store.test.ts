@@ -52,7 +52,7 @@ function makeDeck(opts: { cardCount?: number; commander?: DeckCard | null } = {}
 
 describe("usePlaytestStore", () => {
   beforeEach(() => {
-    usePlaytestStore.setState({ engine: null, isActive: false });
+    usePlaytestStore.setState({ engine: null, isActive: false, setup: null });
   });
 
   it("startPlaytest builds engine from commander + main deck", () => {
@@ -148,5 +148,58 @@ describe("usePlaytestStore", () => {
     usePlaytestStore.getState().resetPlaytest();
     eng = usePlaytestStore.getState().engine;
     expect(eng?.hand.length).toBe(7);
+  });
+
+  // Rebuilding the deck by concatenating the zones lost the commander and
+  // dragged battlefield state (tapped/counters) back into the library.
+  it("resetPlaytest restores the full original deck, not the current zones", () => {
+    const deck = makeDeck({ cardCount: 30 });
+    const total = deck.cards.length + 1; // + commander
+
+    usePlaytestStore.getState().startPlaytest(deck);
+    const cardId = usePlaytestStore.getState().engine?.hand[0]?.id;
+    if (cardId) usePlaytestStore.getState().moveToZone(cardId, "hand", "exile");
+
+    usePlaytestStore.getState().resetPlaytest();
+    const eng = usePlaytestStore.getState().engine;
+
+    expect(eng?.hand.length ?? 0).toBe(7);
+    expect((eng?.hand.length ?? 0) + (eng?.library.length ?? 0)).toBe(total);
+    expect(eng?.exile).toHaveLength(0);
+    expect(eng?.mulliganCount).toBe(0);
+  });
+
+  it("resetPlaytest clears a mulligan taken before it", () => {
+    usePlaytestStore.getState().startPlaytest(makeDeck());
+    usePlaytestStore.getState().mulligan();
+    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+
+    usePlaytestStore.getState().resetPlaytest();
+
+    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(7);
+    expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(0);
+  });
+
+  it("mulligan is a no-op when no engine exists", () => {
+    usePlaytestStore.getState().mulligan();
+    expect(usePlaytestStore.getState().engine).toBeNull();
+  });
+
+  it("mulligan shrinks the opening hand when active", () => {
+    usePlaytestStore.getState().startPlaytest(makeDeck());
+    usePlaytestStore.getState().mulligan();
+    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+    expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(1);
+  });
+
+  it("starts Commander decks on 40 life", () => {
+    usePlaytestStore.getState().startPlaytest(makeDeck());
+    expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(40);
+  });
+
+  it("starts non-Commander decks on the format life total", () => {
+    const modernDeck = { ...makeDeck({ commander: null }), format: "modern" as const };
+    usePlaytestStore.getState().startPlaytest(modernDeck);
+    expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(20);
   });
 });
