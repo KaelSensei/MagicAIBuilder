@@ -562,6 +562,34 @@ All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 
 ---
 
+## Internationalisation
+
+Ten locales (`en, fr, de, it, es, ja, zh, ko, ru, pt`) via next-intl v4, `localePrefix: "as-needed"`. Catalogs live in `src/messages/<locale>/<namespace>.json` and are wired in `src/i18n/request.ts`.
+
+### Adding a translated string
+
+1. Add the key to `src/messages/en/<namespace>.json`, and to `fr` with a real translation.
+2. Propagate the key to the remaining eight locales — the value may stay English until the translation pass, but **the key must exist everywhere**. A missing key renders as its raw dotted path in that locale.
+3. `src/i18n/messages.test.ts` enforces this: it fails the unit suite when any locale's key set diverges from `en`, or when a namespace file is missing.
+
+### Strings in module-scope tables
+
+`useTranslations` is a hook and cannot run at module scope. Constant tables that carry user-facing labels (filter options, mode lists) therefore store **catalog keys**, resolved at render:
+
+```ts
+const CMC_MODES = [{ value: "range", labelKey: "cmcMode.range" }, …];
+// …
+{CMC_MODES.map((m) => <TabButton key={m.value}>{t(m.labelKey)}</TabButton>)}
+```
+
+The same rule applies to error copy held in state: store a flag, not a message, and render the translated string from it.
+
+### Rich text
+
+next-intl's parser does not support self-closing tags — `<br/>` renders as literal text. Write `<br></br>` and supply a tag renderer to `t.rich()`. `messages.test.ts` fails on any self-closing tag in a catalog.
+
+---
+
 ## Community Deck Discovery
 
 Two quality signals coexist deliberately:

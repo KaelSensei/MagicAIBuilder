@@ -2,6 +2,7 @@
 // Set code autocomplete for "By Set" search mode
 // Dynamically loads all sets from Scryfall API
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Search, X, Loader2 } from "lucide-react";
 
 interface SetOption {
@@ -70,23 +71,25 @@ export function SetAutocomplete({
   onChange,
   onClear,
 }: SetAutocompleteProps) {
+  const t = useTranslations("search");
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
   const [allSets, setAllSets] = useState<SetOption[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // A flag rather than a message: the copy belongs in the catalog, not in state.
+  const [hasError, setHasError] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   // Load sets on first open
   const loadSets = useCallback(async () => {
     if (allSets.length > 0) return;
     setLoading(true);
-    setError(null);
+    setHasError(false);
     try {
       const sets = await fetchAllSets();
       setAllSets(sets);
     } catch {
-      setError("Failed to load sets");
+      setHasError(true);
     } finally {
       setLoading(false);
     }
@@ -126,6 +129,7 @@ export function SetAutocomplete({
         <button
           type="button"
           onClick={onClear}
+          aria-label={t("clearSet")}
           className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
         >
           <X className="w-3.5 h-3.5" />
@@ -151,7 +155,7 @@ export function SetAutocomplete({
             setOpen(true);
             loadSets();
           }}
-          placeholder="Search set (e.g. dsk, mh3…)"
+          placeholder={t("setPlaceholder")}
           className="flex-1 bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none"
         />
         {loading && (
@@ -165,18 +169,20 @@ export function SetAutocomplete({
           {loading && (
             <div className="px-3 py-3 text-sm text-[var(--text-secondary)] flex items-center gap-2">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Loading sets…
+              {t("loadingSets")}
             </div>
           )}
-          {error && (
-            <div className="px-3 py-3 text-sm text-red-400">{error}</div>
+          {hasError && (
+            <div className="px-3 py-3 text-sm text-red-400">
+              {t("setsLoadFailed")}
+            </div>
           )}
-          {!loading && !error && filtered.length === 0 && input.length > 0 && (
+          {!loading && !hasError && filtered.length === 0 && input.length > 0 && (
             <div className="px-3 py-3 text-sm text-[var(--text-secondary)]">
-              No sets found for &quot;{input}&quot;
+              {t("noSetsFound", { query: input })}
             </div>
           )}
-          {!loading && !error && filtered.length > 0 && (
+          {!loading && !hasError && filtered.length > 0 && (
             <div className="max-h-64 overflow-y-auto">
               {filtered.map((s) => (
                 <button
