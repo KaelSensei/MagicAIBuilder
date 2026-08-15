@@ -1,15 +1,20 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * E2E performance tests for critical API endpoints.
- * Measures response time under PLAYWRIGHT_TEST=1 (auto-login, real DB).
+ * Contract and performance tests for critical API endpoints, under
+ * PLAYWRIGHT_TEST=1 (auto-login, real DB).
+ *
+ * The timing assertions are tagged @perf and excluded from the pre-push gate.
+ * The harness runs `next dev`, which compiles each route on first request: the
+ * same endpoint measured 41ms alone and 5163ms inside the full suite, purely
+ * from bundler contention. Gating on wall-clock latency there measures the dev
+ * server, not the endpoint. The contract assertions below always run.
+ *
+ * Run the timing checks deliberately with PLAYWRIGHT_GREP_INVERT="".
  */
 test.describe("API Performance", () => {
-  test("GET /api/decks responds under 1 second", async ({ request }) => {
-    const start = Date.now();
+  test("GET /api/decks returns a paginated listing envelope", async ({ request }) => {
     const response = await request.get("/api/decks");
-    const duration = Date.now() - start;
-
     expect(response.ok()).toBe(true);
 
     const body = await response.json();
@@ -18,9 +23,16 @@ test.describe("API Performance", () => {
     expect(body).toHaveProperty("page", 0);
     expect(body).toHaveProperty("limit");
     expect(Array.isArray(body.decks)).toBe(true);
+  });
 
-    // eslint-disable-next-line no-console -- performance reporting
-    console.log(`GET /api/decks: ${duration}ms (${body.decks.length} decks, ${body.total} total)`);
+  test("@perf GET /api/decks responds under 1 second", async ({ request }) => {
+    await request.get("/api/decks"); // warm-up: compile the route
+
+    const start = Date.now();
+    const response = await request.get("/api/decks");
+    const duration = Date.now() - start;
+
+    expect(response.ok()).toBe(true);
     expect(duration).toBeLessThan(1000);
   });
 
@@ -34,19 +46,23 @@ test.describe("API Performance", () => {
     expect(body.decks.length).toBeLessThanOrEqual(5);
   });
 
-  test("GET /api/user/init responds under 1 second", async ({ request }) => {
-    const start = Date.now();
+  test("GET /api/user/init returns onboarding state and collection", async ({ request }) => {
     const response = await request.get("/api/user/init");
-    const duration = Date.now() - start;
-
     expect(response.ok()).toBe(true);
 
     const body = await response.json();
     expect(body).toHaveProperty("onboardingDone");
     expect(body).toHaveProperty("collection");
+  });
 
-    // eslint-disable-next-line no-console -- performance reporting
-    console.log(`GET /api/user/init: ${duration}ms (${body.collection.length} collection cards)`);
+  test("@perf GET /api/user/init responds under 1 second", async ({ request }) => {
+    await request.get("/api/user/init"); // warm-up: compile the route
+
+    const start = Date.now();
+    const response = await request.get("/api/user/init");
+    const duration = Date.now() - start;
+
+    expect(response.ok()).toBe(true);
     expect(duration).toBeLessThan(1000);
   });
 
@@ -59,10 +75,13 @@ test.describe("API Performance", () => {
     const created = await createRes.json();
     const deckId = created.id;
 
-    // Add a non-commander card
-    await request.post(`/api/decks/${deckId}/cards`, {
+    // Add a non-commander card. `scryfallId` must be a real Scryfall UUID —
+    // addCardSchema rejects anything else with a 400, and this write used to
+    // go unchecked, so the deck stayed empty and the count assertion below
+    // failed with no indication why.
+    const addRes = await request.post(`/api/decks/${deckId}/cards`, {
       data: {
-        scryfallId: "test-card-1",
+        scryfallId: "e3285e6b-3e79-4d7c-bf96-d920f973b122",
         name: "Lightning Bolt",
         manaCost: "{R}",
         cmc: 1,
@@ -73,6 +92,7 @@ test.describe("API Performance", () => {
         quantity: 1,
       },
     });
+    expect(addRes.status(), `add card failed: ${await addRes.text()}`).toBe(201);
 
     // Fetch listing — should NOT include the non-commander card
     const listRes = await request.get("/api/decks");

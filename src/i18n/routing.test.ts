@@ -29,8 +29,11 @@ describe("i18n routing config", () => {
     expect(routing.defaultLocale).toBe("en");
   });
 
-  it("uses explicit locale prefixes", () => {
-    expect(routing.localePrefix).toBe("always");
+  // English is served unprefixed (/decks), every other locale is prefixed
+  // (/fr/decks). app/sitemap.ts already emits unprefixed URLs, so "always"
+  // made every sitemap entry a redirect.
+  it("serves the default locale without a prefix", () => {
+    expect(routing.localePrefix).toBe("as-needed");
   });
 
   it("routing.locales matches SUPPORTED_LOCALES", () => {

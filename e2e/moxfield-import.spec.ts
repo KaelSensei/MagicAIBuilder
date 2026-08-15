@@ -45,8 +45,19 @@ function buildCountMap(cards: readonly ImportCard[], zone: ImportCard["zone"]): 
   return map;
 }
 
+/**
+ * Tagged @external because it calls the live Moxfield API against a deck owned
+ * by a third party. When that deck's visibility changed the whole pre-push gate
+ * went red with no code change on our side ("Deck is private or access denied").
+ *
+ * The gate excludes @external by default; the parser itself is covered
+ * hermetically in src/lib/import/url-import.test.ts. Run this deliberately with
+ * PLAYWRIGHT_GREP_INVERT="" to verify the live contract.
+ */
 test.describe("Moxfield import", () => {
-  test("imports Esika deck and includes expected main + sideboard cards", async ({ request }) => {
+  test("@external imports Esika deck and includes expected main + sideboard cards", async ({
+    request,
+  }) => {
     test.setTimeout(60_000);
 
     const url = "https://moxfield.com/decks/8wdob7tqoUujv-Ifp0S3cw";
