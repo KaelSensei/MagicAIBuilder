@@ -93,6 +93,19 @@
     "targetRange": "(cible {min}–{max})",
     "formatStatsHint": "Proportions des cartes non-terrain. Les repères sont indicatifs, pas des règles."
   },
+  "community": {
+    "upvote": "Voter pour",
+    "downvote": "Voter contre",
+    "signInToVote": "Connecte-toi pour voter",
+    "commanderDecksTitle": "Decks {commander}",
+    "commanderDecksSubtitle": "Decks publics menés par ce commandant, classés par votes de la communauté.",
+    "noDecks": "Aucun deck public pour ce commandant pour l'instant.",
+    "deckCount": "{count, plural, one {# deck} other {# decks}}",
+    "cards": "{count} cartes",
+    "ratedBy": "{count, plural, one {# note} other {# notes}}",
+    "unrated": "Pas encore noté",
+    "anonymous": "Anonyme"
+  },
   "ai": {
     "title": "Suggestions IA",
     "archetype": "Archétype",
@@ -135,6 +148,7 @@
     "title": "Analyse Méta",
     "refresh": "Actualiser",
     "staleData": "Données obsolètes du {date}",
+    "communityDecks": "Voir les decks de la communauté pour ce commandant",
     "popularEdhrec": "Populaires (EDHRec)",
     "notInDeck": "Absentes du deck",
     "noEdhrecData": "Aucune donnée EDHRec pour ce commandant",

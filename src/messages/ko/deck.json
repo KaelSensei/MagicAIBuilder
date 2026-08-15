@@ -142,7 +142,8 @@
     "competitive": "Competitive (Tournaments)",
     "noTournamentDecks": "No recent tournament decks found",
     "selectCommander": "Select a commander to see meta data",
-    "addCard": "Add {name}"
+    "addCard": "Add {name}",
+    "communityDecks": "Browse community decks for this commander"
   },
   "snapshots": {
     "title": "History",
@@ -297,5 +298,18 @@
     "ownDeck": "You cannot rate your own deck.",
     "signInToRate": "Sign in to rate this deck.",
     "saveFailed": "Could not save your rating. Try again."
+  },
+  "community": {
+    "upvote": "Upvote",
+    "downvote": "Downvote",
+    "signInToVote": "Sign in to vote",
+    "commanderDecksTitle": "{commander} decks",
+    "commanderDecksSubtitle": "Public decks led by this commander, ranked by community votes.",
+    "noDecks": "No public decks for this commander yet.",
+    "deckCount": "{count, plural, one {# deck} other {# decks}}",
+    "cards": "{count} cards",
+    "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
+    "unrated": "Not rated yet",
+    "anonymous": "Anonymous"
   }
 }

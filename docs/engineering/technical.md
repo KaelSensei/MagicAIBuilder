@@ -561,6 +561,34 @@ All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 
 ---
 
+## Community Deck Discovery
+
+Two quality signals coexist deliberately:
+
+| Signal              | Model        | Answers                              | Used for           |
+| ------------------- | ------------ | ------------------------------------ | ------------------ |
+| 1–5 stars + reviews | `DeckRating` | "how good is this deck"              | Per-deck quality   |
+| ±1 vote             | `DeckVote`   | "should this deck rank near the top" | Discovery ordering |
+
+`src/lib/community/votes.ts` holds the domain: `isValidVoteValue`, `calculateVoteScore`, `rankDecksByScore`. **Zero is not a valid vote** — clearing a vote deletes the row rather than storing 0, so a stored row always represents a real opinion.
+
+Ranking is score first, then rating count (more ratings means more evidence behind the same score), then recency so a new list is not permanently stuck under an identical older one.
+
+### Routes
+
+| Route                                            | Notes                                                          |
+| ------------------------------------------------ | -------------------------------------------------------------- |
+| `GET/POST/DELETE /api/community/decks/[id]/vote` | POST upserts, so flipping a vote replaces it. 403 on self-vote |
+| `GET /api/community/commanders/[slug]/decks`     | Public decks led by that commander, ranked                     |
+
+Both live under `/api/community` so the edge auth allowlist (`src/lib/auth/edge-config.ts`) can expose `GET` anonymously without opening the protected `/api/decks` tree. `/commanders` is on the page allowlist in both `edge-config.ts` and `middleware.ts`.
+
+> **Known limitation.** Commander identity lives on the deck's _cards_ (`isCommander`), not on the `Deck` row, so the slug cannot be matched in SQL — the route loads public decks with a commander and slugs them in memory. Fine while public decks are few; it needs a denormalised `commanderName` column on `Deck` before that stops being true.
+
+An unknown slug is not a 404: it is a commander nobody has published for yet, so the page renders its empty state.
+
+---
+
 ## Format-Specific Statistics
 
 Commander decks are graded by bracket scoring. Every other format had no equivalent read on whether a list is well-proportioned, so `src/lib/deck/format-stats.ts` adds three measures, computed by `computeDeckStats` and surfaced in `DeckStats.tsx`:
