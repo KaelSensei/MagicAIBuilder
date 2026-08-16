@@ -61,6 +61,24 @@ The `e2e` service now bind-mounts `playwright-report/` and `test-results/`. With
 
 The reporter is `[["list"], ["html", { open: "never" }]]`. `html` alone writes nothing to stdout, so a container log showed a run failing without naming a single failing test — the detail existed only in the report that never escaped. `list` puts it in the log, which is the one place a reader always has.
 
+The pre-push script clears both directories before each run. Playwright overwrites `index.html` but leaves older attachments in `data/`, so without clearing, a reader browsing the folder can still open evidence from a previous run — a smaller version of the same lie.
+
+### What the fresh report revealed
+
+The first run after mounting caught the intermittent failure and, for the first time, named it:
+
+- `deck-builder.spec.ts:55` — _back navigation returns to home_
+- `community.spec.ts` — _public deck page, signed-out viewer_
+
+The mechanism: `await page.locator('a[href$="/decks"]').first().click()` fires, and the URL **stays on `/builder/<id>`**. The navigation is started and then aborted, which lines up with the `useTranslations` context error in the dev-server log — the render for the destination throws, so the navigation never commits.
+
+Two things ruled out along the way:
+
+- **Not a missing provider in the tree.** `[locale]/layout.tsx` wraps everything, and `[locale]/not-found.tsx` supplies its own for the case where the layout bailed on an unsupported locale.
+- **Not a missing `setRequestLocale` on the destination page.** That call is next-intl's documented requirement for static rendering and is currently in the layout only — but `/decks` is a `"use client"` page, and `setRequestLocale` is a server API, so it cannot be the fix there. Worth adding to the nine server pages on its own merits; it is not this bug.
+
+Still open. The difference now is that the next occurrence leaves usable evidence instead of deleting it.
+
 > **`retries` is 0 here.** `playwright.config.ts` sets `retries: process.env.CI ? 2 : 0`, and `CI` is not set inside the e2e container — nor does the GitHub workflow run e2e at all, so the retry setting has never applied anywhere. The gate that blocks pushes therefore runs in the least forgiving mode, with full parallelism. That is deliberate for now: adding retries would stop a known intermittent failure from blocking, which is the sort of quiet loosening this gate has already been fixed for twice. Fix the flake, do not pad the gate.
 
 ### Tests excluded from the blocking run
