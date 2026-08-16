@@ -123,6 +123,28 @@
     "gcForcesBracket": "→ Bracket {bracket} minimum",
     "andMore": "+{count} de plus"
   },
+  "proxy": {
+    "title": "Exporter des planches de proxys",
+    "description": "Configurez et imprimez les proxys de votre deck.",
+    "paper": "Papier",
+    "layout": "Disposition",
+    "quality": "Qualité",
+    "qualityOption": { "standard": "Standard", "high": "Haute" },
+    "content": "Contenu",
+    "cardArt": "Illustration",
+    "textOnly": "Texte seul",
+    "includeBasics": "Inclure les terrains de base",
+    "includeCommander": "Inclure le commandant",
+    "summary": "{cards} cartes → <strong>{pages, plural, one {# page} other {# pages}}</strong> (disposition {layout})",
+    "noCards": "Aucune carte à imprimer",
+    "loadingImages": "Chargement des images… {loaded}/{total}",
+    "imagesFailed": "{count, plural, one {# image en échec — texte utilisé à la place} other {# images en échec — texte utilisé à la place}}",
+    "loading": "Chargement…",
+    "preload": "Précharger les images",
+    "print": "Imprimer / Enregistrer en PDF",
+    "hintArt": "Préchargez les images, puis imprimez. Choisissez « Enregistrer en PDF » dans la boîte de dialogue. Ordinateur recommandé.",
+    "hintTextOnly": "Sans images — l'impression s'ouvre immédiatement avec le nom, le type et le texte de règles. Choisissez « Enregistrer en PDF » dans la boîte de dialogue."
+  },
   "buyList": {
     "title": "{count, plural, one {Liste d'achat — # carte} other {Liste d'achat — # cartes}}",
     "description": "Les cartes qu'il vous manque pour ce deck.",

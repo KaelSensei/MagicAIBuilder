@@ -418,5 +418,30 @@
     "copy": "Copy List",
     "copied": "Copied!",
     "exportCsv": "Export CSV"
+  },
+  "proxy": {
+    "title": "Export Proxy Sheets",
+    "description": "Configure and print proxy cards for your deck.",
+    "paper": "Paper",
+    "layout": "Layout",
+    "quality": "Quality",
+    "qualityOption": {
+      "standard": "Standard",
+      "high": "High"
+    },
+    "content": "Content",
+    "cardArt": "Card art",
+    "textOnly": "Text only",
+    "includeBasics": "Include basics",
+    "includeCommander": "Include commander",
+    "summary": "{cards} cards → <strong>{pages, plural, one {# page} other {# pages}}</strong> ({layout} layout)",
+    "noCards": "No cards to print",
+    "loadingImages": "Loading images… {loaded}/{total}",
+    "imagesFailed": "{count, plural, one {# image failed — text fallback used} other {# images failed — text fallback used}}",
+    "loading": "Loading…",
+    "preload": "Preload Images",
+    "print": "Print / Save PDF",
+    "hintArt": "Preload images first, then print. Choose “Save as PDF” in the dialog. Desktop recommended.",
+    "hintTextOnly": "No images — opens print immediately with name, type, and rules text. Choose “Save as PDF” in the dialog."
   }
 }
