@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PlaytestModal } from "./PlaytestModal";
 import { usePlaytestStore } from "@/lib/playtest/store";
 import messages from "@/messages/en/playtest.json";
@@ -59,10 +60,14 @@ function makeDeck(format: Deck["format"] = "commander"): Deck {
 }
 
 function renderModal(deck = makeDeck(), onClose = vi.fn()) {
+  // The header bar and history panel both query, so the modal needs a client.
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <NextIntlClientProvider locale="en" messages={{ playtest: messages }}>
-      <PlaytestModal deck={deck} onClose={onClose} />
-    </NextIntlClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="en" messages={{ playtest: messages }}>
+        <PlaytestModal deck={deck} onClose={onClose} />
+      </NextIntlClientProvider>
+    </QueryClientProvider>
   );
 }
 

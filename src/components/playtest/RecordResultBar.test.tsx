@@ -2,15 +2,21 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { RecordResultBar } from "./RecordResultBar";
 import playtestMessages from "@/messages/en/playtest.json";
 
+let queryClient: QueryClient;
+
 function renderBar(onRecorded = vi.fn()) {
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
-      <RecordResultBar deckId="deck-1" turns={9} mulliganCount={2} onRecorded={onRecorded} />
-    </NextIntlClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
+        <RecordResultBar deckId="deck-1" turns={9} mulliganCount={2} onRecorded={onRecorded} />
+      </NextIntlClientProvider>
+    </QueryClientProvider>
   );
   return onRecorded;
 }
@@ -71,6 +77,18 @@ describe("RecordResultBar", () => {
 
     await waitFor(() => expect(screen.getByText("Could not save")).toBeDefined());
     expect(onRecorded).not.toHaveBeenCalled();
+  });
+
+  it("drops the cached history so the new run shows up next time", async () => {
+    renderBar();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    await userEvent.click(screen.getByText("Win"));
+
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({
+        queryKey: ["playtest", "history", "deck-1"],
+      })
+    );
   });
 
   it("closes without recording when the player skips", async () => {

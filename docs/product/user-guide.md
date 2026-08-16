@@ -190,6 +190,22 @@ Recorded runs build up a picture of the deck over time: how often it wins, how m
 
 **Your playtest records are private.** They are tied to your account, not to the deck. If you share a deck publicly, nobody else sees your practice results — and if two people practise the same shared deck, neither sees the other's.
 
+### Your Deck's Record
+
+Open the playtest on a deck you have played before and its record sits under the start button:
+
+- **Games**, **win rate**, and **turns to win** — the last averaged over your wins only, so a long loss does not make the deck look slower than it is. It shows a dash until you have won at least once.
+- **A breakdown by mulligans**, so you can see whether keeping a shaky seven is costing you games.
+- **A verdict on the direction**: improving, steady, or declining.
+
+Three things worth knowing about that verdict:
+
+- **It needs at least four days of play.** Below that it says _Too few games_ rather than guessing. A trend drawn from one day on each side is decided by a single lucky game.
+- **Busy days count for more.** Twenty games at 40% outweigh one game at 100%, so a single fluke cannot swing it.
+- **Small movements read as steady.** Win rates over a handful of games bounce around; the panel only calls a direction once the change is large enough to mean something.
+
+The panel stays hidden entirely until you have recorded your first game — it will not show you a wall of zeroes and imply the deck has been losing.
+
 These bands are **guidance, not rules** — a deliberate combo deck can sit far outside them and still be excellent. Treat an out-of-range reading as a reason to look, not a verdict.
 
 ### Playtesting a Deck
