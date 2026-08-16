@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Heart } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { LifeHistoryEntry, Phase } from "@/lib/playtest/engine";
@@ -19,19 +20,6 @@ const QUICK_BUTTONS = [
   { label: "-5", action: "damage", amount: 5 },
 ] as const;
 
-function formatPhase(phase: Phase): string {
-  const map: Record<Phase, string> = {
-    Untap: "Untap",
-    Upkeep: "Upkeep",
-    Draw: "Draw",
-    Main1: "Main 1",
-    Combat: "Combat",
-    Main2: "Main 2",
-    End: "End",
-  };
-  return map[phase];
-}
-
 export function LifeTracker({
   lifeTotal,
   lifeHistory,
@@ -39,6 +27,10 @@ export function LifeTracker({
   onHeal,
   onUndo,
 }: LifeTrackerProps) {
+  const t = useTranslations("playtest");
+  // Phase names come from the catalog, shared with PhaseTracker, which used to
+  // keep its own identical copy.
+  const formatPhase = (phase: Phase) => t(`phases.${phase}`);
   const [customInput, setCustomInput] = useState("");
   const isGameOver = lifeTotal <= 0;
 
@@ -65,12 +57,12 @@ export function LifeTracker({
         </div>
         {isGameOver && (
           <p className="text-red-400 font-bold mt-1 text-sm uppercase tracking-widest">
-            Game Over
+            {t("gameOver")}
           </p>
         )}
         <div className="flex items-center justify-center gap-1 mt-1 text-white/40 text-xs">
           <Heart size={12} />
-          <span>Life Total</span>
+          <span>{t("life.total")}</span>
         </div>
       </div>
 
@@ -103,7 +95,7 @@ export function LifeTracker({
           value={customInput}
           onChange={(e) => setCustomInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCustomSubmit()}
-          placeholder="+/- amount"
+          placeholder={t("life.customPlaceholder")}
           className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/40"
         />
         <button
@@ -111,7 +103,7 @@ export function LifeTracker({
           onClick={handleCustomSubmit}
           className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm text-white transition-colors"
         >
-          Apply
+          {t("life.apply")}
         </button>
       </div>
 
@@ -122,7 +114,7 @@ export function LifeTracker({
           onClick={onUndo}
           className="w-full py-1.5 rounded-lg text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
         >
-          ↩ Undo last action
+          ↩ {t("life.undo")}
         </button>
       )}
 
@@ -130,7 +122,7 @@ export function LifeTracker({
       {lifeHistory.length > 0 && (
         <div className="space-y-1 max-h-36 overflow-y-auto">
           <p className="text-xs font-semibold text-white/50 uppercase">
-            History
+            {t("life.history")}
           </p>
           {[...lifeHistory].reverse().map((entry) => (
             <div

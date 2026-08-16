@@ -14,5 +14,53 @@
   "mulligan": "Mulligan",
   "mulliganDown": "à {count}",
   "restart": "Recommencer",
-  "gameOver": "Partie terminée"
+  "gameOver": "Partie terminée",
+  "phases": {
+    "Untap": "Dégagement",
+    "Upkeep": "Entretien",
+    "Draw": "Pioche",
+    "Main1": "Principale 1",
+    "Combat": "Combat",
+    "Main2": "Principale 2",
+    "End": "Fin"
+  },
+  "phaseTracker": {
+    "nextPhase": "Phase suivante",
+    "nextTurn": "Tour suivant"
+  },
+  "life": {
+    "total": "Points de vie",
+    "customPlaceholder": "+/- montant",
+    "apply": "Appliquer",
+    "undo": "Annuler la dernière action",
+    "history": "Historique"
+  },
+  "hand": {
+    "count": "Main : {count} cartes",
+    "deckCount": "Deck : {count}",
+    "emptyDeck": "Deck vide",
+    "draw": "Piocher une carte",
+    "showCards": "Voir les cartes",
+    "cardBack": "Dos de carte",
+    "toBattlefield": "Vers le champ de bataille",
+    "toGraveyard": "Vers le cimetière"
+  },
+  "battlefield": {
+    "title": "Champ de bataille ({count})",
+    "empty": "Aucun permanent en jeu",
+    "tap": "Engager",
+    "untap": "Dégager",
+    "addCounter": "Ajouter un marqueur",
+    "removeCounter": "Retirer un marqueur",
+    "remove": "Retirer"
+  },
+  "graveyard": {
+    "graveyard": "Cimetière",
+    "exile": "Exil",
+    "graveyardEmpty": "Le cimetière est vide",
+    "exileEmpty": "L'exil est vide",
+    "cardCount": "{count, plural, one {# carte} other {# cartes}}",
+    "restoreToHand": "Remettre en main",
+    "play": "Jouer"
+  }
 }
