@@ -36,7 +36,7 @@ function renderPanel(cards: readonly DeckCard[]) {
     >
       <MaybeboardPanel
         cards={cards}
-        onMoveToDeck={vi.fn()}
+        onMoveToDecks={vi.fn()}
         onRemove={vi.fn()}
       />
     </NextIntlClientProvider>
