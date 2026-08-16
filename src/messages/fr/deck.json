@@ -91,7 +91,18 @@
     "threatDensity": "Menaces",
     "interaction": "Interaction",
     "targetRange": "(cible {min}–{max})",
-    "formatStatsHint": "Proportions des cartes non-terrain. Les repères sont indicatifs, pas des règles."
+    "formatStatsHint": "Proportions des cartes non-terrain. Les repères sont indicatifs, pas des règles.",
+    "manaAlignment": "Alignement de mana",
+    "sourcesOfRecommended": "{sources}/{recommended} sources · {pips} des pips",
+    "colorlessSources": "Incolores uniquement",
+    "manaAlignmentHint": "Les sources suggérées reflètent la part de pips de chaque couleur. Une couleur nécessaire dès le tour 1 en demande davantage.",
+    "color": {
+      "W": "Blanc",
+      "U": "Bleu",
+      "B": "Noir",
+      "R": "Rouge",
+      "G": "Vert"
+    }
   },
   "community": {
     "upvote": "Voter pour",

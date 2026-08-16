@@ -132,6 +132,25 @@ For **non-Commander decks** the panel swaps the Commander benchmarks for checks 
 
 The card count is also measured against your format's real deck size (60 rather than 100), and the Commander-only bracket targets are hidden.
 
+### Mana Alignment
+
+The colour distribution chart tells you what your **spells** cost. The **Mana Alignment** panel tells you whether your **lands** can actually pay for them — in any format, Commander included.
+
+Each colour you play gets a row reading `sources / recommended · share of pips`:
+
+- **Sources** — how many of your lands can tap for that colour.
+- **Recommended** — how many there would be if your land slots mirrored your pips. A deck where 40% of the pips are red wants roughly 40% of its lands producing red.
+- A ⚠️ marks a colour more than 15 points away from its share, in either direction. Too few sources and you hold uncastable cards; too many and you are paying for fixing you never use.
+
+Lands that only make colourless mana are listed separately — they count towards your land total but cannot cast a coloured spell.
+
+Two things the panel does **not** know:
+
+- **When you need the colour.** The recommendation is a flat proportion. A colour you want on turn one deserves more sources than its pip share suggests; a colour you only need for a six-drop deserves fewer.
+- **Every land's exact output.** What a land produces is read from its printed type line and rules text. Unusual lands may be read conservatively, and a land whose text the app cannot parse falls back to its colour identity.
+
+Treat a warning as a reason to look at the mana base, not as a verdict on it.
+
 These bands are **guidance, not rules** — a deliberate combo deck can sit far outside them and still be excellent. Treat an out-of-range reading as a reason to look, not a verdict.
 
 ### Playtesting a Deck
