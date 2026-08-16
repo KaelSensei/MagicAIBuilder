@@ -26,6 +26,7 @@ model User {
   favoriteLists  FavoriteList[]
   ratings        DeckRating[]
   votes          DeckVote[]
+  playtests      PlaytestSession[]
   following      UserFollow[]    @relation("Following")
   followers      UserFollow[]    @relation("Followers")
   createdAt      DateTime        @default(now())
@@ -94,6 +95,7 @@ model Deck {
   snapshots     DeckSnapshot[]
   ratings       DeckRating[]
   votes         DeckVote[]
+  playtests     PlaytestSession[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -288,6 +290,30 @@ model DeckVote {
 
   @@unique([userId, deckId]) // one vote per user per deck; POST upserts
   @@index([deckId])
+}
+
+/// One recorded goldfish playtest of a deck.
+///
+/// `turns` and `mulliganCount` are read off the playtest engine, but `result`
+/// can only be declared by the player: the playtest is a solitaire goldfish
+/// with no opponent, so nothing in the app can decide whether a run was a win.
+/// A session is therefore only stored when the player says how it went.
+model PlaytestSession {
+  id            String   @id @default(cuid())
+  deckId        String
+  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  result        String // "win" | "loss" | "draw", validated at the route
+  turns         Int
+  mulliganCount Int      @default(0)
+  difficulty    String? // "budget" | "mid-range" | "cedh"; absent means unspecified
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  // No unique constraint: every run is its own row — that is the whole point.
+  @@index([deckId])
+  @@index([deckId, createdAt])
 }
 
 /// A directed follow edge between two users.
