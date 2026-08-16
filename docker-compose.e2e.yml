@@ -29,6 +29,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.playwright
+    # Without these, the report and traces are written inside the container and
+    # destroyed by the `down -v` in the pre-push cleanup. What stayed on the
+    # host was whatever an older local run had left there, so
+    # "Check playwright-report/ for details" pointed at a stale report
+    # describing a different run — which is why the intermittent failure went
+    # undiagnosed for so long.
+    volumes:
+      - ./playwright-report:/app/playwright-report
+      - ./test-results:/app/test-results
     depends_on:
       db:
         condition: service_healthy

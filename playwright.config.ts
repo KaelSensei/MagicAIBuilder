@@ -6,7 +6,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: "html",
+  // `list` alongside `html`: the HTML report is written inside the e2e
+  // container, so until it is mounted out the only thing a reader ever sees is
+  // stdout. A run that failed printed no failing test name at all.
+  reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",

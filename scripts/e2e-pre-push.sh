@@ -28,6 +28,16 @@ if [[ -n "${CI:-}" ]]; then
   exit 0
 fi
 
+# The report directory is bind-mounted, so Playwright writes into whatever is
+# already there. It overwrites index.html but leaves older attachments in
+# data/, which means a reader browsing that folder can still open evidence from
+# a previous run. Clearing first is the difference between "the report is this
+# run" and "the report is mostly this run".
+clear_report() {
+  rm -rf playwright-report test-results
+  mkdir -p playwright-report test-results
+}
+
 run_direct() {
   PLAYWRIGHT_SPEC="" docker compose -f docker-compose.e2e.yml up \
     --build \
@@ -39,6 +49,8 @@ cleanup() {
   docker compose -f docker-compose.e2e.yml down -v >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
+
+clear_report
 
 if run_direct; then
   echo "✓ E2E passed — push allowed."

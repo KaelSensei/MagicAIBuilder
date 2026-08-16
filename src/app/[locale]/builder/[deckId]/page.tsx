@@ -613,8 +613,14 @@ export default function BuilderPage() {
 
         {/* Deck title bar */}
         <div className="border-b border-[var(--border)] bg-[var(--surface)] px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3">
+          {/* Icon-only, so it needs its own accessible name: a screen reader
+              announced this as "link" with no name at all. It also left the
+              e2e suite unable to target it — `a[href$="/decks"]` matches the
+              header's "My Decks" nav link too, and `.first()` picked that one,
+              so the test named "back navigation" never touched this control. */}
           <Link
             href="/decks"
+            aria-label="Back to my decks"
             className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
