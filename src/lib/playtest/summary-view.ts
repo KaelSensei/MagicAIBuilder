@@ -8,7 +8,8 @@
  * @module playtest/summary-view
  */
 
-import type { MulliganBucket, TrendPoint } from "./analytics";
+import type { MatchupStat, MulliganBucket, TrendPoint } from "./analytics";
+import { SESSION_DIFFICULTIES } from "./session-input";
 
 /** Which way the win rate is moving, or that there is not enough play to say. */
 export type TrendDirection = "improving" | "steady" | "declining" | "insufficient";
@@ -99,4 +100,47 @@ export function mulliganRows(
       winRate: bucket.winRate,
     }))
     .sort((a, b) => a.mulligans - b.mulligans);
+}
+
+/** One row of the matchup breakdown. */
+export interface MatchupRow {
+  readonly difficulty: string;
+  readonly wins: number;
+  readonly losses: number;
+  readonly winRate: number;
+}
+
+/**
+ * Orders the matchup breakdown for display.
+ *
+ * Sorted by **opponent strength**, not alphabetically: alphabetical would read
+ * budget, cedh, mid-range, putting the strongest opponent in the middle and
+ * making the table hard to read down.
+ *
+ * A difficulty this list does not know is kept and sorted after the known ones,
+ * rather than dropped. Silently discarding recorded games would be worse than
+ * showing an unfamiliar label.
+ *
+ * @param matchups - stats keyed by difficulty
+ * @returns one row per difficulty played, weakest opponent first
+ */
+export function matchupRows(matchups: Record<string, MatchupStat>): readonly MatchupRow[] {
+  const rank = (difficulty: string): number => {
+    const index = SESSION_DIFFICULTIES.indexOf(difficulty as never);
+    return index === -1 ? SESSION_DIFFICULTIES.length : index;
+  };
+
+  return Object.entries(matchups)
+    .map(([difficulty, stat]) => ({
+      difficulty,
+      wins: stat.wins,
+      losses: stat.losses,
+      winRate: stat.winRate,
+    }))
+    .sort((a, b) => {
+      const byRank = rank(a.difficulty) - rank(b.difficulty);
+      // Unknown values all share a rank; order those by name so the table is
+      // at least stable between renders.
+      return byRank !== 0 ? byRank : a.difficulty.localeCompare(b.difficulty);
+    });
 }

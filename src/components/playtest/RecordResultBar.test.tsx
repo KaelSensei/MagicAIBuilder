@@ -79,6 +79,33 @@ describe("RecordResultBar", () => {
     expect(onRecorded).not.toHaveBeenCalled();
   });
 
+  it("omits difficulty entirely when the player does not pick one", async () => {
+    // Sending an empty string would fail validation; the field must be absent.
+    renderBar();
+    await userEvent.click(screen.getByText("Win"));
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0];
+    expect(JSON.parse(String(init?.body))).not.toHaveProperty("difficulty");
+  });
+
+  it("sends the difficulty the player picked", async () => {
+    renderBar();
+    await userEvent.selectOptions(screen.getByLabelText("Opponent"), "cedh");
+    await userEvent.click(screen.getByText("Win"));
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0];
+    expect(JSON.parse(String(init?.body)).difficulty).toBe("cedh");
+  });
+
+  it("offers every difficulty the schema accepts", () => {
+    renderBar();
+    const select = screen.getByLabelText("Opponent") as HTMLSelectElement;
+    const values = Array.from(select.options).map((o) => o.value);
+    expect(values).toEqual(["", "budget", "mid-range", "cedh"]);
+  });
+
   it("drops the cached history so the new run shows up next time", async () => {
     renderBar();
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");

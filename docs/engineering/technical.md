@@ -791,6 +791,10 @@ Movement under `TREND_THRESHOLD` (10 points) reports as `"steady"`. Win rates ov
 
 Recording invalidates the `["playtest", "history", deckId]` query. Without it the run just recorded would be missing from the panel the next time the modal opened.
 
+`matchupRows` sorts by **opponent strength**, not alphabetically — alphabetical would read budget, cedh, mid-range, putting the strongest opponent in the middle. A difficulty the list does not recognise is kept and sorted after the known ones rather than dropped: silently discarding recorded games is worse than showing an unfamiliar label, and the panel renders such a value as stored rather than guessing a translation for it.
+
+"Not saying" is a legitimate answer. The recording bar **omits the key entirely** rather than sending `""`, which would fail validation — absent is what "not saying" means to the route, and the column is nullable. Those runs simply do not appear in the matchup breakdown, and the breakdown itself stays hidden until at least one run has named an opponent.
+
 ---
 
 ## Playtest Engine
