@@ -29,7 +29,7 @@ Every feature or fix branch is merged into `staging` first. Promotion follows th
 
 Feature branches still merge into `staging` normally; the merge commit is only a problem when the source branch is long-lived and has to stay level with the target.
 
-`delete_branch_on_merge` is enabled on the repository, so merged branches clean themselves up. `scripts/git-prune.sh` is now only needed for branches abandoned without merging.
+**Never enable `delete_branch_on_merge` on this repository.** It deletes the PR's _head_ branch, and on a promotion PR the head is `staging` or `dev`. Turning it on deleted `staging` outright the first time a promotion merged; it was restored from `dev`, which held the same commit, but the setting is fundamentally incompatible with promoting long-lived branches through PRs. Use `scripts/git-prune.sh` for cleanup instead — it has an explicit protected list.
 
 ### Documentation discipline
 
