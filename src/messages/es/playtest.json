@@ -71,5 +71,20 @@
     "win": "Win",
     "loss": "Loss",
     "draw": "Draw"
+  },
+  "history": {
+    "title": "This deck's record",
+    "games": "Games",
+    "winRate": "Win rate",
+    "avgWinTurns": "Turns to win",
+    "byMulligans": "By mulligans",
+    "mulliganLabel": "{count, plural, =0 {No mulligan} one {# mulligan} other {# mulligans}}",
+    "mulliganValue": "{games} · {winRate}%",
+    "trend": {
+      "improving": "Improving",
+      "steady": "Steady",
+      "declining": "Declining",
+      "insufficient": "Too few games"
+    }
   }
 }

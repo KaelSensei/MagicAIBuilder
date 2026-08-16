@@ -2,6 +2,7 @@
 // Records how a playtest went — the one thing the app cannot work out itself.
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { SESSION_RESULTS, type SessionResult } from "@/lib/playtest/session-input";
 import { logger } from "@/lib/logger";
@@ -29,6 +30,7 @@ export function RecordResultBar({
   onRecorded,
 }: RecordResultBarProps) {
   const t = useTranslations("playtest");
+  const queryClient = useQueryClient();
   const [pending, setPending] = useState<SessionResult | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -43,6 +45,9 @@ export function RecordResultBar({
           body: JSON.stringify({ result, turns, mulliganCount }),
         });
         if (!response.ok) throw new Error(`record failed: ${response.status}`);
+        // The history panel is cached; without this the run just recorded
+        // would be missing from it the next time the modal opens.
+        await queryClient.invalidateQueries({ queryKey: ["playtest", "history", deckId] });
         onRecorded();
       } catch (error) {
         // Keep the modal open: closing would discard a result the player just
@@ -53,7 +58,7 @@ export function RecordResultBar({
         setPending(null);
       }
     },
-    [deckId, turns, mulliganCount, onRecorded]
+    [deckId, turns, mulliganCount, onRecorded, queryClient]
   );
 
   return (

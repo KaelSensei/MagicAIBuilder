@@ -14,13 +14,20 @@ import { HandZone } from "@/components/playtest/HandZone";
 import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
 import { GraveyardZone } from "@/components/playtest/GraveyardZone";
 import { RecordResultBar } from "@/components/playtest/RecordResultBar";
+import { PlaytestHistoryPanel } from "@/components/playtest/PlaytestHistoryPanel";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
   readonly onClose: () => void;
 }
 
-function PlaytestStartScreen({ onStart }: { readonly onStart: () => void }) {
+function PlaytestStartScreen({
+  deckId,
+  onStart,
+}: {
+  readonly deckId: string;
+  readonly onStart: () => void;
+}) {
   const t = useTranslations("playtest");
 
   return (
@@ -36,6 +43,8 @@ function PlaytestStartScreen({ onStart }: { readonly onStart: () => void }) {
       >
         {t("start.action")}
       </button>
+      {/* Past runs, so the deck's record is in front of you before the next one */}
+      <PlaytestHistoryPanel deckId={deckId} />
     </div>
   );
 }
@@ -142,7 +151,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
         {/* Body */}
         {engine === null ? (
           <div className="flex-1 flex items-center justify-center p-6">
-            <PlaytestStartScreen onStart={handleStart} />
+            <PlaytestStartScreen deckId={deck.id} onStart={handleStart} />
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
