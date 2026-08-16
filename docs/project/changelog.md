@@ -9,6 +9,37 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-16: Release batch #409–#421 — deck analytics and localised cards
+
+#### Added
+
+- `feat(stats): add mana base alignment to deck statistics (#410)` — the colour distribution reported what the **spells** ask for and nothing about what the **lands** produce, so a deck could read as balanced while being unable to cast half its cards. Each colour now shows sources against a proportional recommendation. Puts `MANA_IMBALANCE_THRESHOLD` to work: declared in `constants.ts` since the early days and referenced **nowhere**.
+- `feat(stats): add turn-one playability (#412)` — exact hypergeometric odds that the opening seven holds a land and a one-drop, plus a stricter per-colour read requiring a matching source. Not simulated, so the figures do not wobble between visits. The two are deliberately never summed: one hand can satisfy two colours at once.
+- `feat(i18n): show card text in the viewer's language (#415)` — card name, type line and rules text read from a printing in the viewer's language, with **per-field** English fallback. Scryfall fills `printed_name` / `printed_type_line` / `printed_text` independently, so falling back as a unit would blank a card's rules whenever one field was missing.
+- `feat(playtest): record playtest sessions (#418)` — `PlaytestSession` model and route. `analytics.ts` had held win rate, mulligan distribution, matchup splits and daily trend since US-AG Phase 1, **written, tested, and reachable from nothing**: no model existed, so no session could ever be recorded. The result is user-declared — the playtest is a solitaire goldfish, so nothing in the app can decide whether a run was a win.
+- `feat(playtest): show the deck's recorded history (#421)` — games, win rate, turns to win, mulligan breakdown and a trend verdict. #418 had shipped recording with no way to read it back.
+- `feat(i18n): extract the card and collection components (#409)` — third extraction slice, `card` namespace added.
+
+#### Changed
+
+- Playtest records are **private to the account**, not attached to the deck: two players practising the same public deck never see each other's runs. Hence the route sits under `/api/decks`, not `/api/community`.
+- `PlaytestSession` carries **no unique constraint**, unlike `DeckVote` and `DeckRating` which upsert on `@@unique([userId, deckId])`. Every run is its own row — that is what makes a trend possible.
+- The trend verdict is deliberately conservative: four days of play before claiming a direction, each day weighted by games played, and movements under 10 points reported as steady.
+- `searchCardPrintings` sends `lang:xx` and `include_multilingual=true` **together** — Scryfall hides non-English cards from search without the flag, so the filter alone returns nothing, which reads as "no translation exists".
+
+#### Fixed
+
+- The printing selector's text panel read the card it was **opened with** rather than the printing selected, so choosing a printing changed nothing (#415).
+- Recording a playtest did not invalidate the history query, so the run just recorded was **missing from the panel** the next time the modal opened (#421).
+- A hardcoded `"No text"` missed by the card/collection extraction (#415).
+- `CardListItem` hardcoded "Move to Maybeboard" while `builder.json` already held `zoneMoveTargets.toMaybeboard` = "Move to Considering", the actual tab name. The hardcoded string was the inconsistent one (#409).
+- `PrintingSelectorModal` built an English plural by hand; replaced by an ICU plural (#409).
+
+#### Notes
+
+- The `PlaytestSession` migration was **hand-written** and applied with `db execute` + `migrate resolve`. `migrate dev` demanded a database reset over a pre-existing, unrelated drift — `DeckCard.isMaybeboard` exists in the dev database but not in the schema — and its generated diff would have dropped that column. **That drift is still unexplained and still there.**
+- CI's SonarCloud step has reported _pass_ throughout this batch **without analysing anything**: `SONAR_TOKEN` is absent from repo secrets and the scan step is gated on it. `fix/sonar-gate-silently-skipped` is pushed and waiting on the secret.
+
 ### 2026-08-16: Release batch #392–#406
 
 #### Added

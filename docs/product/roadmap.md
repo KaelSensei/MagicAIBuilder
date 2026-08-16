@@ -120,8 +120,8 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 - [x] **Two locales served, eight dormant** _(done — PR #398)_: `en` and `fr` are routed; `de, it, es, ja, zh, ko, ru, pt` keep their catalogs in `DORMANT_LOCALES` but are not served. They were machine-seeded English copies, and translating the interface around card text that is itself still English would ship a half-translated product in eight languages instead of a coherent one in two. Re-activating one is a single-line move once a speaker has translated it
 - [x] **Language switcher** _(already in place)_: `src/components/layout/LocaleSwitcher.tsx`, mounted in the header
 - [x] **Key-parity guard** _(done — PR #397)_: `messages.test.ts` fails the unit suite when any locale's key set diverges from `en`. A key present only in `en` renders as its raw dotted path everywhere else
-- 🔄 **String extraction** _(in progress)_: 77 of 125 components held hardcoded English. Done: search panel (PR #397), playtest zones (PR #406). Remaining clusters: `src/components/deck` (20 files), `src/components/card` (11), `src/components/collection` (5)
-- [ ] **Localized card data**: fetch and display card names, oracle text, and type lines in the user's language via Scryfall's `lang` parameter. **This is what makes the rest worth having** — a translated interface around English card text is only half a product
+- 🔄 **String extraction** _(in progress)_: 77 of 125 components held hardcoded English. Done: search panel (PR #397), playtest zones (PR #406), card and collection (PR #409). Remaining cluster: `src/components/deck` (20 files) — the last and largest
+- 🔄 **Localized card data** _(in progress — PR #415)_: card name, type line and rules text now read from a printing in the viewer's language, with **per-field** English fallback (Scryfall fills `printed_name` / `printed_type_line` / `printed_text` independently, so an all-or-nothing fallback would blank a card's rules whenever one field was missing). Wired into the printing selector, the one place the app renders raw Scryfall text. **Remaining**: the other card surfaces. Card names stay English in search, storage, import and export — a translated name written into `DeckCard` rows would denormalise a translation into every deck holding the card
 
 ---
 
@@ -173,11 +173,11 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [x] **Deck statistics** _(done)_: mana curve, colour distribution (0.5 pip hybrid), category breakdown, average CMC excluding lands, Game Changers, price and budget checks, theme detection
 
-> **Correction (2026-08-16).** This entry previously claimed _turn 1 playability_, a _mana alignment panel with warnings_ and _per-color land recommendations_ as done. **No code implements any of the three.** They were never built; the line was inaccurate rather than the feature regressed. Reopened below.
+> **Correction (2026-08-16).** This entry previously claimed _turn 1 playability_, a _mana alignment panel with warnings_ and _per-color land recommendations_ as done. **No code implemented any of the three.** They were reopened below, then built the same day.
 
-- [ ] **Turn 1 playability**: probability the opening hand can cast something on turn 1
-- [ ] **Mana alignment panel**: warn when the mana base does not match the deck's colour pips
-- [ ] **Per-colour land recommendations**: suggest a land split from the pip distribution
+- [x] **Turn 1 playability** _(done — PR #412)_: exact hypergeometric odds that the opening seven holds a land and a one-drop, plus a stricter per-colour read requiring a matching source. Computed by inclusion–exclusion rather than sampled, so the figures do not wobble between visits. The two figures are never summed: one hand can satisfy two colours at once, and a hybrid one-drop counts for each colour that casts it
+- [x] **Mana alignment panel** _(done — PR #410)_: pips the spells ask for against sources the lands produce, flagged past 15 points of deviation. Scryfall's `produced_mana` is stored nowhere in this codebase, so land production is derived from printed text — subtypes after the em dash, then the land's own "Add …" clauses, then colour identity
+- [x] **Per-colour land recommendations** _(done — PR #410)_: each colour's suggested source count, proportional to its share of pips. Same panel as the alignment read — they share the pip distribution, so splitting them would have computed it twice
 
 ---
 
@@ -185,7 +185,8 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [x] **Hand draw & goldfishing** _(done)_: Fisher-Yates shuffle, London mulligan rules, fullscreen modal, fan hand display, library counter
 - [x] **Enhanced Playtest Mode** _(done — PR #394)_: turn phases (Untap → End), life tracking with history and 10-step undo, battlefield / graveyard / exile zones with tap and counters, London mulligan, starting life from `FormatConfig`. The engine, store and five zone components already existed and were unit-tested — nothing outside their own tests imported them, and the modal still ran a hand-only hook
-- [ ] **Playtest session analytics**: `src/lib/playtest/analytics.ts` (win rate, mulligan distribution, matchup stats) is written and tested but unreachable — there is no `PlaytestSession` Prisma model to feed it
+- [x] **Playtest session analytics** _(done — PRs #418, #421)_: `PlaytestSession` model, route, recording bar and history panel. `analytics.ts` had held win rate, mulligan distribution, matchup splits and daily trend since US-AG Phase 1, written and tested but reachable from nothing. The result is **user-declared**: the playtest is a solitaire goldfish with no opponent, so turns and mulligans come off the engine but only the player can say how a run went — and skipping records nothing, since an abandoned run is not a loss. Records are private to the account, not the deck
+- [ ] **Difficulty on recorded sessions**: the schema and validation accept `budget` / `mid-range` / `cedh` and `getMatchupStats` already groups by it, but the recording bar never asks — so the matchup breakdown has no data to show
 
 ---
 
