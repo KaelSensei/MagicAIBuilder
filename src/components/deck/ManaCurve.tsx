@@ -1,6 +1,7 @@
 "use client";
 // Premium mana curve bar chart — Linear/Vercel dashboard aesthetic
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 
@@ -25,6 +26,7 @@ const CMC_COLORS: Record<number, string> = {
 const GRID_LINES = [0.25, 0.5, 0.75, 1];
 
 export function ManaCurve({ curve, className }: ManaCurveProps) {
+  const t = useTranslations("deck");
   const buckets = Array.from({ length: 8 }, (_, i) => i);
   const [hoveredCmc, setHoveredCmc] = useState<number | null>(null);
 
@@ -53,10 +55,10 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-widest">
-          Mana Curve
+          {t("stats.manaCurve")}
         </p>
         <span className="text-xs text-[var(--text-secondary)] tabular-nums">
-          Avg CMC: {avgCmc}
+          {t("stats.avgCmcInline", { value: avgCmc })}
         </span>
       </div>
 
@@ -84,7 +86,10 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
                 key={cmc}
                 type="button"
                 className="relative flex flex-col items-center flex-1 h-full justify-end bg-transparent border-0 p-0 cursor-default focus:outline-none"
-                aria-label={`CMC ${cmc === 7 ? "7+" : cmc}: ${count} card${count === 1 ? "" : "s"}`}
+                aria-label={t("stats.curveBucket", {
+                  cmc: cmc === 7 ? "7+" : String(cmc),
+                  count,
+                })}
                 onMouseEnter={() => setHoveredCmc(cmc)}
                 onMouseLeave={() => setHoveredCmc(null)}
                 onFocus={() => setHoveredCmc(cmc)}
@@ -100,7 +105,10 @@ export function ManaCurve({ curve, className }: ManaCurveProps) {
                       exit={{ opacity: 0, y: 4 }}
                       transition={{ duration: 0.15 }}
                     >
-                      {count} card{count === 1 ? "" : "s"} at CMC {cmc === 7 ? "7+" : cmc}
+                      {t("stats.curveBucket", {
+                        cmc: cmc === 7 ? "7+" : String(cmc),
+                        count,
+                      })}
                     </motion.div>
                   )}
                 </AnimatePresence>

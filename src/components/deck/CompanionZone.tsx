@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { CardTooltip } from "@/components/card/CardTooltip";
 import {
   describeCompanionCondition,
@@ -21,6 +22,7 @@ interface CompanionZoneProps {
  * Shows the deck's Companion (outside the 99), its rule summary, validation hints, and clear.
  */
 export function CompanionZone({ deck, deckViewMode }: CompanionZoneProps) {
+  const t = useTranslations("deck");
   const setCompanion = useDeckStore((s) => s.setCompanion);
   const companion = deck.companion;
   const commander = deck.commander;
@@ -46,12 +48,16 @@ export function CompanionZone({ deck, deckViewMode }: CompanionZoneProps) {
     return (
       <div className="px-3 pb-2 border-b border-[var(--border)]">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-1">
-          Companion <span className="text-[10px] normal-case opacity-70">(sideboard)</span>
+          {t("companion.title")}{" "}
+          <span className="text-[10px] normal-case opacity-70">{t("companion.zoneHint")}</span>
         </p>
         <div className="rounded-lg border border-dashed border-[var(--border)] px-2 py-2">
           <p className="text-[10px] text-[var(--text-secondary)] leading-snug">
-            Turn on <span className="text-[var(--text-primary)] font-medium">Companion</span> in search,
-            then click a Companion card. It stays separate from the Sideboard tab.
+            {t.rich("companion.emptyHint", {
+              strong: (chunks) => (
+                <span className="text-[var(--text-primary)] font-medium">{chunks}</span>
+              ),
+            })}
           </p>
         </div>
       </div>
@@ -62,14 +68,15 @@ export function CompanionZone({ deck, deckViewMode }: CompanionZoneProps) {
     <div className={`px-3 pb-3 border-b ${hasColorViolation ? "border-red-500/40 bg-red-500/5" : "border-[var(--border)]"}`}>
       <div className="flex items-start justify-between gap-2 mb-1">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
-          Companion <span className="text-[10px] normal-case opacity-70">(sideboard)</span>
+          {t("companion.title")}{" "}
+          <span className="text-[10px] normal-case opacity-70">{t("companion.zoneHint")}</span>
         </p>
         <button
           type="button"
           onClick={() => void setCompanion(null)}
           className="text-[10px] px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:border-red-500/50 hover:text-red-400 transition-colors shrink-0"
         >
-          Clear
+          {t("companion.clear")}
         </button>
       </div>
       {deckViewMode !== "grid" && (

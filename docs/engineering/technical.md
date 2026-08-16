@@ -595,6 +595,20 @@ The same rule applies to error copy held in state: store a flag, not a message, 
 
 next-intl's parser does not support self-closing tags — `<br/>` renders as literal text. Write `<br></br>` and supply a tag renderer to `t.rich()`. `messages.test.ts` fails on any self-closing tag in a catalog.
 
+### Extraction is a review, not a transcription
+
+Every slice so far has turned up a defect that the hardcoded strings were hiding. Copying a string into the catalog unchanged preserves the bug; the rule is to check whether the wording is already stated somewhere authoritative first.
+
+Two kinds recur:
+
+**The same thing under two names.** `MaybeboardPanel` labelled the zone "Maybeboard" while the tab the user clicks says "Considering" (`builder.zones.considering`) — the same zone had two names depending on where you looked. `CardListItem` had the same split in #409. Both now read the builder catalog, which is where the tab that shows the name is defined. A component reaching into another namespace is the right trade when the alternative is a second copy that drifts.
+
+Likewise `ColorDistribution` carried its own `White` / `Blue` / … table while `stats.color.*` already held those names for the mana alignment panel. The table now keeps only what is genuinely its own — the CSS variables and fallback hex.
+
+**Hand-built English plurals.** `card${count === 1 ? "" : "s"}` appeared in `ManaCurve` (twice), `DeckPriceDisplay` and `PrintingSelectorModal`. It is invisible while the UI is English and unfixable once it is not: no other language pluralises on that rule. All are ICU plurals now.
+
+Domain jargon is deliberately **not** extracted. Archetype names (`Tokens`, `Aristocrats`) and format names come from domain data and stay as they are, for the same reason card names do.
+
 ---
 
 ## Community Deck Discovery

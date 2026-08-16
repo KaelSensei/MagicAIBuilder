@@ -1,5 +1,6 @@
 "use client";
 // Color distribution visualization using CSS bars
+import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 
 interface ColorDistributionProps {
@@ -7,21 +8,23 @@ interface ColorDistributionProps {
   readonly className?: string;
 }
 
+// Colour names are not repeated here: `stats.color.*` already holds them for
+// the mana alignment panel, and a second copy would drift from the first.
 const COLOR_CONFIG: Array<{
   key: string;
-  label: string;
   cssVar: string;
   fallback: string;
 }> = [
-  { key: "W", label: "White", cssVar: "--mana-white", fallback: "#f9faf4" },
-  { key: "U", label: "Blue", cssVar: "--mana-blue", fallback: "#0e68ab" },
-  { key: "B", label: "Black", cssVar: "--mana-black", fallback: "#4a3728" },
-  { key: "R", label: "Red", cssVar: "--mana-red", fallback: "#d3202a" },
-  { key: "G", label: "Green", cssVar: "--mana-green", fallback: "#00733e" },
-  { key: "C", label: "Colorless", cssVar: "--mana-colorless", fallback: "#ccc2c0" },
+  { key: "W", cssVar: "--mana-white", fallback: "#f9faf4" },
+  { key: "U", cssVar: "--mana-blue", fallback: "#0e68ab" },
+  { key: "B", cssVar: "--mana-black", fallback: "#4a3728" },
+  { key: "R", cssVar: "--mana-red", fallback: "#d3202a" },
+  { key: "G", cssVar: "--mana-green", fallback: "#00733e" },
+  { key: "C", cssVar: "--mana-colorless", fallback: "#ccc2c0" },
 ];
 
 export function ColorDistribution({ distribution, className }: ColorDistributionProps) {
+  const t = useTranslations("deck");
   const total = Object.values(distribution).reduce((sum, v) => sum + v, 0);
 
   if (total === 0) return null;
@@ -36,7 +39,7 @@ export function ColorDistribution({ distribution, className }: ColorDistribution
   return (
     <div className={cn("rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4", className)}>
       <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-3">
-        Color Distribution
+        {t("stats.colorDistribution")}
       </p>
 
       {/* Stacked color bar */}
@@ -57,7 +60,7 @@ export function ColorDistribution({ distribution, className }: ColorDistribution
 
       {/* Legend bars */}
       <div className="space-y-1.5">
-        {colorData.map(({ key, label, cssVar, fallback, count }) => (
+        {colorData.map(({ key, cssVar, fallback, count }) => (
           <div key={key} className="flex items-center gap-2">
             <div
               className="w-2.5 h-2.5 rounded-sm shrink-0"
@@ -67,7 +70,7 @@ export function ColorDistribution({ distribution, className }: ColorDistribution
               }}
             />
             <span className="text-xs text-[var(--text-secondary)] w-14 shrink-0">
-              {label}
+              {t(`stats.color.${key}`)}
             </span>
             <div className="flex-1 bg-[var(--background)] rounded-full h-1.5 overflow-hidden">
               <div
