@@ -5,9 +5,32 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-04-12                             |
+| Last Updated  | 2026-08-16                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
+
+## Current metrics (2026-08-16)
+
+| Metric              | Value                                                  |
+| ------------------- | ------------------------------------------------------ |
+| Unit tests          | 1863 across 129 files                                  |
+| E2E tests           | 56 passing, 1 skipped (`@external` / `@perf` excluded) |
+| Coverage            | ~94.5%                                                 |
+| SonarCloud          | 0 open issues                                          |
+| Components          | 125 (`.tsx`, excluding tests)                          |
+| Prisma migrations   | 20                                                     |
+| Locales served      | 2 (`en`, `fr`) + 8 dormant                             |
+| Production database | Neon (Vercel Marketplace)                              |
+
+> The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
+
+## Known open issues
+
+- **`SONAR_TOKEN` is not set in GitHub secrets.** The `SonarCloud Scan` step is skipped on every CI run while the job reports success — the quality gate has never analysed anything in CI. `fix/sonar-gate-silently-skipped` makes it fail loudly instead, but the secret still has to be added.
+- **Intermittent e2e failure**, roughly 1 run in 5, alongside a recurring `useTranslations` outside `NextIntlClientProvider` in the dev-server log, traced to `Header.tsx:29` during a client-side navigation. Not reproducible with direct requests. Not diagnosed.
+- **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
+- **`src/lib/playtest/analytics.ts` is unreachable** — written and tested, but no `PlaytestSession` Prisma model feeds it.
+- **Three docs are still in French**: `docs/init-prompt.md`, `docs/product/competitive-landscape.md`, `docs/security/audit-securite-2026-07-20.md` (French filename too).
 
 ---
 
@@ -821,15 +844,15 @@ _(Previously documented as "Phase 13 features" in changelog)_
 - `CardFlip` 3D component; `useCardFlip` hook; `CardListItem` Turn Over; `CardGrid` cardFaces
 - Tests: `useCardFlip.test.ts` (6+), MDFC section in `categories.test.ts`
 - `docs/product/roadmap.md`: MDFC and DFC items marked done
-  | Metric | Value |
-  |---|---|
-  | Source files | ~75 |
-  | API routes | 7 |
-  | Prisma models | 3 |
-  | Hooks | 9 |
-  | Components | ~38 |
-  | Test files | 9 |
-  | Tests passing | 111 |
-  | Phase 1 P0 completion | 100% |
-  | Phase 1–5 completion | 100% |
-  | Build | ✅ Passing |
+  | Metric                | Value      |
+  | --------------------- | ---------- |
+  | Source files          | ~75        |
+  | API routes            | 7          |
+  | Prisma models         | 3          |
+  | Hooks                 | 9          |
+  | Components            | ~38        |
+  | Test files            | 9          |
+  | Tests passing         | 111        |
+  | Phase 1 P0 completion | 100%       |
+  | Phase 1–5 completion  | 100%       |
+  | Build                 | ✅ Passing |
