@@ -66,7 +66,7 @@ describe("RecordResultBar", () => {
     const onRecorded = renderBar();
     await userEvent.click(screen.getByText("Win"));
 
-    await waitFor(() => expect(screen.getByText("Could not save")).toBeDefined());
+    expect(await screen.findByText("Could not save")).toBeDefined();
     expect(onRecorded).not.toHaveBeenCalled();
   });
 
@@ -75,7 +75,7 @@ describe("RecordResultBar", () => {
     const onRecorded = renderBar();
     await userEvent.click(screen.getByText("Draw"));
 
-    await waitFor(() => expect(screen.getByText("Could not save")).toBeDefined());
+    expect(await screen.findByText("Could not save")).toBeDefined();
     expect(onRecorded).not.toHaveBeenCalled();
   });
 

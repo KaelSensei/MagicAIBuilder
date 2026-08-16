@@ -3,6 +3,7 @@
  * ShoppingListModal — lists all missing cards with prices, copy/export.
  */
 import { useMemo } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { X, Copy, Download, Check } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import type { Deck } from "@/lib/deck/types";
@@ -35,7 +36,13 @@ export function ShoppingListModal({
   ownedScryfallIds,
   onClose,
 }: ShoppingListModalProps) {
+  const t = useTranslations("deck");
+  const format = useFormatter();
   const [copied, copy] = useCopyToClipboard();
+
+  // USD, like every other price surface — see BudgetOptimizationModal.
+  const money = (value: number) =>
+    format.number(value, { style: "currency", currency: "USD" });
 
   const items = useMemo(
     () =>
@@ -80,7 +87,7 @@ export function ShoppingListModal({
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
             <Dialog.Title className="text-base font-semibold text-[var(--text-primary)]">
-              Shopping List — {items.length} card{items.length === 1 ? "" : "s"}
+              {t("buyList.title", { count: items.length })}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -92,14 +99,14 @@ export function ShoppingListModal({
             </Dialog.Close>
           </div>
           <Dialog.Description className="sr-only">
-            Cards you need to buy for this deck.
+            {t("buyList.description")}
           </Dialog.Description>
 
           {/* Card list */}
           <div className="flex-1 overflow-y-auto px-5 py-3">
             {items.length === 0 ? (
               <p className="text-sm text-[var(--text-secondary)] text-center py-8">
-                You own all cards in this deck! 🎉
+                {t("buyList.ownAll")}
               </p>
             ) : (
               <div className="space-y-1">
@@ -114,15 +121,15 @@ export function ShoppingListModal({
           <div className="border-t border-[var(--border)] px-5 py-3 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-[var(--text-secondary)]">
-                Total to buy
+                {t("buyList.totalToBuy")}
                 {unknownPriceCount > 0 && (
                   <span className="text-[10px] ml-1 text-amber-400">
-                    ({unknownPriceCount} without price)
+                    {t("buyList.withoutPrice", { count: unknownPriceCount })}
                   </span>
                 )}
               </span>
               <span className="font-semibold text-[var(--text-primary)]">
-                ~${totalCost.toFixed(2)}
+                {t("buyList.approx", { amount: money(totalCost) })}
               </span>
             </div>
 
@@ -138,7 +145,7 @@ export function ShoppingListModal({
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}
-                {copied ? "Copied!" : "Copy List"}
+                {copied ? t("buyList.copied") : t("buyList.copy")}
               </button>
               <button
                 type="button"
@@ -147,7 +154,7 @@ export function ShoppingListModal({
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors disabled:opacity-40"
               >
                 <Download className="w-3.5 h-3.5" />
-                Export CSV
+                {t("buyList.exportCsv")}
               </button>
             </div>
           </div>
