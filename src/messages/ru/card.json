@@ -20,5 +20,6 @@
   "favorite": {
     "add": "Add to favorites",
     "remove": "Remove from favorites"
-  }
+  },
+  "noText": "No text"
 }
