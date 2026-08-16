@@ -91,7 +91,18 @@
     "threatDensity": "Threats",
     "interaction": "Interaction",
     "targetRange": "(target {min}–{max})",
-    "formatStatsHint": "Shares of non-land cards. Benchmarks are guidance, not rules."
+    "formatStatsHint": "Shares of non-land cards. Benchmarks are guidance, not rules.",
+    "manaAlignment": "Mana Alignment",
+    "sourcesOfRecommended": "{sources}/{recommended} sources · {pips} of pips",
+    "colorlessSources": "Colourless only",
+    "manaAlignmentHint": "Suggested sources mirror each colour's share of pips. A colour needed on turn one wants more than that.",
+    "color": {
+      "W": "White",
+      "U": "Blue",
+      "B": "Black",
+      "R": "Red",
+      "G": "Green"
+    }
   },
   "ai": {
     "title": "AI Suggestions",

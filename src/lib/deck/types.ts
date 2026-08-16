@@ -37,6 +37,8 @@ export interface DeckStats {
   flexibleLands: number;
   /** Curve / threat / interaction measures; null for Commander (bracket scoring instead) */
   formatStats: import("./format-stats").FormatStats | null;
+  /** Pips asked for vs. sources produced; null when no spell needs coloured mana */
+  manaAlignment: import("./mana-alignment").ManaAlignment | null;
 }
 export interface BracketScore {
   overall: 1|2|3|4;

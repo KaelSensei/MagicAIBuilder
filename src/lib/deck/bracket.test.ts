@@ -50,6 +50,7 @@ function makeStats(overrides: Partial<DeckStats> = {}): DeckStats {
     flexibleLands: 0,
     // Commander is graded by bracket scoring, not format stats.
     formatStats: null,
+    manaAlignment: null,
     ...overrides,
   };
 }
