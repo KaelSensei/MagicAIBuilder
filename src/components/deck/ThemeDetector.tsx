@@ -1,5 +1,6 @@
 "use client";
 // Detected deck theme/archetype badges
+import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { DetectedTheme } from "@/lib/deck/themes";
 
@@ -46,6 +47,7 @@ export function ThemeDetector({
   maxThemes = 3,
   className,
 }: ThemeDetectorProps) {
+  const t = useTranslations("deck");
   const topThemes = (themes ?? []).slice(0, maxThemes);
 
   if (topThemes.length === 0) {
@@ -57,10 +59,10 @@ export function ThemeDetector({
         )}
       >
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
-          Archetypes
+          {t("stats.archetypes")}
         </p>
         <p className="text-xs text-[var(--text-secondary)] italic">
-          Add more cards to detect themes
+          {t("stats.archetypesEmpty")}
         </p>
       </div>
     );
@@ -74,7 +76,7 @@ export function ThemeDetector({
       )}
     >
       <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
-        Archetypes
+        {t("stats.archetypes")}
       </p>
       <div className="flex flex-wrap gap-2">
         {topThemes.map((theme) => {
@@ -88,8 +90,13 @@ export function ThemeDetector({
                 "flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium",
                 colorClass
               )}
-              title={`${Math.round(theme.confidence * 100)}% confidence — ${theme.matchedKeywords.slice(0, 3).join(", ")}`}
+              title={t("stats.archetypeConfidence", {
+                percent: Math.round(theme.confidence * 100),
+                keywords: theme.matchedKeywords.slice(0, 3).join(", "),
+              })}
             >
+              {/* Archetype names are MTG jargon carried by the domain data —
+                  left as-is, like card names. */}
               <span>{theme.name}</span>
               <ConfidenceBar confidence={theme.confidence} />
             </div>
