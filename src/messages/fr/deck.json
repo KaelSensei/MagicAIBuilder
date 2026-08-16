@@ -123,6 +123,44 @@
     "gcForcesBracket": "→ Bracket {bracket} minimum",
     "andMore": "+{count} de plus"
   },
+  "buyList": {
+    "title": "{count, plural, one {Liste d'achat — # carte} other {Liste d'achat — # cartes}}",
+    "description": "Les cartes qu'il vous manque pour ce deck.",
+    "ownAll": "Vous possédez toutes les cartes de ce deck ! 🎉",
+    "totalToBuy": "Total à acheter",
+    "withoutPrice": "{count, plural, one {(# sans prix)} other {(# sans prix)}}",
+    "approx": "~{amount}",
+    "copy": "Copier la liste",
+    "copied": "Copié !",
+    "exportCsv": "Exporter en CSV"
+  },
+  "bracket": {
+    "noData": "Pas encore de données de bracket",
+    "score": "Score de bracket",
+    "target": "Cible",
+    "manualOverride": "Forçage manuel — Bracket {bracket}",
+    "ignoresGameChangers": "Ignore les règles Game Changers",
+    "resetToCalculated": "Revenir au bracket calculé",
+    "autoCalculated": "Calculé automatiquement depuis les règles du deck",
+    "override": "Forcer",
+    "cancel": "Annuler",
+    "setManual": "Définir le bracket manuellement :",
+    "dimensions": "Dimensions",
+    "dimensionsHint": "score 1–4 (niveau de bracket)",
+    "dimension": {
+      "ramp": "Rampe",
+      "draw": "Pioche",
+      "removal": "Removal",
+      "tutors": "Tuteurs",
+      "winSpeed": "Vitesse de victoire",
+      "avgCmc": "CMC moyen"
+    },
+    "infiniteCombos": "{count, plural, one {# combo infini à 2 cartes → Bracket 4 (règle RC)} other {# combos infinis à 2 cartes → Bracket 4 (règle RC)}}",
+    "gameChangers": "{count, plural, one {# Game Changer} other {# Game Changers}}",
+    "gcForcesB4": " → Bracket 4 minimum (plus de 3 GC)",
+    "gcForcesB3": " → Bracket 3 minimum (GC interdits en B1/B2)",
+    "warnings": "Avertissements"
+  },
   "budget": {
     "title": "Optimisation du budget",
     "close": "Fermer",

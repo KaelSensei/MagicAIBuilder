@@ -264,9 +264,10 @@ export async function searchCardPrintings(
   lang?: string
 ): Promise<ScryfallSearchResponse> {
   const wantsTranslation = lang !== undefined && lang !== "en";
+  const langFilter = wantsTranslation ? ` lang:${lang}` : "";
   const params = new URLSearchParams({
     // Do NOT filter by legality here: banned cards still have many printings/arts (e.g. Black Lotus).
-    q: `!"${cardName}" game:paper${wantsTranslation ? ` lang:${lang}` : ""}`,
+    q: `!"${cardName}" game:paper${langFilter}`,
     unique: "prints",
     order: "released",
     dir: "desc",

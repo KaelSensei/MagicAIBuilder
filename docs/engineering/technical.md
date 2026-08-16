@@ -626,6 +626,26 @@ That states the currency once, and lets the locale decide how to write it — `$
 
 `generateShoppingListCSV` is a plain module rather than a component, so it formats with `$` directly; the same rule applies — the symbol matches the data.
 
+### Rich-text renderers belong at module scope
+
+A `t.rich` tag renderer written inline in the render body is a new function identity on every render, and static analysis reads it as a component defined inside a component. Hoist it:
+
+```tsx
+const RICH_TAGS = {
+  strong: (chunks: ReactNode) => <span className="font-medium">{chunks}</span>,
+};
+// …
+{
+  t.rich("companion.emptyHint", RICH_TAGS);
+}
+```
+
+### What the first real Sonar run found
+
+`SONAR_TOKEN` lives in the gitignored `.env.sonar` and drives `pnpm sonar` locally. It is **not** the same as the GitHub Actions secret of the same name, which is what CI reads — so a local file does nothing for the pipeline.
+
+The first local analysis after a full day of merges surfaced **five issues, all in code written that day**, none of which CI had ever seen: a `t.rich` renderer read as a nested component, a nested template literal in the Scryfall query builder, an `if (!x || x.y !== z)` that wanted optional chaining, and two `waitFor` + `getByText` pairs that should be `findByText`. All fixed; back to zero, verified by re-running the analysis rather than re-reading the API.
+
 ---
 
 ## Community Deck Discovery
