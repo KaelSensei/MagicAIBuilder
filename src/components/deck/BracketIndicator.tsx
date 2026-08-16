@@ -1,6 +1,7 @@
 "use client";
 // Bracket score with breakdown — supports manual override with amber warning badge
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import type { BracketLevel, BracketScore } from "@/lib/deck/types";
@@ -15,14 +16,10 @@ interface BracketIndicatorProps {
   readonly className?: string;
 }
 
-const DIMENSION_LABELS: Record<string, string> = {
-  ramp: "Ramp",
-  draw: "Draw",
-  removal: "Removal",
-  tutors: "Tutors",
-  winSpeed: "Win Speed",
-  avgCmc: "Avg CMC",
-};
+// The six dimensions of the bracket engine. Kept separate from `stats.*` even
+// where the English word coincides: "Draw" here is a 1–4 score, while
+// `stats.cardDraw` is a card count. Same word, different quantity.
+const DIMENSION_KEYS = ["ramp", "draw", "removal", "tutors", "winSpeed", "avgCmc"] as const;
 
 const BRACKET_BG: Record<BracketLevel, string> = {
   1: "bg-green-500/10 border-green-500/30",
@@ -80,6 +77,7 @@ export function BracketIndicator({
   onManualBracketChange,
   className,
 }: BracketIndicatorProps) {
+  const t = useTranslations("deck");
   // Controls visibility of the inline bracket-picker when no override is active
   const [showPicker, setShowPicker] = useState(false);
 
@@ -87,7 +85,7 @@ export function BracketIndicator({
     return (
       <div className={cn("rounded-lg bg-[var(--surface)] p-4", className)}>
         <p className="text-xs text-[var(--text-secondary)]">
-          No bracket data yet
+          {t("bracket.noData")}
         </p>
       </div>
     );
@@ -124,7 +122,7 @@ export function BracketIndicator({
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-1">
-            Bracket Score
+            {t("bracket.score")}
           </p>
           <AnimatePresence mode="wait">
             <motion.div
@@ -147,7 +145,9 @@ export function BracketIndicator({
 
         {targetBracket && targetBracket !== displayBracket && (
           <div className="text-right">
-            <p className="text-xs text-[var(--text-secondary)] mb-1">Target</p>
+            <p className="text-xs text-[var(--text-secondary)] mb-1">
+              {t("bracket.target")}
+            </p>
             <span
               className={cn(
                 "text-xl font-semibold",
@@ -169,10 +169,10 @@ export function BracketIndicator({
           <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-amber-400">
-              Manual override — Bracket {manualBracket}
+              {t("bracket.manualOverride", { bracket: manualBracket })}
             </p>
             <p className="text-xs text-amber-400/70">
-              Ignores Game Changers rules
+              {t("bracket.ignoresGameChangers")}
             </p>
           </div>
           {onManualBracketChange && (
@@ -180,7 +180,7 @@ export function BracketIndicator({
               type="button"
               onClick={handleReset}
               className="text-amber-400/70 hover:text-amber-300 transition-colors shrink-0"
-              title="Reset to calculated bracket"
+              title={t("bracket.resetToCalculated")}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -192,7 +192,7 @@ export function BracketIndicator({
       {!isOverridden && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-[var(--text-secondary)] italic">
-            Auto-calculated from deck rules
+            {t("bracket.autoCalculated")}
           </p>
           {onManualBracketChange && (
             <button
@@ -200,7 +200,7 @@ export function BracketIndicator({
               onClick={() => setShowPicker((v) => !v)}
               className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] underline underline-offset-2 transition-colors"
             >
-              {showPicker ? "Cancel" : "Override"}
+              {showPicker ? t("bracket.cancel") : t("bracket.override")}
             </button>
           )}
         </div>
@@ -218,7 +218,7 @@ export function BracketIndicator({
             className="overflow-hidden"
           >
             <p className="text-xs text-[var(--text-secondary)] mb-2">
-              Set manual bracket:
+              {t("bracket.setManual")}
             </p>
             <div className="flex gap-1.5">
               {([1, 2, 3, 4] as const).map((b) => (
@@ -265,17 +265,17 @@ export function BracketIndicator({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
-            Dimensions
+            {t("bracket.dimensions")}
           </p>
           <p className="text-xs text-[var(--text-secondary)] italic">
-            score 1–4 (bracket level)
+            {t("bracket.dimensionsHint")}
           </p>
         </div>
-        {Object.entries(score.dimensions).map(([key, value]) => (
+        {DIMENSION_KEYS.map((key) => (
           <MiniBar
             key={key}
-            label={DIMENSION_LABELS[key] ?? key}
-            value={value}
+            label={t(`bracket.dimension.${key}`)}
+            value={score.dimensions[key]}
             bracketColor={bracketColor}
           />
         ))}
@@ -286,9 +286,7 @@ export function BracketIndicator({
         <div className="flex items-center gap-1.5">
           <Infinity className="w-3.5 h-3.5 text-red-400" />
           <span className="text-xs text-red-400 font-medium">
-            {score.twoCardInfiniteCombos} infinite 2-card combo
-            {score.twoCardInfiniteCombos > 1 ? "s" : ""}
-            {" → Bracket 4 (RC rule)"}
+            {t("bracket.infiniteCombos", { count: score.twoCardInfiniteCombos })}
           </span>
         </div>
       )}
@@ -298,10 +296,10 @@ export function BracketIndicator({
         <div className="flex items-center gap-1.5">
           <Zap className="w-3.5 h-3.5 text-amber-400" />
           <span className="text-xs text-amber-400 font-medium">
-            {score.gameChangers} Game Changer{score.gameChangers > 1 ? "s" : ""}
+            {t("bracket.gameChangers", { count: score.gameChangers })}
             {score.gameChangers > 3
-              ? " → Bracket 4 minimum (>3 GC)"
-              : " → Bracket 3 minimum (GC not allowed in B1/B2)"}
+              ? t("bracket.gcForcesB4")
+              : t("bracket.gcForcesB3")}
           </span>
         </div>
       )}
@@ -310,7 +308,7 @@ export function BracketIndicator({
       {score.warnings.length > 0 && (
         <div className="space-y-1.5 border-t border-[var(--border)] pt-3">
           <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
-            Warnings
+            {t("bracket.warnings")}
           </p>
           {score.warnings.map((warning) => (
             <div key={warning} className="flex items-start gap-1.5">

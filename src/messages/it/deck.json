@@ -380,5 +380,43 @@
     "copy": "Copy",
     "copied": "Copied!",
     "downloadCsv": "Download CSV"
+  },
+  "bracket": {
+    "noData": "No bracket data yet",
+    "score": "Bracket Score",
+    "target": "Target",
+    "manualOverride": "Manual override — Bracket {bracket}",
+    "ignoresGameChangers": "Ignores Game Changers rules",
+    "resetToCalculated": "Reset to calculated bracket",
+    "autoCalculated": "Auto-calculated from deck rules",
+    "override": "Override",
+    "cancel": "Cancel",
+    "setManual": "Set manual bracket:",
+    "dimensions": "Dimensions",
+    "dimensionsHint": "score 1–4 (bracket level)",
+    "dimension": {
+      "ramp": "Ramp",
+      "draw": "Draw",
+      "removal": "Removal",
+      "tutors": "Tutors",
+      "winSpeed": "Win Speed",
+      "avgCmc": "Avg CMC"
+    },
+    "infiniteCombos": "{count, plural, one {# infinite 2-card combo → Bracket 4 (RC rule)} other {# infinite 2-card combos → Bracket 4 (RC rule)}}",
+    "gameChangers": "{count, plural, one {# Game Changer} other {# Game Changers}}",
+    "gcForcesB4": " → Bracket 4 minimum (>3 GC)",
+    "gcForcesB3": " → Bracket 3 minimum (GC not allowed in B1/B2)",
+    "warnings": "Warnings"
+  },
+  "buyList": {
+    "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",
+    "description": "Cards you need to buy for this deck.",
+    "ownAll": "You own all cards in this deck! 🎉",
+    "totalToBuy": "Total to buy",
+    "withoutPrice": "{count, plural, one {(# without price)} other {(# without price)}}",
+    "approx": "~{amount}",
+    "copy": "Copy List",
+    "copied": "Copied!",
+    "exportCsv": "Export CSV"
   }
 }

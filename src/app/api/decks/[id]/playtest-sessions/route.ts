@@ -40,7 +40,7 @@ async function findOwnedDeck(deckId: string, userId: string) {
     select: { id: true, userId: true },
   });
 
-  if (!deck || deck.userId !== userId) return null;
+  if (deck?.userId !== userId) return null;
   return deck;
 }
 
