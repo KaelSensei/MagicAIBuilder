@@ -4,7 +4,12 @@ import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { SESSION_RESULTS, type SessionResult } from "@/lib/playtest/session-input";
+import {
+  SESSION_DIFFICULTIES,
+  SESSION_RESULTS,
+  type SessionDifficulty,
+  type SessionResult,
+} from "@/lib/playtest/session-input";
 import { logger } from "@/lib/logger";
 
 interface RecordResultBarProps {
@@ -33,6 +38,9 @@ export function RecordResultBar({
   const queryClient = useQueryClient();
   const [pending, setPending] = useState<SessionResult | null>(null);
   const [failed, setFailed] = useState(false);
+  // Empty means "not saying", which is a legitimate answer — the column is
+  // nullable and the matchup breakdown simply skips those runs.
+  const [difficulty, setDifficulty] = useState<SessionDifficulty | "">("");
 
   const record = useCallback(
     async (result: SessionResult) => {
@@ -42,7 +50,14 @@ export function RecordResultBar({
         const response = await fetch(`/api/decks/${deckId}/playtest-sessions`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ result, turns, mulliganCount }),
+          // Omit the key entirely rather than sending "", which fails
+          // validation; absent is what "not saying" means to the route.
+          body: JSON.stringify({
+            result,
+            turns,
+            mulliganCount,
+            ...(difficulty === "" ? {} : { difficulty }),
+          }),
         });
         if (!response.ok) throw new Error(`record failed: ${response.status}`);
         // The history panel is cached; without this the run just recorded
@@ -58,12 +73,28 @@ export function RecordResultBar({
         setPending(null);
       }
     },
-    [deckId, turns, mulliganCount, onRecorded, queryClient]
+    [deckId, turns, mulliganCount, difficulty, onRecorded, queryClient]
   );
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-white/50">{t("recordResult")}</span>
+      <label className="sr-only" htmlFor="playtest-difficulty">
+        {t("difficultyLabel")}
+      </label>
+      <select
+        id="playtest-difficulty"
+        value={difficulty}
+        onChange={(event) => setDifficulty(event.target.value as SessionDifficulty | "")}
+        className="rounded bg-white/10 px-2 py-1 text-xs text-white [&>option]:bg-neutral-900"
+      >
+        <option value="">{t("difficultyUnset")}</option>
+        {SESSION_DIFFICULTIES.map((value) => (
+          <option key={value} value={value}>
+            {t(`difficulty.${value}`)}
+          </option>
+        ))}
+      </select>
       {SESSION_RESULTS.map((result) => (
         <button
           key={result}

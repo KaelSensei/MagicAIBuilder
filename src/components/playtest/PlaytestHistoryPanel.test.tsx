@@ -84,6 +84,37 @@ describe("PlaytestHistoryPanel", () => {
     expect(screen.getByText("1 mulligan")).toBeDefined();
   });
 
+  it("hides the opponent breakdown until a run says who it was against", () => {
+    // Every session stores null until the player picks a difficulty; an empty
+    // heading with no rows is worse than no section.
+    renderPanel(makeSummary({ matchups: {} }));
+    expect(screen.queryByText("By opponent")).toBeNull();
+  });
+
+  it("breaks the record down by opponent, weakest first", () => {
+    renderPanel(
+      makeSummary({
+        matchups: {
+          cedh: { wins: 1, losses: 4, winRate: 20 },
+          budget: { wins: 5, losses: 1, winRate: 83 },
+        },
+      })
+    );
+    expect(screen.getByText("By opponent")).toBeDefined();
+    const labels = screen.getAllByText(/^(Budget|Mid-range|cEDH)$/).map((n) => n.textContent);
+    expect(labels).toEqual(["Budget", "cEDH"]);
+  });
+
+  it("shows the win-loss split for each opponent", () => {
+    renderPanel(makeSummary({ matchups: { budget: { wins: 5, losses: 1, winRate: 83 } } }));
+    expect(screen.getByText("5W–1L · 83%")).toBeDefined();
+  });
+
+  it("shows an unrecognised difficulty as stored rather than dropping it", () => {
+    renderPanel(makeSummary({ matchups: { legacy: { wins: 2, losses: 2, winRate: 50 } } }));
+    expect(screen.getByText("legacy")).toBeDefined();
+  });
+
   it("declines to call a trend from too little play", () => {
     renderPanel(makeSummary({ trend: [{ date: "2026-08-01", winRate: 50, total: 6 }] }));
     expect(screen.getByText("Too few games")).toBeDefined();

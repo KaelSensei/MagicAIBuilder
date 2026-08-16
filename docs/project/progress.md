@@ -13,12 +13,16 @@
 
 | Metric              | Value                                                  |
 | ------------------- | ------------------------------------------------------ |
-| Unit tests          | 1863 across 129 files                                  |
+| Unit tests          | 1987 across 138 files                                  |
 | E2E tests           | 56 passing, 1 skipped (`@external` / `@perf` excluded) |
 | Coverage            | ~94.5%                                                 |
 | SonarCloud          | 0 open issues                                          |
-| Components          | 125 (`.tsx`, excluding tests)                          |
-| Prisma migrations   | 20                                                     |
+| Source files        | 282 (`.ts`/`.tsx`, excluding tests)                    |
+| Components          | 114 (`.tsx`, excluding tests)                          |
+| API routes          | 37                                                     |
+| Prisma models       | 19                                                     |
+| Prisma migrations   | 21                                                     |
+| Hooks               | 22                                                     |
 | Locales served      | 2 (`en`, `fr`) + 8 dormant                             |
 | Production database | Neon (Vercel Marketplace)                              |
 
@@ -29,7 +33,7 @@
 - **`SONAR_TOKEN` is not set in GitHub secrets.** The `SonarCloud Scan` step is skipped on every CI run while the job reports success — the quality gate has never analysed anything in CI. `fix/sonar-gate-silently-skipped` makes it fail loudly instead, but the secret still has to be added.
 - **Intermittent e2e failure**, roughly 1 run in 5, alongside a recurring `useTranslations` outside `NextIntlClientProvider` in the dev-server log, traced to `Header.tsx:29` during a client-side navigation. Not reproducible with direct requests. Not diagnosed.
 - **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
-- **`src/lib/playtest/analytics.ts` is unreachable** — written and tested, but no `PlaytestSession` Prisma model feeds it.
+- **The matchup breakdown has no data.** `difficulty` is accepted by the schema and by `parseSessionInput`, and `getMatchupStats` groups by it, but the recording bar never asks for it — so every session stores `null` and the breakdown is always empty.
 - **Three docs are still in French**: `docs/init-prompt.md`, `docs/product/competitive-landscape.md`, `docs/security/audit-securite-2026-07-20.md` (French filename too).
 
 ---
@@ -856,3 +860,17 @@ _(Previously documented as "Phase 13 features" in changelog)_
   | Phase 1 P0 completion | 100%       |
   | Phase 1–5 completion  | 100%       |
   | Build                 | ✅ Passing |
+
+---
+
+## Batch #409–#421 — deck analytics and localised cards (2026-08-16)
+
+> The 2026-03-26 snapshot above is kept for comparison only. Live figures live in **Current metrics** at the top of this file — one place, so they cannot disagree with each other.
+
+Four roadmap lines were closed and one correction stood down:
+
+- **Mana alignment** and **per-colour land recommendations** (#410) and **turn-1 playability** (#412) — the three entries reopened on 2026-08-16 for claiming features with no implementing code. All three are now real.
+- **Playtest session analytics** (#418, #421) — `analytics.ts` had been written and tested since US-AG Phase 1 with no model to feed it. Model, route, recording and history panel now exist.
+- **Localised card data** (#415) — moved from open to in progress: the resolution layer is done and wired into the printing selector; the remaining card surfaces are not.
+
+The #418 migration was hand-written around the `DeckCard.isMaybeboard` drift rather than letting `migrate dev` reset the database. That drift, and the rest of the debt this batch leaves behind, are listed once under **Known open issues** at the top of this file.

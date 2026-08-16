@@ -183,6 +183,7 @@ When you open the printing selector, the app looks for printings of that card in
 The playtest is a goldfish — there is no opponent, so the app cannot tell whether a run went well. When you finish one, the header asks: **Win**, **Loss**, **Draw**, or **Skip**.
 
 - **Turns and mulligans are filled in for you** from the run itself. You only say the outcome.
+- **You can also say who you were up against** — Budget, Mid-range or cEDH — using the dropdown beside the buttons. Leave it on _Not saying_ if you would rather not; nothing is recorded for it and the run still counts everywhere else.
 - **Skip records nothing.** Abandoning a run halfway is not a loss, and counting it as one would spoil your win rate. Use Skip freely.
 - **If saving fails**, the playtest stays open and tells you. Your answer is not thrown away silently.
 
@@ -196,6 +197,7 @@ Open the playtest on a deck you have played before and its record sits under the
 
 - **Games**, **win rate**, and **turns to win** — the last averaged over your wins only, so a long loss does not make the deck look slower than it is. It shows a dash until you have won at least once.
 - **A breakdown by mulligans**, so you can see whether keeping a shaky seven is costing you games.
+- **A breakdown by opponent**, listed weakest to strongest, for the runs where you said who you played against. It stays hidden until at least one run has named an opponent.
 - **A verdict on the direction**: improving, steady, or declining.
 
 Three things worth knowing about that verdict:

@@ -85,6 +85,15 @@
       "steady": "Stable",
       "declining": "En baisse",
       "insufficient": "Trop peu de parties"
-    }
+    },
+    "byOpponent": "Par adversaire",
+    "matchupValue": "{wins}V–{losses}D · {winRate} %"
+  },
+  "difficultyLabel": "Adversaire",
+  "difficultyUnset": "Sans préciser",
+  "difficulty": {
+    "budget": "Budget",
+    "mid-range": "Intermédiaire",
+    "cedh": "cEDH"
   }
 }
