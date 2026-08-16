@@ -6,6 +6,8 @@ export interface ScryfallCardFace {
   name: string; mana_cost?: string; type_line?: string; oracle_text?: string;
   power?: string; toughness?: string;
   image_uris?: ScryfallImageUris; colors?: string[]; color_indicator?: string[];
+  /** Text as printed on a non-English face; the fields above stay oracle (English) */
+  printed_name?: string; printed_type_line?: string; printed_text?: string;
 }
 export const DFC_LAYOUTS: ReadonlySet<string> = new Set(["modal_dfc","transform","reversible_card","double_faced_token"]);
 export interface ScryfallCard {
@@ -16,6 +18,10 @@ export interface ScryfallCard {
   prices?: { usd?: string|null; usd_foil?: string|null; eur?: string|null };
   legalities?: { commander?: string; brawl?: string; [key: string]: string|undefined };
   set?: string; set_name?: string; rarity?: string; artist?: string; flavor_text?: string; keywords?: string[];
+  /** Scryfall language code of this printing, e.g. "en", "fr", "zhs" */
+  lang?: string;
+  /** Text as printed on a non-English card; the fields above stay oracle (English) */
+  printed_name?: string; printed_type_line?: string; printed_text?: string;
 }
 export interface ScryfallSearchResponse { object: "list"; total_cards: number; has_more: boolean; next_page?: string; data: ScryfallCard[]; }
 export interface ScryfallError { object: "error"; code: string; status: number; details: string; }

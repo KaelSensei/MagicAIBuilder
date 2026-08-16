@@ -713,6 +713,41 @@ A hybrid one-drop is counted for **every** colour on its cost, since either will
 
 ---
 
+## Localised Card Text
+
+A translated interface wrapped around English card text is only half a product, so Scryfall printings are read in the viewer's language where one exists. `src/lib/scryfall/localized.ts` owns the resolution.
+
+### How Scryfall models it
+
+Every printing keeps `name` / `type_line` / `oracle_text` as the **oracle (English)** values, and adds `printed_name` / `printed_type_line` / `printed_text` carrying what is actually printed on that physical card. Two properties of those fields drive the module:
+
+1. **They are filled independently.** A printing can carry a printed name with no printed text. Falling back as a unit would blank a card's rules the moment one field was missing, so `resolveLocalizedText` falls back **per field**.
+2. **They are not proof of translation.** Scryfall emits them on some English printings too, where they are simply the English text again. `isLocalized` therefore keys off `lang`, never off the presence of the fields.
+
+### Preference order
+
+Every **translated** candidate is preferred over every **English** one, and the face is preferred within each tier:
+
+```
+face.printed_* → card.printed_* → face.<english> → card.<english>
+```
+
+Ordering by level instead (face before card) would show an English face name in place of a translated card name — the wrong trade, since a viewer reading French would rather have the combined "A // B" French name than an English face. An empty string counts as absent throughout, so `printed_text: ""` shows the English rules rather than nothing.
+
+### Fetching
+
+`searchCardPrintings(name, lang)` adds `lang:xx` **and** `include_multilingual=true` together. Scryfall hides non-English cards from search unless the flag is set, so sending the filter alone returns nothing at all — which reads as "no translation exists" rather than as the mistake it is.
+
+`useCardPrintings` falls back to English when no printing exists in the requested language. Scryfall answers a search with no matches by **404-ing** rather than returning an empty list, so the miss arrives as a thrown error and is caught, not tested for. The language is part of the React Query key: the same card in two languages is two results.
+
+### Scope
+
+Wired into `PrintingSelectorModal`, which is where the app renders raw Scryfall text to the user. The text panel now reads the **previewed printing** rather than the card the modal was opened with — with localised printings in the list, picking one has to change the text shown.
+
+> Card **names stay English** for search and deck storage. Translating stored `DeckCard` rows would denormalise a translation into every deck that holds the card; display is resolved at render time instead. Extending this to the rest of the card surfaces is follow-up work.
+
+---
+
 ## Playtest Engine
 
 `src/lib/playtest/` is a pure state machine with no framework dependency, wrapped by a Zustand store and rendered by the components in `src/components/playtest/`.

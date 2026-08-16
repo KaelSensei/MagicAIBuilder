@@ -1,12 +1,13 @@
 "use client";
 // Modal to select a card printing — shows oracle text alongside all printings
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { useCardPrintings } from "@/hooks/useCardPrintings";
 import { getCardImageUri } from "@/lib/scryfall/images";
+import { resolveLocalizedText, toScryfallLang } from "@/lib/scryfall/localized";
 import { Modal } from "@/components/ui/Modal";
 
 
@@ -24,7 +25,7 @@ export function PrintingSelectorModal({
   onClose,
 }: PrintingSelectorModalProps) {
   const t = useTranslations("card");
-  const { data, isLoading } = useCardPrintings(card.name);
+  const { data, isLoading } = useCardPrintings(card.name, toScryfallLang(useLocale()));
   const [previewedPrintingId, setPreviewedPrintingId] = useState(card.id);
 
   const printings = useMemo(() => data?.data ?? [card], [card, data?.data]);
@@ -40,11 +41,11 @@ export function PrintingSelectorModal({
     setPreviewedPrintingId(card.id);
   }, [card.id]);
 
-  // Resolve oracle text — handle double-faced cards
-  const face = card.card_faces?.[0];
-  const manaCost = face?.mana_cost ?? card.mana_cost ?? "";
-  const typeLine = face?.type_line ?? card.type_line ?? "";
-  const oracleText = face?.oracle_text ?? card.oracle_text ?? "";
+  // Read the previewed printing, not the card the modal was opened with: with
+  // localised printings in the list, picking one has to change the text shown.
+  const face = previewedPrinting.card_faces?.[0];
+  const manaCost = face?.mana_cost ?? previewedPrinting.mana_cost ?? "";
+  const { name, typeLine, oracleText } = resolveLocalizedText(previewedPrinting);
 
   return (
     <Modal
@@ -58,7 +59,7 @@ export function PrintingSelectorModal({
       <div className="flex items-center justify-between px-5 py-4 border-b border-(--border) shrink-0">
         <div>
           <h2 className="text-base font-semibold text-(--text-primary)">
-            {card.name}
+            {name}
           </h2>
           <p className="text-xs text-(--text-secondary) mt-0.5">
             {isLoading
@@ -94,7 +95,7 @@ export function PrintingSelectorModal({
             </p>
           ) : (
             <p className="text-xs text-(--text-secondary) italic opacity-50">
-              No text
+              {t("noText")}
             </p>
           )}
 

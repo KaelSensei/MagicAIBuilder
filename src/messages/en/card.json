@@ -8,6 +8,7 @@
   "banned": "Banned",
   "moveNamedToMaybeboard": "Move {name} to Considering",
   "removeNamed": "Remove {name}",
+  "noText": "No text",
   "noCardsFound": "No cards found",
   "loadingPrintings": "Loading printings…",
   "printingsAvailable": "{count, plural, one {# printing available} other {# printings available}}",
