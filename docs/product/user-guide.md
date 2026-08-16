@@ -132,6 +132,14 @@ For **non-Commander decks** the panel swaps the Commander benchmarks for checks 
 
 The card count is also measured against your format's real deck size (60 rather than 100), and the Commander-only bracket targets are hidden.
 
+### Prices and Budgets
+
+**All prices are in US dollars.** They come from Scryfall, which quotes in USD, and nothing in the app converts them. Budget targets are USD too — a budget of 50 means $50.
+
+Some screens previously showed a euro sign on those same figures. They were never euros; only the label was wrong, and it has been corrected.
+
+In the shopping list, cards whose price Scryfall does not know are **listed at zero** rather than left out. A buy list that quietly drops a card is a list you cannot shop from — the total simply does not include them.
+
 ### Mana Alignment
 
 The colour distribution chart tells you what your **spells** cost. The **Mana Alignment** panel tells you whether your **lands** can actually pay for them — in any format, Commander included.
