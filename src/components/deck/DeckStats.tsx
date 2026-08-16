@@ -6,6 +6,8 @@ import type { DeckStats } from "@/lib/deck/types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
 import type { BenchmarkStatus, FormatStats } from "@/lib/deck/format-stats";
+import type { AlignmentStatus, ManaAlignment } from "@/lib/deck/mana-alignment";
+import type { TurnOnePlayability } from "@/lib/deck/turn-one";
 import { ManaCurve } from "./ManaCurve";
 import { ColorDistribution } from "./ColorDistribution";
 import { ThemeDetector } from "./ThemeDetector";
@@ -173,6 +175,90 @@ function FormatStatsPanel({
   );
 }
 
+/** @returns the icon colour matching an alignment verdict */
+function statusFromAlignment(status: AlignmentStatus): StatusLevel {
+  return status === "aligned" ? "ok" : "warn";
+}
+
+/**
+ * Pips the deck asks for against sources its lands produce.
+ *
+ * Each row reads "sources / recommended", so an under-supported colour shows
+ * the shortfall directly rather than leaving the reader to compute it.
+ */
+function ManaAlignmentPanel({ alignment }: { readonly alignment: ManaAlignment }) {
+  const t = useTranslations("deck");
+
+  return (
+    <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
+      <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
+        {t("stats.manaAlignment")}
+      </p>
+      <div className="divide-y divide-[var(--border)]">
+        {alignment.colors.map((entry) => (
+          <StatRow
+            key={entry.color}
+            label={t(`stats.color.${entry.color}`)}
+            value={t("stats.sourcesOfRecommended", {
+              sources: entry.sources,
+              recommended: entry.recommendedSources,
+              pips: asPercent(entry.pipShare),
+            })}
+            status={statusFromAlignment(entry.status)}
+          />
+        ))}
+        {alignment.colorlessSources > 0 && (
+          <StatRow
+            label={t("stats.colorlessSources")}
+            value={alignment.colorlessSources}
+          />
+        )}
+      </div>
+      <p className="mt-2 text-[10px] leading-snug text-[var(--text-secondary)] opacity-70">
+        {t("stats.manaAlignmentHint")}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Odds the opening seven can act on turn one.
+ *
+ * The headline ignores colour; the rows below require a matching source and so
+ * read lower. They are shown together because the difference between them is
+ * itself the useful signal — a wide gap means the mana, not the curve, is what
+ * stops the deck acting.
+ */
+function TurnOnePanel({ playability }: { readonly playability: TurnOnePlayability }) {
+  const t = useTranslations("deck");
+
+  return (
+    <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
+      <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
+        {t("stats.turnOne")}
+      </p>
+      <div className="divide-y divide-[var(--border)]">
+        <StatRow
+          label={t("stats.turnOneAny")}
+          value={asPercent(playability.anyPlay)}
+          status={getRatioStatus(playability.anyPlay * 100)}
+        />
+        {playability.byColor.map((entry) => (
+          <StatRow
+            key={entry.color}
+            label={t("stats.turnOneColor", { color: t(`stats.color.${entry.color}`) })}
+            value={asPercent(entry.probability)}
+            status={getRatioStatus(entry.probability * 100)}
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-[10px] leading-snug text-[var(--text-secondary)] opacity-70">
+        {t("stats.turnOneHint", { oneDrops: playability.oneDrops })}
+      </p>
+    </div>
+  );
+}
+
 export function DeckStats({
   stats,
   format,
@@ -278,6 +364,12 @@ export function DeckStats({
           formatLabel={config.label}
         />
       )}
+
+      {/* Mana base alignment — pips asked for vs. sources produced */}
+      {stats.manaAlignment && <ManaAlignmentPanel alignment={stats.manaAlignment} />}
+
+      {/* Turn-one playability — odds the opening hand can act */}
+      {stats.turnOnePlayability && <TurnOnePanel playability={stats.turnOnePlayability} />}
 
       {/* Deck price — live total from store via useDeckPrice */}
       <DeckPriceDisplay />

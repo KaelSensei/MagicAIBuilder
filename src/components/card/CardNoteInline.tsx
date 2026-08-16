@@ -1,6 +1,7 @@
 "use client";
 // Inline card note editor — small textarea that opens on 📝 icon click
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { FileText } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 
@@ -10,6 +11,7 @@ interface CardNoteInlineProps {
 }
 
 export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
+  const t = useTranslations("card.note");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(notes ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -54,13 +56,13 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
       <button
         type="button"
         onClick={handleOpen}
-        title={hasNote ? noteText : "Add note"}
+        title={hasNote ? noteText : t("add")}
         className={`p-0.5 rounded transition-opacity hover:text-amber-400 ${
           hasNote
             ? "text-amber-400"
             : "opacity-0 group-hover:opacity-60 text-[var(--text-secondary)]"
         }`}
-        aria-label={hasNote ? "Edit note" : "Add note"}
+        aria-label={hasNote ? t("edit") : t("add")}
       >
         <FileText className="w-3 h-3" />
       </button>
@@ -69,7 +71,7 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
 
   return (
     <dialog
-      aria-label="Card note editor"
+      aria-label={t("editor")}
       open
       className="absolute left-0 right-0 top-full z-30 m-0 p-0 bg-transparent border-none shadow-none w-full"
     >
@@ -91,7 +93,7 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
             handleKeyDown(e);
           }}
           onBlur={handleSave}
-          placeholder="Add a private note for this card…"
+          placeholder={t("placeholder")}
           rows={3}
           maxLength={1000}
           className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 resize-none outline-none"

@@ -19,11 +19,13 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const collection = (await import(`@/messages/${locale}/collection.json`)).default;
   const profile = (await import(`@/messages/${locale}/profile.json`)).default;
   const playtest = (await import(`@/messages/${locale}/playtest.json`)).default;
+  const card = (await import(`@/messages/${locale}/card.json`)).default;
 
   return {
     locale,
     messages: {
       common,
+      card,
       auth,
       builder,
       deck,

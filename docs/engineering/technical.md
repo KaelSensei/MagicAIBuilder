@@ -645,6 +645,74 @@ The same `format` prop also fixes two Commander assumptions in the stats panel: 
 
 ---
 
+## Mana Base Alignment
+
+`computeDeckStats` already reported the colour distribution of the **spells**, via their pips. It said nothing about what the **lands** actually tap for, so a deck could read as perfectly balanced while being unable to cast half its cards. `src/lib/deck/mana-alignment.ts` supplies the missing half and compares the two.
+
+| Field                     | Definition                                                             |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `pips` / `pipShare`       | Coloured pips the spells ask for; hybrids count as halves              |
+| `sources` / `sourceShare` | Lands that can tap for the colour, as a share of **all** lands         |
+| `gap`                     | `sourceShare - pipShare`, in percentage points; negative means starved |
+| `status`                  | `"under"` / `"aligned"` / `"over"`, using `MANA_IMBALANCE_THRESHOLD`   |
+| `recommendedSources`      | `round(pipShare × totalSources)` — the proportional starting point     |
+
+`MANA_IMBALANCE_THRESHOLD` (15 points, in `constants.ts`) had been declared since the early days and **never referenced**; this is the feature it was written for.
+
+### Two deliberate design decisions
+
+**No `FormatConfig` gate.** `buildFormatStats` is gated on `hasFormatStats`, and the obvious parallel here would be `hasColorIdentity` — but that flag encodes the Commander colour-identity _rule_, not whether mana alignment is worth measuring. Gating on it would switch the panel off for Modern and Standard, where a two-colour manabase needs this read at least as much. The gate is the data instead: no coloured pips, no panel, `null`.
+
+**Lands only.** A mana creature or a signet fixes colours too, but it has to be drawn _and_ cast first. Folding those into the same number would overstate how reliably the deck produces the colour, so `countColorSources` counts `category === "land"` and nothing else.
+
+### Deriving what a land produces
+
+Scryfall's `produced_mana` is **not stored anywhere** in this codebase — not on `ScryfallCard`, not on `DeckCard`, not in the Prisma model. Adding it would be a schema migration, so `colorsProducedBy` derives production from printed text in three passes, most reliable first:
+
+1. **Printed subtypes** — the portion of `typeLine` after the em dash. Only the subtype half is read: `Land — Mountain Valley` taps for nothing red, and matching against the whole line would invent a red source.
+2. **The land's own `Add …` clauses** — text following an `Add`, up to the end of that sentence. A land whose activation _costs_ `{W}` does not thereby produce white; scanning the whole oracle text would credit it anyway. `Add one mana of any color` credits all five.
+3. **Colour identity**, only when the first two find nothing. It is the weakest signal — on a land it usually does reflect production, but it also picks up activation costs.
+
+> This derivation is a **heuristic**, and the recommendation is proportional, which ignores curve position: a colour needed on turn one deserves more sources than its pip share alone suggests. Treat an `"under"` verdict as a prompt to look, not a verdict.
+
+---
+
+## Turn-One Playability
+
+A low curve looks healthy in `manaCurve`, and a solid land count looks healthy in the stats panel, but neither says whether the two arrive **together**. `src/lib/deck/turn-one.ts` answers that as a probability over the opening seven.
+
+### The maths
+
+`chanceOfBoth(deckSize, groupA, groupB, handSize)` is exact, not sampled — inclusion–exclusion on the complements:
+
+```
+P(both) = 1 − P(no A) − P(no B) + P(neither)
+```
+
+with each term a hypergeometric ratio of binomials. The two groups **must be disjoint**, which they always are here: lands versus spells, or sources versus the spells they cast.
+
+`binomial(n, k)` multiplies and divides in alternation so the running value stays small — the factorials themselves overflow a double long before a 100-card deck. Edge cases are handled explicitly: a hand larger than the deck is capped to the deck (you simply draw all of it), and an empty group short-circuits to 0 rather than dividing by zero.
+
+### Two figures, deliberately not merged
+
+| Figure    | Meaning                                                               |
+| --------- | --------------------------------------------------------------------- |
+| `anyPlay` | A land plus a one-drop, ignoring colour                               |
+| `byColor` | A **matching source** plus a one-drop of that colour — the truer read |
+
+They are never combined into a single number. The per-colour events overlap — one hand can satisfy green and blue at once — so summing the rows would double-count. Each row is exact on its own terms; the _gap_ between `anyPlay` and the colour rows is itself the signal, since a wide gap means the mana, not the curve, is what stops the deck acting.
+
+A hybrid one-drop is counted for **every** colour on its cost, since either will cast it. That is the other reason the rows overlap.
+
+### Scoping details that matter
+
+- **Library only.** `computeDeckStats` passes `mainCards`, not `allCards`: the commander is cast from the command zone and is never drawn, so including it would both inflate the deck size and add a card that cannot appear in an opening hand.
+- **Lands are never one-drops.** A land is played, not cast, so `card.cmc === 1` is filtered by `category !== "land"` first. Some lands do carry a non-zero mana value.
+
+> The model is the **opening hand only** — no mulligans, no scry, no cantrips, no mana cheating. It is a floor, not a forecast.
+
+---
+
 ## Playtest Engine
 
 `src/lib/playtest/` is a pure state machine with no framework dependency, wrapped by a Zustand store and rendered by the components in `src/components/playtest/`.
