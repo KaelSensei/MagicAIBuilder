@@ -96,6 +96,10 @@
     "sourcesOfRecommended": "{sources}/{recommended} sources · {pips} des pips",
     "colorlessSources": "Incolores uniquement",
     "manaAlignmentHint": "Les sources suggérées reflètent la part de pips de chaque couleur. Une couleur nécessaire dès le tour 1 en demande davantage.",
+    "turnOne": "Jouabilité tour 1",
+    "turnOneAny": "Sort à 1 mana",
+    "turnOneColor": "Sort à 1 mana {color}",
+    "turnOneHint": "{oneDrops, plural, one {# sort à 1 mana} other {# sorts à 1 mana}}. Main de départ uniquement — sans mulligan ni cantrip.",
     "color": {
       "W": "Blanc",
       "U": "Bleu",

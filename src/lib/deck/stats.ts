@@ -5,6 +5,7 @@ import { extractColorPips } from "@/lib/mana/parse";
 import { getColorIdentityViolations } from "./color-identity";
 import { buildFormatStats } from "./format-stats";
 import { buildManaAlignment } from "./mana-alignment";
+import { buildTurnOnePlayability } from "./turn-one";
 
 function buildManaCurve(nonLandCards: ReturnType<typeof buildAllCards>): Record<number, number> {
   const manaCurve: Record<number, number> = {};
@@ -101,6 +102,8 @@ export function computeDeckStats(deck: Deck): DeckStats {
   return {
     formatStats: buildFormatStats(deck.format, allCards, roundedAvgCmc),
     manaAlignment: buildManaAlignment(allCards),
+    // Library only: the commander is cast from the command zone, never drawn.
+    turnOnePlayability: buildTurnOnePlayability(mainCards),
     totalCards,
     lands,
     creatures,

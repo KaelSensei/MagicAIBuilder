@@ -39,6 +39,8 @@ export interface DeckStats {
   formatStats: import("./format-stats").FormatStats | null;
   /** Pips asked for vs. sources produced; null when no spell needs coloured mana */
   manaAlignment: import("./mana-alignment").ManaAlignment | null;
+  /** Odds the opening hand can act on turn one; null when the deck has no one-drops */
+  turnOnePlayability: import("./turn-one").TurnOnePlayability | null;
 }
 export interface BracketScore {
   overall: 1|2|3|4;
