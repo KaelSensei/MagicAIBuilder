@@ -47,6 +47,18 @@ Then confirm SonarCloud reports **zero open issues**:
 
 > `pnpm sonar` does **not** regenerate coverage. Run `pnpm test:coverage` first, or the quality gate reads a stale `lcov` file.
 
+### The scan must fail, not skip
+
+`sonar.yml` carried `if: env.SONAR_TOKEN != ''` on the scan step. With no secret set, the step was skipped and **the job still reported success** — so every PR displayed a green SonarCloud check while nothing was analysed, and the "open issues = 0" line in the checklist above was reading a months-old snapshot rather than the code under review. Thirteen batches shipped in one day under that green tick; the first real analysis afterwards found five issues, all in that day's code.
+
+It now fails with an explicit error when the token is missing.
+
+**Two `SONAR_TOKEN`s, and they are not the same thing.** The gitignored `.env.sonar` drives `pnpm sonar` on a developer machine. CI reads the **repository secret** of the same name, set under Settings → Secrets and variables → Actions. A local file does nothing for the pipeline, and having one is easy to mistake for having both.
+
+**Fork PRs are the exception.** GitHub withholds secrets from workflows triggered by a fork, so that a modified workflow cannot exfiltrate them. That is a protection, not a misconfiguration, so the run must not fail on it — the workflow emits a `::warning::` instead, which is visible rather than quietly green. Since this repository is public, that path is reachable by any outside contributor.
+
+> Prefer a **project-scoped analysis token** over a personal one: if it leaks it grants analysis on this project alone.
+
 ## E2E gate
 
 `.husky/pre-push` runs the full Playwright suite in Docker via `scripts/e2e-pre-push.sh` and blocks the push on failure.
