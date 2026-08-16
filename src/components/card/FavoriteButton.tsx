@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { Heart } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 
@@ -17,11 +18,13 @@ export function FavoriteButton({
   size = 16,
   className,
 }: FavoriteButtonProps) {
+  const t = useTranslations("card.favorite");
+
   return (
     <button
       type="button"
       onClick={() => onToggle(scryfallId)}
-      aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+      aria-label={isFavorited ? t("remove") : t("add")}
       aria-pressed={isFavorited}
       className={cn(
         "p-1.5 rounded-full transition-colors",
