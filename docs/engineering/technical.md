@@ -748,6 +748,34 @@ Wired into `PrintingSelectorModal`, which is where the app renders raw Scryfall 
 
 ---
 
+## Playtest Session Analytics
+
+`src/lib/playtest/analytics.ts` has held the pure statistics — win rate, mulligan distribution, matchup splits, daily trend — since US-AG Phase 1, **written and tested but reachable from nothing**: there was no `PlaytestSession` model, so no session could ever be recorded. This closes that gap.
+
+### Why the result is user-declared
+
+The playtest is a solitaire goldfish with no opponent. `turns` and `mulliganCount` are read straight off the engine, but **nothing in the app can decide whether a run was a win** — the player has to say. A session is therefore only stored when they do, and skipping is a first-class option: an abandoned run is not a loss, and recording it as one would poison the win rate it feeds.
+
+### Storage
+
+`PlaytestSession` carries no unique constraint, unlike `DeckVote` and `DeckRating` which both upsert on `@@unique([userId, deckId])`. Every run is its own row — that is what makes a trend possible at all. Indexed on `deckId` and on `[deckId, createdAt]` for the chronological read.
+
+`result` and `difficulty` are plain string columns, so `parseSessionInput` is the only thing standing between a typo and a row that quietly breaks every aggregate reading it. It validates the three results, rejects a turn count below 1 (a game always has a first turn), caps `mulliganCount` at `OPENING_HAND_SIZE` (the London mulligan bottoms one card per mulligan; past a full hand there is nothing to keep), and treats whitespace-only notes as absent.
+
+### Route
+
+Mounted at `/api/decks/[id]/playtest-sessions`, **not** under `/api/community`. A playtest record is private practice data, not something other viewers of a public deck should read. Both verbs require a session and scope every query to the caller, so two players practising the same public deck never see each other's results.
+
+Access is checked on **ownership**, not visibility: you may read a public deck, but you may only record playtests against your own. A deck you do not own returns **404 rather than 403**, so the endpoint cannot be used to confirm which deck ids exist.
+
+Reads are capped at `MAX_SESSIONS = 500` so one enthusiastic tester cannot make the panel unbounded.
+
+### Aggregation
+
+`summarizeSessions` wraps the existing pure functions. Turn count is averaged over **wins only**: a twenty-turn loss says nothing about how fast the deck closes a game, and folding it in would answer a different question than the panel asks.
+
+---
+
 ## Playtest Engine
 
 `src/lib/playtest/` is a pure state machine with no framework dependency, wrapped by a Zustand store and rendered by the components in `src/components/playtest/`.

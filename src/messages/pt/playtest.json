@@ -62,5 +62,14 @@
     "cardCount": "{count, plural, one {# card} other {# cards}}",
     "restoreToHand": "Restore to hand",
     "play": "Play"
+  },
+  "recordResult": "How did it go?",
+  "recording": "Saving…",
+  "recordFailed": "Could not save",
+  "skipRecording": "Skip",
+  "result": {
+    "win": "Win",
+    "loss": "Loss",
+    "draw": "Draw"
   }
 }

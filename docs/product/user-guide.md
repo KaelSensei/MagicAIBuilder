@@ -178,6 +178,18 @@ When you open the printing selector, the app looks for printings of that card in
 
 **Card names stay English everywhere else** — in search, in your deck lists, and in imports and exports. This is deliberate: deck lists need to stay portable between tools, and searching for a card by its English name has to keep working whatever your interface language is.
 
+### Recording How a Playtest Went
+
+The playtest is a goldfish — there is no opponent, so the app cannot tell whether a run went well. When you finish one, the header asks: **Win**, **Loss**, **Draw**, or **Skip**.
+
+- **Turns and mulligans are filled in for you** from the run itself. You only say the outcome.
+- **Skip records nothing.** Abandoning a run halfway is not a loss, and counting it as one would spoil your win rate. Use Skip freely.
+- **If saving fails**, the playtest stays open and tells you. Your answer is not thrown away silently.
+
+Recorded runs build up a picture of the deck over time: how often it wins, how many turns its wins take, and how the number of mulligans you took relates to how the game went.
+
+**Your playtest records are private.** They are tied to your account, not to the deck. If you share a deck publicly, nobody else sees your practice results — and if two people practise the same shared deck, neither sees the other's.
+
 These bands are **guidance, not rules** — a deliberate combo deck can sit far outside them and still be excellent. Treat an out-of-range reading as a reason to look, not a verdict.
 
 ### Playtesting a Deck
