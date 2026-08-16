@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { X, Download, Copy, Check } from "lucide-react";
 import type { DeckCard } from "@/lib/deck/types";
 import { generateShoppingListCSV } from "@/lib/deck/pricing";
@@ -17,7 +18,13 @@ export function PricingShoppingListModal({
   cards,
   onClose,
 }: ShoppingListModalProps) {
+  const t = useTranslations("deck");
+  const format = useFormatter();
   const [copied, setCopied] = useState(false);
+
+  // USD, because that is what `prices.usd` holds — see BudgetOptimizationModal.
+  const money = (value: number) =>
+    format.number(value, { style: "currency", currency: "USD" });
 
   if (!isOpen) return null;
 
@@ -45,8 +52,7 @@ export function PricingShoppingListModal({
 
   async function handleCopy() {
     const lines = sortedCards.map(
-      (c) =>
-        `${c.quantity}x ${c.name} — €${((c.price ?? 0) * c.quantity).toFixed(2)}`
+      (c) => `${c.quantity}x ${c.name} — ${money((c.price ?? 0) * c.quantity)}`
     );
     const text = lines.join("\n");
     await navigator.clipboard.writeText(text);
@@ -58,7 +64,7 @@ export function PricingShoppingListModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
         type="button"
-        aria-label="Close shopping list modal"
+        aria-label={t("shoppingList.closeOverlay")}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
@@ -77,12 +83,12 @@ export function PricingShoppingListModal({
             id="pricing-shopping-list-title"
             className="text-lg font-bold text-white"
           >
-            Shopping List
+            {t("shoppingList.title")}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("shoppingList.close")}
             className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
           >
             <X size={18} />
@@ -95,16 +101,16 @@ export function PricingShoppingListModal({
             <thead className="bg-white/5 sticky top-0">
               <tr>
                 <th className="text-left px-4 py-2 text-white/50 font-medium">
-                  Card
+                  {t("shoppingList.card")}
                 </th>
                 <th className="text-center px-3 py-2 text-white/50 font-medium">
-                  Qty
+                  {t("shoppingList.qty")}
                 </th>
                 <th className="text-right px-3 py-2 text-white/50 font-medium">
-                  Unit
+                  {t("shoppingList.unit")}
                 </th>
                 <th className="text-right px-4 py-2 text-white/50 font-medium">
-                  Total
+                  {t("shoppingList.total")}
                 </th>
               </tr>
             </thead>
@@ -121,10 +127,10 @@ export function PricingShoppingListModal({
                     {card.quantity}
                   </td>
                   <td className="px-3 py-2 text-right text-white/60">
-                    €{(card.price ?? 0).toFixed(2)}
+                    {money(card.price ?? 0)}
                   </td>
                   <td className="px-4 py-2 text-right text-white font-semibold">
-                    €{((card.price ?? 0) * card.quantity).toFixed(2)}
+                    {money((card.price ?? 0) * card.quantity)}
                   </td>
                 </tr>
               ))}
@@ -136,19 +142,18 @@ export function PricingShoppingListModal({
         <div className="border-t border-white/10 p-4 space-y-3">
           {cardsWithoutPrice > 0 && (
             <p className="text-xs text-white/40">
-              {cardsWithoutPrice} card{cardsWithoutPrice > 1 ? "s" : ""} —
-              unknown price (excluded)
+              {t("shoppingList.unpricedNote", { count: cardsWithoutPrice })}
             </p>
           )}
           <div className="flex items-center justify-between">
             <span className="text-white font-bold">
-              Subtotal: €{subtotal.toFixed(2)}
+              {t("shoppingList.subtotal", { amount: money(subtotal) })}
             </span>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={handleCopy}
-                aria-label="Copy"
+                aria-label={t("shoppingList.copy")}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs text-white transition-colors"
               >
                 {copied ? (
@@ -156,16 +161,16 @@ export function PricingShoppingListModal({
                 ) : (
                   <Copy size={14} />
                 )}
-                {copied ? "Copied!" : "Copy"}
+                {copied ? t("shoppingList.copied") : t("shoppingList.copy")}
               </button>
               <button
                 type="button"
                 onClick={handleDownloadCSV}
-                aria-label="Download CSV"
+                aria-label={t("shoppingList.downloadCsv")}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-xs font-medium transition-colors"
               >
                 <Download size={14} />
-                Download CSV
+                {t("shoppingList.downloadCsv")}
               </button>
             </div>
           </div>

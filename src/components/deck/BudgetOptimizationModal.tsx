@@ -1,4 +1,5 @@
 "use client";
+import { useFormatter, useTranslations } from "next-intl";
 import { X, TrendingDown } from "lucide-react";
 import type { BudgetSuggestion } from "@/lib/deck/pricing";
 
@@ -19,6 +20,15 @@ export function BudgetOptimizationModal({
   onApplySuggestion,
   onClose,
 }: BudgetOptimizationModalProps) {
+  const t = useTranslations("deck");
+  const format = useFormatter();
+
+  // Prices come from Scryfall's `prices.usd`, so the currency is USD and the
+  // locale decides how it is written — not a hardcoded symbol, which is how
+  // this modal came to label dollar amounts with a euro sign.
+  const money = (value: number) =>
+    format.number(value, { style: "currency", currency: "USD" });
+
   if (!isOpen) return null;
 
   const totalSavings = suggestions.reduce((sum, s) => sum + s.savingsAmount, 0);
@@ -28,7 +38,7 @@ export function BudgetOptimizationModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
         type="button"
-        aria-label="Close budget optimization modal"
+        aria-label={t("budget.closeOverlay")}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
@@ -49,13 +59,13 @@ export function BudgetOptimizationModal({
               id="budget-optimization-title"
               className="text-lg font-bold text-white"
             >
-              Budget Optimization
+              {t("budget.title")}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("budget.close")}
             className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
           >
             <X size={18} />
@@ -65,21 +75,17 @@ export function BudgetOptimizationModal({
         {/* Summary */}
         <div className="flex items-center justify-between px-5 py-3 bg-white/5 text-sm">
           <span className="text-white/60">
-            Current:{" "}
-            <span className="text-white font-semibold">
-              €{totalPrice.toFixed(2)}
-            </span>
+            {t("budget.current")}{" "}
+            <span className="text-white font-semibold">{money(totalPrice)}</span>
           </span>
           <span className="text-white/40">→</span>
           <span className="text-white/60">
-            Target:{" "}
-            <span className="text-green-400 font-semibold">
-              €{targetBudget.toFixed(2)}
-            </span>
+            {t("budget.target")}{" "}
+            <span className="text-green-400 font-semibold">{money(targetBudget)}</span>
           </span>
           {totalSavings > 0 && (
             <span className="text-green-400 font-bold">
-              Save up to €{totalSavings.toFixed(2)}
+              {t("budget.saveUpTo", { amount: money(totalSavings) })}
             </span>
           )}
         </div>
@@ -89,10 +95,8 @@ export function BudgetOptimizationModal({
           {isGoalReached ? (
             <div className="text-center py-10 text-white/50">
               <p className="text-2xl mb-2">✓</p>
-              <p className="font-medium">Budget goal reached!</p>
-              <p className="text-sm mt-1 text-white/30">
-                Your deck is already within budget.
-              </p>
+              <p className="font-medium">{t("budget.goalReached")}</p>
+              <p className="text-sm mt-1 text-white/30">{t("budget.withinBudget")}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -111,20 +115,19 @@ export function BudgetOptimizationModal({
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs text-white/50">
-                      €{s.currentPrice.toFixed(2)} → €
-                      {s.suggestedPrice.toFixed(2)}
+                      {money(s.currentPrice)} → {money(s.suggestedPrice)}
                     </p>
                     <p className="text-xs text-green-400 font-semibold">
-                      Save €{s.savingsAmount.toFixed(2)}
+                      {t("budget.save", { amount: money(s.savingsAmount) })}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => onApplySuggestion(s.cardToReplace.id)}
-                    aria-label="Apply"
+                    aria-label={t("budget.apply")}
                     className="px-3 py-1.5 bg-green-600/20 hover:bg-green-600/40 text-green-300 rounded-lg text-xs font-medium transition-colors flex-shrink-0"
                   >
-                    Apply
+                    {t("budget.apply")}
                   </button>
                 </div>
               ))}
