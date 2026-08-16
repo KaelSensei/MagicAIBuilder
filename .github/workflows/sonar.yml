@@ -47,8 +47,30 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:pass@localhost:5432/test' }}
 
+      # A fork PR never receives secrets — GitHub withholds them so a modified
+      # workflow cannot exfiltrate them. That is not a misconfiguration, so it
+      # must not fail the run; it is announced instead of passing quietly.
+      - name: Note skipped scan on a fork PR
+        if: ${{ github.event.pull_request.head.repo.fork == true }}
+        run: |
+          echo "::warning::Fork PR — GitHub withholds secrets from forks, so no SonarCloud analysis ran for this branch."
+
+      # Fail loudly rather than skip. This step used to carry
+      # `if: env.SONAR_TOKEN != ''`, so a missing secret silently skipped the
+      # analysis while the job still reported success. SonarCloud kept serving a
+      # months-old snapshot, and the "open issues = 0" check in the pre-PR
+      # checklist was reading that snapshot rather than the code under review.
+      - name: Require SONAR_TOKEN
+        if: ${{ github.event.pull_request.head.repo.fork != true }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::error::SONAR_TOKEN is not set. Add it under Settings > Secrets and variables > Actions."
+            echo "Without it no analysis runs, and SonarCloud keeps reporting the previous revision as if it were current."
+            exit 1
+          fi
+
       - name: SonarCloud Scan
-        if: ${{ env.SONAR_TOKEN != '' }}
+        if: ${{ github.event.pull_request.head.repo.fork != true }}
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_HOST_URL: https://sonarcloud.io
