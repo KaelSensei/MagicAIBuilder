@@ -4,7 +4,13 @@ import { useTranslations } from "next-intl";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 import { usePlaytestHistory } from "@/hooks/usePlaytestHistory";
-import { mulliganRows, trendDirection, type TrendDirection } from "@/lib/playtest/summary-view";
+import {
+  matchupRows,
+  mulliganRows,
+  trendDirection,
+  type TrendDirection,
+} from "@/lib/playtest/summary-view";
+import { SESSION_DIFFICULTIES } from "@/lib/playtest/session-input";
 
 interface PlaytestHistoryPanelProps {
   readonly deckId: string;
@@ -43,6 +49,13 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
 
   const direction = trendDirection(summary.trend);
   const rows = mulliganRows(summary.mulligans);
+  const matchups = matchupRows(summary.matchups);
+
+  /** Known difficulties get a translated label; anything else shows as stored. */
+  const difficultyLabel = (value: string): string =>
+    (SESSION_DIFFICULTIES as readonly string[]).includes(value)
+      ? t(`difficulty.${value}`)
+      : value;
 
   return (
     <div className="w-full max-w-md rounded-lg border border-white/10 bg-white/5 p-4">
@@ -81,6 +94,33 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
           ))}
         </ul>
       </div>
+
+      {/* Only once a run has said who it was against; otherwise there is
+          nothing here but an empty heading. */}
+      {matchups.length > 0 && (
+        <div className="border-t border-white/10 pt-2 mt-2">
+          <p className="text-[10px] uppercase tracking-wide text-white/40 mb-1">
+            {t("history.byOpponent")}
+          </p>
+          <ul className="space-y-0.5">
+            {matchups.map((row) => (
+              <li
+                key={row.difficulty}
+                className="flex justify-between text-[11px] text-white/60"
+              >
+                <span>{difficultyLabel(row.difficulty)}</span>
+                <span>
+                  {t("history.matchupValue", {
+                    wins: row.wins,
+                    losses: row.losses,
+                    winRate: Math.round(row.winRate),
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
