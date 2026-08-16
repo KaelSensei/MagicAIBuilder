@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Eye, EyeOff, Plus } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
@@ -27,6 +28,7 @@ export function HandZone({
   onDrawCard,
   onMoveCard,
 }: HandZoneProps) {
+  const t = useTranslations("playtest.hand");
   const [showCards, setShowCards] = useState(false);
   const [contextMenu, setContextMenu] = useState<CardContextMenu | null>(null);
   const isEmpty = libraryCount === 0;
@@ -44,11 +46,13 @@ export function HandZone({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-white font-semibold text-sm">
-          Hand: {hand.length} cards
+          {t("count", { count: hand.length })}
         </h3>
         <div className="flex items-center gap-2 text-xs text-white/50">
-          <span>Deck: {libraryCount}</span>
-          {isEmpty && <span className="text-orange-400">Deck vide</span>}
+          <span>{t("deckCount", { count: libraryCount })}</span>
+          {isEmpty && (
+            <span className="text-orange-400">{t("emptyDeck")}</span>
+          )}
         </div>
       </div>
 
@@ -66,7 +70,7 @@ export function HandZone({
           )}
         >
           <Plus size={14} />
-          Draw card
+          {t("draw")}
         </button>
         <button
           type="button"
@@ -74,7 +78,7 @@ export function HandZone({
           className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs text-white/70 transition-colors"
         >
           {showCards ? <EyeOff size={14} /> : <Eye size={14} />}
-          Show cards
+          {t("showCards")}
         </button>
       </div>
 
@@ -87,13 +91,13 @@ export function HandZone({
                 type="button"
                 onClick={() => handleCardClick(card)}
                 className="relative w-14 rounded-md overflow-hidden hover:scale-105 transition-transform"
-                aria-label={showCards ? card.name : "Card back"}
+                aria-label={showCards ? card.name : t("cardBack")}
               >
                 <Image
                   src={
                     showCards ? card.imageUri || CARD_BACK_URL : CARD_BACK_URL
                   }
-                  alt={showCards ? card.name : "Card back"}
+                  alt={showCards ? card.name : t("cardBack")}
                   width={56}
                   height={78}
                   className="w-full object-cover"
@@ -121,7 +125,7 @@ export function HandZone({
                     }}
                     className="w-full text-left px-3 py-2 text-xs text-white hover:bg-white/10 transition-colors"
                   >
-                    → Battlefield
+                    → {t("toBattlefield")}
                   </button>
                   <button
                     type="button"
@@ -131,7 +135,7 @@ export function HandZone({
                     }}
                     className="w-full text-left px-3 py-2 text-xs text-white hover:bg-white/10 transition-colors"
                   >
-                    → Graveyard
+                    → {t("toGraveyard")}
                   </button>
                 </div>
               )}

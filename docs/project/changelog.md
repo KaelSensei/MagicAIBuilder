@@ -9,6 +9,32 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-16: Release batch #392–#406
+
+#### Added
+
+- `feat(playtest): wire the enhanced playtest engine into the UI (#394)` — turn phases, life tracking with history and undo, battlefield / graveyard / exile zones. The engine, store and five zone components were already written and unit-tested but **had no importer outside their own tests**; the modal still ran a hand-only hook. Added `applyMulligan` (the engine had none, so wiring the store in as-is would have removed a shipped feature) and `FormatConfig.startingLife` (40 Commander, 30 Brawl, 20 elsewhere — Oathbreaker runs a commander but starts at 20).
+- `feat(stats): add format-specific deck statistics (#395)` — curve, threat density and interaction ratio per format, ratios taken against non-land cards. Bands are heuristic, not tournament data.
+- `feat(community): commander deck discovery with up/down votes (#396)` — public `/commanders/[slug]/decks` ranked by vote score, `DeckVote` model, Meta panel link. Nothing listed public decks before this.
+- `feat(404): keep the app chrome and locale on a not-found inside the app (#405)` — `[locale]/not-found.tsx`, with its own provider so it also works when the locale layout itself bailed.
+- `feat(i18n): extract the search panel and guard key parity (#397)`, `extract the playtest zone components (#406)` — plus `messages.test.ts` failing the suite when any locale diverges from `en`.
+
+#### Changed
+
+- `feat(i18n): serve English and French only, keep the other catalogs dormant (#398)` — the other eight were machine-seeded English copies. **A dormant prefix such as `/ja` is now an ordinary unknown path.**
+- Locale routing is `as-needed`: English is served unprefixed. It was `always`, which contradicted both the documented design and `app/sitemap.ts` — **every indexed URL was a redirect to its `/en` equivalent**.
+- Production database migrated from Supabase to **Neon**. The Supabase project had been deleted or auto-paused; all prior production data was lost with it.
+
+#### Fixed
+
+- `fix(deck): load a deck's cards when it is opened by URL (#399)` — a bookmark, refresh, shared link or freshly imported deck opened **with no cards**: the editor was blank, stats read zero, the playtest dealt an empty hand. Two holes: `setActiveDeck` skipped the fetch when the store was still empty, and `loadDecks` then overwrote any hydrated deck with the lightweight listing.
+- `fix(observability): report server errors to Sentry and add error boundaries (#392)` — there was no `instrumentation.ts`, so `onRequestError` never ran, and the API routes catch into a JSON 500 that automatic instrumentation never sees. **No server-side error reached Sentry.** Also stopped `/api/health` leaking the raw driver message to anonymous callers.
+- `fix(e2e): make the pre-push gate truthful and repair the suite (#393)` — the gate branched on `claude -p`, which exits 0 whenever the CLI ran, so it printed "E2E passed — push allowed" on a run with **27 failures**. 27 → 0: Playwright image drift (18 failures), unpinned pnpm, a `prisma.upsert` race across 8 workers (7 failures), plus `@external` / `@perf` tagging.
+- `fix(dev): bind the dev server on IPv6 as well as IPv4 (#401)` — `dev:local` listened on IPv4 loopback only, so a browser resolving `localhost` to `::1` could never connect. It read as broken authentication.
+- `fix(ci): stop declaring the pnpm version twice (#402)` — `pnpm/action-setup` received the version from both the workflow and `packageManager`, killing setup in 7 seconds. Never surfaced earlier because the workflows only trigger on PRs to `main`.
+- HandZone rendered the French string "Deck vide" in the English UI, and its test asserted `/deck vide/i` — the test encoded the bug (#406).
+- Phase labels were duplicated between `PhaseTracker` and `LifeTracker`; both now read the catalog (#406).
+
 ### Added — 2026-04-12: i18n Infrastructure
 
 - `feat: add i18n infrastructure with next-intl (#320)` — full internationalization plumbing for 10 locales (en, fr, de, it, es, ja, zh, ko, ru, pt) using next-intl v4 with pathname-prefix routing (as-needed mode):

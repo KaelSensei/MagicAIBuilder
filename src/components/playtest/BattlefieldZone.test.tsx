@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { BattlefieldZone } from "./BattlefieldZone";
 import type { BattlefieldCard } from "@/lib/playtest/engine";
 
@@ -22,20 +23,20 @@ describe("BattlefieldZone", () => {
   };
 
   it("renders all permanents on the battlefield", () => {
-    render(<BattlefieldZone {...defaultProps} />);
+    renderWithIntl(<BattlefieldZone {...defaultProps} />);
     expect(screen.getByText("Rhystic Study")).toBeDefined();
     expect(screen.getByText("Sol Ring")).toBeDefined();
   });
 
   it("shows tap button for each permanent", () => {
-    render(<BattlefieldZone {...defaultProps} />);
+    renderWithIntl(<BattlefieldZone {...defaultProps} />);
     const tapButtons = screen.getAllByRole("button", { name: /tap/i });
     expect(tapButtons.length).toBeGreaterThanOrEqual(1);
   });
 
   it("calls onTap with card id when Tap is clicked", () => {
     const onTap = vi.fn();
-    render(<BattlefieldZone {...defaultProps} onTap={onTap} />);
+    renderWithIntl(<BattlefieldZone {...defaultProps} onTap={onTap} />);
     const tapButtons = screen.getAllByRole("button", { name: /tap/i });
     fireEvent.click(tapButtons[0]);
     expect(onTap).toHaveBeenCalledWith("p1");
@@ -43,20 +44,20 @@ describe("BattlefieldZone", () => {
 
   it("shows tapped state visually (aria or data attribute)", () => {
     const tapped = [makePermanent("p1", "Tapped Card", true)];
-    render(<BattlefieldZone {...defaultProps} battlefield={tapped} />);
+    renderWithIntl(<BattlefieldZone {...defaultProps} battlefield={tapped} />);
     const card = screen.getByTestId("battlefield-card-p1");
     expect(card.getAttribute("data-tapped")).toBe("true");
   });
 
   it("shows counter value for each permanent", () => {
     const withCounters = [{ ...makePermanent("p1"), counters: 3 }];
-    render(<BattlefieldZone {...defaultProps} battlefield={withCounters} />);
+    renderWithIntl(<BattlefieldZone {...defaultProps} battlefield={withCounters} />);
     expect(screen.getByText(/3/)).toBeDefined();
   });
 
   it("calls onAddCounter with +1 when + counter is clicked", () => {
     const onAddCounter = vi.fn();
-    render(<BattlefieldZone {...defaultProps} onAddCounter={onAddCounter} />);
+    renderWithIntl(<BattlefieldZone {...defaultProps} onAddCounter={onAddCounter} />);
     const addBtn = screen.getAllByRole("button", { name: /\+1/i })[0];
     fireEvent.click(addBtn);
     expect(onAddCounter).toHaveBeenCalledWith("p1", 1);
@@ -64,14 +65,14 @@ describe("BattlefieldZone", () => {
 
   it("calls onRemove when Remove is clicked", () => {
     const onRemove = vi.fn();
-    render(<BattlefieldZone {...defaultProps} onRemove={onRemove} />);
+    renderWithIntl(<BattlefieldZone {...defaultProps} onRemove={onRemove} />);
     const removeBtn = screen.getAllByRole("button", { name: /remove/i })[0];
     fireEvent.click(removeBtn);
     expect(onRemove).toHaveBeenCalledWith("p1");
   });
 
   it("shows empty state when battlefield is empty", () => {
-    render(<BattlefieldZone {...defaultProps} battlefield={[]} />);
+    renderWithIntl(<BattlefieldZone {...defaultProps} battlefield={[]} />);
     expect(screen.getByText(/no permanents/i)).toBeDefined();
   });
 });

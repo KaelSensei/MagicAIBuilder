@@ -23,6 +23,11 @@
   "sidebar": {
     "navigation": "Navigation"
   },
+  "notFound": {
+    "title": "Page not found",
+    "description": "This address does not match any page. It may have been moved, or the deck may no longer be public.",
+    "backToDecks": "Back to my decks"
+  },
   "error": {
     "title": "Something went wrong",
     "description": "An unexpected error interrupted this page. The problem has been reported — you can try again, or head back to your decks.",

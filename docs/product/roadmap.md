@@ -14,15 +14,15 @@ This is a **rough** first-pass weighting using a lightweight RICE/MoSCoW hybrid:
 - **Weight 2**: Nice-to-have / polish
 - **Weight 1**: Experimental / long-term / speculative
 
-Top candidates right now (subject to change):
+Top candidates right now (reviewed 2026-08-16):
 
-- **Dependabot** — Weight **5** (low effort, high security value)
-- **Enhance Scryfall API usage (caching/batching/error recovery)** — Weight **5** (core perf + UX)
-- **UptimeRobot** — Weight **4** (early production safety net)
-- **Structured logging (Pino)** — Weight **4** (debuggability once real users arrive)
-- **Bundle analyzer (monthly)** — Weight **3**
+- **Add `SONAR_TOKEN` to GitHub secrets** — Weight **5**. The repository has **no secrets at all**, so the `SonarCloud Scan` step is skipped on every run while the job reports success. The quality gate has never analysed anything in CI; every analysis so far came from `pnpm sonar` run locally
+- **Finish i18n string extraction** — Weight **4** _(in progress — search and playtest done; deck, card, collection remain)_
+- **Localized card data via Scryfall `lang`** — Weight **4**. Without it a translated interface still shows English card names and oracle text
+- **UptimeRobot** — Weight **4** (early production safety net, now that a database exists again)
+- **Structured logging (Pino)** — Weight **3**. `src/lib/logger.ts` already centralises every call site and forwards to Sentry; only the JSON format is missing
+- **Diagnose the intermittent e2e failure** — Weight **3**. Roughly 1 run in 5, with a recurring `useTranslations` outside `NextIntlClientProvider` in the dev log
 - **Visual redesign** — Weight **3** (big surface area, schedule when stable)
-- **Multi-language support (i18n)** — Weight **2** _(in progress — infrastructure done PR #320, string extraction next)_
 - **Local AI model via MageZero** — Weight **1** (very high effort / research)
 
 # Part 1 — Technical Roadmap
@@ -33,8 +33,9 @@ Preferred technology choices for new infrastructure. Based on cost, DX, and reli
 
 ### Database
 
-- [x] **Use Neon (PostgreSQL)** _(recommended)_ — serverless Postgres, generous free tier, branches for preview environments. Avoid Supabase (vendor lock-in) and MongoDB (poor fit for relational data).
-- **Current**: Prisma 6.x (7.x upgrade pending) + PostgreSQL (prod), SQLite (dev). Neon recommended for hosting.
+- [x] **Use Neon (PostgreSQL)** _(done — 2026-08-16)_ — provisioned via the Vercel Marketplace and connected to production, preview and development. Migrated off Supabase, whose project had been deleted or auto-paused: `/api/health` returned `503 ENOTFOUND tenant/user not found`, every sign-in failed, and **all prior production data was lost with it**. Neon also ends the Supabase pooler gymnastics — direct connections were IPv4-only and unreachable from Vercel's IPv6, the session pooler hit `MaxClientsInSessionMode`, and only the transaction pooler on 6543 worked.
+  - **Migrations must use `DATABASE_URL_UNPOOLED`.** The pooled URL routes through PgBouncer in transaction mode and breaks Prisma Migrate with errors that never mention pooling.
+- **Current**: Prisma 6.x (7.x upgrade pending) + Neon Postgres (prod), Docker Postgres 16 on 5432 (dev).
 
 ### Authentication
 
@@ -72,9 +73,10 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [x] **Sentry** (`@sentry/nextjs`) _(done — 2026-03-25)_: automatic error capture on frontend and backend; EU data center
 - [x] **Health check endpoint** _(done)_: `GET /api/health` returns DB connectivity status (`200 ok` / `503 degraded`)
+- [x] **Error reporting wired end to end** _(done — PR #392)_: `src/instrumentation.ts` with `register()` + `onRequestError`, `instrumentation-client.ts` replacing the deprecated root config, `logger.error` forwarding to `Sentry.captureException`, and `error.tsx` / `global-error.tsx` boundaries. Before this, **no server-side error reached Sentry at all** — the routes catch into a JSON 500, so automatic instrumentation never saw them
 - [ ] **UptimeRobot** (once deployed): monitor `https://<your-domain>/api/health` every 5 minutes with email/Discord alerts — free plan includes 50 monitors
-- [ ] **Bundle analyzer** (`@next/bundle-analyzer`): run monthly to catch JS bloat early
-- [ ] **Dependabot** (GitHub native): auto-PRs for CVEs in npm dependencies; **recommended first**
+- [x] **Bundle analyzer** (`@next/bundle-analyzer`) _(already in place)_: wired in `next.config.ts`, run with `pnpm analyze`
+- [x] **Dependabot** (GitHub native) _(already in place)_: `.github/dependabot.yml`, weekly, two groups, majors ignored
 
 ### Level 2: When you have real users
 
@@ -114,11 +116,12 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ## Internationalization (i18n)
 
-- [x] **Multi-language support**: next-intl v4 with 10 locales (en, fr, de, it, es, ja, zh, ko, ru, pt), pathname-prefix routing (as-needed mode), `[locale]` App Router segment, composed middleware (next-intl + NextAuth), 100 message stub files, 13 tests _(done — PR #320)_
-- [ ] **String extraction**: extract all hardcoded English strings from components into `en/*.json` message files, wire `useTranslations()` / `getTranslations()` hooks
-- [ ] **Language switcher**: add locale selector UI (navbar dropdown or footer toggle)
-- [ ] **UI translations**: translate all 10 namespace files for 9 non-default locales (fr, de, it, es, ja, zh, ko, ru, pt)
-- [ ] **Localized card data**: fetch and display card names, oracle text, and type lines in the user's language via Scryfall's `lang` parameter
+- [x] **Multi-language support**: next-intl v4, `[locale]` App Router segment, composed middleware (next-intl + NextAuth) _(done — PR #320)_
+- [x] **Two locales served, eight dormant** _(done — PR #398)_: `en` and `fr` are routed; `de, it, es, ja, zh, ko, ru, pt` keep their catalogs in `DORMANT_LOCALES` but are not served. They were machine-seeded English copies, and translating the interface around card text that is itself still English would ship a half-translated product in eight languages instead of a coherent one in two. Re-activating one is a single-line move once a speaker has translated it
+- [x] **Language switcher** _(already in place)_: `src/components/layout/LocaleSwitcher.tsx`, mounted in the header
+- [x] **Key-parity guard** _(done — PR #397)_: `messages.test.ts` fails the unit suite when any locale's key set diverges from `en`. A key present only in `en` renders as its raw dotted path everywhere else
+- 🔄 **String extraction** _(in progress)_: 77 of 125 components held hardcoded English. Done: search panel (PR #397), playtest zones (PR #406). Remaining clusters: `src/components/deck` (20 files), `src/components/card` (11), `src/components/collection` (5)
+- [ ] **Localized card data**: fetch and display card names, oracle text, and type lines in the user's language via Scryfall's `lang` parameter. **This is what makes the rest worth having** — a translated interface around English card text is only half a product
 
 ---
 
@@ -161,28 +164,35 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 ## Export / Print / Proxy
 
 - [x] **Proxy sheet PDF export** _(done — #202)_: configurable layout (3×3 A4/Letter, 2×2), client-side generation, 63×88mm cards, optional basic lands/commander
-- [ ] **Text-only proxy sheets** _(in progress)_: plain-text card list with art-free format
+- [x] **Text-only proxy sheets** _(already shipped)_: `includeCardArt: false` in `src/lib/deck/proxy.ts` renders art-free card boxes with name, mana cost, type line, oracle text and P/T; covered by unit and e2e tests. _(If the intent was a literal plain-text list rather than art-free card boxes, that is a separate render mode and still open.)_
 - [ ] **Richer export formats**: EDHRec, Goldfish (import only), extended Archidekt
 
 ---
 
 ## Statistics
 
-- [x] **Enhanced deck statistics** _(done)_: turn 1 playability, corrected CMC (with/without lands), mana alignment panel with warnings, per-color land recommendations, 0.5 pip hybrid distribution
+- [x] **Deck statistics** _(done)_: mana curve, colour distribution (0.5 pip hybrid), category breakdown, average CMC excluding lands, Game Changers, price and budget checks, theme detection
+
+> **Correction (2026-08-16).** This entry previously claimed _turn 1 playability_, a _mana alignment panel with warnings_ and _per-color land recommendations_ as done. **No code implements any of the three.** They were never built; the line was inaccurate rather than the feature regressed. Reopened below.
+
+- [ ] **Turn 1 playability**: probability the opening hand can cast something on turn 1
+- [ ] **Mana alignment panel**: warn when the mana base does not match the deck's colour pips
+- [ ] **Per-colour land recommendations**: suggest a land split from the pip distribution
 
 ---
 
 ## Playtesting
 
 - [x] **Hand draw & goldfishing** _(done)_: Fisher-Yates shuffle, London mulligan rules, fullscreen modal, fan hand display, library counter
-- 🔄 **Enhanced Playtest Mode** _(Sprint 5 planned)_: turn phases, step tracking, life total management
+- [x] **Enhanced Playtest Mode** _(done — PR #394)_: turn phases (Untap → End), life tracking with history and 10-step undo, battlefield / graveyard / exile zones with tap and counters, London mulligan, starting life from `FormatConfig`. The engine, store and five zone components already existed and were unit-tested — nothing outside their own tests imported them, and the modal still ran a hand-only hook
+- [ ] **Playtest session analytics**: `src/lib/playtest/analytics.ts` (win rate, mulligan distribution, matchup stats) is written and tested but unreachable — there is no `PlaytestSession` Prisma model to feed it
 
 ---
 
 ## Formats
 
 - [x] **Multiple format support** _(done — PR #299)_: 9 formats (Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, Pauper) with centralized `FORMAT_CONFIG`, format-aware search queries, banlists, validation (deck size, singleton, max copies), and conditional bracket scoring
-- [ ] **Format-specific statistics**: curve quality, threat density, interaction ratio for non-Commander formats
+- [x] **Format-specific statistics** _(done — PR #395)_: curve, threat density and interaction ratio per format, benchmarked against bands in `FORMAT_CONFIG`. Ratios are taken against non-land cards so a 60-card and a 100-card list are comparable. Also fixed two Commander assumptions leaking into other formats: the card count read `60/100`, and bracket targets were labelled "target for B3" in formats that have no brackets. **The bands are heuristic starting points, not tournament data** — tune them as evidence arrives
 
 ---
 
@@ -195,8 +205,11 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ## Community
 
-- [ ] **Community deck suggestions** _(Sprint 4 — US-I)_: public `/commanders/[slug]/decks`, upvote/downvote, comments, "Community Favorite" badge
-- [ ] **Integration in Meta panel**: show community decks alongside tournament decks
+- [x] **Ratings, reviews and follows** _(done — PR #389)_: 1–5 stars with written reviews, quality badges, directed user follows
+- [x] **Community deck discovery** _(done — PR #396)_: public `/commanders/[slug]/decks`, up/down votes, "Community Favourite" badge. Before this **nothing listed public decks at all** — `/api/decks` never filtered on `isPublic`, so a shared deck was reachable only by its direct link. Votes are deliberately separate from stars: stars answer "how good is this deck", a vote answers "should this deck rank near the top", and only the vote score orders the listing
+- [x] **Integration in Meta panel** _(done — PR #396)_: the panel links through to the commander's community decks
+- [ ] **Deck comments**: a threaded comment stream. `DeckRating.title`/`body` already carries one written review per user per deck; a separate stream is its own feature, with its own moderation surface
+- [ ] **Denormalise the commander on `Deck`**: commander identity lives on the deck's _cards_, so `/api/community/commanders/[slug]/decks` cannot match the slug in SQL and slugs public decks in memory. Fine at current volume, not indefinitely
 
 ---
 

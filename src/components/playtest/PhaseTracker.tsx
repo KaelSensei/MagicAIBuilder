@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { ChevronRight, SkipForward } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { PHASES, type Phase } from "@/lib/playtest/engine";
@@ -10,29 +11,24 @@ interface PhaseTrackerProps {
   readonly onNextTurn: () => void;
 }
 
-const PHASE_LABELS: Record<Phase, string> = {
-  Untap: "Untap",
-  Upkeep: "Upkeep",
-  Draw: "Draw",
-  Main1: "Main 1",
-  Combat: "Combat",
-  Main2: "Main 2",
-  End: "End",
-};
-
 export function PhaseTracker({
   turn,
   phase,
   onNextPhase,
   onNextTurn,
 }: PhaseTrackerProps) {
+  const t = useTranslations("playtest");
+  // Phase names live in the catalog rather than a local map, so PhaseTracker
+  // and LifeTracker cannot drift apart — they each had their own copy.
+  const phaseLabel = (p: Phase) => t(`phases.${p}`);
+
   return (
     <div className="bg-[var(--surface)] rounded-xl p-4 space-y-3">
       {/* Turn badge */}
       <div className="flex items-center justify-between">
-        <h3 className="text-white font-bold text-lg">Turn {turn}</h3>
+        <h3 className="text-white font-bold text-lg">{t("turn", { turn })}</h3>
         <span className="text-xs text-white/40 bg-white/10 px-2 py-1 rounded">
-          {PHASE_LABELS[phase]}
+          {phaseLabel(phase)}
         </span>
       </div>
 
@@ -50,7 +46,7 @@ export function PhaseTracker({
                 : "bg-white/10 text-white/50"
             )}
           >
-            {PHASE_LABELS[p]}
+            {phaseLabel(p)}
           </span>
         ))}
       </div>
@@ -63,7 +59,7 @@ export function PhaseTracker({
           className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-sm font-medium transition-colors"
         >
           <ChevronRight size={16} />
-          Next Phase
+          {t("phaseTracker.nextPhase")}
         </button>
         <button
           type="button"
@@ -71,7 +67,7 @@ export function PhaseTracker({
           className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 rounded-lg text-sm font-medium transition-colors"
         >
           <SkipForward size={16} />
-          Next Turn
+          {t("phaseTracker.nextTurn")}
         </button>
       </div>
     </div>
