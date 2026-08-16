@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { CardTooltip } from "@/components/card/CardTooltip";
 import {
@@ -11,6 +11,19 @@ import {
 import { isCompanionOutsideColorIdentity } from "@/lib/deck/color-identity";
 import type { Deck } from "@/lib/deck/types";
 import { useDeckStore } from "@/lib/deck/store";
+
+/**
+ * Tag renderers for `t.rich`.
+ *
+ * Defined at module scope rather than inline: a renderer written in the render
+ * body is a new function identity on every render, and Sonar reads it as a
+ * component defined inside a component.
+ */
+const RICH_TAGS = {
+  strong: (chunks: ReactNode) => (
+    <span className="text-[var(--text-primary)] font-medium">{chunks}</span>
+  ),
+};
 
 interface CompanionZoneProps {
   readonly deck: Deck;
@@ -53,11 +66,7 @@ export function CompanionZone({ deck, deckViewMode }: CompanionZoneProps) {
         </p>
         <div className="rounded-lg border border-dashed border-[var(--border)] px-2 py-2">
           <p className="text-[10px] text-[var(--text-secondary)] leading-snug">
-            {t.rich("companion.emptyHint", {
-              strong: (chunks) => (
-                <span className="text-[var(--text-primary)] font-medium">{chunks}</span>
-              ),
-            })}
+            {t.rich("companion.emptyHint", RICH_TAGS)}
           </p>
         </div>
       </div>
