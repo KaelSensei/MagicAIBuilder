@@ -55,6 +55,14 @@ Then confirm SonarCloud reports **zero open issues**:
 
 `SKIP_E2E=1` bypasses the gate in an emergency. CI skips it too, having its own job.
 
+### The report has to leave the container
+
+The `e2e` service now bind-mounts `playwright-report/` and `test-results/`. Without them the report was written **inside** the container and destroyed by the `down -v` in the cleanup, so what remained on the host was whatever an older local run had left there. When this was found, the on-disk report was **six days old** while the script was telling the reader to check it for details of a run that had just failed.
+
+The reporter is `[["list"], ["html", { open: "never" }]]`. `html` alone writes nothing to stdout, so a container log showed a run failing without naming a single failing test — the detail existed only in the report that never escaped. `list` puts it in the log, which is the one place a reader always has.
+
+> **`retries` is 0 here.** `playwright.config.ts` sets `retries: process.env.CI ? 2 : 0`, and `CI` is not set inside the e2e container — nor does the GitHub workflow run e2e at all, so the retry setting has never applied anywhere. The gate that blocks pushes therefore runs in the least forgiving mode, with full parallelism. That is deliberate for now: adding retries would stop a known intermittent failure from blocking, which is the sort of quiet loosening this gate has already been fixed for twice. Fix the flake, do not pad the gate.
+
 ### Tests excluded from the blocking run
 
 | Tag         | Rationale                                                                                                                                                   |

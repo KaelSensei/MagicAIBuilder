@@ -97,7 +97,14 @@ export default async function LocaleLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${cinzelDeco.variable} ${inter.variable} antialiased min-h-screen bg-[var(--background)] text-[var(--text-primary)]`}
       >
-        <NextIntlClientProvider messages={messages}>
+        {/* `locale` is passed explicitly rather than left to be inferred from
+            the request context. next-intl can infer it, but only while that
+            context is available — which is not guaranteed during a partial or
+            streamed re-render, and the app has an intermittent
+            "context from NextIntlClientProvider was not found" on exactly that
+            path. This is hardening, not a proven fix: the flake has never been
+            reproduced deliberately. */}
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
         <SpeedInsights />
