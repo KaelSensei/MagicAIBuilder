@@ -7,7 +7,7 @@
  * Uses window.print() — user can "Save as PDF" via browser dialog.
  * Zero external dependencies.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Printer, Loader2, AlertCircle } from "lucide-react";
 import type { Deck } from "@/lib/deck/types";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/deck/proxy";
 import type { ProxyConfig, ProxySlot } from "@/lib/deck/proxy";
 import { buildProxyPrintDocumentHtml } from "@/lib/deck/proxy-print-html";
+import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 
 // ─── Image preloading ─────────────────────────────────────────────────────────
@@ -90,7 +91,20 @@ interface ProxyExportModalProps {
   readonly onClose: () => void;
 }
 
+/**
+ * Tag renderer for the summary line's emphasised page count.
+ *
+ * Module scope, not inline: a renderer created in the render body is a new
+ * function identity each pass and reads as a component defined in a component.
+ */
+const PROXY_RICH_TAGS = {
+  strong: (chunks: ReactNode) => (
+    <strong className="text-[var(--text-primary)]">{chunks}</strong>
+  ),
+};
+
 export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
+  const t = useTranslations("deck");
   const [config, setConfig] = useState<ProxyConfig>(DEFAULT_PROXY_CONFIG);
   const [imgState, setImgState] = useState<ImageState | null>(null);
   const [isPreparing, setIsPreparing] = useState(false);
@@ -200,7 +214,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
           <div className="flex items-center justify-between">
             <Dialog.Title className="text-base font-semibold text-[var(--text-primary)] flex items-center gap-2">
               <Printer className="w-4 h-4 text-[var(--accent)]" />
-              Export Proxy Sheets
+              {t("proxy.title")}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -212,7 +226,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
             </Dialog.Close>
           </div>
           <Dialog.Description className="sr-only">
-            Configure and print proxy cards for your deck.
+            {t("proxy.description")}
           </Dialog.Description>
 
           {/* Config */}
@@ -220,7 +234,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
             {/* Paper */}
             <div className="flex items-center gap-3">
               <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">
-                Paper
+                {t("proxy.paper")}
               </span>
               <div className="flex gap-1.5">
                 {(["a4", "letter"] as const).map((p) => (
@@ -244,7 +258,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
             {/* Layout */}
             <div className="flex items-center gap-3">
               <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">
-                Layout
+                {t("proxy.layout")}
               </span>
               <div className="flex gap-1.5">
                 {(["3x3", "2x2"] as const).map((l) => (
@@ -268,7 +282,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
             {/* Quality — only affects Scryfall image size when card art is on */}
             <div className="flex items-center gap-3">
               <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">
-                Quality
+                {t("proxy.quality")}
               </span>
               <div className="flex gap-1.5">
                 {(["standard", "high"] as const).map((q) => (
@@ -285,7 +299,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                         : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                     )}
                   >
-                    {q === "standard" ? "Standard" : "High"}
+                    {t(`proxy.qualityOption.${q}`)}
                   </button>
                 ))}
               </div>
@@ -294,7 +308,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
             {/* Card art vs text-only (no preload for text-only) */}
             <div className="flex items-center gap-3">
               <span className="text-xs text-[var(--text-secondary)] w-20 shrink-0">
-                Content
+                {t("proxy.content")}
               </span>
               <div className="flex gap-1.5 flex-wrap">
                 <button
@@ -309,7 +323,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                       : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                   )}
                 >
-                  Card art
+                  {t("proxy.cardArt")}
                 </button>
                 <button
                   type="button"
@@ -323,7 +337,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                       : "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
                   )}
                 >
-                  Text only
+                  {t("proxy.textOnly")}
                 </button>
               </div>
             </div>
@@ -332,10 +346,10 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
             <div className="flex items-center gap-6">
               {(
                 [
-                  { key: "includeLands", label: "Include basics" },
-                  { key: "includeCommander", label: "Include commander" },
+                  { key: "includeLands", labelKey: "proxy.includeBasics" },
+                  { key: "includeCommander", labelKey: "proxy.includeCommander" },
                 ] as const
-              ).map(({ key, label }) => (
+              ).map(({ key, labelKey }) => (
                 <label
                   key={key}
                   className="flex items-center gap-2 cursor-pointer"
@@ -349,7 +363,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                     className="w-3.5 h-3.5 accent-[var(--accent)]"
                   />
                   <span className="text-xs text-[var(--text-secondary)]">
-                    {label}
+                    {t(labelKey)}
                   </span>
                 </label>
               ))}
@@ -359,14 +373,15 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
           {/* Summary */}
           <div className="rounded-lg bg-[var(--background)] border border-[var(--border)] px-4 py-3 text-xs text-[var(--text-secondary)] flex items-center justify-between">
             <span>
-              {slots.length} cards →{" "}
-              <strong className="text-[var(--text-primary)]">
-                {pageCount} page{pageCount === 1 ? "" : "s"}
-              </strong>{" "}
-              ({config.layout} layout)
+              {t.rich("proxy.summary", {
+                cards: slots.length,
+                pages: pageCount,
+                layout: config.layout,
+                strong: PROXY_RICH_TAGS.strong,
+              })}
             </span>
             {slots.length === 0 && (
-              <span className="text-amber-400">No cards to print</span>
+              <span className="text-amber-400">{t("proxy.noCards")}</span>
             )}
           </div>
 
@@ -375,13 +390,14 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
                 <span>
-                  Loading images… {imgState.loaded}/{imgState.total}
+                  {t("proxy.loadingImages", {
+                    loaded: imgState.loaded,
+                    total: imgState.total,
+                  })}
                 </span>
                 {imgState.failed.size > 0 && (
                   <span className="text-amber-400">
-                    {imgState.failed.size} image
-                    {imgState.failed.size === 1 ? "" : "s"} failed — text
-                    fallback used
+                    {t("proxy.imagesFailed", { count: imgState.failed.size })}
                   </span>
                 )}
               </div>
@@ -424,10 +440,10 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
               {isPreparing ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Loading…
+                  {t("proxy.loading")}
                 </>
               ) : (
-                "Preload Images"
+                t("proxy.preload")
               )}
             </button>
             <button
@@ -442,14 +458,12 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
               )}
             >
               <Printer className="w-3.5 h-3.5" />
-              Print / Save PDF
+              {t("proxy.print")}
             </button>
           </div>
 
           <p className="text-[10px] text-[var(--text-secondary)] text-center">
-            {config.includeCardArt
-              ? "Preload images first, then print. Choose &ldquo;Save as PDF&rdquo; in the dialog. Desktop recommended."
-              : "No images — opens print immediately with name, type, and rules text. Choose &ldquo;Save as PDF&rdquo; in the dialog."}
+            {config.includeCardArt ? t("proxy.hintArt") : t("proxy.hintTextOnly")}
           </p>
         </Dialog.Content>
       </Dialog.Portal>
