@@ -62,5 +62,14 @@
     "cardCount": "{count, plural, one {# carte} other {# cartes}}",
     "restoreToHand": "Remettre en main",
     "play": "Jouer"
+  },
+  "recordResult": "Comment ça s'est passé ?",
+  "recording": "Enregistrement…",
+  "recordFailed": "Enregistrement impossible",
+  "skipRecording": "Passer",
+  "result": {
+    "win": "Victoire",
+    "loss": "Défaite",
+    "draw": "Égalité"
   }
 }
