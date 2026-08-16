@@ -47,6 +47,12 @@ Then confirm SonarCloud reports **zero open issues**:
 
 > `pnpm sonar` does **not** regenerate coverage. Run `pnpm test:coverage` first, or the quality gate reads a stale `lcov` file.
 
+### Branch protection the settings cannot express
+
+`delete_branch_on_merge` was enabled once and had to be reverted within minutes. It deletes the PR's **head** branch, and on a promotion PR (`staging` → `dev`) the head is `staging`. Merging the first promotion after enabling it deleted `staging` from the remote. It was restored from `dev`, which carried the same commit, so nothing was lost — but the setting cannot distinguish a throwaway feature branch from a permanent one.
+
+`scripts/git-prune.sh` is the right tool: it carries an explicit protected list (`main master develop dev staging production`) and only removes what is not on it.
+
 ### The scan must fail, not skip
 
 `sonar.yml` carried `if: env.SONAR_TOKEN != ''` on the scan step. With no secret set, the step was skipped and **the job still reported success** — so every PR displayed a green SonarCloud check while nothing was analysed, and the "open issues = 0" line in the checklist above was reading a months-old snapshot rather than the code under review. Thirteen batches shipped in one day under that green tick; the first real analysis afterwards found five issues, all in that day's code.
