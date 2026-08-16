@@ -14,5 +14,53 @@
   "mulligan": "Mulligan",
   "mulliganDown": "to {count}",
   "restart": "Restart",
-  "gameOver": "Game over"
+  "gameOver": "Game over",
+  "phases": {
+    "Untap": "Untap",
+    "Upkeep": "Upkeep",
+    "Draw": "Draw",
+    "Main1": "Main 1",
+    "Combat": "Combat",
+    "Main2": "Main 2",
+    "End": "End"
+  },
+  "phaseTracker": {
+    "nextPhase": "Next phase",
+    "nextTurn": "Next turn"
+  },
+  "life": {
+    "total": "Life total",
+    "customPlaceholder": "+/- amount",
+    "apply": "Apply",
+    "undo": "Undo last action",
+    "history": "History"
+  },
+  "hand": {
+    "count": "Hand: {count} cards",
+    "deckCount": "Deck: {count}",
+    "emptyDeck": "Deck empty",
+    "draw": "Draw card",
+    "showCards": "Show cards",
+    "cardBack": "Card back",
+    "toBattlefield": "To battlefield",
+    "toGraveyard": "To graveyard"
+  },
+  "battlefield": {
+    "title": "Battlefield ({count})",
+    "empty": "No permanents in play",
+    "tap": "Tap",
+    "untap": "Untap",
+    "addCounter": "Add a counter",
+    "removeCounter": "Remove a counter",
+    "remove": "Remove"
+  },
+  "graveyard": {
+    "graveyard": "Graveyard",
+    "exile": "Exile",
+    "graveyardEmpty": "Graveyard is empty",
+    "exileEmpty": "Exile is empty",
+    "cardCount": "{count, plural, one {# card} other {# cards}}",
+    "restoreToHand": "Restore to hand",
+    "play": "Play"
+  }
 }

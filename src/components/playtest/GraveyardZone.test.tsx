@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { GraveyardZone } from "./GraveyardZone";
 import type { DeckCard } from "@/lib/deck/types";
 
@@ -20,24 +21,24 @@ describe("GraveyardZone", () => {
   };
 
   it("displays graveyard count", () => {
-    render(<GraveyardZone {...defaultProps} />);
+    renderWithIntl(<GraveyardZone {...defaultProps} />);
     expect(screen.getByText(/graveyard: 2/i)).toBeDefined();
   });
 
   it("displays exile count", () => {
-    render(<GraveyardZone {...defaultProps} />);
+    renderWithIntl(<GraveyardZone {...defaultProps} />);
     expect(screen.getByText(/exile: 1/i)).toBeDefined();
   });
 
   it("shows cards in graveyard on expand", () => {
-    render(<GraveyardZone {...defaultProps} />);
+    renderWithIntl(<GraveyardZone {...defaultProps} />);
     const expandBtn = screen.getByRole("button", { name: /graveyard/i });
     fireEvent.click(expandBtn);
     expect(screen.getByText("Dead Creature")).toBeDefined();
   });
 
   it("shows 'Restore to hand' option when graveyard card is clicked", () => {
-    render(<GraveyardZone {...defaultProps} />);
+    renderWithIntl(<GraveyardZone {...defaultProps} />);
     const expandBtn = screen.getByRole("button", { name: /graveyard/i });
     fireEvent.click(expandBtn);
     const restoreBtn = screen.getAllByRole("button", { name: /restore to hand/i });
@@ -46,7 +47,7 @@ describe("GraveyardZone", () => {
 
   it("calls onRestore with correct args when restoring to hand", () => {
     const onRestore = vi.fn();
-    render(<GraveyardZone {...defaultProps} onRestore={onRestore} />);
+    renderWithIntl(<GraveyardZone {...defaultProps} onRestore={onRestore} />);
     const expandBtn = screen.getByRole("button", { name: /graveyard/i });
     fireEvent.click(expandBtn);
     // Cards are reversed (newest on top), so g2 is first
@@ -56,7 +57,7 @@ describe("GraveyardZone", () => {
   });
 
   it("shows empty graveyard message when graveyard is empty", () => {
-    render(<GraveyardZone {...defaultProps} graveyard={[]} />);
+    renderWithIntl(<GraveyardZone {...defaultProps} graveyard={[]} />);
     const expandBtn = screen.getByRole("button", { name: /graveyard/i });
     fireEvent.click(expandBtn);
     expect(screen.getByText(/graveyard is empty/i)).toBeDefined();
