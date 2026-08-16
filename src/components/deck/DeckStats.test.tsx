@@ -7,6 +7,7 @@ import type { DeckStats as DeckStatsData } from "@/lib/deck/types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import type { FormatStats } from "@/lib/deck/format-stats";
 import type { ManaAlignment } from "@/lib/deck/mana-alignment";
+import type { TurnOnePlayability } from "@/lib/deck/turn-one";
 
 // Pulls live price from the store; irrelevant to what is asserted here.
 vi.mock("./DeckPriceDisplay", () => ({ DeckPriceDisplay: () => null }));
@@ -70,6 +71,7 @@ function makeStats(overrides: Partial<DeckStatsData> = {}): DeckStatsData {
     flexibleLands: 0,
     formatStats: null,
     manaAlignment: null,
+    turnOnePlayability: null,
     ...overrides,
   };
 }
@@ -209,6 +211,48 @@ describe("DeckStats", () => {
     it("omits the colourless row when every land makes coloured mana", () => {
       renderStats(makeStats({ manaAlignment: makeAlignment({ colorlessSources: 0 }) }));
       expect(screen.queryByText("Colourless only")).toBeNull();
+    });
+  });
+
+  describe("turn 1 playability", () => {
+    function makePlayability(
+      overrides: Partial<TurnOnePlayability> = {}
+    ): TurnOnePlayability {
+      return {
+        anyPlay: 0.62,
+        byColor: [{ color: "G", spells: 8, sources: 24, probability: 0.51 }],
+        oneDrops: 8,
+        lands: 24,
+        deckSize: 60,
+        ...overrides,
+      };
+    }
+
+    it("stays hidden when the deck has no one-drops", () => {
+      renderStats(makeStats({ turnOnePlayability: null }));
+      expect(screen.queryByText("Turn 1 Playability")).toBeNull();
+    });
+
+    it("shows the colour-blind chance as a whole percentage", () => {
+      renderStats(makeStats({ turnOnePlayability: makePlayability() }));
+      expect(screen.getByText("62%")).toBeDefined();
+    });
+
+    it("names the colour on each per-colour row", () => {
+      renderStats(makeStats({ turnOnePlayability: makePlayability() }));
+      expect(screen.getByText("Green one-drop")).toBeDefined();
+    });
+
+    it("counts the one-drops in the footnote, pluralised", () => {
+      renderStats(makeStats({ turnOnePlayability: makePlayability({ oneDrops: 1 }) }));
+      expect(screen.getByText(/1 one-mana spell\./)).toBeDefined();
+    });
+
+    it("renders no colour rows for a deck of colourless one-drops", () => {
+      renderStats(makeStats({ turnOnePlayability: makePlayability({ byColor: [] }) }));
+      // Anchored to a colour name: "Any one-drop" is the headline, not a row.
+      expect(screen.queryByText(/^(White|Blue|Black|Red|Green) one-drop$/)).toBeNull();
+      expect(screen.getByText("Any one-drop")).toBeDefined();
     });
   });
 });

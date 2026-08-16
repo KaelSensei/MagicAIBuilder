@@ -677,6 +677,42 @@ Scryfall's `produced_mana` is **not stored anywhere** in this codebase — not o
 
 ---
 
+## Turn-One Playability
+
+A low curve looks healthy in `manaCurve`, and a solid land count looks healthy in the stats panel, but neither says whether the two arrive **together**. `src/lib/deck/turn-one.ts` answers that as a probability over the opening seven.
+
+### The maths
+
+`chanceOfBoth(deckSize, groupA, groupB, handSize)` is exact, not sampled — inclusion–exclusion on the complements:
+
+```
+P(both) = 1 − P(no A) − P(no B) + P(neither)
+```
+
+with each term a hypergeometric ratio of binomials. The two groups **must be disjoint**, which they always are here: lands versus spells, or sources versus the spells they cast.
+
+`binomial(n, k)` multiplies and divides in alternation so the running value stays small — the factorials themselves overflow a double long before a 100-card deck. Edge cases are handled explicitly: a hand larger than the deck is capped to the deck (you simply draw all of it), and an empty group short-circuits to 0 rather than dividing by zero.
+
+### Two figures, deliberately not merged
+
+| Figure    | Meaning                                                               |
+| --------- | --------------------------------------------------------------------- |
+| `anyPlay` | A land plus a one-drop, ignoring colour                               |
+| `byColor` | A **matching source** plus a one-drop of that colour — the truer read |
+
+They are never combined into a single number. The per-colour events overlap — one hand can satisfy green and blue at once — so summing the rows would double-count. Each row is exact on its own terms; the _gap_ between `anyPlay` and the colour rows is itself the signal, since a wide gap means the mana, not the curve, is what stops the deck acting.
+
+A hybrid one-drop is counted for **every** colour on its cost, since either will cast it. That is the other reason the rows overlap.
+
+### Scoping details that matter
+
+- **Library only.** `computeDeckStats` passes `mainCards`, not `allCards`: the commander is cast from the command zone and is never drawn, so including it would both inflate the deck size and add a card that cannot appear in an opening hand.
+- **Lands are never one-drops.** A land is played, not cast, so `card.cmc === 1` is filtered by `category !== "land"` first. Some lands do carry a non-zero mana value.
+
+> The model is the **opening hand only** — no mulligans, no scry, no cantrips, no mana cheating. It is a floor, not a forecast.
+
+---
+
 ## Playtest Engine
 
 `src/lib/playtest/` is a pure state machine with no framework dependency, wrapped by a Zustand store and rendered by the components in `src/components/playtest/`.

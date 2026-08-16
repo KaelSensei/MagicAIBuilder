@@ -151,6 +151,23 @@ Two things the panel does **not** know:
 
 Treat a warning as a reason to look at the mana base, not as a verdict on it.
 
+### Turn 1 Playability
+
+A cheap curve and a healthy land count each look fine on their own. This panel asks the harder question: how often do they turn up **in the same opening hand**?
+
+- **Any one-drop** — the chance your opening seven holds a land and a one-mana spell, whatever their colours.
+- **One row per colour** — the same chance, but requiring a land that actually produces that colour. These read lower, and they are the honest number.
+
+The gap between the two lines is the useful part. If "Any one-drop" is high but the colour rows are much lower, the problem is your mana, not your curve — you are drawing the spell and the land, and they do not match.
+
+The figures are computed exactly, not simulated, so they do not wobble between visits.
+
+What the panel assumes:
+
+- **Your opening seven, and nothing else.** No mulligans, no scrying, no cantrips, no rituals or mana creatures. Real games give you more outs than this, so treat the number as a floor.
+- **Your commander is not counted.** It waits in the command zone and is never drawn, so it neither fills a slot in your library nor helps you act on turn one.
+- **Hybrid one-drops count for both colours**, since either will cast them. That is why the colour rows can add up to more than 100% — they overlap on purpose.
+
 These bands are **guidance, not rules** — a deliberate combo deck can sit far outside them and still be excellent. Treat an out-of-range reading as a reason to look, not a verdict.
 
 ### Playtesting a Deck

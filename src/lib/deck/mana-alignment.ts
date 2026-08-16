@@ -30,7 +30,7 @@ import type { DeckCard } from "./types";
 export type PipColor = "W" | "U" | "B" | "R" | "G";
 
 /** Canonical WUBRG ordering, used for every colour list this module returns. */
-const PIP_COLORS: readonly PipColor[] = ["W", "U", "B", "R", "G"];
+export const PIP_COLORS: readonly PipColor[] = ["W", "U", "B", "R", "G"];
 
 /** Basic land subtype to the colour it taps for. */
 const SUBTYPE_COLORS: ReadonlyMap<string, PipColor> = new Map([

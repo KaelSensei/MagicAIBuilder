@@ -51,6 +51,7 @@ function makeStats(overrides: Partial<DeckStats> = {}): DeckStats {
     // Commander is graded by bracket scoring, not format stats.
     formatStats: null,
     manaAlignment: null,
+    turnOnePlayability: null,
     ...overrides,
   };
 }

@@ -102,7 +102,11 @@
       "B": "Black",
       "R": "Red",
       "G": "Green"
-    }
+    },
+    "turnOne": "Turn 1 Playability",
+    "turnOneAny": "Any one-drop",
+    "turnOneColor": "{color} one-drop",
+    "turnOneHint": "{oneDrops, plural, one {# one-mana spell} other {# one-mana spells}}. Opening seven only — no mulligans, no cantrips."
   },
   "ai": {
     "title": "AI Suggestions",
