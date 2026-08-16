@@ -168,6 +168,16 @@ What the panel assumes:
 - **Your commander is not counted.** It waits in the command zone and is never drawn, so it neither fills a slot in your library nor helps you act on turn one.
 - **Hybrid one-drops count for both colours**, since either will cast them. That is why the colour rows can add up to more than 100% — they overlap on purpose.
 
+### Cards in Your Language
+
+When you open the printing selector, the app looks for printings of that card in your interface language and shows the name, type line and rules text as they are actually printed on the card.
+
+- **Not every card exists in every language.** Older and supplemental sets are English-only. When there is no printing in your language, you get the English one — you will not get an error or an empty panel.
+- **Partial translations are handled.** Some printings carry a translated name but no translated rules text. You get the translated name and the English rules, rather than a blank box.
+- **Picking a printing changes the text.** The panel follows whichever printing you have selected, so you can compare languages by clicking between them.
+
+**Card names stay English everywhere else** — in search, in your deck lists, and in imports and exports. This is deliberate: deck lists need to stay portable between tools, and searching for a card by its English name has to keep working whatever your interface language is.
+
 These bands are **guidance, not rules** — a deliberate combo deck can sit far outside them and still be excellent. Treat an out-of-range reading as a reason to look, not a verdict.
 
 ### Playtesting a Deck

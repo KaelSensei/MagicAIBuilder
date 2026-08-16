@@ -246,15 +246,33 @@ export async function getCommanderBanlist(): Promise<ScryfallSearchResponse> {
   return searchCards("banned:commander");
 }
 
-/** Fetch all printings of a card by exact name (unique=prints) */
-export async function searchCardPrintings(cardName: string): Promise<ScryfallSearchResponse> {
+/**
+ * Fetch all printings of a card by exact name (unique=prints).
+ *
+ * Passing a non-English `lang` asks Scryfall for that language's printings.
+ * Scryfall hides non-English cards from search unless `include_multilingual` is
+ * set, so the flag and the filter travel together — sending `lang:fr` alone
+ * returns nothing at all, which reads as "no French printing exists" rather
+ * than as the mistake it is.
+ *
+ * @param cardName - exact English card name
+ * @param lang - Scryfall language code; omit or pass "en" for English printings
+ * @returns the printings, newest first
+ */
+export async function searchCardPrintings(
+  cardName: string,
+  lang?: string
+): Promise<ScryfallSearchResponse> {
+  const wantsTranslation = lang !== undefined && lang !== "en";
   const params = new URLSearchParams({
     // Do NOT filter by legality here: banned cards still have many printings/arts (e.g. Black Lotus).
-    q: `!"${cardName}" game:paper`,
+    q: `!"${cardName}" game:paper${wantsTranslation ? ` lang:${lang}` : ""}`,
     unique: "prints",
     order: "released",
     dir: "desc",
   });
+  if (wantsTranslation) params.set("include_multilingual", "true");
+
   const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/search?${params}`);
   return handleResponse<ScryfallSearchResponse>(response);
 }

@@ -8,6 +8,7 @@
   "banned": "Bannie",
   "moveNamedToMaybeboard": "Déplacer {name} vers À l'étude",
   "removeNamed": "Retirer {name}",
+  "noText": "Aucun texte",
   "noCardsFound": "Aucune carte trouvée",
   "loadingPrintings": "Chargement des éditions…",
   "printingsAvailable": "{count, plural, one {# édition disponible} other {# éditions disponibles}}",
