@@ -9,6 +9,31 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-16 (evening): Release batch #428–#447 — honest gates and the deck cluster
+
+#### Fixed
+
+- `fix(ci): make the SonarCloud scan fail rather than skip (#442)` — the scan step carried `if: env.SONAR_TOKEN != ''`. With no secret set it was **skipped while the job still reported success**, so every PR showed a green SonarCloud check with nothing analysed and the "open issues = 0" checklist line read a months-old snapshot. **Thirteen batches shipped in one day under that tick.** Fork PRs are handled separately — GitHub withholds secrets from forks by design, so those emit a `::warning::` rather than failing a contributor for something they cannot fix.
+- `fix(e2e): let the report leave the container (#436)` — the `e2e` service mounted nothing, so the Playwright report was written inside it and destroyed by the cleanup. The host copy was **six days old** while the script said "Check playwright-report/ for details". Also switched the reporter to `[list, html]`: `html` alone writes nothing to stdout, so a failing run named no failing test anywhere a reader could see.
+- The builder's back arrow was an icon-only link with **no accessible name**, and `a[href$="/decks"]` matched the header nav link first — so the e2e test named _back navigation returns to home_ never touched the back arrow (#436).
+- Card prices come from Scryfall's `prices.usd`, but the budget modal, pricing shopping list and CSV export printed a **euro sign**. A "€50" budget was really $50, and exports named a currency the numbers were never in (#433).
+- The shopping-list CSV **dropped cards with no known price** — `getCardsSortedByPrice` filters them by design, right for a sorted view, wrong for a list of what to buy (#433).
+- Five SonarCloud issues, the first ever raised against this project's real code, all written the same day: a `t.rich` renderer read as a nested component, nested template literals, a missing optional chain, and two `waitFor` + `getByText` pairs (#439).
+
+#### Added
+
+- i18n extraction of the deck cluster: stats panels (#428), budget and shopping-list modals (#433), bracket indicator and buy list (#439), proxy export (#445).
+
+#### Changed
+
+- `SONAR_TOKEN` now exists as a repository secret. The local gitignored `.env.sonar` drives `pnpm sonar` only — **a local file does nothing for CI**, which is what made this easy to miss for so long.
+- Three `setRequestLocale` / `requestLocale` deprecation warnings marked **accepted** in SonarCloud with the reason recorded: the replacement `next/root-params` exports `unstable_rootParams` and ships a stub `.d.ts` in Next 15.5.22. Reversible; revisit when it stabilises.
+- Promotions now use `gh pr merge --rebase`. Merge commits are created _on the target_, so `staging` drifted to **26 commits behind `main` with zero files different**. `delete_branch_on_merge` enabled on the repository.
+
+#### Notes
+
+- The intermittent e2e navigation failure is **still open**, but no longer invisible: it took three push attempts to land #436, and the now-readable report named the failing specs. Two hypotheses ruled out and written into `quality-gate.md`.
+
 ### 2026-08-16: Release batch #409–#421 — deck analytics and localised cards
 
 #### Added
