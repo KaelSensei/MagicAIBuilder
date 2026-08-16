@@ -55,8 +55,11 @@ test.describe("Deck Builder Flow", () => {
   test("back navigation returns to home", async ({ page }) => {
     await openBuilder(page);
 
-    // Click back arrow (links carry the locale prefix, e.g. /en/decks)
-    await page.locator('a[href$="/decks"]').first().click();
+    // Target the back arrow by its accessible name. `a[href$="/decks"]` also
+    // matches the header's "My Decks" nav link, which comes first in DOM order,
+    // so `.first()` clicked that instead — this test never exercised the back
+    // arrow it is named after.
+    await page.getByRole("link", { name: "Back to my decks" }).click();
     await expect(page).toHaveURL(/\/decks$/);
     await expect(page.getByRole("heading", { name: "My Decks" })).toBeVisible();
   });
