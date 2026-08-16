@@ -1,0 +1,24 @@
+{
+  "turnOver": "Turn over",
+  "showFront": "Show front: {name}",
+  "turnOverTo": "Turn over: {name}",
+  "flexibleLand": "Flexible land (MDFC)",
+  "doubleFaced": "Double-faced card",
+  "gameChanger": "Game Changer",
+  "banned": "Banned",
+  "moveNamedToMaybeboard": "Move {name} to Considering",
+  "removeNamed": "Remove {name}",
+  "noCardsFound": "No cards found",
+  "loadingPrintings": "Loading printings…",
+  "printingsAvailable": "{count, plural, one {# printing available} other {# printings available}}",
+  "note": {
+    "add": "Add note",
+    "edit": "Edit note",
+    "editor": "Card note editor",
+    "placeholder": "Add a private note for this card…"
+  },
+  "favorite": {
+    "add": "Add to favorites",
+    "remove": "Remove from favorites"
+  }
+}

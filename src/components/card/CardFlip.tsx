@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { RefreshCw } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { CardFace } from "@/lib/deck/types";
@@ -105,6 +106,7 @@ export function CardFlip({
   className,
   onClick,
 }: CardFlipProps) {
+  const t = useTranslations("card");
   const [isFlipped, setIsFlipped] = useState(false);
   const flip = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -154,7 +156,7 @@ export function CardFlip({
             ? "bg-emerald-600/80 text-white"
             : "bg-black/60 text-white/90",
         )}
-        title={isFlexibleLand ? "Flexible land (MDFC)" : "Double-faced card"}
+        title={isFlexibleLand ? t("flexibleLand") : t("doubleFaced")}
       >
         {isFlexibleLand ? "△▽ LAND" : "△▽"}
       </div>

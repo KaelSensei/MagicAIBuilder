@@ -1,5 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { X, AlertTriangle, Zap, Bookmark, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/components/ui/utils";
@@ -23,14 +24,17 @@ function TurnOverButton({
   readonly backName: string;
   readonly onFlip: (e: React.MouseEvent) => void;
 }) {
+  const t = useTranslations("card");
+  const label = isFlipped
+    ? t("showFront", { name: frontName })
+    : t("turnOverTo", { name: backName });
+
   return (
     <button
       type="button"
       onClick={onFlip}
-      aria-label={
-        isFlipped ? `Show front: ${frontName}` : `Turn over: ${backName}`
-      }
-      title={isFlipped ? `Show front: ${frontName}` : `Turn over: ${backName}`}
+      aria-label={label}
+      title={label}
       className={cn(
         "shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors text-[10px] leading-none opacity-0 group-hover:opacity-100"
       )}
@@ -41,11 +45,13 @@ function TurnOverButton({
           isFlipped && "rotate-180"
         )}
       />
-      <span>Turn Over</span>
+      <span>{t("turnOver")}</span>
     </button>
   );
 }
 function DfcBadge({ isFlexibleLand }: { readonly isFlexibleLand: boolean }) {
+  const t = useTranslations("card");
+
   return (
     <span
       className={cn(
@@ -54,7 +60,7 @@ function DfcBadge({ isFlexibleLand }: { readonly isFlexibleLand: boolean }) {
           ? "bg-emerald-600/20 text-emerald-400"
           : "bg-[var(--surface-hover)] text-[var(--text-secondary)]"
       )}
-      title={isFlexibleLand ? "Flexible land (MDFC)" : "Double-faced card"}
+      title={isFlexibleLand ? t("flexibleLand") : t("doubleFaced")}
     >
       {isFlexibleLand ? "△▽ LAND" : "△▽"}
     </span>
@@ -67,6 +73,8 @@ export function CardListItem({
   className,
   showNotes: _showNotes,
 }: CardListItemProps) {
+  const t = useTranslations("card");
+  const tBuilder = useTranslations("builder");
   const [isFlipped, setIsFlipped] = useState(false);
   const isDfc = Boolean(card.cardFaces);
   const activeName =
@@ -106,12 +114,12 @@ export function CardListItem({
           </span>
         )}
         {card.isGameChanger && (
-          <span title="Game Changer">
+          <span title={t("gameChanger")}>
             <Zap className="w-3 h-3 text-amber-400" />
           </span>
         )}
         {card.isBanned && (
-          <span title="Banned">
+          <span title={t("banned")}>
             <AlertTriangle className="w-3 h-3 text-red-500" />
           </span>
         )}
@@ -128,8 +136,8 @@ export function CardListItem({
             type="button"
             onClick={() => onMoveToMaybeboard(card.id)}
             className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-0.5 rounded hover:bg-amber-500/20 text-[var(--text-secondary)] hover:text-amber-400"
-            aria-label={`Move ${card.name} to Maybeboard`}
-            title="Move to Maybeboard"
+            aria-label={t("moveNamedToMaybeboard", { name: card.name })}
+            title={tBuilder("zoneMoveTargets.toMaybeboard")}
           >
             <Bookmark className="w-3 h-3" />
           </button>
@@ -139,7 +147,7 @@ export function CardListItem({
             type="button"
             onClick={() => onRemove(card.id)}
             className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
-            aria-label={`Remove ${card.name}`}
+            aria-label={t("removeNamed", { name: card.name })}
           >
             <X className="w-3 h-3" />
           </button>

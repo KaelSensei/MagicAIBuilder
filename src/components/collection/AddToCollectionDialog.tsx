@@ -1,6 +1,7 @@
 "use client";
 // Dialog for adding a card to the collection via search
 import { useState, useCallback, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, Search, Loader2, Check } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { CardCondition } from "@/lib/collection/types";
@@ -12,6 +13,7 @@ import { cn } from "@/components/ui/utils";
 const CONDITIONS: readonly CardCondition[] = ["NM", "LP", "MP", "HP", "DMG"];
 
 export function AddToCollectionDialog() {
+  const t = useTranslations("collection.dialog");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ScryfallCard[]>([]);
@@ -94,14 +96,14 @@ export function AddToCollectionDialog() {
         className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-1.5 rounded transition-colors"
       >
         <Plus className="w-3.5 h-3.5" />
-        Add Card
+        {t("trigger")}
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
             <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
-              Add to Collection
+              {t("title")}
             </h2>
 
             {/* Card search */}
@@ -110,7 +112,7 @@ export function AddToCollectionDialog() {
               <input
                 type="text"
                 autoFocus
-                placeholder="Search for a card…"
+                placeholder={t("searchPlaceholder")}
                 value={query}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 text-sm bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] outline-none focus:border-[var(--accent)] placeholder:text-[var(--text-secondary)]"
@@ -151,7 +153,7 @@ export function AddToCollectionDialog() {
                 {/* Quantity */}
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-[var(--text-secondary)] w-20">
-                    Quantity
+                    {t("quantity")}
                   </span>
                   <div className="flex items-center gap-2">
                     <button
@@ -177,7 +179,7 @@ export function AddToCollectionDialog() {
                 {/* Condition */}
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-[var(--text-secondary)] w-20">
-                    Condition
+                    {t("condition")}
                   </span>
                   <div className="flex gap-1">
                     {CONDITIONS.map((c) => (
@@ -201,7 +203,7 @@ export function AddToCollectionDialog() {
                 {/* Foil */}
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-[var(--text-secondary)] w-20">
-                    Foil
+                    {t("foilLabel")}
                   </span>
                   <button
                     type="button"
@@ -213,7 +215,7 @@ export function AddToCollectionDialog() {
                         : "border-[var(--border)] text-[var(--text-secondary)] hover:border-purple-500/50"
                     )}
                   >
-                    ✨ {foil ? "Foil" : "Non-Foil"}
+                    ✨ {foil ? t("foil") : t("nonFoil")}
                   </button>
                 </div>
               </div>
@@ -226,7 +228,7 @@ export function AddToCollectionDialog() {
                 onClick={handleClose}
                 className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 type="button"
@@ -254,7 +256,7 @@ export function AddToCollectionDialog() {
                 {!added && !isSyncing && (
                   <>
                     <Plus className="w-3.5 h-3.5" />
-                    Add to Collection
+                    {t("submit")}
                   </>
                 )}
               </button>

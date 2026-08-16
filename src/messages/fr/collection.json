@@ -35,5 +35,29 @@
     "condition": "État",
     "value": "Valeur"
   },
-  "foilBadge": "Foil"
+  "foilBadge": "Foil",
+  "quickAdd": {
+    "add": "Ajouter à la collection",
+    "added": "Ajouté !",
+    "owned": "{count, plural, one {Tu possèdes # exemplaire} other {Tu possèdes # exemplaires}}"
+  },
+  "ownership": {
+    "owned": "Possédée",
+    "ownedCount": "Possédée (×{count})",
+    "buy": "Acheter",
+    "notOwned": "Absente de ta collection — à acheter",
+    "inCollection": "En collection ×{count}"
+  },
+  "dialog": {
+    "trigger": "Ajouter une carte",
+    "title": "Ajouter à la collection",
+    "searchPlaceholder": "Rechercher une carte…",
+    "quantity": "Quantité",
+    "condition": "État",
+    "foilLabel": "Foil",
+    "foil": "Foil",
+    "nonFoil": "Non-foil",
+    "cancel": "Annuler",
+    "submit": "Ajouter à la collection"
+  }
 }

@@ -4,6 +4,7 @@
  * Shows a "+" when card is not owned, "Owned" when it is.
  */
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useCollectionStore } from "@/lib/collection/store";
@@ -19,6 +20,7 @@ export function QuickAddCollectionButton({
   card,
   className,
 }: QuickAddCollectionButtonProps) {
+  const t = useTranslations("collection.quickAdd");
   const { data: session } = useSession();
   const getTotalOwned = useCollectionStore((s) => s.getTotalOwned);
   const addToCollection = useCollectionStore((s) => s.addToCollection);
@@ -51,10 +53,10 @@ export function QuickAddCollectionButton({
           "inline-flex items-center gap-0.5 text-[10px] font-medium text-green-400 bg-green-400/15 border border-green-400/30 rounded px-1.5 py-0.5",
           className
         )}
-        title={`You own ${owned} cop${owned === 1 ? "y" : "ies"}`}
+        title={t("owned", { count: owned })}
       >
         <Check className="w-2.5 h-2.5" />
-        {justAdded ? "Added!" : owned}
+        {justAdded ? t("added") : owned}
       </span>
     );
   }
@@ -67,7 +69,7 @@ export function QuickAddCollectionButton({
         "inline-flex items-center gap-0.5 text-[10px] font-medium text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded px-1.5 py-0.5 hover:bg-[var(--accent)]/20 transition-colors",
         className
       )}
-      title="Add to collection"
+      title={t("add")}
     >
       <Plus className="w-2.5 h-2.5" />
       Own
