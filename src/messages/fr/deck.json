@@ -123,6 +123,32 @@
     "gcForcesBracket": "→ Bracket {bracket} minimum",
     "andMore": "+{count} de plus"
   },
+  "budget": {
+    "title": "Optimisation du budget",
+    "close": "Fermer",
+    "closeOverlay": "Fermer la fenêtre d'optimisation du budget",
+    "current": "Actuel :",
+    "target": "Cible :",
+    "saveUpTo": "Jusqu'à {amount} d'économie",
+    "save": "{amount} d'économie",
+    "goalReached": "Objectif de budget atteint !",
+    "withinBudget": "Votre deck respecte déjà le budget.",
+    "apply": "Appliquer"
+  },
+  "shoppingList": {
+    "title": "Liste d'achat",
+    "close": "Fermer",
+    "closeOverlay": "Fermer la liste d'achat",
+    "card": "Carte",
+    "qty": "Qté",
+    "unit": "Unité",
+    "total": "Total",
+    "subtotal": "Sous-total : {amount}",
+    "unpricedNote": "{count, plural, one {# carte sans prix connu — comptée à zéro dans le CSV} other {# cartes sans prix connu — comptées à zéro dans le CSV}}",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "downloadCsv": "Télécharger le CSV"
+  },
   "companion": {
     "title": "Companion",
     "zoneHint": "(réserve)",

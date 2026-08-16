@@ -609,6 +609,23 @@ Likewise `ColorDistribution` carried its own `White` / `Blue` / … table while 
 
 Domain jargon is deliberately **not** extracted. Archetype names (`Tokens`, `Aristocrats`) and format names come from domain data and stay as they are, for the same reason card names do.
 
+### Money
+
+Card prices come from Scryfall's **`prices.usd`** on every ingest path — `PrintingSelectorModal`, `AddToCollectionDialog`, `QuickAddCollectionButton`, `CollectionPageClient`. The currency is USD and nothing converts it.
+
+`BudgetOptimizationModal`, `PricingShoppingListModal` and the shopping-list CSV nonetheless printed a **euro sign**, so the same figure read as `$12.50` in the stats panel and `€12.50` in the budget modal, and an exported file named a currency its numbers were never in. A user setting a "€50" budget was setting $50.
+
+Amounts are now formatted, never concatenated with a symbol:
+
+```ts
+const money = (value: number) =>
+  useFormatter().number(value, { style: "currency", currency: "USD" });
+```
+
+That states the currency once, and lets the locale decide how to write it — `$12.50` in English, `12,50 $US` in French. A hardcoded symbol cannot do either, which is how the euro sign survived this long.
+
+`generateShoppingListCSV` is a plain module rather than a component, so it formats with `$` directly; the same rule applies — the symbol matches the data.
+
 ---
 
 ## Community Deck Discovery

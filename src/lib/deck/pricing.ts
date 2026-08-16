@@ -204,16 +204,31 @@ export function findCheaperAlternatives(
 // ─── Export shopping list ──────────────────────────────────────────────────
 /**
  * Generate CSV data for a shopping list (card name, qty, price, total).
+ *
+ * Amounts are in **USD**: every ingest path reads Scryfall's `prices.usd`, so
+ * the euro sign this used to print named a currency the numbers were never in.
+ *
+ * Unpriced cards are listed last at 0.00 rather than dropped.
+ * `getCardsSortedByPrice` filters them out by design — right for a
+ * sorted-by-price view, wrong for a list of what to buy, where a missing row
+ * means a card you never purchase.
+ *
+ * @param cards - the cards to list
+ * @returns CSV text, priced cards first, most expensive first
  */
 export function generateShoppingListCSV(
   cards: readonly DeckCard[]
 ): string {
-  const sorted = getCardsSortedByPrice(cards, "desc");
+  const priced = getCardsSortedByPrice(cards, "desc");
+  const pricedIds = new Set(priced.map((c) => c.id));
+  const unpriced = cards.filter((c) => !pricedIds.has(c.id));
+
   const lines = [
     "Card Name,Quantity,Unit Price,Total",
-    ...sorted.map((c) => {
-      const total = (c.price ?? 0) * c.quantity;
-      return `"${c.name}",${c.quantity},€${(c.price ?? 0).toFixed(2)},€${total.toFixed(2)}`;
+    ...[...priced, ...unpriced].map((c) => {
+      const unit = c.price ?? 0;
+      const total = unit * c.quantity;
+      return `"${c.name}",${c.quantity},$${unit.toFixed(2)},$${total.toFixed(2)}`;
     }),
   ];
 

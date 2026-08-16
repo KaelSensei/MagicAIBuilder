@@ -5,6 +5,7 @@ import {
   suggestBudgetReductions,
   getCardsSortedByPrice,
   findCheaperAlternatives,
+  generateShoppingListCSV,
   type DeckPricing as _DeckPricing,
   type PriceBreakdown as _PriceBreakdown,
 } from "./pricing";
@@ -35,6 +36,37 @@ function makeCard(
     scryfallId: id,
   };
 }
+
+describe("generateShoppingListCSV", () => {
+  it("prices in the currency the data is actually in", () => {
+    // Card prices come from Scryfall's `prices.usd` on every ingest path, so a
+    // euro sign on the export claimed a currency the numbers were never in.
+    const csv = generateShoppingListCSV([makeCard("c1", "Sol Ring", 12.5)]);
+    expect(csv).toContain("$12.50");
+    expect(csv).not.toContain("€");
+  });
+
+  it("keeps a header row so the file opens as a table", () => {
+    const csv = generateShoppingListCSV([makeCard("c1", "Sol Ring", 1)]);
+    expect(csv.split("\n")[0]).toBe("Card Name,Quantity,Unit Price,Total");
+  });
+
+  it("multiplies the unit price by the quantity", () => {
+    const card = { ...makeCard("c1", "Sol Ring", 3), quantity: 4 };
+    expect(generateShoppingListCSV([card])).toContain("$12.00");
+  });
+
+  it("quotes names so a comma cannot split a row", () => {
+    const csv = generateShoppingListCSV([makeCard("c1", "Jaheira, Friend of the Forest", 1)]);
+    expect(csv).toContain('"Jaheira, Friend of the Forest"');
+  });
+
+  it("prices a card with no known price at zero rather than omitting it", () => {
+    const csv = generateShoppingListCSV([makeCard("c1", "Unpriced", null)]);
+    expect(csv).toContain("Unpriced");
+    expect(csv).toContain("$0.00");
+  });
+});
 
 // ─── Price calculation ─────────────────────────────────────────────────────
 describe("calculateDeckPrice", () => {

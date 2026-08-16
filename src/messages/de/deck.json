@@ -354,5 +354,31 @@
     "moveToDeck": "Move to deck",
     "deck": "Deck",
     "remove": "Remove from this zone"
+  },
+  "budget": {
+    "title": "Budget Optimization",
+    "close": "Close",
+    "closeOverlay": "Close budget optimization modal",
+    "current": "Current:",
+    "target": "Target:",
+    "saveUpTo": "Save up to {amount}",
+    "save": "Save {amount}",
+    "goalReached": "Budget goal reached!",
+    "withinBudget": "Your deck is already within budget.",
+    "apply": "Apply"
+  },
+  "shoppingList": {
+    "title": "Shopping List",
+    "close": "Close",
+    "closeOverlay": "Close shopping list modal",
+    "card": "Card",
+    "qty": "Qty",
+    "unit": "Unit",
+    "total": "Total",
+    "subtotal": "Subtotal: {amount}",
+    "unpricedNote": "{count, plural, one {# card has no known price — listed at zero in the CSV} other {# cards have no known price — listed at zero in the CSV}}",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "downloadCsv": "Download CSV"
   }
 }
