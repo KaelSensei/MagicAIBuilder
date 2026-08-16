@@ -13,6 +13,7 @@ import { LifeTracker } from "@/components/playtest/LifeTracker";
 import { HandZone } from "@/components/playtest/HandZone";
 import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
 import { GraveyardZone } from "@/components/playtest/GraveyardZone";
+import { RecordResultBar } from "@/components/playtest/RecordResultBar";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
@@ -118,14 +119,24 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            aria-label={t("close")}
-            className="text-white/50 hover:text-white transition-colors p-1 rounded shrink-0"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            {engine && (
+              <RecordResultBar
+                deckId={deck.id}
+                turns={engine.turn}
+                mulliganCount={engine.mulliganCount}
+                onRecorded={handleClose}
+              />
+            )}
+            <button
+              type="button"
+              onClick={handleClose}
+              aria-label={t("close")}
+              className="text-white/50 hover:text-white transition-colors p-1 rounded"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
