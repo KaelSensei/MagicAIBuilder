@@ -14,14 +14,14 @@ This is a **rough** first-pass weighting using a lightweight RICE/MoSCoW hybrid:
 - **Weight 2**: Nice-to-have / polish
 - **Weight 1**: Experimental / long-term / speculative
 
-Top candidates right now (reviewed 2026-08-16):
+Top candidates right now (reviewed 2026-08-17):
 
-- **Add `SONAR_TOKEN` to GitHub secrets** — Weight **5**. The repository has **no secrets at all**, so the `SonarCloud Scan` step is skipped on every run while the job reports success. The quality gate has never analysed anything in CI; every analysis so far came from `pnpm sonar` run locally
-- **Finish i18n string extraction** — Weight **4** _(in progress — search and playtest done; deck, card, collection remain)_
-- **Localized card data via Scryfall `lang`** — Weight **4**. Without it a translated interface still shows English card names and oracle text
+- **Finish i18n string extraction** — Weight **4** _(in progress — three components left: `TemplatesModal`, `BulkEditModal`, `ImportFromUrlTab`, ~750 lines)_
+- **Diagnose the intermittent e2e failure** — Weight **4**, raised from 3: it now blocks pushes, having taken three attempts to land one branch. The Playwright report finally escapes its container (#436), so the next occurrence leaves evidence. Known: `deck-builder.spec.ts:55` and the community public-deck spec, the click fires and the URL stays on `/builder/<id>`. Two hypotheses already ruled out — see `quality-gate.md`
+- **Localized card data via Scryfall `lang`** — Weight **4** _(in progress — PR #415 covers the printing selector; the other card surfaces remain)_
 - **UptimeRobot** — Weight **4** (early production safety net, now that a database exists again)
+- **Migrate `setRequestLocale` to `next/root-params`** — Weight **2**. next-intl deprecates it, but the replacement ships `unstable_rootParams` and a stub `.d.ts` in Next 15.5.22. The three SonarCloud warnings are marked accepted with that reason. Revisit when it stabilises
 - **Structured logging (Pino)** — Weight **3**. `src/lib/logger.ts` already centralises every call site and forwards to Sentry; only the JSON format is missing
-- **Diagnose the intermittent e2e failure** — Weight **3**. Roughly 1 run in 5, with a recurring `useTranslations` outside `NextIntlClientProvider` in the dev log
 - **Visual redesign** — Weight **3** (big surface area, schedule when stable)
 - **Local AI model via MageZero** — Weight **1** (very high effort / research)
 
@@ -120,7 +120,10 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 - [x] **Two locales served, eight dormant** _(done — PR #398)_: `en` and `fr` are routed; `de, it, es, ja, zh, ko, ru, pt` keep their catalogs in `DORMANT_LOCALES` but are not served. They were machine-seeded English copies, and translating the interface around card text that is itself still English would ship a half-translated product in eight languages instead of a coherent one in two. Re-activating one is a single-line move once a speaker has translated it
 - [x] **Language switcher** _(already in place)_: `src/components/layout/LocaleSwitcher.tsx`, mounted in the header
 - [x] **Key-parity guard** _(done — PR #397)_: `messages.test.ts` fails the unit suite when any locale's key set diverges from `en`. A key present only in `en` renders as its raw dotted path everywhere else
-- 🔄 **String extraction** _(in progress)_: 77 of 125 components held hardcoded English. Done: search panel (PR #397), playtest zones (PR #406), card and collection (PR #409). Remaining cluster: `src/components/deck` (20 files) — the last and largest
+- 🔄 **String extraction** _(in progress)_: 77 of 125 components held hardcoded English. Done: search panel (#397), playtest zones (#406), card and collection (#409), deck stats panels (#428), budget and shopping list (#433), bracket and buy list (#439), proxy export (#445). **Remaining: `TemplatesModal`, `BulkEditModal`, `ImportFromUrlTab`** — ~750 lines.
+
+  Every slice found a defect the hardcoded strings were hiding, which is why this is done in slices rather than one pass: **eight hand-built English plurals** (`card${n === 1 ? "" : "s"}` — invisible while the UI is English, unfixable once it is not); the considering zone named _"Maybeboard"_ in a panel and _"Considering"_ on its tab; `ColorDistribution` duplicating a colour-name table `stats.color.*` already held; a French string in the English UI; and a euro sign on figures that were always USD
+
 - 🔄 **Localized card data** _(in progress — PR #415)_: card name, type line and rules text now read from a printing in the viewer's language, with **per-field** English fallback (Scryfall fills `printed_name` / `printed_type_line` / `printed_text` independently, so an all-or-nothing fallback would blank a card's rules whenever one field was missing). Wired into the printing selector, the one place the app renders raw Scryfall text. **Remaining**: the other card surfaces. Card names stay English in search, storage, import and export — a translated name written into `DeckCard` rows would denormalise a translation into every deck holding the card
 
 ---
