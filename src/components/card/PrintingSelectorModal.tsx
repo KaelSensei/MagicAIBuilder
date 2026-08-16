@@ -1,6 +1,7 @@
 "use client";
 // Modal to select a card printing — shows oracle text alongside all printings
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -8,9 +9,6 @@ import { useCardPrintings } from "@/hooks/useCardPrintings";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { Modal } from "@/components/ui/Modal";
 
-function getPrintingsLabel(count: number): string {
-  return `${count} printing${count === 1 ? "" : "s"} available`;
-}
 
 interface PrintingSelectorModalProps {
   readonly card: ScryfallCard;
@@ -25,6 +23,7 @@ export function PrintingSelectorModal({
   onSelect,
   onClose,
 }: PrintingSelectorModalProps) {
+  const t = useTranslations("card");
   const { data, isLoading } = useCardPrintings(card.name);
   const [previewedPrintingId, setPreviewedPrintingId] = useState(card.id);
 
@@ -63,8 +62,8 @@ export function PrintingSelectorModal({
           </h2>
           <p className="text-xs text-(--text-secondary) mt-0.5">
             {isLoading
-              ? "Loading printings…"
-              : getPrintingsLabel(printings.length)}
+              ? t("loadingPrintings")
+              : t("printingsAvailable", { count: printings.length })}
           </p>
         </div>
         <button
