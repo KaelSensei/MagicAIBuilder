@@ -25,6 +25,12 @@ Every feature or fix branch is merged into `staging` first. Promotion follows th
 2. Only a dev may request the merge from `staging` into `dev`.
 3. Only a dev may request the merge from `dev` into `main`.
 
+**Promote with `gh pr merge --rebase`, not a merge commit.** A merge commit is created _on the target_, so `dev` gained commits `staging` never received and `main` gained commits neither had. Content stayed identical while the histories drifted — after fifteen batches in one day, GitHub reported `staging` as **26 commits behind `main`** with zero files different. Rebasing the promotion keeps all three branches on the same commit.
+
+Feature branches still merge into `staging` normally; the merge commit is only a problem when the source branch is long-lived and has to stay level with the target.
+
+`delete_branch_on_merge` is enabled on the repository, so merged branches clean themselves up. `scripts/git-prune.sh` is now only needed for branches abandoned without merging.
+
 ### Documentation discipline
 
 Feature branches MUST NOT modify `docs/project/changelog.md`, `docs/project/progress.md`, or `docs/product/roadmap.md`. These are updated in a dedicated `chore/docs` PR after each merge batch to avoid rebase conflicts.
