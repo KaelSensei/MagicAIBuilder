@@ -85,6 +85,15 @@
       "steady": "Steady",
       "declining": "Declining",
       "insufficient": "Too few games"
-    }
+    },
+    "byOpponent": "By opponent",
+    "matchupValue": "{wins}W–{losses}L · {winRate}%"
+  },
+  "difficultyLabel": "Opponent",
+  "difficultyUnset": "Not saying",
+  "difficulty": {
+    "budget": "Budget",
+    "mid-range": "Mid-range",
+    "cedh": "cEDH"
   }
 }

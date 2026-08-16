@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { mulliganRows, trendDirection, MIN_TREND_POINTS } from "./summary-view";
+import { matchupRows, mulliganRows, trendDirection, MIN_TREND_POINTS } from "./summary-view";
 import type { TrendPoint } from "./analytics";
 
 function point(date: string, winRate: number, total = 4): TrendPoint {
@@ -110,5 +110,44 @@ describe("mulliganRows", () => {
     const rows = mulliganRows({ 3: { count: 2, winRate: 0 } });
     expect(rows).toHaveLength(1);
     expect(rows[0].winRate).toBe(0);
+  });
+});
+
+describe("matchupRows", () => {
+  it("returns nothing when no session recorded a difficulty", () => {
+    expect(matchupRows({})).toEqual([]);
+  });
+
+  it("orders by opponent strength, not alphabetically", () => {
+    // Alphabetical would read budget, cedh, mid-range — which puts the
+    // strongest opponent in the middle and makes the table hard to scan.
+    const rows = matchupRows({
+      cedh: { wins: 1, losses: 4, winRate: 20 },
+      "mid-range": { wins: 3, losses: 3, winRate: 50 },
+      budget: { wins: 5, losses: 1, winRate: 83 },
+    });
+    expect(rows.map((r) => r.difficulty)).toEqual(["budget", "mid-range", "cedh"]);
+  });
+
+  it("carries wins, losses and win rate through", () => {
+    const rows = matchupRows({ budget: { wins: 5, losses: 1, winRate: 83 } });
+    expect(rows[0]).toEqual({ difficulty: "budget", wins: 5, losses: 1, winRate: 83 });
+  });
+
+  it("omits a difficulty that was never played", () => {
+    const rows = matchupRows({ cedh: { wins: 0, losses: 2, winRate: 0 } });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].difficulty).toBe("cedh");
+  });
+
+  it("keeps an unrecognised difficulty rather than dropping the data", () => {
+    // Older rows, or a value added to the schema before this list, should
+    // still be shown — silently discarding recorded games is worse than an
+    // unfamiliar label.
+    const rows = matchupRows({
+      budget: { wins: 1, losses: 0, winRate: 100 },
+      legacy: { wins: 2, losses: 2, winRate: 50 },
+    });
+    expect(rows.map((r) => r.difficulty)).toEqual(["budget", "legacy"]);
   });
 });
