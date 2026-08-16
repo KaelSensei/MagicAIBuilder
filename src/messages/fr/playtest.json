@@ -71,5 +71,20 @@
     "win": "Victoire",
     "loss": "Défaite",
     "draw": "Égalité"
+  },
+  "history": {
+    "title": "Historique du deck",
+    "games": "Parties",
+    "winRate": "Victoires",
+    "avgWinTurns": "Tours pour gagner",
+    "byMulligans": "Par mulligans",
+    "mulliganLabel": "{count, plural, =0 {Sans mulligan} one {# mulligan} other {# mulligans}}",
+    "mulliganValue": "{games} · {winRate} %",
+    "trend": {
+      "improving": "En progrès",
+      "steady": "Stable",
+      "declining": "En baisse",
+      "insufficient": "Trop peu de parties"
+    }
   }
 }

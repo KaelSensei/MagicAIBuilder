@@ -1,0 +1,105 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+
+import { PlaytestHistoryPanel } from "./PlaytestHistoryPanel";
+import playtestMessages from "@/messages/en/playtest.json";
+import type { PlaytestHistory } from "@/hooks/usePlaytestHistory";
+import type { SessionSummary } from "@/lib/playtest/session-input";
+
+const historyResult = vi.hoisted(() => ({
+  current: { data: undefined as PlaytestHistory | null | undefined },
+}));
+
+vi.mock("@/hooks/usePlaytestHistory", () => ({
+  usePlaytestHistory: () => historyResult.current,
+}));
+
+function makeSummary(overrides: Partial<SessionSummary> = {}): SessionSummary {
+  return {
+    total: 6,
+    winRate: 50,
+    averageWinTurns: 7.5,
+    mulligans: { 0: { count: 4, winRate: 75 }, 1: { count: 2, winRate: 0 } },
+    matchups: {},
+    trend: [],
+    ...overrides,
+  };
+}
+
+function renderPanel(summary: SessionSummary | null) {
+  historyResult.current = {
+    data: summary === null ? null : { sessions: [], summary },
+  };
+  render(
+    <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
+      <PlaytestHistoryPanel deckId="deck-1" />
+    </NextIntlClientProvider>
+  );
+}
+
+beforeEach(() => {
+  historyResult.current = { data: undefined };
+});
+
+describe("PlaytestHistoryPanel", () => {
+  it("renders nothing while the history is still loading", () => {
+    historyResult.current = { data: undefined };
+    const { container } = render(
+      <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
+        <PlaytestHistoryPanel deckId="deck-1" />
+      </NextIntlClientProvider>
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("renders nothing when the deck has never been played", () => {
+    // A panel of zeroes would read as "this deck loses every game" rather than
+    // "you have not recorded anything yet" — the opposite of the truth.
+    renderPanel(makeSummary({ total: 0, winRate: 0, averageWinTurns: 0, mulligans: {} }));
+    expect(screen.queryByText("This deck's record")).toBeNull();
+  });
+
+  it("renders nothing when the deck is not the caller's", () => {
+    renderPanel(null);
+    expect(screen.queryByText("This deck's record")).toBeNull();
+  });
+
+  it("shows the headline figures", () => {
+    renderPanel(makeSummary());
+    expect(screen.getByText("6")).toBeDefined();
+    expect(screen.getByText("50%")).toBeDefined();
+    expect(screen.getByText("7.5")).toBeDefined();
+  });
+
+  it("dashes the win-turn figure when the deck has never won", () => {
+    // "0.0 turns to win" would claim a win that never happened.
+    renderPanel(makeSummary({ winRate: 0, averageWinTurns: 0 }));
+    expect(screen.getByText("—")).toBeDefined();
+  });
+
+  it("breaks the record down by mulligan count, fewest first", () => {
+    renderPanel(makeSummary());
+    expect(screen.getByText("No mulligan")).toBeDefined();
+    expect(screen.getByText("1 mulligan")).toBeDefined();
+  });
+
+  it("declines to call a trend from too little play", () => {
+    renderPanel(makeSummary({ trend: [{ date: "2026-08-01", winRate: 50, total: 6 }] }));
+    expect(screen.getByText("Too few games")).toBeDefined();
+  });
+
+  it("reports a rising win rate as improving", () => {
+    renderPanel(
+      makeSummary({
+        trend: [
+          { date: "2026-08-01", winRate: 20, total: 5 },
+          { date: "2026-08-02", winRate: 20, total: 5 },
+          { date: "2026-08-03", winRate: 80, total: 5 },
+          { date: "2026-08-04", winRate: 80, total: 5 },
+        ],
+      })
+    );
+    expect(screen.getByText("Improving")).toBeDefined();
+  });
+});

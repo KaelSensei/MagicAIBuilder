@@ -774,6 +774,23 @@ Reads are capped at `MAX_SESSIONS = 500` so one enthusiastic tester cannot make 
 
 `summarizeSessions` wraps the existing pure functions. Turn count is averaged over **wins only**: a twenty-turn loss says nothing about how fast the deck closes a game, and folding it in would answer a different question than the panel asks.
 
+### Reading the history back
+
+`src/lib/playtest/summary-view.ts` answers the one question the aggregates do not: **is the deck getting better?**
+
+`trendDirection` splits the daily history in half chronologically and compares the two halves, rather than first point against last — a single bad day in the middle should not read as a decline. With an odd number of days the middle one falls into neither half, so it cannot pull the verdict either way.
+
+Two guards keep it honest:
+
+- **`MIN_TREND_POINTS = 4`.** Fewer would mean calling a trend off one day on each side, where a single lucky game decides the answer. Below it the verdict is `"insufficient"`, not a direction.
+- **Days are weighted by games played.** One lucky game at 100% must not count for as much as twenty games at 40%, which is exactly what a plain mean of the daily rates would do. `TrendPoint` carries a rate rather than a win count, so the count is recovered before averaging.
+
+Movement under `TREND_THRESHOLD` (10 points) reports as `"steady"`. Win rates over a handful of games are noisy, and a direction the player might act on should not come out of noise.
+
+`PlaytestHistoryPanel` renders **nothing at all** until at least one session exists. A panel of zeroes would read as "this deck loses every game" rather than "you have not recorded anything yet" — the opposite of the truth. The same applies per-figure: average win turns shows a dash rather than `0.0` when the deck has never won.
+
+Recording invalidates the `["playtest", "history", deckId]` query. Without it the run just recorded would be missing from the panel the next time the modal opened.
+
 ---
 
 ## Playtest Engine
