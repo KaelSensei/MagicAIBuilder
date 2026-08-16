@@ -2,6 +2,8 @@ import type { ReactElement } from "react";
 import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import common from "@/messages/en/common.json";
+import builder from "@/messages/en/builder.json";
+import card from "@/messages/en/card.json";
 import deck from "@/messages/en/deck.json";
 import playtest from "@/messages/en/playtest.json";
 import search from "@/messages/en/search.json";
@@ -27,7 +29,7 @@ export function renderWithIntl(
   return render(
     <NextIntlClientProvider
       locale="en"
-      messages={{ common, deck, playtest, search, collection, profile }}
+      messages={{ common, builder, card, deck, playtest, search, collection, profile }}
     >
       {ui}
     </NextIntlClientProvider>,

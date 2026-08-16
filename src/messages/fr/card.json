@@ -1,0 +1,24 @@
+{
+  "turnOver": "Retourner",
+  "showFront": "Voir le recto : {name}",
+  "turnOverTo": "Retourner : {name}",
+  "flexibleLand": "Terrain flexible (MDFC)",
+  "doubleFaced": "Carte recto-verso",
+  "gameChanger": "Game Changer",
+  "banned": "Bannie",
+  "moveNamedToMaybeboard": "Déplacer {name} vers À l'étude",
+  "removeNamed": "Retirer {name}",
+  "noCardsFound": "Aucune carte trouvée",
+  "loadingPrintings": "Chargement des éditions…",
+  "printingsAvailable": "{count, plural, one {# édition disponible} other {# éditions disponibles}}",
+  "note": {
+    "add": "Ajouter une note",
+    "edit": "Modifier la note",
+    "editor": "Éditeur de note de carte",
+    "placeholder": "Ajoute une note privée pour cette carte…"
+  },
+  "favorite": {
+    "add": "Ajouter aux favoris",
+    "remove": "Retirer des favoris"
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 // Grid display for search results
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { CardImage } from "./CardImage";
 import { DraggableCard } from "./DraggableCard";
 import { cn } from "@/components/ui/utils";
@@ -64,15 +65,17 @@ export function CardGrid({
   cards,
   onCardClick,
   className,
-  emptyMessage = "No cards found",
+  emptyMessage,
   draggable = false,
   onAddToMaybeboard: _onAddToMaybeboard,
   maybeboardNames: _maybeboardNames,
 }: CardGridProps) {
+  const t = useTranslations("card");
+
   if (cards.length === 0) {
     return (
       <div className={cn("flex items-center justify-center h-40 text-[var(--text-secondary)]", className)}>
-        {emptyMessage}
+        {emptyMessage ?? t("noCardsFound")}
       </div>
     );
   }

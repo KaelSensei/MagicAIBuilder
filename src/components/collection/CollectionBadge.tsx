@@ -1,5 +1,6 @@
 "use client";
 // Badge showing collection ownership status on a card
+import { useTranslations } from "next-intl";
 import { CheckCircle } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { cn } from "@/components/ui/utils";
@@ -11,6 +12,7 @@ interface CollectionBadgeProps {
 }
 
 export function CollectionBadge({ scryfallId, className, compact = false }: CollectionBadgeProps) {
+  const t = useTranslations("collection");
   const getTotalOwned = useCollectionStore((s) => s.getTotalOwned);
   const total = getTotalOwned(scryfallId);
 
@@ -23,7 +25,7 @@ export function CollectionBadge({ scryfallId, className, compact = false }: Coll
           "inline-flex items-center gap-0.5 text-[10px] font-medium text-green-400 bg-green-400/10 border border-green-400/30 rounded px-1 py-0.5",
           className
         )}
-        title={`You own ${total} cop${total === 1 ? "y" : "ies"}`}
+        title={t("quickAdd.owned", { count: total })}
       >
         <CheckCircle className="w-2.5 h-2.5" />
         {total}
@@ -39,7 +41,7 @@ export function CollectionBadge({ scryfallId, className, compact = false }: Coll
       )}
     >
       <CheckCircle className="w-3 h-3" />
-      In Collection ×{total}
+      {t("ownership.inCollection", { count: total })}
     </span>
   );
 }
