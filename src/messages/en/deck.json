@@ -105,8 +105,36 @@
       "U": "Blue",
       "B": "Black",
       "R": "Red",
-      "G": "Green"
-    }
+      "G": "Green",
+      "C": "Colorless"
+    },
+    "colorDistribution": "Color Distribution",
+    "manaCurve": "Mana Curve",
+    "avgCmcInline": "Avg CMC: {value}",
+    "curveBucket": "{count, plural, one {# card at CMC {cmc}} other {# cards at CMC {cmc}}}",
+    "deckPrice": "Deck Price",
+    "totalValue": "Total value",
+    "missingPrices": "{count, plural, one {# card without price data} other {# cards without price data}}",
+    "archetypes": "Archetypes",
+    "archetypesEmpty": "Add more cards to detect themes",
+    "archetypeConfidence": "{percent}% confidence — {keywords}",
+    "gameChangersOutOf": "/ {max} Game Changers",
+    "gcOverLimit": "⚠ Over limit for B{bracket}",
+    "gcForcesBracket": "→ Bracket {bracket} minimum",
+    "andMore": "+{count} more"
+  },
+  "companion": {
+    "title": "Companion",
+    "zoneHint": "(sideboard)",
+    "emptyHint": "Turn on <strong>Companion</strong> in search, then click a Companion card. It stays separate from the Sideboard tab.",
+    "clear": "Clear"
+  },
+  "maybeboard": {
+    "notCounted": "Not counted in the 99",
+    "empty": "No cards here yet",
+    "moveToDeck": "Move to deck",
+    "deck": "Deck",
+    "remove": "Remove from this zone"
   },
   "community": {
     "upvote": "Upvote",

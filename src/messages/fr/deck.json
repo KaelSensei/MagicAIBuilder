@@ -105,8 +105,36 @@
       "U": "Bleu",
       "B": "Noir",
       "R": "Rouge",
-      "G": "Vert"
-    }
+      "G": "Vert",
+      "C": "Incolore"
+    },
+    "colorDistribution": "Répartition des couleurs",
+    "manaCurve": "Courbe de mana",
+    "avgCmcInline": "CMC moyen : {value}",
+    "curveBucket": "{count, plural, one {# carte à CMC {cmc}} other {# cartes à CMC {cmc}}}",
+    "deckPrice": "Prix du deck",
+    "totalValue": "Valeur totale",
+    "missingPrices": "{count, plural, one {# carte sans prix} other {# cartes sans prix}}",
+    "archetypes": "Archétypes",
+    "archetypesEmpty": "Ajoutez des cartes pour détecter les thèmes",
+    "archetypeConfidence": "{percent} % de confiance — {keywords}",
+    "gameChangersOutOf": "/ {max} Game Changers",
+    "gcOverLimit": "⚠ Au-dessus de la limite pour B{bracket}",
+    "gcForcesBracket": "→ Bracket {bracket} minimum",
+    "andMore": "+{count} de plus"
+  },
+  "companion": {
+    "title": "Companion",
+    "zoneHint": "(réserve)",
+    "emptyHint": "Activez <strong>Companion</strong> dans la recherche, puis cliquez une carte Companion. Elle reste séparée de l'onglet Réserve.",
+    "clear": "Retirer"
+  },
+  "maybeboard": {
+    "notCounted": "Non comptées dans les 99",
+    "empty": "Aucune carte ici pour l'instant",
+    "moveToDeck": "Déplacer vers le deck",
+    "deck": "Deck",
+    "remove": "Retirer de cette zone"
   },
   "community": {
     "upvote": "Voter pour",

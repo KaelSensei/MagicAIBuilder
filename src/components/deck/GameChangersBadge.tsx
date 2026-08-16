@@ -1,5 +1,6 @@
 "use client";
 // Game Changers count badge with warning
+import { useTranslations } from "next-intl";
 import { Zap } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 
@@ -23,6 +24,7 @@ export function GameChangersBadge({
   targetBracket = 3,
   className,
 }: GameChangersBadgeProps) {
+  const t = useTranslations("deck");
   const maxAllowed = BRACKET_MAX_GC[targetBracket] ?? Infinity;
   const isOverLimit = count > maxAllowed;
 
@@ -50,13 +52,19 @@ export function GameChangersBadge({
             {count}
           </span>
           <span className="text-xs text-[var(--text-secondary)]">
-            / {maxAllowed === Infinity ? "∞" : maxAllowed} Game Changers
+            {t("stats.gameChangersOutOf", {
+              max: maxAllowed === Infinity ? "∞" : String(maxAllowed),
+            })}
           </span>
           {isOverLimit && targetBracket <= 2 && (
-            <span className="text-xs text-amber-400 font-medium">⚠ Over limit for B{targetBracket}</span>
+            <span className="text-xs text-amber-400 font-medium">
+              {t("stats.gcOverLimit", { bracket: targetBracket })}
+            </span>
           )}
           {isOverLimit && targetBracket >= 3 && (
-            <span className="text-xs text-amber-400 font-medium">→ Bracket {count > 3 ? 4 : 3} minimum</span>
+            <span className="text-xs text-amber-400 font-medium">
+              {t("stats.gcForcesBracket", { bracket: count > 3 ? 4 : 3 })}
+            </span>
           )}
         </div>
         {names.length > 0 && (
@@ -68,7 +76,7 @@ export function GameChangersBadge({
             ))}
             {names.length > 5 && (
               <li className="text-xs text-[var(--text-secondary)]">
-                +{names.length - 5} more
+                {t("stats.andMore", { count: names.length - 5 })}
               </li>
             )}
           </ul>
