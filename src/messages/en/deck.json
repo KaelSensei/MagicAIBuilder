@@ -314,6 +314,7 @@
     "refresh": "Refresh",
     "staleData": "Stale data from {date}",
     "communityDecks": "Browse community decks for this commander",
+    "viewOnEdhrec": "View this commander on EDHRec",
     "popularEdhrec": "Popular (EDHRec)",
     "notInDeck": "Not in deck",
     "noEdhrecData": "No EDHRec data for this commander",
