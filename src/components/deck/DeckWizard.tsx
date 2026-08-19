@@ -20,6 +20,7 @@ import {
 } from "@/lib/scryfall/client";
 import { logger } from "@/lib/logger";
 import { useAIDeckBuild } from "@/hooks/useAIDeckBuild";
+import { useLocalizedCardText } from "@/hooks/useLocalizedCardText";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { categorizeCard } from "@/lib/deck/categories";
@@ -375,6 +376,8 @@ function StepCommander({
   readonly onSkip: () => void;
 }) {
   const t = useTranslations("deck");
+  // Display only — the deck is always built from the English commanderName.
+  const localizedCommander = useLocalizedCardText(commanderCard);
   const [query, setQuery] = useState(commanderName);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -464,16 +467,16 @@ function StepCommander({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={commanderCard.image_uris.art_crop}
-              alt={commanderCard.name}
+              alt={localizedCommander?.name ?? commanderCard.name}
               className="w-12 h-12 rounded-lg object-cover"
             />
           )}
           <div>
             <div className="font-semibold text-sm text-[var(--text-primary)]">
-              {commanderCard.name}
+              {localizedCommander?.name ?? commanderCard.name}
             </div>
             <div className="text-xs text-[var(--text-secondary)] mt-0.5">
-              {commanderCard.type_line}
+              {localizedCommander?.typeLine ?? commanderCard.type_line}
             </div>
           </div>
           <Check className="w-4 h-4 text-[var(--accent)] ml-auto" />

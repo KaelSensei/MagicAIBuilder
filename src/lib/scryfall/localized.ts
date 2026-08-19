@@ -94,6 +94,30 @@ function firstFilled(...candidates: readonly (string | undefined)[]): string {
  * @param card - the printing, as returned by Scryfall
  * @returns the text to render, plus whether it is genuinely translated
  */
+/**
+ * Substitutes localised printings into an English card list.
+ *
+ * A `lang:`-filtered Scryfall search only returns cards that were actually
+ * printed in that language, so it cannot be used as the list itself — cards
+ * with no translated printing would silently vanish. The English list stays
+ * the source of truth for membership, order and count; a localised printing
+ * merely replaces the object rendered for a card it covers.
+ *
+ * Matching is by `name`, which Scryfall keeps as the oracle (English) name on
+ * every printing regardless of language.
+ *
+ * @param english - the full English list, defining membership and order
+ * @param localized - printings in the viewer's language, any subset, any order
+ * @returns the English list with localised printings substituted in place
+ */
+export function mergeLocalizedPrintings(
+  english: readonly ScryfallCard[],
+  localized: readonly ScryfallCard[]
+): ScryfallCard[] {
+  const byName = new Map(localized.map((card) => [card.name, card]));
+  return english.map((card) => byName.get(card.name) ?? card);
+}
+
 export function resolveLocalizedText(card: ScryfallCard): LocalizedCardText {
   const face: ScryfallCardFace | undefined = card.card_faces?.[0];
 
