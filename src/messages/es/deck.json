@@ -209,7 +209,8 @@
     "noTournamentDecks": "No recent tournament decks found",
     "selectCommander": "Select a commander to see meta data",
     "addCard": "Add {name}",
-    "communityDecks": "Browse community decks for this commander"
+    "communityDecks": "Browse community decks for this commander",
+    "viewOnEdhrec": "View this commander on EDHRec"
   },
   "snapshots": {
     "title": "History",
