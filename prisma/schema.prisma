@@ -27,6 +27,7 @@ model User {
   ratings        DeckRating[]
   votes          DeckVote[]
   playtests      PlaytestSession[]
+  comments       DeckComment[]
   following      UserFollow[]    @relation("Following")
   followers      UserFollow[]    @relation("Followers")
   createdAt      DateTime        @default(now())
@@ -96,6 +97,7 @@ model Deck {
   ratings       DeckRating[]
   votes         DeckVote[]
   playtests     PlaytestSession[]
+  comments      DeckComment[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -290,6 +292,30 @@ model DeckVote {
 
   @@unique([userId, deckId]) // one vote per user per deck; POST upserts
   @@index([deckId])
+}
+
+/// One comment in a deck's threaded stream.
+///
+/// Deliberately separate from DeckRating.title/body, which is a single written
+/// review per user per deck: comments are many per user, conversational, and
+/// can reply to each other. Threading is a self-relation — deleting a comment
+/// cascades to its replies, and deleting the deck removes the whole stream.
+/// No @@unique: like PlaytestSession, every row stands on its own.
+model DeckComment {
+  id        String        @id @default(cuid())
+  deckId    String
+  deck      Deck          @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  String? // null = top-level; replies point at any comment on the same deck
+  parent    DeckComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   DeckComment[] @relation("CommentReplies")
+  body      String // 1–2000 chars, validated at the route
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([deckId, createdAt])
+  @@index([parentId])
 }
 
 /// One recorded goldfish playtest of a deck.
