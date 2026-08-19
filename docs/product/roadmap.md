@@ -17,7 +17,7 @@ This is a **rough** first-pass weighting using a lightweight RICE/MoSCoW hybrid:
 Top candidates right now (reviewed 2026-08-19):
 
 - ~~**Finish i18n string extraction**~~ _(done — 2026-08-19, #455: the last three components shipped)_
-- **Diagnose the intermittent e2e failure** — Weight **4**, raised from 3: it now blocks pushes, having taken three attempts to land one branch. The Playwright report finally escapes its container (#436), so the next occurrence leaves evidence. Known: `deck-builder.spec.ts:55` and the community public-deck spec, the click fires and the URL stays on `/builder/<id>`. Two hypotheses already ruled out — see `quality-gate.md`
+- **Diagnose the intermittent e2e failure** — Weight **4** _(mitigated — 2026-08-19, #464)_: hypothesis 3 — dev-mode on-demand compilation racing navigations — fits every observed trait, and a `warmup` Playwright project now compiles every route before the suite runs. Two gate runs green since. If it recurs with the warmup in place the hypothesis is wrong; the definitive fix (testing a production build) needs the auth bypass un-tied from `NODE_ENV` first — see `quality-gate.md`
 - **Localized card data via Scryfall `lang`** — Weight **4** _(in progress — #415 printing selector, #456 Game Changers page and wizard commander preview; the `DeckCard` surfaces remain)_
 - **UptimeRobot** — Weight **4** (early production safety net, now that a database exists again)
 - **Migrate `setRequestLocale` to `next/root-params`** — Weight **2**. next-intl deprecates it, but the replacement ships `unstable_rootParams` and a stub `.d.ts` in Next 15.5.22. The three SonarCloud warnings are marked accepted with that reason. Revisit when it stabilises
@@ -213,7 +213,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 - [x] **Community deck discovery** _(done — PR #396)_: public `/commanders/[slug]/decks`, up/down votes, "Community Favourite" badge. Before this **nothing listed public decks at all** — `/api/decks` never filtered on `isPublic`, so a shared deck was reachable only by its direct link. Votes are deliberately separate from stars: stars answer "how good is this deck", a vote answers "should this deck rank near the top", and only the vote score orders the listing
 - [x] **Integration in Meta panel** _(done — PR #396)_: the panel links through to the commander's community decks
 - [x] **Deck comments** _(done — 2026-08-19, #459 API, #460 UI)_: threaded stream on the public deck page. `parentId` self-relation with database-level cascade; GET is anonymous-readable, the deck owner may post (unlike rating and voting — a stream where the author cannot answer questions is half a conversation) and may delete any comment as the minimal moderation surface. The API resolves `isDeckOwner` and `isAuthor` per comment; the raw `userId` never leaves it. Orphaned replies are promoted to top level rather than dropped
-- [ ] **Denormalise the commander on `Deck`**: commander identity lives on the deck's _cards_, so `/api/community/commanders/[slug]/decks` cannot match the slug in SQL and slugs public decks in memory. Fine at current volume, not indefinitely
+- [x] **Denormalise the commander on `Deck`** _(done — 2026-08-19, #465)_: `Deck.commanderName`, written wherever `commanderId` is written and backfilled from the `isCommander` card in the repository's first data migration. The slug stays derived, never stored — `commanderToSlug` is shared with the EDHRec URL builder, so a stored slug could silently desync; the discovery route matches it in SQL via an expression index instead of fetching every public deck and slugging in memory
 
 ---
 
@@ -237,7 +237,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ### URL Import Sources (✅ all complete)
 
-- [x] **MTGTop8**, **MTGDecks.net**, **Moxfield**, **Archidekt**, **TappedOut** _(done — #204)_
+- [x] **MTGTop8**, **MTGDecks.net**, **Moxfield**, **Archidekt**, **TappedOut** _(done — #204; Archidekt zones and partner commanders fixed in #462, live-contract `@external` e2e added in #463)_
 - [x] **EDHRec** _(meta panel done — #205)_
 - [ ] **Goldfish** (`https://mtggoldfish.com`) — **blocked (checked 2026-08-19)**: the deck download endpoint sits behind a Cloudflare managed JS challenge, so the server-side `httpGet` the other parsers use receives the "Just a moment…" page, not the decklist. Shipping the parser would ship a source that fails in production. Revisit only if Goldfish exposes an API or drops the challenge
 
