@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                  |
 | ------------------- | ------------------------------------------------------ |
-| Unit tests          | 2060 across 143 files                                  |
+| Unit tests          | 2063 across 143 files                                  |
 | E2E tests           | 56 passing, 1 skipped (`@external` / `@perf` excluded) |
 | Coverage            | ~94.5%                                                 |
 | SonarCloud          | 0 open issues                                          |
@@ -21,7 +21,7 @@
 | Components          | 118 (`.tsx`, excluding tests)                          |
 | API routes          | 39                                                     |
 | Prisma models       | 20                                                     |
-| Prisma migrations   | 22                                                     |
+| Prisma migrations   | 23                                                     |
 | Hooks               | 22                                                     |
 | Locales served      | 2 (`en`, `fr`) + 8 dormant                             |
 | Production database | Neon (Vercel Marketplace)                              |
@@ -32,7 +32,7 @@
 
 - ~~**`SONAR_TOKEN` is not set in GitHub secrets.**~~ **Resolved 2026-08-16 (#442).** The secret is set and the scan step now fails rather than skipping. A `SonarCloud Code Analysis` check appears on each PR — it never did before. Note the two tokens are different things: the gitignored `.env.sonar` drives `pnpm sonar` locally and does nothing for CI.
 - **Three `setRequestLocale` / `requestLocale` deprecations are marked accepted in SonarCloud**, not fixed. next-intl points to `next/root-params`, which in Next 15.5.22 exports `unstable_rootParams` and ships a stub `.d.ts`. Migrating would trade a MINOR warning for an unstable API in the same request-locale plumbing that carries the intermittent navigation failure. Reversible — reopen them if the trade looks different later.
-- **Intermittent e2e failure** — now blocking: it took three push attempts to land #436. The Playwright report finally escapes its container, so the failing specs are known (`deck-builder.spec.ts:55`, community public-deck). The click on the `/decks` link fires and the URL stays on `/builder/<id>` — the navigation starts and is aborted, matching the `useTranslations` context error in the dev log. Two hypotheses ruled out; see `quality-gate.md`. Still undiagnosed.
+- **Intermittent e2e failure** — **mitigated 2026-08-19 (#464)**: hypothesis 3 (dev-mode on-demand compilation racing navigations) finally gave the flake a mechanism, and a `warmup` Playwright project now compiles every route before the suite runs. Two gate runs green since. Watch for a recurrence _with_ the warmup in place — that would falsify the hypothesis; see `quality-gate.md`. The definitive fix (testing a production build) needs the auth bypass un-tied from `NODE_ENV`.
 - **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
 - ~~**The matchup breakdown has no data.**~~ **Resolved (#425).** The recording bar asks for opponent strength and the breakdown shows the split. The stale copy of this line survived here and in the roadmap until 2026-08-19 — when syncing docs, check the component, not the last review.
 - **Three docs are still in French**: `docs/init-prompt.md`, `docs/product/competitive-landscape.md`, `docs/security/audit-securite-2026-07-20.md` (French filename too).
