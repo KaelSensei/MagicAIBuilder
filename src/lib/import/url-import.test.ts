@@ -212,6 +212,87 @@ describe("importFromUrl", () => {
     expect(result.cards.find((c) => c.name === "Niv-Mizzet")?.isCommander).toBe(true);
   });
 
+  it("Archidekt: cards in a not-included category leave the main deck", async () => {
+    // Archidekt's categories metadata is the source of truth: any category with
+    // includedInDeck false (Maybeboard, Considering, custom names…) holds cards
+    // the deck does not run. Importing them into the main zone silently changes
+    // the deck's contents.
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "Zones",
+          deckFormat: 3,
+          categories: [
+            { name: "Commander", includedInDeck: true, isPremier: true },
+            { name: "Considering", includedInDeck: false, isPremier: false },
+            { name: "Sideboard", includedInDeck: false, isPremier: false },
+          ],
+          cards: [
+            { quantity: 1, categories: ["Commander"], card: { oracleCard: { name: "Niv-Mizzet" } } },
+            { quantity: 1, categories: ["Considering"], card: { oracleCard: { name: "Ponder" } } },
+            { quantity: 1, categories: ["Sideboard"], card: { oracleCard: { name: "Pyroblast" } } },
+            { quantity: 1, categories: [], card: { oracleCard: { name: "Island" } } },
+          ],
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://archidekt.com/decks/556");
+    const zones = Object.fromEntries(result.cards.map((c) => [c.name, c.zone]));
+    expect(zones).toEqual({
+      "Niv-Mizzet": "main",
+      Ponder: "maybeboard",
+      Pyroblast: "sideboard",
+      Island: "main",
+    });
+  });
+
+  it("Archidekt: falls back to well-known category names when the metadata is absent", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "No meta",
+          deckFormat: 3,
+          cards: [
+            { quantity: 1, categories: ["Maybeboard"], card: { oracleCard: { name: "Ponder" } } },
+            { quantity: 1, categories: ["Sideboard"], card: { oracleCard: { name: "Pyroblast" } } },
+          ],
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://archidekt.com/decks/557");
+    expect(result.cards.find((c) => c.name === "Ponder")?.zone).toBe("maybeboard");
+    expect(result.cards.find((c) => c.name === "Pyroblast")?.zone).toBe("sideboard");
+  });
+
+  it("Archidekt: the second commander imports as the partner", async () => {
+    // Archidekt has no partner flag — both halves of a pair sit in the
+    // Commander category. Importing both as isCommander made the second
+    // overwrite the first and the deck lose its partner.
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "Partners",
+          deckFormat: 3,
+          cards: [
+            { quantity: 1, categories: ["Commander"], card: { oracleCard: { name: "Thrasios, Triton Hero" } } },
+            { quantity: 1, categories: ["Commander"], card: { oracleCard: { name: "Tymna the Weaver" } } },
+          ],
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://archidekt.com/decks/558");
+    expect(result.cards).toEqual([
+      { name: "Thrasios, Triton Hero", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Tymna the Weaver", quantity: 1, isCommander: false, isPartner: true, zone: "main" },
+    ]);
+  });
+
   it("Archidekt: formatWarning when deck is not Commander format", async () => {
     vi.spyOn(http, "httpGet").mockResolvedValueOnce(
       new Response(
