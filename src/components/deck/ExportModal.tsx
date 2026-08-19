@@ -12,6 +12,8 @@ import {
   exportMTGO,
   exportTappedOut,
   exportArchidekt,
+  exportGoldfish,
+  exportEdhrec,
   copyToClipboard,
   downloadFile,
 } from "@/lib/deck/export";
@@ -23,14 +25,24 @@ interface ExportModalProps {
 }
 
 type ExportFormat =
-  "moxfield" | "arena" | "mtgo" | "tappedout" | "archidekt" | "plaintext";
+  | "moxfield"
+  | "arena"
+  | "mtgo"
+  | "tappedout"
+  | "archidekt"
+  | "goldfish"
+  | "edhrec"
+  | "plaintext";
 
+// Brand names, deliberately not translated
 const FORMAT_LABELS: Record<ExportFormat, string> = {
   moxfield: "Moxfield",
   arena: "MTG Arena",
   mtgo: "MTGO",
   tappedout: "TappedOut",
   archidekt: "Archidekt",
+  goldfish: "MTGGoldfish",
+  edhrec: "EDHRec",
   plaintext: "Plain Text",
 };
 
@@ -46,6 +58,10 @@ function getExportText(deck: Deck, format: ExportFormat): string {
       return exportTappedOut(deck);
     case "archidekt":
       return exportArchidekt(deck);
+    case "goldfish":
+      return exportGoldfish(deck);
+    case "edhrec":
+      return exportEdhrec(deck);
     case "plaintext":
       return exportPlainText(deck);
   }
@@ -92,6 +108,8 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
     "mtgo",
     "tappedout",
     "archidekt",
+    "goldfish",
+    "edhrec",
     "plaintext",
   ];
 
