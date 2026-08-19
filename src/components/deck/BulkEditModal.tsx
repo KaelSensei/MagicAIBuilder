@@ -1,6 +1,7 @@
 "use client";
 // Bulk Edit modal — edit the entire deck as plain text, Moxfield-style
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle, FileText } from "lucide-react";
 import { exportToText, parseTextDecklist } from "@/lib/deck/import";
@@ -17,6 +18,14 @@ interface BulkEditModalProps {
 
 type SaveStatus = "idle" | "saving" | "reloading" | "done" | "error";
 
+const DESCRIPTION_RICH_TAGS = {
+  code: (chunks: ReactNode) => (
+    <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">
+      {chunks}
+    </code>
+  ),
+};
+
 function getStatusTextClass(status: SaveStatus): string {
   if (status === "error") return "text-red-400";
   if (status === "done") return "text-green-400";
@@ -24,6 +33,7 @@ function getStatusTextClass(status: SaveStatus): string {
 }
 
 export function BulkEditModal({ deck, children }: BulkEditModalProps) {
+  const t = useTranslations("deck");
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [status, setStatus] = useState<SaveStatus>("idle");
@@ -82,12 +92,12 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
     if (!text.trim()) return;
     if (!activeDeckId) {
       setStatus("error");
-      setMessage("No deck selected. Please open a deck first.");
+      setMessage(t("import.noDeckSelected"));
       return;
     }
 
     setStatus("saving");
-    setMessage("Saving...");
+    setMessage(t("bulkEdit.saving"));
 
     try {
       const parsed = parseTextDecklist(text);
@@ -103,15 +113,15 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
 
       if (allCardNames.length === 0) {
         setStatus("error");
-        setMessage("No cards found in the decklist.");
+        setMessage(t("import.noCardsFound"));
         return;
       }
 
-      setMessage(`Validating ${allCardNames.length} cards with Scryfall...`);
+      setMessage(t("import.validating", { count: allCardNames.length }));
       const foundCards = await fetchInBatches(allCardNames);
 
       // Step 1: Remove all existing cards from DB
-      setMessage("Clearing existing deck...");
+      setMessage(t("bulkEdit.clearing"));
       await deckApi.removeAllCards(activeDeckId);
 
       // Step 2: Reset commander / partner / companion
@@ -122,16 +132,16 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       });
 
       // Step 3: Re-add commander and all cards
-      setMessage("Rebuilding deck...");
+      setMessage(t("bulkEdit.rebuilding"));
       const added = await addParsedCards(parsed, foundCards);
 
       // Step 4: Reload deck state from DB
       setStatus("reloading");
-      setMessage(`Saved! Reloading deck...`);
+      setMessage(t("bulkEdit.reloading"));
       await loadDecks();
 
       setStatus("done");
-      setMessage(`Saved ${added} cards successfully.`);
+      setMessage(t("bulkEdit.saved", { count: added }));
 
       // Auto-close after a short delay
       setTimeout(() => {
@@ -140,7 +150,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
     } catch (err) {
       setStatus("error");
       setMessage(
-        err instanceof Error ? err.message : "Failed to save changes."
+        err instanceof Error ? err.message : t("bulkEdit.saveFailed")
       );
     }
   };
@@ -172,12 +182,13 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-[var(--accent)]" />
               <Dialog.Title className="text-base font-semibold text-[var(--text-primary)]">
-                Bulk Edit — {deck.name}
+                {t("bulkEdit.title", { name: deck.name })}
               </Dialog.Title>
             </div>
             <Dialog.Close asChild>
               <button
                 type="button"
+                aria-label={t("bulkEdit.close")}
                 className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -186,15 +197,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
           </div>
 
           <Dialog.Description className="text-sm text-[var(--text-secondary)] shrink-0">
-            Edit your decklist directly. One card per line:{" "}
-            <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">
-              1 Card Name
-            </code>
-            . Add a{" "}
-            <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">
-              Commander
-            </code>{" "}
-            section header to set your commander.
+            {t.rich("bulkEdit.description", DESCRIPTION_RICH_TAGS)}
           </Dialog.Description>
 
           {/* Textarea */}
@@ -209,7 +212,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
             />
             {/* Line counter */}
             <p className="text-xs text-[var(--text-secondary)] text-right">
-              {lineCount} {lineCount === 1 ? "line" : "lines"}
+              {t("bulkEdit.lineCount", { count: lineCount })}
             </p>
           </div>
 
@@ -239,7 +242,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
               disabled={status === "saving" || status === "reloading"}
               className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Cancel
+              {t("import.cancel")}
             </button>
             <button
               type="button"
@@ -255,7 +258,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
               {(status === "saving" || status === "reloading") && (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               )}
-              {status === "done" ? "Saved!" : "Save"}
+              {status === "done" ? t("bulkEdit.savedButton") : t("bulkEdit.save")}
             </button>
           </div>
         </Dialog.Content>

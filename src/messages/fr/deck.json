@@ -54,9 +54,7 @@
     "title": "Importer une liste de deck",
     "tabText": "Texte brut",
     "tabUrl": "Depuis une URL",
-    "description": "Collez une liste de deck en texte brut. Utilisez {codeCard} par ligne. Ajoutez un en-tête {codeCommander} pour définir votre commandant.",
-    "codeCard": "1 Nom de carte",
-    "codeCommander": "Commander",
+    "description": "Collez une liste de deck en texte brut. Utilisez <code>1 Nom de carte</code> par ligne. Ajoutez un en-tête <code>Commander</code> pour définir votre commandant.",
     "noDeckSelected": "Aucun deck sélectionné. Créez ou ouvrez un deck d’abord.",
     "parsing": "Analyse de la liste...",
     "noCardsFound": "Aucune carte trouvée dans la liste.",
@@ -65,7 +63,45 @@
     "importFailed": "Échec de l’import des cartes.",
     "close": "Fermer",
     "cancel": "Annuler",
-    "import": "Importer"
+    "import": "Importer",
+    "url": {
+      "intro": "Collez l’URL d’un deck à importer. Sources prises en charge : {sources}.",
+      "placeholder": "https://www.moxfield.com/decks/… ou publicId moxfield (ex. AbCdEfGhIj)",
+      "detected": "{source} détecté ✓",
+      "notRecognised": "Source non reconnue. Sources prises en charge : {sources}.",
+      "fetching": "Récupération du deck…",
+      "importFailed": "Échec de l’import.",
+      "success": "« {name} » importé — {added, plural, one {# carte ajoutée} other {# cartes ajoutées}}{ignored, plural, =0 {} one {, # ignorée} other {, # ignorées}}.",
+      "notFound": "Cartes introuvables sur Scryfall ({count}) :",
+      "footer": "Sources prises en charge : {sources}. Le deck doit être public."
+    }
+  },
+  "templates": {
+    "title": "Modèles pour {commander}",
+    "subtitle": "Partez d’un deck sélectionné et personnalisez-le",
+    "close": "Fermer",
+    "loading": "Chargement des modèles...",
+    "loadFailed": "Échec du chargement des modèles",
+    "empty": "Aucun modèle disponible pour ce commandant pour l’instant",
+    "filterByArchetype": "Filtrer par archétype",
+    "all": "Tous",
+    "official": "Officiel",
+    "byAuthor": "{archetype} par {author}",
+    "use": "Utiliser"
+  },
+  "bulkEdit": {
+    "title": "Édition en bloc — {name}",
+    "close": "Fermer",
+    "description": "Modifiez votre liste directement. Une carte par ligne : <code>1 Nom de carte</code>. Ajoutez un en-tête <code>Commander</code> pour définir votre commandant.",
+    "saving": "Enregistrement...",
+    "clearing": "Suppression du deck existant...",
+    "rebuilding": "Reconstruction du deck...",
+    "reloading": "Enregistré ! Rechargement du deck...",
+    "saved": "{count, plural, one {# carte enregistrée avec succès.} other {# cartes enregistrées avec succès.}}",
+    "saveFailed": "Échec de l’enregistrement des modifications.",
+    "lineCount": "{count, plural, one {# ligne} other {# lignes}}",
+    "save": "Enregistrer",
+    "savedButton": "Enregistré !"
   },
   "bulk": {
     "selectAll": "Tout sélectionner",
