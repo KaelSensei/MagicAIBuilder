@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 
-import { resolveLocalizedText, toScryfallLang } from "./localized";
+import {
+  mergeLocalizedPrintings,
+  resolveLocalizedText,
+  toScryfallLang,
+} from "./localized";
 import type { ScryfallCard } from "./types";
 
 function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
@@ -136,5 +140,55 @@ describe("resolveLocalizedText", () => {
     // Scryfall does emit printed_* on some English cards; that is not a translation.
     const card = makeCard({ lang: "en", printed_name: "Lightning Bolt" });
     expect(resolveLocalizedText(card).isLocalized).toBe(false);
+  });
+});
+
+describe("mergeLocalizedPrintings", () => {
+  const english = [
+    makeCard({ id: "en-1", name: "Lightning Bolt" }),
+    makeCard({ id: "en-2", name: "Sol Ring", type_line: "Artifact" }),
+    makeCard({ id: "en-3", name: "Counterspell", type_line: "Instant" }),
+  ];
+
+  it("substitutes the localised printing where one exists", () => {
+    const localized = [
+      makeCard({ id: "fr-1", name: "Lightning Bolt", lang: "fr", printed_name: "Foudre" }),
+    ];
+    const merged = mergeLocalizedPrintings(english, localized);
+    expect(merged[0].id).toBe("fr-1");
+    expect(merged[0].printed_name).toBe("Foudre");
+  });
+
+  it("keeps every English card that has no localised printing", () => {
+    // A lang-filtered Scryfall search only returns cards printed in that
+    // language; merging over the English list is what keeps the rest visible.
+    const localized = [
+      makeCard({ id: "fr-2", name: "Sol Ring", lang: "fr", printed_name: "Anneau solaire" }),
+    ];
+    const merged = mergeLocalizedPrintings(english, localized);
+    expect(merged.map((c) => c.id)).toEqual(["en-1", "fr-2", "en-3"]);
+  });
+
+  it("preserves the English list's order and length", () => {
+    const localized = [
+      makeCard({ id: "fr-3", name: "Counterspell", lang: "fr" }),
+      makeCard({ id: "fr-1", name: "Lightning Bolt", lang: "fr" }),
+    ];
+    const merged = mergeLocalizedPrintings(english, localized);
+    expect(merged).toHaveLength(3);
+    expect(merged.map((c) => c.name)).toEqual([
+      "Lightning Bolt",
+      "Sol Ring",
+      "Counterspell",
+    ]);
+  });
+
+  it("returns the English list untouched when there is nothing to merge", () => {
+    expect(mergeLocalizedPrintings(english, [])).toEqual(english);
+  });
+
+  it("ignores localised printings of cards not in the English list", () => {
+    const localized = [makeCard({ id: "fr-9", name: "Brainstorm", lang: "fr" })];
+    expect(mergeLocalizedPrintings(english, localized)).toEqual(english);
   });
 });

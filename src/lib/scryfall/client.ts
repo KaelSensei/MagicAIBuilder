@@ -99,10 +99,18 @@ const EMPTY_SEARCH_RESPONSE: ScryfallSearchResponse = {
   data: [],
 };
 
-/** Search cards using Scryfall query syntax — results cached 1h */
+/**
+ * Search cards using Scryfall query syntax — results cached 1h.
+ *
+ * `includeMultilingual` must be set whenever the query carries a `lang:`
+ * filter: Scryfall hides non-English cards from search without it, so the
+ * filter alone returns nothing at all. The DB cache stays correct because the
+ * flag is implied by the query text it always travels with.
+ */
 export async function searchCards(
   query: string,
-  page = 1
+  page = 1,
+  includeMultilingual = false
 ): Promise<ScryfallSearchResponse> {
   // Check cache first
   try {
@@ -119,6 +127,7 @@ export async function searchCards(
     page: String(page),
     order: "edhrec",
   });
+  if (includeMultilingual) params.set("include_multilingual", "true");
   const response = await rateLimitedFetch(
     `${SCRYFALL_BASE}/cards/search?${params}`
   );
@@ -219,7 +228,8 @@ export async function getCardCollection(
 
 /** Fetch all pages of a Scryfall search query */
 export async function fetchAllPages(
-  query: string
+  query: string,
+  includeMultilingual = false
 ): Promise<ScryfallCard[]> {
   const allCards: ScryfallCard[] = [];
   let page = 1;
@@ -227,7 +237,7 @@ export async function fetchAllPages(
 
   let hasMore = true;
   while (hasMore && page <= PAGE_SAFETY_CAP) {
-    const response = await searchCards(query, page);
+    const response = await searchCards(query, page, includeMultilingual);
     allCards.push(...response.data);
     hasMore = response.has_more ?? false;
     page++;

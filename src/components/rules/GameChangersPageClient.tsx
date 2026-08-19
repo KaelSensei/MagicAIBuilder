@@ -13,7 +13,8 @@ import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Loader2, Search, Shield, Zap, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { useGameChangersList } from "@/hooks/useGameChangers";
+import { useLocalizedGameChangersList } from "@/hooks/useGameChangers";
+import { resolveLocalizedText } from "@/lib/scryfall/localized";
 import { useBanlistQuery } from "@/hooks/useBanlist";
 import { Pagination } from "@/components/rules/Pagination";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
@@ -49,13 +50,14 @@ function getCardNormalImage(card: ScryfallCard): string {
 function CardTile({ card, badge, onClickZoom }: CardTileProps) {
   const t = useTranslations("rules");
   const imageUri = getCardNormalImage(card);
+  const text = resolveLocalizedText(card);
 
   return (
     <button
       type="button"
       className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--accent)]/50 transition-colors cursor-pointer text-left w-full"
       onClick={() => onClickZoom(card)}
-      aria-label={t("zoom.viewCard", { name: card.name })}
+      aria-label={t("zoom.viewCard", { name: text.name })}
     >
       {/* Card image — aspect ratio ~63:88 */}
       <div className="relative aspect-[63/88] bg-[var(--background)] overflow-hidden">
@@ -63,7 +65,7 @@ function CardTile({ card, badge, onClickZoom }: CardTileProps) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUri}
-            alt={card.name}
+            alt={text.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
@@ -78,10 +80,10 @@ function CardTile({ card, badge, onClickZoom }: CardTileProps) {
       <div className="p-2 flex items-center gap-2">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-[var(--text-primary)] truncate">
-            {card.name}
+            {text.name}
           </p>
           <p className="text-[10px] text-[var(--text-secondary)] truncate">
-            {card.type_line}
+            {text.typeLine}
           </p>
         </div>
         {badge}
@@ -109,6 +111,7 @@ function CardZoomModal({
   onOpenPrintings,
 }: CardZoomModalProps) {
   const t = useTranslations("rules");
+  const text = resolveLocalizedText(card);
   const currentIndex = cards.findIndex((c) => c.id === card.id);
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < cards.length - 1;
@@ -141,7 +144,7 @@ function CardZoomModal({
     <dialog
       open
       className="fixed inset-0 z-50 m-0 flex h-full w-full max-h-none max-w-none items-center justify-center border-none bg-transparent p-4"
-      aria-label={`${card.name} — zoom`}
+      aria-label={`${text.name} — zoom`}
     >
       <div className="relative flex h-full w-full max-h-full items-center justify-center">
         <button
@@ -187,16 +190,16 @@ function CardZoomModal({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={largeUri}
-              alt={card.name}
+              alt={text.name}
               className="w-full rounded-xl shadow-2xl"
             />
           )}
 
           <div className="mt-3 flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-white">{card.name}</p>
+              <p className="text-sm font-semibold text-white">{text.name}</p>
               <p className="text-xs text-white/60">
-                {card.type_line}
+                {text.typeLine}
                 {cards.length > 1 && (
                   <span className="ml-2 text-white/40">
                     {t("zoom.cardPosition", {
@@ -244,7 +247,7 @@ export function GameChangersPageClient() {
     data: gameChangers,
     isLoading: gcLoading,
     isError: gcError,
-  } = useGameChangersList();
+  } = useLocalizedGameChangersList();
 
   const {
     data: banlist,
@@ -262,7 +265,13 @@ export function GameChangersPageClient() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return activeData;
-    return activeData.filter((c) => c.name.toLowerCase().includes(q));
+    // Match the oracle name and the displayed (printed) one: a viewer reading
+    // a French list will type the French name they see on screen.
+    return activeData.filter((c) => {
+      if (c.name.toLowerCase().includes(q)) return true;
+      const printed = c.printed_name ?? c.card_faces?.[0]?.printed_name;
+      return printed !== undefined && printed.toLowerCase().includes(q);
+    });
   }, [activeData, search]);
 
   // Pagination
