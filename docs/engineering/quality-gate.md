@@ -95,7 +95,13 @@ Two things ruled out along the way:
 - **Not a missing provider in the tree.** `[locale]/layout.tsx` wraps everything, and `[locale]/not-found.tsx` supplies its own for the case where the layout bailed on an unsupported locale.
 - **Not a missing `setRequestLocale` on the destination page.** That call is next-intl's documented requirement for static rendering and is currently in the layout only — but `/decks` is a `"use client"` page, and `setRequestLocale` is a server API, so it cannot be the fix there. Worth adding to the nine server pages on its own merits; it is not this bug.
 
-Still open. The difference now is that the next occurrence leaves usable evidence instead of deleting it.
+**Hypothesis 3 (2026-08-19, mitigated): dev-mode on-demand compilation.** The gate's web server is `next dev` (`playwright.config.ts` → `pnpm dev`), so route segments compile on first visit — during the run, under full parallel load. A navigation that lands mid-compile can render a client component against a different instance of the next-intl context module than the one the provider captured, which is exactly "context from `NextIntlClientProvider` was not found": React logs it, retries on the client, and the in-flight navigation aborts. This fits every observed trait — intermittent, load-dependent, never reproducible deliberately (it is compile _timing_), always alongside that log line, and touching whichever spec happens to navigate first.
+
+Mitigation: a `warmup` Playwright project (`e2e/warmup.setup.ts`) that the `chromium` project depends on visits every route segment the suite navigates before any test runs, so all compilation happens up front and nothing recompiles mid-run. Deliberately a dependency project, not `globalSetup` — it appears in the report, and project dependencies are guaranteed to run before the dependent project regardless of `PLAYWRIGHT_SPEC` narrowing.
+
+The definitive fix would be testing a production build (`next build && next start`), which also would make `@perf` meaningful — but the auth bypass is deliberately dead when `NODE_ENV === "production"` (`requireAuth` checks it), so that requires redesigning the bypass gate first. Tracked, not done.
+
+If the failure recurs _with_ the warmup in place, hypothesis 3 is wrong or incomplete — say so here rather than quietly re-running.
 
 > **`retries` is 0 here.** `playwright.config.ts` sets `retries: process.env.CI ? 2 : 0`, and `CI` is not set inside the e2e container — nor does the GitHub workflow run e2e at all, so the retry setting has never applied anywhere. The gate that blocks pushes therefore runs in the least forgiving mode, with full parallelism. That is deliberate for now: adding retries would stop a known intermittent failure from blocking, which is the sort of quiet loosening this gate has already been fixed for twice. Fix the flake, do not pad the gate.
 

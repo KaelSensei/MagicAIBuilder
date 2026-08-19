@@ -15,9 +15,21 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
+    // Compiles every route segment once before the suite runs. The web server
+    // is `next dev`, and a navigation landing mid-compile intermittently
+    // renders against a stale next-intl context module ("context from
+    // NextIntlClientProvider was not found") and aborts — see
+    // docs/engineering/quality-gate.md. The default testMatch never picks
+    // this file up (it is .setup.ts, not .spec.ts), so it runs only here.
+    {
+      name: "warmup",
+      testMatch: /warmup\.setup\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      dependencies: ["warmup"],
     },
   ],
   webServer: {
