@@ -15,7 +15,7 @@ import { BookOpen, Loader2, Search, Shield, Zap, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useLocalizedGameChangersList } from "@/hooks/useGameChangers";
 import { resolveLocalizedText } from "@/lib/scryfall/localized";
-import { useBanlistQuery } from "@/hooks/useBanlist";
+import { useLocalizedBanlistQuery } from "@/hooks/useBanlist";
 import { Pagination } from "@/components/rules/Pagination";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { cn } from "@/components/ui/utils";
@@ -253,7 +253,7 @@ export function GameChangersPageClient() {
     data: banlist,
     isLoading: blLoading,
     isError: blError,
-  } = useBanlistQuery();
+  } = useLocalizedBanlistQuery();
 
   // Active dataset
   const activeData: ScryfallCard[] = useMemo(() => {
