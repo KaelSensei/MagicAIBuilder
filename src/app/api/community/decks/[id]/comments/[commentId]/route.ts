@@ -128,7 +128,7 @@ export async function DELETE(_req: Request, { params }: Params) {
       where: { id: commentId },
       select: { userId: true, deckId: true },
     });
-    if (!comment || comment.deckId !== id) {
+    if (comment?.deckId !== id) {
       return NextResponse.json({ error: "Comment not found" }, { status: 404 });
     }
 

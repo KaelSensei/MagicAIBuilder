@@ -270,7 +270,7 @@ export function GameChangersPageClient() {
     return activeData.filter((c) => {
       if (c.name.toLowerCase().includes(q)) return true;
       const printed = c.printed_name ?? c.card_faces?.[0]?.printed_name;
-      return printed !== undefined && printed.toLowerCase().includes(q);
+      return printed?.toLowerCase().includes(q) ?? false;
     });
   }, [activeData, search]);
 
