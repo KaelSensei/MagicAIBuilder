@@ -5,19 +5,19 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-08-16                             |
+| Last Updated  | 2026-08-19                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-08-16)
+## Current metrics (2026-08-19)
 
 | Metric              | Value                                                  |
 | ------------------- | ------------------------------------------------------ |
-| Unit tests          | 1987 across 138 files                                  |
+| Unit tests          | 2013 across 139 files                                  |
 | E2E tests           | 56 passing, 1 skipped (`@external` / `@perf` excluded) |
 | Coverage            | ~94.5%                                                 |
 | SonarCloud          | 0 open issues                                          |
-| Source files        | 282 (`.ts`/`.tsx`, excluding tests)                    |
+| Source files        | 283 (`.ts`/`.tsx`, excluding tests)                    |
 | Components          | 114 (`.tsx`, excluding tests)                          |
 | API routes          | 37                                                     |
 | Prisma models       | 19                                                     |
@@ -34,7 +34,7 @@
 - **Three `setRequestLocale` / `requestLocale` deprecations are marked accepted in SonarCloud**, not fixed. next-intl points to `next/root-params`, which in Next 15.5.22 exports `unstable_rootParams` and ships a stub `.d.ts`. Migrating would trade a MINOR warning for an unstable API in the same request-locale plumbing that carries the intermittent navigation failure. Reversible — reopen them if the trade looks different later.
 - **Intermittent e2e failure** — now blocking: it took three push attempts to land #436. The Playwright report finally escapes its container, so the failing specs are known (`deck-builder.spec.ts:55`, community public-deck). The click on the `/decks` link fires and the URL stays on `/builder/<id>` — the navigation starts and is aborted, matching the `useTranslations` context error in the dev log. Two hypotheses ruled out; see `quality-gate.md`. Still undiagnosed.
 - **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
-- **The matchup breakdown has no data.** `difficulty` is accepted by the schema and by `parseSessionInput`, and `getMatchupStats` groups by it, but the recording bar never asks for it — so every session stores `null` and the breakdown is always empty.
+- ~~**The matchup breakdown has no data.**~~ **Resolved (#425).** The recording bar asks for opponent strength and the breakdown shows the split. The stale copy of this line survived here and in the roadmap until 2026-08-19 — when syncing docs, check the component, not the last review.
 - **Three docs are still in French**: `docs/init-prompt.md`, `docs/product/competitive-landscape.md`, `docs/security/audit-securite-2026-07-20.md` (French filename too).
 
 ---
