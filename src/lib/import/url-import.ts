@@ -200,10 +200,39 @@ interface ArchidektCard {
   categories: string[];
 }
 
+interface ArchidektCategory {
+  name: string;
+  includedInDeck?: boolean;
+}
+
 interface ArchidektDeck {
   name: string;
   cards: ArchidektCard[];
+  /** Category metadata — the source of truth for what the deck actually runs */
+  categories?: ArchidektCategory[];
   deckFormat?: number; // 3 = Commander
+}
+
+/**
+ * Resolves the zone an Archidekt card belongs to.
+ *
+ * Archidekt models Maybeboard/Sideboard/Considering (and any custom name) as
+ * categories flagged `includedInDeck: false` — importing those into the main
+ * zone would silently change the deck's contents. The name check backstops
+ * the two conventional names when the metadata is absent from a payload.
+ */
+function archidektZone(
+  cardCategories: readonly string[],
+  notIncluded: ReadonlySet<string>
+): UrlImportCard["zone"] {
+  for (const category of cardCategories) {
+    const lower = category.toLowerCase();
+    if (lower === "sideboard") return "sideboard";
+    if (notIncluded.has(lower) || lower === "maybeboard" || lower === "considering") {
+      return "maybeboard";
+    }
+  }
+  return "main";
 }
 
 async function importArchidekt(id: string): Promise<UrlImportResult> {
@@ -211,9 +240,30 @@ async function importArchidekt(id: string): Promise<UrlImportResult> {
   const data = parseJson<ArchidektDeck>(await res.json());
   const cards: UrlImportCard[] = [];
 
+  const notIncluded = new Set(
+    (data.categories ?? [])
+      .filter((c) => c.includedInDeck === false)
+      .map((c) => c.name.toLowerCase())
+  );
+
+  // Archidekt has no partner flag — both halves of a pair sit in the
+  // Commander category, and importing both as commander loses the second.
+  let commanderSeen = false;
   for (const entry of data.cards ?? []) {
-    const isCommander = entry.categories.some((c) => c.toLowerCase() === "commander");
-    cards.push({ name: entry.card.oracleCard.name, quantity: entry.quantity, isCommander, isPartner: false, zone: "main" });
+    const inCommanderCategory = entry.categories.some(
+      (c) => c.toLowerCase() === "commander"
+    );
+    const isCommander = inCommanderCategory && !commanderSeen;
+    const isPartner = inCommanderCategory && commanderSeen;
+    if (inCommanderCategory) commanderSeen = true;
+
+    cards.push({
+      name: entry.card.oracleCard.name,
+      quantity: entry.quantity,
+      isCommander,
+      isPartner,
+      zone: inCommanderCategory ? "main" : archidektZone(entry.categories, notIncluded),
+    });
   }
 
   const formatWarning =
