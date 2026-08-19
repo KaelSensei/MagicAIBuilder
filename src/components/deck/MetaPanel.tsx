@@ -232,6 +232,17 @@ export function MetaPanel({
                     {t("meta.communityDecks")}
                   </Link>
 
+                  {/* ─ EDHRec link-out — same slug the data above is fetched with ─ */}
+                  <a
+                    href={`https://edhrec.com/commanders/${commanderToSlug(commanderName)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-[11px] text-[var(--accent)] hover:underline"
+                  >
+                    <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                    {t("meta.viewOnEdhrec")}
+                  </a>
+
                   {/* ─ EDHRec section ─ */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">

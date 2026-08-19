@@ -314,6 +314,7 @@
     "refresh": "Actualiser",
     "staleData": "Données obsolètes du {date}",
     "communityDecks": "Voir les decks de la communauté pour ce commandant",
+    "viewOnEdhrec": "Voir ce commandant sur EDHRec",
     "popularEdhrec": "Populaires (EDHRec)",
     "notInDeck": "Absentes du deck",
     "noEdhrecData": "Aucune donnée EDHRec pour ce commandant",
