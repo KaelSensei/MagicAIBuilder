@@ -54,9 +54,7 @@
     "title": "Import Decklist",
     "tabText": "Plain Text",
     "tabUrl": "From URL",
-    "description": "Paste a decklist in plain text format. Use {codeCard} per line. Add a {codeCommander} section header to set your commander.",
-    "codeCard": "1 Card Name",
-    "codeCommander": "Commander",
+    "description": "Paste a decklist in plain text format. Use <code>1 Card Name</code> per line. Add a <code>Commander</code> section header to set your commander.",
     "noDeckSelected": "No deck selected. Create or open a deck first.",
     "parsing": "Parsing decklist...",
     "noCardsFound": "No cards found in the decklist.",
@@ -65,7 +63,45 @@
     "importFailed": "Failed to import cards.",
     "close": "Close",
     "cancel": "Cancel",
-    "import": "Import"
+    "import": "Import",
+    "url": {
+      "intro": "Paste a deck URL to import. Supported: {sources}.",
+      "placeholder": "https://www.moxfield.com/decks/\u2026 or moxfield publicId (e.g. AbCdEfGhIj)",
+      "detected": "{source} detected \u2713",
+      "notRecognised": "Source not recognised. Supported: {sources}.",
+      "fetching": "Fetching deck\u2026",
+      "importFailed": "Import failed.",
+      "success": "Imported \u201c{name}\u201d \u2014 {added, plural, one {# card added} other {# cards added}}{ignored, plural, =0 {} one {, # ignored} other {, # ignored}}.",
+      "notFound": "Cards not found in Scryfall ({count}):",
+      "footer": "Supported: {sources}. Deck must be public."
+    }
+  },
+  "templates": {
+    "title": "Templates for {commander}",
+    "subtitle": "Start with a curated deck and customize it",
+    "close": "Close",
+    "loading": "Loading templates...",
+    "loadFailed": "Failed to load templates",
+    "empty": "No templates available for this commander yet",
+    "filterByArchetype": "Filter by archetype",
+    "all": "All",
+    "official": "Official",
+    "byAuthor": "{archetype} by {author}",
+    "use": "Use"
+  },
+  "bulkEdit": {
+    "title": "Bulk Edit \u2014 {name}",
+    "close": "Close",
+    "description": "Edit your decklist directly. One card per line: <code>1 Card Name</code>. Add a <code>Commander</code> section header to set your commander.",
+    "saving": "Saving...",
+    "clearing": "Clearing existing deck...",
+    "rebuilding": "Rebuilding deck...",
+    "reloading": "Saved! Reloading deck...",
+    "saved": "{count, plural, one {Saved # card successfully.} other {Saved # cards successfully.}}",
+    "saveFailed": "Failed to save changes.",
+    "lineCount": "{count, plural, one {# line} other {# lines}}",
+    "save": "Save",
+    "savedButton": "Saved!"
   },
   "bulk": {
     "selectAll": "Select all",
