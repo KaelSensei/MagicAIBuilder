@@ -156,6 +156,27 @@ describe("DeckCommentPanel", () => {
     );
   });
 
+  it("flips the top-level order with the sort toggle", async () => {
+    // The API serves newest first; the toggle only reverses the top level.
+    stubStream([
+      thread({ id: "new", body: "Newest comment." }),
+      thread({ id: "old", body: "Oldest comment.", createdAt: "2026-08-17T10:00:00.000Z" }),
+    ]);
+    renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+
+    await screen.findByText("Newest comment.");
+    const bodies = () =>
+      screen
+        .getAllByText(/comment\./i)
+        .map((el) => el.textContent);
+    expect(bodies()).toEqual(["Newest comment.", "Oldest comment."]);
+
+    fireEvent.click(screen.getByRole("button", { name: /newest first/i }));
+
+    expect(bodies()).toEqual(["Oldest comment.", "Newest comment."]);
+    expect(screen.getByRole("button", { name: /oldest first/i })).toBeTruthy();
+  });
+
   it("deletes after confirmation", async () => {
     stubStream([thread({ isAuthor: true })]);
     vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
