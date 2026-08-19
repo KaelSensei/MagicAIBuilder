@@ -31,6 +31,8 @@ export interface DeckComment {
   readonly author: CommentAuthor;
   /** True when the author owns the deck — lets the UI badge their replies */
   readonly isDeckOwner: boolean;
+  /** True when the viewer wrote this comment — gates edit/delete affordances */
+  readonly isAuthor: boolean;
 }
 
 /** A comment with its replies resolved into a tree. */

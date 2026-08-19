@@ -479,5 +479,23 @@
     "print": "Print / Save PDF",
     "hintArt": "Preload images first, then print. Choose “Save as PDF” in the dialog. Desktop recommended.",
     "hintTextOnly": "No images — opens print immediately with name, type, and rules text. Choose “Save as PDF” in the dialog."
+  },
+  "comments": {
+    "title": "Comments",
+    "count": "{count, plural, =0 {No comments yet} one {# comment} other {# comments}}",
+    "signInToComment": "Sign in to join the conversation.",
+    "placeholder": "Ask a question or share a thought\u2026",
+    "post": "Post",
+    "posting": "Posting\u2026",
+    "reply": "Reply",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this comment? Its replies go with it.",
+    "edited": "edited",
+    "ownerBadge": "Deck author",
+    "failed": "Something went wrong. Try again.",
+    "empty": "Start the conversation."
   }
 }

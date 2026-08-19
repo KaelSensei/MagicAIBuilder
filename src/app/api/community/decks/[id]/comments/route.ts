@@ -78,7 +78,7 @@ export async function GET(_req: Request, { params }: Params) {
       select: COMMENT_SELECT,
     })) as DeckCommentRow[];
 
-    const comments = rows.map((row) => toDeckComment(row, deck.userId));
+    const comments = rows.map((row) => toDeckComment(row, deck.userId, viewerId));
 
     return NextResponse.json({
       comments: buildCommentTree(comments),
@@ -149,7 +149,9 @@ export async function POST(request: Request, { params }: Params) {
       select: COMMENT_SELECT,
     })) as DeckCommentRow;
 
-    return NextResponse.json(toDeckComment(row, deck.userId), { status: 201 });
+    return NextResponse.json(toDeckComment(row, deck.userId, userId), {
+      status: 201,
+    });
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
