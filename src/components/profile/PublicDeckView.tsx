@@ -1,7 +1,9 @@
 "use client";
 // Public read-only deck page — accessible without auth for public decks
+import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { User, ExternalLink, Layers } from "lucide-react";
+import { User, ExternalLink, Layers, Link2, Check } from "lucide-react";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import type { CardCategory } from "@/lib/deck/types";
 import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
@@ -22,7 +24,15 @@ const BRACKET_COLORS: Record<number, string> = {
 };
 
 export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
+  const t = useTranslations("deck");
+  const [copied, setCopied] = useState(false);
   const commander = deck.cards.find((c) => c.isCommander && !c.isPartner);
+
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const partner = deck.cards.find((c) => c.isPartner);
   const nonCommanderCards = deck.cards.filter((c) => !c.isCommander && !c.isPartner);
 
@@ -54,15 +64,29 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <h1 className="text-2xl font-bold text-[var(--text-primary)]">{deck.name}</h1>
-            {deck.isOwner && (
-              <Link
-                href={`/builder/${deck.id}`}
-                className="flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline shrink-0"
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => void handleCopyLink()}
+                className="flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
-                Edit
-              </Link>
-            )}
+                {copied ? (
+                  <Check className="w-3.5 h-3.5 text-green-400" aria-hidden="true" />
+                ) : (
+                  <Link2 className="w-3.5 h-3.5" aria-hidden="true" />
+                )}
+                {copied ? t("share.copiedLink") : t("share.copyLink")}
+              </button>
+              {deck.isOwner && (
+                <Link
+                  href={`/builder/${deck.id}`}
+                  className="flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  {t("share.editDeck")}
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Commander info */}
