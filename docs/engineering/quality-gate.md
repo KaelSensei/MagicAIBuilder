@@ -103,6 +103,8 @@ The definitive fix would be testing a production build (`next build && next star
 
 If the failure recurs _with_ the warmup in place, hypothesis 3 is wrong or incomplete — say so here rather than quietly re-running.
 
+**Recurred — hypothesis 3 falsified as stated (2026-08-19, same day).** A later gate run failed 3 specs across unrelated files (community, deck-builder, playtest) with seven intl-context errors in the log, warmup active. Two observations survive: the run took 2.1 minutes against the usual ~1.4 — the host was visibly loaded (multiple Docker gate runs that day) — and the error still always accompanies the failures. So compile-timing may be _a_ trigger but is not _the_ mechanism; whatever it is, load widens it. The remaining credible path is the one already recorded: stop testing `next dev` and run the gate against a production build, which requires un-tying the auth bypass from `NODE_ENV` first — a security-relevant redesign that should not be done casually. Until then the flake is understood to be load-sensitive: avoid running other Docker builds while the gate runs.
+
 > **`retries` is 0 here.** `playwright.config.ts` sets `retries: process.env.CI ? 2 : 0`, and `CI` is not set inside the e2e container — nor does the GitHub workflow run e2e at all, so the retry setting has never applied anywhere. The gate that blocks pushes therefore runs in the least forgiving mode, with full parallelism. That is deliberate for now: adding retries would stop a known intermittent failure from blocking, which is the sort of quiet loosening this gate has already been fixed for twice. Fix the flake, do not pad the gate.
 
 ### Tests excluded from the blocking run
