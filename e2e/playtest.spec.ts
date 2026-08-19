@@ -16,6 +16,12 @@ test.describe("Playtest mode", () => {
     await suppressOnboarding(page);
     await page.goto(`/builder/${deckId}`);
 
+    // The builder lazy-loads the deck's cards after mount. Opening the
+    // playtest before they arrive snapshots a short library, and the
+    // opening hand comes up smaller than seven — the intermittent failure
+    // this wait exists to prevent.
+    await expect(page.getByText("Fixture Card 0").first()).toBeVisible();
+
     // Targeted by title: the visible label collapses to an icon below the `sm`
     // breakpoint, so the accessible name is viewport-dependent.
     await page.getByTitle("Playtest this deck").click();
