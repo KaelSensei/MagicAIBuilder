@@ -17,7 +17,7 @@ This is a **rough** first-pass weighting using a lightweight RICE/MoSCoW hybrid:
 Top candidates right now (reviewed 2026-08-19):
 
 - ~~**Finish i18n string extraction**~~ _(done — 2026-08-19, #455: the last three components shipped)_
-- **Diagnose the intermittent e2e failure** — Weight **4** _(mitigated — 2026-08-19, #464)_: hypothesis 3 — dev-mode on-demand compilation racing navigations — fits every observed trait, and a `warmup` Playwright project now compiles every route before the suite runs. Two gate runs green since. If it recurs with the warmup in place the hypothesis is wrong; the definitive fix (testing a production build) needs the auth bypass un-tied from `NODE_ENV` first — see `quality-gate.md`
+- **Diagnose the intermittent e2e failure** — Weight **4** _(hypothesis 3 falsified same day — see `quality-gate.md`)_: the warmup (#464) did not prevent a 3-spec failure on a loaded host, so compile timing is a trigger at most, not the mechanism. The flake is load-sensitive (do not run other Docker builds during the gate). **Next step needs a decision**: test a production build instead of `next dev`, which first requires un-tying the e2e auth bypass from `NODE_ENV` — a security-relevant redesign
 - **Localized card data via Scryfall `lang`** — Weight **4** _(in progress — #415 printing selector, #456 Game Changers page and wizard commander preview; the `DeckCard` surfaces remain)_
 - **UptimeRobot** — Weight **4** (early production safety net, now that a database exists again)
 - **Migrate `setRequestLocale` to `next/root-params`** — Weight **2**. next-intl deprecates it, but the replacement ships `unstable_rootParams` and a stub `.d.ts` in Next 15.5.22. The three SonarCloud warnings are marked accepted with that reason. Revisit when it stabilises
@@ -168,7 +168,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [x] **Proxy sheet PDF export** _(done — #202)_: configurable layout (3×3 A4/Letter, 2×2), client-side generation, 63×88mm cards, optional basic lands/commander
 - [x] **Text-only proxy sheets** _(already shipped)_: `includeCardArt: false` in `src/lib/deck/proxy.ts` renders art-free card boxes with name, mana cost, type line, oracle text and P/T; covered by unit and e2e tests. _(If the intent was a literal plain-text list rather than art-free card boxes, that is a separate render mode and still open.)_
-- [ ] **Richer export formats**: EDHRec, Goldfish (import only), extended Archidekt
+- [x] **Richer export formats** _(done — 2026-08-19, #467)_: MTGGoldfish (main deck, blank line, commander as the sideboard slot — the MTGO convention their import reads as the command zone), EDHRec deck-check list (command zone first, no marker syntax), and category tags on the Archidekt export (`[Commander{top}]` pins the command zone) so the categorisation survives the round trip
 
 ---
 
