@@ -1,7 +1,7 @@
 "use client";
 // Import deck from plain text or URL — Radix Dialog
 // Supports both trigger-based (children) and controlled (open/onOpenChange) usage
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -26,6 +26,14 @@ type ImportDialogProps =
     };
 
 type ImportStatus = "idle" | "validating" | "done" | "error";
+
+const DESCRIPTION_RICH_TAGS = {
+  code: (chunks: ReactNode) => (
+    <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">
+      {chunks}
+    </code>
+  ),
+};
 
 function getStatusTextClass(status: ImportStatus): string {
   if (status === "error") return "text-red-400";
@@ -213,15 +221,7 @@ export function ImportDialog({
           {activeTab === "text" && (
             <>
               <Dialog.Description className="text-sm text-[var(--text-secondary)]">
-                Paste a decklist in plain text format. Use{" "}
-                <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">
-                  1 Card Name
-                </code>{" "}
-                per line. Add a{" "}
-                <code className="text-xs bg-[var(--surface-hover)] px-1 rounded">
-                  Commander
-                </code>{" "}
-                section header to set your commander.
+                {t.rich("import.description", DESCRIPTION_RICH_TAGS)}
               </Dialog.Description>
 
               {/* Textarea */}

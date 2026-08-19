@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useState, type ReactNode } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, ThumbsUp, Clock } from "lucide-react";
@@ -24,6 +25,8 @@ export function TemplatesModal({
   onClose,
   isOpen,
 }: TemplatesModalProps) {
+  const t = useTranslations("deck");
+  const format = useFormatter();
   const [selectedArchetype, setSelectedArchetype] = useState<string | null>(
     null
   );
@@ -65,21 +68,21 @@ export function TemplatesModal({
     if (isLoading) {
       return (
         <div className="text-center py-12 text-white/60">
-          Loading templates...
+          {t("templates.loading")}
         </div>
       );
     }
     if (error) {
       return (
         <div className="text-center py-12 text-red-400">
-          Failed to load templates
+          {t("templates.loadFailed")}
         </div>
       );
     }
     if (templates.length === 0) {
       return (
         <div className="text-center py-12 text-white/60">
-          No templates available for this commander yet
+          {t("templates.empty")}
         </div>
       );
     }
@@ -88,7 +91,7 @@ export function TemplatesModal({
         {archetypes.length > 1 && (
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase text-white/60">
-              Filter by archetype
+              {t("templates.filterByArchetype")}
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -101,7 +104,7 @@ export function TemplatesModal({
                     : "bg-white/10 text-white/70 hover:bg-white/20"
                 )}
               >
-                All
+                {t("templates.all")}
               </button>
               {archetypes.map((arch) => (
                 <button
@@ -138,12 +141,15 @@ export function TemplatesModal({
                     </h3>
                     {template.source === "official" && (
                       <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-600/30 text-blue-200 flex-shrink-0">
-                        Official
+                        {t("templates.official")}
                       </span>
                     )}
                   </div>
                   <p className="text-sm text-white/60 mb-2">
-                    {template.archetype} by {template.author}
+                    {t("templates.byAuthor", {
+                      archetype: template.archetype,
+                      author: template.author,
+                    })}
                   </p>
                   <div className="flex items-center gap-4 text-xs text-white/50">
                     <div className="flex items-center gap-1">
@@ -153,7 +159,7 @@ export function TemplatesModal({
                     <div className="flex items-center gap-1">
                       <Clock size={14} />
                       <span>
-                        {new Date(template.createdAt).toLocaleDateString()}
+                        {format.dateTime(new Date(template.createdAt))}
                       </span>
                     </div>
                   </div>
@@ -167,7 +173,7 @@ export function TemplatesModal({
                   }}
                 >
                   <Download size={16} />
-                  Use
+                  {t("templates.use")}
                 </button>
               </div>
             </motion.div>
@@ -199,17 +205,17 @@ export function TemplatesModal({
           <div className="flex items-center justify-between p-6 border-b border-white/10">
             <div>
               <h2 className="text-xl font-bold text-white">
-                Templates for {commanderName}
+                {t("templates.title", { commander: commanderName })}
               </h2>
               <p className="text-sm text-white/60 mt-1">
-                Start with a curated deck and customize it
+                {t("templates.subtitle")}
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
               className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              aria-label="Close"
+              aria-label={t("templates.close")}
             >
               <X size={20} />
             </button>

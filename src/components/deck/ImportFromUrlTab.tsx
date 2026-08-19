@@ -1,6 +1,7 @@
 "use client";
 // Import deck from supported URL sources (Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec)
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Loader2,
   CheckCircle2,
@@ -28,6 +29,9 @@ const SOURCE_LABELS: Record<string, string> = {
   edhrec: "EDHRec",
 };
 
+// Brand names, deliberately not translated
+const SOURCES_LIST = Object.values(SOURCE_LABELS).join(", ");
+
 type ImportStatus = "idle" | "loading" | "done" | "error";
 
 interface ImportFromUrlTabProps {
@@ -41,6 +45,7 @@ function statusTextClass(status: ImportStatus): string {
 }
 
 export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
+  const t = useTranslations("deck");
   const [url, setUrl] = useState("");
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [message, setMessage] = useState("");
@@ -100,12 +105,12 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     if (!url.trim()) return;
     if (!activeDeckId) {
       setStatus("error");
-      setMessage("No deck selected. Create or open a deck first.");
+      setMessage(t("import.noDeckSelected"));
       return;
     }
 
     setStatus("loading");
-    setMessage("Fetching deck…");
+    setMessage(t("import.url.fetching"));
     setIgnored([]);
 
     try {
@@ -128,7 +133,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
         new Set(result.cards.map((c) => c.name))
       ).map((name) => ({ name }));
 
-      setMessage(`Validating ${cardNames.length} cards with Scryfall…`);
+      setMessage(t("import.validating", { count: cardNames.length }));
       const foundCards = await fetchInBatches(cardNames);
 
       const { added, ignoredNames } = await addUrlCards(
@@ -137,24 +142,25 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       );
       setIgnored(ignoredNames);
       setStatus("done");
-      const ignoredSuffix =
-        ignoredNames.length > 0 ? `, ${ignoredNames.length} ignored` : "";
       setMessage(
-        `Imported "${result.name}" — ${added} cards added${ignoredSuffix}.`
+        t("import.url.success", {
+          name: result.name,
+          added,
+          ignored: ignoredNames.length,
+        })
       );
       if (ignoredNames.length === 0) onSuccess?.();
     } catch (err) {
       setStatus("error");
       setFormatWarning(null);
-      setMessage(err instanceof Error ? err.message : "Import failed.");
+      setMessage(err instanceof Error ? err.message : t("import.url.importFailed"));
     }
   };
 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-[var(--text-secondary)]">
-        Paste a deck URL to import. Supported: Moxfield, Archidekt, TappedOut,
-        MTGTop8, MTGDecks, EDHRec.
+        {t("import.url.intro", { sources: SOURCES_LIST })}
       </p>
 
       {/* URL input */}
@@ -163,7 +169,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
           <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
           <input
             type="text"
-            placeholder="https://www.moxfield.com/decks/… or moxfield publicId (e.g. AbCdEfGhIj)"
+            placeholder={t("import.url.placeholder")}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleImport()}
@@ -180,7 +186,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
           {status === "loading" && (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           )}
-          Import
+          {t("import.import")}
         </button>
       </div>
 
@@ -189,14 +195,15 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
         <div className="flex items-center gap-1.5 text-xs text-green-400">
           <CheckCheck className="w-3.5 h-3.5" />
           <span>
-            {SOURCE_LABELS[detected.source] ?? detected.source} detected ✓
+            {t("import.url.detected", {
+              source: SOURCE_LABELS[detected.source] ?? detected.source,
+            })}
           </span>
         </div>
       )}
       {url.trim() && !detected && (
         <p className="text-xs text-amber-400">
-          Source not recognised. Supported: Moxfield, Archidekt, TappedOut,
-          MTGTop8, MTGDecks, EDHRec.
+          {t("import.url.notRecognised", { sources: SOURCES_LIST })}
         </p>
       )}
 
@@ -230,7 +237,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       {ignored.length > 0 && (
         <div className="rounded border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
           <p className="font-medium mb-1">
-            Cards not found in Scryfall ({ignored.length}):
+            {t("import.url.notFound", { count: ignored.length })}
           </p>
           <ul className="space-y-0.5 max-h-24 overflow-y-auto">
             {ignored.map((name) => (
@@ -240,12 +247,9 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
         </div>
       )}
 
-      {/* Supported sources note */}
+      {/* Supported sources note — same list as the intro, deck must be public */}
       <p className="text-xs text-[var(--text-secondary)]">
-        Supported:{" "}
-        <span className="text-[var(--text-primary)]">moxfield.com</span> and{" "}
-        <span className="text-[var(--text-primary)]">archidekt.com</span>. Deck
-        must be public.
+        {t("import.url.footer", { sources: SOURCES_LIST })}
       </p>
     </div>
   );
