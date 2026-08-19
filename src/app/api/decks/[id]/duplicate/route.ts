@@ -29,6 +29,7 @@ export async function POST(_req: Request, { params }: Params) {
         manualBracket: original.manualBracket,
         budget: original.budget,
         commanderId: original.commanderId,
+        commanderName: original.commanderName,
         partnerId: original.partnerId,
         companionId: original.companionId,
         pairingType: original.pairingType,
