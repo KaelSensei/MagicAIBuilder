@@ -9,6 +9,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-19 (night): Release batch #462–#465 — Archidekt fidelity, the flake gets a mechanism, commander in SQL
+
+#### Added
+
+- `test(e2e): Archidekt live-contract spec (#463)` — mirrors the Moxfield `@external` pattern against our own deck (25314868); structural assertions so content drift cannot redden it.
+- `feat(community): denormalise the commander name onto Deck (#465)` — `Deck.commanderName`, written wherever `commanderId` is written, **backfilled from the `isCommander` card in the repository's first data migration**. The discovery route now matches the slug in SQL via an expression index (the exact twin of `commanderToSlug` — the slug itself is never stored, since that function is shared with the EDHRec URL builder and a stored copy could silently desync) instead of fetching every public deck with its votes and ratings and slugging in memory. A new e2e case proves the SQL expression against real Postgres with "Kroxa, Titan of Death's Hunger".
+
+#### Fixed
+
+- `fix(import): honour Archidekt zones and partner commanders (#462)` — verified against the live API. Archidekt models Maybeboard/Sideboard/Considering as categories flagged `includedInDeck: false`; the importer put **every card in the main zone**, silently changing the deck's contents. And with no partner flag on Archidekt, both halves of a pair sat in the Commander category — importing both as commander made the second overwrite the first. Not-included categories now route to maybeboard/sideboard and the second commander imports as the partner.
+- `fix(e2e): warm every route before the suite runs (#464)` — **hypothesis 3 for the intermittent flake, the first with a mechanism**: the gate's web server is `next dev`, so route segments compile on demand mid-run, and a navigation landing mid-compile can render against a different instance of the next-intl context module than the provider captured — the "context from `NextIntlClientProvider` was not found" log line, a client retry, an aborted navigation. A `warmup` Playwright project the suite depends on now compiles every segment first. Falsification criterion recorded in `quality-gate.md`: a recurrence with warmup in place means the hypothesis is wrong.
+
+#### Notes
+
+- The Goldfish import stays blocked (Cloudflare JS challenge) — the Archidekt work in this batch is the practical answer to richer URL imports.
+- `Deck.commanderName` ships with a data backfill; production deploys must run `prisma migrate deploy` with `DATABASE_URL_UNPOOLED` as usual.
+
 ### 2026-08-19 (evening): Release batch #458–#460 — structured logs and deck comments
 
 #### Added
