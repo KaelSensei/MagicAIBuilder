@@ -9,7 +9,7 @@ vi.mock("@sentry/nextjs", () => ({
 }));
 
 // Imported after the mock so the logger picks up the stubbed Sentry client.
-const { logger } = await import("./logger");
+const { logger, toLogPayload } = await import("./logger");
 
 describe("logger", () => {
   beforeEach(() => {
@@ -127,6 +127,42 @@ describe("logger", () => {
 
       expect(() => logger.error("boom", "GET /api/decks")).not.toThrow();
       expect(console.error).toHaveBeenCalledWith("[GET /api/decks]", "boom");
+    });
+  });
+
+  describe("toLogPayload", () => {
+    // The structured (Pino) path emits one JSON object per line; this payload
+    // is everything that rides alongside `level`, `time` and `msg`.
+    it("carries the context under a searchable key", () => {
+      expect(toLogPayload("GET /api/decks", [])).toEqual({
+        context: "GET /api/decks",
+      });
+    });
+
+    it("omits keys that have nothing to say", () => {
+      expect(toLogPayload(undefined, [])).toEqual({});
+    });
+
+    it("attaches meta values when present", () => {
+      expect(toLogPayload("addCard", [{ id: "abc" }])).toEqual({
+        context: "addCard",
+        meta: [{ id: "abc" }],
+      });
+    });
+
+    it("puts an Error under the err key Pino serialises stacks from", () => {
+      const cause = new Error("db unreachable");
+      const payload = toLogPayload("GET /api/health", [], cause);
+
+      expect(payload.err).toBe(cause);
+    });
+
+    it("keeps the Error out of meta so it is not serialised twice", () => {
+      const cause = new Error("write conflict");
+      const payload = toLogPayload("addCard", ["detail", cause], cause);
+
+      expect(payload.err).toBe(cause);
+      expect(payload.meta).toEqual(["detail"]);
     });
   });
 });
