@@ -392,6 +392,24 @@
     "signInToRate": "Sign in to rate this deck.",
     "saveFailed": "Could not save your rating. Try again."
   },
+  "comments": {
+    "title": "Comments",
+    "count": "{count, plural, =0 {No comments yet} one {# comment} other {# comments}}",
+    "signInToComment": "Sign in to join the conversation.",
+    "placeholder": "Ask a question or share a thought…",
+    "post": "Post",
+    "posting": "Posting…",
+    "reply": "Reply",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this comment? Its replies go with it.",
+    "edited": "edited",
+    "ownerBadge": "Deck author",
+    "failed": "Something went wrong. Try again.",
+    "empty": "Be the first to comment."
+  },
   "banlist": {
     "deckWarnings": "Deck warnings",
     "banned": "{count} banned",

@@ -83,6 +83,23 @@ describe("GET /api/community/decks/[id]/comments", () => {
     expect(json.comments[0].replies).toHaveLength(1);
   });
 
+  it("marks the viewer's own comments so the UI can offer edit and delete", async () => {
+    authedAs("author-1");
+    mockDeckFindUnique.mockResolvedValue(PUBLIC_DECK);
+    mockCommentFindMany.mockResolvedValue([
+      commentRow(),
+      commentRow({ id: "c2", userId: "someone-else" }),
+    ]);
+
+    const res = await GET(new Request("http://test"), params());
+    const json = await res.json();
+
+    const mine = json.comments.find((c: { id: string }) => c.id === "c1");
+    const theirs = json.comments.find((c: { id: string }) => c.id === "c2");
+    expect(mine.isAuthor).toBe(true);
+    expect(theirs.isAuthor).toBe(false);
+  });
+
   it("badges comments written by the deck owner", async () => {
     unauthed();
     mockDeckFindUnique.mockResolvedValue(PUBLIC_DECK);

@@ -17,6 +17,7 @@ function makeComment(overrides: Partial<DeckComment> = {}): DeckComment {
     updatedAt: "2026-08-19T10:00:00.000Z",
     author: { name: "Ana", username: "ana", image: null },
     isDeckOwner: false,
+    isAuthor: false,
     ...overrides,
   };
 }

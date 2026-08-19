@@ -24,13 +24,19 @@ export interface DeckCommentRow {
 /**
  * Maps one database row to the shape the API serves.
  *
+ * The raw `userId` never leaves the API; the two questions the client asks
+ * about it — "is this the deck's author?" and "is this mine?" — are answered
+ * here as booleans instead.
+ *
  * @param row - the selected row, author included
  * @param deckOwnerId - the deck owner's user id, or null for ownerless decks
- * @returns the comment with dates as ISO strings and the owner badge resolved
+ * @param viewerId - the signed-in viewer's user id, or null for anonymous
+ * @returns the comment with dates as ISO strings and both badges resolved
  */
 export function toDeckComment(
   row: DeckCommentRow,
-  deckOwnerId: string | null
+  deckOwnerId: string | null,
+  viewerId: string | null
 ): DeckComment {
   return {
     id: row.id,
@@ -41,5 +47,6 @@ export function toDeckComment(
     updatedAt: row.updatedAt.toISOString(),
     author: row.user,
     isDeckOwner: deckOwnerId !== null && row.userId === deckOwnerId,
+    isAuthor: viewerId !== null && row.userId === viewerId,
   };
 }

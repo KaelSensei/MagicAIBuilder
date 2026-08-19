@@ -96,7 +96,7 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Comment not found" }, { status: 404 });
     }
 
-    return NextResponse.json(toDeckComment(row, deck.userId));
+    return NextResponse.json(toDeckComment(row, deck.userId, userId));
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
