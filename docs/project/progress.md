@@ -13,15 +13,15 @@
 
 | Metric              | Value                                                  |
 | ------------------- | ------------------------------------------------------ |
-| Unit tests          | 2013 across 139 files                                  |
+| Unit tests          | 2060 across 143 files                                  |
 | E2E tests           | 56 passing, 1 skipped (`@external` / `@perf` excluded) |
 | Coverage            | ~94.5%                                                 |
 | SonarCloud          | 0 open issues                                          |
-| Source files        | 283 (`.ts`/`.tsx`, excluding tests)                    |
-| Components          | 114 (`.tsx`, excluding tests)                          |
-| API routes          | 37                                                     |
-| Prisma models       | 19                                                     |
-| Prisma migrations   | 21                                                     |
+| Source files        | 291 (`.ts`/`.tsx`, excluding tests)                    |
+| Components          | 118 (`.tsx`, excluding tests)                          |
+| API routes          | 39                                                     |
+| Prisma models       | 20                                                     |
+| Prisma migrations   | 22                                                     |
 | Hooks               | 22                                                     |
 | Locales served      | 2 (`en`, `fr`) + 8 dormant                             |
 | Production database | Neon (Vercel Marketplace)                              |
@@ -36,6 +36,9 @@
 - **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
 - ~~**The matchup breakdown has no data.**~~ **Resolved (#425).** The recording bar asks for opponent strength and the breakdown shows the split. The stale copy of this line survived here and in the roadmap until 2026-08-19 — when syncing docs, check the component, not the last review.
 - **Three docs are still in French**: `docs/init-prompt.md`, `docs/product/competitive-landscape.md`, `docs/security/audit-securite-2026-07-20.md` (French filename too).
+- **Playtest e2e flake (2026-08-19)**: a playtest spec can start before the full deck loads, so the engine snapshots an empty library and the assertion fails. Distinct from the navigation flake above. Not yet diagnosed to a wait/selector; failed one gate run, passed on retry.
+- **Masked SSR error in `Header`**: the e2e web-server log repeatedly shows `Failed to call useTranslations because the context from NextIntlClientProvider was not found` thrown from `src/components/layout/Header.tsx` on community pages, recovered by client-side rendering so nothing user-visible fails. A latent flake source — and possibly related to the navigation flake, which also matches a `useTranslations` context error in the dev log.
+- **The e2e auth-bypass duplicate-key noise is expected**: parallel Playwright workers all upsert `playwright@test.local`; losers hit `User_email_key` and recover via the P2002 path in `resolveAuthenticatedUser`. Postgres logs the losers loudly — do not mistake them for the failure.
 
 ---
 

@@ -9,6 +9,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-19 (evening): Release batch #458–#460 — structured logs and deck comments
+
+#### Added
+
+- `feat(observability): emit structured JSON logs on the production server (#458)` — Pino behind the existing `logger` API with **zero call-site changes**: `level`, ISO `time`, `msg`, `context`, `meta`, serialised `err` stack. Development and the browser keep the readable `[context] message` console form; Sentry forwarding is unchanged in both modes. `pid`/`hostname` dropped — on serverless every invocation differs, so they say nothing.
+- `feat(community): threaded deck comments (#459 API, #460 UI)` — `DeckComment` model (`parentId` self-relation, database-level cascade), public GET / authed POST-PATCH-DELETE under `/api/community`, and a panel below the ratings block on the public deck page. The deck owner **may post** (unlike rating and voting) and may delete any comment as the minimal moderation surface; the API answers "is this mine?" / "is this the deck author?" as booleans so the raw `userId` never leaves it.
+- Shared `UserChip` author chip — extracted from `ReviewList` when the comments panel would have been the pattern's third copy.
+
+#### Fixed
+
+- `fix(e2e): probe the database healthcheck over TCP (#459)` — on a cold volume (every gate run: cleanup is `down -v`) postgres's initdb phase runs a bootstrap server that listens **only on the Unix socket**, which `pg_isready` without `-h` happily answers. The check could pass seconds before the real server bound TCP, and `prisma migrate deploy` died with P1001 before a single test executed. `-h 127.0.0.1` makes the probe ask the question Prisma asks.
+- The comments empty-state copy initially collided with the ratings e2e locator `/be the first/i` — a strict-mode two-element violation the moment both panels rendered. Caught by the gate, reworded (#460).
+
+#### Notes
+
+- **Goldfish import is blocked**, not just unbuilt: mtggoldfish.com's download endpoint sits behind a Cloudflare managed JS challenge, so the server-side fetch the other five parsers use receives the challenge page. Recorded on the roadmap; no parser shipped.
+- Two latent e2e flakes surfaced by the gate, both pre-existing: a playtest spec can start before the full deck loads (the engine snapshots an empty library), and the community pages log a masked `useTranslations … NextIntlClientProvider was not found` SSR error from `Header` that client-side rendering recovers. Neither is diagnosed yet; both are now in the progress tracker.
+
 ### 2026-08-19: Release batch #455–#456 — string extraction complete, localized surfaces spread
 
 #### Added
