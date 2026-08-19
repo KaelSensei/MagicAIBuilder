@@ -1,7 +1,8 @@
 "use client";
 // Threaded comment stream on a public deck page.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { ArrowDownUp } from "lucide-react";
 import type { DeckCommentThread } from "@/lib/community/comments";
 import { CommentForm } from "./CommentForm";
 import { CommentThreadItem, type CommentActions } from "./CommentThreadItem";
@@ -23,6 +24,9 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
   const [data, setData] = useState<DeckCommentsResponse | null>(null);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
+  // The API serves newest first; replies inside a thread stay chronological
+  // either way — only the top-level order flips.
+  const [newestFirst, setNewestFirst] = useState(true);
 
   const endpoint = `/api/community/decks/${encodeURIComponent(deckId)}/comments`;
 
@@ -67,6 +71,11 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
       body: JSON.stringify(parentId === undefined ? { body } : { body, parentId }),
     });
 
+  const orderedComments = useMemo(() => {
+    if (!data) return [];
+    return newestFirst ? data.comments : [...data.comments].reverse();
+  }, [data, newestFirst]);
+
   const actions: CommentActions = {
     onReply: (parentId, body) => post(body, parentId),
     onEdit: (commentId, body) =>
@@ -88,6 +97,16 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
             {t("count", { count: data.count })}
           </span>
         )}
+        {data && data.comments.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setNewestFirst((v) => !v)}
+            className="ml-auto flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            <ArrowDownUp className="w-3 h-3" aria-hidden="true" />
+            {newestFirst ? t("sortNewest") : t("sortOldest")}
+          </button>
+        )}
       </header>
 
       {data && (
@@ -104,7 +123,7 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
             <p className="text-sm text-[var(--text-secondary)]">{t("empty")}</p>
           ) : (
             <ul className="flex flex-col gap-4 list-none p-0 m-0 border-t border-[var(--border)] pt-4">
-              {data.comments.map((comment) => (
+              {orderedComments.map((comment) => (
                 <CommentThreadItem
                   key={comment.id}
                   comment={comment}

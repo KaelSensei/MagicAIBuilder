@@ -484,6 +484,8 @@
   "comments": {
     "title": "Comments",
     "count": "{count, plural, =0 {No comments yet} one {# comment} other {# comments}}",
+    "sortNewest": "Newest first",
+    "sortOldest": "Oldest first",
     "signInToComment": "Sign in to join the conversation.",
     "placeholder": "Ask a question or share a thought\u2026",
     "post": "Post",

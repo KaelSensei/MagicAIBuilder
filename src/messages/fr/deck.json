@@ -481,6 +481,8 @@
   "comments": {
     "title": "Commentaires",
     "count": "{count, plural, =0 {Aucun commentaire pour l\u2019instant} one {# commentaire} other {# commentaires}}",
+    "sortNewest": "Plus r\u00e9cents d\u2019abord",
+    "sortOldest": "Plus anciens d\u2019abord",
     "signInToComment": "Connectez-vous pour rejoindre la conversation.",
     "placeholder": "Posez une question ou partagez une remarque\u2026",
     "post": "Publier",
