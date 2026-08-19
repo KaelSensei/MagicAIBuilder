@@ -127,6 +127,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       // Step 2: Reset commander / partner / companion
       await deckApi.updateDeck(activeDeckId, {
         commanderId: null,
+        commanderName: null,
         partnerId: null,
         companionId: null,
       });

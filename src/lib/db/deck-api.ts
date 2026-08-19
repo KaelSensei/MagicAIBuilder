@@ -8,6 +8,7 @@ export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "command
   createdAt: string;
   updatedAt: string;
   commanderId: string | null;
+  commanderName: string | null;
   partnerId: string | null;
   companionId: string | null;
   pairingType: CommanderPairingType;
@@ -63,6 +64,7 @@ export async function createDeck(
     targetBracket?: number;
     budget?: number | null;
     commanderId?: string | null;
+    commanderName?: string | null;
     partnerId?: string | null;
     isAIGenerated?: boolean;
   }
@@ -85,6 +87,7 @@ export async function updateDeck(
     manualBracket: number | null;
     budget: number | null;
     commanderId: string | null;
+    commanderName: string | null;
     partnerId: string | null;
     companionId?: string | null;
     pairingType: CommanderPairingType;

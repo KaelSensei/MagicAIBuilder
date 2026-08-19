@@ -16,6 +16,7 @@ const createDeckSchema = z.object({
   targetBracket: z.number().int().min(1).max(5).optional().default(3),
   budget: z.number().positive().nullable().optional(),
   commanderId: z.string().nullable().optional(),
+  commanderName: z.string().max(200).nullable().optional(),
   partnerId: z.string().nullable().optional(),
   companionId: z.string().nullable().optional(),
   pairingType: z
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid input", details: parsed.error.issues.map((i) => i.message) }, { status: 400 });
     }
-    const { name: rawName, format, targetBracket, budget, commanderId, partnerId, companionId, pairingType, isAIGenerated } = parsed.data;
+    const { name: rawName, format, targetBracket, budget, commanderId, commanderName, partnerId, companionId, pairingType, isAIGenerated } = parsed.data;
     // Bounded quantifier prevents ReDoS on HTML tag stripping
     const sanitizedName = rawName.replaceAll(/<[^>]{0,200}>/g, "").trim();
     if (!sanitizedName) {
@@ -117,6 +118,7 @@ export async function POST(request: Request) {
         targetBracket,
         budget: budget ?? null,
         commanderId: commanderId ?? null,
+        commanderName: commanderName ?? null,
         partnerId: partnerId ?? null,
         companionId: companionId ?? null,
         pairingType,
