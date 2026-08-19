@@ -1,5 +1,27 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type APIRequestContext } from "@playwright/test";
 import { suppressOnboarding } from "./helpers";
+
+/**
+ * Seeds a public deck whose commanderName is set the way setCommander sets it,
+ * so the listing's SQL slug match has something to find.
+ */
+async function seedCommanderDeck(
+  request: APIRequestContext,
+  name: string,
+  commanderName: string
+): Promise<string> {
+  const created = await request.post("/api/decks", {
+    data: { name, format: "commander" },
+  });
+  expect(created.ok(), await created.text()).toBe(true);
+  const { id } = (await created.json()) as { id: string };
+
+  const patched = await request.patch(`/api/decks/${id}`, {
+    data: { commanderName, isPublic: true },
+  });
+  expect(patched.ok(), await patched.text()).toBe(true);
+  return id;
+}
 
 /**
  * Commander deck discovery, seen as an anonymous visitor.
@@ -38,6 +60,31 @@ test.describe("Commander deck discovery — anonymous viewer", () => {
       page.getByRole("heading", { name: /nobody has this commander decks/i })
     ).toBeVisible();
     await expect(page.getByText(/no public decks for this commander yet/i)).toBeVisible();
+  });
+
+  test("finds a public deck by its commander slug, apostrophes and all", async ({
+    request,
+  }) => {
+    // Exercises the SQL slug expression against real Postgres — the unit tests
+    // can only mock it. The name carries a comma and an apostrophe, the two
+    // characters commanderToSlug strips.
+    const deckId = await seedCommanderDeck(
+      request,
+      "Discovery Fixture",
+      "Kroxa, Titan of Death's Hunger"
+    );
+
+    const response = await request.get(
+      "/api/community/commanders/kroxa-titan-of-deaths-hunger/decks"
+    );
+
+    expect(response.status()).toBe(200);
+    const body = (await response.json()) as {
+      commanderName: string | null;
+      decks: readonly { id: string }[];
+    };
+    expect(body.commanderName).toBe("Kroxa, Titan of Death's Hunger");
+    expect(body.decks.map((d) => d.id)).toContain(deckId);
   });
 
   test("voting requires a session", async ({ request }) => {
