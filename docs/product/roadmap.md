@@ -21,7 +21,7 @@ Top candidates right now (reviewed 2026-08-19):
 - **Localized card data via Scryfall `lang`** — Weight **4** _(in progress — #415 printing selector, #456 Game Changers page and wizard commander preview; the `DeckCard` surfaces remain)_
 - **UptimeRobot** — Weight **4** (early production safety net, now that a database exists again)
 - **Migrate `setRequestLocale` to `next/root-params`** — Weight **2**. next-intl deprecates it, but the replacement ships `unstable_rootParams` and a stub `.d.ts` in Next 15.5.22. The three SonarCloud warnings are marked accepted with that reason. Revisit when it stabilises
-- **Structured logging (Pino)** — Weight **3**. `src/lib/logger.ts` already centralises every call site and forwards to Sentry; only the JSON format is missing
+- ~~**Structured logging (Pino)**~~ _(done — 2026-08-19, #458)_
 - **Visual redesign** — Weight **3** (big surface area, schedule when stable)
 - **Local AI model via MageZero** — Weight **1** (very high effort / research)
 
@@ -92,7 +92,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [ ] **Chromatic**: visual regression testing — takes screenshots of shadcn/ui components on every PR and diffs them; catches unintended UI changes; free for open-source
 
-- [ ] **Structured logging**: replace `console.error("[GET /api/decks]", error)` with a structured JSON logger (Pino is the Node standard); emit `level`, `timestamp`, `requestId`, `route`, and `error` fields so logs are searchable after the fact
+- [x] **Structured logging** _(done — 2026-08-19, #458)_: Pino behind the existing `logger` API, zero call-site changes. The production server emits one JSON line per event — `level`, ISO `time`, `msg`, `context` (route/function), `meta`, serialised `err` stack; development and the browser keep the readable console form, and `logger.error` still forwards to Sentry in both modes. `requestId` was deliberately dropped from the first cut: it needs `AsyncLocalStorage` plumbing through every route, and `context` already answers "where"
 
 ### Level 3: When it's serious
 
@@ -212,7 +212,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 - [x] **Ratings, reviews and follows** _(done — PR #389)_: 1–5 stars with written reviews, quality badges, directed user follows
 - [x] **Community deck discovery** _(done — PR #396)_: public `/commanders/[slug]/decks`, up/down votes, "Community Favourite" badge. Before this **nothing listed public decks at all** — `/api/decks` never filtered on `isPublic`, so a shared deck was reachable only by its direct link. Votes are deliberately separate from stars: stars answer "how good is this deck", a vote answers "should this deck rank near the top", and only the vote score orders the listing
 - [x] **Integration in Meta panel** _(done — PR #396)_: the panel links through to the commander's community decks
-- [ ] **Deck comments**: a threaded comment stream. `DeckRating.title`/`body` already carries one written review per user per deck; a separate stream is its own feature, with its own moderation surface
+- [x] **Deck comments** _(done — 2026-08-19, #459 API, #460 UI)_: threaded stream on the public deck page. `parentId` self-relation with database-level cascade; GET is anonymous-readable, the deck owner may post (unlike rating and voting — a stream where the author cannot answer questions is half a conversation) and may delete any comment as the minimal moderation surface. The API resolves `isDeckOwner` and `isAuthor` per comment; the raw `userId` never leaves it. Orphaned replies are promoted to top level rather than dropped
 - [ ] **Denormalise the commander on `Deck`**: commander identity lives on the deck's _cards_, so `/api/community/commanders/[slug]/decks` cannot match the slug in SQL and slugs public decks in memory. Fine at current volume, not indefinitely
 
 ---
@@ -239,7 +239,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [x] **MTGTop8**, **MTGDecks.net**, **Moxfield**, **Archidekt**, **TappedOut** _(done — #204)_
 - [x] **EDHRec** _(meta panel done — #205)_
-- [ ] **Goldfish** (`https://mtggoldfish.com`) — future import source
+- [ ] **Goldfish** (`https://mtggoldfish.com`) — **blocked (checked 2026-08-19)**: the deck download endpoint sits behind a Cloudflare managed JS challenge, so the server-side `httpGet` the other parsers use receives the "Just a moment…" page, not the decklist. Shipping the parser would ship a source that fails in production. Revisit only if Goldfish exposes an API or drops the challenge
 
 ### Implementation (✅ all complete)
 
