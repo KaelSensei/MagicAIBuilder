@@ -20,7 +20,13 @@ services:
     volumes:
       - pgdata_e2e:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U magic -d magicaibuilder"]
+      # -h 127.0.0.1 forces the probe over TCP. Without it pg_isready uses the
+      # Unix socket, which the temporary bootstrap server postgres runs during
+      # initdb happily answers — so on a cold volume (every gate run: the
+      # cleanup is `down -v`) the check could pass seconds before the real
+      # server bound TCP, and Prisma's `db:5432` connect died with P1001
+      # before a single test executed.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U magic -d magicaibuilder"]
       interval: 5s
       timeout: 5s
       retries: 20
