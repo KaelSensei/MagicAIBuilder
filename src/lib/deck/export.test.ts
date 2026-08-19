@@ -6,6 +6,8 @@ import {
   exportMTGO,
   exportTappedOut,
   exportArchidekt,
+  exportGoldfish,
+  exportEdhrec,
 } from "@/lib/deck/export";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 
@@ -216,5 +218,82 @@ describe("exportArchidekt", () => {
     const text = exportArchidekt(deck);
     expect(text).not.toContain("Commander");
     expect(text).toContain("Mainboard (1)");
+  });
+
+  it("tags each card with its category in Archidekt's bracket syntax", () => {
+    const deck = makeDeck({
+      commander: makeCard("Atraxa, Praetor's Voice", 1, { category: "commander" }),
+      cards: [
+        makeCard("Sol Ring", 1, { category: "ramp" }),
+        makeCard("Forest", 5, { category: "land" }),
+      ],
+    });
+    const text = exportArchidekt(deck);
+    // {top} pins the premier category so Archidekt shows the commander first.
+    expect(text).toContain("1x Atraxa, Praetor's Voice [Commander{top}]");
+    expect(text).toContain("1x Sol Ring [Ramp]");
+    expect(text).toContain("5x Forest [Land]");
+  });
+});
+
+describe("exportGoldfish", () => {
+  it("lists the main deck, then the commander in the sideboard slot", () => {
+    // MTGGoldfish's text import uses the MTGO convention: the commander is the
+    // one-card sideboard after a blank line.
+    const deck = makeDeck({
+      commander: makeCard("Atraxa, Praetor's Voice"),
+      cards: [makeCard("Sol Ring"), makeCard("Forest", 5)],
+    });
+    const text = exportGoldfish(deck);
+    const [main, side, ...rest] = text.split("\n\n");
+    expect(rest).toEqual([]);
+    expect(main.split("\n")).toEqual(["1 Sol Ring", "5 Forest"]);
+    expect(side.split("\n")).toEqual(["1 Atraxa, Praetor's Voice"]);
+  });
+
+  it("puts both partners in the sideboard slot", () => {
+    const deck = makeDeck({
+      commander: makeCard("Sidar Kondo of Jamuraa"),
+      partner: makeCard("Vial Smasher the Fierce"),
+      cards: [makeCard("Sol Ring")],
+    });
+    const [, side] = exportGoldfish(deck).split("\n\n");
+    expect(side.split("\n")).toEqual([
+      "1 Sidar Kondo of Jamuraa",
+      "1 Vial Smasher the Fierce",
+    ]);
+  });
+
+  it("emits no sideboard block without a commander", () => {
+    const deck = makeDeck({ cards: [makeCard("Sol Ring")] });
+    expect(exportGoldfish(deck)).toBe("1 Sol Ring");
+  });
+});
+
+describe("exportEdhrec", () => {
+  it("puts the commander first as a plain line", () => {
+    // EDHRec's deck check takes a plain list and reads the first legal
+    // commander as the deck's commander — no marker syntax exists.
+    const deck = makeDeck({
+      commander: makeCard("Atraxa, Praetor's Voice"),
+      cards: [makeCard("Sol Ring")],
+    });
+    expect(exportEdhrec(deck).split("\n")).toEqual([
+      "1 Atraxa, Praetor's Voice",
+      "1 Sol Ring",
+    ]);
+  });
+
+  it("keeps quantities and lists partners before the deck", () => {
+    const deck = makeDeck({
+      commander: makeCard("Sidar Kondo of Jamuraa"),
+      partner: makeCard("Vial Smasher the Fierce"),
+      cards: [makeCard("Forest", 5)],
+    });
+    expect(exportEdhrec(deck).split("\n")).toEqual([
+      "1 Sidar Kondo of Jamuraa",
+      "1 Vial Smasher the Fierce",
+      "5 Forest",
+    ]);
   });
 });

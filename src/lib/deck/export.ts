@@ -1,4 +1,5 @@
-// Deck export utilities — supports Moxfield, Arena, MTGO, TappedOut, Archidekt, Plain Text
+// Deck export utilities — supports Moxfield, Arena, MTGO, TappedOut, Archidekt,
+// MTGGoldfish, EDHRec, Plain Text
 import type { Deck, DeckCard } from "./types";
 
 /** Format a single card line for plain text / Moxfield */
@@ -80,18 +81,56 @@ export function exportTappedOut(deck: Deck): string {
   return lines.join("\n");
 }
 
-/** Archidekt format — sections with card counts */
+/** @returns the app category as an Archidekt bracket tag, e.g. `[Ramp]` */
+function archidektCategoryTag(category: string): string {
+  return `[${category.charAt(0).toUpperCase()}${category.slice(1)}]`;
+}
+
+/**
+ * Archidekt format — sections with card counts, each card tagged with its
+ * category in Archidekt's bracket syntax so the categorisation survives the
+ * round trip. `{top}` pins the commander's category as premier, which is what
+ * makes Archidekt display the card in the command zone.
+ */
 export function exportArchidekt(deck: Deck): string {
   const lines: string[] = [];
   if (deck.commander || deck.partner) {
     const cmdCount = (deck.commander ? 1 : 0) + (deck.partner ? 1 : 0);
     lines.push(`Commander (${cmdCount})`);
-    if (deck.commander) lines.push(cardLine(deck.commander));
-    if (deck.partner) lines.push(cardLine(deck.partner));
+    if (deck.commander) lines.push(`1x ${deck.commander.name} [Commander{top}]`);
+    if (deck.partner) lines.push(`1x ${deck.partner.name} [Commander{top}]`);
     lines.push("");
   }
   const mainCount = deck.cards.reduce((s, c) => s + c.quantity, 0);
   lines.push(`Mainboard (${mainCount})`);
+  for (const card of deck.cards) {
+    lines.push(`${card.quantity}x ${card.name} ${archidektCategoryTag(card.category)}`);
+  }
+  return lines.join("\n");
+}
+
+/**
+ * MTGGoldfish format — their text import uses the MTGO convention: the main
+ * deck, a blank line, then the commander (and partner) as the sideboard slot,
+ * which Goldfish reads as the command zone for EDH decks.
+ */
+export function exportGoldfish(deck: Deck): string {
+  const main = deck.cards.map((card) => cardLine(card, card.quantity));
+  const side: string[] = [];
+  if (deck.commander) side.push(cardLine(deck.commander));
+  if (deck.partner) side.push(cardLine(deck.partner));
+  return side.length > 0 ? `${main.join("\n")}\n\n${side.join("\n")}` : main.join("\n");
+}
+
+/**
+ * EDHRec format — the deck check tool takes a plain list with no marker
+ * syntax and reads the first legal commander as the deck's commander, so the
+ * command zone goes first.
+ */
+export function exportEdhrec(deck: Deck): string {
+  const lines: string[] = [];
+  if (deck.commander) lines.push(cardLine(deck.commander));
+  if (deck.partner) lines.push(cardLine(deck.partner));
   for (const card of deck.cards) {
     lines.push(cardLine(card, card.quantity));
   }
