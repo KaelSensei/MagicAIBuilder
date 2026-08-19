@@ -9,6 +9,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-20: Release batch #471–#476 — five light features and a clean slate
+
+#### Added
+
+- `feat(export): download button for every format (#472)` — only MTGO and Plain Text offered a file download; the other six were copy-only.
+- `feat(meta): link the commander out to EDHRec (#473)` — same `commanderToSlug` the panel's data is fetched with, so the link can never point somewhere the data did not come from.
+- `feat(i18n): localized banlist tab (#474)` — the Game Changers tab was localized since #456 while the banlist tab beside it stayed English; same merge-over-English construction, `useBanlistSet` untouched.
+- `feat(community): sort toggle on the comment stream (#475)` — newest-first reads as a feed, oldest-first as a conversation; replies stay chronological either way. Hidden below two comments.
+- `feat(community): copy-link button on the public deck page (#476)` — plus the header's hardcoded "Edit", missed by the extraction, moved to a catalog key.
+
+#### Fixed
+
+- `fix: optional chains for the three S6582 issues (#471)` — the only findings from the first full `pnpm sonar` run after the #455–#468 promotion; open issues back to **0**.
+
 ### 2026-08-19 (late): Release batch #466–#467 — export formats, and the flake fights back
 
 #### Added
