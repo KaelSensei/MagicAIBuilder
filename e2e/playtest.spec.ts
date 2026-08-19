@@ -19,8 +19,13 @@ test.describe("Playtest mode", () => {
     // The builder lazy-loads the deck's cards after mount. Opening the
     // playtest before they arrive snapshots a short library, and the
     // opening hand comes up smaller than seven — the intermittent failure
-    // this wait exists to prevent.
-    await expect(page.getByText("Fixture Card 0").first()).toBeVisible();
+    // this wait exists to prevent. The generous timeout is deliberate:
+    // under full-suite parallelism the single next-dev process queues this
+    // fetch behind the heavy proxy-export tests, and the default 5s was
+    // observed timing out while the load was merely slow, not broken.
+    await expect(page.getByText("Fixture Card 0").first()).toBeVisible({
+      timeout: 30_000,
+    });
 
     // Targeted by title: the visible label collapses to an icon below the `sm`
     // breakpoint, so the accessible name is viewport-dependent.
