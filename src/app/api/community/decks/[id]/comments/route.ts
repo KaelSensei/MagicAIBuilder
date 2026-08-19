@@ -131,7 +131,7 @@ export async function POST(request: Request, { params }: Params) {
         where: { id: parsed.data.parentId },
         select: { deckId: true },
       });
-      if (!parent || parent.deckId !== id) {
+      if (parent?.deckId !== id) {
         return NextResponse.json(
           { error: "Parent comment not found" },
           { status: 400 }
