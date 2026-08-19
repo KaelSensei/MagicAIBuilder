@@ -9,6 +9,7 @@ export const patchDeckSchema = z.object({
   manualBracket: z.number().int().min(1).max(5).nullable().optional(),
   budget: z.number().positive().nullable().optional(),
   commanderId: z.string().nullable().optional(),
+  commanderName: z.string().max(200).nullable().optional(),
   partnerId: z.string().nullable().optional(),
   companionId: z.string().nullable().optional(),
   pairingType: z

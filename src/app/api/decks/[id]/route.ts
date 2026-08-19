@@ -41,7 +41,7 @@ function buildDeckPatchData(fields: PatchDeckInput) {
   const data: Record<string, unknown> = {};
   const keys = [
     "name", "format", "targetBracket", "manualBracket", "budget",
-    "commanderId", "partnerId", "companionId", "pairingType",
+    "commanderId", "commanderName", "partnerId", "companionId", "pairingType",
     "isAIGenerated", "description", "tags", "isPublic",
   ] as const;
   for (const key of keys) {

@@ -644,7 +644,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     set({ isSyncing: true });
     try {
-      await deckApi.updateDeck(activeDeckId, { commanderId: card.id, pairingType });
+      await deckApi.updateDeck(activeDeckId, {
+        commanderId: card.id,
+        // Denormalised so community discovery can match the slug in SQL
+        commanderName: deckCard.name,
+        pairingType,
+      });
       // Persist the commander card record
       await deckApi.addCard(activeDeckId, {
         scryfallId: card.id,
@@ -690,7 +695,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
     set({ isSyncing: true });
     try {
-      await deckApi.updateDeck(activeDeckId, { commanderId: null, partnerId: null, pairingType: "none" });
+      await deckApi.updateDeck(activeDeckId, {
+        commanderId: null,
+        commanderName: null,
+        partnerId: null,
+        pairingType: "none",
+      });
     } catch (err) {
       logger.error("Unexpected error", "clearCommander", err);
     } finally {

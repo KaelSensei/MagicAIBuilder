@@ -2,10 +2,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockDeckFindMany } = vi.hoisted(() => ({ mockDeckFindMany: vi.fn() }));
+const { mockDeckFindMany, mockQueryRaw } = vi.hoisted(() => ({
+  mockDeckFindMany: vi.fn(),
+  mockQueryRaw: vi.fn(),
+}));
 
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { deck: { findMany: mockDeckFindMany } },
+  prisma: { deck: { findMany: mockDeckFindMany }, $queryRaw: mockQueryRaw },
 }));
 
 // ─── Mock NextAuth auth() ─────────────────────────────────────────────────────
@@ -18,6 +21,11 @@ vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
 import { GET } from "./route";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
+// The slug→deck matching itself is SQL against the denormalised commanderName
+// (an expression the partial index covers), so these tests mock the id query
+// and assert the route's plumbing: ids in → hydration → summaries out. The SQL
+// expression is exercised for real by e2e/community-discovery.spec.ts against
+// Postgres.
 
 interface DeckOptions {
   readonly id: string;
@@ -38,6 +46,7 @@ function deckRow({
     id,
     name: `${commander} list`,
     format: "commander",
+    commanderName: commander,
     updatedAt: new Date(updatedAt),
     user: { name: "Builder", username: "builder", image: null },
     cards: [{ name: commander, imageUri: "", artCropUri: "" }],
@@ -64,27 +73,34 @@ async function get(slug: string) {
   return (await GET(new Request("http://localhost"), params(slug))).json();
 }
 
+/** Wires both mocks: the id query finds these rows, the hydration returns them. */
+function stubMatch(rows: ReturnType<typeof deckRow>[]) {
+  mockQueryRaw.mockResolvedValue(rows.map((row) => ({ id: row.id })));
+  mockDeckFindMany.mockResolvedValue(rows);
+}
+
 describe("GET /api/community/commanders/[slug]/decks", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue(null);
   });
 
-  it("returns only decks whose commander matches the slug", async () => {
-    mockDeckFindMany.mockResolvedValue([
-      deckRow({ id: "a", commander: "Atraxa, Praetors' Voice" }),
-      deckRow({ id: "b", commander: "The Ur-Dragon" }),
-    ]);
+  it("hydrates exactly the decks the SQL slug match returned", async () => {
+    const row = deckRow({ id: "a", commander: "Atraxa, Praetors' Voice" });
+    stubMatch([row]);
 
     const body = await get("atraxa-praetors-voice");
 
+    expect(mockDeckFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: { in: ["a"] } } })
+    );
     expect(body.decks).toHaveLength(1);
     expect(body.decks[0].id).toBe("a");
     expect(body.commanderName).toBe("Atraxa, Praetors' Voice");
   });
 
   it("returns an empty listing for a commander nobody has published", async () => {
-    mockDeckFindMany.mockResolvedValue([deckRow({ id: "a", commander: "Atraxa" })]);
+    stubMatch([]);
 
     const body = await get("kenrith-the-returned-king");
 
@@ -93,7 +109,7 @@ describe("GET /api/community/commanders/[slug]/decks", () => {
   });
 
   it("ranks by vote score, highest first", async () => {
-    mockDeckFindMany.mockResolvedValue([
+    stubMatch([
       deckRow({ id: "low", commander: "Atraxa", votes: [{ userId: "u1", value: -1 }] }),
       deckRow({
         id: "high",
@@ -112,9 +128,7 @@ describe("GET /api/community/commanders/[slug]/decks", () => {
   });
 
   it("carries the star average alongside the vote score", async () => {
-    mockDeckFindMany.mockResolvedValue([
-      deckRow({ id: "a", commander: "Atraxa", ratings: [5, 4, 3] }),
-    ]);
+    stubMatch([deckRow({ id: "a", commander: "Atraxa", ratings: [5, 4, 3] })]);
 
     const body = await get("atraxa");
 
@@ -123,7 +137,7 @@ describe("GET /api/community/commanders/[slug]/decks", () => {
   });
 
   it("reports no viewer vote for an anonymous visitor", async () => {
-    mockDeckFindMany.mockResolvedValue([
+    stubMatch([
       deckRow({ id: "a", commander: "Atraxa", votes: [{ userId: "someone", value: 1 }] }),
     ]);
 
@@ -134,7 +148,7 @@ describe("GET /api/community/commanders/[slug]/decks", () => {
 
   it("reports the signed-in viewer's own vote", async () => {
     mockAuth.mockResolvedValue({ user: { id: "me" } });
-    mockDeckFindMany.mockResolvedValue([
+    stubMatch([
       deckRow({ id: "a", commander: "Atraxa", votes: [{ userId: "me", value: -1 }] }),
     ]);
 
@@ -143,20 +157,18 @@ describe("GET /api/community/commanders/[slug]/decks", () => {
     expect(body.decks[0].viewerVote).toBe(-1);
   });
 
-  it("queries only public decks that have a commander", async () => {
-    mockDeckFindMany.mockResolvedValue([]);
+  it("falls back to the commander card's name when the row predates the backfill", async () => {
+    const row = { ...deckRow({ id: "a", commander: "Atraxa" }), commanderName: null };
+    mockQueryRaw.mockResolvedValue([{ id: "a" }]);
+    mockDeckFindMany.mockResolvedValue([row]);
 
-    await get("atraxa");
+    const body = await get("atraxa");
 
-    expect(mockDeckFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { isPublic: true, cards: { some: { isCommander: true } } },
-      })
-    );
+    expect(body.commanderName).toBe("Atraxa");
   });
 
   it("returns a 500 envelope rather than throwing when the query fails", async () => {
-    mockDeckFindMany.mockRejectedValue(new Error("db down"));
+    mockQueryRaw.mockRejectedValue(new Error("db down"));
 
     const response = await GET(new Request("http://localhost"), params("atraxa"));
 

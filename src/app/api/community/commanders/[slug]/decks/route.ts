@@ -12,7 +12,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
-import { commanderToSlug } from "@/lib/meta/fetch";
 import { calculateVoteScore, rankDecksByScore, type DeckVote } from "@/lib/community/votes";
 import { calculateAverageRating, getDeckQualityBadge } from "@/lib/ratings/ratings";
 import { toDeckRating, type DeckRatingRow } from "@/lib/ratings/mappers";
@@ -30,18 +29,28 @@ export async function GET(_req: Request, { params }: Params) {
     const session = await auth();
     const viewerId = session?.user?.id ?? null;
 
-    // Commander identity lives on the deck's cards, not on the Deck row, so the
-    // slug cannot be matched in SQL. Public decks are few enough to slug in
-    // memory; revisit if that stops being true.
+    // The slug is matched in SQL against the denormalised Deck.commanderName,
+    // using the same expression the partial index
+    // Deck_commanderSlug_public_idx covers — the SQL twin of commanderToSlug
+    // (lowercase → strip non [a-z0-9\s-] → trim → whitespace runs to '-').
+    // Prisma cannot filter on an expression, hence the raw id query.
+    const matchingIds = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT "id" FROM "Deck"
+      WHERE "isPublic" = true
+        AND "commanderName" IS NOT NULL
+        AND regexp_replace(
+              btrim(regexp_replace(lower("commanderName"), '[^a-z0-9[:space:]-]', '', 'g')),
+              '[[:space:]]+', '-', 'g'
+            ) = ${slug}
+    `;
+
     const decks = await prisma.deck.findMany({
-      where: {
-        isPublic: true,
-        cards: { some: { isCommander: true } },
-      },
+      where: { id: { in: matchingIds.map((row) => row.id) } },
       select: {
         id: true,
         name: true,
         format: true,
+        commanderName: true,
         updatedAt: true,
         user: { select: { name: true, username: true, image: true } },
         cards: {
@@ -66,11 +75,7 @@ export async function GET(_req: Request, { params }: Params) {
       },
     });
 
-    const matching = decks.filter(
-      (deck) => deck.cards[0] && commanderToSlug(deck.cards[0].name) === slug
-    );
-
-    const summaries = matching.map((deck) => {
+    const summaries = decks.map((deck) => {
       const ratings = (deck.ratings as DeckRatingRow[]).map(toDeckRating);
       const votes = deck.votes as readonly DeckVote[];
       const tally = calculateVoteScore(votes);
@@ -97,7 +102,7 @@ export async function GET(_req: Request, { params }: Params) {
 
     return NextResponse.json({
       slug,
-      commanderName: matching[0]?.cards[0]?.name ?? null,
+      commanderName: decks[0]?.commanderName ?? decks[0]?.cards[0]?.name ?? null,
       total: summaries.length,
       decks: ranked,
     });

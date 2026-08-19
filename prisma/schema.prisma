@@ -82,6 +82,7 @@ model Deck {
   targetBracket Int            @default(3)
   budget        Float?
   commanderId   String?
+  commanderName String? // denormalised from the isCommander DeckCard; lets community discovery match a commander slug in SQL
   partnerId     String?
   companionId   String?
   pairingType   String         @default("none")
