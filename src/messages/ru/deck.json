@@ -229,6 +229,7 @@
   },
   "share": {
     "title": "Share Deck",
+    "editDeck": "Edit",
     "share": "Share",
     "public": "Public",
     "publicLinkActive": "Public link active",

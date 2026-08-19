@@ -341,6 +341,7 @@
   },
   "share": {
     "title": "Partager le deck",
+    "editDeck": "Modifier",
     "share": "Partager",
     "public": "Public",
     "publicLinkActive": "Lien public actif",
