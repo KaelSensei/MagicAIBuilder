@@ -9,6 +9,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-19 (late): Release batch #466–#467 — export formats, and the flake fights back
+
+#### Added
+
+- `feat(export): MTGGoldfish and EDHRec formats, categories in the Archidekt export (#467)` — Goldfish gets the MTGO sideboard-slot convention its text import reads as the command zone; EDHRec gets a plain deck-check list with the command zone first; the Archidekt export tags every card with its app category (`[Commander{top}]` pinning the command zone) so the categorisation survives the round trip. The Goldfish URL **import** stays blocked by their Cloudflare challenge — exporting a list a user pastes into Goldfish needs no network at all.
+
+#### Fixed
+
+- `fix(e2e): wait for the deck's cards before opening the playtest (#466)` — the spec opened the playtest immediately after `goto`, but the builder lazy-loads cards, so under load the engine snapshotted a short library and drew under seven.
+
+#### Notes
+
+- **Hypothesis 3 for the intermittent e2e failure is falsified**, by its own pre-registered criterion: a run failed 3 specs with the warmup active, on a loaded host (2.1m vs the usual 1.4). Compile timing is at most a trigger; load widens the real mechanism. Recorded in `quality-gate.md`, along with the operational rule — do not run other Docker builds while the gate runs. The next step is a **decision, not a patch**: test a production build instead of `next dev`, which first requires un-tying the e2e auth bypass from `NODE_ENV`.
+
 ### 2026-08-19 (night): Release batch #462–#465 — Archidekt fidelity, the flake gets a mechanism, commander in SQL
 
 #### Added
