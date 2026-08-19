@@ -9,6 +9,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-19: Release batch #455–#456 — string extraction complete, localized surfaces spread
+
+#### Added
+
+- `feat(i18n): extract TemplatesModal, BulkEditModal and ImportFromUrlTab (#455)` — the **final slice of the string extraction**: every one of the 125 components now reads its copy from the catalogs. The slice kept the effort's record of surfacing defects the hardcoded strings were hiding: a **ninth hand-built plural** (`lineCount === 1 ? "line" : "lines"`), and the URL-import footer claiming **2 supported sources while its own intro listed 6**.
+- `feat(i18n): localized card text on the Game Changers page and the wizard commander preview (#456)` — extends #415's per-field printed-text fallback past the printing selector. The Game Changers list merges one localized paginated search (24h cached) **over** the English list: a `lang:` search only returns cards printed in that language, so using it as the list itself would silently drop every Game Changer without a translated printing. The page's search box matches printed names too — a viewer reading a French list types the French name they see. A reusable `useLocalizedCardText` hook piggybacks on the printing-selector query cache; English locales make no request at all.
+
+#### Fixed
+
+- `deck.import.description` had been in the catalogs — translated — since the import dialog's extraction, while the dialog rendered the same sentence **hardcoded** beside it. The key is now actually rendered, and the `codeCard` / `codeCommander` fragment keys were folded into it as `<code>` rich tags (#455).
+- The bulk edit modal's close button had **no accessible name** (#455).
+- `TemplatesModal` formatted dates with `toLocaleDateString()`, which ignores the app locale; it now goes through `useFormatter().dateTime` (#455).
+
+#### Notes
+
+- The roadmap's "Difficulty on recorded sessions" entry was **stale**: the recording bar has asked for opponent strength since #425. It survived one roadmap review after the feature shipped — caught this time by checking the component before building it again.
+
 ### 2026-08-16 (evening): Release batch #428–#447 — honest gates and the deck cluster
 
 #### Fixed
