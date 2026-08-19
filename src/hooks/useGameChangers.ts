@@ -1,7 +1,12 @@
 "use client";
 // Game Changers detection hook with paginated Scryfall fetch
 import { useQuery } from "@tanstack/react-query";
+import { useLocale } from "next-intl";
 import { fetchAllPages } from "@/lib/scryfall/client";
+import {
+  mergeLocalizedPrintings,
+  toScryfallLang,
+} from "@/lib/scryfall/localized";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { useMemo } from "react";
 
@@ -15,6 +20,40 @@ export function useGameChangersList() {
     staleTime: STALE_TIME_24H,
     gcTime: STALE_TIME_24H,
   });
+}
+
+/**
+ * The Game Changers list with printings in the viewer's language where any
+ * exist — for display surfaces only.
+ *
+ * The English list stays the source of truth: a `lang:`-filtered search only
+ * returns cards printed in that language, so using it as the list itself would
+ * silently drop every Game Changer without a translated printing. The
+ * localised query is a second, progressive layer — the page renders English
+ * first and re-renders translated when (and if) the layer arrives. Loading and
+ * error therefore track the English query alone.
+ */
+export function useLocalizedGameChangersList() {
+  const locale = useLocale();
+  const lang = toScryfallLang(locale);
+  const english = useGameChangersList();
+
+  const localized = useQuery({
+    queryKey: ["scryfall", "game-changers", lang],
+    // The flag and the lang: filter must travel together — see searchCards.
+    queryFn: () => fetchAllPages(`is:gamechanger lang:${lang}`, true),
+    enabled: lang !== "en",
+    staleTime: STALE_TIME_24H,
+    gcTime: STALE_TIME_24H,
+  });
+
+  const data = useMemo(() => {
+    if (!english.data) return undefined;
+    if (lang === "en" || !localized.data) return english.data;
+    return mergeLocalizedPrintings(english.data, localized.data);
+  }, [english.data, localized.data, lang]);
+
+  return { data, isLoading: english.isLoading, isError: english.isError };
 }
 
 /** Returns a Set of Game Changer card names and a helper function */
