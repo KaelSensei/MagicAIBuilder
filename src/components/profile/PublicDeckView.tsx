@@ -6,6 +6,7 @@ import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import type { CardCategory } from "@/lib/deck/types";
 import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
 import { DeckRatingPanel } from "@/components/community/DeckRatingPanel";
+import { DeckCommentPanel } from "@/components/community/DeckCommentPanel";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
@@ -121,6 +122,13 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
 
       {/* Community rating */}
       <DeckRatingPanel
+        deckId={deck.id}
+        isOwner={deck.isOwner}
+        isSignedIn={isSignedIn}
+      />
+
+      {/* Comment stream */}
+      <DeckCommentPanel
         deckId={deck.id}
         isOwner={deck.isOwner}
         isSignedIn={isSignedIn}
