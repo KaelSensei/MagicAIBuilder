@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                  |
 | ------------------- | ------------------------------------------------------ |
-| Unit tests          | 2063 across 143 files                                  |
+| Unit tests          | 2069 across 143 files                                  |
 | E2E tests           | 56 passing, 1 skipped (`@external` / `@perf` excluded) |
 | Coverage            | ~94.5%                                                 |
 | SonarCloud          | 0 open issues                                          |
@@ -32,11 +32,11 @@
 
 - ~~**`SONAR_TOKEN` is not set in GitHub secrets.**~~ **Resolved 2026-08-16 (#442).** The secret is set and the scan step now fails rather than skipping. A `SonarCloud Code Analysis` check appears on each PR — it never did before. Note the two tokens are different things: the gitignored `.env.sonar` drives `pnpm sonar` locally and does nothing for CI.
 - **Three `setRequestLocale` / `requestLocale` deprecations are marked accepted in SonarCloud**, not fixed. next-intl points to `next/root-params`, which in Next 15.5.22 exports `unstable_rootParams` and ships a stub `.d.ts`. Migrating would trade a MINOR warning for an unstable API in the same request-locale plumbing that carries the intermittent navigation failure. Reversible — reopen them if the trade looks different later.
-- **Intermittent e2e failure** — **mitigated 2026-08-19 (#464)**: hypothesis 3 (dev-mode on-demand compilation racing navigations) finally gave the flake a mechanism, and a `warmup` Playwright project now compiles every route before the suite runs. Two gate runs green since. Watch for a recurrence _with_ the warmup in place — that would falsify the hypothesis; see `quality-gate.md`. The definitive fix (testing a production build) needs the auth bypass un-tied from `NODE_ENV`.
+- **Intermittent e2e failure** — hypothesis 3 (dev-mode compile racing) was mitigated with a route warmup (#464) and **falsified the same day** by its own criterion: 3 specs failed with the warmup active on a loaded host. The flake is load-sensitive; do not run other Docker builds during the gate. Next step needs a decision: test a production build instead of `next dev`, which first requires un-tying the e2e auth bypass from `NODE_ENV` — see `quality-gate.md`.
 - **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
 - ~~**The matchup breakdown has no data.**~~ **Resolved (#425).** The recording bar asks for opponent strength and the breakdown shows the split. The stale copy of this line survived here and in the roadmap until 2026-08-19 — when syncing docs, check the component, not the last review.
 - **Three docs are still in French**: `docs/init-prompt.md`, `docs/product/competitive-landscape.md`, `docs/security/audit-securite-2026-07-20.md` (French filename too).
-- **Playtest e2e flake (2026-08-19)**: a playtest spec can start before the full deck loads, so the engine snapshots an empty library and the assertion fails. Distinct from the navigation flake above. Not yet diagnosed to a wait/selector; failed one gate run, passed on retry.
+- ~~**Playtest e2e flake (2026-08-19)**~~ **Resolved (#466)**: the spec opened the playtest before the builder's lazy card load finished; the `beforeEach` now waits for a seeded card to render.
 - **Masked SSR error in `Header`**: the e2e web-server log repeatedly shows `Failed to call useTranslations because the context from NextIntlClientProvider was not found` thrown from `src/components/layout/Header.tsx` on community pages, recovered by client-side rendering so nothing user-visible fails. A latent flake source — and possibly related to the navigation flake, which also matches a `useTranslations` context error in the dev log.
 - **The e2e auth-bypass duplicate-key noise is expected**: parallel Playwright workers all upsert `playwright@test.local`; losers hit `User_email_key` and recover via the P2002 path in `resolveAuthenticatedUser`. Postgres logs the losers loudly — do not mistake them for the failure.
 
