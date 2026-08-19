@@ -149,19 +149,18 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
                   ? t("export.copied")
                   : t("export.copyFor", { format: FORMAT_LABELS[format] })}
               </button>
-              {(format === "mtgo" || format === "plaintext") && (
-                <button
-                  type="button"
-                  onClick={() => handleDownload(format)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors"
-                  title={t("export.downloadFormat", {
-                    format: FORMAT_LABELS[format],
-                  })}
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  {format === "mtgo" ? ".dek" : ".txt"}
-                </button>
-              )}
+              {/* Every format downloads — MTGO as .dek XML, the rest as .txt */}
+              <button
+                type="button"
+                onClick={() => handleDownload(format)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors"
+                title={t("export.downloadFormat", {
+                  format: FORMAT_LABELS[format],
+                })}
+              >
+                <Download className="w-3.5 h-3.5" />
+                {format === "mtgo" ? ".dek" : ".txt"}
+              </button>
             </div>
           ))}
           {/* Proxy export */}
