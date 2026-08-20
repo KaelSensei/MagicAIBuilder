@@ -118,6 +118,68 @@ export function mergeLocalizedPrintings(
   return english.map((card) => byName.get(card.name) ?? card);
 }
 
+/**
+ * Names per batched search. Scryfall rejects queries past a few thousand
+ * characters; twenty exact-name terms stay well under that even for the
+ * longest card names, and a 100-card deck costs five requests, cached 24h.
+ */
+const NAMES_PER_QUERY = 20;
+
+/**
+ * Builds the Scryfall searches that fetch one printing per card, in `lang`,
+ * for a list of English names — the batch path the `DeckCard` surfaces need.
+ *
+ * `/cards/collection` cannot be used: it has no language parameter and returns
+ * whichever printing Scryfall considers canonical, which is English. A search
+ * with `lang:` and OR-joined `!"name"` terms is the only batch form that
+ * honours a language, so names are chunked to keep each query short.
+ *
+ * Every query returned **must** be sent with `include_multilingual`, or the
+ * `lang:` filter matches nothing — see `searchCards`.
+ *
+ * @param names - English card names, duplicates allowed
+ * @param lang - Scryfall language code; `"en"` yields no queries at all
+ * @returns zero or more search queries, each covering at most 20 names
+ */
+export function buildLocalizedNamesQueries(
+  names: readonly string[],
+  lang: string
+): string[] {
+  if (lang === "en") return [];
+  // A quote inside a name would terminate its `!"…"` term early and corrupt
+  // the rest of the chunk, so such a name is left English rather than risked.
+  const unique = [...new Set(names)].filter((name) => !name.includes('"'));
+  const queries: string[] = [];
+  for (let start = 0; start < unique.length; start += NAMES_PER_QUERY) {
+    const terms = unique
+      .slice(start, start + NAMES_PER_QUERY)
+      .map((name) => `!"${name}"`)
+      .join(" or ");
+    queries.push(`lang:${lang} unique:cards (${terms})`);
+  }
+  return queries;
+}
+
+/**
+ * Indexes printings by their oracle (English) name, resolved for display.
+ *
+ * The first printing wins when Scryfall returns a card twice across chunks;
+ * they carry the same printed text in practice, and determinism matters more
+ * than which one is kept.
+ *
+ * @param cards - printings in any language, any order
+ * @returns display text keyed by English name
+ */
+export function indexLocalizedText(
+  cards: readonly ScryfallCard[]
+): ReadonlyMap<string, LocalizedCardText> {
+  const index = new Map<string, LocalizedCardText>();
+  for (const card of cards) {
+    if (!index.has(card.name)) index.set(card.name, resolveLocalizedText(card));
+  }
+  return index;
+}
+
 export function resolveLocalizedText(card: ScryfallCard): LocalizedCardText {
   const face: ScryfallCardFace | undefined = card.card_faces?.[0];
 
