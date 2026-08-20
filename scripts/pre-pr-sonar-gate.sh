@@ -26,7 +26,17 @@ if [ -z "$total" ]; then
 fi
 
 if [ "$total" != "0" ]; then
+  # The count comes from the last analysis of the default branch, so a PR whose
+  # whole purpose is to fix those issues is blocked by them — the fix cannot be
+  # analysed until the PR exists. SONAR_GATE_OVERRIDE=1 is the escape hatch for
+  # exactly that case (same shape as SKIP_E2E=1 on the pre-push gate); say why
+  # in the PR body when you use it.
+  if [ "${SONAR_GATE_OVERRIDE:-}" = "1" ]; then
+    echo "SonarCloud has $total open issue(s) — SONAR_GATE_OVERRIDE=1 set, allowing." >&2
+    exit 0
+  fi
   echo "SonarCloud has $total open issue(s) — fix them before creating a PR (CLAUDE.md pre-PR gate, item 5)." >&2
+  echo "If this PR is the fix, re-run with SONAR_GATE_OVERRIDE=1." >&2
   exit 2
 fi
 
