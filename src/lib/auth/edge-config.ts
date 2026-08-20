@@ -40,7 +40,14 @@ function matchesPathPrefix(pathname: string, prefix: string): boolean {
  * Credentials provider is omitted here; it runs server-side in config.ts.
  */
 export const edgeAuthConfig = {
-  session: { strategy: "jwt" },
+  // Explicit expiry rather than the library default: a session lives 7 days
+  // and is re-issued on use once a day, so an active user stays signed in
+  // while an abandoned token dies within the week.
+  session: {
+    strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
+  },
   pages: {
     signIn: "/auth/signin",
     error: "/auth/signin",
