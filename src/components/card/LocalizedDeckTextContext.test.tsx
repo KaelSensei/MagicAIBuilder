@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import React from "react";
@@ -67,7 +67,7 @@ describe("LocalizedDeckTextProvider", () => {
     vi.mocked(scryfallClient.fetchLocalizedPrintingsByNames).mockResolvedValueOnce([frSolRing]);
     renderRows("fr", true);
 
-    await waitFor(() => expect(screen.getByText("Anneau solaire")).toBeInTheDocument());
+    expect(await screen.findByText("Anneau solaire")).toBeInTheDocument();
     expect(screen.getByText("Counterspell")).toBeInTheDocument();
     expect(screen.queryByText("Sol Ring")).not.toBeInTheDocument();
   });
@@ -89,7 +89,7 @@ describe("LocalizedDeckTextProvider", () => {
         </QueryClientProvider>
       </NextIntlClientProvider>
     );
-    await waitFor(() => expect(screen.getByText("Anneau solaire")).toBeInTheDocument());
+    expect(await screen.findByText("Anneau solaire")).toBeInTheDocument();
   });
 
   it("renders English with no request when no provider is mounted", () => {
