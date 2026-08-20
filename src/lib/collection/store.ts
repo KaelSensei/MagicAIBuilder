@@ -3,46 +3,8 @@
 import { create } from "zustand";
 import type { CollectionCard, AddToCollectionInput, CardCondition } from "./types";
 import { logger } from "@/lib/logger";
+import { isRecord, parseCollectionCard } from "./parse";
 
-const VALID_CONDITIONS = new Set(["NM", "LP", "MP", "HP", "DMG"]);
-
-/** Parse a condition value from an unknown API response */
-function parseCondition(v: unknown): CardCondition | null {
-  if (typeof v === "string" && VALID_CONDITIONS.has(v)) return v as CardCondition;
-  return null;
-}
-
-/** Type guard for plain objects */
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === "object" && v !== null;
-}
-
-/** Parse and hydrate a CollectionCard from an unknown API response */
-function parseCollectionCard(v: unknown): CollectionCard | null {
-  if (!isRecord(v)) return null;
-
-  const { id, scryfallId, name, quantity, foil, createdAt, acquiredAt, price, imageUri } = v;
-
-  if (typeof id !== "string") return null;
-  if (typeof scryfallId !== "string") return null;
-  if (typeof name !== "string") return null;
-  if (typeof quantity !== "number") return null;
-  if (typeof foil !== "boolean") return null;
-  if (typeof createdAt !== "string") return null;
-
-  return {
-    id,
-    scryfallId,
-    name,
-    quantity,
-    foil,
-    condition: parseCondition(v["condition"]),
-    acquiredAt: typeof acquiredAt === "string" ? new Date(acquiredAt) : null,
-    price: typeof price === "number" ? price : null,
-    imageUri: typeof imageUri === "string" ? imageUri : "",
-    createdAt: new Date(createdAt),
-  };
-}
 
 export interface CollectionStore {
   // State
