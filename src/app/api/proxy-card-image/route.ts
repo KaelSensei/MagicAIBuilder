@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 const ALLOWED_HOST = "cards.scryfall.io";
 const MAX_PARAM_LEN = 700;
 const UPSTREAM_TIMEOUT_MS = 15_000;
+/** Scryfall's largest PNG is ~1.5 MB; 5 MB leaves room without buffering anything absurd. */
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /**
  * True when `raw` is an https URL on the Scryfall card image CDN only (SSRF-safe).
@@ -61,7 +63,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Response is not an image" }, { status: 502 });
     }
 
+    // Bound the bytes before buffering: the declared length catches the honest
+    // case, the post-read check catches a missing or lying header.
+    const declared = Number(upstream.headers.get("content-length") ?? "0");
+    if (declared > MAX_IMAGE_BYTES) {
+      return NextResponse.json({ error: "Image too large" }, { status: 502 });
+    }
     const buffer = await upstream.arrayBuffer();
+    if (buffer.byteLength > MAX_IMAGE_BYTES) {
+      return NextResponse.json({ error: "Image too large" }, { status: 502 });
+    }
     return new NextResponse(buffer, {
       status: 200,
       headers: {

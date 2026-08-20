@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { importFromUrl } from "@/lib/import/url-import";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 const RATE_LIMIT = 10;        // max requests
 const RATE_WINDOW = 60_000;   // per 60 seconds
@@ -55,9 +56,13 @@ export async function POST(request: Request) {
       message.includes("No cards") ||
       message.includes("empty");
 
-    return NextResponse.json(
-      { error: message },
-      { status: isUserError ? 422 : 500 }
-    );
+    // Parser messages in the 422 class are written for the user ("deck is
+    // private", "no cards found"). Anything else is an internal failure whose
+    // text (upstream hostnames, timeouts, stack fragments) stays in the log.
+    if (isUserError) {
+      return NextResponse.json({ error: message }, { status: 422 });
+    }
+    logger.error(message, "POST /api/import/url");
+    return NextResponse.json({ error: "Import failed." }, { status: 500 });
   }
 }

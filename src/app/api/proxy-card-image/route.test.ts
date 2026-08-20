@@ -71,4 +71,28 @@ describe("GET /api/proxy-card-image", () => {
     const res = await GET(makeReq(`url=${encodeURIComponent(VALID_URL)}`));
     expect(res.status).toBe(502);
   });
+
+  it("refuses an upstream that declares more than 5 MB without reading it", async () => {
+    const arrayBuffer = vi.fn();
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "image/png", "content-length": String(6 * 1024 * 1024) }),
+      arrayBuffer,
+    } as unknown as Response);
+
+    const res = await GET(makeReq(`url=${encodeURIComponent(VALID_URL)}`));
+    expect(res.status).toBe(502);
+    expect(arrayBuffer).not.toHaveBeenCalled();
+  });
+
+  it("refuses an upstream whose body turns out larger than its header said", async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ "content-type": "image/png" }),
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(5 * 1024 * 1024 + 1)),
+    } as unknown as Response);
+
+    const res = await GET(makeReq(`url=${encodeURIComponent(VALID_URL)}`));
+    expect(res.status).toBe(502);
+  });
 });
