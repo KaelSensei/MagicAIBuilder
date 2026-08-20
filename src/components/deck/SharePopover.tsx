@@ -80,7 +80,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
             ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10"
             : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
         )}
-        title="Share deck"
+        title={t("share.openShare")}
       >
         <Share2 className="w-3 h-3" />
         {t("share.share")}
@@ -165,7 +165,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
                   type="button"
                   onClick={handleCopy}
                   className="shrink-0 p-1.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-                  title="Copy link"
+                  title={t("share.copyLink")}
                 >
                   {copied ? (
                     <Check className="w-3.5 h-3.5 text-green-400" />

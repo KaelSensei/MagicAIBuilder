@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Crown, Package } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { Deck } from "@/lib/deck/types";
@@ -27,6 +28,7 @@ export function BuilderNameSearchModeBar({
   onTogglePartner,
   onToggleCompanion,
 }: BuilderNameSearchModeBarProps) {
+  const t = useTranslations("builder");
   return (
     <div className="flex items-center gap-2">
       <button
@@ -38,10 +40,10 @@ export function BuilderNameSearchModeBar({
             ? "border-amber-500 text-amber-400 bg-amber-500/10"
             : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
         )}
-        title="Filter for legendary creatures (commanders)"
+        title={t("searchToggles.commanderTitle")}
       >
         <Crown className="w-3 h-3" />
-        Commander
+        {t("searchToggles.commander")}
       </button>
       {supportsPartner(deck.pairingType) && (
         <button
@@ -53,7 +55,7 @@ export function BuilderNameSearchModeBar({
               ? "border-purple-500 text-purple-400 bg-purple-500/10"
               : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
           )}
-          title={`Search for a ${partnerSlotLabel(deck.pairingType)}`}
+          title={t("searchToggles.partnerTitle", { label: partnerSlotLabel(deck.pairingType) })}
         >
           <Crown className="w-3 h-3" />
           {partnerSlotLabel(deck.pairingType)}
@@ -72,12 +74,12 @@ export function BuilderNameSearchModeBar({
         )}
         title={
           deck.commander
-            ? "Search Companion cards (Ikoria) — one per deck, outside the 99"
-            : "Set a commander first"
+            ? t("searchToggles.companionTitle")
+            : t("searchToggles.setCommanderFirst")
         }
       >
         <Package className="w-3 h-3" />
-        Companion
+        {t("searchToggles.companion")}
       </button>
     </div>
   );

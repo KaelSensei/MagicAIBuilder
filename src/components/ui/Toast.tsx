@@ -1,5 +1,6 @@
 "use client";
 // Toast notification container
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, CheckCircle2, AlertTriangle, Info, XCircle } from "lucide-react";
 import { useToastStore } from "@/hooks/useToast";
@@ -33,6 +34,7 @@ const TOAST_STYLES: Record<
 };
 
 export function ToastContainer() {
+  const t = useTranslations("common");
   const { toasts, remove } = useToastStore();
 
   return (
@@ -64,7 +66,7 @@ export function ToastContainer() {
                 type="button"
                 onClick={() => remove(toast.id)}
                 className="p-0.5 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
-                aria-label="Dismiss"
+                aria-label={t("actions.dismiss")}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
