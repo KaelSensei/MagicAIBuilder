@@ -9,6 +9,30 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-20: Release batch #505–#510 — silent failures hunted down, DeckEditor split in four
+
+#### Fixed
+
+- **Three instances of one failure shape, the third found by looking for it.** A read whose failure is indistinguishable from a legitimate empty state, with no way to recover: the UI renders something plausible, so nobody suspects the fetch.
+  1. The MTGTop8 source returned nothing from #205 to #487 — **months**
+  2. `DeckRatingPanel` (#505) — swallowed its read; found **by accident**, by an agent diagnosing an unrelated gate failure
+  3. `DeckCommentPanel` (#506) — **found by grepping for the signature** rather than waiting for a report
+     Both panels ignored a non-OK response and caught a thrown fetch bare, with a code comment describing it as intentional. Their bodies render only when `data` is set, so either outcome left the section showing its header alone, forever. Both now report the failure and offer a retry, with `loadFailed` kept distinct from the existing `failed` for writes. Each fix is **mutation-checked** — reverting it fails two of its three new tests. The grep that found the third (`if (res.ok)` followed by a state setter) now returns nothing in `src`.
+- `fix(i18n): the gap my own sweep left (#507)` — the #498 sweep grepped for `attr="Text"` and `>Text<`. Neither shape catches a string in a **template literal** or a **const table**, and ten more were sitting in exactly those two places: interpolated `aria-label`s across five components, the price tooltip, and the whole `SortGroupToolbar`, whose `CMC / Name / Price / Color / Type` and `Ungrouped / By Type / By CMC / By Color` are visible button text living in `SORT_OPTIONS` / `GROUP_OPTIONS`. Both signatures now return zero. The two survivors — the decklist example placeholders — stay English deliberately and now say why in the code: `parsePlainTextDecklist` matches the English section headers, so a localised example would show input the parser rejects.
+  - Worth stating plainly: `catalog.test.ts` guards key parity across locales, but **it cannot see a string that was never extracted.** That is a grep problem, and a grep is only as good as the shapes it knows about.
+
+#### Changed
+
+- **`DeckEditor` split in four: 1214 → 325 lines (−73%).** The project's largest component is now a shell around `MainZoneContent` (442), `SecondaryZoneContent` (321), `ColorIdentityBanner` (165) and a shared `grid-cols.ts` (25).
+  - `ColorIdentityBanner` (#508) — self-contained, already exported. Its test file was named `DeckEditor.test.tsx` and tested **only the banner**, which made a 1214-line component look covered when it was not; renamed to what it always was. Six tests added for `getDisplayColorIdentity`, which normalises identities arriving from deck data _and from imports_: lowercase accepted, repeats drawn once, non-colour symbols ignored rather than rendered as broken pips, colourless fallback, and the identity's own order preserved rather than sorted.
+  - `SecondaryZoneContent` (#509) — took everything through props already, so no prop threading was needed. `DroppableZone` travelled with it; `getDropZoneClass` stayed because `DroppableCategory` still needs it; `gridColsClass` got its own module because the main zone shares it, and duplicating it would have been the easy wrong answer.
+  - `MainZoneContent` (#510) — took its whole drag-and-drop chain, since nothing else used it. The banner row, companion zone and pairing helpers stayed with the shell. **That boundary was wrong on the first pass and the compiler caught it in seconds** — the argument for splitting against a type checker rather than by eye.
+  - In every case the code moved **verbatim**, so the pre-existing suite passing unchanged is the evidence, not a hope.
+
+#### Known
+
+- **The e2e flake fix reduced it; it did not eliminate it.** Four gate runs since #495 still failed and passed on retry — one of them on `back navigation returns to home`, the very spec the fix was written against. So `networkidle` is not a reliable hydration proxy, or the swallowed-click mechanism is not the whole story. Recorded in `progress.md`, which no longer reads as if the item were closed.
+
 ### 2026-08-20: Release batch #495–#501 — the e2e flake diagnosed, i18n stragglers, three store extractions
 
 #### Fixed
