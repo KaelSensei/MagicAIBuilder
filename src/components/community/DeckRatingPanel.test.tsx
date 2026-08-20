@@ -12,11 +12,12 @@ vi.mock("@/i18n/navigation", () => ({
   usePathname: () => "/",
 }));
 
+import enCommon from "@/messages/en/common.json";
 import { DeckRatingPanel, type DeckRatingsResponse } from "./DeckRatingPanel";
 
 function renderWithIntl(ui: React.ReactElement) {
   return render(
-    <NextIntlClientProvider locale="en" messages={{ deck: enDeck }}>
+    <NextIntlClientProvider locale="en" messages={{ deck: enDeck, common: enCommon }}>
       {ui}
     </NextIntlClientProvider>
   );
@@ -198,5 +199,51 @@ describe("DeckRatingPanel", () => {
     await user.click(await screen.findByRole("button", { name: /rate 5 stars/i }));
 
     expect(await screen.findByText(/could not save your rating/i)).toBeInTheDocument();
+  });
+
+  /**
+   * The panel body renders only when `data` is set, so a swallowed read left
+   * the section showing its title and nothing else — indistinguishable from a
+   * deck with no ratings, and with no way back.
+   */
+  describe("when the aggregate cannot be read", () => {
+    it("says so instead of sitting on an empty panel, when the API errors", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) })
+      );
+      renderWithIntl(<DeckRatingPanel {...defaultProps} />);
+
+      expect(await screen.findByText(/ratings could not be loaded/i)).toBeInTheDocument();
+      expect(screen.queryByText(/no ratings yet/i)).not.toBeInTheDocument();
+    });
+
+    it("says so when the request throws outright", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+      renderWithIntl(<DeckRatingPanel {...defaultProps} />);
+
+      expect(await screen.findByText(/ratings could not be loaded/i)).toBeInTheDocument();
+    });
+
+    it("offers a retry that recovers the panel", async () => {
+      const user = userEvent.setup();
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
+        .mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => aggregate({ average: 4, count: 2 }),
+        });
+      vi.stubGlobal("fetch", fetchMock);
+
+      renderWithIntl(<DeckRatingPanel {...defaultProps} />);
+      await screen.findByText(/ratings could not be loaded/i);
+
+      await user.click(screen.getByRole("button", { name: /try again/i }));
+
+      expect(await screen.findByText(/2 ratings/i)).toBeInTheDocument();
+      expect(screen.queryByText(/ratings could not be loaded/i)).not.toBeInTheDocument();
+    });
   });
 });
