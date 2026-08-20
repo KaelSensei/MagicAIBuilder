@@ -5,24 +5,24 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-08-19                             |
+| Last Updated  | 2026-08-20                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-08-19)
+## Current metrics (2026-08-20)
 
 | Metric              | Value                                                  |
 | ------------------- | ------------------------------------------------------ |
-| Unit tests          | 2070 across 143 files                                  |
-| E2E tests           | 56 passing, 1 skipped (`@external` / `@perf` excluded) |
+| Unit tests          | 2126 across 149 files                                  |
+| E2E tests           | 58 passing, 1 skipped (`@external` / `@perf` excluded) |
 | Coverage            | ~94.5%                                                 |
 | SonarCloud          | 0 open issues                                          |
-| Source files        | 291 (`.ts`/`.tsx`, excluding tests)                    |
-| Components          | 118 (`.tsx`, excluding tests)                          |
+| Source files        | 295 (`.ts`/`.tsx`, excluding tests)                    |
+| Components          | 140 (`.tsx`, excluding tests)                          |
 | API routes          | 39                                                     |
 | Prisma models       | 20                                                     |
 | Prisma migrations   | 23                                                     |
-| Hooks               | 22                                                     |
+| Hooks               | 24                                                     |
 | Locales served      | 2 (`en`, `fr`) + 8 dormant                             |
 | Production database | Neon (Vercel Marketplace)                              |
 
@@ -34,8 +34,12 @@
 - **Three `setRequestLocale` / `requestLocale` deprecations are marked accepted in SonarCloud**, not fixed. next-intl points to `next/root-params`, which in Next 15.5.22 exports `unstable_rootParams` and ships a stub `.d.ts`. Migrating would trade a MINOR warning for an unstable API in the same request-locale plumbing that carries the intermittent navigation failure. Reversible — reopen them if the trade looks different later.
 - **Intermittent e2e failure** — hypothesis 3 (dev-mode compile racing) was mitigated with a route warmup (#464) and **falsified the same day** by its own criterion: 3 specs failed with the warmup active on a loaded host. The flake is load-sensitive; do not run other Docker builds during the gate. Next step needs a decision: test a production build instead of `next dev`, which first requires un-tying the e2e auth bypass from `NODE_ENV` — see `quality-gate.md`.
 - **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
+- **Five transitive `high` npm advisories, unfixable without majors** (2026-08-20): `sharp` and `postcss` are pinned by `next@15`, `defu` and `deepmerge-ts` by `prisma@6`. `pnpm audit` runs in CI since #486 — **critical blocks, high only reports**. Tighten to `--audit-level=high` once Next 16 / Prisma 7 land.
+- **Production security follow-ups** (`docs/security/production-checklist.md`, audited 2026-08-20): rate limiting is still an in-process `Map` so it counts per Vercel lambda; **no email verification** (schema is ready, no mail provider); the **Neon PITR retention window has never been verified**; the CSP still carries `'unsafe-inline'` on `script-src` because Next hydrates through inline scripts — removing it needs per-request nonces through middleware and the root layout.
+- **`gh pr merge --rebase` still drifts the promotion branches.** Rebasing avoids a merge commit _on the target_, but it rewrites the promoted commits, so after `staging → dev → main` the same commits exist three times under different SHAs — identical trees, divergent histories. The fix is to reset `staging` and `dev` onto `main` after each promotion (done 2026-08-20 for batch #480–#489). CLAUDE.md's claim that rebasing "keeps all three branches on the same commit" is only true after that reset.
 - ~~**The matchup breakdown has no data.**~~ **Resolved (#425).** The recording bar asks for opponent strength and the breakdown shows the split. The stale copy of this line survived here and in the roadmap until 2026-08-19 — when syncing docs, check the component, not the last review.
 - **Three docs are still in French**: `docs/init-prompt.md`, `docs/product/competitive-landscape.md`, `docs/security/audit-securite-2026-07-20.md` (French filename too).
+- **A silent scraper break went unnoticed for months.** The MTGTop8 tournament source matched nothing from #205 until #487: the panel rendered its empty state, which reads as "this commander has no tournament decks" rather than "the parser is broken". `@external` contract specs now cover Archidekt, Moxfield and MTGTop8 — **an external source with no live contract test is a source that can fail without telling anyone**.
 - ~~**Playtest e2e flake (2026-08-19)**~~ **Resolved (#466)**: the spec opened the playtest before the builder's lazy card load finished; the `beforeEach` now waits for a seeded card to render.
 - **Masked SSR error in `Header`**: the e2e web-server log repeatedly shows `Failed to call useTranslations because the context from NextIntlClientProvider was not found` thrown from `src/components/layout/Header.tsx` on community pages, recovered by client-side rendering so nothing user-visible fails. A latent flake source — and possibly related to the navigation flake, which also matches a `useTranslations` context error in the dev log.
 - **The e2e auth-bypass duplicate-key noise is expected**: parallel Playwright workers all upsert `playwright@test.local`; losers hit `User_email_key` and recover via the P2002 path in `resolveAuthenticatedUser`. Postgres logs the losers loudly — do not mistake them for the failure.
