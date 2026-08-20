@@ -13,11 +13,11 @@
 
 | Metric              | Value                                                  |
 | ------------------- | ------------------------------------------------------ |
-| Unit tests          | 2126 across 149 files                                  |
+| Unit tests          | 2199 across 153 files                                  |
 | E2E tests           | 58 passing, 1 skipped (`@external` / `@perf` excluded) |
 | Coverage            | ~94.5%                                                 |
 | SonarCloud          | 0 open issues                                          |
-| Source files        | 295 (`.ts`/`.tsx`, excluding tests)                    |
+| Source files        | 298 (`.ts`/`.tsx`, excluding tests)                    |
 | Components          | 140 (`.tsx`, excluding tests)                          |
 | API routes          | 39                                                     |
 | Prisma models       | 20                                                     |
@@ -32,7 +32,9 @@
 
 - ~~**`SONAR_TOKEN` is not set in GitHub secrets.**~~ **Resolved 2026-08-16 (#442).** The secret is set and the scan step now fails rather than skipping. A `SonarCloud Code Analysis` check appears on each PR — it never did before. Note the two tokens are different things: the gitignored `.env.sonar` drives `pnpm sonar` locally and does nothing for CI.
 - **Three `setRequestLocale` / `requestLocale` deprecations are marked accepted in SonarCloud**, not fixed. next-intl points to `next/root-params`, which in Next 15.5.22 exports `unstable_rootParams` and ships a stub `.d.ts`. Migrating would trade a MINOR warning for an unstable API in the same request-locale plumbing that carries the intermittent navigation failure. Reversible — reopen them if the trade looks different later.
-- **Intermittent e2e failure** — hypothesis 3 (dev-mode compile racing) was mitigated with a route warmup (#464) and **falsified the same day** by its own criterion: 3 specs failed with the warmup active on a loaded host. The flake is load-sensitive; do not run other Docker builds during the gate. Next step needs a decision: test a production build instead of `next dev`, which first requires un-tying the e2e auth bypass from `NODE_ENV` — see `quality-gate.md`.
+- ~~**Intermittent e2e failure**~~ **Diagnosed and mitigated 2026-08-20 (#495).** The mechanism was in the harness, not the app: `openBuilder` returned as soon as `waitForURL` saw the address change, before the route was usable — deck store still syncing, React still hydrating. A click in that window is **swallowed**: the listener has attached and calls `preventDefault`, but the router cannot act yet, so the native navigation is cancelled and nothing replaces it. That is load-sensitive by construction, which explains every observation, including hypothesis 3 being falsified — compile timing was a _trigger_, never the mechanism. The helper now waits for the loaded branch and `networkidle`.
+  - **Still not a captured failure.** The flake was never reproducible on demand; this is a mechanism that fits the evidence plus a fix that removes it. Two gate runs since have still failed under heavy parallel load (3 search specs, `waitForURL` timing out) and passed on retry, so **do not run other Docker builds or repo-wide greps during the gate** — that advice stands.
+  - The production-build question (un-tying the e2e auth bypass from `NODE_ENV`) is **no longer blocking** and can be judged on its own merits.
 - **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
 - **Five transitive `high` npm advisories, unfixable without majors** (2026-08-20): `sharp` and `postcss` are pinned by `next@15`, `defu` and `deepmerge-ts` by `prisma@6`. `pnpm audit` runs in CI since #486 — **critical blocks, high only reports**. Tighten to `--audit-level=high` once Next 16 / Prisma 7 land.
 - **Production security follow-ups** (`docs/security/production-checklist.md`, audited 2026-08-20): rate limiting is still an in-process `Map` so it counts per Vercel lambda; **no email verification** (schema is ready, no mail provider); the **Neon PITR retention window has never been verified**; the CSP still carries `'unsafe-inline'` on `script-src` because Next hydrates through inline scripts — removing it needs per-request nonces through middleware and the root layout.
