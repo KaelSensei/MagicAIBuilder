@@ -1,5 +1,6 @@
 "use client";
 // Toolbar for sorting and grouping cards in the DeckEditor
+import { useTranslations } from "next-intl";
 import { ArrowDownAZ, ArrowUpAZ, Layers } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { useDeckStore } from "@/lib/deck/store";
@@ -7,30 +8,33 @@ import type { SortField, GroupBy } from "@/lib/deck/sort";
 
 interface SortOption {
   field: SortField;
-  label: string;
+  /** Key under `builder.sort.fields`. */
+  labelKey: string;
 }
 
 interface GroupOption {
   value: GroupBy;
-  label: string;
+  /** Key under `builder.sort.groups`. */
+  labelKey: string;
 }
 
 const SORT_OPTIONS: SortOption[] = [
-  { field: "cmc", label: "CMC" },
-  { field: "name", label: "Name" },
-  { field: "price", label: "Price" },
-  { field: "color", label: "Color" },
-  { field: "type", label: "Type" },
+  { field: "cmc", labelKey: "cmc" },
+  { field: "name", labelKey: "name" },
+  { field: "price", labelKey: "price" },
+  { field: "color", labelKey: "color" },
+  { field: "type", labelKey: "type" },
 ];
 
 const GROUP_OPTIONS: GroupOption[] = [
-  { value: "none", label: "Ungrouped" },
-  { value: "type", label: "By Type" },
-  { value: "cmc", label: "By CMC" },
-  { value: "color", label: "By Color" },
+  { value: "none", labelKey: "none" },
+  { value: "type", labelKey: "type" },
+  { value: "cmc", labelKey: "cmc" },
+  { value: "color", labelKey: "color" },
 ];
 
 export function SortGroupToolbar() {
+  const t = useTranslations("builder");
   const sortField = useDeckStore((s) => s.sortField);
   const sortDirection = useDeckStore((s) => s.sortDirection);
   const groupBy = useDeckStore((s) => s.groupBy);
@@ -50,12 +54,13 @@ export function SortGroupToolbar() {
     <div className="flex items-center gap-2 px-2 py-1 border-b border-[var(--border)] flex-wrap">
       {/* Sort buttons */}
       <div className="flex items-center gap-0.5">
-        {SORT_OPTIONS.map(({ field, label }) => {
+        {SORT_OPTIONS.map(({ field, labelKey }) => {
+          const label = t(`sort.fields.${labelKey}`);
           const isActive = sortField === field;
           let activeSortHint = "";
           if (isActive) {
             activeSortHint =
-              sortDirection === "asc" ? "(ascending)" : "(descending)";
+              sortDirection === "asc" ? t("sort.ascending") : t("sort.descending");
           }
           return (
             <button
@@ -68,7 +73,7 @@ export function SortGroupToolbar() {
                   ? "bg-[var(--accent)]/20 text-[var(--accent)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
               )}
-              title={`Sort by ${label} ${activeSortHint}`.trim()}
+              title={t("actions.sortByField", { label, hint: activeSortHint }).trim()}
             >
               {label}
               {isActive && sortDirection === "asc" && (
@@ -88,7 +93,7 @@ export function SortGroupToolbar() {
       {/* Group by selector */}
       <div className="flex items-center gap-0.5">
         <Layers className="w-3 h-3 text-[var(--text-secondary)]" />
-        {GROUP_OPTIONS.map(({ value, label }) => (
+        {GROUP_OPTIONS.map(({ value, labelKey }) => (
           <button
             type="button"
             key={value}
@@ -99,9 +104,9 @@ export function SortGroupToolbar() {
                 ? "bg-[var(--accent)]/20 text-[var(--accent)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
             )}
-            title={`Group ${label}`}
+            title={t("actions.groupByField", { label: t(`sort.groups.${labelKey}`) })}
           >
-            {label}
+            {t(`sort.groups.${labelKey}`)}
           </button>
         ))}
       </div>

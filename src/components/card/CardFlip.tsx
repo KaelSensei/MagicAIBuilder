@@ -73,11 +73,12 @@ function InteractiveFlipContainer({
   readonly onClick?: () => void;
   readonly children: React.ReactNode;
 }) {
+  const t = useTranslations("card");
   if (onClick) {
     return (
       <button
         type="button"
-        aria-label={`Add ${activeName} to deck`}
+        aria-label={t("addNamedToDeck", { name: activeName })}
         onClick={onClick}
         className={cn(
           flipContainerBase,

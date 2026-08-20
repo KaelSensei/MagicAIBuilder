@@ -53,7 +53,11 @@
     "playtest": "Playtest this deck",
     "export": "Export deck",
     "resizePanel": "Search panel width",
-    "resizeHint": "Drag to resize — use arrow keys to adjust"
+    "resizeHint": "Drag to resize — use arrow keys to adjust",
+    "removeNamed": "Remove {name}",
+    "removeTag": "Remove tag {tag}",
+    "sortByField": "Sort by {label} {hint}",
+    "groupByField": "Group {label}"
   },
   "badges": {
     "cmd": "CMD",
@@ -86,5 +90,22 @@
     "companionTitle": "Search Companion cards (Ikoria) — one per deck, outside the 99",
     "setCommanderFirst": "Set a commander first",
     "partnerTitle": "Search for a {label}"
+  },
+  "sort": {
+    "fields": {
+      "cmc": "CMC",
+      "name": "Name",
+      "price": "Price",
+      "color": "Color",
+      "type": "Type"
+    },
+    "groups": {
+      "none": "Ungrouped",
+      "type": "By Type",
+      "cmc": "By CMC",
+      "color": "By Color"
+    },
+    "ascending": "(ascending)",
+    "descending": "(descending)"
   }
 }
