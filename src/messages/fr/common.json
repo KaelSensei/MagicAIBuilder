@@ -47,5 +47,29 @@
     "ko": "한국어",
     "ru": "Русский",
     "pt": "Português"
+  },
+  "actions": {
+    "close": "Fermer",
+    "dismiss": "Ignorer"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Page précédente",
+    "next": "Page suivante"
+  },
+  "shortcuts": {
+    "title": "Raccourcis clavier",
+    "open": "Raccourcis clavier (?)",
+    "focusSearch": "Placer le curseur dans la recherche",
+    "navigateResults": "Naviguer dans les résultats",
+    "addResult": "Ajouter au deck le premier résultat (ou celui sélectionné)",
+    "closeModal": "Fermer la fenêtre / effacer la recherche",
+    "showShortcuts": "Afficher les raccourcis clavier",
+    "undo": "Annuler le dernier ajout ou retrait de carte",
+    "save": "Forcer l'enregistrement du deck",
+    "export": "Ouvrir la fenêtre d'export",
+    "import": "Ouvrir la fenêtre d'import",
+    "triggerLabel": "Raccourcis",
+    "inactiveHint": "Les raccourcis sont inactifs quand un champ de texte a le focus (sauf ceux avec modificateur)"
   }
 }

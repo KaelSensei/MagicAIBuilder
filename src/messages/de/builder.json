@@ -78,5 +78,13 @@
     "name": "Name",
     "set": "By Set",
     "color": "By Color"
+  },
+  "searchToggles": {
+    "commander": "Commander",
+    "companion": "Companion",
+    "commanderTitle": "Filter for legendary creatures (commanders)",
+    "companionTitle": "Search Companion cards (Ikoria) — one per deck, outside the 99",
+    "setCommanderFirst": "Set a commander first",
+    "partnerTitle": "Search for a {label}"
   }
 }

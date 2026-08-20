@@ -1,5 +1,6 @@
 "use client";
 // Generic pagination controls: Prev / Next + "Page X / Y" indicator
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 
@@ -16,6 +17,7 @@ export function Pagination({
   onPageChange,
   className,
 }: PaginationProps) {
+  const t = useTranslations("common");
   const isFirst = currentPage === 1;
   const isLast = currentPage === totalPages;
 
@@ -23,14 +25,14 @@ export function Pagination({
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t("pagination.label")}
       className={cn("flex items-center justify-center gap-4", className)}
     >
       <button
         type="button"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={isFirst}
-        aria-label="Previous page"
+        aria-label={t("pagination.previous")}
         className={cn(
           "flex items-center gap-1 px-3 py-1.5 rounded border text-sm transition-colors",
           isFirst
@@ -60,7 +62,7 @@ export function Pagination({
         type="button"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={isLast}
-        aria-label="Next page"
+        aria-label={t("pagination.next")}
         className={cn(
           "flex items-center gap-1 px-3 py-1.5 rounded border text-sm transition-colors",
           isLast

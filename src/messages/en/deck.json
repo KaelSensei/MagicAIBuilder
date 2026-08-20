@@ -16,10 +16,10 @@
     "sortDecks": "Sort decks",
     "sortUpdatedNewest": "Updated (newest)",
     "sortUpdatedOldest": "Updated (oldest)",
-    "sortNameAsc": "Name (A\u2013Z)",
-    "sortNameDesc": "Name (Z\u2013A)",
-    "sortBracketAsc": "Bracket (low\u2192high)",
-    "sortBracketDesc": "Bracket (high\u2192low)",
+    "sortNameAsc": "Name (A–Z)",
+    "sortNameDesc": "Name (Z–A)",
+    "sortBracketAsc": "Bracket (low→high)",
+    "sortBracketDesc": "Bracket (high→low)",
     "buildWithAI": "Build with AI",
     "newDeck": "New Deck"
   },
@@ -30,7 +30,8 @@
     "duplicate": "Duplicate {name}",
     "delete": "Delete {name}",
     "manualBracket": "Manual bracket override",
-    "autoBracket": "Auto bracket"
+    "autoBracket": "Auto bracket",
+    "gameChanger": "Game Changer"
   },
   "table": {
     "deck": "Deck",
@@ -42,7 +43,7 @@
   },
   "export": {
     "title": "Export Options",
-    "deckList": "Deck List \u2014 {count} cards",
+    "deckList": "Deck List — {count} cards",
     "copyFor": "Copy for {format}",
     "copied": "Copied!",
     "downloadFormat": "Download {format} file",
@@ -165,7 +166,10 @@
     "paper": "Paper",
     "layout": "Layout",
     "quality": "Quality",
-    "qualityOption": { "standard": "Standard", "high": "High" },
+    "qualityOption": {
+      "standard": "Standard",
+      "high": "High"
+    },
     "content": "Content",
     "cardArt": "Card art",
     "textOnly": "Text only",
@@ -279,7 +283,7 @@
     "noLimit": "No limit",
     "analyzeDeck": "Analyze Deck",
     "reAnalyze": "Re-analyze",
-    "analyzing": "Analyzing\u2026",
+    "analyzing": "Analyzing…",
     "analysedAgo": "Analysed {time}",
     "addCommanderHint": "Add a commander to get suggestions",
     "retry": "Retry",
@@ -305,7 +309,7 @@
     "title": "Combos",
     "found": "{count} found",
     "minCards": "Add at least 10 cards to detect combos",
-    "checking": "Checking Commander Spellbook\u2026",
+    "checking": "Checking Commander Spellbook…",
     "noKnown": "No known combos detected",
     "infinite": "Infinite combos"
   },
@@ -366,9 +370,10 @@
     "shareThisDeck": "Share this deck",
     "importThisDeck": "Import this deck",
     "imported": "Imported!",
-    "importing": "Importing\u2026",
+    "importing": "Importing…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
-    "cardCountLabel": "{count} cards"
+    "cardCountLabel": "{count} cards",
+    "openShare": "Share deck"
   },
   "ratings": {
     "title": "Community Rating",
@@ -450,9 +455,9 @@
     "budgetOption": "Budget",
     "budgetOptionSub": "< $50",
     "moderateOption": "Moderate",
-    "moderateOptionSub": "$50 \u2013 $200",
+    "moderateOptionSub": "$50 – $200",
     "competitiveOption": "Competitive",
-    "competitiveOptionSub": "$200 \u2013 $500",
+    "competitiveOptionSub": "$200 – $500",
     "noLimitOption": "No Limit",
     "noLimitOptionSub": "Spare no expense",
     "colorWhite": "White",
@@ -479,24 +484,30 @@
     "stratVoltronSub": "Buff your commander",
     "bracket1": "Bracket 1",
     "bracket1Sub": "Exhibition",
-    "bracket1Desc": "No interaction, no synergy \u2014 pure theme or storytelling",
+    "bracket1Desc": "No interaction, no synergy — pure theme or storytelling",
     "bracket2": "Bracket 2",
     "bracket2Sub": "Casual",
-    "bracket2Desc": "Precons and light upgrades, 0\u20131 game changers, no infinite combos",
+    "bracket2Desc": "Precons and light upgrades, 0–1 game changers, no infinite combos",
     "bracket3": "Bracket 3",
     "bracket3Sub": "Powered",
     "bracket3Desc": "Optimised synergies, up to 3 game changers, some strong staples",
     "bracket4": "Bracket 4",
     "bracket4Sub": "cEDH",
     "bracket4Desc": "Fully optimised, fast combos, any legal card",
-    "searchCommander": "Search for a commander\u2026",
-    "skipLetAI": "Skip \u2014 let the AI choose",
-    "aiBuilding": "AI is building your deck\u2026",
-    "thinking": "Thinking\u2026",
+    "searchCommander": "Search for a commander…",
+    "skipLetAI": "Skip — let the AI choose",
+    "aiBuilding": "AI is building your deck…",
+    "thinking": "Thinking…",
     "commanderLabel": "Commander: {name}",
-    "cardProgress": "{count} / 99 cards\u2026",
-    "generatingDeck": "Generating deck\u2026",
+    "cardProgress": "{count} / 99 cards…",
+    "generatingDeck": "Generating deck…",
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed."
+  },
+  "description": {
+    "add": "Add deck description…",
+    "edit": "Edit description",
+    "clickToEdit": "Click to edit",
+    "placeholder": "Describe your deck strategy, themes, or notes… (basic markdown supported)"
   }
 }

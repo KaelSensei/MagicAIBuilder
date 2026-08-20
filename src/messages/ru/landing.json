@@ -9,42 +9,43 @@
     "eyebrow": "The Future of Commander Deckbuilding",
     "line1": "Stop Guessing.",
     "line2": "Start Winning.",
-    "subtitle": "You spend <strong>hours building decks</strong> only to sit across the table and realize three cards don\u2019t synergize, your curve is broken, and you\u2019re missing an answer to the meta.<br></br><strong>There\u2019s a smarter way.</strong>",
-    "ctaLoggedIn": "\u2726 Go to My Decks",
-    "ctaLoggedOut": "\u2726 Build My First Deck",
+    "subtitle": "You spend <strong>hours building decks</strong> only to sit across the table and realize three cards don’t synergize, your curve is broken, and you’re missing an answer to the meta.<br></br><strong>There’s a smarter way.</strong>",
+    "ctaLoggedIn": "✦ Go to My Decks",
+    "ctaLoggedOut": "✦ Build My First Deck",
     "secondaryCta": "See How It Works",
-    "note": "100% free \u00b7 Commander \u00b7 Standard \u00b7 Pioneer \u00b7 All formats"
+    "note": "100% free · Commander · Standard · Pioneer · All formats",
+    "manaColors": "All mana colors"
   },
   "pain": {
     "sectionLabel": "The Problem",
     "heading": "Deckbuilding is <em>broken.</em><br></br>And you know it.",
     "hoursTitle": "Hours Down the Drain",
-    "hoursText": "You open 20 Scryfall tabs, scroll Moxfield for an hour, and still aren\u2019t sure if the deck works.",
+    "hoursText": "You open 20 Scryfall tabs, scroll Moxfield for an hour, and still aren’t sure if the deck works.",
     "synergyTitle": "Blind Synergy Testing",
-    "synergyText": "You only find out your combo doesn\u2019t work at the table. In front of three opponents.",
+    "synergyText": "You only find out your combo doesn’t work at the table. In front of three opponents.",
     "expensiveTitle": "Expensive Mistakes",
     "expensiveText": "You buy the cards, build the deck, and a week later realize you built the wrong gameplan.",
     "curveTitle": "Broken Mana Curves",
-    "curveText": "No tool tells you your curve is top-heavy until you\u2019re stuck on 3 lands on turn 6."
+    "curveText": "No tool tells you your curve is top-heavy until you’re stuck on 3 lands on turn 6."
   },
   "product": {
     "sectionLabel": "The Solution",
     "heading": "Moxfield-level power.<br></br><span>Gemini-level intelligence.</span>",
-    "description": "MagicAIBuilder is the deck building tool you always wished existed \u2014 a full-featured deck manager where an AI co-pilot analyzes every card choice, flags synergy gaps, and suggests upgrades in real time.",
-    "feature1": "AI commander analysis \u2014 instant synergy scoring on every card you add",
+    "description": "MagicAIBuilder is the deck building tool you always wished existed — a full-featured deck manager where an AI co-pilot analyzes every card choice, flags synergy gaps, and suggests upgrades in real time.",
+    "feature1": "AI commander analysis — instant synergy scoring on every card you add",
     "feature2": "Mana curve optimizer with bracket-aware power budgeting",
-    "feature3": "Real-time \u201cWhat should I cut?\u201d \u2014 context-aware removal suggestions",
+    "feature3": "Real-time “What should I cut?” — context-aware removal suggestions",
     "feature4": "Full format support: Commander, Standard, Pioneer, Modern, Legacy",
-    "feature5": "Import from Moxfield, Archidekt, MTGO, Arena \u2014 in one click",
+    "feature5": "Import from Moxfield, Archidekt, MTGO, Arena — in one click",
     "feature6": "Price tracker + budget alternatives with similar power level",
-    "mockupTitle": "MagicAIBuilder \u2014 Tinybones EDH",
-    "userPrompt": "I need 5 discard engines under $10 for Tinybones. What\u2019s good?",
+    "mockupTitle": "MagicAIBuilder — Tinybones EDH",
+    "userPrompt": "I need 5 discard engines under $10 for Tinybones. What’s good?",
     "aiResponse": "Here are 5 high-synergy discard engines for Tinybones, all under $10:",
-    "aiCard1": "<strong>Burglar Rat</strong> \u2014 ETB discard, recurrable with your 4 reanimation spells (synergy: 94%)",
-    "aiCard2": "<strong>Liliana\u2019s Specter</strong> \u2014 flying + each opponent discards, great with your evasion package (92%)",
-    "aiCard3": "<strong>Oppression</strong> \u2014 symmetrical but you benefit more with 8 recursion pieces (97%)",
-    "aiCard4": "<strong>Bottomless Pit</strong> \u2014 repeatable, triggers Tinybones every upkeep (95%)",
-    "aiCard5": "<strong>Cunning Lethemancer</strong> \u2014 low cmc, consistent trigger, fuels your graveyard plan (91%)",
+    "aiCard1": "<strong>Burglar Rat</strong> — ETB discard, recurrable with your 4 reanimation spells (synergy: 94%)",
+    "aiCard2": "<strong>Liliana’s Specter</strong> — flying + each opponent discards, great with your evasion package (92%)",
+    "aiCard3": "<strong>Oppression</strong> — symmetrical but you benefit more with 8 recursion pieces (97%)",
+    "aiCard4": "<strong>Bottomless Pit</strong> — repeatable, triggers Tinybones every upkeep (95%)",
+    "aiCard5": "<strong>Cunning Lethemancer</strong> — low cmc, consistent trigger, fuels your graveyard plan (91%)",
     "aiFootnote": "Adding all 5 would lower your avg CMC from 3.2 to 2.9 and increase discard density to optimal range."
   },
   "how": {
@@ -70,26 +71,26 @@
     "heading": "What Players Are Saying",
     "review1Text": "I built a Bracket 4 Tinybones deck in 45 minutes. The AI caught three dead cards I would have never noticed until game night.",
     "review1Author": "Kael M.",
-    "review1Role": "cEDH Player \u00b7 Paris",
-    "review2Text": "Finally a tool that speaks Commander language. It knows what Bracket 3 means. It knows what \u2018goodstuff\u2019 means. It gets it.",
+    "review1Role": "cEDH Player · Paris",
+    "review2Text": "Finally a tool that speaks Commander language. It knows what Bracket 3 means. It knows what ‘goodstuff’ means. It gets it.",
     "review2Author": "Romain V.",
-    "review2Role": "LGS Regular \u00b7 Lyon",
-    "review3Text": "The curve optimizer alone is worth the subscription. My decks have never been this consistent. I\u2019m not going back to Moxfield alone.",
+    "review2Role": "LGS Regular · Lyon",
+    "review3Text": "The curve optimizer alone is worth the subscription. My decks have never been this consistent. I’m not going back to Moxfield alone.",
     "review3Author": "Julien T.",
-    "review3Role": "Competitive Player \u00b7 Bordeaux"
+    "review3Role": "Competitive Player · Bordeaux"
   },
   "cta": {
     "heading": "Your Next Win<br></br>Starts <span>Right Here.</span>",
-    "subtitle": "Stop second-guessing your card choices. Build the deck you meant to build \u2014 and win with it.",
-    "ctaLoggedIn": "\u2726 Go to My Decks",
-    "ctaLoggedOut": "\u2726 Start Building Now"
+    "subtitle": "Stop second-guessing your card choices. Build the deck you meant to build — and win with it.",
+    "ctaLoggedIn": "✦ Go to My Decks",
+    "ctaLoggedOut": "✦ Start Building Now"
   },
   "footer": {
     "privacy": "Privacy",
     "terms": "Terms",
     "contact": "Contact",
     "discord": "Discord",
-    "copyright": "\u00a9 2025 MagicAIBuilder",
+    "copyright": "© 2025 MagicAIBuilder",
     "disclaimer": "Magic: The Gathering, the mana symbols, and all associated card names and images are trademarks of Wizards of the Coast LLC. MagicAIBuilder is not produced by, endorsed by, supported by, or affiliated with Wizards of the Coast. Card data provided by <scryfall>Scryfall</scryfall>."
   }
 }
