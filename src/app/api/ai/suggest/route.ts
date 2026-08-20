@@ -279,9 +279,9 @@ export async function POST(request: Request) {
         else result = mockSuggestions(body);
         await streamResponse(controller, result);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "AI suggestion failed";
-        logger.error(message, "POST /api/ai/suggest");
-        const event: StreamEvent = { type: "error", message };
+        // Logged in full, sent generic — provider errors stay server-side.
+        logger.error(error instanceof Error ? error.message : String(error), "POST /api/ai/suggest");
+        const event: StreamEvent = { type: "error", message: "AI suggestion failed" };
         controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
       } finally {
         controller.close();
