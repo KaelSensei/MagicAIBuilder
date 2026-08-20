@@ -1,5 +1,6 @@
 "use client";
 // Deck tags editor — pill tags with suggestions and add/remove
+import { useTranslations } from "next-intl";
 import { useState, useRef } from "react";
 import { X, Plus } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
@@ -24,6 +25,7 @@ interface DeckTagsEditorProps {
 }
 
 export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
+  const t = useTranslations("builder");
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,7 +78,7 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
               type="button"
               onClick={() => removeTag(deckId, tag)}
               className="hover:opacity-70 transition-opacity"
-              aria-label={`Remove tag ${tag}`}
+              aria-label={t("actions.removeTag", { tag })}
             >
               <X className="w-2.5 h-2.5" />
             </button>

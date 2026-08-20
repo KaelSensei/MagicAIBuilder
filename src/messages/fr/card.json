@@ -21,5 +21,8 @@
   "favorite": {
     "add": "Ajouter aux favoris",
     "remove": "Retirer des favoris"
-  }
+  },
+  "addNamedToDeck": "Ajouter {name} au deck",
+  "priceLabel": "Prix : {price} $",
+  "previewOf": "Aperçu de {name}"
 }
