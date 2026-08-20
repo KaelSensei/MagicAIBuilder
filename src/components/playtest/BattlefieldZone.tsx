@@ -5,6 +5,7 @@ import { RotateCcw } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import type { BattlefieldCard } from "@/lib/playtest/engine";
+import { useLocalizeDeckCard } from "@/components/card/LocalizedDeckTextContext";
 
 interface BattlefieldZoneProps {
   readonly battlefield: readonly BattlefieldCard[];
@@ -20,6 +21,7 @@ export function BattlefieldZone({
   onRemove,
 }: BattlefieldZoneProps) {
   const t = useTranslations("playtest.battlefield");
+  const localize = useLocalizeDeckCard();
 
   if (battlefield.length === 0) {
     return (
@@ -35,7 +37,9 @@ export function BattlefieldZone({
         {t("title", { count: battlefield.length })}
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {battlefield.map((card) => (
+        {battlefield.map((card) => {
+          const view = localize(card);
+          return (
           <div
             key={card.id}
             data-testid={`battlefield-card-${card.id}`}
@@ -48,8 +52,8 @@ export function BattlefieldZone({
             {/* Card image */}
             <div className="relative aspect-[3/4] overflow-hidden">
               <Image
-                src={card.imageUri || CARD_BACK_URL}
-                alt={card.name}
+                src={view.imageUri || CARD_BACK_URL}
+                alt={view.name}
                 fill
                 className="object-cover"
                 unoptimized
@@ -59,7 +63,7 @@ export function BattlefieldZone({
             {/* Card info */}
             <div className="p-2 space-y-2">
               <p className="text-xs text-white font-medium truncate">
-                {card.name}
+                {view.name}
               </p>
 
               {/* Counter display */}
@@ -107,7 +111,8 @@ export function BattlefieldZone({
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

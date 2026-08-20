@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useCallback, useContext, type ReactNode } from "react";
 import { useLocalizedDeckIndex } from "@/hooks/useLocalizedDeckIndex";
 import type { LocalizedCardText } from "@/lib/scryfall/localized";
 
@@ -53,4 +53,29 @@ export function useLocalizedDeckName(englishName: string): string {
  */
 export function useLocalizedDeckText(englishName: string): LocalizedCardText | null {
   return useContext(LocalizedDeckTextContext).get(englishName) ?? null;
+}
+
+/** The two fields a card surface shows: what to call it and what to draw. */
+export interface LocalizedCardView {
+  readonly name: string;
+  readonly imageUri: string;
+}
+
+/**
+ * A localiser for components that render many cards in one `map` — hooks
+ * cannot be called per item, so the lookup is returned as a function.
+ *
+ * @returns a function taking any card with an English `name` and `imageUri`
+ *   and returning the translated pair, or the card's own values when the
+ *   nearest provider has no printing for it
+ */
+export function useLocalizeDeckCard(): (card: LocalizedCardView) => LocalizedCardView {
+  const index = useContext(LocalizedDeckTextContext);
+  return useCallback(
+    (card: LocalizedCardView): LocalizedCardView => {
+      const entry = index.get(card.name);
+      return entry ? { name: entry.name, imageUri: entry.imageUri } : card;
+    },
+    [index]
+  );
 }

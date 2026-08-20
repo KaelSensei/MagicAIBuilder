@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { DeckCard } from "@/lib/deck/types";
 import type { CardZone } from "@/lib/playtest/engine";
+import { useLocalizeDeckCard } from "@/components/card/LocalizedDeckTextContext";
 
 interface GraveyardZoneProps {
   readonly graveyard: readonly DeckCard[];
@@ -19,6 +20,7 @@ interface ZoneListProps {
 
 function ZoneList({ cards, zone, onRestore }: ZoneListProps) {
   const t = useTranslations("playtest.graveyard");
+  const localize = useLocalizeDeckCard();
   const [isOpen, setIsOpen] = useState(false);
   // The label and the empty message follow the zone, so the two call sites no
   // longer pass an English string down as a prop.
@@ -56,7 +58,7 @@ function ZoneList({ cards, zone, onRestore }: ZoneListProps) {
                 key={card.id}
                 className="flex items-center justify-between gap-2 py-1.5 px-2 bg-white/5 rounded"
               >
-                <span className="text-xs text-white truncate">{card.name}</span>
+                <span className="text-xs text-white truncate">{localize(card).name}</span>
                 <div className="flex gap-1 flex-shrink-0">
                   <button
                     type="button"
