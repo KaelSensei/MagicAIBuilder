@@ -16,8 +16,8 @@
     "open": "Open menu"
   },
   "footer": {
-    "wizardsTrademarks": "Wizards of the Coast, Magic: The Gathering, and their logos are trademarks of Wizards of the Coast LLC in the United States and other countries. \u00a9 1993-2026 Wizards. All Rights Reserved.",
-    "notAffiliated": "MagicAIBuilder is not affiliated with, endorsed, sponsored, or specifically approved by Wizards of the Coast LLC. MagicAIBuilder may use the trademarks and other intellectual property of Wizards of the Coast LLC, which is permitted under Wizards\u2019 Fan Site Policy. MAGIC: THE GATHERING\u00ae is a trademark of Wizards of the Coast. For more information about Wizards of the Coast or any of Wizards\u2019 trademarks or other intellectual property, please visit their website at <link>company.wizards.com</link>.",
+    "wizardsTrademarks": "Wizards of the Coast, Magic: The Gathering, and their logos are trademarks of Wizards of the Coast LLC in the United States and other countries. © 1993-2026 Wizards. All Rights Reserved.",
+    "notAffiliated": "MagicAIBuilder is not affiliated with, endorsed, sponsored, or specifically approved by Wizards of the Coast LLC. MagicAIBuilder may use the trademarks and other intellectual property of Wizards of the Coast LLC, which is permitted under Wizards’ Fan Site Policy. MAGIC: THE GATHERING® is a trademark of Wizards of the Coast. For more information about Wizards of the Coast or any of Wizards’ trademarks or other intellectual property, please visit their website at <link>company.wizards.com</link>.",
     "scryfallDisclaimer": "Some card prices and other card data are provided by Scryfall. Scryfall makes no guarantee about its price information and recommends you see stores for final prices and details."
   },
   "sidebar": {
@@ -38,14 +38,38 @@
   "locale": {
     "switchLocale": "Switch language",
     "en": "English",
-    "fr": "Fran\u00e7ais",
+    "fr": "Français",
     "de": "Deutsch",
     "it": "Italiano",
-    "es": "Espa\u00f1ol",
-    "ja": "\u65e5\u672c\u8a9e",
-    "zh": "\u4e2d\u6587",
-    "ko": "\ud55c\uad6d\uc5b4",
-    "ru": "\u0420\u0443\u0441\u0441\u043a\u0438\u0439",
-    "pt": "Portugu\u00eas"
+    "es": "Español",
+    "ja": "日本語",
+    "zh": "中文",
+    "ko": "한국어",
+    "ru": "Русский",
+    "pt": "Português"
+  },
+  "actions": {
+    "close": "Close",
+    "dismiss": "Dismiss"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "open": "Keyboard shortcuts (?)",
+    "focusSearch": "Focus search bar",
+    "navigateResults": "Navigate search results",
+    "addResult": "Add first (or selected) result to deck",
+    "closeModal": "Close modal / clear search",
+    "showShortcuts": "Show keyboard shortcuts",
+    "undo": "Undo last card add/remove",
+    "save": "Force save deck to database",
+    "export": "Open export modal",
+    "import": "Open import modal",
+    "triggerLabel": "Shortcuts",
+    "inactiveHint": "Shortcuts are inactive when a text field is focused (except modifier shortcuts)"
   }
 }

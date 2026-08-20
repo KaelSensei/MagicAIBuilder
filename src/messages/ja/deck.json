@@ -30,7 +30,8 @@
     "duplicate": "Duplicate {name}",
     "delete": "Delete {name}",
     "manualBracket": "Manual bracket override",
-    "autoBracket": "Auto bracket"
+    "autoBracket": "Auto bracket",
+    "gameChanger": "Game Changer"
   },
   "table": {
     "deck": "Deck",
@@ -66,12 +67,12 @@
     "import": "Import",
     "url": {
       "intro": "Paste a deck URL to import. Supported: {sources}.",
-      "placeholder": "https://www.moxfield.com/decks/\u2026 or moxfield publicId (e.g. AbCdEfGhIj)",
-      "detected": "{source} detected \u2713",
+      "placeholder": "https://www.moxfield.com/decks/… or moxfield publicId (e.g. AbCdEfGhIj)",
+      "detected": "{source} detected ✓",
       "notRecognised": "Source not recognised. Supported: {sources}.",
-      "fetching": "Fetching deck\u2026",
+      "fetching": "Fetching deck…",
       "importFailed": "Import failed.",
-      "success": "Imported \u201c{name}\u201d \u2014 {added, plural, one {# card added} other {# cards added}}{ignored, plural, =0 {} one {, # ignored} other {, # ignored}}.",
+      "success": "Imported “{name}” — {added, plural, one {# card added} other {# cards added}}{ignored, plural, =0 {} one {, # ignored} other {, # ignored}}.",
       "notFound": "Cards not found in Scryfall ({count}):",
       "footer": "Supported: {sources}. Deck must be public."
     }
@@ -90,7 +91,7 @@
     "use": "Use"
   },
   "bulkEdit": {
-    "title": "Bulk Edit \u2014 {name}",
+    "title": "Bulk Edit — {name}",
     "close": "Close",
     "description": "Edit your decklist directly. One card per line: <code>1 Card Name</code>. Add a <code>Commander</code> section header to set your commander.",
     "saving": "Saving...",
@@ -256,7 +257,8 @@
     "imported": "Imported!",
     "importing": "Importing…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
-    "cardCountLabel": "{count} cards"
+    "cardCountLabel": "{count} cards",
+    "openShare": "Share deck"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -488,9 +490,9 @@
     "sortNewest": "Newest first",
     "sortOldest": "Oldest first",
     "signInToComment": "Sign in to join the conversation.",
-    "placeholder": "Ask a question or share a thought\u2026",
+    "placeholder": "Ask a question or share a thought…",
     "post": "Post",
-    "posting": "Posting\u2026",
+    "posting": "Posting…",
     "reply": "Reply",
     "edit": "Edit",
     "save": "Save",
@@ -501,5 +503,11 @@
     "ownerBadge": "Deck author",
     "failed": "Something went wrong. Try again.",
     "empty": "Start the conversation."
+  },
+  "description": {
+    "add": "Add deck description…",
+    "edit": "Edit description",
+    "clickToEdit": "Click to edit",
+    "placeholder": "Describe your deck strategy, themes, or notes… (basic markdown supported)"
   }
 }

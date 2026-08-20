@@ -36,7 +36,7 @@ export function Hero() {
       <ManaFloats />
 
       {/* Real Scryfall mana symbols -- W U B R G C */}
-      <div className="hero-mana-pips" aria-label="All mana colors">
+      <div className="hero-mana-pips" aria-label={t("hero.manaColors")}>
         {MANA_COLORS.map((c) => (
           <Image
             key={c.code}

@@ -78,5 +78,13 @@
     "name": "Nom",
     "set": "Par édition",
     "color": "Par couleur"
+  },
+  "searchToggles": {
+    "commander": "Commandant",
+    "companion": "Compagnon",
+    "commanderTitle": "Filtrer les créatures légendaires (commandants)",
+    "companionTitle": "Chercher des cartes Compagnon (Ikoria) — une par deck, hors des 99",
+    "setCommanderFirst": "Choisissez d'abord un commandant",
+    "partnerTitle": "Chercher un {label}"
   }
 }

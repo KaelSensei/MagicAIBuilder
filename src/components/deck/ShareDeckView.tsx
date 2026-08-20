@@ -102,6 +102,7 @@ function computeAvgCmc(cards: ApiCard[]): number {
 // ─── Card row ─────────────────────────────────────────────────────────────────
 
 function CardRow({ card }: { readonly card: ApiCard }) {
+  const t = useTranslations("deck");
   return (
     <div className="flex items-center gap-2 py-1 text-sm hover:bg-[var(--surface-hover)] rounded px-1 transition-colors group">
       {card.artCropUri ? (
@@ -120,7 +121,7 @@ function CardRow({ card }: { readonly card: ApiCard }) {
         )}
         {card.name}
         {card.isGameChanger && (
-          <span className="ml-1.5 text-xs text-amber-400" title="Game Changer">
+          <span className="ml-1.5 text-xs text-amber-400" title={t("card.gameChanger")}>
             ⚡
           </span>
         )}

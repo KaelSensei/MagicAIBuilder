@@ -1,5 +1,6 @@
 "use client";
 // Generic modal wrapper — shared overlay + container, eliminates duplication across modals
+import { useTranslations } from "next-intl";
 import { useEffect, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +27,7 @@ export function Modal({
   children,
   showClose = true,
 }: ModalProps) {
+  const t = useTranslations("common");
   // Close on Escape
   useEffect(() => {
     if (!open) return;
@@ -69,7 +71,7 @@ export function Modal({
                     type="button"
                     onClick={onClose}
                     className="ml-auto text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                    aria-label="Close"
+                    aria-label={t("actions.close")}
                   >
                     <X className="w-4 h-4" />
                   </button>
