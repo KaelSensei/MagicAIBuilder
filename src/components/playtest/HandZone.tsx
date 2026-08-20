@@ -6,6 +6,7 @@ import { Eye, EyeOff, Plus } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import type { DeckCard } from "@/lib/deck/types";
+import { useLocalizeDeckCard } from "@/components/card/LocalizedDeckTextContext";
 
 interface HandZoneProps {
   readonly hand: readonly DeckCard[];
@@ -29,6 +30,7 @@ export function HandZone({
   onMoveCard,
 }: HandZoneProps) {
   const t = useTranslations("playtest.hand");
+  const localize = useLocalizeDeckCard();
   const [showCards, setShowCards] = useState(false);
   const [contextMenu, setContextMenu] = useState<CardContextMenu | null>(null);
   const isEmpty = libraryCount === 0;
@@ -85,29 +87,31 @@ export function HandZone({
       {/* Hand cards */}
       {hand.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {hand.map((card) => (
+          {hand.map((card) => {
+            const view = localize(card);
+            return (
             <div key={card.id} className="relative">
               <button
                 type="button"
                 onClick={() => handleCardClick(card)}
                 className="relative w-14 rounded-md overflow-hidden hover:scale-105 transition-transform"
-                aria-label={showCards ? card.name : t("cardBack")}
+                aria-label={showCards ? view.name : t("cardBack")}
               >
                 <Image
                   src={
-                    showCards ? card.imageUri || CARD_BACK_URL : CARD_BACK_URL
+                    showCards ? view.imageUri || CARD_BACK_URL : CARD_BACK_URL
                   }
-                  alt={showCards ? card.name : t("cardBack")}
+                  alt={showCards ? view.name : t("cardBack")}
                   width={56}
                   height={78}
                   className="w-full object-cover"
                   unoptimized
                 />
-                {showCards && <span className="sr-only">{card.name}</span>}
+                {showCards && <span className="sr-only">{view.name}</span>}
               </button>
               {showCards && (
                 <p className="text-[9px] text-white/60 text-center truncate max-w-14 mt-0.5">
-                  {card.name}
+                  {view.name}
                 </p>
               )}
 
@@ -115,7 +119,7 @@ export function HandZone({
               {contextMenu?.cardId === card.id && (
                 <div className="absolute bottom-full left-0 mb-1 bg-[var(--surface)] border border-white/20 rounded-lg shadow-xl z-10 min-w-[140px] overflow-hidden">
                   <p className="px-3 py-1.5 text-xs font-semibold text-white/60 border-b border-white/10 truncate">
-                    {card.name}
+                    {view.name}
                   </p>
                   <button
                     type="button"
@@ -140,7 +144,8 @@ export function HandZone({
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -7,6 +7,8 @@ import { CardListItem } from "./CardListItem";
 import { LocalizedDeckTextProvider } from "./LocalizedDeckTextContext";
 import enCard from "@/messages/en/card.json";
 import enBuilder from "@/messages/en/builder.json";
+import enPlaytest from "@/messages/en/playtest.json";
+import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -68,6 +70,26 @@ describe("LocalizedDeckTextProvider", () => {
     await waitFor(() => expect(screen.getByText("Anneau solaire")).toBeInTheDocument());
     expect(screen.getByText("Counterspell")).toBeInTheDocument();
     expect(screen.queryByText("Sol Ring")).not.toBeInTheDocument();
+  });
+
+  it("localises a zone that maps over its cards, via useLocalizeDeckCard", async () => {
+    vi.mocked(scryfallClient.fetchLocalizedPrintingsByNames).mockResolvedValueOnce([frSolRing]);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <NextIntlClientProvider locale="fr" messages={{ playtest: enPlaytest }}>
+        <QueryClientProvider client={client}>
+          <LocalizedDeckTextProvider names={["Sol Ring"]}>
+            <BattlefieldZone
+              battlefield={[{ ...makeDeckCard("Sol Ring"), tapped: false, counters: 0 }]}
+              onTap={vi.fn()}
+              onAddCounter={vi.fn()}
+              onRemove={vi.fn()}
+            />
+          </LocalizedDeckTextProvider>
+        </QueryClientProvider>
+      </NextIntlClientProvider>
+    );
+    await waitFor(() => expect(screen.getByText("Anneau solaire")).toBeInTheDocument());
   });
 
   it("renders English with no request when no provider is mounted", () => {
