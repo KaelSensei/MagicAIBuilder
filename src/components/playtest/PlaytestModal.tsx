@@ -1,6 +1,6 @@
 "use client";
 // Fullscreen playtest — phases, life, and the hand / battlefield / graveyard zones
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCcw, Layers } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -15,6 +15,7 @@ import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
 import { GraveyardZone } from "@/components/playtest/GraveyardZone";
 import { RecordResultBar } from "@/components/playtest/RecordResultBar";
 import { PlaytestHistoryPanel } from "@/components/playtest/PlaytestHistoryPanel";
+import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
@@ -105,7 +106,17 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     engine.graveyard.length === 0 &&
     engine.exile.length === 0;
 
+  // Every card the zones can show — main deck plus the command zone
+  const cardNames = useMemo(
+    () =>
+      [deck.commander, deck.partner, ...deck.cards]
+        .filter((c) => c !== null && c !== undefined)
+        .map((c) => c.name),
+    [deck.commander, deck.partner, deck.cards]
+  );
+
   return (
+    <LocalizedDeckTextProvider names={cardNames}>
     <AnimatePresence>
       <motion.div
         className="fixed inset-0 z-50 bg-black/95 flex flex-col"
@@ -226,5 +237,6 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
         )}
       </motion.div>
     </AnimatePresence>
+    </LocalizedDeckTextProvider>
   );
 }
