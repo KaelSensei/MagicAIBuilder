@@ -37,20 +37,33 @@ const BADGE_LABEL_KEYS: Record<NonNullable<QualityBadge>, string> = {
 
 export function DeckRatingPanel({ deckId, isOwner, isSignedIn }: DeckRatingPanelProps) {
   const t = useTranslations("deck.ratings");
+  const tCommon = useTranslations("common");
   const [data, setData] = useState<DeckRatingsResponse | null>(null);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
+  /** Distinct from `failed`, which reports a failed *write* under the stars. */
+  const [loadFailed, setLoadFailed] = useState(false);
   const [writing, setWriting] = useState(false);
 
   const endpoint = `/api/community/decks/${encodeURIComponent(deckId)}/ratings`;
 
+  /**
+   * Reads the aggregate. A failure has to be *visible*: the body renders only
+   * when `data` is set, so silently ignoring a non-OK response or a thrown
+   * fetch left the panel showing its title and nothing else, forever — and a
+   * failed read looked exactly like a deck with no ratings, with no way back.
+   */
   const load = useCallback(async () => {
+    setLoadFailed(false);
     try {
       const res = await fetch(endpoint);
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        setLoadFailed(true);
+        return;
+      }
+      setData(await res.json());
     } catch {
-      // A failed aggregate read leaves the panel in its loading state; the
-      // rating actions below surface their own errors.
+      setLoadFailed(true);
     }
   }, [endpoint]);
 
@@ -105,6 +118,19 @@ export function DeckRatingPanel({ deckId, isOwner, isSignedIn }: DeckRatingPanel
           </span>
         )}
       </header>
+
+      {loadFailed && !data && (
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-[var(--text-secondary)]">{t("loadFailed")}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="text-xs px-2 py-1 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
+          >
+            {tCommon("error.retry")}
+          </button>
+        </div>
+      )}
 
       {data && (
         <>
