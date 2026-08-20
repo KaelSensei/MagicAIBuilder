@@ -41,5 +41,16 @@ export function LocalizedDeckTextProvider({
  * @returns the localised name, or `englishName` when none is known
  */
 export function useLocalizedDeckName(englishName: string): string {
-  return useContext(LocalizedDeckTextContext).get(englishName)?.name ?? englishName;
+  return useLocalizedDeckText(englishName)?.name ?? englishName;
+}
+
+/**
+ * The full localised entry for a card — name, type line, rules and the
+ * printing's image — or null when the nearest provider has no translated
+ * printing for it. Display only.
+ *
+ * @param englishName - the card's oracle name as stored on the `DeckCard`
+ */
+export function useLocalizedDeckText(englishName: string): LocalizedCardText | null {
+  return useContext(LocalizedDeckTextContext).get(englishName) ?? null;
 }

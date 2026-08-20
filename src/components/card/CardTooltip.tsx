@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, cloneElement, isValidElement, Children }
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import type { DeckCard } from "@/lib/deck/types";
+import { useLocalizedDeckText } from "@/components/card/LocalizedDeckTextContext";
 
 const TOOLTIP_WIDTH = 223;
 const TOOLTIP_HEIGHT = 334; // image 310 + price row
@@ -16,6 +17,9 @@ interface CardTooltipProps {
 
 export function CardTooltip({ card, children }: CardTooltipProps) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  // The translated printing's own image when the deck surface has one —
+  // a French viewer sees the French card, not English art with a caption.
+  const localized = useLocalizedDeckText(card.name);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const computePos = useCallback((e: React.MouseEvent) => {
@@ -65,7 +69,13 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
             className="fixed z-9999 pointer-events-none rounded-lg overflow-hidden shadow-2xl border border-(--border)"
             style={{ left: pos.x, top: pos.y }}
           >
-            <Image src={card.imageUri} alt={card.name} width={223} height={310} unoptimized />
+            <Image
+              src={localized?.imageUri ?? card.imageUri}
+              alt={localized?.name ?? card.name}
+              width={223}
+              height={310}
+              unoptimized
+            />
             {card.price != null && (
               <div className="p-2 bg-(--surface) text-xs text-(--text-secondary)">
                 <span className="text-(--accent)">${card.price.toFixed(2)}</span>
