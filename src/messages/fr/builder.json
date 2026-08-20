@@ -45,7 +45,15 @@
     "removePartner": "Retirer le partenaire",
     "removeCompanion": "Retirer le compagnon",
     "removeCard": "Retirer {name}",
-    "dragToReorder": "Glisser pour réorganiser"
+    "dragToReorder": "Glisser pour réorganiser",
+    "backToDecks": "Retour à mes decks",
+    "rename": "Cliquer pour renommer",
+    "duplicate": "Dupliquer le deck",
+    "bulkEdit": "Édition groupée",
+    "playtest": "Tester ce deck",
+    "export": "Exporter le deck",
+    "resizePanel": "Largeur du panneau de recherche",
+    "resizeHint": "Glisser pour redimensionner — flèches pour ajuster"
   },
   "badges": {
     "cmd": "CMD",
@@ -59,5 +67,16 @@
     "G": "Vert",
     "C": "Incolore"
   },
-  "manaSymbolAlt": "Symbole de mana {color}"
+  "manaSymbolAlt": "Symbole de mana {color}",
+  "loading": "Chargement du deck…",
+  "deckNotFound": {
+    "title": "Deck introuvable",
+    "back": "Retour à mes decks"
+  },
+  "searchFilterPlaceholder": "Filtrer par nom (facultatif)…",
+  "searchModes": {
+    "name": "Nom",
+    "set": "Par édition",
+    "color": "Par couleur"
+  }
 }
