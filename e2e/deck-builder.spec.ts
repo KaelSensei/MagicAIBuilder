@@ -24,9 +24,14 @@ test.describe("Deck Builder Flow", () => {
     // Search panel — has search input
     await expect(page.getByTestId("search-input")).toBeVisible();
 
-    // Deck editor panel — commander filter control is present
+    // Deck editor panel — commander filter control is present.
+    // `exact` is required: without it `name` matches as a substring, so once
+    // the search panel has loaded its default results this also picks up
+    // "Commander's Sphere" and its "Add …" button — three elements, strict
+    // mode violation. It only ever passed because the assertion used to run
+    // before those cards rendered.
     await expect(
-      page.getByRole("button", { name: "Commander" })
+      page.getByRole("button", { name: "Commander", exact: true })
     ).toBeVisible();
 
     // Stats panel — has Bracket Score section
