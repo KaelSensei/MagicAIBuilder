@@ -94,7 +94,7 @@ function EdhrecCardRow({
   );
 }
 
-function TournamentDeckRow({ deck }: { readonly deck: TournamentDeck }) {
+export function TournamentDeckRow({ deck }: { readonly deck: TournamentDeck }) {
   return (
     <a
       href={deck.url}
@@ -103,12 +103,23 @@ function TournamentDeckRow({ deck }: { readonly deck: TournamentDeck }) {
       className="flex items-start gap-2 px-2 py-2 rounded hover:bg-[var(--surface-hover)] transition-colors group"
     >
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-[var(--text-primary)] truncate">
-          {deck.name}
+        <p className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-primary)]">
+          {deck.placement && (
+            <span
+              className="shrink-0 px-1 rounded bg-amber-500/15 text-amber-300 text-[10px] font-semibold tabular-nums"
+              title={deck.eventLevel ? "★".repeat(deck.eventLevel) : undefined}
+            >
+              #{deck.placement}
+            </span>
+          )}
+          <span className="truncate">{deck.name}</span>
         </p>
         <p className="text-[10px] text-[var(--text-secondary)] truncate">
           {[deck.player, deck.event, deck.date].filter(Boolean).join(" · ")}
         </p>
+        {deck.format && (
+          <p className="text-[10px] text-[var(--text-secondary)]/70 truncate">{deck.format}</p>
+        )}
       </div>
       <ExternalLink className="w-3 h-3 text-[var(--text-secondary)] shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
     </a>

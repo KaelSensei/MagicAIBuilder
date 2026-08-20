@@ -16,7 +16,14 @@ export interface TournamentDeck {
   readonly name: string;
   readonly player?: string;
   readonly event?: string;
+  /** ISO date `yyyy-mm-dd` */
   readonly date?: string;
+  /** Finishing position as the source prints it: "1", "8", "3-4" */
+  readonly placement?: string;
+  /** The source's format label — on MTGTop8 this is mostly "Duel Commander" (1v1) */
+  readonly format?: string;
+  /** Event size, 1 (local) to 4 (major), as MTGTop8 rates it */
+  readonly eventLevel?: number;
   readonly url: string;
   readonly source: "mtgtop8" | "mtgdecks";
 }
@@ -59,6 +66,14 @@ interface EdhrecJson {
 }
 
 import { httpGet, parseJson } from "@/lib/http";
+import {
+  MTGTOP8_SEARCH_URL,
+  buildSearchBody,
+  decodeLatin1,
+  findArchetypeId,
+  parseArchetypeOptions,
+  parseSearchResults,
+} from "./mtgtop8";
 
 function inclusionFromEdhrecView(view: EdhrecCardView): number {
   if (view.inclusion != null) return view.inclusion;
@@ -113,42 +128,57 @@ export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData
 
 // ─── MTGTop8 ─────────────────────────────────────────────────────────────────
 
-export async function fetchTournamentData(
-  commanderName: string
-): Promise<TournamentData> {
-  const searchUrl = "https://www.mtgtop8.com/format?f=EDH&meta=150&a=&cp=";
+const MAX_TOURNAMENT_DECKS = 5;
+const ARCHETYPE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
-  let res: Response;
+let archetypeCache: { readonly options: ReadonlyMap<string, number>; readonly expiresAt: number } | null =
+  null;
+
+/** Reset the archetype form cache (tests only). @internal */
+export function __resetArchetypeCache(): void {
+  archetypeCache = null;
+}
+
+/**
+ * The commander → archetype id map from the MTGTop8 search form, fetched at
+ * most once a day per server instance. The form is ~1,500 options and every
+ * commander shares it, so fetching it per request would be the slow half of
+ * each lookup.
+ */
+async function loadArchetypeOptions(): Promise<ReadonlyMap<string, number>> {
+  if (archetypeCache && archetypeCache.expiresAt > Date.now()) return archetypeCache.options;
+  const res = await httpGet(MTGTOP8_SEARCH_URL, { headers: { Accept: "text/html" } });
+  const options = parseArchetypeOptions(decodeLatin1(await res.arrayBuffer()));
+  archetypeCache = { options, expiresAt: Date.now() + ARCHETYPE_CACHE_TTL_MS };
+  return options;
+}
+
+/**
+ * Recent tournament decks for a commander, with event context.
+ *
+ * Searches MTGTop8 by commander archetype (decks *led* by the commander) and
+ * falls back to a card-content search for a commander the site has not
+ * classified. Any failure yields an empty list: the meta panel treats the
+ * tournament feed as best-effort and the route serves stale cache when it can.
+ *
+ * @param commanderName - display name, or the slug's words as the meta route passes them
+ */
+export async function fetchTournamentData(commanderName: string): Promise<TournamentData> {
   try {
-    res = await httpGet(searchUrl, { headers: { Accept: "text/html" } });
+    const options = await loadArchetypeOptions();
+    const archetypeId = findArchetypeId(options, commanderName);
+    const res = await httpGet(MTGTOP8_SEARCH_URL, {
+      method: "POST",
+      headers: {
+        Accept: "text/html",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: buildSearchBody({ archetypeId, commanderName }).toString(),
+    });
+    const decks = parseSearchResults(decodeLatin1(await res.arrayBuffer()));
+    return { decks: decks.slice(0, MAX_TOURNAMENT_DECKS) };
   } catch {
     return { decks: [] };
   }
-
-  const html = await res.text();
-
-  // MTGTop8 deck entries typically have links like /event?e=XXX&d=YYY
-  const deckLinkRe = /href="\/event\?e=(\d+)&d=(\d+)"[^>]*>([^<]+)<\/a>/gi;
-  const decks: TournamentDeck[] = [];
-  let m: RegExpExecArray | null;
-
-  while ((m = deckLinkRe.exec(html)) !== null && decks.length < 5) {
-    const eventId = m[1];
-    const deckId = m[2];
-    const deckName = m[3].trim();
-    // Only include if commander name appears nearby in the HTML (simple heuristic)
-    const contextStart = Math.max(0, m.index - 200);
-    const context = html.slice(contextStart, m.index + 200).toLowerCase();
-    const slugWords = commanderToSlug(commanderName).split("-").slice(0, 2);
-    const isRelevant = slugWords.some((w) => w.length > 3 && context.includes(w));
-    if (!isRelevant && decks.length === 0) continue; // Skip unrelated results
-
-    decks.push({
-      name: deckName || `EDH Deck #${deckId}`,
-      url: `https://www.mtgtop8.com/event?e=${eventId}&d=${deckId}`,
-      source: "mtgtop8",
-    });
-  }
-
-  return { decks };
 }
+

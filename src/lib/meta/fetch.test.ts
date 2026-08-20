@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as http from "@/lib/http";
-import { commanderToSlug, fetchEdhrecData, fetchTournamentData } from "./fetch";
+import { commanderToSlug, fetchEdhrecData, fetchTournamentData, __resetArchetypeCache } from "./fetch";
 
 // ─── commanderToSlug ──────────────────────────────────────────────────────────
 describe("commanderToSlug", () => {
@@ -176,44 +176,104 @@ describe("fetchEdhrecData", () => {
 });
 
 // ─── fetchTournamentData ─────────────────────────────────────────────────────
+const FORM_HTML = `<select id=arch_EDH name=archetype_sel[EDH]>
+<option value="">All</option>
+<option value=1551 >Atraxa, Praetors' Voice</option>
+</select>`;
+
+const ROW = (id: number, name: string) => `<tr class=hover_tr>
+<td><input type=checkbox></td>
+<td class=S12><a href=event?e=1&d=${id}&f=EDH>${name}</a></td>
+<td class=G12><a class=player href=search?player=x>Player ${id}</a></td>
+<td class=S12>Duel Commander</td>
+<td class=S11><a href=event?e=1&f=EDH>Open @ Somewhere</a></td>
+<td align=center><img src=/graph/star.png></td>
+<td class=S12 align=center>${id}</td>
+<td class=S11>05/05/24</td>
+</tr>`;
+
+function latin1Response(html: string): Response {
+  const bytes = Uint8Array.from(html, (ch) => ch.charCodeAt(0));
+  return new Response(bytes, { status: 200, headers: { "Content-Type": "text/html; charset=iso-8859-1" } });
+}
+
 describe("fetchTournamentData", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    __resetArchetypeCache();
   });
 
-  it("returns empty decks when httpGet throws", async () => {
+  it("returns empty decks when the search form cannot be fetched", async () => {
     vi.spyOn(http, "httpGet").mockRejectedValueOnce(new Error("network down"));
-    const result = await fetchTournamentData("Kenrith, the Returned King");
+    const result = await fetchTournamentData("atraxa praetors voice");
     expect(result.decks).toEqual([]);
   });
 
-  it("parses deck links when commander context matches slug", async () => {
-    const html =
-      '<div class="wrap">competitive kenrith cEDH meta</div>' +
-      '<a href="/event?e=111&d=222">Kenrith Combo</a>' +
-      "<p>more html</p>";
-    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
-      new Response(html, { status: 200, headers: { "Content-Type": "text/html" } })
-    );
+  it("searches the commander's archetype and returns the five most recent decks with context", async () => {
+    const rows = [1, 2, 3, 4, 5, 6].map((i) => ROW(i, `Deck ${i}`)).join("");
+    const spy = vi
+      .spyOn(http, "httpGet")
+      .mockResolvedValueOnce(latin1Response(FORM_HTML))
+      .mockResolvedValueOnce(latin1Response(rows));
 
-    const result = await fetchTournamentData("Kenrith, the Returned King");
-    expect(result.decks).toHaveLength(1);
-    expect(result.decks[0].url).toContain("e=111");
-    expect(result.decks[0].url).toContain("d=222");
-    expect(result.decks[0].source).toBe("mtgtop8");
+    const result = await fetchTournamentData("atraxa praetors voice");
+
+    expect(result.decks).toHaveLength(5);
+    expect(result.decks[0]).toMatchObject({
+      name: "Deck 1",
+      player: "Player 1",
+      event: "Open @ Somewhere",
+      date: "2024-05-05",
+      placement: "1",
+      format: "Duel Commander",
+      eventLevel: 1,
+      source: "mtgtop8",
+    });
+    const [, postOptions] = spy.mock.calls[1];
+    expect(postOptions?.method).toBe("POST");
+    expect(String(postOptions?.body)).toContain("archetype_sel%5BEDH%5D=1551");
   });
 
-  it("skips first match when context is unrelated and no decks yet", async () => {
-    const html =
-      '<a href="/event?e=1&d=1">Random Deck</a>' +
-      '<div>kenrith tournament here</div>' +
-      '<a href="/event?e=2&d=2">Kenrith Lists</a>';
-    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
-      new Response(html, { status: 200 })
-    );
+  it("falls back to a card search when MTGTop8 has no archetype for the commander", async () => {
+    const spy = vi
+      .spyOn(http, "httpGet")
+      .mockResolvedValueOnce(latin1Response(FORM_HTML))
+      .mockResolvedValueOnce(latin1Response(ROW(9, "Krenko Goblins")));
 
-    const result = await fetchTournamentData("Kenrith");
-    expect(result.decks.length).toBeGreaterThanOrEqual(1);
-    expect(result.decks.some((d) => d.url.includes("d=2"))).toBe(true);
+    const result = await fetchTournamentData("Krenko, Mob Boss");
+
+    expect(result.decks.map((d) => d.name)).toEqual(["Krenko Goblins"]);
+    expect(String(spy.mock.calls[1][1]?.body)).toContain("cards=Krenko");
+  });
+
+  it("fetches the archetype form once and reuses it for later commanders", async () => {
+    const spy = vi
+      .spyOn(http, "httpGet")
+      .mockResolvedValueOnce(latin1Response(FORM_HTML))
+      .mockResolvedValue(latin1Response(""));
+
+    await fetchTournamentData("atraxa praetors voice");
+    await fetchTournamentData("atraxa praetors voice");
+
+    const formCalls = spy.mock.calls.filter(([, o]) => o?.method !== "POST");
+    expect(formCalls).toHaveLength(1);
+  });
+
+  it("decodes the site's Latin-1 bytes so accented player names survive", async () => {
+    vi.spyOn(http, "httpGet")
+      .mockResolvedValueOnce(latin1Response(FORM_HTML))
+      .mockResolvedValueOnce(latin1Response(ROW(1, "Atraxa").replace("Player 1", "Roméo")));
+
+    const result = await fetchTournamentData("atraxa praetors voice");
+    expect(result.decks[0].player).toBe("Roméo");
+  });
+
+  it("returns empty decks when the search itself fails", async () => {
+    vi.spyOn(http, "httpGet")
+      .mockResolvedValueOnce(latin1Response(FORM_HTML))
+      .mockRejectedValueOnce(new Error("HTTP 503"));
+    const result = await fetchTournamentData("atraxa praetors voice");
+    expect(result.decks).toEqual([]);
   });
 });
+
