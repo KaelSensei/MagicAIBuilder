@@ -13,12 +13,12 @@
 
 | Metric              | Value                                                  |
 | ------------------- | ------------------------------------------------------ |
-| Unit tests          | 2199 across 153 files                                  |
+| Unit tests          | 2221 across 155 files                                  |
 | E2E tests           | 58 passing, 1 skipped (`@external` / `@perf` excluded) |
 | Coverage            | ~94.5%                                                 |
 | SonarCloud          | 0 open issues                                          |
-| Source files        | 298 (`.ts`/`.tsx`, excluding tests)                    |
-| Components          | 140 (`.tsx`, excluding tests)                          |
+| Source files        | 302 (`.ts`/`.tsx`, excluding tests)                    |
+| Components          | 143 (`.tsx`, excluding tests)                          |
 | API routes          | 39                                                     |
 | Prisma models       | 20                                                     |
 | Prisma migrations   | 23                                                     |
@@ -43,6 +43,9 @@
 - **`gh pr merge --rebase` still drifts the promotion branches.** Rebasing avoids a merge commit _on the target_, but it rewrites the promoted commits, so after `staging → dev → main` the same commits exist three times under different SHAs — identical trees, divergent histories. The fix is to reset `staging` and `dev` onto `main` after each promotion (done 2026-08-20 for batch #480–#489). CLAUDE.md's claim that rebasing "keeps all three branches on the same commit" is only true after that reset.
 - ~~**The matchup breakdown has no data.**~~ **Resolved (#425).** The recording bar asks for opponent strength and the breakdown shows the split. The stale copy of this line survived here and in the roadmap until 2026-08-19 — when syncing docs, check the component, not the last review.
 - **Three docs are still in French**: `docs/init-prompt.md`, `docs/product/competitive-landscape.md`, `docs/security/audit-securite-2026-07-20.md` (French filename too).
+- **The silent-read failure is a recurring shape, not three coincidences** (2026-08-20). Three instances found: the MTGTop8 source (#487, unnoticed for months), `DeckRatingPanel` (#505, found by accident) and `DeckCommentPanel` (#506, found by grepping for the signature). All three share it: **a read whose failure is indistinguishable from a legitimate empty state, with no way to recover.** The UI renders something plausible, so nobody suspects the fetch, and no error is logged anywhere the user or the developer looks.
+  - **How to hunt it**: `if (res.ok)` followed by a state setter, and bare `catch {}` around a read that populates the UI. Both currently return nothing in `src` — the remaining `catch {}` blocks are fire-and-forget writes (localStorage, clipboard, cache) with their own error paths.
+  - **The rule**: a read that populates the UI needs a failure state distinct from its empty state. An empty result and a broken fetch must not look the same.
 - **A silent scraper break went unnoticed for months.** The MTGTop8 tournament source matched nothing from #205 until #487: the panel rendered its empty state, which reads as "this commander has no tournament decks" rather than "the parser is broken". `@external` contract specs now cover Archidekt, Moxfield and MTGTop8 — **an external source with no live contract test is a source that can fail without telling anyone**.
 - ~~**Playtest e2e flake (2026-08-19)**~~ **Resolved (#466)**: the spec opened the playtest before the builder's lazy card load finished; the `beforeEach` now waits for a seeded card to render.
 - **Masked SSR error in `Header`**: the e2e web-server log repeatedly shows `Failed to call useTranslations because the context from NextIntlClientProvider was not found` thrown from `src/components/layout/Header.tsx` on community pages, recovered by client-side rendering so nothing user-visible fails. A latent flake source — and possibly related to the navigation flake, which also matches a `useTranslations` context error in the dev log.
