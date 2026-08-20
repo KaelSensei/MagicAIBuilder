@@ -5,6 +5,7 @@
  * filtering by user options.
  */
 import type { DeckCard } from "./types";
+import type { LocalizedCardText } from "@/lib/scryfall/localized";
 
 export interface ProxyConfig {
   /** Paper format */
@@ -90,6 +91,37 @@ function makeCardSlots(card: DeckCard): ProxySlot[] {
     powerToughness,
     isCommander: false,
   }));
+}
+
+/**
+ * Substitutes the viewer's-language text and printing image into proxy slots.
+ *
+ * Slots are matched on their English `name` — the oracle name every printing
+ * carries — so one index entry covers every copy of a card. Mana cost and
+ * power/toughness are language-neutral and stay as they are. An empty index
+ * returns the input array itself, so callers holding the slots in a
+ * dependency list see no change for English viewers.
+ *
+ * @param slots - the English print slots
+ * @param index - localised text keyed by English name
+ * @returns slots ready to print in the viewer's language
+ */
+export function localizeProxySlots(
+  slots: readonly ProxySlot[],
+  index: ReadonlyMap<string, LocalizedCardText>
+): readonly ProxySlot[] {
+  if (index.size === 0) return slots;
+  return slots.map((slot) => {
+    const entry = index.get(slot.name);
+    if (!entry) return slot;
+    return {
+      ...slot,
+      name: entry.name,
+      typeLine: entry.typeLine,
+      oracleText: entry.oracleText,
+      imageUri: entry.imageUri,
+    };
+  });
 }
 
 /** Build the flat list of print slots from a deck */

@@ -7,17 +7,19 @@
  * Uses window.print() — user can "Save as PDF" via browser dialog.
  * Zero external dependencies.
  */
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Printer, Loader2, AlertCircle } from "lucide-react";
 import type { Deck } from "@/lib/deck/types";
 import {
   buildProxySlots,
+  localizeProxySlots,
   estimatePages,
   cardsPerPage,
   DEFAULT_PROXY_CONFIG,
 } from "@/lib/deck/proxy";
 import type { ProxyConfig, ProxySlot } from "@/lib/deck/proxy";
+import { useLocalizedDeckIndex } from "@/hooks/useLocalizedDeckIndex";
 import { buildProxyPrintDocumentHtml } from "@/lib/deck/proxy-print-html";
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
@@ -41,7 +43,7 @@ function proxyImageRequestUrl(scryfallImageUrl: string): string {
 }
 
 async function preloadImages(
-  slots: ProxySlot[],
+  slots: readonly ProxySlot[],
   onProgress: (state: ImageState) => void,
   signal: AbortSignal
 ): Promise<Map<string, string>> {
@@ -112,11 +114,19 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
   const abortRef = useRef<AbortController | null>(null);
   const imageMapRef = useRef<Map<string, string>>(new Map());
 
-  const slots = buildProxySlots(
-    deck.cards,
-    deck.commander,
-    deck.partner,
-    config
+  // Proxies are printed in the viewer's language where a printing exists —
+  // the batch is the same one the deck editor already ran, so it is cached.
+  const cardNames = useMemo(
+    () =>
+      [deck.commander, deck.partner, ...deck.cards]
+        .filter((c) => c !== null && c !== undefined)
+        .map((c) => c.name),
+    [deck.commander, deck.partner, deck.cards]
+  );
+  const localizedIndex = useLocalizedDeckIndex(cardNames);
+  const slots = localizeProxySlots(
+    buildProxySlots(deck.cards, deck.commander, deck.partner, config),
+    localizedIndex
   );
   const pageCount = estimatePages(slots.length, config.layout);
   const deckName = deck.name.replaceAll(/[^a-z0-9]/gi, "_").toLowerCase();
