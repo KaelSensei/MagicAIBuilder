@@ -1,6 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { buildProxySlots, estimatePages, cardsPerPage, DEFAULT_PROXY_CONFIG } from "./proxy";
+import {
+  buildProxySlots,
+  estimatePages,
+  cardsPerPage,
+  localizeProxySlots,
+  DEFAULT_PROXY_CONFIG,
+} from "./proxy";
 import type { DeckCard } from "./types";
+import type { LocalizedCardText } from "@/lib/scryfall/localized";
 
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
   return {
@@ -123,5 +130,50 @@ describe("buildProxySlots", () => {
     const slots = buildProxySlots([bear], null, null, DEFAULT_PROXY_CONFIG);
     expect(slots[0].oracleText).toBe("Trample");
     expect(slots[0].powerToughness).toBe("2/2");
+  });
+});
+
+describe("localizeProxySlots", () => {
+  const slots = buildProxySlots(
+    [makeCard({ id: "a", name: "Sol Ring", quantity: 2 }), makeCard({ id: "b", name: "Counterspell" })],
+    null,
+    null,
+    DEFAULT_PROXY_CONFIG
+  );
+  const index = new Map<string, LocalizedCardText>([
+    [
+      "Sol Ring",
+      {
+        name: "Anneau solaire",
+        typeLine: "Artefact",
+        oracleText: "T : Ajoutez {C}{C}.",
+        isLocalized: true,
+        imageUri: "https://img/fr.jpg",
+      },
+    ],
+  ]);
+
+  it("substitutes name, type line, rules and image on every slot of a covered card", () => {
+    const localized = localizeProxySlots(slots, index);
+    const rings = localized.filter((s) => s.id.startsWith("a-"));
+    expect(rings).toHaveLength(2);
+    for (const slot of rings) {
+      expect(slot.name).toBe("Anneau solaire");
+      expect(slot.typeLine).toBe("Artefact");
+      expect(slot.oracleText).toBe("T : Ajoutez {C}{C}.");
+      expect(slot.imageUri).toBe("https://img/fr.jpg");
+    }
+  });
+
+  it("leaves uncovered slots untouched, including the mana cost of covered ones", () => {
+    const localized = localizeProxySlots(slots, index);
+    expect(localized.find((s) => s.id.startsWith("b-"))).toEqual(
+      slots.find((s) => s.id.startsWith("b-"))
+    );
+    expect(localized[0].manaCost).toBe("{1}");
+  });
+
+  it("returns the same array when the index is empty, so nothing re-renders", () => {
+    expect(localizeProxySlots(slots, new Map())).toBe(slots);
   });
 });
