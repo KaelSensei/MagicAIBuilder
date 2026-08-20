@@ -25,13 +25,38 @@ export async function suppressOnboarding(page: Page): Promise<void> {
 }
 
 /**
- * Create a fresh deck from the header "New Deck" button and land on the builder.
+ * Create a fresh deck from the header "New Deck" button and land on the builder,
+ * **interactive**.
+ *
+ * `waitForURL` alone returns the moment the client-side navigation commits the
+ * address — well before the route is usable. The builder renders a transient
+ * `!deck` branch ("Loading deck…") while the store syncs, and React is still
+ * hydrating the freshly-pushed route. A click dispatched in that window can be
+ * swallowed: the listener has attached and calls `preventDefault`, but the
+ * router is not ready to act on it, so the native navigation is cancelled and
+ * no client-side one replaces it. The page simply stays where it is.
+ *
+ * That is load-sensitive by construction, which matches the observed flake:
+ * `back navigation returns to home` failed three times in a row on a loaded
+ * host and passed on an idle one, its `toHaveURL` timing out while the address
+ * never left `/builder/`.
+ *
+ * Waiting for the deck title bar's back arrow — which only exists on the
+ * loaded branch — closes the store-sync half. `waitForLoadState("networkidle")`
+ * closes the hydration half: the route's JS has been fetched and run.
+ *
+ * Same shape as the fix for the playtest flake (#466), which waited for a
+ * seeded card rather than for the modal's frame.
  */
 export async function openBuilder(page: Page): Promise<void> {
   await suppressOnboarding(page);
   await page.goto("/decks");
   await page.click("text=New Deck");
   await page.waitForURL(/\/builder\//);
+  await page
+    .getByRole("link", { name: "Back to my decks" })
+    .waitFor({ state: "visible" });
+  await page.waitForLoadState("networkidle");
 }
 
 /**
