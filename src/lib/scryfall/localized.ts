@@ -23,6 +23,7 @@
  * @module scryfall/localized
  */
 
+import { getCardImageUri } from "./images";
 import type { ScryfallCard, ScryfallCardFace } from "./types";
 
 /** Card text as it should be shown to the viewer. */
@@ -33,6 +34,12 @@ export interface LocalizedCardText {
   readonly oracleText: string;
   /** True only when this is a genuine non-English printing */
   readonly isLocalized: boolean;
+  /**
+   * Front image of this printing, so a surface can show the translated card
+   * itself rather than the English art with a translated caption. Built from
+   * the printing id when Scryfall sends no image_uris.
+   */
+  readonly imageUri: string;
 }
 
 /**
@@ -200,5 +207,6 @@ export function resolveLocalizedText(card: ScryfallCard): LocalizedCardText {
     // Keyed off the printing's language, not the printed_* fields: Scryfall
     // emits those on English printings too, where they are not a translation.
     isLocalized: card.lang !== undefined && card.lang !== "en",
+    imageUri: getCardImageUri(card, "normal", "front"),
   };
 }

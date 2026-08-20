@@ -225,6 +225,18 @@ describe("buildLocalizedNamesQueries", () => {
   });
 });
 
+describe("resolveLocalizedText — image", () => {
+  const uris = { small: "", normal: "https://img/fr.jpg", large: "", art_crop: "", border_crop: "", png: "" };
+
+  it("carries the printing's front image so the translated card can be shown", () => {
+    expect(resolveLocalizedText(makeCard({ image_uris: uris })).imageUri).toBe("https://img/fr.jpg");
+  });
+
+  it("builds the image URL from the printing id when image_uris is absent", () => {
+    expect(resolveLocalizedText(makeCard()).imageUri).toContain("card-1");
+  });
+});
+
 describe("indexLocalizedText", () => {
   it("keys resolved text by the oracle (English) name", () => {
     const index = indexLocalizedText([
