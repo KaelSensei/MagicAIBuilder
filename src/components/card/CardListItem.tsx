@@ -6,6 +6,7 @@ import { useState } from "react";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
 import { CardTooltip } from "@/components/card/CardTooltip";
+import { useLocalizedDeckName } from "@/components/card/LocalizedDeckTextContext";
 interface CardListItemProps {
   readonly card: DeckCard;
   readonly onRemove?: (id: string) => void;
@@ -77,8 +78,11 @@ export function CardListItem({
   const tBuilder = useTranslations("builder");
   const [isFlipped, setIsFlipped] = useState(false);
   const isDfc = Boolean(card.cardFaces);
+  // Translated front name only: the batch resolves the front face, and the
+  // back face is read straight from the English snapshot on flip.
+  const localizedName = useLocalizedDeckName(card.name);
   const activeName =
-    isDfc && isFlipped ? (card.cardFaces?.[1].name ?? card.name) : card.name;
+    isDfc && isFlipped ? (card.cardFaces?.[1].name ?? card.name) : localizedName;
   const flip = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsFlipped((p) => !p);

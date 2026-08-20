@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 
 import {
+  buildLocalizedNamesQueries,
+  indexLocalizedText,
   mergeLocalizedPrintings,
   resolveLocalizedText,
   toScryfallLang,
@@ -190,5 +192,54 @@ describe("mergeLocalizedPrintings", () => {
   it("ignores localised printings of cards not in the English list", () => {
     const localized = [makeCard({ id: "fr-9", name: "Brainstorm", lang: "fr" })];
     expect(mergeLocalizedPrintings(english, localized)).toEqual(english);
+  });
+});
+
+describe("buildLocalizedNamesQueries", () => {
+  it("ORs exact-name terms under a lang filter, one printing per card", () => {
+    const queries = buildLocalizedNamesQueries(["Sol Ring", "Counterspell"], "fr");
+    expect(queries).toEqual(['lang:fr unique:cards (!"Sol Ring" or !"Counterspell")']);
+  });
+
+  it("deduplicates names so a card held in two zones costs one term", () => {
+    const queries = buildLocalizedNamesQueries(["Sol Ring", "Sol Ring"], "fr");
+    expect(queries[0]).toBe('lang:fr unique:cards (!"Sol Ring")');
+  });
+
+  it("splits long lists into chunks of at most 20 names", () => {
+    const names = Array.from({ length: 45 }, (_, i) => `Card ${i}`);
+    const queries = buildLocalizedNamesQueries(names, "de");
+    expect(queries).toHaveLength(3);
+    expect(queries[0].match(/!"/g)).toHaveLength(20);
+    expect(queries[2].match(/!"/g)).toHaveLength(5);
+  });
+
+  it("returns nothing for English or an empty list", () => {
+    expect(buildLocalizedNamesQueries(["Sol Ring"], "en")).toEqual([]);
+    expect(buildLocalizedNamesQueries([], "fr")).toEqual([]);
+  });
+
+  it("drops names containing a double quote rather than breaking the query", () => {
+    const queries = buildLocalizedNamesQueries(['Bad "Name"', "Sol Ring"], "fr");
+    expect(queries).toEqual(['lang:fr unique:cards (!"Sol Ring")']);
+  });
+});
+
+describe("indexLocalizedText", () => {
+  it("keys resolved text by the oracle (English) name", () => {
+    const index = indexLocalizedText([
+      makeCard({ name: "Sol Ring", lang: "fr", printed_name: "Anneau solaire" }),
+    ]);
+    expect(index.get("Sol Ring")?.name).toBe("Anneau solaire");
+    expect(index.get("Sol Ring")?.isLocalized).toBe(true);
+  });
+
+  it("keeps the first printing when Scryfall returns the same card twice", () => {
+    const index = indexLocalizedText([
+      makeCard({ id: "a", name: "Sol Ring", lang: "fr", printed_name: "Anneau solaire" }),
+      makeCard({ id: "b", name: "Sol Ring", lang: "fr", printed_name: "Autre" }),
+    ]);
+    expect(index.size).toBe(1);
+    expect(index.get("Sol Ring")?.name).toBe("Anneau solaire");
   });
 });

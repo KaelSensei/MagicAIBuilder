@@ -18,6 +18,7 @@ import {
   getGameChangers,
   getCommanderBanlist,
   searchCardPrintings,
+  fetchLocalizedPrintingsByNames,
   __resetRateLimiter,
 } from "@/lib/scryfall/client";
 import { lookupCardCache } from "@/lib/db/deck-api";
@@ -220,6 +221,40 @@ describe("getCardCollection", () => {
     expect(result.data).toHaveLength(1);
     const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(fetchCall).toContain("/cards/collection");
+  });
+});
+
+describe("fetchLocalizedPrintingsByNames", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
+
+  it("sends one multilingual search per chunk and concatenates the printings", async () => {
+    mockFetchSuccess(makeSearchResponse([makeScryfallCard("fr-1")]));
+    const names = Array.from({ length: 25 }, (_, i) => `Card ${i}`);
+    const promise = fetchLocalizedPrintingsByNames(names, "fr");
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    expect(result).toHaveLength(2);
+    const calls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls).toHaveLength(2);
+    const url = calls[0][0] as string;
+    expect(url).toContain("include_multilingual=true");
+    expect(url).toContain("lang%3Afr");
+  });
+
+  it("makes no request for English", async () => {
+    mockFetchSuccess(makeSearchResponse());
+    const result = await fetchLocalizedPrintingsByNames(["Sol Ring"], "en");
+    expect(result).toEqual([]);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("skips a failing chunk instead of failing the batch", async () => {
+    mockFetchError(500, "Boom");
+    const promise = fetchLocalizedPrintingsByNames(["Sol Ring"], "fr");
+    await vi.runAllTimersAsync();
+    await expect(promise).resolves.toEqual([]);
   });
 });
 
