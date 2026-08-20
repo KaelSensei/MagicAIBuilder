@@ -26,40 +26,48 @@
 - 📊 **Live bracket scoring** — 6-dimension analysis (ramp, draw, removal, tutors, win speed, CMC)
 - 📐 **Format-specific stats** — curve, threat density and interaction ratio benchmarked per format for non-Commander decks
 - ⚡ **Game Changers detection** — auto-warns when you cross bracket thresholds
-- 🤖 **AI suggestions** — Anthropic Claude or OpenAI GPT analyzes your deck and recommends cards + cuts
+- 🧭 **Mana alignment & turn-1 odds** — pips asked vs sources produced, per-colour land targets, exact hypergeometric odds that the opening seven holds a land and a one-drop
+- 🤖 **AI suggestions & deck builder** — Anthropic Claude or OpenAI GPT analyzes your deck and recommends cards + cuts; the builder drafts a full list from 10 archetype templates with budget constraints and per-card reasoning
 - 🤝 **Partner pairing** — Partner, Partner With, Friends Forever, Background, Doctor's Companion, Character Select (TMNT) — filtered search per pairing type
 - 📦 **Companion (Ikoria)** — dedicated slot + **Companion** search mode, rule hints, color/mechanical warnings (not the same as Sideboard pile cards)
-- 📤 **Multi-format export** — Moxfield, MTG Arena, MTGO (.dek), TappedOut, Archidekt, Manabox, Plain Text; import from Moxfield format (SET) 123
+- 📤 **Multi-format export** — Moxfield, MTG Arena, MTGO (.dek), TappedOut, Archidekt (with category tags), Manabox, MTGGoldfish, EDHRec deck-check, Plain Text
+- 📥 **Import from URL or text** — paste a Moxfield, Archidekt, TappedOut, MTGTop8 or MTGDecks.net link (auto-detected, rate-limited, honours `robots.txt`) or a Moxfield-style text list
+- 🖨️ **Proxy sheets** — print-ready 63×88 mm pages (3×3 A4/Letter or 2×2), with card art or text-only boxes; printed in the viewer's language
+- 📈 **Commander meta panel** — EDHRec's top cards for your commander with one-click add, plus recent MTGTop8 tournament decks with player, event, placement and date
 - 👑 **Set as commander** — crown icon on any deck card promotes it to commander slot
 - 🔢 **Card quantities** — +/- buttons for basic lands and Commander-legal multiples (auto-detected via oracle text)
 - 📝 **Deck notes & tags** — per-card notes, deck description, colored tag pills
 - 📸 **Deck snapshots** — save and restore deck states at any point
 - 🔗 **Deck sharing** — generate a shareable read-only link
-- 🌍 **Community discovery** — public deck listing per commander at `/commanders/<slug>/decks`, ranked by up/down votes, with star ratings and reviews
+- 🌍 **Community discovery** — public deck listing per commander at `/commanders/<slug>/decks`, ranked by up/down votes, with star ratings, reviews, threaded comments and user follows
 - 🎮 **Playtest mode** — opening hand and London mulligan, turn phases (Untap → End), life tracking with history and undo, and battlefield / graveyard / exile zones with tap and counters; starting life follows the deck format
+- 📒 **Playtest analytics** — record how each goldfish run went (result, turns, mulligans, opponent strength) and read win rate, mulligan distribution and matchup splits per deck
 - ⌨️ **Keyboard shortcuts** — power-user navigation with undo stack
 - 🎴 **Multi-format support** — Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, Pauper with correct rules per format
 - 📦 **Collection tracking** — mark owned cards, shopping list with missing cost, CSV export, bulk "Mark all owned"
 - ✨ **3D Spellbook landing** — immersive Three.js scene for unauthenticated visitors (mobile/a11y fallback)
-- 🌍 **English & French** — full UI in both, with a header language switcher
+- 🌍 **English & French** — full UI in both, with a header language switcher; card names, rules text and images follow the viewer's language where a Scryfall printing exists (deck rows, tooltips, playtest, proxies, Game Changers page)
 - 🌙 **Dark / Light theme** — persisted across sessions
-- 🔒 **Security hardened** — Zod validation, input sanitization, no client-side secrets
+- 🔒 **Security hardened** — Zod validation, input sanitization, no client-side secrets, CSP / HSTS / COOP headers, rate-limited auth and AI routes
 
 ## Stack
 
-| Layer         | Tech                    |
-| ------------- | ----------------------- |
-| Framework     | Next.js 15 (App Router) |
-| Language      | TypeScript 5            |
-| Styling       | Tailwind CSS 4          |
-| Components    | shadcn/ui + Radix       |
-| Animations    | Framer Motion           |
-| State         | Zustand 5               |
-| Data fetching | TanStack Query 5        |
-| Database      | PostgreSQL 16 + Prisma  |
-| Drag & Drop   | dnd-kit 6               |
-| 3D Engine     | Three.js + R3F + drei   |
-| Animations    | gsap (camera), Framer   |
+| Layer         | Tech                                                        |
+| ------------- | ----------------------------------------------------------- |
+| Framework     | Next.js 15 (App Router)                                     |
+| Language      | TypeScript 5                                                |
+| Styling       | Tailwind CSS 4                                              |
+| Components    | shadcn/ui + Radix                                           |
+| Animations    | Framer Motion                                               |
+| State         | Zustand 5                                                   |
+| Data fetching | TanStack Query 5                                            |
+| Database      | PostgreSQL 16 + Prisma (Docker locally, Neon in production) |
+| Auth          | NextAuth.js v5 (Google OAuth + credentials)                 |
+| i18n          | next-intl 4 (`en`, `fr`)                                    |
+| Drag & Drop   | dnd-kit 6                                                   |
+| 3D Engine     | Three.js + R3F + drei                                       |
+| Animations    | gsap (camera), Framer                                       |
+| Observability | Sentry, Vercel Speed Insights                               |
 
 ## Getting Started
 
@@ -184,27 +192,31 @@ code. Set `SKIP_E2E=1` to bypass it in an emergency.
 ```
 Browser (Zustand — optimistic updates)
     ↕ fetch
-Next.js API Routes (/api/decks/*, /api/ai/suggest)
+Next.js API Routes (/api/decks/*, /api/ai/*, /api/import/url, /api/meta/*, …)
     ↕ Prisma Client
-PostgreSQL 16 (Docker)
+PostgreSQL 16 — Docker locally, Neon (Vercel Marketplace) in production
 ```
 
 External APIs:
 
-- **Scryfall** — card search, images, Game Changers list, banlist (direct from browser, CORS allowed)
+- **Scryfall** — card search, printings, localized text and images, Game Changers list, banlist (direct from browser, CORS allowed; card images go through `/api/proxy-card-image` only for print)
 - **Commander Spellbook** — combo detection (proxied via /api/combos)
-- **Anthropic / OpenAI** — AI suggestions (server-side only, key never exposed to client)
+- **EDHRec** — top cards per commander (server-side, cached 24h in `MetaCache`)
+- **MTGTop8 / MTGDecks / Moxfield / Archidekt / TappedOut** — deck import by URL and tournament meta (server-side, rate-limited, `robots.txt` respected)
+- **Anthropic / OpenAI** — AI suggestions and deck builder (server-side only, key never exposed to client)
 
 ## Security
 
-See [`docs/security/security.md`](docs/security/security.md) for the full security architecture.
+See [`docs/security/security.md`](docs/security/security.md) for the threat model and architecture, and [`docs/security/production-checklist.md`](docs/security/production-checklist.md) for the 20-point production checklist with a status per item (audited 2026-08-20).
 
 Key points:
 
-- All API keys are server-side only
-- Input validation via Zod on all API routes
-- HTML sanitization on user-controlled strings
-- Commander Spellbook proxied to avoid CORS and SSRF vectors
+- All API keys are server-side only; the client sees `NEXT_PUBLIC_*` values and nothing else
+- Input validation via Zod on API routes; HTML sanitization on user-controlled strings
+- Content-Security-Policy, HSTS, COOP/CORP and the classic hardening headers, built and unit-tested in `src/lib/security-headers.ts`
+- Ownership checks (`requireAuth` / `requireDeckOwner`) on every mutating route; generic error messages, details stay in the logs
+- Login, signup, AI and import routes are rate-limited; JWT sessions expire after 7 days
+- Commander Spellbook and card images proxied to avoid CORS and SSRF vectors (host allowlist, `image/*` only, 5 MB cap)
 
 ## Quality Gate 🧪
 
@@ -246,8 +258,10 @@ docs/
     progress.md                # Project checklist / milestones / tracking
   security/
     security.md                # Threat model + security architecture + hardening rules
+    production-checklist.md    # 20-point production checklist, status per item + follow-ups
+    audit-securite-2026-07-20.md  # Full security audit (French)
   prompt-system/               # Prompting system docs (AI behavior, prompts, conventions)
-  references/                  # Reference material (patterns, examples)
+  references/                  # Reference material: typescript-patterns.md, banlists, game-changers, edh-themes, official-sources
   rules/                       # Internal rules / conventions docs (e.g. magic-comp-rules-*.txt)
   init-prompt.md               # Seed prompt / bootstrap notes for agent-assisted work
 ```
