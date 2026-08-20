@@ -326,7 +326,8 @@
     "competitive": "Competitive (Tournaments)",
     "noTournamentDecks": "No recent tournament decks found",
     "selectCommander": "Select a commander to see meta data",
-    "addCard": "Add {name}"
+    "addCard": "Add {name}",
+    "addNamedCard": "Add {name}"
   },
   "snapshots": {
     "title": "History",

@@ -52,6 +52,7 @@ function EdhrecCardRow({
   readonly inDeck: boolean;
   readonly onAdd: (name: string) => void;
 }) {
+  const t = useTranslations("deck");
   const [added, setAdded] = useState(false);
   const pct = Math.round(card.inclusion * 100);
 
@@ -85,7 +86,7 @@ function EdhrecCardRow({
             setAdded(true);
           }}
           className="shrink-0 w-5 h-5 rounded-full bg-[var(--accent)]/20 hover:bg-[var(--accent)] flex items-center justify-center text-[var(--accent)] hover:text-white transition-colors opacity-0 group-hover:opacity-100"
-          aria-label={`Add ${card.name}`}
+          aria-label={t("meta.addNamedCard", { name: card.name })}
         >
           <Plus className="w-3 h-3" />
         </button>

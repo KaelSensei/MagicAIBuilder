@@ -53,7 +53,11 @@
     "playtest": "Tester ce deck",
     "export": "Exporter le deck",
     "resizePanel": "Largeur du panneau de recherche",
-    "resizeHint": "Glisser pour redimensionner — flèches pour ajuster"
+    "resizeHint": "Glisser pour redimensionner — flèches pour ajuster",
+    "removeNamed": "Retirer {name}",
+    "removeTag": "Retirer l'étiquette {tag}",
+    "sortByField": "Trier par {label} {hint}",
+    "groupByField": "Grouper par {label}"
   },
   "badges": {
     "cmd": "CMD",
@@ -86,5 +90,22 @@
     "companionTitle": "Chercher des cartes Compagnon (Ikoria) — une par deck, hors des 99",
     "setCommanderFirst": "Choisissez d'abord un commandant",
     "partnerTitle": "Chercher un {label}"
+  },
+  "sort": {
+    "fields": {
+      "cmc": "CMC",
+      "name": "Nom",
+      "price": "Prix",
+      "color": "Couleur",
+      "type": "Type"
+    },
+    "groups": {
+      "none": "Sans groupe",
+      "type": "Par type",
+      "cmc": "Par CMC",
+      "color": "Par couleur"
+    },
+    "ascending": "(croissant)",
+    "descending": "(décroissant)"
   }
 }
