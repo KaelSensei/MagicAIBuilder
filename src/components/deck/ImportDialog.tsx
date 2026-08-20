@@ -224,7 +224,9 @@ export function ImportDialog({
                 {t.rich("import.description", DESCRIPTION_RICH_TAGS)}
               </Dialog.Description>
 
-              {/* Textarea */}
+              {/* Textarea. The placeholder stays English on purpose:
+                  parsePlainTextDecklist matches the English section headers,
+                  so a localised example would show input the parser rejects. */}
               <textarea
                 className="w-full h-48 bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-none focus:outline-none focus:border-[var(--accent)] font-mono"
                 placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n...`}

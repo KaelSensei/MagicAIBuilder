@@ -211,7 +211,8 @@
     "selectCommander": "Select a commander to see meta data",
     "addCard": "Add {name}",
     "communityDecks": "Browse community decks for this commander",
-    "viewOnEdhrec": "View this commander on EDHRec"
+    "viewOnEdhrec": "View this commander on EDHRec",
+    "addNamedCard": "Add {name}"
   },
   "snapshots": {
     "title": "History",

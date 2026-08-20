@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
@@ -15,6 +16,7 @@ interface CollectionCardTooltipProps {
 }
 
 export function CollectionCardTooltip({ card, children }: CollectionCardTooltipProps) {
+  const t = useTranslations("card");
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -52,7 +54,7 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
     <>
       <span
         role="img"
-        aria-label={`Preview of ${card.name}`}
+        aria-label={t("previewOf", { name: card.name })}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}

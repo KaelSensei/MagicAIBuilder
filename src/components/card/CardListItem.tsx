@@ -112,7 +112,7 @@ export function CardListItem({
         {card.price !== null && (
           <span
             className="shrink-0 text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-600/20 text-emerald-400 leading-none"
-            title={`Price: $${card.price.toFixed(2)}`}
+            title={t("priceLabel", { price: card.price.toFixed(2) })}
           >
             ${card.price.toFixed(2)}
           </span>

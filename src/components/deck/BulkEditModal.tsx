@@ -201,7 +201,9 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
             {t.rich("bulkEdit.description", DESCRIPTION_RICH_TAGS)}
           </Dialog.Description>
 
-          {/* Textarea */}
+          {/* Textarea. The placeholder stays English on purpose:
+              parsePlainTextDecklist matches the English section headers, so a
+              localised example would show input the parser rejects. */}
           <div className="flex flex-col gap-1 flex-1 min-h-0">
             <textarea
               className="w-full flex-1 min-h-[55vh] bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-none focus:outline-none focus:border-[var(--accent)] font-mono leading-relaxed"

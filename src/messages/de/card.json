@@ -21,5 +21,8 @@
     "add": "Add to favorites",
     "remove": "Remove from favorites"
   },
-  "noText": "No text"
+  "noText": "No text",
+  "addNamedToDeck": "Add {name} to deck",
+  "priceLabel": "Price: ${price}",
+  "previewOf": "Preview of {name}"
 }
