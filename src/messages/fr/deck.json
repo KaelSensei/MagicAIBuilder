@@ -30,7 +30,8 @@
     "duplicate": "Dupliquer {name}",
     "delete": "Supprimer {name}",
     "manualBracket": "Bracket manuel",
-    "autoBracket": "Bracket auto"
+    "autoBracket": "Bracket auto",
+    "gameChanger": "Game Changer"
   },
   "table": {
     "deck": "Deck",
@@ -165,7 +166,10 @@
     "paper": "Papier",
     "layout": "Disposition",
     "quality": "Qualité",
-    "qualityOption": { "standard": "Standard", "high": "Haute" },
+    "qualityOption": {
+      "standard": "Standard",
+      "high": "Haute"
+    },
     "content": "Contenu",
     "cardArt": "Illustration",
     "textOnly": "Texte seul",
@@ -368,7 +372,8 @@
     "imported": "Importé !",
     "importing": "Importation…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
-    "cardCountLabel": "{count} cartes"
+    "cardCountLabel": "{count} cartes",
+    "openShare": "Partager le deck"
   },
   "banlist": {
     "deckWarnings": "Avertissements du deck",
@@ -481,22 +486,28 @@
   },
   "comments": {
     "title": "Commentaires",
-    "count": "{count, plural, =0 {Aucun commentaire pour l\u2019instant} one {# commentaire} other {# commentaires}}",
-    "sortNewest": "Plus r\u00e9cents d\u2019abord",
-    "sortOldest": "Plus anciens d\u2019abord",
+    "count": "{count, plural, =0 {Aucun commentaire pour l’instant} one {# commentaire} other {# commentaires}}",
+    "sortNewest": "Plus récents d’abord",
+    "sortOldest": "Plus anciens d’abord",
     "signInToComment": "Connectez-vous pour rejoindre la conversation.",
-    "placeholder": "Posez une question ou partagez une remarque\u2026",
+    "placeholder": "Posez une question ou partagez une remarque…",
     "post": "Publier",
-    "posting": "Publication\u2026",
-    "reply": "R\u00e9pondre",
+    "posting": "Publication…",
+    "reply": "Répondre",
     "edit": "Modifier",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "delete": "Supprimer",
-    "deleteConfirm": "Supprimer ce commentaire ? Ses r\u00e9ponses partent avec.",
-    "edited": "modifi\u00e9",
+    "deleteConfirm": "Supprimer ce commentaire ? Ses réponses partent avec.",
+    "edited": "modifié",
     "ownerBadge": "Auteur du deck",
-    "failed": "Une erreur est survenue. R\u00e9essayez.",
+    "failed": "Une erreur est survenue. Réessayez.",
     "empty": "Lancez la conversation."
+  },
+  "description": {
+    "add": "Ajouter une description…",
+    "edit": "Modifier la description",
+    "clickToEdit": "Cliquer pour modifier",
+    "placeholder": "Décrivez la stratégie, les thèmes ou vos notes… (markdown basique pris en charge)"
   }
 }

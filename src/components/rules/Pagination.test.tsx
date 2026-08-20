@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithIntl as render } from "@/test/render-with-intl";
 import userEvent from "@testing-library/user-event";
 import { Pagination } from "./Pagination";
 

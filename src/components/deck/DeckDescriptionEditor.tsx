@@ -1,5 +1,6 @@
 "use client";
 // Expandable deck description editor — collapsed by default, supports basic markdown preview
+import { useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, Edit3 } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
@@ -13,6 +14,7 @@ export function DeckDescriptionEditor({
   deckId,
   description,
 }: DeckDescriptionEditorProps) {
+  const t = useTranslations("deck");
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(description ?? "");
@@ -77,14 +79,14 @@ export function DeckDescriptionEditor({
               {description!.trim().split("\n")[0]}
             </span>
           ) : (
-            <span className="opacity-50">Add deck description…</span>
+            <span className="opacity-50">{t("description.add")}</span>
           )}
         </span>
         <button
           type="button"
           onClick={handleEdit}
           className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-0.5 rounded"
-          aria-label="Edit description"
+          aria-label={t("description.edit")}
         >
           <Edit3 className="w-3 h-3 text-[var(--text-secondary)]" />
         </button>
@@ -101,7 +103,7 @@ export function DeckDescriptionEditor({
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onBlur={handleSave}
-                placeholder="Describe your deck strategy, themes, or notes… (basic markdown supported)"
+                placeholder={t("description.placeholder")}
                 rows={4}
                 maxLength={2000}
                 className="w-full bg-[var(--surface)] border border-[var(--border)] focus:border-[var(--accent)] rounded-md px-2.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 resize-y outline-none transition-colors"
@@ -127,7 +129,7 @@ export function DeckDescriptionEditor({
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") startEditing();
               }}
-              title="Click to edit"
+              title={t("description.clickToEdit")}
             >
               {hasContent ? (
                 <span className="text-[var(--text-primary)]">

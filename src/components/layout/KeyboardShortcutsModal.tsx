@@ -1,24 +1,30 @@
 "use client";
 // Keyboard shortcuts help modal — triggered by "?" or ⌨️ button
+import { useTranslations } from "next-intl";
 import { Keyboard } from "lucide-react";
 import { useUIStore } from "@/lib/ui/store";
 import { Modal } from "@/components/ui/Modal";
 
 interface ShortcutEntry {
   readonly keys: readonly string[];
-  readonly description: string;
+  /** Message key under `common.shortcuts`, resolved at render. */
+  readonly descriptionKey: string;
 }
 
+/**
+ * The chords are literal on purpose — `⌘Z` and `Esc` are the same on a French
+ * keyboard — while the descriptions are keys, since those are prose.
+ */
 const SHORTCUTS: ShortcutEntry[] = [
-  { keys: ["/"], description: "Focus search bar" },
-  { keys: ["↑", "↓"], description: "Navigate search results" },
-  { keys: ["Enter"], description: "Add first (or selected) result to deck" },
-  { keys: ["Esc"], description: "Close modal / clear search" },
-  { keys: ["?"], description: "Show keyboard shortcuts" },
-  { keys: ["⌘Z", "Ctrl+Z"], description: "Undo last card add/remove" },
-  { keys: ["⌘S", "Ctrl+S"], description: "Force save deck to database" },
-  { keys: ["⌘E", "Ctrl+E"], description: "Open export modal" },
-  { keys: ["⌘I", "Ctrl+I"], description: "Open import modal" },
+  { keys: ["/"], descriptionKey: "focusSearch" },
+  { keys: ["↑", "↓"], descriptionKey: "navigateResults" },
+  { keys: ["Enter"], descriptionKey: "addResult" },
+  { keys: ["Esc"], descriptionKey: "closeModal" },
+  { keys: ["?"], descriptionKey: "showShortcuts" },
+  { keys: ["⌘Z", "Ctrl+Z"], descriptionKey: "undo" },
+  { keys: ["⌘S", "Ctrl+S"], descriptionKey: "save" },
+  { keys: ["⌘E", "Ctrl+E"], descriptionKey: "export" },
+  { keys: ["⌘I", "Ctrl+I"], descriptionKey: "import" },
 ];
 
 interface KeybadgeProps {
@@ -34,6 +40,7 @@ function Keybadge({ label }: KeybadgeProps) {
 }
 
 export function KeyboardShortcutsModal() {
+  const t = useTranslations("common");
   const showKeyboardModal = useUIStore((s) => s.showKeyboardModal);
   const setShowKeyboardModal = useUIStore((s) => s.setShowKeyboardModal);
 
@@ -48,13 +55,13 @@ export function KeyboardShortcutsModal() {
       <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--border)]">
         <Keyboard className="w-4 h-4 text-[var(--accent)]" />
         <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">
-          Keyboard Shortcuts
+          {t("shortcuts.title")}
         </h2>
         <button
           type="button"
           onClick={() => setShowKeyboardModal(false)}
           className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
-          aria-label="Close"
+          aria-label={t("actions.close")}
         >
           ✕
         </button>
@@ -64,11 +71,11 @@ export function KeyboardShortcutsModal() {
       <div className="px-5 py-4 space-y-1">
         {SHORTCUTS.map((entry) => (
           <div
-            key={entry.description}
+            key={entry.descriptionKey}
             className="flex items-center justify-between py-2 border-b border-[var(--border)]/50 last:border-0"
           >
             <span className="text-sm text-[var(--text-secondary)]">
-              {entry.description}
+              {t(`shortcuts.${entry.descriptionKey}`)}
             </span>
             <div className="flex items-center gap-1 shrink-0 ml-4">
               {entry.keys.map((k, i) => (
@@ -89,8 +96,7 @@ export function KeyboardShortcutsModal() {
       {/* Footer hint */}
       <div className="px-5 pb-4">
         <p className="text-xs text-[var(--text-secondary)] text-center">
-          Shortcuts are inactive when a text field is focused (except modifier
-          shortcuts)
+          {t("shortcuts.inactiveHint")}
         </p>
       </div>
     </Modal>
@@ -99,16 +105,17 @@ export function KeyboardShortcutsModal() {
 
 // Trigger button — renders a small ⌨ button suitable for footers / headers
 export function KeyboardShortcutsTrigger() {
+  const t = useTranslations("common");
   const setShowKeyboardModal = useUIStore((s) => s.setShowKeyboardModal);
   return (
     <button
       type="button"
       onClick={() => setShowKeyboardModal(true)}
-      title="Keyboard shortcuts (?)"
+      title={t("shortcuts.open")}
       className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
     >
       <Keyboard className="w-3.5 h-3.5" />
-      <span>Shortcuts</span>
+      <span>{t("shortcuts.triggerLabel")}</span>
     </button>
   );
 }

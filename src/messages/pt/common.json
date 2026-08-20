@@ -47,5 +47,29 @@
     "ko": "한국어",
     "ru": "Русский",
     "pt": "Português"
+  },
+  "actions": {
+    "close": "Close",
+    "dismiss": "Dismiss"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "open": "Keyboard shortcuts (?)",
+    "focusSearch": "Focus search bar",
+    "navigateResults": "Navigate search results",
+    "addResult": "Add first (or selected) result to deck",
+    "closeModal": "Close modal / clear search",
+    "showShortcuts": "Show keyboard shortcuts",
+    "undo": "Undo last card add/remove",
+    "save": "Force save deck to database",
+    "export": "Open export modal",
+    "import": "Open import modal",
+    "triggerLabel": "Shortcuts",
+    "inactiveHint": "Shortcuts are inactive when a text field is focused (except modifier shortcuts)"
   }
 }
