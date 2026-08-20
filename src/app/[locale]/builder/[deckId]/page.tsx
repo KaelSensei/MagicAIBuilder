@@ -2,6 +2,7 @@
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   DndContext,
   DragEndEvent,
@@ -87,10 +88,9 @@ function isDeckZone(value: string): value is DeckZone {
   return value === "main" || value === "sideboard" || value === "maybeboard";
 }
 
-function getSearchModeLabel(mode: SearchMode): string {
-  if (mode === "name") return "Name";
-  if (mode === "set") return "By Set";
-  return "By Color";
+/** Message key for a search mode tab, resolved by the caller's `t`. */
+function searchModeKey(mode: SearchMode): string {
+  return `searchModes.${mode}`;
 }
 
 interface BuildSearchQueryFromModeParams {
@@ -216,6 +216,7 @@ const DEFAULT_FILTERS: Filters = {
 };
 
 export default function BuilderPage() {
+  const t = useTranslations("builder");
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
@@ -569,17 +570,17 @@ export default function BuilderPage() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             {isSyncing ? (
-              <p className="text-[var(--text-secondary)]">Loading deck…</p>
+              <p className="text-[var(--text-secondary)]">{t("loading")}</p>
             ) : (
               <>
                 <p className="text-[var(--text-secondary)] mb-4">
-                  Deck not found
+                  {t("deckNotFound.title")}
                 </p>
                 <Link
                   href="/decks"
                   className="text-[var(--accent)] hover:underline text-sm"
                 >
-                  ← Back to My Decks
+                  ← {t("deckNotFound.back")}
                 </Link>
               </>
             )}
@@ -620,7 +621,7 @@ export default function BuilderPage() {
               so the test named "back navigation" never touched this control. */}
           <Link
             href="/decks"
-            aria-label="Back to my decks"
+            aria-label={t("actions.backToDecks")}
             className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -653,7 +654,7 @@ export default function BuilderPage() {
               type="button"
               onClick={handleStartEditName}
               className="group flex items-center gap-1.5"
-              title="Click to rename"
+              title={t("actions.rename")}
             >
               <h1 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
                 {deck.name}
@@ -680,7 +681,7 @@ export default function BuilderPage() {
               type="button"
               onClick={handleDuplicate}
               className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-              title="Duplicate deck"
+              title={t("actions.duplicate")}
             >
               <Copy className="w-3 h-3" />
               <span className="hidden sm:inline">Duplicate</span>
@@ -690,7 +691,7 @@ export default function BuilderPage() {
               <button
                 type="button"
                 className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-                title="Bulk edit"
+                title={t("actions.bulkEdit")}
               >
                 <FileText className="w-3 h-3" />
                 <span className="hidden sm:inline">Bulk Edit</span>
@@ -701,7 +702,7 @@ export default function BuilderPage() {
               type="button"
               onClick={() => setShowPlaytest(true)}
               className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-purple-500 text-[var(--text-secondary)] hover:text-purple-400 transition-all"
-              title="Playtest this deck"
+              title={t("actions.playtest")}
             >
               <Dices className="w-3 h-3" />
               <span className="hidden sm:inline">Playtest</span>
@@ -711,7 +712,7 @@ export default function BuilderPage() {
               type="button"
               onClick={() => setShowExport(true)}
               className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-              title="Export deck"
+              title={t("actions.export")}
             >
               <Download className="w-3 h-3" />
               <span className="hidden sm:inline">Export</span>
@@ -763,7 +764,7 @@ export default function BuilderPage() {
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     )}
                   >
-                    {getSearchModeLabel(mode)}
+                    {t(searchModeKey(mode))}
                   </button>
                 ))}
               </div>
@@ -829,7 +830,7 @@ export default function BuilderPage() {
                   <SearchBar
                     onSearch={handleSearch}
                     isLoading={searchLoading}
-                    placeholder="Filter by name (optional)…"
+                    placeholder={t("searchFilterPlaceholder")}
                     showKeyboardHint={false}
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}
@@ -890,7 +891,7 @@ export default function BuilderPage() {
           {/* Resize handle between panel 1 and 2 — hidden on mobile */}
           <div
             role="slider"
-            aria-label="Search panel width"
+            aria-label={t("actions.resizePanel")}
             aria-orientation="horizontal"
             aria-valuemin={220}
             aria-valuemax={520}
@@ -899,7 +900,7 @@ export default function BuilderPage() {
             onMouseDown={handleSearchResize}
             onKeyDown={handleSearchResizeKeyDown}
             className="hidden lg:block w-1 shrink-0 cursor-col-resize hover:bg-[var(--accent)]/40 active:bg-[var(--accent)]/60 transition-colors group relative z-10"
-            title="Drag to resize — use arrow keys to adjust"
+            title={t("actions.resizeHint")}
           >
             <div className="absolute inset-y-0 -left-0.5 -right-0.5" />
           </div>
