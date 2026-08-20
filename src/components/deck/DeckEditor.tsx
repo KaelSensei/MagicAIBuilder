@@ -10,6 +10,7 @@ import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
+import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 import { cn } from "@/components/ui/utils";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 
@@ -959,8 +960,12 @@ export function DeckEditor({
   };
 
   // Deduplicate cards by id (guard against import bugs creating duplicate rows)
-  const uniqueCards = deck.cards.filter(
-    (card, index, arr) => arr.findIndex((c) => c.id === card.id) === index
+  const uniqueCards = useMemo(
+    () =>
+      deck.cards.filter(
+        (card, index, arr) => arr.findIndex((c) => c.id === card.id) === index
+      ),
+    [deck.cards]
   );
 
   // Cards split by zone
@@ -995,7 +1000,11 @@ export function DeckEditor({
     id: `deck-panel-${activeZone}`,
   });
 
+  // Every row this editor renders, across zones — one batch for the whole deck
+  const cardNames = useMemo(() => uniqueCards.map((c) => c.name), [uniqueCards]);
+
   return (
+    <LocalizedDeckTextProvider names={cardNames}>
     <div
       ref={setDeckPanelRef}
       className={cn("flex flex-col h-full", className)}
@@ -1200,5 +1209,6 @@ export function DeckEditor({
         )}
       </div>
     </div>
+    </LocalizedDeckTextProvider>
   );
 }

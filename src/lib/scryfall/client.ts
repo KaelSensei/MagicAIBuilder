@@ -14,6 +14,7 @@ import {
   lookupSearchCache,
   storeSearchCache,
 } from "@/lib/db/deck-api";
+import { buildLocalizedNamesQueries } from "./localized";
 
 const SCRYFALL_BASE = "https://api.scryfall.com";
 const MIN_DELAY_MS = 100;
@@ -244,6 +245,33 @@ export async function fetchAllPages(
   }
 
   return allCards;
+}
+
+/**
+ * Fetch one printing per card, in `lang`, for a list of English names.
+ *
+ * Chunks run sequentially through the rate limiter; a chunk that fails is
+ * skipped rather than failing the whole batch — a deck with one untranslated
+ * chunk is still better read than a deck shown wholly in English. Each chunk
+ * fits in a single page (20 names < 175 per page), so only page 1 is read.
+ *
+ * @param names - English card names, duplicates allowed
+ * @param lang - Scryfall language code; "en" returns an empty list without a request
+ */
+export async function fetchLocalizedPrintingsByNames(
+  names: readonly string[],
+  lang: string
+): Promise<ScryfallCard[]> {
+  const cards: ScryfallCard[] = [];
+  for (const query of buildLocalizedNamesQueries(names, lang)) {
+    try {
+      const response = await searchCards(query, 1, true);
+      cards.push(...response.data);
+    } catch {
+      // Leave this chunk English.
+    }
+  }
+  return cards;
 }
 
 /** Get all Game Changers (cached 24h via TanStack Query) */
