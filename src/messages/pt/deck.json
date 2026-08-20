@@ -503,7 +503,8 @@
     "edited": "edited",
     "ownerBadge": "Deck author",
     "failed": "Something went wrong. Try again.",
-    "empty": "Start the conversation."
+    "empty": "Start the conversation.",
+    "loadFailed": "Comments could not be loaded."
   },
   "description": {
     "add": "Add deck description…",

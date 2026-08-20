@@ -21,7 +21,10 @@ interface DeckCommentPanelProps {
 
 export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPanelProps) {
   const t = useTranslations("deck.comments");
+  const tCommon = useTranslations("common");
   const [data, setData] = useState<DeckCommentsResponse | null>(null);
+  /** A failed *read*, distinct from the per-action write errors below. */
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
   // The API serves newest first; replies inside a thread stay chronological
@@ -30,13 +33,23 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
 
   const endpoint = `/api/community/decks/${encodeURIComponent(deckId)}/comments`;
 
+  /**
+   * Reads the stream. A failure has to be *visible*: every part of the body
+   * is gated on `data`, so silently ignoring a non-OK response or a thrown
+   * fetch left the panel showing its header and nothing else — a broken read
+   * looked exactly like a deck nobody had commented on, and never recovered.
+   */
   const load = useCallback(async () => {
+    setLoadFailed(false);
     try {
       const res = await fetch(endpoint);
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        setLoadFailed(true);
+        return;
+      }
+      setData(await res.json());
     } catch {
-      // A failed read leaves the panel in its loading state; the write
-      // actions below surface their own errors.
+      setLoadFailed(true);
     }
   }, [endpoint]);
 
@@ -108,6 +121,19 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
           </button>
         )}
       </header>
+
+      {loadFailed && !data && (
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-[var(--text-secondary)]">{t("loadFailed")}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="text-xs px-2 py-1 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
+          >
+            {tCommon("error.retry")}
+          </button>
+        </div>
+      )}
 
       {data && (
         <>
