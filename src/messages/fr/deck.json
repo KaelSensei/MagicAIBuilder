@@ -503,7 +503,8 @@
     "edited": "modifié",
     "ownerBadge": "Auteur du deck",
     "failed": "Une erreur est survenue. Réessayez.",
-    "empty": "Lancez la conversation."
+    "empty": "Lancez la conversation.",
+    "loadFailed": "Les commentaires n'ont pas pu être chargés."
   },
   "description": {
     "add": "Ajouter une description…",

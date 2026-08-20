@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import enDeck from "@/messages/en/deck.json";
+import enCommon from "@/messages/en/common.json";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
@@ -17,7 +18,7 @@ import { DeckCommentPanel } from "./DeckCommentPanel";
 
 function renderWithIntl(ui: React.ReactElement) {
   return render(
-    <NextIntlClientProvider locale="en" messages={{ deck: enDeck }}>
+    <NextIntlClientProvider locale="en" messages={{ deck: enDeck, common: enCommon }}>
       {ui}
     </NextIntlClientProvider>
   );
@@ -190,5 +191,52 @@ describe("DeckCommentPanel", () => {
         expect.objectContaining({ method: "DELETE" })
       )
     );
+  });
+
+  /**
+   * Every part of the body is gated on `data`, so a swallowed read left the
+   * panel showing its header alone — identical to a deck nobody had commented
+   * on, with no way to retry.
+   */
+  describe("when the stream cannot be read", () => {
+    it("says so instead of looking like an empty stream, when the API errors", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({ ok: false, status: 500, json: () => Promise.resolve({}) })
+      );
+      renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+
+      expect(await screen.findByText(/comments could not be loaded/i)).toBeInTheDocument();
+      expect(screen.queryByText(/no comments yet/i)).not.toBeInTheDocument();
+    });
+
+    it("says so when the request throws outright", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+      renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+
+      expect(await screen.findByText(/comments could not be loaded/i)).toBeInTheDocument();
+    });
+
+    it("offers a retry that recovers the stream", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockResolvedValueOnce({ ok: false, status: 500, json: () => Promise.resolve({}) })
+          .mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({ comments: [thread()], count: 1 }),
+          })
+      );
+
+      renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+      await screen.findByText(/comments could not be loaded/i);
+
+      fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+
+      expect(await screen.findByText("Why no Cyclonic Rift?")).toBeInTheDocument();
+      expect(screen.queryByText(/comments could not be loaded/i)).not.toBeInTheDocument();
+    });
   });
 });
