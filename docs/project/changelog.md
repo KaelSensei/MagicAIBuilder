@@ -9,6 +9,29 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-20: Release batch #480–#489 — localized card data finished, production hardening, tournament context
+
+#### Added
+
+- `feat(i18n): localized card names on deck rows (#480)` — the batch path the `DeckCard` surfaces had been waiting for since #415. Names are chunked into `lang:xx unique:cards (!"A" or !"B" …)` searches, 20 per request, cached 24 h, indexed by oracle name and handed to every row through a provider mounted once in `DeckEditor`. `/cards/collection` could not be used: it has no language parameter. English viewers make no request.
+- `feat(i18n): translated printing in the deck tooltip (#481)` — a hover is an image, so the meaningful localization is the French card itself, not English art with a translated caption.
+- `feat(i18n): playtest zones (#482)` — hand, battlefield and graveyard/exile, including `alt` and `aria-label`s. `useLocalizeDeckCard` returns a function so a zone that maps over its cards needs no per-card component.
+- `feat(i18n): proxy sheets (#484)` — name, type line, rules and the printing image on every slot; mana cost and P/T are language-neutral and stay. **With this the roadmap line _Localized card data_ is complete**: search, storage, import and export keep English names, display follows the viewer.
+- `feat(meta): tournament decks with event context (#487)` — player, event, ISO date, placement, format label and event level.
+- `chore(ci): production dependency audit (#486)` — critical advisories block the job; high ones are reported. The five present today (`sharp`/`postcss` under `next@15`, `defu`/`deepmerge-ts` under `prisma@6`) need the Next 16 / Prisma 7 majors.
+
+#### Fixed
+
+- `fix(security): CSP, HSTS, session expiry, error leaks, image byte cap (#485)` — closes the header findings the 2026-07-20 audit left open and the actionable items of the 20-point production checklist, now recorded per item in `docs/security/production-checklist.md`. The CSP host allowlist is unit-tested in `src/lib/security-headers.ts`: a missing host breaks a feature silently in production and a test is the only cheap place to catch it. JWT sessions expire after 7 days instead of the unasserted 30-day default. Four routes (`ai/build`, `ai/suggest`, `import/url`, `meta/[slug]`) echoed `error.message` — provider quotas, upstream hostnames — straight to the client; they now log it and answer with a fixed line. `proxy-card-image` refuses upstream bodies over 5 MB.
+- **The tournament source had matched nothing since #205.** Its regex expected quoted `/event?e=…&d=…` links on the MTGTop8 format listing, but that page lists _events_ — unquoted, no `&d=`. The panel showed "no tournament decks" and read as "this commander has none". `fetchTournamentData` now searches by commander archetype (the id map is parsed from the search form and cached 24 h per instance), falls back to a card-content search, and decodes the site's Latin-1. An `@external` contract spec guards the live markup so the next silent break is loud.
+
+#### Changed
+
+- `chore(hooks): deterministic SonarCloud PR gate (#483)` — the prompt hook ignored its own `Bash(gh pr create:*)` filter and blocked unrelated multi-line shell commands (heredocs, loops, pipelines) with a Sonar message, six times in one session. Replaced by `scripts/pre-pr-sonar-gate.sh`, which exits silently unless the command is a PR creation and otherwise queries the issues API itself.
+- `docs(readme): catch up features, stack, architecture, security (#488)` — the README had fallen several batches behind.
+
+> **Branch drift, again.** `gh pr merge --rebase` rewrites the promoted commits on the target, so after `staging → dev → main` the same nine commits existed three times under different SHAs — identical trees, divergent histories. `staging` and `dev` were reset onto `main`'s commits to bring all three level. Rebasing the promotion avoids a _merge commit_, but not the SHA rewrite; the reset is still needed.
+
 ### 2026-08-20: Release batch #471–#476 — five light features and a clean slate
 
 #### Added
