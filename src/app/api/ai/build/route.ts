@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { buildSchema, sanitizeForPrompt } from "@/lib/validation/ai";
 import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -348,10 +349,13 @@ export async function POST(request: Request) {
 
         await streamDeck(controller, deck);
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "AI deck build failed";
-        console.error("[POST /api/ai/build]", message);
-        emit({ type: "error", message });
+        // The cause is logged; the client gets a fixed line so provider
+        // errors (quota, model names, stack fragments) never reach the UI.
+        logger.error(
+          error instanceof Error ? error.message : String(error),
+          "POST /api/ai/build"
+        );
+        emit({ type: "error", message: "AI deck build failed" });
       } finally {
         controller.close();
       }

@@ -123,6 +123,7 @@ export async function GET(request: Request, { params }: Params) {
     logger.error(message, "GET /api/meta/:slug", { commanderSlug, source });
     const stale = await tryStaleMetaResponse(commanderSlug, source);
     if (stale) return stale;
-    return NextResponse.json({ error: message }, { status: 502 });
+    // Upstream detail (EDHRec / MTGTop8 hostnames, status lines) stays logged.
+    return NextResponse.json({ error: "Meta fetch failed" }, { status: 502 });
   }
 }

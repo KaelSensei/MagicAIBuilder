@@ -8,7 +8,12 @@ import { edgeAuthConfig } from "./edge-config";
 
 describe("edgeAuthConfig", () => {
   it("has JWT session strategy", () => {
-    expect(edgeAuthConfig.session).toEqual({ strategy: "jwt" });
+    expect(edgeAuthConfig.session?.strategy).toBe("jwt");
+  });
+
+  it("expires sessions after 7 days and refreshes them daily, not the 30-day default", () => {
+    expect(edgeAuthConfig.session?.maxAge).toBe(7 * 24 * 60 * 60);
+    expect(edgeAuthConfig.session?.updateAge).toBe(24 * 60 * 60);
   });
 
   it("has correct sign-in pages", () => {
