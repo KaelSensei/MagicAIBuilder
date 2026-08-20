@@ -397,7 +397,8 @@
     "cancel": "Cancel",
     "ownDeck": "You cannot rate your own deck.",
     "signInToRate": "Sign in to rate this deck.",
-    "saveFailed": "Could not save your rating. Try again."
+    "saveFailed": "Could not save your rating. Try again.",
+    "loadFailed": "Ratings could not be loaded."
   },
   "comments": {
     "title": "Comments",
