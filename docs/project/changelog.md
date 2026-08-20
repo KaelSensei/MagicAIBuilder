@@ -9,6 +9,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-20: Release batch #495–#501 — the e2e flake diagnosed, i18n stragglers, three store extractions
+
+#### Fixed
+
+- `fix(e2e): wait for the builder to be interactive (#495)` — **the intermittent failure is diagnosed.** `openBuilder` returned as soon as `waitForURL` saw the address change, well before the route was usable: the deck store was still syncing (the transient `!deck` branch) and React was still hydrating the pushed route. A click dispatched in that window is **swallowed** — the listener has attached and calls `preventDefault`, but the router cannot act yet, so the native navigation is cancelled and nothing replaces it. Load-sensitive by construction, which is what every observation said: `back navigation returns to home` failed three times on a host busy with another agent's greps and passed on an idle one. Now waits for the loaded branch and for `networkidle`. Verified with the spec run three times, twice under deliberate load. **Honest limit**: the flake was never reproducible on demand, so this is a mechanism that fits every observation and a fix that removes it — not a captured failure.
+  - Making the helper deterministic immediately broke `builder shows 3-panel layout`: `getByRole` matches `name` as a **substring**, so with the search results actually rendered, `"Commander"` also matched _Commander's Sphere_ and its add button. **It had only ever passed by racing ahead of those cards.**
+- `fix(i18n): localize the builder page (#497)` — the roadmap marked string extraction done at #455, but **the builder — the app's main screen — never called `useTranslations` at all**. A French viewer got `Loading deck…`, `Deck not found`, the Name / By Set / By Color tabs, and **every icon-only control announced an English name to a screen reader**.
+- `fix(i18n): sweep the shared components (#498)` — the same defect elsewhere, notably `ui/Modal` and `ui/Toast`, whose English Close / Dismiss labels were shared by **every modal and every toast in the app**. Also the entire keyboard-shortcuts modal, pagination, the description editor, share controls and the landing hero. **Zero hardcoded `aria-label` / `title` / `placeholder` left in `src`** (was 15).
+- **A decklist section-header branch was dead code** (#501). The branch clearing the commander section tested `/^(deck|main|sideboard)/` against the raw line, but that code is only reachable when the line is blank or starts with `//` or `#` — so an anchored pattern expecting the line to _begin_ with "deck" could never match. A list whose commander section is empty before a deck header therefore **mislabelled the first deck card as the commander**. Found by writing the tests, not by reading the code.
+
+#### Changed
+
+- **Three store/parser extractions, chosen by measurement rather than feel** — `store.ts` (cognitive complexity 190, double the next), `collection/store.ts` (99) and `url-import.ts` (88). In each case the seam was the same and the reason it was safe was the same: the extracted functions touch no store state and make no network call. All moved **verbatim**, so the pre-existing suites passing unchanged is the evidence nothing shifted semantically.
+  - `refactor(deck): store-factories.ts (#499)` — −165 lines, +16 direct tests
+  - `refactor(collection): parse.ts (#500)` — +27 tests. This one is a **trust boundary whose rejection is silent by design**: `parseCollectionCard` returns `null` and the caller drops the row, so a mistake here does not throw — it makes a card vanish from someone's collection with no error anywhere
+  - `refactor(import): decklist-parse.ts (#501)` — −115 lines, +16 tests, and the dead branch above
+- `src/i18n/catalog.test.ts` (#497) — a key present in `en` and missing elsewhere **fails nothing today**: no build error, no render error, no warning; next-intl prints the key path into the UI. Parity is now asserted on key paths across every locale × namespace. **Mutation-checked** — deleting `fr` `actions.playtest` fails the test naming that exact key. Values are deliberately not compared, since dormant locales legitimately hold English.
+- `chore(scripts): compact-docker-disk.ps1 (#496)` — the gate leaves ~2–3 GB of build cache per run; ten pushes took the cache to 21 GB and C: to 95 %. `docker builder prune` frees it inside Docker but the backing `.vhdx` stays at its high-water mark. Measured on the dev machine: **28.5 GB → 4.1 GB, C: from 26 GB to 49.5 GB free.** `wsl --set-sparse` is deliberately not used — WSL disables it over a data-corruption risk and the dev Postgres volume lives on that disk.
+
 ### 2026-08-20: Release batch #480–#489 — localized card data finished, production hardening, tournament context
 
 #### Added
