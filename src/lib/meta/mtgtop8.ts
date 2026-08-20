@@ -31,7 +31,9 @@ export function decodeLatin1(buffer: ArrayBuffer): string {
 /** Strips tags and collapses whitespace in a cell's inner HTML. */
 function cellText(html: string): string {
   return html
-    .replaceAll(/<[^>]+>/g, "")
+    // `[^<>]*` rather than `[^>]+`: bounding the run on both delimiters keeps
+    // the match linear on malformed markup instead of backtracking through it.
+    .replaceAll(/<[^<>]*>/g, "")
     .replaceAll(/\s+/g, " ")
     .trim();
 }
