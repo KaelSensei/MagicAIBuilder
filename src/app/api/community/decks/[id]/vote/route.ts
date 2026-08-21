@@ -12,6 +12,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { findVisibleDeck } from "@/lib/community/visible-deck";
 import { auth } from "@/lib/auth/config";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
@@ -23,25 +24,6 @@ type Params = { params: Promise<{ id: string }> };
 const VoteSchema = z.object({
   value: z.number().int().refine(isValidVoteValue, "Vote must be 1 or -1"),
 });
-
-/**
- * Loads a deck and confirms the viewer may see it.
- *
- * @param deckId Deck identifier from the route.
- * @param viewerId Signed-in user id, or null for anonymous viewers.
- * @returns The deck when visible, otherwise null.
- */
-async function findVisibleDeck(deckId: string, viewerId: string | null) {
-  const deck = await prisma.deck.findUnique({
-    where: { id: deckId },
-    select: { id: true, userId: true, isPublic: true },
-  });
-
-  if (!deck) return null;
-  if (!deck.isPublic && deck.userId !== viewerId) return null;
-
-  return deck;
-}
 
 /**
  * Reads every vote on a deck and tallies it.
