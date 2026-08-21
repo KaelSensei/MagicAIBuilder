@@ -16,6 +16,7 @@ import { auth } from "@/lib/auth/config";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { calculateVoteScore, isValidVoteValue, type DeckVote } from "@/lib/community/votes";
+import { readJsonBody } from "@/lib/api/json-body";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -92,7 +93,9 @@ export async function POST(request: Request, { params }: Params) {
     if (authResult.error) return authResult.error;
     const userId = authResult.session.user.id;
 
-    const parsed = VoteSchema.safeParse(await request.json());
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.ok) return jsonBody.response;
+    const parsed = VoteSchema.safeParse(jsonBody.value);
     if (!parsed.success) {
       return NextResponse.json(
         { error: z.flattenError(parsed.error).fieldErrors },

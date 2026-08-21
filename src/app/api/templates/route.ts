@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { requireAuth } from "@/lib/auth/helpers";
+import { readJsonBody } from "@/lib/api/json-body";
 
 // ─── Validation Schemas ────────────────────────────────────────────────────
 const TemplateQuerySchema = z.object({
@@ -94,7 +95,9 @@ export async function POST(request: NextRequest) {
   if (auth.error) return auth.error;
 
   try {
-    const body = await request.json();
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.ok) return jsonBody.response;
+    const body = jsonBody.value;
     const validation = CreateTemplateSchema.safeParse(body);
 
     if (!validation.success) {

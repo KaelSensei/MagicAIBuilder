@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { addCardSchema } from "@/lib/validation/card";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { readJsonBody } from "@/lib/api/json-body";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -14,7 +15,11 @@ export async function POST(request: Request, { params }: Params) {
     const ownership = await requireDeckOwner(deckId);
     if (ownership.error) return ownership.error;
 
-    const raw = await request.json();
+    const jsonBody = await readJsonBody(request);
+
+    if (!jsonBody.ok) return jsonBody.response;
+
+    const raw = jsonBody.value;
     const parsed = addCardSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(

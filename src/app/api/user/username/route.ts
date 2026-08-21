@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { readJsonBody } from "@/lib/api/json-body";
 
 const usernameSchema = z.object({
   username: z
@@ -20,7 +21,11 @@ export async function PATCH(request: Request) {
     const result = await requireAuth();
     if (result.error) return result.error;
 
-    const body = await request.json();
+    const jsonBody = await readJsonBody(request);
+
+    if (!jsonBody.ok) return jsonBody.response;
+
+    const body = jsonBody.value;
     const parsed = usernameSchema.safeParse(body);
 
     if (!parsed.success) {
