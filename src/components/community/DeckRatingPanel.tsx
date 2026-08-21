@@ -182,7 +182,7 @@ export function DeckRatingPanel({ deckId, isOwner, isSignedIn }: DeckRatingPanel
                 <button
                   type="button"
                   onClick={() => setWriting(true)}
-                  className="self-start flex items-center gap-1.5 text-sm text-[var(--accent)] hover:underline"
+                  className="self-start flex items-center gap-1.5 text-sm text-[var(--accent-text)] hover:underline"
                 >
                   <MessageSquare className="w-4 h-4" aria-hidden="true" />
                   {t("writeReview")}

@@ -40,7 +40,7 @@ interface StepDef {
 const STEP_DEFS: readonly StepDef[] = [
   {
     key: "welcome",
-    icon: <Layers className="w-8 h-8 text-[var(--accent)]" />,
+    icon: <Layers className="w-8 h-8 text-[var(--accent-text)]" />,
     hasHint: false,
   },
   {

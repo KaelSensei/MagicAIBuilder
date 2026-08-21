@@ -93,7 +93,7 @@ export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps
       {/* Decks */}
       <section>
         <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-          <Layers className="w-4 h-4 text-[var(--accent)]" />
+          <Layers className="w-4 h-4 text-[var(--accent-text)]" />
           {t("publicDecks")}
           <span className="text-sm font-normal text-[var(--text-secondary)]">
             ({profile.decks.length})

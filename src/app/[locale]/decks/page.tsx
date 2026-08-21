@@ -175,7 +175,7 @@ export default function DecksPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Layers className="mb-4 h-12 w-12 text-[var(--accent)] opacity-60" />
+            <Layers className="mb-4 h-12 w-12 text-[var(--accent-text)] opacity-60" />
             <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
               {t("home.startBuilding")}
             </h2>
@@ -244,7 +244,7 @@ export default function DecksPage() {
                 <motion.button
                   onClick={handleNewDeck}
                   disabled={isCreating}
-                  className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-60"
                   variants={{
                     hidden: { opacity: 0, y: 16 },
                     show: { opacity: 1, y: 0 },

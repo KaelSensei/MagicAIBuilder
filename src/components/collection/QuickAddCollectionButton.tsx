@@ -66,7 +66,7 @@ export function QuickAddCollectionButton({
       type="button"
       onClick={handleClick}
       className={cn(
-        "inline-flex items-center gap-0.5 text-[10px] font-medium text-[var(--accent)] bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded px-1.5 py-0.5 hover:bg-[var(--accent)]/20 transition-colors",
+        "inline-flex items-center gap-0.5 text-[10px] font-medium text-[var(--accent-text)] bg-[var(--accent)]/10 border border-[var(--accent)]/30 rounded px-1.5 py-0.5 hover:bg-[var(--accent)]/20 transition-colors",
         className
       )}
       title={t("add")}

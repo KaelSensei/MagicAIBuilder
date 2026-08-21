@@ -61,7 +61,7 @@ export function ReviewForm({ initialRating, saving, onCancel, onSubmit }: Review
         <button
           type="submit"
           disabled={!canSubmit}
-          className="text-sm px-3 py-1.5 rounded-lg border border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)] font-medium disabled:opacity-50 hover:bg-[var(--accent)]/20"
+          className="text-sm px-3 py-1.5 rounded-lg border border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent-text)] font-medium disabled:opacity-50 hover:bg-[var(--accent)]/20"
         >
           {saving ? t("submitting") : t("submitReview")}
         </button>

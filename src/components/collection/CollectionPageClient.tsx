@@ -151,7 +151,7 @@ export function CollectionPageClient() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <Package className="w-6 h-6 text-[var(--accent)]" />
+            <Package className="w-6 h-6 text-[var(--accent-text)]" />
             <h1 className="text-2xl font-bold text-[var(--text-primary)]">
               {t("title")}
             </h1>
@@ -223,7 +223,7 @@ export function CollectionPageClient() {
               className={cn(
                 "p-2 rounded transition-colors",
                 viewMode === "grid"
-                  ? "text-[var(--accent)]"
+                  ? "text-[var(--accent-text)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
               title={t("viewMode.gridView")}
@@ -236,7 +236,7 @@ export function CollectionPageClient() {
               className={cn(
                 "p-2 rounded transition-colors",
                 viewMode === "list"
-                  ? "text-[var(--accent)]"
+                  ? "text-[var(--accent-text)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
               title={t("viewMode.listView")}
@@ -316,7 +316,7 @@ function StatCard({
       <p
         className={cn(
           "text-2xl font-bold",
-          highlight ? "text-[var(--accent)]" : "text-[var(--text-primary)]"
+          highlight ? "text-[var(--accent-text)]" : "text-[var(--text-primary)]"
         )}
       >
         {value}

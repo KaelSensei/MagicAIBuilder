@@ -201,7 +201,7 @@ export function DeckEditor({
               <span
                 className={cn(
                   "text-[10px] tabular-nums",
-                  activeZone === zone ? "text-[var(--accent)]" : "opacity-60"
+                  activeZone === zone ? "text-[var(--accent-text)]" : "opacity-60"
                 )}
               >
                 {count}
@@ -229,7 +229,7 @@ export function DeckEditor({
               onClick={() => setViewMode("list")}
               className={`p-1 rounded transition-colors ${
                 viewMode === "list"
-                  ? "text-[var(--accent)]"
+                  ? "text-[var(--accent-text)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
               title={t("viewMode.listView")}
@@ -242,7 +242,7 @@ export function DeckEditor({
               onClick={() => setViewMode("grid")}
               className={`p-1 rounded transition-colors ${
                 viewMode === "grid"
-                  ? "text-[var(--accent)]"
+                  ? "text-[var(--accent-text)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
               title={t("viewMode.gridView")}
@@ -261,7 +261,7 @@ export function DeckEditor({
                     className={cn(
                       "w-5 h-5 rounded text-[10px] font-medium transition-colors",
                       gridCols === n
-                        ? "bg-[var(--accent)]/20 text-[var(--accent)]"
+                        ? "bg-[var(--accent)]/20 text-[var(--accent-text)]"
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     )}
                     title={t("viewMode.cardsPerRow", { count: n })}

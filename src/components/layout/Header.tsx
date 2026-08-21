@@ -67,9 +67,9 @@ export function Header({ deckId }: HeaderProps = {}) {
       {/* Logo */}
       <Link
         href="/"
-        className="flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--accent)] transition-colors"
+        className="flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors"
       >
-        <Layers className="w-5 h-5 text-[var(--accent)]" />
+        <Layers className="w-5 h-5 text-[var(--accent-text)]" />
         <span className="font-semibold text-base hidden sm:inline">
           {t("appName")}
         </span>

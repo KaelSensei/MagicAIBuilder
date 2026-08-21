@@ -68,7 +68,7 @@ export function FollowButton({
           className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border font-medium transition-colors disabled:opacity-60 ${
             following
               ? "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-red-400/50"
-              : "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20"
+              : "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent-text)] hover:bg-[var(--accent)]/20"
           }`}
         >
           {following ? (

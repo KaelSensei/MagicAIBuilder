@@ -133,7 +133,7 @@ export function HomeDeckCard({
             type="button"
             onClick={(e) => onDuplicate(e, deck.id)}
             disabled={duplicatingId === deck.id}
-            className="rounded p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-[var(--accent)]/20 hover:text-[var(--accent)] group-hover:opacity-100 disabled:opacity-60"
+            className="rounded p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-[var(--accent)]/20 hover:text-[var(--accent-text)] group-hover:opacity-100 disabled:opacity-60"
             aria-label={t("card.duplicate", { name: deck.name })}
           >
             {duplicatingId === deck.id ? (

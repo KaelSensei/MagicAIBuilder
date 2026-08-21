@@ -29,7 +29,7 @@ export function UserChip({ name, username, image }: UserChipProps) {
       {username ? (
         <Link
           href={`/u/${username}`}
-          className="text-sm text-[var(--text-primary)] hover:text-[var(--accent)]"
+          className="text-sm text-[var(--text-primary)] hover:text-[var(--accent-text)]"
         >
           {displayName}
         </Link>
