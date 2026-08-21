@@ -77,7 +77,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
         className={cn(
           "flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border transition-all",
           isEnabled
-            ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10"
+            ? "border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent)]/10"
             : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
         )}
         title={t("share.openShare")}
@@ -112,7 +112,7 @@ export function SharePopover({ deckId }: SharePopoverProps) {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               {isEnabled ? (
-                <Globe className="w-4 h-4 text-[var(--accent)]" />
+                <Globe className="w-4 h-4 text-[var(--accent-text)]" />
               ) : (
                 <Lock className="w-4 h-4 text-[var(--text-secondary)]" />
               )}

@@ -37,7 +37,7 @@ export function Pagination({
           "flex items-center gap-1 px-3 py-1.5 rounded border text-sm transition-colors",
           isFirst
             ? "border-[var(--border)] text-[var(--text-secondary)] opacity-40 cursor-not-allowed"
-            : "border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            : "border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)]"
         )}
       >
         <ChevronLeft className="w-4 h-4" />
@@ -67,7 +67,7 @@ export function Pagination({
           "flex items-center gap-1 px-3 py-1.5 rounded border text-sm transition-colors",
           isLast
             ? "border-[var(--border)] text-[var(--text-secondary)] opacity-40 cursor-not-allowed"
-            : "border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            : "border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)]"
         )}
       >
         Next

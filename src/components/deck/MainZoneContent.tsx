@@ -215,7 +215,7 @@ function DroppableCategory({
             ))}
           </SortableContext>
           {cards.length === 0 && isOver && (
-            <div className="py-2 text-center text-xs text-[var(--accent)]">
+            <div className="py-2 text-center text-xs text-[var(--accent-text)]">
               {t("dropToMove", { label })}
             </div>
           )}

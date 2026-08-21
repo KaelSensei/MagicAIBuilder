@@ -8,8 +8,19 @@
   --border: #2a2a35;
   --text-primary: #e8e8ec;
   --text-secondary: #8888a0;
-  --accent: #6366f1;
-  --accent-hover: #818cf8;
+  /* #6366f1 was 4.46:1 under white button text — short of 4.5 by a hair.
+     Darkened 0.2% in lightness, hue and saturation untouched. */
+  --accent: #6265f1;
+  /* Was #818cf8, which is 2.98:1 under white text: hovering an accent button
+     made its own label harder to read. No audit catches this — Lighthouse
+     measures the page as rendered, never a hover state. The dark theme now
+     darkens on hover like the light one, rather than brightening. */
+  --accent-hover: #4f53ef;
+  /* Accent-coloured *text*, which --accent cannot also be: white-on-accent
+     needs the token darker, accent-on-surface needs it lighter, and the two
+     requirements have no overlap. Clears 4.5:1 on --surface-hover, the
+     lightest surface it lands on and therefore the binding one. */
+  --accent-text: #7274f2;
 
   /* MTG mana colors */
   --mana-white: #f9faf4;
@@ -38,9 +49,15 @@
   --surface-hover: #f1f3f5;
   --border: #e2e8f0;
   --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --accent: #6366f1;
+  /* #64748b was 4.28:1 on --surface-hover. Light-theme text is bound by the
+     *darkest* surface, not by white — checking against #ffffff passes and is
+     the wrong test. */
+  --text-secondary: #617087;
+  --accent: #6265f1;
+  /* Already 6.29:1 under white text; left alone. */
   --accent-hover: #4f46e5;
+  /* Mirror of the dark theme's --accent-text, solved against #f1f3f5. */
+  --accent-text: #585bf0;
 }
 
 * {

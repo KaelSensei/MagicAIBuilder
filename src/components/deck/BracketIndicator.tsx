@@ -198,7 +198,7 @@ export function BracketIndicator({
             <button
               type="button"
               onClick={() => setShowPicker((v) => !v)}
-              className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] underline underline-offset-2 transition-colors"
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent-text)] underline underline-offset-2 transition-colors"
             >
               {showPicker ? t("bracket.cancel") : t("bracket.override")}
             </button>

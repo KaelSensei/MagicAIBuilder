@@ -254,7 +254,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               href="/"
               className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
             >
-              <Layers className="w-5 h-5 text-[var(--accent)]" />
+              <Layers className="w-5 h-5 text-[var(--accent-text)]" />
               <span className="font-semibold">MagicAIBuilder</span>
             </Link>
             <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/20">

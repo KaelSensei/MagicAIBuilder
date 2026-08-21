@@ -77,7 +77,7 @@ export function DeckVisibilityToggle({
 
       <div className="flex items-center gap-1.5">
         {isPublic ? (
-          <Globe className="w-3.5 h-3.5 text-[var(--accent)]" />
+          <Globe className="w-3.5 h-3.5 text-[var(--accent-text)]" />
         ) : (
           <Lock className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
         )}
@@ -91,7 +91,7 @@ export function DeckVisibilityToggle({
           href={publicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-[var(--accent)] hover:underline ml-1"
+          className="text-xs text-[var(--accent-text)] hover:underline ml-1"
         >
           {t("visibility.view")}
         </a>

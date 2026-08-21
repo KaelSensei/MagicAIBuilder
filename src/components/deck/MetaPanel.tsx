@@ -85,7 +85,7 @@ function EdhrecCardRow({
             onAdd(card.name);
             setAdded(true);
           }}
-          className="shrink-0 w-5 h-5 rounded-full bg-[var(--accent)]/20 hover:bg-[var(--accent)] flex items-center justify-center text-[var(--accent)] hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+          className="shrink-0 w-5 h-5 rounded-full bg-[var(--accent)]/20 hover:bg-[var(--accent)] flex items-center justify-center text-[var(--accent-text)] hover:text-white transition-colors opacity-0 group-hover:opacity-100"
           aria-label={t("meta.addNamedCard", { name: card.name })}
         >
           <Plus className="w-3 h-3" />
@@ -185,12 +185,12 @@ export function MetaPanel({
         onClick={() => setExpanded((e) => !e)}
         className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[var(--surface-hover)] transition-colors"
       >
-        <BarChart2 className="w-4 h-4 text-[var(--accent)] shrink-0" />
+        <BarChart2 className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
         <span className="text-sm font-medium text-[var(--text-primary)] flex-1 text-left">
           {t("meta.title")}
         </span>
         {(isLoadingEdhrec || isLoadingTournament) && (
-          <Loader2 className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
+          <Loader2 className="w-3.5 h-3.5 text-[var(--accent-text)] animate-spin" />
         )}
         <TrendingUp
           className={cn(
@@ -238,7 +238,7 @@ export function MetaPanel({
                   {/* ─ Community decks ─ */}
                   <Link
                     href={`/commanders/${commanderToSlug(commanderName)}/decks`}
-                    className="flex items-center gap-1.5 text-[11px] text-[var(--accent)] hover:underline"
+                    className="flex items-center gap-1.5 text-[11px] text-[var(--accent-text)] hover:underline"
                   >
                     <Users className="w-3 h-3" aria-hidden="true" />
                     {t("meta.communityDecks")}
@@ -249,7 +249,7 @@ export function MetaPanel({
                     href={`https://edhrec.com/commanders/${commanderToSlug(commanderName)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-[11px] text-[var(--accent)] hover:underline"
+                    className="flex items-center gap-1.5 text-[11px] text-[var(--accent-text)] hover:underline"
                   >
                     <ExternalLink className="w-3 h-3" aria-hidden="true" />
                     {t("meta.viewOnEdhrec")}

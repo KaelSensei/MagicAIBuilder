@@ -120,7 +120,7 @@ export function SetAutocomplete({
   if (value) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--accent)] bg-[var(--surface)]">
-        <span className="text-xs font-mono text-[var(--accent)] uppercase">
+        <span className="text-xs font-mono text-[var(--accent-text)] uppercase">
           {value}
         </span>
         <span className="flex-1 text-sm text-[var(--text-primary)] truncate">
@@ -195,7 +195,7 @@ export function SetAutocomplete({
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[var(--surface-hover)] text-left transition-colors"
                 >
-                  <span className="text-xs font-mono text-[var(--accent)] uppercase w-10 shrink-0">
+                  <span className="text-xs font-mono text-[var(--accent-text)] uppercase w-10 shrink-0">
                     {s.code}
                   </span>
                   <span className="flex-1 text-sm text-[var(--text-primary)] truncate">

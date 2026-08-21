@@ -142,7 +142,7 @@ export function CollectionStatsPanel({
           onClick={() => setExpanded((e) => !e)}
           className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[var(--surface-hover)] transition-colors"
         >
-          <Package className="w-4 h-4 text-[var(--accent)] shrink-0" />
+          <Package className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
           <span className="text-sm font-medium text-[var(--text-primary)] flex-1 text-left">
             Collection
           </span>
@@ -214,7 +214,7 @@ export function CollectionStatsPanel({
                   <button
                     type="button"
                     onClick={() => setShowShoppingList(true)}
-                    className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg border border-[var(--accent)]/50 text-[var(--accent)] text-xs font-medium hover:bg-[var(--accent)]/10 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg border border-[var(--accent)]/50 text-[var(--accent-text)] text-xs font-medium hover:bg-[var(--accent)]/10 transition-colors"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
                     Shopping List ({stats.missingCount} cards)

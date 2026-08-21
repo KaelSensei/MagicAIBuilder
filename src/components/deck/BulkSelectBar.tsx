@@ -41,7 +41,7 @@ export function BulkSelectBar({
         aria-label={allSelected ? t("bulk.deselectAll") : t("bulk.selectAll")}
       >
         {allSelected ? (
-          <CheckSquare className="w-3.5 h-3.5 text-[var(--accent)]" />
+          <CheckSquare className="w-3.5 h-3.5 text-[var(--accent-text)]" />
         ) : (
           <Square className="w-3.5 h-3.5" />
         )}
@@ -52,7 +52,7 @@ export function BulkSelectBar({
       {selectedCount > 0 && (
         <>
           <span className="text-xs text-[var(--text-secondary)]">·</span>
-          <span className="text-xs font-medium text-[var(--accent)]">
+          <span className="text-xs font-medium text-[var(--accent-text)]">
             {t("bulk.selectedCount", { count: selectedCount })}
           </span>
 
@@ -62,7 +62,7 @@ export function BulkSelectBar({
               type="button"
               key={zone}
               onClick={() => onBulkMove(zone)}
-              className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-[var(--accent)]/50 text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors shrink-0"
+              className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-[var(--accent)]/50 text-[var(--accent-text)] hover:bg-[var(--accent)]/10 transition-colors shrink-0"
             >
               <ArrowRight className="w-3 h-3" />
               {label}

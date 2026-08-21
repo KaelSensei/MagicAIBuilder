@@ -106,12 +106,12 @@ export function AISuggestionsPanel({
         onClick={() => setExpanded((e) => !e)}
         className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[var(--surface-hover)] transition-colors"
       >
-        <Sparkles className="w-4 h-4 text-[var(--accent)] shrink-0" />
+        <Sparkles className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
         <span className="text-sm font-medium text-[var(--text-primary)] flex-1 text-left">
           {t("ai.title")}
         </span>
         {effectiveArchetype && !isLoading && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] font-medium">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent-text)] font-medium">
             {effectiveArchetype}
           </span>
         )}
@@ -122,7 +122,7 @@ export function AISuggestionsPanel({
           </span>
         )}
         {isLoading && (
-          <Loader2 className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
+          <Loader2 className="w-3.5 h-3.5 text-[var(--accent-text)] animate-spin" />
         )}
         {expanded ? (
           <ChevronUp className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
@@ -166,7 +166,7 @@ export function AISuggestionsPanel({
                           "text-[10px] px-2 py-0.5 rounded-full border transition-colors",
                           archetypeOverride === arch ||
                             (!archetypeOverride && detectedArchetype === arch)
-                            ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                            ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-text)]"
                             : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                         )}
                       >
@@ -192,7 +192,7 @@ export function AISuggestionsPanel({
                         className={cn(
                           "text-[10px] px-2 py-0.5 rounded-full border transition-colors",
                           budgetPerCard === value
-                            ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                            ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-text)]"
                             : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                         )}
                       >

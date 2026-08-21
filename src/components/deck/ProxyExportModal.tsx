@@ -223,7 +223,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
           {/* Header */}
           <div className="flex items-center justify-between">
             <Dialog.Title className="text-base font-semibold text-[var(--text-primary)] flex items-center gap-2">
-              <Printer className="w-4 h-4 text-[var(--accent)]" />
+              <Printer className="w-4 h-4 text-[var(--accent-text)]" />
               {t("proxy.title")}
             </Dialog.Title>
             <Dialog.Close asChild>
@@ -255,7 +255,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                     className={cn(
                       "px-3 py-1 rounded text-xs border transition-colors",
                       config.paper === p
-                        ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                        ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-text)]"
                         : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                     )}
                   >
@@ -279,7 +279,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                     className={cn(
                       "px-3 py-1 rounded text-xs border transition-colors",
                       config.layout === l
-                        ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                        ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-text)]"
                         : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                     )}
                   >
@@ -305,7 +305,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                       "px-3 py-1 rounded text-xs border transition-colors",
                       !config.includeCardArt && "opacity-40 cursor-not-allowed",
                       config.quality === q
-                        ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                        ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-text)]"
                         : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                     )}
                   >
@@ -329,7 +329,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                   className={cn(
                     "px-3 py-1 rounded text-xs border transition-colors",
                     config.includeCardArt
-                      ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                      ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-text)]"
                       : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                   )}
                 >
@@ -344,7 +344,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                     "px-3 py-1 rounded text-xs border transition-colors",
                     config.includeCardArt
                       ? "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
-                      : "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                      : "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-text)]"
                   )}
                 >
                   {t("proxy.textOnly")}
@@ -444,7 +444,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                 "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all border",
                 isPreparing || slots.length === 0 || !config.includeCardArt
                   ? "border-[var(--border)] text-[var(--text-secondary)] cursor-not-allowed opacity-50"
-                  : "border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10"
+                  : "border-[var(--accent)] text-[var(--accent-text)] hover:bg-[var(--accent)]/10"
               )}
             >
               {isPreparing ? (
