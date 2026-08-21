@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-21: #524 — a correction to this changelog's own premise
+
+#### Fixed
+
+- `docs(seo): record why the two base-URL helpers must not be merged (#524)` — **`progress.md` claimed `NEXT_PUBLIC_BASE_URL` and `NEXT_PUBLIC_APP_URL` "name the same thing" and should be reconciled. They do not, and acting on it would have introduced a bug.**
+  - `resolveAppBaseUrl()` resolves _the instance that is running_: a server component calling this app's own API needs the current deployment, so it falls back to `VERCEL_URL` — the preview host on a preview.
+  - `siteUrl()` is the site's _public identity_, used for canonicals, hreflang and the sitemap. Resolving it to a preview host would publish canonical URLs pointing at deployments that disappear — the exact damage #517 and #521 repaired.
+  - **On a preview deployment the two are supposed to disagree.** The names look interchangeable, which is the entire hazard; the claim survived several restatements in `progress.md` for that reason alone. Each function now points at the other and says why they stay apart.
+  - Found by going to merge them, not by reviewing them. A wrong claim in a document is only as visible as the next person who acts on it.
+
 ### 2026-08-21: Release batch #521–#522 — a sitemap that published private links, and a 500 that was a closed tab
 
 #### Fixed
