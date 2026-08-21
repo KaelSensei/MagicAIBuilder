@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { alternatesFor } from "@/lib/seo/alternates";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
@@ -10,7 +11,7 @@ import {
 import { auth } from "@/lib/auth/config";
 
 interface Params {
-  readonly params: Promise<{ username: string }>;
+  readonly params: Promise<{ locale: string; username: string }>;
 }
 
 /**
@@ -33,7 +34,7 @@ async function fetchProfile(username: string) {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { username } = await params;
+  const { username, locale } = await params;
   const profile = await fetchProfile(username);
 
   if (!profile) {
@@ -42,6 +43,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const displayName = profile.name ?? profile.username;
   return {
+    alternates: alternatesFor(locale, `/u/${username}`),
     title: `${displayName} — MagicAIBuilder`,
     description: `${displayName}'s public Commander decks on MagicAIBuilder.`,
   };
