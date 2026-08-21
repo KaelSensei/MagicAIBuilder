@@ -40,6 +40,14 @@ const LOCAL_BASE_URL = "http://localhost:3000";
  * empty* (`NEXT_PUBLIC_APP_URL=` in a .env) is a realistic misconfiguration —
  * so blank values are treated as unset rather than used as an origin.
  *
+ * **Not the same thing as `siteUrl()` in `@/lib/seo/alternates`, and they must
+ * not be merged.** This one has to reach *the instance that is running*, so it
+ * falls back to `VERCEL_URL` — the current deployment, preview URLs included.
+ * `siteUrl()` is the public identity of the site, used for canonicals, hreflang
+ * and the sitemap; resolving it to a preview host would publish canonical URLs
+ * pointing at deployments that disappear. On a preview they are *supposed* to
+ * disagree. The names look interchangeable, which is the whole hazard.
+ *
  * @returns The origin to prefix API paths with, without a trailing slash.
  */
 export function resolveAppBaseUrl(): string {

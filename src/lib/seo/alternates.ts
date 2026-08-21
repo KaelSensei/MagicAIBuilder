@@ -30,6 +30,14 @@ const FALLBACK_SITE_URL = "https://magicaibuilder.com";
  * and robots directives are built from the former, and a canonical that
  * disagreed with the sitemap would hand a crawler two different answers for the
  * same page.
+ *
+ * **Not the same thing as `resolveAppBaseUrl()` in `@/lib/api/viewer-request`,
+ * and they must not be merged.** That one resolves the instance that is
+ * running and falls back to `VERCEL_URL`, so on a preview deployment it is the
+ * preview host — correct for fetching this app's own API, and wrong here.
+ * This is the site's public identity: a canonical, an hreflang or a sitemap
+ * entry pointing at a preview would advertise URLs that disappear. On a preview
+ * the two are *supposed* to disagree.
  */
 export function siteUrl(): string {
   const configured = process.env.NEXT_PUBLIC_BASE_URL?.trim();
