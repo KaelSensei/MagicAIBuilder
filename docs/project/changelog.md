@@ -9,6 +9,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-21: Release batch #521–#522 — a sitemap that published private links, and a 500 that was a closed tab
+
+#### Fixed
+
+- `fix(seo): stop publishing share tokens, and index the pages that are public (#521)` — **the sitemap was publishing capability URLs.** It listed every `shareEnabled` deck's `/share/<token>`. The sharing dialog promises "Anyone with this link can view your deck" — a promise about who _receives_ the link — and `/api/share/[token]` checks `shareEnabled` and **never `isPublic`**, so a deck the owner kept private is fully readable at its token, by design, for the person they sent it to. Feeding those tokens to search engines turned "anyone with this link" into "anyone at all", for decks never marked public, while `isPublic` sits in the same model precisely to mark the ones that were. `robots.ts` carried a matching `allow: "/share/"`. Both are gone. **Live since #153.**
+  - The pages that _should_ have been listed were absent: public decks, public profiles and commander deck discovery are all public per the middleware and all received a canonical in #517. Each entry now carries an hreflang alternate per served locale, so the sitemap cannot give a crawler a different answer than the page.
+  - The bare `catch {}` produced a one-URL sitemap indistinguishable from a site that genuinely has one page — the **fourth** instance of the shape, this one in output nobody looks at. Failures now reach `logger.error` and Sentry. Two `as` casts on `prisma.deck` removed; `robots.ts` folded onto the shared `siteUrl()`, which had three copies of its fallback.
+  - `buildSitemap` is a pure function. Its first test asserts no share token appears whatever it is handed — the guard worth keeping, since nothing about the leak was visible from the sitemap itself.
+- `fix(api): answer 400 for a malformed body instead of 500 (#522)` — a request stream truncated by page teardown produced `Unexpected end of JSON input`, a 500 and an error log **indistinguishable from a genuine server fault**. Nothing broke; the logs stopped being able to tell an incident from a closed tab. **Nineteen routes shared the shape** — not 22 as first counted: `ai/build`, `ai/suggest` and `import/url` already handled it, and were left alone.
+  - **Three routes stopped compiling, which was the point.** `request.json()` returns `any`; the helper returns `unknown`. `cache/cards`, `cache/search` and `decks/[id]/snapshots` destructured the body directly. They _do_ check the fields immediately afterwards — a typing hole rather than a validation hole — but `any` is what kept it open. No `as` was needed anywhere; Prisma's JSON columns use the round-trip idiom already in `metaCachePayload`.
+
+#### Changed
+
+- `refactor(community): extract the shared deck-visibility rule (#522)` — `findVisibleDeck` was **byte-identical in four route files** (same md5) and `COMMENT_SELECT` in two. Both are shared modules now, moved verbatim.
+  - **A test written as a hypothesis found a real defect.** `deck.userId !== viewerId` with both sides nullable reads `null !== null` as false, so an ownerless private deck registered as owned by an anonymous viewer. **Latent, never live** — `Deck.userId` is optional in the schema, but the only creation path sets it and no such row exists. Fixed because the schema permits the state and this is a visibility rule. Four copies, tested in none; now seven tests.
+  - This extraction was not planned: SonarCloud failed the gate at 3.8% new-code duplication. The added lines were three per route, under the detector's block size, so the duplications API was asked _where_ rather than guessed at — it pointed at 21-to-34-line blocks of pre-existing boilerplate pulled into the new-code measure by the edit. Guessing would have meant refactoring the wrong code.
+
 ### 2026-08-21: Release #519 — the accent token split, and two defects no audit could see
 
 #### Fixed
