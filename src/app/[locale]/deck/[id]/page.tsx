@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { alternatesFor } from "@/lib/seo/alternates";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
@@ -7,7 +8,7 @@ import { fetchPublicDeck } from "@/lib/deck/public-deck";
 import { auth } from "@/lib/auth/config";
 
 interface Params {
-  readonly params: Promise<{ id: string }>;
+  readonly params: Promise<{ locale: string; id: string }>;
 }
 
 async function fetchDeckForViewer(id: string) {
@@ -16,7 +17,7 @@ async function fetchDeckForViewer(id: string) {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { id } = await params;
+  const { id, locale } = await params;
   const deck = await fetchDeckForViewer(id);
 
   if (!deck) return { title: "Deck not found — MagicAIBuilder" };
@@ -27,6 +28,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const author = deck.user?.name ?? deck.user?.username ?? "Unknown";
 
   return {
+    alternates: alternatesFor(locale, `/deck/${id}`),
     title: `${deck.name} by ${author} — MagicAIBuilder`,
     description: `Commander: ${commander?.name ?? "Unknown"} · Bracket ${deck.targetBracket} · ${deck.format}`,
     openGraph: {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { alternatesFor } from "@/lib/seo/alternates";
 import { headers } from "next/headers";
 import { Header } from "@/components/layout/Header";
 import { CommanderDecksView } from "@/components/community/CommanderDecksView";
@@ -10,7 +11,7 @@ import { auth } from "@/lib/auth/config";
 import type { CommanderDecksResponse } from "@/lib/community/discovery-types";
 
 interface Params {
-  readonly params: Promise<{ slug: string }>;
+  readonly params: Promise<{ locale: string; slug: string }>;
 }
 
 /**
@@ -35,11 +36,12 @@ async function fetchCommanderDecks(
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, locale } = await params;
   const data = await fetchCommanderDecks(slug);
   const name = data?.commanderName ?? slug.replaceAll("-", " ");
 
   return {
+    alternates: alternatesFor(locale, `/commanders/${slug}/decks`),
     title: `${name} decks — MagicAIBuilder`,
     description: `Public Commander decks led by ${name}, ranked by community votes.`,
   };
