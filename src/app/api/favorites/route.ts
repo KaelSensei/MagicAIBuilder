@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { readJsonBody } from "@/lib/api/json-body";
 
 const AddFavoriteSchema = z.object({
   scryfallId: z.string().min(1),
@@ -23,7 +24,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.ok) return jsonBody.response;
+    const body = jsonBody.value;
     const validation = AddFavoriteSchema.safeParse(body);
 
     if (!validation.success) {

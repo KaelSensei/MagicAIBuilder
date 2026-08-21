@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { readJsonBody } from "@/lib/api/json-body";
 
 const patchSchema = z.object({
   quantity: z.number().int().min(0).optional(),
@@ -83,7 +84,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body = await request.json();
+    const jsonBody = await readJsonBody(request);
+
+    if (!jsonBody.ok) return jsonBody.response;
+
+    const body = jsonBody.value;
     const parsed = patchSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { ALL_FORMATS } from "@/lib/deck/formats";
+import { readJsonBody } from "@/lib/api/json-body";
 
 /** Max decks per page for the listing endpoint */
 const MAX_PAGE_SIZE = 50;
@@ -100,7 +101,11 @@ export async function POST(request: Request) {
     const result = await requireAuth();
     if (result.error) return result.error;
 
-    const body = await request.json();
+    const jsonBody = await readJsonBody(request);
+
+    if (!jsonBody.ok) return jsonBody.response;
+
+    const body = jsonBody.value;
     const parsed = createDeckSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid input", details: parsed.error.issues.map((i) => i.message) }, { status: 400 });

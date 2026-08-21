@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { readJsonBody } from "@/lib/api/json-body";
 
 const RATE_LIMIT = 5; // max signup attempts
 const RATE_WINDOW = 15 * 60_000; // per 15 minutes per IP
@@ -26,7 +27,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.ok) return jsonBody.response;
+    const body = jsonBody.value;
     const parsed = signupSchema.safeParse(body);
 
     if (!parsed.success) {

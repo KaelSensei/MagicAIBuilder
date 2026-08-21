@@ -13,6 +13,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { findVisibleDeck } from "@/lib/community/visible-deck";
 import { auth } from "@/lib/auth/config";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
@@ -23,6 +24,7 @@ import {
   validateReview,
 } from "@/lib/ratings/ratings";
 import { toDeckRating, toDeckReview, type DeckRatingRow } from "@/lib/ratings/mappers";
+import { readJsonBody } from "@/lib/api/json-body";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -52,25 +54,6 @@ const RATING_SELECT = {
   createdAt: true,
   user: { select: { name: true, username: true, image: true } },
 } as const;
-
-/**
- * Loads a deck and confirms the viewer may see it.
- *
- * @param deckId Deck identifier from the route.
- * @param viewerId Signed-in user id, or null for anonymous viewers.
- * @returns The deck when visible, otherwise null.
- */
-async function findVisibleDeck(deckId: string, viewerId: string | null) {
-  const deck = await prisma.deck.findUnique({
-    where: { id: deckId },
-    select: { id: true, userId: true, isPublic: true },
-  });
-
-  if (!deck) return null;
-  if (!deck.isPublic && deck.userId !== viewerId) return null;
-
-  return deck;
-}
 
 // GET /api/community/decks/[id]/ratings
 export async function GET(_req: Request, { params }: Params) {
@@ -124,7 +107,9 @@ export async function POST(request: Request, { params }: Params) {
     if (authResult.error) return authResult.error;
     const userId = authResult.session.user.id;
 
-    const parsed = RatingSchema.safeParse(await request.json());
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.ok) return jsonBody.response;
+    const parsed = RatingSchema.safeParse(jsonBody.value);
     if (!parsed.success) {
       return NextResponse.json(
         { error: z.flattenError(parsed.error).fieldErrors },

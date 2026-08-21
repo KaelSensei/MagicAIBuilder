@@ -18,6 +18,7 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import type { PlaytestSession } from "@/lib/playtest/analytics";
 import { parseSessionInput, summarizeSessions } from "@/lib/playtest/session-input";
+import { readJsonBody } from "@/lib/api/json-body";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -103,7 +104,9 @@ export async function POST(request: Request, { params }: Params) {
     if (authResult.error) return authResult.error;
     const userId = authResult.session.user.id;
 
-    const parsed = parseSessionInput(await request.json());
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.ok) return jsonBody.response;
+    const parsed = parseSessionInput(jsonBody.value);
     if (!parsed.ok) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }

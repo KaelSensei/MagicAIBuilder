@@ -9,9 +9,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { findVisibleDeck } from "@/lib/community/visible-deck";
+import { COMMENT_SELECT } from "@/lib/community/comment-select";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { validateCommentBody } from "@/lib/community/comments";
+import { readJsonBody } from "@/lib/api/json-body";
 import {
   toDeckComment,
   type DeckCommentRow,
@@ -20,36 +23,6 @@ import {
 type Params = { params: Promise<{ id: string; commentId: string }> };
 
 const EditSchema = z.object({ body: z.string() });
-
-const COMMENT_SELECT = {
-  id: true,
-  deckId: true,
-  userId: true,
-  parentId: true,
-  body: true,
-  createdAt: true,
-  updatedAt: true,
-  user: { select: { name: true, username: true, image: true } },
-} as const;
-
-/**
- * Loads a deck and confirms the viewer may see it.
- *
- * @param deckId Deck identifier from the route.
- * @param viewerId Signed-in user id.
- * @returns The deck when visible, otherwise null.
- */
-async function findVisibleDeck(deckId: string, viewerId: string | null) {
-  const deck = await prisma.deck.findUnique({
-    where: { id: deckId },
-    select: { id: true, userId: true, isPublic: true },
-  });
-
-  if (!deck) return null;
-  if (!deck.isPublic && deck.userId !== viewerId) return null;
-
-  return deck;
-}
 
 // PATCH /api/community/decks/[id]/comments/[commentId]
 export async function PATCH(request: Request, { params }: Params) {
@@ -65,7 +38,9 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    const parsed = EditSchema.safeParse(await request.json());
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.ok) return jsonBody.response;
+    const parsed = EditSchema.safeParse(jsonBody.value);
     if (!parsed.success) {
       return NextResponse.json(
         { error: z.flattenError(parsed.error).fieldErrors },

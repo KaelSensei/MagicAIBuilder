@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { patchCardSchema } from "@/lib/validation/card";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { readJsonBody } from "@/lib/api/json-body";
 
 type Params = { params: Promise<{ id: string; cardId: string }> };
 
@@ -53,7 +54,11 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Card not found" }, { status: 404 });
     }
 
-    const raw = await request.json();
+    const jsonBody = await readJsonBody(request);
+
+    if (!jsonBody.ok) return jsonBody.response;
+
+    const raw = jsonBody.value;
     const parsed = patchCardSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(
