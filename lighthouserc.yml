@@ -46,17 +46,19 @@ ci:
 
   assert:
     assertions:
-      # Baseline measured 2026-08-21 on this machine (median of 3, desktop):
+      # Baseline, median of 3, desktop preset:
       #
       #   URL             PERF  A11Y  BP   SEO
-      #   /                 97    96  100  100
-      #   /fr               97    96  100  100
-      #   /auth/signin      98    91  100  100
+      #   /                 98    96  100  100   (97 on a workstation)
+      #   /fr               98    96  100  100   (97)
+      #   /auth/signin      97    91  100  100   (98)
       #
-      # Performance is a warning, not an error, for the first landing only:
-      # 97 here says nothing about what a shared GitHub runner scores. Promote
-      # it to `error` once a few CI runs have established the real baseline.
-      "categories:performance": ["warn", { "minScore": 0.9 }]
+      # Measured on a GitHub runner 2026-08-21, workstation figures in
+      # brackets. The two agree within a point and the spread across three
+      # runs on the same URL was also one point, so the desktop preset's
+      # simulated throttling does normalise the hardware — this asserts as an
+      # error, not a warning, with seven points of headroom.
+      "categories:performance": ["error", { "minScore": 0.9 }]
 
       # 0.9 is a ratchet, not a standard. It is set below the current 91 so the
       # gate lands green; the known failures are real and still open:
