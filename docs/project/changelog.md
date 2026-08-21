@@ -9,6 +9,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-21: Release #519 — the accent token split, and two defects no audit could see
+
+#### Fixed
+
+- `fix(a11y): split --accent into a background token and a text token (#519)` — **accessibility is now 100 on all three audited pages, with no failing audits** (was 96 / 96 / 96).
+  - `--accent` had two jobs with opposite requirements: white-on-accent needs `L <= 0.183`, accent-on-surface needs `L >= 0.195`. **No overlap**, so at #6366f1 it was 4.46:1 and 4.42:1 — failing both by a hair, and unfixable by moving one value. 91 `text-[var(--accent)]` call sites swept across 46 files onto a new `--accent-text`.
+  - Every token moved by the **minimum** that crosses 4.5:1, hue and saturation untouched — `--accent` shifted 0.2% in lightness. An accessibility fix should not redesign the brand.
+- **`--accent-hover` was 2.98:1 under white text in the dark theme** — _worse than the resting state_, so hovering an accent button made its own label harder to read. **No audit can report this**: Lighthouse measures the page as rendered and never a hover, focus or active state. Found by computing the ratio from the tokens. The dark theme now darkens on hover, as the light theme already did.
+- **Light `--text-secondary` was 4.28:1 on `--surface-hover`.** Found by the new test, not by inspection — and the first solve for it targeted `#ffffff`, passed at 5.04, and was wrong. Light-theme text is bound by the **darkest** surface. That is the third instance of the same mistake: `#7c5cfc` cleared `--black` and failed `--surface` in #516; this is its mirror image.
+
+#### Changed
+
+- **The Lighthouse harness was under-reporting, and the gate hid it.** SEO read 92 on `/` and `/fr` after #517 because `NEXT_PUBLIC_BASE_URL` was unset: `siteUrl()` fell back to the production domain while the page was served from localhost, so every canonical pointed off-origin and the audit reported "points to another hreflang location". It cleared the 0.9 threshold, so nothing complained — **and a standing failure like that would have hidden a real canonical defect behind it.** The variable is now set on the build _and_ the audit step, since `NEXT_PUBLIC_*` is inlined at build time. Confirmed at 100 across the board.
+- **Accessibility, best practices and SEO raised from 0.9 to 0.95**, the follow-through the #516 config comment promised. Performance stays at 0.9 — the only category that moves with load.
+- `src/styles/contrast.test.ts` guards both themes: white on `--accent` and `--accent-hover`, and `--accent-text` and `--text-secondary` against all three surfaces each. **Sixteen assertions, ten of which failed before this change.**
+
 ### 2026-08-21: Release batch #514–#517 — a gate that was never running, and three defects it found on its first pass
 
 #### Added
