@@ -1,9 +1,9 @@
 name: Lighthouse CI
 
-# Unlike ci.yml and sonar.yml, this also runs on PRs into `staging` and `dev`.
-# The project flow sends every feature PR to `staging` first, so a workflow
-# limited to `main` would never see the change that introduced a regression —
-# it would only fire on the promotion, after review.
+# Feature branches target `staging`, which is then promoted to `dev` and on to
+# `main`. Scoped to `main` alone, this workflow first saw a change on the
+# promotion PR — after review, after it had already landed in the integration
+# branch. Every gate now runs on the PR that actually carries the change.
 on:
   push:
     branches: [main]
