@@ -15,7 +15,8 @@
   --surface: #16152a;
   --border: rgba(124,92,252,0.22);
   --text: #e2dff5;
-  --muted: #6b6890;
+  /* #6b6890 was 3.41:1 on --surface; body copy here is small text. */
+  --muted: #8280ab;
   --white: #f0eeff;
 
   background: var(--black);
@@ -164,7 +165,8 @@
 .section-label {
   font-family: var(--font-cinzel), 'Cinzel', serif;
   font-size: 0.7rem; letter-spacing: 0.35em; text-transform: uppercase;
-  color: var(--gold-dark); margin-bottom: 1.5rem;
+  /* --gold-dark is 2.23:1 on --surface. It stays in the gradients below. */
+  color: var(--gold-light); margin-bottom: 1.5rem;
 }
 
 /* --- Pain section --- */
