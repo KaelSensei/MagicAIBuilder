@@ -42,6 +42,9 @@ jobs:
         env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/test
           SKIP_ENV_VALIDATION: true
+          # Inlined into the bundle at build time, so it has to be set here and
+          # not only on the audit step.
+          NEXT_PUBLIC_BASE_URL: http://localhost:3000
 
       # No database is started. Every audited URL is a public page and the
       # session strategy is JWT, so an anonymous visit issues no query — see
@@ -52,6 +55,13 @@ jobs:
           DATABASE_URL: postgresql://user:pass@localhost:5432/test
           AUTH_SECRET: lighthouse-ci-secret
           NEXT_PUBLIC_APP_URL: http://localhost:3000
+          # Must match the origin the audit fetches from. Left unset, siteUrl()
+          # falls back to the production domain while the page is served from
+          # localhost, so every canonical points off-origin and Lighthouse
+          # reports "points to another hreflang location" — SEO 92 instead of
+          # 100, for a mismatch that cannot happen in production. Worse, that
+          # standing failure would hide a real canonical defect behind it.
+          NEXT_PUBLIC_BASE_URL: http://localhost:3000
 
       # `include-hidden-files` is not optional here: `.lighthouseci` is a
       # dot-directory and upload-artifact@v4 skips those by default, so the

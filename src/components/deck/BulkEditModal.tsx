@@ -181,7 +181,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
           {/* Header */}
           <div className="flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[var(--accent)]" />
+              <FileText className="w-4 h-4 text-[var(--accent-text)]" />
               <Dialog.Title className="text-base font-semibold text-[var(--text-primary)]">
                 {t("bulkEdit.title", { name: deck.name })}
               </Dialog.Title>

@@ -90,7 +90,7 @@ export function CompanionZone({ deck, deckViewMode }: CompanionZoneProps) {
       </div>
       {deckViewMode !== "grid" && (
         <CardTooltip card={companion}>
-          <span className="text-sm text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent)] transition-colors">
+          <span className="text-sm text-[var(--text-primary)] font-medium cursor-default hover:text-[var(--accent-text)] transition-colors">
             {companion.name}
           </span>
         </CardTooltip>

@@ -214,7 +214,7 @@ function StepBudget({
             <div className="text-sm opacity-70 mt-0.5">{opt.subtitle}</div>
           </div>
           {value === opt.value && (
-            <Check className="w-5 h-5 text-[var(--accent)] shrink-0" />
+            <Check className="w-5 h-5 text-[var(--accent-text)] shrink-0" />
           )}
         </button>
       ))}
@@ -356,7 +356,7 @@ function StepBracket({
             </div>
           </div>
           {value === opt.value && (
-            <Check className="w-4 h-4 shrink-0 text-[var(--accent)]" />
+            <Check className="w-4 h-4 shrink-0 text-[var(--accent-text)]" />
           )}
         </button>
       ))}
@@ -479,7 +479,7 @@ function StepCommander({
               {localizedCommander?.typeLine ?? commanderCard.type_line}
             </div>
           </div>
-          <Check className="w-4 h-4 text-[var(--accent)] ml-auto" />
+          <Check className="w-4 h-4 text-[var(--accent-text)] ml-auto" />
         </div>
       )}
 
@@ -527,7 +527,7 @@ function StepLoading({
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
           >
-            <Sparkles className="w-12 h-12 text-[var(--accent)]" />
+            <Sparkles className="w-12 h-12 text-[var(--accent-text)]" />
           </motion.div>
 
           <div>
@@ -796,7 +796,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[var(--accent)]" />
+                <Sparkles className="w-5 h-5 text-[var(--accent-text)]" />
                 <Dialog.Title className="text-sm font-semibold text-[var(--text-secondary)]">
                   {t("wizard.title")}
                 </Dialog.Title>
@@ -843,7 +843,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                         setBuildError(null);
                         resetBuild();
                       }}
-                      className="mt-6 text-sm text-[var(--accent)] hover:underline"
+                      className="mt-6 text-sm text-[var(--accent-text)] hover:underline"
                     >
                       {t("wizard.tryAgain")}
                     </button>

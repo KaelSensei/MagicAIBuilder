@@ -108,7 +108,7 @@ export async function ComprehensiveRulesView({
                       className={cn(
                         "block px-2 py-1 rounded text-sm transition-colors",
                         chapter.number === activeChapter?.number
-                          ? "bg-[var(--accent)]/15 text-[var(--accent)] font-medium"
+                          ? "bg-[var(--accent)]/15 text-[var(--accent-text)] font-medium"
                           : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                       )}
                     >
@@ -127,7 +127,7 @@ export async function ComprehensiveRulesView({
             className={cn(
               "block px-2 py-1 rounded text-sm font-semibold transition-colors",
               showGlossary
-                ? "bg-[var(--accent)]/15 text-[var(--accent)]"
+                ? "bg-[var(--accent)]/15 text-[var(--accent-text)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             )}
           >

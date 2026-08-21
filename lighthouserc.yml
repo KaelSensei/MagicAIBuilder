@@ -46,30 +46,27 @@ ci:
 
   assert:
     assertions:
-      # Baseline, median of 3, desktop preset:
+      # Baseline, median of 3, desktop preset, measured 2026-08-21:
       #
       #   URL             PERF  A11Y  BP   SEO
-      #   /                 98    96  100  100   (97 on a workstation)
-      #   /fr               98    96  100  100   (97)
-      #   /auth/signin      97    91  100  100   (98)
+      #   /                 97   100  100  100
+      #   /fr               97   100  100  100
+      #   /auth/signin      98   100  100  100
       #
-      # Measured on a GitHub runner 2026-08-21, workstation figures in
-      # brackets. The two agree within a point and the spread across three
-      # runs on the same URL was also one point, so the desktop preset's
-      # simulated throttling does normalise the hardware — this asserts as an
-      # error, not a warning, with seven points of headroom.
+      # Performance is the only category asserted below its measured value. A
+      # GitHub runner scored 98/98/97 against this workstation's 97/97/98, and
+      # the spread across three runs on one URL was a single point — close
+      # enough to gate on, but it is still the one number that moves with load.
       "categories:performance": ["error", { "minScore": 0.9 }]
 
-      # 0.9 is a ratchet, not a standard. It is set below the current 91 so the
-      # gate lands green; the known failures are real and still open:
-      #   - colour contrast on `.section-label` (#4f35c2 on #07060f, 2.5:1)
-      #     and on footer links (#6b6890 on #07060f, 3.8:1)
-      #   - the accent button and links at 4.42–4.46:1, just under 4.5
-      #   - the sign-up link on /auth/signin is distinguished by colour alone
-      # Raise this as they are fixed.
-      "categories:accessibility": ["error", { "minScore": 0.9 }]
-      "categories:best-practices": ["error", { "minScore": 0.9 }]
-      "categories:seo": ["error", { "minScore": 0.9 }]
+      # Raised from 0.9 to 0.95 on 2026-08-21, once the `--accent` split closed
+      # the last colour-contrast failure. Every audited page now scores 100 on
+      # accessibility, best practices and SEO, so 0.95 leaves headroom for a
+      # single minor audit regressing without pinning the gate to perfection.
+      # Performance stays at 0.9: it is the only category that moves with load.
+      "categories:accessibility": ["error", { "minScore": 0.95 }]
+      "categories:best-practices": ["error", { "minScore": 0.95 }]
+      "categories:seo": ["error", { "minScore": 0.95 }]
 
   upload:
     # Deliberately not `temporary-public-storage`, which would publish every

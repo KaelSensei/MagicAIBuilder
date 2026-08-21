@@ -108,7 +108,7 @@ function DeckListRow({
       <td className="min-w-[280px]">
         <Link
           href={`/builder/${deck.id}`}
-          className="block text-[var(--text-primary)] hover:text-[var(--accent)]"
+          className="block text-[var(--text-primary)] hover:text-[var(--accent-text)]"
         >
           <div className="font-medium">{deck.name}</div>
           <div className="mt-0.5 text-xs text-[var(--text-secondary)]">
@@ -166,7 +166,7 @@ function DeckListRow({
             type="button"
             onClick={(e) => onDuplicate(e, deck.id)}
             disabled={duplicatingId === deck.id}
-            className="rounded p-1 text-[var(--text-secondary)] hover:bg-[var(--accent)]/20 hover:text-[var(--accent)] disabled:opacity-60"
+            className="rounded p-1 text-[var(--text-secondary)] hover:bg-[var(--accent)]/20 hover:text-[var(--accent-text)] disabled:opacity-60"
             aria-label={t("card.duplicate", { name: deck.name })}
           >
             {duplicatingId === deck.id ? (

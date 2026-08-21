@@ -190,7 +190,7 @@ export function AddToCollectionDialog() {
                         className={cn(
                           "px-2 py-1 text-xs rounded border transition-colors",
                           condition === c
-                            ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10"
+                            ? "border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent)]/10"
                             : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                         )}
                       >

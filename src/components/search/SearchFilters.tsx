@@ -263,7 +263,7 @@ export function SearchFilters({
             className={cn(
               "px-2 h-8 rounded transition-all border-2 text-xs font-medium",
               filters.landFilter
-                ? "border-[var(--accent)] text-[var(--accent)]"
+                ? "border-[var(--accent)] text-[var(--accent-text)]"
                 : "border-[var(--border)] text-[var(--text-secondary)] opacity-70 hover:opacity-100"
             )}
           >
@@ -524,7 +524,7 @@ export function SearchFilters({
             type="button"
             onClick={handleSavePreset}
             disabled={!presetName.trim()}
-            className="text-xs px-2 py-1 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="text-xs px-2 py-1 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             {tf("savePreset")}
           </button>

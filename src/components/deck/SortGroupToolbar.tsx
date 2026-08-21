@@ -70,7 +70,7 @@ export function SortGroupToolbar() {
               className={cn(
                 "flex items-center gap-0.5 px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
                 isActive
-                  ? "bg-[var(--accent)]/20 text-[var(--accent)]"
+                  ? "bg-[var(--accent)]/20 text-[var(--accent-text)]"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
               )}
               title={t("actions.sortByField", { label, hint: activeSortHint }).trim()}
@@ -101,7 +101,7 @@ export function SortGroupToolbar() {
             className={cn(
               "px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
               groupBy === value
-                ? "bg-[var(--accent)]/20 text-[var(--accent)]"
+                ? "bg-[var(--accent)]/20 text-[var(--accent-text)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
             )}
             title={t("actions.groupByField", { label: t(`sort.groups.${labelKey}`) })}

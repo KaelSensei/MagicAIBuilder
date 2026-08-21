@@ -72,7 +72,7 @@ export function MaybeboardPanel({
                   <button
                     type="button"
                     onClick={() => onMoveToDecks(card.id)}
-                    className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-[var(--accent)]/50 text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors"
+                    className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-[var(--accent)]/50 text-[var(--accent-text)] hover:bg-[var(--accent)]/10 transition-colors"
                     title={t("maybeboard.moveToDeck")}
                   >
                     <ArrowRight className="w-3 h-3" />

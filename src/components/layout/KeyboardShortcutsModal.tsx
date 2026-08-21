@@ -53,7 +53,7 @@ export function KeyboardShortcutsModal() {
     >
       {/* Header with icon */}
       <div className="flex items-center gap-2 px-5 py-4 border-b border-[var(--border)]">
-        <Keyboard className="w-4 h-4 text-[var(--accent)]" />
+        <Keyboard className="w-4 h-4 text-[var(--accent-text)]" />
         <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">
           {t("shortcuts.title")}
         </h2>

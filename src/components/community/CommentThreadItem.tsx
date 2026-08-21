@@ -48,7 +48,7 @@ export function CommentThreadItem({
       <div className="flex flex-wrap items-center gap-2">
         <UserChip {...comment.author} />
         {comment.isDeckOwner && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-[var(--accent)]/40 text-[var(--accent)] font-medium">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-[var(--accent)]/40 text-[var(--accent-text)] font-medium">
             {t("ownerBadge")}
           </span>
         )}
@@ -78,7 +78,7 @@ export function CommentThreadItem({
             <button
               type="button"
               onClick={() => setMode("reply")}
-              className="text-xs text-[var(--accent)] hover:underline"
+              className="text-xs text-[var(--accent-text)] hover:underline"
             >
               {t("reply")}
             </button>

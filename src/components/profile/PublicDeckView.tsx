@@ -68,7 +68,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
               <button
                 type="button"
                 onClick={() => void handleCopyLink()}
-                className="flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline"
+                className="flex items-center gap-1.5 text-xs text-[var(--accent-text)] hover:underline"
               >
                 {copied ? (
                   <Check className="w-3.5 h-3.5 text-green-400" aria-hidden="true" />
@@ -80,7 +80,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
               {deck.isOwner && (
                 <Link
                   href={`/builder/${deck.id}`}
-                  className="flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline"
+                  className="flex items-center gap-1.5 text-xs text-[var(--accent-text)] hover:underline"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   {t("share.editDeck")}
@@ -133,7 +133,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
             {authorUsername ? (
               <Link
                 href={`/u/${authorUsername}`}
-                className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+                className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent-text)] transition-colors"
               >
                 {authorName}
               </Link>
@@ -176,7 +176,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
                   className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--surface)] transition-colors"
                 >
                   {card.quantity > 1 && (
-                    <span className="text-xs font-medium text-[var(--accent)] w-4 shrink-0">
+                    <span className="text-xs font-medium text-[var(--accent-text)] w-4 shrink-0">
                       {card.quantity}×
                     </span>
                   )}
