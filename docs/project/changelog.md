@@ -9,6 +9,34 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-21: Release batch #514–#517 — a gate that was never running, and three defects it found on its first pass
+
+#### Added
+
+- `chore(ci): Lighthouse CI (#514)` — performance, accessibility, best practices and SEO scored on every PR. `lhci autorun` builds the app, serves it with `next start` and audits `/`, `/fr` and `/auth/signin`, median of three runs, desktop preset, no database — every audited URL is public and the session strategy is JWT, so an anonymous visit issues no query. All four categories assert as **errors** at 0.9.
+  - **The `warn` on performance was retired on measured data, not on nerve.** It shipped as a warning because a workstation's 97 says nothing about a shared runner. The first CI run answered it: 98/98/97 against 97/97/98, with one point of spread across three runs on the same URL. The preset's simulated throttling normalises the hardware, so it gates.
+  - **The audited URLs were not deterministic.** next-intl negotiates the locale from `Accept-Language`, so on a French Chrome `/` redirected to `/fr` and `/auth/signin` to `/fr/auth/signin` — three requested URLs collapsed into two audited pages, and English was never measured at all. On an Ubuntu runner it would have been the mirror image. `extraHeaders` pins it.
+  - **The first CI run was green with an empty artifact.** Nine reports written, none uploaded: `.lighthouseci` is a dot-directory and `actions/upload-artifact@v4` skips hidden files by default, while `if-no-files-found` defaults to `warn`. **The fourth instance of the shape already catalogued three times** — a failure whose output is indistinguishable from a legitimate empty result. Now `include-hidden-files: true` **and** `if-no-files-found: error`.
+  - `.prettierignore`, which the repository did not have. lint-staged formats `*.yml`, so adding the first dependency in a while rewrote `pnpm-lock.yaml` wholesale — 14k lines of churn that pnpm undoes on the next install.
+- `feat(seo): canonical and hreflang on the public pages (#517)` — self-referential canonical per locale, one `hreflang` per served locale plus `x-default`, on the landing page, public decks, public profiles and commander deck discovery. Verified against a production build, not only unit tests.
+  - **Deliberately not set on the locale layout.** Layout metadata is inherited by every page that does not override it, so a canonical there would declare every deck, profile and commander page to be the homepage — worse than declaring nothing, and the obvious way to write this change. Only `metadataBase` is global, because it is a base URL and not an instruction.
+  - `siteUrl()` reads `NEXT_PUBLIC_BASE_URL`, the variable `robots.ts` and `sitemap.ts` already use. A canonical disagreeing with the sitemap hands a crawler two answers for one page.
+  - Dormant locales are excluded: advertising a language the middleware does not route sends a crawler to a redirect or a 404.
+
+#### Fixed
+
+- `fix(ci): run the gates on PRs into staging, not only main (#515)` — **`ci.yml` and `sonar.yml` were scoped to `branches: [main]` while every feature PR targets `staging`.** No PR carrying a change had ever been linted, typechecked, tested or analysed; the gates fired only on the promotion, after review, once the code was already in the integration branch. Found because Lighthouse was the only repository check present on #514 — the new workflow was the only one that listed `staging`. All three now trigger on `[main, dev, staging]`.
+- `fix(a11y): readable contrast on the landing and sign-in pages (#516)` — three of the four defects Lighthouse reported on its first pass. `.section-label` was 2.23:1 on `--surface`; `--muted`, which carries body copy across seventeen rules, was 3.41:1; the sign-up link was distinguished from its sentence by colour alone.
+  - `--gold-dark` itself is untouched — it also ends two gradients and a card border, where lightening it would alter the design rather than the accessibility.
+  - **`contrast.test.ts` exists for a narrower trap than "check the contrast".** `#7c5cfc` clears 4.5:1 against `--black` at 4.60 and fails against `--surface` at 4.08, so a token verified against the darkest background alone reads as safe and is not. Two of the four candidates costed for this fix had exactly that shape. Every text token is now checked against every background it can land on.
+  - Only small text is asserted at 4.5:1. Several headings use `--gold` at `clamp(1.8rem, 4vw, 3rem)`, which WCAG allows at 3:1 — asserting 4.5:1 across every `color:` declaration would fail on those and teach the next reader to weaken the rule.
+
+#### Known
+
+- **`--accent` is the remaining contrast failure and cannot be fixed by moving one value.** #6366f1 is 4.46:1 under white button text and 4.42:1 as text on the app background: the button wants it darker, the link wants it lighter. Needs a second derived token and 179 call sites across 46 files. The a11y ratchet stays at 0.9 until then.
+- **A fourth silent-read instance, in `sitemap.ts`.** A bare `catch {}` around the Prisma read yields a one-URL sitemap indistinguishable from a site that has one page. The sitemap also omits the public decks, profiles and commander pages that #517 just made canonical.
+- **The e2e flake got a controlled data point.** The gate failed on `back navigation returns to home` while a `next start` server left over from a Lighthouse verification held the host; killing it and re-running **the same commit** went green. Still not reproducible on demand, but the first recurrence where the load was known and removable rather than inferred afterwards.
+
 ### 2026-08-20: Release batch #505–#510 — silent failures hunted down, DeckEditor split in four
 
 #### Fixed

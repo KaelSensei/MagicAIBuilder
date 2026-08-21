@@ -14,11 +14,16 @@ This is a **rough** first-pass weighting using a lightweight RICE/MoSCoW hybrid:
 - **Weight 2**: Nice-to-have / polish
 - **Weight 1**: Experimental / long-term / speculative
 
-Top candidates right now (reviewed 2026-08-19):
+Top candidates right now (reviewed 2026-08-21):
 
 - ~~**Finish i18n string extraction**~~ _(done — 2026-08-20, #497 and #498)_. **Correction: this was marked done at #455 on 2026-08-19 and was not.** The builder page — the app's main screen — never called `useTranslations` at all, and `ui/Modal` and `ui/Toast` shipped English Close / Dismiss labels shared by every modal and every toast in the app. Fifteen hardcoded accessible attributes remained across nine components. The gap survived a review because nothing fails when a string is hardcoded: it renders, in English, silently. `src/i18n/catalog.test.ts` now guards the catalogs, but **no test can see a string that was never extracted** — the remaining defence is the grep in #498's description
 - ~~**Diagnose the intermittent e2e failure**~~ _(diagnosed and mitigated — 2026-08-20, #495)_: the mechanism was in the **harness**, not the app. `openBuilder` returned the moment `waitForURL` saw the address change, before the route was usable, so a click could land while React was mid-hydration — the listener has attached and calls `preventDefault`, but the router cannot act yet, and the navigation is simply lost. Load-sensitive by construction, which is why hypothesis 3 kept half-fitting: compile timing was a _trigger_, never the mechanism. Still **not a captured failure** — do not run other Docker builds or repo-wide greps during the gate. The production-build question is no longer blocking
 - ~~**Localized card data via Scryfall `lang`**~~ _(done — 2026-08-20, #480 deck rows, #481 tooltip, #482 playtest zones, #484 proxies, on top of #415 / #456)_
+- ~~**Lighthouse CI**~~ _(done — 2026-08-21, #514)_: performance, accessibility, best practices and SEO all assert as errors at 0.9 on every PR. A GitHub runner scores within one point of a workstation, so the desktop preset does normalise the hardware
+- ~~**Canonical and hreflang**~~ _(done — 2026-08-21, #517)_. **Correction: the SEO entry has claimed a canonical URL since 2026-03-26 and there was none** — `canonical`, `alternates` and `metadataBase` appeared nowhere in `src`. The third instance of a roadmap line describing code that did not exist
+- ~~**No gate ran on the PRs that carry the change**~~ _(fixed — 2026-08-21, #515)_: `ci.yml` and `sonar.yml` were scoped to `branches: [main]` while every feature PR targets `staging`, so nothing was linted, typechecked, tested or analysed until the promotion. Found because Lighthouse was the only check present on #514
+- **Split `--accent` into a background token and a text token** — Weight **3**. The last colour-contrast failure Lighthouse reports, on all three audited pages: #6366f1 is 4.46:1 under white button text and 4.42:1 as text on the app background. The two pull the token in opposite directions, so no single value fixes both. Needs a second derived token and a sweep of 91 `text-[var(--accent)]` and 88 `bg-[var(--accent)]` call sites across 46 files — a visual change to the whole app, which is why it was not folded into #516. The a11y ratchet stays at 0.9 until it lands
+- **Put the public pages in the sitemap** — Weight **3**. `sitemap.ts` lists only `/` and `/share/<token>`, so public decks, profiles and commander pages are now canonical but absent from it. It also swallows a Prisma failure in a bare `catch {}` — a one-URL sitemap that looks deliberate, the same silent-read shape catalogued three times already
 - **UptimeRobot** — Weight **4** (early production safety net, now that a database exists again)
 - **Migrate `setRequestLocale` to `next/root-params`** — Weight **2**. next-intl deprecates it, but the replacement ships `unstable_rootParams` and a stub `.d.ts` in Next 15.5.22. The three SonarCloud warnings are marked accepted with that reason. Revisit when it stabilises
 - ~~**Structured logging (Pino)**~~ _(done — 2026-08-19, #458)_
@@ -80,7 +85,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ### Level 2: When you have real users
 
-- [ ] **Vercel Analytics**: real-world performance metrics per page and device: LCP, CLS, INP (Core Web Vitals); free on the hobby plan if deploying to Vercel
+- [x] **Vercel Analytics** _(already in place — verified against the code 2026-08-21)_: `@vercel/speed-insights@2` is a dependency, `<SpeedInsights />` is mounted in `src/app/[locale]/layout.tsx`, and `security-headers.ts` whitelists its script in the CSP. It reports exactly the metrics this entry describes — LCP, CLS, INP per page and device. **This entry was open while the feature shipped**, the mirror image of the three 2026-08-16 corrections: those claimed done with no implementing code, this had the code and no tick. Found while auditing the roadmap for #514, not by anything failing
 
 - [ ] **PostHog**: open-source product analytics, self-hostable; track which features users actually use, identify abandoned flows (e.g. "80% of users never click AI Suggestions -> UX problem"); free up to 1M events/month — **recommended second: understand how people actually use the tool**
 
@@ -88,7 +93,9 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 - [ ] **LogRocket**: session replay — watch exactly what users did before an error occurred; useful for understanding UX issues in the deck builder; free tier available
 
-- [ ] **Lighthouse CI**: add to GitHub Actions to score performance/accessibility/SEO on every PR; catches regressions before they ship; pairs well with Next.js; **recommended** to keep Next.js perf under control
+- [x] **Lighthouse CI** _(done — 2026-08-21, #514)_: `lhci autorun` builds the app, serves it with `next start` and audits `/`, `/fr` and `/auth/signin` — median of three runs, desktop preset, no database (every audited URL is public and the session strategy is JWT, so an anonymous visit issues no query). Performance, accessibility, best practices and SEO all assert as **errors** at 0.9; the runner scores 98/98/97 against a workstation's 97/97/98, and the spread across three runs on one URL is a single point, so the preset's simulated throttling normalises the hardware well enough to gate on.
+  - **The audited URLs were not deterministic at first.** next-intl negotiates the locale from `Accept-Language`, so on a French Chrome `/` redirected to `/fr` and `/auth/signin` to `/fr/auth/signin` — three requested URLs collapsed into two audited pages and English was never measured. `extraHeaders` pins it.
+  - **The first CI run was green with an empty artifact** (#514, second commit). `.lighthouseci` is a dot-directory, `actions/upload-artifact@v4` skips hidden files by default, and `if-no-files-found` defaults to `warn`: nine reports written, none uploaded, silently. The same shape as the three silent-read failures already catalogued. Now `include-hidden-files: true` **and** `if-no-files-found: error`
 
 - [ ] **Chromatic**: visual regression testing — takes screenshots of shadcn/ui components on every PR and diffs them; catches unintended UI changes; free for open-source
 
@@ -110,7 +117,15 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 
 ## SEO & Discoverability
 
-- [x] **SEO optimization** _(done — 2026-03-26, #153)_: `robots.txt` (blocks private routes), dynamic sitemap with shared decks, enriched metadata (keywords, Twitter card, canonical URL), JSON-LD `SoftwareApplication` structured data, dynamic Open Graph image via `/api/og` edge route
+- [x] **SEO optimization** _(done — 2026-03-26, #153)_: `robots.txt` (blocks private routes), dynamic sitemap with shared decks, enriched metadata (keywords, Twitter card), JSON-LD `SoftwareApplication` structured data, dynamic Open Graph image via `/api/og` edge route
+
+  > **Correction (2026-08-21).** This entry claimed a **canonical URL** since 2026-03-26. `canonical`, `alternates` and `metadataBase` appeared nowhere in `src` — the string was in the roadmap and not in the code. Built in #517.
+
+- [x] **Canonical and hreflang on the public pages** _(done — 2026-08-21, #517)_: self-referential canonical per locale plus one `hreflang` per served locale and an `x-default`, on the landing page, public decks, public profiles and commander deck discovery. English is served at the root and French behind `/fr`, so the same page has two addresses and nothing told a crawler they were one page in two languages.
+  - **Deliberately not set on the locale layout.** Layout metadata is inherited by every page that does not override it, so a canonical there would declare every deck, profile and commander page to be the homepage — worse than declaring nothing, and the obvious way to write this change. Only `metadataBase` is global, because it is a base URL and not an instruction.
+  - `siteUrl()` reads `NEXT_PUBLIC_BASE_URL`, the variable `robots.ts` and `sitemap.ts` already use. A canonical disagreeing with the sitemap hands a crawler two answers for one page.
+  - Dormant locales are excluded: advertising a language the middleware does not route sends a crawler to a redirect or a 404.
+  - **Remaining**: `sitemap.ts` lists only `/` and `/share/<token>`, so public decks, profiles and commander pages are indexed by canonical but absent from the sitemap; it also swallows a Prisma failure in a bare `catch {}`, which produces a one-URL sitemap that looks intentional
 
 ---
 
