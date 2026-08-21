@@ -20,7 +20,7 @@ function ComboCard({ combo }: { readonly combo: SpellbookVariant }) {
         {combo.cards.map((cardName) => (
           <span
             key={cardName}
-            className="px-1.5 py-0.5 text-xs rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 font-medium"
+            className="px-1.5 py-0.5 text-xs rounded bg-[var(--accent)]/10 text-[var(--accent-text)] border border-[var(--accent)]/20 font-medium"
           >
             {cardName}
           </span>

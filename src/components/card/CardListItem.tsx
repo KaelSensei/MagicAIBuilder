@@ -37,7 +37,7 @@ function TurnOverButton({
       aria-label={label}
       title={label}
       className={cn(
-        "shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors text-[10px] leading-none opacity-0 group-hover:opacity-100"
+        "shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] transition-colors text-[10px] leading-none opacity-0 group-hover:opacity-100"
       )}
     >
       <RefreshCw

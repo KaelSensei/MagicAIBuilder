@@ -578,7 +578,7 @@ export default function BuilderPage() {
                 </p>
                 <Link
                   href="/decks"
-                  className="text-[var(--accent)] hover:underline text-sm"
+                  className="text-[var(--accent-text)] hover:underline text-sm"
                 >
                   ← {t("deckNotFound.back")}
                 </Link>
@@ -656,7 +656,7 @@ export default function BuilderPage() {
               className="group flex items-center gap-1.5"
               title={t("actions.rename")}
             >
-              <h1 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+              <h1 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)] transition-colors">
                 {deck.name}
               </h1>
               <Pencil className="w-3 h-3 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1027,7 +1027,7 @@ export default function BuilderPage() {
                 className={cn(
                   "flex-1 flex flex-col items-center gap-0.5 py-2 text-xs transition-colors",
                   mobilePanel === tab.id
-                    ? "text-[var(--accent)] border-t-2 border-[var(--accent)] -mt-px"
+                    ? "text-[var(--accent-text)] border-t-2 border-[var(--accent)] -mt-px"
                     : "text-[var(--text-secondary)]"
                 )}
               >

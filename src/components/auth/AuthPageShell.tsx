@@ -20,7 +20,7 @@ export function AuthPageShell({ subtitle, error, children }: AuthPageShellProps)
         {/* Logo */}
         <div className="flex flex-col items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
-            <Layers className="w-8 h-8 text-[var(--accent)]" />
+            <Layers className="w-8 h-8 text-[var(--accent-text)]" />
             <span className="font-bold text-xl text-[var(--text-primary)]">
               MagicAIBuilder
             </span>
