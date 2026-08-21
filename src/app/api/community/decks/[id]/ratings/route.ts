@@ -23,6 +23,7 @@ import {
   validateReview,
 } from "@/lib/ratings/ratings";
 import { toDeckRating, toDeckReview, type DeckRatingRow } from "@/lib/ratings/mappers";
+import { readJsonBody } from "@/lib/api/json-body";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -124,7 +125,9 @@ export async function POST(request: Request, { params }: Params) {
     if (authResult.error) return authResult.error;
     const userId = authResult.session.user.id;
 
-    const parsed = RatingSchema.safeParse(await request.json());
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.ok) return jsonBody.response;
+    const parsed = RatingSchema.safeParse(jsonBody.value);
     if (!parsed.success) {
       return NextResponse.json(
         { error: z.flattenError(parsed.error).fieldErrors },

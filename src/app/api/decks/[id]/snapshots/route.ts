@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { readJsonBody, readRecord } from "@/lib/api/json-body";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -39,8 +40,11 @@ export async function POST(request: Request, { params }: Params) {
     const ownership = await requireDeckOwner(id);
     if (ownership.error) return ownership.error;
 
-    const body = await request.json();
-    const rawName = body?.name;
+    const jsonBody = await readJsonBody(request);
+
+    if (!jsonBody.ok) return jsonBody.response;
+
+    const rawName = readRecord(jsonBody.value).name;
 
     if (!rawName || typeof rawName !== "string") {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
