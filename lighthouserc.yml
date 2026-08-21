@@ -1,0 +1,77 @@
+# Lighthouse CI — see .github/workflows/lighthouse.yml
+ci:
+  collect:
+    startServerCommand: pnpm start
+    startServerReadyPattern: Ready in
+    startServerReadyTimeout: 120000
+
+    # Public, database-free pages only. The session strategy is JWT, so an
+    # anonymous request issues no query and `next start` needs no database.
+    # Everything else in the app either sits behind the auth middleware or
+    # reads Prisma on render.
+    url:
+      - http://localhost:3000/
+      - http://localhost:3000/fr
+      - http://localhost:3000/auth/signin
+
+    # Median of three. A single run swings a few points on a shared runner.
+    numberOfRuns: 3
+
+    settings:
+      # Desktop, not the mobile default. The landing page is the surface worth
+      # watching and its heavy work is desktop-side; mobile emulation mostly
+      # measures the throttling model.
+      preset: desktop
+      chromeFlags: --no-sandbox --disable-dev-shm-usage
+
+      # Without this the audited URLs are not deterministic. next-intl
+      # negotiates the locale from Accept-Language, so on a French Chrome `/`
+      # redirects to `/fr` and `/auth/signin` to `/fr/auth/signin` — three
+      # requested URLs collapsed into two audited pages, and the English
+      # locale was never measured at all.
+      extraHeaders:
+        Accept-Language: en
+
+      skipAudits:
+        # Meaningless over plain HTTP on localhost.
+        - uses-http2
+        - redirects-http
+        # Source maps are not emitted for the production bundle.
+        - valid-source-maps
+        # Measures the harness, not the app: no database is started, so
+        # /api/auth/session answers 500, and `_vercel/speed-insights/script.js`
+        # 404s anywhere outside Vercel. Both are expected here and neither
+        # says anything about the code under review.
+        - errors-in-console
+
+  assert:
+    assertions:
+      # Baseline measured 2026-08-21 on this machine (median of 3, desktop):
+      #
+      #   URL             PERF  A11Y  BP   SEO
+      #   /                 97    96  100  100
+      #   /fr               97    96  100  100
+      #   /auth/signin      98    91  100  100
+      #
+      # Performance is a warning, not an error, for the first landing only:
+      # 97 here says nothing about what a shared GitHub runner scores. Promote
+      # it to `error` once a few CI runs have established the real baseline.
+      "categories:performance": ["warn", { "minScore": 0.9 }]
+
+      # 0.9 is a ratchet, not a standard. It is set below the current 91 so the
+      # gate lands green; the known failures are real and still open:
+      #   - colour contrast on `.section-label` (#4f35c2 on #07060f, 2.5:1)
+      #     and on footer links (#6b6890 on #07060f, 3.8:1)
+      #   - the accent button and links at 4.42–4.46:1, just under 4.5
+      #   - the sign-up link on /auth/signin is distinguished by colour alone
+      # Raise this as they are fixed.
+      "categories:accessibility": ["error", { "minScore": 0.9 }]
+      "categories:best-practices": ["error", { "minScore": 0.9 }]
+      "categories:seo": ["error", { "minScore": 0.9 }]
+
+  upload:
+    # Deliberately not `temporary-public-storage`, which would publish every
+    # report to a Google-hosted public URL. The workflow keeps them as a build
+    # artifact instead.
+    target: filesystem
+    outputDir: .lighthouseci
