@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { siteUrl } from "@/lib/seo/alternates";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
@@ -38,6 +39,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  // Relative URLs below (the OG image) resolve against this. Without it Next
+  // warns and falls back to localhost, so shared links carried a dead preview.
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "MagicAIBuilder — Commander Deck Builder",
     template: "%s | MagicAIBuilder",
