@@ -5,30 +5,39 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-08-20                             |
+| Last Updated  | 2026-08-21                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-08-20)
+## Current metrics (2026-08-21)
 
-| Metric              | Value                                                  |
-| ------------------- | ------------------------------------------------------ |
-| Unit tests          | 2221 across 155 files                                  |
-| E2E tests           | 58 passing, 1 skipped (`@external` / `@perf` excluded) |
-| Coverage            | ~94.5%                                                 |
-| SonarCloud          | 0 open issues                                          |
-| Source files        | 302 (`.ts`/`.tsx`, excluding tests)                    |
-| Components          | 143 (`.tsx`, excluding tests)                          |
-| API routes          | 39                                                     |
-| Prisma models       | 20                                                     |
-| Prisma migrations   | 23                                                     |
-| Hooks               | 24                                                     |
-| Locales served      | 2 (`en`, `fr`) + 8 dormant                             |
-| Production database | Neon (Vercel Marketplace)                              |
+| Metric              | Value                                                                     |
+| ------------------- | ------------------------------------------------------------------------- |
+| Unit tests          | 2249 across 157 files                                                     |
+| E2E tests           | 58 passing, 1 skipped (`@external` / `@perf` excluded)                    |
+| Coverage            | ~94.5%                                                                    |
+| SonarCloud          | 0 open issues                                                             |
+| Source files        | 303 (`.ts`/`.tsx`, excluding tests)                                       |
+| Components          | 143 (`.tsx`, excluding tests)                                             |
+| API routes          | 39                                                                        |
+| Prisma models       | 20                                                                        |
+| Prisma migrations   | 23                                                                        |
+| Hooks               | 24                                                                        |
+| Locales served      | 2 (`en`, `fr`) + 8 dormant                                                |
+| Production database | Neon (Vercel Marketplace)                                                 |
+| CI workflows        | 3 (CI, SonarCloud, Lighthouse) — all on PRs into `staging`, `dev`, `main` |
 
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Known open issues
+
+- **No gate ran on the PRs that carry the change.** ~~Resolved 2026-08-21 (#515).~~ `ci.yml` and `sonar.yml` were both scoped to `pull_request: branches: [main]` while the documented flow sends every feature and fix PR to `staging`. So nothing was linted, typechecked, tested or analysed until the `staging → dev → main` promotion — after review, once the code had already landed in the integration branch. Found because Lighthouse (#514) was the only repository check present on its own PR. All three workflows now trigger on `[main, dev, staging]`; `push` stays on `main` so the badge and SonarCloud's main-branch snapshot keep one source.
+  - **CodeRabbit still reports "reviews are disabled for this base branch" on staging PRs.** There is no `.coderabbit.yaml` in the repository — that setting lives in their dashboard and needs an owner action.
+- **`--accent` is the last colour-contrast failure, and it cannot be fixed by moving one value.** #6366f1 is 4.46:1 under white button text and 4.42:1 as text on the app background: the button wants the token darker, the link wants it lighter. It needs a second derived token and a sweep of 91 `text-[var(--accent)]` and 88 `bg-[var(--accent)]` call sites across 46 files. Deliberately not folded into #516 — it is a visual change to the whole app. The a11y ratchet in `lighthouserc.yml` stays at 0.9 until it lands.
+- **`sitemap.ts` lists only `/` and `/share/<token>`.** Public decks, profiles and commander deck pages are public per the middleware, are now canonical per #517, and are absent from the sitemap. It also wraps its Prisma read in a bare `catch {}`, so a database failure yields a one-URL sitemap indistinguishable from a site that genuinely has one page — **a fourth instance of the silent-read shape**, in output nobody looks at. It carries two `as` casts on `prisma.deck` as well.
+- **Two environment variables name the same thing.** `NEXT_PUBLIC_BASE_URL` drives `robots.ts`, `sitemap.ts` and now `siteUrl()`; `NEXT_PUBLIC_APP_URL` drives share links and `viewer-request.ts`. A deployment that sets only one gets half its URLs right, and nothing reports it.
+- **`deck-builder.spec.ts:9` is a permanent `test.skip`.** `PLAYWRIGHT_TEST=1` bypasses auth server-side only; the browser never receives a NextAuth client session, and `decks/page.tsx` early-returns unless `sessionStatus === "authenticated"`, so the deck list sits on "Loading…" forever. Its neighbour asserts on that same list, so that one is only shallowly green. Fixing it needs a real login or a `storageState` fixture.
+- **A client disconnect is logged as a 500.** `POST /api/decks/:id/cards` calls `await request.json()` inside the shared `try`, so a request stream truncated by teardown ("Unexpected end of JSON input") returns a 500 and an error log indistinguishable from a genuine server fault. Latent noise now; it will misattribute a real incident later.
 
 - ~~**`SONAR_TOKEN` is not set in GitHub secrets.**~~ **Resolved 2026-08-16 (#442).** The secret is set and the scan step now fails rather than skipping. A `SonarCloud Code Analysis` check appears on each PR — it never did before. Note the two tokens are different things: the gitignored `.env.sonar` drives `pnpm sonar` locally and does nothing for CI.
 - **Three `setRequestLocale` / `requestLocale` deprecations are marked accepted in SonarCloud**, not fixed. next-intl points to `next/root-params`, which in Next 15.5.22 exports `unstable_rootParams` and ships a stub `.d.ts`. Migrating would trade a MINOR warning for an unstable API in the same request-locale plumbing that carries the intermittent navigation failure. Reversible — reopen them if the trade looks different later.
@@ -36,6 +45,7 @@
   - **The fix reduced it; it did not eliminate it.** On 2026-08-20, after #495, the gate still failed four times and passed on retry each time — three of those on the `search` specs (`waitForURL` timing out inside `openBuilder`) and, notably, **once on `back navigation returns to home` itself**, the very spec #495 was written against, with the address still on `/builder/`.
   - So `networkidle` is **not a reliable hydration proxy**, or the swallowed-click mechanism is not the whole story. The mechanism above still fits every observation and the fix still removed most of the failures — but it is not closed, and it should not be described as closed.
   - **Do not run other Docker builds or repo-wide greps during the gate.** Every recurrence so far has been on a loaded host.
+  - **2026-08-21, a controlled data point for the load hypothesis.** The gate failed on `back navigation returns to home` while a `next start` production server, left running from a Lighthouse verification, was still holding port 3000. The stray process was killed and **the same commit re-run green** with nothing else changed. Not proof — the flake has never been reproducible on demand — but it is the first recurrence where the load was known, self-inflicted and removable, rather than inferred afterwards.
   - The production-build question (un-tying the e2e auth bypass from `NODE_ENV`) is **no longer blocking** and can be judged on its own merits.
 - **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
 - **Five transitive `high` npm advisories, unfixable without majors** (2026-08-20): `sharp` and `postcss` are pinned by `next@15`, `defu` and `deepmerge-ts` by `prisma@6`. `pnpm audit` runs in CI since #486 — **critical blocks, high only reports**. Tighten to `--audit-level=high` once Next 16 / Prisma 7 land.
