@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { patchDeckSchema, PatchDeckInput } from "@/lib/validation/deck";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { readJsonBody } from "@/lib/api/json-body";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -57,7 +58,11 @@ export async function PATCH(request: Request, { params }: Params) {
     const result = await requireAuth();
     if (result.error) return result.error;
 
-    const raw = await request.json();
+    const jsonBody = await readJsonBody(request);
+
+    if (!jsonBody.ok) return jsonBody.response;
+
+    const raw = jsonBody.value;
     const parsed = patchDeckSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(

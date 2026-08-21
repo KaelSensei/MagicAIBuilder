@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { readJsonBody } from "@/lib/api/json-body";
 
 const addCardSchema = z.object({
   scryfallId: z.string().min(1),
@@ -38,7 +39,11 @@ export async function POST(request: Request) {
     const result = await requireAuth();
     if (result.error) return result.error;
 
-    const body = await request.json();
+    const jsonBody = await readJsonBody(request);
+
+    if (!jsonBody.ok) return jsonBody.response;
+
+    const body = jsonBody.value;
     const parsed = addCardSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(

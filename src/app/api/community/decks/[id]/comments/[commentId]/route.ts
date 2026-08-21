@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { validateCommentBody } from "@/lib/community/comments";
+import { readJsonBody } from "@/lib/api/json-body";
 import {
   toDeckComment,
   type DeckCommentRow,
@@ -65,7 +66,9 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    const parsed = EditSchema.safeParse(await request.json());
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.ok) return jsonBody.response;
+    const parsed = EditSchema.safeParse(jsonBody.value);
     if (!parsed.success) {
       return NextResponse.json(
         { error: z.flattenError(parsed.error).fieldErrors },

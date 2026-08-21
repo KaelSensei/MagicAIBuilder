@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { readJsonBody } from "@/lib/api/json-body";
 
 /** GET /api/user/profile — Get current user's profile */
 export async function GET() {
@@ -58,7 +59,11 @@ export async function PATCH(request: Request) {
     const result = await requireAuth();
     if (result.error) return result.error;
 
-    const body = await request.json();
+    const jsonBody = await readJsonBody(request);
+
+    if (!jsonBody.ok) return jsonBody.response;
+
+    const body = jsonBody.value;
     const parsed = updateProfileSchema.safeParse(body);
 
     if (!parsed.success) {
