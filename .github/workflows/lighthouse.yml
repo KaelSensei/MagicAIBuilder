@@ -1,0 +1,62 @@
+name: Lighthouse CI
+
+# Unlike ci.yml and sonar.yml, this also runs on PRs into `staging` and `dev`.
+# The project flow sends every feature PR to `staging` first, so a workflow
+# limited to `main` would never see the change that introduced a regression —
+# it would only fire on the promotion, after review.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, dev, staging]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lighthouse:
+    name: Performance, a11y and SEO audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # No `version:` here on purpose — see the note in ci.yml.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/test
+          SKIP_ENV_VALIDATION: true
+
+      # No database is started. Every audited URL is a public page and the
+      # session strategy is JWT, so an anonymous visit issues no query — see
+      # the URL list in lighthouserc.json.
+      - name: Run Lighthouse CI
+        run: pnpm lighthouse
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/test
+          AUTH_SECRET: lighthouse-ci-secret
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 14

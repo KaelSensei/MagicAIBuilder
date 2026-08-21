@@ -23,7 +23,8 @@
     "db:reset": "prisma migrate reset --force",
     "git:prune": "bash scripts/git-prune.sh",
     "db:seed": "tsx prisma/seed.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lighthouse": "lhci autorun"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -73,6 +74,7 @@
     }
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.3.1",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
