@@ -36,7 +36,9 @@ const storedDataSchema = z.object({
   cards: z.array(
     z.object({
       name: z.string().min(1),
-      inclusion: z.number().finite(),
+      // No `.finite()`: Zod 4 deprecated it because `z.number()` already
+      // rejects `NaN` and both infinities on its own.
+      inclusion: z.number(),
     })
   ),
 });
