@@ -356,10 +356,12 @@
     "aiBuilding": "AI is building your deck…",
     "thinking": "Thinking…",
     "commanderLabel": "Commander: {name}",
-    "cardProgress": "{count} / 99 cards…",
+    "cardProgress": "{count} / {total} карт…",
     "generatingDeck": "Generating deck…",
     "tryAgain": "Try again",
-    "buildCancelled": "Build was cancelled or failed."
+    "buildCancelled": "Build was cancelled or failed.",
+    "addingCards": "Добавление карт в колоду…",
+    "demoDeckNotice": "Демонстрационная колода — в этом развёртывании не настроен ИИ-провайдер, поэтому список является заглушкой."
   },
   "ratings": {
     "title": "Community Rating",
