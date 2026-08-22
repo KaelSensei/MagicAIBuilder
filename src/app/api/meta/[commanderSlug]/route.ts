@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { fetchEdhrecData, fetchTournamentData } from "@/lib/meta/fetch";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { EdhrecData, TournamentData } from "@/lib/meta/fetch";
 import { logger } from "@/lib/logger";
+import { toJsonPayload } from "@/lib/api/json-payload";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const RATE_LIMIT = 30;
@@ -48,14 +48,9 @@ async function readFreshMetaCache(commanderSlug: string, source: MetaSource): Pr
   return null;
 }
 
-function metaCachePayload(data: EdhrecData | TournamentData): Prisma.InputJsonValue {
-  const encoded = JSON.stringify(data);
-  return JSON.parse(encoded);
-}
-
 async function persistMetaCache(commanderSlug: string, source: MetaSource, data: EdhrecData | TournamentData) {
   const expiresAt = new Date(Date.now() + CACHE_TTL_MS);
-  const payload = metaCachePayload(data);
+  const payload = toJsonPayload(data);
   try {
     await prisma.metaCache.upsert({
       where: { commanderSlug_source: { commanderSlug, source } },

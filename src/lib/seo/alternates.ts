@@ -46,7 +46,23 @@ export function siteUrl(): string {
       ? FALLBACK_SITE_URL
       : configured;
 
-  return base.replace(/\/+$/, "");
+  return withoutTrailingSlashes(base);
+}
+
+/**
+ * `url` with every trailing slash removed.
+ *
+ * A loop rather than `replace(/\/+$/, "")`. That pattern backtracks: on a
+ * string ending in many slashes the engine retries the run from each position
+ * in turn, which is quadratic in the number of slashes (SonarCloud S8786). The
+ * input is an environment variable rather than anything a visitor controls, so
+ * this is not a live denial-of-service — but the loop is linear, obviously
+ * correct, and costs nothing.
+ */
+function withoutTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url.charAt(end - 1) === "/") end--;
+  return url.slice(0, end);
 }
 
 /**
@@ -89,9 +105,20 @@ export function buildAlternates(
   };
 }
 
+/**
+ * Served locales as a set of plain strings.
+ *
+ * `SUPPORTED_LOCALES` is `readonly ["en", "fr"]`, so `.includes(value)` on a
+ * `string` does not typecheck — which is why the check below was written as
+ * `.some()` in the first place. Widening through a `Set<string>` satisfies both
+ * the type checker and SonarCloud's S7765 without an `as`, and turns a scan
+ * into a hash lookup.
+ */
+const SERVED_LOCALES: ReadonlySet<string> = new Set(SUPPORTED_LOCALES);
+
 /** Narrows a raw route param to a served locale. */
 export function isSupportedLocale(value: string): value is SupportedLocale {
-  return SUPPORTED_LOCALES.some((supported) => supported === value);
+  return SERVED_LOCALES.has(value);
 }
 
 /**
