@@ -1,23 +1,12 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
 import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
 import { readJsonBody, readRecord } from "@/lib/api/json-body";
-
-/**
- * Round-trips a validated value into Prisma's JSON input type.
- *
- * Same idiom as `metaCachePayload` in the meta route: `JSON.parse` returns
- * `any`, which satisfies `InputJsonValue` without an assertion, and the
- * round-trip drops anything non-serialisable.
- */
-function asJsonPayload(value: unknown): Prisma.InputJsonValue {
-  return JSON.parse(JSON.stringify(value));
-}
+import { toJsonPayload } from "@/lib/api/json-payload";
 
 
 const WRITE_RATE_LIMIT = 60; // max cache writes
@@ -112,8 +101,8 @@ export async function POST(request: Request) {
 
     const entry = await prisma.scryfallSearchCache.upsert({
       where: { cacheKey },
-      update: { data: asJsonPayload(data), cachedAt: new Date() },
-      create: { cacheKey, data: asJsonPayload(data) },
+      update: { data: toJsonPayload(data), cachedAt: new Date() },
+      create: { cacheKey, data: toJsonPayload(data) },
     });
 
     return NextResponse.json(entry, { status: 201 });
