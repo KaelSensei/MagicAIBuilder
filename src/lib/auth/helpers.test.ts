@@ -45,13 +45,22 @@ describe("requireAuth", () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "user-1", name: "Kael", email: "kael@test.com" },
     });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "user-1",
+      name: "Kael",
+      email: "kael@test.com",
+      image: null,
+    });
 
     const result = await requireAuth();
 
     expect(result.error).toBeUndefined();
     expect(result.session?.user.id).toBe("user-1");
     expect(result.session?.user.name).toBe("Kael");
-    expect(mockUserFindUnique).not.toHaveBeenCalled();
+    expect(mockUserFindUnique).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      select: { id: true, name: true, email: true, image: true },
+    });
   });
 
   it("returns 401 error when session is null", async () => {
@@ -89,16 +98,55 @@ describe("requireAuth", () => {
     expect(result.session?.user.id).toBe("user-1");
   });
 
-  it("trusts the JWT session ID without DB verification", async () => {
+  it("verifies the JWT session ID against the database", async () => {
     mockAuth.mockResolvedValueOnce({
       user: { id: "oauth-user", name: "Kael", email: "Kael@Test.com", image: "https://example.com/avatar.png" },
+    });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "oauth-user",
+      name: "Kael",
+      email: "kael@test.com",
+      image: "https://example.com/avatar.png",
     });
 
     const result = await requireAuth();
 
     expect(result.error).toBeUndefined();
     expect(result.session?.user.id).toBe("oauth-user");
-    expect(mockUserFindUnique).not.toHaveBeenCalled();
+    expect(mockUserFindUnique).toHaveBeenCalledOnce();
+    expect(mockUserUpsert).not.toHaveBeenCalled();
+  });
+
+  // A signed JWT outlives the row it points at. Handing that id straight to a
+  // write produced a foreign-key violation — a 500 on every deck creation.
+  it("re-resolves by email when the JWT's user row no longer exists", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "deleted-user", name: "Kael", email: "Kael@Test.com" },
+    });
+    mockUserFindUnique.mockResolvedValueOnce(null);
+    mockUserUpsert.mockResolvedValueOnce({
+      id: "rebuilt-user",
+      name: "Kael",
+      email: "kael@test.com",
+      image: null,
+    });
+
+    const result = await requireAuth();
+
+    expect(result.error).toBeUndefined();
+    // The caller gets the id that actually exists, not the stale one.
+    expect(result.session?.user.id).toBe("rebuilt-user");
+    expect(mockUserUpsert).toHaveBeenCalledOnce();
+  });
+
+  it("returns 401 when the stale id has no email to recover from", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "deleted-user" } });
+    mockUserFindUnique.mockResolvedValueOnce(null);
+
+    const result = await requireAuth();
+
+    expect(result.session).toBeUndefined();
+    expect(result.error?.status).toBe(401);
     expect(mockUserUpsert).not.toHaveBeenCalled();
   });
 
@@ -221,6 +269,12 @@ describe("requireAuth — Playwright test bypass", () => {
     vi.stubEnv("PLAYWRIGHT_TEST", "1");
     vi.stubEnv("NODE_ENV", "test");
     mockAuth.mockResolvedValueOnce({ user: { id: "real-user", email: "real@test.com" } });
+    mockUserFindUnique.mockResolvedValueOnce({
+      id: "real-user",
+      name: null,
+      email: "real@test.com",
+      image: null,
+    });
 
     const result = await requireAuth();
 

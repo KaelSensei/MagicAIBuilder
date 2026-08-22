@@ -8,7 +8,12 @@
     "startBuildingDescription": "Create your first Commander deck with live bracket scoring and Game Changers detection.",
     "createDeck": "Create Deck",
     "newDeck": "New Deck",
-    "deleteConfirm": "Delete this deck? This cannot be undone."
+    "deleteConfirm": "Delete this deck? This cannot be undone.",
+    "loadFailedTitle": "Não foi possível carregar seus decks",
+    "loadFailedDescription": "O servidor rejeitou a requisição, então esta lista pode estar incompleta. Seus decks não foram perdidos — tente novamente em instantes.",
+    "loadFailedSubtitle": "Lista de decks indisponível",
+    "retry": "Tentar novamente",
+    "createFailed": "Não foi possível criar o deck — {reason}"
   },
   "controls": {
     "grid": "Grid",

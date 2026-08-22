@@ -8,7 +8,12 @@
     "startBuildingDescription": "Create your first Commander deck with live bracket scoring and Game Changers detection.",
     "createDeck": "Create Deck",
     "newDeck": "New Deck",
-    "deleteConfirm": "Delete this deck? This cannot be undone."
+    "deleteConfirm": "Delete this deck? This cannot be undone.",
+    "loadFailedTitle": "Impossibile caricare i tuoi mazzi",
+    "loadFailedDescription": "Il server ha rifiutato la richiesta, quindi questo elenco potrebbe essere incompleto. I tuoi mazzi non sono persi: riprova tra un momento.",
+    "loadFailedSubtitle": "Elenco dei mazzi non disponibile",
+    "retry": "Riprova",
+    "createFailed": "Impossibile creare il mazzo — {reason}"
   },
   "controls": {
     "grid": "Grid",
