@@ -327,7 +327,22 @@
     "noTournamentDecks": "No recent tournament decks found",
     "selectCommander": "Select a commander to see meta data",
     "addCard": "Add {name}",
-    "addNamedCard": "Add {name}"
+    "addNamedCard": "Add {name}",
+    "shifts": {
+      "title": "Meta shifts",
+      "since": "vs {date}",
+      "empty": "No history yet — movements appear once this commander has been looked up on two separate days",
+      "pending": "Recorded once so far — one more day and the movements appear here",
+      "steadyOnly": "Nothing moved by more than a point",
+      "error": "Could not load meta shifts",
+      "points": "{points} pts",
+      "atLeast": "≥ {points} pts",
+      "atMost": "≤ {points} pts",
+      "entered": "New in the list",
+      "left": "Out of the list",
+      "enteredHint": "Below the list before, so the rise is a lower bound",
+      "leftHint": "Below the list now, so the fall is an upper bound"
+    }
   },
   "snapshots": {
     "title": "History",
