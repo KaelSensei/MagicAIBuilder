@@ -30,6 +30,7 @@ model User {
   comments       DeckComment[]
   following      UserFollow[]    @relation("Following")
   followers      UserFollow[]    @relation("Followers")
+  apiKeys        ApiKey[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 }
@@ -176,6 +177,39 @@ model MetaCache {
   @@unique([commanderSlug, source])
   @@index([commanderSlug])
   @@index([expiresAt])
+}
+
+/// A credential for the public REST API, owned by a user.
+///
+/// Only the SHA-256 of the token is stored — a database dump must not hand
+/// over working credentials. `tokenHash` is unique because it is also the
+/// lookup index: verification is one indexed read, not a scan over every key.
+model ApiKey {
+  id String @id @default(cuid())
+  /// What the key is for, as its owner labelled it ("CLI on my laptop").
+  name          String
+  /// SHA-256 of the token, hex. The token itself exists only in the response
+  /// that created it.
+  tokenHash     String   @unique
+  /// `mab_` plus the first 8 characters, so a key can be recognised in a list
+  /// without being usable from it.
+  displayPrefix String
+  /// Granted scopes. Present from the first key so that shipping a write
+  /// endpoint later cannot silently widen keys already in the wild.
+  scopes        String[] @default(["decks:read"])
+  /// Set when the owner revokes the key. Kept rather than deleted so a
+  /// compromised key's usage stays auditable.
+  revokedAt     DateTime?
+  /// Optional expiry; a key with none is valid until revoked.
+  expiresAt     DateTime?
+  /// Coarse — written at most once an hour per key, so ordinary traffic does
+  /// not turn every read into a write.
+  lastUsedAt    DateTime?
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
 }
 
 /// Retained EDHRec distribution, one row per commander per day.

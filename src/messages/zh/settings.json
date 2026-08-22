@@ -1,0 +1,31 @@
+{
+  "apiKeys": {
+    "title": "API keys",
+    "intro": "Keys let a program read your decks through the MagicAIBuilder API. Each key belongs to you alone and can be revoked at any time.",
+    "nameLabel": "What is this key for?",
+    "namePlaceholder": "CLI on my laptop",
+    "scopesLabel": "Permissions",
+    "expiryLabel": "Expires",
+    "expiryNever": "Until I revoke it",
+    "expiryDays": "In {days} days",
+    "create": "Create key",
+    "existing": "Your keys",
+    "loading": "Loading your keys…",
+    "empty": "No keys yet. Create one above to start using the API.",
+    "revoke": "Revoke",
+    "revokeNamed": "Revoke the key {name}",
+    "confirmRevoke": "Revoke for good",
+    "cancel": "Cancel",
+    "revoked": "Revoked",
+    "expired": "Expired",
+    "lastUsed": "last used {date}",
+    "neverUsed": "never used",
+    "tokenOnce": {
+      "title": "Copy this key now — it will not be shown again",
+      "body": "Only a hash of the key is stored, so nobody, including us, can show it to you a second time. If you lose it, revoke it and create another.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "dismiss": "I have saved it"
+    }
+  }
+}
