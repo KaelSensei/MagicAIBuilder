@@ -356,10 +356,12 @@
     "aiBuilding": "AI is building your deck…",
     "thinking": "Thinking…",
     "commanderLabel": "Commander: {name}",
-    "cardProgress": "{count} / 99 cards…",
+    "cardProgress": "{count} / {total} 张牌…",
     "generatingDeck": "Generating deck…",
     "tryAgain": "Try again",
-    "buildCancelled": "Build was cancelled or failed."
+    "buildCancelled": "Build was cancelled or failed.",
+    "addingCards": "正在将卡牌加入你的套牌…",
+    "demoDeckNotice": "演示套牌 — 此部署未配置 AI 服务商，因此这是一份占位牌表。"
   },
   "ratings": {
     "title": "Community Rating",

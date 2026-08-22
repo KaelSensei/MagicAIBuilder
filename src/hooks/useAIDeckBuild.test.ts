@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useAIDeckBuild } from "./useAIDeckBuild";
+import { useAIDeckBuild, countCopies } from "./useAIDeckBuild";
+import type { BuildResult } from "./useAIDeckBuild";
 
 function makeStream(lines: string[]) {
   const encoder = new TextEncoder();
@@ -146,6 +147,128 @@ describe("useAIDeckBuild", () => {
     });
 
     expect(result.current.state.cards.length).toBeGreaterThan(0);
+    vi.unstubAllGlobals();
+  });
+
+  it("returns the commander with the result instead of only the card list", async () => {
+    const events = [
+      JSON.stringify({ type: "commander", name: "Muldrotha, the Gravetide" }),
+      JSON.stringify({ type: "card", name: "Sol Ring", category: "ramp", quantity: 1 }),
+      JSON.stringify({ type: "done", totalCards: 1, source: "ai" }),
+    ];
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: makeStream(events) }));
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["U", "B", "G"],
+        strategy: "graveyard",
+        bracket: 3,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(built).not.toBeNull();
+    expect(built!.commander).toBe("Muldrotha, the Gravetide");
+    expect(built!.source).toBe("ai");
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps card quantities so basics are not collapsed to singletons", async () => {
+    const events = [
+      JSON.stringify({ type: "card", name: "Island", category: "land", quantity: 12 }),
+      JSON.stringify({ type: "card", name: "Sol Ring", category: "ramp", quantity: 1 }),
+      JSON.stringify({ type: "done", totalCards: 13, source: "ai" }),
+    ];
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: makeStream(events) }));
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    await act(async () => {
+      await result.current.build({
+        colors: ["U"],
+        strategy: "control",
+        bracket: 2,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(countCopies(result.current.state.cards)).toBe(13);
+    expect(result.current.state.totalCards).toBe(13);
+    vi.unstubAllGlobals();
+  });
+
+  it("defaults a missing quantity to one copy", async () => {
+    const events = [
+      JSON.stringify({ type: "card", name: "Sol Ring", category: "ramp" }),
+      JSON.stringify({ type: "done", totalCards: 1, source: "ai" }),
+    ];
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: makeStream(events) }));
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    await act(async () => {
+      await result.current.build({
+        colors: ["W"],
+        strategy: "aggro",
+        bracket: 2,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(result.current.state.cards[0]?.quantity).toBe(1);
+    vi.unstubAllGlobals();
+  });
+
+  it("reports demo mode so the UI can warn the user", async () => {
+    const events = [
+      JSON.stringify({ type: "card", name: "Sol Ring", category: "ramp", quantity: 1 }),
+      JSON.stringify({ type: "done", totalCards: 1, source: "demo" }),
+    ];
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: makeStream(events) }));
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["R"],
+        strategy: "aggro",
+        bracket: 2,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(built!.source).toBe("demo");
+    expect(result.current.state.source).toBe("demo");
+    vi.unstubAllGlobals();
+  });
+
+  it("errors when the stream is cut short instead of importing a partial deck", async () => {
+    const events = [
+      JSON.stringify({ type: "commander", name: "Atraxa, Praetors' Voice" }),
+      JSON.stringify({ type: "card", name: "Sol Ring", category: "ramp", quantity: 1 }),
+      // no "done" event — the platform killed the function mid-stream
+    ];
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: makeStream(events) }));
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["W", "U", "B", "G"],
+        strategy: "midrange",
+        bracket: 2,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(built).toBeNull();
+    expect(result.current.state.error).toBe("The AI build ended early");
+    expect(result.current.state.isLoading).toBe(false);
     vi.unstubAllGlobals();
   });
 });
