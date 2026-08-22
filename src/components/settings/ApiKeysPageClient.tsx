@@ -187,7 +187,10 @@ export function ApiKeysPageClient() {
 
   const canSubmit = name.trim().length > 0 && scopes.length > 0 && !isSubmitting;
 
-  async function submit(event: React.FormEvent) {
+  // `SyntheticEvent`, not `FormEvent`: React's own types deprecate the latter
+  // ("FormEvent doesn't actually exist"). A handler taking the base event is
+  // still assignable to `onSubmit`.
+  async function submit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) return;
     const created = await createKey({

@@ -158,8 +158,16 @@ export async function authenticateApiKey(request: Request): Promise<ApiAuthResul
     };
   }
 
+  if (!key) {
+    return { ok: false, response: unauthorized("Invalid API key") };
+  }
+
+  // Kept separate from the guard above rather than folded into one condition:
+  // `!key || key.revokedAt !== null` collapses to the optional chain
+  // `key?.revokedAt !== null`, which is equivalent but narrows nothing, so
+  // every `key.` access below would need its own null check.
   const now = new Date();
-  if (!key || key.revokedAt !== null || (key.expiresAt !== null && key.expiresAt <= now)) {
+  if (key.revokedAt !== null || (key.expiresAt !== null && key.expiresAt <= now)) {
     return { ok: false, response: unauthorized("Invalid API key") };
   }
 
