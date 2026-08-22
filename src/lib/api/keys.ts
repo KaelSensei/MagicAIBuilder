@@ -87,6 +87,6 @@ export function isWellFormedApiKey(token: string): boolean {
  */
 export function parseBearerToken(header: string | null): string | null {
   if (!header) return null;
-  const match = /^Bearer[ ]+(\S+)$/i.exec(header);
+  const match = /^Bearer +(\S+)$/i.exec(header);
   return match?.[1] ?? null;
 }

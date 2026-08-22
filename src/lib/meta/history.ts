@@ -207,7 +207,8 @@ export function computeMetaShifts(
   const ordered = [...snapshots].toSorted(
     (a, b) => a.capturedOn.getTime() - b.capturedOn.getTime()
   );
-  const current = ordered[ordered.length - 1];
+  const current = ordered.at(-1);
+  if (!current) return null;
   const earliestAllowed = current.capturedOn.getTime() - windowDays * MS_PER_DAY;
   const baseline = ordered.find(
     (snapshot) => snapshot.capturedOn.getTime() >= earliestAllowed
