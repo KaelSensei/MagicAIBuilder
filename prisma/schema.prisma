@@ -212,6 +212,29 @@ model ApiKey {
   @@index([userId])
 }
 
+/// Retained EDHRec distribution, one row per commander per day.
+///
+/// `MetaCache` holds one row per commander and overwrites it on every refresh,
+/// so yesterday's distribution is destroyed the moment today's arrives — there
+/// was nothing left to difference. This keeps the history instead.
+///
+/// EDHRec only: the tournament feed is the five most recent events, a rolling
+/// window rather than a distribution, and differencing it reports only that
+/// events happened.
+model MetaSnapshot {
+  id            String   @id @default(cuid())
+  commanderSlug String
+  /// UTC midnight of the capture day — the row's identity, so refreshing a
+  /// commander five times in a day still records one point, not five.
+  capturedOn    DateTime @db.Date
+  /// `EdhrecData` as fetched: `{ cards: [{ name, inclusion }] }`
+  data          Json
+  createdAt     DateTime @default(now())
+
+  @@unique([commanderSlug, capturedOn])
+  @@index([commanderSlug, capturedOn])
+}
+
 /// A card owned by the user in their physical collection
 model CollectionCard {
   id         String    @id @default(cuid())

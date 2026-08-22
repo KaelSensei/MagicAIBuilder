@@ -327,7 +327,22 @@
     "noTournamentDecks": "Aucun deck de tournoi récent trouvé",
     "selectCommander": "Sélectionnez un commandant pour voir les données méta",
     "addCard": "Ajouter {name}",
-    "addNamedCard": "Ajouter {name}"
+    "addNamedCard": "Ajouter {name}",
+    "shifts": {
+      "title": "Évolution du méta",
+      "since": "vs {date}",
+      "empty": "Pas encore d'historique — les mouvements apparaissent dès que ce commandant a été consulté deux jours différents",
+      "pending": "Un seul relevé pour l'instant — encore un jour et les mouvements s'affichent ici",
+      "steadyOnly": "Rien n'a bougé de plus d'un point",
+      "error": "Impossible de charger l'évolution du méta",
+      "points": "{points} pts",
+      "atLeast": "≥ {points} pts",
+      "atMost": "≤ {points} pts",
+      "entered": "Nouveau dans la liste",
+      "left": "Sorti de la liste",
+      "enteredHint": "Sous la liste auparavant : la hausse est une borne inférieure",
+      "leftHint": "Sous la liste désormais : la baisse est une borne supérieure"
+    }
   },
   "snapshots": {
     "title": "Historique",

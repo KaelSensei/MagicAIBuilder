@@ -15,12 +15,20 @@ import {
   AlertCircle,
   TrendingUp,
   Users,
+  ArrowUpRight,
+  ArrowDownRight,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMetaAnalysis } from "@/hooks/useMetaAnalysis";
+import { useMetaShifts } from "@/hooks/useMetaShifts";
 import { cn } from "@/components/ui/utils";
 import { Link } from "@/i18n/navigation";
 import { commanderToSlug, type MetaCard, type TournamentDeck } from "@/lib/meta/fetch";
+import { shiftMagnitude, type MetaShift } from "@/lib/meta/history";
+
+/** Movements shown in the panel; the report itself is not truncated. */
+const MAX_SHIFTS_SHOWN = 8;
 
 interface MetaPanelProps {
   readonly commanderName: string | null;
@@ -127,6 +135,107 @@ export function TournamentDeckRow({ deck }: { readonly deck: TournamentDeck }) {
   );
 }
 
+/**
+ * One card's movement between the two compared snapshots.
+ *
+ * The four variants are rendered differently on purpose. `rose` and `fell`
+ * carry a measured delta; `entered` and `left` carry a **bound**, because the
+ * card is listed at only one end and EDHRec's list is truncated at 20 — the
+ * unseen end is somewhere below that snapshot's cut-off and was never recorded.
+ * Printing "−78 pts" for a card that merely dropped out would report a collapse
+ * that the data cannot support, so those two read "≤" / "≥" and say why on hover.
+ */
+function MetaShiftRow({ shift }: { readonly shift: MetaShift }) {
+  const t = useTranslations("deck");
+  const points = Math.round(shiftMagnitude(shift) * 100);
+
+  switch (shift.kind) {
+    case "rose":
+    case "fell": {
+      const up = shift.kind === "rose";
+      const Icon = up ? ArrowUpRight : ArrowDownRight;
+      return (
+        <ShiftLine
+          name={shift.name}
+          tone={up ? "up" : "down"}
+          icon={<Icon className="w-3 h-3" aria-hidden="true" />}
+          label={t("meta.shifts.points", { points: up ? `+${points}` : `-${points}` })}
+        />
+      );
+    }
+    case "entered":
+      return (
+        <ShiftLine
+          name={shift.name}
+          tone="up"
+          icon={<Sparkles className="w-3 h-3" aria-hidden="true" />}
+          label={t("meta.shifts.atLeast", { points: `+${points}` })}
+          note={t("meta.shifts.entered")}
+          title={t("meta.shifts.enteredHint")}
+        />
+      );
+    case "left":
+      return (
+        <ShiftLine
+          name={shift.name}
+          tone="down"
+          icon={<ArrowDownRight className="w-3 h-3" aria-hidden="true" />}
+          label={t("meta.shifts.atMost", { points: `-${points}` })}
+          note={t("meta.shifts.left")}
+          title={t("meta.shifts.leftHint")}
+        />
+      );
+    case "steady":
+      // Filtered out before the list is built; handled here so the guard below
+      // is a real exhaustiveness check and not a `default` that swallows a
+      // variant added later.
+      return null;
+    default: {
+      const exhaustive: never = shift;
+      return exhaustive;
+    }
+  }
+}
+
+function ShiftLine({
+  name,
+  tone,
+  icon,
+  label,
+  note,
+  title,
+}: {
+  readonly name: string;
+  readonly tone: "up" | "down";
+  readonly icon: React.ReactNode;
+  readonly label: string;
+  readonly note?: string;
+  readonly title?: string;
+}) {
+  return (
+    <div
+      className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] transition-colors"
+      title={title}
+    >
+      <span
+        className={cn(
+          "shrink-0 flex items-center gap-0.5 text-[10px] font-semibold tabular-nums",
+          tone === "up" ? "text-green-400" : "text-red-400"
+        )}
+      >
+        {icon}
+        {label}
+      </span>
+      <span className="flex-1 min-w-0 text-xs text-[var(--text-primary)] truncate">
+        {name}
+      </span>
+      {note && (
+        <span className="shrink-0 text-[10px] text-[var(--text-secondary)]">{note}</span>
+      )}
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function MetaPanel({
@@ -150,6 +259,15 @@ export function MetaPanel({
     fetchAll,
   } = useMetaAnalysis(commanderName);
 
+  const {
+    report: shiftReport,
+    snapshotCount,
+    isLoading: isLoadingShifts,
+    error: errorShifts,
+    fetchShifts,
+    reset: resetShifts,
+  } = useMetaShifts(commanderName);
+
   // Auto-fetch when expanded for the first time
   useEffect(() => {
     if (expanded && !fetched.current && commanderName) {
@@ -158,16 +276,33 @@ export function MetaPanel({
     }
   }, [expanded, commanderName, fetchAll]);
 
+  // Read the history only once the EDHRec call has returned. That call is what
+  // *writes* today's snapshot, so firing both together would race: on a
+  // commander recorded once before, the read could land first and report no
+  // history on the very visit that completed it.
+  useEffect(() => {
+    if (edhrec) void fetchShifts();
+  }, [edhrec, fetchShifts]);
+
   // Reset when commander changes
   useEffect(() => {
     fetched.current = false;
-  }, [commanderName]);
+    resetShifts();
+  }, [commanderName, resetShifts]);
 
   const edhrecCards = (edhrec?.cards ?? []) as MetaCard[];
   const filteredCards = showOnlyMissing
     ? edhrecCards.filter((c) => !deckCardNames.has(c.name))
     : edhrecCards;
   const tournamentDecks = (tournament?.decks ?? []) as TournamentDeck[];
+
+  // `steady` is dropped: a card holding its inclusion within a point is the
+  // normal state of most of the list, and printing twenty of them would bury
+  // the handful that actually moved. The report still carries them for any
+  // caller that wants the full picture.
+  const movements = (shiftReport?.shifts ?? [])
+    .filter((shift) => shift.kind !== "steady")
+    .slice(0, MAX_SHIFTS_SHOWN);
 
   const staleEdhrec = edhrec?._meta?.stale;
   const cachedAt = edhrec?._meta?.cachedAt;
@@ -316,6 +451,61 @@ export function MetaPanel({
                             {t("meta.allPopularInDeck")}
                           </p>
                         )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ─ Meta shifts ─ */}
+                  <div className="space-y-2">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
+                        {t("meta.shifts.title")}
+                      </p>
+                      {shiftReport && (
+                        <span className="text-[10px] text-[var(--text-secondary)]/70 shrink-0">
+                          {t("meta.shifts.since", {
+                            date: new Date(
+                              shiftReport.baselineCapturedOn
+                            ).toLocaleDateString(),
+                          })}
+                        </span>
+                      )}
+                    </div>
+
+                    {isLoadingShifts && !shiftReport && (
+                      <div className="space-y-1">
+                        {[1, 2, 3].map((i) => (
+                          <SkeletonRow key={i} />
+                        ))}
+                      </div>
+                    )}
+
+                    {errorShifts && (
+                      <div className="flex items-center gap-1.5 text-red-400 text-xs">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        {t("meta.shifts.error")}
+                      </div>
+                    )}
+
+                    {!isLoadingShifts && !errorShifts && !shiftReport && (
+                      <p className="text-xs text-[var(--text-secondary)] py-1">
+                        {snapshotCount > 0
+                          ? t("meta.shifts.pending")
+                          : t("meta.shifts.empty")}
+                      </p>
+                    )}
+
+                    {shiftReport && movements.length === 0 && (
+                      <p className="text-xs text-[var(--text-secondary)] py-1">
+                        {t("meta.shifts.steadyOnly")}
+                      </p>
+                    )}
+
+                    {movements.length > 0 && (
+                      <div className="space-y-0.5">
+                        {movements.map((shift) => (
+                          <MetaShiftRow key={`${shift.kind}:${shift.name}`} shift={shift} />
+                        ))}
                       </div>
                     )}
                   </div>
