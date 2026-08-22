@@ -18,6 +18,16 @@
 
 import { createHash, randomBytes } from "node:crypto";
 
+// Scopes live in their own module so client components can read the list
+// without pulling node:crypto into the browser bundle.
+export {
+  API_SCOPES,
+  DEFAULT_API_SCOPES,
+  hasScope,
+  parseScopes,
+  type ApiScope,
+} from "./scopes";
+
 /** Marks a MagicAIBuilder key in logs, secret scanners and support tickets. */
 export const API_KEY_PREFIX = "mab_";
 
@@ -26,22 +36,6 @@ const SECRET_BYTES = 32;
 
 /** Characters of the token kept in clear for display, after the prefix. */
 const DISPLAY_CHARS = 8;
-
-/**
- * What a key is allowed to do.
- *
- * Scopes exist from the first key even though every endpoint is read-only
- * today. Shipping keys without them would mean that the day a write endpoint
- * lands, every key already in the wild silently gains write access — a
- * privilege escalation delivered by a deploy, with nothing in the request to
- * show it happened.
- */
-export const API_SCOPES = ["decks:read", "collection:read"] as const;
-
-export type ApiScope = (typeof API_SCOPES)[number];
-
-/** Scopes granted to a key whose creator asked for nothing in particular. */
-export const DEFAULT_API_SCOPES: readonly ApiScope[] = ["decks:read"];
 
 export interface MintedApiKey {
   /** The full secret. Returned once, at creation, and never recoverable. */
@@ -95,18 +89,4 @@ export function parseBearerToken(header: string | null): string | null {
   if (!header) return null;
   const match = /^Bearer[ ]+(\S+)$/i.exec(header);
   return match?.[1] ?? null;
-}
-
-/** Whether `granted` covers `required`. */
-export function hasScope(
-  granted: readonly string[],
-  required: ApiScope
-): boolean {
-  return granted.includes(required);
-}
-
-/** Narrow arbitrary stored strings back to known scopes, dropping any the code no longer defines. */
-export function parseScopes(stored: readonly string[]): readonly ApiScope[] {
-  const known = new Set<string>(API_SCOPES);
-  return stored.filter((scope): scope is ApiScope => known.has(scope));
 }

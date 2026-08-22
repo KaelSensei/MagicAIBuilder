@@ -1,0 +1,31 @@
+{
+  "apiKeys": {
+    "title": "Clés d'API",
+    "intro": "Les clés permettent à un programme de lire vos decks via l'API MagicAIBuilder. Chaque clé n'appartient qu'à vous et peut être révoquée à tout moment.",
+    "nameLabel": "À quoi sert cette clé ?",
+    "namePlaceholder": "CLI sur mon portable",
+    "scopesLabel": "Permissions",
+    "expiryLabel": "Expiration",
+    "expiryNever": "Jusqu'à révocation",
+    "expiryDays": "Dans {days} jours",
+    "create": "Créer la clé",
+    "existing": "Vos clés",
+    "loading": "Chargement de vos clés…",
+    "empty": "Aucune clé pour l'instant. Créez-en une ci-dessus pour utiliser l'API.",
+    "revoke": "Révoquer",
+    "revokeNamed": "Révoquer la clé {name}",
+    "confirmRevoke": "Révoquer définitivement",
+    "cancel": "Annuler",
+    "revoked": "Révoquée",
+    "expired": "Expirée",
+    "lastUsed": "dernière utilisation le {date}",
+    "neverUsed": "jamais utilisée",
+    "tokenOnce": {
+      "title": "Copiez cette clé maintenant — elle ne sera plus affichée",
+      "body": "Seule une empreinte de la clé est stockée : personne, nous compris, ne peut vous la remontrer. Si vous la perdez, révoquez-la et créez-en une autre.",
+      "copy": "Copier",
+      "copied": "Copié",
+      "dismiss": "Je l'ai enregistrée"
+    }
+  }
+}
