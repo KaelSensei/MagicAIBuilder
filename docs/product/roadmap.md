@@ -14,8 +14,14 @@ This is a **rough** first-pass weighting using a lightweight RICE/MoSCoW hybrid:
 - **Weight 2**: Nice-to-have / polish
 - **Weight 1**: Experimental / long-term / speculative
 
-Top candidates right now (reviewed 2026-08-21):
+Top candidates right now (reviewed 2026-08-22):
 
+- ~~**Track meta shifts over time**~~ _(done — 2026-08-22, #528)_: the mechanism was that `MetaCache` **overwrote** its single row per commander on every refresh, so no earlier distribution survived to be differenced. Retention was the whole feature; the differencing was the easy half. The 20-card truncation forced the interesting decision — a card that leaves the list carries a **bound**, never a fall to zero
+- ~~**Public external API**~~ _(done — 2026-08-22, #529)_: all four named requirements. **Built in this repository rather than the "likely separate" one the entry imagined — that split is still an open decision.** `collection:read` shipped gating nothing for two commits, which is now guarded by a test asserting no scope is decorative
+- ~~**Evaluate Better-Auth**~~ _(evaluated — 2026-08-22, #531)_: **do not migrate; revisit after Next.js 16.** Decided by Better-Auth's own docs calling its Next 15 middleware pattern _"NOT SECURE"_, against a middleware here that verifies a JWT signature on the Edge
+- ~~**The four open SonarCloud issues**~~ _(fixed — 2026-08-22, #530)_: they sat on `staging` outside any feature branch, so **every PR inherited a mandatory gate it could not satisfy**. Two of the four tool suggestions were wrong for this codebase — `structuredClone` would have been a regression, and `.includes()` does not typecheck against a `readonly` tuple
+- **Upgrade to Prisma 7** — Weight **3**, **blocked on the local toolchain**: needs Node ≥ 22.12, this workstation is on 22.11. Attempted and reverted rather than pushed unverified
+- **UptimeRobot** — Weight **4** (early production safety net, now that a database exists again)
 - ~~**Finish i18n string extraction**~~ _(done — 2026-08-20, #497 and #498)_. **Correction: this was marked done at #455 on 2026-08-19 and was not.** The builder page — the app's main screen — never called `useTranslations` at all, and `ui/Modal` and `ui/Toast` shipped English Close / Dismiss labels shared by every modal and every toast in the app. Fifteen hardcoded accessible attributes remained across nine components. The gap survived a review because nothing fails when a string is hardcoded: it renders, in English, silently. `src/i18n/catalog.test.ts` now guards the catalogs, but **no test can see a string that was never extracted** — the remaining defence is the grep in #498's description
 - ~~**Diagnose the intermittent e2e failure**~~ _(diagnosed and mitigated — 2026-08-20, #495)_: the mechanism was in the **harness**, not the app. `openBuilder` returned the moment `waitForURL` saw the address change, before the route was usable, so a click could land while React was mid-hydration — the listener has attached and calls `preventDefault`, but the router cannot act yet, and the navigation is simply lost. Load-sensitive by construction, which is why hypothesis 3 kept half-fitting: compile timing was a _trigger_, never the mechanism. Still **not a captured failure** — do not run other Docker builds or repo-wide greps during the gate. The production-build question is no longer blocking
 - ~~**Localized card data via Scryfall `lang`**~~ _(done — 2026-08-20, #480 deck rows, #481 tooltip, #482 playtest zones, #484 proxies, on top of #415 / #456)_
@@ -28,7 +34,6 @@ Top candidates right now (reviewed 2026-08-21):
 - ~~**Put the public pages in the sitemap**~~ _(done — 2026-08-21, #521)_. **What the fix actually found was the opposite problem.** The sitemap published every `shareEnabled` deck's `/share/<token>` URL — a capability URL. The sharing dialog promises "anyone with this link can view your deck", a promise about who _receives_ the link, and `/api/share/[token]` checks `shareEnabled` and never `isPublic`, so a deck the owner kept private is fully readable at its token. Listing those tokens turned "anyone with this link" into "anyone at all", for decks never marked public — while `isPublic` sits in the same model precisely to mark the ones that were. Live since #153. `robots.ts` carried a matching `allow: "/share/"`; both are gone
   - The pages that _should_ have been listed — public decks, public profiles, commander discovery — now are, each with an hreflang alternate per served locale so the sitemap cannot disagree with the page tags. The bare `catch {}` reports through `logger.error` instead of yielding a one-URL sitemap, and the two `as` casts on `prisma.deck` are gone
   - `buildSitemap` is a pure function; its first test asserts no share token appears whatever it is handed. Nothing about the leak was visible from the sitemap itself, which is why it stood five months
-- **UptimeRobot** — Weight **4** (early production safety net, now that a database exists again)
 - **Migrate `setRequestLocale` to `next/root-params`** — Weight **2**. next-intl deprecates it, but the replacement ships `unstable_rootParams` and a stub `.d.ts` in Next 15.5.22. The three SonarCloud warnings are marked accepted with that reason. Revisit when it stabilises
 - ~~**Structured logging (Pino)**~~ _(done — 2026-08-19, #458)_
 - **Visual redesign** — Weight **3** (big surface area, schedule when stable)
@@ -44,12 +49,15 @@ Preferred technology choices for new infrastructure. Based on cost, DX, and reli
 
 - [x] **Use Neon (PostgreSQL)** _(done — 2026-08-16)_ — provisioned via the Vercel Marketplace and connected to production, preview and development. Migrated off Supabase, whose project had been deleted or auto-paused: `/api/health` returned `503 ENOTFOUND tenant/user not found`, every sign-in failed, and **all prior production data was lost with it**. Neon also ends the Supabase pooler gymnastics — direct connections were IPv4-only and unreachable from Vercel's IPv6, the session pooler hit `MaxClientsInSessionMode`, and only the transaction pooler on 6543 worked.
   - **Migrations must use `DATABASE_URL_UNPOOLED`.** The pooled URL routes through PgBouncer in transaction mode and breaks Prisma Migrate with errors that never mention pooling.
-- **Current**: Prisma 6.x (7.x upgrade pending) + Neon Postgres (prod), Docker Postgres 16 on 5432 (dev).
+- **Current**: Prisma 6.x + Neon Postgres (prod), Docker Postgres 16 on 5432 (dev).
+- [ ] **Upgrade to Prisma 7** — **blocked on the local toolchain (checked 2026-08-22)**: `prisma@7.9.1` declares `engines: { node: "^20.19 || ^22.12 || >=24.0" }` and this workstation runs Node 22.11, one version below where Node accepts `require()` of an ESM module. The symptom misleads — `ERR_REQUIRE_ESM` inside `@prisma/dev/dist/state.cjs`, and **`"type": "module"` does not fix it**, because the offending file is Prisma's, not this project's. `prisma generate` fails, so nothing downstream can be verified. Attempted and reverted rather than pushed unverified. CI is already fine (`node-version: 22` resolves to the latest 22.x).
+  - Roughly half an hour once Node is current: generator `prisma-client` with a required `output`, a `prisma.config.ts` holding the URL (with the `DATABASE_URL_UNPOOLED` fallback Neon migrations need), `"type": "module"`, and only **three** files importing `@prisma/client`.
+  - **One documented contradiction to settle at runtime**: the v7 upgrade guide calls driver adapters _"required for all databases"_, while the config reference says they _"work automatically without additional configuration"_. Observe the behaviour; do not infer it.
 
 ### Authentication
 
 - [x] **NextAuth.js v5** _(done — 2026-03-27)_: Google OAuth + credentials auth already implemented.
-- [ ] **Evaluate Better-Auth** as a future replacement or complement — simpler API, better DX than Clerk or Auth0. Clerk is explicitly not recommended (pricing, complexity, lock-in).
+- [x] **Evaluate Better-Auth** _(evaluated — 2026-08-22, #531; **recommendation: do not migrate, revisit after Next.js 16**)_. Full write-up in [`docs/references/better-auth-evaluation.md`](../references/better-auth-evaluation.md). Better-Auth's own docs call its Next 13–15.1.x middleware pattern _"NOT SECURE"_ — the recommended helper checks only that a cookie exists, and database validation in middleware arrives with Next 16. This app is on 15.5.23, `middleware.ts` is the only guard in front of every protected page, and the current check verifies a JWT signature on the Edge. Clerk stays ruled out.
 
 ### File Storage
 
@@ -70,7 +78,12 @@ Preferred technology choices for new infrastructure. Based on cost, DX, and reli
 
 - [x] **Enhance Scryfall API usage** _(done — PR #289)_: server-side search cache (1h TTL), serialized rate limiter, name-based card cache, TanStack Query gcTime fix, shared fetchAllPages utility
 
-- [ ] **Public external API**: expose MagicAIBuilder data and deck operations as a versioned REST (or GraphQL) API, likely in a separate repository; enables third-party integrations, mobile clients, and CLI tooling; requires auth (API keys or OAuth2), rate limiting, OpenAPI documentation, and versioning strategy
+- [x] **Public external API** _(done — 2026-08-22, #529)_: all four named requirements shipped — Bearer API keys, per-key rate limiting, a drift-guarded OpenAPI document at `GET /api/v1/openapi`, and `/api/v1` as the versioning boundary. Endpoints: `/decks`, `/decks/:id`, `/collection`; key management sits behind the browser session with a `/settings/api-keys` screen.
+  - **Built in this repository, not a separate one.** The entry said "likely in a separate repository"; `/api/v1` is additive and extractable, but the split is an **open decision**, not a settled one.
+  - Only the SHA-256 of a token is stored, and that hash is the unique index, so verification is one indexed read. **SHA-256 and not bcrypt on purpose** — a slow hash makes guessing a _low-entropy_ secret expensive, and a 256-bit random token is not that; bcrypt would only tax every request.
+  - **Scopes exist from the first key**, though everything is read-only today: without them, the first write endpoint would silently widen every key already in the wild. **A key cannot mint another key** — otherwise one leak becomes permanent access that revocation can never catch. Revocation stamps `revokedAt` rather than deleting, because the revoked key is exactly the one whose history matters.
+  - **`collection:read` gated nothing for two commits.** An advertised permission with no meaning invites a caller to request the narrowest scope that fits and then fail for reasons the docs deny. A test now asserts no scope is decorative.
+  - The spec is hand-written because nothing here can derive one from an App Router handler. **The drift guard earned its keep**: `/collection` was written first and `openapi.test.ts` failed with `documents /collection` before a line of spec was touched.
 
 ---
 
@@ -222,7 +235,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 ## User Accounts & Auth
 
 - [x] **User account system** _(done)_: NextAuth.js v5 with Google OAuth + credentials, public profiles, deck ownership, private/public decks
-- [ ] **Evaluate Better-Auth**: simpler DX than Clerk; future replacement/complement consideration
+- [x] **Evaluate Better-Auth** _(evaluated — 2026-08-22, #531)_: **do not migrate; revisit after Next.js 16.** Only two-factor and passkeys are things it offers that this project lacks, and neither is on this roadmap. Migrating would also mean a hand-written data migration preserving every `User.id`, since eleven tables of application data point at them. See [`docs/references/better-auth-evaluation.md`](../references/better-auth-evaluation.md) for the three conditions that would reopen it.
 
 ---
 
@@ -268,4 +281,7 @@ Set up progressively: start with Level 1 immediately, add Level 2 when real user
 - [x] Commander meta panel — top 20 EDHRec cards + 5 latest tournament decks _(#205)_
 - [x] **Event context from tournament sources** _(done — 2026-08-20, #487)_: player, event, ISO date, placement and event level (1–4 stars) on every MTGTop8 row, plus the source's format label — its EDH section is overwhelmingly **Duel Commander (1v1)**, so the label is shown rather than assumed. This also fixed the source: since #205 it had matched **nothing**, its regex expecting quoted `/event?e=…&d=…` links on the format listing, which lists events. The panel read "no tournament decks" for every commander. Searching is now by commander archetype (`archetype_sel[EDH]` id from the search form, cached 24 h) with a card-content fallback, and the site's Latin-1 is decoded. An `@external` spec guards the markup
 - [ ] Show **win rate** from tournament sources — **not available**: MTGTop8 publishes standings, not match records, so a rate cannot be derived from a deck page. Would need a different source (Melee, EDHTop16) or nothing at all
-- [ ] Track meta shifts over time (future)
+- [x] **Track meta shifts over time** _(done — 2026-08-22, #528)_: `MetaCache` held one row per commander and overwrote it on every refresh, so yesterday's distribution was destroyed the moment today's arrived — nothing in the database could answer _what moved_. `MetaSnapshot` retains one row per commander per day, written from the EDHRec fetch the meta route already performs: no cron, no crawl, no extra upstream request, and the history accrues from ordinary traffic.
+  - **The 20-card truncation governs the design.** A card absent from a snapshot is not at 0% inclusion — it is below that snapshot's cut-off, at a value nobody recorded. Reporting a drop-out as a fall from 78% to zero would invent a collapse out of a ranking change, so entering and leaving carry a **bound** (`≥` / `≤`) rather than a delta.
+  - **An empty result is never recorded**: `fetchEdhrecData` returns `{ cards: [] }` for both an unknown commander and an upstream 404, and storing it would render an outage as a meta collapse.
+  - EDHRec only — the tournament feed is a rolling window of five events, not a distribution.

@@ -5,31 +5,37 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-08-21                             |
+| Last Updated  | 2026-08-22                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-08-21)
+## Current metrics (2026-08-22)
 
-| Metric              | Value                                                                     |
-| ------------------- | ------------------------------------------------------------------------- |
-| Unit tests          | 2294 across 162 files                                                     |
-| E2E tests           | 58 passing, 1 skipped (`@external` / `@perf` excluded)                    |
-| Coverage            | ~94.5%                                                                    |
-| SonarCloud          | 0 open issues                                                             |
-| Source files        | 307 (`.ts`/`.tsx`, excluding tests)                                       |
-| Components          | 143 (`.tsx`, excluding tests)                                             |
-| API routes          | 39                                                                        |
-| Prisma models       | 20                                                                        |
-| Prisma migrations   | 23                                                                        |
-| Hooks               | 24                                                                        |
-| Locales served      | 2 (`en`, `fr`) + 8 dormant                                                |
-| Production database | Neon (Vercel Marketplace)                                                 |
-| CI workflows        | 3 (CI, SonarCloud, Lighthouse) — all on PRs into `staging`, `dev`, `main` |
+| Metric              | Value                                                                                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit tests          | 2458 across 174 files                                                                                                                   |
+| E2E tests           | 58 passing, 1 skipped (`@external` / `@perf` excluded)                                                                                  |
+| Coverage            | 93.69% statements (see the uncovered-hooks note below)                                                                                  |
+| SonarCloud          | 0 open issues                                                                                                                           |
+| Source files        | 325 (`.ts`/`.tsx`, excluding tests)                                                                                                     |
+| Components          | 145 — every `.tsx` under `src/` excluding tests, pages included (the label undercounts what it measures; `src/components` alone is 123) |
+| API routes          | 46                                                                                                                                      |
+| Prisma models       | 22                                                                                                                                      |
+| Prisma migrations   | 25                                                                                                                                      |
+| Hooks               | 26                                                                                                                                      |
+| Locales served      | 2 (`en`, `fr`) + 8 dormant                                                                                                              |
+| Production database | Neon (Vercel Marketplace)                                                                                                               |
+| CI workflows        | 3 (CI, SonarCloud, Lighthouse) — all on PRs into `staging`, `dev`, `main`                                                               |
 
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Known open issues
+
+- **Two hooks shipped in #528 and #529 have no tests, and that is my own gap.** `useApiKeys.ts` is at **0% of 88 statements** and `useMetaShifts.ts` at 25.6%; together they are the reason coverage moved from ~94.5% to **93.69%**. Four older hooks (`useLocalizedCardText`, `useScrollReveal`, `useTypewriter`, and `instrumentation*.ts`) are also at 0%, so this follows existing practice rather than breaking a standard — but `useApiKeys` is now the single largest uncovered unit in the repository, and it is the one that mints and revokes credentials. Worth covering before the next batch.
+- **Prisma 7 needs Node ≥ 22.12 and this workstation is on 22.11.** The roadmap's "7.x upgrade pending" line was attempted on 2026-08-22 and abandoned without a commit. `prisma@7.9.1` declares `engines: { node: "^20.19 || ^22.12 || >=24.0" }` — the exact version where Node accepts `require()` of an ESM module. The symptom is misleading: `ERR_REQUIRE_ESM` pointing into `@prisma/dev/dist/state.cjs`, and **setting `"type": "module"` does not help**, because the offending file belongs to Prisma rather than to this project — a `.cjs` cannot `require()` an ESM package whatever the consumer declares. `prisma generate` therefore fails, so the client does not exist, so `tsc`, the tests, the build and the e2e gate all fail for reasons unrelated to the change. **Nothing verifiable, so nothing was pushed**; the tree was restored. CI is already fine — the workflows use `node-version: 22`, which resolves to the latest 22.x.
+  - The migration itself is roughly half an hour: generator `prisma-client` with a required `output`, a `prisma.config.ts` carrying the connection URL (with the `DATABASE_URL_UNPOOLED` fallback that migrations have always needed on Neon), `"type": "module"`, and only **three** files importing `@prisma/client`.
+  - **One documented contradiction to resolve at runtime rather than on paper.** The v7 upgrade guide says driver adapters are _"required for all databases"_; the `prisma.config.ts` reference says they _"work automatically without additional configuration"_ as of v7. The two pages do not agree, so the real behaviour must be observed, not inferred.
+- **The public API lives in this repository, and the roadmap said it would "likely" live in a separate one.** Built under `/api/v1` in #529 — additive and extractable later, but the split is an unresolved architecture decision, not a settled one.
 
 - **No gate ran on the PRs that carry the change.** ~~Resolved 2026-08-21 (#515).~~ `ci.yml` and `sonar.yml` were both scoped to `pull_request: branches: [main]` while the documented flow sends every feature and fix PR to `staging`. So nothing was linted, typechecked, tested or analysed until the `staging → dev → main` promotion — after review, once the code had already landed in the integration branch. Found because Lighthouse (#514) was the only repository check present on its own PR. All three workflows now trigger on `[main, dev, staging]`; `push` stays on `main` so the badge and SonarCloud's main-branch snapshot keep one source.
   - **CodeRabbit still reports "reviews are disabled for this base branch" on staging PRs.** There is no `.coderabbit.yaml` in the repository — that setting lives in their dashboard and needs an owner action.
