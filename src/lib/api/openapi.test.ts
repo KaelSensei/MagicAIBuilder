@@ -94,6 +94,27 @@ describe("buildOpenApiDocument", () => {
     }
   });
 
+  it("names a known required scope on every operation", () => {
+    for (const [path, item] of Object.entries(doc.paths)) {
+      const scope = item.get["x-required-scope"];
+      expect(API_SCOPES, `${path} requires an unknown scope`).toContain(scope);
+    }
+  });
+
+  it("leaves no scope decorative — each one gates at least one operation", () => {
+    // `collection:read` shipped with the first key and gated nothing for two
+    // commits: a permission a user could tick that bought no access. An
+    // advertised permission with no meaning is worse than a missing one — it
+    // invites a caller to request the narrowest scope that fits and then fail
+    // at runtime for reasons the docs deny.
+    const gated = new Set(
+      Object.values(doc.paths).map((item) => item.get["x-required-scope"])
+    );
+    for (const scope of API_SCOPES) {
+      expect(gated, `${scope} is granted but gates nothing`).toContain(scope);
+    }
+  });
+
   it("gives every operation a unique operationId, which client generators key on", () => {
     const ids = Object.values(doc.paths).map((item) => item.get.operationId);
     expect(new Set(ids).size).toBe(ids.length);

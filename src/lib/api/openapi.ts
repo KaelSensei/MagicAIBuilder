@@ -26,7 +26,7 @@ export const API_VERSION = "1.0.0";
  * Kept as a named export so the drift test can compare it against the
  * filesystem without re-parsing the whole document.
  */
-export const DOCUMENTED_PATHS = ["/decks", "/decks/{id}"] as const;
+export const DOCUMENTED_PATHS = ["/decks", "/decks/{id}", "/collection"] as const;
 
 const ERROR_RESPONSE = {
   description: "Error",
@@ -134,6 +134,26 @@ export function buildOpenApiDocument(serverUrl: string) {
             price: { type: ["number", "null"] },
           },
         },
+        CollectionCard: {
+          type: "object",
+          required: ["scryfallId", "name", "quantity", "foil"],
+          properties: {
+            scryfallId: { type: "string" },
+            name: { type: "string" },
+            quantity: { type: "integer", minimum: 1 },
+            foil: {
+              type: "boolean",
+              description:
+                "The same card in both finishes is two entries, not one with a flag — that is how the collection stores it.",
+            },
+            condition: {
+              type: ["string", "null"],
+              enum: ["NM", "LP", "MP", "HP", "DMG", null],
+            },
+            acquiredAt: { type: ["string", "null"], format: "date-time" },
+            price: { type: ["number", "null"] },
+          },
+        },
         Deck: {
           allOf: [
             { $ref: "#/components/schemas/DeckSummary" },
@@ -161,6 +181,11 @@ export function buildOpenApiDocument(serverUrl: string) {
           description:
             "Decks belonging to the key's owner, most recently updated first. Never other users' decks, public or otherwise.",
           operationId: "listDecks",
+          // OpenAPI's `security` scope array is only meaningful for oauth2 and
+          // openIdConnect; on an http-bearer scheme it is ignored, so the
+          // requirement would be documented nowhere. An extension states it
+          // where a reader and the drift test can both find it.
+          "x-required-scope": "decks:read",
           parameters: [
             {
               name: "page",
@@ -208,6 +233,7 @@ export function buildOpenApiDocument(serverUrl: string) {
         get: {
           summary: "Read one deck, with its cards",
           operationId: "getDeck",
+          "x-required-scope": "decks:read",
           parameters: [
             { name: "id", in: "path", required: true, schema: { type: "string" } },
           ],
@@ -231,6 +257,54 @@ export function buildOpenApiDocument(serverUrl: string) {
               description:
                 "No such deck, or it belongs to someone else — the two are deliberately indistinguishable.",
             },
+            "429": ERROR_RESPONSE,
+            "500": ERROR_RESPONSE,
+          },
+        },
+      },
+      "/collection": {
+        get: {
+          summary: "List your physical card collection",
+          description:
+            "Cards the key's owner has marked as owned, by name then finish. A card held in both normal and foil is two entries, which is how the collection stores it.",
+          operationId: "listCollection",
+          "x-required-scope": "collection:read",
+          parameters: [
+            {
+              name: "page",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 0, default: 0 },
+            },
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, maximum: 200, default: 50 },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "A page of owned cards",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    required: ["data", "pagination"],
+                    properties: {
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/CollectionCard" },
+                      },
+                      pagination: { $ref: "#/components/schemas/Pagination" },
+                    },
+                  },
+                },
+              },
+            },
+            "400": ERROR_RESPONSE,
+            "401": ERROR_RESPONSE,
+            "403": ERROR_RESPONSE,
             "429": ERROR_RESPONSE,
             "500": ERROR_RESPONSE,
           },
