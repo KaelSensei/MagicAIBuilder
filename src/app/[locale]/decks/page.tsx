@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { Layers, Loader2, Plus } from "lucide-react";
+import { AlertTriangle, Layers, Loader2, Plus, RefreshCw } from "lucide-react";
 import { DeckWizard } from "@/components/deck/DeckWizard";
 import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { useDeckStore } from "@/lib/deck/store";
+import { useToastStore } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
@@ -43,8 +44,17 @@ export default function DecksPage() {
   const t = useTranslations("deck");
   const { status: sessionStatus } = useSession();
   const router = useRouter();
-  const { decks, createDeck, loadDecks, isSyncing, deleteDeck, duplicateDeck } =
-    useDeckStore();
+  const {
+    decks,
+    createDeck,
+    loadDecks,
+    isSyncing,
+    deleteDeck,
+    duplicateDeck,
+    loadError,
+  } = useDeckStore();
+  // Fine-grained selector: `add` is stable, so it can sit in a useCallback dep.
+  const addToast = useToastStore((state) => state.add);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
@@ -54,6 +64,8 @@ export default function DecksPage() {
   const [sortKey, setSortKey] = useState<DecksSortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<DecksSortDir>("desc");
   const deckList = Object.values(decks);
+  // A failed listing must not read as an empty account.
+  const hasLoadFailed = loadError !== null && deckList.length === 0;
   const sortedDeckList = useMemo(
     () => sortDecks(deckList, sortKey, sortDir),
     [deckList, sortKey, sortDir]
@@ -115,10 +127,23 @@ export default function DecksPage() {
       const id = await createDeck(name);
       router.push(`/builder/${id}`);
     } catch (error) {
+      // Logging alone made the button look inert: it spun, the request 500'd,
+      // and the user was left on the same screen with no explanation.
       logger.error("Unexpected error", "handleNewDeck", error);
+      addToast(
+        "error",
+        t("home.createFailed", {
+          reason: error instanceof Error ? error.message : "unknown error",
+        })
+      );
       setIsCreating(false);
     }
-  }, [createDeck, deckList.length, isCreating, router]);
+  }, [createDeck, deckList.length, isCreating, router, t, addToast]);
+
+  const handleRetryLoad = useCallback(() => {
+    setIsLoading(true);
+    loadDecks().finally(() => setIsLoading(false));
+  }, [loadDecks]);
 
   const handleSetViewMode = useCallback((mode: DecksViewMode) => {
     setViewMode(mode);
@@ -142,7 +167,11 @@ export default function DecksPage() {
             </h1>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
               {isLoading && t("home.loading")}
-              {!isLoading && deckList.length === 0 && t("home.empty")}
+              {!isLoading && hasLoadFailed && t("home.loadFailedSubtitle")}
+              {!isLoading &&
+                !hasLoadFailed &&
+                deckList.length === 0 &&
+                t("home.empty")}
               {!isLoading &&
                 deckList.length > 0 &&
                 t("home.deckCount", { count: deckList.length })}
@@ -169,7 +198,34 @@ export default function DecksPage() {
           </div>
         )}
 
-        {!isLoading && deckList.length === 0 && (
+        {!isLoading && hasLoadFailed && (
+          <motion.div
+            className="flex flex-col items-center justify-center py-24 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <AlertTriangle className="mb-4 h-12 w-12 text-red-400 opacity-80" />
+            <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
+              {t("home.loadFailedTitle")}
+            </h2>
+            <p className="mb-2 max-w-md text-sm text-[var(--text-secondary)]">
+              {t("home.loadFailedDescription")}
+            </p>
+            <p className="mb-6 max-w-md break-words font-mono text-xs text-[var(--text-secondary)] opacity-70">
+              {loadError}
+            </p>
+            <button
+              type="button"
+              onClick={handleRetryLoad}
+              className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
+            >
+              <RefreshCw className="h-4 w-4" />
+              {t("home.retry")}
+            </button>
+          </motion.div>
+        )}
+
+        {!isLoading && !hasLoadFailed && deckList.length === 0 && (
           <motion.div
             className="flex flex-col items-center justify-center py-24 text-center"
             initial={{ opacity: 0, y: 20 }}

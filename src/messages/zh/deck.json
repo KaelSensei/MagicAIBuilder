@@ -8,7 +8,12 @@
     "startBuildingDescription": "Create your first Commander deck with live bracket scoring and Game Changers detection.",
     "createDeck": "Create Deck",
     "newDeck": "New Deck",
-    "deleteConfirm": "Delete this deck? This cannot be undone."
+    "deleteConfirm": "Delete this deck? This cannot be undone.",
+    "loadFailedTitle": "无法加载你的套牌",
+    "loadFailedDescription": "服务器拒绝了该请求，此列表可能不完整。你的套牌并未丢失 — 请稍后重试。",
+    "loadFailedSubtitle": "套牌列表不可用",
+    "retry": "重试",
+    "createFailed": "无法创建套牌 — {reason}"
   },
   "controls": {
     "grid": "Grid",
