@@ -14,8 +14,21 @@ const {
   mockRatingDeleteMany: vi.fn(),
 }));
 
+// requireAuth resolves the session id against the database, so authenticated
+// route tests need that row to exist. These routes never query prisma.user
+// themselves, so one persistent echo stub covers every case.
+const { mockUserFindUnique } = vi.hoisted(() => ({
+  mockUserFindUnique: vi.fn(async ({ where }: { where: { id?: string } }) => ({
+    id: where.id ?? "user-1",
+    name: null,
+    email: null,
+    image: null,
+  })),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    user: { findUnique: mockUserFindUnique },
     deck: { findUnique: mockDeckFindUnique },
     deckRating: {
       findMany: mockRatingFindMany,

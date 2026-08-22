@@ -8,7 +8,12 @@
     "startBuildingDescription": "Create your first Commander deck with live bracket scoring and Game Changers detection.",
     "createDeck": "Create Deck",
     "newDeck": "New Deck",
-    "deleteConfirm": "Delete this deck? This cannot be undone."
+    "deleteConfirm": "Delete this deck? This cannot be undone.",
+    "loadFailedTitle": "덱을 불러오지 못했습니다",
+    "loadFailedDescription": "서버가 요청을 거부하여 이 목록이 불완전할 수 있습니다. 덱은 사라지지 않았습니다 — 잠시 후 다시 시도하세요.",
+    "loadFailedSubtitle": "덱 목록을 사용할 수 없음",
+    "retry": "다시 시도",
+    "createFailed": "덱을 만들지 못했습니다 — {reason}"
   },
   "controls": {
     "grid": "Grid",

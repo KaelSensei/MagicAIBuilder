@@ -6,6 +6,7 @@ import { useState } from "react";
 import { InitProvider } from "@/components/providers/InitProvider";
 import { ThemeSync } from "@/components/providers/ThemeSync";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
+import { ToastContainer } from "@/components/ui/Toast";
 
 export function Providers({ children }: { readonly children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -27,6 +28,9 @@ export function Providers({ children }: { readonly children: React.ReactNode }) 
         <ThemeSync />
         <InitProvider>
           <OnboardingProvider>{children}</OnboardingProvider>
+          {/* Mounted once here: it used to live only in the builder page, so
+              toasts raised anywhere else were queued and never rendered. */}
+          <ToastContainer />
         </InitProvider>
       </QueryClientProvider>
     </SessionProvider>
