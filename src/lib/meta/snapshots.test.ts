@@ -119,4 +119,18 @@ describe("readSnapshotHistory", () => {
     expect(snapshots[0].capturedOn.toISOString()).toBe("2026-08-22T00:00:00.000Z");
     expect(mockLogError).toHaveBeenCalledTimes(1);
   });
+
+  it.each([Infinity, -Infinity, NaN])("rejects a non-finite inclusion (%s)", async (inclusion) => {
+    // The schema dropped a deprecated `.finite()` call. `z.number()` rejects
+    // these on its own, and a snapshot that got through with one would make
+    // every downstream delta `NaN`.
+    mockFindMany.mockResolvedValue([
+      {
+        capturedOn: new Date("2026-08-22T00:00:00.000Z"),
+        data: { cards: [{ name: "Sol Ring", inclusion }] },
+      },
+    ]);
+
+    await expect(readSnapshotHistory("atraxa", 30, NOW)).resolves.toEqual([]);
+  });
 });
