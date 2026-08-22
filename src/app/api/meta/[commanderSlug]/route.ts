@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { fetchEdhrecData, fetchTournamentData } from "@/lib/meta/fetch";
+import { recordEdhrecSnapshot } from "@/lib/meta/snapshots";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { EdhrecData, TournamentData } from "@/lib/meta/fetch";
 import { logger } from "@/lib/logger";
@@ -70,6 +71,11 @@ async function loadLiveMeta(commanderSlug: string, source: MetaSource): Promise<
   return fetchTournamentData(commanderName);
 }
 
+/** `EdhrecData` is the branch carrying a distribution; the tournament feed is a list of events. */
+function isEdhrecData(data: EdhrecData | TournamentData): data is EdhrecData {
+  return "cards" in data;
+}
+
 async function tryStaleMetaResponse(commanderSlug: string, source: MetaSource): Promise<NextResponse | null> {
   try {
     const stale = await prisma.metaCache.findUnique({
@@ -112,6 +118,14 @@ export async function GET(request: Request, { params }: Params) {
   try {
     const data = await loadLiveMeta(commanderSlug, source);
     await persistMetaCache(commanderSlug, source, data);
+    if (isEdhrecData(data)) {
+      // Retain the distribution before the next refresh overwrites the cache.
+      // Awaited rather than fired and forgotten: a serverless invocation can be
+      // frozen the moment its response is returned, and a detached promise
+      // would then be lost at random — the history would have holes nothing
+      // could explain. `recordEdhrecSnapshot` never throws.
+      await recordEdhrecSnapshot(commanderSlug, data);
+    }
     return NextResponse.json({ ...data, _meta: { cached: false } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Meta fetch failed";
