@@ -112,21 +112,19 @@ export async function requireAuth(): Promise<
     };
   }
 
-  // Fast path: trust the JWT-verified user ID (avoids a DB round-trip)
-  if (session.user.id) {
-    return {
-      session: {
-        user: {
-          id: session.user.id,
-          name: session.user.name ?? null,
-          email: session.user.email ?? null,
-          image: session.user.image ?? null,
-        },
-      },
-    };
-  }
-
-  // Fallback: resolve by email when ID is missing (e.g. first OAuth sign-in)
+  // Resolve against the database rather than trusting the JWT's id outright.
+  //
+  // The id rides in a signed cookie, so it outlives the row it points at: after
+  // the database was rebuilt, sessions minted against the old one still carried
+  // ids that no longer existed. Reads quietly returned nothing (the listing
+  // showed "no decks yet") while every write died on a foreign-key violation
+  // and surfaced as a 500 — a Create Deck button that just span and gave up.
+  //
+  // resolveAuthenticatedUser looks the id up first and only falls back to the
+  // email upsert when it is missing, so a stale session heals itself instead of
+  // failing. The cost is one indexed primary-key lookup per authenticated
+  // request, which is worth paying to not hand out a user id that cannot be
+  // written against.
   const user = await resolveAuthenticatedUser(session.user);
   if (!user) {
     return {

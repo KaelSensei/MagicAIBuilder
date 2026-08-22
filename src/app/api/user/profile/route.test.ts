@@ -48,6 +48,15 @@ function authed() {
   mockAuth.mockResolvedValueOnce({
     user: { id: "user-1", name: "Kael", email: "kael@test.com" },
   });
+  // requireAuth resolves the session id against the database before the
+  // route runs, so it consumes the first queued findUnique. Queue its row
+  // here; whatever the test queues next is what the route itself reads.
+  mockUserFindUnique.mockResolvedValueOnce({
+    id: "user-1",
+    name: "Kael",
+    email: "kael@test.com",
+    image: null,
+  });
 }
 
 function unauthed() {

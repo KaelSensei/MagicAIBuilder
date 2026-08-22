@@ -8,7 +8,12 @@
     "startBuildingDescription": "Create your first Commander deck with live bracket scoring and Game Changers detection.",
     "createDeck": "Create Deck",
     "newDeck": "New Deck",
-    "deleteConfirm": "Delete this deck? This cannot be undone."
+    "deleteConfirm": "Delete this deck? This cannot be undone.",
+    "loadFailedTitle": "デッキを読み込めませんでした",
+    "loadFailedDescription": "サーバーがリクエストを拒否したため、この一覧は不完全な可能性があります。デッキは失われていません — 少し待ってから再試行してください。",
+    "loadFailedSubtitle": "デッキ一覧を取得できません",
+    "retry": "再試行",
+    "createFailed": "デッキを作成できませんでした — {reason}"
   },
   "controls": {
     "grid": "Grid",

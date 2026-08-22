@@ -38,8 +38,33 @@ export interface ApiDeckListResponse {
   limit: number;
 }
 
-function handleApiError(res: Response, context: string): never {
-  throw new Error(`[${context}] HTTP ${res.status}: ${res.statusText}`);
+/** Longest server-supplied message we will forward to the UI. */
+const MAX_API_ERROR_LENGTH = 200;
+
+/**
+ * Throws with the server's own `error` string when it sent one.
+ *
+ * A bare "HTTP 500" told the user nothing and told us nothing either; the deck
+ * routes already return a short, fixed reason, so surface it. Only the `error`
+ * field is read — never the whole body — so nothing unexpected reaches the UI.
+ */
+async function handleApiError(res: Response, context: string): Promise<never> {
+  let detail = "";
+  try {
+    const body: unknown = await res.json();
+    if (
+      typeof body === "object" &&
+      body !== null &&
+      "error" in body &&
+      typeof body.error === "string"
+    ) {
+      detail = body.error.slice(0, MAX_API_ERROR_LENGTH);
+    }
+  } catch {
+    // Non-JSON error body (a proxy timeout page, say) — the status is all we have.
+  }
+  const suffix = detail ? `: ${detail}` : "";
+  throw new Error(`[${context}] HTTP ${res.status}${suffix}`);
 }
 
 // ─── Deck CRUD ────────────────────────────────────────────────────────────────
@@ -47,13 +72,13 @@ function handleApiError(res: Response, context: string): never {
 export async function fetchDecks(page = 0, limit = 20): Promise<ApiDeckListResponse> {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   const res = await fetch(`/api/decks?${params}`);
-  if (!res.ok) handleApiError(res, "fetchDecks");
+  if (!res.ok) await handleApiError(res, "fetchDecks");
   return res.json();
 }
 
 export async function fetchDeck(id: string): Promise<ApiDeck> {
   const res = await fetch(`/api/decks/${id}`);
-  if (!res.ok) handleApiError(res, "fetchDeck");
+  if (!res.ok) await handleApiError(res, "fetchDeck");
   return res.json();
 }
 
@@ -74,7 +99,7 @@ export async function createDeck(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, ...opts }),
   });
-  if (!res.ok) handleApiError(res, "createDeck");
+  if (!res.ok) await handleApiError(res, "createDeck");
   return res.json();
 }
 
@@ -102,13 +127,13 @@ export async function updateDeck(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
   });
-  if (!res.ok) handleApiError(res, "updateDeck");
+  if (!res.ok) await handleApiError(res, "updateDeck");
   return res.json();
 }
 
 export async function deleteDeck(id: string): Promise<void> {
   const res = await fetch(`/api/decks/${id}`, { method: "DELETE" });
-  if (!res.ok) handleApiError(res, "deleteDeck");
+  if (!res.ok) await handleApiError(res, "deleteDeck");
 }
 
 export async function duplicateDeck(id: string): Promise<ApiDeck> {
@@ -116,7 +141,7 @@ export async function duplicateDeck(id: string): Promise<ApiDeck> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
-  if (!res.ok) handleApiError(res, "duplicateDeck");
+  if (!res.ok) await handleApiError(res, "duplicateDeck");
   return res.json();
 }
 
@@ -153,7 +178,7 @@ export async function addCard(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) handleApiError(res, "addCard");
+  if (!res.ok) await handleApiError(res, "addCard");
   return res.json();
 }
 
@@ -164,7 +189,7 @@ export async function removeCard(
   const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
     method: "DELETE",
   });
-  if (!res.ok) handleApiError(res, "removeCard");
+  if (!res.ok) await handleApiError(res, "removeCard");
 }
 
 export async function updateCardCategory(
@@ -177,7 +202,7 @@ export async function updateCardCategory(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ category }),
   });
-  if (!res.ok) handleApiError(res, "updateCardCategory");
+  if (!res.ok) await handleApiError(res, "updateCardCategory");
   return res.json();
 }
 
@@ -191,7 +216,7 @@ export async function updateCardNotes(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ notes }),
   });
-  if (!res.ok) handleApiError(res, "updateCardNotes");
+  if (!res.ok) await handleApiError(res, "updateCardNotes");
   return res.json();
 }
 
@@ -205,7 +230,7 @@ export async function updateCardZone(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ zone }),
   });
-  if (!res.ok) handleApiError(res, "updateCardZone");
+  if (!res.ok) await handleApiError(res, "updateCardZone");
   return res.json();
 }
 
@@ -219,7 +244,7 @@ export async function updateCardMaybeboard(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ isMaybeboard }),
   });
-  if (!res.ok) handleApiError(res, "updateCardMaybeboard");
+  if (!res.ok) await handleApiError(res, "updateCardMaybeboard");
   return res.json();
 }
 
@@ -227,7 +252,7 @@ export async function removeAllCards(deckId: string): Promise<void> {
   const res = await fetch(`/api/decks/${deckId}/cards`, {
     method: "DELETE",
   });
-  if (!res.ok) handleApiError(res, "removeAllCards");
+  if (!res.ok) await handleApiError(res, "removeAllCards");
 }
 
 // ─── Scryfall Cache ───────────────────────────────────────────────────────────

@@ -62,7 +62,6 @@ import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsMod
 import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
-import { ToastContainer } from "@/components/ui/Toast";
 import { CombosPanel } from "@/components/deck/CombosPanel";
 import { useCombos } from "@/hooks/useCombos";
 import { ExportModal } from "@/components/deck/ExportModal";
@@ -1040,7 +1039,6 @@ export default function BuilderPage() {
       </div>
 
       {/* Toast notifications */}
-      <ToastContainer />
 
       {/* Keyboard shortcuts modal */}
       <KeyboardShortcutsModal />

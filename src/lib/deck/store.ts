@@ -44,6 +44,8 @@ export interface DeckStore {
   decks: Record<string, Deck>;
   activeDeckId: string | null;
   isSyncing: boolean;
+  /** Why the last deck listing failed, or null when it succeeded. */
+  loadError: string | null;
 
   // Undo stack
   undoStack: DeckAction[];
@@ -130,6 +132,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   decks: {},
   activeDeckId: null,
   isSyncing: false,
+  loadError: null,
   undoStack: [],
   gameChangerNames: new Set<string>(),
   bannedNames: new Set<string>(),
@@ -278,10 +281,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         }
         // Decks absent from the listing were deleted server-side, so the
         // rebuilt map drops them rather than merging them back in.
-        return { decks };
+        return { decks, loadError: null };
       });
     } catch (err) {
+      // Record the failure as well as logging it. Swallowing it left the page
+      // rendering "No decks yet" after a 500 — an outage disguised as an empty
+      // account, with no way for the user to tell the difference or retry.
       logger.error("Unexpected error", "loadDecks", err);
+      set({
+        loadError: err instanceof Error ? err.message : "Failed to load decks",
+      });
     } finally {
       set({ isSyncing: false });
     }

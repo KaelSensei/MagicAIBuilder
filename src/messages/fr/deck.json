@@ -8,7 +8,12 @@
     "startBuildingDescription": "Créez votre premier deck Commander avec le scoring de bracket en direct et la détection de Game Changers.",
     "createDeck": "Créer un deck",
     "newDeck": "Nouveau deck",
-    "deleteConfirm": "Supprimer ce deck ? Cette action est irréversible."
+    "deleteConfirm": "Supprimer ce deck ? Cette action est irréversible.",
+    "loadFailedTitle": "Impossible de charger vos decks",
+    "loadFailedDescription": "Le serveur a rejeté la requête, cette liste peut donc être incomplète. Vos decks ne sont pas perdus — réessayez dans un instant.",
+    "loadFailedSubtitle": "Liste de decks indisponible",
+    "retry": "Réessayer",
+    "createFailed": "Impossible de créer le deck — {reason}"
   },
   "controls": {
     "grid": "Grille",
