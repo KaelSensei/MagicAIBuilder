@@ -1,7 +1,7 @@
 "use client";
 // Public profile page — shows user info + list of public decks
 import { Link } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { User, Layers } from "lucide-react";
 import type { PlayerBadge } from "@/lib/social/follow";
 import { FollowButton } from "@/components/community/FollowButton";
@@ -51,8 +51,9 @@ const BRACKET_COLORS: Record<number, string> = {
 
 export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps) {
   const t = useTranslations("profile");
+  const format = useFormatter();
   const displayName = profile.name ?? profile.username;
-  const memberSince = new Date(profile.createdAt).toLocaleDateString("en-US", {
+  const memberSince = format.dateTime(new Date(profile.createdAt), {
     year: "numeric",
     month: "long",
   });

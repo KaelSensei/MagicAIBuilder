@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
 import type { Deck } from "@/lib/deck/types";
 
@@ -105,6 +105,7 @@ export function HomeDeckCard({
   const isManual = Boolean(deck.manualBracket);
   const manaColors = useMemo(() => getDeckPresentationManaColors(deck), [deck]);
   const t = useTranslations("deck");
+  const format = useFormatter();
 
   return (
     <Link
@@ -191,7 +192,7 @@ export function HomeDeckCard({
         <div className="mt-auto flex items-end justify-between gap-3 pt-3">
           <div className={`flex items-center gap-1 text-xs ${textMuted}`}>
             <Clock className="h-3 w-3" />
-            <span>{new Date(deck.updatedAt).toLocaleDateString()}</span>
+            <span>{format.dateTime(new Date(deck.updatedAt))}</span>
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">

@@ -9,7 +9,7 @@
  * remedy would be minting a second key and revoking the first.
  */
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { Check, Copy, KeyRound, Loader2, Plus, ShieldAlert, Trash2 } from "lucide-react";
 import { useApiKeys, type ApiKeySummary } from "@/hooks/useApiKeys";
 // From `scopes`, never `keys`: the latter imports node:crypto, and pulling it
@@ -93,6 +93,7 @@ function KeyRow({
   readonly onRevoke: (id: string) => void;
 }) {
   const t = useTranslations("settings");
+  const format = useFormatter();
   const [confirming, setConfirming] = useState(false);
   const revoked = apiKey.revokedAt !== null;
   const expired =
@@ -116,7 +117,7 @@ function KeyRow({
           {apiKey.scopes.join(", ")} ·{" "}
           {apiKey.lastUsedAt
             ? t("apiKeys.lastUsed", {
-                date: new Date(apiKey.lastUsedAt).toLocaleDateString(),
+                date: format.dateTime(new Date(apiKey.lastUsedAt)),
               })
             : t("apiKeys.neverUsed")}
         </p>

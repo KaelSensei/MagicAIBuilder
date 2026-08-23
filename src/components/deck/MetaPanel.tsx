@@ -4,7 +4,7 @@
  * EDHRec popular cards, MTGTop8 tournament decks, and community decks.
  */
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   BarChart2,
   RefreshCw,
@@ -245,6 +245,7 @@ export function MetaPanel({
   className,
 }: MetaPanelProps) {
   const t = useTranslations("deck");
+  const format = useFormatter();
   const [expanded, setExpanded] = useState(false);
   const [showOnlyMissing, setShowOnlyMissing] = useState(false);
   const fetched = useRef(false);
@@ -352,7 +353,7 @@ export function MetaPanel({
                     {staleEdhrec && cachedAt && (
                       <p className="text-[10px] text-amber-400">
                         {t("meta.staleData", {
-                          date: new Date(cachedAt).toLocaleDateString(),
+                          date: format.dateTime(new Date(cachedAt)),
                         })}
                       </p>
                     )}
@@ -464,9 +465,9 @@ export function MetaPanel({
                       {shiftReport && (
                         <span className="text-[10px] text-[var(--text-secondary)]/70 shrink-0">
                           {t("meta.shifts.since", {
-                            date: new Date(
-                              shiftReport.baselineCapturedOn
-                            ).toLocaleDateString(),
+                            date: format.dateTime(
+                              new Date(shiftReport.baselineCapturedOn)
+                            ),
                           })}
                         </span>
                       )}
