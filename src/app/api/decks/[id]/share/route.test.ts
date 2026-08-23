@@ -1,12 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockFindUnique, mockUpdate } = vi.hoisted(() => ({
-  mockFindUnique: vi.fn(),
-  mockUpdate: vi.fn(),
-}));
+const { mockFindUnique, mockUpdate, mockUserFindUnique, mockUserUpsert } = vi.hoisted(
+  () => ({
+    mockFindUnique: vi.fn(),
+    mockUpdate: vi.fn(),
+    mockUserFindUnique: vi.fn(),
+    mockUserUpsert: vi.fn(),
+  })
+);
 
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { deck: { findUnique: mockFindUnique, update: mockUpdate } },
+  prisma: {
+    deck: { findUnique: mockFindUnique, update: mockUpdate },
+    user: { findUnique: mockUserFindUnique, upsert: mockUserUpsert },
+  },
 }));
 
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
@@ -17,8 +24,21 @@ import { DELETE, POST } from "./route";
 const OWNER = "user-1";
 const INTRUDER = "user-2";
 
+/**
+ * `requireAuth` resolves the session id against the database on every call -
+ * it does not trust the JWT's id outright, because that id rides in a signed
+ * cookie and outlives the row it points at. So `prisma.user.findUnique` is on
+ * the path of every authenticated request here, and a mock that stubs only
+ * `prisma.deck` makes each one throw before it reaches the route.
+ */
 function signedInAs(id: string): void {
   mockAuth.mockResolvedValue({ user: { id, name: "Someone", email: "s@test.com" } });
+  mockUserFindUnique.mockResolvedValue({
+    id,
+    name: "Someone",
+    email: "s@test.com",
+    image: null,
+  });
 }
 
 function params(id = "deck-1") {
