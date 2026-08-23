@@ -1,7 +1,15 @@
 version: 2
+
+# Dependabot opens against `staging`, not the default branch.
+#
+# Feature and fix PRs target `staging` and are promoted `staging` -> `dev` ->
+# `main`; a bot opening straight onto `main` would be the one contributor
+# exempt from that, and would push `main` ahead of the two branches meant to
+# gate it. The first github-actions PR did exactly that before this was set.
 updates:
   - package-ecosystem: npm
     directory: "/"
+    target-branch: staging
     schedule:
       interval: weekly
       day: monday
@@ -35,6 +43,7 @@ updates:
   # a runtime GitHub has stopped supporting.
   - package-ecosystem: github-actions
     directory: "/"
+    target-branch: staging
     schedule:
       interval: weekly
       day: monday
