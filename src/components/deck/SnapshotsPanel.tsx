@@ -1,7 +1,7 @@
 "use client";
 // Deck Snapshots / History panel — save named versions of a deck
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   Camera,
   Clock,
@@ -26,15 +26,6 @@ interface SnapshotsPanelProps {
   readonly currentCardCount: number;
   /** Called after a successful restore so the builder can reload the deck */
   readonly onRestore?: () => void;
-}
-
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 }
 
 function DiffBadge({
@@ -66,6 +57,7 @@ export function SnapshotsPanel({
   onRestore,
 }: SnapshotsPanelProps) {
   const t = useTranslations("deck");
+  const format = useFormatter();
   const [snapshots, setSnapshots] = useState<SnapshotMeta[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -258,7 +250,12 @@ export function SnapshotsPanel({
                       </p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                         <span className="text-[10px] text-[var(--text-secondary)]">
-                          {formatDate(snap.createdAt)} · {snap.cardCount} cards
+                          {format.dateTime(new Date(snap.createdAt), {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}{" "}
+                          · {snap.cardCount} cards
                         </span>
                         {snap.commander && (
                           <span className="text-[10px] text-amber-400 truncate max-w-[100px]">
