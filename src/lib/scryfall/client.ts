@@ -32,7 +32,7 @@ function isTestMode(): boolean {
 // Serialized rate-limiting with async mutex (prevents concurrent request race)
 // In test mode (vi.useFakeTimers), bypass delay to avoid timeout issues
 let lastRequestTime = 0;
-let queue: Promise<Response | undefined> = Promise.resolve(undefined);
+let queue: Promise<void> = Promise.resolve();
 
 /**
  * Reset the rate limiter state (for tests only)
@@ -40,44 +40,49 @@ let queue: Promise<Response | undefined> = Promise.resolve(undefined);
  */
 export function __resetRateLimiter() {
   lastRequestTime = 0;
-  queue = Promise.resolve(undefined);
+  queue = Promise.resolve();
 }
 
 function rateLimitedFetch(
   url: string,
   options?: RequestInit
 ): Promise<Response> {
-  return queue
-    .then(async () => {
-      const now = Date.now();
-      const elapsed = now - lastRequestTime;
-      // Only apply delay in non-test environments (skip in test mode to avoid setTimeout issues)
-      if (elapsed < MIN_DELAY_MS && !isTestMode()) {
-        await new Promise<void>((resolve) =>
-          setTimeout(resolve, MIN_DELAY_MS - elapsed)
-        );
-      }
-      lastRequestTime = Date.now();
+  const run = queue.then(async () => {
+    const now = Date.now();
+    const elapsed = now - lastRequestTime;
+    // Only apply delay in non-test environments (skip in test mode to avoid setTimeout issues)
+    if (elapsed < MIN_DELAY_MS && !isTestMode()) {
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, MIN_DELAY_MS - elapsed)
+      );
+    }
+    lastRequestTime = Date.now();
 
-      return fetch(url, {
-        ...options,
-        headers: {
-          ...defaultHeaders,
-          ...options?.headers,
-        },
-      });
-    })
-    .then(
-      (res) => {
-        queue = Promise.resolve(undefined);
-        return res;
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...options?.headers,
       },
-      (err) => {
-        // Reset queue even on error so future requests can still proceed
-        queue = Promise.resolve(undefined);
-        throw err;
-      }
-    );
+    });
+  });
+
+  // Handing the tail back to `queue` is what makes this a mutex. The previous
+  // version chained off `queue` but never reassigned it, so every concurrent
+  // caller found the same already-resolved promise and ran immediately: they
+  // read one `lastRequestTime`, waited the same delay, and then fired at
+  // Scryfall together — the 10 req/s ceiling the comment promises was never
+  // enforced.
+  //
+  // The tail must not reject, or one failed request would poison the chain for
+  // every request after it. Swallowing here only affects the ordering handle;
+  // `run` still carries the rejection to this call's own caller.
+  queue = run.then(
+    () => undefined,
+    () => undefined
+  );
+
+  return run;
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {

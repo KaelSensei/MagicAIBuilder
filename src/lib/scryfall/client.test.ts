@@ -301,3 +301,47 @@ describe("searchCardPrintings", () => {
     expect(fetchCall).toContain("game%3Apaper");
   });
 });
+
+// The module promises "max 10 req/s" and calls its queue an async mutex, so a
+// second caller must not reach `fetch` while the first request is still open.
+// The delay itself is skipped under isTestMode(); what is asserted here is the
+// ordering the mutex exists to provide, which is what the 100ms spacing rides on.
+describe("rate limiting", () => {
+  afterEach(() => { vi.restoreAllMocks(); __resetRateLimiter(); });
+
+  it("holds a concurrent request until the one in flight settles", async () => {
+    let releaseFirst: (value: unknown) => void = () => {};
+    const firstInFlight = new Promise((resolve) => { releaseFirst = resolve; });
+
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(() => firstInFlight)
+      .mockResolvedValue({ ok: true, json: async () => makeScryfallCard("second") });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const first = getCardByName("Sol Ring");
+    const second = getCardByName("Llanowar Elves");
+
+    // Let every pending microtask run. A serialized queue leaves the second
+    // call parked behind the first; an unassigned one lets it straight through.
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    releaseFirst({ ok: true, json: async () => makeScryfallCard("first") });
+    await Promise.all([first, second]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps serving requests after one of them rejects", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("network down"))
+      .mockResolvedValue({ ok: true, json: async () => makeScryfallCard("after-failure") });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getCardByName("Sol Ring")).rejects.toThrow("network down");
+    await expect(getCardByName("Llanowar Elves")).resolves.toMatchObject({
+      id: "after-failure",
+    });
+  });
+});
