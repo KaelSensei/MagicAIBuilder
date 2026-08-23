@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { importFromUrl } from "@/lib/import/url-import";
+import { BOT_CHALLENGE_MESSAGE } from "@/lib/http";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
@@ -54,7 +55,10 @@ export async function POST(request: Request) {
       message.includes("not recognised") ||
       message.includes("HTTP 4") ||
       message.includes("No cards") ||
-      message.includes("empty");
+      message.includes("empty") ||
+      // Nothing on our side failed: the source refused the request. Logging it
+      // as a 500 would bury a standing, known block in the error stream.
+      message === BOT_CHALLENGE_MESSAGE;
 
     // Parser messages in the 422 class are written for the user ("deck is
     // private", "no cards found"). Anything else is an internal failure whose
