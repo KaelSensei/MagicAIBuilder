@@ -259,7 +259,7 @@ docs/
   security/
     security.md                # Threat model + security architecture + hardening rules
     production-checklist.md    # 20-point production checklist, status per item + follow-ups
-    audit-securite-2026-07-20.md  # Full security audit (French)
+    audit-2026-07-20.md        # Full security audit
   prompt-system/               # Prompting system docs (AI behavior, prompts, conventions)
   references/                  # Reference material: typescript-patterns.md, banlists, game-changers, edh-themes, official-sources
   rules/                       # Internal rules / conventions docs (e.g. magic-comp-rules-*.txt)

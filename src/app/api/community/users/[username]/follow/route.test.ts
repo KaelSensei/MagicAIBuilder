@@ -2,17 +2,30 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockUserFindFirst, mockFollowUpsert, mockFollowDeleteMany, mockFollowCount } =
-  vi.hoisted(() => ({
-    mockUserFindFirst: vi.fn(),
-    mockFollowUpsert: vi.fn(),
-    mockFollowDeleteMany: vi.fn(),
-    mockFollowCount: vi.fn(),
-  }));
+const {
+  mockUserFindFirst,
+  mockUserFindUnique,
+  mockFollowUpsert,
+  mockFollowDeleteMany,
+  mockFollowCount,
+} = vi.hoisted(() => ({
+  mockUserFindFirst: vi.fn(),
+  // requireAuth resolves the session id against the database. This route
+  // looks its target up with findFirst, so the two never collide.
+  mockUserFindUnique: vi.fn(async ({ where }: { where: { id?: string } }) => ({
+    id: where.id ?? "user-1",
+    name: null,
+    email: null,
+    image: null,
+  })),
+  mockFollowUpsert: vi.fn(),
+  mockFollowDeleteMany: vi.fn(),
+  mockFollowCount: vi.fn(),
+}));
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    user: { findFirst: mockUserFindFirst },
+    user: { findFirst: mockUserFindFirst, findUnique: mockUserFindUnique },
     userFollow: {
       upsert: mockFollowUpsert,
       deleteMany: mockFollowDeleteMany,

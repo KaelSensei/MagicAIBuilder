@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { STORAGE_STATE } from "./e2e/storage-state";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -55,8 +56,27 @@ export default defineConfig({
     },
     {
       name: "chromium",
+      // Anything ending in .authed.spec.ts belongs to the signed-in project
+      // below; without this it would run here too, with no session.
+      testIgnore: /.*\.authed\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
       dependencies: ["warmup"],
+    },
+    // Signs in once and saves the browser state. PLAYWRIGHT_TEST=1 bypasses
+    // auth server-side only, so without a real session every client-gated
+    // screen renders its signed-out branch forever — which is why the deck
+    // list flow was a permanent test.skip.
+    {
+      name: "auth",
+      testMatch: /auth\.setup\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["warmup"],
+    },
+    {
+      name: "authenticated",
+      testMatch: /.*\.authed\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], storageState: STORAGE_STATE },
+      dependencies: ["auth"],
     },
   ],
   webServer: {

@@ -1,58 +1,66 @@
-# OpenClaw Init Prompt - MagicAIBuilder
+# OpenClaw Init Prompt — MagicAIBuilder
 
-Copy-paste this prompt into OpenClaw pour bootstrapper le projet.
+> **Archival.** This is the prompt that bootstrapped the project, kept as a record of
+> the original brief. Several of its instructions no longer describe the app: there is
+> a light/dark theme toggle rather than dark only, decks are persisted in Postgres
+> rather than held in memory, and the AI features it defers to "Phase 3" have shipped.
+> Read `docs/product/project-spec.md` and `CLAUDE.md` for what is actually true today.
+
+Paste this prompt into OpenClaw to bootstrap the project.
 
 ---
 
 ## Prompt
 
 ````
-Tu es un dev senior frontend React/Next.js. Tu vas initialiser le projet MagicAIBuilder, un deck builder Commander (EDH) pour Magic: The Gathering.
+You are a senior React/Next.js frontend developer. You are going to initialise
+MagicAIBuilder, a Commander (EDH) deck builder for Magic: The Gathering.
 
 ## Context
 
-Lis d'abord ces fichiers dans le repo pour comprendre le projet :
-- README.md : vision generale, deux modes, positionnement
-- docs/product/project-spec.md : spec technique Phase 1 complete (stack, structure, types, endpoints, UI layout, user stories)
-- docs/references/game-changers.md : la Game Changers list pour le systeme de brackets
-- docs/references/banlists.md : la banlist Commander
-- docs/references/edh-themes.md : les themes/archetypes (pour plus tard, Phase 3)
+Read these files in the repo first, to understand the project:
+- README.md — overall vision, the two modes, positioning
+- docs/product/project-spec.md — the complete Phase 1 technical spec (stack, structure, types, endpoints, UI layout, user stories)
+- docs/references/game-changers.md — the Game Changers list, for the bracket system
+- docs/references/banlists.md — the Commander banlist
+- docs/references/edh-themes.md — themes and archetypes (for later, Phase 3)
 
-## Ce que tu dois faire
+## What you have to do
 
-### 1. Init le projet Next.js
+### 1. Initialise the Next.js project
 
 ```bash
 pnpx create-next-app@latest magic-ai-builder --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
 cd magic-ai-builder
 ````
 
-### 2. Installer les deps
+### 2. Install the dependencies
 
 ```bash
 pnpm add zustand @tanstack/react-query framer-motion @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities lucide-react
 pnpm add -D prettier eslint-config-prettier
 ```
 
-### 3. Installer shadcn/ui
+### 3. Install shadcn/ui
 
 ```bash
 pnpx shadcn@latest init
 ```
 
-Puis ajouter les composants de base :
+Then add the base components:
 
 ```bash
 pnpx shadcn@latest add button input dialog card badge tooltip scroll-area separator sheet command popover
 ```
 
-### 4. Creer la structure de dossiers
+### 4. Create the folder structure
 
-Suis exactement la structure definie dans docs/product/project-spec.md section "Project Structure".
+Follow exactly the structure defined in the "Project Structure" section of
+docs/product/project-spec.md.
 
-### 5. Configurer le theme dark
+### 5. Configure the dark theme
 
-Tailwind config avec les design tokens de la spec (section "Theme & Design Tokens") :
+Tailwind config with the design tokens from the spec ("Theme & Design Tokens"):
 
 - Background near-black (#0a0a0f)
 - Surface panels (#12121a)
@@ -60,63 +68,66 @@ Tailwind config avec les design tokens de la spec (section "Theme & Design Token
 - Mana colors (W/U/B/R/G)
 - Bracket colors (green/blue/amber/red)
 
-Le dark mode doit etre le DEFAULT, pas un toggle.
+Dark mode must be the DEFAULT, not a toggle.
 
-### 6. Scaffolder les composants de base
+### 6. Scaffold the base components
 
-Cree des versions minimales (placeholder) de chaque composant liste dans la spec. Chaque composant doit :
+Create a minimal (placeholder) version of every component listed in the spec.
+Each component must:
 
-- Avoir les bons props TypeScript
-- Rendre un placeholder visible (pas un div vide)
-- Etre exporte proprement
+- Take the right TypeScript props
+- Render a visible placeholder (not an empty div)
+- Be exported cleanly
 
-### 7. Creer le Scryfall API client
+### 7. Create the Scryfall API client
 
-Implemente `src/lib/scryfall/client.ts` avec :
+Implement `src/lib/scryfall/client.ts` with:
 
-- Rate limiting (100ms entre les requetes, queue)
-- Headers requis par Scryfall (User-Agent, Accept)
-- Types TypeScript pour les reponses Scryfall
-- Fonctions : searchCards, getCardByName, getCardByFuzzyName, batchLookup, getAutocomplete, getGameChangers, getBannedCards
+- Rate limiting (100ms between requests, queued)
+- The headers Scryfall requires (User-Agent, Accept)
+- TypeScript types for the Scryfall responses
+- Functions: searchCards, getCardByName, getCardByFuzzyName, batchLookup, getAutocomplete, getGameChangers, getBannedCards
 
-### 8. Creer le Zustand store
+### 8. Create the Zustand store
 
-Implemente `src/lib/deck/store.ts` avec les types de la spec et les actions :
+Implement `src/lib/deck/store.ts` with the spec's types and these actions:
 
 - setCommander, setPartner, setCompanion
-- addCard, removeCard, moveCard (entre categories)
+- addCard, removeCard, moveCard (between categories)
 - setTargetBracket, setBudget
 - importDeck, exportDeck
 - computed: getStats, getBracketScore
-- Partner validation : verifier le keyword (Partner, Partner with, Friends Forever, Background, Doctor's companion) et valider la paire
-- Companion validation : verifier la restriction du companion contre le deck entier
+- Partner validation: check the keyword (Partner, Partner with, Friends Forever, Background, Doctor's companion) and validate the pair
+- Companion validation: check the companion's restriction against the whole deck
 
-### 9. Creer la page builder
+### 9. Create the builder page
 
-Assemble les composants dans `src/app/builder/[deckId]/page.tsx` en suivant le layout ASCII de la spec :
+Assemble the components in `src/app/builder/[deckId]/page.tsx`, following the
+spec's ASCII layout:
 
-- Panel gauche : recherche + resultats (300px)
-- Centre : editeur de deck (categories avec cartes)
-- Panel droit : stats + bracket score + checks
+- Left panel: search + results (300px)
+- Centre: deck editor (categories with cards)
+- Right panel: stats + bracket score + checks
 
-### 10. Premier rendu fonctionnel
+### 10. First working render
 
-Objectif : pouvoir chercher une carte sur Scryfall, voir l'image, et l'ajouter au deck. Le bracket score et les stats doivent se mettre a jour en temps reel.
+The goal: search Scryfall for a card, see its image, and add it to the deck. The
+bracket score and the stats must update in real time.
 
-## Regles importantes
+## Rules that matter
 
-- TypeScript strict, pas de `any`
-- Composants fonctionnels uniquement, hooks pour la logique
-- Framer Motion pour TOUTES les animations (hover, drag, transitions)
-- Dark theme UNIQUEMENT (pas de light mode)
-- L'esthetique est la priorite #1. Chaque composant doit etre beau, soigne, avec des micro-interactions
-- Les images de cartes viennent de Scryfall (cards.scryfall.io)
-- Rate limit Scryfall : 10 req/s max, implemente un debounce sur la recherche (300ms)
-- Ne fetch PAS tout au demarrage. Lazy load, recherche a la demande
-- Pas de localStorage pour les decks en Phase 1 (on gere en memoire)
-- Double-faced cards (DFC/MDFC) : Scryfall retourne `card_faces[]` au lieu de `oracle_text`/`mana_cost` au top level. Toujours checker `card.layout` et utiliser `card_faces[0]` pour le front
-- Partner : supporter les 5 variantes (Partner, Partner with, Friends Forever, Choose a Background, Doctor's companion). La color identity du deck = union des deux commanders
-- Companion : le companion est EN DEHORS des 100 cartes. Sa restriction doit etre satisfaite par TOUTES les cartes du deck. Lutri est banni comme companion uniquement
+- TypeScript strict, no `any`
+- Function components only, hooks for the logic
+- Framer Motion for EVERY animation (hover, drag, transitions)
+- Dark theme ONLY (no light mode)
+- Looks are priority #1. Every component must be beautiful, polished, with micro-interactions
+- Card images come from Scryfall (cards.scryfall.io)
+- Scryfall rate limit: 10 req/s max — debounce the search (300ms)
+- Do NOT fetch everything on start-up. Lazy load, search on demand
+- No localStorage for decks in Phase 1 (kept in memory)
+- Double-faced cards (DFC/MDFC): Scryfall returns `card_faces[]` instead of top-level `oracle_text`/`mana_cost`. Always check `card.layout` and use `card_faces[0]` for the front
+- Partner: support all five variants (Partner, Partner with, Friends Forever, Choose a Background, Doctor's companion). The deck's colour identity is the union of both commanders
+- Companion: the companion sits OUTSIDE the 100 cards. Its restriction must be satisfied by EVERY card in the deck. Lutri is banned as a companion only
 
 ```
 
@@ -124,9 +135,9 @@ Objectif : pouvoir chercher une carte sur Scryfall, voir l'image, et l'ajouter a
 
 ## Notes
 
-- Ce prompt est concu pour etre donne tel quel a OpenClaw
-- Il reference les fichiers du repo, donc OpenClaw doit avoir acces au dossier MagicAIBuilder
-- Si OpenClaw demande des precisions, renvoie-le vers `docs/product/project-spec.md`
-- Phase 1 = Free Build uniquement. L'IA (Phase 3) viendra plus tard
-- Pense a commit regulierement au fur et a mesure que les composants sont fonctionnels
+- This prompt is designed to be handed to OpenClaw as-is
+- It references files in the repo, so OpenClaw needs access to the MagicAIBuilder folder
+- If OpenClaw asks for clarification, point it back at `docs/product/project-spec.md`
+- Phase 1 = Free Build only. The AI (Phase 3) comes later
+- Remember to commit regularly as components become functional
 ```

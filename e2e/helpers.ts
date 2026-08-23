@@ -51,7 +51,13 @@ export async function suppressOnboarding(page: Page): Promise<void> {
 export async function openBuilder(page: Page): Promise<void> {
   await suppressOnboarding(page);
   await page.goto("/decks");
-  await page.click("text=New Deck");
+  // Strict, and a role rather than text. "New Deck" is also the default name of
+  // every deck this helper creates, so once the account persists decks - which
+  // it now does, since auth.setup.ts signs in as a real user - the text selector
+  // resolves to the header button *and* every matching deck card. page.click
+  // silently takes the first, so a run could open an existing deck, pass
+  // waitForURL and its assertions, and create nothing at all.
+  await page.getByRole("button", { name: "New Deck", exact: true }).click();
   await page.waitForURL(/\/builder\//);
   await page
     .getByRole("link", { name: "Back to my decks" })
