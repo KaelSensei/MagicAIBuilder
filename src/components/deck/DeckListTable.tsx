@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
 import type { Deck } from "@/lib/deck/types";
 import { getDeckPresentationManaColors } from "./HomeDeckCard";
@@ -102,6 +102,7 @@ function DeckListRow({
   const isManual = Boolean(deck.manualBracket);
   const manaColors = useMemo(() => getDeckPresentationManaColors(deck), [deck]);
   const t = useTranslations("deck");
+  const format = useFormatter();
 
   return (
     <tr className="group [&>td]:px-4 [&>td]:py-3">
@@ -156,7 +157,7 @@ function DeckListRow({
       <td className="min-w-[120px] text-[var(--text-secondary)]">
         <div className="flex items-center gap-1.5">
           <Clock className="h-3.5 w-3.5" />
-          <span>{new Date(deck.updatedAt).toLocaleDateString()}</span>
+          <span>{format.dateTime(new Date(deck.updatedAt))}</span>
         </div>
       </td>
 
