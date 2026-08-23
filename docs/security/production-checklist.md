@@ -3,7 +3,7 @@
 Status audited against the code on **2026-08-20**. Items marked _fixed 2026-08-20_ were
 closed by `fix/security-hardening` the same day; everything else is either already in
 place or tracked in **Follow-ups** below. Companion to the fuller
-[`audit-securite-2026-07-20.md`](./audit-securite-2026-07-20.md), whose open findings
+[`audit-2026-07-20.md`](./audit-2026-07-20.md), whose open findings
 (CSP, HSTS, COOP/CORP) are closed by the same change.
 
 ## Authentication & secrets
