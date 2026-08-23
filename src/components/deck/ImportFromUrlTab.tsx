@@ -1,5 +1,5 @@
 "use client";
-// Import deck from supported URL sources (Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec)
+// Import deck from supported URL sources (Moxfield, Archidekt, MTGTop8, MTGDecks, EDHRec)
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -29,8 +29,24 @@ const SOURCE_LABELS: Record<string, string> = {
   edhrec: "EDHRec",
 };
 
+/**
+ * Sources this panel advertises.
+ *
+ * TappedOut is deliberately absent while staying in SOURCE_LABELS. It sits
+ * behind a Cloudflare managed challenge: a public deck's text export answers
+ * 403 with `cf-mitigated: challenge` to the app's User-Agent, every time. So
+ * listing it promises an import that cannot happen — the same reason the
+ * roadmap already records MTGGoldfish as blocked. Detection stays on purpose,
+ * so a pasted TappedOut URL is named and explained rather than dismissed as
+ * "Source not recognised".
+ */
+const BLOCKED_SOURCES: ReadonlySet<string> = new Set(["tappedout"]);
+
 // Brand names, deliberately not translated
-const SOURCES_LIST = Object.values(SOURCE_LABELS).join(", ");
+const SOURCES_LIST = Object.entries(SOURCE_LABELS)
+  .filter(([source]) => !BLOCKED_SOURCES.has(source))
+  .map(([, label]) => label)
+  .join(", ");
 
 type ImportStatus = "idle" | "loading" | "done" | "error";
 
