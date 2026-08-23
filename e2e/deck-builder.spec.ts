@@ -2,21 +2,9 @@ import { test, expect } from "@playwright/test";
 import { openBuilder } from "./helpers";
 
 test.describe("Deck Builder Flow", () => {
-  // The decks list only loads when the *client* NextAuth session is authenticated
-  // (see decks/page.tsx: `if (sessionStatus !== "authenticated") return`). The e2e
-  // harness bypasses auth server-side only and never establishes a client session,
-  // so this list-dependent flow stays on "Loading…". Needs a real login / storageState.
-  test.skip("can create a deck and see it on home page", async ({ page }) => {
-    await openBuilder(page);
-
-    // Navigate back to home
-    await page.goto("/decks");
-
-    // Deck should now appear (the deck list loads asynchronously)
-    const deckCard = page.getByTestId("deck-card");
-    await expect(deckCard.first()).toBeVisible({ timeout: 15000 });
-    await expect(deckCard.first()).toContainText("New Deck");
-  });
+  // The signed-in deck-list flow that used to sit here as a permanent
+  // test.skip now lives in deck-list.authed.spec.ts, which runs against a
+  // saved session from auth.setup.ts.
 
   test("builder shows 3-panel layout", async ({ page }) => {
     await openBuilder(page);
