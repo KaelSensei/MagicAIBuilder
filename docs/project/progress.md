@@ -5,19 +5,19 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-08-22                             |
+| Last Updated  | 2026-08-23                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-08-22)
+## Current metrics (2026-08-23)
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2485 across 176 files                                                                                                                   |
-| E2E tests           | 58 passing, 1 skipped (`@external` / `@perf` excluded) — ~3.4 min, serial since #535                                                    |
-| Coverage            | 94.89% statements, 87.14% branches, 97.23% functions                                                                                    |
-| SonarCloud          | 0 open issues                                                                                                                           |
-| Source files        | 325 (`.ts`/`.tsx`, excluding tests)                                                                                                     |
+| Unit tests          | 2583 across 188 files                                                                                                                   |
+| E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
+| Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
+| SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
+| Source files        | 327 (`.ts`/`.tsx`, excluding tests)                                                                                                     |
 | Components          | 145 — every `.tsx` under `src/` excluding tests, pages included (the label undercounts what it measures; `src/components` alone is 123) |
 | API routes          | 46                                                                                                                                      |
 | Prisma models       | 22                                                                                                                                      |
@@ -28,6 +28,8 @@
 | CI workflows        | 3 (CI, SonarCloud, Lighthouse) — all on PRs into `staging`, `dev`, `main`                                                               |
 
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
+
+> **The coverage number fell from 94.89% to 50.52% without a single test being deleted.** The denominator changed: `src/app` and `src/components` were excluded from the measure, so "94.89%" described roughly a third of the repository. The exclusions were removed on 2026-08-23, and `vitest.config.ts` records the breakdown that made it visible — lib 96.6%, hooks 87.4%, components 25.2%, app 25.1%, all of src **48.5%**. This batch moved it to **50.52%**. Compare only against figures measured after that change; anything at 90-something in this file above 2026-08-23 is measuring the smaller denominator.
 
 ## Known open issues
 
@@ -65,9 +67,18 @@
   - Whether this closes the intermittent failure is **not yet known**: it has never been reproducible on demand, so only a stretch of green gates can answer it. Do not mark it resolved on the strength of the mechanism alone.
   - The production-build question (un-tying the e2e auth bypass from `NODE_ENV`) is **no longer blocking** and can be judged on its own merits.
 - **Dev database drift**: `DeckCard.isMaybeboard` exists in the local database but not in migration history, so `prisma migrate dev` wants to reset. Work around it with `db execute` + `migrate resolve`.
-- **Five transitive `high` npm advisories, unfixable without majors** (2026-08-20): `sharp` and `postcss` are pinned by `next@15`, `defu` and `deepmerge-ts` by `prisma@6`. `pnpm audit` runs in CI since #486 — **critical blocks, high only reports**. Tighten to `--audit-level=high` once Next 16 / Prisma 7 land.
+- ~~**Five transitive `high` npm advisories, unfixable without majors**~~ **Resolved 2026-08-23 (#552, #554).** The premise was wrong: none of the five needed Next 16 or Prisma 7. `pnpm.overrides` reaches a transitive dependency whatever pins it, and fifteen of them took the audit from **31 advisories to 1**, with the production tree clean at every level including `--audit-level=low`. The CI gate now **blocks at `high`** and reports `moderate`, which is the step the workflow comment had been describing since 2026-08-20.
+  - **One advisory cannot be closed**: `extract-zip` (`@lhci/cli > lighthouse > puppeteer-core > @puppeteer/browsers`) has no patched version published. Dev-only; it stays until upstream ships one.
+  - The lesson worth keeping: "unfixable without a major" was recorded three months running without anyone testing it. An override is a two-line experiment.
+- **`SONAR_TOKEN` returns HTTP 403, so no SonarCloud analysis has run since 2026-08-23.** The scanner dies before it starts: `Failed to query JRE metadata: GET https://api.sonarcloud.io/analysis/jres … failed with HTTP 403`. Every branch is affected, `main` included. **This is a different failure from the 2026-08-16 one below** — the secret is present, so the `Require SONAR_TOKEN` guard passes and the scan fails afterwards; it is rejected rather than missing, which means the token was revoked or has expired.
+  - **The trap: the pre-PR checklist reads "open issues = 0" and gets it.** The issues API answers `{"total":0}` because it is serving the last successful analysis, not the code under review — the same stale-snapshot shape `sonar.yml`'s own comment warns about for a skipped scan. Batch #552–#562 shipped six commits with that gate **unsatisfied and looking green**. Treat `total: 0` as "no data" until a run succeeds.
+  - Fix: regenerate at https://sonarcloud.io/account/security and update Settings > Secrets and variables > Actions.
 - **Production security follow-ups** (`docs/security/production-checklist.md`, audited 2026-08-20): rate limiting is still an in-process `Map` so it counts per Vercel lambda; **no email verification** (schema is ready, no mail provider); the **Neon PITR retention window has never been verified**; the CSP still carries `'unsafe-inline'` on `script-src` because Next hydrates through inline scripts — removing it needs per-request nonces through middleware and the root layout.
-- **`gh pr merge --rebase` still drifts the promotion branches.** Rebasing avoids a merge commit _on the target_, but it rewrites the promoted commits, so after `staging → dev → main` the same commits exist three times under different SHAs — identical trees, divergent histories. The fix is to reset `staging` and `dev` onto `main` after each promotion (done 2026-08-20 for batch #480–#489). CLAUDE.md's claim that rebasing "keeps all three branches on the same commit" is only true after that reset.
+- **`gh pr merge --rebase` still drifts the promotion branches.** Rebasing avoids a merge commit _on the target_, but it rewrites the promoted commits, so after `staging → dev → main` the same commits exist three times under different SHAs — identical trees, divergent histories. The fix is to reset `staging` and `dev` onto `main` after each promotion (done 2026-08-20 for batch #480–#489, and again 2026-08-23 for #552–#562). CLAUDE.md's claim that rebasing "keeps all three branches on the same commit" is only true after that reset.
+  - **2026-08-23: skipping the reset eventually blocks a promotion outright, and the symptom is silence.** Once `staging` carries merge commits the target does not, a promotion PR comes back `mergeable: CONFLICTING` — and **GitHub cannot build the merge ref for a conflicting PR, so it dispatches no workflow at all.** No CI, no Lighthouse, no Sonar, no error: `gh pr checks` listed only Vercel on #563. There is nothing to read, so the first instinct is to hunt for a broken trigger. **Check `gh pr view <n> --json mergeable,mergeStateStatus` first.**
+  - **A clean rebase probe is not evidence the merge will work.** `git rebase origin/dev` from `staging` printed `skipped previously applied commit …` and succeeded, which reads as reassurance and is not: a PR is tested by a _merge_, and the same edits arriving down two ancestries conflict.
+  - **Unblocking needs no force-push**: open the promotion from `staging` rebased onto `dev` on a fresh branch, which is a true descendant and merges cleanly. The force-push is only for the realignment afterwards, and only once `git diff` and `git log --cherry-pick --right-only` confirm the branches hold nothing but content-free merge commits.
+  - **The root cause is upstream of the promotion**: #552–#554 were merged into `staging` with `--merge`. Use `--rebase` on feature PRs and the divergence never starts.
 - ~~**The matchup breakdown has no data.**~~ **Resolved (#425).** The recording bar asks for opponent strength and the breakdown shows the split. The stale copy of this line survived here and in the roadmap until 2026-08-19 — when syncing docs, check the component, not the last review.
 - **Three docs are still in French**: `docs/init-prompt.md`, `docs/product/competitive-landscape.md`, `docs/security/audit-securite-2026-07-20.md` (French filename too).
 - **The silent-read failure is a recurring shape, not three coincidences** (2026-08-20). Three instances found: the MTGTop8 source (#487, unnoticed for months), `DeckRatingPanel` (#505, found by accident) and `DeckCommentPanel` (#506, found by grepping for the signature). All three share it: **a read whose failure is indistinguishable from a legitimate empty state, with no way to recover.** The UI renders something plausible, so nobody suspects the fetch, and no error is logged anywhere the user or the developer looks.
