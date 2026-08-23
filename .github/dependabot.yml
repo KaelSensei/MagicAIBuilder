@@ -22,3 +22,24 @@ updates:
         update-types:
           - minor
           - patch
+
+  # The workflows pin actions/checkout, actions/setup-node, actions/upload-artifact,
+  # pnpm/action-setup and SonarSource/sonarqube-scan-action by major tag. Nothing
+  # was watching them, so a tag going stale — or an advisory against one — showed
+  # up only when a run started warning about it (the SonarCloud job already warns
+  # that its Node 20 runtime is deprecated).
+  #
+  # Majors are NOT ignored here, unlike the npm config above: an action's breaking
+  # changes are usually a runner-version bump, the PR is a one-line diff, and CI
+  # proves it on the spot. Holding those back is how a workflow ends up pinned to
+  # a runtime GitHub has stopped supporting.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
