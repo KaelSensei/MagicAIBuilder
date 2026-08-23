@@ -9,15 +9,25 @@
 interface WindowEntry {
   count: number;
   windowStart: number;
+  /**
+   * The window this entry was opened with.
+   *
+   * Callers do not agree on a window: signup and login budget over 15 minutes,
+   * every other endpoint over 60 seconds, and they all share this one store.
+   * Pruning against the *calling* window therefore let a 60-second caller
+   * evict a 15-minute entry — one import or meta request was enough to reset
+   * someone else's login attempt counter, which is the opposite of what a
+   * brute-force limit is for. Each entry now expires on its own terms.
+   */
+  windowMs: number;
 }
 
 const store = new Map<string, WindowEntry>();
 
-/** Prune entries older than 2× the window to prevent unbounded growth */
-function prune(windowMs: number): void {
-  const cutoff = Date.now() - windowMs * 2;
+/** Prune entries older than 2× their own window to prevent unbounded growth */
+function prune(now: number): void {
   for (const [key, entry] of store) {
-    if (entry.windowStart < cutoff) store.delete(key);
+    if (now - entry.windowStart >= entry.windowMs * 2) store.delete(key);
   }
 }
 
@@ -31,13 +41,13 @@ export function checkRateLimit(
   windowMs: number
 ): { allowed: true } | { allowed: false; retryAfterMs: number } {
   const now = Date.now();
-  prune(windowMs);
+  prune(now);
 
   const entry = store.get(key);
 
   if (!entry || now - entry.windowStart >= windowMs) {
     // New window
-    store.set(key, { count: 1, windowStart: now });
+    store.set(key, { count: 1, windowStart: now, windowMs });
     return { allowed: true };
   }
 
