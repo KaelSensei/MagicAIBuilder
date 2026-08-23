@@ -522,10 +522,12 @@
     "aiBuilding": "AI is building your deck…",
     "thinking": "Thinking…",
     "commanderLabel": "Commander: {name}",
-    "cardProgress": "{count} / 99 cards…",
+    "cardProgress": "{count} / {total} cards…",
     "generatingDeck": "Generating deck…",
     "tryAgain": "Try again",
-    "buildCancelled": "Build was cancelled or failed."
+    "buildCancelled": "Build was cancelled or failed.",
+    "addingCards": "Adding cards to your deck…",
+    "demoDeckNotice": "Demo deck — no AI provider is configured on this deployment, so this is a placeholder list."
   },
   "description": {
     "add": "Add deck description…",

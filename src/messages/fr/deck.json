@@ -476,10 +476,12 @@
     "aiBuilding": "L’IA construit votre deck…",
     "thinking": "Réflexion…",
     "commanderLabel": "Commandant : {name}",
-    "cardProgress": "{count} / 99 cartes…",
+    "cardProgress": "{count} / {total} cartes…",
     "generatingDeck": "Génération du deck…",
     "tryAgain": "Réessayer",
-    "buildCancelled": "La construction a été annulée ou a échoué."
+    "buildCancelled": "La construction a été annulée ou a échoué.",
+    "addingCards": "Ajout des cartes à votre deck…",
+    "demoDeckNotice": "Deck de démonstration — aucun fournisseur IA n’est configuré sur ce déploiement, cette liste est un simple exemple."
   },
   "ratings": {
     "title": "Community Rating",

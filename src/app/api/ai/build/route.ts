@@ -3,58 +3,56 @@ import { buildSchema, sanitizeForPrompt } from "@/lib/validation/ai";
 import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { mockDeck } from "./mock-deck";
+import type {
+  AIDeckResponse,
+  Bracket,
+  BuildEvent,
+  BuildRequest,
+  BuildSource,
+} from "./types";
 
 export const runtime = "nodejs";
+/**
+ * The provider call alone can take the better part of a minute. Without this the
+ * platform default (10s) killed the response mid-stream, and the wizard sat on a
+ * half-filled progress bar with no error.
+ */
+export const maxDuration = 60;
 
 const RATE_LIMIT = 5; // max AI builds
 const RATE_WINDOW = 60_000; // per 60 seconds per user
 
-// ---------------------------------------------------------------------------
-// Request / Response types
-// ---------------------------------------------------------------------------
-export interface BuildRequest {
-  budget: number | null; // null = no limit
-  colors: string[]; // ["W", "U", "B", "R", "G"]
-  strategy: string; // "Aggro" | "Control" | etc.
-  commanderName: string | null; // null = let AI pick
-  bracket: 1 | 2 | 3 | 4; // target power level
-}
-
-export type BuildEvent =
-  | { type: "status"; message: string }
-  | { type: "commander"; name: string }
-  | { type: "card"; name: string; category: string }
-  | { type: "done"; totalCards: number }
-  | { type: "error"; message: string };
-
-interface AICard {
-  name: string;
-  quantity: number;
-  category: string;
-}
-
-interface AIDeckResponse {
-  commander: string;
-  partner: string | null;
-  cards: AICard[];
-}
+export type { BuildEvent, BuildRequest, BuildSource } from "./types";
 
 // ---------------------------------------------------------------------------
 // Prompt builder
 // ---------------------------------------------------------------------------
-const BRACKET_DESCRIPTIONS: Record<number, string> = {
+const BRACKET_DESCRIPTIONS: Record<Bracket, string> = {
   1: "Bracket 1 — Casual/precon level. No tutors, no combos, no game changers.",
   2: "Bracket 2 — Low power. 0-1 game changers max, no infinite combos, budget-friendly.",
   3: "Bracket 3 — Mid power. Up to 3 game changers, some strong synergies, no cEDH staples.",
-  4: "Bracket 4 — High power / cEDH. Any legal card, optimized for winning.",
+  4: "Bracket 4 — High power. Fast combos and strong staples, short of a tuned cEDH list.",
+  5: "Bracket 5 — cEDH. Any legal card, fully optimized for winning.",
+};
+
+const COLOR_NAMES: Record<string, string> = {
+  W: "White",
+  U: "Blue",
+  B: "Black",
+  R: "Red",
+  G: "Green",
+  C: "Colorless",
 };
 
 function buildPrompt(req: BuildRequest): string {
-  const colorNames: Record<string, string> = { W: "White", U: "Blue", B: "Black", R: "Red", G: "Green", C: "Colorless" };
-  const colorStr = req.colors.length > 0 ? req.colors.map((c) => colorNames[c] ?? c).join(", ") : "Colorless";
+  const colorStr =
+    req.colors.length > 0
+      ? req.colors.map((c) => COLOR_NAMES[c] ?? c).join(", ")
+      : "Colorless";
   const colorSymbols = req.colors.filter((c) => c !== "C").join(""); // e.g. "UB" for Dimir
   const budgetStr = req.budget ? `$${req.budget} max per card` : "No limit";
-  const bracketDesc = BRACKET_DESCRIPTIONS[req.bracket] ?? BRACKET_DESCRIPTIONS[2];
+  const bracketDesc = BRACKET_DESCRIPTIONS[req.bracket];
 
   const commanderStr = req.commanderName
     ? `Use exactly "${req.commanderName}" as the commander`
@@ -85,8 +83,10 @@ Return a complete Commander decklist as ONLY valid JSON (no markdown, no text ou
 }
 
 STRICT RULES:
-- "cards" array must contain EXACTLY 99 entries (total quantity sum = 99) — this is mandatory
-- If using a partner commander, set "partner" field and "cards" must contain EXACTLY 98 entries
+- The quantities in "cards" must sum to EXACTLY 99 — this is mandatory
+- Every card except basic lands is singleton: give them "quantity": 1
+- Group basic lands into a single entry each with the right quantity, e.g. { "name": "Island", "quantity": 12 }
+- If using a partner commander, set "partner" and make the quantities sum to EXACTLY 98
 - Include approximately 36-38 lands
 - Use basic lands matching your color identity only (Plains/Island/Swamp/Mountain/Forest)
 - All cards must be legal in Commander format
@@ -103,7 +103,7 @@ async function callAnthropic(prompt: string): Promise<AIDeckResponse> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
@@ -111,14 +111,19 @@ async function callAnthropic(prompt: string): Promise<AIDeckResponse> {
       max_tokens: 4096,
       messages: [{ role: "user", content: prompt }],
     }),
-    signal: AbortSignal.timeout(60000),
+    // Must stay under maxDuration so a slow provider surfaces as an error
+    // event rather than the platform truncating the stream.
+    signal: AbortSignal.timeout(45_000),
   });
 
   if (!response.ok) throw new Error(`Anthropic API error: ${response.status}`);
   const data = await response.json();
   const text: string = data.content?.[0]?.text ?? "{}";
   // Strip markdown fences if the model wrapped output anyway
-  const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+  const cleaned = text
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
   return JSON.parse(cleaned) as AIDeckResponse;
 }
 
@@ -138,7 +143,7 @@ async function callOpenAI(prompt: string): Promise<AIDeckResponse> {
       response_format: { type: "json_object" },
       max_tokens: 4096,
     }),
-    signal: AbortSignal.timeout(60000),
+    signal: AbortSignal.timeout(45_000),
   });
 
   if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
@@ -148,140 +153,59 @@ async function callOpenAI(prompt: string): Promise<AIDeckResponse> {
 }
 
 // ---------------------------------------------------------------------------
-// Mock deck for development (no API key)
-// ---------------------------------------------------------------------------
-function mockDeck(req: BuildRequest): AIDeckResponse {
-  const commander = req.commanderName ?? "Atraxa, Praetors' Voice";
-
-  const lands: AICard[] = [
-    { name: "Command Tower", quantity: 1, category: "land" },
-    { name: "Arcane Sanctum", quantity: 1, category: "land" },
-    { name: "Exotic Orchard", quantity: 1, category: "land" },
-    { name: "Evolving Wilds", quantity: 1, category: "land" },
-    { name: "Terramorphic Expanse", quantity: 1, category: "land" },
-    { name: "Plains", quantity: 6, category: "land" },
-    { name: "Island", quantity: 6, category: "land" },
-    { name: "Swamp", quantity: 6, category: "land" },
-    { name: "Forest", quantity: 6, category: "land" },
-    { name: "Mountain", quantity: 4, category: "land" },
-    { name: "Reliquary Tower", quantity: 1, category: "land" },
-    { name: "Temple of Mystery", quantity: 1, category: "land" },
-  ];
-
-  const ramp: AICard[] = [
-    { name: "Sol Ring", quantity: 1, category: "ramp" },
-    { name: "Arcane Signet", quantity: 1, category: "ramp" },
-    { name: "Commander's Sphere", quantity: 1, category: "ramp" },
-    { name: "Cultivate", quantity: 1, category: "ramp" },
-    { name: "Kodama's Reach", quantity: 1, category: "ramp" },
-    { name: "Rampant Growth", quantity: 1, category: "ramp" },
-    { name: "Farseek", quantity: 1, category: "ramp" },
-  ];
-
-  const draw: AICard[] = [
-    { name: "Rhystic Study", quantity: 1, category: "draw" },
-    { name: "Mystic Remora", quantity: 1, category: "draw" },
-    { name: "Phyrexian Arena", quantity: 1, category: "draw" },
-    { name: "Harmonize", quantity: 1, category: "draw" },
-    { name: "Windfall", quantity: 1, category: "draw" },
-    { name: "Brainstorm", quantity: 1, category: "draw" },
-    { name: "Ponder", quantity: 1, category: "draw" },
-  ];
-
-  const removal: AICard[] = [
-    { name: "Swords to Plowshares", quantity: 1, category: "removal" },
-    { name: "Path to Exile", quantity: 1, category: "removal" },
-    { name: "Counterspell", quantity: 1, category: "removal" },
-    { name: "Swan Song", quantity: 1, category: "removal" },
-    { name: "Cyclonic Rift", quantity: 1, category: "removal" },
-    { name: "Wrath of God", quantity: 1, category: "removal" },
-    { name: "Damnation", quantity: 1, category: "removal" },
-    { name: "Generous Gift", quantity: 1, category: "removal" },
-  ];
-
-  const creatures: AICard[] = [
-    { name: "Eternal Witness", quantity: 1, category: "creature" },
-    { name: "Reclamation Sage", quantity: 1, category: "creature" },
-    { name: "Mulldrifter", quantity: 1, category: "creature" },
-    { name: "Solemn Simulacrum", quantity: 1, category: "creature" },
-    { name: "Burnished Hart", quantity: 1, category: "creature" },
-    { name: "Sun Titan", quantity: 1, category: "creature" },
-    { name: "Avacyn, Angel of Hope", quantity: 1, category: "creature" },
-    { name: "Consecrated Sphinx", quantity: 1, category: "creature" },
-    { name: "Selvala, Heart of the Wilds", quantity: 1, category: "creature" },
-    { name: "Seedborn Muse", quantity: 1, category: "creature" },
-    { name: "Glen Elendra Archmage", quantity: 1, category: "creature" },
-    { name: "Mystic Snake", quantity: 1, category: "creature" },
-  ];
-
-  const other: AICard[] = [
-    { name: "Swiftfoot Boots", quantity: 1, category: "other" },
-    { name: "Lightning Greaves", quantity: 1, category: "other" },
-    { name: "Sensei's Divining Top", quantity: 1, category: "other" },
-    { name: "Mimic Vat", quantity: 1, category: "other" },
-    { name: "Strionic Resonator", quantity: 1, category: "other" },
-    { name: "The Ozolith", quantity: 1, category: "other" },
-    { name: "Doubling Season", quantity: 1, category: "other" },
-    { name: "Parallel Lives", quantity: 1, category: "other" },
-    { name: "Hardened Scales", quantity: 1, category: "other" },
-    { name: "Inexorable Tide", quantity: 1, category: "other" },
-    { name: "Contagion Engine", quantity: 1, category: "other" },
-    { name: "Sword of Truth and Justice", quantity: 1, category: "other" },
-    { name: "Grafted Exoskeleton", quantity: 1, category: "other" },
-    { name: "Rings of Brighthearth", quantity: 1, category: "other" },
-  ];
-
-  const allCards = [...lands, ...ramp, ...draw, ...removal, ...creatures, ...other];
-
-  // Expand by quantity and trim to exactly 99 cards
-  const flat: AICard[] = [];
-  for (const c of allCards) {
-    for (let i = 0; i < c.quantity; i++) {
-      flat.push({ name: c.name, quantity: 1, category: c.category });
-    }
-  }
-  const trimmed = flat.slice(0, 99);
-
-  return {
-    commander,
-    partner: null,
-    cards: trimmed,
-  };
-}
-
-// ---------------------------------------------------------------------------
 // Stream helper
 // ---------------------------------------------------------------------------
-function delay(ms: number) {
-  return new Promise<void>((r) => setTimeout(r, ms));
-}
-
-async function streamDeck(
-  controller: ReadableStreamDefaultController<Uint8Array>,
-  deck: AIDeckResponse
-) {
-  const encoder = new TextEncoder();
-  const emit = (event: BuildEvent) =>
-    controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
-
-  emit({ type: "status", message: "Commander selected…" });
-  await delay(60);
+/**
+ * Emits one event per decklist entry, carrying the entry's quantity so basics
+ * survive the trip. There is deliberately no artificial per-card delay: it used
+ * to burn three seconds of the function budget for a cosmetic effect.
+ *
+ * Not exported. A Next.js `route.ts` may only export the HTTP verbs and a
+ * fixed set of config fields, so an exported helper fails the build with
+ * "streamDeck is not a valid Route export field" — a check `tsc --noEmit`
+ * does not run, which is why it passed locally and failed in CI.
+ */
+function streamDeck(
+  emit: (event: BuildEvent) => void,
+  deck: AIDeckResponse,
+  source: BuildSource,
+): void {
   emit({ type: "commander", name: deck.commander });
-
   emit({ type: "status", message: "Building card list…" });
 
+  let total = 0;
   for (const card of deck.cards) {
-    await delay(30);
-    emit({ type: "card", name: card.name, category: card.category });
+    // Guard against a model returning 0, a negative, or a non-integer.
+    const quantity = Math.max(1, Math.floor(card.quantity || 1));
+    total += quantity;
+    emit({ type: "card", name: card.name, category: card.category, quantity });
   }
 
   if (deck.partner) {
-    await delay(30);
-    emit({ type: "card", name: deck.partner, category: "commander" });
+    total += 1;
+    emit({
+      type: "card",
+      name: deck.partner,
+      category: "commander",
+      quantity: 1,
+    });
   }
 
-  const total = deck.cards.length + (deck.partner ? 1 : 0);
-  emit({ type: "done", totalCards: total });
+  emit({ type: "done", totalCards: total, source });
+}
+
+/** Narrows the validated bracket number to the Bracket union without a cast. */
+function toBracket(value: number): Bracket {
+  switch (value) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+      return value;
+    default:
+      return 2;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -291,11 +215,20 @@ export async function POST(request: Request) {
   const auth = await requireAuth();
   if (auth.error) return auth.error;
 
-  const rl = checkRateLimit(`ai-build:${auth.session.user.id}`, RATE_LIMIT, RATE_WINDOW);
+  const rl = checkRateLimit(
+    `ai-build:${auth.session.user.id}`,
+    RATE_LIMIT,
+    RATE_WINDOW,
+  );
   if (!rl.allowed) {
     return NextResponse.json(
-      { error: `Too many requests. Please wait ${Math.ceil(rl.retryAfterMs / 1000)}s before retrying.` },
-      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      {
+        error: `Too many requests. Please wait ${Math.ceil(rl.retryAfterMs / 1000)}s before retrying.`,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
+      },
     );
   }
 
@@ -310,18 +243,19 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid request body", details: parsed.error.flatten() },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   // Sanitize user-provided strings before injecting into prompts (prompt injection prevention)
   const body: BuildRequest = {
-    ...parsed.data,
+    budget: parsed.data.budget,
+    colors: parsed.data.colors,
     strategy: sanitizeForPrompt(parsed.data.strategy, 50),
     commanderName: parsed.data.commanderName
       ? sanitizeForPrompt(parsed.data.commanderName, 200)
       : null,
-    bracket: parsed.data.bracket as 1 | 2 | 3 | 4,
+    bracket: toBracket(parsed.data.bracket),
   };
 
   const encoder = new TextEncoder();
@@ -335,25 +269,30 @@ export async function POST(request: Request) {
         emit({ type: "status", message: "Thinking…" });
 
         let deck: AIDeckResponse;
+        let source: BuildSource;
 
         if (process.env.ANTHROPIC_API_KEY) {
           emit({ type: "status", message: "Consulting the AI oracle…" });
           deck = await callAnthropic(buildPrompt(body));
+          source = "ai";
         } else if (process.env.OPENAI_API_KEY) {
           emit({ type: "status", message: "Consulting the AI oracle…" });
           deck = await callOpenAI(buildPrompt(body));
+          source = "ai";
         } else {
-          emit({ type: "status", message: "Using demo deck (no API key configured)…" });
+          // No provider key configured: fall back to a colour-correct
+          // placeholder list, and flag it on "done" so the UI can say so.
           deck = mockDeck(body);
+          source = "demo";
         }
 
-        await streamDeck(controller, deck);
+        streamDeck(emit, deck, source);
       } catch (error) {
         // The cause is logged; the client gets a fixed line so provider
         // errors (quota, model names, stack fragments) never reach the UI.
         logger.error(
           error instanceof Error ? error.message : String(error),
-          "POST /api/ai/build"
+          "POST /api/ai/build",
         );
         emit({ type: "error", message: "AI deck build failed" });
       } finally {

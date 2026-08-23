@@ -361,10 +361,12 @@
     "aiBuilding": "AI is building your deck…",
     "thinking": "Thinking…",
     "commanderLabel": "Commander: {name}",
-    "cardProgress": "{count} / 99 cards…",
+    "cardProgress": "{count} / {total}장…",
     "generatingDeck": "Generating deck…",
     "tryAgain": "Try again",
-    "buildCancelled": "Build was cancelled or failed."
+    "buildCancelled": "Build was cancelled or failed.",
+    "addingCards": "덱에 카드를 추가하는 중…",
+    "demoDeckNotice": "데모 덱 — 이 배포에는 AI 제공자가 설정되어 있지 않아 임시 목록입니다."
   },
   "ratings": {
     "title": "Community Rating",

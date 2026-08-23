@@ -361,10 +361,12 @@
     "aiBuilding": "AI is building your deck…",
     "thinking": "Thinking…",
     "commanderLabel": "Commander: {name}",
-    "cardProgress": "{count} / 99 cards…",
+    "cardProgress": "{count} / {total} 枚…",
     "generatingDeck": "Generating deck…",
     "tryAgain": "Try again",
-    "buildCancelled": "Build was cancelled or failed."
+    "buildCancelled": "Build was cancelled or failed.",
+    "addingCards": "デッキにカードを追加しています…",
+    "demoDeckNotice": "デモデッキ — このデプロイには AI プロバイダーが設定されていないため、これは仮のリストです。"
   },
   "ratings": {
     "title": "Community Rating",

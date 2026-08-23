@@ -361,10 +361,12 @@
     "aiBuilding": "AI is building your deck…",
     "thinking": "Thinking…",
     "commanderLabel": "Commander: {name}",
-    "cardProgress": "{count} / 99 cards…",
+    "cardProgress": "{count} / {total} Karten…",
     "generatingDeck": "Generating deck…",
     "tryAgain": "Try again",
-    "buildCancelled": "Build was cancelled or failed."
+    "buildCancelled": "Build was cancelled or failed.",
+    "addingCards": "Karten werden zum Deck hinzugefügt…",
+    "demoDeckNotice": "Demo-Deck — auf diesem Deployment ist kein KI-Anbieter konfiguriert, diese Liste ist nur ein Platzhalter."
   },
   "ratings": {
     "title": "Community Rating",

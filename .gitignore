@@ -7,11 +7,11 @@ node_modules/
 .pnp
 .pnp.js
 
-# Build
+# Build (root-level only — src/app/api/ai/build/ is source, not output)
 .next/
-out/
-build/
-dist/
+/out/
+/build/
+/dist/
 
 # Environment
 .env

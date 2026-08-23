@@ -19,13 +19,14 @@ import {
   getCardCollection,
 } from "@/lib/scryfall/client";
 import { logger } from "@/lib/logger";
-import { useAIDeckBuild } from "@/hooks/useAIDeckBuild";
+import { useAIDeckBuild, countCopies } from "@/hooks/useAIDeckBuild";
+import type { BuildCard } from "@/hooks/useAIDeckBuild";
 import { useLocalizedCardText } from "@/hooks/useLocalizedCardText";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { categorizeCard } from "@/lib/deck/categories";
 import { getCardImageUri } from "@/lib/scryfall/images";
-import type { DeckCard } from "@/lib/deck/types";
+import type { CardCategory, DeckCard } from "@/lib/deck/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -503,16 +504,31 @@ function StepLoading({
   commander,
   cardCount,
   totalCards,
+  isDemoDeck,
+  importedCount,
+  importTotal,
   error,
 }: {
   readonly statusMessages: string[];
   readonly commander: string | null;
   readonly cardCount: number;
   readonly totalCards: number | null;
+  readonly isDemoDeck: boolean;
+  readonly importedCount: number;
+  readonly importTotal: number;
   readonly error: string | null;
 }) {
   const t = useTranslations("deck");
-  const lastMsg = statusMessages.at(-1) ?? t("wizard.thinking");
+  const isImporting = importTotal > 0;
+  const lastMsg = isImporting
+    ? t("wizard.addingCards")
+    : (statusMessages.at(-1) ?? t("wizard.thinking"));
+
+  // While streaming, measure against what the server said it would send; while
+  // importing, against the copies actually being written to the deck.
+  const done = isImporting ? importedCount : cardCount;
+  const target = isImporting ? importTotal : (totalCards ?? 99);
+  const percent = target > 0 ? Math.min((done / target) * 100, 100) : 0;
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto text-center">
@@ -539,22 +555,24 @@ function StepLoading({
             )}
           </div>
 
+          {isDemoDeck && (
+            <p className="text-xs text-amber-400 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10">
+              {t("wizard.demoDeckNotice")}
+            </p>
+          )}
+
           {/* Progress bar */}
           <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
             <motion.div
               className="h-full bg-[var(--accent)] rounded-full"
-              animate={{
-                width: totalCards
-                  ? `${Math.min((cardCount / 99) * 100, 100)}%`
-                  : "30%",
-              }}
+              animate={{ width: `${percent}%` }}
               transition={{ duration: 0.3 }}
             />
           </div>
 
           <p className="text-xs text-[var(--text-secondary)]">
-            {cardCount > 0
-              ? t("wizard.cardProgress", { count: cardCount })
+            {done > 0
+              ? t("wizard.cardProgress", { count: done, total: target })
               : t("wizard.generatingDeck")}
           </p>
         </>
@@ -584,17 +602,76 @@ async function tryResolveCommander(
   }
 }
 
+const DECK_CATEGORIES: ReadonlySet<string> = new Set<CardCategory>([
+  "commander",
+  "companion",
+  "creature",
+  "instant",
+  "sorcery",
+  "artifact",
+  "enchantment",
+  "planeswalker",
+  "land",
+  "ramp",
+  "draw",
+  "removal",
+  "boardWipe",
+  "winCondition",
+  "protection",
+  "other",
+]);
+
+/** Narrows an AI-provided category string without casting; unknown values fall back to Scryfall. */
+function isDeckCategory(value: string | undefined): value is CardCategory {
+  return value !== undefined && DECK_CATEGORIES.has(value);
+}
+
+/** One decklist entry, collapsed by name so quantities survive the import. */
+interface ImportEntry {
+  readonly name: string;
+  readonly category: string;
+  readonly quantity: number;
+}
+
+/**
+ * Collapses the streamed cards by name, summing quantities.
+ *
+ * The previous version deduplicated with a Set and hardcoded `quantity: 1`,
+ * which silently dropped every extra copy — a 99-card list arrived as ~65 cards
+ * because the basic lands collapsed into singletons.
+ */
+export function collapseEntries(
+  cards: readonly BuildCard[]
+): readonly ImportEntry[] {
+  const byName = new Map<string, ImportEntry>();
+  for (const card of cards) {
+    const existing = byName.get(card.name);
+    byName.set(card.name, {
+      name: card.name,
+      category: existing?.category ?? card.category,
+      quantity: (existing?.quantity ?? 0) + card.quantity,
+    });
+  }
+  return [...byName.values()];
+}
+
 /** Fetches and imports cards from Scryfall in batches of BATCH_SIZE. */
 async function importCardsInBatches(
-  uniqueNames: readonly string[],
-  categoryMap: ReadonlyMap<string, string>,
-  addDeckCard: (card: DeckCard) => Promise<void>
+  entries: readonly ImportEntry[],
+  addDeckCard: (card: DeckCard) => Promise<void>,
+  onProgress: (imported: number) => void
 ): Promise<void> {
-  for (let i = 0; i < uniqueNames.length; i += BATCH_SIZE) {
-    const batch = uniqueNames.slice(i, i + BATCH_SIZE);
+  const byName = new Map(entries.map((e) => [e.name, e]));
+  let imported = 0;
+
+  for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+    const batch = entries.slice(i, i + BATCH_SIZE);
     try {
-      const result = await getCardCollection(batch.map((name) => ({ name })));
+      const result = await getCardCollection(
+        batch.map((entry) => ({ name: entry.name }))
+      );
       for (const sc of result.data) {
+        const entry = byName.get(sc.name);
         const deckCard: DeckCard = {
           id: sc.id,
           scryfallId: sc.id,
@@ -609,13 +686,15 @@ async function importCardsInBatches(
           price: sc.prices?.usd ? Number.parseFloat(sc.prices.usd) : null,
           imageUri: getCardImageUri(sc, "normal"),
           artCropUri: getCardImageUri(sc, "art_crop"),
-          category:
-            (categoryMap.get(sc.name) as DeckCard["category"]) ??
-            categorizeCard(sc),
-          quantity: 1,
+          category: isDeckCategory(entry?.category)
+            ? entry.category
+            : categorizeCard(sc),
+          quantity: entry?.quantity ?? 1,
           zone: "main",
         };
         await addDeckCard(deckCard);
+        imported += deckCard.quantity;
+        onProgress(imported);
       }
     } catch (err) {
       logger.error("Batch import error", "DeckWizard", err);
@@ -648,6 +727,11 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   // Build state
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildError, setBuildError] = useState<string | null>(null);
+  const [isDemoDeck, setIsDemoDeck] = useState(false);
+  // Importing 99 cards is ~65 serialized round trips; without a counter the
+  // dialog looks frozen for the whole minute.
+  const [importedCount, setImportedCount] = useState(0);
+  const [importTotal, setImportTotal] = useState(0);
 
   const { state: buildState, build, reset: resetBuild } = useAIDeckBuild();
   const { createDeck, setActiveDeck, addDeckCard, setCommander } =
@@ -667,6 +751,9 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       setCommanderSkipped(false);
       setIsBuilding(false);
       setBuildError(null);
+      setIsDemoDeck(false);
+      setImportedCount(0);
+      setImportTotal(0);
       resetBuild();
     }
   }, [open, resetBuild]);
@@ -714,7 +801,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
     setBuildError(null);
 
     try {
-      const cards = await build({
+      const result = await build({
         budget: budget === "unset" ? null : budget,
         colors,
         strategy,
@@ -725,22 +812,28 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
             : commanderName,
       });
 
-      if (!cards) {
+      if (!result) {
         setBuildError(t("wizard.buildCancelled"));
         return;
       }
+
+      setIsDemoDeck(result.source === "demo");
 
       const deckId = await createDeck(`AI Deck — ${strategy}`, {
         isAIGenerated: true,
       });
       setActiveDeck(deckId);
 
-      const commander = buildState.commander;
-      if (commander) await tryResolveCommander(commander, setCommander);
+      // Read the commander off the build result, not off `buildState`: this
+      // closure captured the render-time snapshot, where it is still null.
+      if (result.commander) {
+        await tryResolveCommander(result.commander, setCommander);
+      }
 
-      const uniqueNames = [...new Set(cards.map((c) => c.name))];
-      const categoryMap = new Map(cards.map((c) => [c.name, c.category]));
-      await importCardsInBatches(uniqueNames, categoryMap, addDeckCard);
+      const entries = collapseEntries(result.cards);
+      setImportTotal(countCopies(result.cards));
+      setImportedCount(0);
+      await importCardsInBatches(entries, addDeckCard, setImportedCount);
 
       onComplete(deckId);
     } catch (err) {
@@ -831,8 +924,11 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                   <StepLoading
                     statusMessages={buildState.statusMessages}
                     commander={buildState.commander}
-                    cardCount={buildState.cards.length}
+                    cardCount={countCopies(buildState.cards)}
                     totalCards={buildState.totalCards}
+                    isDemoDeck={isDemoDeck}
+                    importedCount={importedCount}
+                    importTotal={importTotal}
                     error={buildError}
                   />
                   {buildError && (

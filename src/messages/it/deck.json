@@ -361,10 +361,12 @@
     "aiBuilding": "AI is building your deck…",
     "thinking": "Thinking…",
     "commanderLabel": "Commander: {name}",
-    "cardProgress": "{count} / 99 cards…",
+    "cardProgress": "{count} / {total} carte…",
     "generatingDeck": "Generating deck…",
     "tryAgain": "Try again",
-    "buildCancelled": "Build was cancelled or failed."
+    "buildCancelled": "Build was cancelled or failed.",
+    "addingCards": "Aggiunta delle carte al mazzo…",
+    "demoDeckNotice": "Mazzo dimostrativo — nessun fornitore IA è configurato su questo deployment, questa lista è solo un segnaposto."
   },
   "ratings": {
     "title": "Community Rating",
