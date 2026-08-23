@@ -20,14 +20,21 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Expose the token at job level so the `if` guard on the scan step can read it
-    # (a step-level env is not visible to that step's own `if` condition).
+    # Expose these at job level so the `if` guards on the steps below can read
+    # them (a step-level env is not visible to that step's own `if` condition).
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # True whenever GitHub withholds repository secrets from the run. That
+      # happens for two unrelated reasons needing the same handling: a fork PR,
+      # and a Dependabot PR — same-repo, but still secret-less. Enabling the
+      # github-actions ecosystem made the second case routine, and without this
+      # every Dependabot PR failed on the guard below for a reason that is not
+      # a misconfiguration.
+      SECRETS_WITHHELD: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Full history required for blame/new code detection
 
@@ -35,10 +42,10 @@ jobs:
       # package.json. Declaring both makes it fail with
       # "Multiple versions of pnpm specified".
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: "pnpm" # Cache node_modules between runs
@@ -52,12 +59,13 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:pass@localhost:5432/test' }}
 
       # A fork PR never receives secrets — GitHub withholds them so a modified
-      # workflow cannot exfiltrate them. That is not a misconfiguration, so it
-      # must not fail the run; it is announced instead of passing quietly.
-      - name: Note skipped scan on a fork PR
-        if: ${{ github.event.pull_request.head.repo.fork == true }}
+      # workflow cannot exfiltrate them; a Dependabot PR is withheld for the
+      # same reason. Neither is a misconfiguration, so neither may fail the
+      # run; both are announced instead of passing quietly.
+      - name: Note skipped scan without secrets
+        if: ${{ env.SECRETS_WITHHELD == 'true' }}
         run: |
-          echo "::warning::Fork PR — GitHub withholds secrets from forks, so no SonarCloud analysis ran for this branch."
+          echo "::warning::No SonarCloud analysis ran — GitHub withholds repository secrets from fork and Dependabot pull requests."
 
       # Fail loudly rather than skip. This step used to carry
       # `if: env.SONAR_TOKEN != ''`, so a missing secret silently skipped the
@@ -65,7 +73,7 @@ jobs:
       # months-old snapshot, and the "open issues = 0" check in the pre-PR
       # checklist was reading that snapshot rather than the code under review.
       - name: Require SONAR_TOKEN
-        if: ${{ github.event.pull_request.head.repo.fork != true }}
+        if: ${{ env.SECRETS_WITHHELD != 'true' }}
         run: |
           if [ -z "$SONAR_TOKEN" ]; then
             echo "::error::SONAR_TOKEN is not set. Add it under Settings > Secrets and variables > Actions."
@@ -74,7 +82,7 @@ jobs:
           fi
 
       - name: SonarCloud Scan
-        if: ${{ github.event.pull_request.head.repo.fork != true }}
-        uses: SonarSource/sonarqube-scan-action@v6
+        if: ${{ env.SECRETS_WITHHELD != 'true' }}
+        uses: SonarSource/sonarqube-scan-action@v8
         env:
           SONAR_HOST_URL: https://sonarcloud.io
