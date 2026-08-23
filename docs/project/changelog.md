@@ -9,6 +9,55 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-08-23: Release batch #552–#562 — thirty advisories nobody could reach, two limiters that enforced nothing, and dates in the wrong language
+
+#### Fixed
+
+- `fix(limits): stop short-window callers from wiping the brute-force counter (#553)` — **two limiters whose own comments describe behaviour they did not have.** Both were found by reading the code the dependency audit walked past, not by anything failing.
+  - **`rate-limit.ts` kept one store for callers that do not agree on a window.** Signup budgets 5 attempts per IP over **15 minutes** and login 10 per email over the same; import, meta, ai-suggest, the cache routes and the API-key limiter all work in **60 seconds**. `prune` deleted every entry older than twice _the calling_ window, so a single 60-second request evicted entries belonging to the 15-minute limiters. Three minutes of ordinary traffic — from any user, on any unrelated endpoint — handed an attacker a fresh login budget. **The 15-minute brute-force limit was in practice a two-minute one**, and nothing about it looked wrong: each limiter is correct in isolation, and the defect exists only in the shared `Map`. Each entry now records the window it was opened with and expires on its own terms.
+  - **`scryfall/client.ts` calls its queue an async mutex and the file header promises 10 req/s. It serialised nothing.** The code chained off `queue` but **never assigned the chain back**, so every concurrent caller found the same already-resolved promise and went straight through: they read one `lastRequestTime`, waited the same delay, then hit Scryfall together. The tail is now handed back to `queue`, and deliberately cannot reject — a failed request must not poison the chain for the requests behind it, which is what the old reset-on-error handlers were reaching for.
+  - Each fix has a test that fails without it. The rate-limit one advances three minutes of unrelated 60-second traffic and asserts the 15-minute budget survives; the scryfall one holds a request open and asserts the second never reaches `fetch` — `expected "spy" to be called 1 times, but got 2 times` against the old code.
+- `fix(i18n): render dates in the reader's locale, not the platform's (#558)` — **the app serves two locales and eight components formatted dates with the platform API.** `toLocaleDateString()` reads the _ambient_ locale, which is not the one the request carries. The public profile was the plainest case: it passed `"en-US"` outright, so "Membre depuis" read **"August 2026"** on an otherwise French page.
+  - The other seven passed no locale at all, **which is worse than it looks**. They are `"use client"` components, and Next still server-renders them for the initial HTML — so the date was formatted once in the server's locale and timezone and again in the browser's, and the two need not agree.
+  - `useFormatter()` was already the project's answer, in use in five other components. These eight had drifted from it. `SnapshotsPanel`'s helper lived outside the component and so could not call a hook; the formatting moved to the call site.
+  - **`renderWithIntl` grew a `locale` option, because `en` is the one locale under which a hardcoded `"en-US"` looks correct.** Asserting anything about localization needs a second locale to compare with; the test renders the profile under `fr` and asserts `août 2026`. A repo-wide guard test keeps a ninth site from drifting back, and it was checked to actually bite by reintroducing one call and watching it fail.
+  - **Two things deliberately left alone.** `Header` builds an imported deck's _name_ from the current time — persisted data, not rendered UI. And the request config still sets no `timeZone`: pinning one changes which calendar day a late-evening edit displays as, which is a product call rather than a bug fix. **Currency shows the same split** — three components use `format.number(…, { style: "currency" })`, about twelve hardcode `# Changelog
+
+All notable changes to MagicAIBuilder are documented here.
+
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+
+---
+
+with `toFixed(2)` — but prices really are USD, so nothing is _wrong_ and the decision is left open rather than taken quietly.
+
+- `fix(random): reject the biased byte tail the ID generator was folding (#559)` — `crypto-random.ts` holds two generators to one standard and **only one met it**. `randomIntBelow` rejection-samples and documents why; beside it `randomAlphanumericId` mapped a raw byte with `% 36`, and 256 is not a multiple of 36, so bytes 252–255 folded onto `a`–`d` and dealt those four an eighth chance the other thirty-two never got.
+  - **Stated plainly: this is hygiene, not a vulnerability.** The callers build local collision-avoidance ids already prefixed with `Date.now()`, and the share tokens that actually have to resist guessing come from `randomBytes` server-side. The reason to fix it is that a file explaining modulo bias in one function and committing it in the next is a trap for whoever reaches for it later.
+  - **The first version of the test passed against the old code too.** It used byte 252, and `252 % 36` is 0, so both implementations answer `'a'` and it proved nothing. **255 is the discriminating byte**: folded it yields `'d'`, rejected it yields whatever comes next. The test drives `getRandomValues` directly rather than sampling a distribution, so it reads the mapping off instead of inferring it from a histogram.
+
+#### Security
+
+- `chore(deps): pin the 30 vulnerable transitive packages the audit flagged (#552)` — **`pnpm audit` reported 31 advisories and not one was reachable by a direct upgrade.** `postcss` arrives pinned to exactly `8.4.31` by `next@15`; `sharp` is next's optional `^0.34.3`; `defu` and `deepmerge-ts` come from `prisma@6` via `@prisma/config`; `brace-expansion` is present in **three major lines at once** under different parents and needed three range-scoped entries. Fifteen `pnpm.overrides` later: **31 → 1**, and the production tree is clean at _every_ level, `--audit-level=low` included.
+  - **The five highs this file recorded as "unfixable without majors" needed neither major.** That entry stood since 2026-08-20 and named Next 16 / Prisma 7 as the precondition. Overrides reach all five.
+  - **One advisory is left standing and cannot be closed**: `extract-zip`, via `@lhci/cli > lighthouse > puppeteer-core > @puppeteer/browsers`, has **no patched version published**. Dev-only tooling; it stays until upstream ships one.
+  - Verified with a production build as well as the suite, since overriding `postcss` and `sharp` reaches the build itself and not only the dependency graph.
+
+#### Changed
+
+- `chore(ci): block on high advisories, and let Dependabot watch the actions (#554)` — the audit gate blocked only on `critical`, with a comment naming its own next step: _"Tighten to `--audit-level=high` once those land."_ #552 made that true without either major, so **`high` now blocks and `moderate` is reported**. Low stays quiet deliberately: a low advisory in a transitive package is not worth a red `main`, but a moderate one should not pass unseen.
+  - **Dependabot only ever watched npm.** The workflows pin five actions by major tag with nothing looking at them, which is why the SonarCloud job had been _warning_ about a deprecated Node 20 runtime rather than being offered an upgrade. Majors are deliberately **not** ignored for actions, unlike npm: the breaking change is almost always a runner bump, the diff is one line, and CI settles it on the spot.
+- `chore(ci): send Dependabot to staging, and stop it failing the Sonar job (#562)` — **enabling the ecosystem produced its first PR within the hour, and that PR exposed two things the config had not accounted for.**
+  - **It opened against `main`.** Dependabot targets the default branch unless told otherwise, which made the bot the one contributor exempt from `staging` → `dev` → `main` and would have pushed `main` ahead of the two branches meant to gate it. Both ecosystems now set `target-branch: staging`.
+  - **It failed the SonarCloud job for a different reason than every other branch is failing it today.** The log reads `SONAR_TOKEN:` followed by nothing: **GitHub withholds repository secrets from Dependabot pull requests**, so the token arrives empty and the `Require SONAR_TOKEN` guard fires — a guard written to catch a genuinely missing secret, doing exactly its job on a case that is not a misconfiguration. `sonar.yml` already handled the identical situation for fork PRs; the two conditions collapse into one `SECRETS_WITHHELD` flag, so a Dependabot PR is announced rather than failed. Without it, every weekly Dependabot PR would carry a red check nobody can act on.
+  - The five action bumps from #557 come along, **proven by the CI that ran them rather than assumed**: the job reporting green is the one running `checkout@v7`, `setup-node@v7` and `pnpm/action-setup@v6`, and the green Lighthouse job is the one running `upload-artifact@v7`. `sonarqube-scan-action@v8` is the exception and stays **unproven** — nothing can exercise it until the token is regenerated. #557 was closed as superseded.
+
+#### Process
+
+- **A conflicting promotion PR runs no workflow at all, and says nothing about it.** #552–#554 were merged into `staging` with `--merge`, putting merge commits on it; the promotion rebase then rewrote SHAs, and `staging` and `dev` ended up with identical content on unrelated ancestries. Promotion PR #563 came back `mergeable: CONFLICTING`, and the symptom was **silence** — GitHub cannot build the merge ref for a conflicting PR, so it dispatched no CI, no Lighthouse and no Sonar. `gh pr checks` listed only Vercel. There is no failure to read, which is what makes it expensive: the first instinct is to hunt for a broken trigger.
+  - **A clean rebase is not evidence the merge will work.** Rebasing `staging` onto `dev` printed `skipped previously applied commit …` three times and succeeded, which read as reassurance and was wrong — a PR is tested by a _merge_, and the same edits arriving down two ancestries conflict. Check `gh pr view <n> --json mergeable,mergeStateStatus` before diagnosing anything else.
+  - Unblocked **without a force-push** by opening the promotion from `staging` rebased onto `dev`, which is a true descendant and merges cleanly. Then `staging` and `dev` were reset onto `main` — the practice this file already records for batch #480–#489, and the reason `CLAUDE.md`'s claim that rebasing "keeps all three branches on the same commit" is only true after that reset. **Feature PRs into `staging` should use `--rebase`; this batch used `--merge`, and that is what created the divergence.**
+
 ### 2026-08-22: Release batch #534–#536 — a quality gate that was measuring the wrong thing, and the credential hook nobody tested
 
 #### Fixed
