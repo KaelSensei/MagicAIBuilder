@@ -11,6 +11,23 @@ const MAX_PAGE_SIZE = 50;
 /** Default decks per page */
 const DEFAULT_PAGE_SIZE = 20;
 
+/**
+ * Reads a whole-number query parameter, falling back when it is not one.
+ *
+ * `Number("abc")` is NaN and every clamp around it is NaN too — `Math.max(0,
+ * NaN)` is NaN, not 0 — so `?page=abc` reached Prisma as `skip: NaN, take:
+ * NaN`, which it rejects. Fractions are floored rather than
+ * rejected: `?page=1.5` should mean page 1, not a skip of 30.
+ *
+ * @param value - the raw query parameter, or null when absent
+ * @param fallback - the value to use when it is absent or not a number
+ * @returns a whole number
+ */
+function readWholeNumber(value: string | null, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.floor(parsed) : fallback;
+}
+
 const createDeckSchema = z.object({
   name: z.string().min(1).max(200),
   format: z.enum(ALL_FORMATS).optional().default("commander"),
@@ -34,8 +51,11 @@ export async function GET(request: NextRequest) {
     if (result.error) return result.error;
 
     const { searchParams } = request.nextUrl;
-    const page = Math.max(0, Number(searchParams.get("page") ?? "0"));
-    const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(searchParams.get("limit") ?? String(DEFAULT_PAGE_SIZE))));
+    const page = Math.max(0, readWholeNumber(searchParams.get("page"), 0));
+    const limit = Math.min(
+      MAX_PAGE_SIZE,
+      Math.max(1, readWholeNumber(searchParams.get("limit"), DEFAULT_PAGE_SIZE))
+    );
     const userId = result.session.user.id;
 
     const [decks, total] = await Promise.all([
