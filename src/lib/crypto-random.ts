@@ -45,6 +45,16 @@ export function randomIntBelow(upperExclusive: number): number {
 const ID_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
 
 /**
+ * Largest multiple of the charset size that fits in a byte.
+ *
+ * 256 is not a multiple of 36, so mapping a raw byte with `% 36` deals the
+ * first four characters 8 of the 256 values and the rest 7 — the same modulo
+ * bias `randomIntBelow` rejection-samples away. Bytes at or above this bound
+ * are discarded rather than folded.
+ */
+const ID_BYTE_LIMIT = Math.floor(256 / ID_CHARS.length) * ID_CHARS.length;
+
+/**
  * Random lowercase alphanumeric string, for non-guessable URL-style segments (`tmpl-…`, `deck-…`).
  *
  * @param length Number of characters (1..256).
@@ -55,17 +65,19 @@ export function randomAlphanumericId(length: number): string {
   }
 
   const crypto = getWebCrypto();
-  const bytes = new Uint8Array(length);
-  crypto.getRandomValues(bytes);
+  const base = ID_CHARS.length;
 
   let out = "";
-  const base = ID_CHARS.length;
-  for (let i = 0; i < length; i++) {
-    const b = bytes[i];
-    if (b === undefined) {
-      throw new Error("randomAlphanumericId: unexpected buffer end");
+  while (out.length < length) {
+    // Refill for what is still missing. Roughly 1 byte in 64 is rejected, so
+    // asking for exactly the shortfall converges immediately in practice.
+    const bytes = new Uint8Array(length - out.length);
+    crypto.getRandomValues(bytes);
+
+    for (const b of bytes) {
+      if (b >= ID_BYTE_LIMIT) continue;
+      out += ID_CHARS.charAt(b % base);
     }
-    out += ID_CHARS.charAt(b % base);
   }
   return out;
 }
