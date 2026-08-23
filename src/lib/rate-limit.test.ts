@@ -57,6 +57,24 @@ describe("checkRateLimit", () => {
     expect(checkRateLimit("key-a", 3, 60_000).allowed).toBe(false);
     expect(checkRateLimit("key-b", 3, 60_000).allowed).toBe(true);
   });
+
+  // signup budgets over 15 minutes and import over 60 seconds, and both share
+  // one store. Pruning against the *caller's* window let the short-window
+  // caller evict the long-window entry, so unrelated traffic reset a
+  // brute-force counter every two minutes.
+  it("keeps a long-window entry alive across a short-window caller's prune", () => {
+    const FIFTEEN_MINUTES = 15 * 60_000;
+    const victim = "signup:203.0.113.7";
+
+    for (let i = 0; i < 3; i++) checkRateLimit(victim, 3, FIFTEEN_MINUTES);
+    expect(checkRateLimit(victim, 3, FIFTEEN_MINUTES).allowed).toBe(false);
+
+    // Three minutes on: well past 2x a 60-second window, nowhere near 15 minutes.
+    vi.advanceTimersByTime(3 * 60_000);
+    checkRateLimit("import:198.51.100.4", 10, 60_000);
+
+    expect(checkRateLimit(victim, 3, FIFTEEN_MINUTES).allowed).toBe(false);
+  });
 });
 
 describe("getClientIp", () => {
