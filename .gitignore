@@ -49,6 +49,8 @@ coverage/
 
 # Playwright / E2E
 playwright-report/
+# Saved browser state from e2e/auth.setup.ts - contains a real session cookie
+playwright/.auth/
 test-results/
 
 # Misc
