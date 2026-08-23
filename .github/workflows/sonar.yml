@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Full history required for blame/new code detection
 
@@ -35,10 +35,10 @@ jobs:
       # package.json. Declaring both makes it fail with
       # "Multiple versions of pnpm specified".
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: "pnpm" # Cache node_modules between runs
@@ -75,6 +75,6 @@ jobs:
 
       - name: SonarCloud Scan
         if: ${{ github.event.pull_request.head.repo.fork != true }}
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v8
         env:
           SONAR_HOST_URL: https://sonarcloud.io
