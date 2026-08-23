@@ -159,8 +159,13 @@ async function callOpenAI(prompt: string): Promise<AIDeckResponse> {
  * Emits one event per decklist entry, carrying the entry's quantity so basics
  * survive the trip. There is deliberately no artificial per-card delay: it used
  * to burn three seconds of the function budget for a cosmetic effect.
+ *
+ * Not exported. A Next.js `route.ts` may only export the HTTP verbs and a
+ * fixed set of config fields, so an exported helper fails the build with
+ * "streamDeck is not a valid Route export field" — a check `tsc --noEmit`
+ * does not run, which is why it passed locally and failed in CI.
  */
-export function streamDeck(
+function streamDeck(
   emit: (event: BuildEvent) => void,
   deck: AIDeckResponse,
   source: BuildSource,
