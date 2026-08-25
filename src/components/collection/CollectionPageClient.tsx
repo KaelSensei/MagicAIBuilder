@@ -1,7 +1,7 @@
 "use client";
 // Collection page — lists all owned cards with stats
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Loader2,
   Package,
@@ -27,8 +27,10 @@ import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { CollectionCardTooltip } from "@/components/collection/CollectionCardTooltip";
+import { formatUsd } from "@/lib/i18n/currency";
 
 export function CollectionPageClient() {
+  const locale = useLocale();
   const t = useTranslations("collection");
   const {
     collectionCards,
@@ -199,7 +201,7 @@ export function CollectionPageClient() {
           />
           <StatCard
             label={t("stats.totalValue")}
-            value={`$${totalValue.toFixed(2)}`}
+            value={formatUsd(locale, totalValue)}
             highlight
           />
         </div>
@@ -287,6 +289,7 @@ export function CollectionPageClient() {
               <CollectionListRow
                 key={card.id}
                 card={card}
+                locale={locale}
                 onRemove={removeFromCollection}
                 onQuantityChange={updateQuantity}
                 onOpenPrintings={openPrintingsModal}
@@ -414,11 +417,13 @@ function CollectionGridCard({
 
 function CollectionListRow({
   card,
+  locale,
   onRemove,
   onQuantityChange,
   onOpenPrintings,
 }: {
   readonly card: CollectionCard;
+  readonly locale: string;
   readonly onRemove: (id: string) => void;
   readonly onQuantityChange: (id: string, qty: number) => void;
   readonly onOpenPrintings: (card: CollectionCard) => void;
@@ -427,7 +432,7 @@ function CollectionListRow({
   const value =
     card.price === null || card.price === undefined
       ? "—"
-      : `$${(card.price * card.quantity).toFixed(2)}`;
+      : formatUsd(locale, card.price * card.quantity);
 
   return (
     <div className="grid grid-cols-[1fr_80px_80px_80px_100px_40px] gap-2 px-3 py-2 rounded hover:bg-[var(--surface-hover)] items-center group">

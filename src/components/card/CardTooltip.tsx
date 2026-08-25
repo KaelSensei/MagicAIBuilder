@@ -1,10 +1,19 @@
 "use client";
 // Hover tooltip with card details — follows mouse cursor
-import { useState, useCallback, useRef, cloneElement, isValidElement, Children } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  cloneElement,
+  isValidElement,
+  Children,
+} from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
+import { useLocale } from "next-intl";
 import type { DeckCard } from "@/lib/deck/types";
 import { useLocalizedDeckText } from "@/components/card/LocalizedDeckTextContext";
+import { formatUsd } from "@/lib/i18n/currency";
 
 const TOOLTIP_WIDTH = 223;
 const TOOLTIP_HEIGHT = 334; // image 310 + price row
@@ -16,6 +25,7 @@ interface CardTooltipProps {
 }
 
 export function CardTooltip({ card, children }: CardTooltipProps) {
+  const locale = useLocale();
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   // The translated printing's own image when the deck surface has one —
   // a French viewer sees the French card, not English art with a caption.
@@ -23,7 +33,10 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const computePos = useCallback((e: React.MouseEvent) => {
-    const x = Math.min(e.clientX + OFFSET_X, globalThis.innerWidth - TOOLTIP_WIDTH - 8);
+    const x = Math.min(
+      e.clientX + OFFSET_X,
+      globalThis.innerWidth - TOOLTIP_WIDTH - 8
+    );
     const y = Math.min(
       Math.max(e.clientY - TOOLTIP_HEIGHT / 2, 8),
       globalThis.innerHeight - TOOLTIP_HEIGHT - 8
@@ -53,11 +66,14 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
 
   const child = Children.only(children);
   const trigger = isValidElement(child)
-    ? cloneElement(child as React.ReactElement<React.HTMLAttributes<HTMLElement>>, {
-        onMouseEnter: handleMouseEnter,
-        onMouseMove: handleMouseMove,
-        onMouseLeave: handleMouseLeave,
-      })
+    ? cloneElement(
+        child as React.ReactElement<React.HTMLAttributes<HTMLElement>>,
+        {
+          onMouseEnter: handleMouseEnter,
+          onMouseMove: handleMouseMove,
+          onMouseLeave: handleMouseLeave,
+        }
+      )
     : child;
 
   return (
@@ -78,7 +94,9 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
             />
             {card.price != null && (
               <div className="p-2 bg-(--surface) text-xs text-(--text-secondary)">
-                <span className="text-(--accent)">${card.price.toFixed(2)}</span>
+                <span className="text-(--accent)">
+                  {formatUsd(locale, card.price)}
+                </span>
               </div>
             )}
           </div>,

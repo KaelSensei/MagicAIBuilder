@@ -1,10 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import type { CollectionCard } from "@/lib/collection/types";
+import { formatUsd } from "@/lib/i18n/currency";
 
 const TOOLTIP_WIDTH = 223;
 const TOOLTIP_HEIGHT = 334; // image 310 + price row
@@ -14,14 +15,20 @@ interface CollectionCardTooltipProps {
   readonly card: Pick<CollectionCard, "imageUri" | "name" | "price">;
   readonly children: React.ReactNode;
 }
-
-export function CollectionCardTooltip({ card, children }: CollectionCardTooltipProps) {
+export function CollectionCardTooltip({
+  card,
+  children,
+}: CollectionCardTooltipProps) {
+  const locale = useLocale();
   const t = useTranslations("card");
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const computePos = useCallback((e: React.MouseEvent) => {
-    const x = Math.min(e.clientX + OFFSET_X, globalThis.innerWidth - TOOLTIP_WIDTH - 8);
+    const x = Math.min(
+      e.clientX + OFFSET_X,
+      globalThis.innerWidth - TOOLTIP_WIDTH - 8
+    );
     const y = Math.min(
       Math.max(e.clientY - TOOLTIP_HEIGHT / 2, 8),
       globalThis.innerHeight - TOOLTIP_HEIGHT - 8
@@ -67,10 +74,18 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
             className="fixed z-9999 pointer-events-none rounded-lg overflow-hidden shadow-2xl border border-(--border)"
             style={{ left: pos.x, top: pos.y }}
           >
-            <Image src={card.imageUri} alt={card.name} width={223} height={310} unoptimized />
+            <Image
+              src={card.imageUri}
+              alt={card.name}
+              width={223}
+              height={310}
+              unoptimized
+            />
             {card.price != null && (
               <div className="p-2 bg-(--surface) text-xs text-(--text-secondary)">
-                <span className="text-(--accent)">${card.price.toFixed(2)}</span>
+                <span className="text-(--accent)">
+                  {formatUsd(locale, card.price)}
+                </span>
               </div>
             )}
           </div>,
@@ -79,4 +94,3 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
     </>
   );
 }
-

@@ -9,7 +9,7 @@
  * Step 5: Loading / streaming results
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, X, Loader2, Sparkles, Check } from "lucide-react";
@@ -27,6 +27,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { categorizeCard } from "@/lib/deck/categories";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import type { CardCategory, DeckCard } from "@/lib/deck/types";
+import { formatUsd } from "@/lib/i18n/currency";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -100,12 +101,20 @@ const STRATEGIES = [
   },
 ];
 
-const BUDGET_OPTIONS: { value: Budget; label: string; subtitle: string }[] = [
-  { value: 50, label: "Budget", subtitle: "< $50" },
-  { value: 200, label: "Moderate", subtitle: "$50 – $200" },
-  { value: 500, label: "Competitive", subtitle: "$200 – $500" },
-  { value: null, label: "No Limit", subtitle: "Spare no expense" },
+const BUDGET_OPTIONS: { value: Budget; label: string }[] = [
+  { value: 50, label: "Budget" },
+  { value: 200, label: "Moderate" },
+  { value: 500, label: "Competitive" },
+  { value: null, label: "No Limit" },
 ];
+
+function formatBudgetSubtitle(locale: string, value: Budget): string {
+  if (value === null) return "Spare no expense";
+  if (value === 50) return `< ${formatUsd(locale, value)}`;
+
+  const previousLimit = value === 200 ? 50 : 200;
+  return `${formatUsd(locale, previousLimit)} – ${formatUsd(locale, value)}`;
+}
 
 // ---------------------------------------------------------------------------
 // Animation variants
@@ -194,6 +203,7 @@ function StepBudget({
   readonly value: Budget;
   readonly onChange: (v: Budget) => void;
 }) {
+  const locale = useLocale();
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
       {BUDGET_OPTIONS.map((opt) => (
@@ -212,7 +222,9 @@ function StepBudget({
         >
           <div className="text-left">
             <div className="font-semibold text-base">{opt.label}</div>
-            <div className="text-sm opacity-70 mt-0.5">{opt.subtitle}</div>
+            <div className="text-sm opacity-70 mt-0.5">
+              {formatBudgetSubtitle(locale, opt.value)}
+            </div>
           </div>
           {value === opt.value && (
             <Check className="w-5 h-5 text-[var(--accent-text)] shrink-0" />

@@ -1,12 +1,13 @@
 "use client";
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { X, AlertTriangle, Zap, Bookmark, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
 import { CardTooltip } from "@/components/card/CardTooltip";
 import { useLocalizedDeckName } from "@/components/card/LocalizedDeckTextContext";
+import { formatUsd } from "@/lib/i18n/currency";
 interface CardListItemProps {
   readonly card: DeckCard;
   readonly onRemove?: (id: string) => void;
@@ -74,6 +75,7 @@ export function CardListItem({
   className,
   showNotes: _showNotes,
 }: CardListItemProps) {
+  const locale = useLocale();
   const t = useTranslations("card");
   const tBuilder = useTranslations("builder");
   const [isFlipped, setIsFlipped] = useState(false);
@@ -82,7 +84,9 @@ export function CardListItem({
   // back face is read straight from the English snapshot on flip.
   const localizedName = useLocalizedDeckName(card.name);
   const activeName =
-    isDfc && isFlipped ? (card.cardFaces?.[1].name ?? card.name) : localizedName;
+    isDfc && isFlipped
+      ? (card.cardFaces?.[1].name ?? card.name)
+      : localizedName;
   const flip = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsFlipped((p) => !p);
@@ -112,9 +116,9 @@ export function CardListItem({
         {card.price !== null && (
           <span
             className="shrink-0 text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-600/20 text-emerald-400 leading-none"
-            title={t("priceLabel", { price: card.price.toFixed(2) })}
+            title={t("priceLabel", { price: formatUsd(locale, card.price) })}
           >
-            ${card.price.toFixed(2)}
+            {formatUsd(locale, card.price)}
           </span>
         )}
         {card.isGameChanger && (

@@ -2,7 +2,7 @@
 // Read-only public view of a shared deck
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useDeckStore } from "@/lib/deck/store";
 import { ManaCostDisplay } from "@/components/card/ManaSymbol";
 import {
@@ -21,6 +21,7 @@ import { cn } from "@/components/ui/utils";
 import type { CardCategory } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import { logger } from "@/lib/logger";
+import { formatUsd } from "@/lib/i18n/currency";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -121,7 +122,10 @@ function CardRow({ card }: { readonly card: ApiCard }) {
         )}
         {card.name}
         {card.isGameChanger && (
-          <span className="ml-1.5 text-xs text-amber-400" title={t("card.gameChanger")}>
+          <span
+            className="ml-1.5 text-xs text-amber-400"
+            title={t("card.gameChanger")}
+          >
             ⚡
           </span>
         )}
@@ -140,6 +144,7 @@ interface ShareDeckViewProps {
 }
 
 export function ShareDeckView({ deck }: ShareDeckViewProps) {
+  const locale = useLocale();
   const t = useTranslations("deck");
   const router = useRouter();
   const { createDeck, addDeckCard, setActiveDeck } = useDeckStore();
@@ -452,7 +457,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               {deck.budget !== null && (
                 <StatRow
                   label={t("share.budgetPerCard")}
-                  value={`$${deck.budget}/card`}
+                  value={`${formatUsd(locale, deck.budget)}/card`}
                 />
               )}
             </div>

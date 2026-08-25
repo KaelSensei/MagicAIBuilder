@@ -3,7 +3,7 @@
  * ShoppingListModal — lists all missing cards with prices, copy/export.
  */
 import { useMemo } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { X, Copy, Download, Check } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import type { Deck } from "@/lib/deck/types";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/collection/shopping-list";
 import type { ShoppingListItem } from "@/lib/collection/shopping-list";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { formatUsd } from "@/lib/i18n/currency";
 
 interface ShoppingListModalProps {
   readonly deck: Deck;
@@ -36,6 +37,7 @@ export function ShoppingListModal({
   ownedScryfallIds,
   onClose,
 }: ShoppingListModalProps) {
+  const locale = useLocale();
   const t = useTranslations("deck");
   const format = useFormatter();
   const [copied, copy] = useCopyToClipboard();
@@ -111,7 +113,11 @@ export function ShoppingListModal({
             ) : (
               <div className="space-y-1">
                 {items.map((item) => (
-                  <ShoppingRow key={item.scryfallId} item={item} />
+                  <ShoppingRow
+                    key={item.scryfallId}
+                    item={item}
+                    locale={locale}
+                  />
                 ))}
               </div>
             )}
@@ -164,7 +170,13 @@ export function ShoppingListModal({
   );
 }
 
-function ShoppingRow({ item }: { readonly item: ShoppingListItem }) {
+function ShoppingRow({
+  item,
+  locale,
+}: {
+  readonly item: ShoppingListItem;
+  readonly locale: string;
+}) {
   const lineTotal = item.price === null ? null : item.price * item.quantity;
 
   return (
@@ -176,11 +188,11 @@ function ShoppingRow({ item }: { readonly item: ShoppingListItem }) {
         {item.name}
       </span>
       <span className="text-xs text-[var(--text-secondary)] shrink-0 tabular-nums">
-        {item.price === null ? "—" : `$${item.price.toFixed(2)}`}
+        {item.price === null ? "—" : formatUsd(locale, item.price)}
       </span>
       {typeof lineTotal === "number" && item.quantity > 1 ? (
         <span className="text-[10px] text-[var(--text-secondary)] shrink-0 tabular-nums w-14 text-right">
-          (${lineTotal.toFixed(2)})
+          ({formatUsd(locale, lineTotal)})
         </span>
       ) : null}
     </div>

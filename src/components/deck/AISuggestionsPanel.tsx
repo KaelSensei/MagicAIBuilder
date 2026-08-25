@@ -13,19 +13,14 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { AISuggestionResult } from "@/hooks/useAISuggestions";
 import { ARCHETYPES } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
+import { formatUsd } from "@/lib/i18n/currency";
 
-const BUDGET_OPTIONS: Array<{ label: string; value: number | null }> = [
-  { label: "No limit", value: null },
-  { label: "< $1", value: 1 },
-  { label: "< $5", value: 5 },
-  { label: "< $10", value: 10 },
-  { label: "< $25", value: 25 },
-];
+const BUDGET_OPTIONS: readonly (number | null)[] = [null, 1, 5, 10, 25];
 
 interface AISuggestionsPanelProps {
   readonly result: AISuggestionResult | null;
@@ -71,6 +66,7 @@ export function AISuggestionsPanel({
   onIgnoreSuggestion,
   onClearIgnored,
 }: AISuggestionsPanelProps) {
+  const locale = useLocale();
   const t = useTranslations("deck");
   const [expanded, setExpanded] = useState(true);
   const [addedCards, setAddedCards] = useState<Set<string>>(new Set());
@@ -184,10 +180,10 @@ export function AISuggestionsPanel({
                     {t("ai.budgetPerCard")}
                   </p>
                   <div className="flex gap-1 flex-wrap">
-                    {BUDGET_OPTIONS.map(({ label, value }) => (
+                    {BUDGET_OPTIONS.map((value) => (
                       <button
                         type="button"
-                        key={label}
+                        key={value ?? "unlimited"}
                         onClick={() => onBudgetPerCardChange(value)}
                         className={cn(
                           "text-[10px] px-2 py-0.5 rounded-full border transition-colors",
@@ -196,7 +192,9 @@ export function AISuggestionsPanel({
                             : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                         )}
                       >
-                        {label}
+                        {value === null
+                          ? t("ai.noLimit")
+                          : `< ${formatUsd(locale, value)}`}
                       </button>
                     ))}
                   </div>

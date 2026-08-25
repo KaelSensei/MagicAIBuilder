@@ -9,7 +9,7 @@ import { useCardPrintings } from "@/hooks/useCardPrintings";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { resolveLocalizedText, toScryfallLang } from "@/lib/scryfall/localized";
 import { Modal } from "@/components/ui/Modal";
-
+import { formatUsd } from "@/lib/i18n/currency";
 
 interface PrintingSelectorModalProps {
   readonly card: ScryfallCard;
@@ -24,8 +24,12 @@ export function PrintingSelectorModal({
   onSelect,
   onClose,
 }: PrintingSelectorModalProps) {
+  const locale = useLocale();
   const t = useTranslations("card");
-  const { data, isLoading } = useCardPrintings(card.name, toScryfallLang(useLocale()));
+  const { data, isLoading } = useCardPrintings(
+    card.name,
+    toScryfallLang(locale)
+  );
   const [previewedPrintingId, setPreviewedPrintingId] = useState(card.id);
 
   const printings = useMemo(() => data?.data ?? [card], [card, data?.data]);
@@ -45,7 +49,8 @@ export function PrintingSelectorModal({
   // localised printings in the list, picking one has to change the text shown.
   const face = previewedPrinting.card_faces?.[0];
   const manaCost = face?.mana_cost ?? previewedPrinting.mana_cost ?? "";
-  const { name, typeLine, oracleText } = resolveLocalizedText(previewedPrinting);
+  const { name, typeLine, oracleText } =
+    resolveLocalizedText(previewedPrinting);
 
   return (
     <Modal
@@ -101,7 +106,7 @@ export function PrintingSelectorModal({
 
           {card.prices?.usd && (
             <p className="text-xs text-(--accent) mt-auto pt-2 border-t border-(--border)">
-              ${card.prices.usd}
+              {formatUsd(locale, Number.parseFloat(card.prices.usd))}
             </p>
           )}
         </div>

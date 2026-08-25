@@ -5,6 +5,7 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useLocale } from "next-intl";
 import {
   Package,
   ShoppingCart,
@@ -18,6 +19,7 @@ import { useCollectionStore } from "@/lib/collection/store";
 import { computeCollectionStats } from "@/lib/collection/shopping-list";
 import { ShoppingListModal } from "./ShoppingListModal";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { formatUsd } from "@/lib/i18n/currency";
 
 interface CollectionStatsPanelProps {
   readonly deck: Deck;
@@ -28,6 +30,7 @@ export function CollectionStatsPanel({
   deck,
   className,
 }: CollectionStatsPanelProps) {
+  const locale = useLocale();
   const { data: session } = useSession();
   const [expanded, setExpanded] = useState(false);
   const [showShoppingList, setShowShoppingList] = useState(false);
@@ -196,7 +199,7 @@ export function CollectionStatsPanel({
                       Missing cards cost
                     </span>
                     <span className="font-medium text-[var(--text-primary)]">
-                      ~${stats.missingCost.toFixed(2)}
+                      ~{formatUsd(locale, stats.missingCost)}
                     </span>
                   </div>
                 )}

@@ -1,7 +1,7 @@
 "use client";
 // Dialog for adding a card to the collection via search
 import { useState, useCallback, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Plus, Search, Loader2, Check } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { CardCondition } from "@/lib/collection/types";
@@ -9,10 +9,12 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { searchCards } from "@/lib/scryfall/client";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { cn } from "@/components/ui/utils";
+import { formatUsd } from "@/lib/i18n/currency";
 
 const CONDITIONS: readonly CardCondition[] = ["NM", "LP", "MP", "HP", "DMG"];
 
 export function AddToCollectionDialog() {
+  const locale = useLocale();
   const t = useTranslations("collection.dialog");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -136,7 +138,9 @@ export function AddToCollectionDialog() {
                       {card.name}
                     </span>
                     <span className="text-xs text-[var(--text-secondary)] shrink-0">
-                      {card.prices?.usd ? `$${card.prices.usd}` : ""}
+                      {card.prices?.usd
+                        ? formatUsd(locale, Number.parseFloat(card.prices.usd))
+                        : ""}
                     </span>
                   </button>
                 ))}
