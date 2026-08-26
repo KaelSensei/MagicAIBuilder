@@ -17,7 +17,6 @@ import { sortCards, groupCards } from "@/lib/deck/sort";
 import { useDeckStore } from "@/lib/deck/store";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for upcoming zone-based drag-and-drop feature
 type DeckZone = "main" | "sideboard" | "maybeboard";
 
 
@@ -55,7 +54,6 @@ export function DeckEditor({
   const clearCompanion = useCallback(() => {
     void setCompanion(null);
   }, [setCompanion]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- wired up in upcoming zone-based drag-and-drop feature
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const moveToMaybeboard = useDeckStore((s) => s.moveToMaybeboard);
   const sortField = useDeckStore((s) => s.sortField);

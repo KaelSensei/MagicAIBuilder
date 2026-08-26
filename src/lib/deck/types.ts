@@ -20,7 +20,10 @@ export type CommanderPairingType = | "none" | "partner" | "partner_with" | "frie
 export interface Deck {
   id: string; name: string; commander: DeckCard | null; partner: DeckCard | null;
   companion: DeckCard | null; pairingType: CommanderPairingType;
-  cards: DeckCard[]; maybeboard: DeckCard[]; format: DeckFormat;
+  cards: DeckCard[];
+  /** Compatibility mirror of cards whose persisted zone is "maybeboard". */
+  maybeboard: DeckCard[];
+  format: DeckFormat;
   /** Total card count (including commander/partner/companion). Set from _count on listing, derived from cards on full load. */
   cardCount: number;
   targetBracket: 1|2|3|4; manualBracket: 1|2|3|4|null; budget: number | null;

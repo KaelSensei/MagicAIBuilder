@@ -36,6 +36,7 @@ export function useDeck() {
     removeFromMaybeboard: store.removeFromMaybeboard,
     moveToMaybeboard: store.moveToMaybeboard,
     moveToDeck: store.moveToDeck,
+    moveCardToZone: store.moveCardToZone,
     // Deck list
     decks: Object.values(store.decks),
   };
