@@ -2,7 +2,7 @@
 // Read-only public view of a shared deck
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useDeckStore } from "@/lib/deck/store";
 import { ManaCostDisplay } from "@/components/card/ManaSymbol";
 import {
@@ -141,6 +141,7 @@ interface ShareDeckViewProps {
 
 export function ShareDeckView({ deck }: ShareDeckViewProps) {
   const t = useTranslations("deck");
+  const format = useFormatter();
   const router = useRouter();
   const { createDeck, addDeckCard, setActiveDeck } = useDeckStore();
   const [importing, setImporting] = useState(false);
@@ -452,7 +453,10 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               {deck.budget !== null && (
                 <StatRow
                   label={t("share.budgetPerCard")}
-                  value={`$${deck.budget}/card`}
+                  value={`${format.number(deck.budget, {
+                    style: "currency",
+                    currency: "USD",
+                  })}/card`}
                 />
               )}
             </div>
