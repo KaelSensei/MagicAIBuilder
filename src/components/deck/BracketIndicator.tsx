@@ -1,6 +1,6 @@
 "use client";
 // Bracket score with breakdown — supports manual override with amber warning badge
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
@@ -80,6 +80,14 @@ export function BracketIndicator({
   const t = useTranslations("deck");
   // Controls visibility of the inline bracket-picker when no override is active
   const [showPicker, setShowPicker] = useState(false);
+  const [warningsDismissed, setWarningsDismissed] = useState(false);
+  const warningKey = score?.warnings.join("\u0000") ?? "";
+
+  // Bring new or changed warnings back into view without changing the
+  // deterministic score calculation itself.
+  useEffect(() => {
+    setWarningsDismissed(false);
+  }, [warningKey]);
 
   if (!score) {
     return (
@@ -306,19 +314,45 @@ export function BracketIndicator({
 
       {/* Warnings */}
       {score.warnings.length > 0 && (
-        <div className="space-y-1.5 border-t border-[var(--border)] pt-3">
-          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
-            {t("bracket.warnings")}
-          </p>
-          {score.warnings.map((warning) => (
-            <div key={warning} className="flex items-start gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
-              <span className="text-xs text-[var(--text-secondary)]">
-                {warning}
-              </span>
+        warningsDismissed ? (
+          <div className="border-t border-[var(--border)] pt-3">
+            <button
+              type="button"
+              onClick={() => setWarningsDismissed(false)}
+              className="flex w-full items-center gap-1.5 text-left text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              aria-label={t("banlist.toggleWarnings")}
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>{t("bracket.warnings")}</span>
+              <span className="ml-auto">{score.warnings.length}</span>
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-1.5 border-t border-[var(--border)] pt-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide">
+                {t("bracket.warnings")}
+              </p>
+              <button
+                type="button"
+                onClick={() => setWarningsDismissed(true)}
+                className="rounded-md p-1 text-[var(--text-secondary)] hover:bg-white/5 hover:text-[var(--text-primary)] transition-colors"
+                aria-label={t("banlist.dismissWarnings")}
+                title={t("banlist.dismissWarnings")}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
-          ))}
-        </div>
+            {score.warnings.map((warning) => (
+              <div key={warning} className="flex items-start gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
+                <span className="text-xs text-[var(--text-secondary)]">
+                  {warning}
+                </span>
+              </div>
+            ))}
+          </div>
+        )
       )}
     </div>
   );
