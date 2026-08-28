@@ -17,17 +17,24 @@ Skills own the coding standards — no `any`/`as`/`!`, exhaustive `never` guards
 
 ## Project-specific rules (not covered by any skill)
 
-### Branch flow — staging → dev → main
+### Branch flow — dev → staging → main
 
-Every feature or fix branch is merged into `staging` first. Promotion follows the chain `staging` → `dev` → `main`:
+The branches have distinct release roles:
 
-1. `feature/*` / `fix/*` PRs target **`staging`** (never `dev` or `main` directly).
-2. Only a dev may request the merge from `staging` into `dev`.
-3. Only a dev may request the merge from `dev` into `main`.
+- `dev`: daily integration of features and fixes.
+- `staging`: alpha candidate, TestFlight build and colleague validation.
+- `main`: validated release code only.
+
+PRs follow this promotion chain:
+
+1. `feature/*` / `fix/*` PRs target **`dev`** (never `staging` or `main` directly).
+2. A reviewed promotion PR moves `dev` into **`staging`** for the alpha/TestFlight cycle.
+3. After alpha and colleague validation, a reviewed promotion PR moves `staging` into **`main`**.
+4. Never skip a branch or merge a feature directly into `staging` or `main`.
 
 **Promote with `gh pr merge --rebase`, not a merge commit.** A merge commit is created _on the target_, so `dev` gained commits `staging` never received and `main` gained commits neither had. Content stayed identical while the histories drifted — after fifteen batches in one day, GitHub reported `staging` as **26 commits behind `main`** with zero files different. Rebasing the promotion keeps all three branches on the same commit.
 
-Feature branches still merge into `staging` normally; the merge commit is only a problem when the source branch is long-lived and has to stay level with the target.
+Feature branches merge into `dev` normally. Promotion branches are long-lived and must preserve the branch order above.
 
 **Never enable `delete_branch_on_merge` on this repository.** It deletes the PR's _head_ branch, and on a promotion PR the head is `staging` or `dev`. Turning it on deleted `staging` outright the first time a promotion merged; it was restored from `dev`, which held the same commit, but the setting is fundamentally incompatible with promoting long-lived branches through PRs. Use `scripts/git-prune.sh` for cleanup instead — it has an explicit protected list.
 

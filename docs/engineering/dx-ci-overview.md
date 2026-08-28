@@ -30,9 +30,19 @@
 
 - Local: Docker PostgreSQL (`localhost:5432`)
 - Production: Supabase Transaction Pooler (`pooler.supabase.com:6543?pgbouncer=true`)
-- Auto-deploy on every push to `main`
+- Auto-deploy on every push to `main`; `dev` and `staging` deployments are validation environments.
 
 ---
+
+## Branch workflow
+
+| Branch | Role | Entry condition | Exit condition |
+| ------ | ---- | --------------- | -------------- |
+| `dev` | Daily integration of features and fixes | Feature/fix PR reviewed and checks pass | Candidate is selected for alpha validation |
+| `staging` | Alpha candidate, TestFlight build and colleague validation | Promotion PR from `dev` | Alpha and colleague validation complete |
+| `main` | Validated release code | Promotion PR from `staging` | Release is deployed through the production path |
+
+Feature and fix PRs target `dev`. Promotion PRs are the only way to move code from `dev` to `staging`, then from `staging` to `main`. Do not skip a branch or merge feature work directly into `staging` or `main`.
 
 ## CI / GitHub Actions
 
@@ -40,7 +50,7 @@ Two workflows:
 
 ### `ci.yml` — Main pipeline (Required)
 
-Runs on every push and every PR targeting `main`.
+Runs on every push to `main` and every PR targeting `dev`, `staging` or `main`.
 
 ```
 pnpm install
@@ -52,7 +62,7 @@ pnpm install
 
 ### `sonar.yml` — Quality analysis
 
-Runs on every push and every PR targeting `main`.
+Runs on every push to `main` and every PR targeting `dev`, `staging` or `main`.
 
 ```
 pnpm install
@@ -62,12 +72,11 @@ pnpm install
 
 ---
 
-## Branch Protection (main)
+## Branch Protection
 
-The only **Required** check to merge: `CI / Lint, Typecheck, Test, Build`
+The **Required** check for integration and promotion merges is `CI / Lint, Typecheck, Test, Build`.
 
-SonarCloud also runs on PRs but is **not a required gate** — it appears as informational only.
-Do not set it as Required (creates duplicate checks and blocks merges when Sonar is slow or unavailable).
+SonarCloud also runs on PRs. A merge must not be used to hide a failed analysis; a failure must be resolved or explicitly documented before promotion to `main`.
 
 ---
 

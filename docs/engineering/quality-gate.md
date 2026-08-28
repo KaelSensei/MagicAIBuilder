@@ -47,6 +47,12 @@ Then confirm SonarCloud reports **zero open issues**:
 
 > `pnpm sonar` does **not** regenerate coverage. Run `pnpm test:coverage` first, or the quality gate reads a stale `lcov` file.
 
+## Promotion gate
+
+Feature and fix PRs target `dev`. Only a promotion PR from `dev` may target `staging`, and only a validated `staging` promotion may target `main`. The `staging` promotion is the alpha/TestFlight and colleague-validation checkpoint; `main` is release-only.
+
+Do not skip a branch, merge feature work directly into `staging` or `main`, or promote while a required quality check is failing.
+
 ### Branch protection the settings cannot express
 
 `delete_branch_on_merge` was enabled once and had to be reverted within minutes. It deletes the PR's **head** branch, and on a promotion PR (`staging` → `dev`) the head is `staging`. Merging the first promotion after enabling it deleted `staging` from the remote. It was restored from `dev`, which carried the same commit, so nothing was lost — but the setting cannot distinguish a throwaway feature branch from a permanent one.
