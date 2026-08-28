@@ -185,6 +185,17 @@ function getDropZoneFromId(overId: string, defaultZone: DeckZone): DeckZone {
   return defaultZone;
 }
 
+function getExplicitDropZone(overId: string): DeckZone | null {
+  if (overId === "deck-zone-sideboard" || overId === "deck-zone-maybeboard") {
+    return getDropZoneFromId(overId, "main");
+  }
+  if (overId.startsWith("deck-panel-")) {
+    const zone = overId.slice("deck-panel-".length);
+    return isDeckZone(zone) ? zone : null;
+  }
+  return null;
+}
+
 /** Get category name from drop target ID if it's a category drop */
 function getCategoryFromDropId(overId: string): string | null {
   if (overId.startsWith("deck-category-")) {
@@ -230,6 +241,7 @@ export default function BuilderPage() {
     setPartner,
     setCompanion,
     updateCardCategory,
+    moveCardToZone,
   } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
@@ -434,8 +446,10 @@ export default function BuilderPage() {
     async (newCard: ScryfallCard) => {
       if (!deckCardForPrinting) return;
       const originalCategory = deckCardForPrinting.category;
-      removeCard(deckCardForPrinting.id);
-      await addCard(newCard);
+      const originalZone = deckCardForPrinting.zone;
+      const originalQuantity = deckCardForPrinting.quantity;
+      await removeCard(deckCardForPrinting.id);
+      await addCard(newCard, originalQuantity, originalZone);
       // Restore original category if it differs from the auto-categorized one
       const addedCard = useDeckStore
         .getState()
@@ -556,10 +570,15 @@ export default function BuilderPage() {
       if (cardId) {
         const sourceCategory = active.data.current?.sourceCategory as
           string | undefined;
+        const targetZone = getExplicitDropZone(overId);
+        if (targetZone) {
+          moveCardToZone(cardId, targetZone);
+          return;
+        }
         moveIntraDeck(cardId, overId, sourceCategory, deck?.cards ?? []);
       }
     },
-    [dropSearchCard, moveIntraDeck, deck]
+    [dropSearchCard, moveIntraDeck, deck, moveCardToZone]
   );
 
   if (!deck) {

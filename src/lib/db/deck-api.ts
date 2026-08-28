@@ -239,13 +239,7 @@ export async function updateCardMaybeboard(
   cardId: string,
   isMaybeboard: boolean
 ): Promise<ApiDeckCard> {
-  const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ isMaybeboard }),
-  });
-  if (!res.ok) await handleApiError(res, "updateCardMaybeboard");
-  return res.json();
+  return updateCardZone(deckId, cardId, isMaybeboard ? "maybeboard" : "main");
 }
 
 export async function removeAllCards(deckId: string): Promise<void> {

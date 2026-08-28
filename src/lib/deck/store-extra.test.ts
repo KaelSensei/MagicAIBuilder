@@ -472,9 +472,27 @@ describe("useDeckStore — moveCardToZone", () => {
     expect(card?.zone).toBe("sideboard");
   });
 
+  it("keeps the maybeboard compatibility mirror in sync", async () => {
+    await useDeckStore.getState().moveCardToZone("card-1", "maybeboard");
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.maybeboard).toHaveLength(1);
+    expect(deck.maybeboard[0].id).toBe("card-1");
+  });
+
   it("calls updateCardZone API", async () => {
     await useDeckStore.getState().moveCardToZone("card-1", "maybeboard");
     expect(deckApi.updateCardZone).toHaveBeenCalledWith("deck-1", "card-1", "maybeboard");
+  });
+
+  it("persists a card added directly to a secondary zone", async () => {
+    await useDeckStore.getState().addCard(makeScryfallCard(), 1, "sideboard");
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.cards.find((card) => card.name === "Lightning Bolt")?.zone).toBe("sideboard");
+    expect(deckApi.addCard).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ zone: "sideboard" })
+    );
   });
 
   it("does nothing when no active deck", async () => {
@@ -558,14 +576,15 @@ describe("useDeckStore — moveToMaybeboard", () => {
     await useDeckStore.getState().moveToMaybeboard("card-1");
 
     const deck = useDeckStore.getState().decks["deck-1"];
-    expect(deck.cards).toHaveLength(0);
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].zone).toBe("maybeboard");
     expect(deck.maybeboard).toHaveLength(1);
     expect(deck.maybeboard[0].name).toBe("Counterspell");
   });
 
-  it("calls updateCardMaybeboard API with true", async () => {
+  it("persists the maybeboard zone", async () => {
     await useDeckStore.getState().moveToMaybeboard("card-1");
-    expect(deckApi.updateCardMaybeboard).toHaveBeenCalledWith("deck-1", "card-1", true);
+    expect(deckApi.updateCardZone).toHaveBeenCalledWith("deck-1", "card-1", "maybeboard");
   });
 
   it("does nothing when card not found", async () => {
@@ -587,11 +606,12 @@ describe("useDeckStore — moveToDeck", () => {
     expect(deck.maybeboard).toHaveLength(0);
     expect(deck.cards).toHaveLength(1);
     expect(deck.cards[0].isMaybeboard).toBe(false);
+    expect(deck.cards[0].zone).toBe("main");
   });
 
-  it("calls updateCardMaybeboard API with false", async () => {
+  it("persists the main zone", async () => {
     await useDeckStore.getState().moveToDeck("card-1");
-    expect(deckApi.updateCardMaybeboard).toHaveBeenCalledWith("deck-1", "card-1", false);
+    expect(deckApi.updateCardZone).toHaveBeenCalledWith("deck-1", "card-1", "main");
   });
 
   it("does not move if card already in deck (same name)", async () => {

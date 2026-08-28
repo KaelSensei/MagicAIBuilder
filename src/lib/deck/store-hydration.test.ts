@@ -113,6 +113,23 @@ describe("setActiveDeck — cold load hydration", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(20);
   });
 
+  it("hydrates secondary zones from the persisted card zone", async () => {
+    mockFetchDeck.mockResolvedValue(apiDeck(["main", "maybe"], {
+      cards: [
+        apiCard("main"),
+        apiCard("maybe", { zone: "maybeboard" }),
+      ],
+    }));
+
+    await useDeckStore.getState().setActiveDeck("deck-1");
+
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.cards).toHaveLength(2);
+    expect(deck.maybeboard).toHaveLength(1);
+    expect(deck.maybeboard[0].id).toBe("maybe");
+    expect(deck.maybeboard[0].zone).toBe("maybeboard");
+  });
+
   it("fetches the full deck when the store only holds the listing version", async () => {
     useDeckStore.setState({
       decks: {
