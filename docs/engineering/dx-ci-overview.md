@@ -39,10 +39,12 @@
 | Branch | Role | Entry condition | Exit condition |
 | ------ | ---- | --------------- | -------------- |
 | `dev` | Daily integration of features and fixes | Feature/fix PR reviewed and checks pass | Candidate is selected for alpha validation |
-| `staging` | Alpha candidate, TestFlight build and colleague validation | Promotion PR from `dev` | Alpha and colleague validation complete |
+| `staging` | QA alpha candidate and colleague validation | Promotion PR from `dev` | QA and colleague validation complete |
 | `main` | Validated release code | Promotion PR from `staging` | Release is deployed through the production path |
 
 Feature and fix PRs target `dev`. Promotion PRs are the only way to move code from `dev` to `staging`, then from `staging` to `main`. Do not skip a branch or merge feature work directly into `staging` or `main`.
+
+The `staging` checkpoint includes QA sign-off for the critical desktop and responsive mobile-web journeys, plus colleague validation. The project does not currently have a native mobile or TestFlight build, so TestFlight validation becomes active only after that build exists.
 
 ## CI / GitHub Actions
 

@@ -49,9 +49,9 @@ Then confirm SonarCloud reports **zero open issues**:
 
 ## Promotion gate
 
-Feature and fix PRs target `dev`. Only a promotion PR from `dev` may target `staging`, and only a validated `staging` promotion may target `main`. The `staging` promotion is the alpha/TestFlight and colleague-validation checkpoint; `main` is release-only.
+Feature and fix PRs target `dev`. Only a promotion PR from `dev` may target `staging`, and only a validated `staging` promotion may target `main`. The `staging` promotion is the QA alpha and colleague-validation checkpoint; `main` is release-only. QA currently validates the web app at desktop and mobile responsive viewports because no native mobile/TestFlight build exists yet.
 
-Do not skip a branch, merge feature work directly into `staging` or `main`, or promote while a required quality check is failing.
+Do not skip a branch, merge feature work directly into `staging` or `main`, or promote while a required quality check or QA sign-off is missing.
 
 ### Branch protection the settings cannot express
 

@@ -22,15 +22,16 @@ Skills own the coding standards — no `any`/`as`/`!`, exhaustive `never` guards
 The branches have distinct release roles:
 
 - `dev`: daily integration of features and fixes.
-- `staging`: alpha candidate, TestFlight build and colleague validation.
+- `staging`: QA alpha candidate and colleague validation. Mobile QA currently means responsive web viewport checks; there is no native mobile/TestFlight build yet.
 - `main`: validated release code only.
 
 PRs follow this promotion chain:
 
 1. `feature/*` / `fix/*` PRs target **`dev`** (never `staging` or `main` directly).
-2. A reviewed promotion PR moves `dev` into **`staging`** for the alpha/TestFlight cycle.
-3. After alpha and colleague validation, a reviewed promotion PR moves `staging` into **`main`**.
-4. Never skip a branch or merge a feature directly into `staging` or `main`.
+2. A reviewed promotion PR moves `dev` into **`staging`** for the QA alpha cycle.
+3. QA validates desktop and mobile viewport journeys on `staging`; TestFlight is conditional on a future native mobile build.
+4. After QA and colleague validation, a reviewed promotion PR moves `staging` into **`main`**.
+5. Never skip a branch or merge a feature directly into `staging` or `main`.
 
 **Promote with `gh pr merge --rebase`, not a merge commit.** A merge commit is created _on the target_, so `dev` gained commits `staging` never received and `main` gained commits neither had. Content stayed identical while the histories drifted — after fifteen batches in one day, GitHub reported `staging` as **26 commits behind `main`** with zero files different. Rebasing the promotion keeps all three branches on the same commit.
 

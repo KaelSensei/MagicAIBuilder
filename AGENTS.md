@@ -323,15 +323,16 @@ describe("validatePartner", () => {
 Branch roles are explicit:
 
 - `dev`: daily feature and fix integration.
-- `staging`: alpha candidate, TestFlight build and colleague validation.
+- `staging`: QA alpha candidate and colleague validation. Mobile QA currently means responsive web viewport checks; no native mobile/TestFlight build exists yet.
 - `main`: validated release code.
 
 Promotion rules:
 
 1. `feature/*` / `fix/*` PRs target **`dev`** (never `staging` or `main` directly).
-2. Promote `dev` to **`staging`** only for an alpha/TestFlight validation cycle.
-3. Promote `staging` to **`main`** only after alpha and colleague validation.
-4. Never skip a branch or merge a feature directly into `staging` or `main`.
+2. Promote `dev` to **`staging`** only for the QA alpha validation cycle.
+3. QA must validate desktop and mobile viewport journeys on `staging`; TestFlight is conditional on a future native mobile build.
+4. Promote `staging` to **`main`** only after QA and colleague validation.
+5. Never skip a branch or merge a feature directly into `staging` or `main`.
 
 ## Documentation Discipline
 
