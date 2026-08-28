@@ -5,6 +5,7 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useFormatter } from "next-intl";
 import {
   Package,
   ShoppingCart,
@@ -29,6 +30,7 @@ export function CollectionStatsPanel({
   className,
 }: CollectionStatsPanelProps) {
   const { data: session } = useSession();
+  const format = useFormatter();
   const [expanded, setExpanded] = useState(false);
   const [showShoppingList, setShowShoppingList] = useState(false);
 
@@ -196,7 +198,10 @@ export function CollectionStatsPanel({
                       Missing cards cost
                     </span>
                     <span className="font-medium text-[var(--text-primary)]">
-                      ~${stats.missingCost.toFixed(2)}
+                      ~{format.number(stats.missingCost, {
+                        style: "currency",
+                        currency: "USD",
+                      })}
                     </span>
                   </div>
                 )}

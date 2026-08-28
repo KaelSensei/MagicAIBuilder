@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { X, AlertTriangle, Zap, Bookmark, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/components/ui/utils";
@@ -75,6 +75,7 @@ export function CardListItem({
   showNotes: _showNotes,
 }: CardListItemProps) {
   const t = useTranslations("card");
+  const format = useFormatter();
   const tBuilder = useTranslations("builder");
   const [isFlipped, setIsFlipped] = useState(false);
   const isDfc = Boolean(card.cardFaces);
@@ -112,9 +113,14 @@ export function CardListItem({
         {card.price !== null && (
           <span
             className="shrink-0 text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-600/20 text-emerald-400 leading-none"
-            title={t("priceLabel", { price: card.price.toFixed(2) })}
+            title={t("priceLabel", {
+              price: format.number(card.price, {
+                style: "currency",
+                currency: "USD",
+              }),
+            })}
           >
-            ${card.price.toFixed(2)}
+            {format.number(card.price, { style: "currency", currency: "USD" })}
           </span>
         )}
         {card.isGameChanger && (

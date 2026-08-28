@@ -1,7 +1,7 @@
 "use client";
 // Collection page — lists all owned cards with stats
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   Loader2,
   Package,
@@ -30,6 +30,7 @@ import { CollectionCardTooltip } from "@/components/collection/CollectionCardToo
 
 export function CollectionPageClient() {
   const t = useTranslations("collection");
+  const format = useFormatter();
   const {
     collectionCards,
     collectionCardsFoil,
@@ -199,7 +200,10 @@ export function CollectionPageClient() {
           />
           <StatCard
             label={t("stats.totalValue")}
-            value={`$${totalValue.toFixed(2)}`}
+            value={format.number(totalValue, {
+              style: "currency",
+              currency: "USD",
+            })}
             highlight
           />
         </div>
@@ -424,10 +428,14 @@ function CollectionListRow({
   readonly onOpenPrintings: (card: CollectionCard) => void;
 }) {
   const t = useTranslations("collection");
+  const format = useFormatter();
   const value =
     card.price === null || card.price === undefined
       ? "—"
-      : `$${(card.price * card.quantity).toFixed(2)}`;
+      : format.number(card.price * card.quantity, {
+          style: "currency",
+          currency: "USD",
+        });
 
   return (
     <div className="grid grid-cols-[1fr_80px_80px_80px_100px_40px] gap-2 px-3 py-2 rounded hover:bg-[var(--surface-hover)] items-center group">

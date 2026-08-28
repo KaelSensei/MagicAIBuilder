@@ -111,7 +111,7 @@ export function ShoppingListModal({
             ) : (
               <div className="space-y-1">
                 {items.map((item) => (
-                  <ShoppingRow key={item.scryfallId} item={item} />
+                  <ShoppingRow key={item.scryfallId} item={item} money={money} />
                 ))}
               </div>
             )}
@@ -164,7 +164,13 @@ export function ShoppingListModal({
   );
 }
 
-function ShoppingRow({ item }: { readonly item: ShoppingListItem }) {
+function ShoppingRow({
+  item,
+  money,
+}: {
+  readonly item: ShoppingListItem;
+  readonly money: (value: number) => string;
+}) {
   const lineTotal = item.price === null ? null : item.price * item.quantity;
 
   return (
@@ -176,11 +182,11 @@ function ShoppingRow({ item }: { readonly item: ShoppingListItem }) {
         {item.name}
       </span>
       <span className="text-xs text-[var(--text-secondary)] shrink-0 tabular-nums">
-        {item.price === null ? "—" : `$${item.price.toFixed(2)}`}
+        {item.price === null ? "—" : money(item.price)}
       </span>
       {typeof lineTotal === "number" && item.quantity > 1 ? (
         <span className="text-[10px] text-[var(--text-secondary)] shrink-0 tabular-nums w-14 text-right">
-          (${lineTotal.toFixed(2)})
+          ({money(lineTotal)})
         </span>
       ) : null}
     </div>
