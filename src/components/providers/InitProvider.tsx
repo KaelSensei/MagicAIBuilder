@@ -8,64 +8,68 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useCollectionStore } from "@/lib/collection/store";
+import { fetchUserInit } from "@/lib/auth/user-init";
 
 interface InitContextValue {
   /** null = not yet loaded, boolean = resolved */
   readonly onboardingDone: boolean | null;
+  /** Whether the bootstrap request is idle, pending, ready, or failed. */
+  readonly initializationStatus: "idle" | "loading" | "ready" | "error";
 }
 
-const InitContext = createContext<InitContextValue>({ onboardingDone: null });
+const InitContext = createContext<InitContextValue>({
+  onboardingDone: null,
+  initializationStatus: "idle",
+});
 
 /** Read pre-fetched onboarding status from InitProvider */
 export function useInitContext(): InitContextValue {
   return useContext(InitContext);
 }
 
-interface InitResponse {
-  readonly onboardingDone: boolean;
-  readonly collection: readonly unknown[];
-}
-
-function isInitResponse(value: unknown): value is InitResponse {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "onboardingDone" in value &&
-    typeof (value as Record<string, unknown>).onboardingDone === "boolean" &&
-    "collection" in value &&
-    Array.isArray((value as Record<string, unknown>).collection)
-  );
-}
-
 export function InitProvider({ children }: { readonly children: React.ReactNode }) {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const hydrateCollection = useCollectionStore((s) => s.hydrateCollection);
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
+  const [initializationStatus, setInitializationStatus] = useState<
+    InitContextValue["initializationStatus"]
+  >("idle");
 
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated") {
+      setOnboardingDone(null);
+      setInitializationStatus("idle");
+      return;
+    }
 
     let isCurrent = true;
+    setInitializationStatus("loading");
 
-    fetch("/api/user/init")
-      .then(async (res) => {
-        if (!res.ok || !isCurrent) return;
-        const data: unknown = await res.json();
-        if (!isCurrent || !isInitResponse(data)) return;
+    const userId = session?.user?.id ?? "authenticated";
 
+    fetchUserInit(userId)
+      .then((data) => {
+        if (!isCurrent) return;
         hydrateCollection(data.collection);
         setOnboardingDone(data.onboardingDone);
+        setInitializationStatus("ready");
       })
       .catch(() => {
-        // Fail silently — don't block UI on network error
+        if (isCurrent) {
+          setOnboardingDone(null);
+          setInitializationStatus("error");
+        }
       });
 
     return () => {
       isCurrent = false;
     };
-  }, [status, hydrateCollection]);
+  }, [hydrateCollection, session?.user?.id, status]);
 
-  const contextValue = useMemo(() => ({ onboardingDone }), [onboardingDone]);
+  const contextValue = useMemo(
+    () => ({ onboardingDone, initializationStatus }),
+    [initializationStatus, onboardingDone]
+  );
 
   return <InitContext.Provider value={contextValue}>{children}</InitContext.Provider>;
 }
