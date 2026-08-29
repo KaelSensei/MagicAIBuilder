@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PlaytestModal } from "./PlaytestModal";
 import { usePlaytestStore } from "@/lib/playtest/store";
 import messages from "@/messages/en/playtest.json";
+import evidenceMessages from "@/messages/en/playtest-evidence.json";
 import builderMessages from "@/messages/en/builder.json";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 
@@ -67,7 +68,7 @@ function renderModal(deck = makeDeck(), onClose = vi.fn()) {
     <QueryClientProvider client={queryClient}>
       <NextIntlClientProvider
         locale="en"
-        messages={{ playtest: messages, builder: builderMessages }}
+        messages={{ playtest: messages, playtestEvidence: evidenceMessages, builder: builderMessages }}
       >
         <PlaytestModal deck={deck} onClose={onClose} />
       </NextIntlClientProvider>

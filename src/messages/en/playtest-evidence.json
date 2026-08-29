@@ -1,0 +1,10 @@
+{
+  "drawProgress": {
+    "cardsSeen": "{count, plural, one {# card seen} other {# cards seen}}",
+    "status": {
+      "natural": "Natural draws only.",
+      "drawing-extra": "{count} extra cards seen. Your draw effects are working.",
+      "library-empty": "Library empty. Close the game before your next draw."
+    }
+  }
+}
