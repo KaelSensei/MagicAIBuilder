@@ -117,6 +117,7 @@
   },
   "stats": {
     "buildToSee": "Construisez votre deck pour voir les stats",
+    "tokenLibrary": "Bibliothèque de jetons",
     "deckChecks": "Vérifications du deck",
     "totalCards": "Total cartes",
     "lands": "Terrains",

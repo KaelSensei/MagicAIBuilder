@@ -364,6 +364,15 @@ export default function BuilderPage() {
   // Input focus tracking — suppresses single-key shortcuts when typing
   const [isInputFocused, setIsInputFocused] = useState(false);
 
+  const deckAnalysisCards = useMemo(
+    () => [
+      ...(deck.commander ? [deck.commander] : []),
+      ...(deck.partner ? [deck.partner] : []),
+      ...deck.cards,
+    ],
+    [deck.commander, deck.partner, deck.cards]
+  );
+
   const banlistAlertKey = useMemo(() => {
     if (!stats) {
       return "";
@@ -1027,6 +1036,7 @@ export default function BuilderPage() {
             <DeckStats
               stats={stats}
               format={deck.format}
+              cards={deckAnalysisCards}
               targetBracket={deck.targetBracket}
             />
           </motion.div>

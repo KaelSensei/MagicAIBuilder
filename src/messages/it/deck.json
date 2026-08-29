@@ -117,6 +117,7 @@
   },
   "stats": {
     "buildToSee": "Build your deck to see stats",
+    "tokenLibrary": "Biblioteca delle pedine",
     "deckChecks": "Deck Checks",
     "totalCards": "Total cards",
     "lands": "Lands",
