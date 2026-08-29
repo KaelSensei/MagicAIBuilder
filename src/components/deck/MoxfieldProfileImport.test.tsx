@@ -36,4 +36,18 @@ describe("MoxfieldProfileImport", () => {
       JSON.stringify(["totoro"])
     );
   });
+
+  it("removes a saved username from the profile list and local storage", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem("magic-ai-builder:moxfield-profiles", JSON.stringify(["totoro", "luna"]));
+
+    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    await user.click(screen.getByRole("button", { name: "Remove @totoro" }));
+
+    expect(screen.queryByRole("button", { name: "@totoro" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "@luna" })).toBeInTheDocument();
+    expect(window.localStorage.getItem("magic-ai-builder:moxfield-profiles")).toBe(
+      JSON.stringify(["luna"])
+    );
+  });
 });

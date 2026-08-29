@@ -45,6 +45,15 @@ export function MoxfieldProfileImport({ onDeckSelected }: MoxfieldProfileImportP
     setUsername(normalized);
   };
 
+  const removeProfile = (profile: string) => {
+    const next = profiles.filter((savedProfile) => savedProfile !== profile);
+    setProfiles(next);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    if (username === profile) {
+      setUsername("");
+      setDecks([]);
+    }
+  };
   const loadDecks = async (profile = username) => {
     const normalized = profile.trim().replace(/^@/, "");
     if (!normalized) return;
@@ -88,7 +97,10 @@ export function MoxfieldProfileImport({ onDeckSelected }: MoxfieldProfileImportP
       {profiles.length > 0 && (
         <div className="flex flex-wrap gap-2" aria-label="Saved Moxfield profiles">
           {profiles.map((profile) => (
-            <button key={profile} type="button" onClick={() => loadDecks(profile)} className="rounded-full border border-[var(--border)] px-2 py-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">@{profile}</button>
+            <span key={profile} className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-2 py-1 text-xs text-[var(--text-secondary)]">
+              <button type="button" onClick={() => loadDecks(profile)} className="hover:text-[var(--text-primary)]">@{profile}</button>
+              <button type="button" aria-label={`Remove @${profile}`} onClick={() => removeProfile(profile)} className="text-[var(--text-secondary)] hover:text-red-400">×</button>
+            </span>
           ))}
         </div>
       )}
