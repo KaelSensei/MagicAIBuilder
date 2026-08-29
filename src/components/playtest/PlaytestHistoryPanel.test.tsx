@@ -74,6 +74,9 @@ describe("PlaytestHistoryPanel", () => {
     expect(screen.getByText("6")).toBeDefined();
     expect(screen.getByText("50%")).toBeDefined();
     expect(screen.getByText("7.5")).toBeDefined();
+    expect(
+      screen.getByText(/self-reported solitaire results, not tournament win rates/i)
+    ).toBeDefined();
   });
 
   it("dashes the win-turn figure when the deck has never won", () => {
