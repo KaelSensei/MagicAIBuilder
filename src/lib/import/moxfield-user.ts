@@ -73,7 +73,7 @@ export function parseMoxfieldUserDecks(data: unknown): MoxfieldUserDeckPage {
     });
   }
 
-  if (decks.length === 0) {
+  if (decks.length === 0 && items.length > 0) {
     throw new Error("Moxfield returned no usable decks");
   }
 

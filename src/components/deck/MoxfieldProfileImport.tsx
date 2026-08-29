@@ -35,6 +35,7 @@ export function MoxfieldProfileImport({ onDeckSelected }: MoxfieldProfileImportP
   const [decks, setDecks] = useState<readonly MoxfieldUserDeckSummary[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   const saveProfile = () => {
     const normalized = username.trim().replace(/^@/, "");
@@ -50,6 +51,7 @@ export function MoxfieldProfileImport({ onDeckSelected }: MoxfieldProfileImportP
     if (!normalized) return;
     setUsername(normalized);
     setStatus("loading");
+    setHasLoaded(false);
     setError(null);
     try {
       const response = await fetch("/api/import/moxfield-user", {
@@ -60,6 +62,7 @@ export function MoxfieldProfileImport({ onDeckSelected }: MoxfieldProfileImportP
       const data: unknown = await response.json();
       if (!response.ok || !isDeckPage(data)) throw new Error("Could not load Moxfield decks.");
       setDecks(data.decks);
+      setHasLoaded(true);
       setStatus("idle");
     } catch (cause) {
       setStatus("error");
@@ -93,6 +96,9 @@ export function MoxfieldProfileImport({ onDeckSelected }: MoxfieldProfileImportP
         </div>
       )}
       {error && <p role="alert" className="text-xs text-red-400">{error}</p>}
+      {hasLoaded && decks.length === 0 && (
+        <p className="text-xs text-[var(--text-secondary)]">No public decks found for this profile.</p>
+      )}
       {decks.length > 0 && (
         <ul className="flex max-h-40 flex-col gap-1 overflow-y-auto">
           {decks.map((deck) => (
