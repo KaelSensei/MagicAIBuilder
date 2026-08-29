@@ -5,11 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PlaytestModal } from "./PlaytestModal";
 import { usePlaytestStore } from "@/lib/playtest/store";
 import messages from "@/messages/en/playtest.json";
-<<<<<<< HEAD
 import evidenceMessages from "@/messages/en/playtest-evidence.json";
-=======
 import builderMessages from "@/messages/en/builder.json";
->>>>>>> origin/staging
 import type { Deck, DeckCard } from "@/lib/deck/types";
 
 // next/image and framer-motion are noise here; the zones under test are DOM only.
@@ -71,11 +68,7 @@ function renderModal(deck = makeDeck(), onClose = vi.fn()) {
     <QueryClientProvider client={queryClient}>
       <NextIntlClientProvider
         locale="en"
-<<<<<<< HEAD
-        messages={{ playtest: messages, playtestEvidence: evidenceMessages }}
-=======
-        messages={{ playtest: messages, builder: builderMessages }}
->>>>>>> origin/staging
+        messages={{ playtest: messages, playtestEvidence: evidenceMessages, builder: builderMessages }}
       >
         <PlaytestModal deck={deck} onClose={onClose} />
       </NextIntlClientProvider>
