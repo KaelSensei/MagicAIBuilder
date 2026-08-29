@@ -15,6 +15,8 @@ import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
 import { GraveyardZone } from "@/components/playtest/GraveyardZone";
 import { RecordResultBar } from "@/components/playtest/RecordResultBar";
 import { PlaytestHistoryPanel } from "@/components/playtest/PlaytestHistoryPanel";
+import { DrawProgressEvidence } from "@/components/playtest/DrawProgressEvidence";
+import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 
 interface PlaytestModalProps {
@@ -169,6 +171,8 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
             <div className="mx-auto max-w-7xl grid gap-4 lg:grid-cols-[20rem_1fr]">
               {/* Left rail: turn structure and life */}
               <aside className="space-y-4">
+                {engine.turn > 1 && <DrawProgressEvidence engine={engine} />}
+                {canMulligan && <OpeningHandEvidence hand={engine.hand} />}
                 <PhaseTracker
                   turn={engine.turn}
                   phase={engine.phase}

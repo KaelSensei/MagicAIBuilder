@@ -4,6 +4,7 @@ import {
   createEmptyDeck,
   isDeckStub,
   makeDeckCard,
+  apiDeckToStoreDeck,
 } from "./store-factories";
 import type { Deck } from "./types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -176,5 +177,101 @@ describe("isDeckStub", () => {
 
   it("treats an empty deck as loaded, not as a stub", () => {
     expect(isDeckStub(deck({ cardCount: 0, cards: [] }))).toBe(false);
+  });
+});
+
+describe("apiDeckToStoreDeck zones", () => {
+  it("keeps persisted secondary cards in cards and mirrors maybeboard", () => {
+    const deck = apiDeckToStoreDeck({
+      id: "deck-zones",
+      name: "Zone Deck",
+      format: "commander",
+      targetBracket: 3,
+      manualBracket: null,
+      budget: null,
+      description: "",
+      tags: [],
+      shareToken: null,
+      shareEnabled: false,
+      isPublic: false,
+      isAIGenerated: false,
+      commanderId: null,
+      commanderName: null,
+      partnerId: null,
+      companionId: null,
+      companion: null,
+      pairingType: "none",
+      cards: [
+        {
+          id: "main-card",
+          deckId: "deck-zones",
+          scryfallId: "sf-main",
+          name: "Main Card",
+          manaCost: "{1}",
+          cmc: 1,
+          typeLine: "Artifact",
+          oracleText: "",
+          colorIdentity: [],
+          isGameChanger: false,
+          isBanned: false,
+          price: null,
+          imageUri: "",
+          artCropUri: "",
+          category: "artifact",
+          quantity: 1,
+          isCommander: false,
+          isPartner: false,
+          zone: "main",
+        },
+        {
+          id: "side-card",
+          deckId: "deck-zones",
+          scryfallId: "sf-side",
+          name: "Side Card",
+          manaCost: "{1}",
+          cmc: 1,
+          typeLine: "Artifact",
+          oracleText: "",
+          colorIdentity: [],
+          isGameChanger: false,
+          isBanned: false,
+          price: null,
+          imageUri: "",
+          artCropUri: "",
+          category: "artifact",
+          quantity: 1,
+          isCommander: false,
+          isPartner: false,
+          zone: "sideboard",
+        },
+        {
+          id: "maybe-card",
+          deckId: "deck-zones",
+          scryfallId: "sf-maybe",
+          name: "Maybe Card",
+          manaCost: "{1}",
+          cmc: 1,
+          typeLine: "Artifact",
+          oracleText: "",
+          colorIdentity: [],
+          isGameChanger: false,
+          isBanned: false,
+          price: null,
+          imageUri: "",
+          artCropUri: "",
+          category: "artifact",
+          quantity: 1,
+          isCommander: false,
+          isPartner: false,
+          zone: "maybeboard",
+        },
+      ],
+      maybeboard: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+
+    expect(deck.cards.map((card) => card.zone)).toEqual(["main", "sideboard", "maybeboard"]);
+    expect(deck.maybeboard.map((card) => card.id)).toEqual(["maybe-card"]);
   });
 });

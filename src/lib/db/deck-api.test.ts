@@ -106,12 +106,12 @@ describe("duplicateDeck", () => {
 });
 
 describe("updateCardMaybeboard", () => {
-  it("patches isMaybeboard flag on a card", async () => {
-    mockFetch({ id: "card-1", isMaybeboard: true });
+  it("patches the persisted maybeboard zone", async () => {
+    mockFetch({ id: "card-1", zone: "maybeboard" });
     const result = await updateCardMaybeboard("deck-1", "card-1", true);
-    expect(result.isMaybeboard).toBe(true);
+    expect(result.zone).toBe("maybeboard");
     const body = JSON.parse(vi.mocked(global.fetch).mock.calls[0][1]?.body as string);
-    expect(body.isMaybeboard).toBe(true);
+    expect(body.zone).toBe("maybeboard");
   });
 
   it("throws on error", async () => {

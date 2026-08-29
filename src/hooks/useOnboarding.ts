@@ -14,7 +14,10 @@ const LS_KEY = "mab-onboarding-done";
 
 export function useOnboarding() {
   const { data: session, status } = useSession();
-  const { onboardingDone: initOnboardingDone } = useInitContext();
+  const {
+    onboardingDone: initOnboardingDone,
+    initializationStatus,
+  } = useInitContext();
   const sessionUserId = typeof session?.user?.id === "string" ? session.user.id : null;
   const [showWizard, setShowWizard] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -25,6 +28,12 @@ export function useOnboarding() {
 
     if (status === "authenticated") {
       // Wait for InitProvider to resolve
+      if (initializationStatus === "loading" || initializationStatus === "idle") return;
+      if (initializationStatus === "error") {
+        setShowWizard(false);
+        setLoading(false);
+        return;
+      }
       if (initOnboardingDone === null) return;
       setShowWizard(!initOnboardingDone);
       setLoading(false);
@@ -38,7 +47,7 @@ export function useOnboarding() {
       }
       setLoading(false);
     }
-  }, [status, initOnboardingDone]);
+  }, [initializationStatus, initOnboardingDone, status]);
 
   /** Mark onboarding as done (complete or skip) */
   const completeOnboarding = useCallback(async () => {

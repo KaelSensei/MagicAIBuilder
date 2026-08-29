@@ -8,6 +8,7 @@ import { BookOpen, Shield } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import {
   loadComprehensiveRules,
+  searchComprehensiveRules,
   type RulesChapter,
 } from "@/lib/rules/comprehensive";
 import { cn } from "@/components/ui/utils";
@@ -17,6 +18,7 @@ const GLOSSARY_KEY = "glossary";
 interface ComprehensiveRulesViewProps {
   /** Raw `?chapter=` value: a chapter number like "903", or "glossary". */
   readonly requestedChapter?: string;
+  readonly requestedQuery?: string;
 }
 
 function ChapterArticle({ chapter }: { readonly chapter: RulesChapter }) {
@@ -47,6 +49,7 @@ function ChapterArticle({ chapter }: { readonly chapter: RulesChapter }) {
 
 export async function ComprehensiveRulesView({
   requestedChapter,
+  requestedQuery = "",
 }: ComprehensiveRulesViewProps) {
   const t = await getTranslations("rules");
   const rules = loadComprehensiveRules();
@@ -55,8 +58,9 @@ export async function ComprehensiveRulesView({
   const showGlossary = requestedChapter === GLOSSARY_KEY;
   const activeChapter = showGlossary
     ? null
-    : (allChapters.find((c) => c.number === requestedChapter) ??
-      allChapters[0]);
+    : (allChapters.find((c) => c.number === requestedChapter) ?? allChapters[0]);
+  const searchResults = searchComprehensiveRules(rules, requestedQuery);
+  const showSearch = requestedQuery.trim().length > 0;
 
   return (
     <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 flex flex-col gap-6">
@@ -85,6 +89,35 @@ export async function ComprehensiveRulesView({
           {t("comprehensive.tabLabel")}
         </span>
       </div>
+
+      <form method="get" className="flex gap-2 max-w-2xl">
+        <label htmlFor="rules-search" className="sr-only">{t("comprehensive.search")}</label>
+        <input
+          id="rules-search"
+          name="q"
+          defaultValue={requestedQuery}
+          placeholder={t("comprehensive.searchPlaceholder")}
+          className="flex-1 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)]"
+        />
+        <button type="submit" className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white">
+          {t("comprehensive.search")}
+        </button>
+      </form>
+
+      {showSearch ? (
+        <section aria-labelledby="rules-search-results" className="flex flex-col gap-3">
+          <h2 id="rules-search-results" className="text-lg font-semibold text-[var(--text-primary)]">
+            {t("comprehensive.searchResults")}
+          </h2>
+          {searchResults.map((result) => (
+            <article key={`${result.kind}-${result.reference}`} className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+              <p className="text-xs font-semibold text-[var(--accent-text)]">{result.reference}</p>
+              <p className="mt-1 text-sm leading-relaxed text-[var(--text-primary)]">{result.text}</p>
+            </article>
+          ))}
+          {searchResults.length === 0 && <p className="text-sm text-[var(--text-secondary)]">No matching rules found.</p>}
+        </section>
+      ) : null}
 
       <div className="flex flex-col md:flex-row gap-8">
         {/* Contents navigation */}

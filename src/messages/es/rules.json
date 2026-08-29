@@ -31,6 +31,9 @@
     "subtitle": "Las reglas completas oficiales de Magic: The Gathering.",
     "effectiveDate": "Vigentes desde el {date}.",
     "contents": "Contenido",
-    "glossary": "Glosario"
+    "glossary": "Glosario",
+    "search": "Search rules",
+    "searchPlaceholder": "Search rules and glossary...",
+    "searchResults": "Search results"
   }
 }

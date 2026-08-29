@@ -9,18 +9,18 @@ export const metadata: Metadata = {
 };
 
 interface ComprehensiveRulesPageProps {
-  readonly searchParams: Promise<{ chapter?: string }>;
+  readonly searchParams: Promise<{ chapter?: string; q?: string }>;
 }
 
 export default async function ComprehensiveRulesPage({
   searchParams,
 }: ComprehensiveRulesPageProps) {
-  const { chapter } = await searchParams;
+  const { chapter, q } = await searchParams;
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
       <Header />
-      <ComprehensiveRulesView requestedChapter={chapter} />
+      <ComprehensiveRulesView requestedChapter={chapter} requestedQuery={q} />
     </div>
   );
 }

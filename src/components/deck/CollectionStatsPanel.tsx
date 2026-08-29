@@ -5,6 +5,7 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useFormatter } from "next-intl";
 import {
   Package,
   ShoppingCart,
@@ -15,7 +16,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import { useCollectionStore } from "@/lib/collection/store";
-import { computeCollectionStats } from "@/lib/collection/shopping-list";
+import { computeCollectionStats, summarizeDeckCollection } from "@/lib/collection/shopping-list";
 import { ShoppingListModal } from "./ShoppingListModal";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 
@@ -29,6 +30,7 @@ export function CollectionStatsPanel({
   className,
 }: CollectionStatsPanelProps) {
   const { data: session } = useSession();
+  const format = useFormatter();
   const [expanded, setExpanded] = useState(false);
   const [showShoppingList, setShowShoppingList] = useState(false);
 
@@ -48,6 +50,21 @@ export function CollectionStatsPanel({
     return ids;
   }, [collectionCards, collectionCardsFoil]);
 
+  const collectionQuantities = useMemo(() => {
+    const quantities: Record<string, number> = {};
+    for (const [scryfallId, card] of Object.entries(collectionCards)) {
+      quantities[scryfallId] = card.quantity;
+    }
+    for (const [scryfallId, card] of Object.entries(collectionCardsFoil)) {
+      quantities[scryfallId] = (quantities[scryfallId] ?? 0) + card.quantity;
+    }
+    return quantities;
+  }, [collectionCards, collectionCardsFoil]);
+
+  const quantitySummary = useMemo(
+    () => summarizeDeckCollection(deck.cards, deck.commander, deck.partner, collectionQuantities),
+    [deck.cards, deck.commander, deck.partner, collectionQuantities]
+  );
   const stats = useMemo(
     () =>
       computeCollectionStats(
@@ -59,7 +76,7 @@ export function CollectionStatsPanel({
     [deck.cards, deck.commander, deck.partner, ownedScryfallIds]
   );
 
-  const pct = Math.round(stats.completionRatio * 100);
+  const pct = Math.round(quantitySummary.completionRatio * 100);
 
   /** Gather all unique non-basic deck cards not yet in collection */
   const getMissingCards = useCallback((): DeckCard[] => {
@@ -165,7 +182,7 @@ export function CollectionStatsPanel({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-[var(--text-secondary)]">
-                      {stats.ownedCount} owned · {stats.missingCount} missing
+                      {quantitySummary.ownedQuantity} owned · {quantitySummary.proxyQuantity} proxy · {quantitySummary.missingQuantity} missing
                     </span>
                     <span
                       className={cn(
@@ -196,7 +213,10 @@ export function CollectionStatsPanel({
                       Missing cards cost
                     </span>
                     <span className="font-medium text-[var(--text-primary)]">
-                      ~${stats.missingCost.toFixed(2)}
+                      ~{format.number(stats.missingCost, {
+                        style: "currency",
+                        currency: "USD",
+                      })}
                     </span>
                   </div>
                 )}

@@ -1,0 +1,10 @@
+{
+  "drawProgress": {
+    "cardsSeen": "{count, plural, one {# carte vue} other {# cartes vues}}",
+    "status": {
+      "natural": "Pioches naturelles uniquement.",
+      "drawing-extra": "{count} cartes supplémentaires vues. Vos effets de pioche fonctionnent.",
+      "library-empty": "Bibliothèque vide. Terminez la partie avant votre prochaine pioche."
+    }
+  }
+}

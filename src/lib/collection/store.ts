@@ -4,7 +4,7 @@ import { create } from "zustand";
 import type { CollectionCard, AddToCollectionInput, CardCondition } from "./types";
 import { logger } from "@/lib/logger";
 import { isRecord, parseCollectionCard } from "./parse";
-
+import { updateCollectionQuantity } from "./quantity-update";
 
 export interface CollectionStore {
   // State
@@ -203,47 +203,11 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
   },
 
   updateQuantity: async (id: string, quantity: number) => {
-    set({ isSyncing: true });
-    try {
-      const res = await fetch(`/api/collection/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity }),
-      });
-      if (!res.ok) throw new Error("Failed to update quantity");
-      const data = await res.json();
-
-      if (data.deleted) {
-        // quantity was set to 0 — delete from store
-        set((state) => {
-          const collectionCards = { ...state.collectionCards };
-          const collectionCardsFoil = { ...state.collectionCardsFoil };
-          for (const [k, c] of Object.entries(collectionCards)) {
-            if (c.id === id) delete collectionCards[k];
-          }
-          for (const [k, c] of Object.entries(collectionCardsFoil)) {
-            if (c.id === id) delete collectionCardsFoil[k];
-          }
-          return { collectionCards, collectionCardsFoil };
-        });
-      } else {
-        const updated: CollectionCard = {
-          ...data,
-          createdAt: new Date(data.createdAt),
-          acquiredAt: data.acquiredAt ? new Date(data.acquiredAt) : null,
-        };
-        set((state) => {
-          if (updated.foil) {
-            return { collectionCardsFoil: { ...state.collectionCardsFoil, [updated.scryfallId]: updated } };
-          }
-          return { collectionCards: { ...state.collectionCards, [updated.scryfallId]: updated } };
-        });
-      }
-    } catch (err) {
-      logger.error("Unexpected error", "updateQuantity", err);
-    } finally {
-      set({ isSyncing: false });
-    }
+    await updateCollectionQuantity(id, quantity, {
+      getState: get,
+      setState: (update) => set((state) => update(state)),
+      setSyncing: (isSyncing) => set({ isSyncing }),
+    });
   },
 
   updateCondition: async (id: string, condition: CardCondition | null) => {

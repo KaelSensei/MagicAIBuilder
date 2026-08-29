@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { mockDeck } from "./mock-deck";
+import { validateGeneratedDeck } from "@/lib/ai/generated-deck-validation";
 import type {
   AIDeckResponse,
   Bracket,
@@ -284,6 +285,11 @@ export async function POST(request: Request) {
           // placeholder list, and flag it on "done" so the UI can say so.
           deck = mockDeck(body);
           source = "demo";
+        }
+
+        const validationIssues = validateGeneratedDeck(deck);
+        if (validationIssues.length > 0) {
+          throw new Error(`Generated deck rejected: ${validationIssues.join(" ")}`);
         }
 
         streamDeck(emit, deck, source);

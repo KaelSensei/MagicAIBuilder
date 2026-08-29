@@ -36,6 +36,11 @@
     "value": "Value"
   },
   "foilBadge": "Foil",
+  "quantityControl": {
+    "input": "Quantity owned for {name}",
+    "decrease": "Decrease {name} quantity",
+    "increase": "Increase {name} quantity"
+  },
   "quickAdd": {
     "add": "Add to collection",
     "added": "Added!",
