@@ -318,13 +318,21 @@ describe("validatePartner", () => {
 });
 ```
 
-## Branch Flow — staging → dev → main
+## Branch Flow — dev → staging → main
 
-Every feature or fix branch is merged into `staging` first. Promotion follows the chain `staging` → `dev` → `main`:
+Branch roles are explicit:
 
-1. `feature/*` / `fix/*` PRs target **`staging`** (never `dev` or `main` directly).
-2. Only a dev may request the merge from `staging` into `dev`.
-3. Only a dev may request the merge from `dev` into `main`.
+- `dev`: daily feature and fix integration.
+- `staging`: QA alpha candidate and colleague validation. Mobile QA currently means responsive web viewport checks; no native mobile/TestFlight build exists yet.
+- `main`: validated release code.
+
+Promotion rules:
+
+1. `feature/*` / `fix/*` PRs target **`dev`** (never `staging` or `main` directly).
+2. Promote `dev` to **`staging`** only for the QA alpha validation cycle.
+3. QA must validate desktop and mobile viewport journeys on `staging`; TestFlight is conditional on a future native mobile build.
+4. Promote `staging` to **`main`** only after QA and colleague validation.
+5. Never skip a branch or merge a feature directly into `staging` or `main`.
 
 ## Documentation Discipline
 
