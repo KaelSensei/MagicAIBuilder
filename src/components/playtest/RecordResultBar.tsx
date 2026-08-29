@@ -41,6 +41,7 @@ export function RecordResultBar({
   // Empty means "not saying", which is a legitimate answer — the column is
   // nullable and the matchup breakdown simply skips those runs.
   const [difficulty, setDifficulty] = useState<SessionDifficulty | "">("");
+  const [notes, setNotes] = useState("");
 
   const record = useCallback(
     async (result: SessionResult) => {
@@ -57,6 +58,7 @@ export function RecordResultBar({
             turns,
             mulliganCount,
             ...(difficulty === "" ? {} : { difficulty }),
+            ...(notes.trim() === "" ? {} : { notes: notes.trim() }),
           }),
         });
         if (!response.ok) throw new Error(`record failed: ${response.status}`);
@@ -73,11 +75,11 @@ export function RecordResultBar({
         setPending(null);
       }
     },
-    [deckId, turns, mulliganCount, difficulty, onRecorded, queryClient]
+    [deckId, turns, mulliganCount, difficulty, notes, onRecorded, queryClient]
   );
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <span className="text-xs text-white/50">{t("recordResult")}</span>
       <label className="sr-only" htmlFor="playtest-difficulty">
         {t("difficultyLabel")}
@@ -95,6 +97,17 @@ export function RecordResultBar({
           </option>
         ))}
       </select>
+      <label className="sr-only" htmlFor="playtest-notes">
+        {t("notesLabel")}
+      </label>
+      <input
+        id="playtest-notes"
+        type="text"
+        value={notes}
+        onChange={(event) => setNotes(event.target.value)}
+        placeholder={t("notesPlaceholder")}
+        className="min-w-48 flex-1 rounded bg-white/10 px-2 py-1 text-xs text-white placeholder:text-white/35"
+      />
       {SESSION_RESULTS.map((result) => (
         <button
           key={result}

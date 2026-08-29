@@ -99,6 +99,21 @@ describe("RecordResultBar", () => {
     expect(JSON.parse(String(init?.body)).difficulty).toBe("cedh");
   });
 
+  it("sends the player's trimmed playtest note", async () => {
+    renderBar();
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Playtest note" }),
+      "  Kept a slow hand and missed blue mana.  "
+    );
+    await userEvent.click(screen.getByText("Loss"));
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0];
+    expect(JSON.parse(String(init?.body)).notes).toBe(
+      "Kept a slow hand and missed blue mana."
+    );
+  });
+
   it("offers every difficulty the schema accepts", () => {
     renderBar();
     const select = screen.getByLabelText("Opponent") as HTMLSelectElement;
