@@ -9,6 +9,7 @@ import { useCardPrintings } from "@/hooks/useCardPrintings";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { resolveLocalizedText, toScryfallLang } from "@/lib/scryfall/localized";
 import { Modal } from "@/components/ui/Modal";
+import { CardRulingsPanel } from "@/components/card/CardRulingsPanel";
 
 
 interface PrintingSelectorModalProps {
@@ -99,6 +100,11 @@ export function PrintingSelectorModal({
               {t("noText")}
             </p>
           )}
+
+          <CardRulingsPanel
+            key={previewedPrinting.id}
+            cardId={previewedPrinting.id}
+          />
 
           {card.prices?.usd && (
             <p className="text-xs text-(--accent) mt-auto pt-2 border-t border-(--border)">
