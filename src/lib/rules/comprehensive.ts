@@ -198,3 +198,51 @@ export function loadComprehensiveRules(): ComprehensiveRules {
   cachedRules ??= parseComprehensiveRules(readFileSync(RULES_FILE, "utf8"));
   return cachedRules;
 }
+
+export interface RulesSearchResult {
+  readonly kind: "rule" | "glossary";
+  readonly chapter: string | null;
+  readonly reference: string;
+  readonly text: string;
+}
+
+/** Search the locally parsed rules corpus; no network access is performed. */
+export function searchComprehensiveRules(
+  rules: ComprehensiveRules,
+  query: string,
+  limit = 25
+): readonly RulesSearchResult[] {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  if (!normalizedQuery || limit <= 0) return [];
+
+  const results: RulesSearchResult[] = [];
+  for (const section of rules.sections) {
+    for (const chapter of section.chapters) {
+      for (const paragraph of chapter.paragraphs) {
+        if (paragraph.text.toLocaleLowerCase().includes(normalizedQuery)) {
+          results.push({
+            kind: "rule",
+            chapter: chapter.number,
+            reference: paragraph.ref ?? chapter.number,
+            text: paragraph.text,
+          });
+          if (results.length >= limit) return results;
+        }
+      }
+    }
+  }
+
+  for (const entry of rules.glossary) {
+    const haystack = `${entry.term} ${entry.definition}`.toLocaleLowerCase();
+    if (haystack.includes(normalizedQuery)) {
+      results.push({
+        kind: "glossary",
+        chapter: null,
+        reference: entry.term,
+        text: entry.definition,
+      });
+      if (results.length >= limit) return results;
+    }
+  }
+  return results;
+}

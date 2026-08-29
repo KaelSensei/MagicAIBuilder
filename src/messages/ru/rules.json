@@ -31,6 +31,9 @@
     "subtitle": "Официальные полные правила Magic: The Gathering.",
     "effectiveDate": "Действуют с {date}.",
     "contents": "Содержание",
-    "glossary": "Глоссарий"
+    "glossary": "Глоссарий",
+    "search": "Search rules",
+    "searchPlaceholder": "Search rules and glossary...",
+    "searchResults": "Search results"
   }
 }

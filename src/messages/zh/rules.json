@@ -31,6 +31,9 @@
     "subtitle": "万智牌官方完整规则。",
     "effectiveDate": "自{date}起生效。",
     "contents": "目录",
-    "glossary": "词汇表"
+    "glossary": "词汇表",
+    "search": "Search rules",
+    "searchPlaceholder": "Search rules and glossary...",
+    "searchResults": "Search results"
   }
 }
