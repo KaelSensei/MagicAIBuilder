@@ -6,6 +6,7 @@ import {
   formatCollectionText,
   formatCollectionCsv,
   getDeckCardStatuses,
+  summarizeDeckCollection,
 } from "./shopping-list";
 import type { DeckCard } from "@/lib/deck/types";
 
@@ -23,6 +24,24 @@ function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
 const BASIC_LAND = makeCard({
   id: "land", name: "Island", typeLine: "Basic Land — Island",
   scryfallId: "island", category: "land", price: 0.1, quantity: 4,
+});
+
+describe("summarizeDeckCollection", () => {
+  it("summarizes physical, proxy, and missing deck quantities", () => {
+    const cards = [
+      makeCard({ scryfallId: "owned", quantity: 2 }),
+      makeCard({ scryfallId: "proxy", quantity: 3 }),
+      makeCard({ scryfallId: "missing", quantity: 1 }),
+    ];
+
+    expect(summarizeDeckCollection(cards, null, null, { owned: 2 }, { proxy: 1 })).toEqual({
+      totalQuantity: 6,
+      ownedQuantity: 2,
+      proxyQuantity: 1,
+      missingQuantity: 3,
+      completionRatio: 0.5,
+    });
+  });
 });
 
 describe("buildShoppingList", () => {
