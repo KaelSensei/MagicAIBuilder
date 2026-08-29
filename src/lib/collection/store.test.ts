@@ -150,6 +150,64 @@ describe("Collection store — updateQuantity", () => {
     vi.restoreAllMocks();
   });
 
+  it("updates the visible quantity before the request completes", async () => {
+    const card = makeCollectionCard({ id: "card-1", quantity: 1 });
+    useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
+    let resolveRequest: ((response: Response) => void) | undefined;
+    const pendingResponse = new Promise<Response>((resolve) => {
+      resolveRequest = resolve;
+    });
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(pendingResponse));
+
+    const update = useCollectionStore.getState().updateQuantity("card-1", 3);
+
+    expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.quantity).toBe(3);
+    resolveRequest?.(
+      new Response(
+        JSON.stringify({
+          ...card,
+          quantity: 3,
+          createdAt: "2024-01-01T00:00:00.000Z",
+          acquiredAt: null,
+        }),
+        { status: 200 }
+      )
+    );
+    await update;
+  });
+
+  it("serializes rapid writes for the same card in their requested order", async () => {
+    const card = makeCollectionCard({ id: "card-1", quantity: 1 });
+    useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
+    const resolvers: Array<(response: Response) => void> = [];
+    const fetchMock = vi.fn().mockImplementation(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolvers.push(resolve);
+        })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const firstUpdate = useCollectionStore.getState().updateQuantity("card-1", 2);
+    const secondUpdate = useCollectionStore.getState().updateQuantity("card-1", 3);
+
+    expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.quantity).toBe(3);
+    await Promise.resolve();
+    expect(fetchMock).toHaveBeenCalledOnce();
+
+    resolvers[0]?.(
+      new Response(JSON.stringify({ ...card, quantity: 2, createdAt: card.createdAt.toISOString() }))
+    );
+    await firstUpdate;
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    resolvers[1]?.(
+      new Response(JSON.stringify({ ...card, quantity: 3, createdAt: card.createdAt.toISOString() }))
+    );
+    await secondUpdate;
+
+    expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.quantity).toBe(3);
+  });
+
   it("updates quantity for a non-foil card", async () => {
     const card = makeCollectionCard({ id: "card-1", quantity: 1 });
     useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
@@ -173,6 +231,18 @@ describe("Collection store — updateQuantity", () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     await useCollectionStore.getState().updateQuantity("card-1", 5);
     expect(useCollectionStore.getState().isSyncing).toBe(false);
+    consoleSpy.mockRestore();
+  });
+
+  it("rolls back an optimistic quantity when its request fails", async () => {
+    const card = makeCollectionCard({ id: "card-1", quantity: 2 });
+    useCollectionStore.setState({ collectionCards: { "scryfall-1": card } });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await useCollectionStore.getState().updateQuantity("card-1", 5);
+
+    expect(useCollectionStore.getState().collectionCards["scryfall-1"]?.quantity).toBe(2);
     consoleSpy.mockRestore();
   });
 
