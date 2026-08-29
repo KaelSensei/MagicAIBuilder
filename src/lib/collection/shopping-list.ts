@@ -15,6 +15,18 @@ export interface ShoppingListItem {
   readonly price: number | null;
 }
 
+export type DeckCardStatus = "owned" | "proxy" | "missing";
+
+export interface DeckCardStatusItem {
+  readonly scryfallId: string;
+  readonly name: string;
+  readonly quantity: number;
+  readonly availableQuantity: number;
+  readonly neededQuantity: number;
+  readonly status: DeckCardStatus;
+  readonly price: number | null;
+}
+
 export interface CollectionStats {
   readonly ownedCount: number;
   readonly totalCount: number;
@@ -45,6 +57,46 @@ function collectAllCards(
     if (card.zone === "main") cards.push(card);
   }
   return cards;
+}
+
+// ─── Collection status ────────────────────────────────────────────────────────
+
+/**
+ * Resolve each deck card against physical and proxy quantities.
+ * Physical cards take precedence; proxies cover the remaining quantity.
+ */
+export function getDeckCardStatuses(
+  deckCards: readonly DeckCard[],
+  commander: DeckCard | null,
+  partner: DeckCard | null,
+  quantities: Readonly<Record<string, number>>,
+  proxyQuantities: Readonly<Record<string, number>> = {}
+): DeckCardStatusItem[] {
+  const result: DeckCardStatusItem[] = [];
+  for (const card of collectAllCards(deckCards, commander, partner)) {
+    const scryfallId = card.scryfallId ?? card.id;
+    const physical = Math.max(0, quantities[scryfallId] ?? 0);
+    const proxy = Math.max(0, proxyQuantities[scryfallId] ?? 0);
+    const availableQuantity = Math.min(card.quantity, physical + proxy);
+    const neededQuantity = card.quantity - availableQuantity;
+    const isBasic = isBasicLand(card);
+    const status: DeckCardStatus = isBasic || physical >= card.quantity
+      ? "owned"
+      : proxy > 0
+        ? "proxy"
+        : "missing";
+
+    result.push({
+      scryfallId,
+      name: card.name,
+      quantity: card.quantity,
+      availableQuantity: isBasic ? card.quantity : availableQuantity,
+      neededQuantity: isBasic ? 0 : neededQuantity,
+      status: isBasic ? "owned" : status,
+      price: card.price,
+    });
+  }
+  return result;
 }
 
 // ─── Shopping list ────────────────────────────────────────────────────────────
