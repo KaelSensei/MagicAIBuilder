@@ -36,6 +36,11 @@
     "value": "Valeur"
   },
   "foilBadge": "Foil",
+  "quantityControl": {
+    "input": "Quantité possédée pour {name}",
+    "decrease": "Diminuer la quantité de {name}",
+    "increase": "Augmenter la quantité de {name}"
+  },
   "quickAdd": {
     "add": "Ajouter à la collection",
     "added": "Ajouté !",
