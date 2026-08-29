@@ -35,6 +35,14 @@ export interface CollectionStats {
   readonly missingCount: number;
 }
 
+export interface DeckCollectionSummary {
+  readonly totalQuantity: number;
+  readonly ownedQuantity: number;
+  readonly proxyQuantity: number;
+  readonly missingQuantity: number;
+  readonly completionRatio: number;
+}
+
 interface ShoppingListOptions {
   readonly includeBasics?: boolean;
 }
@@ -99,7 +107,38 @@ export function getDeckCardStatuses(
   return result;
 }
 
-// ─── Shopping list ────────────────────────────────────────────────────────────
+/** Summarize required deck quantities without mutating collection data. */
+export function summarizeDeckCollection(
+  deckCards: readonly DeckCard[],
+  commander: DeckCard | null,
+  partner: DeckCard | null,
+  quantities: Readonly<Record<string, number>>,
+  proxyQuantities: Readonly<Record<string, number>> = {}
+): DeckCollectionSummary {
+  const statuses = getDeckCardStatuses(deckCards, commander, partner, quantities, proxyQuantities);
+  let totalQuantity = 0;
+  let ownedQuantity = 0;
+  let proxyQuantity = 0;
+  let missingQuantity = 0;
+
+  for (const item of statuses) {
+    totalQuantity += item.quantity;
+    const physical = Math.min(item.quantity, Math.max(0, quantities[item.scryfallId] ?? 0));
+    const proxy = Math.min(item.quantity - physical, Math.max(0, proxyQuantities[item.scryfallId] ?? 0));
+    ownedQuantity += physical;
+    proxyQuantity += proxy;
+    missingQuantity += item.quantity - physical - proxy;
+  }
+
+  return {
+    totalQuantity,
+    ownedQuantity,
+    proxyQuantity,
+    missingQuantity,
+    completionRatio: totalQuantity > 0 ? (ownedQuantity + proxyQuantity) / totalQuantity : 0,
+  };
+}
+
 
 /** Build a sorted list of cards the user needs to buy. */
 export function buildShoppingList(
