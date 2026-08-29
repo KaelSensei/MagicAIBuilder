@@ -11,14 +11,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/db/deck-api", () => ({
   addCard: vi.fn(async (_deckId: string, payload: Record<string, unknown>) => ({
     ...payload,
-    id: "saved-db-id",
+    id: `${String(payload.scryfallId)}-saved`,
     deckId: "deck-1",
     scryfallId: payload.scryfallId,
     isCommander: false,
     isPartner: false,
-    isMaybeboard: payload.isMaybeboard ?? false,
+    isMaybeboard: payload.zone === "maybeboard",
   })),
   removeCard: vi.fn(async () => undefined),
+  updateCardZone: vi.fn(async (_deckId: string, cardId: string, zone: string) => ({
+    id: cardId,
+    zone,
+  })),
   updateCardMaybeboard: vi.fn(async (_deckId: string, cardId: string, isMaybeboard: boolean) => ({
     id: cardId,
     isMaybeboard,
@@ -135,7 +139,8 @@ describe("Deck store — maybeboard actions", () => {
       const deck = useDeckStore.getState().decks["deck-1"];
       expect(deck.maybeboard).toHaveLength(1);
       expect(deck.maybeboard[0].name).toBe("Lightning Bolt");
-      expect(deck.cards).toHaveLength(0); // main deck untouched
+      expect(deck.cards).toHaveLength(1);
+      expect(deck.cards[0].zone).toBe("maybeboard");
     });
 
     it("does not add duplicate (same name) to maybeboard", async () => {
@@ -160,6 +165,7 @@ describe("Deck store — maybeboard actions", () => {
 
       const deck = useDeckStore.getState().decks["deck-1"];
       expect(deck.maybeboard).toHaveLength(2);
+      expect(deck.cards).toHaveLength(2);
     });
 
     it("does nothing when no active deck", async () => {
@@ -216,7 +222,8 @@ describe("Deck store — maybeboard actions", () => {
       await useDeckStore.getState().moveToMaybeboard("main-1");
 
       const updated = useDeckStore.getState().decks["deck-1"];
-      expect(updated.cards).toHaveLength(0);
+      expect(updated.cards).toHaveLength(1);
+      expect(updated.cards[0].zone).toBe("maybeboard");
       expect(updated.maybeboard).toHaveLength(1);
       expect(updated.maybeboard[0].name).toBe("Counterspell");
     });
@@ -245,6 +252,7 @@ describe("Deck store — maybeboard actions", () => {
       expect(updated.maybeboard).toHaveLength(0);
       expect(updated.cards).toHaveLength(1);
       expect(updated.cards[0].name).toBe("Swords to Plowshares");
+      expect(updated.cards[0].zone).toBe("main");
     });
 
     it("does not move if the card is already in the main deck (duplicate prevention)", async () => {
@@ -288,7 +296,8 @@ describe("Deck store — maybeboard actions", () => {
 
       const deckCardId = useDeckStore.getState().decks["deck-1"].cards[0].id;
       await useDeckStore.getState().moveToMaybeboard(deckCardId);
-      expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(0);
+      expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(1);
+      expect(useDeckStore.getState().decks["deck-1"].cards[0].zone).toBe("maybeboard");
       expect(useDeckStore.getState().decks["deck-1"].maybeboard).toHaveLength(1);
     });
   });

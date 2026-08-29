@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
@@ -17,6 +17,7 @@ interface CollectionCardTooltipProps {
 
 export function CollectionCardTooltip({ card, children }: CollectionCardTooltipProps) {
   const t = useTranslations("card");
+  const format = useFormatter();
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -70,7 +71,9 @@ export function CollectionCardTooltip({ card, children }: CollectionCardTooltipP
             <Image src={card.imageUri} alt={card.name} width={223} height={310} unoptimized />
             {card.price != null && (
               <div className="p-2 bg-(--surface) text-xs text-(--text-secondary)">
-                <span className="text-(--accent)">${card.price.toFixed(2)}</span>
+                <span className="text-(--accent)">
+                  {format.number(card.price, { style: "currency", currency: "USD" })}
+                </span>
               </div>
             )}
           </div>,

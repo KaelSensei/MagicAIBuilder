@@ -31,6 +31,9 @@
     "subtitle": "マジック：ザ・ギャザリングの公式総合ルール。",
     "effectiveDate": "{date}発効。",
     "contents": "目次",
-    "glossary": "用語集"
+    "glossary": "用語集",
+    "search": "Search rules",
+    "searchPlaceholder": "Search rules and glossary...",
+    "searchResults": "Search results"
   }
 }

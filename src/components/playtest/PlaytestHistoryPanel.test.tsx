@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { PlaytestHistoryPanel } from "./PlaytestHistoryPanel";
 import playtestMessages from "@/messages/en/playtest.json";
 import type { PlaytestHistory } from "@/hooks/usePlaytestHistory";
+import type { PlaytestSession } from "@/lib/playtest/analytics";
 import type { SessionSummary } from "@/lib/playtest/session-input";
 
 const historyResult = vi.hoisted(() => ({
@@ -27,9 +28,12 @@ function makeSummary(overrides: Partial<SessionSummary> = {}): SessionSummary {
   };
 }
 
-function renderPanel(summary: SessionSummary | null) {
+function renderPanel(
+  summary: SessionSummary | null,
+  sessions: readonly PlaytestSession[] = []
+) {
   historyResult.current = {
-    data: summary === null ? null : { sessions: [], summary },
+    data: summary === null ? null : { sessions, summary },
   };
   render(
     <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
@@ -108,6 +112,21 @@ describe("PlaytestHistoryPanel", () => {
   it("shows the win-loss split for each opponent", () => {
     renderPanel(makeSummary({ matchups: { budget: { wins: 5, losses: 1, winRate: 83 } } }));
     expect(screen.getByText("5W–1L · 83%")).toBeDefined();
+  });
+
+  it("shows recent sessions with their result and run details", () => {
+    const session: PlaytestSession = {
+      id: "session-1",
+      deckId: "deck-1",
+      userId: "user-1",
+      result: "win",
+      turns: 6,
+      mulliganCount: 1,
+      createdAt: new Date("2026-08-28T12:00:00.000Z"),
+    };
+    renderPanel(makeSummary(), [session]);
+    expect(screen.getByText("Win")).toBeDefined();
+    expect(screen.getByText(/Turn 6 · 1 mulligan/)).toBeDefined();
   });
 
   it("shows an unrecognised difficulty as stored rather than dropping it", () => {

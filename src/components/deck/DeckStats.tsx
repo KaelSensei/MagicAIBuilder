@@ -2,7 +2,8 @@
 // Live stats panel with bracket-aware benchmarks
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
-import type { DeckStats } from "@/lib/deck/types";
+import type { DeckStats, DeckCard } from "@/lib/deck/types";
+import { buildTokenLibrary } from "@/lib/deck/token-library";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
 import type { BenchmarkStatus, FormatStats } from "@/lib/deck/format-stats";
@@ -19,6 +20,7 @@ type BracketLevel = 1 | 2 | 3 | 4;
 interface DeckStatsProps {
   readonly stats: DeckStats | null;
   readonly format: DeckFormat;
+  readonly cards?: readonly DeckCard[];
   readonly targetBracket?: BracketLevel;
   readonly className?: string;
 }
@@ -259,9 +261,35 @@ function TurnOnePanel({ playability }: { readonly playability: TurnOnePlayabilit
   );
 }
 
+function TokenLibraryPanel({ cards }: { readonly cards: readonly DeckCard[] }) {
+  const t = useTranslations("deck");
+  const entries = buildTokenLibrary(cards);
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
+      <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
+        {t("stats.tokenLibrary")}
+      </p>
+      <div className="space-y-1">
+        {entries.map((entry) => (
+          <div key={`${entry.kind}:${entry.name}:${entry.power ?? ""}`} className="flex justify-between text-xs">
+            <span className="text-[var(--text-primary)]">
+              {entry.name}{entry.power ? ` · ${entry.power}` : ""}
+              <span className="text-[var(--text-secondary)]"> · {entry.kind}</span>
+            </span>
+            <span className="text-[var(--text-secondary)]">×{entry.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DeckStats({
   stats,
   format,
+  cards = [],
   targetBracket = 3,
   className,
 }: DeckStatsProps) {
@@ -370,6 +398,8 @@ export function DeckStats({
 
       {/* Turn-one playability — odds the opening hand can act */}
       {stats.turnOnePlayability && <TurnOnePanel playability={stats.turnOnePlayability} />}
+
+      <TokenLibraryPanel cards={cards} />
 
       {/* Deck price — live total from store via useDeckPrice */}
       <DeckPriceDisplay />

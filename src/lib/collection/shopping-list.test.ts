@@ -5,6 +5,8 @@ import {
   computeCollectionStats,
   formatCollectionText,
   formatCollectionCsv,
+  getDeckCardStatuses,
+  summarizeDeckCollection,
 } from "./shopping-list";
 import type { DeckCard } from "@/lib/deck/types";
 
@@ -22,6 +24,24 @@ function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
 const BASIC_LAND = makeCard({
   id: "land", name: "Island", typeLine: "Basic Land — Island",
   scryfallId: "island", category: "land", price: 0.1, quantity: 4,
+});
+
+describe("summarizeDeckCollection", () => {
+  it("summarizes physical, proxy, and missing deck quantities", () => {
+    const cards = [
+      makeCard({ scryfallId: "owned", quantity: 2 }),
+      makeCard({ scryfallId: "proxy", quantity: 3 }),
+      makeCard({ scryfallId: "missing", quantity: 1 }),
+    ];
+
+    expect(summarizeDeckCollection(cards, null, null, { owned: 2 }, { proxy: 1 })).toEqual({
+      totalQuantity: 6,
+      ownedQuantity: 2,
+      proxyQuantity: 1,
+      missingQuantity: 3,
+      completionRatio: 0.5,
+    });
+  });
 });
 
 describe("buildShoppingList", () => {
@@ -83,6 +103,26 @@ describe("buildShoppingList", () => {
     const list = buildShoppingList(cards, null, null, new Set());
     expect(list[0].name).toBe("Has Price"); // null price sorts last
     expect(list[1].name).toBe("No Price");
+  });
+});
+
+describe("getDeckCardStatuses", () => {
+  it("classifies owned, proxy and missing quantities", () => {
+    const cards = [
+      makeCard({ id: "owned", scryfallId: "owned", name: "Owned", quantity: 2 }),
+      makeCard({ id: "proxy", scryfallId: "proxy", name: "Proxy", quantity: 2 }),
+      makeCard({ id: "missing", scryfallId: "missing", name: "Missing", quantity: 1 }),
+    ];
+
+    const statuses = getDeckCardStatuses(cards, null, null, {
+      owned: 2,
+    }, {
+      proxy: 1,
+    });
+
+    expect(statuses.map((status) => status.status)).toEqual(["owned", "proxy", "missing"]);
+    expect(statuses[1].availableQuantity).toBe(1);
+    expect(statuses[1].neededQuantity).toBe(1);
   });
 });
 

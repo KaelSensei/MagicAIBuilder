@@ -1,6 +1,7 @@
 "use client";
 // What the deck has done in past playtests — shown before you start another.
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 import { usePlaytestHistory } from "@/hooks/usePlaytestHistory";
@@ -42,7 +43,9 @@ function Figure({ label, value }: { readonly label: string; readonly value: stri
  */
 export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
   const t = useTranslations("playtest");
+  const format = useFormatter();
   const { data } = usePlaytestHistory(deckId);
+  const recentSessions = useMemo(() => data?.sessions.slice(0, 10) ?? [], [data?.sessions]);
 
   const summary = data?.summary;
   if (!summary || summary.total === 0) return null;
@@ -114,6 +117,42 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
                     wins: row.wins,
                     losses: row.losses,
                     winRate: Math.round(row.winRate),
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {recentSessions.length > 0 && (
+        <div className="border-t border-white/10 pt-2 mt-2">
+          <p className="text-[10px] uppercase tracking-wide text-white/40 mb-1">
+            {t("history.title")}
+          </p>
+          <ul className="space-y-1">
+            {recentSessions.map((session) => (
+              <li
+                key={session.id}
+                className="flex items-center justify-between gap-2 text-[11px] text-white/60"
+              >
+                <span
+                  className={
+                    session.result === "win"
+                      ? "text-green-400"
+                      : session.result === "loss"
+                        ? "text-red-400"
+                        : "text-white/70"
+                  }
+                >
+                  {t(`result.${session.result}`)}
+                </span>
+                <span className="truncate text-right">
+                  {t("turn", { turn: session.turns })} · {t("mulliganCount", {
+                    count: session.mulliganCount,
+                  })} · {format.dateTime(new Date(String(session.createdAt)), {
+                    dateStyle: "medium",
+                    timeZone: "UTC",
                   })}
                 </span>
               </li>

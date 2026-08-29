@@ -286,11 +286,11 @@ describe("useDeckStore — moveToMaybeboard error path", () => {
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
     await useDeckStore.getState().moveToMaybeboard("card-1");
-    expect(deckApi.updateCardMaybeboard).not.toHaveBeenCalled();
+    expect(deckApi.updateCardZone).not.toHaveBeenCalled();
   });
 
   it("keeps optimistic state when API throws", async () => {
-    vi.mocked(deckApi.updateCardMaybeboard).mockRejectedValueOnce(new Error("api error"));
+    vi.mocked(deckApi.updateCardZone).mockRejectedValueOnce(new Error("api error"));
 
     const card = makeDeckCard("card-1", "Counterspell");
     useDeckStore.setState({
@@ -302,7 +302,8 @@ describe("useDeckStore — moveToMaybeboard error path", () => {
 
     const state = useDeckStore.getState().decks["deck-1"];
     // Optimistic update kept despite API error
-    expect(state.cards).toHaveLength(0);
+    expect(state.cards).toHaveLength(1);
+    expect(state.cards[0].zone).toBe("maybeboard");
     expect(state.maybeboard).toHaveLength(1);
   });
 });
@@ -313,11 +314,11 @@ describe("useDeckStore — moveToDeck error path", () => {
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
     await useDeckStore.getState().moveToDeck("card-1");
-    expect(deckApi.updateCardMaybeboard).not.toHaveBeenCalled();
+    expect(deckApi.updateCardZone).not.toHaveBeenCalled();
   });
 
   it("keeps optimistic state when API throws", async () => {
-    vi.mocked(deckApi.updateCardMaybeboard).mockRejectedValueOnce(new Error("api error"));
+    vi.mocked(deckApi.updateCardZone).mockRejectedValueOnce(new Error("api error"));
 
     const card = makeDeckCard("maybe-1", "Swords to Plowshares");
     useDeckStore.setState({
@@ -330,6 +331,7 @@ describe("useDeckStore — moveToDeck error path", () => {
     const state = useDeckStore.getState().decks["deck-1"];
     expect(state.maybeboard).toHaveLength(0);
     expect(state.cards).toHaveLength(1);
+    expect(state.cards[0].zone).toBe("main");
   });
 });
 

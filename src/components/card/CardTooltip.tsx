@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, cloneElement, isValidElement, Children } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
+import { useFormatter } from "next-intl";
 import type { DeckCard } from "@/lib/deck/types";
 import { useLocalizedDeckText } from "@/components/card/LocalizedDeckTextContext";
 
@@ -16,6 +17,7 @@ interface CardTooltipProps {
 }
 
 export function CardTooltip({ card, children }: CardTooltipProps) {
+  const format = useFormatter();
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   // The translated printing's own image when the deck surface has one —
   // a French viewer sees the French card, not English art with a caption.
@@ -78,7 +80,9 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
             />
             {card.price != null && (
               <div className="p-2 bg-(--surface) text-xs text-(--text-secondary)">
-                <span className="text-(--accent)">${card.price.toFixed(2)}</span>
+                <span className="text-(--accent)">
+                  {format.number(card.price, { style: "currency", currency: "USD" })}
+                </span>
               </div>
             )}
           </div>,

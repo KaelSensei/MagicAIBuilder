@@ -38,6 +38,41 @@ function notifyGameChangerAdded(cardName: string, newTotal: number): void {
   }
 }
 
+function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
+  const seen = new Set<string>();
+  return [...deck.cards, ...deck.maybeboard].filter((card) => {
+    if (seen.has(card.id)) return false;
+    seen.add(card.id);
+    return true;
+  });
+}
+
+function syncDeckCards(deck: Deck, cards: readonly DeckCard[]): Deck {
+  const uniqueCards = cards.filter((card, index, all) =>
+    all.findIndex((candidate) => candidate.id === card.id) === index
+  ).map((card) => ({ ...card, isMaybeboard: card.zone === "maybeboard" }));
+  return {
+    ...deck,
+    cards: uniqueCards,
+    maybeboard: uniqueCards.filter((card) => card.zone === "maybeboard"),
+  };
+}
+
+function updateDeckCards(deck: Deck, update: (cards: DeckCard[]) => DeckCard[]): Deck {
+  return {
+    ...syncDeckCards(deck, update(uniqueDeckCards(deck))),
+    updatedAt: new Date(),
+  };
+}
+
+function setCardsZone(deck: Deck, cardIds: ReadonlySet<string>, zone: DeckZone): Deck {
+  return updateDeckCards(deck, (cards) => cards.map((card) =>
+    cardIds.has(card.id)
+      ? { ...card, zone, isMaybeboard: zone === "maybeboard" }
+      : card
+  ));
+}
+
 
 export interface DeckStore {
   // State
@@ -185,16 +220,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const { activeDeckId } = get();
       if (!activeDeckId) return;
       const deck = get().decks[activeDeckId];
-      const card = deck?.cards.find((c) => c.name === last.card.name);
+      const card = deck && uniqueDeckCards(deck).find((c) => c.id === last.card.id || c.name === last.card.name);
       if (!card) return;
       set((state) => ({
         decks: {
           ...state.decks,
-          [activeDeckId]: {
-            ...state.decks[activeDeckId],
-            cards: state.decks[activeDeckId].cards.filter((c) => c.id !== card.id),
-            updatedAt: new Date(),
-          },
+          [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
+            cards.filter((c) => c.id !== card.id)
+          ),
         },
       }));
       try {
@@ -209,11 +242,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       set((state) => ({
         decks: {
           ...state.decks,
-          [activeDeckId]: {
-            ...state.decks[activeDeckId],
-            cards: [...state.decks[activeDeckId].cards, last.card],
-            updatedAt: new Date(),
-          },
+          [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => [...cards, last.card]),
         },
       }));
       try {
@@ -236,6 +265,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           quantity: last.card.quantity,
           isCommander: false,
           isPartner: false,
+          zone: last.card.zone,
         });
       } catch (err) {
         logger.error("Unexpected error", "undo:REMOVE_CARD", err);
@@ -720,7 +750,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     const { maxQuantity } = await import("@/lib/deck/multiples");
     const max = maxQuantity(card.name, card.type_line, card.oracle_text ?? "");
-    const exists = deck.cards.find((c) => c.name === card.name);
+    const exists = uniqueDeckCards(deck).find((c) => c.name === card.name && c.zone === zone);
     if (exists) {
       // Basic land already present — skip (caller should pass quantity on first add)
       if (isBasic) return;
@@ -738,6 +768,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
     // Apply target zone (sideboard / maybeboard / main)
     deckCard.zone = zone;
+    deckCard.isMaybeboard = zone === "maybeboard";
     deckCard.isGameChanger = gameChangerNames.has(card.name);
     deckCard.isBanned = bannedNames.has(card.name);
 
@@ -753,11 +784,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: [...state.decks[activeDeckId].cards, deckCard],
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => [...cards, deckCard]),
       },
     }));
 
@@ -790,9 +817,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           ...state.decks,
           [activeDeckId]: {
             ...state.decks[activeDeckId],
-            cards: state.decks[activeDeckId].cards.map((c) =>
+            ...updateDeckCards(state.decks[activeDeckId], (cards) => cards.map((c) =>
               c.id === card.id ? { ...c, id: saved.id } : c
-            ),
+            )),
           },
         },
         // Record in undo stack (use saved id)
@@ -815,7 +842,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!deck) return;
     const { maxQuantity } = await import("@/lib/deck/multiples");
     const max = maxQuantity(card.name, card.typeLine, card.oracleText ?? "");
-    const exists = deck.cards.find((c) => c.name === card.name);
+    const exists = uniqueDeckCards(deck).find((c) => c.name === card.name && c.zone === card.zone);
     if (exists) {
       if (exists.quantity >= max) return;
       get().updateCardQuantity(exists.id, 1);
@@ -825,17 +852,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       ...card,
       isGameChanger: gameChangerNames.has(card.name),
       isBanned: bannedNames.has(card.name),
+      isMaybeboard: card.zone === "maybeboard",
     };
 
     // Optimistic update
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: [...state.decks[activeDeckId].cards, enriched],
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => [...cards, enriched]),
       },
     }));
 
@@ -860,15 +884,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         quantity: card.quantity,
         isCommander: false,
         isPartner: false,
+        zone: enriched.zone,
       });
       set((state) => ({
         decks: {
           ...state.decks,
           [activeDeckId]: {
             ...state.decks[activeDeckId],
-            cards: state.decks[activeDeckId].cards.map((c) =>
+            ...updateDeckCards(state.decks[activeDeckId], (cards) => cards.map((c) =>
               c.id === card.id ? { ...c, id: saved.id } : c
-            ),
+            )),
           },
         },
       }));
@@ -884,19 +909,17 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!activeDeckId) return;
 
     // Capture card before removing for undo stack
-    const removedCard = decks[activeDeckId]?.cards.find((c) => c.id === cardId) ?? null;
+    const removedCard = decks[activeDeckId]
+      ? uniqueDeckCards(decks[activeDeckId]).find((c) => c.id === cardId) ?? null
+      : null;
 
     // Optimistic update
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.filter(
-            (c) => c.id !== cardId
-          ),
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
+          cards.filter((c) => c.id !== cardId)
+        ),
       },
       // Record in undo stack
       undoStack: removedCard
@@ -925,13 +948,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.map((c) =>
-            c.id === cardId ? { ...c, category } : c
-          ),
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => cards.map((c) =>
+          c.id === cardId ? { ...c, category } : c
+        )),
       },
     }));
 
@@ -950,7 +969,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!activeDeckId) return;
     const deck = decks[activeDeckId];
     if (!deck) return;
-    const card = deck.cards.find((c) => c.id === cardId);
+    const card = uniqueDeckCards(deck).find((c) => c.id === cardId);
     if (!card) return;
 
     const { maxQuantity } = await import("@/lib/deck/multiples");
@@ -961,12 +980,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.map((c) =>
-            c.id === cardId ? { ...c, quantity: newQty } : c
-          ),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => cards.map((c) =>
+          c.id === cardId ? { ...c, quantity: newQty } : c
+        )),
       },
     }));
     set({ isSyncing: true });
@@ -1026,14 +1042,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.map((c) =>
-            c.id === cardId
-              ? { ...c, scryfallId: printing.id, imageUri, artCropUri }
-              : c
-          ),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => cards.map((c) =>
+          c.id === cardId
+            ? { ...c, scryfallId: printing.id, imageUri, artCropUri }
+            : c
+        )),
       },
     }));
     set({ isSyncing: true });
@@ -1058,13 +1071,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.map((c) =>
-            c.id === cardId ? { ...c, notes } : c
-          ),
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => cards.map((c) =>
+          c.id === cardId ? { ...c, notes } : c
+        )),
       },
     }));
 
@@ -1082,17 +1091,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const { activeDeckId } = get();
     if (!activeDeckId) return;
 
+    const deck = get().decks[activeDeckId];
+    const currentCard = deck ? uniqueDeckCards(deck).find((card) => card.id === cardId) : undefined;
+    const isLegacyMaybeboardCard = Boolean(
+      deck?.maybeboard.some((card) => card.id === cardId) &&
+      !deck.cards.some((card) => card.id === cardId && card.zone === "maybeboard")
+    );
+    if (!currentCard || (currentCard.zone === zone && !isLegacyMaybeboardCard)) return;
+
     // Optimistic update
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.map((c) =>
-            c.id === cardId ? { ...c, zone } : c
-          ),
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: setCardsZone(state.decks[activeDeckId], new Set([cardId]), zone),
       },
     }));
 
@@ -1111,17 +1122,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!activeDeckId || cardIds.length === 0) return;
 
     const idSet = new Set(cardIds);
+    const deck = get().decks[activeDeckId];
+    if (!deck || !cardIds.some((id) => uniqueDeckCards(deck).some((card) => card.id === id && card.zone !== zone))) return;
+
     // Optimistic update
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.map((c) =>
-            idSet.has(c.id) ? { ...c, zone } : c
-          ),
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: setCardsZone(state.decks[activeDeckId], idSet, zone),
       },
     }));
 
@@ -1146,11 +1154,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.filter((c) => !idSet.has(c.id)),
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
+          cards.filter((c) => !idSet.has(c.id))
+        ),
       },
     }));
 
@@ -1250,12 +1256,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.map((c) =>
-            c.name === cardName ? { ...c, isGameChanger: true } : c
-          ),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => cards.map((c) =>
+          c.name === cardName ? { ...c, isGameChanger: true } : c
+        )),
       },
     }));
   },
@@ -1266,12 +1269,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.map((c) =>
-            c.name === cardName ? { ...c, isBanned: true } : c
-          ),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => cards.map((c) =>
+          c.name === cardName ? { ...c, isBanned: true } : c
+        )),
       },
     }));
   },
@@ -1283,21 +1283,20 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!deck) return;
 
     const isBasicLand = (card.type_line ?? "").toLowerCase().includes("basic land");
-    const exists = !isBasicLand && deck.maybeboard.find((c) => c.name === card.name);
+    const exists = !isBasicLand && uniqueDeckCards(deck).find((c) =>
+      c.name === card.name && (c.zone === "maybeboard" || deck.maybeboard.some((maybe) => maybe.id === c.id))
+    );
     if (exists) return;
 
     const deckCard = makeDeckCard(card);
+    deckCard.zone = "maybeboard";
     deckCard.isMaybeboard = true;
 
     // Optimistic update
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          maybeboard: [...state.decks[activeDeckId].maybeboard, deckCard],
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) => [...cards, deckCard]),
       },
     }));
 
@@ -1321,16 +1320,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         quantity: deckCard.quantity,
         isCommander: false,
         isPartner: false,
+        zone: "maybeboard",
       });
       // Update id to DB-generated id
       set((state) => ({
         decks: {
           ...state.decks,
           [activeDeckId]: {
-            ...state.decks[activeDeckId],
-            maybeboard: state.decks[activeDeckId].maybeboard.map((c) =>
+            ...updateDeckCards(state.decks[activeDeckId], (cards) => cards.map((c) =>
               c.id === card.id ? { ...c, id: saved.id } : c
-            ),
+            )),
           },
         },
       }));
@@ -1346,11 +1345,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((state) => ({
       decks: {
         ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          maybeboard: state.decks[activeDeckId].maybeboard.filter((c) => c.id !== cardId),
-          updatedAt: new Date(),
-        },
+        [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
+          cards.filter((c) => c.id !== cardId)
+        ),
       },
     }));
 
@@ -1367,26 +1364,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const card = deck.cards.find((c) => c.id === cardId);
-    if (!card) return;
+    const card = uniqueDeckCards(deck).find((c) => c.id === cardId);
+    if (!card || card.zone === "maybeboard") return;
 
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          cards: state.decks[activeDeckId].cards.filter((c) => c.id !== cardId),
-          maybeboard: [...state.decks[activeDeckId].maybeboard, { ...card, isMaybeboard: true }],
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    try {
-      await deckApi.updateCardMaybeboard(activeDeckId, cardId, true);
-    } catch (err) {
-      logger.error("Unexpected error", "moveToMaybeboard", err);
-    }
+    await get().moveCardToZone(cardId, "maybeboard");
   },
 
   moveToDeck: async (cardId: string) => {
@@ -1395,30 +1376,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const card = deck.maybeboard.find((c) => c.id === cardId);
+    const card = uniqueDeckCards(deck).find((c) =>
+      c.id === cardId && (c.zone === "maybeboard" || deck.maybeboard.some((maybe) => maybe.id === c.id))
+    );
     if (!card) return;
 
     // Don't move if the deck already has a card with the same name
-    const alreadyInDeck = deck.cards.some((c) => c.name === card.name);
+    const maybeboardIds = new Set(deck.maybeboard.map((maybe) => maybe.id));
+    const alreadyInDeck = uniqueDeckCards(deck).some((c) =>
+      c.name === card.name && c.zone !== "maybeboard" && !maybeboardIds.has(c.id)
+    );
     if (alreadyInDeck) return;
 
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: {
-          ...state.decks[activeDeckId],
-          maybeboard: state.decks[activeDeckId].maybeboard.filter((c) => c.id !== cardId),
-          cards: [...state.decks[activeDeckId].cards, { ...card, isMaybeboard: false }],
-          updatedAt: new Date(),
-        },
-      },
-    }));
-
-    try {
-      await deckApi.updateCardMaybeboard(activeDeckId, cardId, false);
-    } catch (err) {
-      logger.error("Unexpected error", "moveToDeck", err);
-    }
+    await get().moveCardToZone(cardId, "main");
   },
 
   getActiveDeck: () => {

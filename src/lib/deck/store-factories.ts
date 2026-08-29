@@ -105,7 +105,7 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     ? rawPartnerCard
     : null;
   const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
-  const mainCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
+  const deckCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
 
   const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => {
     const cardFaces = rebuildCardFaces(c.scryfallId, c.name, c.typeLine, c.manaCost, c.oracleText);
@@ -130,6 +130,7 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
       quantity: c.quantity,
       notes: c.notes ?? null,
       zone: c.zone ?? "main",
+      isMaybeboard: (c.zone ?? "main") === "maybeboard",
       cardFaces,
       isFlexibleLand: isFlexibleLand || undefined,
     };
@@ -155,9 +156,9 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     partner: partnerCard ? toDeckCard(partnerCard) : null,
     companion: companionCard ? toDeckCard(companionCard) : null,
     pairingType: d.pairingType ?? "none",
-    cards: mainCards.map(toDeckCard),
+    cards: deckCards.map(toDeckCard),
     cardCount,
-    maybeboard: [],
+    maybeboard: deckCards.filter((c) => (c.zone ?? "main") === "maybeboard").map(toDeckCard),
     createdAt: new Date(d.createdAt),
     updatedAt: new Date(d.updatedAt),
   };
