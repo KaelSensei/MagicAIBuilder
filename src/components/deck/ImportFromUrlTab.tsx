@@ -19,6 +19,7 @@ import {
   buildScryfallNameIndex,
   normalizeImportedName,
 } from "@/lib/scryfall/name-index";
+import { MoxfieldProfileImport } from "@/components/deck/MoxfieldProfileImport";
 
 const SOURCE_LABELS: Record<string, string> = {
   moxfield: "Moxfield",
@@ -70,6 +71,14 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
 
   // Detect source from URL for live badge
   const detected = url.trim() ? detectSource(url.trim()) : null;
+
+  const handleProfileDeckSelected = (selectedUrl: string) => {
+    setUrl(selectedUrl);
+    setStatus("idle");
+    setMessage("");
+    setIgnored([]);
+    setFormatWarning(null);
+  };
 
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
@@ -175,6 +184,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      <MoxfieldProfileImport onDeckSelected={handleProfileDeckSelected} />
       <p className="text-sm text-[var(--text-secondary)]">
         {t("import.url.intro", { sources: SOURCES_LIST })}
       </p>
