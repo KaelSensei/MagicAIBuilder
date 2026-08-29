@@ -27,6 +27,7 @@ import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { CollectionCardTooltip } from "@/components/collection/CollectionCardTooltip";
+import { CollectionQuantityControl } from "@/components/collection/CollectionQuantityControl";
 
 export function CollectionPageClient() {
   const t = useTranslations("collection");
@@ -279,7 +280,7 @@ export function CollectionPageClient() {
         )}
         {filtered.length > 0 && viewMode !== "grid" && (
           <div className="space-y-1">
-            <div className="grid grid-cols-[1fr_80px_80px_80px_100px_40px] gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)] uppercase tracking-wide border-b border-[var(--border)]">
+            <div className="grid grid-cols-[1fr_120px_80px_80px_100px_40px] gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)] uppercase tracking-wide border-b border-[var(--border)]">
               <span>{t("listHeaders.card")}</span>
               <span>{t("listHeaders.qty")}</span>
               <span>{t("listHeaders.foil")}</span>
@@ -341,6 +342,10 @@ function CollectionGridCard({
   readonly onOpenPrintings: (card: CollectionCard) => void;
 }) {
   const t = useTranslations("collection");
+  const handleQuantityChange = useCallback(
+    (quantity: number) => onQuantityChange(card.id, quantity),
+    [card.id, onQuantityChange]
+  );
   return (
     <div className="relative group/card">
       {card.imageUri ? (
@@ -382,27 +387,11 @@ function CollectionGridCard({
           <ImageIcon className="w-3.5 h-3.5" />
           {t("actions.art")}
         </button>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() =>
-              onQuantityChange(card.id, Math.max(0, card.quantity - 1))
-            }
-            className="w-6 h-6 rounded bg-white/20 hover:bg-white/40 text-white text-sm flex items-center justify-center"
-          >
-            −
-          </button>
-          <span className="text-white text-sm w-5 text-center">
-            {card.quantity}
-          </span>
-          <button
-            type="button"
-            onClick={() => onQuantityChange(card.id, card.quantity + 1)}
-            className="w-6 h-6 rounded bg-white/20 hover:bg-white/40 text-white text-sm flex items-center justify-center"
-          >
-            +
-          </button>
-        </div>
+        <CollectionQuantityControl
+          cardName={card.name}
+          quantity={card.quantity}
+          onQuantityChange={handleQuantityChange}
+        />
         <button
           type="button"
           onClick={() => onRemove(card.id)}
@@ -429,6 +418,10 @@ function CollectionListRow({
 }) {
   const t = useTranslations("collection");
   const format = useFormatter();
+  const handleQuantityChange = useCallback(
+    (quantity: number) => onQuantityChange(card.id, quantity),
+    [card.id, onQuantityChange]
+  );
   const value =
     card.price === null || card.price === undefined
       ? "—"
@@ -438,7 +431,7 @@ function CollectionListRow({
         });
 
   return (
-    <div className="grid grid-cols-[1fr_80px_80px_80px_100px_40px] gap-2 px-3 py-2 rounded hover:bg-[var(--surface-hover)] items-center group">
+    <div className="grid grid-cols-[1fr_120px_80px_80px_100px_40px] gap-2 px-3 py-2 rounded hover:bg-[var(--surface-hover)] items-center group">
       <div className="min-w-0 flex items-center gap-2">
         <CollectionCardTooltip card={card}>
           <span className="text-sm text-[var(--text-primary)] truncate cursor-default">
@@ -458,27 +451,11 @@ function CollectionListRow({
         </button>
       </div>
       {/* Qty controls */}
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() =>
-            onQuantityChange(card.id, Math.max(0, card.quantity - 1))
-          }
-          className="w-5 h-5 rounded bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs flex items-center justify-center"
-        >
-          −
-        </button>
-        <span className="text-sm text-[var(--text-primary)] w-5 text-center">
-          {card.quantity}
-        </span>
-        <button
-          type="button"
-          onClick={() => onQuantityChange(card.id, card.quantity + 1)}
-          className="w-5 h-5 rounded bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs flex items-center justify-center"
-        >
-          +
-        </button>
-      </div>
+      <CollectionQuantityControl
+        cardName={card.name}
+        quantity={card.quantity}
+        onQuantityChange={handleQuantityChange}
+      />
       <span className="text-sm text-[var(--text-secondary)]">
         {card.foil ? (
           <span className="text-purple-400 text-xs font-medium">
