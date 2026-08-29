@@ -72,6 +72,16 @@
     "C": "Colorless"
   },
   "manaSymbolAlt": "{color} mana symbol",
+  "playtestEvidence": {
+    "openingHand": {
+      "landCount": "{count, plural, one {# land in opening hand} other {# lands in opening hand}}",
+      "status": {
+        "land-light": "Land-light: consider a mulligan.",
+        "balanced": "Balanced start.",
+        "land-heavy": "Land-heavy: consider a mulligan."
+      }
+    }
+  },
   "loading": "Loading deck…",
   "deckNotFound": {
     "title": "Deck not found",

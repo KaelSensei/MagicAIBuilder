@@ -72,6 +72,16 @@
     "C": "Incolore"
   },
   "manaSymbolAlt": "Symbole de mana {color}",
+  "playtestEvidence": {
+    "openingHand": {
+      "landCount": "{count, plural, one {# terrain en main de départ} other {# terrains en main de départ}}",
+      "status": {
+        "land-light": "Peu de terrains : envisagez un mulligan.",
+        "balanced": "Départ équilibré.",
+        "land-heavy": "Beaucoup de terrains : envisagez un mulligan."
+      }
+    }
+  },
   "loading": "Chargement du deck…",
   "deckNotFound": {
     "title": "Deck introuvable",
