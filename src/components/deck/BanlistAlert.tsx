@@ -84,28 +84,40 @@ export function BanlistAlert({
           {expanded && (
             <div className="border-t border-red-500/20 px-3 pb-3 pt-2.5 space-y-2">
               {bannedCards.length > 0 && (
-                <div>
+                <section aria-labelledby="banned-cards-heading">
                   <p className="text-xs font-medium text-red-400">
-                    {t("banlist.bannedInCommander")}
+                    <span id="banned-cards-heading">{t("banlist.bannedInCommander")}</span>
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                    {t("banlist.bannedExplanation")}
                   </p>
                   <ul className="text-xs text-red-300/80 mt-1 space-y-0.5">
                     {bannedCards.map((name) => (
                       <li key={name}>• {name}</li>
                     ))}
                   </ul>
-                </div>
+                  <p className="mt-1.5 text-xs font-medium text-red-300">
+                    {t("banlist.bannedAction")}
+                  </p>
+                </section>
               )}
               {colorViolations.length > 0 && (
-                <div>
+                <section aria-labelledby="color-identity-heading">
                   <p className="text-xs font-medium text-orange-400">
-                    {t("banlist.colorIdentityViolations")}
+                    <span id="color-identity-heading">{t("banlist.colorIdentityViolations")}</span>
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                    {t("banlist.colorIdentityExplanation")}
                   </p>
                   <ul className="text-xs text-orange-300/80 mt-1 space-y-0.5">
                     {colorViolations.map((name) => (
                       <li key={name}>• {name}</li>
                     ))}
                   </ul>
-                </div>
+                  <p className="mt-1.5 text-xs font-medium text-orange-300">
+                    {t("banlist.colorIdentityAction")}
+                  </p>
+                </section>
               )}
             </div>
           )}
