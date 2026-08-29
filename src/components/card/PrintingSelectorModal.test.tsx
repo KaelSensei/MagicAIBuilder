@@ -92,4 +92,9 @@ describe("PrintingSelectorModal", () => {
     renderModal(makeCard({ oracle_text: undefined }));
     expect(screen.getByText("No text")).toBeDefined();
   });
+
+  it("offers Oracle rulings for the previewed printing", () => {
+    renderModal(makeCard());
+    expect(screen.getByRole("button", { name: "Show rulings" })).toBeDefined();
+  });
 });

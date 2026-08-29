@@ -12,6 +12,15 @@
   "noCardsFound": "No cards found",
   "loadingPrintings": "Loading printings…",
   "printingsAvailable": "{count, plural, one {# printing available} other {# printings available}}",
+  "rulings": {
+    "show": "Show rulings",
+    "loading": "Loading rulings…",
+    "title": "Oracle rulings",
+    "offline": "Saved offline",
+    "empty": "No rulings published for this card.",
+    "error": "Rulings are unavailable.",
+    "retry": "Try again"
+  },
   "note": {
     "add": "Add note",
     "edit": "Edit note",

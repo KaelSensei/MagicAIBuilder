@@ -12,6 +12,15 @@
   "noCardsFound": "Aucune carte trouvée",
   "loadingPrintings": "Chargement des éditions…",
   "printingsAvailable": "{count, plural, one {# édition disponible} other {# éditions disponibles}}",
+  "rulings": {
+    "show": "Afficher les rulings",
+    "loading": "Chargement des rulings…",
+    "title": "Rulings Oracle",
+    "offline": "Enregistré hors ligne",
+    "empty": "Aucun ruling publié pour cette carte.",
+    "error": "Les rulings sont indisponibles.",
+    "retry": "Réessayer"
+  },
   "note": {
     "add": "Ajouter une note",
     "edit": "Modifier la note",
