@@ -450,7 +450,11 @@
     "toggleWarnings": "Toggle deck warnings",
     "dismissWarnings": "Dismiss deck warnings",
     "bannedInCommander": "Banned in Commander",
-    "colorIdentityViolations": "Color identity violations"
+    "bannedExplanation": "These cards appear on the Commander ban list and make the deck illegal.",
+    "bannedAction": "Remove or replace the banned card before playing.",
+    "colorIdentityViolations": "Color identity violations",
+    "colorIdentityExplanation": "These cards contain mana symbols outside your commander's color identity.",
+    "colorIdentityAction": "Replace each card with one inside the commander's colors."
   },
   "visibility": {
     "public": "Public",
