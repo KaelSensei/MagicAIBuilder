@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
+  MAX_SESSION_NOTES_LENGTH,
   SESSION_DIFFICULTIES,
   SESSION_RESULTS,
   type SessionDifficulty,
@@ -105,6 +106,7 @@ export function RecordResultBar({
         type="text"
         value={notes}
         onChange={(event) => setNotes(event.target.value)}
+        maxLength={MAX_SESSION_NOTES_LENGTH}
         placeholder={t("notesPlaceholder")}
         className="min-w-48 flex-1 rounded bg-white/10 px-2 py-1 text-xs text-white placeholder:text-white/35"
       />

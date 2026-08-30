@@ -33,6 +33,9 @@ export type SessionResult = (typeof SESSION_RESULTS)[number];
 export const SESSION_DIFFICULTIES = ["budget", "mid-range", "cedh"] as const;
 export type SessionDifficulty = (typeof SESSION_DIFFICULTIES)[number];
 
+/** Maximum persisted length for a player-authored playtest evidence note. */
+export const MAX_SESSION_NOTES_LENGTH = 500;
+
 /** A validated session, ready to persist. */
 export interface SessionInput {
   readonly result: SessionResult;
@@ -103,9 +106,16 @@ export function parseSessionInput(payload: unknown): ParseResult {
     return fail(`difficulty must be one of ${SESSION_DIFFICULTIES.join(", ")}`);
   }
 
+  if (notes !== undefined && typeof notes !== "string") {
+    return fail("notes must be text");
+  }
+
   // Whitespace-only notes are the same as none; storing them would put an empty
   // row in the UI that the player cannot tell apart from a real note.
-  const trimmed = typeof notes === "string" ? notes.trim() : "";
+  const trimmed = notes?.trim() ?? "";
+  if (trimmed.length > MAX_SESSION_NOTES_LENGTH) {
+    return fail(`notes must be at most ${MAX_SESSION_NOTES_LENGTH} characters`);
+  }
 
   return {
     ok: true,

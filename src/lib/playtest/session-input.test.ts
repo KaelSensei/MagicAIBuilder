@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { parseSessionInput, summarizeSessions } from "./session-input";
+import { MAX_SESSION_NOTES_LENGTH, parseSessionInput, summarizeSessions } from "./session-input";
 import type { PlaytestSession } from "./analytics";
 
 function session(overrides: Partial<PlaytestSession> = {}): PlaytestSession {
@@ -75,6 +75,28 @@ describe("parseSessionInput", () => {
 
     const blank = parseSessionInput({ result: "win", turns: 8, notes: "   " });
     if (blank.ok) expect(blank.value.notes).toBeUndefined();
+  });
+
+  it("rejects notes that are not text", () => {
+    const parsed = parseSessionInput({ result: "win", turns: 8, notes: 42 });
+    expect(parsed.ok).toBe(false);
+    if (!parsed.ok) expect(parsed.error).toMatch(/notes/i);
+  });
+
+  it("accepts notes at the length limit and rejects longer notes", () => {
+    const atLimit = parseSessionInput({
+      result: "win",
+      turns: 8,
+      notes: "a".repeat(MAX_SESSION_NOTES_LENGTH),
+    });
+    const overLimit = parseSessionInput({
+      result: "win",
+      turns: 8,
+      notes: "a".repeat(MAX_SESSION_NOTES_LENGTH + 1),
+    });
+
+    expect(atLimit.ok).toBe(true);
+    expect(overLimit.ok).toBe(false);
   });
 
   it("rejects a payload that is not an object at all", () => {
