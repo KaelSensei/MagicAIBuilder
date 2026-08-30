@@ -32,7 +32,10 @@ function metaRateLimitResponse(request: Request): NextResponse | null {
   );
 }
 
-async function readFreshMetaCache(commanderSlug: string, source: MetaSource): Promise<NextResponse | null> {
+async function readFreshMetaCache(
+  commanderSlug: string,
+  source: MetaSource
+): Promise<NextResponse | null> {
   try {
     const cached = await prisma.metaCache.findUnique({
       where: { commanderSlug_source: { commanderSlug, source } },
@@ -40,7 +43,11 @@ async function readFreshMetaCache(commanderSlug: string, source: MetaSource): Pr
     if (cached && cached.expiresAt > new Date()) {
       return NextResponse.json({
         ...(cached.data as Record<string, unknown>),
-        _meta: { cached: true, cachedAt: cached.cachedAt.toISOString() },
+        _meta: {
+          cached: true,
+          cachedAt: cached.cachedAt.toISOString(),
+          observedAt: cached.cachedAt.toISOString(),
+        },
       });
     }
   } catch {
@@ -49,21 +56,35 @@ async function readFreshMetaCache(commanderSlug: string, source: MetaSource): Pr
   return null;
 }
 
-async function persistMetaCache(commanderSlug: string, source: MetaSource, data: EdhrecData | TournamentData) {
-  const expiresAt = new Date(Date.now() + CACHE_TTL_MS);
+async function persistMetaCache(
+  commanderSlug: string,
+  source: MetaSource,
+  data: EdhrecData | TournamentData,
+  observedAt: Date
+) {
+  const expiresAt = new Date(observedAt.getTime() + CACHE_TTL_MS);
   const payload = toJsonPayload(data);
   try {
     await prisma.metaCache.upsert({
       where: { commanderSlug_source: { commanderSlug, source } },
-      create: { commanderSlug, source, data: payload, expiresAt },
-      update: { data: payload, cachedAt: new Date(), expiresAt },
+      create: {
+        commanderSlug,
+        source,
+        data: payload,
+        cachedAt: observedAt,
+        expiresAt,
+      },
+      update: { data: payload, cachedAt: observedAt, expiresAt },
     });
   } catch {
     // Cache write failure is non-fatal
   }
 }
 
-async function loadLiveMeta(commanderSlug: string, source: MetaSource): Promise<EdhrecData | TournamentData> {
+async function loadLiveMeta(
+  commanderSlug: string,
+  source: MetaSource
+): Promise<EdhrecData | TournamentData> {
   if (source === "edhrec") {
     return fetchEdhrecData(commanderSlug);
   }
@@ -76,7 +97,10 @@ function isEdhrecData(data: EdhrecData | TournamentData): data is EdhrecData {
   return "cards" in data;
 }
 
-async function tryStaleMetaResponse(commanderSlug: string, source: MetaSource): Promise<NextResponse | null> {
+async function tryStaleMetaResponse(
+  commanderSlug: string,
+  source: MetaSource
+): Promise<NextResponse | null> {
   try {
     const stale = await prisma.metaCache.findUnique({
       where: { commanderSlug_source: { commanderSlug, source } },
@@ -84,7 +108,12 @@ async function tryStaleMetaResponse(commanderSlug: string, source: MetaSource): 
     if (stale) {
       return NextResponse.json({
         ...(stale.data as Record<string, unknown>),
-        _meta: { cached: true, stale: true, cachedAt: stale.cachedAt.toISOString() },
+        _meta: {
+          cached: true,
+          stale: true,
+          cachedAt: stale.cachedAt.toISOString(),
+          observedAt: stale.cachedAt.toISOString(),
+        },
       });
     }
   } catch {
@@ -99,13 +128,19 @@ export async function GET(request: Request, { params }: Params) {
 
   const { commanderSlug } = await params;
   if (!commanderSlug || !/^[a-z0-9-]{1,100}$/.test(commanderSlug)) {
-    return NextResponse.json({ error: "Invalid commander slug" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid commander slug" },
+      { status: 400 }
+    );
   }
 
   const { searchParams } = new URL(request.url);
   const parsed = querySchema.safeParse(Object.fromEntries(searchParams));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid query params" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid query params" },
+      { status: 400 }
+    );
   }
 
   const { source, refresh } = parsed.data;
@@ -117,7 +152,8 @@ export async function GET(request: Request, { params }: Params) {
 
   try {
     const data = await loadLiveMeta(commanderSlug, source);
-    await persistMetaCache(commanderSlug, source, data);
+    const observedAt = new Date();
+    await persistMetaCache(commanderSlug, source, data, observedAt);
     if (isEdhrecData(data)) {
       // Retain the distribution before the next refresh overwrites the cache.
       // Awaited rather than fired and forgotten: a serverless invocation can be
@@ -126,9 +162,13 @@ export async function GET(request: Request, { params }: Params) {
       // could explain. `recordEdhrecSnapshot` never throws.
       await recordEdhrecSnapshot(commanderSlug, data);
     }
-    return NextResponse.json({ ...data, _meta: { cached: false } });
+    return NextResponse.json({
+      ...data,
+      _meta: { cached: false, observedAt: observedAt.toISOString() },
+    });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Meta fetch failed";
+    const message =
+      error instanceof Error ? error.message : "Meta fetch failed";
     logger.error(message, "GET /api/meta/:slug", { commanderSlug, source });
     const stale = await tryStaleMetaResponse(commanderSlug, source);
     if (stale) return stale;
