@@ -23,8 +23,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMetaAnalysis } from "@/hooks/useMetaAnalysis";
 import { useMetaShifts } from "@/hooks/useMetaShifts";
 import { cn } from "@/components/ui/utils";
+import { MetaSourceDisclosure } from "./MetaSourceDisclosure";
 import { Link } from "@/i18n/navigation";
-import { commanderToSlug, type MetaCard, type TournamentDeck } from "@/lib/meta/fetch";
+import {
+  commanderToSlug,
+  type MetaCard,
+  type TournamentDeck,
+} from "@/lib/meta/fetch";
 import { shiftMagnitude, type MetaShift } from "@/lib/meta/history";
 
 /** Movements shown in the panel; the report itself is not truncated. */
@@ -127,7 +132,9 @@ export function TournamentDeckRow({ deck }: { readonly deck: TournamentDeck }) {
           {[deck.player, deck.event, deck.date].filter(Boolean).join(" · ")}
         </p>
         {deck.format && (
-          <p className="text-[10px] text-[var(--text-secondary)]/70 truncate">{deck.format}</p>
+          <p className="text-[10px] text-[var(--text-secondary)]/70 truncate">
+            {deck.format}
+          </p>
         )}
       </div>
       <ExternalLink className="w-3 h-3 text-[var(--text-secondary)] shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -159,7 +166,9 @@ function MetaShiftRow({ shift }: { readonly shift: MetaShift }) {
           name={shift.name}
           tone={up ? "up" : "down"}
           icon={<Icon className="w-3 h-3" aria-hidden="true" />}
-          label={t("meta.shifts.points", { points: up ? `+${points}` : `-${points}` })}
+          label={t("meta.shifts.points", {
+            points: up ? `+${points}` : `-${points}`,
+          })}
         />
       );
     }
@@ -230,7 +239,9 @@ function ShiftLine({
         {name}
       </span>
       {note && (
-        <span className="shrink-0 text-[10px] text-[var(--text-secondary)]">{note}</span>
+        <span className="shrink-0 text-[10px] text-[var(--text-secondary)]">
+          {note}
+        </span>
       )}
     </div>
   );
@@ -306,7 +317,8 @@ export function MetaPanel({
     .slice(0, MAX_SHIFTS_SHOWN);
 
   const staleEdhrec = edhrec?._meta?.stale;
-  const cachedAt = edhrec?._meta?.cachedAt;
+  const edhrecObservedAt = edhrec?._meta?.observedAt;
+  const tournamentObservedAt = tournament?._meta?.observedAt;
 
   return (
     <div
@@ -348,15 +360,8 @@ export function MetaPanel({
             <div className="px-3 pb-3 space-y-4">
               {commanderName ? (
                 <>
-                  {/* Refresh + stale notice */}
+                  {/* Refresh */}
                   <div className="flex items-center justify-between">
-                    {staleEdhrec && cachedAt && (
-                      <p className="text-[10px] text-amber-400">
-                        {t("meta.staleData", {
-                          date: format.dateTime(new Date(cachedAt)),
-                        })}
-                      </p>
-                    )}
                     <button
                       type="button"
                       onClick={() => {
@@ -413,6 +418,13 @@ export function MetaPanel({
                         </label>
                       )}
                     </div>
+                    {edhrecObservedAt && (
+                      <MetaSourceDisclosure
+                        source="edhrec"
+                        observedAt={edhrecObservedAt}
+                        stale={staleEdhrec}
+                      />
+                    )}
 
                     {isLoadingEdhrec && !edhrecCards.length && (
                       <div className="space-y-1">
@@ -505,7 +517,10 @@ export function MetaPanel({
                     {movements.length > 0 && (
                       <div className="space-y-0.5">
                         {movements.map((shift) => (
-                          <MetaShiftRow key={`${shift.kind}:${shift.name}`} shift={shift} />
+                          <MetaShiftRow
+                            key={`${shift.kind}:${shift.name}`}
+                            shift={shift}
+                          />
                         ))}
                       </div>
                     )}
@@ -516,6 +531,13 @@ export function MetaPanel({
                     <p className="text-[10px] uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
                       {t("meta.competitive")}
                     </p>
+                    {tournamentObservedAt && (
+                      <MetaSourceDisclosure
+                        source="tournament"
+                        observedAt={tournamentObservedAt}
+                        stale={tournament?._meta?.stale}
+                      />
+                    )}
 
                     {isLoadingTournament && !tournamentDecks.length && (
                       <div className="space-y-1">
