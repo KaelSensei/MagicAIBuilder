@@ -78,6 +78,9 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
           value={summary.averageWinTurns === 0 ? "—" : summary.averageWinTurns.toFixed(1)}
         />
       </div>
+      <p className="mb-3 text-[10px] leading-relaxed text-white/40">
+        {t("history.methodology")}
+      </p>
 
       <div className="border-t border-white/10 pt-2">
         <p className="text-[10px] uppercase tracking-wide text-white/40 mb-1">
