@@ -43,13 +43,13 @@ Feature branches merge into `dev` normally. Promotion branches are long-lived an
 
 Feature branches MUST NOT modify `docs/project/changelog.md`, `docs/project/progress.md`, or `docs/product/roadmap.md`. These are updated in a dedicated `chore/docs` PR after each merge batch to avoid rebase conflicts.
 
-### Pre-PR gate — mandatory
+### Pre-PR gate — mandatory, with advisory Sonar
 
 1. `npx tsc --noEmit` — zero errors
 2. `pnpm lint` — zero warnings
 3. `pnpm test` — all passing
-4. `pnpm sonar` — runs successfully (or rely on CI if it hangs locally)
-5. SonarCloud open issues **= 0**:
+4. `pnpm sonar` — run when credentials and the local environment are available; otherwise document the limitation and rely on CI
+5. SonarCloud status — record the result, but it is **advisory** while the repository integration is being repaired:
    - https://sonarcloud.io/project/issues?issueStatuses=OPEN&id=KaelSensei_MagicAIBuilder
    - API: https://sonarcloud.io/api/issues/search?componentKeys=KaelSensei_MagicAIBuilder&statuses=OPEN&ps=100
 
