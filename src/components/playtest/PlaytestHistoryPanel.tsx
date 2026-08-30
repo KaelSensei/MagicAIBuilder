@@ -137,27 +137,32 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
             {recentSessions.map((session) => (
               <li
                 key={session.id}
-                className="flex items-center justify-between gap-2 text-[11px] text-white/60"
+                className="text-[11px] text-white/60"
               >
-                <span
-                  className={
-                    session.result === "win"
-                      ? "text-green-400"
-                      : session.result === "loss"
-                        ? "text-red-400"
-                        : "text-white/70"
-                  }
-                >
-                  {t(`result.${session.result}`)}
-                </span>
-                <span className="truncate text-right">
-                  {t("turn", { turn: session.turns })} · {t("mulliganCount", {
-                    count: session.mulliganCount,
-                  })} · {format.dateTime(new Date(String(session.createdAt)), {
-                    dateStyle: "medium",
-                    timeZone: "UTC",
-                  })}
-                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className={
+                      session.result === "win"
+                        ? "text-green-400"
+                        : session.result === "loss"
+                          ? "text-red-400"
+                          : "text-white/70"
+                    }
+                  >
+                    {t(`result.${session.result}`)}
+                  </span>
+                  <span className="truncate text-right">
+                    {t("turn", { turn: session.turns })} · {t("mulliganCount", {
+                      count: session.mulliganCount,
+                    })} · {format.dateTime(new Date(String(session.createdAt)), {
+                      dateStyle: "medium",
+                      timeZone: "UTC",
+                    })}
+                  </span>
+                </div>
+                {session.notes && (
+                  <p className="mt-0.5 break-words text-white/45">{session.notes}</p>
+                )}
               </li>
             ))}
           </ul>

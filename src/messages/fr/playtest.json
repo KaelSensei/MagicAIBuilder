@@ -91,6 +91,8 @@
     "matchupValue": "{wins}V–{losses}D · {winRate} %"
   },
   "difficultyLabel": "Adversaire",
+  "notesLabel": "Note du test de jeu",
+  "notesPlaceholder": "Qu’est-ce qui a fonctionné ou semblé faible ?",
   "difficultyUnset": "Sans préciser",
   "difficulty": {
     "budget": "Budget",
