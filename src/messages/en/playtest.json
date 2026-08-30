@@ -91,6 +91,8 @@
     "matchupValue": "{wins}W–{losses}L · {winRate}%"
   },
   "difficultyLabel": "Opponent",
+  "notesLabel": "Playtest note",
+  "notesPlaceholder": "What worked or felt weak?",
   "difficultyUnset": "Not saying",
   "difficulty": {
     "budget": "Budget",

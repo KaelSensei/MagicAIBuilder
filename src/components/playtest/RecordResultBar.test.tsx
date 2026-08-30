@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { RecordResultBar } from "./RecordResultBar";
 import playtestMessages from "@/messages/en/playtest.json";
+import { MAX_SESSION_NOTES_LENGTH } from "@/lib/playtest/session-input";
 
 let queryClient: QueryClient;
 
@@ -97,6 +98,29 @@ describe("RecordResultBar", () => {
     await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
     const [, init] = vi.mocked(globalThis.fetch).mock.calls[0];
     expect(JSON.parse(String(init?.body)).difficulty).toBe("cedh");
+  });
+
+  it("sends the player's trimmed playtest note", async () => {
+    renderBar();
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Playtest note" }),
+      "  Kept a slow hand and missed blue mana.  "
+    );
+    await userEvent.click(screen.getByText("Loss"));
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0];
+    expect(JSON.parse(String(init?.body)).notes).toBe(
+      "Kept a slow hand and missed blue mana."
+    );
+  });
+
+  it("prevents notes longer than the server accepts", () => {
+    renderBar();
+    expect(screen.getByRole("textbox", { name: "Playtest note" })).toHaveAttribute(
+      "maxlength",
+      String(MAX_SESSION_NOTES_LENGTH)
+    );
   });
 
   it("offers every difficulty the schema accepts", () => {
