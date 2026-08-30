@@ -4,31 +4,70 @@ alwaysApply: true
 
 # TDD Skill
 
-Based on Kent Beck (TDD by Example)
+TDD follows Kent Beck's short feedback loop. With an AI agent, the Green step is
+more deliberate: do not ask for intentionally dirty code and plan a cleanup pass.
+Ask for the smallest production-quality implementation that satisfies the test,
+then reserve deeper design changes for a separate refining refactor.
 
-## Cycle
+## Cycle: Red -> Super Green -> Refining Refactoring
 
-1. Write a failing test (RED)
-2. Write minimal code (GREEN)
-3. Refactor safely
+### 1. Red
 
-## Rules
+1. State one observable behavior and one reason it matters.
+2. Add the smallest deterministic test that expresses that behavior.
+3. Run that focused test and confirm it fails for the expected reason.
 
-- Never write production code without a failing test
-- Tests must be deterministic and fast
-- Test behavior, not implementation
+The test is the scope boundary. Do not add future enum values, factories,
+interfaces, abstractions, or error cases that no current test requires.
 
-## Coverage
+### 2. Super Green
 
-- Include edge cases
-- Include failure scenarios
+Implement only enough behavior to pass the new test and preserve existing tests.
+The implementation should already be production-clean in its local context:
 
-## Cursor Behavior
+- Use names, boundaries, and placement that are correct now.
+- Keep the diff small and avoid speculative generalization.
+- Follow the project's type, error-handling, accessibility, and performance rules.
+- Preserve the existing public contract unless the test explicitly changes it.
 
-- Start with tests for any feature or fix
-- Reproduce bugs via tests before fixing
-- Never skip the TDD cycle
+Super Green does not mean advanced design or skipping the TPP. Progress behavior
+in small steps: constant -> scalar -> invariant -> conditional -> loop. Clean
+code and behavioral complexity are separate axes.
+
+### 3. Refining Refactoring
+
+Refactor only after the focused and regression tests are green. Keep behavior
+unchanged, make one coherent design improvement at a time, and rerun the tests
+after each meaningful step. Refactoring may deepen the design, clarify a domain
+boundary, or remove duplication; it is not a required second pass for code that
+was deliberately written badly.
+
+## Test Boundary
+
+Prefer sociable tests at the stable public boundary: a use case, route handler,
+store action, or component behavior with real in-process collaborators. Verify
+observable outcomes rather than private calls or implementation details.
+
+Use solitary tests for pure algorithms, parsers, and small domain policies where
+isolating a collaborator improves clarity or speed. Mock external systems only
+at their boundary, never internal classes merely to make a test pass.
+
+## AI Guardrails
+
+- Reproduce every bug with a failing regression test before changing production code.
+- Ask for one increment at a time; stop when the requested behavior and regressions pass.
+- Never rewrite a test to match an implementation unless the requirement changed.
+- Do not mix feature work and a broad refactor in the same cycle or commit.
+- If the next design step is not required by a red test, record it as follow-up work.
+
+## Coverage And Verification
+
+Cover the happy path, relevant edge cases, and failure behavior. Run the focused
+test first, then the full unit suite. Run E2E when the change crosses a real user
+journey or integration boundary; if the environment is not ready, document the
+reason instead of weakening unit tests.
 
 ## Sources
 
-- TDD by Example – Kent Beck
+- TDD by Example - Kent Beck
+- Test-Driven Development: By Example - short feedback loops and emergent design
