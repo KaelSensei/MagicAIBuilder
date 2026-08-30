@@ -28,6 +28,10 @@ describe("BanlistAlert", () => {
     fireEvent.click(screen.getByRole("button", { name: /toggle deck warnings/i }));
     expect(screen.getByText(/banned in commander/i)).toBeDefined();
     expect(screen.getByText(/color identity violations/i)).toBeDefined();
+    expect(screen.getByText(/commander ban list/i)).toBeDefined();
+    expect(screen.getByText(/remove or replace the banned card/i)).toBeDefined();
+    expect(screen.getByText(/mana symbols outside your commander's color identity/i)).toBeDefined();
+    expect(screen.getByText(/replace each card with one inside the commander's colors/i)).toBeDefined();
   });
 
   it("renders the dismiss button when onDismiss is provided", () => {
