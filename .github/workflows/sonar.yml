@@ -1,9 +1,8 @@
 name: SonarCloud Analysis
 
-# Feature branches target `staging`, which is then promoted to `dev` and on to
-# `main`. Scoped to `main` alone, this workflow first saw a change on the
-# promotion PR — after review, after it had already landed in the integration
-# branch. Every gate now runs on the PR that actually carries the change.
+# Feature branches target `dev`, which is then promoted to `staging` and on to
+# `main`. Sonar remains visible on every change, but is advisory while the
+# repository token and quality baseline are being repaired.
 on:
   push:
     branches: [main]
@@ -18,6 +17,7 @@ concurrency:
 jobs:
   sonar:
     name: SonarCloud
+    continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # Expose these at job level so the `if` guards on the steps below can read

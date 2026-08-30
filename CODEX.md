@@ -331,8 +331,8 @@ Checklist (run mentally or via script):
 1. `npx tsc --noEmit` passes
 2. `pnpm lint` passes (zero warnings)
 3. `pnpm test` passes
-4. `pnpm sonar` runs successfully (or rely on CI if it hangs locally)
-5. SonarCloud open issues are **0**:
+4. `pnpm sonar` runs when credentials and the local environment are available; otherwise document the limitation and rely on CI
+5. SonarCloud status is recorded but remains **advisory** while the repository integration is being repaired:
    - `https://sonarcloud.io/project/issues?issueStatuses=OPEN&id=KaelSensei_MagicAIBuilder`
    - `https://sonarcloud.io/api/issues/search?componentKeys=KaelSensei_MagicAIBuilder&statuses=OPEN&ps=100`
 6. No `any`, no `as`, no `!`, no `eslint-disable` without justification
