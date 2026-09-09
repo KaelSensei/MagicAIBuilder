@@ -92,7 +92,7 @@
     "byOpponent": "Par adversaire",
     "matchupValue": "{wins}V–{losses}D · {winRate} %",
     "bySnapshot": "Par version du deck",
-    "snapshotValue": "{games} parties · {winRate} % · {avgTurns} tours"
+    "snapshotValue": "{games} parties · {winRate} % · {avgTurns} tours{delta}"
   },
   "difficultyLabel": "Adversaire",
   "notesLabel": "Note du test de jeu",

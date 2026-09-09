@@ -178,6 +178,10 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
                       row.averageWinTurns === 0
                         ? "—"
                         : row.averageWinTurns.toFixed(1),
+                    delta:
+                      row.winRateDelta === null
+                        ? ""
+                        : ` (${row.winRateDelta >= 0 ? "+" : ""}${Math.round(row.winRateDelta)}%)`,
                   })}
                 </span>
               </li>

@@ -122,6 +122,7 @@ export interface SnapshotComparisonRow {
   readonly games: number;
   readonly winRate: number;
   readonly averageWinTurns: number;
+  readonly winRateDelta: number | null;
 }
 
 /** Groups recorded games by deck version, keeping unlabelled games visible. */
@@ -157,14 +158,22 @@ export function snapshotRows(
     groups.set(key, group);
   }
 
-  return [...groups.entries()]
-    .map(([snapshotId, group]) => ({
-      snapshotId: snapshotId === "current" ? null : snapshotId,
-      label: group.label,
-      games: group.games,
-      winRate: (group.wins / group.games) * 100,
-      averageWinTurns:
-        group.winCount === 0 ? 0 : group.winTurns / group.winCount,
+  const rows = [...groups.entries()].map(([snapshotId, group]) => ({
+    snapshotId: snapshotId === "current" ? null : snapshotId,
+    label: group.label,
+    games: group.games,
+    winRate: (group.wins / group.games) * 100,
+    averageWinTurns: group.winCount === 0 ? 0 : group.winTurns / group.winCount,
+    winRateDelta: null as number | null,
+  }));
+  const current = rows.find((row) => row.snapshotId === null);
+  return rows
+    .map((row) => ({
+      ...row,
+      winRateDelta:
+        current && row.snapshotId !== null
+          ? row.winRate - current.winRate
+          : null,
     }))
     .sort((a, b) => b.games - a.games || a.label.localeCompare(b.label));
 }

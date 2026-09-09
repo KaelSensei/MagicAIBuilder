@@ -50,6 +50,7 @@ describe("snapshotRows", () => {
         games: 2,
         winRate: 50,
         averageWinTurns: 6,
+        winRateDelta: -50,
       },
       {
         snapshotId: null,
@@ -57,6 +58,7 @@ describe("snapshotRows", () => {
         games: 1,
         winRate: 100,
         averageWinTurns: 5,
+        winRateDelta: null,
       },
     ]);
   });
