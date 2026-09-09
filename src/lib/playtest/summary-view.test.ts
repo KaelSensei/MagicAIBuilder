@@ -1,11 +1,66 @@
 import { describe, it, expect } from "vitest";
 
-import { matchupRows, mulliganRows, trendDirection, MIN_TREND_POINTS } from "./summary-view";
-import type { TrendPoint } from "./analytics";
+import {
+  matchupRows,
+  mulliganRows,
+  snapshotRows,
+  trendDirection,
+  MIN_TREND_POINTS,
+} from "./summary-view";
+import type { PlaytestSession, TrendPoint } from "./analytics";
 
 function point(date: string, winRate: number, total = 4): TrendPoint {
   return { date, winRate, total };
 }
+
+function session(overrides: Partial<PlaytestSession>): PlaytestSession {
+  return {
+    id: crypto.randomUUID(),
+    deckId: "deck-1",
+    userId: "user-1",
+    result: "loss",
+    turns: 8,
+    mulliganCount: 0,
+    createdAt: new Date("2026-09-09T12:00:00Z"),
+    ...overrides,
+  };
+}
+
+describe("snapshotRows", () => {
+  it("compares named snapshots and keeps current-deck sessions visible", () => {
+    const rows = snapshotRows([
+      session({
+        result: "win",
+        turns: 6,
+        snapshotId: "old",
+        snapshotName: "Before ramp",
+      }),
+      session({
+        result: "loss",
+        snapshotId: "old",
+        snapshotName: "Before ramp",
+      }),
+      session({ result: "win", turns: 5 }),
+    ]);
+
+    expect(rows).toEqual([
+      {
+        snapshotId: "old",
+        label: "Before ramp",
+        games: 2,
+        winRate: 50,
+        averageWinTurns: 6,
+      },
+      {
+        snapshotId: null,
+        label: "Current deck",
+        games: 1,
+        winRate: 100,
+        averageWinTurns: 5,
+      },
+    ]);
+  });
+});
 
 describe("trendDirection", () => {
   it("says nothing from a single day of play", () => {
@@ -126,12 +181,21 @@ describe("matchupRows", () => {
       "mid-range": { wins: 3, losses: 3, winRate: 50 },
       budget: { wins: 5, losses: 1, winRate: 83 },
     });
-    expect(rows.map((r) => r.difficulty)).toEqual(["budget", "mid-range", "cedh"]);
+    expect(rows.map((r) => r.difficulty)).toEqual([
+      "budget",
+      "mid-range",
+      "cedh",
+    ]);
   });
 
   it("carries wins, losses and win rate through", () => {
     const rows = matchupRows({ budget: { wins: 5, losses: 1, winRate: 83 } });
-    expect(rows[0]).toEqual({ difficulty: "budget", wins: 5, losses: 1, winRate: 83 });
+    expect(rows[0]).toEqual({
+      difficulty: "budget",
+      wins: 5,
+      losses: 1,
+      winRate: 83,
+    });
   });
 
   it("omits a difficulty that was never played", () => {

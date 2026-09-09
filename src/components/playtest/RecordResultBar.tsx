@@ -12,11 +12,13 @@ import {
   type SessionResult,
 } from "@/lib/playtest/session-input";
 import { logger } from "@/lib/logger";
+import type { SnapshotMeta } from "@/lib/db/snapshot-api";
 
 interface RecordResultBarProps {
   readonly deckId: string;
   readonly turns: number;
   readonly mulliganCount: number;
+  readonly snapshots?: readonly SnapshotMeta[];
   /** Called once the session is stored, or immediately if the player skips */
   readonly onRecorded: () => void;
 }
@@ -33,6 +35,7 @@ export function RecordResultBar({
   deckId,
   turns,
   mulliganCount,
+  snapshots = [],
   onRecorded,
 }: RecordResultBarProps) {
   const t = useTranslations("playtest");
@@ -43,6 +46,7 @@ export function RecordResultBar({
   // nullable and the matchup breakdown simply skips those runs.
   const [difficulty, setDifficulty] = useState<SessionDifficulty | "">("");
   const [notes, setNotes] = useState("");
+  const [snapshotId, setSnapshotId] = useState("");
 
   const record = useCallback(
     async (result: SessionResult) => {
@@ -60,35 +64,71 @@ export function RecordResultBar({
             mulliganCount,
             ...(difficulty === "" ? {} : { difficulty }),
             ...(notes.trim() === "" ? {} : { notes: notes.trim() }),
+            ...(snapshotId === "" ? {} : { snapshotId }),
           }),
         });
         if (!response.ok) throw new Error(`record failed: ${response.status}`);
         // The history panel is cached; without this the run just recorded
         // would be missing from it the next time the modal opens.
-        await queryClient.invalidateQueries({ queryKey: ["playtest", "history", deckId] });
+        await queryClient.invalidateQueries({
+          queryKey: ["playtest", "history", deckId],
+        });
         onRecorded();
       } catch (error) {
         // Keep the modal open: closing would discard a result the player just
         // gave us, with nothing stored to show for it.
-        logger.error("Failed to record playtest session", "RecordResultBar", error);
+        logger.error(
+          "Failed to record playtest session",
+          "RecordResultBar",
+          error
+        );
         setFailed(true);
       } finally {
         setPending(null);
       }
     },
-    [deckId, turns, mulliganCount, difficulty, notes, onRecorded, queryClient]
+    [
+      deckId,
+      turns,
+      mulliganCount,
+      difficulty,
+      notes,
+      snapshotId,
+      onRecorded,
+      queryClient,
+    ]
   );
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-xs text-white/50">{t("recordResult")}</span>
+      {snapshots.length > 0 && (
+        <label className="flex items-center gap-1 text-xs text-white/50">
+          <span className="sr-only">{t("snapshotLabel")}</span>
+          <select
+            aria-label={t("snapshotLabel")}
+            value={snapshotId}
+            onChange={(event) => setSnapshotId(event.target.value)}
+            className="max-w-40 rounded bg-white/10 px-2 py-1 text-xs text-white [&>option]:bg-neutral-900"
+          >
+            <option value="">{t("snapshotCurrent")}</option>
+            {snapshots.map((snapshot) => (
+              <option key={snapshot.id} value={snapshot.id}>
+                {snapshot.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="sr-only" htmlFor="playtest-difficulty">
         {t("difficultyLabel")}
       </label>
       <select
         id="playtest-difficulty"
         value={difficulty}
-        onChange={(event) => setDifficulty(event.target.value as SessionDifficulty | "")}
+        onChange={(event) =>
+          setDifficulty(event.target.value as SessionDifficulty | "")
+        }
         className="rounded bg-white/10 px-2 py-1 text-xs text-white [&>option]:bg-neutral-900"
       >
         <option value="">{t("difficultyUnset")}</option>
@@ -128,7 +168,9 @@ export function RecordResultBar({
       >
         {t("skipRecording")}
       </button>
-      {failed && <span className="text-xs text-red-400">{t("recordFailed")}</span>}
+      {failed && (
+        <span className="text-xs text-red-400">{t("recordFailed")}</span>
+      )}
     </div>
   );
 }

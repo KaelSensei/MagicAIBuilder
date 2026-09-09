@@ -8,11 +8,17 @@
  * @module playtest/summary-view
  */
 
-import type { MatchupStat, MulliganBucket, TrendPoint } from "./analytics";
+import type {
+  MatchupStat,
+  MulliganBucket,
+  PlaytestSession,
+  TrendPoint,
+} from "./analytics";
 import { SESSION_DIFFICULTIES } from "./session-input";
 
 /** Which way the win rate is moving, or that there is not enough play to say. */
-export type TrendDirection = "improving" | "steady" | "declining" | "insufficient";
+export type TrendDirection =
+  "improving" | "steady" | "declining" | "insufficient";
 
 /**
  * Days of play needed before a direction is claimed.
@@ -110,6 +116,59 @@ export interface MatchupRow {
   readonly winRate: number;
 }
 
+export interface SnapshotComparisonRow {
+  readonly snapshotId: string | null;
+  readonly label: string;
+  readonly games: number;
+  readonly winRate: number;
+  readonly averageWinTurns: number;
+}
+
+/** Groups recorded games by deck version, keeping unlabelled games visible. */
+export function snapshotRows(
+  sessions: readonly PlaytestSession[]
+): readonly SnapshotComparisonRow[] {
+  const groups = new Map<
+    string,
+    {
+      label: string;
+      games: number;
+      wins: number;
+      winTurns: number;
+      winCount: number;
+    }
+  >();
+
+  for (const session of sessions) {
+    const key = session.snapshotId ?? "current";
+    const group = groups.get(key) ?? {
+      label: session.snapshotName ?? "Current deck",
+      games: 0,
+      wins: 0,
+      winTurns: 0,
+      winCount: 0,
+    };
+    group.games += 1;
+    if (session.result === "win") {
+      group.wins += 1;
+      group.winTurns += session.turns;
+      group.winCount += 1;
+    }
+    groups.set(key, group);
+  }
+
+  return [...groups.entries()]
+    .map(([snapshotId, group]) => ({
+      snapshotId: snapshotId === "current" ? null : snapshotId,
+      label: group.label,
+      games: group.games,
+      winRate: (group.wins / group.games) * 100,
+      averageWinTurns:
+        group.winCount === 0 ? 0 : group.winTurns / group.winCount,
+    }))
+    .sort((a, b) => b.games - a.games || a.label.localeCompare(b.label));
+}
+
 /**
  * Orders the matchup breakdown for display.
  *
@@ -124,7 +183,9 @@ export interface MatchupRow {
  * @param matchups - stats keyed by difficulty
  * @returns one row per difficulty played, weakest opponent first
  */
-export function matchupRows(matchups: Record<string, MatchupStat>): readonly MatchupRow[] {
+export function matchupRows(
+  matchups: Record<string, MatchupStat>
+): readonly MatchupRow[] {
   const rank = (difficulty: string): number => {
     const index = SESSION_DIFFICULTIES.indexOf(difficulty as never);
     return index === -1 ? SESSION_DIFFICULTIES.length : index;

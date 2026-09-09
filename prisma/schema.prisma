@@ -116,6 +116,7 @@ model DeckSnapshot {
   commander  String?
   cardCount  Int
   createdAt  DateTime @default(now())
+  playtests   PlaytestSession[]
 
   @@index([deckId])
 }
@@ -388,6 +389,8 @@ model PlaytestSession {
   deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshotId    String?
+  snapshot      DeckSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
   result        String // "win" | "loss" | "draw", validated at the route
   turns         Int
   mulliganCount Int      @default(0)
@@ -398,6 +401,7 @@ model PlaytestSession {
   // No unique constraint: every run is its own row — that is the whole point.
   @@index([deckId])
   @@index([deckId, createdAt])
+  @@index([snapshotId])
 }
 
 /// A directed follow edge between two users.

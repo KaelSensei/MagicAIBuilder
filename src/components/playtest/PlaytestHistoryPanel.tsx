@@ -8,6 +8,7 @@ import { usePlaytestHistory } from "@/hooks/usePlaytestHistory";
 import {
   matchupRows,
   mulliganRows,
+  snapshotRows,
   trendDirection,
   type TrendDirection,
 } from "@/lib/playtest/summary-view";
@@ -19,17 +20,28 @@ interface PlaytestHistoryPanelProps {
 
 /** @returns the icon for a trend verdict, or null when there is nothing to claim */
 function TrendIcon({ direction }: { readonly direction: TrendDirection }) {
-  if (direction === "improving") return <TrendingUp className="w-3.5 h-3.5 text-green-400" />;
-  if (direction === "declining") return <TrendingDown className="w-3.5 h-3.5 text-red-400" />;
-  if (direction === "steady") return <Minus className="w-3.5 h-3.5 text-white/40" />;
+  if (direction === "improving")
+    return <TrendingUp className="w-3.5 h-3.5 text-green-400" />;
+  if (direction === "declining")
+    return <TrendingDown className="w-3.5 h-3.5 text-red-400" />;
+  if (direction === "steady")
+    return <Minus className="w-3.5 h-3.5 text-white/40" />;
   return null;
 }
 
-function Figure({ label, value }: { readonly label: string; readonly value: string }) {
+function Figure({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: string;
+}) {
   return (
     <div className="text-center">
       <p className="text-lg font-semibold text-white">{value}</p>
-      <p className="text-[10px] uppercase tracking-wide text-white/40">{label}</p>
+      <p className="text-[10px] uppercase tracking-wide text-white/40">
+        {label}
+      </p>
     </div>
   );
 }
@@ -45,7 +57,10 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
   const t = useTranslations("playtest");
   const format = useFormatter();
   const { data } = usePlaytestHistory(deckId);
-  const recentSessions = useMemo(() => data?.sessions.slice(0, 10) ?? [], [data?.sessions]);
+  const recentSessions = useMemo(
+    () => data?.sessions.slice(0, 10) ?? [],
+    [data?.sessions]
+  );
 
   const summary = data?.summary;
   if (!summary || summary.total === 0) return null;
@@ -53,6 +68,7 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
   const direction = trendDirection(summary.trend);
   const rows = mulliganRows(summary.mulligans);
   const matchups = matchupRows(summary.matchups);
+  const snapshots = snapshotRows(data?.sessions ?? []);
 
   /** Known difficulties get a translated label; anything else shows as stored. */
   const difficultyLabel = (value: string): string =>
@@ -63,7 +79,9 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
   return (
     <div className="w-full max-w-md rounded-lg border border-white/10 bg-white/5 p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs uppercase tracking-wide text-white/40">{t("history.title")}</p>
+        <p className="text-xs uppercase tracking-wide text-white/40">
+          {t("history.title")}
+        </p>
         <span className="flex items-center gap-1 text-[11px] text-white/60">
           <TrendIcon direction={direction} />
           {t(`history.trend.${direction}`)}
@@ -72,10 +90,17 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
 
       <div className="grid grid-cols-3 gap-2 mb-3">
         <Figure label={t("history.games")} value={String(summary.total)} />
-        <Figure label={t("history.winRate")} value={`${Math.round(summary.winRate)}%`} />
+        <Figure
+          label={t("history.winRate")}
+          value={`${Math.round(summary.winRate)}%`}
+        />
         <Figure
           label={t("history.avgWinTurns")}
-          value={summary.averageWinTurns === 0 ? "—" : summary.averageWinTurns.toFixed(1)}
+          value={
+            summary.averageWinTurns === 0
+              ? "—"
+              : summary.averageWinTurns.toFixed(1)
+          }
         />
       </div>
       <p className="mb-3 text-[10px] leading-relaxed text-white/40">
@@ -88,8 +113,13 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
         </p>
         <ul className="space-y-0.5">
           {rows.map((row) => (
-            <li key={row.mulligans} className="flex justify-between text-[11px] text-white/60">
-              <span>{t("history.mulliganLabel", { count: row.mulligans })}</span>
+            <li
+              key={row.mulligans}
+              className="flex justify-between text-[11px] text-white/60"
+            >
+              <span>
+                {t("history.mulliganLabel", { count: row.mulligans })}
+              </span>
               <span>
                 {t("history.mulliganValue", {
                   games: row.count,
@@ -128,6 +158,34 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
         </div>
       )}
 
+      {snapshots.length > 1 && (
+        <div className="border-t border-white/10 pt-2 mt-2">
+          <p className="text-[10px] uppercase tracking-wide text-white/40 mb-1">
+            {t("history.bySnapshot")}
+          </p>
+          <ul className="space-y-0.5">
+            {snapshots.map((row) => (
+              <li
+                key={row.snapshotId ?? "current"}
+                className="flex justify-between gap-2 text-[11px] text-white/60"
+              >
+                <span className="truncate">{row.label}</span>
+                <span className="shrink-0">
+                  {t("history.snapshotValue", {
+                    games: row.games,
+                    winRate: Math.round(row.winRate),
+                    avgTurns:
+                      row.averageWinTurns === 0
+                        ? "—"
+                        : row.averageWinTurns.toFixed(1),
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {recentSessions.length > 0 && (
         <div className="border-t border-white/10 pt-2 mt-2">
           <p className="text-[10px] uppercase tracking-wide text-white/40 mb-1">
@@ -135,10 +193,7 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
           </p>
           <ul className="space-y-1">
             {recentSessions.map((session) => (
-              <li
-                key={session.id}
-                className="text-[11px] text-white/60"
-              >
+              <li key={session.id} className="text-[11px] text-white/60">
                 <div className="flex items-center justify-between gap-2">
                   <span
                     className={
@@ -152,16 +207,21 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
                     {t(`result.${session.result}`)}
                   </span>
                   <span className="truncate text-right">
-                    {t("turn", { turn: session.turns })} · {t("mulliganCount", {
+                    {t("turn", { turn: session.turns })} ·{" "}
+                    {t("mulliganCount", {
                       count: session.mulliganCount,
-                    })} · {format.dateTime(new Date(String(session.createdAt)), {
+                    })}{" "}
+                    ·{" "}
+                    {format.dateTime(new Date(String(session.createdAt)), {
                       dateStyle: "medium",
                       timeZone: "UTC",
                     })}
                   </span>
                 </div>
                 {session.notes && (
-                  <p className="mt-0.5 break-words text-white/45">{session.notes}</p>
+                  <p className="mt-0.5 break-words text-white/45">
+                    {session.notes}
+                  </p>
                 )}
               </li>
             ))}

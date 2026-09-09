@@ -17,10 +17,20 @@ import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import type { PlaytestSession } from "@/lib/playtest/analytics";
-import { parseSessionInput, summarizeSessions } from "@/lib/playtest/session-input";
-import { readJsonBody } from "@/lib/api/json-body";
+import {
+  parseSessionInput,
+  summarizeSessions,
+} from "@/lib/playtest/session-input";
+import { readJsonBody, readRecord } from "@/lib/api/json-body";
 
 type Params = { params: Promise<{ id: string }> };
+
+function readSnapshotId(value: unknown): string | undefined {
+  const snapshotId = readRecord(value).snapshotId;
+  return typeof snapshotId === "string" && snapshotId.length > 0
+    ? snapshotId
+    : undefined;
+}
 
 /** Rows are capped so one enthusiastic tester cannot make the panel unbounded. */
 const MAX_SESSIONS = 500;
@@ -52,11 +62,15 @@ async function findOwnedDeck(deckId: string, userId: string) {
  * @param userId Signed-in user id.
  * @returns The sessions, capped at MAX_SESSIONS.
  */
-async function loadSessions(deckId: string, userId: string): Promise<PlaytestSession[]> {
+async function loadSessions(
+  deckId: string,
+  userId: string
+): Promise<PlaytestSession[]> {
   const rows = await prisma.playtestSession.findMany({
     where: { deckId, userId },
     orderBy: { createdAt: "desc" },
     take: MAX_SESSIONS,
+    include: { snapshot: { select: { name: true } } },
   });
 
   // The column is a plain string; analytics expects the narrowed union.
@@ -64,6 +78,8 @@ async function loadSessions(deckId: string, userId: string): Promise<PlaytestSes
     id: row.id,
     deckId: row.deckId,
     userId: row.userId,
+    snapshotId: row.snapshotId ?? undefined,
+    snapshotName: row.snapshot?.name ?? undefined,
     result: row.result as PlaytestSession["result"],
     turns: row.turns,
     mulliganCount: row.mulliganCount,
@@ -88,10 +104,20 @@ export async function GET(_req: Request, { params }: Params) {
     }
 
     const sessions = await loadSessions(id, userId);
-    return NextResponse.json({ sessions, summary: summarizeSessions(sessions) });
+    return NextResponse.json({
+      sessions,
+      summary: summarizeSessions(sessions),
+    });
   } catch (error) {
-    logger.error("Unexpected error", "GET /api/decks/:id/playtest-sessions", error);
-    return NextResponse.json({ error: "Failed to fetch playtest sessions" }, { status: 500 });
+    logger.error(
+      "Unexpected error",
+      "GET /api/decks/:id/playtest-sessions",
+      error
+    );
+    return NextResponse.json(
+      { error: "Failed to fetch playtest sessions" },
+      { status: 500 }
+    );
   }
 }
 
@@ -117,8 +143,22 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     // No upsert: every run is its own row, which is the whole point of a trend.
+    const snapshotId = readSnapshotId(jsonBody.value);
+    if (snapshotId) {
+      const snapshot = await prisma.deckSnapshot.findFirst({
+        where: { id: snapshotId, deckId: id },
+        select: { id: true },
+      });
+      if (!snapshot) {
+        return NextResponse.json(
+          { error: "Snapshot not found" },
+          { status: 400 }
+        );
+      }
+    }
+
     await prisma.playtestSession.create({
-      data: { ...parsed.value, deckId: id, userId },
+      data: { ...parsed.value, deckId: id, userId, snapshotId },
     });
 
     const sessions = await loadSessions(id, userId);
@@ -127,7 +167,14 @@ export async function POST(request: Request, { params }: Params) {
       { status: 201 }
     );
   } catch (error) {
-    logger.error("Unexpected error", "POST /api/decks/:id/playtest-sessions", error);
-    return NextResponse.json({ error: "Failed to record playtest session" }, { status: 500 });
+    logger.error(
+      "Unexpected error",
+      "POST /api/decks/:id/playtest-sessions",
+      error
+    );
+    return NextResponse.json(
+      { error: "Failed to record playtest session" },
+      { status: 500 }
+    );
   }
 }

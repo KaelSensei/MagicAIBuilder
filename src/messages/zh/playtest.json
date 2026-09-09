@@ -64,6 +64,8 @@
     "play": "Play"
   },
   "recordResult": "How did it go?",
+  "snapshotLabel": "Deck version",
+  "snapshotCurrent": "Current deck",
   "recording": "Saving…",
   "recordFailed": "Could not save",
   "skipRecording": "Skip",
@@ -88,7 +90,9 @@
       "insufficient": "Too few games"
     },
     "byOpponent": "By opponent",
-    "matchupValue": "{wins}W–{losses}L · {winRate}%"
+    "matchupValue": "{wins}W–{losses}L · {winRate}%",
+    "bySnapshot": "By deck version",
+    "snapshotValue": "{games} games · {winRate}% · {avgTurns} turns"
   },
   "difficultyLabel": "Opponent",
   "notesLabel": "Playtest note",

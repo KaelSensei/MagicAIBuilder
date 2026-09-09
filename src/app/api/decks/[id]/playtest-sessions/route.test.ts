@@ -2,8 +2,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockDeckFindUnique, mockSessionFindMany, mockSessionCreate } = vi.hoisted(() => ({
+const {
+  mockDeckFindUnique,
+  mockSnapshotFindFirst,
+  mockSessionFindMany,
+  mockSessionCreate,
+} = vi.hoisted(() => ({
   mockDeckFindUnique: vi.fn(),
+  mockSnapshotFindFirst: vi.fn(),
   mockSessionFindMany: vi.fn(),
   mockSessionCreate: vi.fn(),
 }));
@@ -24,7 +30,11 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     user: { findUnique: mockUserFindUnique },
     deck: { findUnique: mockDeckFindUnique },
-    playtestSession: { findMany: mockSessionFindMany, create: mockSessionCreate },
+    deckSnapshot: { findFirst: mockSnapshotFindFirst },
+    playtestSession: {
+      findMany: mockSessionFindMany,
+      create: mockSessionCreate,
+    },
   },
 }));
 
@@ -75,6 +85,7 @@ function row(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   mockSessionFindMany.mockResolvedValue([]);
+  mockSnapshotFindFirst.mockResolvedValue({ id: "snapshot-1" });
 });
 
 describe("GET /api/decks/[id]/playtest-sessions", () => {
@@ -96,7 +107,10 @@ describe("GET /api/decks/[id]/playtest-sessions", () => {
   it("returns sessions with their summary", async () => {
     signedInAs("owner-1");
     mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
-    mockSessionFindMany.mockResolvedValue([row(), row({ id: "s2", result: "loss", turns: 12 })]);
+    mockSessionFindMany.mockResolvedValue([
+      row(),
+      row({ id: "s2", result: "loss", turns: 12 }),
+    ]);
 
     const response = await GET(new Request("http://localhost"), params());
     const body = await response.json();
@@ -114,14 +128,18 @@ describe("GET /api/decks/[id]/playtest-sessions", () => {
     await GET(new Request("http://localhost"), params());
 
     expect(mockSessionFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { deckId: "deck-1", userId: "owner-1" } })
+      expect.objectContaining({
+        where: { deckId: "deck-1", userId: "owner-1" },
+      })
     );
   });
 
   it("reports zeroes rather than failing for a deck never played", async () => {
     signedInAs("owner-1");
     mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
-    const body = await (await GET(new Request("http://localhost"), params())).json();
+    const body = await (
+      await GET(new Request("http://localhost"), params())
+    ).json();
     expect(body.summary.total).toBe(0);
     expect(body.summary.winRate).toBe(0);
   });
@@ -130,14 +148,20 @@ describe("GET /api/decks/[id]/playtest-sessions", () => {
 describe("POST /api/decks/[id]/playtest-sessions", () => {
   it("refuses an anonymous caller", async () => {
     mockAuth.mockResolvedValue(null);
-    const response = await POST(postRequest({ result: "win", turns: 8 }), params());
+    const response = await POST(
+      postRequest({ result: "win", turns: 8 }),
+      params()
+    );
     expect(response.status).toBe(401);
   });
 
   it("rejects a result the schema cannot store", async () => {
     signedInAs("owner-1");
     mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
-    const response = await POST(postRequest({ result: "victory", turns: 8 }), params());
+    const response = await POST(
+      postRequest({ result: "victory", turns: 8 }),
+      params()
+    );
     expect(response.status).toBe(400);
     expect(mockSessionCreate).not.toHaveBeenCalled();
   });
@@ -145,7 +169,10 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
   it("rejects an impossible turn count", async () => {
     signedInAs("owner-1");
     mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
-    const response = await POST(postRequest({ result: "win", turns: 0 }), params());
+    const response = await POST(
+      postRequest({ result: "win", turns: 0 }),
+      params()
+    );
     expect(response.status).toBe(400);
   });
 
@@ -159,7 +186,10 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
   it("returns 404 for a deck the caller does not own", async () => {
     signedInAs("owner-1");
     mockDeckFindUnique.mockResolvedValue(SOMEONE_ELSES_DECK);
-    const response = await POST(postRequest({ result: "win", turns: 8 }), params());
+    const response = await POST(
+      postRequest({ result: "win", turns: 8 }),
+      params()
+    );
     expect(response.status).toBe(404);
     expect(mockSessionCreate).not.toHaveBeenCalled();
   });
@@ -170,7 +200,12 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
     mockSessionCreate.mockResolvedValue(row());
 
     const response = await POST(
-      postRequest({ result: "win", turns: 8, mulliganCount: 1, notes: "  kept a two-lander  " }),
+      postRequest({
+        result: "win",
+        turns: 8,
+        mulliganCount: 1,
+        notes: "  kept a two-lander  ",
+      }),
       params()
     );
 
@@ -196,5 +231,44 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
     await POST(postRequest({ result: "loss", turns: 5 }), params());
 
     expect(mockSessionCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it("stores a valid snapshot association", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSessionCreate.mockResolvedValue(row({ snapshotId: "snapshot-1" }));
+
+    const response = await POST(
+      postRequest({ result: "win", turns: 8, snapshotId: "snapshot-1" }),
+      params()
+    );
+
+    expect(response.status).toBe(201);
+    expect(mockSnapshotFindFirst).toHaveBeenCalledWith({
+      where: { id: "snapshot-1", deckId: "deck-1" },
+      select: { id: true },
+    });
+    expect(mockSessionCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ snapshotId: "snapshot-1" }),
+    });
+  });
+
+  it("rejects a snapshot that is not part of the deck", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSnapshotFindFirst.mockResolvedValue(null);
+
+    const response = await POST(
+      postRequest({
+        result: "win",
+        turns: 8,
+        snapshotId: "other-deck-snapshot",
+      }),
+      params()
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Snapshot not found" });
+    expect(mockSessionCreate).not.toHaveBeenCalled();
   });
 });

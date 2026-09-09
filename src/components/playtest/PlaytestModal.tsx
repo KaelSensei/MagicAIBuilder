@@ -18,6 +18,8 @@ import { PlaytestHistoryPanel } from "@/components/playtest/PlaytestHistoryPanel
 import { DrawProgressEvidence } from "@/components/playtest/DrawProgressEvidence";
 import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
+import { listSnapshots, type SnapshotMeta } from "@/lib/db/snapshot-api";
+import { useQuery } from "@tanstack/react-query";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
@@ -70,6 +72,11 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const moveToZone = usePlaytestStore((s) => s.moveToZone);
   const addCounter = usePlaytestStore((s) => s.addCounter);
   const undo = usePlaytestStore((s) => s.undo);
+  const { data: snapshots = [] } = useQuery<SnapshotMeta[]>({
+    queryKey: ["deck", deck.id, "snapshots"],
+    queryFn: () => listSnapshots(deck.id),
+    staleTime: 60_000,
+  });
 
   // The store outlives the modal, so a stale session would otherwise reappear
   // the next time it opens.
@@ -80,7 +87,10 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     onClose();
   }, [stopPlaytest, onClose]);
 
-  const handleStart = useCallback(() => startPlaytest(deck), [deck, startPlaytest]);
+  const handleStart = useCallback(
+    () => startPlaytest(deck),
+    [deck, startPlaytest]
+  );
 
   const handleMoveFromHand = useCallback(
     (cardId: string, to: "battlefield" | "graveyard") =>
@@ -94,7 +104,8 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   );
 
   const handleRestore = useCallback(
-    (cardId: string, from: CardZone, to: CardZone) => moveToZone(cardId, from, to),
+    (cardId: string, from: CardZone, to: CardZone) =>
+      moveToZone(cardId, from, to),
     [moveToZone]
   );
 
@@ -119,128 +130,132 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
 
   return (
     <LocalizedDeckTextProvider names={cardNames}>
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-50 bg-black/95 flex flex-col"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <Layers className="w-5 h-5 text-purple-400 shrink-0" aria-hidden="true" />
-            <h2 className="text-white font-semibold truncate">
-              {t("title")} — {deck.name}
-            </h2>
-            {engine && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 whitespace-nowrap">
-                {t("turn", { turn: engine.turn })}
-                {engine.mulliganCount > 0 &&
-                  ` · ${t("mulliganCount", { count: engine.mulliganCount })}`}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            {engine && (
-              <RecordResultBar
-                deckId={deck.id}
-                turns={engine.turn}
-                mulliganCount={engine.mulliganCount}
-                onRecorded={handleClose}
+      <AnimatePresence>
+        <motion.div
+          className="fixed inset-0 z-50 bg-black/95 flex flex-col"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <Layers
+                className="w-5 h-5 text-purple-400 shrink-0"
+                aria-hidden="true"
               />
-            )}
-            <button
-              type="button"
-              onClick={handleClose}
-              aria-label={t("close")}
-              className="text-white/50 hover:text-white transition-colors p-1 rounded"
-            >
-              <X className="w-5 h-5" />
-            </button>
+              <h2 className="text-white font-semibold truncate">
+                {t("title")} — {deck.name}
+              </h2>
+              {engine && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 whitespace-nowrap">
+                  {t("turn", { turn: engine.turn })}
+                  {engine.mulliganCount > 0 &&
+                    ` · ${t("mulliganCount", { count: engine.mulliganCount })}`}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {engine && (
+                <RecordResultBar
+                  deckId={deck.id}
+                  turns={engine.turn}
+                  mulliganCount={engine.mulliganCount}
+                  snapshots={snapshots}
+                  onRecorded={handleClose}
+                />
+              )}
+              <button
+                type="button"
+                onClick={handleClose}
+                aria-label={t("close")}
+                className="text-white/50 hover:text-white transition-colors p-1 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Body */}
-        {engine === null ? (
-          <div className="flex-1 flex items-center justify-center p-6">
-            <PlaytestStartScreen deckId={deck.id} onStart={handleStart} />
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="mx-auto max-w-7xl grid gap-4 lg:grid-cols-[20rem_1fr]">
-              {/* Left rail: turn structure and life */}
-              <aside className="space-y-4">
-                {engine.turn > 1 && <DrawProgressEvidence engine={engine} />}
-                {canMulligan && <OpeningHandEvidence hand={engine.hand} />}
-                <PhaseTracker
-                  turn={engine.turn}
-                  phase={engine.phase}
-                  onNextPhase={nextPhase}
-                  onNextTurn={nextTurn}
-                />
-                <LifeTracker
-                  lifeTotal={engine.lifeTotal}
-                  lifeHistory={engine.lifeHistory}
-                  onDamage={damage}
-                  onHeal={heal}
-                  onUndo={undo}
-                />
-              </aside>
+          {/* Body */}
+          {engine === null ? (
+            <div className="flex-1 flex items-center justify-center p-6">
+              <PlaytestStartScreen deckId={deck.id} onStart={handleStart} />
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              <div className="mx-auto max-w-7xl grid gap-4 lg:grid-cols-[20rem_1fr]">
+                {/* Left rail: turn structure and life */}
+                <aside className="space-y-4">
+                  {engine.turn > 1 && <DrawProgressEvidence engine={engine} />}
+                  {canMulligan && <OpeningHandEvidence hand={engine.hand} />}
+                  <PhaseTracker
+                    turn={engine.turn}
+                    phase={engine.phase}
+                    onNextPhase={nextPhase}
+                    onNextTurn={nextTurn}
+                  />
+                  <LifeTracker
+                    lifeTotal={engine.lifeTotal}
+                    lifeHistory={engine.lifeHistory}
+                    onDamage={damage}
+                    onHeal={heal}
+                    onUndo={undo}
+                  />
+                </aside>
 
-              {/* Board */}
-              <div className="space-y-4">
-                <BattlefieldZone
-                  battlefield={engine.battlefield}
-                  onTap={tap}
-                  onAddCounter={addCounter}
-                  onRemove={handleRemoveFromBattlefield}
-                />
-                <HandZone
-                  hand={engine.hand}
-                  libraryCount={engine.library.length}
-                  onDrawCard={drawCard}
-                  onMoveCard={handleMoveFromHand}
-                />
-                <GraveyardZone
-                  graveyard={engine.graveyard}
-                  exile={engine.exile}
-                  onRestore={handleRestore}
-                />
+                {/* Board */}
+                <div className="space-y-4">
+                  <BattlefieldZone
+                    battlefield={engine.battlefield}
+                    onTap={tap}
+                    onAddCounter={addCounter}
+                    onRemove={handleRemoveFromBattlefield}
+                  />
+                  <HandZone
+                    hand={engine.hand}
+                    libraryCount={engine.library.length}
+                    onDrawCard={drawCard}
+                    onMoveCard={handleMoveFromHand}
+                  />
+                  <GraveyardZone
+                    graveyard={engine.graveyard}
+                    exile={engine.exile}
+                    onRestore={handleRestore}
+                  />
 
-                {/* Session controls */}
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={mulligan}
-                    disabled={!canMulligan}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-sm font-medium text-white/70 transition-all hover:border-purple-500 hover:text-white hover:bg-purple-500/10 disabled:border-white/10 disabled:text-white/30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-                    {t("mulligan")}
-                    {canMulligan && (
-                      <span className="text-xs opacity-60">
-                        {t("mulliganDown", {
-                          count: OPENING_HAND_SIZE - engine.mulliganCount - 1,
-                        })}
-                      </span>
-                    )}
-                  </button>
+                  {/* Session controls */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={mulligan}
+                      disabled={!canMulligan}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-sm font-medium text-white/70 transition-all hover:border-purple-500 hover:text-white hover:bg-purple-500/10 disabled:border-white/10 disabled:text-white/30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                      {t("mulligan")}
+                      {canMulligan && (
+                        <span className="text-xs opacity-60">
+                          {t("mulliganDown", {
+                            count: OPENING_HAND_SIZE - engine.mulliganCount - 1,
+                          })}
+                        </span>
+                      )}
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={resetPlaytest}
-                    className="text-xs text-white/40 hover:text-white/70 transition-colors"
-                  >
-                    {t("restart")}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={resetPlaytest}
+                      className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                    >
+                      {t("restart")}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </motion.div>
-    </AnimatePresence>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </LocalizedDeckTextProvider>
   );
 }

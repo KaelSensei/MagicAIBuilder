@@ -64,6 +64,8 @@
     "play": "Jouer"
   },
   "recordResult": "Comment ça s'est passé ?",
+  "snapshotLabel": "Version du deck",
+  "snapshotCurrent": "Deck actuel",
   "recording": "Enregistrement…",
   "recordFailed": "Enregistrement impossible",
   "skipRecording": "Passer",
@@ -88,7 +90,9 @@
       "insufficient": "Trop peu de parties"
     },
     "byOpponent": "Par adversaire",
-    "matchupValue": "{wins}V–{losses}D · {winRate} %"
+    "matchupValue": "{wins}V–{losses}D · {winRate} %",
+    "bySnapshot": "Par version du deck",
+    "snapshotValue": "{games} parties · {winRate} % · {avgTurns} tours"
   },
   "difficultyLabel": "Adversaire",
   "notesLabel": "Note du test de jeu",

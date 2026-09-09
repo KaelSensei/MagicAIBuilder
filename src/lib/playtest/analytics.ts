@@ -9,6 +9,8 @@ export interface PlaytestSession {
   readonly id: string;
   readonly deckId: string;
   readonly userId: string;
+  readonly snapshotId?: string;
+  readonly snapshotName?: string;
   readonly result: "win" | "loss" | "draw";
   readonly turns: number;
   readonly mulliganCount: number;
@@ -54,7 +56,7 @@ export function calculateWinRate(sessions: readonly PlaytestSession[]): number {
  */
 export function calculateAverageTurns(
   sessions: readonly PlaytestSession[],
-  result: PlaytestSession["result"],
+  result: PlaytestSession["result"]
 ): number {
   const filtered = sessions.filter((s) => s.result === result);
   if (filtered.length === 0) return 0;
@@ -69,7 +71,7 @@ export function calculateAverageTurns(
  * winRate is the percentage of wins within that mulligan bucket.
  */
 export function getMulliganDistribution(
-  sessions: readonly PlaytestSession[],
+  sessions: readonly PlaytestSession[]
 ): Record<number, MulliganBucket> {
   const buckets: Record<number, { wins: number; total: number }> = {};
 
@@ -99,13 +101,20 @@ export function getMulliganDistribution(
  * winRate is wins / total (including draws).
  */
 export function getMatchupStats(
-  sessions: readonly PlaytestSession[],
+  sessions: readonly PlaytestSession[]
 ): Record<string, MatchupStat> {
-  const groups: Record<string, { wins: number; losses: number; total: number }> = {};
+  const groups: Record<
+    string,
+    { wins: number; losses: number; total: number }
+  > = {};
 
   for (const session of sessions) {
     if (session.difficulty === undefined) continue;
-    const group = groups[session.difficulty] ?? { wins: 0, losses: 0, total: 0 };
+    const group = groups[session.difficulty] ?? {
+      wins: 0,
+      losses: 0,
+      total: 0,
+    };
     groups[session.difficulty] = {
       wins: group.wins + (session.result === "win" ? 1 : 0),
       losses: group.losses + (session.result === "loss" ? 1 : 0),
@@ -130,7 +139,9 @@ export function getMatchupStats(
  * Returns an array of daily trend points sorted chronologically.
  * Each point contains: date (YYYY-MM-DD), winRate, total sessions.
  */
-export function buildTrendData(sessions: readonly PlaytestSession[]): TrendPoint[] {
+export function buildTrendData(
+  sessions: readonly PlaytestSession[]
+): TrendPoint[] {
   const days: Record<string, { wins: number; total: number }> = {};
 
   for (const session of sessions) {
