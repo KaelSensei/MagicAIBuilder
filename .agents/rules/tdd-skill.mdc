@@ -2,12 +2,25 @@
 alwaysApply: true
 ---
 
-# TDD Skill
+# TDD Skill — Michael Azerhad's AI-assisted TDD model
 
 TDD follows Kent Beck's short feedback loop. With an AI agent, the Green step is
 more deliberate: do not ask for intentionally dirty code and plan a cleanup pass.
 Ask for the smallest production-quality implementation that satisfies the test,
 then reserve deeper design changes for a separate refining refactor.
+
+The project follows the short TDD loop described in
+`docs/engineering/tdd-with-ai.md`: **Red -> Super Green -> Refining
+Refactoring**. This is still TDD, not "write code first and add tests
+afterwards".
+
+Keep two axes independent:
+
+- **Code quality:** naming, boundaries, placement, cohesion and readability.
+- **Behavioral progress:** the smallest behavior demanded by the current test.
+
+Super Green improves the first axis immediately. It must not skip the second
+axis or implement the imagined final architecture.
 
 ## Cycle: Red -> Super Green -> Refining Refactoring
 
@@ -16,6 +29,7 @@ then reserve deeper design changes for a separate refining refactor.
 1. State one observable behavior and one reason it matters.
 2. Add the smallest deterministic test that expresses that behavior.
 3. Run that focused test and confirm it fails for the expected reason.
+4. For a bug, keep the failing test as the regression contract.
 
 The test is the scope boundary. Do not add future enum values, factories,
 interfaces, abstractions, or error cases that no current test requires.
@@ -32,7 +46,8 @@ The implementation should already be production-clean in its local context:
 
 Super Green does not mean advanced design or skipping the TPP. Progress behavior
 in small steps: constant -> scalar -> invariant -> conditional -> loop. Clean
-code and behavioral complexity are separate axes.
+code and behavioral complexity are separate axes. Do not add future enum values,
+factories or interfaces until a red test requires them.
 
 ### 3. Refining Refactoring
 
@@ -44,21 +59,26 @@ was deliberately written badly.
 
 ## Test Boundary
 
-Prefer sociable tests at the stable public boundary: a use case, route handler,
-store action, or component behavior with real in-process collaborators. Verify
-observable outcomes rather than private calls or implementation details.
+Prefer **sociable unit tests** at the stable public boundary: a use case, route
+handler, store action, or component behavior with real in-process collaborators.
+Verify observable outcomes rather than private calls or implementation details.
+The collaborator graph may evolve without rewriting tests when the boundary and
+behavior remain stable.
 
 Use solitary tests for pure algorithms, parsers, and small domain policies where
 isolating a collaborator improves clarity or speed. Mock external systems only
-at their boundary, never internal classes merely to make a test pass.
+at their boundary, never internal classes merely to make a test pass. A mock is
+not a substitute for a missing behavior assertion.
 
 ## AI Guardrails
 
 - Reproduce every bug with a failing regression test before changing production code.
+- Never start implementation before the focused Red test has been observed.
 - Ask for one increment at a time; stop when the requested behavior and regressions pass.
 - Never rewrite a test to match an implementation unless the requirement changed.
 - Do not mix feature work and a broad refactor in the same cycle or commit.
 - If the next design step is not required by a red test, record it as follow-up work.
+- Do not call a passing test "TDD" when the Red step was skipped or hidden.
 
 ## Coverage And Verification
 
@@ -66,6 +86,10 @@ Cover the happy path, relevant edge cases, and failure behavior. Run the focused
 test first, then the full unit suite. Run E2E when the change crosses a real user
 journey or integration boundary; if the environment is not ready, document the
 reason instead of weakening unit tests.
+
+Every PR description must make the cycle auditable by naming the behavior and
+focused test, the observed Red failure, the Super Green implementation, and the
+verification result. A separate refining refactor must be identified as such.
 
 ## Sources
 
