@@ -2,6 +2,16 @@
 
 These rules apply to ALL code written in this project. Read `docs/references/typescript-patterns.md` before any refactoring session or when writing complex logic.
 
+## TDD Contract
+
+Follow [`docs/engineering/tdd-with-ai.md`](docs/engineering/tdd-with-ai.md) and
+[`.agents/rules/tdd-skill.mdc`](.agents/rules/tdd-skill.mdc):
+**Red -> Super Green -> Refining Refactoring**. First express one observable
+behavior in a focused test and observe the expected failure. Then implement the
+smallest production-quality behavior required by that test. Refactor only after
+the focused and regression tests are green. Prefer sociable tests at stable
+public boundaries; reserve solitary tests for pure algorithms and policies.
+
 ## Language & Runtime
 
 - TypeScript strict mode (`"strict": true`). Zero `any` — use `unknown` + type guards instead.

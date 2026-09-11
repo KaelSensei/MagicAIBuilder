@@ -15,6 +15,16 @@ Stack: Next.js 15 (App Router) · React 19 · TypeScript strict · Prisma · Zus
 
 Skills own the coding standards — no `any`/`as`/`!`, exhaustive `never` guards, discriminated unions, `readonly` by default, single-pass algorithms, Map/Set for lookups, memoization, fine-grained Zustand selectors, serialized async, error boundaries, file-size limits, naming conventions, JSDoc on exports, etc. **Do not duplicate those rules in this file.** If a rule is missing from a skill, add it to the skill, not here.
 
+### TDD contract
+
+The authoritative method is [`docs/engineering/tdd-with-ai.md`](docs/engineering/tdd-with-ai.md)
+and [`.agents/rules/tdd-skill.mdc`](.agents/rules/tdd-skill.mdc):
+**Red -> Super Green -> Refining Refactoring**. Prefer sociable tests at stable
+behavioral boundaries; use solitary tests for pure policies and algorithms.
+Super Green means production-quality structure now, not speculative final
+architecture. A PR must record the focused Red failure and the verification
+performed after implementation.
+
 ## Project-specific rules (not covered by any skill)
 
 ### Branch flow — dev → staging → main
