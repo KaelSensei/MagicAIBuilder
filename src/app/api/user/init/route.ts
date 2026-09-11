@@ -28,8 +28,12 @@ export async function GET() {
       }),
     ]);
 
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     return NextResponse.json({
-      onboardingDone: user?.onboardingDone ?? false,
+      onboardingDone: user.onboardingDone,
       collection,
     });
   } catch (error) {
