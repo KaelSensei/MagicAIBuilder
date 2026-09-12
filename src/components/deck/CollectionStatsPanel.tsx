@@ -18,7 +18,6 @@ import { cn } from "@/components/ui/utils";
 import { useCollectionStore } from "@/lib/collection/store";
 import {
   buildShoppingList,
-  computeCollectionStats,
   summarizeDeckCollection,
 } from "@/lib/collection/shopping-list";
 import { ShoppingListModal } from "./ShoppingListModal";
@@ -48,14 +47,6 @@ export function CollectionStatsPanel({
   const updateQuantity = useCollectionStore((s) => s.updateQuantity);
   const isSyncing = useCollectionStore((s) => s.isSyncing);
 
-  const ownedScryfallIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const scryfallId of Object.keys(collectionCards)) ids.add(scryfallId);
-    for (const scryfallId of Object.keys(collectionCardsFoil))
-      ids.add(scryfallId);
-    return ids;
-  }, [collectionCards, collectionCardsFoil]);
-
   const collectionQuantities = useMemo(() => {
     const quantities: Record<string, number> = {};
     for (const [scryfallId, card] of Object.entries(collectionCards)) {
@@ -71,17 +62,6 @@ export function CollectionStatsPanel({
     () => summarizeDeckCollection(deck.cards, deck.commander, deck.partner, collectionQuantities),
     [deck.cards, deck.commander, deck.partner, collectionQuantities]
   );
-  const stats = useMemo(
-    () =>
-      computeCollectionStats(
-        deck.cards,
-        deck.commander,
-        deck.partner,
-        ownedScryfallIds
-      ),
-    [deck.cards, deck.commander, deck.partner, ownedScryfallIds]
-  );
-
   const pct = Math.round(quantitySummary.completionRatio * 100);
 
   /** Gather non-basic deck cards with only the quantity still missing. */
@@ -184,7 +164,7 @@ export function CollectionStatsPanel({
             Collection
           </span>
           <span className="text-xs text-[var(--text-secondary)]">
-            {stats.ownedCount}/{stats.totalCount}
+            {quantitySummary.ownedQuantity}/{quantitySummary.totalQuantity}
           </span>
         </button>
 
@@ -227,13 +207,13 @@ export function CollectionStatsPanel({
                 </div>
 
                 {/* Missing cost */}
-                {stats.missingCount > 0 && (
+                {quantitySummary.missingQuantity > 0 && (
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-[var(--text-secondary)]">
                       Missing cards cost
                     </span>
                     <span className="font-medium text-[var(--text-primary)]">
-                      ~{format.number(stats.missingCost, {
+                      ~{format.number(quantitySummary.missingCost, {
                         style: "currency",
                         currency: "USD",
                       })}
@@ -250,20 +230,20 @@ export function CollectionStatsPanel({
                 )}
 
                 {/* Shopping list button */}
-                {stats.missingCount > 0 && (
+                {quantitySummary.missingQuantity > 0 && (
                   <button
                     type="button"
                     onClick={() => setShowShoppingList(true)}
                     className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg border border-[var(--accent)]/50 text-[var(--accent-text)] text-xs font-medium hover:bg-[var(--accent)]/10 transition-colors"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
-                    Shopping List ({stats.missingCount} cards)
+                    Shopping List ({quantitySummary.missingQuantity} cards)
                   </button>
                 )}
 
                 {/* Mark all + Reset */}
                 <div className="flex gap-2">
-                  {stats.missingCount > 0 && (
+                  {quantitySummary.missingQuantity > 0 && (
                     <button
                       type="button"
                       onClick={handleMarkAllOwned}
@@ -274,7 +254,7 @@ export function CollectionStatsPanel({
                       Mark all owned
                     </button>
                   )}
-                  {stats.ownedCount > 0 && (
+                  {quantitySummary.ownedQuantity > 0 && (
                     <button
                       type="button"
                       onClick={handleResetCollection}
