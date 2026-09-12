@@ -145,7 +145,7 @@ export function buildShoppingList(
   deckCards: readonly DeckCard[],
   commander: DeckCard | null,
   partner: DeckCard | null,
-  ownedScryfallIds: ReadonlySet<string>,
+  ownedQuantities: Readonly<Record<string, number>>,
   options?: ShoppingListOptions
 ): ShoppingListItem[] {
   const includeBasics = options?.includeBasics ?? false;
@@ -154,13 +154,18 @@ export function buildShoppingList(
   const missing: ShoppingListItem[] = [];
 
   for (const card of allCards) {
-    if (ownedScryfallIds.has(card.scryfallId ?? card.id)) continue;
     if (!includeBasics && isBasicLand(card)) continue;
+    const scryfallId = card.scryfallId ?? card.id;
+    const missingQuantity = Math.max(
+      0,
+      card.quantity - Math.max(0, ownedQuantities[scryfallId] ?? 0)
+    );
+    if (missingQuantity === 0) continue;
 
     missing.push({
-      scryfallId: card.scryfallId ?? card.id,
+      scryfallId,
       name: card.name,
-      quantity: card.quantity,
+      quantity: missingQuantity,
       price: card.price,
     });
   }
