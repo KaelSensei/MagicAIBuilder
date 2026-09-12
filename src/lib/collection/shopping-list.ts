@@ -228,11 +228,15 @@ export function formatShoppingListText(items: readonly ShoppingListItem[]): stri
   return items.map((item) => `${item.quantity}× ${item.name}`).join("\n");
 }
 
+function formatCsvText(value: string): string {
+  return `"${value.replaceAll('"', '""')}"`;
+}
+
 /** Format shopping list as CSV for download */
 export function formatShoppingListCsv(items: readonly ShoppingListItem[]): string {
   const header = "Name,Quantity,Price (USD)";
   const rows = items.map(
-    (item) => `"${item.name}",${item.quantity},${item.price ?? ""}`
+    (item) => `${formatCsvText(item.name)},${item.quantity},${item.price ?? ""}`
   );
   return [header, ...rows].join("\n");
 }
@@ -261,7 +265,7 @@ export function formatCollectionCsv(cards: readonly CollectionExportCard[]): str
   const header = "Name,Quantity,Foil,Condition,Price (USD)";
   const rows = cards.map(
     (c) =>
-      `"${c.name}",${c.quantity},${c.foil ? "Yes" : "No"},${c.condition ?? ""},${c.price ?? ""}`
+      `${formatCsvText(c.name)},${c.quantity},${c.foil ? "Yes" : "No"},${c.condition ?? ""},${c.price ?? ""}`
   );
   return [header, ...rows].join("\n");
 }

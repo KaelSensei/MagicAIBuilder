@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildShoppingList,
   formatShoppingListText,
+  formatShoppingListCsv,
   computeCollectionStats,
   formatCollectionText,
   formatCollectionCsv,
@@ -213,6 +214,16 @@ describe("formatShoppingListText", () => {
   });
 });
 
+describe("formatShoppingListCsv", () => {
+  it("escapes quotes inside card names", () => {
+    const csv = formatShoppingListCsv([
+      { name: 'Jace, "Unraveler"', quantity: 1, price: 2, scryfallId: "jace" },
+    ]);
+
+    expect(csv.split("\n")[1]).toBe('"Jace, ""Unraveler""",1,2');
+  });
+});
+
 describe("formatCollectionText", () => {
   it("formats as quantity + name per line", () => {
     const cards = [
@@ -238,6 +249,14 @@ describe("formatCollectionText", () => {
 });
 
 describe("formatCollectionCsv", () => {
+  it("escapes quotes inside card names", () => {
+    const csv = formatCollectionCsv([
+      { name: 'Jace, "Unraveler"', quantity: 1, foil: false, condition: "NM", price: 2 },
+    ]);
+
+    expect(csv.split("\n")[1]).toBe('"Jace, ""Unraveler""",1,No,NM,2');
+  });
+
   it("produces valid CSV with header row", () => {
     const cards = [
       { name: "Sol Ring", quantity: 1, foil: false, condition: "NM", price: 1.5 },
