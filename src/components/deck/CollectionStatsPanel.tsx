@@ -23,6 +23,7 @@ import {
 } from "@/lib/collection/shopping-list";
 import { ShoppingListModal } from "./ShoppingListModal";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { planCollectionRemoval } from "@/lib/collection/removal-plan";
 
 interface CollectionStatsPanelProps {
   readonly deck: Deck;
@@ -44,6 +45,7 @@ export function CollectionStatsPanel({
   const removeFromCollection = useCollectionStore(
     (s) => s.removeFromCollection
   );
+  const updateQuantity = useCollectionStore((s) => s.updateQuantity);
   const isSyncing = useCollectionStore((s) => s.isSyncing);
 
   const ownedScryfallIds = useMemo(() => {
@@ -126,14 +128,21 @@ export function CollectionStatsPanel({
     for (const c of deck.cards) {
       if (c.zone === "main") allCards.push(c);
     }
+    const requiredQuantities: Record<string, number> = {};
     for (const card of allCards) {
-      const sid = card.scryfallId ?? card.id;
-      const normal = collectionCards[sid];
-      const foil = collectionCardsFoil[sid];
-      if (normal) await removeFromCollection(normal.id);
-      if (foil) await removeFromCollection(foil.id);
+      const scryfallId = card.scryfallId ?? card.id;
+      requiredQuantities[scryfallId] =
+        (requiredQuantities[scryfallId] ?? 0) + card.quantity;
     }
-  }, [deck, collectionCards, collectionCardsFoil, removeFromCollection]);
+    for (const update of planCollectionRemoval(
+      requiredQuantities,
+      collectionCards,
+      collectionCardsFoil
+    )) {
+      if (update.nextQuantity === 0) await removeFromCollection(update.id);
+      else await updateQuantity(update.id, update.nextQuantity);
+    }
+  }, [deck, collectionCards, collectionCardsFoil, removeFromCollection, updateQuantity]);
 
   if (!session?.user) {
     return (
