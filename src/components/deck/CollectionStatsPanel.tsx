@@ -16,7 +16,11 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import { useCollectionStore } from "@/lib/collection/store";
-import { computeCollectionStats, summarizeDeckCollection } from "@/lib/collection/shopping-list";
+import {
+  buildShoppingList,
+  computeCollectionStats,
+  summarizeDeckCollection,
+} from "@/lib/collection/shopping-list";
 import { ShoppingListModal } from "./ShoppingListModal";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 
@@ -78,7 +82,7 @@ export function CollectionStatsPanel({
 
   const pct = Math.round(quantitySummary.completionRatio * 100);
 
-  /** Gather all unique non-basic deck cards not yet in collection */
+  /** Gather non-basic deck cards with only the quantity still missing. */
   const getMissingCards = useCallback((): DeckCard[] => {
     const allCards: DeckCard[] = [];
     if (deck.commander) allCards.push(deck.commander);
@@ -86,12 +90,19 @@ export function CollectionStatsPanel({
     for (const c of deck.cards) {
       if (c.zone === "main") allCards.push(c);
     }
-    return allCards.filter(
-      (c) =>
-        !c.typeLine.toLowerCase().includes("basic land") &&
-        !ownedScryfallIds.has(c.scryfallId ?? c.id)
+    const missingById = new Map(
+      buildShoppingList(
+        deck.cards,
+        deck.commander,
+        deck.partner,
+        collectionQuantities
+      ).map((item) => [item.scryfallId, item.quantity])
     );
-  }, [deck, ownedScryfallIds]);
+    return allCards.flatMap((card) => {
+      const quantity = missingById.get(card.scryfallId ?? card.id);
+      return quantity ? [{ ...card, quantity }] : [];
+    });
+  }, [deck, collectionQuantities]);
 
   /** Mark all deck cards as owned */
   const handleMarkAllOwned = useCallback(async () => {
@@ -100,7 +111,7 @@ export function CollectionStatsPanel({
     const inputs = missing.map((c) => ({
       scryfallId: c.scryfallId ?? c.id,
       name: c.name,
-      quantity: 1,
+      quantity: c.quantity,
       price: c.price,
       imageUri: c.imageUri,
     }));
