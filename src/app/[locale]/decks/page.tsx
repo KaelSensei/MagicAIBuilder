@@ -15,6 +15,7 @@ import { useToastStore } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
+import { DeckComparisonPanel } from "@/components/deck/DeckComparisonPanel";
 import {
   getStoredDecksViewMode,
   sortDecks,
@@ -189,6 +190,10 @@ export default function DecksPage() {
             isCreating={isCreating}
           />
         </div>
+
+        {!isLoading && !hasLoadFailed && (
+          <DeckComparisonPanel decks={sortedDeckList} />
+        )}
 
         {isLoading && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
