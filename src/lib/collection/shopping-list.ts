@@ -40,6 +40,7 @@ export interface DeckCollectionSummary {
   readonly ownedQuantity: number;
   readonly proxyQuantity: number;
   readonly missingQuantity: number;
+  readonly missingCost: number;
   readonly completionRatio: number;
 }
 
@@ -120,6 +121,7 @@ export function summarizeDeckCollection(
   let ownedQuantity = 0;
   let proxyQuantity = 0;
   let missingQuantity = 0;
+  let missingCost = 0;
 
   for (const item of statuses) {
     totalQuantity += item.quantity;
@@ -128,6 +130,7 @@ export function summarizeDeckCollection(
     ownedQuantity += physical;
     proxyQuantity += proxy;
     missingQuantity += item.quantity - physical - proxy;
+    missingCost += (item.price ?? 0) * (item.quantity - physical - proxy);
   }
 
   return {
@@ -135,6 +138,7 @@ export function summarizeDeckCollection(
     ownedQuantity,
     proxyQuantity,
     missingQuantity,
+    missingCost: Math.round(missingCost * 100) / 100,
     completionRatio: totalQuantity > 0 ? (ownedQuantity + proxyQuantity) / totalQuantity : 0,
   };
 }

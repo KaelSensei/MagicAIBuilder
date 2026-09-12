@@ -39,8 +39,17 @@ describe("summarizeDeckCollection", () => {
       ownedQuantity: 2,
       proxyQuantity: 1,
       missingQuantity: 3,
+      missingCost: 4.5,
       completionRatio: 0.5,
     });
+  });
+
+  it("prices only the quantity still missing", () => {
+    const cards = [makeCard({ scryfallId: "card", quantity: 4, price: 10 })];
+
+    expect(
+      summarizeDeckCollection(cards, null, null, { card: 1 }).missingCost
+    ).toBe(30);
   });
 });
 
