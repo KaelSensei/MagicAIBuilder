@@ -1,8 +1,8 @@
-# MagicAIBuilder ✦
+# MagicAIBuilder
 
 ![Banner](assets/banner.png)
 
-> A beautiful, intelligent Commander deck builder powered by Scryfall, bracket scoring, and AI suggestions.
+> Build, analyze, test, and improve Magic: The Gathering decks with reliable card data and focused AI assistance.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
@@ -20,35 +20,37 @@
 
 ## Features
 
-- 🔍 **Scryfall search** — full syntax support, commander mode, By Set, By Color
-- 🎨 **Card printing selector** — choose your preferred art before adding or swap it anytime from the deck list
-- 🃏 **Drag & drop deck builder** — list and grid views, categorized zones; commander pinned first in grid view
-- 📊 **Live bracket scoring** — 6-dimension analysis (ramp, draw, removal, tutors, win speed, CMC)
-- 📐 **Format-specific stats** — curve, threat density and interaction ratio benchmarked per format for non-Commander decks
-- ⚡ **Game Changers detection** — auto-warns when you cross bracket thresholds
-- 🧭 **Mana alignment & turn-1 odds** — pips asked vs sources produced, per-colour land targets, exact hypergeometric odds that the opening seven holds a land and a one-drop
-- 🤖 **AI suggestions & deck builder** — Anthropic Claude or OpenAI GPT analyzes your deck and recommends cards + cuts; the builder drafts a full list from 10 archetype templates with budget constraints and per-card reasoning
-- 🤝 **Partner pairing** — Partner, Partner With, Friends Forever, Background, Doctor's Companion, Character Select (TMNT) — filtered search per pairing type
-- 📦 **Companion (Ikoria)** — dedicated slot + **Companion** search mode, rule hints, color/mechanical warnings (not the same as Sideboard pile cards)
-- 📤 **Multi-format export** — Moxfield, MTG Arena, MTGO (.dek), TappedOut, Archidekt (with category tags), Manabox, MTGGoldfish, EDHRec deck-check, Plain Text
-- 📥 **Import from URL or text** — paste a Moxfield, Archidekt, TappedOut, MTGTop8 or MTGDecks.net link (auto-detected, rate-limited, honours `robots.txt`) or a Moxfield-style text list
-- 🖨️ **Proxy sheets** — print-ready 63×88 mm pages (3×3 A4/Letter or 2×2), with card art or text-only boxes; printed in the viewer's language
-- 📈 **Commander meta panel** — EDHRec's top cards for your commander with one-click add, plus recent MTGTop8 tournament decks with player, event, placement and date
-- 👑 **Set as commander** — crown icon on any deck card promotes it to commander slot
-- 🔢 **Card quantities** — +/- buttons for basic lands and Commander-legal multiples (auto-detected via oracle text)
-- 📝 **Deck notes & tags** — per-card notes, deck description, colored tag pills
-- 📸 **Deck snapshots** — save and restore deck states at any point
-- 🔗 **Deck sharing** — generate a shareable read-only link
-- 🌍 **Community discovery** — public deck listing per commander at `/commanders/<slug>/decks`, ranked by up/down votes, with star ratings, reviews, threaded comments and user follows
-- 🎮 **Playtest mode** — opening hand and London mulligan, turn phases (Untap → End), life tracking with history and undo, and battlefield / graveyard / exile zones with tap and counters; starting life follows the deck format
-- 📒 **Playtest analytics** — record how each goldfish run went (result, turns, mulligans, opponent strength) and read win rate, mulligan distribution and matchup splits per deck
-- ⌨️ **Keyboard shortcuts** — power-user navigation with undo stack
-- 🎴 **Multi-format support** — Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, Pauper with correct rules per format
-- 📦 **Collection tracking** — mark owned cards, shopping list with missing cost, CSV export, bulk "Mark all owned"
-- ✨ **3D Spellbook landing** — immersive Three.js scene for unauthenticated visitors (mobile/a11y fallback)
-- 🌍 **English & French** — full UI in both, with a header language switcher; card names, rules text and images follow the viewer's language where a Scryfall printing exists (deck rows, tooltips, playtest, proxies, Game Changers page)
-- 🌙 **Dark / Light theme** — persisted across sessions
-- 🔒 **Security hardened** — Zod validation, input sanitization, no client-side secrets, CSP / HSTS / COOP headers, rate-limited auth and AI routes
+### Build and organize
+
+- Search the complete Scryfall catalog with syntax, set, color, commander, partner, and companion filters.
+- Edit decks in list or grid view with drag and drop, categorized zones, quantities, notes, tags, snapshots, and keyboard shortcuts.
+- Choose a preferred printing before adding a card or replace its artwork later.
+- Track owned cards, missing-card costs, and shopping lists; import from text or popular deck-building services.
+
+### Analyze and improve
+
+- Evaluate Commander brackets across ramp, draw, removal, tutors, win speed, and mana value.
+- Detect Game Changers, color-identity violations, mana-source gaps, turn-one probabilities, and format-specific statistical weaknesses.
+- Compare a commander against EDHRec recommendations and recent tournament results.
+- Request card and cut suggestions from Anthropic Claude or OpenAI, with budget and archetype constraints.
+
+### Playtest and share
+
+- Simulate opening hands, London mulligans, turn phases, life totals, counters, and battlefield, graveyard, and exile zones.
+- Record playtest outcomes and compare win rate, mulligans, matchup strength, and deck snapshots.
+- Publish read-only deck links and discover community decks by commander, rating, review, and vote.
+
+### Import, export, and print
+
+- Import lists from Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks.net, or plain text.
+- Export to Moxfield, Arena, MTGO, TappedOut, Archidekt, Manabox, MTGGoldfish, EDHRec, or plain text.
+- Generate localized, print-ready proxy sheets in A4 or Letter layouts.
+
+### Formats and accessibility
+
+- Build for Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage, and Pauper.
+- Use the complete interface in English or French, including localized card data when available.
+- Switch between persistent light and dark themes; reduced-motion and mobile fallbacks support the 3D landing experience.
 
 ## Stack
 
@@ -218,9 +220,9 @@ Key points:
 - Login, signup, AI and import routes are rate-limited; JWT sessions expire after 7 days
 - Commander Spellbook and card images proxied to avoid CORS and SSRF vectors (host allowlist, `image/*` only, 5 MB cap)
 
-## Quality Gate 🧪
+## Quality Gate
 
-> Maintained by Marco — The Bug Whisperer. See [`docs/engineering/quality-gate.md`](docs/engineering/quality-gate.md) for full details and history.
+See [`docs/engineering/quality-gate.md`](docs/engineering/quality-gate.md) for thresholds, enforcement, and history.
 
 | Metric               | Baseline | Minimum |
 | -------------------- | -------- | ------- |
@@ -362,7 +364,7 @@ done
 
 Coding standards are defined in `CLAUDE.md` (root) and automatically loaded by Claude Code every session.
 
-## AI Assistants 👾
+## AI Assistants
 
 MagicAIBuilder was conceived, designed, and developed by **Kael**, with three AI assistants playing different roles in the story:
 
