@@ -143,7 +143,7 @@ export function CollectionStatsPanel({
       {showShoppingList && (
         <ShoppingListModal
           deck={deck}
-          ownedScryfallIds={ownedScryfallIds}
+          ownedQuantities={collectionQuantities}
           onClose={() => setShowShoppingList(false)}
         />
       )}

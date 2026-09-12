@@ -45,10 +45,19 @@ describe("summarizeDeckCollection", () => {
 });
 
 describe("buildShoppingList", () => {
+  it("buys only the quantity not already owned", () => {
+    const cards = [makeCard({ scryfallId: "a", name: "Persistent Petitioners", quantity: 4 })];
+
+    const list = buildShoppingList(cards, null, null, { a: 1 });
+
+    expect(list).toEqual([
+      expect.objectContaining({ name: "Persistent Petitioners", quantity: 3 }),
+    ]);
+  });
+
   it("returns all cards as missing when collection is empty", () => {
     const cards = [makeCard({ scryfallId: "a", name: "Sol Ring", price: 2 })];
-    const ownedIds = new Set<string>();
-    const list = buildShoppingList(cards, null, null, ownedIds);
+    const list = buildShoppingList(cards, null, null, {});
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe("Sol Ring");
   });
@@ -58,28 +67,26 @@ describe("buildShoppingList", () => {
       makeCard({ scryfallId: "a", name: "Sol Ring" }),
       makeCard({ scryfallId: "b", name: "Arcane Signet" }),
     ];
-    const ownedIds = new Set(["a"]);
-    const list = buildShoppingList(cards, null, null, ownedIds);
+    const list = buildShoppingList(cards, null, null, { a: 1 });
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe("Arcane Signet");
   });
 
   it("includes commander if missing", () => {
     const commander = makeCard({ scryfallId: "cmd", name: "Atraxa" });
-    const ownedIds = new Set<string>();
-    const list = buildShoppingList([], commander, null, ownedIds);
+    const list = buildShoppingList([], commander, null, {});
     expect(list.some((c) => c.name === "Atraxa")).toBe(true);
   });
 
   it("excludes basic lands by default", () => {
     const cards = [BASIC_LAND];
-    const list = buildShoppingList(cards, null, null, new Set());
+    const list = buildShoppingList(cards, null, null, {});
     expect(list).toHaveLength(0);
   });
 
   it("includes basic lands when includeBasics is true", () => {
     const cards = [BASIC_LAND];
-    const list = buildShoppingList(cards, null, null, new Set(), { includeBasics: true });
+    const list = buildShoppingList(cards, null, null, {}, { includeBasics: true });
     expect(list).toHaveLength(1);
   });
 
@@ -89,7 +96,7 @@ describe("buildShoppingList", () => {
       makeCard({ scryfallId: "b", name: "Expensive", price: 50 }),
       makeCard({ scryfallId: "c", name: "Medium", price: 10 }),
     ];
-    const list = buildShoppingList(cards, null, null, new Set());
+    const list = buildShoppingList(cards, null, null, {});
     expect(list[0].name).toBe("Expensive");
     expect(list[1].name).toBe("Medium");
     expect(list[2].name).toBe("Cheap");
@@ -100,7 +107,7 @@ describe("buildShoppingList", () => {
       makeCard({ scryfallId: "a", name: "No Price", price: null }),
       makeCard({ scryfallId: "b", name: "Has Price", price: 5 }),
     ];
-    const list = buildShoppingList(cards, null, null, new Set());
+    const list = buildShoppingList(cards, null, null, {});
     expect(list[0].name).toBe("Has Price"); // null price sorts last
     expect(list[1].name).toBe("No Price");
   });
