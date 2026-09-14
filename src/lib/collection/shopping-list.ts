@@ -223,10 +223,17 @@ export function computeCollectionStats(
 
 // ─── Text export ──────────────────────────────────────────────────────────────
 
-/** Format shopping list as copyable text: "1× Sol Ring\n4× Island" */
+/** Format a shopping list with acquisition costs for copying to another tool. */
 export function formatShoppingListText(items: readonly ShoppingListItem[]): string {
   if (items.length === 0) return "";
-  return items.map((item) => `${item.quantity}× ${item.name}`).join("\n");
+  return items
+    .map((item) => {
+      const linePrice = item.price === null
+        ? "?"
+        : (item.price * item.quantity).toFixed(2);
+      return `${item.quantity}× ${item.name} | USD ${linePrice}`;
+    })
+    .join("\n");
 }
 
 function formatCsvText(value: string): string {
