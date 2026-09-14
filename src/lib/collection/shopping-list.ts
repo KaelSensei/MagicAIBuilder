@@ -174,12 +174,13 @@ export function buildShoppingList(
     });
   }
 
-  // Sort: priced cards descending, then null-price cards at the end
+  // Prioritize the largest acquisition costs, then keep equal totals stable by name.
   missing.sort((a, b) => {
-    if (a.price === null && b.price === null) return 0;
+    if (a.price === null && b.price === null) return a.name.localeCompare(b.name);
     if (a.price === null) return 1;
     if (b.price === null) return -1;
-    return b.price - a.price;
+    const totalDifference = b.price * b.quantity - a.price * a.quantity;
+    return totalDifference || a.name.localeCompare(b.name);
   });
 
   return missing;
