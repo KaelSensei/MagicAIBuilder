@@ -226,12 +226,23 @@ describe("formatShoppingListText", () => {
 });
 
 describe("formatShoppingListCsv", () => {
-  it("escapes quotes inside card names", () => {
+  it("exports escaped names with unit and line prices", () => {
     const csv = formatShoppingListCsv([
-      { name: 'Jace, "Unraveler"', quantity: 1, price: 2, scryfallId: "jace" },
+      { name: 'Jace, "Unraveler"', quantity: 3, price: 2, scryfallId: "jace" },
     ]);
 
-    expect(csv.split("\n")[1]).toBe('"Jace, ""Unraveler""",1,2');
+    expect(csv.split("\n")).toEqual([
+      "Name,Quantity,Price (USD),Total (USD)",
+      '"Jace, ""Unraveler""",3,2,6',
+    ]);
+  });
+
+  it("leaves unit and line prices empty when price is unknown", () => {
+    const csv = formatShoppingListCsv([
+      { name: "Unknown", quantity: 2, price: null, scryfallId: "unknown" },
+    ]);
+
+    expect(csv.split("\n")[1]).toBe('"Unknown",2,,');
   });
 });
 
