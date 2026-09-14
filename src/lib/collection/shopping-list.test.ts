@@ -112,6 +112,17 @@ describe("buildShoppingList", () => {
     expect(list[2].name).toBe("Cheap");
   });
 
+  it("prioritizes the highest total acquisition cost", () => {
+    const cards = [
+      makeCard({ scryfallId: "single", name: "Single", price: 10, quantity: 1 }),
+      makeCard({ scryfallId: "playset", name: "Playset", price: 3, quantity: 4 }),
+    ];
+
+    const list = buildShoppingList(cards, null, null, {});
+
+    expect(list.map((item) => item.name)).toEqual(["Playset", "Single"]);
+  });
+
   it("handles null prices", () => {
     const cards = [
       makeCard({ scryfallId: "a", name: "No Price", price: null }),
