@@ -235,10 +235,11 @@ function formatCsvText(value: string): string {
 
 /** Format shopping list as CSV for download */
 export function formatShoppingListCsv(items: readonly ShoppingListItem[]): string {
-  const header = "Name,Quantity,Price (USD)";
-  const rows = items.map(
-    (item) => `${formatCsvText(item.name)},${item.quantity},${item.price ?? ""}`
-  );
+  const header = "Name,Quantity,Price (USD),Total (USD)";
+  const rows = items.map((item) => {
+    const lineTotal = item.price === null ? "" : item.price * item.quantity;
+    return `${formatCsvText(item.name)},${item.quantity},${item.price ?? ""},${lineTotal}`;
+  });
   return [header, ...rows].join("\n");
 }
 
