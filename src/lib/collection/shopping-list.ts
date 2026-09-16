@@ -226,14 +226,25 @@ export function computeCollectionStats(
 /** Format a shopping list with acquisition costs for copying to another tool. */
 export function formatShoppingListText(items: readonly ShoppingListItem[]): string {
   if (items.length === 0) return "";
-  return items
-    .map((item) => {
-      const linePrice = item.price === null
-        ? "?"
-        : (item.price * item.quantity).toFixed(2);
-      return `${item.quantity}× ${item.name} | USD ${linePrice}`;
-    })
-    .join("\n");
+  const lines: string[] = [];
+  let estimatedTotal = 0;
+  let unpricedQuantity = 0;
+
+  for (const item of items) {
+    if (item.price === null) {
+      unpricedQuantity += item.quantity;
+      lines.push(`${item.quantity}× ${item.name} | USD ?`);
+      continue;
+    }
+
+    const linePrice = item.price * item.quantity;
+    estimatedTotal += linePrice;
+    lines.push(`${item.quantity}× ${item.name} | USD ${linePrice.toFixed(2)}`);
+  }
+
+  lines.push("", `Estimated total | USD ${estimatedTotal.toFixed(2)}`);
+  if (unpricedQuantity > 0) lines.push(`Unpriced cards | ${unpricedQuantity}`);
+  return lines.join("\n");
 }
 
 function formatCsvText(value: string): string {
