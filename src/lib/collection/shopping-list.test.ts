@@ -218,6 +218,7 @@ describe("formatShoppingListText", () => {
     const text = formatShoppingListText(list);
     expect(text).toContain("1× Sol Ring | USD 2.00");
     expect(text).toContain("4× Island | USD 0.40");
+    expect(text).toContain("Estimated total | USD 2.40");
   });
 
   it("keeps cards with unknown prices explicit", () => {
@@ -225,7 +226,9 @@ describe("formatShoppingListText", () => {
       { name: "Unknown", quantity: 2, price: null, scryfallId: "unknown" },
     ]);
 
-    expect(text).toBe("2× Unknown | USD ?");
+    expect(text).toContain("2× Unknown | USD ?");
+    expect(text).toContain("Estimated total | USD 0.00");
+    expect(text).toContain("Unpriced cards | 2");
   });
 
   it("returns empty string for empty list", () => {
