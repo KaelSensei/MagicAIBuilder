@@ -210,14 +210,22 @@ describe("computeCollectionStats", () => {
 });
 
 describe("formatShoppingListText", () => {
-  it("formats as quantity + name per line", () => {
+  it("formats quantity, name and acquisition cost per line", () => {
     const list = [
       { name: "Sol Ring", quantity: 1, price: 2, scryfallId: "a" },
       { name: "Island", quantity: 4, price: 0.1, scryfallId: "b" },
     ];
     const text = formatShoppingListText(list);
-    expect(text).toContain("1× Sol Ring");
-    expect(text).toContain("4× Island");
+    expect(text).toContain("1× Sol Ring | USD 2.00");
+    expect(text).toContain("4× Island | USD 0.40");
+  });
+
+  it("keeps cards with unknown prices explicit", () => {
+    const text = formatShoppingListText([
+      { name: "Unknown", quantity: 2, price: null, scryfallId: "unknown" },
+    ]);
+
+    expect(text).toBe("2× Unknown | USD ?");
   });
 
   it("returns empty string for empty list", () => {
