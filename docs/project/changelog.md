@@ -17,6 +17,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Kept the evidence boundary explicit in the interface: solitaire playtests are user-owned directional evidence, not tournament win rates.
 - Added focused component coverage and preserved message-catalog parity across the two active and eight dormant locales.
 - Added cohort-size disclosure and an early-signal warning below three runs per version. Directional labels now describe slower wins and increased mulligans directly instead of rendering misleading negative improvements.
+- Persisted deterministic cards-seen and additional-draw evidence with each newly recorded playtest session through an additive database migration and validated API contract.
 
 ### 2026-08-23: Release batch #552–#562 — thirty advisories nobody could reach, two limiters that enforced nothing, and dates in the wrong language
 
