@@ -69,6 +69,22 @@ describe("parseSessionInput", () => {
     if (parsed.ok) expect(parsed.value.difficulty).toBeUndefined();
   });
 
+  it("accepts and trims an optional deck snapshot identifier", () => {
+    const parsed = parseSessionInput({
+      result: "win",
+      turns: 8,
+      snapshotId: "  snapshot-1  ",
+    });
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) expect(parsed.value.snapshotId).toBe("snapshot-1");
+  });
+
+  it("rejects an empty or non-text snapshot identifier", () => {
+    expect(parseSessionInput({ result: "win", turns: 8, snapshotId: "  " }).ok).toBe(false);
+    expect(parseSessionInput({ result: "win", turns: 8, snapshotId: 42 }).ok).toBe(false);
+  });
+
   it("trims notes and drops them when they are only whitespace", () => {
     const withNotes = parseSessionInput({ result: "win", turns: 8, notes: "  kept it  " });
     if (withNotes.ok) expect(withNotes.value.notes).toBe("kept it");

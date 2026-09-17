@@ -69,6 +69,7 @@ async function loadSessions(deckId: string, userId: string): Promise<PlaytestSes
     mulliganCount: row.mulliganCount,
     difficulty: (row.difficulty ?? undefined) as PlaytestSession["difficulty"],
     notes: row.notes ?? undefined,
+    snapshotId: row.snapshotId ?? undefined,
     createdAt: row.createdAt,
   }));
 }
@@ -114,6 +115,16 @@ export async function POST(request: Request, { params }: Params) {
     const deck = await findOwnedDeck(id, userId);
     if (!deck) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
+
+    if (parsed.value.snapshotId) {
+      const snapshot = await prisma.deckSnapshot.findFirst({
+        where: { id: parsed.value.snapshotId, deckId: id },
+        select: { id: true },
+      });
+      if (!snapshot) {
+        return NextResponse.json({ error: "Snapshot not found for this deck" }, { status: 400 });
+      }
     }
 
     // No upsert: every run is its own row, which is the whole point of a trend.
