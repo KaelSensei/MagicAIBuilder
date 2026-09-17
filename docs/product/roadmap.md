@@ -317,11 +317,12 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - Session recording, result history, mulligan data and opponent-strength labels.
 - Player-authored evidence notes and explicit self-reported methodology.
 - Snapshot-linked sessions, a deterministic comparison engine, a private comparison API and an in-product snapshot evidence comparison with cohort-size disclosure and early-signal guidance.
+- Recorded sessions now persist deterministic cards-seen and additional-draw evidence from the goldfish engine for later version analysis.
 
 ### Remaining scope
 
 - [x] Present playtest comparison between deck snapshots in the product UI.
-- [ ] Surface evidence such as mulligans, missing colors, dead opening hands and turn progression.
+- [ ] Surface missing-color and dead-opening-hand evidence alongside the now-persisted mulligan and draw-progression signals.
 - [x] Let the player attach a short evidence note to a result.
 - [ ] Associate a note with a proposed deck change.
 - [ ] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
