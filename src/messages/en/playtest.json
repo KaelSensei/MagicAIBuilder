@@ -101,8 +101,10 @@
     "speed": "Win speed",
     "mulligans": "Mulligans",
     "winRateValue": "{delta, number, ::sign-always maximumFractionDigits-0} pts",
-    "speedValue": "{delta, number, maximumFractionDigits-1} turns faster",
+    "speedValue": "{delta, number, maximumFractionDigits-1} turns {direction, select, faster {faster} other {slower}}",
     "mulliganValue": "{delta, number, maximumFractionDigits-1} {direction, select, fewer {fewer} other {more}} mulligans",
+    "sampleSize": "{before, plural, one {# run} other {# runs}} before · {after, plural, one {# run} other {# runs}} after",
+    "earlySignal": "Early signal — record at least 3 runs per version before drawing conclusions.",
     "methodology": "Directional, self-reported playtest evidence. It is not a tournament win rate."
   },
   "difficultyLabel": "Opponent",
