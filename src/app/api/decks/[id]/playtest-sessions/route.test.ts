@@ -2,8 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockDeckFindUnique, mockSessionFindMany, mockSessionCreate } = vi.hoisted(() => ({
+const { mockDeckFindUnique, mockSnapshotFindFirst, mockSessionFindMany, mockSessionCreate } = vi.hoisted(() => ({
   mockDeckFindUnique: vi.fn(),
+  mockSnapshotFindFirst: vi.fn(),
   mockSessionFindMany: vi.fn(),
   mockSessionCreate: vi.fn(),
 }));
@@ -24,6 +25,7 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     user: { findUnique: mockUserFindUnique },
     deck: { findUnique: mockDeckFindUnique },
+    deckSnapshot: { findFirst: mockSnapshotFindFirst },
     playtestSession: { findMany: mockSessionFindMany, create: mockSessionCreate },
   },
 }));
@@ -67,6 +69,7 @@ function row(overrides: Record<string, unknown> = {}) {
     mulliganCount: 0,
     difficulty: null,
     notes: null,
+    snapshotId: null,
     createdAt: new Date("2026-08-16T10:00:00Z"),
     ...overrides,
   };
@@ -75,6 +78,7 @@ function row(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   mockSessionFindMany.mockResolvedValue([]);
+  mockSnapshotFindFirst.mockResolvedValue(null);
 });
 
 describe("GET /api/decks/[id]/playtest-sessions", () => {
@@ -196,5 +200,40 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
     await POST(postRequest({ result: "loss", turns: 5 }), params());
 
     expect(mockSessionCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it("records the deck snapshot used for the session", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSnapshotFindFirst.mockResolvedValue({ id: "snapshot-1" });
+    mockSessionCreate.mockResolvedValue(row({ snapshotId: "snapshot-1" }));
+
+    const response = await POST(
+      postRequest({ result: "win", turns: 7, snapshotId: "snapshot-1" }),
+      params()
+    );
+
+    expect(response.status).toBe(201);
+    expect(mockSnapshotFindFirst).toHaveBeenCalledWith({
+      where: { id: "snapshot-1", deckId: "deck-1" },
+      select: { id: true },
+    });
+    expect(mockSessionCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ snapshotId: "snapshot-1" }),
+    });
+  });
+
+  it("rejects a snapshot that does not belong to the deck", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSnapshotFindFirst.mockResolvedValue(null);
+
+    const response = await POST(
+      postRequest({ result: "win", turns: 7, snapshotId: "foreign-snapshot" }),
+      params()
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockSessionCreate).not.toHaveBeenCalled();
   });
 });

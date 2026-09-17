@@ -14,6 +14,7 @@ export interface PlaytestSession {
   readonly mulliganCount: number;
   readonly difficulty?: "budget" | "mid-range" | "cedh";
   readonly notes?: string;
+  readonly snapshotId?: string;
   readonly createdAt: Date;
 }
 
