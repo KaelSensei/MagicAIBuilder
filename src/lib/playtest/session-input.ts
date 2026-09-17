@@ -43,6 +43,7 @@ export interface SessionInput {
   readonly mulliganCount: number;
   readonly difficulty?: SessionDifficulty;
   readonly notes?: string;
+  readonly snapshotId?: string;
 }
 
 /** Either a validated value or the reason it was refused. */
@@ -79,7 +80,7 @@ function fail(error: string): ParseResult {
 export function parseSessionInput(payload: unknown): ParseResult {
   if (!isRecord(payload)) return fail("body must be an object");
 
-  const { result, turns, mulliganCount, difficulty, notes } = payload;
+  const { result, turns, mulliganCount, difficulty, notes, snapshotId } = payload;
 
   if (!SESSION_RESULTS.includes(result as SessionResult)) {
     return fail(`result must be one of ${SESSION_RESULTS.join(", ")}`);
@@ -110,6 +111,13 @@ export function parseSessionInput(payload: unknown): ParseResult {
     return fail("notes must be text");
   }
 
+  if (
+    snapshotId !== undefined &&
+    (typeof snapshotId !== "string" || snapshotId.trim().length === 0)
+  ) {
+    return fail("snapshotId must be non-empty text");
+  }
+
   // Whitespace-only notes are the same as none; storing them would put an empty
   // row in the UI that the player cannot tell apart from a real note.
   const trimmed = notes?.trim() ?? "";
@@ -125,6 +133,7 @@ export function parseSessionInput(payload: unknown): ParseResult {
       mulliganCount: mulligans,
       difficulty: difficulty as SessionDifficulty | undefined,
       notes: trimmed === "" ? undefined : trimmed,
+      snapshotId: typeof snapshotId === "string" ? snapshotId.trim() : undefined,
     },
   };
 }

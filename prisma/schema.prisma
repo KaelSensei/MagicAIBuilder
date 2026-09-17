@@ -116,6 +116,7 @@ model DeckSnapshot {
   commander  String?
   cardCount  Int
   createdAt  DateTime @default(now())
+  playtests  PlaytestSession[]
 
   @@index([deckId])
 }
@@ -393,11 +394,14 @@ model PlaytestSession {
   mulliganCount Int      @default(0)
   difficulty    String? // "budget" | "mid-range" | "cedh"; absent means unspecified
   notes         String?
+  snapshotId    String?
+  snapshot      DeckSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
   createdAt     DateTime @default(now())
 
   // No unique constraint: every run is its own row — that is the whole point.
   @@index([deckId])
   @@index([deckId, createdAt])
+  @@index([snapshotId])
 }
 
 /// A directed follow edge between two users.

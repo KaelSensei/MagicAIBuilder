@@ -17,7 +17,7 @@ import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 interface ShoppingListModalProps {
   readonly deck: Deck;
-  readonly ownedScryfallIds: ReadonlySet<string>;
+  readonly ownedQuantities: Readonly<Record<string, number>>;
   readonly onClose: () => void;
 }
 
@@ -33,7 +33,7 @@ function downloadFile(content: string, filename: string, mime: string): void {
 
 export function ShoppingListModal({
   deck,
-  ownedScryfallIds,
+  ownedQuantities,
   onClose,
 }: ShoppingListModalProps) {
   const t = useTranslations("deck");
@@ -50,9 +50,9 @@ export function ShoppingListModal({
         deck.cards,
         deck.commander,
         deck.partner,
-        ownedScryfallIds
+        ownedQuantities
       ),
-    [deck.cards, deck.commander, deck.partner, ownedScryfallIds]
+    [deck.cards, deck.commander, deck.partner, ownedQuantities]
   );
 
   const totalCost = useMemo(
