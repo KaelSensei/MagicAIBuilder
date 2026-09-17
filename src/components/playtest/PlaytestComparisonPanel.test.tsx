@@ -62,7 +62,27 @@ describe("PlaytestComparisonPanel", () => {
     expect(screen.getByText("+50 pts")).toBeDefined();
     expect(screen.getByText("3 turns faster")).toBeDefined();
     expect(screen.getByText("1 fewer mulligans")).toBeDefined();
+    expect(screen.getByText("2 runs before · 2 runs after")).toBeDefined();
+    expect(screen.getByText(/early signal/i)).toBeDefined();
     expect(screen.getByText(/self-reported playtest evidence/i)).toBeDefined();
+  });
+
+  it("describes regressions without negative faster or fewer labels", () => {
+    renderPanel([
+      session("1", "snapshot-a", "win", 4, 0),
+      session("2", "snapshot-b", "win", 7, 2),
+    ]);
+
+    fireEvent.change(screen.getByLabelText("Before version"), {
+      target: { value: "snapshot-a" },
+    });
+    fireEvent.change(screen.getByLabelText("After version"), {
+      target: { value: "snapshot-b" },
+    });
+
+    expect(screen.getByText("3 turns slower")).toBeDefined();
+    expect(screen.getByText("2 more mulligans")).toBeDefined();
+    expect(screen.queryByText(/-3 turns faster/i)).toBeNull();
   });
 
   it("asks for distinct versions instead of comparing a cohort with itself", () => {

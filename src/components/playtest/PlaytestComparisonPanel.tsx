@@ -17,6 +17,8 @@ interface SnapshotCohort {
   readonly sessions: readonly PlaytestSession[];
 }
 
+const MIN_CONFIDENT_COHORT_SIZE = 3;
+
 function buildCohorts(
   sessions: readonly PlaytestSession[]
 ): readonly SnapshotCohort[] {
@@ -121,7 +123,18 @@ export function PlaytestComparisonPanel({
         <p className="mt-2 text-xs text-amber-300">{t("distinct")}</p>
       )}
       {comparison?.hasComparableData && (
-        <div className="mt-3 grid grid-cols-3 gap-2 rounded-md bg-black/20 p-2 text-center">
+        <>
+        <p className="mt-2 text-center text-[10px] text-white/45">
+          {t("sampleSize", {
+            before: comparison.beforeSessions,
+            after: comparison.afterSessions,
+          })}
+        </p>
+        {(comparison.beforeSessions < MIN_CONFIDENT_COHORT_SIZE ||
+          comparison.afterSessions < MIN_CONFIDENT_COHORT_SIZE) && (
+          <p className="mt-1 text-center text-[10px] text-amber-300/80">{t("earlySignal")}</p>
+        )}
+        <div className="mt-2 grid grid-cols-3 gap-2 rounded-md bg-black/20 p-2 text-center">
           <div>
             <strong className="block text-sm text-white">
               {t("winRateValue", { delta: comparison.winRateDelta })}
@@ -130,7 +143,10 @@ export function PlaytestComparisonPanel({
           </div>
           <div>
             <strong className="block text-sm text-white">
-              {t("speedValue", { delta: comparison.winSpeedDelta })}
+              {t("speedValue", {
+                delta: Math.abs(comparison.winSpeedDelta),
+                direction: comparison.winSpeedDelta >= 0 ? "faster" : "slower",
+              })}
             </strong>
             <span className="text-[9px] text-white/40">{t("speed")}</span>
           </div>
@@ -145,6 +161,7 @@ export function PlaytestComparisonPanel({
             <span className="text-[9px] text-white/40">{t("mulligans")}</span>
           </div>
         </div>
+        </>
       )}
       <p className="mt-2 text-[10px] leading-relaxed text-white/35">
         {t("methodology")}
