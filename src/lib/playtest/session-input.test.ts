@@ -85,6 +85,34 @@ describe("parseSessionInput", () => {
     expect(parseSessionInput({ result: "win", turns: 8, snapshotId: 42 }).ok).toBe(false);
   });
 
+  it("accepts deterministic draw evidence", () => {
+    const parsed = parseSessionInput({
+      result: "win",
+      turns: 8,
+      cardsSeen: 15,
+      additionalCardsSeen: 1,
+    });
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.value.cardsSeen).toBe(15);
+      expect(parsed.value.additionalCardsSeen).toBe(1);
+    }
+  });
+
+  it("rejects impossible draw evidence", () => {
+    expect(parseSessionInput({ result: "win", turns: 8, cardsSeen: -1 }).ok).toBe(false);
+    expect(parseSessionInput({ result: "win", turns: 8, cardsSeen: 10.5 }).ok).toBe(false);
+    expect(
+      parseSessionInput({
+        result: "win",
+        turns: 8,
+        cardsSeen: 10,
+        additionalCardsSeen: 11,
+      }).ok,
+    ).toBe(false);
+  });
+
   it("trims notes and drops them when they are only whitespace", () => {
     const withNotes = parseSessionInput({ result: "win", turns: 8, notes: "  kept it  " });
     if (withNotes.ok) expect(withNotes.value.notes).toBe("kept it");

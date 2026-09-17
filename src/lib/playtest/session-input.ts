@@ -44,6 +44,8 @@ export interface SessionInput {
   readonly difficulty?: SessionDifficulty;
   readonly notes?: string;
   readonly snapshotId?: string;
+  readonly cardsSeen?: number;
+  readonly additionalCardsSeen?: number;
 }
 
 /** Either a validated value or the reason it was refused. */
@@ -80,7 +82,16 @@ function fail(error: string): ParseResult {
 export function parseSessionInput(payload: unknown): ParseResult {
   if (!isRecord(payload)) return fail("body must be an object");
 
-  const { result, turns, mulliganCount, difficulty, notes, snapshotId } = payload;
+  const {
+    result,
+    turns,
+    mulliganCount,
+    difficulty,
+    notes,
+    snapshotId,
+    cardsSeen,
+    additionalCardsSeen,
+  } = payload;
 
   if (!SESSION_RESULTS.includes(result as SessionResult)) {
     return fail(`result must be one of ${SESSION_RESULTS.join(", ")}`);
@@ -118,6 +129,28 @@ export function parseSessionInput(payload: unknown): ParseResult {
     return fail("snapshotId must be non-empty text");
   }
 
+  const hasDrawEvidence = cardsSeen !== undefined || additionalCardsSeen !== undefined;
+  if (
+    hasDrawEvidence &&
+    (typeof cardsSeen !== "number" || !Number.isInteger(cardsSeen) || cardsSeen < 0)
+  ) {
+    return fail("cardsSeen must be a non-negative whole number");
+  }
+  if (
+    hasDrawEvidence &&
+    (typeof additionalCardsSeen !== "number" ||
+      !Number.isInteger(additionalCardsSeen) ||
+      additionalCardsSeen < 0 ||
+      additionalCardsSeen > (cardsSeen as number))
+  ) {
+    return fail("additionalCardsSeen must be a whole number between 0 and cardsSeen");
+  }
+
+  const drawEvidence =
+    typeof cardsSeen === "number" && typeof additionalCardsSeen === "number"
+      ? { cardsSeen, additionalCardsSeen }
+      : {};
+
   // Whitespace-only notes are the same as none; storing them would put an empty
   // row in the UI that the player cannot tell apart from a real note.
   const trimmed = notes?.trim() ?? "";
@@ -134,6 +167,7 @@ export function parseSessionInput(payload: unknown): ParseResult {
       difficulty: difficulty as SessionDifficulty | undefined,
       notes: trimmed === "" ? undefined : trimmed,
       snapshotId: typeof snapshotId === "string" ? snapshotId.trim() : undefined,
+      ...drawEvidence,
     },
   };
 }

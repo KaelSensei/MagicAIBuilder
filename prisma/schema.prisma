@@ -396,6 +396,8 @@ model PlaytestSession {
   notes         String?
   snapshotId    String?
   snapshot      DeckSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+  cardsSeen           Int? // deterministic count captured from the playtest engine
+  additionalCardsSeen Int? // cards accessed beyond opening hand and natural draws
   createdAt     DateTime @default(now())
 
   // No unique constraint: every run is its own row — that is the whole point.
