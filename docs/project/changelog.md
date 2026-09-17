@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-17: Snapshot playtest comparison
+
+#### Added
+
+- Added an in-product comparison for playtest cohorts linked to two distinct deck snapshots. Players can now inspect directional changes in self-reported win rate, winning-turn speed and mulligan frequency directly from the playtest history panel.
+- Kept the evidence boundary explicit in the interface: solitaire playtests are user-owned directional evidence, not tournament win rates.
+- Added focused component coverage and preserved message-catalog parity across the two active and eight dormant locales.
+
 ### 2026-08-23: Release batch #552–#562 — thirty advisories nobody could reach, two limiters that enforced nothing, and dates in the wrong language
 
 #### Fixed

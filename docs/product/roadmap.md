@@ -316,11 +316,11 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - Turn phases, life tracking, undo, battlefield, graveyard and exile.
 - Session recording, result history, mulligan data and opponent-strength labels.
 - Player-authored evidence notes and explicit self-reported methodology.
-- Snapshot-linked sessions plus a deterministic comparison engine and private comparison API.
+- Snapshot-linked sessions, a deterministic comparison engine, a private comparison API and an in-product snapshot evidence comparison.
 
 ### Remaining scope
 
-- [ ] Present playtest comparison between deck snapshots in the product UI.
+- [x] Present playtest comparison between deck snapshots in the product UI.
 - [ ] Surface evidence such as mulligans, missing colors, dead opening hands and turn progression.
 - [x] Let the player attach a short evidence note to a result.
 - [ ] Associate a note with a proposed deck change.
