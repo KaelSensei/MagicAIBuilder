@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-08-26
+> **Updated:** 2026-09-17
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -28,6 +28,7 @@ Our opportunity is the workflow between those products:
 5. The final list is easy to own, print, share and export.
 
 **Positioning sentence:**
+
 > Build the deck you mean, understand why it works, test it before game night.
 
 ### Strategic boundaries
@@ -42,14 +43,14 @@ Our opportunity is the workflow between those products:
 
 ## Status And Priorities
 
-| Status | Meaning |
-| --- | --- |
-| **Shipped** | Available in the product and covered by the current test strategy |
-| **In progress** | Partially available or actively being completed |
-| **Next** | High-value work for the next delivery batches |
-| **Later** | Valuable, but not a near-term commitment |
-| **Blocked** | Do not implement until the stated external condition changes |
-| **Parked** | Deliberately deferred; not a product priority right now |
+| Status          | Meaning                                                           |
+| --------------- | ----------------------------------------------------------------- |
+| **Shipped**     | Available in the product and covered by the current test strategy |
+| **In progress** | Partially available or actively being completed                   |
+| **Next**        | High-value work for the next delivery batches                     |
+| **Later**       | Valuable, but not a near-term commitment                          |
+| **Blocked**     | Do not implement until the stated external condition changes      |
+| **Parked**      | Deliberately deferred; not a product priority right now           |
 
 Priority is expressed as **Now**, **Next** and **Later**. A priority is not a promise of a release date.
 
@@ -193,13 +194,14 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - Turn-one playability odds.
 - Combo detection through Commander Spellbook.
 - Budget, missing-card and deck-size warnings.
+- Explanations and next actions for legality warnings.
 
 ### Remaining scope
 
 - [ ] Replace long persistent warning blocks with dismissible, grouped and actionable warnings.
-- [ ] Show the rule or calculation behind each warning on demand.
+- [x] Show the rule or calculation behind legality warnings on demand.
 - [ ] Separate hard legality errors from strategic suggestions and optional advice.
-- [ ] Add confidence and freshness labels to external recommendations.
+- [x] Add source and freshness labels to external recommendations.
 - [ ] Let the player compare analysis before and after a proposed change.
 - [ ] Keep warning calculations deterministic and independent from AI output.
 
@@ -283,6 +285,8 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Missing-card list, budget checks and shopping list.
 - Basic-land defaults, bulk ownership actions and CSV export.
 - Card prices and multi-format exports.
+- Quantity-aware deck reconciliation that preserves surplus collection copies.
+- Shopping-list prioritization, line totals, copied budget summaries and safe CSV escaping.
 
 ### Remaining scope
 
@@ -311,14 +315,17 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - Opening hand, London mulligan and goldfishing.
 - Turn phases, life tracking, undo, battlefield, graveyard and exile.
 - Session recording, result history, mulligan data and opponent-strength labels.
+- Player-authored evidence notes and explicit self-reported methodology.
+- Snapshot-linked sessions plus a deterministic comparison engine and private comparison API.
 
 ### Remaining scope
 
-- [ ] Compare playtest results between deck snapshots.
+- [ ] Present playtest comparison between deck snapshots in the product UI.
 - [ ] Surface evidence such as mulligans, missing colors, dead opening hands and turn progression.
-- [ ] Let the player attach a short note to a result and a proposed deck change.
+- [x] Let the player attach a short evidence note to a result.
+- [ ] Associate a note with a proposed deck change.
 - [ ] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
-- [ ] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
+- [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
 
 ### Definition of done
 
@@ -340,10 +347,11 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - Community discovery by commander.
 - Ratings, reviews, votes, follows and threaded comments.
 - Deck duplication and snapshots.
+- Side-by-side comparison for two owned decks, including card and summary differences.
 
 ### Remaining scope
 
-- [ ] Compare two public or owned decks side by side.
+- [ ] Extend side-by-side comparison from owned decks to public decks.
 - [ ] Fork a public deck with clear attribution and a clean ownership boundary.
 - [ ] Show "why this deck differs" using roles, curve, budget and color identity.
 - [ ] Add moderation and abuse-reporting primitives before opening broader social features.
@@ -370,10 +378,11 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - Player, event, date, placement and event-level context.
 - Meta snapshots over time.
 - Commander Spellbook combo data.
+- Recommendation source and freshness disclosure.
 
 ### Remaining scope
 
-- [ ] Make the source, timestamp and sample window visible beside every external recommendation.
+- [ ] Complete source, timestamp and sample-window disclosure across every external recommendation surface.
 - [ ] Separate "popular", "high synergy", "tournament observed" and "AI suggested".
 - [ ] Add source-health telemetry and contract tests for every scraper or external feed.
 - [ ] Add trend views that respect EDHREC top-20 truncation bounds.
@@ -501,8 +510,9 @@ These items remain visible so they are not forgotten, but they are not part of t
 
 # Delivery Rules
 
-- Feature and fix branches target staging.
-- Promotion order is always staging -> dev -> main.
+- Feature and fix branches target `dev`.
+- Promotion order is always `dev` -> `staging` -> `main`.
+- `staging` is the QA alpha candidate; `main` receives only code validated by QA and colleagues.
 - A PR is not ready without typecheck, lint, unit tests, the agreed Docker E2E strategy and SonarCloud verification.
 - Roadmap status changes only when the feature is present in code and its acceptance evidence exists.
 - Product initiatives may be split into small PRs, but their definition of done remains the source of truth.

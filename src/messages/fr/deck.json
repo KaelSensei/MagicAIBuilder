@@ -15,6 +15,18 @@
     "retry": "Réessayer",
     "createFailed": "Impossible de créer le deck — {reason}"
   },
+  "comparison": {
+    "title": "Comparer des decks",
+    "description": "Voyez précisément ce qui change entre deux listes.",
+    "firstDeck": "Premier deck",
+    "secondDeck": "Second deck",
+    "compare": "Comparer les decks",
+    "onlyFirst": "Uniquement dans le premier",
+    "onlySecond": "Uniquement dans le second",
+    "quantityChanges": "Quantités différentes",
+    "shared": "{count, plural, one {1 carte commune} other {# cartes communes}}",
+    "error": "Impossible de comparer les decks. Réessayez."
+  },
   "controls": {
     "grid": "Grille",
     "list": "Liste",

@@ -15,6 +15,18 @@
     "retry": "Erneut versuchen",
     "createFailed": "Deck konnte nicht erstellt werden — {reason}"
   },
+  "comparison": {
+    "title": "Compare decks",
+    "description": "See what changed between two deck lists.",
+    "firstDeck": "First deck",
+    "secondDeck": "Second deck",
+    "compare": "Compare decks",
+    "onlyFirst": "Only in first",
+    "onlySecond": "Only in second",
+    "quantityChanges": "Quantity changes",
+    "shared": "{count, plural, one {1 shared card} other {# shared cards}}",
+    "error": "The decks could not be compared. Try again."
+  },
   "controls": {
     "grid": "Grid",
     "list": "List",
