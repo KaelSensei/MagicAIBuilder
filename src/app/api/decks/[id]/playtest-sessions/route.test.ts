@@ -70,6 +70,8 @@ function row(overrides: Record<string, unknown> = {}) {
     difficulty: null,
     notes: null,
     snapshotId: null,
+    cardsSeen: null,
+    additionalCardsSeen: null,
     createdAt: new Date("2026-08-16T10:00:00Z"),
     ...overrides,
   };
@@ -223,7 +225,14 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
     mockSessionCreate.mockResolvedValue(row());
 
     const response = await POST(
-      postRequest({ result: "win", turns: 8, mulliganCount: 1, notes: "  kept a two-lander  " }),
+      postRequest({
+        result: "win",
+        turns: 8,
+        mulliganCount: 1,
+        cardsSeen: 15,
+        additionalCardsSeen: 1,
+        notes: "  kept a two-lander  ",
+      }),
       params()
     );
 
@@ -235,6 +244,8 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
         result: "win",
         turns: 8,
         mulliganCount: 1,
+        cardsSeen: 15,
+        additionalCardsSeen: 1,
         notes: "kept a two-lander",
       }),
     });

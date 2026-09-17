@@ -15,6 +15,8 @@ export interface PlaytestSession {
   readonly difficulty?: "budget" | "mid-range" | "cedh";
   readonly notes?: string;
   readonly snapshotId?: string;
+  readonly cardsSeen?: number;
+  readonly additionalCardsSeen?: number;
   readonly createdAt: Date;
 }
 

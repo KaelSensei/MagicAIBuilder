@@ -17,6 +17,8 @@ interface RecordResultBarProps {
   readonly deckId: string;
   readonly turns: number;
   readonly mulliganCount: number;
+  readonly cardsSeen: number;
+  readonly additionalCardsSeen: number;
   /** Called once the session is stored, or immediately if the player skips */
   readonly onRecorded: () => void;
 }
@@ -33,6 +35,8 @@ export function RecordResultBar({
   deckId,
   turns,
   mulliganCount,
+  cardsSeen,
+  additionalCardsSeen,
   onRecorded,
 }: RecordResultBarProps) {
   const t = useTranslations("playtest");
@@ -58,6 +62,8 @@ export function RecordResultBar({
             result,
             turns,
             mulliganCount,
+            cardsSeen,
+            additionalCardsSeen,
             ...(difficulty === "" ? {} : { difficulty }),
             ...(notes.trim() === "" ? {} : { notes: notes.trim() }),
           }),
@@ -76,7 +82,17 @@ export function RecordResultBar({
         setPending(null);
       }
     },
-    [deckId, turns, mulliganCount, difficulty, notes, onRecorded, queryClient]
+    [
+      deckId,
+      turns,
+      mulliganCount,
+      cardsSeen,
+      additionalCardsSeen,
+      difficulty,
+      notes,
+      onRecorded,
+      queryClient,
+    ]
   );
 
   return (

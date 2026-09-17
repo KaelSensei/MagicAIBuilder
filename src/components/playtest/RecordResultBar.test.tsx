@@ -15,7 +15,14 @@ function renderBar(onRecorded = vi.fn()) {
   render(
     <QueryClientProvider client={queryClient}>
       <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
-        <RecordResultBar deckId="deck-1" turns={9} mulliganCount={2} onRecorded={onRecorded} />
+        <RecordResultBar
+          deckId="deck-1"
+          turns={9}
+          mulliganCount={2}
+          cardsSeen={14}
+          additionalCardsSeen={1}
+          onRecorded={onRecorded}
+        />
       </NextIntlClientProvider>
     </QueryClientProvider>
   );
@@ -51,6 +58,8 @@ describe("RecordResultBar", () => {
       result: "win",
       turns: 9,
       mulliganCount: 2,
+      cardsSeen: 14,
+      additionalCardsSeen: 1,
     });
   });
 
