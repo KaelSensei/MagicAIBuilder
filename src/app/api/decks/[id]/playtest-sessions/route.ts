@@ -19,6 +19,7 @@ import { logger } from "@/lib/logger";
 import type { PlaytestSession } from "@/lib/playtest/analytics";
 import { parseSessionInput, summarizeSessions } from "@/lib/playtest/session-input";
 import { readJsonBody } from "@/lib/api/json-body";
+import { compareSessionGroups } from "@/lib/playtest/comparison";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -75,13 +76,31 @@ async function loadSessions(deckId: string, userId: string): Promise<PlaytestSes
 }
 
 // GET /api/decks/[id]/playtest-sessions
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
   const { id } = await params;
 
   try {
     const authResult = await requireAuth();
     if (authResult.error) return authResult.error;
     const userId = authResult.session.user.id;
+    const searchParams = new URL(request.url).searchParams;
+    const beforeSnapshotId = searchParams.get("beforeSnapshotId")?.trim() ?? "";
+    const afterSnapshotId = searchParams.get("afterSnapshotId")?.trim() ?? "";
+    const hasBeforeSnapshot = beforeSnapshotId.length > 0;
+    const hasAfterSnapshot = afterSnapshotId.length > 0;
+
+    if (hasBeforeSnapshot !== hasAfterSnapshot) {
+      return NextResponse.json(
+        { error: "Both beforeSnapshotId and afterSnapshotId are required" },
+        { status: 400 }
+      );
+    }
+    if (hasBeforeSnapshot && beforeSnapshotId === afterSnapshotId) {
+      return NextResponse.json(
+        { error: "Choose two different snapshots" },
+        { status: 400 }
+      );
+    }
 
     const deck = await findOwnedDeck(id, userId);
     if (!deck) {
@@ -89,7 +108,16 @@ export async function GET(_req: Request, { params }: Params) {
     }
 
     const sessions = await loadSessions(id, userId);
-    return NextResponse.json({ sessions, summary: summarizeSessions(sessions) });
+    const summary = summarizeSessions(sessions);
+    if (!hasBeforeSnapshot) return NextResponse.json({ sessions, summary });
+
+    const before = sessions.filter((session) => session.snapshotId === beforeSnapshotId);
+    const after = sessions.filter((session) => session.snapshotId === afterSnapshotId);
+    return NextResponse.json({
+      sessions,
+      summary,
+      comparison: compareSessionGroups(before, after),
+    });
   } catch (error) {
     logger.error("Unexpected error", "GET /api/decks/:id/playtest-sessions", error);
     return NextResponse.json({ error: "Failed to fetch playtest sessions" }, { status: 500 });
