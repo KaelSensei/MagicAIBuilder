@@ -129,6 +129,55 @@ describe("GET /api/decks/[id]/playtest-sessions", () => {
     expect(body.summary.total).toBe(0);
     expect(body.summary.winRate).toBe(0);
   });
+
+  it("compares sessions recorded against two deck snapshots", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSessionFindMany.mockResolvedValue([
+      row({ id: "before-1", snapshotId: "snapshot-before", result: "win", turns: 8 }),
+      row({ id: "before-2", snapshotId: "snapshot-before", result: "loss", turns: 10 }),
+      row({ id: "after-1", snapshotId: "snapshot-after", result: "win", turns: 6 }),
+      row({ id: "after-2", snapshotId: "snapshot-after", result: "win", turns: 8 }),
+    ]);
+
+    const request = new Request(
+      "http://localhost/api/decks/deck-1/playtest-sessions?beforeSnapshotId=snapshot-before&afterSnapshotId=snapshot-after"
+    );
+    const body = await (await GET(request, params())).json();
+
+    expect(body.comparison).toEqual(expect.objectContaining({
+      beforeSessions: 2,
+      afterSessions: 2,
+      winRateDelta: 50,
+      winSpeedDelta: 1,
+      hasComparableData: true,
+    }));
+  });
+
+  it("rejects an incomplete snapshot comparison", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+
+    const request = new Request(
+      "http://localhost/api/decks/deck-1/playtest-sessions?beforeSnapshotId=snapshot-before"
+    );
+    const response = await GET(request, params());
+
+    expect(response.status).toBe(400);
+    expect(mockSessionFindMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects comparing a snapshot with itself", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+
+    const request = new Request(
+      "http://localhost/api/decks/deck-1/playtest-sessions?beforeSnapshotId=same&afterSnapshotId=same"
+    );
+    const response = await GET(request, params());
+
+    expect(response.status).toBe(400);
+  });
 });
 
 describe("POST /api/decks/[id]/playtest-sessions", () => {
