@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2677 across 212 files                                                                                                                   |
+| Unit tests          | 2678 across 212 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -32,6 +32,7 @@
 ## Latest product delivery
 
 - Playtest history can now compare evidence recorded against two distinct deck snapshots. The UI reports directional changes in self-reported win rate, winning-turn speed and mulligans, while explicitly avoiding tournament-performance claims.
+- Snapshot comparisons disclose both cohort sizes, flag fewer than three runs per version as an early signal, and describe regressions without ambiguous negative wording.
 - The next playtest priorities are surfacing richer evidence such as missing colors and dead opening hands, then associating player notes with proposed deck changes.
 
 > **The coverage number fell from 94.89% to 50.52% without a single test being deleted.** The denominator changed: `src/app` and `src/components` were excluded from the measure, so "94.89%" described roughly a third of the repository. The exclusions were removed on 2026-08-23, and `vitest.config.ts` records the breakdown that made it visible — lib 96.6%, hooks 87.4%, components 25.2%, app 25.1%, all of src **48.5%**. This batch moved it to **50.52%**. Compare only against figures measured after that change; anything at 90-something in this file above 2026-08-23 is measuring the smaller denominator.
