@@ -1,7 +1,7 @@
 # The image tag MUST track @playwright/test in package.json: the browser
 # binaries it ships live at a version-stamped path, so any drift makes every
 # browser test fail to launch. Guarded by src/lib/toolchain.test.ts.
-FROM mcr.microsoft.com/playwright:v1.62.1-jammy
+FROM mcr.microsoft.com/playwright:v1.63.0-jammy
 
 WORKDIR /app
 
