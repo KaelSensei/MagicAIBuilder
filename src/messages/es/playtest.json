@@ -91,6 +91,21 @@
     "matchupValue": "{wins}W–{losses}L · {winRate}%"
   },
   "difficultyLabel": "Opponent",
+  "comparison": {
+    "title": "Compare deck versions",
+    "before": "Before version",
+    "after": "After version",
+    "choose": "Choose a version",
+    "distinct": "Choose two different versions.",
+    "versionOption": "{date} · {count, plural, one {# run} other {# runs}}",
+    "winRate": "Win rate",
+    "speed": "Win speed",
+    "mulligans": "Mulligans",
+    "winRateValue": "{delta, number, ::sign-always maximumFractionDigits-0} pts",
+    "speedValue": "{delta, number, maximumFractionDigits-1} turns faster",
+    "mulliganValue": "{delta, number, maximumFractionDigits-1} {direction, select, fewer {fewer} other {more}} mulligans",
+    "methodology": "Directional, self-reported playtest evidence. It is not a tournament win rate."
+  },
   "notesLabel": "Playtest note",
   "notesPlaceholder": "What worked or felt weak?",
   "difficultyUnset": "Not saying",
