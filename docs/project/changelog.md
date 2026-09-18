@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-18: Verified AI suggestion evidence
+
+#### Added
+
+- Enriched all AI additions through one batched Scryfall lookup with mana value, curve impact, color compatibility, Commander legality and USD price evidence.
+- Added a compact evidence panel that distinguishes verified facts from unavailable data without blocking suggestions during a Scryfall outage.
+- Added policy, route and component coverage, bringing the suite to 2,710 tests across 219 files.
+
 ### 2026-09-18: Reviewed AI deck plan
 
 #### Added
