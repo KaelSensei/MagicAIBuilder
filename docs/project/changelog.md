@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-18: Opening-hand color evidence
+
+#### Added
+
+- Added deterministic opening-hand castability analysis that combines visible land production, affordable spell costs and hybrid mana options.
+- Added explicit missing-color and dead-hand guidance before the mulligan decision, with English and French copy plus key parity for dormant locales.
+- Added focused policy and component coverage, bringing the suite to 2,684 tests across 212 files.
+
 ### 2026-09-17: Snapshot playtest comparison
 
 #### Added

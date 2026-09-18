@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-09-17
+> **Updated:** 2026-09-18
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -318,11 +318,12 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - Player-authored evidence notes and explicit self-reported methodology.
 - Snapshot-linked sessions, a deterministic comparison engine, a private comparison API and an in-product snapshot evidence comparison with cohort-size disclosure and early-signal guidance.
 - Recorded sessions now persist deterministic cards-seen and additional-draw evidence from the goldfish engine for later version analysis.
+- Opening-hand evidence now distinguishes land balance from immediate castability, exposing missing mana colors and dead hands before the mulligan decision.
 
 ### Remaining scope
 
 - [x] Present playtest comparison between deck snapshots in the product UI.
-- [ ] Surface missing-color and dead-opening-hand evidence alongside the now-persisted mulligan and draw-progression signals.
+- [x] Surface missing-color and dead-opening-hand evidence alongside persisted mulligan and draw-progression signals.
 - [x] Let the player attach a short evidence note to a result.
 - [ ] Associate a note with a proposed deck change.
 - [ ] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
