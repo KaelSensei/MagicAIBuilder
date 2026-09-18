@@ -5,7 +5,7 @@ import type { DeckCard } from "@/lib/deck/types";
 import builderMessages from "@/messages/en/builder.json";
 import { OpeningHandEvidence } from "./OpeningHandEvidence";
 
-function card(typeLine: string, id: string): DeckCard {
+function card(typeLine: string, id: string, manaCost = "", cmc = 0): DeckCard {
   return {
     id,
     scryfallId: id,
@@ -13,8 +13,8 @@ function card(typeLine: string, id: string): DeckCard {
     quantity: 1,
     category: typeLine.includes("Land") ? "land" : "creature",
     zone: "main",
-    manaCost: "",
-    cmc: 0,
+    manaCost,
+    cmc,
     typeLine,
     oracleText: "",
     colorIdentity: [],
@@ -56,5 +56,26 @@ describe("OpeningHandEvidence", () => {
 
     expect(screen.getByText("3 lands in opening hand")).toBeDefined();
     expect(screen.getByText(/balanced start/i)).toBeDefined();
+  });
+
+  it("warns when an affordable spell needs a missing color", () => {
+    const hand = [
+      card("Basic Land — Forest", "forest-1"),
+      card("Basic Land — Forest", "forest-2"),
+      card("Basic Land", "wastes"),
+      card("Instant", "counterspell", "{U}{U}", 2),
+      card("Creature", "spell-1", "{4}", 4),
+      card("Creature", "spell-2", "{5}", 5),
+      card("Creature", "spell-3", "{6}", 6),
+    ];
+
+    render(
+      <NextIntlClientProvider locale="en" messages={{ builder: builderMessages }}>
+        <OpeningHandEvidence hand={hand} />
+      </NextIntlClientProvider>
+    );
+
+    expect(screen.getByText(/missing blue mana/i)).toBeDefined();
+    expect(screen.getByText(/dead opening hand/i)).toBeDefined();
   });
 });

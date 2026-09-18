@@ -79,6 +79,15 @@
         "land-light": "Peu de terrains : envisagez un mulligan.",
         "balanced": "Départ équilibré.",
         "land-heavy": "Beaucoup de terrains : envisagez un mulligan."
+      },
+      "deadHand": "Main de départ morte : aucun sort n'est actuellement jouable.",
+      "missingColors": "Mana {colors} manquant.",
+      "colors": {
+        "W": "blanc",
+        "U": "bleu",
+        "B": "noir",
+        "R": "rouge",
+        "G": "vert"
       }
     }
   },
