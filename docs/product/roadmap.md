@@ -166,7 +166,7 @@ A user can move a card between every legal zone, reload the page, change its pri
 - [x] Conversational brief: commander, theme, play pattern, budget, power target and dislikes.
 - [x] Structured plan before card generation: gameplan, win conditions, roles and constraints.
 - [x] Explain every suggestion with evidence: role, synergy, curve, color identity, legality and price.
-- [ ] Offer alternatives by budget, power and play pattern instead of one opaque answer.
+- [x] Offer alternatives by budget, power and play pattern instead of one opaque answer.
 - [ ] Diff a proposed change against the current deck before applying it.
 - [ ] Support "why is this card here?" and "what is the weakest card?" questions.
 - [ ] Add a deterministic post-generation validator; the LLM never decides legality.
