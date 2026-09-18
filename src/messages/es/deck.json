@@ -206,7 +206,17 @@
     "priorityMedium": "Med",
     "priorityLow": "Low",
     "timeJustNow": "just now",
-    "timeMinAgo": "{mins} min ago"
+    "timeMinAgo": "{mins} min ago",
+    "brief": {
+      "title": "Your deck brief",
+      "description": "Optional preferences used only for this analysis.",
+      "themeLabel": "Theme",
+      "themePlaceholder": "Phyrexians, sea monsters, politics…",
+      "playPatternLabel": "How should it play?",
+      "playPatternPlaceholder": "Build value, then win through combat…",
+      "dislikesLabel": "What should it avoid?",
+      "dislikesPlaceholder": "Infinite combos, tutors, extra turns…"
+    }
   },
   "combos": {
     "title": "Combos",

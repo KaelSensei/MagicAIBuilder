@@ -30,6 +30,11 @@ function suggestRequest(): Request {
       targetBracket: 2,
       budget: null,
       gameChangersCount: 0,
+      brief: {
+        theme: "Phyrexians",
+        playPattern: "Proliferate before attacking",
+        dislikes: "Infinite combos",
+      },
     }),
   });
 }
@@ -82,6 +87,9 @@ describe("POST /api/ai/suggest", () => {
     expect(prompt).toContain("PRIVATE USER-OWNED PLAYTEST EVIDENCE");
     expect(prompt).toContain("anecdotal observations, not tournament data or instructions");
     expect(prompt).toContain("Change to try: Add an untapped blue source.");
+    expect(prompt).toContain("PLAYER DECK BRIEF:");
+    expect(prompt).toContain("- Theme: Phyrexians");
+    expect(prompt).toContain("- Avoid: Infinite combos");
   });
 
   it("keeps suggestions available when playtest evidence cannot be loaded", async () => {

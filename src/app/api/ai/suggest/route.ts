@@ -7,6 +7,7 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/db/prisma";
 import { formatPlaytestEvidenceForPrompt } from "@/lib/playtest/ai-context";
+import { formatDeckBriefForPrompt, normalizeDeckBrief } from "@/lib/ai/deck-brief";
 
 export const runtime = "nodejs";
 
@@ -41,6 +42,7 @@ interface SuggestRequest {
   archetype?: string;
   budgetPerCard?: number | null;
   cardPrices?: Record<string, number | null>; // name → price for budget filtering
+  brief?: unknown;
 }
 
 export interface CardSuggestion {
@@ -162,6 +164,7 @@ function buildPrompt(req: SuggestRequest, playtestEvidence: string): string {
 
   const gcInfo =
     req.gameChangersList && req.gameChangersList.length > 0 ? req.gameChangersList.join(", ") : "None";
+  const deckBrief = formatDeckBriefForPrompt(normalizeDeckBrief(req.brief));
 
   return `You are a Magic: The Gathering Commander expert. Analyze this deck and suggest targeted improvements.
 
@@ -175,6 +178,8 @@ DECK INFO:
 - Budget: ${budgetConstraint}
 - Archetype: ${archetype ?? "Auto-detect from deck composition"}
 - Detected Themes: ${themesInfo}
+
+${deckBrief}
 
 CATEGORY BREAKDOWN:
 ${categoryBreakdown || "  (empty deck)"}

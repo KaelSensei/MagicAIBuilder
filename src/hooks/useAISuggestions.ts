@@ -4,6 +4,7 @@ import type { Deck, DeckStats, BracketScore } from "@/lib/deck/types";
 import type { StreamEvent } from "@/app/api/ai/suggest/route";
 import { detectArchetypes } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
+import type { DeckBrief } from "@/lib/ai/deck-brief";
 export type { Archetype } from "@/lib/ai/archetypes";
 
 export interface CardSuggestion {
@@ -25,11 +26,17 @@ export interface AISuggestionResult {
   provider: "anthropic" | "openai" | "mock";
 }
 
-function hashDeckState(deck: Deck, stats: DeckStats, bracket: number): string {
+function hashDeckState(
+  deck: Deck,
+  stats: DeckStats,
+  bracket: number,
+  options?: AIAnalysisOptions
+): string {
   const cardNames = deck.cards.map((c) => c.name).sort((a, b) => a.localeCompare(b)).join(",");
   const commander = deck.commander?.name ?? "";
   const partner = deck.partner?.name ?? "";
-  return `${commander}|${partner}|${bracket}|${deck.targetBracket}|${deck.budget ?? ""}|${cardNames}`;
+  const brief = options?.brief;
+  return `${commander}|${partner}|${bracket}|${deck.targetBracket}|${deck.budget ?? ""}|${options?.budgetPerCard ?? ""}|${options?.archetypeOverride ?? ""}|${brief?.theme ?? ""}|${brief?.playPattern ?? ""}|${brief?.dislikes ?? ""}|${cardNames}`;
 }
 
 function buildSuggestPayload(
@@ -38,7 +45,8 @@ function buildSuggestPayload(
   bracketScore: BracketScore | null,
   bracket: number,
   archetypeOverride?: Archetype | null,
-  budgetPerCard?: number | null
+  budgetPerCard?: number | null,
+  brief?: DeckBrief
 ) {
   const cardNames = deck.cards.map((c) => c.name);
   const categories = {
@@ -85,6 +93,7 @@ function buildSuggestPayload(
     archetype,
     budgetPerCard: budgetPerCard ?? null,
     cardPrices,
+    brief,
   };
 }
 
@@ -202,6 +211,7 @@ async function processStream(
 export interface AIAnalysisOptions {
   archetypeOverride?: Archetype | null;
   budgetPerCard?: number | null;
+  brief?: DeckBrief;
 }
 
 export function useAISuggestions() {
@@ -230,7 +240,7 @@ export function useAISuggestions() {
     options?: AIAnalysisOptions,
   ) => {
     const bracket = bracketScore?.overall ?? deck.targetBracket;
-    const hash = hashDeckState(deck, stats, bracket);
+    const hash = hashDeckState(deck, stats, bracket, options);
 
     if (hash === lastHash.current && lastResult.current && !options?.archetypeOverride) {
       setResult(lastResult.current);
@@ -248,7 +258,7 @@ export function useAISuggestions() {
     setResult({ suggestions: [], removals: [], analysis: "", provider: "mock" });
 
     try {
-      const payload = buildSuggestPayload(deck, stats, bracketScore, bracket, options?.archetypeOverride, options?.budgetPerCard);
+      const payload = buildSuggestPayload(deck, stats, bracketScore, bracket, options?.archetypeOverride, options?.budgetPerCard, options?.brief);
       const response = await fetch("/api/ai/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
