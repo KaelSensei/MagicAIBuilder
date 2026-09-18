@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-18: Reviewed AI deck plan
+
+#### Added
+
+- Added a pre-generation review step that presents the selected gameplan, win conditions, deck-role targets and explicit constraints before any cards are chosen.
+- Rebuilt the same deterministic plan server-side and embedded it in the provider prompt so the reviewed structure governs generation without trusting client-authored instructions.
+- Added strategy, fallback and constraint coverage, bringing the suite to 2,703 tests across 217 files.
+
 ### 2026-09-18: Conversational AI deck brief
 
 #### Added
