@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-18: Targeted AI suggestion alternatives
+
+#### Added
+
+- Added budget, power-level and playstyle alternatives to AI card recommendations instead of returning one opaque answer.
+- Verified alternatives in the same deduplicated Scryfall batch as primary suggestions and exposed them through a compact, directly actionable disclosure.
+- Added route and component coverage, bringing the suite to 2,711 tests across 220 files.
+
 ### 2026-09-18: Verified AI suggestion evidence
 
 #### Added
