@@ -70,6 +70,7 @@ import { BulkEditModal } from "@/components/deck/BulkEditModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
+import type { DeckBrief } from "@/lib/ai/deck-brief";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 import { MetaPanel } from "@/components/deck/MetaPanel";
@@ -496,12 +497,18 @@ export default function BuilderPage() {
     import("@/lib/ai/archetypes").Archetype | null
   >(null);
   const [aiBudgetPerCard, setAIBudgetPerCard] = useState<number | null>(null);
+  const [aiBrief, setAIBrief] = useState<DeckBrief>({
+    theme: "",
+    playPattern: "",
+    dislikes: "",
+  });
 
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
     analyzeAI(deck, stats, bracketScore, {
       archetypeOverride: aiArchetypeOverride,
       budgetPerCard: aiBudgetPerCard,
+      brief: aiBrief,
     });
   }, [
     deck,
@@ -510,6 +517,7 @@ export default function BuilderPage() {
     analyzeAI,
     aiArchetypeOverride,
     aiBudgetPerCard,
+    aiBrief,
   ]);
 
   const handleSnapshotRestore = useCallback(() => {
@@ -1013,6 +1021,8 @@ export default function BuilderPage() {
               onArchetypeChange={setAIArchetypeOverride}
               budgetPerCard={aiBudgetPerCard}
               onBudgetPerCardChange={setAIBudgetPerCard}
+              brief={aiBrief}
+              onBriefChange={setAIBrief}
               analysedAt={analysedAt}
               ignoredSuggestions={ignoredSuggestions}
               onIgnoreSuggestion={ignoreSuggestion}

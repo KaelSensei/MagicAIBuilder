@@ -321,7 +321,17 @@
     "priorityMedium": "Moy",
     "priorityLow": "Bas",
     "timeJustNow": "à l’instant",
-    "timeMinAgo": "il y a {mins} min"
+    "timeMinAgo": "il y a {mins} min",
+    "brief": {
+      "title": "Votre brief de deck",
+      "description": "Préférences facultatives utilisées uniquement pour cette analyse.",
+      "themeLabel": "Thème",
+      "themePlaceholder": "Phyrexians, monstres marins, politique…",
+      "playPatternLabel": "Comment doit-il se jouer ?",
+      "playPatternPlaceholder": "Créer de la valeur, puis gagner au combat…",
+      "dislikesLabel": "Que doit-il éviter ?",
+      "dislikesPlaceholder": "Combos infinis, tuteurs, tours supplémentaires…"
+    }
   },
   "combos": {
     "title": "Combos",

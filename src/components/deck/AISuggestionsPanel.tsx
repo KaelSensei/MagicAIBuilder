@@ -18,6 +18,8 @@ import { cn } from "@/components/ui/utils";
 import type { AISuggestionResult } from "@/hooks/useAISuggestions";
 import { ARCHETYPES } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
+import type { DeckBrief } from "@/lib/ai/deck-brief";
+import { AIDeckBriefFields } from "./AIDeckBriefFields";
 
 const BUDGET_OPTIONS: Array<{ label: string; value: number | null }> = [
   { label: "No limit", value: null },
@@ -45,6 +47,8 @@ interface AISuggestionsPanelProps {
   readonly ignoredSuggestions?: ReadonlySet<string>;
   readonly onIgnoreSuggestion?: (name: string) => void;
   readonly onClearIgnored?: () => void;
+  readonly brief?: DeckBrief;
+  readonly onBriefChange?: (brief: DeckBrief) => void;
 }
 
 const PRIORITY_COLORS = {
@@ -70,6 +74,8 @@ export function AISuggestionsPanel({
   ignoredSuggestions,
   onIgnoreSuggestion,
   onClearIgnored,
+  brief,
+  onBriefChange,
 }: AISuggestionsPanelProps) {
   const t = useTranslations("deck");
   const [expanded, setExpanded] = useState(true);
@@ -201,6 +207,10 @@ export function AISuggestionsPanel({
                     ))}
                   </div>
                 </div>
+              )}
+
+              {brief && onBriefChange && (
+                <AIDeckBriefFields value={brief} onChange={onBriefChange} />
               )}
 
               {/* Analyze button + timestamp */}

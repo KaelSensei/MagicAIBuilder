@@ -132,6 +132,38 @@ describe("useAISuggestions", () => {
     vi.unstubAllGlobals();
   });
 
+  it("includes the player's deck brief in the suggestion request", async () => {
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode('{"type":"done"}\n'));
+        controller.close();
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body }));
+
+    const { result } = renderHook(() => useAISuggestions());
+    await act(async () => {
+      await result.current.analyze(makeDeck(), makeStats(), null, {
+        brief: {
+          theme: "Artifacts",
+          playPattern: "Incremental value",
+          dislikes: "Extra turns",
+        },
+      });
+    });
+
+    const request = vi.mocked(global.fetch).mock.calls[0]?.[1];
+    expect(JSON.parse(String(request?.body))).toMatchObject({
+      brief: {
+        theme: "Artifacts",
+        playPattern: "Incremental value",
+        dislikes: "Extra turns",
+      },
+    });
+    vi.unstubAllGlobals();
+  });
+
   it("invalidateCache allows re-fetching same hash", async () => {
     const makeStream = (lines: string[]) => {
       const encoder = new TextEncoder();
