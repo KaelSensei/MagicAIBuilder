@@ -14,6 +14,14 @@ export interface CardSuggestion {
   category: string;
   priority: "high" | "medium" | "low";
   evidence?: SuggestionEvidence;
+  alternatives?: CardAlternative[];
+}
+
+export interface CardAlternative {
+  name: string;
+  reason: string;
+  dimension: "budget" | "power" | "playstyle";
+  evidence?: SuggestionEvidence;
 }
 
 export interface CardRemoval {

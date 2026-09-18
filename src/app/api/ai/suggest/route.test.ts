@@ -113,7 +113,7 @@ describe("POST /api/ai/suggest", () => {
     );
   });
 
-  it("streams factual evidence verified against Scryfall", async () => {
+  it("streams verified evidence for suggestions and targeted alternatives", async () => {
     const providerFetch = vi
       .fn()
       .mockResolvedValueOnce({
@@ -128,6 +128,13 @@ describe("POST /api/ai/suggest", () => {
                     reason: "Accelerates Atraxa and fixes all four colors.",
                     category: "ramp",
                     priority: "high",
+                    alternatives: [
+                      {
+                        name: "Fellwar Stone",
+                        reason: "A cheaper mana rock for budget lists.",
+                        dimension: "budget",
+                      },
+                    ],
                   },
                 ],
               }),
@@ -150,6 +157,15 @@ describe("POST /api/ai/suggest", () => {
               legalities: { commander: "legal" },
               prices: { usd: "1.25" },
             },
+            {
+              id: "fellwar-stone",
+              name: "Fellwar Stone",
+              cmc: 2,
+              type_line: "Artifact",
+              color_identity: [],
+              legalities: { commander: "legal" },
+              prices: { usd: "0.75" },
+            },
           ],
         }),
       });
@@ -163,6 +179,13 @@ describe("POST /api/ai/suggest", () => {
     const suggestion = events.find((event) => event.type === "suggestion");
 
     expect(providerFetch).toHaveBeenCalledTimes(2);
+    const collectionRequest = JSON.parse(
+      String(providerFetch.mock.calls[1]?.[1]?.body)
+    );
+    expect(collectionRequest.identifiers).toEqual([
+      { name: "Arcane Signet" },
+      { name: "Fellwar Stone" },
+    ]);
     expect(suggestion.data.evidence).toEqual(
       expect.objectContaining({
         role: "ramp",
@@ -171,6 +194,17 @@ describe("POST /api/ai/suggest", () => {
         colorCompatible: true,
         priceUsd: 1.25,
         verified: true,
+      })
+    );
+    expect(suggestion.data.alternatives[0]).toEqual(
+      expect.objectContaining({
+        name: "Fellwar Stone",
+        dimension: "budget",
+        evidence: expect.objectContaining({
+          priceUsd: 0.75,
+          commanderLegal: true,
+          verified: true,
+        }),
       })
     );
   });
