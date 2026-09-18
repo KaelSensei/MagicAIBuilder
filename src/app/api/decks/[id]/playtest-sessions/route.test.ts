@@ -69,6 +69,7 @@ function row(overrides: Record<string, unknown> = {}) {
     mulliganCount: 0,
     difficulty: null,
     notes: null,
+    proposedChange: null,
     snapshotId: null,
     cardsSeen: null,
     additionalCardsSeen: null,
@@ -232,6 +233,7 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
         cardsSeen: 15,
         additionalCardsSeen: 1,
         notes: "  kept a two-lander  ",
+        proposedChange: "  Add one more untapped blue source.  ",
       }),
       params()
     );
@@ -247,6 +249,7 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
         cardsSeen: 15,
         additionalCardsSeen: 1,
         notes: "kept a two-lander",
+        proposedChange: "Add one more untapped blue source.",
       }),
     });
   });

@@ -36,6 +36,9 @@ export type SessionDifficulty = (typeof SESSION_DIFFICULTIES)[number];
 /** Maximum persisted length for a player-authored playtest evidence note. */
 export const MAX_SESSION_NOTES_LENGTH = 500;
 
+/** Maximum persisted length for a concrete deck change to test next. */
+export const MAX_PROPOSED_CHANGE_LENGTH = 500;
+
 /** A validated session, ready to persist. */
 export interface SessionInput {
   readonly result: SessionResult;
@@ -43,6 +46,7 @@ export interface SessionInput {
   readonly mulliganCount: number;
   readonly difficulty?: SessionDifficulty;
   readonly notes?: string;
+  readonly proposedChange?: string;
   readonly snapshotId?: string;
   readonly cardsSeen?: number;
   readonly additionalCardsSeen?: number;
@@ -88,6 +92,7 @@ export function parseSessionInput(payload: unknown): ParseResult {
     mulliganCount,
     difficulty,
     notes,
+    proposedChange,
     snapshotId,
     cardsSeen,
     additionalCardsSeen,
@@ -120,6 +125,10 @@ export function parseSessionInput(payload: unknown): ParseResult {
 
   if (notes !== undefined && typeof notes !== "string") {
     return fail("notes must be text");
+  }
+
+  if (proposedChange !== undefined && typeof proposedChange !== "string") {
+    return fail("proposedChange must be text");
   }
 
   if (
@@ -157,6 +166,10 @@ export function parseSessionInput(payload: unknown): ParseResult {
   if (trimmed.length > MAX_SESSION_NOTES_LENGTH) {
     return fail(`notes must be at most ${MAX_SESSION_NOTES_LENGTH} characters`);
   }
+  const trimmedProposedChange = proposedChange?.trim() ?? "";
+  if (trimmedProposedChange.length > MAX_PROPOSED_CHANGE_LENGTH) {
+    return fail(`proposedChange must be at most ${MAX_PROPOSED_CHANGE_LENGTH} characters`);
+  }
 
   return {
     ok: true,
@@ -166,6 +179,7 @@ export function parseSessionInput(payload: unknown): ParseResult {
       mulliganCount: mulligans,
       difficulty: difficulty as SessionDifficulty | undefined,
       notes: trimmed === "" ? undefined : trimmed,
+      proposedChange: trimmedProposedChange === "" ? undefined : trimmedProposedChange,
       snapshotId: typeof snapshotId === "string" ? snapshotId.trim() : undefined,
       ...drawEvidence,
     },

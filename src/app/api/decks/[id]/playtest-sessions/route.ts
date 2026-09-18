@@ -70,6 +70,7 @@ async function loadSessions(deckId: string, userId: string): Promise<PlaytestSes
     mulliganCount: row.mulliganCount,
     difficulty: (row.difficulty ?? undefined) as PlaytestSession["difficulty"],
     notes: row.notes ?? undefined,
+    proposedChange: row.proposedChange ?? undefined,
     snapshotId: row.snapshotId ?? undefined,
     cardsSeen: row.cardsSeen ?? undefined,
     additionalCardsSeen: row.additionalCardsSeen ?? undefined,
