@@ -64,6 +64,7 @@ function buildSuggestPayload(
   }
 
   return {
+    deckId: deck.id,
     commanderName: deck.commander?.name ?? null,
     partnerName: deck.partner?.name ?? null,
     colorIdentity: [
