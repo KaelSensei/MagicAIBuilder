@@ -319,13 +319,14 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - Snapshot-linked sessions, a deterministic comparison engine, a private comparison API and an in-product snapshot evidence comparison with cohort-size disclosure and early-signal guidance.
 - Recorded sessions now persist deterministic cards-seen and additional-draw evidence from the goldfish engine for later version analysis.
 - Opening-hand evidence now distinguishes land balance from immediate castability, exposing missing mana colors and dead hands before the mulligan decision.
+- Playtest results can link a separate proposed deck change to the player-authored evidence note, keeping observation and next experiment distinct in history.
 
 ### Remaining scope
 
 - [x] Present playtest comparison between deck snapshots in the product UI.
 - [x] Surface missing-color and dead-opening-hand evidence alongside persisted mulligan and draw-progression signals.
 - [x] Let the player attach a short evidence note to a result.
-- [ ] Associate a note with a proposed deck change.
+- [x] Associate a note with a proposed deck change.
 - [ ] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
 

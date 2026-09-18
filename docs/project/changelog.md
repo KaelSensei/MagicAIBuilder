@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-18: Proposed playtest changes
+
+#### Added
+
+- Added an optional proposed-change field to recorded playtest sessions so players can separate what they observed from what they intend to try next.
+- Displayed the proposed change as a distinct item in playtest history and persisted it through the validated API contract and an additive database migration.
+- Added parser, API and component coverage, bringing the suite to 2,688 tests across 212 files.
+
 ### 2026-09-18: Opening-hand color evidence
 
 #### Added

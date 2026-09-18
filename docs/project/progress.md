@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2684 across 212 files                                                                                                                   |
+| Unit tests          | 2688 across 212 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -21,7 +21,7 @@
 | Components          | 145 — every `.tsx` under `src/` excluding tests, pages included (the label undercounts what it measures; `src/components` alone is 123) |
 | API routes          | 46                                                                                                                                      |
 | Prisma models       | 22                                                                                                                                      |
-| Prisma migrations   | 26                                                                                                                                      |
+| Prisma migrations   | 27                                                                                                                                      |
 | Hooks               | 26                                                                                                                                      |
 | Locales served      | 2 (`en`, `fr`) + 8 dormant                                                                                                              |
 | Production database | Neon (Vercel Marketplace)                                                                                                               |
@@ -35,7 +35,8 @@
 - Snapshot comparisons disclose both cohort sizes, flag fewer than three runs per version as an early signal, and describe regressions without ambiguous negative wording.
 - Recorded playtest sessions now retain deterministic cards-seen and additional-draw evidence instead of losing those engine signals when the modal closes.
 - Opening-hand evidence now identifies missing mana colors and dead hands using visible lands and affordable spell costs before the player commits to a keep.
-- The next playtest priority is associating player notes with proposed deck changes.
+- Playtest results now store a proposed deck change separately from the evidence note and expose both in history, so observation and the next experiment remain distinct.
+- The next playtest priority is feeding this user-owned evidence into AI prompts without treating it as unexplained training data.
 
 > **The coverage number fell from 94.89% to 50.52% without a single test being deleted.** The denominator changed: `src/app` and `src/components` were excluded from the measure, so "94.89%" described roughly a third of the repository. The exclusions were removed on 2026-08-23, and `vitest.config.ts` records the breakdown that made it visible — lib 96.6%, hooks 87.4%, components 25.2%, app 25.1%, all of src **48.5%**. This batch moved it to **50.52%**. Compare only against figures measured after that change; anything at 90-something in this file above 2026-08-23 is measuring the smaller denominator.
 
