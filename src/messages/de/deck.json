@@ -204,6 +204,7 @@
     "poweredBy": "Powered by {provider}",
     "priorityHigh": "High",
     "priorityMedium": "Med",
+    "priorityAll": "Alle",
     "priorityLow": "Low",
     "timeJustNow": "just now",
     "timeMinAgo": "{mins} min ago",

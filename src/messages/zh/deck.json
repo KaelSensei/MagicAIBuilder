@@ -204,6 +204,7 @@
     "poweredBy": "Powered by {provider}",
     "priorityHigh": "High",
     "priorityMedium": "Med",
+    "priorityAll": "全部",
     "priorityLow": "Low",
     "timeJustNow": "just now",
     "timeMinAgo": "{mins} min ago",

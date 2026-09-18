@@ -1021,6 +1021,7 @@ export default function BuilderPage() {
               onArchetypeChange={setAIArchetypeOverride}
               budgetPerCard={aiBudgetPerCard}
               onBudgetPerCardChange={setAIBudgetPerCard}
+              currentCardNames={deck.cards.map((card) => card.name)}
               brief={aiBrief}
               onBriefChange={setAIBrief}
               analysedAt={analysedAt}
