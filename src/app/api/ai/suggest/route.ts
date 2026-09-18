@@ -5,6 +5,8 @@ import type { Archetype } from "@/lib/ai/archetypes";
 import { logger } from "@/lib/logger";
 import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { prisma } from "@/lib/db/prisma";
+import { formatPlaytestEvidenceForPrompt } from "@/lib/playtest/ai-context";
 
 export const runtime = "nodejs";
 
@@ -21,6 +23,7 @@ interface BracketDimensions {
 }
 
 interface SuggestRequest {
+  deckId: string;
   commanderName: string | null;
   partnerName: string | null;
   colorIdentity: string[];
@@ -89,7 +92,49 @@ function resolveArchetype(req: SuggestRequest): Archetype | undefined {
     : undefined;
 }
 
-function buildPrompt(req: SuggestRequest): string {
+async function loadPlaytestEvidence(deckId: string, userId: string): Promise<string> {
+  try {
+    const sessions = await prisma.playtestSession.findMany({
+      where: {
+        deckId,
+        userId,
+        OR: [{ notes: { not: null } }, { proposedChange: { not: null } }],
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        result: true,
+        turns: true,
+        mulliganCount: true,
+        difficulty: true,
+        notes: true,
+        proposedChange: true,
+      },
+    });
+
+    return formatPlaytestEvidenceForPrompt(
+      sessions.map((session) => ({
+        result:
+          session.result === "win" || session.result === "draw" ? session.result : "loss",
+        turns: session.turns,
+        mulliganCount: session.mulliganCount,
+        difficulty:
+          session.difficulty === "budget" ||
+          session.difficulty === "mid-range" ||
+          session.difficulty === "cedh"
+            ? session.difficulty
+            : undefined,
+        notes: session.notes ?? undefined,
+        proposedChange: session.proposedChange ?? undefined,
+      }))
+    );
+  } catch (error) {
+    logger.error("Playtest evidence unavailable", "POST /api/ai/suggest", error);
+    return formatPlaytestEvidenceForPrompt([]);
+  }
+}
+
+function buildPrompt(req: SuggestRequest, playtestEvidence: string): string {
   const commander = resolveCommanderLabel(req);
   const colors = req.colorIdentity.length > 0 ? req.colorIdentity.join("") : "Colorless";
   const budgetConstraint = resolveBudgetConstraint(req);
@@ -145,6 +190,8 @@ ${warningsInfo}
 
 ALL CURRENT CARDS (${req.cardNames.length}):
 ${cardList || "(none)"}
+
+${playtestEvidence}
 
 ARCHETYPE GUIDANCE (${archetype ?? "Goodstuff"}):
 ${archetypeHint}
@@ -262,17 +309,19 @@ export async function POST(request: Request) {
 
   let body: SuggestRequest;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
-  if (!body.colorIdentity || !Array.isArray(body.cardNames)) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (typeof body.deckId !== "string" || !body.colorIdentity || !Array.isArray(body.cardNames)) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
   // Sanitize user-provided strings before injecting into prompts (prompt injection prevention)
   if (body.commanderName) body.commanderName = sanitizeForPrompt(body.commanderName, 200);
   if (body.partnerName) body.partnerName = sanitizeForPrompt(body.partnerName, 200);
 
+  const playtestEvidence = await loadPlaytestEvidence(body.deckId, auth.session.user.id);
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        const prompt = buildPrompt(body);
+        const prompt = buildPrompt(body, playtestEvidence);
         let result: SuggestResponse;
         if (process.env.ANTHROPIC_API_KEY) result = await callAnthropic(prompt);
         else if (process.env.OPENAI_API_KEY) result = await callOpenAI(prompt);
