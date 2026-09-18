@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import { MAX_SESSION_NOTES_LENGTH, parseSessionInput, summarizeSessions } from "./session-input";
+import {
+  MAX_PROPOSED_CHANGE_LENGTH,
+  MAX_SESSION_NOTES_LENGTH,
+  parseSessionInput,
+  summarizeSessions,
+} from "./session-input";
 import type { PlaytestSession } from "./analytics";
 
 function session(overrides: Partial<PlaytestSession> = {}): PlaytestSession {
@@ -141,6 +146,29 @@ describe("parseSessionInput", () => {
 
     expect(atLimit.ok).toBe(true);
     expect(overLimit.ok).toBe(false);
+  });
+
+  it("trims an optional proposed deck change", () => {
+    const parsed = parseSessionInput({
+      result: "loss",
+      turns: 7,
+      proposedChange: "  Add one more untapped blue source.  ",
+    });
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.value.proposedChange).toBe("Add one more untapped blue source.");
+    }
+  });
+
+  it("rejects a proposed change above its length limit", () => {
+    expect(
+      parseSessionInput({
+        result: "loss",
+        turns: 7,
+        proposedChange: "a".repeat(MAX_PROPOSED_CHANGE_LENGTH + 1),
+      }).ok
+    ).toBe(false);
   });
 
   it("rejects a payload that is not an object at all", () => {

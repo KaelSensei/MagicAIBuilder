@@ -10,16 +10,16 @@ datasource db {
 // ─── NextAuth Models ────────────────────────────────────────────────
 
 model User {
-  id            String          @id @default(cuid())
-  name          String?
-  username      String?         @unique // public profile slug (e.g. /u/kael)
-  onboardingDone Boolean       @default(false) // true after first-run wizard completed or skipped
-  email         String          @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?         // hashed password for credentials provider (null for OAuth-only users)
-  accounts      Account[]
-  sessions      Session[]
+  id             String            @id @default(cuid())
+  name           String?
+  username       String?           @unique // public profile slug (e.g. /u/kael)
+  onboardingDone Boolean           @default(false) // true after first-run wizard completed or skipped
+  email          String            @unique
+  emailVerified  DateTime?
+  image          String?
+  password       String? // hashed password for credentials provider (null for OAuth-only users)
+  accounts       Account[]
+  sessions       Session[]
   decks          Deck[]
   collection     CollectionCard[]
   favorites      CardFavorite[]
@@ -28,11 +28,11 @@ model User {
   votes          DeckVote[]
   playtests      PlaytestSession[]
   comments       DeckComment[]
-  following      UserFollow[]    @relation("Following")
-  followers      UserFollow[]    @relation("Followers")
+  following      UserFollow[]      @relation("Following")
+  followers      UserFollow[]      @relation("Followers")
   apiKeys        ApiKey[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 model Account {
@@ -75,76 +75,76 @@ model VerificationToken {
 
 /// A Commander (or Brawl) deck with its metadata
 model Deck {
-  id            String         @id @default(cuid())
+  id            String            @id @default(cuid())
   name          String
-  description   String?        @default("")
-  tags          String[]       @default([])
-  format        String         @default("commander")
-  targetBracket Int            @default(3)
+  description   String?           @default("")
+  tags          String[]          @default([])
+  format        String            @default("commander")
+  targetBracket Int               @default(3)
   budget        Float?
   commanderId   String?
   commanderName String? // denormalised from the isCommander DeckCard; lets community discovery match a commander slug in SQL
   partnerId     String?
   companionId   String?
-  pairingType   String         @default("none")
-  manualBracket Int?                // null = use calculated score, 1-4 = manual override
-  shareToken    String?        @unique
-  shareEnabled  Boolean        @default(false)
-  isPublic      Boolean        @default(false) // visible on public profile page
-  isAIGenerated Boolean        @default(false)
+  pairingType   String            @default("none")
+  manualBracket Int? // null = use calculated score, 1-4 = manual override
+  shareToken    String?           @unique
+  shareEnabled  Boolean           @default(false)
+  isPublic      Boolean           @default(false) // visible on public profile page
+  isAIGenerated Boolean           @default(false)
   userId        String?
-  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards         DeckCard[]
   snapshots     DeckSnapshot[]
   ratings       DeckRating[]
   votes         DeckVote[]
   playtests     PlaytestSession[]
   comments      DeckComment[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@index([userId])
 }
 
 /// A named snapshot (version) of a deck at a point in time
 model DeckSnapshot {
-  id         String   @id @default(cuid())
-  deckId     String
-  deck       Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  name       String
-  cardList   Json
-  commander  String?
-  cardCount  Int
-  createdAt  DateTime @default(now())
-  playtests  PlaytestSession[]
+  id        String            @id @default(cuid())
+  deckId    String
+  deck      Deck              @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  name      String
+  cardList  Json
+  commander String?
+  cardCount Int
+  createdAt DateTime          @default(now())
+  playtests PlaytestSession[]
 
   @@index([deckId])
 }
 
 model DeckCard {
-  id            String  @id @default(cuid())
-  deck          Deck    @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
   deckId        String
   scryfallId    String
   name          String
-  manaCost      String  @default("")
-  cmc           Float   @default(0)
-  typeLine      String  @default("")
-  oracleText    String  @default("")
+  manaCost      String   @default("")
+  cmc           Float    @default(0)
+  typeLine      String   @default("")
+  oracleText    String   @default("")
   power         String?
   toughness     String?
   colorIdentity String[]
-  isGameChanger Boolean @default(false)
-  isBanned      Boolean @default(false)
+  isGameChanger Boolean  @default(false)
+  isBanned      Boolean  @default(false)
   price         Float?
-  imageUri      String  @default("")
-  artCropUri    String  @default("")
-  category      String  @default("other")
-  quantity      Int     @default(1)
-  isCommander   Boolean @default(false)
-  isPartner     Boolean @default(false)
+  imageUri      String   @default("")
+  artCropUri    String   @default("")
+  category      String   @default("other")
+  quantity      Int      @default(1)
+  isCommander   Boolean  @default(false)
+  isPartner     Boolean  @default(false)
   notes         String?
-  zone          String  @default("main") // "main" | "sideboard" | "maybeboard"
+  zone          String   @default("main") // "main" | "sideboard" | "maybeboard"
 
   @@index([deckId])
 }
@@ -160,7 +160,7 @@ model CardCache {
 /// Cache for Scryfall search results (1h TTL)
 model ScryfallSearchCache {
   cacheKey String   @id // sha256(query|page)
-  data     Json     // ScryfallSearchResponse
+  data     Json // ScryfallSearchResponse
   cachedAt DateTime @default(now())
 
   @@index([cachedAt])
@@ -168,12 +168,12 @@ model ScryfallSearchCache {
 
 /// Cache for meta analysis data (EDHRec, tournament results)
 model MetaCache {
-  id             String   @id @default(cuid())
-  commanderSlug  String
-  source         String   // "edhrec" | "tournament"
-  data           Json
-  cachedAt       DateTime @default(now())
-  expiresAt      DateTime
+  id            String   @id @default(cuid())
+  commanderSlug String
+  source        String // "edhrec" | "tournament"
+  data          Json
+  cachedAt      DateTime @default(now())
+  expiresAt     DateTime
 
   @@unique([commanderSlug, source])
   @@index([commanderSlug])
@@ -186,18 +186,18 @@ model MetaCache {
 /// over working credentials. `tokenHash` is unique because it is also the
 /// lookup index: verification is one indexed read, not a scan over every key.
 model ApiKey {
-  id String @id @default(cuid())
+  id            String    @id @default(cuid())
   /// What the key is for, as its owner labelled it ("CLI on my laptop").
   name          String
   /// SHA-256 of the token, hex. The token itself exists only in the response
   /// that created it.
-  tokenHash     String   @unique
+  tokenHash     String    @unique
   /// `mab_` plus the first 8 characters, so a key can be recognised in a list
   /// without being usable from it.
   displayPrefix String
   /// Granted scopes. Present from the first key so that shipping a write
   /// endpoint later cannot silently widen keys already in the wild.
-  scopes        String[] @default(["decks:read"])
+  scopes        String[]  @default(["decks:read"])
   /// Set when the owner revokes the key. Kept rather than deleted so a
   /// compromised key's usage stays auditable.
   revokedAt     DateTime?
@@ -207,8 +207,8 @@ model ApiKey {
   /// not turn every read into a write.
   lastUsedAt    DateTime?
   userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
 
   @@index([userId])
 }
@@ -243,7 +243,7 @@ model CollectionCard {
   name       String
   quantity   Int       @default(1)
   foil       Boolean   @default(false)
-  condition  String?   // NM / LP / MP / HP / DMG
+  condition  String? // NM / LP / MP / HP / DMG
   acquiredAt DateTime?
   price      Float?
   imageUri   String    @default("")
@@ -258,17 +258,17 @@ model CollectionCard {
 
 // Deck templates for reusable archetypes
 model DeckTemplate {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
   commanderName String
-  archetype     String    // Combo, Control, Voltron, etc.
-  deckList      Json      // Array of DeckCard objects (99 cards)
+  archetype     String // Combo, Control, Voltron, etc.
+  deckList      Json // Array of DeckCard objects (99 cards)
   author        String
-  upvotes       Int       @default(0)
-  source        String    @default("community") // "official" or "community"
-  userId        String?   // Creator (if community)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  upvotes       Int      @default(0)
+  source        String   @default("community") // "official" or "community"
+  userId        String? // Creator (if community)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([commanderName])
   @@index([upvotes])
@@ -292,13 +292,13 @@ model CardFavorite {
 }
 
 model FavoriteList {
-  id        String              @id @default(cuid())
+  id        String               @id @default(cuid())
   name      String
   userId    String
-  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards     CardInFavoriteList[]
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   @@index([userId])
 }
@@ -323,8 +323,8 @@ model DeckRating {
   deck         Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rating       Int      // 1–5, validated at the route
-  title        String?  // non-null => this row is a review
+  rating       Int // 1–5, validated at the route
+  title        String? // non-null => this row is a review
   body         String?
   helpfulCount Int      @default(0)
   createdAt    DateTime @default(now())
@@ -384,21 +384,22 @@ model DeckComment {
 /// with no opponent, so nothing in the app can decide whether a run was a win.
 /// A session is therefore only stored when the player says how it went.
 model PlaytestSession {
-  id            String   @id @default(cuid())
-  deckId        String
-  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  result        String // "win" | "loss" | "draw", validated at the route
-  turns         Int
-  mulliganCount Int      @default(0)
-  difficulty    String? // "budget" | "mid-range" | "cedh"; absent means unspecified
-  notes         String?
-  snapshotId    String?
-  snapshot      DeckSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+  id                  String        @id @default(cuid())
+  deckId              String
+  deck                Deck          @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  userId              String
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  result              String // "win" | "loss" | "draw", validated at the route
+  turns               Int
+  mulliganCount       Int           @default(0)
+  difficulty          String? // "budget" | "mid-range" | "cedh"; absent means unspecified
+  notes               String?
+  proposedChange      String?
+  snapshotId          String?
+  snapshot            DeckSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
   cardsSeen           Int? // deterministic count captured from the playtest engine
   additionalCardsSeen Int? // cards accessed beyond opening hand and natural draws
-  createdAt     DateTime @default(now())
+  createdAt           DateTime      @default(now())
 
   // No unique constraint: every run is its own row — that is the whole point.
   @@index([deckId])

@@ -124,6 +124,21 @@ describe("RecordResultBar", () => {
     );
   });
 
+  it("sends the concrete deck change the player wants to try", async () => {
+    renderBar();
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Change to try" }),
+      "  Add one more untapped blue source.  "
+    );
+    await userEvent.click(screen.getByText("Loss"));
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0];
+    expect(JSON.parse(String(init?.body)).proposedChange).toBe(
+      "Add one more untapped blue source."
+    );
+  });
+
   it("prevents notes longer than the server accepts", () => {
     renderBar();
     expect(screen.getByRole("textbox", { name: "Playtest note" })).toHaveAttribute(

@@ -194,6 +194,16 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
                     {session.notes}
                   </p>
                 )}
+                {session.proposedChange && (
+                  <div className="mt-1 rounded border border-purple-400/20 bg-purple-400/10 px-2 py-1">
+                    <p className="text-[9px] uppercase tracking-wide text-purple-300/70">
+                      {t("history.proposedChange")}
+                    </p>
+                    <p className="break-words text-purple-100/70">
+                      {session.proposedChange}
+                    </p>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

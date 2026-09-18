@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import {
   MAX_SESSION_NOTES_LENGTH,
+  MAX_PROPOSED_CHANGE_LENGTH,
   SESSION_DIFFICULTIES,
   SESSION_RESULTS,
   type SessionDifficulty,
@@ -47,6 +48,7 @@ export function RecordResultBar({
   // nullable and the matchup breakdown simply skips those runs.
   const [difficulty, setDifficulty] = useState<SessionDifficulty | "">("");
   const [notes, setNotes] = useState("");
+  const [proposedChange, setProposedChange] = useState("");
 
   const record = useCallback(
     async (result: SessionResult) => {
@@ -66,6 +68,9 @@ export function RecordResultBar({
             additionalCardsSeen,
             ...(difficulty === "" ? {} : { difficulty }),
             ...(notes.trim() === "" ? {} : { notes: notes.trim() }),
+            ...(proposedChange.trim() === ""
+              ? {}
+              : { proposedChange: proposedChange.trim() }),
           }),
         });
         if (!response.ok) throw new Error(`record failed: ${response.status}`);
@@ -90,6 +95,7 @@ export function RecordResultBar({
       additionalCardsSeen,
       difficulty,
       notes,
+      proposedChange,
       onRecorded,
       queryClient,
     ]
@@ -124,6 +130,18 @@ export function RecordResultBar({
         onChange={(event) => setNotes(event.target.value)}
         maxLength={MAX_SESSION_NOTES_LENGTH}
         placeholder={t("notesPlaceholder")}
+        className="min-w-48 flex-1 rounded bg-white/10 px-2 py-1 text-xs text-white placeholder:text-white/35"
+      />
+      <label className="sr-only" htmlFor="playtest-proposed-change">
+        {t("proposedChangeLabel")}
+      </label>
+      <input
+        id="playtest-proposed-change"
+        type="text"
+        value={proposedChange}
+        onChange={(event) => setProposedChange(event.target.value)}
+        maxLength={MAX_PROPOSED_CHANGE_LENGTH}
+        placeholder={t("proposedChangePlaceholder")}
         className="min-w-48 flex-1 rounded bg-white/10 px-2 py-1 text-xs text-white placeholder:text-white/35"
       />
       {SESSION_RESULTS.map((result) => (
