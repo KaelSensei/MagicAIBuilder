@@ -396,7 +396,13 @@
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "Adicionando cartas ao seu deck…",
-    "demoDeckNotice": "Deck de demonstração — nenhum provedor de IA está configurado neste deployment, esta lista é apenas um exemplo."
+    "demoDeckNotice": "Deck de demonstração — nenhum provedor de IA está configurado neste deployment, esta lista é apenas um exemplo.",
+    "planTitle": "Review your deck plan",
+    "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Win conditions",
+    "planRoles": "Deck roles",
+    "planConstraints": "Constraints"
   },
   "ratings": {
     "title": "Community Rating",

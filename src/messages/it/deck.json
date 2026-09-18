@@ -396,7 +396,13 @@
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "Aggiunta delle carte al mazzo…",
-    "demoDeckNotice": "Mazzo dimostrativo — nessun fornitore IA è configurato su questo deployment, questa lista è solo un segnaposto."
+    "demoDeckNotice": "Mazzo dimostrativo — nessun fornitore IA è configurato su questo deployment, questa lista è solo un segnaposto.",
+    "planTitle": "Review your deck plan",
+    "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Win conditions",
+    "planRoles": "Deck roles",
+    "planConstraints": "Constraints"
   },
   "ratings": {
     "title": "Community Rating",

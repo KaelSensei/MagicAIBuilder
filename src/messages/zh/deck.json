@@ -396,7 +396,13 @@
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "正在将卡牌加入你的套牌…",
-    "demoDeckNotice": "演示套牌 — 此部署未配置 AI 服务商，因此这是一份占位牌表。"
+    "demoDeckNotice": "演示套牌 — 此部署未配置 AI 服务商，因此这是一份占位牌表。",
+    "planTitle": "Review your deck plan",
+    "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Win conditions",
+    "planRoles": "Deck roles",
+    "planConstraints": "Constraints"
   },
   "ratings": {
     "title": "Community Rating",

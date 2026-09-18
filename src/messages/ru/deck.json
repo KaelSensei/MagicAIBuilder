@@ -396,7 +396,13 @@
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "Добавление карт в колоду…",
-    "demoDeckNotice": "Демонстрационная колода — в этом развёртывании не настроен ИИ-провайдер, поэтому список является заглушкой."
+    "demoDeckNotice": "Демонстрационная колода — в этом развёртывании не настроен ИИ-провайдер, поэтому список является заглушкой.",
+    "planTitle": "Review your deck plan",
+    "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Win conditions",
+    "planRoles": "Deck roles",
+    "planConstraints": "Constraints"
   },
   "ratings": {
     "title": "Community Rating",

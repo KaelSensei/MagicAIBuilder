@@ -396,7 +396,13 @@
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "Karten werden zum Deck hinzugefügt…",
-    "demoDeckNotice": "Demo-Deck — auf diesem Deployment ist kein KI-Anbieter konfiguriert, diese Liste ist nur ein Platzhalter."
+    "demoDeckNotice": "Demo-Deck — auf diesem Deployment ist kein KI-Anbieter konfiguriert, diese Liste ist nur ein Platzhalter.",
+    "planTitle": "Review your deck plan",
+    "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Win conditions",
+    "planRoles": "Deck roles",
+    "planConstraints": "Constraints"
   },
   "ratings": {
     "title": "Community Rating",
