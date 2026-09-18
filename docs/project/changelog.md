@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-18: User-owned playtest context for AI suggestions
+
+#### Added
+
+- Grounded AI deck suggestions in up to five recent meaningful playtest records, loaded server-side with both deck and authenticated-user ownership constraints.
+- Marked playtest observations as private anecdotal context rather than tournament evidence or model instructions, with bounded sanitization for player-authored notes and proposed changes.
+- Preserved suggestion availability when playtest history cannot be loaded and added route, formatter and hook coverage, bringing the suite to 2,694 tests across 214 files.
+
 ### 2026-09-18: Proposed playtest changes
 
 #### Added

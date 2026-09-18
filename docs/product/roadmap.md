@@ -320,6 +320,7 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - Recorded sessions now persist deterministic cards-seen and additional-draw evidence from the goldfish engine for later version analysis.
 - Opening-hand evidence now distinguishes land balance from immediate castability, exposing missing mana colors and dead hands before the mulligan decision.
 - Playtest results can link a separate proposed deck change to the player-authored evidence note, keeping observation and next experiment distinct in history.
+- AI deck suggestions can use the latest private, user-owned playtest observations as bounded anecdotal context, scoped server-side by deck and account.
 
 ### Remaining scope
 
@@ -327,7 +328,7 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Surface missing-color and dead-opening-hand evidence alongside persisted mulligan and draw-progression signals.
 - [x] Let the player attach a short evidence note to a result.
 - [x] Associate a note with a proposed deck change.
-- [ ] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
+- [x] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
 
 ### Definition of done
