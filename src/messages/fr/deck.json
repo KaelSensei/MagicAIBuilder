@@ -331,6 +331,16 @@
       "playPatternPlaceholder": "Créer de la valeur, puis gagner au combat…",
       "dislikesLabel": "Que doit-il éviter ?",
       "dislikesPlaceholder": "Combos infinis, tuteurs, tours supplémentaires…"
+    },
+    "evidence": {
+      "verified": "Vérifié par Scryfall",
+      "unavailable": "Vérification indisponible",
+      "colorless": "Incolore",
+      "compatible": "compatible",
+      "incompatible": "hors identité couleur",
+      "commanderLegal": "Légal en Commander",
+      "commanderIllegal": "Non légal en Commander",
+      "unknown": "Inconnu"
     }
   },
   "combos": {

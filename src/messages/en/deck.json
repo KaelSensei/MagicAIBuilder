@@ -331,6 +331,16 @@
       "playPatternPlaceholder": "Build value, then win through combat…",
       "dislikesLabel": "What should it avoid?",
       "dislikesPlaceholder": "Infinite combos, tutors, extra turns…"
+    },
+    "evidence": {
+      "verified": "Scryfall verified",
+      "unavailable": "Verification unavailable",
+      "colorless": "Colorless",
+      "compatible": "compatible",
+      "incompatible": "outside color identity",
+      "commanderLegal": "Commander legal",
+      "commanderIllegal": "Not Commander legal",
+      "unknown": "Unknown"
     }
   },
   "combos": {

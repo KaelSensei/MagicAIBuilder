@@ -20,6 +20,7 @@ import { ARCHETYPES } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
 import type { DeckBrief } from "@/lib/ai/deck-brief";
 import { AIDeckBriefFields } from "./AIDeckBriefFields";
+import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
 
 const BUDGET_OPTIONS: Array<{ label: string; value: number | null }> = [
   { label: "No limit", value: null },
@@ -346,6 +347,11 @@ export function AISuggestionsPanel({
                               <p className="text-[11px] text-[var(--text-secondary)] leading-tight">
                                 {s.reason}
                               </p>
+                              {s.evidence && (
+                                <SuggestionEvidenceDetails
+                                  evidence={s.evidence}
+                                />
+                              )}
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
                               {!isIgnored && onIgnoreSuggestion && (
