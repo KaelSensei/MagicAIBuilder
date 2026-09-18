@@ -557,7 +557,13 @@
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "Adding cards to your deck…",
-    "demoDeckNotice": "Demo deck — no AI provider is configured on this deployment, so this is a placeholder list."
+    "demoDeckNotice": "Demo deck — no AI provider is configured on this deployment, so this is a placeholder list.",
+    "planTitle": "Review your deck plan",
+    "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Win conditions",
+    "planRoles": "Deck roles",
+    "planConstraints": "Constraints"
   },
   "description": {
     "add": "Add deck description…",

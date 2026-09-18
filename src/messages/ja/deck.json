@@ -396,7 +396,13 @@
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "デッキにカードを追加しています…",
-    "demoDeckNotice": "デモデッキ — このデプロイには AI プロバイダーが設定されていないため、これは仮のリストです。"
+    "demoDeckNotice": "デモデッキ — このデプロイには AI プロバイダーが設定されていないため、これは仮のリストです。",
+    "planTitle": "Review your deck plan",
+    "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Win conditions",
+    "planRoles": "Deck roles",
+    "planConstraints": "Constraints"
   },
   "ratings": {
     "title": "Community Rating",
