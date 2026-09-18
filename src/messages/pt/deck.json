@@ -207,6 +207,10 @@
     "priorityLow": "Low",
     "timeJustNow": "just now",
     "timeMinAgo": "{mins} min ago",
+    "alternativeCount": "{count, plural, one {# alternative} other {# alternatives}}",
+    "alternativeBudget": "Budget",
+    "alternativePower": "Power",
+    "alternativePlaystyle": "Playstyle",
     "brief": {
       "title": "Your deck brief",
       "description": "Optional preferences used only for this analysis.",

@@ -322,6 +322,10 @@
     "priorityLow": "Bas",
     "timeJustNow": "à l’instant",
     "timeMinAgo": "il y a {mins} min",
+    "alternativeCount": "{count, plural, one {# alternative} other {# alternatives}}",
+    "alternativeBudget": "Budget",
+    "alternativePower": "Puissance",
+    "alternativePlaystyle": "Style de jeu",
     "brief": {
       "title": "Votre brief de deck",
       "description": "Préférences facultatives utilisées uniquement pour cette analyse.",

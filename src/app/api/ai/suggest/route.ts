@@ -57,6 +57,14 @@ export interface CardSuggestion {
   category: string;
   priority: "high" | "medium" | "low";
   evidence?: SuggestionEvidence;
+  alternatives?: CardAlternative[];
+}
+
+export interface CardAlternative {
+  name: string;
+  reason: string;
+  dimension: "budget" | "power" | "playstyle";
+  evidence?: SuggestionEvidence;
 }
 
 export interface CardRemoval {
@@ -234,7 +242,7 @@ ARCHETYPE GUIDANCE (${archetype ?? "Goodstuff"}):
 ${archetypeHint}
 
 TASK:
-1. Suggest exactly 8 cards to ADD. They should synergize with ${commander}, align with the archetype above, fill the gaps, match bracket ${req.targetBracket}, respect budget, and NOT already be in the deck. Include 2–4 sentences of rationale per card.
+1. Suggest exactly 8 cards to ADD. They should synergize with ${commander}, align with the archetype above, fill the gaps, match bracket ${req.targetBracket}, respect budget, and NOT already be in the deck. Include 2–4 sentences of rationale per card. For each card, include up to 3 distinct alternatives: a cheaper budget option, a different power-level option, and a different playstyle option. Never repeat a main suggestion or a card already in the deck.
 2. Suggest exactly 4 cards to REMOVE. They must be actual cards from the deck above that have low synergy with the archetype, are redundant, or push the bracket too high. Include an explanation per removal.
 
 Respond ONLY in this JSON format (no markdown):
@@ -245,7 +253,14 @@ Respond ONLY in this JSON format (no markdown):
       "name": "Exact Card Name",
       "reason": "One sentence explaining synergy with ${commander}",
       "category": "ramp|draw|removal|boardWipe|creature|land|protection|winCondition|other",
-      "priority": "high|medium|low"
+      "priority": "high|medium|low",
+      "alternatives": [
+        {
+          "name": "Exact Alternative Card Name",
+          "reason": "Why this is a meaningful alternative",
+          "dimension": "budget|power|playstyle"
+        }
+      ]
     }
   ],
   "removals": [
@@ -395,8 +410,12 @@ async function enrichSuggestionEvidence(
     Awaited<ReturnType<typeof getCardCollection>>["data"][number]
   >();
   try {
+    const names = result.suggestions.flatMap((suggestion) => [
+      suggestion.name,
+      ...(suggestion.alternatives ?? []).map(({ name }) => name),
+    ]);
     const collection = await getCardCollection(
-      result.suggestions.map(({ name }) => ({ name }))
+      [...new Set(names)].map((name) => ({ name }))
     );
     cardsByName = new Map(
       collection.data.map((card) => [card.name.toLowerCase(), card])
@@ -418,6 +437,14 @@ async function enrichSuggestionEvidence(
         cardsByName.get(suggestion.name.toLowerCase()),
         { deckColors: req.colorIdentity, averageCmc: req.avgCmc }
       ),
+      alternatives: suggestion.alternatives?.map((alternative) => ({
+        ...alternative,
+        evidence: buildSuggestionEvidence(
+          { ...alternative, category: suggestion.category },
+          cardsByName.get(alternative.name.toLowerCase()),
+          { deckColors: req.colorIdentity, averageCmc: req.avgCmc }
+        ),
+      })),
     })),
   };
 }
