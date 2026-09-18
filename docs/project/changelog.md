@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-18: Conversational AI deck brief
+
+#### Added
+
+- Added optional theme, desired-play-pattern and dislikes fields to the AI suggestions panel, complementing the existing commander, budget and target bracket inputs.
+- Added bounded runtime normalization and a distinct prompt section for player intent; changing the brief now invalidates cached suggestions and requests a fresh analysis.
+- Added policy, component, hook, route and locale-catalog coverage, bringing the suite to 2,700 tests across 216 files.
+
 ### 2026-09-18: User-owned playtest context for AI suggestions
 
 #### Added

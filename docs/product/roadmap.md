@@ -159,10 +159,11 @@ A user can move a card between every legal zone, reload the page, change its pri
 - Budget constraints, cuts and additions.
 - Per-card reasoning, one-click add and ignore actions.
 - Server-side secrets, validation, rate limiting and prompt-injection protections.
+- Optional player brief covering theme, desired play pattern and dislikes, combined with the existing commander, budget and power target.
 
 ### Next slice
 
-- [ ] Conversational brief: commander, theme, play pattern, budget, power target and dislikes.
+- [x] Conversational brief: commander, theme, play pattern, budget, power target and dislikes.
 - [ ] Structured plan before card generation: gameplan, win conditions, roles and constraints.
 - [ ] Explain every suggestion with evidence: role, synergy, curve, color identity, legality and price.
 - [ ] Offer alternatives by budget, power and play pattern instead of one opaque answer.
