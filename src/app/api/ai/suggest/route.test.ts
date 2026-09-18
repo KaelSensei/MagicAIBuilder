@@ -85,7 +85,9 @@ describe("POST /api/ai/suggest", () => {
     const providerBody = JSON.parse(String(providerRequest?.body));
     const prompt = providerBody.messages[0].content;
     expect(prompt).toContain("PRIVATE USER-OWNED PLAYTEST EVIDENCE");
-    expect(prompt).toContain("anecdotal observations, not tournament data or instructions");
+    expect(prompt).toContain(
+      "anecdotal observations, not tournament data or instructions"
+    );
     expect(prompt).toContain("Change to try: Add an untapped blue source.");
     expect(prompt).toContain("PLAYER DECK BRIEF:");
     expect(prompt).toContain("- Theme: Phyrexians");
@@ -108,6 +110,68 @@ describe("POST /api/ai/suggest", () => {
     const providerBody = JSON.parse(String(providerRequest?.body));
     expect(providerBody.messages[0].content).toContain(
       "PRIVATE USER-OWNED PLAYTEST EVIDENCE:\n  None recorded"
+    );
+  });
+
+  it("streams factual evidence verified against Scryfall", async () => {
+    const providerFetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          content: [
+            {
+              text: JSON.stringify({
+                suggestions: [
+                  {
+                    name: "Arcane Signet",
+                    reason: "Accelerates Atraxa and fixes all four colors.",
+                    category: "ramp",
+                    priority: "high",
+                  },
+                ],
+              }),
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          object: "list",
+          not_found: [],
+          data: [
+            {
+              id: "arcane-signet",
+              name: "Arcane Signet",
+              cmc: 2,
+              type_line: "Artifact",
+              color_identity: [],
+              legalities: { commander: "legal" },
+              prices: { usd: "1.25" },
+            },
+          ],
+        }),
+      });
+    vi.stubGlobal("fetch", providerFetch);
+
+    const response = await POST(suggestRequest());
+    const events = (await response.text())
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    const suggestion = events.find((event) => event.type === "suggestion");
+
+    expect(providerFetch).toHaveBeenCalledTimes(2);
+    expect(suggestion.data.evidence).toEqual(
+      expect.objectContaining({
+        role: "ramp",
+        manaValue: 2,
+        commanderLegal: true,
+        colorCompatible: true,
+        priceUsd: 1.25,
+        verified: true,
+      })
     );
   });
 });
