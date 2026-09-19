@@ -319,7 +319,8 @@
     "importing": "Importing…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
-    "openShare": "Share deck"
+    "openShare": "Share deck",
+    "forkThisDeck": "이 덱 포크하기"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",

@@ -5,6 +5,7 @@ import {
   updateDeck,
   deleteDeck,
   duplicateDeck,
+  forkPublicDeck,
   addCard,
   removeCard,
   updateCardCategory,
@@ -102,6 +103,22 @@ describe("duplicateDeck", () => {
   it("throws on error", async () => {
     mockFetch(null, false, 500);
     await expect(duplicateDeck("deck-1")).rejects.toThrow("HTTP 500");
+  });
+});
+
+describe("forkPublicDeck", () => {
+  it("POSTs to the fork endpoint", async () => {
+    mockFetch({ id: "fork-1", name: "Public list (Fork)" });
+    const result = await forkPublicDeck("public-1");
+    expect(result.id).toBe("fork-1");
+    const call = vi.mocked(global.fetch).mock.calls[0];
+    expect(call[0]).toContain("/api/decks/public-1/fork");
+    expect((call[1] as RequestInit).method).toBe("POST");
+  });
+
+  it("surfaces a failed public fork", async () => {
+    mockFetch(null, false, 404);
+    await expect(forkPublicDeck("private-1")).rejects.toThrow("HTTP 404");
   });
 });
 
