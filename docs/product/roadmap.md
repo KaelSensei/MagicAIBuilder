@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-09-18
+> **Updated:** 2026-09-19
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -38,6 +38,24 @@ Our opportunity is the workflow between those products:
 - Do not call an LLM for deterministic legality, color identity, quantities or bracket rules.
 - Do not expand formats, languages or integrations faster than their tests and data contracts can support.
 - Do not add a new external service unless it solves a user-visible problem and has an exit path.
+
+### Competitive functional benchmark — 2026-09-19
+
+The comparison below tracks user workflows rather than trying to match feature counts. It is based on the current public product and help surfaces of Moxfield, Archidekt and TappedOut.
+
+| Competitor strength                                                                                                               | MagicAIBuilder today                                                                                                                        | Product response                                                                                     |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Moxfield: fast editing, detailed primers, deck history, tokens, social notifications and rich sandbox controls                    | Editing, snapshots, comments and playtesting exist; primers, required-token summaries and notification inboxes do not                       | Add deck guides, token requirements and relevant notifications without copying a generic social feed |
+| Archidekt: visual organization, folders, deck comparison, reusable card packages, deck-help requests and exportable playtest logs | Custom categories and owned-deck comparison exist; folders, packages, public comparison, help requests and downloadable logs are incomplete | Prioritize deck organization, reusable packages, public comparison and evidence-rich playtest logs   |
+| TappedOut: acquireboard, inventory usage map, wishlist checkout, deck folders and explicit feedback-seeking workflows             | Collection reconciliation and shopping lists exist; cross-deck card usage, acquire state and structured help requests do not                | Connect collection, decks and acquisition planning, then add a focused request-for-feedback flow     |
+
+#### Deliberate non-goals from the benchmark
+
+- Do not build a draft simulator, cube platform, venue directory or full card-trading marketplace in the current roadmap.
+- Do not add paid deck promotion, deck-cycling mechanics or engagement loops that rank visibility by spend.
+- Do not duplicate Scryfall's card database or pursue every format before the Commander workflow is excellent.
+
+Sources reviewed: [Moxfield public feature guide](https://github.com/moxfield/moxfield-public/wiki/Features), [Archidekt product navigation and updates](https://archidekt.com/news), [TappedOut deck help](https://tappedout.net/help-desk/decks/) and [TappedOut inventory and wishlist help](https://tappedout.net/help-desk/ownership/). Product behavior must be revalidated before implementation because competitor capabilities can change.
 
 ---
 
@@ -130,6 +148,9 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
 - [ ] Add keyboard and mobile alternatives for every drag action.
 - [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
+- [ ] Organize decks into user-defined folders, with move, filter and bulk-move actions.
+- [ ] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
+- [ ] Add a required-token and emblem summary derived from the current deck, with export support.
 
 ### Engineering enablers
 
@@ -297,6 +318,9 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - [ ] Add region-aware price providers, starting with a clearly selected market.
 - [ ] Support a deliberate "proxy now / buy later" workflow.
 - [ ] Consider mobile scanning only after the web data model supports printing-level ownership.
+- [ ] Show every deck, list or acquisition plan that currently uses an owned printing.
+- [ ] Add an explicit acquire state that aggregates missing quantities across decks without changing collection ownership.
+- [ ] Export or deep-link the acquisition plan to supported regional sellers while preserving printing, condition and finish choices.
 
 ### Definition of done
 
@@ -331,6 +355,9 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Associate a note with a proposed deck change.
 - [x] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
+- [ ] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
+- [ ] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
+- [ ] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
 
 ### Definition of done
 
@@ -362,6 +389,11 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [ ] Add moderation and abuse-reporting primitives before opening broader social features.
 - [ ] Build a lightweight following feed only if discovery data shows repeated use.
 - [ ] Keep private decks and share tokens out of search indexes.
+- [ ] Publish a structured deck primer with strategy, mulligans, sequencing, win conditions, interaction and budget alternatives.
+- [ ] Let an owner mark a public deck as "seeking feedback" and ask a focused question instead of only exposing a generic comment box.
+- [ ] Add in-product notifications for replies, mentions, follows and changes to explicitly watched decks, with per-event controls.
+- [ ] Organize saved and followed public decks into personal folders without claiming ownership.
+- [ ] Surface reusable community card packages with author attribution, legality checks and a reviewable diff before applying them.
 
 ### Definition of done
 
