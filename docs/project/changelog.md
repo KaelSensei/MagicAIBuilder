@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-19: Reversible AI change review
+
+#### Changed
+
+- Made AI card additions, removals and alternatives reversible before applying a proposed deck change.
+- Added an exact, deduplicated deck diff with explicit apply and clear actions across every locale catalog.
+- Added immutable selection and diff coverage, bringing the suite to 2,725 tests across 223 files.
+
 ### 2026-09-18: Targeted AI suggestion alternatives
 
 #### Added
