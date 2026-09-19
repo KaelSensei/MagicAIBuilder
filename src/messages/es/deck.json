@@ -273,6 +273,13 @@
       "left": "Out of the list",
       "enteredHint": "Below the list before, so the rise is a lower bound",
       "leftHint": "Below the list now, so the fall is an upper bound"
+    },
+    "evidenceType": "Tipo de evidencia: {type}.",
+    "evidence": {
+      "popular": "recomendaciones populares",
+      "synergy": "recomendaciones de alta sinergia",
+      "tournament": "observaciones de torneos",
+      "ai": "sugerencias de IA"
     }
   },
   "snapshots": {

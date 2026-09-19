@@ -273,6 +273,13 @@
       "left": "Out of the list",
       "enteredHint": "Below the list before, so the rise is a lower bound",
       "leftHint": "Below the list now, so the fall is an upper bound"
+    },
+    "evidenceType": "根拠の種類: {type}",
+    "evidence": {
+      "popular": "人気のおすすめ",
+      "synergy": "高シナジーのおすすめ",
+      "tournament": "大会での観測",
+      "ai": "AIの提案"
     }
   },
   "snapshots": {

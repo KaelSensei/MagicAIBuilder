@@ -273,6 +273,13 @@
       "left": "Out of the list",
       "enteredHint": "Below the list before, so the rise is a lower bound",
       "leftHint": "Below the list now, so the fall is an upper bound"
+    },
+    "evidenceType": "근거 유형: {type}",
+    "evidence": {
+      "popular": "인기 추천",
+      "synergy": "높은 시너지 추천",
+      "tournament": "토너먼트 관찰",
+      "ai": "AI 제안"
     }
   },
   "snapshots": {

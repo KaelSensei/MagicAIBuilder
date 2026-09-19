@@ -388,6 +388,13 @@
       "left": "Sorti de la liste",
       "enteredHint": "Sous la liste auparavant : la hausse est une borne inférieure",
       "leftHint": "Sous la liste désormais : la baisse est une borne supérieure"
+    },
+    "evidenceType": "Type de preuve : {type}.",
+    "evidence": {
+      "popular": "recommandations populaires",
+      "synergy": "recommandations à forte synergie",
+      "tournament": "observations de tournoi",
+      "ai": "suggestions IA"
     }
   },
   "snapshots": {
