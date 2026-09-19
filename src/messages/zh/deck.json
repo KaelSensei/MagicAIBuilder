@@ -272,6 +272,13 @@
       "left": "Out of the list",
       "enteredHint": "Below the list before, so the rise is a lower bound",
       "leftHint": "Below the list now, so the fall is an upper bound"
+    },
+    "evidenceType": "证据类型：{type}",
+    "evidence": {
+      "popular": "热门推荐",
+      "synergy": "高协同推荐",
+      "tournament": "赛事观察",
+      "ai": "AI 建议"
     }
   },
   "snapshots": {

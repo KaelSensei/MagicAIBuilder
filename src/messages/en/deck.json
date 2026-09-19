@@ -387,6 +387,13 @@
       "left": "Out of the list",
       "enteredHint": "Below the list before, so the rise is a lower bound",
       "leftHint": "Below the list now, so the fall is an upper bound"
+    },
+    "evidenceType": "Evidence type: {type}.",
+    "evidence": {
+      "popular": "popular recommendations",
+      "synergy": "high-synergy recommendations",
+      "tournament": "tournament observations",
+      "ai": "AI suggestions"
     }
   },
   "snapshots": {
