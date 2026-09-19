@@ -320,7 +320,8 @@
     "importing": "Importing…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
-    "openShare": "Share deck"
+    "openShare": "Share deck",
+    "forkThisDeck": "Создать форк этой колоды"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",

@@ -16,6 +16,9 @@ export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "command
   manualBracket: number | null;
   isAIGenerated: boolean;
   isPublic: boolean;
+  forkedFromDeckId?: string | null;
+  forkedFromDeckName?: string | null;
+  forkedFromUserName?: string | null;
   cards: ApiDeckCard[];
   /** Prisma _count — present on listing responses */
   _count?: { cards: number };
@@ -142,6 +145,15 @@ export async function duplicateDeck(id: string): Promise<ApiDeck> {
     headers: { "Content-Type": "application/json" },
   });
   if (!res.ok) await handleApiError(res, "duplicateDeck");
+  return res.json();
+}
+
+export async function forkPublicDeck(id: string): Promise<ApiDeck> {
+  const res = await fetch(`/api/decks/${id}/fork`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) await handleApiError(res, "forkPublicDeck");
   return res.json();
 }
 

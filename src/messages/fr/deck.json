@@ -435,7 +435,8 @@
     "importing": "Importation…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cartes",
-    "openShare": "Partager le deck"
+    "openShare": "Partager le deck",
+    "forkThisDeck": "Créer une branche de ce deck"
   },
   "banlist": {
     "deckWarnings": "Avertissements du deck",

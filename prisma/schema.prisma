@@ -92,6 +92,9 @@ model Deck {
   shareEnabled  Boolean           @default(false)
   isPublic      Boolean           @default(false) // visible on public profile page
   isAIGenerated Boolean           @default(false)
+  forkedFromDeckId   String?
+  forkedFromDeckName String?
+  forkedFromUserName String?
   userId        String?
   user          User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards         DeckCard[]
