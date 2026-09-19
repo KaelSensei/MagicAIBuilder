@@ -529,7 +529,12 @@
     "gameChangers": "{count, plural, one {# Game Changer} other {# Game Changers}}",
     "gcForcesB4": " → Bracket 4 minimum (>3 GC)",
     "gcForcesB3": " → Bracket 3 minimum (GC not allowed in B1/B2)",
-    "warnings": "Warnings"
+    "warnings": "Warnings",
+    "warningGroups": {
+      "legality": "Errores de legalidad",
+      "strategy": "Sugerencias estratégicas",
+      "advice": "Consejos opcionales"
+    }
   },
   "buyList": {
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",
