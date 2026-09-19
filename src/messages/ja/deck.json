@@ -91,7 +91,15 @@
       "importFailed": "Import failed.",
       "success": "Imported “{name}” — {added, plural, one {# card added} other {# cards added}}{ignored, plural, =0 {} one {, # ignored} other {, # ignored}}.",
       "notFound": "Cards not found in Scryfall ({count}):",
-      "footer": "Supported: {sources}. Deck must be public."
+      "footer": "Supported: {sources}. Deck must be public.",
+      "previewReady": "Preview ready — review before importing.",
+      "confirmImport": "Import this preview",
+      "cancelPreview": "Cancel preview",
+      "previewSummary": "{name} from {source}: {cards} cards across {zones} zones.",
+      "commanders": "Commanders: {names}",
+      "duplicates": "Duplicate decisions: {names}",
+      "noDuplicates": "No duplicate decisions.",
+      "zones": "Main {main} · Sideboard {sideboard} · Maybeboard {maybeboard}"
     }
   },
   "templates": {

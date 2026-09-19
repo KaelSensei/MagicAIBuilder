@@ -91,7 +91,15 @@
       "importFailed": "Échec de l’import.",
       "success": "« {name} » importé — {added, plural, one {# carte ajoutée} other {# cartes ajoutées}}{ignored, plural, =0 {} one {, # ignorée} other {, # ignorées}}.",
       "notFound": "Cartes introuvables sur Scryfall ({count}) :",
-      "footer": "Sources prises en charge : {sources}. Le deck doit être public."
+      "footer": "Sources prises en charge : {sources}. Le deck doit être public.",
+      "previewReady": "Aperçu prêt — vérifiez avant l’import.",
+      "confirmImport": "Importer cet aperçu",
+      "cancelPreview": "Annuler l’aperçu",
+      "previewSummary": "{name} depuis {source} : {cards} cartes dans {zones} zones.",
+      "commanders": "Commandants : {names}",
+      "duplicates": "Doublons à décider : {names}",
+      "noDuplicates": "Aucun doublon à décider.",
+      "zones": "Principal {main} · Réserve {sideboard} · À envisager {maybeboard}"
     }
   },
   "templates": {
