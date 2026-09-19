@@ -204,6 +204,7 @@
     "poweredBy": "Powered by {provider}",
     "priorityHigh": "High",
     "priorityMedium": "Med",
+    "priorityAll": "모두",
     "priorityLow": "Low",
     "timeJustNow": "just now",
     "timeMinAgo": "{mins} min ago",

@@ -319,6 +319,7 @@
     "poweredBy": "Propulsé par {provider}",
     "priorityHigh": "Élevé",
     "priorityMedium": "Moy",
+    "priorityAll": "Toutes",
     "priorityLow": "Bas",
     "timeJustNow": "à l’instant",
     "timeMinAgo": "il y a {mins} min",
