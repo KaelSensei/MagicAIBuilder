@@ -7,6 +7,16 @@ export interface SuggestionDiff {
   readonly removals: readonly string[];
 }
 
+export function toggleSuggestionSelection(
+  current: ReadonlySet<string>,
+  cardName: string
+): Set<string> {
+  const next = new Set(current);
+  if (next.has(cardName)) next.delete(cardName);
+  else next.add(cardName);
+  return next;
+}
+
 /**
  * Filters AI suggestions without changing the result order.
  * @param suggestions Suggestions returned by the copilot.
@@ -15,7 +25,7 @@ export interface SuggestionDiff {
  */
 export function filterSuggestionsByPriority(
   suggestions: readonly CardSuggestion[],
-  priority: SuggestionPriorityFilter,
+  priority: SuggestionPriorityFilter
 ): readonly CardSuggestion[] {
   if (priority === "all") return suggestions;
   return suggestions.filter((suggestion) => suggestion.priority === priority);
@@ -31,12 +41,18 @@ export function filterSuggestionsByPriority(
 export function buildSuggestionDiff(
   currentCardNames: readonly string[],
   selectedAdditions: readonly string[],
-  selectedRemovals: readonly CardRemoval[],
+  selectedRemovals: readonly CardRemoval[]
 ): SuggestionDiff {
   const currentCards = new Set(currentCardNames);
-  const additions = selectedAdditions.filter((name) => !currentCards.has(name));
-  const removals = selectedRemovals
-    .map((removal) => removal.name)
-    .filter((name) => currentCards.has(name));
+  const additions = [...new Set(selectedAdditions)].filter(
+    (name) => !currentCards.has(name)
+  );
+  const removals = [
+    ...new Set(
+      selectedRemovals
+        .map((removal) => removal.name)
+        .filter((name) => currentCards.has(name))
+    ),
+  ];
   return { additions, removals };
 }

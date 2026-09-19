@@ -25,6 +25,7 @@ import { SuggestionAlternatives } from "./SuggestionAlternatives";
 import {
   buildSuggestionDiff,
   filterSuggestionsByPriority,
+  toggleSuggestionSelection,
   type SuggestionPriorityFilter,
 } from "@/lib/ai/suggestion-review";
 
@@ -90,14 +91,15 @@ export function AISuggestionsPanel({
   const [expanded, setExpanded] = useState(true);
   const [addedCards, setAddedCards] = useState<Set<string>>(new Set());
   const [removedCards, setRemovedCards] = useState<Set<string>>(new Set());
-  const [priorityFilter, setPriorityFilter] = useState<SuggestionPriorityFilter>("all");
+  const [priorityFilter, setPriorityFilter] =
+    useState<SuggestionPriorityFilter>("all");
   const [showIgnored, setShowIgnored] = useState(false);
 
   const handleAdd = (name: string) => {
-    setAddedCards((p) => new Set([...p, name]));
+    setAddedCards((current) => toggleSuggestionSelection(current, name));
   };
   const handleRemove = (name: string) => {
-    setRemovedCards((p) => new Set([...p, name]));
+    setRemovedCards((current) => toggleSuggestionSelection(current, name));
   };
   const handleIgnore = (name: string) => {
     onIgnoreSuggestion?.(name);
@@ -107,16 +109,21 @@ export function AISuggestionsPanel({
   const effectiveArchetype = archetypeOverride ?? detectedArchetype;
 
   const visibleSuggestions = filterSuggestionsByPriority(
-    (result?.suggestions ?? []).filter((s) => showIgnored || !ignoredSuggestions?.has(s.name)),
-    priorityFilter,
+    (result?.suggestions ?? []).filter(
+      (s) => showIgnored || !ignoredSuggestions?.has(s.name)
+    ),
+    priorityFilter
   );
   const pendingDiff = useMemo(
-    () => buildSuggestionDiff(
-      currentCardNames,
-      [...addedCards],
-      (result?.removals ?? []).filter((removal) => removedCards.has(removal.name)),
-    ),
-    [addedCards, currentCardNames, removedCards, result?.removals],
+    () =>
+      buildSuggestionDiff(
+        currentCardNames,
+        [...addedCards],
+        (result?.removals ?? []).filter((removal) =>
+          removedCards.has(removal.name)
+        )
+      ),
+    [addedCards, currentCardNames, removedCards, result?.removals]
   );
   const applyPendingChanges = () => {
     for (const name of pendingDiff.additions) onAddCard(name);
@@ -338,24 +345,32 @@ export function AISuggestionsPanel({
                       </button>
                     )}
                   </div>
-                  <div className="flex gap-1" role="group" aria-label="Suggestion priority">
-                    {(["all", "high", "medium", "low"] as const).map((priority) => (
-                      <button
-                        key={priority}
-                        type="button"
-                        onClick={() => setPriorityFilter(priority)}
-                        className={cn(
-                          "rounded-full border px-2 py-0.5 text-[10px] transition-colors",
-                          priorityFilter === priority
-                            ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-text)]"
-                            : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50",
-                        )}
-                      >
-                        {priority === "all"
-                          ? t("ai.priorityAll")
-                          : t(`ai.priority${priority.charAt(0).toUpperCase()}${priority.slice(1)}`)}
-                      </button>
-                    ))}
+                  <div
+                    className="flex gap-1"
+                    role="group"
+                    aria-label="Suggestion priority"
+                  >
+                    {(["all", "high", "medium", "low"] as const).map(
+                      (priority) => (
+                        <button
+                          key={priority}
+                          type="button"
+                          onClick={() => setPriorityFilter(priority)}
+                          className={cn(
+                            "rounded-full border px-2 py-0.5 text-[10px] transition-colors",
+                            priorityFilter === priority
+                              ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent-text)]"
+                              : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
+                          )}
+                        >
+                          {priority === "all"
+                            ? t("ai.priorityAll")
+                            : t(
+                                `ai.priority${priority.charAt(0).toUpperCase()}${priority.slice(1)}`
+                              )}
+                        </button>
+                      )
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <AnimatePresence initial={false}>
@@ -415,7 +430,6 @@ export function AISuggestionsPanel({
                               <button
                                 type="button"
                                 onClick={() => handleAdd(s.name)}
-                                disabled={addedCards.has(s.name)}
                                 className={cn(
                                   "w-6 h-6 rounded-full flex items-center justify-center text-white transition-all",
                                   addedCards.has(s.name)
@@ -424,7 +438,7 @@ export function AISuggestionsPanel({
                                 )}
                                 title={
                                   addedCards.has(s.name)
-                                    ? t("ai.added")
+                                    ? t("ai.deselectCard", { name: s.name })
                                     : t("ai.addCard", { name: s.name })
                                 }
                               >
@@ -452,22 +466,51 @@ export function AISuggestionsPanel({
                 </div>
               )}
 
-              {(pendingDiff.additions.length > 0 || pendingDiff.removals.length > 0) && (
+              {(pendingDiff.additions.length > 0 ||
+                pendingDiff.removals.length > 0) && (
                 <div className="rounded-lg border border-[var(--accent)]/40 bg-[var(--accent)]/10 p-2 space-y-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent-text)]">
-                    {t("ai.cardsToAdd")} +{pendingDiff.additions.length} · {t("ai.cardsToCut")} -{pendingDiff.removals.length}
+                    {t("ai.changePreview")}: {t("ai.cardsToAdd")} +
+                    {pendingDiff.additions.length} · {t("ai.cardsToCut")} -
+                    {pendingDiff.removals.length}
                   </p>
                   <div className="flex flex-wrap gap-1 text-[11px] text-[var(--text-secondary)]">
                     {pendingDiff.additions.map((name) => (
-                      <span key={`add-${name}`} className="rounded bg-green-500/15 px-1.5 py-0.5">+ {name}</span>
+                      <span
+                        key={`add-${name}`}
+                        className="rounded bg-green-500/15 px-1.5 py-0.5"
+                      >
+                        + {name}
+                      </span>
                     ))}
                     {pendingDiff.removals.map((name) => (
-                      <span key={`remove-${name}`} className="rounded bg-red-500/15 px-1.5 py-0.5">− {name}</span>
+                      <span
+                        key={`remove-${name}`}
+                        className="rounded bg-red-500/15 px-1.5 py-0.5"
+                      >
+                        − {name}
+                      </span>
                     ))}
                   </div>
-                  <button type="button" onClick={applyPendingChanges} className="rounded bg-[var(--accent)] px-2 py-1 text-xs text-white hover:bg-[var(--accent-hover)]">
-                    {t("ai.added")}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={applyPendingChanges}
+                      className="rounded bg-[var(--accent)] px-2 py-1 text-xs text-white hover:bg-[var(--accent-hover)]"
+                    >
+                      {t("ai.applyChanges")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddedCards(new Set());
+                        setRemovedCards(new Set());
+                      }}
+                      className="rounded px-2 py-1 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+                    >
+                      {t("ai.clearSelection")}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -500,7 +543,6 @@ export function AISuggestionsPanel({
                           <button
                             type="button"
                             onClick={() => handleRemove(r.name)}
-                            disabled={removedCards.has(r.name)}
                             className={cn(
                               "shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white transition-all",
                               removedCards.has(r.name)
@@ -509,7 +551,7 @@ export function AISuggestionsPanel({
                             )}
                             title={
                               removedCards.has(r.name)
-                                ? t("ai.removed")
+                                ? t("ai.deselectCard", { name: r.name })
                                 : t("ai.removeCard", { name: r.name })
                             }
                           >

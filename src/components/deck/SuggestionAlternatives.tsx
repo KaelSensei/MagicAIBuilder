@@ -48,11 +48,10 @@ export function SuggestionAlternatives({
               <button
                 type="button"
                 onClick={() => onAdd(alternative.name)}
-                disabled={addedCards.has(alternative.name)}
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white disabled:cursor-default disabled:bg-green-600"
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white ${addedCards.has(alternative.name) ? "bg-green-600" : "bg-[var(--accent)]"}`}
                 aria-label={
                   addedCards.has(alternative.name)
-                    ? t("added")
+                    ? t("deselectCard", { name: alternative.name })
                     : t("addCard", { name: alternative.name })
                 }
               >
