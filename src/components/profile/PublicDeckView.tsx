@@ -9,6 +9,7 @@ import type { CardCategory } from "@/lib/deck/types";
 import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
 import { DeckRatingPanel } from "@/components/community/DeckRatingPanel";
 import { DeckCommentPanel } from "@/components/community/DeckCommentPanel";
+import { PublicDeckPrimer } from "./PublicDeckPrimer";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
@@ -34,14 +35,19 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
     setTimeout(() => setCopied(false), 2000);
   };
   const partner = deck.cards.find((c) => c.isPartner);
-  const nonCommanderCards = deck.cards.filter((c) => !c.isCommander && !c.isPartner);
+  const nonCommanderCards = deck.cards.filter(
+    (c) => !c.isCommander && !c.isPartner
+  );
 
   // Group by category
-  const grouped = CATEGORY_ORDER.reduce<Record<string, PublicCard[]>>((acc, cat) => {
-    const cards = nonCommanderCards.filter((c) => c.category === cat);
-    if (cards.length > 0) acc[cat] = cards;
-    return acc;
-  }, {});
+  const grouped = CATEGORY_ORDER.reduce<Record<string, PublicCard[]>>(
+    (acc, cat) => {
+      const cards = nonCommanderCards.filter((c) => c.category === cat);
+      if (cards.length > 0) acc[cat] = cards;
+      return acc;
+    },
+    {}
+  );
 
   const authorName = deck.user?.name ?? deck.user?.username ?? "Unknown";
   const authorUsername = deck.user?.username;
@@ -63,7 +69,9 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">{deck.name}</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+              {deck.name}
+            </h1>
             <div className="flex items-center gap-3 shrink-0">
               <button
                 type="button"
@@ -71,7 +79,10 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
                 className="flex items-center gap-1.5 text-xs text-[var(--accent-text)] hover:underline"
               >
                 {copied ? (
-                  <Check className="w-3.5 h-3.5 text-green-400" aria-hidden="true" />
+                  <Check
+                    className="w-3.5 h-3.5 text-green-400"
+                    aria-hidden="true"
+                  />
                 ) : (
                   <Link2 className="w-3.5 h-3.5" aria-hidden="true" />
                 )}
@@ -104,19 +115,16 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
             >
               Bracket {deck.targetBracket}
             </span>
-            <span className="text-xs text-[var(--text-secondary)] capitalize">{deck.format}</span>
-            <span className="text-xs text-[var(--text-secondary)]">{totalCards} cards</span>
+            <span className="text-xs text-[var(--text-secondary)] capitalize">
+              {deck.format}
+            </span>
+            <span className="text-xs text-[var(--text-secondary)]">
+              {totalCards} cards
+            </span>
             {deck.isAIGenerated && (
               <span className="text-xs text-purple-400">✦ AI generated</span>
             )}
           </div>
-
-          {/* Description */}
-          {deck.description && (
-            <p className="text-sm text-[var(--text-secondary)] mt-2 line-clamp-2">
-              {deck.description}
-            </p>
-          )}
 
           {/* Author */}
           <div className="flex items-center gap-2 mt-3">
@@ -138,11 +146,17 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
                 {authorName}
               </Link>
             ) : (
-              <span className="text-xs text-[var(--text-secondary)]">{authorName}</span>
+              <span className="text-xs text-[var(--text-secondary)]">
+                {authorName}
+              </span>
             )}
           </div>
         </div>
       </div>
+
+      {deck.description?.trim() && (
+        <PublicDeckPrimer description={deck.description} />
+      )}
 
       {/* Community rating */}
       <DeckRatingPanel
@@ -180,7 +194,9 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
                       {card.quantity}×
                     </span>
                   )}
-                  <span className="text-sm text-[var(--text-primary)] truncate">{card.name}</span>
+                  <span className="text-sm text-[var(--text-primary)] truncate">
+                    {card.name}
+                  </span>
                   {card.isGameChanger && (
                     <span className="text-xs text-amber-400 shrink-0">⚡</span>
                   )}
