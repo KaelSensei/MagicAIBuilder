@@ -51,7 +51,13 @@ test.describe("Deck Editor zones", () => {
       await sideboardTab.click();
       await expect(page.getByText("Zone Sideboard Card")).toBeVisible();
 
+      const zoneUpdate = page.waitForResponse(
+        (response) =>
+          response.request().method() === "PATCH" &&
+          response.url().includes(`/api/decks/${deckId}/cards/`)
+      );
       await page.getByTitle("Move to Considering").click();
+      expect((await zoneUpdate).ok()).toBe(true);
 
       const loaded = await request.get(`/api/decks/${deckId}`);
       expect(loaded.ok()).toBe(true);

@@ -367,11 +367,11 @@ export default function BuilderPage() {
 
   const deckAnalysisCards = useMemo(
     () => [
-      ...(deck.commander ? [deck.commander] : []),
-      ...(deck.partner ? [deck.partner] : []),
-      ...deck.cards,
+      ...(deck?.commander ? [deck.commander] : []),
+      ...(deck?.partner ? [deck.partner] : []),
+      ...(deck?.cards ?? []),
     ],
-    [deck.commander, deck.partner, deck.cards]
+    [deck]
   );
 
   const banlistAlertKey = useMemo(() => {
