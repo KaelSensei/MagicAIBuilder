@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-20: Exportable token checklist
+
+#### Added
+
+- Added copy and text-download actions to the deck's deduplicated token and emblem library.
+- Added accessible localized controls and deterministic checklist formatting.
+- Added formatter and component coverage, bringing the suite to 2,731 tests across 224 files.
+
 ### 2026-09-19: Reversible AI change review
 
 #### Changed
