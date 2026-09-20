@@ -252,7 +252,12 @@
     "gameChangers": "{count, plural, one {# Game Changer} other {# Game Changers}}",
     "gcForcesB4": " → Bracket 4 minimum (plus de 3 GC)",
     "gcForcesB3": " → Bracket 3 minimum (GC interdits en B1/B2)",
-    "warnings": "Avertissements"
+    "warnings": "Avertissements",
+    "warningGroups": {
+      "legality": "Erreurs de légalité",
+      "strategy": "Suggestions stratégiques",
+      "advice": "Conseils optionnels"
+    }
   },
   "budget": {
     "title": "Optimisation du budget",
