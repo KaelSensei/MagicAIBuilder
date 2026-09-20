@@ -155,7 +155,15 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
       </div>
 
       {deck.description?.trim() && (
-        <PublicDeckPrimer description={deck.description} />
+        <PublicDeckPrimer
+          description={deck.description}
+          labels={{
+            contents: t("description.primerContents"),
+            copy: t("description.copyPrimer"),
+            copied: t("description.primerCopied"),
+            download: t("description.downloadPrimer"),
+          }}
+        />
       )}
 
       {/* Community rating */}

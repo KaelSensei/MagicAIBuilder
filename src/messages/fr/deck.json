@@ -603,7 +603,11 @@
     "clickToEdit": "Cliquer pour modifier",
     "placeholder": "Décrivez la stratégie, les thèmes ou vos notes… (markdown basique pris en charge)",
     "usePrimerTemplate": "Utiliser le modèle de primer",
-    "primerTemplateContent": "## Plan de jeu\n\nDécrivez le plan principal du deck.\n\n## Guide de mulligan\n\nExpliquez ce qu’une main de départ doit contenir.\n\n## Conditions de victoire\n\nListez les moyens principaux et secondaires de gagner.\n\n## Interactions clés\n\nPrésentez les synergies et séquences importantes.\n\n## Alternatives budget\n\nIndiquez les remplacements accessibles.",
+    "primerContents": "Sommaire du primer",
+    "copyPrimer": "Copier le primer",
+    "primerCopied": "Primer copié",
+    "downloadPrimer": "Télécharger le primer",
+    "primerTemplateContent": "## Plan de jeu\n\nDécrivez le plan principal du deck.\n\n## Guide de mulligan\n\nExpliquez ce qu’une main de départ doit contenir.\n\n## Guide de séquençage\n\nDécrivez les premiers tours, les décisions prioritaires et quand conserver vos interactions.\n\n## Conditions de victoire\n\nListez les moyens principaux et secondaires de gagner.\n\n## Interactions clés\n\nPrésentez les synergies et séquences importantes.\n\n## Alternatives budget\n\nIndiquez les remplacements accessibles.",
     "editorHelp": "{count}/{max} · Ctrl+Entrée pour enregistrer · Échap pour annuler",
     "save": "Enregistrer",
     "empty": "Aucune description — cliquez pour en ajouter une"

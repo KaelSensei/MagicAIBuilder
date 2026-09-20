@@ -33,6 +33,7 @@ describe("DeckDescriptionEditor", () => {
     expect(screen.getByDisplayValue(/## Game plan/)).toBeDefined();
     expect(screen.getByDisplayValue(/## Mulligan guide/)).toBeDefined();
     expect(screen.getByDisplayValue(/## Win conditions/)).toBeDefined();
+    expect(screen.getByDisplayValue(/## Sequencing guide/)).toBeDefined();
     expect(updateDeckDescription).not.toHaveBeenCalled();
   });
 
