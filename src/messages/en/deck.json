@@ -597,6 +597,15 @@
     "planRoles": "Deck roles",
     "planConstraints": "Constraints"
   },
+  "feedback": {
+    "title": "Feedback wanted",
+    "ownerHint": "Ask one focused question to get more useful replies.",
+    "enable": "Show this request on the public deck",
+    "placeholder": "What would you like other players to help with?",
+    "save": "Save request",
+    "saving": "Saving…",
+    "error": "Could not save the request. Try again."
+  },
   "description": {
     "add": "Add deck description…",
     "edit": "Edit description",

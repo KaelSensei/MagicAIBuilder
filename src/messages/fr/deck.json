@@ -597,6 +597,15 @@
     "empty": "Lancez la conversation.",
     "loadFailed": "Les commentaires n'ont pas pu être chargés."
   },
+  "feedback": {
+    "title": "Avis recherchés",
+    "ownerHint": "Posez une question précise pour obtenir des réponses plus utiles.",
+    "enable": "Afficher cette demande sur le deck public",
+    "placeholder": "Sur quel point souhaitez-vous l'aide des autres joueurs ?",
+    "save": "Enregistrer la demande",
+    "saving": "Enregistrement…",
+    "error": "Impossible d'enregistrer la demande. Réessayez."
+  },
   "description": {
     "add": "Ajouter une description…",
     "edit": "Modifier la description",

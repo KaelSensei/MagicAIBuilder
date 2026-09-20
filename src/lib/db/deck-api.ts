@@ -123,6 +123,8 @@ export async function updateDeck(
     tags: string[];
     isAIGenerated?: boolean;
     isPublic?: boolean;
+    seekingFeedback?: boolean;
+    feedbackQuestion?: string | null;
   }>
 ): Promise<ApiDeck> {
   const res = await fetch(`/api/decks/${id}`, {

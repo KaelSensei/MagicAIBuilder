@@ -11,6 +11,7 @@ import { DeckRatingPanel } from "@/components/community/DeckRatingPanel";
 import { DeckCommentPanel } from "@/components/community/DeckCommentPanel";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
 import { PublicDeckActions } from "./PublicDeckActions";
+import { FocusedFeedbackPanel } from "@/components/community/FocusedFeedbackPanel";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
@@ -180,6 +181,22 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
               }
             : undefined
         }
+      />
+
+      <FocusedFeedbackPanel
+        deckId={deck.id}
+        isOwner={deck.isOwner}
+        initialEnabled={deck.seekingFeedback ?? false}
+        initialQuestion={deck.feedbackQuestion ?? ""}
+        labels={{
+          title: t("feedback.title"),
+          ownerHint: t("feedback.ownerHint"),
+          enable: t("feedback.enable"),
+          placeholder: t("feedback.placeholder"),
+          save: t("feedback.save"),
+          saving: t("feedback.saving"),
+          error: t("feedback.error"),
+        }}
       />
 
       {/* Community rating */}
