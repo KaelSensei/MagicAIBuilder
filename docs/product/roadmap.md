@@ -43,11 +43,11 @@ Our opportunity is the workflow between those products:
 
 The comparison below tracks user workflows rather than trying to match feature counts. It is based on the current public product and help surfaces of Moxfield, Archidekt and TappedOut.
 
-| Competitor strength                                                                                                               | MagicAIBuilder today                                                                                                                        | Product response                                                                                   |
-| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Moxfield: fast editing, detailed primers, deck history, tokens, social notifications and rich sandbox controls                    | Editing, snapshots, required-token checklists, comments and playtesting exist; primers and notification inboxes do not                      | Add deck guides and relevant notifications without copying a generic social feed                   |
-| Archidekt: visual organization, folders, deck comparison, reusable card packages, deck-help requests and exportable playtest logs | Custom categories and owned-deck comparison exist; folders, packages, public comparison, help requests and downloadable logs are incomplete | Prioritize deck organization, reusable packages, public comparison and evidence-rich playtest logs |
-| TappedOut: acquireboard, inventory usage map, wishlist checkout, deck folders and explicit feedback-seeking workflows             | Collection reconciliation and shopping lists exist; cross-deck card usage, acquire state and structured help requests do not                | Connect collection, decks and acquisition planning, then add a focused request-for-feedback flow   |
+| Competitor strength                                                                                                               | MagicAIBuilder today                                                                                                                                            | Product response                                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Moxfield: fast editing, detailed primers, deck history, tokens, social notifications and rich sandbox controls                    | Editing, snapshots, required-token checklists, a guided primer template, comments and playtesting exist; rich published primers and notification inboxes do not | Complete public deck guides and add relevant notifications without copying a generic social feed   |
+| Archidekt: visual organization, folders, deck comparison, reusable card packages, deck-help requests and exportable playtest logs | Custom categories and owned-deck comparison exist; folders, packages, public comparison, help requests and downloadable logs are incomplete                     | Prioritize deck organization, reusable packages, public comparison and evidence-rich playtest logs |
+| TappedOut: acquireboard, inventory usage map, wishlist checkout, deck folders and explicit feedback-seeking workflows             | Collection reconciliation and shopping lists exist; cross-deck card usage, acquire state and structured help requests do not                                    | Connect collection, decks and acquisition planning, then add a focused request-for-feedback flow   |
 
 #### Deliberate non-goals from the benchmark
 
@@ -389,7 +389,8 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [ ] Add moderation and abuse-reporting primitives before opening broader social features.
 - [ ] Build a lightweight following feed only if discovery data shows repeated use.
 - [ ] Keep private decks and share tokens out of search indexes.
-- [ ] Publish a structured deck primer with strategy, mulligans, sequencing, win conditions, interaction and budget alternatives.
+- [x] Provide a structured primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
+- [ ] Render published primers with safe Markdown navigation and explicit sequencing guidance.
 - [ ] Let an owner mark a public deck as "seeking feedback" and ask a focused question instead of only exposing a generic comment box.
 - [ ] Add in-product notifications for replies, mentions, follows and changes to explicitly watched decks, with per-event controls.
 - [ ] Organize saved and followed public decks into personal folders without claiming ownership.

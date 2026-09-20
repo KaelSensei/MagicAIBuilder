@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-20: Guided deck primer template
+
+#### Added
+
+- Added a localized, non-destructive primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
+- Added editor behavior coverage and corrected invalid nested-button markup that could cause React hydration instability.
+- Expanded the suite to 2,735 tests across 225 files.
+
 ### 2026-09-20: Exportable token checklist
 
 #### Added
