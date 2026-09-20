@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { DeckStats, DeckCard } from "@/lib/deck/types";
-import { buildTokenLibrary } from "@/lib/deck/token-library";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
 import type { BenchmarkStatus, FormatStats } from "@/lib/deck/format-stats";
@@ -13,6 +12,7 @@ import { ManaCurve } from "./ManaCurve";
 import { ColorDistribution } from "./ColorDistribution";
 import { ThemeDetector } from "./ThemeDetector";
 import { DeckPriceDisplay } from "./DeckPriceDisplay";
+import { TokenLibraryPanel } from "./TokenLibraryPanel";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 
 type BracketLevel = 1 | 2 | 3 | 4;
@@ -30,9 +30,9 @@ const BRACKET_TARGETS: Record<
   BracketLevel,
   { ramp: number; draw: number; removal: number; lands: number }
 > = {
-  1: { ramp: 8,  draw: 7,  removal: 5,  lands: 37 },
-  2: { ramp: 10, draw: 9,  removal: 7,  lands: 36 },
-  3: { ramp: 12, draw: 11, removal: 8,  lands: 35 },
+  1: { ramp: 8, draw: 7, removal: 5, lands: 37 },
+  2: { ramp: 10, draw: 9, removal: 7, lands: 36 },
+  3: { ramp: 12, draw: 11, removal: 8, lands: 35 },
   4: { ramp: 14, draw: 12, removal: 10, lands: 33 },
 };
 
@@ -103,9 +103,12 @@ interface StatRowProps {
 }
 
 function getStatusIcon(status: "ok" | "warn" | "error" | "neutral") {
-  if (status === "ok") return <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />;
-  if (status === "warn") return <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />;
-  if (status === "error") return <AlertTriangle className="w-3.5 h-3.5 text-red-500" />;
+  if (status === "ok")
+    return <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />;
+  if (status === "warn")
+    return <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />;
+  if (status === "error")
+    return <AlertTriangle className="w-3.5 h-3.5 text-red-500" />;
   return null;
 }
 
@@ -188,7 +191,11 @@ function statusFromAlignment(status: AlignmentStatus): StatusLevel {
  * Each row reads "sources / recommended", so an under-supported colour shows
  * the shortfall directly rather than leaving the reader to compute it.
  */
-function ManaAlignmentPanel({ alignment }: { readonly alignment: ManaAlignment }) {
+function ManaAlignmentPanel({
+  alignment,
+}: {
+  readonly alignment: ManaAlignment;
+}) {
   const t = useTranslations("deck");
 
   return (
@@ -231,7 +238,11 @@ function ManaAlignmentPanel({ alignment }: { readonly alignment: ManaAlignment }
  * itself the useful signal — a wide gap means the mana, not the curve, is what
  * stops the deck acting.
  */
-function TurnOnePanel({ playability }: { readonly playability: TurnOnePlayability }) {
+function TurnOnePanel({
+  playability,
+}: {
+  readonly playability: TurnOnePlayability;
+}) {
   const t = useTranslations("deck");
 
   return (
@@ -248,7 +259,9 @@ function TurnOnePanel({ playability }: { readonly playability: TurnOnePlayabilit
         {playability.byColor.map((entry) => (
           <StatRow
             key={entry.color}
-            label={t("stats.turnOneColor", { color: t(`stats.color.${entry.color}`) })}
+            label={t("stats.turnOneColor", {
+              color: t(`stats.color.${entry.color}`),
+            })}
             value={asPercent(entry.probability)}
             status={getRatioStatus(entry.probability * 100)}
           />
@@ -257,31 +270,6 @@ function TurnOnePanel({ playability }: { readonly playability: TurnOnePlayabilit
       <p className="mt-2 text-[10px] leading-snug text-[var(--text-secondary)] opacity-70">
         {t("stats.turnOneHint", { oneDrops: playability.oneDrops })}
       </p>
-    </div>
-  );
-}
-
-function TokenLibraryPanel({ cards }: { readonly cards: readonly DeckCard[] }) {
-  const t = useTranslations("deck");
-  const entries = buildTokenLibrary(cards);
-  if (entries.length === 0) return null;
-
-  return (
-    <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-4">
-      <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-2">
-        {t("stats.tokenLibrary")}
-      </p>
-      <div className="space-y-1">
-        {entries.map((entry) => (
-          <div key={`${entry.kind}:${entry.name}:${entry.power ?? ""}`} className="flex justify-between text-xs">
-            <span className="text-[var(--text-primary)]">
-              {entry.name}{entry.power ? ` · ${entry.power}` : ""}
-              <span className="text-[var(--text-secondary)]"> · {entry.kind}</span>
-            </span>
-            <span className="text-[var(--text-secondary)]">×{entry.count}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -312,9 +300,13 @@ export function DeckStats({
   // "60/100" and "target for B3" before this was gated on the format.
   const { deckSize } = config;
   let cardCountStatus: "ok" | "warn" | "error";
-  if (stats.totalCards === deckSize) { cardCountStatus = "ok"; }
-  else if (stats.totalCards > deckSize) { cardCountStatus = "error"; }
-  else { cardCountStatus = "warn"; }
+  if (stats.totalCards === deckSize) {
+    cardCountStatus = "ok";
+  } else if (stats.totalCards > deckSize) {
+    cardCountStatus = "error";
+  } else {
+    cardCountStatus = "warn";
+  }
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -394,10 +386,14 @@ export function DeckStats({
       )}
 
       {/* Mana base alignment — pips asked for vs. sources produced */}
-      {stats.manaAlignment && <ManaAlignmentPanel alignment={stats.manaAlignment} />}
+      {stats.manaAlignment && (
+        <ManaAlignmentPanel alignment={stats.manaAlignment} />
+      )}
 
       {/* Turn-one playability — odds the opening hand can act */}
-      {stats.turnOnePlayability && <TurnOnePanel playability={stats.turnOnePlayability} />}
+      {stats.turnOnePlayability && (
+        <TurnOnePanel playability={stats.turnOnePlayability} />
+      )}
 
       <TokenLibraryPanel cards={cards} />
 
