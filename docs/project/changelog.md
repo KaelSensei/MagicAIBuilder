@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-20: Safe public deck primers
+
+#### Added
+
+- Rendered complete public deck primers with responsive headings, paragraphs, ordered and unordered lists, and links.
+- Kept raw HTML inert, rejected unsafe link protocols and isolated external navigation without adding a runtime dependency.
+- Added three behavioral security and presentation tests, bringing the suite to 2,738 tests across 226 files.
+
 ### 2026-09-20: Guided deck primer template
 
 #### Added

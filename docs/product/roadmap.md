@@ -390,7 +390,8 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [ ] Build a lightweight following feed only if discovery data shows repeated use.
 - [ ] Keep private decks and share tokens out of search indexes.
 - [x] Provide a structured primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
-- [ ] Render published primers with safe Markdown navigation and explicit sequencing guidance.
+- [x] Render published primers with safe Markdown headings, lists and navigation.
+- [ ] Add explicit sequencing guidance to the structured primer template.
 - [ ] Let an owner mark a public deck as "seeking feedback" and ask a focused question instead of only exposing a generic comment box.
 - [ ] Add in-product notifications for replies, mentions, follows and changes to explicitly watched decks, with per-event controls.
 - [ ] Organize saved and followed public decks into personal folders without claiming ownership.
