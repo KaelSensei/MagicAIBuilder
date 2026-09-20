@@ -19,7 +19,13 @@ export const patchDeckSchema = z.object({
   description: z.string().max(2000).nullable().optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
   isPublic: z.boolean().optional(),
-});
+  seekingFeedback: z.boolean().optional(),
+  feedbackQuestion: z.string().max(240).nullable().optional(),
+}).refine(
+  (fields) =>
+    fields.seekingFeedback !== true || Boolean(fields.feedbackQuestion?.trim()),
+  { message: "A feedback question is required when seeking feedback", path: ["feedbackQuestion"] }
+);
 
 export type PatchDeckInput = z.infer<typeof patchDeckSchema>;
 

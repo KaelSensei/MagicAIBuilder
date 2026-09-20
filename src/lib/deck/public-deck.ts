@@ -43,6 +43,8 @@ export interface PublicDeck {
   readonly targetBracket: number;
   readonly isAIGenerated: boolean;
   readonly isOwner: boolean;
+  readonly seekingFeedback?: boolean;
+  readonly feedbackQuestion?: string | null;
   readonly cards: readonly PublicCard[];
   readonly user: PublicDeckAuthor | null;
   readonly createdAt: string;
