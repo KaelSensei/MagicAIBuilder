@@ -10,6 +10,7 @@ import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
 import { DeckRatingPanel } from "@/components/community/DeckRatingPanel";
 import { DeckCommentPanel } from "@/components/community/DeckCommentPanel";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
+import { PublicDeckActions } from "./PublicDeckActions";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
@@ -165,6 +166,21 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
           }}
         />
       )}
+
+      <PublicDeckActions
+        deckId={deck.id}
+        deckName={deck.name}
+        isSignedIn={isSignedIn}
+        forkedFrom={
+          deck.forkedFromDeckId && deck.forkedFromDeckName
+            ? {
+                id: deck.forkedFromDeckId,
+                name: deck.forkedFromDeckName,
+                author: deck.forkedFromUserName ?? null,
+              }
+            : undefined
+        }
+      />
 
       {/* Community rating */}
       <DeckRatingPanel
