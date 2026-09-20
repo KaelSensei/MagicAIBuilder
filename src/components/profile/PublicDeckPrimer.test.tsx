@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
 
 describe("PublicDeckPrimer", () => {
@@ -51,5 +51,48 @@ describe("PublicDeckPrimer", () => {
       screen.queryByRole("link", { name: "Unsafe" })
     ).not.toBeInTheDocument();
     expect(screen.getByText("Unsafe")).toBeVisible();
+  });
+
+  it("builds anchored navigation from primer headings", () => {
+    render(
+      <PublicDeckPrimer
+        description={"## Game plan\n\nPlan.\n\n## Win conditions\n\nWin."}
+      />
+    );
+    expect(
+      screen.getByRole("navigation", { name: "Primer contents" })
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Game plan" })).toHaveAttribute(
+      "href",
+      "#primer-game-plan"
+    );
+    expect(screen.getByRole("heading", { name: "Game plan" })).toHaveAttribute(
+      "id",
+      "primer-game-plan"
+    );
+  });
+
+  it("copies the complete Markdown primer", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const description = "## Game plan\n\nBuild resources.";
+    render(<PublicDeckPrimer description={description} />);
+    fireEvent.click(screen.getByRole("button", { name: "Copy primer" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(description));
+    expect(screen.getByRole("button", { name: "Primer copied" })).toBeVisible();
+  });
+
+  it("offers the original primer as a Markdown download", () => {
+    render(
+      <PublicDeckPrimer description={"## Game plan\n\nBuild resources."} />
+    );
+    const download = screen.getByRole("link", { name: "Download primer" });
+    expect(download).toHaveAttribute("download", "deck-primer.md");
+    expect(download.getAttribute("href")).toContain(
+      "data:text/markdown;charset=utf-8,"
+    );
   });
 });
