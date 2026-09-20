@@ -76,6 +76,7 @@ import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 import { MetaPanel } from "@/components/deck/MetaPanel";
 import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
+import { DeckSaveIndicator } from "@/components/deck/DeckSaveIndicator";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
@@ -710,6 +711,7 @@ export default function BuilderPage() {
               (deck.partner ? 1 : 0)}{" "}
             / 100
           </span>
+          <DeckSaveIndicator saving={isSyncing} label={t("saving")} />
           <div className="ml-auto flex items-center gap-1 md:gap-2">
             {/* Duplicate deck */}
             <button

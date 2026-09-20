@@ -92,6 +92,7 @@
     }
   },
   "loading": "Loading deck…",
+  "saving": "Saving…",
   "deckNotFound": {
     "title": "Deck not found",
     "back": "Back to My Decks"
