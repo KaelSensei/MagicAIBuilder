@@ -130,6 +130,11 @@
   "stats": {
     "buildToSee": "Construisez votre deck pour voir les stats",
     "tokenLibrary": "Bibliothèque de jetons",
+    "copyTokenLibrary": "Copier la liste des jetons",
+    "tokenLibraryCopied": "Liste des jetons copiée",
+    "downloadTokenLibrary": "Télécharger la liste des jetons",
+    "tokenKind": "jeton",
+    "emblemKind": "emblème",
     "deckChecks": "Vérifications du deck",
     "totalCards": "Total cartes",
     "lands": "Terrains",

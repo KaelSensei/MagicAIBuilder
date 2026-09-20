@@ -130,6 +130,11 @@
   "stats": {
     "buildToSee": "Build your deck to see stats",
     "tokenLibrary": "Token-Bibliothek",
+    "copyTokenLibrary": "Copy token checklist",
+    "tokenLibraryCopied": "Token checklist copied",
+    "downloadTokenLibrary": "Download token checklist",
+    "tokenKind": "token",
+    "emblemKind": "emblem",
     "deckChecks": "Deck Checks",
     "totalCards": "Total cards",
     "lands": "Lands",
