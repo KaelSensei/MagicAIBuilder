@@ -92,6 +92,7 @@
     }
   },
   "loading": "Chargement du deck…",
+  "saving": "Enregistrement…",
   "deckNotFound": {
     "title": "Deck introuvable",
     "back": "Retour à mes decks"
