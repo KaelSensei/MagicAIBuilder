@@ -11,14 +11,42 @@ describe("DeckComparisonPanel", () => {
     mockFetchDeck
       .mockResolvedValueOnce({
         cards: [
-          { name: "Sol Ring", scryfallId: "sol-ring", quantity: 1 },
-          { name: "Counterspell", scryfallId: "counterspell", quantity: 1 },
+          {
+            name: "Sol Ring",
+            scryfallId: "sol-ring",
+            quantity: 1,
+            cmc: 1,
+            price: 2,
+            colorIdentity: [],
+          },
+          {
+            name: "Counterspell",
+            scryfallId: "counterspell",
+            quantity: 1,
+            cmc: 2,
+            price: 1,
+            colorIdentity: ["U"],
+          },
         ],
       })
       .mockResolvedValueOnce({
         cards: [
-          { name: "Sol Ring", scryfallId: "sol-ring", quantity: 1 },
-          { name: "Swords to Plowshares", scryfallId: "swords", quantity: 1 },
+          {
+            name: "Sol Ring",
+            scryfallId: "sol-ring",
+            quantity: 1,
+            cmc: 1,
+            price: 2,
+            colorIdentity: [],
+          },
+          {
+            name: "Swords to Plowshares",
+            scryfallId: "swords",
+            quantity: 1,
+            cmc: 1,
+            price: 3,
+            colorIdentity: ["W"],
+          },
         ],
       });
 
@@ -37,5 +65,11 @@ describe("DeckComparisonPanel", () => {
     expect(screen.getByText("Counterspell")).toBeDefined();
     expect(screen.getByText("Swords to Plowshares")).toBeDefined();
     expect(screen.getByText("1 shared card")).toBeDefined();
+    expect(screen.getByText("Average mana value")).toBeDefined();
+    expect(screen.getByText("1.5 → 1")).toBeDefined();
+    expect(screen.getByText("Estimated price")).toBeDefined();
+    expect(screen.getByText("$3.00 → $5.00")).toBeDefined();
+    expect(screen.getByText("Unique colors")).toBeDefined();
+    expect(screen.getByText("U → W")).toBeDefined();
   });
 });
