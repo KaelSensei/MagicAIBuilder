@@ -395,9 +395,11 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [x] Provide a structured primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
 - [x] Render published primers with safe Markdown headings, lists and navigation.
 - [x] Add explicit sequencing guidance to the structured primer template.
-- [ ] Let an owner mark a public deck as "seeking feedback" and ask a focused question instead of only exposing a generic comment box.
+- [x] Let an owner mark a public deck as "seeking feedback" and ask a focused question instead of only exposing a generic comment box.
 - [ ] Add in-product notifications for replies, mentions, follows and changes to explicitly watched decks, with per-event controls.
-- [ ] Organize saved and followed public decks into personal folders without claiming ownership.
+- [x] Persist private folders for saved public decks without claiming ownership or exposing decks that later become private.
+- [ ] Add folder management to the community UI.
+- [ ] Decide whether decks from followed builders should share the saved-deck folder model.
 - [ ] Surface reusable community card packages with author attribution, legality checks and a reviewable diff before applying them.
 
 ### Definition of done
