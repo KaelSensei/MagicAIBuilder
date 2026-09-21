@@ -10,32 +10,34 @@ datasource db {
 // ─── NextAuth Models ────────────────────────────────────────────────
 
 model User {
-  id               String            @id @default(cuid())
-  name             String?
-  username         String?           @unique // public profile slug (e.g. /u/kael)
-  onboardingDone   Boolean           @default(false) // true after first-run wizard completed or skipped
-  email            String            @unique
-  emailVerified    DateTime?
-  image            String?
-  password         String? // hashed password for credentials provider (null for OAuth-only users)
-  accounts         Account[]
-  sessions         Session[]
-  decks            Deck[]
-  collection       CollectionCard[]
-  favorites        CardFavorite[]
-  favoriteLists    FavoriteList[]
-  ratings          DeckRating[]
-  votes            DeckVote[]
-  playtests        PlaytestSession[]
-  comments         DeckComment[]
-  deckReports      DeckReport[]      @relation("DeckReportReporter")
-  moderatedReports DeckReport[]      @relation("DeckReportModerator")
-  isModerator      Boolean           @default(false)
-  following        UserFollow[]      @relation("Following")
-  followers        UserFollow[]      @relation("Followers")
-  apiKeys          ApiKey[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                String             @id @default(cuid())
+  name              String?
+  username          String?            @unique // public profile slug (e.g. /u/kael)
+  onboardingDone    Boolean            @default(false) // true after first-run wizard completed or skipped
+  email             String             @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String? // hashed password for credentials provider (null for OAuth-only users)
+  accounts          Account[]
+  sessions          Session[]
+  decks             Deck[]
+  collection        CollectionCard[]
+  favorites         CardFavorite[]
+  favoriteLists     FavoriteList[]
+  ratings           DeckRating[]
+  votes             DeckVote[]
+  playtests         PlaytestSession[]
+  comments          DeckComment[]
+  deckReports       DeckReport[]       @relation("DeckReportReporter")
+  moderatedReports  DeckReport[]       @relation("DeckReportModerator")
+  publicDeckFolders PublicDeckFolder[]
+  savedPublicDecks  SavedPublicDeck[]
+  isModerator       Boolean            @default(false)
+  following         UserFollow[]       @relation("Following")
+  followers         UserFollow[]       @relation("Followers")
+  apiKeys           ApiKey[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model Account {
@@ -109,6 +111,7 @@ model Deck {
   playtests          PlaytestSession[]
   comments           DeckComment[]
   reports            DeckReport[]
+  savedBy            SavedPublicDeck[]
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 
@@ -133,6 +136,36 @@ model DeckReport {
   @@unique([userId, deckId])
   @@index([deckId, status])
   @@index([status, createdAt])
+}
+
+/// A private organizational container owned by one user.
+model PublicDeckFolder {
+  id         String            @id @default(cuid())
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  savedDecks SavedPublicDeck[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+/// A private bookmark for a public deck; ownership always remains with its author.
+model SavedPublicDeck {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deckId    String
+  deck      Deck              @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  folderId  String?
+  folder    PublicDeckFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@unique([userId, deckId])
+  @@index([folderId])
 }
 
 /// A named snapshot (version) of a deck at a point in time
