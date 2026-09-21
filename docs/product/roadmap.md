@@ -386,7 +386,7 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [ ] Extend side-by-side comparison from owned decks to public decks.
 - [ ] Fork a public deck with clear attribution and a clean ownership boundary.
 - [x] Show "why this deck differs" using curve, budget and color identity.
-- [ ] Extend the comparison explanation with card-role differences.
+- [x] Extend the comparison explanation with card-role differences.
 - [ ] Add moderation and abuse-reporting primitives before opening broader social features.
 - [ ] Build a lightweight following feed only if discovery data shows repeated use.
 - [ ] Keep private decks and share tokens out of search indexes.
