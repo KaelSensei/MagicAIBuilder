@@ -4,6 +4,8 @@ import type { Deck, DeckStats, BracketScore } from "@/lib/deck/types";
 import type { StreamEvent } from "@/app/api/ai/suggest/route";
 import { detectArchetypes } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
+import type { DeckBrief } from "@/lib/ai/deck-brief";
+import type { SuggestionEvidence } from "@/lib/ai/suggestion-evidence";
 export type { Archetype } from "@/lib/ai/archetypes";
 
 export interface CardSuggestion {
@@ -11,6 +13,15 @@ export interface CardSuggestion {
   reason: string;
   category: string;
   priority: "high" | "medium" | "low";
+  evidence?: SuggestionEvidence;
+  alternatives?: CardAlternative[];
+}
+
+export interface CardAlternative {
+  name: string;
+  reason: string;
+  dimension: "budget" | "power" | "playstyle";
+  evidence?: SuggestionEvidence;
 }
 
 export interface CardRemoval {
@@ -25,11 +36,20 @@ export interface AISuggestionResult {
   provider: "anthropic" | "openai" | "mock";
 }
 
-function hashDeckState(deck: Deck, stats: DeckStats, bracket: number): string {
-  const cardNames = deck.cards.map((c) => c.name).sort((a, b) => a.localeCompare(b)).join(",");
+function hashDeckState(
+  deck: Deck,
+  stats: DeckStats,
+  bracket: number,
+  options?: AIAnalysisOptions
+): string {
+  const cardNames = deck.cards
+    .map((c) => c.name)
+    .sort((a, b) => a.localeCompare(b))
+    .join(",");
   const commander = deck.commander?.name ?? "";
   const partner = deck.partner?.name ?? "";
-  return `${commander}|${partner}|${bracket}|${deck.targetBracket}|${deck.budget ?? ""}|${cardNames}`;
+  const brief = options?.brief;
+  return `${commander}|${partner}|${bracket}|${deck.targetBracket}|${deck.budget ?? ""}|${options?.budgetPerCard ?? ""}|${options?.archetypeOverride ?? ""}|${brief?.theme ?? ""}|${brief?.playPattern ?? ""}|${brief?.dislikes ?? ""}|${cardNames}`;
 }
 
 function buildSuggestPayload(
@@ -38,7 +58,8 @@ function buildSuggestPayload(
   bracketScore: BracketScore | null,
   bracket: number,
   archetypeOverride?: Archetype | null,
-  budgetPerCard?: number | null
+  budgetPerCard?: number | null,
+  brief?: DeckBrief
 ) {
   const cardNames = deck.cards.map((c) => c.name);
   const categories = {
@@ -51,11 +72,13 @@ function buildSuggestPayload(
   };
   const detectedThemes = stats.themes?.map((t) => t.name);
 
-  const archetype = archetypeOverride ?? detectArchetypes({
-    cardNames,
-    categories,
-    detectedThemes,
-  })[0];
+  const archetype =
+    archetypeOverride ??
+    detectArchetypes({
+      cardNames,
+      categories,
+      detectedThemes,
+    })[0];
 
   // Build card price map for budget filtering (server-side)
   const cardPrices: Record<string, number | null> = {};
@@ -64,6 +87,7 @@ function buildSuggestPayload(
   }
 
   return {
+    deckId: deck.id,
     commanderName: deck.commander?.name ?? null,
     partnerName: deck.partner?.name ?? null,
     colorIdentity: [
@@ -84,6 +108,7 @@ function buildSuggestPayload(
     archetype,
     budgetPerCard: budgetPerCard ?? null,
     cardPrices,
+    brief,
   };
 }
 
@@ -144,7 +169,11 @@ function isStreamEvent(value: unknown): value is StreamEvent {
     }
     case "removal": {
       const d = value.data;
-      return isRecord(d) && typeof d.name === "string" && typeof d.reason === "string";
+      return (
+        isRecord(d) &&
+        typeof d.name === "string" &&
+        typeof d.reason === "string"
+      );
     }
     case "done":
       return true;
@@ -168,7 +197,11 @@ function parseNdjsonLineToEvent(line: string): StreamEvent | undefined {
   return parsed;
 }
 
-function applyNdjsonLine(line: string, acc: StreamAcc, onUpdate: (acc: StreamAcc) => void): void {
+function applyNdjsonLine(
+  line: string,
+  acc: StreamAcc,
+  onUpdate: (acc: StreamAcc) => void
+): void {
   const event = parseNdjsonLineToEvent(line);
   if (event === undefined) return;
   if (applyStreamEvent(event, acc)) {
@@ -179,10 +212,15 @@ function applyNdjsonLine(line: string, acc: StreamAcc, onUpdate: (acc: StreamAcc
 /** Reads a NDJSON stream and applies each event to the accumulator, calling onUpdate after each change. */
 async function processStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
-  onUpdate: (acc: StreamAcc) => void,
+  onUpdate: (acc: StreamAcc) => void
 ): Promise<StreamAcc> {
   const decoder = new TextDecoder();
-  const acc: StreamAcc = { suggestions: [], removals: [], analysis: "", provider: "mock" };
+  const acc: StreamAcc = {
+    suggestions: [],
+    removals: [],
+    analysis: "",
+    provider: "mock",
+  };
   let buffer = "";
 
   while (true) {
@@ -201,15 +239,20 @@ async function processStream(
 export interface AIAnalysisOptions {
   archetypeOverride?: Archetype | null;
   budgetPerCard?: number | null;
+  brief?: DeckBrief;
 }
 
 export function useAISuggestions() {
   const [result, setResult] = useState<AISuggestionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [detectedArchetype, setDetectedArchetype] = useState<Archetype | null>(null);
+  const [detectedArchetype, setDetectedArchetype] = useState<Archetype | null>(
+    null
+  );
   const [analysedAt, setAnalysedAt] = useState<Date | null>(null);
-  const [ignoredSuggestions, setIgnoredSuggestions] = useState<Set<string>>(new Set());
+  const [ignoredSuggestions, setIgnoredSuggestions] = useState<Set<string>>(
+    new Set()
+  );
 
   const lastHash = useRef<string | null>(null);
   const lastResult = useRef<AISuggestionResult | null>(null);
@@ -222,55 +265,100 @@ export function useAISuggestions() {
     setIgnoredSuggestions(new Set());
   }, []);
 
-  const analyze = useCallback(async (
-    deck: Deck,
-    stats: DeckStats,
-    bracketScore: BracketScore | null,
-    options?: AIAnalysisOptions,
-  ) => {
-    const bracket = bracketScore?.overall ?? deck.targetBracket;
-    const hash = hashDeckState(deck, stats, bracket);
+  const analyze = useCallback(
+    async (
+      deck: Deck,
+      stats: DeckStats,
+      bracketScore: BracketScore | null,
+      options?: AIAnalysisOptions
+    ) => {
+      const bracket = bracketScore?.overall ?? deck.targetBracket;
+      const hash = hashDeckState(deck, stats, bracket, options);
 
-    if (hash === lastHash.current && lastResult.current && !options?.archetypeOverride) {
-      setResult(lastResult.current);
-      return;
-    }
+      if (
+        hash === lastHash.current &&
+        lastResult.current &&
+        !options?.archetypeOverride
+      ) {
+        setResult(lastResult.current);
+        return;
+      }
 
-    // Detect archetype client-side for display
-    const cardNames = deck.cards.map((c) => c.name);
-    const categories = { ramp: stats.ramp, draw: stats.draw, removal: stats.removal, boardWipe: stats.boardWipes, creatures: stats.creatures, lands: stats.lands };
-    const auto = detectArchetypes({ cardNames, categories, detectedThemes: stats.themes?.map((t) => t.name) });
-    setDetectedArchetype(options?.archetypeOverride ?? auto[0] ?? null);
+      // Detect archetype client-side for display
+      const cardNames = deck.cards.map((c) => c.name);
+      const categories = {
+        ramp: stats.ramp,
+        draw: stats.draw,
+        removal: stats.removal,
+        boardWipe: stats.boardWipes,
+        creatures: stats.creatures,
+        lands: stats.lands,
+      };
+      const auto = detectArchetypes({
+        cardNames,
+        categories,
+        detectedThemes: stats.themes?.map((t) => t.name),
+      });
+      setDetectedArchetype(options?.archetypeOverride ?? auto[0] ?? null);
 
-    setIsLoading(true);
-    setError(null);
-    setResult({ suggestions: [], removals: [], analysis: "", provider: "mock" });
-
-    try {
-      const payload = buildSuggestPayload(deck, stats, bracketScore, bracket, options?.archetypeOverride, options?.budgetPerCard);
-      const response = await fetch("/api/ai/suggest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(60000),
+      setIsLoading(true);
+      setError(null);
+      setResult({
+        suggestions: [],
+        removals: [],
+        analysis: "",
+        provider: "mock",
       });
 
-      if (!response.ok) throw new Error(`AI request failed (${response.status})`);
-      if (!response.body) throw new Error("No response body");
+      try {
+        const payload = buildSuggestPayload(
+          deck,
+          stats,
+          bracketScore,
+          bracket,
+          options?.archetypeOverride,
+          options?.budgetPerCard,
+          options?.brief
+        );
+        const response = await fetch("/api/ai/suggest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(60000),
+        });
 
-      const acc = await processStream(response.body.getReader(), (current) => {
-        setResult({ suggestions: [...current.suggestions], removals: [...current.removals], analysis: current.analysis, provider: current.provider });
-      });
-      lastHash.current = hash;
-      lastResult.current = { suggestions: acc.suggestions, removals: acc.removals, analysis: acc.analysis, provider: acc.provider };
-      setAnalysedAt(new Date());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-      setResult(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        if (!response.ok)
+          throw new Error(`AI request failed (${response.status})`);
+        if (!response.body) throw new Error("No response body");
+
+        const acc = await processStream(
+          response.body.getReader(),
+          (current) => {
+            setResult({
+              suggestions: [...current.suggestions],
+              removals: [...current.removals],
+              analysis: current.analysis,
+              provider: current.provider,
+            });
+          }
+        );
+        lastHash.current = hash;
+        lastResult.current = {
+          suggestions: acc.suggestions,
+          removals: acc.removals,
+          analysis: acc.analysis,
+          provider: acc.provider,
+        };
+        setAnalysedAt(new Date());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+        setResult(null);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   const invalidateCache = useCallback(() => {
     lastHash.current = null;

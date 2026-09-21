@@ -15,7 +15,14 @@ function renderBar(onRecorded = vi.fn()) {
   render(
     <QueryClientProvider client={queryClient}>
       <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
-        <RecordResultBar deckId="deck-1" turns={9} mulliganCount={2} onRecorded={onRecorded} />
+        <RecordResultBar
+          deckId="deck-1"
+          turns={9}
+          mulliganCount={2}
+          cardsSeen={14}
+          additionalCardsSeen={1}
+          onRecorded={onRecorded}
+        />
       </NextIntlClientProvider>
     </QueryClientProvider>
   );
@@ -51,6 +58,8 @@ describe("RecordResultBar", () => {
       result: "win",
       turns: 9,
       mulliganCount: 2,
+      cardsSeen: 14,
+      additionalCardsSeen: 1,
     });
   });
 
@@ -112,6 +121,21 @@ describe("RecordResultBar", () => {
     const [, init] = vi.mocked(globalThis.fetch).mock.calls[0];
     expect(JSON.parse(String(init?.body)).notes).toBe(
       "Kept a slow hand and missed blue mana."
+    );
+  });
+
+  it("sends the concrete deck change the player wants to try", async () => {
+    renderBar();
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Change to try" }),
+      "  Add one more untapped blue source.  "
+    );
+    await userEvent.click(screen.getByText("Loss"));
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+    const [, init] = vi.mocked(globalThis.fetch).mock.calls[0];
+    expect(JSON.parse(String(init?.body)).proposedChange).toBe(
+      "Add one more untapped blue source."
     );
   });
 

@@ -12,7 +12,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, X, Loader2, Sparkles, Check } from "lucide-react";
+import {
+  ChevronLeft,
+  X,
+  Loader2,
+  Sparkles,
+  Check,
+  Target,
+  ListChecks,
+  ShieldCheck,
+} from "lucide-react";
 import {
   autocompleteCardName,
   getCardByNameFuzzy,
@@ -27,6 +36,8 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { categorizeCard } from "@/lib/deck/categories";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import type { CardCategory, DeckCard } from "@/lib/deck/types";
+import { createDeckPlan } from "@/lib/ai/deck-plan";
+import type { BuildRequest } from "@/app/api/ai/build/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -496,6 +507,77 @@ function StepCommander({
   );
 }
 
+function StepPlan({ request }: { readonly request: BuildRequest }) {
+  const t = useTranslations("deck");
+  const plan = createDeckPlan(request);
+
+  return (
+    <div className="grid gap-3 w-full max-w-lg mx-auto sm:grid-cols-2">
+      <section className="rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 p-4 sm:col-span-2">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--accent-text)]">
+          <Target className="h-4 w-4" />
+          {t("wizard.planGameplan")}
+        </div>
+        <p className="text-sm leading-relaxed text-[var(--text-primary)]">
+          {plan.gameplan}
+        </p>
+      </section>
+
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+          <Sparkles className="h-4 w-4" />
+          {t("wizard.planWinConditions")}
+        </div>
+        <ul className="space-y-2 text-sm text-[var(--text-primary)]">
+          {plan.winConditions.map((condition) => (
+            <li key={condition} className="flex gap-2">
+              <span className="text-[var(--accent-text)]">•</span>
+              <span>{condition}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+          <ListChecks className="h-4 w-4" />
+          {t("wizard.planRoles")}
+        </div>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+          {plan.roles.map(({ role, target }) => (
+            <div
+              key={role}
+              className="flex justify-between gap-2 text-[var(--text-secondary)]"
+            >
+              <span>{role}</span>
+              <span className="font-medium text-[var(--text-primary)]">
+                {target}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:col-span-2">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+          <ShieldCheck className="h-4 w-4" />
+          {t("wizard.planConstraints")}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {plan.constraints.map((constraint) => (
+            <span
+              key={constraint}
+              className="rounded-full border border-[var(--border)] bg-[var(--bg-primary)] px-2.5 py-1 text-xs text-[var(--text-secondary)]"
+            >
+              {constraint}
+            </span>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Loading step (step 5)
 // ---------------------------------------------------------------------------
@@ -585,7 +667,7 @@ function StepLoading({
 // Main wizard
 // ---------------------------------------------------------------------------
 
-const TOTAL_WIZARD_STEPS = 5;
+const TOTAL_WIZARD_STEPS = 6;
 /** Max cards per Scryfall collection lookup request */
 const BATCH_SIZE = 75;
 
@@ -776,6 +858,8 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
         return bracket !== null;
       case 5:
         return true; // commander is optional
+      case 6:
+        return true;
       default:
         return false;
     }
@@ -791,9 +875,19 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
     setCommanderName("");
     setCommanderCard(null);
     setCommanderSkipped(true);
-    // handleGenerate reads commanderSkipped via closure — pass explicit flag
-    handleGenerateWith(true);
+    navigate(6);
   };
+
+  const buildRequest = (skipCommander = false): BuildRequest => ({
+    budget: budget === "unset" ? null : budget,
+    colors,
+    strategy: strategy ?? "Midrange",
+    bracket: bracket ?? 2,
+    commanderName:
+      skipCommander || commanderSkipped || !commanderName
+        ? null
+        : commanderName,
+  });
 
   const handleGenerateWith = async (skipCommander = false) => {
     if (!strategy) return;
@@ -801,16 +895,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
     setBuildError(null);
 
     try {
-      const result = await build({
-        budget: budget === "unset" ? null : budget,
-        colors,
-        strategy,
-        bracket: bracket ?? 2,
-        commanderName:
-          skipCommander || commanderSkipped || !commanderName
-            ? null
-            : commanderName,
-      });
+      const result = await build(buildRequest(skipCommander));
 
       if (!result) {
         setBuildError(t("wizard.buildCancelled"));
@@ -859,6 +944,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       title: t("wizard.commanderTitle"),
       subtitle: t("wizard.commanderSubtitle"),
     },
+    { title: t("wizard.planTitle"), subtitle: t("wizard.planSubtitle") },
   ];
 
   const currentTitle = stepTitles[step - 1];
@@ -882,7 +968,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
             transition={{ duration: 0.2 }}
             className="
               relative w-full max-w-xl bg-[var(--bg-secondary,#1a1a2e)] border border-[var(--border)]
-              rounded-2xl shadow-2xl overflow-hidden
+              rounded-2xl shadow-2xl overflow-hidden max-h-[calc(100vh-2rem)]
             "
             style={{ minHeight: 520 }}
           >
@@ -912,7 +998,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
 
             {/* Body */}
             <div
-              className="px-6 pb-8 flex flex-col gap-6"
+              className="px-6 pb-8 flex flex-col gap-6 overflow-y-auto"
               style={{ minHeight: 360 }}
             >
               {isBuilding ? (
@@ -996,6 +1082,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                         onSkip={handleSkipCommander}
                       />
                     )}
+                    {step === 6 && <StepPlan request={buildRequest()} />}
                   </motion.div>
                 </AnimatePresence>
               )}

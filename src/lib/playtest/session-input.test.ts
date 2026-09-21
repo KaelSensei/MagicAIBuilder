@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import { MAX_SESSION_NOTES_LENGTH, parseSessionInput, summarizeSessions } from "./session-input";
+import {
+  MAX_PROPOSED_CHANGE_LENGTH,
+  MAX_SESSION_NOTES_LENGTH,
+  parseSessionInput,
+  summarizeSessions,
+} from "./session-input";
 import type { PlaytestSession } from "./analytics";
 
 function session(overrides: Partial<PlaytestSession> = {}): PlaytestSession {
@@ -85,6 +90,34 @@ describe("parseSessionInput", () => {
     expect(parseSessionInput({ result: "win", turns: 8, snapshotId: 42 }).ok).toBe(false);
   });
 
+  it("accepts deterministic draw evidence", () => {
+    const parsed = parseSessionInput({
+      result: "win",
+      turns: 8,
+      cardsSeen: 15,
+      additionalCardsSeen: 1,
+    });
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.value.cardsSeen).toBe(15);
+      expect(parsed.value.additionalCardsSeen).toBe(1);
+    }
+  });
+
+  it("rejects impossible draw evidence", () => {
+    expect(parseSessionInput({ result: "win", turns: 8, cardsSeen: -1 }).ok).toBe(false);
+    expect(parseSessionInput({ result: "win", turns: 8, cardsSeen: 10.5 }).ok).toBe(false);
+    expect(
+      parseSessionInput({
+        result: "win",
+        turns: 8,
+        cardsSeen: 10,
+        additionalCardsSeen: 11,
+      }).ok,
+    ).toBe(false);
+  });
+
   it("trims notes and drops them when they are only whitespace", () => {
     const withNotes = parseSessionInput({ result: "win", turns: 8, notes: "  kept it  " });
     if (withNotes.ok) expect(withNotes.value.notes).toBe("kept it");
@@ -113,6 +146,29 @@ describe("parseSessionInput", () => {
 
     expect(atLimit.ok).toBe(true);
     expect(overLimit.ok).toBe(false);
+  });
+
+  it("trims an optional proposed deck change", () => {
+    const parsed = parseSessionInput({
+      result: "loss",
+      turns: 7,
+      proposedChange: "  Add one more untapped blue source.  ",
+    });
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.value.proposedChange).toBe("Add one more untapped blue source.");
+    }
+  });
+
+  it("rejects a proposed change above its length limit", () => {
+    expect(
+      parseSessionInput({
+        result: "loss",
+        turns: 7,
+        proposedChange: "a".repeat(MAX_PROPOSED_CHANGE_LENGTH + 1),
+      }).ok
+    ).toBe(false);
   });
 
   it("rejects a payload that is not an object at all", () => {
