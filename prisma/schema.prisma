@@ -28,6 +28,7 @@ model User {
   votes          DeckVote[]
   playtests      PlaytestSession[]
   comments       DeckComment[]
+  deckReports    DeckReport[]
   following      UserFollow[]      @relation("Following")
   followers      UserFollow[]      @relation("Followers")
   apiKeys        ApiKey[]
@@ -75,40 +76,57 @@ model VerificationToken {
 
 /// A Commander (or Brawl) deck with its metadata
 model Deck {
-  id            String            @id @default(cuid())
-  name          String
-  description   String?           @default("")
-  tags          String[]          @default([])
-  format        String            @default("commander")
-  targetBracket Int               @default(3)
-  budget        Float?
-  commanderId   String?
-  commanderName String? // denormalised from the isCommander DeckCard; lets community discovery match a commander slug in SQL
-  partnerId     String?
-  companionId   String?
-  pairingType   String            @default("none")
-  manualBracket Int? // null = use calculated score, 1-4 = manual override
-  shareToken    String?           @unique
-  shareEnabled  Boolean           @default(false)
-  isPublic      Boolean           @default(false) // visible on public profile page
-  seekingFeedback Boolean         @default(false)
-  feedbackQuestion String?
-  isAIGenerated Boolean           @default(false)
+  id                 String            @id @default(cuid())
+  name               String
+  description        String?           @default("")
+  tags               String[]          @default([])
+  format             String            @default("commander")
+  targetBracket      Int               @default(3)
+  budget             Float?
+  commanderId        String?
+  commanderName      String? // denormalised from the isCommander DeckCard; lets community discovery match a commander slug in SQL
+  partnerId          String?
+  companionId        String?
+  pairingType        String            @default("none")
+  manualBracket      Int? // null = use calculated score, 1-4 = manual override
+  shareToken         String?           @unique
+  shareEnabled       Boolean           @default(false)
+  isPublic           Boolean           @default(false) // visible on public profile page
+  seekingFeedback    Boolean           @default(false)
+  feedbackQuestion   String?
+  isAIGenerated      Boolean           @default(false)
   forkedFromDeckId   String?
   forkedFromDeckName String?
   forkedFromUserName String?
-  userId        String?
-  user          User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cards         DeckCard[]
-  snapshots     DeckSnapshot[]
-  ratings       DeckRating[]
-  votes         DeckVote[]
-  playtests     PlaytestSession[]
-  comments      DeckComment[]
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  userId             String?
+  user               User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards              DeckCard[]
+  snapshots          DeckSnapshot[]
+  ratings            DeckRating[]
+  votes              DeckVote[]
+  playtests          PlaytestSession[]
+  comments           DeckComment[]
+  reports            DeckReport[]
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   @@index([userId])
+}
+
+/// A private moderation signal submitted by one authenticated user.
+model DeckReport {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deckId    String
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  reason    String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, deckId])
+  @@index([deckId, status])
 }
 
 /// A named snapshot (version) of a deck at a point in time
