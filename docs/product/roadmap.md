@@ -387,7 +387,8 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [x] Fork a public deck with clear attribution and a clean ownership boundary.
 - [x] Show "why this deck differs" using curve, budget and color identity.
 - [x] Extend the comparison explanation with card-role differences.
-- [ ] Add moderation and abuse-reporting primitives before opening broader social features.
+- [x] Persist authenticated, deduplicated abuse reports for public decks without exposing moderation data publicly.
+- [ ] Add the reporter UI and a restricted moderation review queue before opening broader social features.
 - [ ] Build a lightweight following feed only if discovery data shows repeated use.
 - [ ] Keep private decks and share tokens out of search indexes.
 - [x] Provide a structured primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
