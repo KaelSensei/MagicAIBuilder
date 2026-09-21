@@ -1,3 +1,5 @@
+import type { CardCategory } from "./types";
+
 export interface ComparableDeckCard {
   readonly scryfallId?: string;
   readonly name: string;
@@ -10,6 +12,18 @@ export interface ComparableDeckProfileCard {
   readonly cmc: number;
   readonly price: number | null;
   readonly colorIdentity: readonly string[];
+  readonly category: CardCategory;
+}
+
+export type StrategicCardRole = Extract<
+  CardCategory,
+  "ramp" | "draw" | "removal" | "boardWipe" | "protection" | "winCondition"
+>;
+
+export interface DeckRoleDifference {
+  readonly role: StrategicCardRole;
+  readonly leftQuantity: number;
+  readonly rightQuantity: number;
 }
 
 export interface DeckProfileComparison {
@@ -19,6 +33,7 @@ export interface DeckProfileComparison {
   readonly rightPrice: number;
   readonly onlyLeftColors: readonly string[];
   readonly onlyRightColors: readonly string[];
+  readonly roleDifferences: readonly DeckRoleDifference[];
 }
 
 export interface DeckComparisonCard {
@@ -88,11 +103,33 @@ function byName<T extends { readonly name: string }>(
 }
 
 const COLOR_ORDER = ["W", "U", "B", "R", "G", "C"] as const;
+const STRATEGIC_ROLE_ORDER: readonly StrategicCardRole[] = [
+  "ramp",
+  "draw",
+  "removal",
+  "boardWipe",
+  "protection",
+  "winCondition",
+];
+
+function isStrategicRole(
+  category: CardCategory
+): category is StrategicCardRole {
+  return (
+    category === "ramp" ||
+    category === "draw" ||
+    category === "removal" ||
+    category === "boardWipe" ||
+    category === "protection" ||
+    category === "winCondition"
+  );
+}
 
 interface DeckProfileTotals {
   readonly averageCmc: number;
   readonly price: number;
   readonly colors: ReadonlySet<string>;
+  readonly roles: ReadonlyMap<StrategicCardRole, number>;
 }
 
 function roundMetric(value: number): number {
@@ -106,6 +143,7 @@ function profileTotals(
   let totalCmc = 0;
   let price = 0;
   const colors = new Set<string>();
+  const roles = new Map<StrategicCardRole, number>();
 
   for (const card of cards) {
     const cardQuantity = Math.max(0, card.quantity);
@@ -113,12 +151,16 @@ function profileTotals(
     totalCmc += Math.max(0, card.cmc) * cardQuantity;
     price += Math.max(0, card.price ?? 0) * cardQuantity;
     for (const color of card.colorIdentity) colors.add(color);
+    if (isStrategicRole(card.category)) {
+      roles.set(card.category, (roles.get(card.category) ?? 0) + cardQuantity);
+    }
   }
 
   return {
     averageCmc: quantity === 0 ? 0 : roundMetric(totalCmc / quantity),
     price: roundMetric(price),
     colors,
+    roles,
   };
 }
 
@@ -149,6 +191,13 @@ export function compareDeckProfiles(
       (color) =>
         rightProfile.colors.has(color) && !leftProfile.colors.has(color)
     ),
+    roleDifferences: STRATEGIC_ROLE_ORDER.flatMap((role) => {
+      const leftQuantity = leftProfile.roles.get(role) ?? 0;
+      const rightQuantity = rightProfile.roles.get(role) ?? 0;
+      return leftQuantity === rightQuantity
+        ? []
+        : [{ role, leftQuantity, rightQuantity }];
+    }),
   };
 }
 

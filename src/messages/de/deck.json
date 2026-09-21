@@ -28,6 +28,15 @@
     "averageManaValue": "Average mana value",
     "estimatedPrice": "Estimated price",
     "uniqueColors": "Unique colors",
+    "roleDifferences": "Role differences",
+    "roles": {
+      "ramp": "Ramp",
+      "draw": "Card draw",
+      "removal": "Removal",
+      "boardWipe": "Board wipes",
+      "protection": "Protection",
+      "winCondition": "Win conditions"
+    },
     "error": "The decks could not be compared. Try again."
   },
   "controls": {
