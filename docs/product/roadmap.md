@@ -190,7 +190,7 @@ A user can move a card between every legal zone, reload the page, change its pri
 - [x] Offer alternatives by budget, power and play pattern instead of one opaque answer.
 - [x] Diff a proposed change against the current deck before applying it.
 - [ ] Support "why is this card here?" and "what is the weakest card?" questions.
-- [ ] Add a deterministic post-generation validator; the LLM never decides legality.
+- [x] Add a deterministic post-generation validator; the LLM never decides legality.
 - [ ] Build a small golden evaluation set for valid cards, useful explanations and regression checks.
 
 ### Definition of done
@@ -220,7 +220,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 
 ### Remaining scope
 
-- [ ] Replace long persistent warning blocks with dismissible, grouped and actionable warnings.
+- [x] Replace long persistent warning blocks with dismissible, grouped and actionable warnings.
 - [x] Show the rule or calculation behind legality warnings on demand.
 - [ ] Separate hard legality errors from strategic suggestions and optional advice.
 - [x] Add source and freshness labels to external recommendations.
@@ -245,9 +245,9 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
 - [ ] Use route-level skeletons and cached session/profile data where safe.
 - [ ] Remove React refresh loops, hover jitter, layout shifts and unstable card previews.
-- [ ] Make warning panels collapsible and dismissible, with accessible close controls.
-- [ ] Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
-- [ ] Make card zoom intentional in "View all cards" contexts, not a global hover effect.
+- [x] Make warning panels collapsible and dismissible, with accessible close controls.
+- [x] Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
+- [x] Make card zoom intentional in "View all cards" contexts, not a global hover effect.
 - [ ] Preserve the established dark/light design language while improving hierarchy, spacing and responsive behavior.
 - [ ] Add visual regression coverage for the Deck Editor, banner, warning panel and card hover states.
 
@@ -385,13 +385,14 @@ A player can test two versions of a deck and see evidence that helps choose betw
 
 - [ ] Extend side-by-side comparison from owned decks to public decks.
 - [ ] Fork a public deck with clear attribution and a clean ownership boundary.
-- [ ] Show "why this deck differs" using roles, curve, budget and color identity.
+- [x] Show "why this deck differs" using curve, budget and color identity.
+- [ ] Extend the comparison explanation with card-role differences.
 - [ ] Add moderation and abuse-reporting primitives before opening broader social features.
 - [ ] Build a lightweight following feed only if discovery data shows repeated use.
 - [ ] Keep private decks and share tokens out of search indexes.
 - [x] Provide a structured primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
 - [x] Render published primers with safe Markdown headings, lists and navigation.
-- [ ] Add explicit sequencing guidance to the structured primer template.
+- [x] Add explicit sequencing guidance to the structured primer template.
 - [ ] Let an owner mark a public deck as "seeking feedback" and ask a focused question instead of only exposing a generic comment box.
 - [ ] Add in-product notifications for replies, mentions, follows and changes to explicitly watched decks, with per-event controls.
 - [ ] Organize saved and followed public decks into personal folders without claiming ownership.
@@ -454,7 +455,7 @@ A recommendation is never presented as universal truth: the user can see where i
 ### Remaining scope
 
 - [ ] Treat import/export formats as versioned contracts with fixtures.
-- [ ] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
+- [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
 - [ ] Improve round-trip fidelity for categories, printings, companions and sideboards.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.
