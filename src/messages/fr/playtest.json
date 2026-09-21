@@ -88,11 +88,31 @@
       "insufficient": "Trop peu de parties"
     },
     "byOpponent": "Par adversaire",
-    "matchupValue": "{wins}V–{losses}D · {winRate} %"
+    "matchupValue": "{wins}V–{losses}D · {winRate} %",
+    "proposedChange": "Changement à essayer"
+  },
+  "comparison": {
+    "title": "Comparer les versions du deck",
+    "before": "Version précédente",
+    "after": "Version suivante",
+    "choose": "Choisir une version",
+    "distinct": "Choisissez deux versions différentes.",
+    "versionOption": "{date} · {count, plural, one {# essai} other {# essais}}",
+    "winRate": "Taux de victoire",
+    "speed": "Vitesse de victoire",
+    "mulligans": "Mulligans",
+    "winRateValue": "{delta, number, ::sign-always maximumFractionDigits-0} pts",
+    "speedValue": "{delta, number, maximumFractionDigits-1} tours {direction, select, faster {plus rapide} other {plus lent}}",
+    "mulliganValue": "{delta, number, maximumFractionDigits-1} mulligans {direction, select, fewer {en moins} other {en plus}}",
+    "sampleSize": "{before, plural, one {# essai avant} other {# essais avant}} · {after, plural, one {# essai après} other {# essais après}}",
+    "earlySignal": "Signal préliminaire — enregistrez au moins 3 essais par version avant de conclure.",
+    "methodology": "Indication directionnelle issue de tests auto-déclarés. Ce n’est pas un taux de victoire en tournoi."
   },
   "difficultyLabel": "Adversaire",
   "notesLabel": "Note du test de jeu",
   "notesPlaceholder": "Qu’est-ce qui a fonctionné ou semblé faible ?",
+  "proposedChangeLabel": "Changement à essayer",
+  "proposedChangePlaceholder": "Que modifier pour le prochain essai ?",
   "difficultyUnset": "Sans préciser",
   "difficulty": {
     "budget": "Budget",

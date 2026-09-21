@@ -15,6 +15,8 @@ import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import type { UrlImportCard, UrlImportResult } from "@/lib/import/url-import";
 import { detectSource } from "@/lib/import/url-import";
+import type { ImportPreview } from "@/lib/import/import-preview";
+import { buildImportPreview } from "@/lib/import/import-preview";
 import {
   buildScryfallNameIndex,
   normalizeImportedName,
@@ -49,7 +51,7 @@ const SOURCES_LIST = Object.entries(SOURCE_LABELS)
   .map(([, label]) => label)
   .join(", ");
 
-type ImportStatus = "idle" | "loading" | "done" | "error";
+type ImportStatus = "idle" | "loading" | "preview" | "done" | "error";
 
 interface ImportFromUrlTabProps {
   readonly onSuccess?: () => void;
@@ -68,6 +70,9 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
   const [message, setMessage] = useState("");
   const [ignored, setIgnored] = useState<readonly string[]>([]);
   const [formatWarning, setFormatWarning] = useState<string | null>(null);
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const [pendingResult, setPendingResult] = useState<UrlImportResult | null>(null);
+  const [pendingCards, setPendingCards] = useState<readonly ScryfallCard[]>([]);
 
   // Detect source from URL for live badge
   const detected = url.trim() ? detectSource(url.trim()) : null;
@@ -78,6 +83,9 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     setMessage("");
     setIgnored([]);
     setFormatWarning(null);
+    setPreview(null);
+    setPendingResult(null);
+    setPendingCards([]);
   };
 
   const addCard = useDeckStore((s) => s.addCard);
@@ -160,24 +168,43 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
 
       setMessage(t("import.validating", { count: cardNames.length }));
       const foundCards = await fetchInBatches(cardNames);
-
-      const { added, ignoredNames } = await addUrlCards(
-        result.cards,
-        foundCards
-      );
-      setIgnored(ignoredNames);
-      setStatus("done");
-      setMessage(
-        t("import.url.success", {
-          name: result.name,
-          added,
-          ignored: ignoredNames.length,
-        })
-      );
-      if (ignoredNames.length === 0) onSuccess?.();
+      const nextPreview = buildImportPreview(result);
+      setPendingResult(result);
+      setPendingCards(foundCards);
+      setPreview(nextPreview);
+      setIgnored(nextPreview.ignoredNames);
+      setStatus("preview");
+      setMessage(t("import.url.previewReady"));
     } catch (err) {
       setStatus("error");
       setFormatWarning(null);
+      setMessage(err instanceof Error ? err.message : t("import.url.importFailed"));
+    }
+  };
+
+  const confirmImport = async () => {
+    if (!pendingResult || status === "loading") return;
+    setStatus("loading");
+    try {
+      const { added, ignoredNames } = await addUrlCards(
+        pendingResult.cards,
+        [...pendingCards]
+      );
+      setIgnored([...pendingResult.ignored, ...ignoredNames]);
+      setStatus("done");
+      setMessage(
+        t("import.url.success", {
+          name: pendingResult.name,
+          added,
+          ignored: pendingResult.ignored.length + ignoredNames.length,
+        })
+      );
+      setPreview(null);
+      setPendingResult(null);
+      setPendingCards([]);
+      if (ignoredNames.length === 0 && pendingResult.ignored.length === 0) onSuccess?.();
+    } catch (err) {
+      setStatus("error");
       setMessage(err instanceof Error ? err.message : t("import.url.importFailed"));
     }
   };
@@ -206,7 +233,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
         <button
           type="button"
           onClick={handleImport}
-          disabled={!url.trim() || status === "loading"}
+          disabled={!url.trim() || status === "loading" || status === "preview"}
           className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
         >
           {status === "loading" && (
@@ -238,6 +265,23 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
         <div className="flex items-start gap-2 text-xs text-amber-300 rounded border border-amber-500/30 bg-amber-500/10 p-2">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <span>{formatWarning}</span>
+        </div>
+      )}
+
+      {preview && (
+        <div className="rounded border border-[var(--accent)]/40 bg-[var(--accent)]/10 p-3 text-xs text-[var(--text-primary)] space-y-2">
+          <p className="font-medium">{t("import.url.previewSummary", { name: preview.name, source: SOURCE_LABELS[preview.source] ?? preview.source, cards: preview.totalQuantity, zones: Object.values(preview.zoneCounts).filter((count) => count > 0).length })}</p>
+          <p>{t("import.url.zones", preview.zoneCounts)}</p>
+          <p>{t("import.url.commanders", { names: [...preview.commanderNames, ...preview.partnerNames].join(", ") || "—" })}</p>
+          <p className={preview.duplicateNames.length > 0 ? "text-amber-300" : "text-green-300"}>
+            {preview.duplicateNames.length > 0
+              ? t("import.url.duplicates", { names: preview.duplicateNames.join(", ") })
+              : t("import.url.noDuplicates")}
+          </p>
+          <div className="flex justify-end gap-2 pt-1">
+            <button type="button" onClick={() => { setPreview(null); setPendingResult(null); setPendingCards([]); setStatus("idle"); setMessage(""); }} className="px-3 py-1.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">{t("import.url.cancelPreview")}</button>
+            <button type="button" onClick={confirmImport} className="px-3 py-1.5 rounded bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]">{t("import.url.confirmImport")}</button>
+          </div>
         </div>
       )}
 

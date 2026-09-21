@@ -79,10 +79,20 @@
         "land-light": "Land-light: consider a mulligan.",
         "balanced": "Balanced start.",
         "land-heavy": "Land-heavy: consider a mulligan."
+      },
+      "deadHand": "Dead opening hand: no spell is currently playable.",
+      "missingColors": "Missing {colors} mana.",
+      "colors": {
+        "W": "white",
+        "U": "blue",
+        "B": "black",
+        "R": "red",
+        "G": "green"
       }
     }
   },
   "loading": "Loading deck…",
+  "saving": "Saving…",
   "deckNotFound": {
     "title": "Deck not found",
     "back": "Back to My Decks"

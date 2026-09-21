@@ -26,6 +26,7 @@ describe("BracketIndicator warnings", () => {
     renderWithIntl(<BracketIndicator score={score} />);
 
     expect(screen.getByText(/color identity violations/i)).toBeDefined();
+    expect(screen.getByRole("heading", { name: /legality errors/i })).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /dismiss deck warnings/i }));
     expect(screen.queryByText(/color identity violations/i)).toBeNull();
 

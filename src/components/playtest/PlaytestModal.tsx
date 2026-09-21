@@ -18,6 +18,7 @@ import { PlaytestHistoryPanel } from "@/components/playtest/PlaytestHistoryPanel
 import { DrawProgressEvidence } from "@/components/playtest/DrawProgressEvidence";
 import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
+import { analyzeDrawProgress } from "@/lib/playtest/draw-progress-evidence";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
@@ -117,6 +118,20 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     [deck.commander, deck.partner, deck.cards]
   );
 
+  const drawEvidence = useMemo(() => {
+    if (engine === null) return null;
+    return analyzeDrawProgress({
+      turn: engine.turn,
+      mulliganCount: engine.mulliganCount,
+      cardsOutsideLibrary:
+        engine.hand.length +
+        engine.battlefield.length +
+        engine.graveyard.length +
+        engine.exile.length,
+      libraryCount: engine.library.length,
+    });
+  }, [engine]);
+
   return (
     <LocalizedDeckTextProvider names={cardNames}>
     <AnimatePresence>
@@ -147,6 +162,8 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 deckId={deck.id}
                 turns={engine.turn}
                 mulliganCount={engine.mulliganCount}
+                cardsSeen={drawEvidence?.cardsSeen ?? 0}
+                additionalCardsSeen={drawEvidence?.additionalCardsSeen ?? 0}
                 onRecorded={handleClose}
               />
             )}

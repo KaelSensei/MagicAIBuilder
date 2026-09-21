@@ -70,11 +70,13 @@ import { BulkEditModal } from "@/components/deck/BulkEditModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
+import type { DeckBrief } from "@/lib/ai/deck-brief";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 import { MetaPanel } from "@/components/deck/MetaPanel";
 import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
+import { DeckSaveIndicator } from "@/components/deck/DeckSaveIndicator";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
@@ -366,11 +368,11 @@ export default function BuilderPage() {
 
   const deckAnalysisCards = useMemo(
     () => [
-      ...(deck.commander ? [deck.commander] : []),
-      ...(deck.partner ? [deck.partner] : []),
-      ...deck.cards,
+      ...(deck?.commander ? [deck.commander] : []),
+      ...(deck?.partner ? [deck.partner] : []),
+      ...(deck?.cards ?? []),
     ],
-    [deck.commander, deck.partner, deck.cards]
+    [deck]
   );
 
   const banlistAlertKey = useMemo(() => {
@@ -496,12 +498,18 @@ export default function BuilderPage() {
     import("@/lib/ai/archetypes").Archetype | null
   >(null);
   const [aiBudgetPerCard, setAIBudgetPerCard] = useState<number | null>(null);
+  const [aiBrief, setAIBrief] = useState<DeckBrief>({
+    theme: "",
+    playPattern: "",
+    dislikes: "",
+  });
 
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
     analyzeAI(deck, stats, bracketScore, {
       archetypeOverride: aiArchetypeOverride,
       budgetPerCard: aiBudgetPerCard,
+      brief: aiBrief,
     });
   }, [
     deck,
@@ -510,6 +518,7 @@ export default function BuilderPage() {
     analyzeAI,
     aiArchetypeOverride,
     aiBudgetPerCard,
+    aiBrief,
   ]);
 
   const handleSnapshotRestore = useCallback(() => {
@@ -702,6 +711,7 @@ export default function BuilderPage() {
               (deck.partner ? 1 : 0)}{" "}
             / 100
           </span>
+          <DeckSaveIndicator saving={isSyncing} label={t("saving")} />
           <div className="ml-auto flex items-center gap-1 md:gap-2">
             {/* Duplicate deck */}
             <button
@@ -1013,6 +1023,9 @@ export default function BuilderPage() {
               onArchetypeChange={setAIArchetypeOverride}
               budgetPerCard={aiBudgetPerCard}
               onBudgetPerCardChange={setAIBudgetPerCard}
+              currentCardNames={deck.cards.map((card) => card.name)}
+              brief={aiBrief}
+              onBriefChange={setAIBrief}
               analysedAt={analysedAt}
               ignoredSuggestions={ignoredSuggestions}
               onIgnoreSuggestion={ignoreSuggestion}

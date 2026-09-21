@@ -7,6 +7,7 @@ import { cn } from "@/components/ui/utils";
 import type { BracketLevel, BracketScore } from "@/lib/deck/types";
 import { BRACKET_DEFINITIONS } from "@/lib/constants/brackets";
 import { AlertTriangle, Zap, X, Infinity } from "lucide-react";
+import { GroupedDeckWarnings } from "./GroupedDeckWarnings";
 
 interface BracketIndicatorProps {
   readonly score: BracketScore | null;
@@ -343,14 +344,7 @@ export function BracketIndicator({
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
-            {score.warnings.map((warning) => (
-              <div key={warning} className="flex items-start gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
-                <span className="text-xs text-[var(--text-secondary)]">
-                  {warning}
-                </span>
-              </div>
-            ))}
+            <GroupedDeckWarnings warnings={score.warnings} />
           </div>
         )
       )}

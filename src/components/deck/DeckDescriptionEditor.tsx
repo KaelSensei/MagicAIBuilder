@@ -2,7 +2,7 @@
 // Expandable deck description editor — collapsed by default, supports basic markdown preview
 import { useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, ChevronRight, Edit3 } from "lucide-react";
+import { ChevronDown, ChevronRight, Edit3, ListPlus } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 
 interface DeckDescriptionEditorProps {
@@ -47,6 +47,11 @@ export function DeckDescriptionEditor({
     updateDeckDescription(deckId, draft.trim());
   };
 
+  const insertPrimerTemplate = () => {
+    setDraft(t("description.primerTemplateContent"));
+    textareaRef.current?.focus();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Escape") {
       setEditing(false);
@@ -63,40 +68,53 @@ export function DeckDescriptionEditor({
   return (
     <div className="border-b border-[var(--border)]">
       {/* Header row */}
-      <button
-        type="button"
-        onClick={handleToggle}
-        className="w-full flex items-center gap-1.5 px-3 py-1.5 hover:bg-[var(--surface-hover)] transition-colors group text-left"
-      >
-        {expanded ? (
-          <ChevronDown className="w-3 h-3 text-[var(--text-secondary)] shrink-0" />
-        ) : (
-          <ChevronRight className="w-3 h-3 text-[var(--text-secondary)] shrink-0" />
-        )}
-        <span className="text-xs text-[var(--text-secondary)] truncate flex-1">
-          {hasContent ? (
-            <span className="text-[var(--text-primary)] italic line-clamp-1">
-              {description!.trim().split("\n")[0]}
-            </span>
+      <div className="group flex items-center hover:bg-[var(--surface-hover)] transition-colors">
+        <button
+          type="button"
+          onClick={handleToggle}
+          className="flex min-w-0 flex-1 items-center gap-1.5 px-3 py-1.5 text-left"
+        >
+          {expanded ? (
+            <ChevronDown className="w-3 h-3 text-[var(--text-secondary)] shrink-0" />
           ) : (
-            <span className="opacity-50">{t("description.add")}</span>
+            <ChevronRight className="w-3 h-3 text-[var(--text-secondary)] shrink-0" />
           )}
-        </span>
+          <span className="text-xs text-[var(--text-secondary)] truncate flex-1">
+            {hasContent ? (
+              <span className="text-[var(--text-primary)] italic line-clamp-1">
+                {description?.trim().split("\n")[0]}
+              </span>
+            ) : (
+              <span className="opacity-50">{t("description.add")}</span>
+            )}
+          </span>
+        </button>
         <button
           type="button"
           onClick={handleEdit}
-          className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-0.5 rounded"
+          className="mr-3 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-60 focus-visible:opacity-100 hover:!opacity-100"
           aria-label={t("description.edit")}
         >
           <Edit3 className="w-3 h-3 text-[var(--text-secondary)]" />
         </button>
-      </button>
+      </div>
 
       {/* Expanded area */}
       {expanded && (
         <div className="px-3 pb-3">
           {editing ? (
             <div className="flex flex-col gap-1.5">
+              {draft.trim() === "" && (
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={insertPrimerTemplate}
+                  className="flex w-fit items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+                >
+                  <ListPlus className="h-3.5 w-3.5" />
+                  {t("description.usePrimerTemplate")}
+                </button>
+              )}
               <textarea
                 ref={textareaRef}
                 value={draft}
@@ -110,14 +128,17 @@ export function DeckDescriptionEditor({
               />
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-[var(--text-secondary)]/50">
-                  {draft.length}/2000 · Ctrl+Enter to save · Esc to cancel
+                  {t("description.editorHelp", {
+                    count: draft.length,
+                    max: 2000,
+                  })}
                 </span>
                 <button
                   type="button"
                   onClick={handleSave}
                   className="text-xs px-2 py-0.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors"
                 >
-                  Save
+                  {t("description.save")}
                 </button>
               </div>
             </div>
@@ -137,7 +158,7 @@ export function DeckDescriptionEditor({
                 </span>
               ) : (
                 <span className="italic opacity-50">
-                  No description — click to add one
+                  {t("description.empty")}
                 </span>
               )}
             </button>
