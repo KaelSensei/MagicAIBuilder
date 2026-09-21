@@ -28,6 +28,15 @@
     "averageManaValue": "Valeur de mana moyenne",
     "estimatedPrice": "Prix estimé",
     "uniqueColors": "Couleurs propres",
+    "roleDifferences": "Différences de rôles",
+    "roles": {
+      "ramp": "Accélération",
+      "draw": "Pioche",
+      "removal": "Retrait",
+      "boardWipe": "Nettoyage de table",
+      "protection": "Protection",
+      "winCondition": "Conditions de victoire"
+    },
     "error": "Impossible de comparer les decks. Réessayez."
   },
   "controls": {

@@ -58,6 +58,7 @@ describe("compareDeckProfiles", () => {
           cmc: 1,
           price: 1,
           colorIdentity: ["U"],
+          category: "draw",
         },
         {
           name: "White spell",
@@ -65,6 +66,7 @@ describe("compareDeckProfiles", () => {
           cmc: 4,
           price: 3,
           colorIdentity: ["W"],
+          category: "removal",
         },
       ],
       [
@@ -74,6 +76,7 @@ describe("compareDeckProfiles", () => {
           cmc: 5,
           price: 10,
           colorIdentity: ["U"],
+          category: "draw",
         },
         {
           name: "Green spell",
@@ -81,6 +84,7 @@ describe("compareDeckProfiles", () => {
           cmc: 3,
           price: 2,
           colorIdentity: ["G"],
+          category: "ramp",
         },
       ]
     );
@@ -92,6 +96,46 @@ describe("compareDeckProfiles", () => {
       rightPrice: 12,
       onlyLeftColors: ["W"],
       onlyRightColors: ["G"],
+      roleDifferences: [
+        { role: "ramp", leftQuantity: 0, rightQuantity: 1 },
+        { role: "draw", leftQuantity: 2, rightQuantity: 1 },
+        { role: "removal", leftQuantity: 1, rightQuantity: 0 },
+      ],
     });
+  });
+
+  it("omits strategic roles with identical quantities and non-role categories", () => {
+    const result = compareDeckProfiles(
+      [
+        {
+          name: "Mana rock",
+          quantity: 2,
+          cmc: 2,
+          price: 1,
+          colorIdentity: [],
+          category: "ramp",
+        },
+        {
+          name: "Creature",
+          quantity: 3,
+          cmc: 3,
+          price: 1,
+          colorIdentity: ["G"],
+          category: "creature",
+        },
+      ],
+      [
+        {
+          name: "Different mana rocks",
+          quantity: 2,
+          cmc: 2,
+          price: 1,
+          colorIdentity: [],
+          category: "ramp",
+        },
+      ]
+    );
+
+    expect(result.roleDifferences).toEqual([]);
   });
 });

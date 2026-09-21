@@ -18,6 +18,7 @@ describe("DeckComparisonPanel", () => {
             cmc: 1,
             price: 2,
             colorIdentity: [],
+            category: "ramp",
           },
           {
             name: "Counterspell",
@@ -26,6 +27,7 @@ describe("DeckComparisonPanel", () => {
             cmc: 2,
             price: 1,
             colorIdentity: ["U"],
+            category: "draw",
           },
         ],
       })
@@ -38,6 +40,7 @@ describe("DeckComparisonPanel", () => {
             cmc: 1,
             price: 2,
             colorIdentity: [],
+            category: "ramp",
           },
           {
             name: "Swords to Plowshares",
@@ -46,6 +49,7 @@ describe("DeckComparisonPanel", () => {
             cmc: 1,
             price: 3,
             colorIdentity: ["W"],
+            category: "removal",
           },
         ],
       });
@@ -71,5 +75,10 @@ describe("DeckComparisonPanel", () => {
     expect(screen.getByText("$3.00 → $5.00")).toBeDefined();
     expect(screen.getByText("Unique colors")).toBeDefined();
     expect(screen.getByText("U → W")).toBeDefined();
+    expect(screen.getByText("Role differences")).toBeDefined();
+    expect(screen.getByText("Card draw")).toBeDefined();
+    expect(screen.getByText("1 → 0")).toBeDefined();
+    expect(screen.getByText("Removal")).toBeDefined();
+    expect(screen.getByText("0 → 1")).toBeDefined();
   });
 });
