@@ -383,8 +383,8 @@ A player can test two versions of a deck and see evidence that helps choose betw
 
 ### Remaining scope
 
-- [ ] Extend side-by-side comparison from owned decks to public decks.
-- [ ] Fork a public deck with clear attribution and a clean ownership boundary.
+- [x] Extend side-by-side comparison from owned decks to public decks.
+- [x] Fork a public deck with clear attribution and a clean ownership boundary.
 - [x] Show "why this deck differs" using curve, budget and color identity.
 - [x] Extend the comparison explanation with card-role differences.
 - [ ] Add moderation and abuse-reporting primitives before opening broader social features.
