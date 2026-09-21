@@ -388,7 +388,8 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [x] Show "why this deck differs" using curve, budget and color identity.
 - [x] Extend the comparison explanation with card-role differences.
 - [x] Persist authenticated, deduplicated abuse reports for public decks without exposing moderation data publicly.
-- [ ] Add the reporter UI and a restricted moderation review queue before opening broader social features.
+- [x] Provide a restricted moderation review queue API with auditable decisions.
+- [ ] Add the public-deck report action and moderator review interface before opening broader social features.
 - [ ] Build a lightweight following feed only if discovery data shows repeated use.
 - [ ] Keep private decks and share tokens out of search indexes.
 - [x] Provide a structured primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
