@@ -10,30 +10,32 @@ datasource db {
 // ─── NextAuth Models ────────────────────────────────────────────────
 
 model User {
-  id             String            @id @default(cuid())
-  name           String?
-  username       String?           @unique // public profile slug (e.g. /u/kael)
-  onboardingDone Boolean           @default(false) // true after first-run wizard completed or skipped
-  email          String            @unique
-  emailVerified  DateTime?
-  image          String?
-  password       String? // hashed password for credentials provider (null for OAuth-only users)
-  accounts       Account[]
-  sessions       Session[]
-  decks          Deck[]
-  collection     CollectionCard[]
-  favorites      CardFavorite[]
-  favoriteLists  FavoriteList[]
-  ratings        DeckRating[]
-  votes          DeckVote[]
-  playtests      PlaytestSession[]
-  comments       DeckComment[]
-  deckReports    DeckReport[]
-  following      UserFollow[]      @relation("Following")
-  followers      UserFollow[]      @relation("Followers")
-  apiKeys        ApiKey[]
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id               String            @id @default(cuid())
+  name             String?
+  username         String?           @unique // public profile slug (e.g. /u/kael)
+  onboardingDone   Boolean           @default(false) // true after first-run wizard completed or skipped
+  email            String            @unique
+  emailVerified    DateTime?
+  image            String?
+  password         String? // hashed password for credentials provider (null for OAuth-only users)
+  accounts         Account[]
+  sessions         Session[]
+  decks            Deck[]
+  collection       CollectionCard[]
+  favorites        CardFavorite[]
+  favoriteLists    FavoriteList[]
+  ratings          DeckRating[]
+  votes            DeckVote[]
+  playtests        PlaytestSession[]
+  comments         DeckComment[]
+  deckReports      DeckReport[]      @relation("DeckReportReporter")
+  moderatedReports DeckReport[]      @relation("DeckReportModerator")
+  isModerator      Boolean           @default(false)
+  following        UserFollow[]      @relation("Following")
+  followers        UserFollow[]      @relation("Followers")
+  apiKeys          ApiKey[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 }
 
 model Account {
@@ -115,18 +117,22 @@ model Deck {
 
 /// A private moderation signal submitted by one authenticated user.
 model DeckReport {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deckId    String
-  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  reason    String
-  status    String   @default("pending")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation("DeckReportReporter", fields: [userId], references: [id], onDelete: Cascade)
+  deckId       String
+  deck         Deck      @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  reason       String
+  status       String    @default("pending")
+  reviewedById String?
+  reviewedBy   User?     @relation("DeckReportModerator", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@unique([userId, deckId])
   @@index([deckId, status])
+  @@index([status, createdAt])
 }
 
 /// A named snapshot (version) of a deck at a point in time
