@@ -25,6 +25,9 @@
     "onlySecond": "Uniquement dans le second",
     "quantityChanges": "Quantités différentes",
     "shared": "{count, plural, one {1 carte commune} other {# cartes communes}}",
+    "averageManaValue": "Valeur de mana moyenne",
+    "estimatedPrice": "Prix estimé",
+    "uniqueColors": "Couleurs propres",
     "error": "Impossible de comparer les decks. Réessayez."
   },
   "controls": {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareDeckCards } from "./comparison";
+import { compareDeckCards, compareDeckProfiles } from "./comparison";
 
 describe("compareDeckCards", () => {
   it("separates shared cards, exclusive cards, and quantity changes", () => {
@@ -45,5 +45,53 @@ describe("compareDeckCards", () => {
     expect(result.shared).toHaveLength(1);
     expect(result.onlyLeft).toEqual([]);
     expect(result.onlyRight).toEqual([]);
+  });
+});
+
+describe("compareDeckProfiles", () => {
+  it("explains curve, budget, and color identity differences", () => {
+    const result = compareDeckProfiles(
+      [
+        {
+          name: "Cheap blue spell",
+          quantity: 2,
+          cmc: 1,
+          price: 1,
+          colorIdentity: ["U"],
+        },
+        {
+          name: "White spell",
+          quantity: 1,
+          cmc: 4,
+          price: 3,
+          colorIdentity: ["W"],
+        },
+      ],
+      [
+        {
+          name: "Expensive blue spell",
+          quantity: 1,
+          cmc: 5,
+          price: 10,
+          colorIdentity: ["U"],
+        },
+        {
+          name: "Green spell",
+          quantity: 1,
+          cmc: 3,
+          price: 2,
+          colorIdentity: ["G"],
+        },
+      ]
+    );
+
+    expect(result).toEqual({
+      leftAverageCmc: 2,
+      rightAverageCmc: 4,
+      leftPrice: 5,
+      rightPrice: 12,
+      onlyLeftColors: ["W"],
+      onlyRightColors: ["G"],
+    });
   });
 });
