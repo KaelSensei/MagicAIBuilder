@@ -6,9 +6,7 @@ export interface ComparableDeckCard {
   readonly quantity: number;
 }
 
-export interface ComparableDeckProfileCard {
-  readonly name: string;
-  readonly quantity: number;
+export interface ComparableDeckProfileCard extends ComparableDeckCard {
   readonly cmc: number;
   readonly price: number | null;
   readonly colorIdentity: readonly string[];

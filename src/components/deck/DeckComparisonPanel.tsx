@@ -9,16 +9,20 @@ import {
   compareDeckProfiles,
   type DeckCardComparison,
   type DeckProfileComparison,
+  type ComparableDeckProfileCard,
 } from "@/lib/deck/comparison";
 import { DeckComparisonResults } from "./DeckComparisonResults";
 
-interface DeckOption {
+export interface DeckOption {
   readonly id: string;
   readonly name: string;
 }
 
 interface DeckComparisonPanelProps {
   readonly decks: readonly DeckOption[];
+  readonly loadDeck?: (id: string) => Promise<{
+    readonly cards: readonly ComparableDeckProfileCard[];
+  }>;
 }
 
 interface DeckComparisonResult {
@@ -26,7 +30,10 @@ interface DeckComparisonResult {
   readonly profile: DeckProfileComparison;
 }
 
-export function DeckComparisonPanel({ decks }: DeckComparisonPanelProps) {
+export function DeckComparisonPanel({
+  decks,
+  loadDeck = fetchDeck,
+}: DeckComparisonPanelProps) {
   const t = useTranslations("deck.comparison");
   const [leftId, setLeftId] = useState(decks[0]?.id ?? "");
   const [rightId, setRightId] = useState(decks[1]?.id ?? "");
@@ -42,8 +49,8 @@ export function DeckComparisonPanel({ decks }: DeckComparisonPanelProps) {
     setHasError(false);
     try {
       const [left, right] = await Promise.all([
-        fetchDeck(leftId),
-        fetchDeck(rightId),
+        loadDeck(leftId),
+        loadDeck(rightId),
       ]);
       setComparison({
         cards: compareDeckCards(left.cards, right.cards),
