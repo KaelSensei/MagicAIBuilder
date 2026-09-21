@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { useDeckStore } from "@/lib/deck/store";
+import { forkPublicDeck } from "@/lib/db/deck-api";
 import { ManaCostDisplay } from "@/components/card/ManaSymbol";
 import {
   Layers,
@@ -143,7 +144,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
   const t = useTranslations("deck");
   const format = useFormatter();
   const router = useRouter();
-  const { createDeck, addDeckCard, setActiveDeck } = useDeckStore();
+  const { setActiveDeck } = useDeckStore();
   const [importing, setImporting] = useState(false);
   const [imported, setImported] = useState(false);
 
@@ -188,41 +189,12 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
     if (importing) return;
     setImporting(true);
     try {
-      const newId = await createDeck(`${deck.name} (imported)`);
-      setActiveDeck(newId);
-
-      // Add all cards — commander first
-      const allCards = [
-        ...(commander ? [commander] : []),
-        ...(partner ? [partner] : []),
-        ...(companion ? [companion] : []),
-        ...mainCards,
-      ];
-
-      for (const card of allCards) {
-        await addDeckCard({
-          id: card.scryfallId,
-          name: card.name,
-          manaCost: card.manaCost,
-          cmc: card.cmc,
-          typeLine: card.typeLine,
-          oracleText: card.oracleText,
-          colorIdentity: [...card.colorIdentity],
-          isGameChanger: card.isGameChanger,
-          isBanned: card.isBanned,
-          price: card.price,
-          imageUri: card.imageUri,
-          artCropUri: card.artCropUri,
-          category: card.category as CardCategory,
-          quantity: card.quantity,
-          zone: "main",
-        });
-      }
-
+      const fork = await forkPublicDeck(deck.id);
+      setActiveDeck(fork.id);
       setImported(true);
-      setTimeout(() => router.push(`/builder/${newId}`), 800);
+      setTimeout(() => router.push(`/builder/${fork.id}`), 800);
     } catch (err) {
-      logger.error("Import failed", "ShareDeckView", err);
+      logger.error("Fork failed", "ShareDeckView", err);
     } finally {
       setImporting(false);
     }
@@ -350,7 +322,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               {!imported && !importing && (
                 <>
                   <ExternalLink className="w-4 h-4" />
-                  {t("share.importThisDeck")}
+                  {t("share.forkThisDeck")}
                 </>
               )}
             </button>

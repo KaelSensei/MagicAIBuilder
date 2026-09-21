@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildShoppingList,
   formatShoppingListText,
+  formatShoppingListCsv,
   computeCollectionStats,
   formatCollectionText,
   formatCollectionCsv,
@@ -39,16 +40,34 @@ describe("summarizeDeckCollection", () => {
       ownedQuantity: 2,
       proxyQuantity: 1,
       missingQuantity: 3,
+      missingCost: 4.5,
       completionRatio: 0.5,
     });
+  });
+
+  it("prices only the quantity still missing", () => {
+    const cards = [makeCard({ scryfallId: "card", quantity: 4, price: 10 })];
+
+    expect(
+      summarizeDeckCollection(cards, null, null, { card: 1 }).missingCost
+    ).toBe(30);
   });
 });
 
 describe("buildShoppingList", () => {
+  it("buys only the quantity not already owned", () => {
+    const cards = [makeCard({ scryfallId: "a", name: "Persistent Petitioners", quantity: 4 })];
+
+    const list = buildShoppingList(cards, null, null, { a: 1 });
+
+    expect(list).toEqual([
+      expect.objectContaining({ name: "Persistent Petitioners", quantity: 3 }),
+    ]);
+  });
+
   it("returns all cards as missing when collection is empty", () => {
     const cards = [makeCard({ scryfallId: "a", name: "Sol Ring", price: 2 })];
-    const ownedIds = new Set<string>();
-    const list = buildShoppingList(cards, null, null, ownedIds);
+    const list = buildShoppingList(cards, null, null, {});
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe("Sol Ring");
   });
@@ -58,28 +77,26 @@ describe("buildShoppingList", () => {
       makeCard({ scryfallId: "a", name: "Sol Ring" }),
       makeCard({ scryfallId: "b", name: "Arcane Signet" }),
     ];
-    const ownedIds = new Set(["a"]);
-    const list = buildShoppingList(cards, null, null, ownedIds);
+    const list = buildShoppingList(cards, null, null, { a: 1 });
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe("Arcane Signet");
   });
 
   it("includes commander if missing", () => {
     const commander = makeCard({ scryfallId: "cmd", name: "Atraxa" });
-    const ownedIds = new Set<string>();
-    const list = buildShoppingList([], commander, null, ownedIds);
+    const list = buildShoppingList([], commander, null, {});
     expect(list.some((c) => c.name === "Atraxa")).toBe(true);
   });
 
   it("excludes basic lands by default", () => {
     const cards = [BASIC_LAND];
-    const list = buildShoppingList(cards, null, null, new Set());
+    const list = buildShoppingList(cards, null, null, {});
     expect(list).toHaveLength(0);
   });
 
   it("includes basic lands when includeBasics is true", () => {
     const cards = [BASIC_LAND];
-    const list = buildShoppingList(cards, null, null, new Set(), { includeBasics: true });
+    const list = buildShoppingList(cards, null, null, {}, { includeBasics: true });
     expect(list).toHaveLength(1);
   });
 
@@ -89,10 +106,21 @@ describe("buildShoppingList", () => {
       makeCard({ scryfallId: "b", name: "Expensive", price: 50 }),
       makeCard({ scryfallId: "c", name: "Medium", price: 10 }),
     ];
-    const list = buildShoppingList(cards, null, null, new Set());
+    const list = buildShoppingList(cards, null, null, {});
     expect(list[0].name).toBe("Expensive");
     expect(list[1].name).toBe("Medium");
     expect(list[2].name).toBe("Cheap");
+  });
+
+  it("prioritizes the highest total acquisition cost", () => {
+    const cards = [
+      makeCard({ scryfallId: "single", name: "Single", price: 10, quantity: 1 }),
+      makeCard({ scryfallId: "playset", name: "Playset", price: 3, quantity: 4 }),
+    ];
+
+    const list = buildShoppingList(cards, null, null, {});
+
+    expect(list.map((item) => item.name)).toEqual(["Playset", "Single"]);
   });
 
   it("handles null prices", () => {
@@ -100,7 +128,7 @@ describe("buildShoppingList", () => {
       makeCard({ scryfallId: "a", name: "No Price", price: null }),
       makeCard({ scryfallId: "b", name: "Has Price", price: 5 }),
     ];
-    const list = buildShoppingList(cards, null, null, new Set());
+    const list = buildShoppingList(cards, null, null, {});
     expect(list[0].name).toBe("Has Price"); // null price sorts last
     expect(list[1].name).toBe("No Price");
   });
@@ -182,18 +210,50 @@ describe("computeCollectionStats", () => {
 });
 
 describe("formatShoppingListText", () => {
-  it("formats as quantity + name per line", () => {
+  it("formats quantity, name and acquisition cost per line", () => {
     const list = [
       { name: "Sol Ring", quantity: 1, price: 2, scryfallId: "a" },
       { name: "Island", quantity: 4, price: 0.1, scryfallId: "b" },
     ];
     const text = formatShoppingListText(list);
-    expect(text).toContain("1× Sol Ring");
-    expect(text).toContain("4× Island");
+    expect(text).toContain("1× Sol Ring | USD 2.00");
+    expect(text).toContain("4× Island | USD 0.40");
+    expect(text).toContain("Estimated total | USD 2.40");
+  });
+
+  it("keeps cards with unknown prices explicit", () => {
+    const text = formatShoppingListText([
+      { name: "Unknown", quantity: 2, price: null, scryfallId: "unknown" },
+    ]);
+
+    expect(text).toContain("2× Unknown | USD ?");
+    expect(text).toContain("Estimated total | USD 0.00");
+    expect(text).toContain("Unpriced cards | 2");
   });
 
   it("returns empty string for empty list", () => {
     expect(formatShoppingListText([])).toBe("");
+  });
+});
+
+describe("formatShoppingListCsv", () => {
+  it("exports escaped names with unit and line prices", () => {
+    const csv = formatShoppingListCsv([
+      { name: 'Jace, "Unraveler"', quantity: 3, price: 2, scryfallId: "jace" },
+    ]);
+
+    expect(csv.split("\n")).toEqual([
+      "Name,Quantity,Price (USD),Total (USD)",
+      '"Jace, ""Unraveler""",3,2,6',
+    ]);
+  });
+
+  it("leaves unit and line prices empty when price is unknown", () => {
+    const csv = formatShoppingListCsv([
+      { name: "Unknown", quantity: 2, price: null, scryfallId: "unknown" },
+    ]);
+
+    expect(csv.split("\n")[1]).toBe('"Unknown",2,,');
   });
 });
 
@@ -222,6 +282,14 @@ describe("formatCollectionText", () => {
 });
 
 describe("formatCollectionCsv", () => {
+  it("escapes quotes inside card names", () => {
+    const csv = formatCollectionCsv([
+      { name: 'Jace, "Unraveler"', quantity: 1, foil: false, condition: "NM", price: 2 },
+    ]);
+
+    expect(csv.split("\n")[1]).toBe('"Jace, ""Unraveler""",1,No,NM,2');
+  });
+
   it("produces valid CSV with header row", () => {
     const cards = [
       { name: "Sol Ring", quantity: 1, foil: false, condition: "NM", price: 1.5 },

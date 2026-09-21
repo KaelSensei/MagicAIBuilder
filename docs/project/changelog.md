@@ -9,6 +9,104 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-20: Safe public deck primers
+
+#### Added
+
+- Rendered complete public deck primers with responsive headings, paragraphs, ordered and unordered lists, and links.
+- Kept raw HTML inert, rejected unsafe link protocols and isolated external navigation without adding a runtime dependency.
+- Added three behavioral security and presentation tests, bringing the suite to 2,738 tests across 226 files.
+
+### 2026-09-20: Guided deck primer template
+
+#### Added
+
+- Added a localized, non-destructive primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
+- Added editor behavior coverage and corrected invalid nested-button markup that could cause React hydration instability.
+- Expanded the suite to 2,735 tests across 225 files.
+
+### 2026-09-20: Exportable token checklist
+
+#### Added
+
+- Added copy and text-download actions to the deck's deduplicated token and emblem library.
+- Added accessible localized controls and deterministic checklist formatting.
+- Added formatter and component coverage, bringing the suite to 2,731 tests across 224 files.
+
+### 2026-09-19: Reversible AI change review
+
+#### Changed
+
+- Made AI card additions, removals and alternatives reversible before applying a proposed deck change.
+- Added an exact, deduplicated deck diff with explicit apply and clear actions across every locale catalog.
+- Added immutable selection and diff coverage, bringing the suite to 2,725 tests across 223 files.
+
+### 2026-09-18: Targeted AI suggestion alternatives
+
+#### Added
+
+- Added budget, power-level and playstyle alternatives to AI card recommendations instead of returning one opaque answer.
+- Verified alternatives in the same deduplicated Scryfall batch as primary suggestions and exposed them through a compact, directly actionable disclosure.
+- Added route and component coverage, bringing the suite to 2,711 tests across 220 files.
+
+### 2026-09-18: Verified AI suggestion evidence
+
+#### Added
+
+- Enriched all AI additions through one batched Scryfall lookup with mana value, curve impact, color compatibility, Commander legality and USD price evidence.
+- Added a compact evidence panel that distinguishes verified facts from unavailable data without blocking suggestions during a Scryfall outage.
+- Added policy, route and component coverage, bringing the suite to 2,710 tests across 219 files.
+
+### 2026-09-18: Reviewed AI deck plan
+
+#### Added
+
+- Added a pre-generation review step that presents the selected gameplan, win conditions, deck-role targets and explicit constraints before any cards are chosen.
+- Rebuilt the same deterministic plan server-side and embedded it in the provider prompt so the reviewed structure governs generation without trusting client-authored instructions.
+- Added strategy, fallback and constraint coverage, bringing the suite to 2,703 tests across 217 files.
+
+### 2026-09-18: Conversational AI deck brief
+
+#### Added
+
+- Added optional theme, desired-play-pattern and dislikes fields to the AI suggestions panel, complementing the existing commander, budget and target bracket inputs.
+- Added bounded runtime normalization and a distinct prompt section for player intent; changing the brief now invalidates cached suggestions and requests a fresh analysis.
+- Added policy, component, hook, route and locale-catalog coverage, bringing the suite to 2,700 tests across 216 files.
+
+### 2026-09-18: User-owned playtest context for AI suggestions
+
+#### Added
+
+- Grounded AI deck suggestions in up to five recent meaningful playtest records, loaded server-side with both deck and authenticated-user ownership constraints.
+- Marked playtest observations as private anecdotal context rather than tournament evidence or model instructions, with bounded sanitization for player-authored notes and proposed changes.
+- Preserved suggestion availability when playtest history cannot be loaded and added route, formatter and hook coverage, bringing the suite to 2,694 tests across 214 files.
+
+### 2026-09-18: Proposed playtest changes
+
+#### Added
+
+- Added an optional proposed-change field to recorded playtest sessions so players can separate what they observed from what they intend to try next.
+- Displayed the proposed change as a distinct item in playtest history and persisted it through the validated API contract and an additive database migration.
+- Added parser, API and component coverage, bringing the suite to 2,688 tests across 212 files.
+
+### 2026-09-18: Opening-hand color evidence
+
+#### Added
+
+- Added deterministic opening-hand castability analysis that combines visible land production, affordable spell costs and hybrid mana options.
+- Added explicit missing-color and dead-hand guidance before the mulligan decision, with English and French copy plus key parity for dormant locales.
+- Added focused policy and component coverage, bringing the suite to 2,684 tests across 212 files.
+
+### 2026-09-17: Snapshot playtest comparison
+
+#### Added
+
+- Added an in-product comparison for playtest cohorts linked to two distinct deck snapshots. Players can now inspect directional changes in self-reported win rate, winning-turn speed and mulligan frequency directly from the playtest history panel.
+- Kept the evidence boundary explicit in the interface: solitaire playtests are user-owned directional evidence, not tournament win rates.
+- Added focused component coverage and preserved message-catalog parity across the two active and eight dormant locales.
+- Added cohort-size disclosure and an early-signal warning below three runs per version. Directional labels now describe slower wins and increased mulligans directly instead of rendering misleading negative improvements.
+- Persisted deterministic cards-seen and additional-draw evidence with each newly recorded playtest session through an additive database migration and validated API contract.
+
 ### 2026-08-23: Release batch #552–#562 — thirty advisories nobody could reach, two limiters that enforced nothing, and dates in the wrong language
 
 #### Fixed

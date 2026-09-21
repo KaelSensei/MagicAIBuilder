@@ -15,6 +15,18 @@
     "retry": "Erneut versuchen",
     "createFailed": "Deck konnte nicht erstellt werden — {reason}"
   },
+  "comparison": {
+    "title": "Compare decks",
+    "description": "See what changed between two deck lists.",
+    "firstDeck": "First deck",
+    "secondDeck": "Second deck",
+    "compare": "Compare decks",
+    "onlyFirst": "Only in first",
+    "onlySecond": "Only in second",
+    "quantityChanges": "Quantity changes",
+    "shared": "{count, plural, one {1 shared card} other {# shared cards}}",
+    "error": "The decks could not be compared. Try again."
+  },
   "controls": {
     "grid": "Grid",
     "list": "List",
@@ -79,7 +91,15 @@
       "importFailed": "Import failed.",
       "success": "Imported “{name}” — {added, plural, one {# card added} other {# cards added}}{ignored, plural, =0 {} one {, # ignored} other {, # ignored}}.",
       "notFound": "Cards not found in Scryfall ({count}):",
-      "footer": "Supported: {sources}. Deck must be public."
+      "footer": "Supported: {sources}. Deck must be public.",
+      "previewReady": "Preview ready — review before importing.",
+      "confirmImport": "Import this preview",
+      "cancelPreview": "Cancel preview",
+      "previewSummary": "{name} from {source}: {cards} cards across {zones} zones.",
+      "commanders": "Commanders: {names}",
+      "duplicates": "Duplicate decisions: {names}",
+      "noDuplicates": "No duplicate decisions.",
+      "zones": "Main {main} · Sideboard {sideboard} · Maybeboard {maybeboard}"
     }
   },
   "templates": {
@@ -118,6 +138,11 @@
   "stats": {
     "buildToSee": "Build your deck to see stats",
     "tokenLibrary": "Token-Bibliothek",
+    "copyTokenLibrary": "Copy token checklist",
+    "tokenLibraryCopied": "Token checklist copied",
+    "downloadTokenLibrary": "Download token checklist",
+    "tokenKind": "token",
+    "emblemKind": "emblem",
     "deckChecks": "Deck Checks",
     "totalCards": "Total cards",
     "lands": "Lands",
@@ -185,6 +210,10 @@
     "clearIgnored": "Clear {count} ignored",
     "addCard": "Add {name}",
     "added": "Added",
+    "deselectCard": "Deselect {name}",
+    "changePreview": "Change preview",
+    "applyChanges": "Apply changes",
+    "clearSelection": "Clear selection",
     "removeCard": "Remove {name}",
     "removed": "Removed",
     "ignoreSuggestion": "Ignore suggestion",
@@ -192,9 +221,34 @@
     "poweredBy": "Powered by {provider}",
     "priorityHigh": "High",
     "priorityMedium": "Med",
+    "priorityAll": "Alle",
     "priorityLow": "Low",
     "timeJustNow": "just now",
-    "timeMinAgo": "{mins} min ago"
+    "timeMinAgo": "{mins} min ago",
+    "alternativeCount": "{count, plural, one {# alternative} other {# alternatives}}",
+    "alternativeBudget": "Budget",
+    "alternativePower": "Power",
+    "alternativePlaystyle": "Playstyle",
+    "brief": {
+      "title": "Your deck brief",
+      "description": "Optional preferences used only for this analysis.",
+      "themeLabel": "Theme",
+      "themePlaceholder": "Phyrexians, sea monsters, politics…",
+      "playPatternLabel": "How should it play?",
+      "playPatternPlaceholder": "Build value, then win through combat…",
+      "dislikesLabel": "What should it avoid?",
+      "dislikesPlaceholder": "Infinite combos, tutors, extra turns…"
+    },
+    "evidence": {
+      "verified": "Scryfall verified",
+      "unavailable": "Verification unavailable",
+      "colorless": "Colorless",
+      "compatible": "compatible",
+      "incompatible": "outside color identity",
+      "commanderLegal": "Commander legal",
+      "commanderIllegal": "Not Commander legal",
+      "unknown": "Unknown"
+    }
   },
   "combos": {
     "title": "Combos",
@@ -236,6 +290,13 @@
       "left": "Out of the list",
       "enteredHint": "Below the list before, so the rise is a lower bound",
       "leftHint": "Below the list now, so the fall is an upper bound"
+    },
+    "evidenceType": "Evidenztyp: {type}.",
+    "evidence": {
+      "popular": "beliebte Empfehlungen",
+      "synergy": "Empfehlungen mit hoher Synergie",
+      "tournament": "Turnierbeobachtungen",
+      "ai": "KI-Vorschläge"
     }
   },
   "snapshots": {
@@ -283,7 +344,8 @@
     "importing": "Importing…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
-    "openShare": "Share deck"
+    "openShare": "Share deck",
+    "forkThisDeck": "Dieses Deck forken"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -374,7 +436,13 @@
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "Karten werden zum Deck hinzugefügt…",
-    "demoDeckNotice": "Demo-Deck — auf diesem Deployment ist kein KI-Anbieter konfiguriert, diese Liste ist nur ein Platzhalter."
+    "demoDeckNotice": "Demo-Deck — auf diesem Deployment ist kein KI-Anbieter konfiguriert, diese Liste ist nur ein Platzhalter.",
+    "planTitle": "Review your deck plan",
+    "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Win conditions",
+    "planRoles": "Deck roles",
+    "planConstraints": "Constraints"
   },
   "ratings": {
     "title": "Community Rating",
@@ -478,7 +546,12 @@
     "gameChangers": "{count, plural, one {# Game Changer} other {# Game Changers}}",
     "gcForcesB4": " → Bracket 4 minimum (>3 GC)",
     "gcForcesB3": " → Bracket 3 minimum (GC not allowed in B1/B2)",
-    "warnings": "Warnings"
+    "warnings": "Warnings",
+    "warningGroups": {
+      "legality": "Legalitätsfehler",
+      "strategy": "Strategische Vorschläge",
+      "advice": "Optionale Hinweise"
+    }
   },
   "buyList": {
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",
@@ -537,10 +610,28 @@
     "empty": "Start the conversation.",
     "loadFailed": "Comments could not be loaded."
   },
+  "feedback": {
+    "title": "Feedback wanted",
+    "ownerHint": "Ask one focused question to get more useful replies.",
+    "enable": "Show this request on the public deck",
+    "placeholder": "What would you like other players to help with?",
+    "save": "Save request",
+    "saving": "Saving…",
+    "error": "Could not save the request. Try again."
+  },
   "description": {
     "add": "Add deck description…",
     "edit": "Edit description",
     "clickToEdit": "Click to edit",
-    "placeholder": "Describe your deck strategy, themes, or notes… (basic markdown supported)"
+    "placeholder": "Describe your deck strategy, themes, or notes… (basic markdown supported)",
+    "usePrimerTemplate": "Use primer template",
+    "primerContents": "Primer contents",
+    "copyPrimer": "Copy primer",
+    "primerCopied": "Primer copied",
+    "downloadPrimer": "Download primer",
+    "primerTemplateContent": "## Game plan\n\nDescribe the deck's main plan.\n\n## Mulligan guide\n\nExplain what an opening hand needs.\n\n## Win conditions\n\nList the primary and backup paths to win.\n\n## Key interactions\n\nHighlight important synergies and sequencing.\n\n## Budget alternatives\n\nNote accessible replacements.",
+    "editorHelp": "{count}/{max} · Ctrl+Enter to save · Esc to cancel",
+    "save": "Save",
+    "empty": "No description — click to add one"
   }
 }

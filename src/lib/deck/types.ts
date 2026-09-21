@@ -29,6 +29,7 @@ export interface Deck {
   targetBracket: 1|2|3|4; manualBracket: 1|2|3|4|null; budget: number | null;
   description: string; tags: string[]; shareToken: string | null;
   shareEnabled: boolean; isPublic: boolean; isAIGenerated: boolean; createdAt: Date; updatedAt: Date;
+  seekingFeedback?: boolean; feedbackQuestion?: string | null;
 }
 export interface DeckStats {
   totalCards: number; lands: number; creatures: number; ramp: number; draw: number;
