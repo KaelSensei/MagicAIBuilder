@@ -95,8 +95,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       effect:
-        specifier: 4.0.0-rc.115
-        version: 4.0.0-rc.115
+        specifier: 4.0.0-rc.116
+        version: 4.0.0-rc.116
       framer-motion:
         specifier: ^11.18.2
         version: 11.18.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -3573,8 +3573,8 @@ packages:
   effect@3.21.0:
     resolution: {integrity: sha512-PPN80qRokCd1f015IANNhrwOnLO7GrrMQfk4/lnZRE/8j7UPWrNNjPV0uBrZutI/nHzernbW+J0hdqQysHiSnQ==}
 
-  effect@4.0.0-rc.115:
-    resolution: {integrity: sha512-ogYulZ5ffeOzrJqQrG0XOkDO5lKn2s9KNHhoxJy/6wKUkF0i12dlVXWA9TgsgQ+zV/JzizyG0+XMPepZEQX6vw==}
+  effect@4.0.0-rc.116:
+    resolution: {integrity: sha512-nawqJHSjHV8XIBRZNZ+D7cLZpN3kkSjzy6aiT9ofKENsl7xAMFKEoDa0itN5JFl3GUQ1PIN1T1HNlva5+xyO/A==}
 
   electron-to-chromium@1.5.406:
     resolution: {integrity: sha512-hWH5ORBi3d0IipnMh7BN5GDTaAmrSSSWmznwt2zltdiRNEWoEQyTwF0FFSBxzHO7hLSRT6loQu3IQGV0wg/Tvg==}
@@ -9425,7 +9425,7 @@ snapshots:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
 
-  effect@4.0.0-rc.115: {}
+  effect@4.0.0-rc.116: {}
 
   electron-to-chromium@1.5.406: {}
 
