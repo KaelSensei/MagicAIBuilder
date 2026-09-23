@@ -355,7 +355,7 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Associate a note with a proposed deck change.
 - [x] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
-- [ ] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
+- [x] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
 - [ ] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
 - [x] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
 
