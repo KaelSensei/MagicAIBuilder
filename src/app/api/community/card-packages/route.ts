@@ -11,6 +11,7 @@ const PackageCardSchema = z.object({
   quantity: z.number().int().min(1).max(99),
   colorIdentity: z.array(z.enum(["W", "U", "B", "R", "G", "C"])).max(6),
   isBanned: z.boolean().optional().default(false),
+  isBasicLand: z.boolean().optional().default(false),
   imageUri: z.string().url().or(z.literal("")).optional().default(""),
 });
 
@@ -59,6 +60,7 @@ export async function GET() {
             quantity: true,
             colorIdentity: true,
             isBanned: true,
+            isBasicLand: true,
             imageUri: true,
           },
         },

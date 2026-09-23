@@ -196,6 +196,7 @@ model CardPackageCard {
   quantity      Int         @default(1)
   colorIdentity String[]
   isBanned      Boolean     @default(false)
+  isBasicLand   Boolean     @default(false)
   imageUri      String      @default("")
 
   @@unique([packageId, scryfallId])
