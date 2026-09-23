@@ -1,4 +1,25 @@
 {
+  "moderation": {
+    "eyebrow": "Community safety",
+    "title": "Deck report queue",
+    "description": "Review reports from oldest to newest. Decisions are private and retained in the moderation audit trail.",
+    "loading": "Loading reports…",
+    "forbidden": "Moderation access is required to view this queue.",
+    "failed": "The report queue could not be updated.",
+    "retry": "Retry",
+    "emptyTitle": "Queue cleared",
+    "emptyDescription": "There are no pending deck reports.",
+    "context": "Deck by {owner}, reported by {reporter}",
+    "unknown": "unknown user",
+    "dismiss": "Dismiss",
+    "review": "Mark reviewed",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harassment",
+      "illegal_content": "Illegal content",
+      "other": "Other"
+    }
+  },
   "report": {
     "action": "Report deck",
     "title": "Report this deck",

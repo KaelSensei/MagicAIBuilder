@@ -1,4 +1,25 @@
 {
+  "moderation": {
+    "eyebrow": "Sécurité de la communauté",
+    "title": "File des signalements de decks",
+    "description": "Examinez les signalements du plus ancien au plus récent. Les décisions restent privées et sont conservées dans l’historique de modération.",
+    "loading": "Chargement des signalements…",
+    "forbidden": "Un accès modérateur est nécessaire pour consulter cette file.",
+    "failed": "La file des signalements n’a pas pu être mise à jour.",
+    "retry": "Réessayer",
+    "emptyTitle": "File traitée",
+    "emptyDescription": "Aucun signalement de deck n’est en attente.",
+    "context": "Deck de {owner}, signalé par {reporter}",
+    "unknown": "utilisateur inconnu",
+    "dismiss": "Rejeter",
+    "review": "Marquer comme traité",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harcèlement",
+      "illegal_content": "Contenu illégal",
+      "other": "Autre"
+    }
+  },
   "report": {
     "action": "Signaler le deck",
     "title": "Signaler ce deck",
