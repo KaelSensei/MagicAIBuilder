@@ -32,6 +32,7 @@ model User {
   moderatedReports  DeckReport[]       @relation("DeckReportModerator")
   publicDeckFolders PublicDeckFolder[]
   savedPublicDecks  SavedPublicDeck[]
+  cardPackages      CardPackage[]
   isModerator       Boolean            @default(false)
   following         UserFollow[]       @relation("Following")
   followers         UserFollow[]       @relation("Followers")
@@ -166,6 +167,39 @@ model SavedPublicDeck {
 
   @@unique([userId, deckId])
   @@index([folderId])
+}
+
+/// A reusable, attributed group of cards such as a mana base or interaction suite.
+model CardPackage {
+  id          String            @id @default(cuid())
+  authorId    String
+  author      User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  name        String
+  description String            @default("")
+  category    String            @default("other")
+  isPublic    Boolean           @default(false)
+  cards       CardPackageCard[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([authorId])
+  @@index([isPublic, updatedAt])
+}
+
+/// One normalized card entry inside a reusable package.
+model CardPackageCard {
+  id            String      @id @default(cuid())
+  packageId     String
+  package       CardPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  scryfallId    String
+  name          String
+  quantity      Int         @default(1)
+  colorIdentity String[]
+  isBanned      Boolean     @default(false)
+  imageUri      String      @default("")
+
+  @@unique([packageId, scryfallId])
+  @@index([packageId])
 }
 
 /// A named snapshot (version) of a deck at a point in time
