@@ -82,6 +82,8 @@ import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
 import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
+import { GuestDeckNotice } from "@/components/builder/GuestDeckNotice";
+import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 
 type SearchMode = "name" | "set" | "color";
 
@@ -266,7 +268,7 @@ export default function BuilderPage() {
 
   // If deck not in store (e.g. direct navigation / page refresh), load from DB
   useEffect(() => {
-    if (deckId && !deck && !isSyncing) {
+    if (deckId && deckId !== GUEST_DECK_ID && !deck && !isSyncing) {
       loadDecks();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-run when deckId changes; loadDecks is stable
@@ -637,6 +639,7 @@ export default function BuilderPage() {
     >
       <div className="flex flex-col h-screen overflow-hidden">
         <Header deckId={deckId} />
+        {deckId === GUEST_DECK_ID && <GuestDeckNotice />}
 
         {/* Deck title bar */}
         <div className="border-b border-[var(--border)] bg-[var(--surface)] px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3">
@@ -704,15 +707,17 @@ export default function BuilderPage() {
           <DeckSaveIndicator saving={isSyncing} label={t("saving")} />
           <div className="ml-auto flex items-center gap-1 md:gap-2">
             {/* Duplicate deck */}
-            <button
-              type="button"
-              onClick={handleDuplicate}
-              className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-              title={t("actions.duplicate")}
-            >
-              <Copy className="w-3 h-3" />
-              <span className="hidden sm:inline">Duplicate</span>
-            </button>
+            {deckId !== GUEST_DECK_ID && (
+              <button
+                type="button"
+                onClick={handleDuplicate}
+                className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+                title={t("actions.duplicate")}
+              >
+                <Copy className="w-3 h-3" />
+                <span className="hidden sm:inline">Duplicate</span>
+              </button>
+            )}
             {/* Bulk edit — edit deck as plain text */}
             <BulkEditModal deck={deck}>
               <button
@@ -745,15 +750,17 @@ export default function BuilderPage() {
               <span className="hidden sm:inline">Export</span>
             </button>
             {/* Visibility toggle — public / private */}
-            <DeckVisibilityToggle
-              deckId={deckId}
-              initialIsPublic={deck.isPublic ?? false}
-              username={
-                (sessionData?.user as { username?: string } | undefined)
-                  ?.username
-              }
-              className="hidden sm:flex"
-            />
+            {deckId !== GUEST_DECK_ID && (
+              <DeckVisibilityToggle
+                deckId={deckId}
+                initialIsPublic={deck.isPublic ?? false}
+                username={
+                  (sessionData?.user as { username?: string } | undefined)
+                    ?.username
+                }
+                className="hidden sm:flex"
+              />
+            )}
           </div>
         </div>
 

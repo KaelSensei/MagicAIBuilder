@@ -11,7 +11,7 @@
     "line2": "Commencez à gagner.",
     "subtitle": "Vous passez <strong>des heures à construire des decks</strong> pour finalement réaliser à la table que trois cartes ne synergisent pas, votre courbe est cassée, et il vous manque une réponse au méta.<br></br><strong>Il y a une meilleure façon.</strong>",
     "ctaLoggedIn": "✦ Aller à mes Decks",
-    "ctaLoggedOut": "✦ Construire mon premier Deck",
+    "ctaLoggedOut": "✦ Construire sans compte",
     "secondaryCta": "Voir comment ça marche",
     "note": "100% gratuit · Commander · Standard · Pioneer · Tous les formats",
     "manaColors": "Toutes les couleurs de mana"
@@ -83,7 +83,7 @@
     "heading": "Votre prochaine victoire<br></br>commence <span>ici.</span>",
     "subtitle": "Arrêtez de douter de vos choix de cartes. Construisez le deck que vous vouliez vraiment — et gagnez avec.",
     "ctaLoggedIn": "✦ Aller à mes Decks",
-    "ctaLoggedOut": "✦ Commencer à construire"
+    "ctaLoggedOut": "✦ Construire sans compte"
   },
   "footer": {
     "privacy": "Confidentialité",
