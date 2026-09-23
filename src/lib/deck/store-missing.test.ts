@@ -249,7 +249,12 @@ describe("useDeckStore — swapCardPrinting", () => {
   });
 
   it("updates card imageUri and scryfallId optimistically", async () => {
-    const card = makeDeckCard("card-1", "Lightning Bolt");
+    const card = makeDeckCard("card-1", "Lightning Bolt", {
+      category: "removal",
+      quantity: 3,
+      zone: "sideboard",
+      notes: "Keep for creature-heavy pods",
+    });
     useDeckStore.setState({
       decks: { "deck-1": seedDeck({ cards: [card] }) },
       activeDeckId: "deck-1",
@@ -262,6 +267,13 @@ describe("useDeckStore — swapCardPrinting", () => {
     const updated = useDeckStore.getState().decks["deck-1"].cards[0];
     expect(updated.scryfallId).toBe("new-printing-id");
     expect(updated.imageUri).toBe("https://example.com/normal.jpg");
+    expect(updated).toMatchObject({
+      id: "card-1",
+      category: "removal",
+      quantity: 3,
+      zone: "sideboard",
+      notes: "Keep for creature-heavy pods",
+    });
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
