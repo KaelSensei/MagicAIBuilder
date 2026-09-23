@@ -1,0 +1,1 @@
+ALTER TABLE "CardPackageCard" ADD COLUMN "isBasicLand" BOOLEAN NOT NULL DEFAULT false;
