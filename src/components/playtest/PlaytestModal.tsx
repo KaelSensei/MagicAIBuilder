@@ -19,6 +19,7 @@ import { DrawProgressEvidence } from "@/components/playtest/DrawProgressEvidence
 import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 import { analyzeDrawProgress } from "@/lib/playtest/draw-progress-evidence";
+import { buildTokenLibrary } from "@/lib/deck/token-library";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
@@ -71,6 +72,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const moveToZone = usePlaytestStore((s) => s.moveToZone);
   const addCounter = usePlaytestStore((s) => s.addCounter);
   const createCardCopy = usePlaytestStore((s) => s.createCardCopy);
+  const createToken = usePlaytestStore((s) => s.createToken);
   const undo = usePlaytestStore((s) => s.undo);
 
   // The store outlives the modal, so a stale session would otherwise reappear
@@ -132,6 +134,11 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
       libraryCount: engine.library.length,
     });
   }, [engine]);
+
+  const requiredTokens = useMemo(
+    () => buildTokenLibrary([deck.commander, deck.partner, ...deck.cards].filter((card) => card !== null)),
+    [deck.commander, deck.partner, deck.cards]
+  );
 
   return (
     <LocalizedDeckTextProvider names={cardNames}>
@@ -213,6 +220,8 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                   onTap={tap}
                   onAddCounter={addCounter}
                   onCreateCopy={createCardCopy}
+                  requiredTokens={requiredTokens}
+                  onCreateToken={createToken}
                   onRemove={handleRemoveFromBattlefield}
                 />
                 <HandZone

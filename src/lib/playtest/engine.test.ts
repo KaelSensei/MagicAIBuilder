@@ -13,6 +13,7 @@ import {
   applyAddCounter,
   applyMulligan,
   applyCreateCardCopy,
+  applyCreateToken,
   PHASES,
   STARTING_LIFE,
   MAX_MULLIGANS,
@@ -283,6 +284,43 @@ describe("applyCreateCardCopy", () => {
 
     expect(next.battlefield).toHaveLength(1);
     expect(next.graveyard).toHaveLength(0);
+  });
+});
+
+describe("applyCreateToken", () => {
+  it("adds an independent playtest token to the battlefield", () => {
+    const state = makeState();
+    const next = applyCreateToken(
+      state,
+      { name: "Soldier", power: "1/1", colors: ["white"], kind: "token" },
+      "token-1"
+    );
+
+    expect(next.battlefield).toHaveLength(1);
+    expect(next.battlefield[0]).toMatchObject({
+      id: "token-1",
+      name: "1/1 Soldier token",
+      typeLine: "Token Creature — Soldier",
+      colorIdentity: ["W"],
+      isSessionCopy: true,
+      tapped: false,
+      counters: 0,
+    });
+  });
+
+  it("creates emblems without creature stats and is undoable", () => {
+    const state = makeState();
+    const next = applyCreateToken(
+      state,
+      { name: "Emblem", power: null, colors: [], kind: "emblem" },
+      "emblem-1"
+    );
+
+    expect(next.battlefield[0]).toMatchObject({
+      name: "Emblem",
+      typeLine: "Emblem",
+    });
+    expect(applyUndo(next).battlefield).toHaveLength(0);
   });
 });
 

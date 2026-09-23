@@ -53,6 +53,8 @@
     "addCounter": "Add a counter",
     "removeCounter": "Remove a counter",
     "copy": "Copy",
+    "tokenChoice": "Token to add",
+    "addToken": "Add token",
     "remove": "Remove"
   },
   "graveyard": {

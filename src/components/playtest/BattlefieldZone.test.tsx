@@ -20,6 +20,8 @@ describe("BattlefieldZone", () => {
     onTap: vi.fn(),
     onAddCounter: vi.fn(),
     onCreateCopy: vi.fn(),
+    requiredTokens: [{ name: "Soldier", power: "1/1", colors: ["white"], count: 2, kind: "token" as const }],
+    onCreateToken: vi.fn(),
     onRemove: vi.fn(),
   };
 
@@ -82,5 +84,19 @@ describe("BattlefieldZone", () => {
   it("shows empty state when battlefield is empty", () => {
     renderWithIntl(<BattlefieldZone {...defaultProps} battlefield={[]} />);
     expect(screen.getByText(/no permanents/i)).toBeDefined();
+  });
+
+  it("adds a required token even when the battlefield is empty", () => {
+    const onCreateToken = vi.fn();
+    renderWithIntl(
+      <BattlefieldZone
+        {...defaultProps}
+        battlefield={[]}
+        onCreateToken={onCreateToken}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /add token/i }));
+    expect(onCreateToken).toHaveBeenCalledWith(defaultProps.requiredTokens[0]);
   });
 });

@@ -84,6 +84,8 @@ describe("LocalizedDeckTextProvider", () => {
               onTap={vi.fn()}
               onAddCounter={vi.fn()}
               onCreateCopy={vi.fn()}
+              requiredTokens={[]}
+              onCreateToken={vi.fn()}
               onRemove={vi.fn()}
             />
           </LocalizedDeckTextProvider>
