@@ -31,6 +31,13 @@ export type Phase = (typeof PHASES)[number];
 /** Library / hand / battlefield / GY / exile zone id (playtest engine). */
 export type CardZone = "hand" | "library" | "battlefield" | "graveyard" | "exile";
 
+export interface PlaytestTokenSpec {
+  readonly name: string;
+  readonly power: string | null;
+  readonly colors: readonly string[];
+  readonly kind: "token" | "emblem";
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────
 /**
  * A card on the battlefield with state (tapped, counters).
@@ -392,6 +399,56 @@ export function applyCreateCardCopy(
   };
 
   return pushHistory(state, { battlefield: [...state.battlefield, copy] });
+}
+
+const TOKEN_COLOR_IDENTITIES: Readonly<Record<string, string>> = {
+  white: "W",
+  blue: "U",
+  black: "B",
+  red: "R",
+  green: "G",
+};
+
+export function applyCreateToken(
+  state: PlaytestEngine,
+  token: PlaytestTokenSpec,
+  tokenId: string
+): PlaytestEngine {
+  if (state.battlefield.some((card) => card.id === tokenId)) return state;
+
+  const name = [token.power, token.name, token.kind === "token" ? "token" : null]
+    .filter(Boolean)
+    .join(" ");
+  const battlefieldToken: BattlefieldCard = {
+    id: tokenId,
+    scryfallId: tokenId,
+    name,
+    manaCost: "",
+    cmc: 0,
+    typeLine:
+      token.kind === "emblem" ? "Emblem" : `Token Creature — ${token.name}`,
+    oracleText: "",
+    colorIdentity: token.colors
+      .map((color) => TOKEN_COLOR_IDENTITIES[color.toLowerCase()])
+      .filter((color): color is string => color !== undefined),
+    isGameChanger: false,
+    isBanned: false,
+    price: null,
+    imageUri: "",
+    artCropUri: "",
+    category: token.kind === "token" ? "creature" : "other",
+    power: token.power?.split("/")[0] ?? null,
+    toughness: token.power?.split("/")[1] ?? null,
+    quantity: 1,
+    zone: "main",
+    tapped: false,
+    counters: 0,
+    isSessionCopy: true,
+  };
+
+  return pushHistory(state, {
+    battlefield: [...state.battlefield, battlefieldToken],
+  });
 }
 
 // ─── Counters ─────────────────────────────────────────────────────────────

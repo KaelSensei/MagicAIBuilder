@@ -213,6 +213,26 @@ describe("usePlaytestStore", () => {
       .toBe(deck.cards.length + 1);
   });
 
+  it("adds a required token to the active session only", () => {
+    const deck = makeDeck();
+    usePlaytestStore.getState().startPlaytest(deck);
+
+    usePlaytestStore.getState().createToken({
+      name: "Treasure",
+      power: null,
+      colors: [],
+      count: 1,
+      kind: "token",
+    });
+
+    expect(usePlaytestStore.getState().engine?.battlefield[0]).toMatchObject({
+      name: "Treasure token",
+      isSessionCopy: true,
+    });
+    usePlaytestStore.getState().resetPlaytest();
+    expect(usePlaytestStore.getState().engine?.battlefield).toHaveLength(0);
+  });
+
   it("starts Commander decks on 40 life", () => {
     usePlaytestStore.getState().startPlaytest(makeDeck());
     expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(40);

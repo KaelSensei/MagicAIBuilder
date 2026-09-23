@@ -53,6 +53,8 @@
     "addCounter": "Ajouter un marqueur",
     "removeCounter": "Retirer un marqueur",
     "copy": "Copier",
+    "tokenChoice": "Jeton à ajouter",
+    "addToken": "Ajouter le jeton",
     "remove": "Retirer"
   },
   "graveyard": {
