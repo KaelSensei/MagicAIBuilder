@@ -1,4 +1,20 @@
 {
+  "report": {
+    "action": "Signaler le deck",
+    "title": "Signaler ce deck",
+    "close": "Fermer le signalement",
+    "reason": "Motif",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harcèlement",
+      "illegal_content": "Contenu illégal",
+      "other": "Autre"
+    },
+    "submit": "Envoyer le signalement",
+    "submitting": "Envoi…",
+    "submitted": "Signalement envoyé",
+    "failed": "Impossible d’envoyer le signalement. Réessayez."
+  },
   "home": {
     "title": "Mes Decks",
     "loading": "Chargement...",

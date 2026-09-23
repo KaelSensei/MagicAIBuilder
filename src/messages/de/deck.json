@@ -1,4 +1,20 @@
 {
+  "report": {
+    "action": "Report deck",
+    "title": "Report this deck",
+    "close": "Close report dialog",
+    "reason": "Reason",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harassment",
+      "illegal_content": "Illegal content",
+      "other": "Other"
+    },
+    "submit": "Submit report",
+    "submitting": "Submitting…",
+    "submitted": "Report submitted",
+    "failed": "Could not submit the report. Please try again."
+  },
   "home": {
     "title": "My Decks",
     "loading": "Loading...",
