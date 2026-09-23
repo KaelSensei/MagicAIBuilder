@@ -391,7 +391,7 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [x] Provide a restricted moderation review queue API with auditable decisions.
 - [ ] Add the public-deck report action and moderator review interface before opening broader social features.
 - [ ] Build a lightweight following feed only if discovery data shows repeated use.
-- [ ] Keep private decks and share tokens out of search indexes.
+- [x] Keep private decks and share tokens out of search indexes.
 - [x] Provide a structured primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
 - [x] Render published primers with safe Markdown headings, lists and navigation.
 - [x] Add explicit sequencing guidance to the structured primer template.
@@ -400,7 +400,9 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [x] Persist private folders for saved public decks without claiming ownership or exposing decks that later become private.
 - [ ] Add folder management to the community UI.
 - [ ] Decide whether decks from followed builders should share the saved-deck folder model.
-- [ ] Surface reusable community card packages with author attribution, legality checks and a reviewable diff before applying them.
+- [x] Persist reusable community card packages with stable author attribution and private-by-default publishing controls.
+- [ ] Preview package additions against deck color identity, singleton and ban rules.
+- [ ] Apply a reviewed package diff without silently replacing existing cards.
 
 ### Definition of done
 
