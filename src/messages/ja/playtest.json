@@ -78,7 +78,9 @@
     "empty": "Actions will appear here as you play.",
     "edit": "Edit",
     "editEntry": "Edit action",
-    "remove": "Remove action"
+    "remove": "Remove action",
+    "exportText": "Text",
+    "exportJson": "JSON"
   },
   "recordResult": "How did it go?",
   "recording": "Saving…",

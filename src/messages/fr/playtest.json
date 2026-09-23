@@ -78,7 +78,9 @@
     "empty": "Les actions apparaîtront ici pendant la partie.",
     "edit": "Modifier",
     "editEntry": "Modifier l’action",
-    "remove": "Supprimer l’action"
+    "remove": "Supprimer l’action",
+    "exportText": "Texte",
+    "exportJson": "JSON"
   },
   "recordResult": "Comment ça s'est passé ?",
   "recording": "Enregistrement…",

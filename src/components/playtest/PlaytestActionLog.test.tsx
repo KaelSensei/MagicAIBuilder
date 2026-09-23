@@ -6,7 +6,7 @@ import { PlaytestActionLog } from "./PlaytestActionLog";
 describe("PlaytestActionLog", () => {
   it("adds a manual entry", () => {
     const onAdd = vi.fn();
-    renderWithIntl(<PlaytestActionLog entries={[]} onAdd={onAdd} onEdit={vi.fn()} onRemove={vi.fn()} />);
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[]} onAdd={onAdd} onEdit={vi.fn()} onRemove={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/record a manual action/i), { target: { value: "Made mana" } });
     fireEvent.click(screen.getByRole("button", { name: /add action/i }));
     expect(onAdd).toHaveBeenCalledWith("Made mana");
@@ -17,6 +17,7 @@ describe("PlaytestActionLog", () => {
     const onRemove = vi.fn();
     renderWithIntl(
       <PlaytestActionLog
+        deckName="Test"
         entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]}
         onAdd={vi.fn()}
         onEdit={onEdit}
