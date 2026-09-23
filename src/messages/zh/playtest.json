@@ -66,6 +66,11 @@
     "restoreToHand": "Restore to hand",
     "play": "Play"
   },
+  "dice": {
+    "title": "Dice",
+    "roll": "Roll d{sides}",
+    "latest": "Latest die result"
+  },
   "recordResult": "How did it go?",
   "recording": "Saving…",
   "recordFailed": "Could not save",

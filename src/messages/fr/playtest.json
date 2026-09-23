@@ -66,6 +66,11 @@
     "restoreToHand": "Remettre en main",
     "play": "Jouer"
   },
+  "dice": {
+    "title": "Dés",
+    "roll": "Lancer un d{sides}",
+    "latest": "Dernier résultat"
+  },
   "recordResult": "Comment ça s'est passé ?",
   "recording": "Enregistrement…",
   "recordFailed": "Enregistrement impossible",

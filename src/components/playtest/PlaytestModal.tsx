@@ -17,6 +17,7 @@ import { RecordResultBar } from "@/components/playtest/RecordResultBar";
 import { PlaytestHistoryPanel } from "@/components/playtest/PlaytestHistoryPanel";
 import { DrawProgressEvidence } from "@/components/playtest/DrawProgressEvidence";
 import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
+import { DiceRoller } from "@/components/playtest/DiceRoller";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 import { analyzeDrawProgress } from "@/lib/playtest/draw-progress-evidence";
 import { buildTokenLibrary } from "@/lib/deck/token-library";
@@ -73,6 +74,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const addCounter = usePlaytestStore((s) => s.addCounter);
   const createCardCopy = usePlaytestStore((s) => s.createCardCopy);
   const createToken = usePlaytestStore((s) => s.createToken);
+  const rollDie = usePlaytestStore((s) => s.rollDie);
   const undo = usePlaytestStore((s) => s.undo);
 
   // The store outlives the modal, so a stale session would otherwise reappear
@@ -215,6 +217,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
 
               {/* Board */}
               <div className="space-y-4">
+                <DiceRoller rolls={engine.diceRolls} onRoll={rollDie} />
                 <BattlefieldZone
                   battlefield={engine.battlefield}
                   onTap={tap}

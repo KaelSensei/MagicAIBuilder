@@ -6,7 +6,7 @@
 import { create } from "zustand";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { getFormatConfig } from "@/lib/deck/formats";
-import { randomAlphanumericId } from "@/lib/crypto-random";
+import { randomAlphanumericId, randomIntBelow } from "@/lib/crypto-random";
 import type { TokenLibraryEntry } from "@/lib/deck/token-library";
 import type { PlaytestEngine } from "./engine";
 import {
@@ -24,6 +24,7 @@ import {
   applyMulligan,
   applyCreateCardCopy,
   applyCreateToken,
+  applyRollDie,
 } from "./engine";
 
 /** The deck as dealt at the start, so a reset does not depend on live zones. */
@@ -73,6 +74,7 @@ interface PlaytestStore {
   addCounter: (cardId: string, amount: number) => void;
   createCardCopy: (cardId: string) => void;
   createToken: (token: TokenLibraryEntry) => void;
+  rollDie: (sides: number) => void;
   undo: () => void;
   resetPlaytest: () => void;
 }
@@ -177,6 +179,15 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
       if (!state.engine) return state;
       const tokenId = `playtest-token-${randomAlphanumericId(16)}`;
       return { engine: applyCreateToken(state.engine, token, tokenId) };
+    });
+  },
+
+  rollDie: (sides: number) => {
+    set((state) => {
+      if (!state.engine) return state;
+      return {
+        engine: applyRollDie(state.engine, sides, randomIntBelow(sides) + 1),
+      };
     });
   },
 
