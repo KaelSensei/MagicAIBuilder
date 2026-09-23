@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2825 across 247 files                                                                                                                   |
+| Unit tests          | 2828 across 248 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -31,6 +31,7 @@
 
 ## Latest product delivery
 
+- Signed-in community members can now report public decks for spam, harassment, illegal content or another reason directly from the deck page. Owners and anonymous visitors do not see the action; moderator review UI remains open roadmap work.
 - Goldfish sessions now maintain a chronological, editable and undoable action log for engine events plus manual actions such as mana production. Players can export the session by turn as readable text or a versioned JSON contract; aggregate cards-seen summaries remain separate roadmap work.
 - Goldfish sessions now provide the deck's detected tokens and emblems, independent card copies, existing permanent counters, and unbiased d6/d20 rolls. All generated objects and rolls remain session-only, support undo/reset, and never mutate the saved decklist.
 - Public deck pages now present complete primers with readable headings, paragraphs, lists and safe links instead of truncating the description. The focused renderer keeps raw HTML inert, rejects unsafe protocols and adds no runtime dependency.
