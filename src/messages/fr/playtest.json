@@ -71,6 +71,15 @@
     "roll": "Lancer un d{sides}",
     "latest": "Dernier résultat"
   },
+  "log": {
+    "title": "Journal des actions",
+    "placeholder": "Noter une action manuelle, comme le mana produit",
+    "add": "Ajouter l’action",
+    "empty": "Les actions apparaîtront ici pendant la partie.",
+    "edit": "Modifier",
+    "editEntry": "Modifier l’action",
+    "remove": "Supprimer l’action"
+  },
   "recordResult": "Comment ça s'est passé ?",
   "recording": "Enregistrement…",
   "recordFailed": "Enregistrement impossible",

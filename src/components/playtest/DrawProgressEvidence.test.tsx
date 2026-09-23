@@ -41,6 +41,8 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
     graveyard: [],
     exile: [],
     diceRolls: [],
+    actionLog: [],
+    nextActionId: 1,
     history: [],
     ...overrides,
   };

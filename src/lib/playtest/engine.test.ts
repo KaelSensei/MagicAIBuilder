@@ -15,6 +15,9 @@ import {
   applyCreateCardCopy,
   applyCreateToken,
   applyRollDie,
+  applyAddActionLogEntry,
+  applyEditActionLogEntry,
+  applyRemoveActionLogEntry,
   PHASES,
   STARTING_LIFE,
   MAX_MULLIGANS,
@@ -102,6 +105,10 @@ describe("applyDrawCard", () => {
     const state = makeState();
     const next = applyDrawCard(state);
     expect(next.history.length).toBeGreaterThan(state.history.length);
+  });
+
+  it("records the draw in the action log", () => {
+    expect(applyDrawCard(makeState()).actionLog.at(-1)?.description).toBe("Drew a card");
   });
 });
 
@@ -348,6 +355,27 @@ describe("applyRollDie", () => {
     }
     expect(state.diceRolls).toHaveLength(10);
     expect(state.diceRolls.at(-1)?.result).toBe(12);
+  });
+});
+
+describe("editable action log", () => {
+  it("adds, edits and removes a manual session entry", () => {
+    const added = applyAddActionLogEntry(makeState(), "Produced three green mana");
+    const entry = added.actionLog[0];
+    expect(entry).toMatchObject({ turn: 1, phase: "Draw", description: "Produced three green mana" });
+
+    const edited = applyEditActionLogEntry(added, entry.id, "Produced four green mana");
+    expect(edited.actionLog[0]?.description).toBe("Produced four green mana");
+
+    const removed = applyRemoveActionLogEntry(edited, entry.id);
+    expect(removed.actionLog).toEqual([]);
+  });
+
+  it("ignores blank entries and missing ids", () => {
+    const state = makeState();
+    expect(applyAddActionLogEntry(state, "   ")).toBe(state);
+    expect(applyEditActionLogEntry(state, 99, "Nope")).toBe(state);
+    expect(applyRemoveActionLogEntry(state, 99)).toBe(state);
   });
 });
 

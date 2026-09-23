@@ -65,6 +65,13 @@ export interface DiceRoll {
   readonly result: number;
 }
 
+export interface PlaytestActionLogEntry {
+  readonly id: number;
+  readonly turn: number;
+  readonly phase: Phase;
+  readonly description: string;
+}
+
 /**
  * An action for undo/redo.
  */
@@ -96,6 +103,8 @@ export interface PlaytestEngine {
   readonly graveyard: readonly DeckCard[];
   readonly exile: readonly DeckCard[];
   readonly diceRolls: readonly DiceRoll[];
+  readonly actionLog: readonly PlaytestActionLogEntry[];
+  readonly nextActionId: number;
 
   // Undo
   readonly history: readonly UndoHistoryEntry[];
@@ -134,6 +143,8 @@ export function createPlaytestState(
     graveyard: [],
     exile: [],
     diceRolls: [],
+    actionLog: [],
+    nextActionId: 1,
     history: [],
     ...overrides,
   };
@@ -157,7 +168,7 @@ export function applyDrawCard(state: PlaytestEngine): PlaytestEngine {
   return pushHistory(state, {
     hand: [...state.hand, drawn],
     library: rest,
-  });
+  }, "Drew a card");
 }
 
 // ─── Mulligan ─────────────────────────────────────────────────────────────
@@ -183,7 +194,7 @@ export function applyMulligan(state: PlaytestEngine): PlaytestEngine {
     mulliganCount,
     hand: shuffled.slice(0, handSize),
     library: shuffled.slice(handSize),
-  });
+  }, `Mulliganed to ${handSize} cards`);
 }
 
 // ─── Phase progression ────────────────────────────────────────────────────
@@ -202,13 +213,13 @@ export function applyNextPhase(state: PlaytestEngine): PlaytestEngine {
       turn: state.turn + 1,
       phase: "Untap" as const,
       battlefield: untappedBattlefield,
-    });
+    }, `Started turn ${state.turn + 1}`);
   }
 
   // Advance to next phase
   const nextPhase = PHASES[currentIndex + 1];
   if (nextPhase === undefined) return state;
-  return pushHistory(state, { phase: nextPhase });
+  return pushHistory(state, { phase: nextPhase }, `Advanced to ${nextPhase}`);
 }
 
 // ─── Next turn ────────────────────────────────────────────────────────────
@@ -235,7 +246,7 @@ export function applyNextTurn(state: PlaytestEngine): PlaytestEngine {
     hand: newHand,
     library: newLibrary,
     battlefield: untappedBattlefield,
-  });
+  }, `Started turn ${state.turn + 1} and drew a card`);
 }
 
 // ─── Damage / heal ────────────────────────────────────────────────────────
@@ -258,7 +269,7 @@ export function applyDamage(
     lifeTotal: newLife,
     lifeHistory: newHistory,
     isGameOver: newLife <= 0,
-  });
+  }, `Lost ${amount} life: ${description}`);
 }
 
 export function applyHeal(
@@ -278,7 +289,7 @@ export function applyHeal(
   return pushHistory(state, {
     lifeTotal: newLife,
     lifeHistory: newHistory,
-  });
+  }, `Gained ${amount} life`);
 }
 
 // ─── Tap / untap ──────────────────────────────────────────────────────────
@@ -290,12 +301,17 @@ export function applyTap(state: PlaytestEngine, cardId: string): PlaytestEngine 
     c.id === cardId ? { ...c, tapped: !c.tapped } : c
   );
 
-  return pushHistory(state, { battlefield: updated });
+  const permanent = state.battlefield.find((card) => card.id === cardId);
+  return pushHistory(
+    state,
+    { battlefield: updated },
+    `${permanent?.tapped ? "Untapped" : "Tapped"} ${permanent?.name ?? "card"}`
+  );
 }
 
 export function applyUntapAll(state: PlaytestEngine): PlaytestEngine {
   const untapped = state.battlefield.map((p) => ({ ...p, tapped: false }));
-  return pushHistory(state, { battlefield: untapped });
+  return pushHistory(state, { battlefield: untapped }, "Untapped all permanents");
 }
 
 // ─── Move to zone ─────────────────────────────────────────────────────────
@@ -357,7 +373,7 @@ export function applyMoveToZone(
 
   // Copies only exist on the battlefield and cease to exist when they leave it.
   if ("isSessionCopy" in card && card.isSessionCopy === true && to !== "battlefield") {
-    return pushHistory(state, updates);
+    return pushHistory(state, updates, `Removed ${card.name} from the battlefield`);
   }
 
   switch (to) {
@@ -382,7 +398,7 @@ export function applyMoveToZone(
     }
   }
 
-  return pushHistory(state, updates);
+  return pushHistory(state, updates, `Moved ${card.name} from ${from} to ${to}`);
 }
 
 // ─── Card copies ─────────────────────────────────────────────────────────
@@ -405,7 +421,11 @@ export function applyCreateCardCopy(
     isSessionCopy: true,
   };
 
-  return pushHistory(state, { battlefield: [...state.battlefield, copy] });
+  return pushHistory(
+    state,
+    { battlefield: [...state.battlefield, copy] },
+    `Created a copy of ${source.name}`
+  );
 }
 
 const TOKEN_COLOR_IDENTITIES: Readonly<Record<string, string>> = {
@@ -455,7 +475,7 @@ export function applyCreateToken(
 
   return pushHistory(state, {
     battlefield: [...state.battlefield, battlefieldToken],
-  });
+  }, `Created ${name}`);
 }
 
 // ─── Dice ────────────────────────────────────────────────────────────────
@@ -469,6 +489,41 @@ export function applyRollDie(
 
   return pushHistory(state, {
     diceRolls: [...state.diceRolls, { sides, result }].slice(-10),
+  }, `Rolled d${sides}: ${result}`);
+}
+
+// ─── Editable action log ─────────────────────────────────────────────────
+export function applyAddActionLogEntry(
+  state: PlaytestEngine,
+  description: string
+): PlaytestEngine {
+  const normalized = description.trim();
+  if (normalized === "") return state;
+  return pushHistory(state, {}, normalized);
+}
+
+export function applyEditActionLogEntry(
+  state: PlaytestEngine,
+  entryId: number,
+  description: string
+): PlaytestEngine {
+  const normalized = description.trim();
+  const exists = state.actionLog.some((entry) => entry.id === entryId);
+  if (!exists || normalized === "") return state;
+  return pushHistory(state, {
+    actionLog: state.actionLog.map((entry) =>
+      entry.id === entryId ? { ...entry, description: normalized } : entry
+    ),
+  });
+}
+
+export function applyRemoveActionLogEntry(
+  state: PlaytestEngine,
+  entryId: number
+): PlaytestEngine {
+  if (!state.actionLog.some((entry) => entry.id === entryId)) return state;
+  return pushHistory(state, {
+    actionLog: state.actionLog.filter((entry) => entry.id !== entryId),
   });
 }
 
@@ -486,7 +541,11 @@ export function applyAddCounter(
     c.id === cardId ? { ...c, counters: newCounters } : c
   );
 
-  return pushHistory(state, { battlefield: updated });
+  return pushHistory(
+    state,
+    { battlefield: updated },
+    `${amount >= 0 ? "Added" : "Removed"} a counter ${amount >= 0 ? "to" : "from"} ${permanent.name}`
+  );
 }
 
 // ─── Undo ────────────────────────────────────────────────────────────────
@@ -511,11 +570,25 @@ function toBattlefieldCard(card: DeckCard | BattlefieldCard): BattlefieldCard {
  */
 function pushHistory(
   state: PlaytestEngine,
-  updates: PlaytestEnginePatch
+  updates: PlaytestEnginePatch,
+  actionDescription?: string
 ): PlaytestEngine {
+  const actionLog = actionDescription
+    ? [
+        ...state.actionLog,
+        {
+          id: state.nextActionId,
+          turn: state.turn,
+          phase: state.phase,
+          description: actionDescription,
+        },
+      ]
+    : updates.actionLog;
   const newState: PlaytestEngine = {
     ...state,
     ...updates,
+    ...(actionLog ? { actionLog } : {}),
+    nextActionId: actionDescription ? state.nextActionId + 1 : state.nextActionId,
   };
 
   // Push to undo history, limit to 10

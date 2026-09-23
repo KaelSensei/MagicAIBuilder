@@ -71,6 +71,15 @@
     "roll": "Roll d{sides}",
     "latest": "Latest die result"
   },
+  "log": {
+    "title": "Action log",
+    "placeholder": "Record a manual action, such as mana produced",
+    "add": "Add action",
+    "empty": "Actions will appear here as you play.",
+    "edit": "Edit",
+    "editEntry": "Edit action",
+    "remove": "Remove action"
+  },
   "recordResult": "How did it go?",
   "recording": "Saving…",
   "recordFailed": "Could not save",
