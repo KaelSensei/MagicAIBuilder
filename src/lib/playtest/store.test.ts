@@ -192,6 +192,27 @@ describe("usePlaytestStore", () => {
     expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(1);
   });
 
+  it("creates an independent battlefield copy without changing the deck setup", () => {
+    const deck = makeDeck();
+    usePlaytestStore.getState().startPlaytest(deck);
+    const cardId = usePlaytestStore.getState().engine?.hand[0]?.id;
+    expect(cardId).toBeDefined();
+    if (!cardId) return;
+
+    usePlaytestStore.getState().moveToZone(cardId, "hand", "battlefield");
+    usePlaytestStore.getState().createCardCopy(cardId);
+
+    const battlefield = usePlaytestStore.getState().engine?.battlefield ?? [];
+    expect(battlefield).toHaveLength(2);
+    expect(battlefield[1]?.id).not.toBe(cardId);
+    expect(battlefield[1]?.isSessionCopy).toBe(true);
+
+    usePlaytestStore.getState().resetPlaytest();
+    const reset = usePlaytestStore.getState().engine;
+    expect((reset?.hand.length ?? 0) + (reset?.library.length ?? 0))
+      .toBe(deck.cards.length + 1);
+  });
+
   it("starts Commander decks on 40 life", () => {
     usePlaytestStore.getState().startPlaytest(makeDeck());
     expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(40);

@@ -70,6 +70,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const tap = usePlaytestStore((s) => s.tap);
   const moveToZone = usePlaytestStore((s) => s.moveToZone);
   const addCounter = usePlaytestStore((s) => s.addCounter);
+  const createCardCopy = usePlaytestStore((s) => s.createCardCopy);
   const undo = usePlaytestStore((s) => s.undo);
 
   // The store outlives the modal, so a stale session would otherwise reappear
@@ -211,6 +212,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                   battlefield={engine.battlefield}
                   onTap={tap}
                   onAddCounter={addCounter}
+                  onCreateCopy={createCardCopy}
                   onRemove={handleRemoveFromBattlefield}
                 />
                 <HandZone

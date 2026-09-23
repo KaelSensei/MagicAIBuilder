@@ -52,6 +52,7 @@
     "untap": "Untap",
     "addCounter": "Add a counter",
     "removeCounter": "Remove a counter",
+    "copy": "Copy",
     "remove": "Remove"
   },
   "graveyard": {

@@ -19,6 +19,7 @@ describe("BattlefieldZone", () => {
     battlefield: [makePermanent("p1", "Rhystic Study"), makePermanent("p2", "Sol Ring")],
     onTap: vi.fn(),
     onAddCounter: vi.fn(),
+    onCreateCopy: vi.fn(),
     onRemove: vi.fn(),
   };
 
@@ -69,6 +70,13 @@ describe("BattlefieldZone", () => {
     const removeBtn = screen.getAllByRole("button", { name: /remove/i })[0];
     fireEvent.click(removeBtn);
     expect(onRemove).toHaveBeenCalledWith("p1");
+  });
+
+  it("calls onCreateCopy when Copy is clicked", () => {
+    const onCreateCopy = vi.fn();
+    renderWithIntl(<BattlefieldZone {...defaultProps} onCreateCopy={onCreateCopy} />);
+    fireEvent.click(screen.getAllByRole("button", { name: /copy/i })[0]);
+    expect(onCreateCopy).toHaveBeenCalledWith("p1");
   });
 
   it("shows empty state when battlefield is empty", () => {

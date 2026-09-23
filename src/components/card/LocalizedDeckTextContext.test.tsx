@@ -83,6 +83,7 @@ describe("LocalizedDeckTextProvider", () => {
               battlefield={[{ ...makeDeckCard("Sol Ring"), tapped: false, counters: 0 }]}
               onTap={vi.fn()}
               onAddCounter={vi.fn()}
+              onCreateCopy={vi.fn()}
               onRemove={vi.fn()}
             />
           </LocalizedDeckTextProvider>

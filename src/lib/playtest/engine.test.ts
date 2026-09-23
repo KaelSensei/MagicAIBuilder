@@ -12,6 +12,7 @@ import {
   applyUndo,
   applyAddCounter,
   applyMulligan,
+  applyCreateCardCopy,
   PHASES,
   STARTING_LIFE,
   MAX_MULLIGANS,
@@ -232,6 +233,56 @@ describe("applyAddCounter", () => {
     const state = { ...makeState(), battlefield: [permanent] };
     const next = applyAddCounter(state, "p1", -5);
     expect(next.battlefield[0].counters).toBe(0);
+  });
+});
+
+describe("applyCreateCardCopy", () => {
+  it("creates an independent session copy of a battlefield permanent", () => {
+    const permanent = { ...makeCard("p1"), tapped: true, counters: 2 };
+    const state = { ...makeState(), battlefield: [permanent] };
+
+    const next = applyCreateCardCopy(state, "p1", "copy-1");
+
+    expect(next.battlefield).toHaveLength(2);
+    expect(next.battlefield[0]).toEqual(permanent);
+    expect(next.battlefield[1]).toMatchObject({
+      id: "copy-1",
+      name: permanent.name,
+      quantity: 1,
+      tapped: false,
+      counters: 0,
+      isSessionCopy: true,
+    });
+  });
+
+  it("is undoable", () => {
+    const permanent = { ...makeCard("p1"), tapped: false, counters: 0 };
+    const state = { ...makeState(), battlefield: [permanent] };
+
+    expect(applyUndo(applyCreateCardCopy(state, "p1", "copy-1")).battlefield)
+      .toEqual(state.battlefield);
+  });
+
+  it("does nothing for a missing permanent or duplicate id", () => {
+    const permanent = { ...makeCard("p1"), tapped: false, counters: 0 };
+    const state = { ...makeState(), battlefield: [permanent] };
+
+    expect(applyCreateCardCopy(state, "missing", "copy-1")).toBe(state);
+    expect(applyCreateCardCopy(state, "p1", "p1")).toBe(state);
+  });
+
+  it("removes a session copy instead of moving it to another zone", () => {
+    const permanent = { ...makeCard("p1"), tapped: false, counters: 0 };
+    const copied = applyCreateCardCopy(
+      { ...makeState(), battlefield: [permanent] },
+      "p1",
+      "copy-1"
+    );
+
+    const next = applyMoveToZone(copied, "copy-1", "battlefield", "graveyard");
+
+    expect(next.battlefield).toHaveLength(1);
+    expect(next.graveyard).toHaveLength(0);
   });
 });
 

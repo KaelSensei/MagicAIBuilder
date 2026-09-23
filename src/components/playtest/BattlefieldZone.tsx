@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { RotateCcw } from "lucide-react";
+import { Copy, RotateCcw } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import type { BattlefieldCard } from "@/lib/playtest/engine";
@@ -11,6 +11,7 @@ interface BattlefieldZoneProps {
   readonly battlefield: readonly BattlefieldCard[];
   readonly onTap: (cardId: string) => void;
   readonly onAddCounter: (cardId: string, amount: number) => void;
+  readonly onCreateCopy: (cardId: string) => void;
   readonly onRemove: (cardId: string) => void;
 }
 
@@ -18,6 +19,7 @@ export function BattlefieldZone({
   battlefield,
   onTap,
   onAddCounter,
+  onCreateCopy,
   onRemove,
 }: BattlefieldZoneProps) {
   const t = useTranslations("playtest.battlefield");
@@ -99,6 +101,15 @@ export function BattlefieldZone({
                   className="px-1.5 py-1 bg-red-600/20 hover:bg-red-600/40 rounded text-[10px] text-red-300 transition-colors"
                 >
                   -1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onCreateCopy(card.id)}
+                  aria-label={t("copy")}
+                  className="flex items-center gap-0.5 px-1.5 py-1 bg-white/10 hover:bg-white/20 rounded text-[10px] text-white/70 transition-colors"
+                >
+                  <Copy size={10} aria-hidden="true" />
+                  {t("copy")}
                 </button>
                 <button
                   type="button"
