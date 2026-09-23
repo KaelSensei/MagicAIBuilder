@@ -357,7 +357,7 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
 - [ ] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
 - [ ] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
-- [ ] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
+- [x] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
 
 ### Definition of done
 

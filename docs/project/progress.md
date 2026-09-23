@@ -5,15 +5,15 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-09-20                             |
+| Last Updated  | 2026-09-23                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-09-20)
+## Current metrics (2026-09-23)
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2738 across 226 files                                                                                                                   |
+| Unit tests          | 2816 across 245 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -31,6 +31,7 @@
 
 ## Latest product delivery
 
+- Goldfish sessions now provide the deck's detected tokens and emblems, independent card copies, existing permanent counters, and unbiased d6/d20 rolls. All generated objects and rolls remain session-only, support undo/reset, and never mutate the saved decklist.
 - Public deck pages now present complete primers with readable headings, paragraphs, lists and safe links instead of truncating the description. The focused renderer keeps raw HTML inert, rejects unsafe protocols and adds no runtime dependency.
 - Deck owners can now insert a localized, structured primer into an empty description without overwriting existing writing or saving before review. The editor also uses valid sibling controls instead of nested buttons, removing the associated hydration risk.
 - Deck statistics now expose a deduplicated checklist of required tokens and emblems that players can copy or download for game night.
