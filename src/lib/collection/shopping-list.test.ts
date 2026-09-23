@@ -8,6 +8,7 @@ import {
   formatCollectionCsv,
   getDeckCardStatuses,
   summarizeDeckCollection,
+  buildAcquisitionPlan,
 } from "./shopping-list";
 import type { DeckCard } from "@/lib/deck/types";
 
@@ -131,6 +132,82 @@ describe("buildShoppingList", () => {
     const list = buildShoppingList(cards, null, null, {});
     expect(list[0].name).toBe("Has Price"); // null price sorts last
     expect(list[1].name).toBe("No Price");
+  });
+});
+
+describe("buildAcquisitionPlan", () => {
+  it("aggregates requirements across decks before subtracting owned copies", () => {
+    const plan = buildAcquisitionPlan(
+      [
+        {
+          id: "deck-a",
+          name: "Artifacts",
+          cards: [makeCard({ scryfallId: "ring", name: "Sol Ring", quantity: 1 })],
+          commander: null,
+          partner: null,
+        },
+        {
+          id: "deck-b",
+          name: "Spells",
+          cards: [makeCard({ scryfallId: "ring", name: "Sol Ring", quantity: 1 })],
+          commander: null,
+          partner: null,
+        },
+      ],
+      { ring: 1 }
+    );
+
+    expect(plan).toEqual([
+      expect.objectContaining({
+        scryfallId: "ring",
+        requiredQuantity: 2,
+        ownedQuantity: 1,
+        acquireQuantity: 1,
+        decks: [
+          { id: "deck-a", name: "Artifacts", quantity: 1 },
+          { id: "deck-b", name: "Spells", quantity: 1 },
+        ],
+      }),
+    ]);
+  });
+
+  it("does not mutate ownership and excludes cards that are already covered", () => {
+    const owned = { ring: 2 };
+    const plan = buildAcquisitionPlan(
+      [
+        {
+          id: "deck-a",
+          name: "Artifacts",
+          cards: [makeCard({ scryfallId: "ring", quantity: 2 })],
+          commander: null,
+          partner: null,
+        },
+      ],
+      owned
+    );
+
+    expect(plan).toEqual([]);
+    expect(owned).toEqual({ ring: 2 });
+  });
+
+  it("ignores sideboards and basic lands like the deck shopping list", () => {
+    const plan = buildAcquisitionPlan(
+      [
+        {
+          id: "deck-a",
+          name: "Artifacts",
+          cards: [
+            BASIC_LAND,
+            makeCard({ scryfallId: "side", zone: "sideboard" }),
+          ],
+          commander: null,
+          partner: null,
+        },
+      ],
+      {}
+    );
+
+    expect(plan).toEqual([]);
   });
 });
 
