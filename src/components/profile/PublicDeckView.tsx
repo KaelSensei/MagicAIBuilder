@@ -12,6 +12,7 @@ import { DeckCommentPanel } from "@/components/community/DeckCommentPanel";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
 import { PublicDeckActions } from "./PublicDeckActions";
 import { FocusedFeedbackPanel } from "@/components/community/FocusedFeedbackPanel";
+import { DeckReportButton } from "@/components/community/DeckReportButton";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
@@ -99,6 +100,11 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
                   {t("share.editDeck")}
                 </Link>
               )}
+              <DeckReportButton
+                deckId={deck.id}
+                isSignedIn={isSignedIn}
+                isOwner={deck.isOwner}
+              />
             </div>
           </div>
 
