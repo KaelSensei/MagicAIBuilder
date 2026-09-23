@@ -38,6 +38,8 @@ export type CardZone = "hand" | "library" | "battlefield" | "graveyard" | "exile
 export interface BattlefieldCard extends DeckCard {
   readonly tapped: boolean;
   readonly counters: number;
+  /** True for a playtest-only copy that is not part of the saved deck. */
+  readonly isSessionCopy?: boolean;
 }
 
 /**
@@ -339,6 +341,11 @@ export function applyMoveToZone(
     }
   }
 
+  // Copies only exist on the battlefield and cease to exist when they leave it.
+  if ("isSessionCopy" in card && card.isSessionCopy === true && to !== "battlefield") {
+    return pushHistory(state, updates);
+  }
+
   switch (to) {
     case "hand":
       updates.hand = [...state.hand, toDeckCard(card)];
@@ -362,6 +369,29 @@ export function applyMoveToZone(
   }
 
   return pushHistory(state, updates);
+}
+
+// ─── Card copies ─────────────────────────────────────────────────────────
+export function applyCreateCardCopy(
+  state: PlaytestEngine,
+  cardId: string,
+  copyId: string
+): PlaytestEngine {
+  if (state.battlefield.some((card) => card.id === copyId)) return state;
+
+  const source = state.battlefield.find((card) => card.id === cardId);
+  if (!source) return state;
+
+  const copy: BattlefieldCard = {
+    ...source,
+    id: copyId,
+    quantity: 1,
+    tapped: false,
+    counters: 0,
+    isSessionCopy: true,
+  };
+
+  return pushHistory(state, { battlefield: [...state.battlefield, copy] });
 }
 
 // ─── Counters ─────────────────────────────────────────────────────────────

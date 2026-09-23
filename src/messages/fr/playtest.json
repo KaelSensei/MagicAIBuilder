@@ -52,6 +52,7 @@
     "untap": "Dégager",
     "addCounter": "Ajouter un marqueur",
     "removeCounter": "Retirer un marqueur",
+    "copy": "Copier",
     "remove": "Retirer"
   },
   "graveyard": {

@@ -6,6 +6,7 @@
 import { create } from "zustand";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { getFormatConfig } from "@/lib/deck/formats";
+import { randomAlphanumericId } from "@/lib/crypto-random";
 import type { PlaytestEngine } from "./engine";
 import {
   createPlaytestState,
@@ -20,6 +21,7 @@ import {
   applyUndo,
   applyAddCounter,
   applyMulligan,
+  applyCreateCardCopy,
 } from "./engine";
 
 /** The deck as dealt at the start, so a reset does not depend on live zones. */
@@ -67,6 +69,7 @@ interface PlaytestStore {
     to: "hand" | "library" | "battlefield" | "graveyard" | "exile"
   ) => void;
   addCounter: (cardId: string, amount: number) => void;
+  createCardCopy: (cardId: string) => void;
   undo: () => void;
   resetPlaytest: () => void;
 }
@@ -155,6 +158,14 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
     set((state) => {
       if (!state.engine) return state;
       return { engine: applyAddCounter(state.engine, cardId, amount) };
+    });
+  },
+
+  createCardCopy: (cardId: string) => {
+    set((state) => {
+      if (!state.engine) return state;
+      const copyId = `playtest-copy-${randomAlphanumericId(16)}`;
+      return { engine: applyCreateCardCopy(state.engine, cardId, copyId) };
     });
   },
 
