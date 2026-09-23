@@ -243,6 +243,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                   onRestore={handleRestore}
                 />
                 <PlaytestActionLog
+                  deckName={deck.name}
                   entries={engine.actionLog}
                   onAdd={addLogEntry}
                   onEdit={editLogEntry}

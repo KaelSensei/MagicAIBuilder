@@ -1,22 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PlaytestActionLogEntry } from "@/lib/playtest/engine";
+import { exportActionLogJson, exportActionLogText } from "@/lib/playtest/action-log-export";
+import { downloadFile } from "@/lib/deck/export";
 
 interface PlaytestActionLogProps {
   readonly entries: readonly PlaytestActionLogEntry[];
+  readonly deckName: string;
   readonly onAdd: (description: string) => void;
   readonly onEdit: (entryId: number, description: string) => void;
   readonly onRemove: (entryId: number) => void;
 }
 
-export function PlaytestActionLog({ entries, onAdd, onEdit, onRemove }: PlaytestActionLogProps) {
+export function PlaytestActionLog({ entries, deckName, onAdd, onEdit, onRemove }: PlaytestActionLogProps) {
   const t = useTranslations("playtest.log");
   const [draft, setDraft] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState("");
+  const fileStem = deckName.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "deck";
 
   const addEntry = () => {
     if (draft.trim() === "") return;
@@ -32,7 +36,27 @@ export function PlaytestActionLog({ entries, onAdd, onEdit, onRemove }: Playtest
 
   return (
     <section className="rounded-xl border border-white/10 bg-[var(--surface)] p-4">
-      <h3 className="mb-3 text-sm font-semibold text-white">{t("title")}</h3>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-white">{t("title")}</h3>
+        {entries.length > 0 && (
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => downloadFile(exportActionLogText(deckName, entries), `${fileStem}-playtest.txt`)}
+              className="flex items-center gap-1 rounded px-2 py-1 text-[10px] text-white/50 hover:bg-white/5 hover:text-white"
+            >
+              <Download className="h-3 w-3" aria-hidden="true" /> {t("exportText")}
+            </button>
+            <button
+              type="button"
+              onClick={() => downloadFile(exportActionLogJson(deckName, entries), `${fileStem}-playtest.json`, "application/json")}
+              className="flex items-center gap-1 rounded px-2 py-1 text-[10px] text-white/50 hover:bg-white/5 hover:text-white"
+            >
+              <Download className="h-3 w-3" aria-hidden="true" /> {t("exportJson")}
+            </button>
+          </div>
+        )}
+      </div>
       <div className="mb-3 flex gap-2">
         <input
           value={draft}
