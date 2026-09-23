@@ -18,6 +18,7 @@ import { PlaytestHistoryPanel } from "@/components/playtest/PlaytestHistoryPanel
 import { DrawProgressEvidence } from "@/components/playtest/DrawProgressEvidence";
 import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
 import { DiceRoller } from "@/components/playtest/DiceRoller";
+import { PlaytestActionLog } from "@/components/playtest/PlaytestActionLog";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 import { analyzeDrawProgress } from "@/lib/playtest/draw-progress-evidence";
 import { buildTokenLibrary } from "@/lib/deck/token-library";
@@ -75,6 +76,9 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const createCardCopy = usePlaytestStore((s) => s.createCardCopy);
   const createToken = usePlaytestStore((s) => s.createToken);
   const rollDie = usePlaytestStore((s) => s.rollDie);
+  const addLogEntry = usePlaytestStore((s) => s.addLogEntry);
+  const editLogEntry = usePlaytestStore((s) => s.editLogEntry);
+  const removeLogEntry = usePlaytestStore((s) => s.removeLogEntry);
   const undo = usePlaytestStore((s) => s.undo);
 
   // The store outlives the modal, so a stale session would otherwise reappear
@@ -237,6 +241,12 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                   graveyard={engine.graveyard}
                   exile={engine.exile}
                   onRestore={handleRestore}
+                />
+                <PlaytestActionLog
+                  entries={engine.actionLog}
+                  onAdd={addLogEntry}
+                  onEdit={editLogEntry}
+                  onRemove={removeLogEntry}
                 />
 
                 {/* Session controls */}

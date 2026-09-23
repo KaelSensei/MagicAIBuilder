@@ -245,6 +245,21 @@ describe("usePlaytestStore", () => {
     expect(roll?.result).toBeLessThanOrEqual(6);
   });
 
+  it("manages editable manual action log entries", () => {
+    usePlaytestStore.getState().startPlaytest(makeDeck());
+    usePlaytestStore.getState().addLogEntry("Made two mana");
+    const entryId = usePlaytestStore.getState().engine?.actionLog.at(-1)?.id;
+    expect(entryId).toBeDefined();
+    if (entryId === undefined) return;
+
+    usePlaytestStore.getState().editLogEntry(entryId, "Made three mana");
+    expect(usePlaytestStore.getState().engine?.actionLog.at(-1)?.description).toBe(
+      "Made three mana"
+    );
+    usePlaytestStore.getState().removeLogEntry(entryId);
+    expect(usePlaytestStore.getState().engine?.actionLog).toEqual([]);
+  });
+
   it("starts Commander decks on 40 life", () => {
     usePlaytestStore.getState().startPlaytest(makeDeck());
     expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(40);

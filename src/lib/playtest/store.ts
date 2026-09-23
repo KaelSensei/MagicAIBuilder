@@ -25,6 +25,9 @@ import {
   applyCreateCardCopy,
   applyCreateToken,
   applyRollDie,
+  applyAddActionLogEntry,
+  applyEditActionLogEntry,
+  applyRemoveActionLogEntry,
 } from "./engine";
 
 /** The deck as dealt at the start, so a reset does not depend on live zones. */
@@ -75,6 +78,9 @@ interface PlaytestStore {
   createCardCopy: (cardId: string) => void;
   createToken: (token: TokenLibraryEntry) => void;
   rollDie: (sides: number) => void;
+  addLogEntry: (description: string) => void;
+  editLogEntry: (entryId: number, description: string) => void;
+  removeLogEntry: (entryId: number) => void;
   undo: () => void;
   resetPlaytest: () => void;
 }
@@ -189,6 +195,30 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
         engine: applyRollDie(state.engine, sides, randomIntBelow(sides) + 1),
       };
     });
+  },
+
+  addLogEntry: (description: string) => {
+    set((state) =>
+      state.engine
+        ? { engine: applyAddActionLogEntry(state.engine, description) }
+        : state
+    );
+  },
+
+  editLogEntry: (entryId: number, description: string) => {
+    set((state) =>
+      state.engine
+        ? { engine: applyEditActionLogEntry(state.engine, entryId, description) }
+        : state
+    );
+  },
+
+  removeLogEntry: (entryId: number) => {
+    set((state) =>
+      state.engine
+        ? { engine: applyRemoveActionLogEntry(state.engine, entryId) }
+        : state
+    );
   },
 
   undo: () => {
