@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { MainZoneContent } from "./MainZoneContent";
 import type { Deck, DeckCard } from "@/lib/deck/types";
@@ -77,6 +77,22 @@ describe("MainZoneContent", () => {
       );
       expect(screen.queryByText(/no cards yet/i)).not.toBeInTheDocument();
     });
+
+    it("moves a card to considering without requiring drag and drop", () => {
+      const onMoveToMaybeboard = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="grid"
+          mainCards={[card("c1", "Sol Ring")]}
+          onMoveToMaybeboard={onMoveToMaybeboard}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /move.*considering/i }));
+
+      expect(onMoveToMaybeboard).toHaveBeenCalledWith("c1");
+    });
   });
 
   describe("list view", () => {
@@ -105,6 +121,22 @@ describe("MainZoneContent", () => {
       );
       expect(screen.getByText("Sol Ring")).toBeInTheDocument();
       expect(screen.getByText("Counterspell")).toBeInTheDocument();
+    });
+
+    it("moves a listed card to considering without requiring drag and drop", () => {
+      const onMoveToMaybeboard = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="list"
+          cardGroups={[group("artifact", [card("c1", "Sol Ring")])]}
+          onMoveToMaybeboard={onMoveToMaybeboard}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /move sol ring.*considering/i }));
+
+      expect(onMoveToMaybeboard).toHaveBeenCalledWith("c1");
     });
 
     it("renders nothing rather than crashing when there are no groups", () => {

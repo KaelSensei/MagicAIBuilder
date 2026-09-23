@@ -14,7 +14,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { Bookmark, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
@@ -36,7 +36,7 @@ interface CategorySectionProps {
 function DraggableDeckCard({
   card,
   onRemove,
-  onMoveToMaybeboard: _onMoveToMaybeboard,
+  onMoveToMaybeboard,
   isColorIdentityViolation = false,
 }: {
   readonly card: DeckCard;
@@ -83,6 +83,7 @@ function DraggableDeckCard({
         <CardListItem
           card={card}
           onRemove={onRemove}
+          onMoveToMaybeboard={onMoveToMaybeboard}
           showNotes
           className={cn(
             isColorIdentityViolation &&
@@ -287,7 +288,7 @@ export function MainZoneContent({
                 e.stopPropagation();
                 clearCommander();
               }}
-              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
               title={t("actions.removeCommander")}
             >
               ×
@@ -381,6 +382,18 @@ export function MainZoneContent({
               cardFaces={card.cardFaces}
               isFlexibleLand={card.isFlexibleLand}
             />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveToMaybeboard?.(card.id);
+              }}
+              className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity bg-black/75 hover:bg-amber-500/90 focus-visible:bg-amber-500/90 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg z-10"
+              aria-label={t("zoneMoveTargets.toMaybeboard")}
+              title={t("zoneMoveTargets.toMaybeboard")}
+            >
+              <Bookmark className="h-3.5 w-3.5" />
+            </button>
             <button
               type="button"
               onClick={(e) => {
