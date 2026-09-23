@@ -1,10 +1,30 @@
 // HTTP client for the deck API routes
-import type { Deck, DeckCard, DeckZone, CardCategory, CommanderPairingType } from "@/lib/deck/types";
+import type {
+  Deck,
+  DeckCard,
+  DeckZone,
+  CardCategory,
+  CommanderPairingType,
+} from "@/lib/deck/types";
 import { logger } from "@/lib/logger";
 import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
+import {
+  createGuestDeck,
+  isGuestDeckId,
+  loadGuestDeck,
+} from "@/lib/deck/guest-deck";
 
 /** Shape returned by the API (dates as ISO strings) */
-export interface ApiDeck extends Omit<Deck, "createdAt" | "updatedAt" | "commander" | "partner" | "cards" | "manualBracket" | "cardCount"> {
+export interface ApiDeck extends Omit<
+  Deck,
+  | "createdAt"
+  | "updatedAt"
+  | "commander"
+  | "partner"
+  | "cards"
+  | "manualBracket"
+  | "cardCount"
+> {
   createdAt: string;
   updatedAt: string;
   commanderId: string | null;
@@ -41,6 +61,68 @@ export interface ApiDeckListResponse {
   limit: number;
 }
 
+function guestCardToApiCard(
+  card: DeckCard,
+  isCommander = false,
+  isPartner = false
+): ApiDeckCard {
+  return {
+    ...card,
+    deckId: "guest",
+    scryfallId: card.scryfallId ?? card.id,
+    isCommander,
+    isPartner,
+  };
+}
+
+function getGuestApiDeck(): ApiDeck {
+  const deck = loadGuestDeck() ?? createGuestDeck();
+  const cards = deck.cards.map((card) => guestCardToApiCard(card));
+  if (deck.commander) cards.push(guestCardToApiCard(deck.commander, true));
+  if (deck.partner) cards.push(guestCardToApiCard(deck.partner, true, true));
+  if (deck.companion) cards.push(guestCardToApiCard(deck.companion));
+  return {
+    ...deck,
+    createdAt: deck.createdAt.toISOString(),
+    updatedAt: deck.updatedAt.toISOString(),
+    commanderId: deck.commander?.scryfallId ?? deck.commander?.id ?? null,
+    commanderName: deck.commander?.name ?? null,
+    partnerId: deck.partner?.scryfallId ?? deck.partner?.id ?? null,
+    companionId: deck.companion?.scryfallId ?? deck.companion?.id ?? null,
+    cards,
+  };
+}
+
+function getGuestApiCard(cardId: string): ApiDeckCard {
+  const deck = loadGuestDeck() ?? createGuestDeck();
+  const card = [
+    ...deck.cards,
+    ...deck.maybeboard,
+    deck.commander,
+    deck.partner,
+    deck.companion,
+  ].find((candidate) => candidate?.id === cardId);
+  return guestCardToApiCard(
+    card ?? {
+      id: cardId,
+      name: "",
+      manaCost: "",
+      cmc: 0,
+      typeLine: "",
+      oracleText: "",
+      colorIdentity: [],
+      isGameChanger: false,
+      isBanned: false,
+      price: null,
+      imageUri: "",
+      artCropUri: "",
+      category: "other",
+      quantity: 1,
+      zone: "main",
+    }
+  );
+}
+
 /** Longest server-supplied message we will forward to the UI. */
 const MAX_API_ERROR_LENGTH = 200;
 
@@ -72,14 +154,21 @@ async function handleApiError(res: Response, context: string): Promise<never> {
 
 // ─── Deck CRUD ────────────────────────────────────────────────────────────────
 
-export async function fetchDecks(page = 0, limit = 20): Promise<ApiDeckListResponse> {
-  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+export async function fetchDecks(
+  page = 0,
+  limit = 20
+): Promise<ApiDeckListResponse> {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
   const res = await fetch(`/api/decks?${params}`);
   if (!res.ok) await handleApiError(res, "fetchDecks");
   return res.json();
 }
 
 export async function fetchDeck(id: string): Promise<ApiDeck> {
+  if (isGuestDeckId(id)) return getGuestApiDeck();
   const res = await fetch(`/api/decks/${id}`);
   if (!res.ok) await handleApiError(res, "fetchDeck");
   return res.json();
@@ -127,6 +216,7 @@ export async function updateDeck(
     feedbackQuestion?: string | null;
   }>
 ): Promise<ApiDeck> {
+  if (isGuestDeckId(id)) return getGuestApiDeck();
   const res = await fetch(`/api/decks/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -137,6 +227,7 @@ export async function updateDeck(
 }
 
 export async function deleteDeck(id: string): Promise<void> {
+  if (isGuestDeckId(id)) return;
   const res = await fetch(`/api/decks/${id}`, { method: "DELETE" });
   if (!res.ok) await handleApiError(res, "deleteDeck");
 }
@@ -187,6 +278,32 @@ export async function addCard(
   deckId: string,
   payload: AddCardPayload
 ): Promise<ApiDeckCard> {
+  if (isGuestDeckId(deckId)) {
+    return {
+      id: payload.scryfallId,
+      deckId,
+      scryfallId: payload.scryfallId,
+      name: payload.name,
+      manaCost: payload.manaCost ?? "",
+      cmc: payload.cmc ?? 0,
+      typeLine: payload.typeLine ?? "",
+      oracleText: payload.oracleText ?? "",
+      power: payload.power,
+      toughness: payload.toughness,
+      colorIdentity: payload.colorIdentity ?? [],
+      isGameChanger: payload.isGameChanger ?? false,
+      isBanned: payload.isBanned ?? false,
+      price: payload.price ?? null,
+      imageUri: payload.imageUri ?? "",
+      artCropUri: payload.artCropUri ?? "",
+      category: normalizeCardCategory(payload.category),
+      quantity: payload.quantity ?? 1,
+      notes: null,
+      isCommander: payload.isCommander ?? false,
+      isPartner: payload.isPartner ?? false,
+      zone: payload.zone ?? "main",
+    };
+  }
   const res = await fetch(`/api/decks/${deckId}/cards`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -200,6 +317,7 @@ export async function removeCard(
   deckId: string,
   cardId: string
 ): Promise<void> {
+  if (isGuestDeckId(deckId)) return;
   const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
     method: "DELETE",
   });
@@ -211,6 +329,7 @@ export async function updateCardCategory(
   cardId: string,
   category: CardCategory
 ): Promise<ApiDeckCard> {
+  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
   const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -225,6 +344,7 @@ export async function updateCardNotes(
   cardId: string,
   notes: string | null
 ): Promise<ApiDeckCard> {
+  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
   const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -239,6 +359,7 @@ export async function updateCardZone(
   cardId: string,
   zone: "main" | "sideboard" | "maybeboard"
 ): Promise<ApiDeckCard> {
+  if (isGuestDeckId(deckId)) return getGuestApiCard(cardId);
   const res = await fetch(`/api/decks/${deckId}/cards/${cardId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -257,19 +378,42 @@ export async function updateCardMaybeboard(
 }
 
 export async function removeAllCards(deckId: string): Promise<void> {
+  if (isGuestDeckId(deckId)) return;
   const res = await fetch(`/api/decks/${deckId}/cards`, {
     method: "DELETE",
   });
   if (!res.ok) await handleApiError(res, "removeAllCards");
 }
 
+function normalizeCardCategory(category: string | undefined): CardCategory {
+  const categories: readonly CardCategory[] = [
+    "commander",
+    "companion",
+    "creature",
+    "instant",
+    "sorcery",
+    "artifact",
+    "enchantment",
+    "planeswalker",
+    "land",
+    "ramp",
+    "draw",
+    "removal",
+    "boardWipe",
+    "winCondition",
+    "protection",
+    "other",
+  ];
+  return categories.find((candidate) => candidate === category) ?? "other";
+}
+
 // ─── Scryfall Cache ───────────────────────────────────────────────────────────
 
-export async function lookupCardCache(
-  scryfallId: string
-): Promise<unknown> {
+export async function lookupCardCache(scryfallId: string): Promise<unknown> {
   try {
-    const res = await fetch(`/api/cache/cards?id=${encodeURIComponent(scryfallId)}`);
+    const res = await fetch(
+      `/api/cache/cards?id=${encodeURIComponent(scryfallId)}`
+    );
     if (!res.ok) return null;
     const body = await res.json();
     return body.hit ? body.data : null;

@@ -91,6 +91,14 @@
       }
     }
   },
+  "guest": {
+    "title": "Guest deck.",
+    "description": "Saved in this browser only. Create an account to keep it safe and access it anywhere.",
+    "anotherTabTitle": "This guest deck is already open in another tab.",
+    "anotherTabDescription": "Create an account to work across tabs without risking your changes.",
+    "createAccount": "Create account",
+    "dismiss": "Dismiss guest deck notice"
+  },
   "loading": "Loading deck…",
   "saving": "Saving…",
   "deckNotFound": {

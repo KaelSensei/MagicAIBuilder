@@ -22,6 +22,8 @@ const PUBLIC_PATH_PREFIXES: readonly string[] = [
   "/commanders", // public deck discovery by commander
 ];
 
+const PUBLIC_EXACT_PATHS: readonly string[] = ["/builder/guest"];
+
 /**
  * Removes a supported locale prefix from a pathname.
  *
@@ -54,6 +56,7 @@ function isPublicPage(pathname: string): boolean {
 
   return (
     normalizedPathname === "/" ||
+    PUBLIC_EXACT_PATHS.includes(normalizedPathname) ||
     PUBLIC_PATH_PREFIXES.some((prefix) =>
       matchesPathPrefix(normalizedPathname, prefix)
     )
@@ -69,7 +72,8 @@ function isPublicPage(pathname: string): boolean {
 function getRequestLocale(pathname: string) {
   return (
     SUPPORTED_LOCALES.find(
-      (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)
+      (locale) =>
+        pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)
     ) ?? routing.defaultLocale
   );
 }

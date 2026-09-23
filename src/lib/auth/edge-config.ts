@@ -22,6 +22,8 @@ const PUBLIC_API_AND_PAGE_PATHS: readonly string[] = [
   "/commanders",
 ];
 
+const PUBLIC_EXACT_PAGE_PATHS: readonly string[] = ["/builder/guest"];
+
 /**
  * Checks whether a pathname equals a prefix or is nested under it.
  * Segment-aware so `/deck` never matches the protected `/decks` listing.
@@ -90,6 +92,7 @@ export const edgeAuthConfig = {
       // Public paths — always allow
       const isPublic =
         pathname === "/" ||
+        PUBLIC_EXACT_PAGE_PATHS.includes(pathname) ||
         PUBLIC_API_AND_PAGE_PATHS.some((p) => matchesPathPrefix(pathname, p));
       if (isPublic) return true;
 
