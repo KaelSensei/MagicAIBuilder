@@ -61,7 +61,7 @@ export function previewCardPackage(
     }
     if (
       config.hasColorIdentity &&
-      card.colorIdentity.some((color) => !allowedColors.has(color))
+      card.colorIdentity.some((color) => color !== "C" && !allowedColors.has(color))
     ) {
       issues.push({
         kind: "colorIdentity",
