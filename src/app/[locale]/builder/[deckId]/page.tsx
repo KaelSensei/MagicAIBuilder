@@ -247,6 +247,7 @@ export default function BuilderPage() {
   } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
+  const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
   const addToMaybeboard = useDeckStore((s) => s.addToMaybeboard);
   const handleDuplicate = useCallback(async () => {
     const newId = await duplicateDeck(deckId);
@@ -452,26 +453,15 @@ export default function BuilderPage() {
     }
   }, []);
 
-  // Replace deck card with a newly selected printing, preserving category
+  // Update the printing in place so deck-building metadata and identity stay stable.
   const handleDeckCardPrintingSelect = useCallback(
     async (newCard: ScryfallCard) => {
       if (!deckCardForPrinting) return;
-      const originalCategory = deckCardForPrinting.category;
-      const originalZone = deckCardForPrinting.zone;
-      const originalQuantity = deckCardForPrinting.quantity;
-      await removeCard(deckCardForPrinting.id);
-      await addCard(newCard, originalQuantity, originalZone);
-      // Restore original category if it differs from the auto-categorized one
-      const addedCard = useDeckStore
-        .getState()
-        .decks[deckId]?.cards.find((c) => c.name === newCard.name);
-      if (addedCard && addedCard.category !== originalCategory) {
-        updateCardCategory(addedCard.id, originalCategory);
-      }
+      await swapCardPrinting(deckCardForPrinting.id, newCard);
       setDeckCardForPrinting(null);
       setDeckCardPrintingCard(null);
     },
-    [deckCardForPrinting, removeCard, addCard, updateCardCategory, deckId]
+    [deckCardForPrinting, swapCardPrinting]
   );
 
   // Keyboard shortcuts — global listener
