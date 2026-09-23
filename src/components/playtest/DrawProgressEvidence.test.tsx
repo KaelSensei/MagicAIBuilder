@@ -40,6 +40,7 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
     battlefield: [],
     graveyard: [],
     exile: [],
+    diceRolls: [],
     history: [],
     ...overrides,
   };

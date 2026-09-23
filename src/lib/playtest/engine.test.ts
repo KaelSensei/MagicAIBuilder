@@ -14,6 +14,7 @@ import {
   applyMulligan,
   applyCreateCardCopy,
   applyCreateToken,
+  applyRollDie,
   PHASES,
   STARTING_LIFE,
   MAX_MULLIGANS,
@@ -321,6 +322,32 @@ describe("applyCreateToken", () => {
       typeLine: "Emblem",
     });
     expect(applyUndo(next).battlefield).toHaveLength(0);
+  });
+});
+
+describe("applyRollDie", () => {
+  it("records a valid die result and is undoable", () => {
+    const state = makeState();
+    const next = applyRollDie(state, 20, 17);
+
+    expect(next.diceRolls).toEqual([{ sides: 20, result: 17 }]);
+    expect(applyUndo(next).diceRolls).toEqual([]);
+  });
+
+  it("rejects invalid sides and results", () => {
+    const state = makeState();
+    expect(applyRollDie(state, 1, 1)).toBe(state);
+    expect(applyRollDie(state, 6, 0)).toBe(state);
+    expect(applyRollDie(state, 6, 7)).toBe(state);
+  });
+
+  it("keeps only the ten most recent results", () => {
+    let state = makeState();
+    for (let result = 1; result <= 12; result++) {
+      state = applyRollDie(state, 20, result);
+    }
+    expect(state.diceRolls).toHaveLength(10);
+    expect(state.diceRolls.at(-1)?.result).toBe(12);
   });
 });
 

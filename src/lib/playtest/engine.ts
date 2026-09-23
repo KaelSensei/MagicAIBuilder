@@ -60,6 +60,11 @@ export interface LifeHistoryEntry {
   readonly description: string; // e.g., "3 damage (attack)", "-5 (heal)"
 }
 
+export interface DiceRoll {
+  readonly sides: number;
+  readonly result: number;
+}
+
 /**
  * An action for undo/redo.
  */
@@ -90,6 +95,7 @@ export interface PlaytestEngine {
   readonly battlefield: readonly BattlefieldCard[];
   readonly graveyard: readonly DeckCard[];
   readonly exile: readonly DeckCard[];
+  readonly diceRolls: readonly DiceRoll[];
 
   // Undo
   readonly history: readonly UndoHistoryEntry[];
@@ -127,6 +133,7 @@ export function createPlaytestState(
     battlefield: [],
     graveyard: [],
     exile: [],
+    diceRolls: [],
     history: [],
     ...overrides,
   };
@@ -448,6 +455,20 @@ export function applyCreateToken(
 
   return pushHistory(state, {
     battlefield: [...state.battlefield, battlefieldToken],
+  });
+}
+
+// ─── Dice ────────────────────────────────────────────────────────────────
+export function applyRollDie(
+  state: PlaytestEngine,
+  sides: number,
+  result: number
+): PlaytestEngine {
+  if (!Number.isInteger(sides) || sides < 2) return state;
+  if (!Number.isInteger(result) || result < 1 || result > sides) return state;
+
+  return pushHistory(state, {
+    diceRolls: [...state.diceRolls, { sides, result }].slice(-10),
   });
 }
 

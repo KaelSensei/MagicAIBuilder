@@ -233,6 +233,18 @@ describe("usePlaytestStore", () => {
     expect(usePlaytestStore.getState().engine?.battlefield).toHaveLength(0);
   });
 
+  it("rolls dice only inside an active session", () => {
+    usePlaytestStore.getState().rollDie(6);
+    expect(usePlaytestStore.getState().engine).toBeNull();
+
+    usePlaytestStore.getState().startPlaytest(makeDeck());
+    usePlaytestStore.getState().rollDie(6);
+    const roll = usePlaytestStore.getState().engine?.diceRolls[0];
+    expect(roll?.sides).toBe(6);
+    expect(roll?.result).toBeGreaterThanOrEqual(1);
+    expect(roll?.result).toBeLessThanOrEqual(6);
+  });
+
   it("starts Commander decks on 40 life", () => {
     usePlaytestStore.getState().startPlaytest(makeDeck());
     expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(40);
