@@ -401,8 +401,8 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [ ] Add folder management to the community UI.
 - [ ] Decide whether decks from followed builders should share the saved-deck folder model.
 - [x] Persist reusable community card packages with stable author attribution and private-by-default publishing controls.
-- [ ] Preview package additions against deck color identity, singleton and ban rules.
-- [ ] Apply a reviewed package diff without silently replacing existing cards.
+- [x] Preview package additions against deck color identity, singleton and ban rules.
+- [x] Apply a reviewed package diff without silently replacing existing cards.
 
 ### Definition of done
 
