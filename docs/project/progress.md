@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2854 across 259 files                                                                                                                   |
+| Unit tests          | 2857 across 261 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -31,6 +31,7 @@
 
 ## Latest product delivery
 
+- Reviewed AI deck changes now include a deterministic before/after comparison for card count, average mana value and known card value. The preview flags unverified, off-color and Commander-illegal additions rather than presenting incomplete evidence as certain.
 - Signed-in users can now organize owned decks in private folders, filter their library, rename or safely delete folders, and move up to 100 selected decks at once. Folder deletion returns affected decks to Unfiled without changing ownership.
 - Signed-in community members can now report public decks for spam, harassment, illegal content or another reason directly from the deck page. Owners and anonymous visitors do not see the action; moderator review UI remains open roadmap work.
 - Goldfish sessions now maintain a chronological, editable and undoable action log for engine events plus manual actions such as mana production. Players can export the session by turn as readable text or a versioned JSON contract; aggregate cards-seen summaries remain separate roadmap work.
