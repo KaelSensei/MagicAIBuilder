@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-24: Owned deck folders
+
+#### Added
+
+- Added private folder creation, filtering, renaming and safe deletion to My Decks.
+- Added owner-scoped bulk movement for up to 100 selected decks, including a return to Unfiled.
+- Added API and UI behavioral coverage, bringing the suite to 2,854 tests across 259 files.
+
 ### 2026-09-20: Safe public deck primers
 
 #### Added
