@@ -77,7 +77,17 @@
     "loadFailedDescription": "O servidor rejeitou a requisição, então esta lista pode estar incompleta. Seus decks não foram perdidos — tente novamente em instantes.",
     "loadFailedSubtitle": "Lista de decks indisponível",
     "retry": "Tentar novamente",
-    "createFailed": "Não foi possível criar o deck — {reason}"
+    "createFailed": "Não foi possível criar o deck — {reason}",
+    "folders": {
+      "all": "All decks",
+      "unfiled": "Unfiled",
+      "namePlaceholder": "New folder name",
+      "create": "Create",
+      "deckLabel": "Deck to move",
+      "chooseDeck": "Choose a deck",
+      "folderLabel": "Destination folder",
+      "move": "Move"
+    }
   },
   "comparison": {
     "title": "Compare decks",

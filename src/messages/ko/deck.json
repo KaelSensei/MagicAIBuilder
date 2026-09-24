@@ -77,7 +77,17 @@
     "loadFailedDescription": "서버가 요청을 거부하여 이 목록이 불완전할 수 있습니다. 덱은 사라지지 않았습니다 — 잠시 후 다시 시도하세요.",
     "loadFailedSubtitle": "덱 목록을 사용할 수 없음",
     "retry": "다시 시도",
-    "createFailed": "덱을 만들지 못했습니다 — {reason}"
+    "createFailed": "덱을 만들지 못했습니다 — {reason}",
+    "folders": {
+      "all": "All decks",
+      "unfiled": "Unfiled",
+      "namePlaceholder": "New folder name",
+      "create": "Create",
+      "deckLabel": "Deck to move",
+      "chooseDeck": "Choose a deck",
+      "folderLabel": "Destination folder",
+      "move": "Move"
+    }
   },
   "comparison": {
     "title": "Compare decks",

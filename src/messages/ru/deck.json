@@ -77,7 +77,17 @@
     "loadFailedDescription": "Сервер отклонил запрос, поэтому список может быть неполным. Ваши колоды не потеряны — повторите попытку через мгновение.",
     "loadFailedSubtitle": "Список колод недоступен",
     "retry": "Повторить",
-    "createFailed": "Не удалось создать колоду — {reason}"
+    "createFailed": "Не удалось создать колоду — {reason}",
+    "folders": {
+      "all": "All decks",
+      "unfiled": "Unfiled",
+      "namePlaceholder": "New folder name",
+      "create": "Create",
+      "deckLabel": "Deck to move",
+      "chooseDeck": "Choose a deck",
+      "folderLabel": "Destination folder",
+      "move": "Move"
+    }
   },
   "comparison": {
     "title": "Compare decks",
