@@ -434,6 +434,13 @@
     "changePreview": "Change preview",
     "applyChanges": "Apply changes",
     "clearSelection": "Clear selection",
+    "impact": {
+      "title": "Before and after",
+      "cards": "Cards",
+      "averageMana": "Average mana value",
+      "knownPrice": "Known card value",
+      "evidenceWarning": "{count, plural, one {# evidence limitation} other {# evidence limitations}} in this projection"
+    },
     "removeCard": "Remove {name}",
     "removed": "Removed",
     "ignoreSuggestion": "Ignore suggestion",

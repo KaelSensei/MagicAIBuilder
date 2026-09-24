@@ -24,6 +24,8 @@ import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
 import { SuggestionAlternatives } from "./SuggestionAlternatives";
 import { DeckQuestionControls } from "./DeckQuestionControls";
 import type { DeckQuestion } from "@/lib/ai/deck-question";
+import type { DeckCard } from "@/lib/deck/types";
+import { SuggestionImpactPreview } from "./SuggestionImpactPreview";
 import {
   buildSuggestionDiff,
   filterSuggestionsByPriority,
@@ -58,6 +60,7 @@ interface AISuggestionsPanelProps {
   readonly onIgnoreSuggestion?: (name: string) => void;
   readonly onClearIgnored?: () => void;
   readonly currentCardNames?: readonly string[];
+  readonly currentCards?: readonly DeckCard[];
   readonly brief?: DeckBrief;
   readonly onBriefChange?: (brief: DeckBrief) => void;
   readonly onAskQuestion?: (question: DeckQuestion) => void;
@@ -87,6 +90,7 @@ export function AISuggestionsPanel({
   onIgnoreSuggestion,
   onClearIgnored,
   currentCardNames = [],
+  currentCards = [],
   brief,
   onBriefChange,
   onAskQuestion,
@@ -129,6 +133,12 @@ export function AISuggestionsPanel({
       ),
     [addedCards, currentCardNames, removedCards, result?.removals]
   );
+  const selectedAdditions = useMemo(() => {
+    const selectedNames = new Set(pendingDiff.additions);
+    return (result?.suggestions ?? []).filter((suggestion) =>
+      selectedNames.has(suggestion.name)
+    );
+  }, [pendingDiff.additions, result?.suggestions]);
   const applyPendingChanges = () => {
     for (const name of pendingDiff.additions) onAddCard(name);
     for (const name of pendingDiff.removals) onRemoveCard(name);
@@ -504,6 +514,11 @@ export function AISuggestionsPanel({
                       </span>
                     ))}
                   </div>
+                  <SuggestionImpactPreview
+                    currentCards={currentCards}
+                    additions={selectedAdditions}
+                    removals={pendingDiff.removals}
+                  />
                   <div className="flex gap-2">
                     <button
                       type="button"
