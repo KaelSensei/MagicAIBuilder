@@ -77,7 +77,17 @@
     "loadFailedDescription": "Der Server hat die Anfrage abgelehnt, diese Liste ist möglicherweise unvollständig. Deine Decks sind nicht verloren — versuche es gleich noch einmal.",
     "loadFailedSubtitle": "Deckliste nicht verfügbar",
     "retry": "Erneut versuchen",
-    "createFailed": "Deck konnte nicht erstellt werden — {reason}"
+    "createFailed": "Deck konnte nicht erstellt werden — {reason}",
+    "folders": {
+      "all": "All decks",
+      "unfiled": "Unfiled",
+      "namePlaceholder": "New folder name",
+      "create": "Create",
+      "deckLabel": "Deck to move",
+      "chooseDeck": "Choose a deck",
+      "folderLabel": "Destination folder",
+      "move": "Move"
+    }
   },
   "comparison": {
     "title": "Compare decks",

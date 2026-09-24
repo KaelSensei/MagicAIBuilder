@@ -77,7 +77,17 @@
     "loadFailedDescription": "服务器拒绝了该请求，此列表可能不完整。你的套牌并未丢失 — 请稍后重试。",
     "loadFailedSubtitle": "套牌列表不可用",
     "retry": "重试",
-    "createFailed": "无法创建套牌 — {reason}"
+    "createFailed": "无法创建套牌 — {reason}",
+    "folders": {
+      "all": "All decks",
+      "unfiled": "Unfiled",
+      "namePlaceholder": "New folder name",
+      "create": "Create",
+      "deckLabel": "Deck to move",
+      "chooseDeck": "Choose a deck",
+      "folderLabel": "Destination folder",
+      "move": "Move"
+    }
   },
   "comparison": {
     "title": "Compare decks",

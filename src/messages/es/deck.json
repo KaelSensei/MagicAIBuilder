@@ -77,7 +77,17 @@
     "loadFailedDescription": "El servidor rechazó la solicitud, por lo que esta lista puede estar incompleta. Tus mazos no se han perdido: inténtalo de nuevo en un momento.",
     "loadFailedSubtitle": "Lista de mazos no disponible",
     "retry": "Reintentar",
-    "createFailed": "No se pudo crear el mazo — {reason}"
+    "createFailed": "No se pudo crear el mazo — {reason}",
+    "folders": {
+      "all": "All decks",
+      "unfiled": "Unfiled",
+      "namePlaceholder": "New folder name",
+      "create": "Create",
+      "deckLabel": "Deck to move",
+      "chooseDeck": "Choose a deck",
+      "folderLabel": "Destination folder",
+      "move": "Move"
+    }
   },
   "comparison": {
     "title": "Compare decks",
