@@ -1,14 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { FolderPlus, Loader2 } from "lucide-react";
+import { FolderPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Deck } from "@/lib/deck/types";
+import { DeckBulkFolderMove } from "./DeckBulkFolderMove";
+import { DeckFolderActions, type DeckFolderOption } from "./DeckFolderActions";
 
-interface DeckFolder {
-  readonly id: string;
-  readonly name: string;
-}
 interface Props {
   readonly decks: readonly Pick<Deck, "id" | "name" | "folderId">[];
   readonly filterId: string;
@@ -24,10 +22,8 @@ export function DeckFolderControls({
   onMoved,
 }: Props) {
   const t = useTranslations("deck.home.folders");
-  const [folders, setFolders] = useState<readonly DeckFolder[]>([]);
+  const [folders, setFolders] = useState<readonly DeckFolderOption[]>([]);
   const [name, setName] = useState("");
-  const [deckId, setDeckId] = useState("");
-  const [targetId, setTargetId] = useState("");
   const [busy, setBusy] = useState(false);
 
   const loadFolders = useCallback(async () => {
@@ -43,7 +39,7 @@ export function DeckFolderControls({
       return;
     setFolders(
       body.folders.filter(
-        (folder): folder is DeckFolder =>
+        (folder): folder is DeckFolderOption =>
           typeof folder === "object" &&
           folder !== null &&
           "id" in folder &&
@@ -70,21 +66,6 @@ export function DeckFolderControls({
     if (response.ok) {
       setName("");
       await loadFolders();
-    }
-    setBusy(false);
-  };
-
-  const moveDeck = async () => {
-    if (!deckId) return;
-    setBusy(true);
-    const response = await fetch(`/api/decks/${deckId}/folder`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ folderId: targetId || null }),
-    });
-    if (response.ok) {
-      setDeckId("");
-      await onMoved();
     }
     setBusy(false);
   };
@@ -117,7 +98,7 @@ export function DeckFolderControls({
           </button>
         ))}
       </div>
-      <div className="grid gap-2 sm:grid-cols-[1fr_auto_1fr_1fr_auto]">
+      <div className="grid gap-2 sm:grid-cols-[1fr_auto_1fr]">
         <input
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -134,45 +115,23 @@ export function DeckFolderControls({
           <FolderPlus className="h-3.5 w-3.5" />
           {t("create")}
         </button>
-        <select
-          aria-label={t("deckLabel")}
-          value={deckId}
-          onChange={(event) => setDeckId(event.target.value)}
-          className="rounded border border-[var(--border)] bg-[var(--background)] px-2 py-2 text-xs"
-        >
-          <option value="">{t("chooseDeck")}</option>
-          {decks.map((deck) => (
-            <option key={deck.id} value={deck.id}>
-              {deck.name}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label={t("folderLabel")}
-          value={targetId}
-          onChange={(event) => setTargetId(event.target.value)}
-          className="rounded border border-[var(--border)] bg-[var(--background)] px-2 py-2 text-xs"
-        >
-          <option value="">{t("unfiled")}</option>
-          {folders.map((folder) => (
-            <option key={folder.id} value={folder.id}>
-              {folder.name}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          disabled={busy || !deckId}
-          onClick={() => void moveDeck()}
-          className="rounded border border-[var(--accent)] px-3 py-2 text-xs font-semibold text-[var(--accent-text)] disabled:opacity-40"
-        >
-          {busy ? (
-            <Loader2 className="mx-auto h-3.5 w-3.5 animate-spin" />
-          ) : (
-            t("move")
-          )}
-        </button>
+        <DeckFolderActions
+          folders={folders}
+          busy={busy}
+          setBusy={setBusy}
+          onChanged={loadFolders}
+          onDeleted={(folderId) => {
+            if (filterId === folderId) onFilterChange("all");
+          }}
+        />
       </div>
+      <DeckBulkFolderMove
+        decks={decks}
+        folders={folders}
+        busy={busy}
+        setBusy={setBusy}
+        onMoved={onMoved}
+      />
     </section>
   );
 }

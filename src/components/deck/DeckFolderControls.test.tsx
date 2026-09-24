@@ -1,10 +1,11 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckFolderControls } from "./DeckFolderControls";
 
 describe("DeckFolderControls", () => {
-  it("moves the selected deck into the selected private folder", async () => {
+  it("moves selected decks into the selected private folder", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
@@ -25,18 +26,19 @@ describe("DeckFolderControls", () => {
       />
     );
 
-    fireEvent.change(await screen.findByLabelText(/deck to move/i), {
-      target: { value: "deck-1" },
-    });
+    const deckSelect = await screen.findByLabelText(/deck to move/i);
+    await userEvent.selectOptions(deckSelect, "deck-1");
     fireEvent.change(screen.getByLabelText(/destination folder/i), {
       target: { value: "f1" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /^move$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /move 1 selected/i }));
 
     await waitFor(() => expect(onMoved).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenLastCalledWith(
-      "/api/decks/deck-1/folder",
-      expect.objectContaining({ body: JSON.stringify({ folderId: "f1" }) })
+      "/api/decks/folders",
+      expect.objectContaining({
+        body: JSON.stringify({ deckIds: ["deck-1"], folderId: "f1" }),
+      })
     );
   });
 });
