@@ -14,6 +14,11 @@ import {
 import { getCardCollection } from "@/lib/scryfall/client";
 import { buildSuggestionEvidence } from "@/lib/ai/suggestion-evidence";
 import type { SuggestionEvidence } from "@/lib/ai/suggestion-evidence";
+import {
+  formatDeckQuestionTask,
+  readDeckQuestion,
+  type DeckQuestion,
+} from "@/lib/ai/deck-question";
 
 export const runtime = "nodejs";
 
@@ -49,6 +54,7 @@ interface SuggestRequest {
   budgetPerCard?: number | null;
   cardPrices?: Record<string, number | null>; // name → price for budget filtering
   brief?: unknown;
+  question?: DeckQuestion;
 }
 
 export interface CardSuggestion {
@@ -206,6 +212,37 @@ function buildPrompt(req: SuggestRequest, playtestEvidence: string): string {
       : "None";
   const deckBrief = formatDeckBriefForPrompt(normalizeDeckBrief(req.brief));
 
+  const task = req.question
+    ? formatDeckQuestionTask(req.question)
+    : `1. Suggest exactly 8 cards to ADD. They should synergize with ${commander}, align with the archetype above, fill the gaps, match bracket ${req.targetBracket}, respect budget, and NOT already be in the deck. Include 2–4 sentences of rationale per card. For each card, include up to 3 distinct alternatives: a cheaper budget option, a different power-level option, and a different playstyle option. Never repeat a main suggestion or a card already in the deck.
+2. Suggest exactly 4 cards to REMOVE. They must be actual cards from the deck above that have low synergy with the archetype, are redundant, or push the bracket too high. Include an explanation per removal.
+
+Respond ONLY in this JSON format (no markdown):
+{
+  "analysis": "2-3 sentences on current state, strengths, and main gaps",
+  "suggestions": [
+    {
+      "name": "Exact Card Name",
+      "reason": "One sentence explaining synergy with ${commander}",
+      "category": "ramp|draw|removal|boardWipe|creature|land|protection|winCondition|other",
+      "priority": "high|medium|low",
+      "alternatives": [
+        {
+          "name": "Exact Alternative Card Name",
+          "reason": "Why this is a meaningful alternative",
+          "dimension": "budget|power|playstyle"
+        }
+      ]
+    }
+  ],
+  "removals": [
+    {
+      "name": "Exact Card Name From Deck",
+      "reason": "One sentence explaining why it underperforms"
+    }
+  ]
+}`;
+
   return `You are a Magic: The Gathering Commander expert. Analyze this deck and suggest targeted improvements.
 
 DECK INFO:
@@ -242,34 +279,7 @@ ARCHETYPE GUIDANCE (${archetype ?? "Goodstuff"}):
 ${archetypeHint}
 
 TASK:
-1. Suggest exactly 8 cards to ADD. They should synergize with ${commander}, align with the archetype above, fill the gaps, match bracket ${req.targetBracket}, respect budget, and NOT already be in the deck. Include 2–4 sentences of rationale per card. For each card, include up to 3 distinct alternatives: a cheaper budget option, a different power-level option, and a different playstyle option. Never repeat a main suggestion or a card already in the deck.
-2. Suggest exactly 4 cards to REMOVE. They must be actual cards from the deck above that have low synergy with the archetype, are redundant, or push the bracket too high. Include an explanation per removal.
-
-Respond ONLY in this JSON format (no markdown):
-{
-  "analysis": "2-3 sentences on current state, strengths, and main gaps",
-  "suggestions": [
-    {
-      "name": "Exact Card Name",
-      "reason": "One sentence explaining synergy with ${commander}",
-      "category": "ramp|draw|removal|boardWipe|creature|land|protection|winCondition|other",
-      "priority": "high|medium|low",
-      "alternatives": [
-        {
-          "name": "Exact Alternative Card Name",
-          "reason": "Why this is a meaningful alternative",
-          "dimension": "budget|power|playstyle"
-        }
-      ]
-    }
-  ],
-  "removals": [
-    {
-      "name": "Exact Card Name From Deck",
-      "reason": "One sentence explaining why it underperforms"
-    }
-  ]
-}`;
+${task}`;
 }
 
 async function callAnthropic(prompt: string): Promise<SuggestResponse> {
@@ -327,6 +337,32 @@ async function callOpenAI(prompt: string): Promise<SuggestResponse> {
 }
 
 function mockSuggestions(req: SuggestRequest): SuggestResponse {
+  if (req.question?.type === "why-card") {
+    return {
+      suggestions: [],
+      removals: [],
+      analysis: `Configure an AI provider to explain why ${req.question.cardName} belongs in this deck.`,
+      provider: "mock",
+    };
+  }
+  if (req.question?.type === "weakest-card") {
+    const weakest = req.cardNames[0];
+    return {
+      suggestions: [],
+      removals: weakest
+        ? [
+            {
+              name: weakest,
+              reason:
+                "Configure an AI provider for a deck-specific weakness analysis.",
+            },
+          ]
+        : [],
+      analysis:
+        "Configure an AI provider to identify the weakest card in this deck.",
+      provider: "mock",
+    };
+  }
   const suggestions: CardSuggestion[] = (
     [
       {
@@ -503,9 +539,27 @@ export async function POST(request: Request) {
   if (
     typeof body.deckId !== "string" ||
     !body.colorIdentity ||
-    !Array.isArray(body.cardNames)
+    !Array.isArray(body.cardNames) ||
+    body.cardNames.length > 100 ||
+    !body.cardNames.every((name) => typeof name === "string")
   )
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+  const question = readDeckQuestion(body.question, body.cardNames);
+  if (body.question !== undefined && question === undefined) {
+    return NextResponse.json(
+      { error: "Invalid deck question" },
+      { status: 400 }
+    );
+  }
+  body.cardNames = body.cardNames.map((name) => sanitizeForPrompt(name, 200));
+  body.question =
+    question?.type === "why-card"
+      ? {
+          type: "why-card",
+          cardName: sanitizeForPrompt(question.cardName, 200),
+        }
+      : question;
 
   // Sanitize user-provided strings before injecting into prompts (prompt injection prevention)
   if (body.commanderName)

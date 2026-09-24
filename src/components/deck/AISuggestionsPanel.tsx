@@ -22,6 +22,8 @@ import type { DeckBrief } from "@/lib/ai/deck-brief";
 import { AIDeckBriefFields } from "./AIDeckBriefFields";
 import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
 import { SuggestionAlternatives } from "./SuggestionAlternatives";
+import { DeckQuestionControls } from "./DeckQuestionControls";
+import type { DeckQuestion } from "@/lib/ai/deck-question";
 import {
   buildSuggestionDiff,
   filterSuggestionsByPriority,
@@ -58,6 +60,7 @@ interface AISuggestionsPanelProps {
   readonly currentCardNames?: readonly string[];
   readonly brief?: DeckBrief;
   readonly onBriefChange?: (brief: DeckBrief) => void;
+  readonly onAskQuestion?: (question: DeckQuestion) => void;
 }
 
 const PRIORITY_COLORS = {
@@ -86,6 +89,7 @@ export function AISuggestionsPanel({
   currentCardNames = [],
   brief,
   onBriefChange,
+  onAskQuestion,
 }: AISuggestionsPanelProps) {
   const t = useTranslations("deck");
   const [expanded, setExpanded] = useState(true);
@@ -285,6 +289,14 @@ export function AISuggestionsPanel({
                   </p>
                 )}
               </div>
+
+              {onAskQuestion && (
+                <DeckQuestionControls
+                  cardNames={currentCardNames}
+                  disabled={isLoading || disabled}
+                  onAsk={onAskQuestion}
+                />
+              )}
 
               {disabled && !result && (
                 <p className="text-xs text-[var(--text-secondary)] text-center">
