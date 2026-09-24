@@ -43,11 +43,11 @@ Our opportunity is the workflow between those products:
 
 The comparison below tracks user workflows rather than trying to match feature counts. It is based on the current public product and help surfaces of Moxfield, Archidekt and TappedOut.
 
-| Competitor strength                                                                                                               | MagicAIBuilder today                                                                                                                                            | Product response                                                                                   |
-| --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Moxfield: fast editing, detailed primers, deck history, tokens, social notifications and rich sandbox controls                    | Editing, snapshots, required-token checklists, a guided primer template, comments and playtesting exist; rich published primers and notification inboxes do not | Complete public deck guides and add relevant notifications without copying a generic social feed   |
-| Archidekt: visual organization, folders, deck comparison, reusable card packages, deck-help requests and exportable playtest logs | Custom categories and owned-deck comparison exist; folders, packages, public comparison, help requests and downloadable logs are incomplete                     | Prioritize deck organization, reusable packages, public comparison and evidence-rich playtest logs |
-| TappedOut: acquireboard, inventory usage map, wishlist checkout, deck folders and explicit feedback-seeking workflows             | Collection reconciliation and shopping lists exist; cross-deck card usage, acquire state and structured help requests do not                                    | Connect collection, decks and acquisition planning, then add a focused request-for-feedback flow   |
+| Competitor strength                                                                                                               | MagicAIBuilder today                                                                                                                                            | Product response                                                                                 |
+| --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Moxfield: fast editing, detailed primers, deck history, tokens, social notifications and rich sandbox controls                    | Editing, snapshots, required-token checklists, a guided primer template, comments and playtesting exist; rich published primers and notification inboxes do not | Complete public deck guides and add relevant notifications without copying a generic social feed |
+| Archidekt: visual organization, folders, deck comparison, reusable card packages, deck-help requests and exportable playtest logs | Owned-deck folders and comparison now exist; packages, public comparison, help requests and downloadable logs remain incomplete                                 | Prioritize reusable packages, public comparison and evidence-rich playtest logs                  |
+| TappedOut: acquireboard, inventory usage map, wishlist checkout, deck folders and explicit feedback-seeking workflows             | Collection reconciliation and shopping lists exist; cross-deck card usage, acquire state and structured help requests do not                                    | Connect collection, decks and acquisition planning, then add a focused request-for-feedback flow |
 
 #### Deliberate non-goals from the benchmark
 
@@ -148,7 +148,7 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
 - [ ] Add keyboard and mobile alternatives for every drag action.
 - [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
-- [ ] Organize decks into user-defined folders, with move, filter and bulk-move actions.
+- [x] Organize decks into user-defined folders, with move, filter and bulk-move actions.
 - [ ] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
 - [x] Add a required-token and emblem summary derived from the current deck, with export support.
 
