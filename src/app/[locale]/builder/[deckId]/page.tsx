@@ -1043,6 +1043,7 @@ export default function BuilderPage() {
               budgetPerCard={aiBudgetPerCard}
               onBudgetPerCardChange={setAIBudgetPerCard}
               currentCardNames={deck.cards.map((card) => card.name)}
+              currentCards={deck.cards}
               brief={aiBrief}
               onBriefChange={setAIBrief}
               onAskQuestion={handleAIQuestion}

@@ -434,6 +434,13 @@
     "changePreview": "Aperçu des changements",
     "applyChanges": "Appliquer les changements",
     "clearSelection": "Effacer la sélection",
+    "impact": {
+      "title": "Avant et après",
+      "cards": "Cartes",
+      "averageMana": "Valeur de mana moyenne",
+      "knownPrice": "Valeur connue des cartes",
+      "evidenceWarning": "{count, plural, one {# limite de données} other {# limites de données}} dans cette projection"
+    },
     "removeCard": "Retirer {name}",
     "removed": "Retiré",
     "ignoreSuggestion": "Ignorer la suggestion",
