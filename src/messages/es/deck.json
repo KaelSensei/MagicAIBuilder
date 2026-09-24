@@ -86,7 +86,14 @@
       "deckLabel": "Deck to move",
       "chooseDeck": "Choose a deck",
       "folderLabel": "Destination folder",
-      "move": "Move"
+      "move": "Move",
+      "moveSelected": "Move {count} selected",
+      "manageLabel": "Folder to manage",
+      "chooseFolder": "Choose a folder",
+      "rename": "Rename folder",
+      "renamePrompt": "New folder name",
+      "delete": "Delete folder",
+      "deleteConfirm": "Delete this folder? Its decks will move to Unfiled."
     }
   },
   "comparison": {

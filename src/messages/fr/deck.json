@@ -86,7 +86,14 @@
       "deckLabel": "Deck à déplacer",
       "chooseDeck": "Choisir un deck",
       "folderLabel": "Dossier de destination",
-      "move": "Déplacer"
+      "move": "Déplacer",
+      "moveSelected": "Déplacer la sélection ({count})",
+      "manageLabel": "Dossier à gérer",
+      "chooseFolder": "Choisir un dossier",
+      "rename": "Renommer le dossier",
+      "renamePrompt": "Nouveau nom du dossier",
+      "delete": "Supprimer le dossier",
+      "deleteConfirm": "Supprimer ce dossier ? Ses decks seront remis dans Sans dossier."
     }
   },
   "comparison": {
