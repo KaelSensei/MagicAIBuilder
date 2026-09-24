@@ -189,7 +189,7 @@ A user can move a card between every legal zone, reload the page, change its pri
 - [x] Explain every suggestion with evidence: role, synergy, curve, color identity, legality and price.
 - [x] Offer alternatives by budget, power and play pattern instead of one opaque answer.
 - [x] Diff a proposed change against the current deck before applying it.
-- [ ] Support "why is this card here?" and "what is the weakest card?" questions.
+- [x] Support "why is this card here?" and "what is the weakest card?" questions.
 - [x] Add a deterministic post-generation validator; the LLM never decides legality.
 - [ ] Build a small golden evaluation set for valid cards, useful explanations and regression checks.
 
