@@ -224,7 +224,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - [x] Show the rule or calculation behind legality warnings on demand.
 - [ ] Separate hard legality errors from strategic suggestions and optional advice.
 - [x] Add source and freshness labels to external recommendations.
-- [ ] Let the player compare analysis before and after a proposed change.
+- [x] Let the player compare analysis before and after a proposed change.
 - [ ] Keep warning calculations deterministic and independent from AI output.
 
 ### Definition of done

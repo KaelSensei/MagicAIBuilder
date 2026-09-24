@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-24: AI change impact preview
+
+#### Added
+
+- Added a deterministic before/after comparison to reviewed AI deck changes for card count, average mana value and known card value.
+- Added visible evidence-limit warnings for unverified, off-color and Commander-illegal additions.
+- Added projection and presentation coverage, bringing the suite to 2,857 tests across 261 files.
+
 ### 2026-09-24: Owned deck folders
 
 #### Added
