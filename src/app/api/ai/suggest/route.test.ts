@@ -15,7 +15,9 @@ vi.mock("@/lib/rate-limit", () => ({
 
 import { POST } from "./route";
 
-function suggestRequest(): Request {
+function suggestRequest(
+  overrides: Readonly<Record<string, unknown>> = {}
+): Request {
   return new Request("http://localhost/api/ai/suggest", {
     method: "POST",
     body: JSON.stringify({
@@ -35,6 +37,7 @@ function suggestRequest(): Request {
         playPattern: "Proliferate before attacking",
         dislikes: "Infinite combos",
       },
+      ...overrides,
     }),
   });
 }
@@ -62,6 +65,66 @@ describe("POST /api/ai/suggest", () => {
   afterEach(() => {
     delete process.env.ANTHROPIC_API_KEY;
     vi.unstubAllGlobals();
+  });
+
+  it("rejects a why-card question for a card outside the deck", async () => {
+    const response = await POST(
+      suggestRequest({
+        cardNames: ["Sol Ring"],
+        question: { type: "why-card", cardName: "Black Lotus" },
+      })
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid deck question",
+    });
+  });
+
+  it("rejects oversized and non-string card lists before building a prompt", async () => {
+    const oversized = await POST(
+      suggestRequest({ cardNames: Array(101).fill("Island") })
+    );
+    const malformed = await POST(suggestRequest({ cardNames: ["Island", 42] }));
+
+    expect(oversized.status).toBe(400);
+    expect(malformed.status).toBe(400);
+  });
+
+  it("asks the provider for a focused card explanation without unrelated changes", async () => {
+    const providerFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            text: JSON.stringify({
+              analysis: "It accelerates the commander.",
+              suggestions: [],
+              removals: [],
+            }),
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", providerFetch);
+
+    const response = await POST(
+      suggestRequest({
+        cardNames: ["Sol Ring"],
+        question: { type: "why-card", cardName: "Sol Ring" },
+      })
+    );
+    const responseText = await response.text();
+    const providerBody = JSON.parse(
+      String(providerFetch.mock.calls[0]?.[1]?.body)
+    );
+
+    expect(providerBody.messages[0].content).toContain(
+      "Explain why Sol Ring belongs"
+    );
+    expect(responseText).toContain("It accelerates the commander.");
+    expect(responseText).not.toContain('"type":"suggestion"');
+    expect(responseText).not.toContain('"type":"removal"');
   });
 
   it("loads only the caller's deck evidence and labels it in the provider prompt", async () => {

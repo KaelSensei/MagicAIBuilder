@@ -389,6 +389,13 @@
   },
   "ai": {
     "title": "AI Suggestions",
+    "questions": {
+      "title": "Ask about this deck",
+      "cardLabel": "Card to explain",
+      "chooseCard": "Choose a card",
+      "whyCard": "Why is this card here?",
+      "weakestCard": "Find weakest card"
+    },
     "archetype": "Archetype",
     "detected": "(detected: {archetype})",
     "budgetPerCard": "Budget/card",

@@ -6,6 +6,7 @@ import { detectArchetypes } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
 import type { DeckBrief } from "@/lib/ai/deck-brief";
 import type { SuggestionEvidence } from "@/lib/ai/suggestion-evidence";
+import type { DeckQuestion } from "@/lib/ai/deck-question";
 export type { Archetype } from "@/lib/ai/archetypes";
 
 export interface CardSuggestion {
@@ -49,7 +50,12 @@ function hashDeckState(
   const commander = deck.commander?.name ?? "";
   const partner = deck.partner?.name ?? "";
   const brief = options?.brief;
-  return `${commander}|${partner}|${bracket}|${deck.targetBracket}|${deck.budget ?? ""}|${options?.budgetPerCard ?? ""}|${options?.archetypeOverride ?? ""}|${brief?.theme ?? ""}|${brief?.playPattern ?? ""}|${brief?.dislikes ?? ""}|${cardNames}`;
+  const question = options?.question;
+  const questionKey =
+    question?.type === "why-card"
+      ? `${question.type}:${question.cardName}`
+      : (question?.type ?? "");
+  return `${commander}|${partner}|${bracket}|${deck.targetBracket}|${deck.budget ?? ""}|${options?.budgetPerCard ?? ""}|${options?.archetypeOverride ?? ""}|${brief?.theme ?? ""}|${brief?.playPattern ?? ""}|${brief?.dislikes ?? ""}|${questionKey}|${cardNames}`;
 }
 
 function buildSuggestPayload(
@@ -59,7 +65,8 @@ function buildSuggestPayload(
   bracket: number,
   archetypeOverride?: Archetype | null,
   budgetPerCard?: number | null,
-  brief?: DeckBrief
+  brief?: DeckBrief,
+  question?: DeckQuestion
 ) {
   const cardNames = deck.cards.map((c) => c.name);
   const categories = {
@@ -109,6 +116,7 @@ function buildSuggestPayload(
     budgetPerCard: budgetPerCard ?? null,
     cardPrices,
     brief,
+    question,
   };
 }
 
@@ -240,6 +248,7 @@ export interface AIAnalysisOptions {
   archetypeOverride?: Archetype | null;
   budgetPerCard?: number | null;
   brief?: DeckBrief;
+  question?: DeckQuestion;
 }
 
 export function useAISuggestions() {
@@ -318,7 +327,8 @@ export function useAISuggestions() {
           bracket,
           options?.archetypeOverride,
           options?.budgetPerCard,
-          options?.brief
+          options?.brief,
+          options?.question
         );
         const response = await fetch("/api/ai/suggest", {
           method: "POST",

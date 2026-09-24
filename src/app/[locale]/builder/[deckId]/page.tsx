@@ -71,6 +71,7 @@ import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
 import type { DeckBrief } from "@/lib/ai/deck-brief";
+import type { DeckQuestion } from "@/lib/ai/deck-question";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 import { MetaPanel } from "@/components/deck/MetaPanel";
@@ -512,6 +513,27 @@ export default function BuilderPage() {
     aiBudgetPerCard,
     aiBrief,
   ]);
+
+  const handleAIQuestion = useCallback(
+    (question: DeckQuestion) => {
+      if (!deck || !stats) return;
+      analyzeAI(deck, stats, bracketScore, {
+        archetypeOverride: aiArchetypeOverride,
+        budgetPerCard: aiBudgetPerCard,
+        brief: aiBrief,
+        question,
+      });
+    },
+    [
+      deck,
+      stats,
+      bracketScore,
+      analyzeAI,
+      aiArchetypeOverride,
+      aiBudgetPerCard,
+      aiBrief,
+    ]
+  );
 
   const handleSnapshotRestore = useCallback(() => {
     // Reload all decks from DB so the builder reflects the restored state
@@ -1023,6 +1045,7 @@ export default function BuilderPage() {
               currentCardNames={deck.cards.map((card) => card.name)}
               brief={aiBrief}
               onBriefChange={setAIBrief}
+              onAskQuestion={handleAIQuestion}
               analysedAt={analysedAt}
               ignoredSuggestions={ignoredSuggestions}
               onIgnoreSuggestion={ignoreSuggestion}
