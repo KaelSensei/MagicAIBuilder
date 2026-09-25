@@ -441,6 +441,13 @@
       "knownPrice": "Known card value",
       "evidenceWarning": "{count, plural, one {# evidence limitation} other {# evidence limitations}} in this projection"
     },
+    "legality": {
+      "title": "Blocked by deck rules",
+      "description": "These verified cards cannot be added. Strategic advice remains separate below.",
+      "colorIdentity": "Outside commander color identity",
+      "commanderLegality": "Not legal in Commander",
+      "blockedAction": "Cannot add {name}: deck legality failure"
+    },
     "removeCard": "Remove {name}",
     "removed": "Removed",
     "ignoreSuggestion": "Ignore suggestion",

@@ -26,9 +26,11 @@ import { DeckQuestionControls } from "./DeckQuestionControls";
 import type { DeckQuestion } from "@/lib/ai/deck-question";
 import type { DeckCard } from "@/lib/deck/types";
 import { SuggestionImpactPreview } from "./SuggestionImpactPreview";
+import { BlockedSuggestions } from "./BlockedSuggestions";
 import {
   buildSuggestionDiff,
   filterSuggestionsByPriority,
+  getSuggestionLegality,
   toggleSuggestionSelection,
   type SuggestionPriorityFilter,
 } from "@/lib/ai/suggestion-review";
@@ -116,11 +118,32 @@ export function AISuggestionsPanel({
   const ignoredCount = ignoredSuggestions?.size ?? 0;
   const effectiveArchetype = archetypeOverride ?? detectedArchetype;
 
-  const visibleSuggestions = filterSuggestionsByPriority(
-    (result?.suggestions ?? []).filter(
-      (s) => showIgnored || !ignoredSuggestions?.has(s.name)
-    ),
-    priorityFilter
+  const filteredSuggestions = useMemo(
+    () =>
+      filterSuggestionsByPriority(
+        (result?.suggestions ?? []).filter(
+          (suggestion) =>
+            showIgnored || !ignoredSuggestions?.has(suggestion.name)
+        ),
+        priorityFilter
+      ),
+    [ignoredSuggestions, priorityFilter, result?.suggestions, showIgnored]
+  );
+  const blockedSuggestions = useMemo(
+    () =>
+      filteredSuggestions.filter(
+        (suggestion) =>
+          getSuggestionLegality(suggestion.evidence).status === "blocked"
+      ),
+    [filteredSuggestions]
+  );
+  const visibleSuggestions = useMemo(
+    () =>
+      filteredSuggestions.filter(
+        (suggestion) =>
+          getSuggestionLegality(suggestion.evidence).status !== "blocked"
+      ),
+    [filteredSuggestions]
   );
   const pendingDiff = useMemo(
     () =>
@@ -347,6 +370,7 @@ export function AISuggestionsPanel({
               )}
 
               {/* Suggestions */}
+              <BlockedSuggestions suggestions={blockedSuggestions} />
               {hasSuggestions && (
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">

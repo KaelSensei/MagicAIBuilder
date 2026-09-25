@@ -3,6 +3,7 @@ import type { CardSuggestion, CardRemoval } from "@/hooks/useAISuggestions";
 import {
   buildSuggestionDiff,
   filterSuggestionsByPriority,
+  getSuggestionLegality,
   toggleSuggestionSelection,
   type SuggestionPriorityFilter,
 } from "./suggestion-review";
@@ -83,5 +84,62 @@ describe("toggleSuggestionSelection", () => {
     expect([
       ...toggleSuggestionSelection(new Set(["Sol Ring"]), "Sol Ring"),
     ]).toEqual([]);
+  });
+});
+
+describe("getSuggestionLegality", () => {
+  it("blocks verified cards outside the deck color identity", () => {
+    expect(
+      getSuggestionLegality({
+        role: "draw",
+        synergy: "Draw cards",
+        manaValue: 2,
+        curveImpact: "Below average",
+        colorIdentity: ["R"],
+        colorCompatible: false,
+        commanderLegal: true,
+        priceUsd: 1,
+        verified: true,
+      })
+    ).toEqual({ status: "blocked", reasons: ["colorIdentity"] });
+  });
+
+  it("collects every hard legality failure", () => {
+    expect(
+      getSuggestionLegality({
+        role: "other",
+        synergy: "",
+        manaValue: 1,
+        curveImpact: "Below average",
+        colorIdentity: ["B"],
+        colorCompatible: false,
+        commanderLegal: false,
+        priceUsd: null,
+        verified: true,
+      })
+    ).toEqual({
+      status: "blocked",
+      reasons: ["colorIdentity", "commanderLegality"],
+    });
+  });
+
+  it("keeps unverified and verified-valid advice actionable", () => {
+    expect(getSuggestionLegality(undefined)).toEqual({
+      status: "unverified",
+      reasons: [],
+    });
+    expect(
+      getSuggestionLegality({
+        role: "ramp",
+        synergy: "Ramp",
+        manaValue: 2,
+        curveImpact: "Near average",
+        colorIdentity: [],
+        colorCompatible: true,
+        commanderLegal: true,
+        priceUsd: 1,
+        verified: true,
+      })
+    ).toEqual({ status: "valid", reasons: [] });
   });
 });

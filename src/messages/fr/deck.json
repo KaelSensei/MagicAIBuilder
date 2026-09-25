@@ -441,6 +441,13 @@
       "knownPrice": "Valeur connue des cartes",
       "evidenceWarning": "{count, plural, one {# limite de données} other {# limites de données}} dans cette projection"
     },
+    "legality": {
+      "title": "Bloquées par les règles du deck",
+      "description": "Ces cartes vérifiées ne peuvent pas être ajoutées. Les conseils stratégiques restent séparés ci-dessous.",
+      "colorIdentity": "Hors identité couleur du commandant",
+      "commanderLegality": "Non légale en Commander",
+      "blockedAction": "Impossible d’ajouter {name} : problème de légalité"
+    },
     "removeCard": "Retirer {name}",
     "removed": "Retiré",
     "ignoreSuggestion": "Ignorer la suggestion",
