@@ -29,4 +29,41 @@ describe("SuggestionAlternatives", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add Fellwar Stone" }));
     expect(onAdd).toHaveBeenCalledWith("Fellwar Stone");
   });
+
+  it("disables alternatives with a verified legality failure", () => {
+    const onAdd = vi.fn();
+    render(
+      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
+        <SuggestionAlternatives
+          alternatives={[
+            {
+              name: "Off-color Stone",
+              reason: "Wrong color.",
+              dimension: "power",
+              evidence: {
+                role: "ramp",
+                synergy: "Wrong color",
+                manaValue: 2,
+                curveImpact: "Below average",
+                colorIdentity: ["R"],
+                colorCompatible: false,
+                commanderLegal: true,
+                priceUsd: 1,
+                verified: true,
+              },
+            },
+          ]}
+          addedCards={new Set()}
+          onAdd={onAdd}
+        />
+      </NextIntlClientProvider>
+    );
+
+    const button = screen.getByRole("button", {
+      name: /cannot add off-color stone/i,
+    });
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(onAdd).not.toHaveBeenCalled();
+  });
 });
