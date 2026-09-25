@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-25: AI legality separation
+
+#### Changed
+
+- Separated verified color-identity and Commander-legality failures from optional strategic recommendations.
+- Removed add actions from blocked primary suggestions and disabled blocked alternatives while retaining their explanation.
+- Added policy and presentation coverage, bringing the suite to 2,862 tests across 262 files.
+
 ### 2026-09-24: AI change impact preview
 
 #### Added
