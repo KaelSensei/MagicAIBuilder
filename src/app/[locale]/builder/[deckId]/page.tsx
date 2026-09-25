@@ -80,6 +80,7 @@ import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { DeckSaveIndicator } from "@/components/deck/DeckSaveIndicator";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
+import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
 import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
@@ -539,6 +540,11 @@ export default function BuilderPage() {
     // Reload all decks from DB so the builder reflects the restored state
     loadDecks();
   }, [loadDecks]);
+
+  const handlePackageApplied = useCallback(async () => {
+    await loadDecks();
+    await setActiveDeck(deckId);
+  }, [deckId, loadDecks, setActiveDeck]);
 
   const handleAIAddCard = useCallback(
     (cardName: string) => {
@@ -1024,6 +1030,12 @@ export default function BuilderPage() {
               deckId={deckId}
               currentCardCount={deck.cards.length}
               onRestore={handleSnapshotRestore}
+            />
+
+            <CardPackagesPanel
+              deckId={deckId}
+              cards={deck.cards}
+              onApplied={handlePackageApplied}
             />
 
             <AISuggestionsPanel

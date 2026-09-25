@@ -724,6 +724,34 @@
     "empty": "Start the conversation.",
     "loadFailed": "Comments could not be loaded."
   },
+  "cardPackages": {
+    "title": "Card packages",
+    "library": "Public library",
+    "create": "Create package",
+    "name": "Package name",
+    "category": "Category",
+    "categories": {
+      "mana-base": "Mana base",
+      "interaction": "Interaction",
+      "tribal": "Tribal core",
+      "combo": "Combo",
+      "other": "Other"
+    },
+    "public": "Public",
+    "save": "Save package",
+    "saving": "Saving…",
+    "saveError": "Could not save this package.",
+    "loading": "Loading packages…",
+    "empty": "No public packages yet.",
+    "anonymous": "Anonymous",
+    "preview": "Preview",
+    "previewing": "Checking…",
+    "ready": "Ready",
+    "blocked": "Blocked",
+    "apply": "Add {count, plural, one {# card} other {# cards}}",
+    "applying": "Adding…",
+    "loadError": "This action failed. Please try again."
+  },
   "feedback": {
     "title": "Feedback wanted",
     "ownerHint": "Ask one focused question to get more useful replies.",
