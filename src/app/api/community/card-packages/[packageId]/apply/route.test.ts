@@ -1,15 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockDeckFindFirst, mockPackageFindFirst, mockCreateMany, mockDeckUpdate, mockRequireAuth } =
+const { mockDeckFindFirst, mockPackageFindFirst, mockCreateMany, mockDeckUpdate, mockRequireAuth, mockGetCardCollection } =
   vi.hoisted(() => ({
     mockDeckFindFirst: vi.fn(),
     mockPackageFindFirst: vi.fn(),
     mockCreateMany: vi.fn(),
     mockDeckUpdate: vi.fn(),
     mockRequireAuth: vi.fn(),
+    mockGetCardCollection: vi.fn(),
   }));
 
 vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mockRequireAuth }));
+vi.mock("@/lib/scryfall/client", () => ({ getCardCollection: mockGetCardCollection }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     deck: { findFirst: mockDeckFindFirst, update: mockDeckUpdate },
@@ -41,6 +43,12 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
     ] });
     mockCreateMany.mockResolvedValue({ count: 1 });
     mockDeckUpdate.mockResolvedValue({ id: "deck-1" });
+    mockGetCardCollection.mockImplementation(async (identifiers: readonly { id: string }[]) => ({
+      data: identifiers.map(({ id }) => id === "ready"
+        ? { id, name: "Island", color_identity: ["U"], type_line: "Basic Land — Island", legalities: { commander: "legal" }, image_uris: { normal: "https://cards.scryfall.io/island.jpg" } }
+        : { id, name: "Red Spell", color_identity: ["R"], type_line: "Sorcery", legalities: { commander: "legal" }, image_uris: {} }),
+      not_found: [],
+    }));
   });
 
   it("adds only explicitly accepted cards that remain legal", async () => {
@@ -61,6 +69,13 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
 
     const response = await POST(blockedOnly, context);
     expect(await response.json()).toEqual({ addedCount: 0, blockedCount: 1 });
+    expect(mockCreateMany).not.toHaveBeenCalled();
+  });
+
+  it("does not write a package card that Scryfall cannot verify", async () => {
+    mockGetCardCollection.mockResolvedValue({ data: [], not_found: [{ id: "ready" }] });
+    const response = await POST(request(), context);
+    expect(response.status).toBe(500);
     expect(mockCreateMany).not.toHaveBeenCalled();
   });
 });

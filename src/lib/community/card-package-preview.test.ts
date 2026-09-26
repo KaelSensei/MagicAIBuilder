@@ -35,4 +35,13 @@ describe("previewCardPackage", () => {
 
     expect(preview.cards[0]?.status).toBe("ready");
   });
+
+  it("blocks multiple copies of a non-basic card within the package", () => {
+    const preview = previewCardPackage(
+      [{ scryfallId: "5", name: "Brainstorm", quantity: 2, colorIdentity: ["U"], isBanned: false, isBasicLand: false }],
+      { ...context, existingCards: [] }
+    );
+
+    expect(preview.cards[0]?.issues[0]?.kind).toBe("singleton");
+  });
 });

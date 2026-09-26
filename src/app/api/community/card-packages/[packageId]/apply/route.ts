@@ -3,6 +3,7 @@ import { z } from "zod";
 import { readJsonBody } from "@/lib/api/json-body";
 import { requireAuth } from "@/lib/auth/helpers";
 import { previewCardPackage } from "@/lib/community/card-package-preview";
+import { verifyPackageCards } from "@/lib/community/verified-package-cards";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
 
@@ -71,7 +72,10 @@ export async function POST(request: Request, context: RouteContext) {
       }
     }
     const acceptedIds = new Set(body.data.acceptedScryfallIds);
-    const acceptedCards = cardPackage.cards.filter((card) => acceptedIds.has(card.scryfallId));
+    const acceptedCards = await verifyPackageCards(
+      cardPackage.cards.filter((card) => acceptedIds.has(card.scryfallId)),
+      format.data
+    );
     const preview = previewCardPackage(acceptedCards, {
       format: format.data,
       commanderColorIdentity: [...commanderColors],
@@ -96,7 +100,7 @@ export async function POST(request: Request, context: RouteContext) {
           scryfallId: card.scryfallId,
           name: card.name,
           quantity: card.quantity,
-          colorIdentity: card.colorIdentity,
+          colorIdentity: [...card.colorIdentity],
           isBanned: card.isBanned,
           imageUri: card.imageUri,
           typeLine: card.isBasicLand ? "Basic Land" : "",

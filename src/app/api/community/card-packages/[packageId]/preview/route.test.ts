@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockDeckFindFirst, mockPackageFindFirst, mockRequireAuth } = vi.hoisted(() => ({
+const { mockDeckFindFirst, mockPackageFindFirst, mockRequireAuth, mockGetCardCollection } = vi.hoisted(() => ({
   mockDeckFindFirst: vi.fn(),
   mockPackageFindFirst: vi.fn(),
   mockRequireAuth: vi.fn(),
+  mockGetCardCollection: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mockRequireAuth }));
+vi.mock("@/lib/scryfall/client", () => ({ getCardCollection: mockGetCardCollection }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     deck: { findFirst: mockDeckFindFirst },
@@ -39,6 +41,10 @@ describe("POST /api/community/card-packages/[packageId]/preview", () => {
         { scryfallId: "card-1", name: "Counterspell", quantity: 1, colorIdentity: ["U"], isBanned: false, isBasicLand: false },
       ],
     });
+    mockGetCardCollection.mockResolvedValue({ data: [{
+      id: "card-1", name: "Counterspell", color_identity: ["U"], type_line: "Instant",
+      legalities: { commander: "legal" }, image_uris: {},
+    }], not_found: [] });
   });
 
   it("previews a visible package only against a deck owned by the caller", async () => {
@@ -58,5 +64,22 @@ describe("POST /api/community/card-packages/[packageId]/preview", () => {
     mockDeckFindFirst.mockResolvedValue(null);
     expect((await POST(makeRequest(), context)).status).toBe(404);
     expect(mockPackageFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("rejects a forged color identity using authoritative card data", async () => {
+    mockPackageFindFirst.mockResolvedValue({ cards: [{
+      scryfallId: "card-1", name: "Blue Spell", quantity: 1,
+      colorIdentity: ["U"], isBanned: false, isBasicLand: false,
+    }] });
+    mockGetCardCollection.mockResolvedValue({ data: [{
+      id: "card-1", name: "Red Spell", color_identity: ["R"], type_line: "Sorcery",
+      legalities: { commander: "legal" }, image_uris: {},
+    }], not_found: [] });
+
+    const response = await POST(makeRequest(), context);
+    expect(await response.json()).toMatchObject({
+      readyCount: 0, blockedCount: 1,
+      cards: [{ name: "Red Spell", status: "blocked", issues: [{ kind: "colorIdentity" }] }],
+    });
   });
 });
