@@ -3,6 +3,7 @@ import { z } from "zod";
 import { readJsonBody } from "@/lib/api/json-body";
 import { requireAuth } from "@/lib/auth/helpers";
 import { previewCardPackage } from "@/lib/community/card-package-preview";
+import { verifyPackageCards } from "@/lib/community/verified-package-cards";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
 
@@ -94,7 +95,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     return NextResponse.json(
-      previewCardPackage(cardPackage.cards, {
+      previewCardPackage(await verifyPackageCards(cardPackage.cards, format.data), {
         format: format.data,
         commanderColorIdentity: [...commanderColors],
         existingCards: deck.cards.map((card) => ({

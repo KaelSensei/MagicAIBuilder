@@ -51,6 +51,7 @@ export function previewCardPackage(
   const config = getFormatConfig(context.format);
   const allowedColors = new Set(context.commanderColorIdentity);
   const existingNames = new Set(context.existingCards.map((card) => card.name));
+  const packageNames = new Set<string>();
   const previews: PackageCardPreview[] = [];
   let readyCount = 0;
 
@@ -68,9 +69,10 @@ export function previewCardPackage(
         message: `${card.name} is outside the deck's color identity`,
       });
     }
-    if (config.isSingleton && !card.isBasicLand && existingNames.has(card.name)) {
-      issues.push({ kind: "singleton", message: `${card.name} is already in the deck` });
+    if (config.isSingleton && !card.isBasicLand && (existingNames.has(card.name) || packageNames.has(card.name) || card.quantity > 1)) {
+      issues.push({ kind: "singleton", message: `${card.name} exceeds the singleton limit` });
     }
+    packageNames.add(card.name);
 
     if (issues.length === 0) readyCount += 1;
     previews.push({
