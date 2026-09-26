@@ -9,6 +9,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-26: Card packages, playtest evidence and package verification
+
+#### Added
+
+- Reusable card packages in the deck editor, including a private owned-package library and legality preview.
+- Per-turn playtest summaries for draws, mana production and cards seen, with readable and versioned JSON exports.
+
+#### Security
+
+- Reverified package card identity, color identity, format legality and basic-land status against Scryfall before preview or apply; unknown cards fail closed and duplicate singleton quantities are blocked.
+- Production dependency audit found no known vulnerabilities. SonarCloud remains unavailable because its configured token returns HTTP 403.
+
 ### 2026-09-25: AI legality separation
 
 #### Changed
