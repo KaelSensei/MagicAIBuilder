@@ -45,7 +45,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   const setCommander = useDeckStore((s) => s.setCommander);
   const setPartner = useDeckStore((s) => s.setPartner);
   const setCompanion = useDeckStore((s) => s.setCompanion);
-  const loadDecks = useDeckStore((s) => s.loadDecks);
+  const forceSave = useDeckStore((s) => s.forceSave);
   const resetActiveDeckForBulkEdit = useDeckStore((s) => s.resetActiveDeckForBulkEdit);
 
   // Pre-fill textarea with current deck content whenever the modal opens
@@ -156,10 +156,10 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       setMessage(t("bulkEdit.rebuilding"));
       const added = await addParsedCards(parsed, foundCards);
 
-      // Step 4: Reload deck state from DB
+      // Step 4: Reload the full deck, including persisted zones and count.
       setStatus("reloading");
       setMessage(t("bulkEdit.reloading"));
-      await loadDecks();
+      await forceSave();
 
       setStatus("done");
       setMessage(t("bulkEdit.saved", { count: added }));
