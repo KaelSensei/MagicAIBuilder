@@ -1,10 +1,11 @@
 // Deck import from text format — with input sanitization
-import type { DeckCard } from "./types";
+import type { DeckCard, DeckZone } from "./types";
 
 export interface ImportResult {
   commander: string | null;
   partner: string | null;
-  cards: Array<{ name: string; quantity: number }>;
+  companion: string | null;
+  cards: Array<{ name: string; quantity: number; zone?: DeckZone }>;
   errors: string[];
 }
 
@@ -37,15 +38,26 @@ const SET_CODE_PATTERN = /\s{1,5}\([A-Z0-9]{1,6}\)\s{1,5}\d{1,6}[a-z*★]{0,3}\s
 type ParseState = {
   commander: string | null;
   partner: string | null;
-  cards: Array<{ name: string; quantity: number }>;
+  companion: string | null;
+  cards: Array<{ name: string; quantity: number; zone?: DeckZone }>;
   errors: string[];
-  inCommanderSection: boolean;
+  section: "commander" | "partner" | "companion" | DeckZone;
 };
 
 /** Process a single line and mutate state accordingly */
 function processImportLine(line: string, state: ParseState): void {
-  if (/^commander/i.test(line)) { state.inCommanderSection = true; return; }
-  if (/^(deck|main|mainboard|99)/i.test(line)) { state.inCommanderSection = false; return; }
+  const header = /^(commander|partner|companion|deck|main|mainboard|99|sideboard|maybeboard|considering)(?:\s*\(\d+\))?$/i.exec(line);
+  if (header) {
+    const section = header[1].toLowerCase();
+    if (section === "commander" || section === "partner" || section === "companion" || section === "sideboard") {
+      state.section = section;
+    } else if (section === "maybeboard" || section === "considering") {
+      state.section = "maybeboard";
+    } else {
+      state.section = "main";
+    }
+    return;
+  }
 
   const match = /^(\d+)x?\s+(\S.*)$/.exec(line);
   const rawName = match
@@ -59,24 +71,30 @@ function processImportLine(line: string, state: ParseState): void {
     return;
   }
 
-  if (state.inCommanderSection) {
+  if (state.section === "commander") {
     if (!state.commander) {
       state.commander = name;
-    } else if (state.partner) {
-      state.cards.push({ name, quantity });
-    } else {
+    } else if (!state.partner) {
       // Second card in Commander section = partner
       state.partner = name;
+    } else {
+      state.cards.push({ name, quantity });
     }
+  } else if (state.section === "partner" && !state.partner) {
+    state.partner = name;
+  } else if (state.section === "companion" && !state.companion) {
+    state.companion = name;
   } else {
-    state.cards.push({ name, quantity });
+    state.cards.push(state.section === "sideboard" || state.section === "maybeboard"
+      ? { name, quantity, zone: state.section }
+      : { name, quantity });
   }
 }
 
 /** Parse a plain-text decklist (1x Card Name or 1 Card Name format) */
 export function parseTextDecklist(text: string): ImportResult {
   if (typeof text !== "string") {
-    return { commander: null, partner: null, cards: [], errors: ["Invalid input"] };
+    return { commander: null, partner: null, companion: null, cards: [], errors: ["Invalid input"] };
   }
 
   const lines = text
@@ -85,25 +103,34 @@ export function parseTextDecklist(text: string): ImportResult {
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith("//") && !l.startsWith("#"));
 
-  const state: ParseState = { commander: null, partner: null, cards: [], errors: [], inCommanderSection: false };
+  const state: ParseState = { commander: null, partner: null, companion: null, cards: [], errors: [], section: "main" };
 
   for (const line of lines) {
     processImportLine(line, state);
   }
 
-  return { commander: state.commander, partner: state.partner, cards: state.cards, errors: state.errors };
+  return { commander: state.commander, partner: state.partner, companion: state.companion, cards: state.cards, errors: state.errors };
 }
 
 /** Export deck to plain text */
 export function exportToText(
   commander: DeckCard | null,
   partner: DeckCard | null,
-  cards: DeckCard[]
+  cards: DeckCard[],
+  companion: DeckCard | null = null
 ): string {
   const lines: string[] = [];
   if (commander) { lines.push("Commander", `1 ${commander.name}`, ""); }
   if (partner) { lines.push("Partner", `1 ${partner.name}`, ""); }
+  if (companion) { lines.push("Companion", `1 ${companion.name}`, ""); }
   lines.push("Deck");
-  for (const card of cards) { lines.push(`${card.quantity} ${card.name}`); }
+  for (const card of cards.filter((card) => card.zone === "main")) { lines.push(`${card.quantity} ${card.name}`); }
+  for (const [zone, heading] of [["sideboard", "Sideboard"], ["maybeboard", "Considering"]] as const) {
+    const zoneCards = cards.filter((card) => card.zone === zone);
+    if (zoneCards.length > 0) {
+      lines.push("", heading);
+      for (const card of zoneCards) lines.push(`${card.quantity} ${card.name}`);
+    }
+  }
   return lines.join("\n");
 }

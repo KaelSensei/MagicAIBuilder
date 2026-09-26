@@ -10,6 +10,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import * as deckApi from "@/lib/db/deck-api";
 import type { Deck } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { buildScryfallNameIndex, normalizeImportedName } from "@/lib/scryfall/name-index";
 
 interface BulkEditModalProps {
   readonly deck: Deck;
@@ -43,12 +44,14 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
   const setPartner = useDeckStore((s) => s.setPartner);
+  const setCompanion = useDeckStore((s) => s.setCompanion);
   const loadDecks = useDeckStore((s) => s.loadDecks);
+  const resetActiveDeckForBulkEdit = useDeckStore((s) => s.resetActiveDeckForBulkEdit);
 
   // Pre-fill textarea with current deck content whenever the modal opens
   useEffect(() => {
     if (open) {
-      setText(exportToText(deck.commander, deck.partner, deck.cards));
+      setText(exportToText(deck.commander, deck.partner, deck.cards, deck.companion));
     }
   }, [open, deck]);
 
@@ -57,12 +60,12 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
     parsed: ReturnType<typeof parseTextDecklist>,
     foundCards: ScryfallCard[]
   ): Promise<number> {
-    const byName = new Map(foundCards.map((c) => [c.name.toLowerCase(), c]));
+    const byName = buildScryfallNameIndex(foundCards);
     let added = 0;
 
     // Set commander first and await — it updates pairingType which partner needs
     if (parsed.commander) {
-      const cmd = byName.get(parsed.commander.toLowerCase());
+      const cmd = byName.get(normalizeImportedName(parsed.commander));
       if (cmd) {
         await setCommander(cmd);
         added++;
@@ -71,18 +74,26 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
 
     // Set partner after commander is persisted
     if (parsed.partner) {
-      const prt = byName.get(parsed.partner.toLowerCase());
+      const prt = byName.get(normalizeImportedName(parsed.partner));
       if (prt) {
         await setPartner(prt);
         added++;
       }
     }
 
-    for (const { name, quantity } of parsed.cards) {
-      const card = byName.get(name.toLowerCase());
+    if (parsed.companion) {
+      const companion = byName.get(normalizeImportedName(parsed.companion));
+      if (companion) {
+        await setCompanion(companion);
+        added++;
+      }
+    }
+
+    for (const { name, quantity, zone } of parsed.cards) {
+      const card = byName.get(normalizeImportedName(name));
       if (!card) continue;
       // Pass quantity directly — addCard handles basics with quantity > 1 in a single call
-      await addCard(card, quantity);
+      await addCard(card, quantity, zone ?? "main");
       added++;
     }
     return added;
@@ -106,6 +117,7 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       const allCardNames = [
         ...(parsed.commander ? [{ name: parsed.commander }] : []),
         ...(parsed.partner ? [{ name: parsed.partner }] : []),
+        ...(parsed.companion ? [{ name: parsed.companion }] : []),
         ...Array.from(new Set(parsed.cards.map((c) => c.name))).map((name) => ({
           name,
         })),
@@ -119,6 +131,12 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
 
       setMessage(t("import.validating", { count: allCardNames.length }));
       const foundCards = await fetchInBatches(allCardNames);
+      const foundByName = buildScryfallNameIndex(foundCards);
+      if (allCardNames.some(({ name }) => !foundByName.has(normalizeImportedName(name)))) {
+        setStatus("error");
+        setMessage(t("bulkEdit.saveFailed"));
+        return;
+      }
 
       // Step 1: Remove all existing cards from DB
       setMessage(t("bulkEdit.clearing"));
@@ -130,7 +148,9 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
         commanderName: null,
         partnerId: null,
         companionId: null,
+        pairingType: "none",
       });
+      resetActiveDeckForBulkEdit();
 
       // Step 3: Re-add commander and all cards
       setMessage(t("bulkEdit.rebuilding"));
