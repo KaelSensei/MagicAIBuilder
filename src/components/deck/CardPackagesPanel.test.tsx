@@ -99,4 +99,20 @@ describe("CardPackagesPanel", () => {
       expect.objectContaining({ body: JSON.stringify({ deckId: "deck-1", acceptedScryfallIds: ["ready"] }) })
     );
   });
+
+  it("shows private packages in the owner's library", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(response([]))
+      .mockResolvedValueOnce(response([{
+        id: "private-1", name: "My mana base", description: "", category: "mana-base",
+        isPublic: false, author: { username: "owner", name: null }, cards: [],
+      }]));
+
+    renderWithIntl(<CardPackagesPanel deckId="deck-1" cards={cards} />);
+    fireEvent.click(screen.getByRole("button", { name: "Card packages" }));
+    fireEvent.click(screen.getByRole("button", { name: "My packages" }));
+
+    expect(await screen.findByText("My mana base")).toBeDefined();
+    expect(fetchMock).toHaveBeenCalledWith("/api/community/card-packages?scope=mine");
+  });
 });

@@ -8,6 +8,7 @@ interface PackageSummary {
   readonly name: string;
   readonly description: string;
   readonly category: string;
+  readonly isPublic?: boolean;
   readonly author: { readonly username: string | null; readonly name: string | null };
   readonly cards: readonly unknown[];
 }
@@ -23,10 +24,11 @@ interface PreviewCard {
 interface CardPackageLibraryProps {
   readonly deckId: string;
   readonly refreshKey: number;
+  readonly scope: "library" | "mine";
   readonly onApplied?: () => void | Promise<void>;
 }
 
-export function CardPackageLibrary({ deckId, refreshKey, onApplied }: CardPackageLibraryProps) {
+export function CardPackageLibrary({ deckId, refreshKey, scope, onApplied }: CardPackageLibraryProps) {
   const t = useTranslations("deck.cardPackages");
   const [packages, setPackages] = useState<readonly PackageSummary[]>([]);
   const [preview, setPreview] = useState<readonly PreviewCard[]>([]);
@@ -37,7 +39,7 @@ export function CardPackageLibrary({ deckId, refreshKey, onApplied }: CardPackag
   useEffect(() => {
     let cancelled = false;
     setStatus("loading");
-    fetch("/api/community/card-packages")
+    fetch(scope === "mine" ? "/api/community/card-packages?scope=mine" : "/api/community/card-packages")
       .then((response) => {
         if (!response.ok) throw new Error("load failed");
         return response.json() as Promise<PackageSummary[]>;
@@ -50,7 +52,7 @@ export function CardPackageLibrary({ deckId, refreshKey, onApplied }: CardPackag
       })
       .catch(() => { if (!cancelled) setStatus("error"); });
     return () => { cancelled = true; };
-  }, [refreshKey]);
+  }, [refreshKey, scope]);
 
   const loadPreview = async (packageId: string) => {
     setStatus("previewing");
@@ -91,7 +93,7 @@ export function CardPackageLibrary({ deckId, refreshKey, onApplied }: CardPackag
   };
 
   if (status === "loading") return <p className="text-xs text-[var(--text-secondary)]">{t("loading")}</p>;
-  if (packages.length === 0) return <p className="text-xs text-[var(--text-secondary)]">{t("empty")}</p>;
+  if (packages.length === 0 && status !== "error") return <p className="text-xs text-[var(--text-secondary)]">{t(scope === "mine" ? "emptyMine" : "empty")}</p>;
 
   return (
     <div className="space-y-2">
@@ -102,6 +104,7 @@ export function CardPackageLibrary({ deckId, refreshKey, onApplied }: CardPackag
               <p className="truncate text-xs font-semibold">{cardPackage.name}</p>
               <p className="text-[10px] text-[var(--text-secondary)]">
                 {t(`categories.${cardPackage.category}`)} · {cardPackage.author.username ?? cardPackage.author.name ?? t("anonymous")}
+                {scope === "mine" && !cardPackage.isPublic ? ` · ${t("private")}` : ""}
               </p>
             </div>
             <button type="button" onClick={() => void loadPreview(cardPackage.id)} className="rounded border border-[var(--border)] px-2 py-1 text-[11px] hover:bg-[var(--surface-hover)]">

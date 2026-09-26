@@ -727,6 +727,9 @@
   "cardPackages": {
     "title": "Card packages",
     "library": "Public library",
+    "mine": "My packages",
+    "private": "Private",
+    "emptyMine": "You have no saved packages yet.",
     "create": "Create package",
     "name": "Package name",
     "category": "Category",

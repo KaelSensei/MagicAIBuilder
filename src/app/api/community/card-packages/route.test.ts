@@ -28,7 +28,7 @@ describe("/api/community/card-packages", () => {
   it("lists only published packages with author attribution", async () => {
     mockFindMany.mockResolvedValue([]);
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/community/card-packages"));
 
     expect(response.status).toBe(200);
     expect(mockFindMany).toHaveBeenCalledWith({
@@ -40,6 +40,7 @@ describe("/api/community/card-packages", () => {
         name: true,
         description: true,
         category: true,
+        isPublic: true,
         updatedAt: true,
         author: { select: { username: true, name: true } },
         cards: {
@@ -56,6 +57,27 @@ describe("/api/community/card-packages", () => {
         },
       },
     });
+  });
+
+  it("lists private packages only for their signed-in owner", async () => {
+    mockFindMany.mockResolvedValue([{ id: "private-1", isPublic: false }]);
+
+    const response = await GET(new Request("http://localhost/api/community/card-packages?scope=mine"));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([{ id: "private-1", isPublic: false }]);
+    expect(mockFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { authorId: "author-1" },
+    }));
+  });
+
+  it("requires authentication before listing owned packages", async () => {
+    mockRequireAuth.mockResolvedValue({ error: new Response(null, { status: 401 }) });
+
+    const response = await GET(new Request("http://localhost/api/community/card-packages?scope=mine"));
+
+    expect(response.status).toBe(401);
+    expect(mockFindMany).not.toHaveBeenCalled();
   });
 
   it("creates an attributed package and combines duplicate cards", async () => {
