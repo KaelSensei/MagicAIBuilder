@@ -727,6 +727,9 @@
   "cardPackages": {
     "title": "Paquets de cartes",
     "library": "Bibliothèque publique",
+    "mine": "Mes paquets",
+    "private": "Privé",
+    "emptyMine": "Vous n’avez pas encore de paquet.",
     "create": "Créer un paquet",
     "name": "Nom du paquet",
     "category": "Catégorie",

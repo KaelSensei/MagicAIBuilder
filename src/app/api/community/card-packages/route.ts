@@ -39,10 +39,15 @@ function normalizeCards(cards: readonly PackageCard[]): readonly PackageCard[] {
 }
 
 /** List recently updated public packages with stable author attribution. */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const mine = new URL(request.url).searchParams.get("scope") === "mine";
+    const authentication = mine ? await requireAuth() : null;
+    if (authentication?.error) return authentication.error;
     const packages = await prisma.cardPackage.findMany({
-      where: { isPublic: true },
+      where: mine && authentication?.session
+        ? { authorId: authentication.session.user.id }
+        : { isPublic: true },
       orderBy: { updatedAt: "desc" },
       take: 50,
       select: {
@@ -50,6 +55,7 @@ export async function GET() {
         name: true,
         description: true,
         category: true,
+        isPublic: true,
         updatedAt: true,
         author: { select: { username: true, name: true } },
         cards: {

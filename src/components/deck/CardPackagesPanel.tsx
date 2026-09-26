@@ -16,7 +16,7 @@ interface CardPackagesPanelProps {
 export function CardPackagesPanel({ deckId, cards, onApplied }: CardPackagesPanelProps) {
   const t = useTranslations("deck.cardPackages");
   const [expanded, setExpanded] = useState(false);
-  const [mode, setMode] = useState<"library" | "create">("library");
+  const [mode, setMode] = useState<"library" | "mine" | "create">("library");
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
@@ -29,17 +29,17 @@ export function CardPackagesPanel({ deckId, cards, onApplied }: CardPackagesPane
       </button>
       {expanded && (
         <div className="border-t border-[var(--border)] p-4 pt-3">
-          <div className="mb-3 grid grid-cols-2 rounded-md bg-[var(--background)] p-1">
-            {(["library", "create"] as const).map((value) => (
+          <div className="mb-3 grid grid-cols-3 rounded-md bg-[var(--background)] p-1">
+            {(["library", "mine", "create"] as const).map((value) => (
               <button key={value} type="button" onClick={() => setMode(value)} className={`rounded px-2 py-1.5 text-xs ${mode === value ? "bg-[var(--surface-hover)] font-semibold" : "text-[var(--text-secondary)]"}`}>
                 {t(value)}
               </button>
             ))}
           </div>
-          {mode === "library" ? (
-            <CardPackageLibrary deckId={deckId} refreshKey={refreshKey} onApplied={onApplied} />
+          {mode !== "create" ? (
+            <CardPackageLibrary deckId={deckId} refreshKey={refreshKey} scope={mode} onApplied={onApplied} />
           ) : (
-            <CardPackageCreator cards={cards} onCreated={() => { setRefreshKey((value) => value + 1); setMode("library"); }} />
+            <CardPackageCreator cards={cards} onCreated={() => { setRefreshKey((value) => value + 1); setMode("mine"); }} />
           )}
         </div>
       )}
