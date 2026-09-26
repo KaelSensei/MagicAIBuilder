@@ -3,6 +3,9 @@ import type { PlaytestActionLogEntry } from "./engine";
 export interface PlaytestTurnSummary {
   readonly turn: number;
   readonly entries: readonly PlaytestActionLogEntry[];
+  readonly draws: number;
+  readonly manaProduced: number;
+  readonly cardsSeen: number;
 }
 
 export function summarizeActionLog(
@@ -16,7 +19,22 @@ export function summarizeActionLog(
   }
   return [...turns.entries()]
     .sort(([left], [right]) => left - right)
-    .map(([turn, turnEntries]) => ({ turn, entries: turnEntries }));
+    .map(([turn, turnEntries]) => {
+      let draws = 0;
+      let manaProduced = 0;
+      let cardsSeen = 0;
+      for (const entry of turnEntries) {
+        if (entry.kind === "draw") {
+          draws += 1;
+          cardsSeen += 1;
+        } else if (entry.kind === "cardSeen") {
+          cardsSeen += 1;
+        } else if (entry.kind === "mana") {
+          manaProduced += entry.amount ?? 0;
+        }
+      }
+      return { turn, entries: turnEntries, draws, manaProduced, cardsSeen };
+    });
 }
 
 export function exportActionLogText(
@@ -24,8 +42,8 @@ export function exportActionLogText(
   entries: readonly PlaytestActionLogEntry[]
 ): string {
   const turns = summarizeActionLog(entries).map(
-    ({ turn, entries: turnEntries }) =>
-      `Turn ${turn}\n${turnEntries.map((entry) => `- ${entry.phase}: ${entry.description}`).join("\n")}`
+    ({ turn, entries: turnEntries, draws, manaProduced, cardsSeen }) =>
+      `Turn ${turn}${draws + manaProduced + cardsSeen > 0 ? `\nEvidence: ${draws} draws, ${manaProduced} mana, ${cardsSeen} additional cards seen` : ""}\n${turnEntries.map((entry) => `- ${entry.phase}: ${entry.description}`).join("\n")}`
   );
   return `${deckName} — playtest log\n\n${turns.join("\n\n")}`;
 }
@@ -35,7 +53,7 @@ export function exportActionLogJson(
   entries: readonly PlaytestActionLogEntry[]
 ): string {
   return JSON.stringify(
-    { version: 1, deckName, turns: summarizeActionLog(entries) },
+    { version: 2, deckName, turns: summarizeActionLog(entries) },
     null,
     2
   );

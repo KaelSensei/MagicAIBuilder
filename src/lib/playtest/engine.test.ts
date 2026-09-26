@@ -16,6 +16,7 @@ import {
   applyCreateToken,
   applyRollDie,
   applyAddActionLogEntry,
+  applyRecordMana,
   applyEditActionLogEntry,
   applyRemoveActionLogEntry,
   PHASES,
@@ -109,6 +110,7 @@ describe("applyDrawCard", () => {
 
   it("records the draw in the action log", () => {
     expect(applyDrawCard(makeState()).actionLog.at(-1)?.description).toBe("Drew a card");
+    expect(applyDrawCard(makeState()).actionLog.at(-1)?.kind).toBe("draw");
   });
 });
 
@@ -125,6 +127,7 @@ describe("applyNextPhase", () => {
     const next = applyNextPhase(state);
     expect(next.phase).toBe("Untap");
     expect(next.turn).toBe(2);
+    expect(next.actionLog.at(-1)).toMatchObject({ turn: 2, phase: "Untap" });
   });
 
   it("PHASES array starts with Untap", () => {
@@ -138,6 +141,7 @@ describe("applyNextTurn", () => {
     const state = makeState();
     const next = applyNextTurn(state);
     expect(next.turn).toBe(2);
+    expect(next.actionLog.at(-1)).toMatchObject({ turn: 2, phase: "Draw", kind: "draw" });
   });
 
   it("sets phase to Draw", () => {
@@ -150,6 +154,11 @@ describe("applyNextTurn", () => {
     const state = makeState();
     const next = applyNextTurn(state);
     expect(next.hand).toHaveLength(state.hand.length + 1);
+  });
+
+  it("does not claim a draw when the library is empty", () => {
+    const next = applyNextTurn({ ...makeState(), library: [] });
+    expect(next.actionLog.at(-1)?.kind).toBeUndefined();
   });
 
   it("untaps all battlefield permanents", () => {
@@ -359,6 +368,15 @@ describe("applyRollDie", () => {
 });
 
 describe("editable action log", () => {
+  it("records only valid mana amounts and clears evidence after free-text editing", () => {
+    const state = makeState();
+    expect(applyRecordMana(state, 0)).toBe(state);
+    const recorded = applyRecordMana(state, 3);
+    expect(recorded.actionLog.at(-1)).toMatchObject({ kind: "mana", amount: 3 });
+    const edited = applyEditActionLogEntry(recorded, recorded.actionLog[0].id, "Actually no mana");
+    expect(edited.actionLog[0]?.kind).toBeUndefined();
+    expect(edited.actionLog[0]?.amount).toBeUndefined();
+  });
   it("adds, edits and removes a manual session entry", () => {
     const added = applyAddActionLogEntry(makeState(), "Produced three green mana");
     const entry = added.actionLog[0];

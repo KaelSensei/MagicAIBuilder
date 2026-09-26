@@ -70,6 +70,8 @@ export interface PlaytestActionLogEntry {
   readonly turn: number;
   readonly phase: Phase;
   readonly description: string;
+  readonly kind?: "draw" | "cardSeen" | "mana";
+  readonly amount?: number;
 }
 
 /**
@@ -168,7 +170,7 @@ export function applyDrawCard(state: PlaytestEngine): PlaytestEngine {
   return pushHistory(state, {
     hand: [...state.hand, drawn],
     library: rest,
-  }, "Drew a card");
+  }, "Drew a card", { kind: "draw" });
 }
 
 // ─── Mulligan ─────────────────────────────────────────────────────────────
@@ -213,7 +215,7 @@ export function applyNextPhase(state: PlaytestEngine): PlaytestEngine {
       turn: state.turn + 1,
       phase: "Untap" as const,
       battlefield: untappedBattlefield,
-    }, `Started turn ${state.turn + 1}`);
+    }, `Started turn ${state.turn + 1}`, { turn: state.turn + 1, phase: "Untap" });
   }
 
   // Advance to next phase
@@ -246,7 +248,13 @@ export function applyNextTurn(state: PlaytestEngine): PlaytestEngine {
     hand: newHand,
     library: newLibrary,
     battlefield: untappedBattlefield,
-  }, `Started turn ${state.turn + 1} and drew a card`);
+  }, state.library.length > 0
+    ? `Started turn ${state.turn + 1} and drew a card`
+    : `Started turn ${state.turn + 1}`, {
+    turn: state.turn + 1,
+    phase: "Draw",
+    ...(state.library.length > 0 ? { kind: "draw" as const } : {}),
+  });
 }
 
 // ─── Damage / heal ────────────────────────────────────────────────────────
@@ -398,7 +406,8 @@ export function applyMoveToZone(
     }
   }
 
-  return pushHistory(state, updates, `Moved ${card.name} from ${from} to ${to}`);
+  return pushHistory(state, updates, `Moved ${card.name} from ${from} to ${to}`,
+    from === "library" ? { kind: "cardSeen" } : undefined);
 }
 
 // ─── Card copies ─────────────────────────────────────────────────────────
@@ -502,6 +511,11 @@ export function applyAddActionLogEntry(
   return pushHistory(state, {}, normalized);
 }
 
+export function applyRecordMana(state: PlaytestEngine, amount: number): PlaytestEngine {
+  if (!Number.isInteger(amount) || amount < 1 || amount > 100) return state;
+  return pushHistory(state, {}, `Produced ${amount} mana`, { kind: "mana", amount });
+}
+
 export function applyEditActionLogEntry(
   state: PlaytestEngine,
   entryId: number,
@@ -512,7 +526,9 @@ export function applyEditActionLogEntry(
   if (!exists || normalized === "") return state;
   return pushHistory(state, {
     actionLog: state.actionLog.map((entry) =>
-      entry.id === entryId ? { ...entry, description: normalized } : entry
+      entry.id === entryId
+        ? { ...entry, description: normalized, kind: undefined, amount: undefined }
+        : entry
     ),
   });
 }
@@ -571,16 +587,19 @@ function toBattlefieldCard(card: DeckCard | BattlefieldCard): BattlefieldCard {
 function pushHistory(
   state: PlaytestEngine,
   updates: PlaytestEnginePatch,
-  actionDescription?: string
+  actionDescription?: string,
+  evidence?: Partial<Pick<PlaytestActionLogEntry, "kind" | "amount" | "turn" | "phase">>
 ): PlaytestEngine {
   const actionLog = actionDescription
     ? [
         ...state.actionLog,
         {
           id: state.nextActionId,
-          turn: state.turn,
-          phase: state.phase,
+          turn: evidence?.turn ?? state.turn,
+          phase: evidence?.phase ?? state.phase,
           description: actionDescription,
+          ...(evidence?.kind ? { kind: evidence.kind } : {}),
+          ...(evidence?.amount ? { amount: evidence.amount } : {}),
         },
       ]
     : updates.actionLog;

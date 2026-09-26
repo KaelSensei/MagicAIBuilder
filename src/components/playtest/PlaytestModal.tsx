@@ -77,6 +77,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const createToken = usePlaytestStore((s) => s.createToken);
   const rollDie = usePlaytestStore((s) => s.rollDie);
   const addLogEntry = usePlaytestStore((s) => s.addLogEntry);
+  const recordMana = usePlaytestStore((s) => s.recordMana);
   const editLogEntry = usePlaytestStore((s) => s.editLogEntry);
   const removeLogEntry = usePlaytestStore((s) => s.removeLogEntry);
   const undo = usePlaytestStore((s) => s.undo);
@@ -246,6 +247,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                   deckName={deck.name}
                   entries={engine.actionLog}
                   onAdd={addLogEntry}
+                  onRecordMana={recordMana}
                   onEdit={editLogEntry}
                   onRemove={removeLogEntry}
                 />

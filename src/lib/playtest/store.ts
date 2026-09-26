@@ -26,6 +26,7 @@ import {
   applyCreateToken,
   applyRollDie,
   applyAddActionLogEntry,
+  applyRecordMana,
   applyEditActionLogEntry,
   applyRemoveActionLogEntry,
 } from "./engine";
@@ -79,6 +80,7 @@ interface PlaytestStore {
   createToken: (token: TokenLibraryEntry) => void;
   rollDie: (sides: number) => void;
   addLogEntry: (description: string) => void;
+  recordMana: (amount: number) => void;
   editLogEntry: (entryId: number, description: string) => void;
   removeLogEntry: (entryId: number) => void;
   undo: () => void;
@@ -203,6 +205,12 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
         ? { engine: applyAddActionLogEntry(state.engine, description) }
         : state
     );
+  },
+
+  recordMana: (amount: number) => {
+    set((state) => state.engine
+      ? { engine: applyRecordMana(state.engine, amount) }
+      : state);
   },
 
   editLogEntry: (entryId: number, description: string) => {

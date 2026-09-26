@@ -80,7 +80,13 @@
     "editEntry": "Edit action",
     "remove": "Remove action",
     "exportText": "Text",
-    "exportJson": "JSON"
+    "exportJson": "JSON",
+    "manaAmount": "Mana amount",
+    "recordMana": "Record mana",
+    "evidenceTitle": "Turn evidence",
+    "turn": "Turn {turn}",
+    "evidence": "{draws, plural, one {# draw} other {# draws}} · {mana} mana · {seen, plural, one {# card seen} other {# cards seen}}",
+    "evidenceLimit": "Additional cards seen only; free-form notes are not counted."
   },
   "recordResult": "How did it go?",
   "recording": "Saving…",
