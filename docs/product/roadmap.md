@@ -149,7 +149,7 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [ ] Add keyboard and mobile alternatives for every drag action.
 - [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
 - [x] Organize decks into user-defined folders, with move, filter and bulk-move actions.
-- [ ] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
+- [x] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
 - [x] Add a required-token and emblem summary derived from the current deck, with export support.
 
 ### Engineering enablers
@@ -356,7 +356,7 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
 - [x] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
-- [ ] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
+- [x] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
 - [x] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
 
 ### Definition of done

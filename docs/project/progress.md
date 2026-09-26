@@ -5,15 +5,15 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-09-24                             |
+| Last Updated  | 2026-09-26                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-09-24)
+## Current metrics (2026-09-26)
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2862 across 262 files                                                                                                                   |
+| Unit tests          | 2872 across 264 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -31,6 +31,9 @@
 
 ## Latest product delivery
 
+- Deck owners can save reusable card packages, browse their private packages, and preview legal additions before applying them. Package metadata is reverified against Scryfall at preview and apply time so forged legality or color identity cannot bypass deck checks.
+- Goldfish playtests now summarize cards drawn, mana produced and additional cards seen for each turn, with readable and versioned JSON exports.
+- The production dependency audit reports no known vulnerabilities. SonarCloud analysis remains blocked by an HTTP 403 token response; local `pnpm sonar` is blocked by the missing Linux Rollup optional binary in WSL. E2E was not rerun locally.
 - AI recommendations now separate verified hard legality failures from optional strategic advice. Off-color and Commander-illegal cards retain an explanation but cannot be selected, including inside alternative recommendations.
 - Reviewed AI deck changes now include a deterministic before/after comparison for card count, average mana value and known card value. The preview flags unverified, off-color and Commander-illegal additions rather than presenting incomplete evidence as certain.
 - Signed-in users can now organize owned decks in private folders, filter their library, rename or safely delete folders, and move up to 100 selected decks at once. Folder deletion returns affected decks to Unfiled without changing ownership.
