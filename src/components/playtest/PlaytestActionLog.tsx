@@ -1,25 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PlaytestActionLogEntry } from "@/lib/playtest/engine";
-import { exportActionLogJson, exportActionLogText } from "@/lib/playtest/action-log-export";
+import { exportActionLogJson, exportActionLogText, summarizeActionLog } from "@/lib/playtest/action-log-export";
 import { downloadFile } from "@/lib/deck/export";
 
 interface PlaytestActionLogProps {
   readonly entries: readonly PlaytestActionLogEntry[];
   readonly deckName: string;
   readonly onAdd: (description: string) => void;
+  readonly onRecordMana?: (amount: number) => void;
   readonly onEdit: (entryId: number, description: string) => void;
   readonly onRemove: (entryId: number) => void;
 }
 
-export function PlaytestActionLog({ entries, deckName, onAdd, onEdit, onRemove }: PlaytestActionLogProps) {
+export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEdit, onRemove }: PlaytestActionLogProps) {
   const t = useTranslations("playtest.log");
   const [draft, setDraft] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState("");
+  const [manaAmount, setManaAmount] = useState("1");
+  const summaries = useMemo(() => summarizeActionLog(entries), [entries]);
   const fileStem = deckName.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "deck";
 
   const addEntry = () => {
@@ -75,6 +78,24 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onEdit, onRemove }
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
+      {onRecordMana && (
+        <div className="mb-3 flex items-center gap-2">
+          <label htmlFor="playtest-mana-amount" className="text-xs text-white/60">{t("manaAmount")}</label>
+          <input id="playtest-mana-amount" type="number" min="1" max="100" step="1" value={manaAmount} onChange={(event) => setManaAmount(event.target.value)} className="w-16 rounded-md border border-white/15 bg-black/20 px-2 py-1 text-xs text-white" />
+          <button type="button" disabled={!Number.isInteger(Number(manaAmount)) || Number(manaAmount) < 1 || Number(manaAmount) > 100} onClick={() => onRecordMana(Number(manaAmount))} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 disabled:opacity-40">{t("recordMana")}</button>
+        </div>
+      )}
+      {summaries.some((summary) => summary.draws + summary.manaProduced + summary.cardsSeen > 0) && (
+        <div className="mb-3 space-y-1 rounded-md border border-white/10 bg-black/10 p-2" aria-label={t("evidenceTitle")}>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-white/50">{t("evidenceTitle")}</p>
+          {summaries.filter((summary) => summary.draws + summary.manaProduced + summary.cardsSeen > 0).map((summary) => (
+            <p key={summary.turn} className="text-xs text-white/70">
+              <span className="font-semibold text-white/85">{t("turn", { turn: summary.turn })}</span> · {t("evidence", { draws: summary.draws, mana: summary.manaProduced, seen: summary.cardsSeen })}
+            </p>
+          ))}
+          <p className="text-[10px] text-white/40">{t("evidenceLimit")}</p>
+        </div>
+      )}
       {entries.length === 0 ? (
         <p className="text-xs text-white/35">{t("empty")}</p>
       ) : (

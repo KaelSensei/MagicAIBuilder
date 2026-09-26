@@ -80,7 +80,13 @@
     "editEntry": "Modifier l’action",
     "remove": "Supprimer l’action",
     "exportText": "Texte",
-    "exportJson": "JSON"
+    "exportJson": "JSON",
+    "manaAmount": "Quantité de mana",
+    "recordMana": "Noter le mana",
+    "evidenceTitle": "Indices par tour",
+    "turn": "Tour {turn}",
+    "evidence": "{draws, plural, one {# pioche} other {# pioches}} · {mana} mana · {seen, plural, one {# carte vue} other {# cartes vues}}",
+    "evidenceLimit": "Cartes vues supplémentaires uniquement ; les notes libres ne sont pas comptées."
   },
   "recordResult": "Comment ça s'est passé ?",
   "recording": "Enregistrement…",
