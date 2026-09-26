@@ -105,6 +105,22 @@ describe("exportPlainText", () => {
     const text = exportPlainText(deck);
     expect(text).toContain("10 Forest");
   });
+
+  it("exports the companion and secondary zones with their quantities", () => {
+    const deck = makeDeck({
+      companion: makeCard("Lurrus of the Dream-Den"),
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 3, { zone: "sideboard" }),
+        makeCard("Counterspell", 2, { zone: "maybeboard" }),
+      ],
+    });
+    const text = exportPlainText(deck);
+    expect(text).toContain("Companion\n1 Lurrus of the Dream-Den");
+    expect(text).toContain("Deck\n1 Sol Ring");
+    expect(text).toContain("Sideboard\n3 Negate");
+    expect(text).toContain("Considering\n2 Counterspell");
+  });
 });
 
 describe("exportMoxfield", () => {

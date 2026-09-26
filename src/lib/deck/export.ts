@@ -12,11 +12,16 @@ export function exportPlainText(deck: Deck): string {
   const lines: string[] = [];
   if (deck.commander) { lines.push("Commander", cardLine(deck.commander), ""); }
   if (deck.partner) { lines.push("Partner", cardLine(deck.partner), ""); }
+  if (deck.companion) { lines.push("Companion", cardLine(deck.companion), ""); }
   lines.push("Deck");
-  for (const card of deck.cards) {
-    lines.push(cardLine(card, card.quantity));
-    const note = card.notes?.trim();
-    if (note) lines.push(`// ${note}`);
+  for (const [zone, heading] of [["main", ""], ["sideboard", "Sideboard"], ["maybeboard", "Considering"]] as const) {
+    const zoneCards = deck.cards.filter((card) => card.zone === zone);
+    if (zone !== "main" && zoneCards.length > 0) lines.push("", heading);
+    for (const card of zoneCards) {
+      lines.push(cardLine(card, card.quantity));
+      const note = card.notes?.trim();
+      if (note) lines.push(`// ${note}`);
+    }
   }
   return lines.join("\n");
 }

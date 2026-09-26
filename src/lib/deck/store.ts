@@ -125,6 +125,7 @@ export interface DeckStore {
   renameDeck: (id: string, name: string) => Promise<void>;
   setActiveDeck: (id: string) => Promise<void>;
   loadDecks: () => Promise<void>;
+  resetActiveDeckForBulkEdit: () => void;
 
   // Deck description & tags
   updateDeckDescription: (deckId: string, description: string) => Promise<void>;
@@ -331,6 +332,32 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } finally {
       set({ isSyncing: false });
     }
+  },
+
+  resetActiveDeckForBulkEdit: () => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    set((state) => {
+      const deck = state.decks[activeDeckId];
+      if (!deck) return state;
+      return {
+        decks: {
+          ...state.decks,
+          [activeDeckId]: {
+            ...deck,
+            commander: null,
+            partner: null,
+            companion: null,
+            pairingType: "none",
+            cards: [],
+            maybeboard: [],
+            cardCount: 0,
+            updatedAt: new Date(),
+          },
+        },
+        undoStack: state.undoStack.filter((action) => action.deckId !== activeDeckId),
+      };
+    });
   },
 
   createDeck: async (name: string, opts?: { isAIGenerated?: boolean }) => {

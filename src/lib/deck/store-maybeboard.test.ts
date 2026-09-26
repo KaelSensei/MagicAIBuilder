@@ -129,6 +129,29 @@ describe("Deck store — maybeboard actions", () => {
     });
   });
 
+  it("clears stale cards and command-zone state before a bulk text rebuild", () => {
+    const card = makeDeckCard("old-card", "Sol Ring");
+    const maybe = makeDeckCard("old-maybe", "Counterspell", { zone: "maybeboard" });
+    useDeckStore.setState({
+      decks: { "deck-1": { ...seedDeck(), commander: card, partner: card, companion: card, cards: [card, maybe], maybeboard: [maybe] } },
+      undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card }],
+    });
+
+    useDeckStore.getState().resetActiveDeckForBulkEdit();
+
+    const state = useDeckStore.getState();
+    expect(state.decks["deck-1"]).toMatchObject({
+      commander: null,
+      partner: null,
+      companion: null,
+      cards: [],
+      maybeboard: [],
+      cardCount: 0,
+      pairingType: "none",
+    });
+    expect(state.undoStack).toHaveLength(0);
+  });
+
   // ── addToMaybeboard ────────────────────────────────────────────────────────
 
   describe("addToMaybeboard", () => {

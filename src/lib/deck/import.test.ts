@@ -44,6 +44,34 @@ describe("parseTextDecklist", () => {
     expect(result.partner).toBe("Tymna the Weaver");
   });
 
+  it("parses a dedicated partner section instead of adding the partner to the deck", () => {
+    const result = parseTextDecklist("Commander\n1 Thrasios\nPartner\n1 Tymna\nDeck\n1 Sol Ring");
+    expect(result.partner).toBe("Tymna");
+    expect(result.cards).toEqual([{ name: "Sol Ring", quantity: 1 }]);
+  });
+
+  it("parses a companion section separately from the main deck", () => {
+    const result = parseTextDecklist("Companion\n1 Lurrus of the Dream-Den\nDeck\n1 Mishra's Bauble");
+    expect(result.companion).toBe("Lurrus of the Dream-Den");
+    expect(result.cards).toEqual([{ name: "Mishra's Bauble", quantity: 1 }]);
+  });
+
+  it("preserves sideboard quantity and zone", () => {
+    const result = parseTextDecklist("Deck\n1 Sol Ring\nSideboard\n3 Negate");
+    expect(result.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Negate", quantity: 3, zone: "sideboard" },
+    ]);
+  });
+
+  it("preserves considering quantity and zone", () => {
+    const result = parseTextDecklist("Deck\n1 Sol Ring\nConsidering\n2 Counterspell");
+    expect(result.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Counterspell", quantity: 2, zone: "maybeboard" },
+    ]);
+  });
+
   it("ignores comment lines starting with //", () => {
     const result = parseTextDecklist("// this is a comment\n4 Lightning Bolt");
     expect(result.cards).toHaveLength(1);
@@ -184,5 +212,23 @@ describe("exportToText", () => {
     expect(result).toContain("Deck");
     expect(result).not.toContain("Commander");
     expect(result).not.toContain("Partner");
+  });
+
+  it("round-trips partner, companion and secondary zones", () => {
+    const text = exportToText(
+      makeCard("Thrasios"),
+      makeCard("Tymna"),
+      [makeCard("Sol Ring"), { ...makeCard("Negate", 3), zone: "sideboard" }, { ...makeCard("Counterspell", 2), zone: "maybeboard" }],
+      makeCard("Lurrus of the Dream-Den")
+    );
+    const parsed = parseTextDecklist(text);
+    expect(parsed.commander).toBe("Thrasios");
+    expect(parsed.partner).toBe("Tymna");
+    expect(parsed.companion).toBe("Lurrus of the Dream-Den");
+    expect(parsed.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Negate", quantity: 3, zone: "sideboard" },
+      { name: "Counterspell", quantity: 2, zone: "maybeboard" },
+    ]);
   });
 });
