@@ -724,6 +724,34 @@
     "empty": "Lancez la conversation.",
     "loadFailed": "Les commentaires n'ont pas pu être chargés."
   },
+  "cardPackages": {
+    "title": "Paquets de cartes",
+    "library": "Bibliothèque publique",
+    "create": "Créer un paquet",
+    "name": "Nom du paquet",
+    "category": "Catégorie",
+    "categories": {
+      "mana-base": "Base de mana",
+      "interaction": "Interactions",
+      "tribal": "Base tribale",
+      "combo": "Combo",
+      "other": "Autre"
+    },
+    "public": "Public",
+    "save": "Enregistrer le paquet",
+    "saving": "Enregistrement…",
+    "saveError": "Impossible d’enregistrer ce paquet.",
+    "loading": "Chargement des paquets…",
+    "empty": "Aucun paquet public pour le moment.",
+    "anonymous": "Anonyme",
+    "preview": "Prévisualiser",
+    "previewing": "Vérification…",
+    "ready": "Compatible",
+    "blocked": "Bloquée",
+    "apply": "Ajouter {count, plural, one {# carte} other {# cartes}}",
+    "applying": "Ajout…",
+    "loadError": "Cette action a échoué. Réessayez."
+  },
   "feedback": {
     "title": "Avis recherchés",
     "ownerHint": "Posez une question précise pour obtenir des réponses plus utiles.",
