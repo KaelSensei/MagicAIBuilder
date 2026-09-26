@@ -145,7 +145,7 @@ export function CardListItem({
           <button
             type="button"
             onClick={() => onMoveToMaybeboard(card.id)}
-            className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-0.5 rounded hover:bg-amber-500/20 text-[var(--text-secondary)] hover:text-amber-400"
+            className="opacity-0 group-hover:opacity-60 focus-visible:opacity-100 hover:!opacity-100 transition-opacity p-0.5 rounded hover:bg-amber-500/20 text-[var(--text-secondary)] hover:text-amber-400"
             aria-label={t("moveNamedToMaybeboard", { name: card.name })}
             title={tBuilder("zoneMoveTargets.toMaybeboard")}
           >
@@ -156,7 +156,7 @@ export function CardListItem({
           <button
             type="button"
             onClick={() => onRemove(card.id)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
             aria-label={t("removeNamed", { name: card.name })}
           >
             <X className="w-3 h-3" />

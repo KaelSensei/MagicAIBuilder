@@ -1,4 +1,68 @@
 {
+  "savedFolders": {
+    "eyebrow": "Community library",
+    "title": "Saved public decks",
+    "description": "Keep useful public decks organized without copying or taking ownership of them.",
+    "saveDeck": "Save deck",
+    "chooseFolder": "Save public deck",
+    "folder": "Folder",
+    "unfiled": "Unfiled",
+    "close": "Close saved deck menu",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "manage": "Manage saved decks",
+    "loading": "Loading saved decks…",
+    "failed": "Saved decks could not be updated.",
+    "retry": "Retry",
+    "empty": "No public decks saved yet.",
+    "newFolderPlaceholder": "Folder name",
+    "createFolder": "Create folder",
+    "renamePrompt": "New folder name",
+    "deleteConfirm": "Delete this folder? Its decks will move to Unfiled.",
+    "renameFolder": "Rename {name}",
+    "deleteFolder": "Delete {name}",
+    "moveTo": "Move to folder",
+    "noCommander": "No commander",
+    "unknown": "Unknown builder"
+  },
+  "moderation": {
+    "eyebrow": "Community safety",
+    "title": "Deck report queue",
+    "description": "Review reports from oldest to newest. Decisions are private and retained in the moderation audit trail.",
+    "loading": "Loading reports…",
+    "forbidden": "Moderation access is required to view this queue.",
+    "failed": "The report queue could not be updated.",
+    "retry": "Retry",
+    "emptyTitle": "Queue cleared",
+    "emptyDescription": "There are no pending deck reports.",
+    "context": "Deck by {owner}, reported by {reporter}",
+    "unknown": "unknown user",
+    "dismiss": "Dismiss",
+    "review": "Mark reviewed",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harassment",
+      "illegal_content": "Illegal content",
+      "other": "Other"
+    }
+  },
+  "report": {
+    "action": "Report deck",
+    "title": "Report this deck",
+    "close": "Close report dialog",
+    "reason": "Reason",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harassment",
+      "illegal_content": "Illegal content",
+      "other": "Other"
+    },
+    "submit": "Submit report",
+    "submitting": "Submitting…",
+    "submitted": "Report submitted",
+    "failed": "Could not submit the report. Please try again."
+  },
   "home": {
     "title": "My Decks",
     "loading": "Loading...",
@@ -13,7 +77,48 @@
     "loadFailedDescription": "The server rejected the request, so this list may be incomplete. Your decks are not lost — try again in a moment.",
     "loadFailedSubtitle": "Deck list unavailable",
     "retry": "Retry",
-    "createFailed": "Could not create the deck — {reason}"
+    "createFailed": "Could not create the deck — {reason}",
+    "folders": {
+      "all": "All decks",
+      "unfiled": "Unfiled",
+      "namePlaceholder": "New folder name",
+      "create": "Create",
+      "deckLabel": "Deck to move",
+      "chooseDeck": "Choose a deck",
+      "folderLabel": "Destination folder",
+      "move": "Move",
+      "moveSelected": "Move {count} selected",
+      "manageLabel": "Folder to manage",
+      "chooseFolder": "Choose a folder",
+      "rename": "Rename folder",
+      "renamePrompt": "New folder name",
+      "delete": "Delete folder",
+      "deleteConfirm": "Delete this folder? Its decks will move to Unfiled."
+    }
+  },
+  "comparison": {
+    "title": "Compare decks",
+    "description": "See what changed between two deck lists.",
+    "firstDeck": "First deck",
+    "secondDeck": "Second deck",
+    "compare": "Compare decks",
+    "onlyFirst": "Only in first",
+    "onlySecond": "Only in second",
+    "quantityChanges": "Quantity changes",
+    "shared": "{count, plural, one {1 shared card} other {# shared cards}}",
+    "averageManaValue": "Average mana value",
+    "estimatedPrice": "Estimated price",
+    "uniqueColors": "Unique colors",
+    "roleDifferences": "Role differences",
+    "roles": {
+      "ramp": "Ramp",
+      "draw": "Card draw",
+      "removal": "Removal",
+      "boardWipe": "Board wipes",
+      "protection": "Protection",
+      "winCondition": "Win conditions"
+    },
+    "error": "The decks could not be compared. Try again."
   },
   "controls": {
     "grid": "Grid",
@@ -79,7 +184,15 @@
       "importFailed": "Import failed.",
       "success": "Imported “{name}” — {added, plural, one {# card added} other {# cards added}}{ignored, plural, =0 {} one {, # ignored} other {, # ignored}}.",
       "notFound": "Cards not found in Scryfall ({count}):",
-      "footer": "Supported: {sources}. Deck must be public."
+      "footer": "Supported: {sources}. Deck must be public.",
+      "previewReady": "Preview ready — review before importing.",
+      "confirmImport": "Import this preview",
+      "cancelPreview": "Cancel preview",
+      "previewSummary": "{name} from {source}: {cards} cards across {zones} zones.",
+      "commanders": "Commanders: {names}",
+      "duplicates": "Duplicate decisions: {names}",
+      "noDuplicates": "No duplicate decisions.",
+      "zones": "Main {main} · Sideboard {sideboard} · Maybeboard {maybeboard}"
     }
   },
   "templates": {
@@ -118,6 +231,11 @@
   "stats": {
     "buildToSee": "Build your deck to see stats",
     "tokenLibrary": "Token library",
+    "copyTokenLibrary": "Copy token checklist",
+    "tokenLibraryCopied": "Token checklist copied",
+    "downloadTokenLibrary": "Download token checklist",
+    "tokenKind": "token",
+    "emblemKind": "emblem",
     "deckChecks": "Deck Checks",
     "totalCards": "Total cards",
     "lands": "Lands",
@@ -227,7 +345,12 @@
     "gameChangers": "{count, plural, one {# Game Changer} other {# Game Changers}}",
     "gcForcesB4": " → Bracket 4 minimum (>3 GC)",
     "gcForcesB3": " → Bracket 3 minimum (GC not allowed in B1/B2)",
-    "warnings": "Warnings"
+    "warnings": "Warnings",
+    "warningGroups": {
+      "legality": "Legality errors",
+      "strategy": "Strategic suggestions",
+      "advice": "Optional advice"
+    }
   },
   "budget": {
     "title": "Budget Optimization",
@@ -283,6 +406,13 @@
   },
   "ai": {
     "title": "AI Suggestions",
+    "questions": {
+      "title": "Ask about this deck",
+      "cardLabel": "Card to explain",
+      "chooseCard": "Choose a card",
+      "whyCard": "Why is this card here?",
+      "weakestCard": "Find weakest card"
+    },
     "archetype": "Archetype",
     "detected": "(detected: {archetype})",
     "budgetPerCard": "Budget/card",
@@ -300,6 +430,24 @@
     "clearIgnored": "Clear {count} ignored",
     "addCard": "Add {name}",
     "added": "Added",
+    "deselectCard": "Deselect {name}",
+    "changePreview": "Change preview",
+    "applyChanges": "Apply changes",
+    "clearSelection": "Clear selection",
+    "impact": {
+      "title": "Before and after",
+      "cards": "Cards",
+      "averageMana": "Average mana value",
+      "knownPrice": "Known card value",
+      "evidenceWarning": "{count, plural, one {# evidence limitation} other {# evidence limitations}} in this projection"
+    },
+    "legality": {
+      "title": "Blocked by deck rules",
+      "description": "These verified cards cannot be added. Strategic advice remains separate below.",
+      "colorIdentity": "Outside commander color identity",
+      "commanderLegality": "Not legal in Commander",
+      "blockedAction": "Cannot add {name}: deck legality failure"
+    },
     "removeCard": "Remove {name}",
     "removed": "Removed",
     "ignoreSuggestion": "Ignore suggestion",
@@ -307,9 +455,34 @@
     "poweredBy": "Powered by {provider}",
     "priorityHigh": "High",
     "priorityMedium": "Med",
+    "priorityAll": "All",
     "priorityLow": "Low",
     "timeJustNow": "just now",
-    "timeMinAgo": "{mins} min ago"
+    "timeMinAgo": "{mins} min ago",
+    "alternativeCount": "{count, plural, one {# alternative} other {# alternatives}}",
+    "alternativeBudget": "Budget",
+    "alternativePower": "Power",
+    "alternativePlaystyle": "Playstyle",
+    "brief": {
+      "title": "Your deck brief",
+      "description": "Optional preferences used only for this analysis.",
+      "themeLabel": "Theme",
+      "themePlaceholder": "Phyrexians, sea monsters, politics…",
+      "playPatternLabel": "How should it play?",
+      "playPatternPlaceholder": "Build value, then win through combat…",
+      "dislikesLabel": "What should it avoid?",
+      "dislikesPlaceholder": "Infinite combos, tutors, extra turns…"
+    },
+    "evidence": {
+      "verified": "Scryfall verified",
+      "unavailable": "Verification unavailable",
+      "colorless": "Colorless",
+      "compatible": "compatible",
+      "incompatible": "outside color identity",
+      "commanderLegal": "Commander legal",
+      "commanderIllegal": "Not Commander legal",
+      "unknown": "Unknown"
+    }
   },
   "combos": {
     "title": "Combos",
@@ -351,6 +524,13 @@
       "left": "Out of the list",
       "enteredHint": "Below the list before, so the rise is a lower bound",
       "leftHint": "Below the list now, so the fall is an upper bound"
+    },
+    "evidenceType": "Evidence type: {type}.",
+    "evidence": {
+      "popular": "popular recommendations",
+      "synergy": "high-synergy recommendations",
+      "tournament": "tournament observations",
+      "ai": "AI suggestions"
     }
   },
   "snapshots": {
@@ -398,7 +578,8 @@
     "importing": "Importing…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
-    "openShare": "Share deck"
+    "openShare": "Share deck",
+    "forkThisDeck": "Fork this deck"
   },
   "ratings": {
     "title": "Community Rating",
@@ -535,12 +716,67 @@
     "tryAgain": "Try again",
     "buildCancelled": "Build was cancelled or failed.",
     "addingCards": "Adding cards to your deck…",
-    "demoDeckNotice": "Demo deck — no AI provider is configured on this deployment, so this is a placeholder list."
+    "demoDeckNotice": "Demo deck — no AI provider is configured on this deployment, so this is a placeholder list.",
+    "planTitle": "Review your deck plan",
+    "planSubtitle": "Confirm the gameplan and structure before the AI chooses any cards.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Win conditions",
+    "planRoles": "Deck roles",
+    "planConstraints": "Constraints"
+  },
+  "cardPackages": {
+    "title": "Card packages",
+    "library": "Public library",
+    "mine": "My packages",
+    "private": "Private",
+    "emptyMine": "You have no saved packages yet.",
+    "create": "Create package",
+    "name": "Package name",
+    "category": "Category",
+    "categories": {
+      "mana-base": "Mana base",
+      "interaction": "Interaction",
+      "tribal": "Tribal core",
+      "combo": "Combo",
+      "other": "Other"
+    },
+    "public": "Public",
+    "save": "Save package",
+    "saving": "Saving…",
+    "saveError": "Could not save this package.",
+    "loading": "Loading packages…",
+    "empty": "No public packages yet.",
+    "anonymous": "Anonymous",
+    "preview": "Preview",
+    "previewing": "Checking…",
+    "ready": "Ready",
+    "blocked": "Blocked",
+    "apply": "Add {count, plural, one {# card} other {# cards}}",
+    "applying": "Adding…",
+    "loadError": "This action failed. Please try again."
+  },
+  "feedback": {
+    "title": "Feedback wanted",
+    "ownerHint": "Ask one focused question to get more useful replies.",
+    "enable": "Show this request on the public deck",
+    "placeholder": "What would you like other players to help with?",
+    "save": "Save request",
+    "saving": "Saving…",
+    "error": "Could not save the request. Try again."
   },
   "description": {
     "add": "Add deck description…",
     "edit": "Edit description",
     "clickToEdit": "Click to edit",
-    "placeholder": "Describe your deck strategy, themes, or notes… (basic markdown supported)"
+    "placeholder": "Describe your deck strategy, themes, or notes… (basic markdown supported)",
+    "usePrimerTemplate": "Use primer template",
+    "primerContents": "Primer contents",
+    "copyPrimer": "Copy primer",
+    "primerCopied": "Primer copied",
+    "downloadPrimer": "Download primer",
+    "primerTemplateContent": "## Game plan\n\nDescribe the deck's main plan.\n\n## Mulligan guide\n\nExplain what an opening hand needs.\n\n## Sequencing guide\n\nDescribe the first turns, priority decisions and when to hold interaction.\n\n## Win conditions\n\nList the primary and backup paths to win.\n\n## Key interactions\n\nHighlight important synergies and sequencing.\n\n## Budget alternatives\n\nNote accessible replacements.",
+    "editorHelp": "{count}/{max} · Ctrl+Enter to save · Esc to cancel",
+    "save": "Save",
+    "empty": "No description — click to add one"
   }
 }

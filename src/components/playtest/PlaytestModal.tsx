@@ -17,7 +17,11 @@ import { RecordResultBar } from "@/components/playtest/RecordResultBar";
 import { PlaytestHistoryPanel } from "@/components/playtest/PlaytestHistoryPanel";
 import { DrawProgressEvidence } from "@/components/playtest/DrawProgressEvidence";
 import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
+import { DiceRoller } from "@/components/playtest/DiceRoller";
+import { PlaytestActionLog } from "@/components/playtest/PlaytestActionLog";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
+import { analyzeDrawProgress } from "@/lib/playtest/draw-progress-evidence";
+import { buildTokenLibrary } from "@/lib/deck/token-library";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
@@ -69,6 +73,13 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const tap = usePlaytestStore((s) => s.tap);
   const moveToZone = usePlaytestStore((s) => s.moveToZone);
   const addCounter = usePlaytestStore((s) => s.addCounter);
+  const createCardCopy = usePlaytestStore((s) => s.createCardCopy);
+  const createToken = usePlaytestStore((s) => s.createToken);
+  const rollDie = usePlaytestStore((s) => s.rollDie);
+  const addLogEntry = usePlaytestStore((s) => s.addLogEntry);
+  const recordMana = usePlaytestStore((s) => s.recordMana);
+  const editLogEntry = usePlaytestStore((s) => s.editLogEntry);
+  const removeLogEntry = usePlaytestStore((s) => s.removeLogEntry);
   const undo = usePlaytestStore((s) => s.undo);
 
   // The store outlives the modal, so a stale session would otherwise reappear
@@ -117,6 +128,25 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     [deck.commander, deck.partner, deck.cards]
   );
 
+  const drawEvidence = useMemo(() => {
+    if (engine === null) return null;
+    return analyzeDrawProgress({
+      turn: engine.turn,
+      mulliganCount: engine.mulliganCount,
+      cardsOutsideLibrary:
+        engine.hand.length +
+        engine.battlefield.length +
+        engine.graveyard.length +
+        engine.exile.length,
+      libraryCount: engine.library.length,
+    });
+  }, [engine]);
+
+  const requiredTokens = useMemo(
+    () => buildTokenLibrary([deck.commander, deck.partner, ...deck.cards].filter((card) => card !== null)),
+    [deck.commander, deck.partner, deck.cards]
+  );
+
   return (
     <LocalizedDeckTextProvider names={cardNames}>
     <AnimatePresence>
@@ -147,6 +177,8 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 deckId={deck.id}
                 turns={engine.turn}
                 mulliganCount={engine.mulliganCount}
+                cardsSeen={drawEvidence?.cardsSeen ?? 0}
+                additionalCardsSeen={drawEvidence?.additionalCardsSeen ?? 0}
                 onRecorded={handleClose}
               />
             )}
@@ -190,10 +222,14 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
 
               {/* Board */}
               <div className="space-y-4">
+                <DiceRoller rolls={engine.diceRolls} onRoll={rollDie} />
                 <BattlefieldZone
                   battlefield={engine.battlefield}
                   onTap={tap}
                   onAddCounter={addCounter}
+                  onCreateCopy={createCardCopy}
+                  requiredTokens={requiredTokens}
+                  onCreateToken={createToken}
                   onRemove={handleRemoveFromBattlefield}
                 />
                 <HandZone
@@ -206,6 +242,14 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                   graveyard={engine.graveyard}
                   exile={engine.exile}
                   onRestore={handleRestore}
+                />
+                <PlaytestActionLog
+                  deckName={deck.name}
+                  entries={engine.actionLog}
+                  onAdd={addLogEntry}
+                  onRecordMana={recordMana}
+                  onEdit={editLogEntry}
+                  onRemove={removeLogEntry}
                 />
 
                 {/* Session controls */}

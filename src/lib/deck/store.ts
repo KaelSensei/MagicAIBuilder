@@ -19,6 +19,13 @@ import {
   isDeckStub,
   makeDeckCard,
 } from "./store-factories";
+import {
+  createGuestDeck,
+  GUEST_DECK_ID,
+  isGuestDeckId,
+  loadGuestDeck,
+  saveGuestDeck,
+} from "./guest-deck";
 
 // ---------------------------------------------------------------------------
 // Undo stack types
@@ -396,6 +403,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   setActiveDeck: async (id: string) => {
+    if (isGuestDeckId(id)) {
+      const guestDeck = loadGuestDeck() ?? createGuestDeck();
+      set((state) => ({
+        activeDeckId: GUEST_DECK_ID,
+        decks: { ...state.decks, [GUEST_DECK_ID]: guestDeck },
+      }));
+      saveGuestDeck(guestDeck);
+      return;
+    }
     set({ activeDeckId: id });
 
     // Load full card data when the store does not already hold it. Two cases:
@@ -987,7 +1003,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
     set({ isSyncing: true });
     try {
-      await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
+      if (!isGuestDeckId(activeDeckId)) await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quantity: newQty }),
@@ -1051,7 +1067,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
     set({ isSyncing: true });
     try {
-      await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
+      if (!isGuestDeckId(activeDeckId)) await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scryfallId: printing.id, imageUri, artCropUri }),
@@ -1396,3 +1412,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     return activeDeckId ? (decks[activeDeckId] ?? null) : null;
   },
 }));
+
+if (typeof window !== "undefined") {
+  useDeckStore.subscribe((state) => {
+    const guestDeck = state.decks[GUEST_DECK_ID];
+    if (guestDeck) saveGuestDeck(guestDeck);
+  });
+}

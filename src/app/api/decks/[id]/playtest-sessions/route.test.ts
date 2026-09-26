@@ -2,8 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockDeckFindUnique, mockSessionFindMany, mockSessionCreate } = vi.hoisted(() => ({
+const { mockDeckFindUnique, mockSnapshotFindFirst, mockSessionFindMany, mockSessionCreate } = vi.hoisted(() => ({
   mockDeckFindUnique: vi.fn(),
+  mockSnapshotFindFirst: vi.fn(),
   mockSessionFindMany: vi.fn(),
   mockSessionCreate: vi.fn(),
 }));
@@ -24,6 +25,7 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     user: { findUnique: mockUserFindUnique },
     deck: { findUnique: mockDeckFindUnique },
+    deckSnapshot: { findFirst: mockSnapshotFindFirst },
     playtestSession: { findMany: mockSessionFindMany, create: mockSessionCreate },
   },
 }));
@@ -67,6 +69,10 @@ function row(overrides: Record<string, unknown> = {}) {
     mulliganCount: 0,
     difficulty: null,
     notes: null,
+    proposedChange: null,
+    snapshotId: null,
+    cardsSeen: null,
+    additionalCardsSeen: null,
     createdAt: new Date("2026-08-16T10:00:00Z"),
     ...overrides,
   };
@@ -75,6 +81,7 @@ function row(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   mockSessionFindMany.mockResolvedValue([]);
+  mockSnapshotFindFirst.mockResolvedValue(null);
 });
 
 describe("GET /api/decks/[id]/playtest-sessions", () => {
@@ -125,6 +132,55 @@ describe("GET /api/decks/[id]/playtest-sessions", () => {
     expect(body.summary.total).toBe(0);
     expect(body.summary.winRate).toBe(0);
   });
+
+  it("compares sessions recorded against two deck snapshots", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSessionFindMany.mockResolvedValue([
+      row({ id: "before-1", snapshotId: "snapshot-before", result: "win", turns: 8 }),
+      row({ id: "before-2", snapshotId: "snapshot-before", result: "loss", turns: 10 }),
+      row({ id: "after-1", snapshotId: "snapshot-after", result: "win", turns: 6 }),
+      row({ id: "after-2", snapshotId: "snapshot-after", result: "win", turns: 8 }),
+    ]);
+
+    const request = new Request(
+      "http://localhost/api/decks/deck-1/playtest-sessions?beforeSnapshotId=snapshot-before&afterSnapshotId=snapshot-after"
+    );
+    const body = await (await GET(request, params())).json();
+
+    expect(body.comparison).toEqual(expect.objectContaining({
+      beforeSessions: 2,
+      afterSessions: 2,
+      winRateDelta: 50,
+      winSpeedDelta: 1,
+      hasComparableData: true,
+    }));
+  });
+
+  it("rejects an incomplete snapshot comparison", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+
+    const request = new Request(
+      "http://localhost/api/decks/deck-1/playtest-sessions?beforeSnapshotId=snapshot-before"
+    );
+    const response = await GET(request, params());
+
+    expect(response.status).toBe(400);
+    expect(mockSessionFindMany).not.toHaveBeenCalled();
+  });
+
+  it("rejects comparing a snapshot with itself", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+
+    const request = new Request(
+      "http://localhost/api/decks/deck-1/playtest-sessions?beforeSnapshotId=same&afterSnapshotId=same"
+    );
+    const response = await GET(request, params());
+
+    expect(response.status).toBe(400);
+  });
 });
 
 describe("POST /api/decks/[id]/playtest-sessions", () => {
@@ -170,7 +226,15 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
     mockSessionCreate.mockResolvedValue(row());
 
     const response = await POST(
-      postRequest({ result: "win", turns: 8, mulliganCount: 1, notes: "  kept a two-lander  " }),
+      postRequest({
+        result: "win",
+        turns: 8,
+        mulliganCount: 1,
+        cardsSeen: 15,
+        additionalCardsSeen: 1,
+        notes: "  kept a two-lander  ",
+        proposedChange: "  Add one more untapped blue source.  ",
+      }),
       params()
     );
 
@@ -182,7 +246,10 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
         result: "win",
         turns: 8,
         mulliganCount: 1,
+        cardsSeen: 15,
+        additionalCardsSeen: 1,
         notes: "kept a two-lander",
+        proposedChange: "Add one more untapped blue source.",
       }),
     });
   });
@@ -196,5 +263,40 @@ describe("POST /api/decks/[id]/playtest-sessions", () => {
     await POST(postRequest({ result: "loss", turns: 5 }), params());
 
     expect(mockSessionCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it("records the deck snapshot used for the session", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSnapshotFindFirst.mockResolvedValue({ id: "snapshot-1" });
+    mockSessionCreate.mockResolvedValue(row({ snapshotId: "snapshot-1" }));
+
+    const response = await POST(
+      postRequest({ result: "win", turns: 7, snapshotId: "snapshot-1" }),
+      params()
+    );
+
+    expect(response.status).toBe(201);
+    expect(mockSnapshotFindFirst).toHaveBeenCalledWith({
+      where: { id: "snapshot-1", deckId: "deck-1" },
+      select: { id: true },
+    });
+    expect(mockSessionCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ snapshotId: "snapshot-1" }),
+    });
+  });
+
+  it("rejects a snapshot that does not belong to the deck", async () => {
+    signedInAs("owner-1");
+    mockDeckFindUnique.mockResolvedValue(OWNED_DECK);
+    mockSnapshotFindFirst.mockResolvedValue(null);
+
+    const response = await POST(
+      postRequest({ result: "win", turns: 7, snapshotId: "foreign-snapshot" }),
+      params()
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockSessionCreate).not.toHaveBeenCalled();
   });
 });

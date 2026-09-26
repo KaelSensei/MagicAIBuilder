@@ -15,6 +15,8 @@ import { useToastStore } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
+import { DeckComparisonPanel } from "@/components/deck/DeckComparisonPanel";
+import { DeckFolderControls } from "@/components/deck/DeckFolderControls";
 import {
   getStoredDecksViewMode,
   sortDecks,
@@ -63,13 +65,17 @@ export default function DecksPage() {
   const [viewMode, setViewMode] = useState<DecksViewMode>("grid");
   const [sortKey, setSortKey] = useState<DecksSortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<DecksSortDir>("desc");
+  const [folderFilter, setFolderFilter] = useState("all");
   const deckList = Object.values(decks);
   // A failed listing must not read as an empty account.
   const hasLoadFailed = loadError !== null && deckList.length === 0;
-  const sortedDeckList = useMemo(
-    () => sortDecks(deckList, sortKey, sortDir),
-    [deckList, sortKey, sortDir]
-  );
+  const sortedDeckList = useMemo(() => {
+    const filtered =
+      folderFilter === "all"
+        ? deckList
+        : deckList.filter((deck) => (deck.folderId ?? "") === folderFilter);
+    return sortDecks(filtered, sortKey, sortDir);
+  }, [deckList, folderFilter, sortKey, sortDir]);
 
   useEffect(() => {
     if (sessionStatus !== "authenticated") return;
@@ -189,6 +195,18 @@ export default function DecksPage() {
             isCreating={isCreating}
           />
         </div>
+
+        {!isLoading && !hasLoadFailed && (
+          <>
+            <DeckFolderControls
+              decks={deckList}
+              filterId={folderFilter}
+              onFilterChange={setFolderFilter}
+              onMoved={loadDecks}
+            />
+            <DeckComparisonPanel decks={sortedDeckList} />
+          </>
+        )}
 
         {isLoading && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

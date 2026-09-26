@@ -5,7 +5,7 @@ import { CircleGauge } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { DeckCard } from "@/lib/deck/types";
 import {
-  analyzeOpeningHandLands,
+  analyzeOpeningHand,
   type OpeningHandLandStatus,
 } from "@/lib/playtest/opening-hand-evidence";
 
@@ -33,7 +33,11 @@ function statusClassName(status: OpeningHandLandStatus): string {
  */
 export function OpeningHandEvidence({ hand }: OpeningHandEvidenceProps) {
   const t = useTranslations("builder.playtestEvidence.openingHand");
-  const evidence = useMemo(() => analyzeOpeningHandLands(hand), [hand]);
+  const evidence = useMemo(() => analyzeOpeningHand(hand), [hand]);
+  const colors = evidence.missingColors.map((color) => t(`colors.${color}`)).join(", ");
+  const warning = evidence.isDead
+    ? t("deadHand")
+    : t(`status.${evidence.landStatus}`);
 
   return (
     <div
@@ -42,16 +46,19 @@ export function OpeningHandEvidence({ hand }: OpeningHandEvidenceProps) {
     >
       <div className="flex items-start gap-2">
         <CircleGauge
-          className={`mt-0.5 h-4 w-4 shrink-0 ${statusClassName(evidence.status)}`}
+          className={`mt-0.5 h-4 w-4 shrink-0 ${statusClassName(evidence.isDead ? "land-light" : evidence.landStatus)}`}
           aria-hidden="true"
         />
         <div className="min-w-0">
           <p className="text-xs font-medium text-white/80">
             {t("landCount", { count: evidence.landCount })}
           </p>
-          <p className={`text-xs ${statusClassName(evidence.status)}`}>
-            {t(`status.${evidence.status}`)}
+          <p className={`text-xs ${statusClassName(evidence.isDead ? "land-light" : evidence.landStatus)}`}>
+            {warning}
           </p>
+          {evidence.missingColors.length > 0 && (
+            <p className="text-xs text-amber-200">{t("missingColors", { colors })}</p>
+          )}
         </div>
       </div>
     </div>

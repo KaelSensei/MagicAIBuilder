@@ -1,4 +1,68 @@
 {
+  "savedFolders": {
+    "eyebrow": "Bibliothèque communautaire",
+    "title": "Decks publics enregistrés",
+    "description": "Classez les decks publics utiles sans les copier ni vous en attribuer la propriété.",
+    "saveDeck": "Enregistrer",
+    "chooseFolder": "Enregistrer le deck public",
+    "folder": "Dossier",
+    "unfiled": "Sans dossier",
+    "close": "Fermer le menu d’enregistrement",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "saved": "Enregistré",
+    "manage": "Gérer les decks enregistrés",
+    "loading": "Chargement des decks enregistrés…",
+    "failed": "Les decks enregistrés n’ont pas pu être mis à jour.",
+    "retry": "Réessayer",
+    "empty": "Aucun deck public enregistré.",
+    "newFolderPlaceholder": "Nom du dossier",
+    "createFolder": "Créer le dossier",
+    "renamePrompt": "Nouveau nom du dossier",
+    "deleteConfirm": "Supprimer ce dossier ? Ses decks seront déplacés vers Sans dossier.",
+    "renameFolder": "Renommer {name}",
+    "deleteFolder": "Supprimer {name}",
+    "moveTo": "Déplacer vers le dossier",
+    "noCommander": "Aucun commandant",
+    "unknown": "Créateur inconnu"
+  },
+  "moderation": {
+    "eyebrow": "Sécurité de la communauté",
+    "title": "File des signalements de decks",
+    "description": "Examinez les signalements du plus ancien au plus récent. Les décisions restent privées et sont conservées dans l’historique de modération.",
+    "loading": "Chargement des signalements…",
+    "forbidden": "Un accès modérateur est nécessaire pour consulter cette file.",
+    "failed": "La file des signalements n’a pas pu être mise à jour.",
+    "retry": "Réessayer",
+    "emptyTitle": "File traitée",
+    "emptyDescription": "Aucun signalement de deck n’est en attente.",
+    "context": "Deck de {owner}, signalé par {reporter}",
+    "unknown": "utilisateur inconnu",
+    "dismiss": "Rejeter",
+    "review": "Marquer comme traité",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harcèlement",
+      "illegal_content": "Contenu illégal",
+      "other": "Autre"
+    }
+  },
+  "report": {
+    "action": "Signaler le deck",
+    "title": "Signaler ce deck",
+    "close": "Fermer le signalement",
+    "reason": "Motif",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harcèlement",
+      "illegal_content": "Contenu illégal",
+      "other": "Autre"
+    },
+    "submit": "Envoyer le signalement",
+    "submitting": "Envoi…",
+    "submitted": "Signalement envoyé",
+    "failed": "Impossible d’envoyer le signalement. Réessayez."
+  },
   "home": {
     "title": "Mes Decks",
     "loading": "Chargement...",
@@ -13,7 +77,48 @@
     "loadFailedDescription": "Le serveur a rejeté la requête, cette liste peut donc être incomplète. Vos decks ne sont pas perdus — réessayez dans un instant.",
     "loadFailedSubtitle": "Liste de decks indisponible",
     "retry": "Réessayer",
-    "createFailed": "Impossible de créer le deck — {reason}"
+    "createFailed": "Impossible de créer le deck — {reason}",
+    "folders": {
+      "all": "Tous les decks",
+      "unfiled": "Sans dossier",
+      "namePlaceholder": "Nom du nouveau dossier",
+      "create": "Créer",
+      "deckLabel": "Deck à déplacer",
+      "chooseDeck": "Choisir un deck",
+      "folderLabel": "Dossier de destination",
+      "move": "Déplacer",
+      "moveSelected": "Déplacer la sélection ({count})",
+      "manageLabel": "Dossier à gérer",
+      "chooseFolder": "Choisir un dossier",
+      "rename": "Renommer le dossier",
+      "renamePrompt": "Nouveau nom du dossier",
+      "delete": "Supprimer le dossier",
+      "deleteConfirm": "Supprimer ce dossier ? Ses decks seront remis dans Sans dossier."
+    }
+  },
+  "comparison": {
+    "title": "Comparer des decks",
+    "description": "Voyez précisément ce qui change entre deux listes.",
+    "firstDeck": "Premier deck",
+    "secondDeck": "Second deck",
+    "compare": "Comparer les decks",
+    "onlyFirst": "Uniquement dans le premier",
+    "onlySecond": "Uniquement dans le second",
+    "quantityChanges": "Quantités différentes",
+    "shared": "{count, plural, one {1 carte commune} other {# cartes communes}}",
+    "averageManaValue": "Valeur de mana moyenne",
+    "estimatedPrice": "Prix estimé",
+    "uniqueColors": "Couleurs propres",
+    "roleDifferences": "Différences de rôles",
+    "roles": {
+      "ramp": "Accélération",
+      "draw": "Pioche",
+      "removal": "Retrait",
+      "boardWipe": "Nettoyage de table",
+      "protection": "Protection",
+      "winCondition": "Conditions de victoire"
+    },
+    "error": "Impossible de comparer les decks. Réessayez."
   },
   "controls": {
     "grid": "Grille",
@@ -79,7 +184,15 @@
       "importFailed": "Échec de l’import.",
       "success": "« {name} » importé — {added, plural, one {# carte ajoutée} other {# cartes ajoutées}}{ignored, plural, =0 {} one {, # ignorée} other {, # ignorées}}.",
       "notFound": "Cartes introuvables sur Scryfall ({count}) :",
-      "footer": "Sources prises en charge : {sources}. Le deck doit être public."
+      "footer": "Sources prises en charge : {sources}. Le deck doit être public.",
+      "previewReady": "Aperçu prêt — vérifiez avant l’import.",
+      "confirmImport": "Importer cet aperçu",
+      "cancelPreview": "Annuler l’aperçu",
+      "previewSummary": "{name} depuis {source} : {cards} cartes dans {zones} zones.",
+      "commanders": "Commandants : {names}",
+      "duplicates": "Doublons à décider : {names}",
+      "noDuplicates": "Aucun doublon à décider.",
+      "zones": "Principal {main} · Réserve {sideboard} · À envisager {maybeboard}"
     }
   },
   "templates": {
@@ -118,6 +231,11 @@
   "stats": {
     "buildToSee": "Construisez votre deck pour voir les stats",
     "tokenLibrary": "Bibliothèque de jetons",
+    "copyTokenLibrary": "Copier la liste des jetons",
+    "tokenLibraryCopied": "Liste des jetons copiée",
+    "downloadTokenLibrary": "Télécharger la liste des jetons",
+    "tokenKind": "jeton",
+    "emblemKind": "emblème",
     "deckChecks": "Vérifications du deck",
     "totalCards": "Total cartes",
     "lands": "Terrains",
@@ -227,7 +345,12 @@
     "gameChangers": "{count, plural, one {# Game Changer} other {# Game Changers}}",
     "gcForcesB4": " → Bracket 4 minimum (plus de 3 GC)",
     "gcForcesB3": " → Bracket 3 minimum (GC interdits en B1/B2)",
-    "warnings": "Avertissements"
+    "warnings": "Avertissements",
+    "warningGroups": {
+      "legality": "Erreurs de légalité",
+      "strategy": "Suggestions stratégiques",
+      "advice": "Conseils optionnels"
+    }
   },
   "budget": {
     "title": "Optimisation du budget",
@@ -283,6 +406,13 @@
   },
   "ai": {
     "title": "Suggestions IA",
+    "questions": {
+      "title": "Interroger ce deck",
+      "cardLabel": "Carte à expliquer",
+      "chooseCard": "Choisir une carte",
+      "whyCard": "Pourquoi cette carte ?",
+      "weakestCard": "Trouver la carte la plus faible"
+    },
     "archetype": "Archétype",
     "detected": "(détecté : {archetype})",
     "budgetPerCard": "Budget/carte",
@@ -300,6 +430,24 @@
     "clearIgnored": "Effacer {count} ignorées",
     "addCard": "Ajouter {name}",
     "added": "Ajouté",
+    "deselectCard": "Désélectionner {name}",
+    "changePreview": "Aperçu des changements",
+    "applyChanges": "Appliquer les changements",
+    "clearSelection": "Effacer la sélection",
+    "impact": {
+      "title": "Avant et après",
+      "cards": "Cartes",
+      "averageMana": "Valeur de mana moyenne",
+      "knownPrice": "Valeur connue des cartes",
+      "evidenceWarning": "{count, plural, one {# limite de données} other {# limites de données}} dans cette projection"
+    },
+    "legality": {
+      "title": "Bloquées par les règles du deck",
+      "description": "Ces cartes vérifiées ne peuvent pas être ajoutées. Les conseils stratégiques restent séparés ci-dessous.",
+      "colorIdentity": "Hors identité couleur du commandant",
+      "commanderLegality": "Non légale en Commander",
+      "blockedAction": "Impossible d’ajouter {name} : problème de légalité"
+    },
     "removeCard": "Retirer {name}",
     "removed": "Retiré",
     "ignoreSuggestion": "Ignorer la suggestion",
@@ -307,9 +455,34 @@
     "poweredBy": "Propulsé par {provider}",
     "priorityHigh": "Élevé",
     "priorityMedium": "Moy",
+    "priorityAll": "Toutes",
     "priorityLow": "Bas",
     "timeJustNow": "à l’instant",
-    "timeMinAgo": "il y a {mins} min"
+    "timeMinAgo": "il y a {mins} min",
+    "alternativeCount": "{count, plural, one {# alternative} other {# alternatives}}",
+    "alternativeBudget": "Budget",
+    "alternativePower": "Puissance",
+    "alternativePlaystyle": "Style de jeu",
+    "brief": {
+      "title": "Votre brief de deck",
+      "description": "Préférences facultatives utilisées uniquement pour cette analyse.",
+      "themeLabel": "Thème",
+      "themePlaceholder": "Phyrexians, monstres marins, politique…",
+      "playPatternLabel": "Comment doit-il se jouer ?",
+      "playPatternPlaceholder": "Créer de la valeur, puis gagner au combat…",
+      "dislikesLabel": "Que doit-il éviter ?",
+      "dislikesPlaceholder": "Combos infinis, tuteurs, tours supplémentaires…"
+    },
+    "evidence": {
+      "verified": "Vérifié par Scryfall",
+      "unavailable": "Vérification indisponible",
+      "colorless": "Incolore",
+      "compatible": "compatible",
+      "incompatible": "hors identité couleur",
+      "commanderLegal": "Légal en Commander",
+      "commanderIllegal": "Non légal en Commander",
+      "unknown": "Inconnu"
+    }
   },
   "combos": {
     "title": "Combos",
@@ -351,6 +524,13 @@
       "left": "Sorti de la liste",
       "enteredHint": "Sous la liste auparavant : la hausse est une borne inférieure",
       "leftHint": "Sous la liste désormais : la baisse est une borne supérieure"
+    },
+    "evidenceType": "Type de preuve : {type}.",
+    "evidence": {
+      "popular": "recommandations populaires",
+      "synergy": "recommandations à forte synergie",
+      "tournament": "observations de tournoi",
+      "ai": "suggestions IA"
     }
   },
   "snapshots": {
@@ -398,7 +578,8 @@
     "importing": "Importation…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cartes",
-    "openShare": "Partager le deck"
+    "openShare": "Partager le deck",
+    "forkThisDeck": "Créer une branche de ce deck"
   },
   "banlist": {
     "deckWarnings": "Avertissements du deck",
@@ -489,7 +670,13 @@
     "tryAgain": "Réessayer",
     "buildCancelled": "La construction a été annulée ou a échoué.",
     "addingCards": "Ajout des cartes à votre deck…",
-    "demoDeckNotice": "Deck de démonstration — aucun fournisseur IA n’est configuré sur ce déploiement, cette liste est un simple exemple."
+    "demoDeckNotice": "Deck de démonstration — aucun fournisseur IA n’est configuré sur ce déploiement, cette liste est un simple exemple.",
+    "planTitle": "Vérifiez le plan du deck",
+    "planSubtitle": "Validez le gameplan et la structure avant que l’IA ne choisisse les cartes.",
+    "planGameplan": "Gameplan",
+    "planWinConditions": "Conditions de victoire",
+    "planRoles": "Rôles du deck",
+    "planConstraints": "Contraintes"
   },
   "ratings": {
     "title": "Community Rating",
@@ -537,10 +724,59 @@
     "empty": "Lancez la conversation.",
     "loadFailed": "Les commentaires n'ont pas pu être chargés."
   },
+  "cardPackages": {
+    "title": "Paquets de cartes",
+    "library": "Bibliothèque publique",
+    "mine": "Mes paquets",
+    "private": "Privé",
+    "emptyMine": "Vous n’avez pas encore de paquet.",
+    "create": "Créer un paquet",
+    "name": "Nom du paquet",
+    "category": "Catégorie",
+    "categories": {
+      "mana-base": "Base de mana",
+      "interaction": "Interactions",
+      "tribal": "Base tribale",
+      "combo": "Combo",
+      "other": "Autre"
+    },
+    "public": "Public",
+    "save": "Enregistrer le paquet",
+    "saving": "Enregistrement…",
+    "saveError": "Impossible d’enregistrer ce paquet.",
+    "loading": "Chargement des paquets…",
+    "empty": "Aucun paquet public pour le moment.",
+    "anonymous": "Anonyme",
+    "preview": "Prévisualiser",
+    "previewing": "Vérification…",
+    "ready": "Compatible",
+    "blocked": "Bloquée",
+    "apply": "Ajouter {count, plural, one {# carte} other {# cartes}}",
+    "applying": "Ajout…",
+    "loadError": "Cette action a échoué. Réessayez."
+  },
+  "feedback": {
+    "title": "Avis recherchés",
+    "ownerHint": "Posez une question précise pour obtenir des réponses plus utiles.",
+    "enable": "Afficher cette demande sur le deck public",
+    "placeholder": "Sur quel point souhaitez-vous l'aide des autres joueurs ?",
+    "save": "Enregistrer la demande",
+    "saving": "Enregistrement…",
+    "error": "Impossible d'enregistrer la demande. Réessayez."
+  },
   "description": {
     "add": "Ajouter une description…",
     "edit": "Modifier la description",
     "clickToEdit": "Cliquer pour modifier",
-    "placeholder": "Décrivez la stratégie, les thèmes ou vos notes… (markdown basique pris en charge)"
+    "placeholder": "Décrivez la stratégie, les thèmes ou vos notes… (markdown basique pris en charge)",
+    "usePrimerTemplate": "Utiliser le modèle de primer",
+    "primerContents": "Sommaire du primer",
+    "copyPrimer": "Copier le primer",
+    "primerCopied": "Primer copié",
+    "downloadPrimer": "Télécharger le primer",
+    "primerTemplateContent": "## Plan de jeu\n\nDécrivez le plan principal du deck.\n\n## Guide de mulligan\n\nExpliquez ce qu’une main de départ doit contenir.\n\n## Guide de séquençage\n\nDécrivez les premiers tours, les décisions prioritaires et quand conserver vos interactions.\n\n## Conditions de victoire\n\nListez les moyens principaux et secondaires de gagner.\n\n## Interactions clés\n\nPrésentez les synergies et séquences importantes.\n\n## Alternatives budget\n\nIndiquez les remplacements accessibles.",
+    "editorHelp": "{count}/{max} · Ctrl+Entrée pour enregistrer · Échap pour annuler",
+    "save": "Enregistrer",
+    "empty": "Aucune description — cliquez pour en ajouter une"
   }
 }

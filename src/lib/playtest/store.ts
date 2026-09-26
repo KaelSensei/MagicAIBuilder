@@ -6,6 +6,8 @@
 import { create } from "zustand";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { getFormatConfig } from "@/lib/deck/formats";
+import { randomAlphanumericId, randomIntBelow } from "@/lib/crypto-random";
+import type { TokenLibraryEntry } from "@/lib/deck/token-library";
 import type { PlaytestEngine } from "./engine";
 import {
   createPlaytestState,
@@ -20,6 +22,13 @@ import {
   applyUndo,
   applyAddCounter,
   applyMulligan,
+  applyCreateCardCopy,
+  applyCreateToken,
+  applyRollDie,
+  applyAddActionLogEntry,
+  applyRecordMana,
+  applyEditActionLogEntry,
+  applyRemoveActionLogEntry,
 } from "./engine";
 
 /** The deck as dealt at the start, so a reset does not depend on live zones. */
@@ -67,6 +76,13 @@ interface PlaytestStore {
     to: "hand" | "library" | "battlefield" | "graveyard" | "exile"
   ) => void;
   addCounter: (cardId: string, amount: number) => void;
+  createCardCopy: (cardId: string) => void;
+  createToken: (token: TokenLibraryEntry) => void;
+  rollDie: (sides: number) => void;
+  addLogEntry: (description: string) => void;
+  recordMana: (amount: number) => void;
+  editLogEntry: (entryId: number, description: string) => void;
+  removeLogEntry: (entryId: number) => void;
   undo: () => void;
   resetPlaytest: () => void;
 }
@@ -156,6 +172,61 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
       if (!state.engine) return state;
       return { engine: applyAddCounter(state.engine, cardId, amount) };
     });
+  },
+
+  createCardCopy: (cardId: string) => {
+    set((state) => {
+      if (!state.engine) return state;
+      const copyId = `playtest-copy-${randomAlphanumericId(16)}`;
+      return { engine: applyCreateCardCopy(state.engine, cardId, copyId) };
+    });
+  },
+
+  createToken: (token: TokenLibraryEntry) => {
+    set((state) => {
+      if (!state.engine) return state;
+      const tokenId = `playtest-token-${randomAlphanumericId(16)}`;
+      return { engine: applyCreateToken(state.engine, token, tokenId) };
+    });
+  },
+
+  rollDie: (sides: number) => {
+    set((state) => {
+      if (!state.engine) return state;
+      return {
+        engine: applyRollDie(state.engine, sides, randomIntBelow(sides) + 1),
+      };
+    });
+  },
+
+  addLogEntry: (description: string) => {
+    set((state) =>
+      state.engine
+        ? { engine: applyAddActionLogEntry(state.engine, description) }
+        : state
+    );
+  },
+
+  recordMana: (amount: number) => {
+    set((state) => state.engine
+      ? { engine: applyRecordMana(state.engine, amount) }
+      : state);
+  },
+
+  editLogEntry: (entryId: number, description: string) => {
+    set((state) =>
+      state.engine
+        ? { engine: applyEditActionLogEntry(state.engine, entryId, description) }
+        : state
+    );
+  },
+
+  removeLogEntry: (entryId: number) => {
+    set((state) =>
+      state.engine
+        ? { engine: applyRemoveActionLogEntry(state.engine, entryId) }
+        : state
+    );
   },
 
   undo: () => {

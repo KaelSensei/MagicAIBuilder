@@ -32,13 +32,18 @@ describe("edgeAuthConfig.callbacks.jwt", () => {
   it("sets token.id when user is provided", async () => {
     const token = { sub: "abc" };
     const user = { id: "user-123", email: "test@test.com" };
-    const result = await jwtCallback({ token, user } as Parameters<typeof jwtCallback>[0]);
+    const result = await jwtCallback({ token, user } as Parameters<
+      typeof jwtCallback
+    >[0]);
     expect(result.id).toBe("user-123");
   });
 
   it("returns token unchanged when user is undefined", async () => {
     const token = { sub: "abc", id: "existing-id" };
-    const result = await jwtCallback({ token, user: undefined } as unknown as Parameters<typeof jwtCallback>[0]);
+    const result = await jwtCallback({
+      token,
+      user: undefined,
+    } as unknown as Parameters<typeof jwtCallback>[0]);
     expect(result.id).toBe("existing-id");
   });
 });
@@ -47,16 +52,28 @@ describe("edgeAuthConfig.callbacks.session", () => {
   const sessionCallback = edgeAuthConfig.callbacks.session;
 
   it("sets session.user.id from token.id", async () => {
-    const session = { user: { id: "", name: "Test", email: "test@test.com" }, expires: "" };
+    const session = {
+      user: { id: "", name: "Test", email: "test@test.com" },
+      expires: "",
+    };
     const token = { id: "user-123", sub: "abc" };
-    const result = await sessionCallback({ session, token } as unknown as Parameters<typeof sessionCallback>[0]);
+    const result = await sessionCallback({
+      session,
+      token,
+    } as unknown as Parameters<typeof sessionCallback>[0]);
     expect(result.user.id).toBe("user-123");
   });
 
   it("does not set session.user.id when token has no id", async () => {
-    const session = { user: { id: "", name: "Test", email: "test@test.com" }, expires: "" };
+    const session = {
+      user: { id: "", name: "Test", email: "test@test.com" },
+      expires: "",
+    };
     const token = { sub: "abc" };
-    const result = await sessionCallback({ session, token } as unknown as Parameters<typeof sessionCallback>[0]);
+    const result = await sessionCallback({
+      session,
+      token,
+    } as unknown as Parameters<typeof sessionCallback>[0]);
     expect(result.user.id).toBe("");
   });
 });
@@ -84,7 +101,9 @@ describe("edgeAuthConfig.callbacks.authorized", () => {
   });
 
   it("allows /api/auth paths", () => {
-    expect(authorizedCallback(makeArgs("/api/auth/callback/google", false))).toBe(true);
+    expect(
+      authorizedCallback(makeArgs("/api/auth/callback/google", false))
+    ).toBe(true);
   });
 
   it("allows /api/health", () => {
@@ -126,11 +145,15 @@ describe("edgeAuthConfig.callbacks.authorized", () => {
   });
 
   it("does not treat /api/decks as public because /api/deck is", () => {
-    expect(authorizedCallback(makeArgs("/api/decks", false))).toBeInstanceOf(Response);
+    expect(authorizedCallback(makeArgs("/api/decks", false))).toBeInstanceOf(
+      Response
+    );
   });
 
   it("allows /_next static assets", () => {
-    expect(authorizedCallback(makeArgs("/_next/static/chunk.js", false))).toBe(true);
+    expect(authorizedCallback(makeArgs("/_next/static/chunk.js", false))).toBe(
+      true
+    );
   });
 
   it("allows /favicon paths", () => {
@@ -148,6 +171,14 @@ describe("edgeAuthConfig.callbacks.authorized", () => {
 
   it("returns false for unauthenticated page requests (triggers redirect)", () => {
     expect(authorizedCallback(makeArgs("/builder/deck-1", false))).toBe(false);
+  });
+
+  it("allows only the dedicated guest builder without authentication", () => {
+    expect(authorizedCallback(makeArgs("/builder/guest", false))).toBe(true);
+    expect(authorizedCallback(makeArgs("/fr/builder/guest", false))).toBe(true);
+    expect(authorizedCallback(makeArgs("/builder/guest-copy", false))).toBe(
+      false
+    );
   });
 
   it("blocks unauthenticated access to /decks", () => {

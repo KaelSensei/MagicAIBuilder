@@ -147,6 +147,24 @@ describe("PlaytestHistoryPanel", () => {
     expect(screen.getByText("Missed blue mana for three turns.")).toBeDefined();
   });
 
+  it("shows the proposed deck change separately from the evidence note", () => {
+    const session: PlaytestSession = {
+      id: "session-change",
+      deckId: "deck-1",
+      userId: "user-1",
+      result: "loss",
+      turns: 5,
+      mulliganCount: 0,
+      notes: "Missed blue mana for three turns.",
+      proposedChange: "Add one more untapped blue source.",
+      createdAt: new Date("2026-08-28T12:00:00.000Z"),
+    };
+    renderPanel(makeSummary(), [session]);
+
+    expect(screen.getByText("Change to try")).toBeDefined();
+    expect(screen.getByText("Add one more untapped blue source.")).toBeDefined();
+  });
+
   it("shows an unrecognised difficulty as stored rather than dropping it", () => {
     renderPanel(makeSummary({ matchups: { legacy: { wins: 2, losses: 2, winRate: 50 } } }));
     expect(screen.getByText("legacy")).toBeDefined();

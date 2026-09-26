@@ -5,15 +5,15 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-08-23                             |
+| Last Updated  | 2026-09-26                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-08-23)
+## Current metrics (2026-09-26)
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2583 across 188 files                                                                                                                   |
+| Unit tests          | 2872 across 264 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -21,13 +21,40 @@
 | Components          | 145 — every `.tsx` under `src/` excluding tests, pages included (the label undercounts what it measures; `src/components` alone is 123) |
 | API routes          | 46                                                                                                                                      |
 | Prisma models       | 22                                                                                                                                      |
-| Prisma migrations   | 25                                                                                                                                      |
+| Prisma migrations   | 27                                                                                                                                      |
 | Hooks               | 26                                                                                                                                      |
 | Locales served      | 2 (`en`, `fr`) + 8 dormant                                                                                                              |
 | Production database | Neon (Vercel Marketplace)                                                                                                               |
 | CI workflows        | 3 (CI, SonarCloud, Lighthouse) — all on PRs into `staging`, `dev`, `main`                                                               |
 
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
+
+## Latest product delivery
+
+- Deck owners can save reusable card packages, browse their private packages, and preview legal additions before applying them. Package metadata is reverified against Scryfall at preview and apply time so forged legality or color identity cannot bypass deck checks.
+- Goldfish playtests now summarize cards drawn, mana produced and additional cards seen for each turn, with readable and versioned JSON exports.
+- The production dependency audit reports no known vulnerabilities. SonarCloud analysis remains blocked by an HTTP 403 token response; local `pnpm sonar` is blocked by the missing Linux Rollup optional binary in WSL. E2E was not rerun locally.
+- AI recommendations now separate verified hard legality failures from optional strategic advice. Off-color and Commander-illegal cards retain an explanation but cannot be selected, including inside alternative recommendations.
+- Reviewed AI deck changes now include a deterministic before/after comparison for card count, average mana value and known card value. The preview flags unverified, off-color and Commander-illegal additions rather than presenting incomplete evidence as certain.
+- Signed-in users can now organize owned decks in private folders, filter their library, rename or safely delete folders, and move up to 100 selected decks at once. Folder deletion returns affected decks to Unfiled without changing ownership.
+- Signed-in community members can now report public decks for spam, harassment, illegal content or another reason directly from the deck page. Owners and anonymous visitors do not see the action; moderator review UI remains open roadmap work.
+- Goldfish sessions now maintain a chronological, editable and undoable action log for engine events plus manual actions such as mana production. Players can export the session by turn as readable text or a versioned JSON contract; aggregate cards-seen summaries remain separate roadmap work.
+- Goldfish sessions now provide the deck's detected tokens and emblems, independent card copies, existing permanent counters, and unbiased d6/d20 rolls. All generated objects and rolls remain session-only, support undo/reset, and never mutate the saved decklist.
+- Public deck pages now present complete primers with readable headings, paragraphs, lists and safe links instead of truncating the description. The focused renderer keeps raw HTML inert, rejects unsafe protocols and adds no runtime dependency.
+- Deck owners can now insert a localized, structured primer into an empty description without overwriting existing writing or saving before review. The editor also uses valid sibling controls instead of nested buttons, removing the associated hydration risk.
+- Deck statistics now expose a deduplicated checklist of required tokens and emblems that players can copy or download for game night.
+- Playtest history can now compare evidence recorded against two distinct deck snapshots. The UI reports directional changes in self-reported win rate, winning-turn speed and mulligans, while explicitly avoiding tournament-performance claims.
+- Snapshot comparisons disclose both cohort sizes, flag fewer than three runs per version as an early signal, and describe regressions without ambiguous negative wording.
+- Recorded playtest sessions now retain deterministic cards-seen and additional-draw evidence instead of losing those engine signals when the modal closes.
+- Opening-hand evidence now identifies missing mana colors and dead hands using visible lands and affordable spell costs before the player commits to a keep.
+- Playtest results now store a proposed deck change separately from the evidence note and expose both in history, so observation and the next experiment remain distinct.
+- AI suggestions now receive at most five meaningful playtest records loaded server-side by deck and authenticated user. The prompt labels them as private anecdotal observations, sanitizes player-authored text and degrades to no evidence if history is unavailable.
+- Players can now give AI suggestions a bounded brief for theme, desired play pattern and dislikes. The existing commander, budget and target bracket complete the requested intent, and brief changes invalidate the suggestion cache.
+- AI deck generation now pauses on a structured plan that exposes the gameplan, win conditions, role targets and hard constraints before selecting cards. The server independently rebuilds the reviewed plan and includes it in the provider prompt.
+- AI suggestions now pair provider rationale with Scryfall-verified role, curve impact, color compatibility, Commander legality and price evidence, while clearly marking unavailable verification.
+- AI suggestions now offer compact, directly actionable alternatives by budget, power and play pattern. Alternatives share the primary recommendation's deduplicated Scryfall verification pass.
+- Players can now review the exact additions and removals in an AI-proposed change, deselect individual cards, clear the selection and apply the remaining batch without duplicate operations.
+- The next product priority is answering "why is this card here?" and "what is the weakest card?" from the current deck context.
 
 > **The coverage number fell from 94.89% to 50.52% without a single test being deleted.** The denominator changed: `src/app` and `src/components` were excluded from the measure, so "94.89%" described roughly a third of the repository. The exclusions were removed on 2026-08-23, and `vitest.config.ts` records the breakdown that made it visible — lib 96.6%, hooks 87.4%, components 25.2%, app 25.1%, all of src **48.5%**. This batch moved it to **50.52%**. Compare only against figures measured after that change; anything at 90-something in this file above 2026-08-23 is measuring the smaller denominator.
 

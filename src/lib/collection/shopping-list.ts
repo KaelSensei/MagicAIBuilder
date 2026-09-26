@@ -15,6 +15,30 @@ export interface ShoppingListItem {
   readonly price: number | null;
 }
 
+export interface AcquisitionDeckRequirement {
+  readonly id: string;
+  readonly name: string;
+  readonly quantity: number;
+}
+
+export interface AcquisitionPlanItem {
+  readonly scryfallId: string;
+  readonly name: string;
+  readonly requiredQuantity: number;
+  readonly ownedQuantity: number;
+  readonly acquireQuantity: number;
+  readonly price: number | null;
+  readonly decks: readonly AcquisitionDeckRequirement[];
+}
+
+export interface AcquisitionPlanDeck {
+  readonly id: string;
+  readonly name: string;
+  readonly cards: readonly DeckCard[];
+  readonly commander: DeckCard | null;
+  readonly partner: DeckCard | null;
+}
+
 export type DeckCardStatus = "owned" | "proxy" | "missing";
 
 export interface DeckCardStatusItem {
@@ -40,6 +64,7 @@ export interface DeckCollectionSummary {
   readonly ownedQuantity: number;
   readonly proxyQuantity: number;
   readonly missingQuantity: number;
+  readonly missingCost: number;
   readonly completionRatio: number;
 }
 
@@ -120,6 +145,7 @@ export function summarizeDeckCollection(
   let ownedQuantity = 0;
   let proxyQuantity = 0;
   let missingQuantity = 0;
+  let missingCost = 0;
 
   for (const item of statuses) {
     totalQuantity += item.quantity;
@@ -128,6 +154,7 @@ export function summarizeDeckCollection(
     ownedQuantity += physical;
     proxyQuantity += proxy;
     missingQuantity += item.quantity - physical - proxy;
+    missingCost += (item.price ?? 0) * (item.quantity - physical - proxy);
   }
 
   return {
@@ -135,6 +162,7 @@ export function summarizeDeckCollection(
     ownedQuantity,
     proxyQuantity,
     missingQuantity,
+    missingCost: Math.round(missingCost * 100) / 100,
     completionRatio: totalQuantity > 0 ? (ownedQuantity + proxyQuantity) / totalQuantity : 0,
   };
 }
@@ -145,7 +173,7 @@ export function buildShoppingList(
   deckCards: readonly DeckCard[],
   commander: DeckCard | null,
   partner: DeckCard | null,
-  ownedScryfallIds: ReadonlySet<string>,
+  ownedQuantities: Readonly<Record<string, number>>,
   options?: ShoppingListOptions
 ): ShoppingListItem[] {
   const includeBasics = options?.includeBasics ?? false;
@@ -154,26 +182,103 @@ export function buildShoppingList(
   const missing: ShoppingListItem[] = [];
 
   for (const card of allCards) {
-    if (ownedScryfallIds.has(card.scryfallId ?? card.id)) continue;
     if (!includeBasics && isBasicLand(card)) continue;
+    const scryfallId = card.scryfallId ?? card.id;
+    const missingQuantity = Math.max(
+      0,
+      card.quantity - Math.max(0, ownedQuantities[scryfallId] ?? 0)
+    );
+    if (missingQuantity === 0) continue;
 
     missing.push({
-      scryfallId: card.scryfallId ?? card.id,
+      scryfallId,
       name: card.name,
-      quantity: card.quantity,
+      quantity: missingQuantity,
       price: card.price,
     });
   }
 
-  // Sort: priced cards descending, then null-price cards at the end
+  // Prioritize the largest acquisition costs, then keep equal totals stable by name.
   missing.sort((a, b) => {
-    if (a.price === null && b.price === null) return 0;
+    if (a.price === null && b.price === null) return a.name.localeCompare(b.name);
     if (a.price === null) return 1;
     if (b.price === null) return -1;
-    return b.price - a.price;
+    const totalDifference = b.price * b.quantity - a.price * a.quantity;
+    return totalDifference || a.name.localeCompare(b.name);
   });
 
   return missing;
+}
+
+/** Aggregate simultaneous deck requirements without changing collection ownership. */
+export function buildAcquisitionPlan(
+  decks: readonly AcquisitionPlanDeck[],
+  ownedQuantities: Readonly<Record<string, number>>
+): AcquisitionPlanItem[] {
+  const requirements = new Map<
+    string,
+    {
+      name: string;
+      requiredQuantity: number;
+      price: number | null;
+      decks: AcquisitionDeckRequirement[];
+    }
+  >();
+
+  for (const deck of decks) {
+    const perDeck = new Map<string, { card: DeckCard; quantity: number }>();
+    for (const card of collectAllCards(deck.cards, deck.commander, deck.partner)) {
+      if (isBasicLand(card)) continue;
+      const scryfallId = card.scryfallId ?? card.id;
+      const current = perDeck.get(scryfallId);
+      perDeck.set(scryfallId, {
+        card,
+        quantity: (current?.quantity ?? 0) + card.quantity,
+      });
+    }
+
+    for (const [scryfallId, requirement] of perDeck) {
+      const current = requirements.get(scryfallId);
+      if (current) {
+        current.requiredQuantity += requirement.quantity;
+        current.decks.push({ id: deck.id, name: deck.name, quantity: requirement.quantity });
+      } else {
+        requirements.set(scryfallId, {
+          name: requirement.card.name,
+          requiredQuantity: requirement.quantity,
+          price: requirement.card.price,
+          decks: [{ id: deck.id, name: deck.name, quantity: requirement.quantity }],
+        });
+      }
+    }
+  }
+
+  const plan: AcquisitionPlanItem[] = [];
+  for (const [scryfallId, requirement] of requirements) {
+    const ownedQuantity = Math.max(0, ownedQuantities[scryfallId] ?? 0);
+    const acquireQuantity = Math.max(0, requirement.requiredQuantity - ownedQuantity);
+    if (acquireQuantity === 0) continue;
+    plan.push({
+      scryfallId,
+      name: requirement.name,
+      requiredQuantity: requirement.requiredQuantity,
+      ownedQuantity,
+      acquireQuantity,
+      price: requirement.price,
+      decks: requirement.decks,
+    });
+  }
+
+  plan.sort((a, b) => {
+    if (a.price === null && b.price === null) return a.name.localeCompare(b.name);
+    if (a.price === null) return 1;
+    if (b.price === null) return -1;
+    return (
+      b.price * b.acquireQuantity - a.price * a.acquireQuantity ||
+      a.name.localeCompare(b.name)
+    );
+  });
+  return plan;
 }
 
 // ─── Collection stats ─────────────────────────────────────────────────────────
@@ -213,18 +318,41 @@ export function computeCollectionStats(
 
 // ─── Text export ──────────────────────────────────────────────────────────────
 
-/** Format shopping list as copyable text: "1× Sol Ring\n4× Island" */
+/** Format a shopping list with acquisition costs for copying to another tool. */
 export function formatShoppingListText(items: readonly ShoppingListItem[]): string {
   if (items.length === 0) return "";
-  return items.map((item) => `${item.quantity}× ${item.name}`).join("\n");
+  const lines: string[] = [];
+  let estimatedTotal = 0;
+  let unpricedQuantity = 0;
+
+  for (const item of items) {
+    if (item.price === null) {
+      unpricedQuantity += item.quantity;
+      lines.push(`${item.quantity}× ${item.name} | USD ?`);
+      continue;
+    }
+
+    const linePrice = item.price * item.quantity;
+    estimatedTotal += linePrice;
+    lines.push(`${item.quantity}× ${item.name} | USD ${linePrice.toFixed(2)}`);
+  }
+
+  lines.push("", `Estimated total | USD ${estimatedTotal.toFixed(2)}`);
+  if (unpricedQuantity > 0) lines.push(`Unpriced cards | ${unpricedQuantity}`);
+  return lines.join("\n");
+}
+
+function formatCsvText(value: string): string {
+  return `"${value.replaceAll('"', '""')}"`;
 }
 
 /** Format shopping list as CSV for download */
 export function formatShoppingListCsv(items: readonly ShoppingListItem[]): string {
-  const header = "Name,Quantity,Price (USD)";
-  const rows = items.map(
-    (item) => `"${item.name}",${item.quantity},${item.price ?? ""}`
-  );
+  const header = "Name,Quantity,Price (USD),Total (USD)";
+  const rows = items.map((item) => {
+    const lineTotal = item.price === null ? "" : item.price * item.quantity;
+    return `${formatCsvText(item.name)},${item.quantity},${item.price ?? ""},${lineTotal}`;
+  });
   return [header, ...rows].join("\n");
 }
 
@@ -252,7 +380,7 @@ export function formatCollectionCsv(cards: readonly CollectionExportCard[]): str
   const header = "Name,Quantity,Foil,Condition,Price (USD)";
   const rows = cards.map(
     (c) =>
-      `"${c.name}",${c.quantity},${c.foil ? "Yes" : "No"},${c.condition ?? ""},${c.price ?? ""}`
+      `${formatCsvText(c.name)},${c.quantity},${c.foil ? "Yes" : "No"},${c.condition ?? ""},${c.price ?? ""}`
   );
   return [header, ...rows].join("\n");
 }
