@@ -9,6 +9,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-26: Plain-text deck round-trip
+
+#### Fixed
+
+- Dedicated partner and companion sections now survive plain-text export, import and bulk editing instead of becoming ordinary deck cards.
+- Sideboard and Considering cards retain their zones and quantities through a text round-trip.
+- Bulk edit validates all card names before clearing the saved deck, resets stale client state before rebuilding, and reloads the full deck afterward.
+
+#### Validation
+
+- 2,884 unit tests, TypeScript, ESLint, production build and dependency audit passed on the personal VPS. Docker E2E remains unrun because port 5433 is occupied by another VPS service. SonarCloud still returns HTTP 403 before analysis.
+
 ### 2026-09-26: Card packages, playtest evidence and package verification
 
 #### Added
