@@ -462,7 +462,8 @@ A recommendation is never presented as universal truth: the user can see where i
 
 - [ ] Treat import/export formats as versioned contracts with fixtures.
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
-- [ ] Improve round-trip fidelity for categories, printings, companions and sideboards.
+- [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
+- [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.
 

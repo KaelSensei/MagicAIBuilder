@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2872 across 264 files                                                                                                                   |
+| Unit tests          | 2884 across 264 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Plain-text deck export, import and bulk edit now preserve the partner, companion, sideboard and Considering zones with their quantities. Bulk edit rejects unresolved names before clearing the deck, resets stale client state before rebuilding, and reloads the full saved deck afterward. External-format printing and category fidelity remains open work.
+- Validation for this batch ran on the personal VPS: 2,884 unit tests, TypeScript, ESLint, production build and dependency audit passed. Docker E2E was not run because its configured host database port 5433 is occupied by another VPS service; no service was changed.
 - Deck owners can save reusable card packages, browse their private packages, and preview legal additions before applying them. Package metadata is reverified against Scryfall at preview and apply time so forged legality or color identity cannot bypass deck checks.
 - Goldfish playtests now summarize cards drawn, mana produced and additional cards seen for each turn, with readable and versioned JSON exports.
 - The production dependency audit reports no known vulnerabilities. SonarCloud analysis remains blocked by an HTTP 403 token response; local `pnpm sonar` is blocked by the missing Linux Rollup optional binary in WSL. E2E was not rerun locally.
