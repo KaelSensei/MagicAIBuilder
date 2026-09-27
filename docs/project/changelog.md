@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-27: MTGO sideboard export fidelity
+
+#### Fixed
+
+- MTGO XML now marks sideboard cards as sideboard, preserves their quantities, and excludes Considering cards from the playable export.
+
+#### Validation
+
+- The focused test failed before implementation. All 2,885 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-09-26: Plain-text deck round-trip
 
 #### Fixed
