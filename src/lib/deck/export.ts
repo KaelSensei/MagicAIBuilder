@@ -60,11 +60,12 @@ export function exportMTGO(deck: Deck): string {
   if (deck.commander) allCards.push({ name: deck.commander.name, qty: 1 });
   if (deck.partner) allCards.push({ name: deck.partner.name, qty: 1 });
   for (const card of deck.cards) {
-    allCards.push({ name: card.name, qty: card.quantity });
+    if (card.zone === "maybeboard") continue;
+    allCards.push({ name: card.name, qty: card.quantity, isSideboard: card.zone === "sideboard" });
   }
 
   const cardXml = allCards
-    .map((c) => `  <Cards CatID="0" Quantity="${c.qty}" Sideboard="false" Name="${c.name.replaceAll("\"", "&quot;")}" />`)
+    .map((c) => `  <Cards CatID="0" Quantity="${c.qty}" Sideboard="${c.isSideboard === true}" Name="${c.name.replaceAll("\"", "&quot;")}" />`)
     .join("\n");
 
   return `<?xml version="1.0" encoding="utf-8"?>

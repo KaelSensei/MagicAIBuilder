@@ -165,6 +165,20 @@ describe("exportArena", () => {
 });
 
 describe("exportMTGO", () => {
+  it("keeps sideboard quantities separate from the playable deck", () => {
+    const deck = makeDeck({
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 3, { zone: "sideboard" }),
+        makeCard("Counterspell", 2, { zone: "maybeboard" }),
+      ],
+    });
+    const xml = exportMTGO(deck);
+    expect(xml).toContain('Quantity="1" Sideboard="false" Name="Sol Ring"');
+    expect(xml).toContain('Quantity="3" Sideboard="true" Name="Negate"');
+    expect(xml).not.toContain('Name="Counterspell"');
+  });
+
   it("exports valid XML", () => {
     const deck = makeDeck({
       commander: makeCard("Atraxa, Praetor's Voice"),
