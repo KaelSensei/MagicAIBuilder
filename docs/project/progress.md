@@ -5,15 +5,15 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-09-26                             |
+| Last Updated  | 2026-09-27                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-09-26)
+## Current metrics (2026-09-27)
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2884 across 264 files                                                                                                                   |
+| Unit tests          | 2885 across 264 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -31,6 +31,7 @@
 
 ## Latest product delivery
 
+- MTGO XML export now preserves sideboard quantities and excludes Considering cards from the playable deck. The focused test failed before the change; 2,885 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud still fails with HTTP 403 before analysis. Docker E2E was not run for this slice.
 - Plain-text deck export, import and bulk edit now preserve the partner, companion, sideboard and Considering zones with their quantities. Bulk edit rejects unresolved names before clearing the deck, resets stale client state before rebuilding, and reloads the full saved deck afterward. External-format printing and category fidelity remains open work.
 - Validation for this batch ran on the personal VPS: 2,884 unit tests, TypeScript, ESLint, production build and dependency audit passed. Docker E2E was not run because its configured host database port 5433 is occupied by another VPS service; no service was changed.
 - Deck owners can save reusable card packages, browse their private packages, and preview legal additions before applying them. Package metadata is reverified against Scryfall at preview and apply time so forged legality or color identity cannot bypass deck checks.
