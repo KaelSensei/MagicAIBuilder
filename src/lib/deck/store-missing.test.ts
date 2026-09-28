@@ -277,17 +277,32 @@ describe("useDeckStore — swapCardPrinting", () => {
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
-  it("resets isSyncing even when fetch throws", async () => {
-    const card = makeDeckCard("card-1", "Lightning Bolt");
+  it.each(["network error", "server error"])("restores the previous printing after a %s", async (failure) => {
+    const card = makeDeckCard("card-1", "Lightning Bolt", {
+      scryfallId: "old-printing-id",
+      imageUri: "https://example.com/old.jpg",
+      artCropUri: "https://example.com/old-art.jpg",
+      quantity: 3,
+      zone: "sideboard",
+    });
     useDeckStore.setState({
       decks: { "deck-1": seedDeck({ cards: [card] }) },
       activeDeckId: "deck-1",
     });
 
-    globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error("network error"));
+    globalThis.fetch = failure === "network error"
+      ? vi.fn().mockRejectedValueOnce(new Error("network error"))
+      : vi.fn().mockResolvedValueOnce({ ok: false, status: 500 });
 
     await useDeckStore.getState().swapCardPrinting("card-1", mockPrinting);
 
+    expect(useDeckStore.getState().decks["deck-1"].cards[0]).toMatchObject({
+      scryfallId: "old-printing-id",
+      imageUri: "https://example.com/old.jpg",
+      artCropUri: "https://example.com/old-art.jpg",
+      quantity: 3,
+      zone: "sideboard",
+    });
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 });
