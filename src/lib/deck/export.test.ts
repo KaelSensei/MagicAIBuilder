@@ -198,6 +198,15 @@ describe("exportMTGO", () => {
     const xml = exportMTGO(deck);
     expect(xml).toContain("&quot;");
   });
+
+  it("exports XML-special card names without changing the name", () => {
+    const name = 'A & B <C> "D"';
+    const xml = exportMTGO(makeDeck({ cards: [makeCard(name)] }));
+    const document = new DOMParser().parseFromString(xml, "application/xml");
+
+    expect(document.querySelector("parsererror")).toBeNull();
+    expect(document.querySelector("Cards")?.getAttribute("Name")).toBe(name);
+  });
 });
 
 describe("exportTappedOut", () => {
