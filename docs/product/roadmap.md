@@ -142,7 +142,8 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 ### Remaining scope
 
 - [ ] Persist main, sideboard and maybeboard zones as the single database source of truth.
-- [ ] Preserve zone and quantity when changing a card printing.
+- [x] Preserve zone and quantity when changing a card printing.
+- [x] Restore the previous card printing and notify the player when its save fails.
 - [ ] Complete cross-zone drag and drop with clear drop targets and no layout jump.
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.

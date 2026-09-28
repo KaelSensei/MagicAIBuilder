@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-28: Card printing save recovery
+
+#### Fixed
+
+- Failed card printing saves now restore the previous printing instead of leaving an unsaved image visible; the card's zone and quantity remain unchanged and an error toast requests a retry.
+
+#### Validation
+
+- Network and HTTP failure tests were red before the fix. All 2,887 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse on rerun and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-09-28: MTGO XML card names
 
 #### Fixed
