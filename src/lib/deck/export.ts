@@ -54,6 +54,19 @@ export function exportArena(deck: Deck): string {
   return lines.join("\n");
 }
 
+/** Escape card names used in double-quoted XML attributes. */
+function escapeXmlAttribute(value: string): string {
+  return value.replaceAll(/[&<>"]/g, (character) => {
+    switch (character) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case "\"": return "&quot;";
+      default: return character;
+    }
+  });
+}
+
 /** MTGO .dek format (XML) */
 export function exportMTGO(deck: Deck): string {
   const allCards: { name: string; qty: number; isSideboard?: boolean }[] = [];
@@ -65,7 +78,7 @@ export function exportMTGO(deck: Deck): string {
   }
 
   const cardXml = allCards
-    .map((c) => `  <Cards CatID="0" Quantity="${c.qty}" Sideboard="${c.isSideboard === true}" Name="${c.name.replaceAll("\"", "&quot;")}" />`)
+    .map((c) => `  <Cards CatID="0" Quantity="${c.qty}" Sideboard="${c.isSideboard === true}" Name="${escapeXmlAttribute(c.name)}" />`)
     .join("\n");
 
   return `<?xml version="1.0" encoding="utf-8"?>
