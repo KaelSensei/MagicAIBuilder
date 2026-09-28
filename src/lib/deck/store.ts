@@ -1079,6 +1079,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   swapCardPrinting: async (cardId, printing) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
+    const previousCard = get().decks[activeDeckId]?.cards.find((card) => card.id === cardId);
+    if (!previousCard) return;
     const { getCardImageUri } = await import("@/lib/scryfall/images");
     const imageUri = getCardImageUri(printing, "normal");
     const artCropUri = getCardImageUri(printing, "art_crop");
@@ -1094,13 +1096,36 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
     set({ isSyncing: true });
     try {
-      if (!isGuestDeckId(activeDeckId)) await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scryfallId: printing.id, imageUri, artCropUri }),
-      });
+      if (!isGuestDeckId(activeDeckId)) {
+        const response = await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scryfallId: printing.id, imageUri, artCropUri }),
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      }
     } catch (err) {
       logger.error("Unexpected error", "swapCardPrinting", err);
+      set((state) => {
+        const deck = state.decks[activeDeckId];
+        if (!deck) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [activeDeckId]: updateDeckCards(deck, (cards) => cards.map((card) =>
+              card.id === cardId && card.scryfallId === printing.id && card.imageUri === imageUri
+                ? {
+                    ...card,
+                    scryfallId: previousCard.scryfallId,
+                    imageUri: previousCard.imageUri,
+                    artCropUri: previousCard.artCropUri,
+                  }
+                : card
+            )),
+          },
+        };
+      });
+      useToastStore.getState().add("error", "Could not save card printing — try again");
     } finally {
       set({ isSyncing: false });
     }
