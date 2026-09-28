@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-28: MTGO XML card names
+
+#### Fixed
+
+- MTGO exports now escape XML-reserved characters in card names without altering the name read back from the file.
+
+#### Validation
+
+- The XML parsing test failed before the fix. All 2,886 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-09-27: MTGO sideboard export fidelity
 
 #### Fixed

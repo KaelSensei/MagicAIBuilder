@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-09-27
+> **Updated:** 2026-09-28
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -464,6 +464,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
 - [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
 - [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
+- [x] Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
 - [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.
