@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2886 across 264 files                                                                                                                   |
+| Unit tests          | 2887 across 264 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -31,6 +31,7 @@
 
 ## Latest product delivery
 
+- Card printing changes now restore the previous printing after a network failure or rejected save, preserving the card's quantity and zone and showing an error toast. Both new tests failed before implementation. All 2,887 unit tests, TypeScript, lint and production build passed on the personal VPS; CI, rerun Lighthouse and Vercel passed. SonarCloud returned HTTP 403 before analysis, and Docker E2E was not run.
 - MTGO XML export now escapes reserved characters in card names, so generated files parse correctly and preserve the original names. The focused test failed before implementation; 2,886 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud returned HTTP 403 before analysis. Docker E2E was not run for this slice.
 - MTGO XML export now preserves sideboard quantities and excludes Considering cards from the playable deck. The focused test failed before the change; 2,885 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud still fails with HTTP 403 before analysis. Docker E2E was not run for this slice.
 - Plain-text deck export, import and bulk edit now preserve the partner, companion, sideboard and Considering zones with their quantities. Bulk edit rejects unresolved names before clearing the deck, resets stale client state before rebuilding, and reloads the full saved deck afterward. External-format printing and category fidelity remains open work.
