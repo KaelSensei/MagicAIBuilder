@@ -62,6 +62,37 @@ describe("validateGeneratedDeck", () => {
     );
   });
 
+  it("accepts the allowed seven copies of Seven Dwarves", () => {
+    const deck = validDeck();
+    deck.cards = [
+      { name: "Seven Dwarves", quantity: 7, category: "creature" },
+      { name: "Island", quantity: 92, category: "land" },
+    ];
+
+    expect(validateGeneratedDeck(deck)).toEqual([]);
+  });
+
+  it("rejects eight copies of Seven Dwarves", () => {
+    const deck = validDeck();
+    deck.cards = [
+      { name: "Seven Dwarves", quantity: 8, category: "creature" },
+      { name: "Island", quantity: 91, category: "land" },
+    ];
+
+    expect(validateGeneratedDeck(deck)).toContain("Seven Dwarves exceeds the 7-copy limit.");
+  });
+
+  it("enforces the cap across separate entries of the same card", () => {
+    const deck = validDeck();
+    deck.cards = [
+      { name: "Nazgûl", quantity: 5, category: "creature" },
+      { name: "Nazgûl", quantity: 5, category: "creature" },
+      { name: "Island", quantity: 89, category: "land" },
+    ];
+
+    expect(validateGeneratedDeck(deck)).toContain("Nazgûl exceeds the 9-copy limit.");
+  });
+
   it("rejects the commander appearing in the card list", () => {
     const deck = validDeck();
     deck.cards[0].name = "Atraxa, Praetors' Voice";
