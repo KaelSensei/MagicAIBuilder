@@ -81,6 +81,8 @@ describe("GET /api/user/profile", () => {
     expect(body.id).toBe("user-1");
     expect(body.name).toBe("Kael");
     expect(body.email).toBe("kael@test.com");
+    expect(body.createdAt).toBe("2026-01-01T00:00:00.000Z");
+    expect(mockUserFindUnique).toHaveBeenCalledTimes(1);
   });
 
   it("returns 401 when not authenticated", async () => {
