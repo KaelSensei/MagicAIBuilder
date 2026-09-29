@@ -93,6 +93,17 @@ describe("validateGeneratedDeck", () => {
     expect(validateGeneratedDeck(deck)).toContain("Nazgûl exceeds the 9-copy limit.");
   });
 
+  it("accepts capped copies split across entries when their total is legal", () => {
+    const deck = validDeck();
+    deck.cards = [
+      { name: "Nazgûl", quantity: 4, category: "creature" },
+      { name: "Nazgûl", quantity: 5, category: "creature" },
+      { name: "Island", quantity: 90, category: "land" },
+    ];
+
+    expect(validateGeneratedDeck(deck)).toEqual([]);
+  });
+
   it("rejects the commander appearing in the card list", () => {
     const deck = validDeck();
     deck.cards[0].name = "Atraxa, Praetors' Voice";
