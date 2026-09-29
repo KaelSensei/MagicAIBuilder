@@ -48,8 +48,13 @@ export function exportArena(deck: Deck): string {
     lines.push("");
   }
   lines.push("Deck");
-  for (const card of deck.cards) {
+  for (const card of deck.cards.filter((card) => card.zone === "main")) {
     lines.push(cardLine(card, card.quantity));
+  }
+  const sideboard = deck.cards.filter((card) => card.zone === "sideboard");
+  if (sideboard.length > 0) {
+    lines.push("", "Sideboard");
+    for (const card of sideboard) lines.push(cardLine(card, card.quantity));
   }
   return lines.join("\n");
 }
