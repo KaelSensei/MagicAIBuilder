@@ -42,21 +42,14 @@ const USER_FIXTURE = {
   email: "kael@test.com",
   image: null,
   createdAt: new Date("2026-01-01"),
+  onboardingDone: true,
 };
 
 function authed() {
   mockAuth.mockResolvedValueOnce({
     user: { id: "user-1", name: "Kael", email: "kael@test.com" },
   });
-  // requireAuth resolves the session id against the database before the
-  // route runs, so it consumes the first queued findUnique. Queue its row
-  // here; whatever the test queues next is what the route itself reads.
-  mockUserFindUnique.mockResolvedValueOnce({
-    id: "user-1",
-    name: "Kael",
-    email: "kael@test.com",
-    image: null,
-  });
+  mockUserFindUnique.mockResolvedValueOnce(USER_FIXTURE);
 }
 
 function unauthed() {
@@ -72,7 +65,6 @@ describe("GET /api/user/profile", () => {
 
   it("returns the current user's profile", async () => {
     authed();
-    mockUserFindUnique.mockResolvedValueOnce(USER_FIXTURE);
 
     const res = await GET();
 
@@ -82,6 +74,7 @@ describe("GET /api/user/profile", () => {
     expect(body.name).toBe("Kael");
     expect(body.email).toBe("kael@test.com");
     expect(body.createdAt).toBe("2026-01-01T00:00:00.000Z");
+    expect(body.onboardingDone).toBe(true);
     expect(mockUserFindUnique).toHaveBeenCalledTimes(1);
   });
 
@@ -94,13 +87,13 @@ describe("GET /api/user/profile", () => {
     expect(mockUserFindUnique).not.toHaveBeenCalled();
   });
 
-  it("returns 404 when user not found in DB", async () => {
-    authed();
+  it("returns 401 when the session user no longer exists and has no recovery email", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "deleted-user" } });
     mockUserFindUnique.mockResolvedValueOnce(null);
 
     const res = await GET();
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(401);
   });
 });
 
