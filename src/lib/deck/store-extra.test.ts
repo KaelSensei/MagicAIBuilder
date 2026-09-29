@@ -9,6 +9,8 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const toastAdd = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/db/deck-api", () => ({
   fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
   createDeck: vi.fn().mockResolvedValue({
@@ -66,11 +68,10 @@ vi.mock("@/lib/db/deck-api", () => ({
 }));
 
 vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
+  useToastStore: { getState: () => ({ add: toastAdd }) },
 }));
 
 import * as deckApi from "@/lib/db/deck-api";
-import { useToastStore } from "@/hooks/useToast";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -727,6 +728,7 @@ describe("useDeckStore — duplicateDeck", () => {
 
 describe("useDeckStore — updateCardQuantity", () => {
   beforeEach(() => {
+    toastAdd.mockClear();
     // Use a basic land — maxQuantity returns 99 for basic lands, allowing increments
     seedDeck(makeActiveDeck({
       cards: [makeDeckCard({ id: "card-1", name: "Island", typeLine: "Basic Land — Island", quantity: 1 })],
@@ -741,12 +743,12 @@ describe("useDeckStore — updateCardQuantity", () => {
   });
 
   it("restores the saved quantity and warns when the server rejects the update", async () => {
-    vi.mocked(global.fetch).mockResolvedValueOnce({ ok: false } as Response);
+    vi.mocked(global.fetch).mockResolvedValueOnce(new Response(null, { status: 500 }));
 
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
 
     expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(1);
-    expect(useToastStore.getState().add).toHaveBeenCalledWith("error", expect.any(String));
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
@@ -756,7 +758,26 @@ describe("useDeckStore — updateCardQuantity", () => {
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
 
     expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(1);
-    expect(useToastStore.getState().add).toHaveBeenCalledWith("error", expect.any(String));
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+  });
+
+  it("restores the last confirmed quantity after two rapid updates", async () => {
+    let finishFirst: ((response: Response) => void) | undefined;
+    vi.mocked(global.fetch)
+      .mockImplementationOnce(() => new Promise<Response>((resolve) => { finishFirst = resolve; }))
+      .mockResolvedValueOnce(new Response(null, { status: 500 }));
+
+    const first = useDeckStore.getState().updateCardQuantity("card-1", 1);
+    await vi.waitFor(() => expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2));
+    const second = useDeckStore.getState().updateCardQuantity("card-1", 1);
+    await vi.waitFor(() => expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(3));
+    finishFirst?.(new Response(null, { status: 200 }));
+    await Promise.all([first, second]);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2);
+    expect(vi.mocked(global.fetch).mock.calls[1][1]).toMatchObject({
+      body: JSON.stringify({ quantity: 3 }),
+    });
   });
 
   it("decrements quantity by delta, minimum 1", async () => {
