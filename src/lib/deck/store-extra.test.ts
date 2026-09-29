@@ -70,6 +70,7 @@ vi.mock("@/hooks/useToast", () => ({
 }));
 
 import * as deckApi from "@/lib/db/deck-api";
+import { useToastStore } from "@/hooks/useToast";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -737,6 +738,25 @@ describe("useDeckStore — updateCardQuantity", () => {
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
     const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
     expect(card?.quantity).toBe(2);
+  });
+
+  it("restores the saved quantity and warns when the server rejects the update", async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce({ ok: false } as Response);
+
+    await useDeckStore.getState().updateCardQuantity("card-1", 1);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(1);
+    expect(useToastStore.getState().add).toHaveBeenCalledWith("error", expect.any(String));
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("restores the saved quantity after a network failure", async () => {
+    vi.mocked(global.fetch).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().updateCardQuantity("card-1", 1);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(1);
+    expect(useToastStore.getState().add).toHaveBeenCalledWith("error", expect.any(String));
   });
 
   it("decrements quantity by delta, minimum 1", async () => {
