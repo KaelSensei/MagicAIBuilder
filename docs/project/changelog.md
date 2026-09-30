@@ -9,6 +9,48 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-09-28: Card printing save recovery
+
+#### Fixed
+
+- Failed card printing saves now restore the previous printing instead of leaving an unsaved image visible; the card's zone and quantity remain unchanged and an error toast requests a retry.
+
+#### Validation
+
+- Network and HTTP failure tests were red before the fix. All 2,887 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse on rerun and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
+### 2026-09-28: MTGO XML card names
+
+#### Fixed
+
+- MTGO exports now escape XML-reserved characters in card names without altering the name read back from the file.
+
+#### Validation
+
+- The XML parsing test failed before the fix. All 2,886 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
+### 2026-09-27: MTGO sideboard export fidelity
+
+#### Fixed
+
+- MTGO XML now marks sideboard cards as sideboard, preserves their quantities, and excludes Considering cards from the playable export.
+
+#### Validation
+
+- The focused test failed before implementation. All 2,885 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
+### 2026-09-26: Plain-text deck round-trip
+
+#### Fixed
+
+- Dedicated partner and companion sections now survive plain-text export, import and bulk editing instead of becoming ordinary deck cards.
+- Sideboard and Considering cards retain their zones and quantities through a text round-trip.
+- Bulk edit validates all card names before clearing the saved deck, resets stale client state before rebuilding, and reloads the full deck afterward.
+
+#### Validation
+
+- 2,884 unit tests, TypeScript, ESLint, production build and dependency audit passed on the personal VPS. Docker E2E remains unrun because port 5433 is occupied by another VPS service. SonarCloud still returns HTTP 403 before analysis.
+
 ### 2026-09-26: Card packages, playtest evidence and package verification
 
 #### Added

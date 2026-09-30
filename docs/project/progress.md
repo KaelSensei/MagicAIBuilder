@@ -5,15 +5,15 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-09-26                             |
+| Last Updated  | 2026-09-28                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-09-26)
+## Current metrics (2026-09-28)
 
 | Metric              | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2872 across 264 files                                                                                                                   |
+| Unit tests          | 2887 across 264 files                                                                                                                   |
 | E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
 | SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
@@ -31,6 +31,11 @@
 
 ## Latest product delivery
 
+- Card printing changes now restore the previous printing after a network failure or rejected save, preserving the card's quantity and zone and showing an error toast. Both new tests failed before implementation. All 2,887 unit tests, TypeScript, lint and production build passed on the personal VPS; CI, rerun Lighthouse and Vercel passed. SonarCloud returned HTTP 403 before analysis, and Docker E2E was not run.
+- MTGO XML export now escapes reserved characters in card names, so generated files parse correctly and preserve the original names. The focused test failed before implementation; 2,886 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud returned HTTP 403 before analysis. Docker E2E was not run for this slice.
+- MTGO XML export now preserves sideboard quantities and excludes Considering cards from the playable deck. The focused test failed before the change; 2,885 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud still fails with HTTP 403 before analysis. Docker E2E was not run for this slice.
+- Plain-text deck export, import and bulk edit now preserve the partner, companion, sideboard and Considering zones with their quantities. Bulk edit rejects unresolved names before clearing the deck, resets stale client state before rebuilding, and reloads the full saved deck afterward. External-format printing and category fidelity remains open work.
+- Validation for this batch ran on the personal VPS: 2,884 unit tests, TypeScript, ESLint, production build and dependency audit passed. Docker E2E was not run because its configured host database port 5433 is occupied by another VPS service; no service was changed.
 - Deck owners can save reusable card packages, browse their private packages, and preview legal additions before applying them. Package metadata is reverified against Scryfall at preview and apply time so forged legality or color identity cannot bypass deck checks.
 - Goldfish playtests now summarize cards drawn, mana produced and additional cards seen for each turn, with readable and versioned JSON exports.
 - The production dependency audit reports no known vulnerabilities. SonarCloud analysis remains blocked by an HTTP 403 token response; local `pnpm sonar` is blocked by the missing Linux Rollup optional binary in WSL. E2E was not rerun locally.

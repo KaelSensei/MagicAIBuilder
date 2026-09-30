@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-09-20
+> **Updated:** 2026-09-28
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -142,7 +142,8 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 ### Remaining scope
 
 - [ ] Persist main, sideboard and maybeboard zones as the single database source of truth.
-- [ ] Preserve zone and quantity when changing a card printing.
+- [x] Preserve zone and quantity when changing a card printing.
+- [x] Restore the previous card printing and notify the player when its save fails.
 - [ ] Complete cross-zone drag and drop with clear drop targets and no layout jump.
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
@@ -462,7 +463,10 @@ A recommendation is never presented as universal truth: the user can see where i
 
 - [ ] Treat import/export formats as versioned contracts with fixtures.
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
-- [ ] Improve round-trip fidelity for categories, printings, companions and sideboards.
+- [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
+- [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
+- [x] Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
+- [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.
 

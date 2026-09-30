@@ -12,11 +12,16 @@ export function exportPlainText(deck: Deck): string {
   const lines: string[] = [];
   if (deck.commander) { lines.push("Commander", cardLine(deck.commander), ""); }
   if (deck.partner) { lines.push("Partner", cardLine(deck.partner), ""); }
+  if (deck.companion) { lines.push("Companion", cardLine(deck.companion), ""); }
   lines.push("Deck");
-  for (const card of deck.cards) {
-    lines.push(cardLine(card, card.quantity));
-    const note = card.notes?.trim();
-    if (note) lines.push(`// ${note}`);
+  for (const [zone, heading] of [["main", ""], ["sideboard", "Sideboard"], ["maybeboard", "Considering"]] as const) {
+    const zoneCards = deck.cards.filter((card) => card.zone === zone);
+    if (zone !== "main" && zoneCards.length > 0) lines.push("", heading);
+    for (const card of zoneCards) {
+      lines.push(cardLine(card, card.quantity));
+      const note = card.notes?.trim();
+      if (note) lines.push(`// ${note}`);
+    }
   }
   return lines.join("\n");
 }
@@ -49,17 +54,31 @@ export function exportArena(deck: Deck): string {
   return lines.join("\n");
 }
 
+/** Escape card names used in double-quoted XML attributes. */
+function escapeXmlAttribute(value: string): string {
+  return value.replaceAll(/[&<>"]/g, (character) => {
+    switch (character) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case "\"": return "&quot;";
+      default: return character;
+    }
+  });
+}
+
 /** MTGO .dek format (XML) */
 export function exportMTGO(deck: Deck): string {
   const allCards: { name: string; qty: number; isSideboard?: boolean }[] = [];
   if (deck.commander) allCards.push({ name: deck.commander.name, qty: 1 });
   if (deck.partner) allCards.push({ name: deck.partner.name, qty: 1 });
   for (const card of deck.cards) {
-    allCards.push({ name: card.name, qty: card.quantity });
+    if (card.zone === "maybeboard") continue;
+    allCards.push({ name: card.name, qty: card.quantity, isSideboard: card.zone === "sideboard" });
   }
 
   const cardXml = allCards
-    .map((c) => `  <Cards CatID="0" Quantity="${c.qty}" Sideboard="false" Name="${c.name.replaceAll("\"", "&quot;")}" />`)
+    .map((c) => `  <Cards CatID="0" Quantity="${c.qty}" Sideboard="${c.isSideboard === true}" Name="${escapeXmlAttribute(c.name)}" />`)
     .join("\n");
 
   return `<?xml version="1.0" encoding="utf-8"?>
