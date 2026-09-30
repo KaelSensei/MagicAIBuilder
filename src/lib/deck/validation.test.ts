@@ -192,6 +192,15 @@ describe("validateDeck", () => {
     expect(result.errors.some((e) => e.includes("singleton") || e.includes("Duplicate"))).toBe(true);
   });
 
+  it("reports a singleton violation when one row contains two copies", () => {
+    const deck = makeDeck({
+      commander: makeCommander([]),
+      cards: [makeCard({ name: "Sol Ring", quantity: 2 })],
+    });
+
+    expect(validateDeck(deck).errors).toContain("Duplicate cards (singleton violation): Sol Ring");
+  });
+
   it("reports too many cards (over 100)", () => {
     const cards = Array.from({ length: 5 }, (_, i) =>
       makeCard({ id: `c-${i}`, name: `Card ${i}`, quantity: 25 })
@@ -308,6 +317,18 @@ describe("validateDeck — multi-format", () => {
     const deck = makeDeck({ format: "standard", cards });
     const result = validateDeck(deck);
     expect(result.errors.some((e) => e.includes("max 4"))).toBe(true);
+  });
+
+  it("counts quantities across rows against the Standard copy limit", () => {
+    const deck = makeDeck({
+      format: "standard",
+      cards: [
+        makeCard({ id: "first", name: "Lightning Bolt", quantity: 3 }),
+        makeCard({ id: "second", name: "Lightning Bolt", quantity: 2 }),
+      ],
+    });
+
+    expect(validateDeck(deck).errors).toContain("Duplicate cards (max 4 copies): Lightning Bolt");
   });
 });
 
