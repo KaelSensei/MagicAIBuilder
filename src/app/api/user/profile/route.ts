@@ -11,23 +11,8 @@ export async function GET() {
     const result = await requireAuth();
     if (result.error) return result.error;
 
-    const user = await prisma.user.findUnique({
-      where: { id: result.session.user.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        createdAt: true,
-        onboardingDone: true,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(user);
+    const { id, name, email, image, createdAt, onboardingDone } = result.session.user;
+    return NextResponse.json({ id, name, email, image, createdAt, onboardingDone });
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "GET /api/user/profile");
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
