@@ -27,6 +27,7 @@ export function validateGeneratedDeck(value: unknown): readonly string[] {
 
   const issues: string[] = [];
   const expectedCardCount = COMMANDER_DECK_CARD_COUNT - (value.partner ? 1 : 0);
+  const normalizedPartner = value.partner?.trim().toLocaleLowerCase();
   const quantitiesByName = new Map<string, number>();
   let totalCards = 0;
 
@@ -52,6 +53,9 @@ export function validateGeneratedDeck(value: unknown): readonly string[] {
 
     if (normalizedName === value.commander.trim().toLocaleLowerCase()) {
       issues.push(`The commander ${name} is duplicated in the card list.`);
+    }
+    if (normalizedPartner && normalizedName === normalizedPartner) {
+      issues.push(`The partner ${name} is duplicated in the card list.`);
     }
 
     const previousQuantity = quantitiesByName.get(normalizedName) ?? 0;
