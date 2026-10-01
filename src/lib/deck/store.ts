@@ -72,6 +72,13 @@ function updateDeckCards(deck: Deck, update: (cards: DeckCard[]) => DeckCard[]):
   };
 }
 
+interface PendingQuantityWrite {
+  confirmedQuantity: number;
+  promise: Promise<void>;
+}
+
+const pendingQuantityWrites = new Map<string, PendingQuantityWrite>();
+
 function setCardsZone(deck: Deck, cardIds: ReadonlySet<string>, zone: DeckZone): Deck {
   return updateDeckCards(deck, (cards) => cards.map((card) =>
     cardIds.has(card.id)
@@ -1025,6 +1032,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const max = maxQuantity(card.name, card.typeLine, card.oracleText ?? "");
     const newQty = Math.max(1, Math.min(max, card.quantity + delta));
     if (newQty === card.quantity) return;
+    const writeKey = `${activeDeckId}:${cardId}`;
+    const previousWrite = pendingQuantityWrites.get(writeKey);
+    const confirmedQuantity = previousWrite?.confirmedQuantity ?? card.quantity;
 
     set((state) => ({
       decks: {
@@ -1035,17 +1045,51 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       },
     }));
     set({ isSyncing: true });
-    try {
-      if (!isGuestDeckId(activeDeckId)) await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity: newQty }),
-      });
-    } catch (err) {
-      logger.error("Unexpected error", "updateCardQuantity", err);
-    } finally {
-      set({ isSyncing: false });
-    }
+    const write: PendingQuantityWrite = {
+      confirmedQuantity,
+      promise: Promise.resolve(),
+    };
+    pendingQuantityWrites.set(writeKey, write);
+    write.promise = (async () => {
+      await previousWrite?.promise;
+      try {
+        if (!isGuestDeckId(activeDeckId)) {
+          const response = await fetch(`/api/decks/${activeDeckId}/cards/${cardId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ quantity: newQty }),
+          });
+          if (!response.ok) throw new Error(`Quantity save failed: ${response.status}`);
+        }
+        write.confirmedQuantity = newQty;
+      } catch (err) {
+        logger.error("Unexpected error", "updateCardQuantity", err);
+        if (pendingQuantityWrites.get(writeKey) === write) {
+          const savedQuantity = write.confirmedQuantity;
+          set((state) => {
+            const currentDeck = state.decks[activeDeckId];
+            if (!currentDeck || !uniqueDeckCards(currentDeck).some((c) => c.id === cardId && c.quantity === newQty)) return state;
+            return {
+              decks: {
+                ...state.decks,
+                [activeDeckId]: updateDeckCards(currentDeck, (cards) => cards.map((c) =>
+                  c.id === cardId ? { ...c, quantity: savedQuantity } : c
+                )),
+              },
+            };
+          });
+          useToastStore.getState().add("error", "Could not save card quantity — previous quantity restored.");
+        }
+      } finally {
+        const nextWrite = pendingQuantityWrites.get(writeKey);
+        if (nextWrite && nextWrite !== write) nextWrite.confirmedQuantity = write.confirmedQuantity;
+        if (nextWrite === write) {
+          pendingQuantityWrites.delete(writeKey);
+          set({ isSyncing: false });
+        }
+      }
+    })();
+    await write.promise;
   },
 
   promoteToCommander: async (cardId) => {
