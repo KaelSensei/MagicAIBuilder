@@ -9,6 +9,8 @@ export interface AuthenticatedSession {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    createdAt: Date;
+    onboardingDone: boolean;
   };
 }
 
@@ -40,7 +42,7 @@ async function resolveAuthenticatedUser(
   if (sessionUser.id) {
     const userById = await prisma.user.findUnique({
       where: { id: sessionUser.id },
-      select: { id: true, name: true, email: true, image: true },
+      select: { id: true, name: true, email: true, image: true, createdAt: true, onboardingDone: true },
     });
     if (userById) {
       return userById;
@@ -52,7 +54,7 @@ async function resolveAuthenticatedUser(
     return null;
   }
 
-  const select = { id: true, name: true, email: true, image: true } as const;
+  const select = { id: true, name: true, email: true, image: true, createdAt: true, onboardingDone: true } as const;
 
   try {
     return await prisma.user.upsert({

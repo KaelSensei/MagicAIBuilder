@@ -50,6 +50,8 @@ describe("requireAuth", () => {
       name: "Kael",
       email: "kael@test.com",
       image: null,
+      createdAt: new Date("2026-01-01"),
+      onboardingDone: true,
     });
 
     const result = await requireAuth();
@@ -57,9 +59,10 @@ describe("requireAuth", () => {
     expect(result.error).toBeUndefined();
     expect(result.session?.user.id).toBe("user-1");
     expect(result.session?.user.name).toBe("Kael");
+    expect(result.session?.user.onboardingDone).toBe(true);
     expect(mockUserFindUnique).toHaveBeenCalledWith({
       where: { id: "user-1" },
-      select: { id: true, name: true, email: true, image: true },
+      select: { id: true, name: true, email: true, image: true, createdAt: true, onboardingDone: true },
     });
   });
 

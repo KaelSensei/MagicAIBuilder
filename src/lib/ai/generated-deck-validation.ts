@@ -1,4 +1,5 @@
 import type { AIDeckResponse } from "@/app/api/ai/build/types";
+import { CAPPED_MULTIPLES } from "@/lib/deck/multiples";
 
 const COMMANDER_DECK_CARD_COUNT = 99;
 const BASIC_LANDS = new Set([
@@ -9,6 +10,9 @@ const BASIC_LANDS = new Set([
   "forest",
   "wastes",
 ]);
+const CAPPED_MULTIPLES_BY_NAME = new Map(
+  Object.entries(CAPPED_MULTIPLES).map(([name, limit]) => [name.toLocaleLowerCase(), limit])
+);
 
 /**
  * Validate the structural invariants required before an AI deck reaches the client.
@@ -24,7 +28,7 @@ export function validateGeneratedDeck(value: unknown): readonly string[] {
   const issues: string[] = [];
   const expectedCardCount = COMMANDER_DECK_CARD_COUNT - (value.partner ? 1 : 0);
   const normalizedPartner = value.partner?.trim().toLocaleLowerCase();
-  const seenNames = new Set<string>();
+  const quantitiesByName = new Map<string, number>();
   let totalCards = 0;
 
   if (value.commander.trim().length === 0) {
@@ -54,12 +58,17 @@ export function validateGeneratedDeck(value: unknown): readonly string[] {
       issues.push(`The partner ${name} is duplicated in the card list.`);
     }
 
-    if (seenNames.has(normalizedName) && !BASIC_LANDS.has(normalizedName)) {
+    const previousQuantity = quantitiesByName.get(normalizedName) ?? 0;
+    const cappedLimit = CAPPED_MULTIPLES_BY_NAME.get(normalizedName);
+    if (previousQuantity > 0 && !BASIC_LANDS.has(normalizedName) && cappedLimit === undefined) {
       issues.push(`${name} is duplicated in the generated deck.`);
     }
-    seenNames.add(normalizedName);
+    const combinedQuantity = previousQuantity + card.quantity;
+    quantitiesByName.set(normalizedName, combinedQuantity);
 
-    if (card.quantity > 1 && !BASIC_LANDS.has(normalizedName)) {
+    if (cappedLimit !== undefined && combinedQuantity > cappedLimit && previousQuantity <= cappedLimit) {
+      issues.push(`${name} exceeds the ${cappedLimit}-copy limit.`);
+    } else if (card.quantity > 1 && !BASIC_LANDS.has(normalizedName) && cappedLimit === undefined) {
       issues.push(`${name} has more than one copy but is not a basic land.`);
     }
   }

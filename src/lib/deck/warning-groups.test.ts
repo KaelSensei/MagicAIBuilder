@@ -31,4 +31,16 @@ describe("groupDeckWarnings", () => {
       "Review this unusual interaction",
     ]);
   });
+
+  it("classifies the validator's incomplete-deck message as a legality warning", () => {
+    const warning = "Deck has 92/100 cards — needs 8 more";
+
+    expect(groupDeckWarnings([warning]).legality).toEqual([warning]);
+  });
+
+  it("classifies a Game Changer bracket floor as strategy, not optional advice", () => {
+    const warning = "4 Game Changers detected — deck is Bracket 4 minimum";
+
+    expect(groupDeckWarnings([warning]).strategy).toEqual([warning]);
+  });
 });
