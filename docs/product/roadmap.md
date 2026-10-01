@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-09-28
+> **Updated:** 2026-10-01
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -182,6 +182,7 @@ A user can move a card between every legal zone, reload the page, change its pri
 - Per-card reasoning, one-click add and ignore actions.
 - Server-side secrets, validation, rate limiting and prompt-injection protections.
 - Optional player brief covering theme, desired play pattern and dislikes, combined with the existing commander, budget and power target.
+- A small regression set for generated deck structure and recommendation evidence; broader usefulness evaluation remains open.
 
 ### Next slice
 
@@ -310,6 +311,8 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Card prices and multi-format exports.
 - Quantity-aware deck reconciliation that preserves surplus collection copies.
 - Shopping-list prioritization, line totals, copied budget summaries and safe CSV escaping.
+- Bulk collection additions now count each missing printing once across duplicate deck rows.
+- Deck collection summaries allocate owned copies and proxies once per printing, so remaining quantities and costs stay accurate.
 
 ### Remaining scope
 
