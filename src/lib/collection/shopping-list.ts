@@ -221,6 +221,37 @@ export function buildShoppingList(
   return missing;
 }
 
+/**
+ * Return one deck card per missing printing with its total quantity to add.
+ * @param deckCards Cards in the deck's zones.
+ * @param commander Optional commander card.
+ * @param partner Optional partner card.
+ * @param ownedQuantities Physical copies by printing ID.
+ * @returns Deduplicated cards with only the quantities still missing.
+ */
+export function getMissingCollectionCards(
+  deckCards: readonly DeckCard[],
+  commander: DeckCard | null,
+  partner: DeckCard | null,
+  ownedQuantities: Readonly<Record<string, number>>
+): DeckCard[] {
+  const missingById = new Map(
+    buildShoppingList(deckCards, commander, partner, ownedQuantities).map((item) => [
+      item.scryfallId,
+      item.quantity,
+    ])
+  );
+  const missingCards: DeckCard[] = [];
+  for (const card of collectAllCards(deckCards, commander, partner)) {
+    const scryfallId = card.scryfallId ?? card.id;
+    const quantity = missingById.get(scryfallId);
+    if (quantity === undefined) continue;
+    missingCards.push({ ...card, quantity });
+    missingById.delete(scryfallId);
+  }
+  return missingCards;
+}
+
 /** Aggregate simultaneous deck requirements without changing collection ownership. */
 export function buildAcquisitionPlan(
   decks: readonly AcquisitionPlanDeck[],

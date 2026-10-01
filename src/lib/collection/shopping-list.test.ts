@@ -9,6 +9,7 @@ import {
   getDeckCardStatuses,
   summarizeDeckCollection,
   buildAcquisitionPlan,
+  getMissingCollectionCards,
 } from "./shopping-list";
 import type { DeckCard } from "@/lib/deck/types";
 
@@ -143,6 +144,19 @@ describe("buildShoppingList", () => {
     const list = buildShoppingList(cards, null, null, {});
     expect(list[0].name).toBe("Has Price"); // null price sorts last
     expect(list[1].name).toBe("No Price");
+  });
+});
+
+describe("getMissingCollectionCards", () => {
+  it("adds each missing printing only once when it appears on multiple deck rows", () => {
+    const cards = [
+      makeCard({ id: "row-a", scryfallId: "shared", quantity: 2 }),
+      makeCard({ id: "row-b", scryfallId: "shared", quantity: 2 }),
+    ];
+
+    expect(getMissingCollectionCards(cards, null, null, { shared: 1 })).toEqual([
+      expect.objectContaining({ scryfallId: "shared", quantity: 3 }),
+    ]);
   });
 });
 
