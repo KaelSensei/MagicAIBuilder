@@ -120,6 +120,48 @@ describe("fetchEdhrecData", () => {
     expect(result.cards[0].inclusion).toBe(0.42);
   });
 
+  it("falls back to a valid deck ratio when inclusion is outside zero to one", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          container: {
+            json_dict: {
+              cardlists: [{
+                tag: "staples",
+                cardviews: [{ name: "Sol Ring", inclusion: 42, num_decks: 80, potential_decks: 100 }],
+              }],
+            },
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    const result = await fetchEdhrecData("test");
+    expect(result.cards[0].inclusion).toBe(0.8);
+  });
+
+  it("does not display an impossible ratio when the source counts disagree", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          container: {
+            json_dict: {
+              cardlists: [{
+                tag: "staples",
+                cardviews: [{ name: "Sol Ring", inclusion: -0.2, num_decks: 120, potential_decks: 100 }],
+              }],
+            },
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    const result = await fetchEdhrecData("test");
+    expect(result.cards[0].inclusion).toBe(0);
+  });
+
   it("returns 0 inclusion when potential_decks is zero", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(

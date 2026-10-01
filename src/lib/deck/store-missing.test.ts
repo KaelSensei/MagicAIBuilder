@@ -316,7 +316,7 @@ describe("useDeckStore — moveToMaybeboard error path", () => {
     expect(deckApi.updateCardZone).not.toHaveBeenCalled();
   });
 
-  it("keeps optimistic state when API throws", async () => {
+  it("restores the main zone when the move fails", async () => {
     vi.mocked(deckApi.updateCardZone).mockRejectedValueOnce(new Error("api error"));
 
     const card = makeDeckCard("card-1", "Counterspell");
@@ -328,10 +328,9 @@ describe("useDeckStore — moveToMaybeboard error path", () => {
     await useDeckStore.getState().moveToMaybeboard("card-1");
 
     const state = useDeckStore.getState().decks["deck-1"];
-    // Optimistic update kept despite API error
     expect(state.cards).toHaveLength(1);
-    expect(state.cards[0].zone).toBe("maybeboard");
-    expect(state.maybeboard).toHaveLength(1);
+    expect(state.cards[0].zone).toBe("main");
+    expect(state.maybeboard).toHaveLength(0);
   });
 });
 
@@ -344,21 +343,21 @@ describe("useDeckStore — moveToDeck error path", () => {
     expect(deckApi.updateCardZone).not.toHaveBeenCalled();
   });
 
-  it("keeps optimistic state when API throws", async () => {
+  it("restores the maybeboard when the move fails", async () => {
     vi.mocked(deckApi.updateCardZone).mockRejectedValueOnce(new Error("api error"));
 
-    const card = makeDeckCard("maybe-1", "Swords to Plowshares");
+    const card = makeDeckCard("maybe-1", "Swords to Plowshares", { zone: "maybeboard" });
     useDeckStore.setState({
-      decks: { "deck-1": seedDeck({ maybeboard: [card] }) },
+      decks: { "deck-1": seedDeck({ cards: [card], maybeboard: [card] }) },
       activeDeckId: "deck-1",
     });
 
     await useDeckStore.getState().moveToDeck("maybe-1");
 
     const state = useDeckStore.getState().decks["deck-1"];
-    expect(state.maybeboard).toHaveLength(0);
+    expect(state.maybeboard).toHaveLength(1);
     expect(state.cards).toHaveLength(1);
-    expect(state.cards[0].zone).toBe("main");
+    expect(state.cards[0].zone).toBe("maybeboard");
   });
 });
 

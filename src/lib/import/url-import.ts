@@ -148,12 +148,12 @@ async function importMoxfield(id: string): Promise<UrlImportResult> {
   const sideEntries = Object.values(data.boards?.sideboard?.cards ?? {});
   const maybeEntries = Object.values(data.boards?.maybeboard?.cards ?? {});
 
-  for (const entry of commanderEntries) {
+  for (const [index, entry] of commanderEntries.entries()) {
     cards.push({
       name: entry.card.name,
       quantity: entry.quantity,
-      isCommander: true,
-      isPartner: false,
+      isCommander: index === 0,
+      isPartner: index === 1,
       zone: "main",
     });
   }
