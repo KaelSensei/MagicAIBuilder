@@ -47,6 +47,8 @@ export interface DeckCardStatusItem {
   readonly quantity: number;
   readonly availableQuantity: number;
   readonly neededQuantity: number;
+  readonly ownedQuantity: number;
+  readonly proxyQuantity: number;
   readonly status: DeckCardStatus;
   readonly price: number | null;
 }
@@ -106,13 +108,23 @@ export function getDeckCardStatuses(
   proxyQuantities: Readonly<Record<string, number>> = {}
 ): DeckCardStatusItem[] {
   const result: DeckCardStatusItem[] = [];
+  const remainingPhysical = new Map<string, number>();
+  const remainingProxy = new Map<string, number>();
   for (const card of collectAllCards(deckCards, commander, partner)) {
     const scryfallId = card.scryfallId ?? card.id;
-    const physical = Math.max(0, quantities[scryfallId] ?? 0);
-    const proxy = Math.max(0, proxyQuantities[scryfallId] ?? 0);
-    const availableQuantity = Math.min(card.quantity, physical + proxy);
-    const neededQuantity = card.quantity - availableQuantity;
     const isBasic = isBasicLand(card);
+    const physical = isBasic
+      ? card.quantity
+      : Math.min(card.quantity, Math.max(0, remainingPhysical.get(scryfallId) ?? quantities[scryfallId] ?? 0));
+    const proxy = isBasic
+      ? 0
+      : Math.min(card.quantity - physical, Math.max(0, remainingProxy.get(scryfallId) ?? proxyQuantities[scryfallId] ?? 0));
+    if (!isBasic) {
+      remainingPhysical.set(scryfallId, (remainingPhysical.get(scryfallId) ?? quantities[scryfallId] ?? 0) - physical);
+      remainingProxy.set(scryfallId, (remainingProxy.get(scryfallId) ?? proxyQuantities[scryfallId] ?? 0) - proxy);
+    }
+    const availableQuantity = physical + proxy;
+    const neededQuantity = card.quantity - availableQuantity;
     const status: DeckCardStatus = isBasic || physical >= card.quantity
       ? "owned"
       : proxy > 0
@@ -123,9 +135,11 @@ export function getDeckCardStatuses(
       scryfallId,
       name: card.name,
       quantity: card.quantity,
-      availableQuantity: isBasic ? card.quantity : availableQuantity,
-      neededQuantity: isBasic ? 0 : neededQuantity,
-      status: isBasic ? "owned" : status,
+      availableQuantity,
+      neededQuantity,
+      ownedQuantity: physical,
+      proxyQuantity: proxy,
+      status,
       price: card.price,
     });
   }
@@ -149,12 +163,10 @@ export function summarizeDeckCollection(
 
   for (const item of statuses) {
     totalQuantity += item.quantity;
-    const physical = Math.min(item.quantity, Math.max(0, quantities[item.scryfallId] ?? 0));
-    const proxy = Math.min(item.quantity - physical, Math.max(0, proxyQuantities[item.scryfallId] ?? 0));
-    ownedQuantity += physical;
-    proxyQuantity += proxy;
-    missingQuantity += item.quantity - physical - proxy;
-    missingCost += (item.price ?? 0) * (item.quantity - physical - proxy);
+    ownedQuantity += item.ownedQuantity;
+    proxyQuantity += item.proxyQuantity;
+    missingQuantity += item.neededQuantity;
+    missingCost += (item.price ?? 0) * item.neededQuantity;
   }
 
   return {
