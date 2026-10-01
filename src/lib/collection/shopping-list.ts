@@ -221,7 +221,14 @@ export function buildShoppingList(
   return missing;
 }
 
-/** Return one deck card per missing printing with its total quantity to add. */
+/**
+ * Return one deck card per missing printing with its total quantity to add.
+ * @param deckCards Cards in the deck's zones.
+ * @param commander Optional commander card.
+ * @param partner Optional partner card.
+ * @param ownedQuantities Physical copies by printing ID.
+ * @returns Deduplicated cards with only the quantities still missing.
+ */
 export function getMissingCollectionCards(
   deckCards: readonly DeckCard[],
   commander: DeckCard | null,
