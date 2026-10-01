@@ -76,11 +76,20 @@ import {
 } from "./mtgtop8";
 
 function inclusionFromEdhrecView(view: EdhrecCardView): number {
-  if (view.inclusion != null) return view.inclusion;
   if (
-    view.num_decks != null &&
-    view.potential_decks != null &&
-    view.potential_decks > 0
+    typeof view.inclusion === "number" &&
+    Number.isFinite(view.inclusion) &&
+    view.inclusion >= 0 &&
+    view.inclusion <= 1
+  ) return view.inclusion;
+  if (
+    typeof view.num_decks === "number" &&
+    typeof view.potential_decks === "number" &&
+    Number.isFinite(view.num_decks) &&
+    Number.isFinite(view.potential_decks) &&
+    view.num_decks >= 0 &&
+    view.potential_decks > 0 &&
+    view.num_decks <= view.potential_decks
   ) {
     return view.num_decks / view.potential_decks;
   }
