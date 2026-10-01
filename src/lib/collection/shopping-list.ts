@@ -113,15 +113,17 @@ export function getDeckCardStatuses(
   for (const card of collectAllCards(deckCards, commander, partner)) {
     const scryfallId = card.scryfallId ?? card.id;
     const isBasic = isBasicLand(card);
+    const physicalAvailable = remainingPhysical.get(scryfallId) ?? quantities[scryfallId] ?? 0;
+    const proxyAvailable = remainingProxy.get(scryfallId) ?? proxyQuantities[scryfallId] ?? 0;
     const physical = isBasic
       ? card.quantity
-      : Math.min(card.quantity, Math.max(0, remainingPhysical.get(scryfallId) ?? quantities[scryfallId] ?? 0));
+      : Math.min(card.quantity, Math.max(0, physicalAvailable));
     const proxy = isBasic
       ? 0
-      : Math.min(card.quantity - physical, Math.max(0, remainingProxy.get(scryfallId) ?? proxyQuantities[scryfallId] ?? 0));
+      : Math.min(card.quantity - physical, Math.max(0, proxyAvailable));
     if (!isBasic) {
-      remainingPhysical.set(scryfallId, (remainingPhysical.get(scryfallId) ?? quantities[scryfallId] ?? 0) - physical);
-      remainingProxy.set(scryfallId, (remainingProxy.get(scryfallId) ?? proxyQuantities[scryfallId] ?? 0) - proxy);
+      remainingPhysical.set(scryfallId, physicalAvailable - physical);
+      remainingProxy.set(scryfallId, proxyAvailable - proxy);
     }
     const availableQuantity = physical + proxy;
     const neededQuantity = card.quantity - availableQuantity;
