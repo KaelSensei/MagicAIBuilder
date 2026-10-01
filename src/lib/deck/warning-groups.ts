@@ -8,6 +8,7 @@ const LEGALITY_MARKERS = [
   "banned",
   "color identity",
   "deck has only",
+  "cards — needs",
   "not legal",
   "cannot be",
   "companion requirement",
@@ -20,6 +21,7 @@ const STRATEGY_MARKERS = [
   "combo",
   "target is bracket",
   "bracket mismatch",
+  "bracket 4 minimum",
 ];
 
 /**
