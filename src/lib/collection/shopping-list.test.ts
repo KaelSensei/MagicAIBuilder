@@ -30,6 +30,22 @@ const BASIC_LAND = makeCard({
 });
 
 describe("summarizeDeckCollection", () => {
+  it("uses owned and proxy copies only once across rows of the same printing", () => {
+    const cards = [
+      makeCard({ id: "row-a", scryfallId: "shared", quantity: 2, price: 5 }),
+      makeCard({ id: "row-b", scryfallId: "shared", quantity: 2, price: 5 }),
+    ];
+
+    expect(summarizeDeckCollection(cards, null, null, { shared: 1 }, { shared: 1 })).toEqual({
+      totalQuantity: 4,
+      ownedQuantity: 1,
+      proxyQuantity: 1,
+      missingQuantity: 2,
+      missingCost: 10,
+      completionRatio: 0.5,
+    });
+  });
+
   it("summarizes physical, proxy, and missing deck quantities", () => {
     const cards = [
       makeCard({ scryfallId: "owned", quantity: 2 }),
@@ -237,6 +253,18 @@ describe("buildAcquisitionPlan", () => {
 });
 
 describe("getDeckCardStatuses", () => {
+  it("does not reuse a printing's available copies on later deck rows", () => {
+    const cards = [
+      makeCard({ id: "row-a", scryfallId: "shared", quantity: 2 }),
+      makeCard({ id: "row-b", scryfallId: "shared", quantity: 2 }),
+    ];
+
+    const statuses = getDeckCardStatuses(cards, null, null, { shared: 1 }, { shared: 1 });
+
+    expect(statuses.map((item) => item.availableQuantity)).toEqual([2, 0]);
+    expect(statuses.map((item) => item.neededQuantity)).toEqual([0, 2]);
+  });
+
   it("classifies owned, proxy and missing quantities", () => {
     const cards = [
       makeCard({ id: "owned", scryfallId: "owned", name: "Owned", quantity: 2 }),
