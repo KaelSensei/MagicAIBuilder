@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import { useCollectionStore } from "@/lib/collection/store";
 import {
-  buildShoppingList,
+  getMissingCollectionCards,
   summarizeDeckCollection,
 } from "@/lib/collection/shopping-list";
 import { ShoppingListModal } from "./ShoppingListModal";
@@ -66,24 +66,7 @@ export function CollectionStatsPanel({
 
   /** Gather non-basic deck cards with only the quantity still missing. */
   const getMissingCards = useCallback((): DeckCard[] => {
-    const allCards: DeckCard[] = [];
-    if (deck.commander) allCards.push(deck.commander);
-    if (deck.partner) allCards.push(deck.partner);
-    for (const c of deck.cards) {
-      if (c.zone === "main") allCards.push(c);
-    }
-    const missingById = new Map(
-      buildShoppingList(
-        deck.cards,
-        deck.commander,
-        deck.partner,
-        collectionQuantities
-      ).map((item) => [item.scryfallId, item.quantity])
-    );
-    return allCards.flatMap((card) => {
-      const quantity = missingById.get(card.scryfallId ?? card.id);
-      return quantity ? [{ ...card, quantity }] : [];
-    });
+    return getMissingCollectionCards(deck.cards, deck.commander, deck.partner, collectionQuantities);
   }, [deck, collectionQuantities]);
 
   /** Mark all deck cards as owned */
