@@ -17,9 +17,9 @@ import {
 import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
 import {
-  formatCollectionCsv,
   formatCollectionText,
 } from "@/lib/collection/shopping-list";
+import { formatCollectionPrintingCsv } from "@/lib/collection/printing-csv";
 import { cn } from "@/components/ui/utils";
 import type { CollectionCard } from "@/lib/collection/types";
 import { CardImage } from "@/components/card/CardImage";
@@ -72,6 +72,7 @@ export function CollectionPageClient() {
   const exportCards = useMemo(
     () =>
       allCards.map((c) => ({
+        scryfallId: c.scryfallId,
         name: c.name,
         quantity: c.quantity,
         foil: c.foil,
@@ -89,7 +90,7 @@ export function CollectionPageClient() {
   }, [exportCards]);
 
   const handleExportCsv = useCallback(() => {
-    const csv = formatCollectionCsv(exportCards);
+    const csv = formatCollectionPrintingCsv(exportCards);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
