@@ -10,8 +10,8 @@ import type { Deck } from "@/lib/deck/types";
 import {
   buildShoppingList,
   formatShoppingListText,
-  formatShoppingListCsv,
 } from "@/lib/collection/shopping-list";
+import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
 import type { ShoppingListItem } from "@/lib/collection/shopping-list";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
@@ -69,7 +69,7 @@ export function ShoppingListModal({
   };
 
   const handleExportCsv = () => {
-    const csv = formatShoppingListCsv(items);
+    const csv = formatAcquisitionCsv(items);
     const deckSlug = deck.name.replaceAll(/[^a-z0-9]/gi, "_").toLowerCase();
     downloadFile(csv, `${deckSlug}-shopping.csv`, "text/csv");
   };
