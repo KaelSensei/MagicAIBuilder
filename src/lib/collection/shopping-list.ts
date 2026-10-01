@@ -179,22 +179,33 @@ export function buildShoppingList(
   const includeBasics = options?.includeBasics ?? false;
   const allCards = collectAllCards(deckCards, commander, partner);
 
-  const missing: ShoppingListItem[] = [];
+  const requirements = new Map<string, ShoppingListItem>();
 
   for (const card of allCards) {
     if (!includeBasics && isBasicLand(card)) continue;
     const scryfallId = card.scryfallId ?? card.id;
+    const existing = requirements.get(scryfallId);
+    requirements.set(scryfallId, {
+      scryfallId,
+      name: card.name,
+      quantity: (existing?.quantity ?? 0) + card.quantity,
+      price: card.price,
+    });
+  }
+
+  const missing: ShoppingListItem[] = [];
+  for (const requirement of requirements.values()) {
     const missingQuantity = Math.max(
       0,
-      card.quantity - Math.max(0, ownedQuantities[scryfallId] ?? 0)
+      requirement.quantity - Math.max(0, ownedQuantities[requirement.scryfallId] ?? 0)
     );
     if (missingQuantity === 0) continue;
 
     missing.push({
-      scryfallId,
-      name: card.name,
+      scryfallId: requirement.scryfallId,
+      name: requirement.name,
       quantity: missingQuantity,
-      price: card.price,
+      price: requirement.price,
     });
   }
 

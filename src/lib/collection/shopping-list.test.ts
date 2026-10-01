@@ -56,6 +56,17 @@ describe("summarizeDeckCollection", () => {
 });
 
 describe("buildShoppingList", () => {
+  it("subtracts owned copies only once when a printing appears on multiple deck rows", () => {
+    const cards = [
+      makeCard({ id: "row-a", scryfallId: "shared", name: "Persistent Petitioners", quantity: 2 }),
+      makeCard({ id: "row-b", scryfallId: "shared", name: "Persistent Petitioners", quantity: 2 }),
+    ];
+
+    expect(buildShoppingList(cards, null, null, { shared: 1 })).toEqual([
+      expect.objectContaining({ scryfallId: "shared", quantity: 3 }),
+    ]);
+  });
+
   it("buys only the quantity not already owned", () => {
     const cards = [makeCard({ scryfallId: "a", name: "Persistent Petitioners", quantity: 4 })];
 
