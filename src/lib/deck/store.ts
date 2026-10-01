@@ -80,6 +80,12 @@ function setCardsZone(deck: Deck, cardIds: ReadonlySet<string>, zone: DeckZone):
   ));
 }
 
+interface PendingZoneWrite {
+  confirmedZone: DeckZone;
+  tail: Promise<void>;
+}
+
+const pendingZoneWrites = new Map<string, PendingZoneWrite>();
 
 export interface DeckStore {
   // State
@@ -1167,6 +1173,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     );
     if (!currentCard || (currentCard.zone === zone && !isLegacyMaybeboardCard)) return;
 
+    const key = `${activeDeckId}:${cardId}`;
+    const pending = pendingZoneWrites.get(key) ?? {
+      confirmedZone: currentCard.zone,
+      tail: Promise.resolve(),
+    };
+    pendingZoneWrites.set(key, pending);
+
     // Optimistic update
     set((state) => ({
       decks: {
@@ -1176,13 +1189,35 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
 
     set({ isSyncing: true });
-    try {
-      await deckApi.updateCardZone(activeDeckId, cardId, zone);
-    } catch (err) {
-      logger.error("Unexpected error", "moveCardToZone", err);
-    } finally {
-      set({ isSyncing: false });
-    }
+    const write = pending.tail.then(async () => {
+      try {
+        await deckApi.updateCardZone(activeDeckId, cardId, zone);
+        pending.confirmedZone = zone;
+      } catch (err) {
+        logger.error("Unexpected error", "moveCardToZone", err);
+        if (pending.tail === write) {
+          set((state) => {
+            const currentDeck = state.decks[activeDeckId];
+            const latestCard = currentDeck && uniqueDeckCards(currentDeck).find((card) => card.id === cardId);
+            if (!latestCard || latestCard.zone !== zone) return state;
+            return {
+              decks: {
+                ...state.decks,
+                [activeDeckId]: setCardsZone(currentDeck, new Set([cardId]), pending.confirmedZone),
+              },
+            };
+          });
+          useToastStore.getState().add("error", "Could not move card. Try again.");
+        }
+      } finally {
+        if (pending.tail === write) {
+          pendingZoneWrites.delete(key);
+          set({ isSyncing: false });
+        }
+      }
+    });
+    pending.tail = write;
+    await write;
   },
 
   bulkMoveToZone: async (cardIds, zone) => {
