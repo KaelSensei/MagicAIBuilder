@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-02: Private cross-deck acquisition plan API
+
+#### Added
+
+- A read-only endpoint aggregates required copies across a signed-in player's decks, deducts owned printings and returns the remaining acquisition quantities without mutating ownership. The collection UI and persistent acquisition state are follow-up work.
+
+#### Validation
+
+- The route test failed before implementation. All 2,933 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-02: Session-only buy-later planning
 
 #### Added
