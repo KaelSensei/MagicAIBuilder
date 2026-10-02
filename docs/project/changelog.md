@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-02: Shared collection safety
+
+#### Fixed
+
+- Removed the deck sidebar's ambiguous Reset action, which could subtract cards from the global collection even when other decks relied on them. Owners can now open collection management to change inventory deliberately.
+
+#### Validation
+
+- The new component regression test failed before the fix. All 2,923 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-02: EDHREC recommendation sample sizes
 
 #### Added
