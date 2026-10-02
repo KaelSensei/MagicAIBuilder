@@ -132,7 +132,7 @@ describe("ShoppingListModal", () => {
     renderWithIntl(<ShoppingListModal deck={plannedDeck} ownedQuantities={{}} onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
 
-    expect(screen.getByText(/\$10\.00/)).toBeInTheDocument();
+    expect(screen.getByText("~$10.00")).toBeInTheDocument();
     expect(screen.queryByText(/\$15\.00/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy buy-now list" })).toBeEnabled();
     expect(plannedDeck.cards.map((entry) => entry.quantity)).toEqual([1, 1]);
