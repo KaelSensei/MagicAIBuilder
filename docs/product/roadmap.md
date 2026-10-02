@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-01
+> **Updated:** 2026-10-02
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -460,6 +460,7 @@ A recommendation is never presented as universal truth: the user can see where i
 
 - Imports from Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks and EDHREC.
 - Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, ManaBox, MTGGoldfish, EDHREC and plain text.
+- Goldfish and EDHREC plain-list exports keep Sideboard and Considering cards out of the playable main deck.
 - Versioned read-only external API under /api/v1.
 
 ### Remaining scope
