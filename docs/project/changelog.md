@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-02: Collection acquisition-plan view
+
+#### Added
+
+- A collapsible collection panel shows the read-only cross-deck purchase plan, with missing-copy quantities, deck names, known-price subtotal, unpriced-copy disclosure, and refresh/retry actions. It loads only when opened and does not change ownership.
+
+#### Validation
+
+- The focused component test failed before implementation. All 2,936 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-02: Private cross-deck acquisition plan API
 
 #### Added
