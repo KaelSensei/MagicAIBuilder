@@ -429,10 +429,11 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - Meta snapshots over time.
 - Commander Spellbook combo data.
 - Recommendation source and freshness disclosure.
+- EDHREC recommendation rows disclose validated per-card sample counts when the source provides them.
 
 ### Remaining scope
 
-- [ ] Complete source, timestamp and sample-window disclosure across every external recommendation surface.
+- [ ] Complete source, timestamp and sample-window disclosure across every external recommendation surface; EDHREC sample counts are shown where available, but the source does not provide a trustworthy sampling date range.
 - [ ] Separate "popular", "high synergy", "tournament observed" and "AI suggested".
 - [ ] Add source-health telemetry and contract tests for every scraper or external feed.
 - [ ] Add trend views that respect EDHREC top-20 truncation bounds.

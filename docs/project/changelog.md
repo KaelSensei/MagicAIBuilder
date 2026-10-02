@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-02: EDHREC recommendation sample sizes
+
+#### Added
+
+- Popular-card recommendations show the number of eligible decks containing each card when EDHREC supplies valid counts. The percentage is calculated from those same counts; missing or inconsistent counts are not presented as evidence.
+
+#### Validation
+
+- The focused data and interface tests failed before implementation. All 2,924 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-09-28: Card printing save recovery
 
 #### Fixed
