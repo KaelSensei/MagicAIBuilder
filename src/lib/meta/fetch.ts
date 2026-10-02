@@ -150,8 +150,14 @@ export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData
     throw err;
   }
 
-  const json = parseJson<EdhrecJson>(await res.json());
-  const cardlists = json.container?.json_dict?.cardlists;
+  const json = parseJson<EdhrecJson | null>(await res.json());
+  const cardlists = json?.container?.json_dict?.cardlists;
+  if (
+    !Array.isArray(cardlists) ||
+    cardlists.some((list) => !list || typeof list.tag !== "string" || !Array.isArray(list.cardviews))
+  ) {
+    throw new Error("Invalid EDHREC response: cardlists malformed");
+  }
   const cards = collectMetaCardsFromEdhrecLists(cardlists);
 
   return { cards };

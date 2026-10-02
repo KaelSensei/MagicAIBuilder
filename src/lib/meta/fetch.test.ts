@@ -185,7 +185,7 @@ describe("fetchEdhrecData", () => {
     expect(result.cards[0].inclusion).toBe(0);
   });
 
-  it("handles missing cardlists", async () => {
+  it("rejects a changed EDHREC response shape instead of caching an empty recommendation list", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(
         JSON.stringify({ container: { json_dict: {} } }),
@@ -193,8 +193,30 @@ describe("fetchEdhrecData", () => {
       )
     );
 
+    await expect(fetchEdhrecData("test")).rejects.toThrow("Invalid EDHREC response");
+  });
+
+  it("accepts an explicitly empty card list", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ container: { json_dict: { cardlists: [] } } }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
     const result = await fetchEdhrecData("test");
-    expect(result.cards).toHaveLength(0);
+    expect(result.cards).toEqual([]);
+  });
+
+  it("rejects a list without cardviews instead of treating it as no recommendations", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ container: { json_dict: { cardlists: [{ tag: "ramp" }] } } }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    await expect(fetchEdhrecData("test")).rejects.toThrow("Invalid EDHREC response");
   });
 
   it("deduplicates cards with same name", async () => {
