@@ -317,6 +317,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Deck collection and shopping-list totals now distinguish known-price subtotals from missing copies without a price instead of presenting an incomplete zero-dollar estimate.
 - The shopping list supports session-only buy-now versus buy-later choices without mutating deck or collection ownership; buy-now copy and CSV exclude deferred cards.
   - A private, read-only acquisition-plan API aggregates required copies across owned decks and subtracts collection quantities without changing ownership.
+  - The collection page now displays that cross-deck acquisition plan on demand, including missing quantities, contributing decks, a known-price subtotal, unpriced-copy disclosure, and refresh/retry states.
 
 ### Remaining scope
 
@@ -327,7 +328,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - [ ] Support a persistent "proxy now / buy later" workflow; the shopping-list buy-later choice is currently session-only and does not track proxies.
 - [ ] Consider mobile scanning only after the web data model supports printing-level ownership.
 - [ ] Show every deck, list or acquisition plan that currently uses an owned printing.
-  - [ ] Expose the cross-deck acquisition plan in the collection UI and add explicit, persistent acquire state; the read-only aggregation API is available.
+  - [ ] Add explicit, persistent acquire state; the read-only cross-deck plan is now visible in the collection UI.
 - [ ] Export or deep-link the acquisition plan to supported regional sellers while preserving printing, condition and finish choices.
 
 ### Definition of done
