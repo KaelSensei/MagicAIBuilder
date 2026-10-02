@@ -276,6 +276,19 @@ describe("exportArchidekt", () => {
 });
 
 describe("exportGoldfish", () => {
+  it("does not turn sideboard or considering cards into main-deck cards", () => {
+    const deck = makeDeck({
+      commander: makeCard("Atraxa"),
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 2, { zone: "sideboard" }),
+        makeCard("Counterspell", 3, { zone: "maybeboard" }),
+      ],
+    });
+
+    expect(exportGoldfish(deck)).toBe("1 Sol Ring\n\n1 Atraxa");
+  });
+
   it("lists the main deck, then the commander in the sideboard slot", () => {
     // MTGGoldfish's text import uses the MTGO convention: the commander is the
     // one-card sideboard after a blank line.
@@ -310,6 +323,19 @@ describe("exportGoldfish", () => {
 });
 
 describe("exportEdhrec", () => {
+  it("omits secondary zones from the plain deck-check list", () => {
+    const deck = makeDeck({
+      commander: makeCard("Atraxa"),
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 2, { zone: "sideboard" }),
+        makeCard("Counterspell", 3, { zone: "maybeboard" }),
+      ],
+    });
+
+    expect(exportEdhrec(deck)).toBe("1 Atraxa\n1 Sol Ring");
+  });
+
   it("puts the commander first as a plain line", () => {
     // EDHRec's deck check takes a plain list and reads the first legal
     // commander as the deck's commander — no marker syntax exists.
