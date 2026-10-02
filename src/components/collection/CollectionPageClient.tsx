@@ -29,6 +29,7 @@ import { getCardImageUri } from "@/lib/scryfall/images";
 import { CollectionCardTooltip } from "@/components/collection/CollectionCardTooltip";
 import { CollectionQuantityControl } from "@/components/collection/CollectionQuantityControl";
 import { AcquisitionPlanPanel } from "@/components/collection/AcquisitionPlanPanel";
+import { PrintingDeckUsage } from "@/components/collection/PrintingDeckUsage";
 
 export function CollectionPageClient() {
   const t = useTranslations("collection");
@@ -391,6 +392,7 @@ function CollectionGridCard({
           <ImageIcon className="w-3.5 h-3.5" />
           {t("actions.art")}
         </button>
+        <PrintingDeckUsage scryfallId={card.scryfallId} cardName={card.name} compact />
         <CollectionQuantityControl
           cardName={card.name}
           quantity={card.quantity}
@@ -453,6 +455,7 @@ function CollectionListRow({
         >
           <ImageIcon className="w-3.5 h-3.5" />
         </button>
+        <PrintingDeckUsage scryfallId={card.scryfallId} cardName={card.name} />
       </div>
       {/* Qty controls */}
       <CollectionQuantityControl

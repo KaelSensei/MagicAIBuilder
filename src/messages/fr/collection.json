@@ -1,5 +1,18 @@
 {
   "title": "Ma Collection",
+  "usage": {
+    "trigger": "Decks",
+    "title": "Decks utilisant {name}",
+    "description": "Seule cette édition précise dans vos decks privés est affichée.",
+    "loading": "Chargement des decks…",
+    "error": "Impossible de charger les decks.",
+    "retry": "Réessayer",
+    "empty": "Aucun deck n’utilise encore cette édition.",
+    "main": "Deck principal",
+    "sideboard": "Réserve",
+    "maybeboard": "À considérer",
+    "copies": "{count, plural, one {# exemplaire} other {# exemplaires}}"
+  },
   "acquisitionPlan": {
     "title": "Plan d’acquisition",
     "description": "Exemplaires nécessaires pour monter tous vos decks en même temps, après déduction de votre collection. Les prix sont des estimations pour les éditions des decks ; ce plan ne modifie pas la collection.",
