@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import { ChevronDown, ChevronRight, Download, RefreshCw } from "lucide-react";
 import { z } from "zod";
+import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
 
 const planSchema = z.object({
   deckCount: z.number().int().nonnegative(),
@@ -31,6 +32,7 @@ type PlanState =
 /** Read-only, on-demand view of copies still needed across the player's decks. */
 export function AcquisitionPlanPanel() {
   const t = useTranslations("collection.acquisitionPlan");
+  const actions = useTranslations("collection.actions");
   const format = useFormatter();
   const [open, setOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -70,6 +72,21 @@ export function AcquisitionPlanPanel() {
     0
   );
 
+  const exportCsv = () => {
+    const csv = formatAcquisitionCsv(items.map((item) => ({
+      scryfallId: item.scryfallId,
+      name: item.name,
+      quantity: item.acquireQuantity,
+      price: item.price,
+    })));
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "acquisition-plan.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <section className="mb-6 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
       <button
@@ -86,14 +103,27 @@ export function AcquisitionPlanPanel() {
         <div id="collection-acquisition-plan" className="border-t border-[var(--border)] px-4 pb-4 pt-3">
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
             <p className="max-w-2xl text-xs text-[var(--text-secondary)]">{t("description")}</p>
-            <button
-              type="button"
-              onClick={() => setRefreshKey((value) => value + 1)}
-              className="inline-flex items-center gap-1.5 text-xs text-[var(--accent-text)] hover:underline"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              {state.status === "error" ? t("retry") : t("refresh")}
-            </button>
+            <div className="flex shrink-0 items-center gap-4">
+              {state.status === "ready" && items.length > 0 && (
+                <button
+                  type="button"
+                  onClick={exportCsv}
+                  aria-label={`${t("title")} CSV`}
+                  className="inline-flex items-center gap-1.5 text-xs text-[var(--accent-text)] hover:underline"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {actions("csv")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setRefreshKey((value) => value + 1)}
+                className="inline-flex items-center gap-1.5 text-xs text-[var(--accent-text)] hover:underline"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                {state.status === "error" ? t("retry") : t("refresh")}
+              </button>
+            </div>
           </div>
           {state.status === "loading" && <p role="status" className="text-sm text-[var(--text-secondary)]">{t("loading")}</p>}
           {state.status === "error" && <p role="alert" className="text-sm text-red-400">{t("error")}</p>}
