@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-02: Cross-deck acquisition-plan CSV
+
+#### Added
+
+- The collection acquisition plan exports a generic CSV of missing copies with Scryfall printing IDs and known prices. It excludes owned quantities and does not change the collection. Regional seller links and condition/finish choices remain future work.
+
+#### Validation
+
+- The focused export test failed before implementation. All 2,937 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-02: Collection acquisition-plan view
 
 #### Added
