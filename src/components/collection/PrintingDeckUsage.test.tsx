@@ -4,6 +4,15 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { PrintingDeckUsage } from "./PrintingDeckUsage";
 
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, onClick, className }: {
+    href: string;
+    children: string;
+    onClick?: () => void;
+    className?: string;
+  }) => <a href={href} onClick={onClick} className={className}>{children}</a>,
+}));
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe("PrintingDeckUsage", () => {
