@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { Deck, DeckCard } from "@/lib/deck/types";
@@ -145,5 +145,24 @@ describe("ShoppingListModal", () => {
     expect(screen.getByText("No cards planned for now")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy buy-now list" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Export buy-now CSV" })).toBeDisabled();
+  });
+
+  it("copies only cards planned for now", async () => {
+    const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const nowCard = { ...card, id: "arcane-signat", scryfallId: "arcane-signat", name: "Arcane Signet" };
+    renderWithIntl(
+      <ShoppingListModal deck={{ ...deck, cards: [card, nowCard] }} ownedQuantities={{}} onClose={vi.fn()} />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy buy-now list" }));
+
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    expect(writeText.mock.calls[0]?.[0]).toContain("Arcane Signet");
+    expect(writeText.mock.calls[0]?.[0]).not.toContain("Sol Ring");
   });
 });
