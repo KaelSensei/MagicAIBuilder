@@ -28,6 +28,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { CollectionCardTooltip } from "@/components/collection/CollectionCardTooltip";
 import { CollectionQuantityControl } from "@/components/collection/CollectionQuantityControl";
+import { AcquisitionPlanPanel } from "@/components/collection/AcquisitionPlanPanel";
 
 export function CollectionPageClient() {
   const t = useTranslations("collection");
@@ -209,6 +210,8 @@ export function CollectionPageClient() {
             highlight
           />
         </div>
+
+        <AcquisitionPlanPanel />
 
         {/* Search + view toggle */}
         <div className="flex items-center gap-3 mb-4">
