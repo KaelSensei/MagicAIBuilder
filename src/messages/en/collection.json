@@ -1,5 +1,18 @@
 {
   "title": "My Collection",
+  "usage": {
+    "trigger": "Decks",
+    "title": "Decks using {name}",
+    "description": "Only this exact printing in your private decks is shown.",
+    "loading": "Loading deck usage…",
+    "error": "Could not load deck usage.",
+    "retry": "Try again",
+    "empty": "No deck uses this printing yet.",
+    "main": "Main deck",
+    "sideboard": "Sideboard",
+    "maybeboard": "Considering",
+    "copies": "{count, plural, one {# copy} other {# copies}}"
+  },
   "acquisitionPlan": {
     "title": "Acquisition plan",
     "description": "Copies needed to build all your decks at once, after counting your collection. Prices are estimates for the deck printings; this plan never changes ownership.",
