@@ -32,6 +32,29 @@ describe("parsePlainTextDecklist", () => {
     expect(cards[0].isCommander).toBe(false);
   });
 
+  it("preserves partner and secondary zones across text section headers", () => {
+    const cards = parsePlainTextDecklist([
+      "# Commander",
+      "1 Thrasios, Triton Hero",
+      "// Partner",
+      "1 Tymna the Weaver",
+      "// Sideboard",
+      "2 Negate",
+      "Considering",
+      "1 Ponder",
+      "Deck",
+      "1 Sol Ring",
+    ].join("\n"));
+
+    expect(cards).toEqual([
+      { name: "Thrasios, Triton Hero", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Tymna the Weaver", quantity: 1, isCommander: false, isPartner: true, zone: "main" },
+      { name: "Negate", quantity: 2, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", quantity: 1, isCommander: false, isPartner: false, zone: "maybeboard" },
+      { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
   it("strips a trailing set code and a // or | comment from the name", () => {
     const cards = parsePlainTextDecklist("1 Sol Ring (C21) 263\n1 Counterspell // draw engine");
     expect(cards.map((c) => c.name)).toEqual(["Sol Ring", "Counterspell"]);
