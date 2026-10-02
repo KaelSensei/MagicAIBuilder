@@ -42,6 +42,7 @@ describe("summarizeDeckCollection", () => {
       proxyQuantity: 1,
       missingQuantity: 2,
       missingCost: 10,
+      unpricedQuantity: 0,
       completionRatio: 0.5,
     });
   });
@@ -59,6 +60,7 @@ describe("summarizeDeckCollection", () => {
       proxyQuantity: 1,
       missingQuantity: 3,
       missingCost: 4.5,
+      unpricedQuantity: 0,
       completionRatio: 0.5,
     });
   });
@@ -69,6 +71,17 @@ describe("summarizeDeckCollection", () => {
     expect(
       summarizeDeckCollection(cards, null, null, { card: 1 }).missingCost
     ).toBe(30);
+  });
+
+  it("counts missing copies without a price separately from the known subtotal", () => {
+    const cards = [
+      makeCard({ scryfallId: "priced", quantity: 2, price: 5 }),
+      makeCard({ scryfallId: "unpriced", quantity: 3, price: null }),
+    ];
+
+    const summary = summarizeDeckCollection(cards, null, null, { unpriced: 1 });
+    expect(summary.missingCost).toBe(10);
+    expect(summary.unpricedQuantity).toBe(2);
   });
 });
 

@@ -669,6 +669,8 @@
     }
   },
   "buyList": {
+    "knownSubtotal": "価格が判明している分の小計",
+    "priceUnavailable": "価格不明",
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",
     "description": "Cards you need to buy for this deck.",
     "ownAll": "You own all cards in this deck! 🎉",

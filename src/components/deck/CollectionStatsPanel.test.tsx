@@ -4,6 +4,7 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { CollectionStatsPanel } from "./CollectionStatsPanel";
+import { ShoppingListModal } from "./ShoppingListModal";
 
 vi.mock("next-auth/react", () => ({
   useSession: () => ({ data: { user: { id: "owner" } } }),
@@ -97,5 +98,29 @@ describe("CollectionStatsPanel", () => {
     expect(useCollectionStore.getState().collectionCards["sol-ring"].quantity).toBe(1);
     expect(removeFromCollection).not.toHaveBeenCalled();
     expect(updateQuantity).not.toHaveBeenCalled();
+  });
+
+  it("does not present missing prices as a zero-dollar estimate", () => {
+    useCollectionStore.setState({ collectionCards: {}, collectionCardsFoil: {} });
+    renderWithIntl(<CollectionStatsPanel deck={{ ...deck, cards: [{ ...card, price: null }] }} />);
+    fireEvent.click(screen.getByRole("button", { name: /collection/i }));
+
+    expect(screen.getByText("Price unavailable")).toBeInTheDocument();
+    expect(screen.queryByText(/\$0\.00/)).not.toBeInTheDocument();
+  });
+});
+
+describe("ShoppingListModal", () => {
+  it("does not present all-unpriced shopping lists as a zero-dollar total", () => {
+    renderWithIntl(
+      <ShoppingListModal
+        deck={{ ...deck, cards: [{ ...card, price: null }] }}
+        ownedQuantities={{}}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Price unavailable")).toBeInTheDocument();
+    expect(screen.queryByText(/\$0\.00/)).not.toBeInTheDocument();
   });
 });

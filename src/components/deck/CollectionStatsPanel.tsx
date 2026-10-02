@@ -35,6 +35,7 @@ export function CollectionStatsPanel({
   const { data: session } = useSession();
   const format = useFormatter();
   const t = useTranslations("collection");
+  const deckT = useTranslations("deck");
   const [expanded, setExpanded] = useState(false);
   const [showShoppingList, setShowShoppingList] = useState(false);
 
@@ -163,16 +164,27 @@ export function CollectionStatsPanel({
 
                 {/* Missing cost */}
                 {quantitySummary.missingQuantity > 0 && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--text-secondary)]">
-                      Missing cards cost
-                    </span>
-                    <span className="font-medium text-[var(--text-primary)]">
-                      ~{format.number(quantitySummary.missingCost, {
-                        style: "currency",
-                        currency: "USD",
-                      })}
-                    </span>
+                  <div className="space-y-0.5 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[var(--text-secondary)]">
+                        {quantitySummary.unpricedQuantity > 0
+                          ? deckT("buyList.knownSubtotal")
+                          : "Missing cards cost"}
+                      </span>
+                      <span className="font-medium text-[var(--text-primary)]">
+                        {quantitySummary.unpricedQuantity === quantitySummary.missingQuantity
+                          ? deckT("buyList.priceUnavailable")
+                          : `~${format.number(quantitySummary.missingCost, {
+                              style: "currency",
+                              currency: "USD",
+                            })}`}
+                      </span>
+                    </div>
+                    {quantitySummary.unpricedQuantity > 0 && (
+                      <p className="text-[10px] text-amber-400">
+                        {deckT("buyList.withoutPrice", { count: quantitySummary.unpricedQuantity })}
+                      </p>
+                    )}
                   </div>
                 )}
 
