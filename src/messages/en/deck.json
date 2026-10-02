@@ -310,6 +310,15 @@
     "hintTextOnly": "No images — opens print immediately with name, type, and rules text. Choose “Save as PDF” in the dialog."
   },
   "buyList": {
+    "buyLater": "Later",
+    "buyNow": "Buy now",
+    "buyLaterNamed": "Buy later: {name}",
+    "buyNowNamed": "Buy now: {name}",
+    "copyBuyNow": "Copy buy-now list",
+    "exportBuyNowCsv": "Export buy-now CSV",
+    "nothingPlanned": "No cards planned for now",
+    "sessionOnly": "Plan for this session only. Your collection is unchanged.",
+    "deferredCount": "{count, plural, one {# card for later} other {# cards for later}}",
     "knownSubtotal": "Known subtotal",
     "priceUnavailable": "Price unavailable",
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",

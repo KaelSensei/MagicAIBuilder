@@ -669,6 +669,15 @@
     }
   },
   "buyList": {
+    "buyLater": "稍后购买",
+    "buyNow": "现在购买",
+    "buyLaterNamed": "稍后购买：{name}",
+    "buyNowNamed": "现在购买：{name}",
+    "copyBuyNow": "复制现在购买清单",
+    "exportBuyNowCsv": "导出现在购买的 CSV",
+    "nothingPlanned": "当前没有计划购买的卡牌",
+    "sessionOnly": "此计划仅在本次会话有效。收藏不会更改。",
+    "deferredCount": "稍后购买 {count} 张卡牌",
     "knownSubtotal": "已知价格小计",
     "priceUnavailable": "价格不可用",
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",

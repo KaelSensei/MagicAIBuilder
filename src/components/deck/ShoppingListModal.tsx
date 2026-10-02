@@ -2,7 +2,7 @@
 /**
  * ShoppingListModal — lists all missing cards with prices, copy/export.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { X, Copy, Download, Check } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -39,6 +39,7 @@ export function ShoppingListModal({
   const t = useTranslations("deck");
   const format = useFormatter();
   const [copied, copy] = useCopyToClipboard();
+  const [deferredIds, setDeferredIds] = useState<ReadonlySet<string>>(() => new Set());
 
   // USD, like every other price surface — see BudgetOptimizationModal.
   const money = (value: number) =>
@@ -55,11 +56,26 @@ export function ShoppingListModal({
     [deck.cards, deck.commander, deck.partner, ownedQuantities]
   );
 
+  const buyNowItems = useMemo(
+    () => items.filter((item) => !deferredIds.has(item.scryfallId)),
+    [items, deferredIds]
+  );
+  const deferredCount = items.length - buyNowItems.length;
+
+  const toggleDeferred = (scryfallId: string) => {
+    setDeferredIds((current) => {
+      const next = new Set(current);
+      if (next.has(scryfallId)) next.delete(scryfallId);
+      else next.add(scryfallId);
+      return next;
+    });
+  };
+
   const { totalCost, unpricedQuantity, pricedQuantity } = useMemo(() => {
     let totalCost = 0;
     let unpricedQuantity = 0;
     let pricedQuantity = 0;
-    for (const item of items) {
+    for (const item of buyNowItems) {
       if (item.price === null) unpricedQuantity += item.quantity;
       else {
         pricedQuantity += item.quantity;
@@ -67,17 +83,17 @@ export function ShoppingListModal({
       }
     }
     return { totalCost, unpricedQuantity, pricedQuantity };
-  }, [items]);
+  }, [buyNowItems]);
 
   const handleCopy = () => {
-    const text = formatShoppingListText(items);
+    const text = formatShoppingListText(buyNowItems);
     void copy(text);
   };
 
   const handleExportCsv = () => {
-    const csv = formatAcquisitionCsv(items);
+    const csv = formatAcquisitionCsv(buyNowItems);
     const deckSlug = deck.name.replaceAll(/[^a-z0-9]/gi, "_").toLowerCase();
-    downloadFile(csv, `${deckSlug}-shopping.csv`, "text/csv");
+    downloadFile(csv, `${deckSlug}-buy-now.csv`, "text/csv");
   };
 
   return (
@@ -107,6 +123,11 @@ export function ShoppingListModal({
           <Dialog.Description className="sr-only">
             {t("buyList.description")}
           </Dialog.Description>
+          {items.length > 0 && (
+            <p className="px-5 pt-3 text-[11px] text-[var(--text-secondary)]">
+              {t("buyList.sessionOnly")}
+            </p>
+          )}
 
           {/* Card list */}
           <div className="flex-1 overflow-y-auto px-5 py-3">
@@ -117,7 +138,13 @@ export function ShoppingListModal({
             ) : (
               <div className="space-y-1">
                 {items.map((item) => (
-                  <ShoppingRow key={item.scryfallId} item={item} money={money} />
+                  <ShoppingRow
+                    key={item.scryfallId}
+                    item={item}
+                    money={money}
+                    deferred={deferredIds.has(item.scryfallId)}
+                    onToggleDeferred={() => toggleDeferred(item.scryfallId)}
+                  />
                 ))}
               </div>
             )}
@@ -125,6 +152,11 @@ export function ShoppingListModal({
 
           {/* Footer — totals + actions */}
           <div className="border-t border-[var(--border)] px-5 py-3 space-y-3">
+            {deferredCount > 0 && (
+              <p className="text-[11px] text-[var(--text-secondary)]">
+                {t("buyList.deferredCount", { count: deferredCount })}
+              </p>
+            )}
             <div className="flex items-center justify-between text-sm">
               <span className="text-[var(--text-secondary)]">
                 {unpricedQuantity > 0 ? t("buyList.knownSubtotal") : t("buyList.totalToBuy")}
@@ -135,7 +167,9 @@ export function ShoppingListModal({
                 )}
               </span>
               <span className="font-semibold text-[var(--text-primary)]">
-                {pricedQuantity === 0 && unpricedQuantity > 0
+                {buyNowItems.length === 0 && items.length > 0
+                  ? t("buyList.nothingPlanned")
+                  : pricedQuantity === 0 && unpricedQuantity > 0
                   ? t("buyList.priceUnavailable")
                   : t("buyList.approx", { amount: money(totalCost) })}
               </span>
@@ -145,7 +179,7 @@ export function ShoppingListModal({
               <button
                 type="button"
                 onClick={handleCopy}
-                disabled={items.length === 0}
+                disabled={buyNowItems.length === 0}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-[var(--border)] hover:border-[var(--accent)] text-sm text-[var(--text-primary)] transition-colors disabled:opacity-40"
               >
                 {copied ? (
@@ -153,16 +187,16 @@ export function ShoppingListModal({
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}
-                {copied ? t("buyList.copied") : t("buyList.copy")}
+                {copied ? t("buyList.copied") : t("buyList.copyBuyNow")}
               </button>
               <button
                 type="button"
                 onClick={handleExportCsv}
-                disabled={items.length === 0}
+                disabled={buyNowItems.length === 0}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors disabled:opacity-40"
               >
                 <Download className="w-3.5 h-3.5" />
-                {t("buyList.exportCsv")}
+                {t("buyList.exportBuyNowCsv")}
               </button>
             </div>
           </div>
@@ -175,14 +209,19 @@ export function ShoppingListModal({
 function ShoppingRow({
   item,
   money,
+  deferred,
+  onToggleDeferred,
 }: {
   readonly item: ShoppingListItem;
   readonly money: (value: number) => string;
+  readonly deferred: boolean;
+  readonly onToggleDeferred: () => void;
 }) {
+  const t = useTranslations("deck");
   const lineTotal = item.price === null ? null : item.price * item.quantity;
 
   return (
-    <div className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] transition-colors">
+    <div className={`flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] transition-colors ${deferred ? "opacity-60" : ""}`}>
       <span className="text-xs text-[var(--text-secondary)] w-5 text-center shrink-0">
         {item.quantity}×
       </span>
@@ -197,6 +236,15 @@ function ShoppingRow({
           ({money(lineTotal)})
         </span>
       ) : null}
+      <button
+        type="button"
+        onClick={onToggleDeferred}
+        aria-pressed={deferred}
+        aria-label={t(deferred ? "buyList.buyNowNamed" : "buyList.buyLaterNamed", { name: item.name })}
+        className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+      >
+        {t(deferred ? "buyList.buyNow" : "buyList.buyLater")}
+      </button>
     </div>
   );
 }
