@@ -9,7 +9,7 @@ import deckMessages from "@/messages/en/deck.json";
 vi.mock("@/hooks/useMetaAnalysis", () => ({
   useMetaAnalysis: () => ({
     edhrec: {
-      cards: [{ name: "Sol Ring", inclusion: 0.8 }],
+      cards: [{ name: "Sol Ring", inclusion: 0.8, sample: { decksWithCard: 80, eligibleDecks: 100 } }],
       _meta: { cached: false, observedAt: "2026-08-29T10:30:00.000Z" },
     },
     tournament: {
@@ -107,5 +107,6 @@ describe("MetaPanel", () => {
     expect(
       screen.getByText(/source: mtgtop8 \/ mtgdecks.*aug 28, 2026/i)
     ).toBeInTheDocument();
+    expect(screen.getByText("80 / 100 decks")).toBeInTheDocument();
   });
 });

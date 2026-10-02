@@ -86,6 +86,14 @@ function EdhrecCardRow({
             {pct}%
           </span>
         </div>
+        {card.sample && (
+          <p className="mt-0.5 text-[10px] text-[var(--text-secondary)] tabular-nums">
+            {t("meta.sampleSize", {
+              included: card.sample.decksWithCard,
+              total: card.sample.eligibleDecks,
+            })}
+          </p>
+        )}
       </div>
       {inDeck || added ? (
         <span className="shrink-0 w-5 h-5 rounded-full bg-green-600/20 flex items-center justify-center">
