@@ -669,6 +669,15 @@
     }
   },
   "buyList": {
+    "buyLater": "Позже",
+    "buyNow": "Купить сейчас",
+    "buyLaterNamed": "Купить позже: {name}",
+    "buyNowNamed": "Купить сейчас: {name}",
+    "copyBuyNow": "Скопировать список покупок сейчас",
+    "exportBuyNowCsv": "Экспорт CSV покупок сейчас",
+    "nothingPlanned": "Покупки сейчас не запланированы",
+    "sessionOnly": "План только на эту сессию. Коллекция не меняется.",
+    "deferredCount": "Отложено карт: {count}",
     "knownSubtotal": "Известная промежуточная сумма",
     "priceUnavailable": "Цена недоступна",
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",

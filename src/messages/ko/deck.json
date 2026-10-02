@@ -669,6 +669,15 @@
     }
   },
   "buyList": {
+    "buyLater": "나중에 구매",
+    "buyNow": "지금 구매",
+    "buyLaterNamed": "나중에 구매: {name}",
+    "buyNowNamed": "지금 구매: {name}",
+    "copyBuyNow": "지금 구매할 목록 복사",
+    "exportBuyNowCsv": "지금 구매할 CSV 내보내기",
+    "nothingPlanned": "지금 구매할 카드가 없습니다",
+    "sessionOnly": "이번 세션에서만 유효한 계획입니다. 컬렉션은 변경되지 않습니다.",
+    "deferredCount": "나중에 구매할 카드 {count}장",
     "knownSubtotal": "확인된 가격 소계",
     "priceUnavailable": "가격 정보 없음",
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",
