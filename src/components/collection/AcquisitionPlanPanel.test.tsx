@@ -13,6 +13,45 @@ const response = (body: unknown, status = 200) =>
 afterEach(() => vi.unstubAllGlobals());
 
 describe("AcquisitionPlanPanel", () => {
+  it("exports only missing copies with their printing IDs and known prices", async () => {
+    const fetchPlan = vi.fn().mockResolvedValue(response({
+      deckCount: 1,
+      items: [
+        { scryfallId: "ring-a", name: "Sol Ring", requiredQuantity: 3, ownedQuantity: 2, acquireQuantity: 1, price: 2, decks: [{ id: "a", name: "Artifacts", quantity: 3 }] },
+        { scryfallId: "ring-b", name: "Sol Ring", requiredQuantity: 2, ownedQuantity: 0, acquireQuantity: 2, price: null, decks: [{ id: "a", name: "Artifacts", quantity: 2 }] },
+      ],
+    }));
+    vi.stubGlobal("fetch", fetchPlan);
+    const createObjectURL = vi.fn().mockReturnValue("blob:acquisition-plan");
+    Object.defineProperty(URL, "createObjectURL", { configurable: true, value: createObjectURL });
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    const user = userEvent.setup();
+
+    renderWithIntl(<AcquisitionPlanPanel />);
+    await user.click(screen.getByRole("button", { name: "Acquisition plan" }));
+    await screen.findAllByText("Sol Ring");
+    await user.click(screen.getByRole("button", { name: "Acquisition plan CSV" }));
+
+    const blob = createObjectURL.mock.calls[0]?.[0];
+    expect(blob).toBeInstanceOf(Blob);
+    if (!(blob instanceof Blob)) throw new Error("Expected a CSV blob");
+    const csv = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(blob);
+    });
+    expect(csv.split("\n")).toEqual([
+      "Name,Quantity,Price (USD),Total (USD),Scryfall ID",
+      '"Sol Ring",1,2,2,"ring-a"',
+      '"Sol Ring",2,,,"ring-b"',
+    ]);
+    expect(click).toHaveBeenCalledOnce();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:acquisition-plan");
+    click.mockRestore();
+  });
+
   it("loads only when opened and shows the missing copies by deck", async () => {
     const fetchPlan = vi.fn().mockResolvedValue(response({
       deckCount: 2,
