@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-09-28                             |
+| Last Updated  | 2026-10-02                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -31,6 +31,7 @@
 
 ## Latest product delivery
 
+- EDHREC recommendation rows now show validated per-card sample counts alongside inclusion percentages when the source provides them. Invalid counts are omitted; no sampling date range is inferred. Red-to-green tests, all 2,924 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed. SonarCloud still returns HTTP 403 before analysis; Docker E2E was not run.
 - Card printing changes now restore the previous printing after a network failure or rejected save, preserving the card's quantity and zone and showing an error toast. Both new tests failed before implementation. All 2,887 unit tests, TypeScript, lint and production build passed on the personal VPS; CI, rerun Lighthouse and Vercel passed. SonarCloud returned HTTP 403 before analysis, and Docker E2E was not run.
 - MTGO XML export now escapes reserved characters in card names, so generated files parse correctly and preserve the original names. The focused test failed before implementation; 2,886 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud returned HTTP 403 before analysis. Docker E2E was not run for this slice.
 - MTGO XML export now preserves sideboard quantities and excludes Considering cards from the playable deck. The focused test failed before the change; 2,885 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud still fails with HTTP 403 before analysis. Docker E2E was not run for this slice.
