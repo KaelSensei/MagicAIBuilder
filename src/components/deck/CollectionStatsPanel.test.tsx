@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { Deck, DeckCard } from "@/lib/deck/types";
@@ -60,7 +60,10 @@ const deck: Deck = {
 
 const initialCollectionState = useCollectionStore.getState();
 
-afterEach(() => useCollectionStore.setState(initialCollectionState, true));
+afterEach(() => {
+  cleanup();
+  useCollectionStore.setState(initialCollectionState, true);
+});
 
 describe("CollectionStatsPanel", () => {
   it("sends owners to collection management instead of resetting shared inventory", () => {
