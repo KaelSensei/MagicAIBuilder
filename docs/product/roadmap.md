@@ -314,6 +314,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Bulk collection additions now count each missing printing once across duplicate deck rows.
 - Deck collection summaries allocate owned copies and proxies once per printing, so remaining quantities and costs stay accurate.
 - The deck sidebar no longer offers a misleading Reset action that subtracts shared, globally owned cards; ownership changes are made from collection management.
+- Deck collection and shopping-list totals now distinguish known-price subtotals from missing copies without a price instead of presenting an incomplete zero-dollar estimate.
 
 ### Remaining scope
 

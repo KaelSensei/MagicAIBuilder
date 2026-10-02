@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-02: Unpriced collection cards
+
+#### Fixed
+
+- Deck collection and shopping-list totals no longer imply that missing cards without a known price cost nothing. Mixed lists show a known-price subtotal and the unpriced quantity; wholly unpriced lists show that the price is unavailable.
+
+#### Validation
+
+- Three focused tests failed before the fix. All 2,926 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-02: Shared collection safety
 
 #### Fixed
