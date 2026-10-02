@@ -502,6 +502,7 @@
     "communityDecks": "Browse community decks for this commander",
     "viewOnEdhrec": "View this commander on EDHRec",
     "popularEdhrec": "Popular (EDHRec)",
+    "sampleSize": "{included} / {total} decks",
     "notInDeck": "Not in deck",
     "noEdhrecData": "No EDHRec data for this commander",
     "allPopularInDeck": "All popular cards already in your deck!",

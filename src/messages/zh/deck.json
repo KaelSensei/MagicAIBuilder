@@ -380,6 +380,7 @@
     "staleSourceDisclosure": "Source: {source} · Last observed {date} · stale",
     "sourceDisclosureUnavailable": "Source: {source} · Observation time unavailable",
     "popularEdhrec": "Popular (EDHRec)",
+    "sampleSize": "{included} / {total} 套牌",
     "notInDeck": "Not in deck",
     "noEdhrecData": "No EDHRec data for this commander",
     "allPopularInDeck": "All popular cards already in your deck!",
