@@ -152,6 +152,9 @@ export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData
 
   const json = parseJson<EdhrecJson>(await res.json());
   const cardlists = json.container?.json_dict?.cardlists;
+  if (!Array.isArray(cardlists)) {
+    throw new Error("Invalid EDHREC response: cardlists missing");
+  }
   const cards = collectMetaCardsFromEdhrecLists(cardlists);
 
   return { cards };

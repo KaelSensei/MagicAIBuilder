@@ -208,6 +208,17 @@ describe("fetchEdhrecData", () => {
     expect(result.cards).toEqual([]);
   });
 
+  it("rejects a list without cardviews instead of treating it as no recommendations", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ container: { json_dict: { cardlists: [{ tag: "ramp" }] } } }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    await expect(fetchEdhrecData("test")).rejects.toThrow("Invalid EDHREC response");
+  });
+
   it("deduplicates cards with same name", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(
