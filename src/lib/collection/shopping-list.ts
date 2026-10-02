@@ -41,8 +41,8 @@ export interface AcquisitionPlanDeck {
 
 export type AcquisitionPlanCard = Pick<
   DeckCard,
-  "id" | "scryfallId" | "name" | "quantity" | "price" | "typeLine" | "zone"
->;
+  "id" | "scryfallId" | "name" | "quantity" | "price" | "typeLine"
+> & { readonly zone: string };
 
 export type DeckCardStatus = "owned" | "proxy" | "missing";
 
