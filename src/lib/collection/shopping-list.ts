@@ -34,10 +34,15 @@ export interface AcquisitionPlanItem {
 export interface AcquisitionPlanDeck {
   readonly id: string;
   readonly name: string;
-  readonly cards: readonly DeckCard[];
-  readonly commander: DeckCard | null;
-  readonly partner: DeckCard | null;
+  readonly cards: readonly AcquisitionPlanCard[];
+  readonly commander: AcquisitionPlanCard | null;
+  readonly partner: AcquisitionPlanCard | null;
 }
+
+export type AcquisitionPlanCard = Pick<
+  DeckCard,
+  "id" | "scryfallId" | "name" | "quantity" | "price" | "typeLine" | "zone"
+>;
 
 export type DeckCardStatus = "owned" | "proxy" | "missing";
 
@@ -286,9 +291,9 @@ export function buildAcquisitionPlan(
   >();
 
   for (const deck of decks) {
-    const perDeck = new Map<string, { card: DeckCard; quantity: number }>();
-    for (const card of collectAllCards(deck.cards, deck.commander, deck.partner)) {
-      if (isBasicLand(card)) continue;
+    const perDeck = new Map<string, { card: AcquisitionPlanCard; quantity: number }>();
+    for (const card of [deck.commander, deck.partner, ...deck.cards]) {
+      if (!card || card.zone !== "main" || card.typeLine.toLowerCase().includes("basic land")) continue;
       const scryfallId = card.scryfallId ?? card.id;
       const current = perDeck.get(scryfallId);
       perDeck.set(scryfallId, {
