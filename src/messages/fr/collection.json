@@ -8,6 +8,7 @@
   },
   "searchPlaceholder": "Rechercher dans votre collection…",
   "actions": {
+    "manage": "Gérer la collection",
     "copyText": "Copier la collection en texte",
     "copy": "Copier",
     "copied": "Copié !",
