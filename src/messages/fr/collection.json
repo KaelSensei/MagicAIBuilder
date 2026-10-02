@@ -1,5 +1,18 @@
 {
   "title": "Ma Collection",
+  "acquisitionPlan": {
+    "title": "Plan d’acquisition",
+    "description": "Exemplaires nécessaires pour monter tous vos decks en même temps, après déduction de votre collection. Les prix sont des estimations pour les éditions des decks ; ce plan ne modifie pas la collection.",
+    "loading": "Chargement du plan d’acquisition…",
+    "error": "Impossible de charger le plan d’acquisition.",
+    "retry": "Réessayer",
+    "refresh": "Actualiser le plan",
+    "noDecks": "Créez un deck pour commencer un plan d’achat.",
+    "complete": "Toutes les cartes nécessaires pour ces decks sont dans votre collection.",
+    "summary": "{count} à acquérir pour {decks} decks · Sous-total des prix connus : {cost}",
+    "unpriced": "Prix indisponible pour {count, plural, one {# exemplaire} other {# exemplaires}}",
+    "toAcquire": "{count} à acquérir"
+  },
   "loading": "Chargement de la collection…",
   "stats": {
     "uniqueCards": "Cartes uniques",

@@ -1,5 +1,18 @@
 {
   "title": "My Collection",
+  "acquisitionPlan": {
+    "title": "Acquisition plan",
+    "description": "Copies needed across all decks after counting your collection. Estimated prices; ownership is unchanged.",
+    "loading": "Loading acquisition plan…",
+    "error": "Could not load the acquisition plan.",
+    "retry": "Try again",
+    "refresh": "Refresh plan",
+    "noDecks": "Create a deck to start a purchase plan.",
+    "complete": "All cards needed for these decks are in your collection.",
+    "summary": "{count} to acquire across {decks} decks · Known-price subtotal: {cost}",
+    "unpriced": "Price unavailable for {count, plural, one {# copy} other {# copies}}",
+    "toAcquire": "{count} to acquire"
+  },
   "loading": "Loading collection…",
   "stats": {
     "uniqueCards": "Unique Cards",
