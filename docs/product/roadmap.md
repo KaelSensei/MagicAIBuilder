@@ -315,6 +315,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Deck collection summaries allocate owned copies and proxies once per printing, so remaining quantities and costs stay accurate.
 - The deck sidebar no longer offers a misleading Reset action that subtracts shared, globally owned cards; ownership changes are made from collection management.
 - Deck collection and shopping-list totals now distinguish known-price subtotals from missing copies without a price instead of presenting an incomplete zero-dollar estimate.
+- The shopping list supports session-only buy-now versus buy-later choices without mutating deck or collection ownership; buy-now copy and CSV exclude deferred cards.
 
 ### Remaining scope
 
@@ -322,7 +323,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - [ ] Prefer owned printings when adding or importing cards.
 - [ ] Complete deck/collection reconciliation without mutating ownership accidentally; the unsafe deck-sidebar Reset action has been removed.
 - [ ] Add region-aware price providers, starting with a clearly selected market.
-- [ ] Support a deliberate "proxy now / buy later" workflow.
+- [ ] Support a persistent "proxy now / buy later" workflow; the shopping-list buy-later choice is currently session-only and does not track proxies.
 - [ ] Consider mobile scanning only after the web data model supports printing-level ownership.
 - [ ] Show every deck, list or acquisition plan that currently uses an owned printing.
 - [ ] Add an explicit acquire state that aggregates missing quantities across decks without changing collection ownership.
