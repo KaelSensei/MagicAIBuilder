@@ -310,6 +310,8 @@
     "hintTextOnly": "No images — opens print immediately with name, type, and rules text. Choose “Save as PDF” in the dialog."
   },
   "buyList": {
+    "knownSubtotal": "Known subtotal",
+    "priceUnavailable": "Price unavailable",
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",
     "description": "Cards you need to buy for this deck.",
     "ownAll": "You own all cards in this deck! 🎉",

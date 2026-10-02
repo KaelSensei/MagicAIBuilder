@@ -669,6 +669,8 @@
     }
   },
   "buyList": {
+    "knownSubtotal": "Subtotal conocido",
+    "priceUnavailable": "Precio no disponible",
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",
     "description": "Cards you need to buy for this deck.",
     "ownAll": "You own all cards in this deck! 🎉",

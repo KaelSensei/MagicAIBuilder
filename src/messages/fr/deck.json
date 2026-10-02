@@ -310,6 +310,8 @@
     "hintTextOnly": "Sans images — l'impression s'ouvre immédiatement avec le nom, le type et le texte de règles. Choisissez « Enregistrer en PDF » dans la boîte de dialogue."
   },
   "buyList": {
+    "knownSubtotal": "Sous-total connu",
+    "priceUnavailable": "Prix indisponible",
     "title": "{count, plural, one {Liste d'achat — # carte} other {Liste d'achat — # cartes}}",
     "description": "Les cartes qu'il vous manque pour ce deck.",
     "ownAll": "Vous possédez toutes les cartes de ce deck ! 🎉",

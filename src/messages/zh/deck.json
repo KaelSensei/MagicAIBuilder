@@ -669,6 +669,8 @@
     }
   },
   "buyList": {
+    "knownSubtotal": "已知价格小计",
+    "priceUnavailable": "价格不可用",
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",
     "description": "Cards you need to buy for this deck.",
     "ownAll": "You own all cards in this deck! 🎉",
