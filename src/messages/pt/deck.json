@@ -669,6 +669,15 @@
     }
   },
   "buyList": {
+    "buyLater": "Mais tarde",
+    "buyNow": "Comprar agora",
+    "buyLaterNamed": "Comprar mais tarde: {name}",
+    "buyNowNamed": "Comprar agora: {name}",
+    "copyBuyNow": "Copiar lista para comprar agora",
+    "exportBuyNowCsv": "Exportar CSV para comprar agora",
+    "nothingPlanned": "Nenhuma carta planejada para agora",
+    "sessionOnly": "Plano apenas para esta sessão. Sua coleção não muda.",
+    "deferredCount": "{count} cartas para mais tarde",
     "knownSubtotal": "Subtotal conhecido",
     "priceUnavailable": "Preço indisponível",
     "title": "{count, plural, one {Shopping List — # card} other {Shopping List — # cards}}",

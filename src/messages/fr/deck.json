@@ -310,6 +310,15 @@
     "hintTextOnly": "Sans images — l'impression s'ouvre immédiatement avec le nom, le type et le texte de règles. Choisissez « Enregistrer en PDF » dans la boîte de dialogue."
   },
   "buyList": {
+    "buyLater": "Plus tard",
+    "buyNow": "Acheter maintenant",
+    "buyLaterNamed": "Acheter plus tard : {name}",
+    "buyNowNamed": "Acheter maintenant : {name}",
+    "copyBuyNow": "Copier les achats immédiats",
+    "exportBuyNowCsv": "Exporter les achats immédiats en CSV",
+    "nothingPlanned": "Aucun achat prévu maintenant",
+    "sessionOnly": "Plan valable pour cette session uniquement. Votre collection ne change pas.",
+    "deferredCount": "{count, plural, one {# carte pour plus tard} other {# cartes pour plus tard}}",
     "knownSubtotal": "Sous-total connu",
     "priceUnavailable": "Prix indisponible",
     "title": "{count, plural, one {Liste d'achat — # carte} other {Liste d'achat — # cartes}}",
