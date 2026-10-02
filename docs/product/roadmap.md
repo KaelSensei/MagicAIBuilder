@@ -459,6 +459,7 @@ A recommendation is never presented as universal truth: the user can see where i
 ### Already shipped
 
 - Imports from Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks and EDHREC.
+- Text URL imports recognize partner and Main, Sideboard and Considering headers when the source provides them.
 - Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, ManaBox, MTGGoldfish, EDHREC and plain text.
 - Goldfish and EDHREC plain-list exports keep Sideboard and Considering cards out of the playable main deck.
 - Versioned read-only external API under /api/v1.
