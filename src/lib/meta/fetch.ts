@@ -9,6 +9,10 @@ export interface MetaCard {
   readonly name: string;
   /** Fraction of decks (0–1), e.g. 0.78 = 78% */
   readonly inclusion: number;
+  readonly sample?: {
+    readonly decksWithCard: number;
+    readonly eligibleDecks: number;
+  };
   readonly imageUri?: string;
 }
 
@@ -96,6 +100,19 @@ function inclusionFromEdhrecView(view: EdhrecCardView): number {
   return 0;
 }
 
+function sampleFromEdhrecView(view: EdhrecCardView): MetaCard["sample"] {
+  if (
+    !Number.isSafeInteger(view.num_decks) ||
+    !Number.isSafeInteger(view.potential_decks) ||
+    view.num_decks === undefined ||
+    view.potential_decks === undefined ||
+    view.num_decks < 0 ||
+    view.potential_decks <= 0 ||
+    view.num_decks > view.potential_decks
+  ) return undefined;
+  return { decksWithCard: view.num_decks, eligibleDecks: view.potential_decks };
+}
+
 function collectMetaCardsFromEdhrecLists(
   cardlists:
     | Array<{ tag: string; cardviews?: EdhrecCardView[] }>
@@ -110,7 +127,12 @@ function collectMetaCardsFromEdhrecLists(
       if (!view.name || seen.has(view.name)) continue;
       if (cards.length >= 20) break outer;
       seen.add(view.name);
-      cards.push({ name: view.name, inclusion: inclusionFromEdhrecView(view) });
+      const sample = sampleFromEdhrecView(view);
+      cards.push({
+        name: view.name,
+        inclusion: sample ? sample.decksWithCard / sample.eligibleDecks : inclusionFromEdhrecView(view),
+        ...(sample ? { sample } : {}),
+      });
     }
   }
 
