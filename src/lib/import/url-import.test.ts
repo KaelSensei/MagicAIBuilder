@@ -344,6 +344,10 @@ describe("importFromUrl", () => {
       "10 Island  (TMP) 1",
       "1 Discovery // Dispersal | note",
       "2x Sol Ring",
+      "// Sideboard",
+      "2 Negate",
+      "// Considering",
+      "1 Ponder",
     ].join("\n");
 
     vi.spyOn(http, "httpGet").mockResolvedValueOnce(new Response(txt, { status: 200 }));
@@ -356,6 +360,8 @@ describe("importFromUrl", () => {
     expect(result.cards.some((c) => c.name === "Island")).toBe(true);
     expect(result.cards.some((c) => c.name === "Discovery")).toBe(true);
     expect(result.cards.some((c) => c.name === "Sol Ring")).toBe(true);
+    expect(result.cards.find((c) => c.name === "Negate")?.zone).toBe("sideboard");
+    expect(result.cards.find((c) => c.name === "Ponder")?.zone).toBe("maybeboard");
   });
 
   it("MTGTop8: uses plain-text export when present", async () => {

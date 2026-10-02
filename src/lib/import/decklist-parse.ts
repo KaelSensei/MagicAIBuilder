@@ -81,22 +81,26 @@ function stripTrailingSetCodeSuffix(name: string): string {
 
 export function parsePlainTextDecklist(text: string): UrlImportCard[] {
   const cards: UrlImportCard[] = [];
-  let inCommanderSection = false;
+  let section: "main" | "sideboard" | "maybeboard" | "commander" | "partner" = "main";
 
   for (const rawLine of text.split("\n").slice(0, 500)) {
     const line = rawLine.trim();
-    if (!line || line.startsWith("//") || line.startsWith("#")) {
-      // The header text has to be read with its comment marker stripped. The
-      // previous form anchored `^(deck|…)` at the start of the raw line, which
-      // can only be reached when the line is blank or starts with `//` / `#` —
-      // so the "leave the commander section" branch could never fire. An empty
-      // commander section followed by a deck header therefore mislabelled the
-      // first deck card as the commander.
-      const heading = line.replace(/^[/#]+/, "").trim();
-      if (/commander/i.test(heading)) inCommanderSection = true;
-      else if (/^(deck|main|sideboard)/i.test(heading)) inCommanderSection = false;
+    if (!line) continue;
+    const isComment = line.startsWith("//") || line.startsWith("#");
+    const heading = (isComment ? line.replace(/^[/#]+/, "").trim() : line).toLowerCase();
+    if (heading === "commander" || heading === "partner" || heading === "sideboard") {
+      section = heading;
       continue;
     }
+    if (heading === "considering" || heading === "maybeboard") {
+      section = "maybeboard";
+      continue;
+    }
+    if (heading === "deck" || heading === "main" || heading === "mainboard") {
+      section = "main";
+      continue;
+    }
+    if (isComment) continue;
 
     const m = /^(\d+)x?\s+(\S.*)$/.exec(line);
     if (!m) continue;
@@ -108,8 +112,14 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
 
     if (!name) continue;
 
-    cards.push({ name, quantity, isCommander: inCommanderSection, isPartner: false, zone: "main" });
-    if (inCommanderSection) inCommanderSection = false; // only first card in section = commander
+    cards.push({
+      name,
+      quantity,
+      isCommander: section === "commander",
+      isPartner: section === "partner",
+      zone: section === "sideboard" || section === "maybeboard" ? section : "main",
+    });
+    if (section === "commander" || section === "partner") section = "main";
   }
 
   return cards;
