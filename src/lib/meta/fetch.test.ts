@@ -97,6 +97,7 @@ describe("fetchEdhrecData", () => {
 
     const result = await fetchEdhrecData("test");
     expect(result.cards[0].inclusion).toBeCloseTo(0.8);
+    expect(result.cards[0].sample).toEqual({ decksWithCard: 80, eligibleDecks: 100 });
   });
 
   it("uses inclusion field when present", async () => {
@@ -160,6 +161,7 @@ describe("fetchEdhrecData", () => {
 
     const result = await fetchEdhrecData("test");
     expect(result.cards[0].inclusion).toBe(0);
+    expect(result.cards[0].sample).toBeUndefined();
   });
 
   it("returns 0 inclusion when potential_decks is zero", async () => {
