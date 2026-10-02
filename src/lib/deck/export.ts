@@ -139,7 +139,9 @@ export function exportArchidekt(deck: Deck): string {
  * which Goldfish reads as the command zone for EDH decks.
  */
 export function exportGoldfish(deck: Deck): string {
-  const main = deck.cards.map((card) => cardLine(card, card.quantity));
+  const main = deck.cards
+    .filter((card) => card.zone === "main")
+    .map((card) => cardLine(card, card.quantity));
   const side: string[] = [];
   if (deck.commander) side.push(cardLine(deck.commander));
   if (deck.partner) side.push(cardLine(deck.partner));
@@ -156,6 +158,7 @@ export function exportEdhrec(deck: Deck): string {
   if (deck.commander) lines.push(cardLine(deck.commander));
   if (deck.partner) lines.push(cardLine(deck.partner));
   for (const card of deck.cards) {
+    if (card.zone !== "main") continue;
     lines.push(cardLine(card, card.quantity));
   }
   return lines.join("\n");
