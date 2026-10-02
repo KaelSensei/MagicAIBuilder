@@ -8,6 +8,7 @@
   },
   "searchPlaceholder": "Search your collection…",
   "actions": {
+    "manage": "Gerenciar coleção",
     "copyText": "Copy collection as text",
     "copy": "Copy",
     "copied": "Copied!",

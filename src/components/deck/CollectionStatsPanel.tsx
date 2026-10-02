@@ -5,13 +5,12 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useFormatter } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   Package,
   ShoppingCart,
   Check,
   CheckCheck,
-  RotateCcw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
@@ -22,7 +21,7 @@ import {
 } from "@/lib/collection/shopping-list";
 import { ShoppingListModal } from "./ShoppingListModal";
 import type { Deck, DeckCard } from "@/lib/deck/types";
-import { planCollectionRemoval } from "@/lib/collection/removal-plan";
+import { Link } from "@/i18n/navigation";
 
 interface CollectionStatsPanelProps {
   readonly deck: Deck;
@@ -35,16 +34,13 @@ export function CollectionStatsPanel({
 }: CollectionStatsPanelProps) {
   const { data: session } = useSession();
   const format = useFormatter();
+  const t = useTranslations("collection");
   const [expanded, setExpanded] = useState(false);
   const [showShoppingList, setShowShoppingList] = useState(false);
 
   const collectionCards = useCollectionStore((s) => s.collectionCards);
   const collectionCardsFoil = useCollectionStore((s) => s.collectionCardsFoil);
   const bulkAddToCollection = useCollectionStore((s) => s.bulkAddToCollection);
-  const removeFromCollection = useCollectionStore(
-    (s) => s.removeFromCollection
-  );
-  const updateQuantity = useCollectionStore((s) => s.updateQuantity);
   const isSyncing = useCollectionStore((s) => s.isSyncing);
 
   const collectionQuantities = useMemo(() => {
@@ -82,30 +78,6 @@ export function CollectionStatsPanel({
     }));
     await bulkAddToCollection(inputs);
   }, [getMissingCards, bulkAddToCollection]);
-
-  /** Remove all deck cards from collection */
-  const handleResetCollection = useCallback(async () => {
-    const allCards: DeckCard[] = [];
-    if (deck.commander) allCards.push(deck.commander);
-    if (deck.partner) allCards.push(deck.partner);
-    for (const c of deck.cards) {
-      if (c.zone === "main") allCards.push(c);
-    }
-    const requiredQuantities: Record<string, number> = {};
-    for (const card of allCards) {
-      const scryfallId = card.scryfallId ?? card.id;
-      requiredQuantities[scryfallId] =
-        (requiredQuantities[scryfallId] ?? 0) + card.quantity;
-    }
-    for (const update of planCollectionRemoval(
-      requiredQuantities,
-      collectionCards,
-      collectionCardsFoil
-    )) {
-      if (update.nextQuantity === 0) await removeFromCollection(update.id);
-      else await updateQuantity(update.id, update.nextQuantity);
-    }
-  }, [deck, collectionCards, collectionCardsFoil, removeFromCollection, updateQuantity]);
 
   if (!session?.user) {
     return (
@@ -224,7 +196,7 @@ export function CollectionStatsPanel({
                   </button>
                 )}
 
-                {/* Mark all + Reset */}
+                {/* Ownership is global; edit it only from the collection page. */}
                 <div className="flex gap-2">
                   {quantitySummary.missingQuantity > 0 && (
                     <button
@@ -237,17 +209,12 @@ export function CollectionStatsPanel({
                       Mark all owned
                     </button>
                   )}
-                  {quantitySummary.ownedQuantity > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleResetCollection}
-                      disabled={isSyncing}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-red-500/30 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      Reset
-                    </button>
-                  )}
+                  <Link
+                    href="/collection"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] text-xs font-medium hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                  >
+                    {t("actions.manage")}
+                  </Link>
                 </div>
               </div>
             </motion.div>

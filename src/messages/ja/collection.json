@@ -8,6 +8,7 @@
   },
   "searchPlaceholder": "Search your collection…",
   "actions": {
+    "manage": "コレクションを管理",
     "copyText": "Copy collection as text",
     "copy": "Copy",
     "copied": "Copied!",
