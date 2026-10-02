@@ -313,12 +313,13 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Shopping-list prioritization, line totals, copied budget summaries and safe CSV escaping.
 - Bulk collection additions now count each missing printing once across duplicate deck rows.
 - Deck collection summaries allocate owned copies and proxies once per printing, so remaining quantities and costs stay accurate.
+- The deck sidebar no longer offers a misleading Reset action that subtracts shared, globally owned cards; ownership changes are made from collection management.
 
 ### Remaining scope
 
 - [ ] Track the actual owned printing, not only the oracle card.
 - [ ] Prefer owned printings when adding or importing cards.
-- [ ] Reconcile a deck against the collection without mutating ownership accidentally.
+- [ ] Complete deck/collection reconciliation without mutating ownership accidentally; the unsafe deck-sidebar Reset action has been removed.
 - [ ] Add region-aware price providers, starting with a clearly selected market.
 - [ ] Support a deliberate "proxy now / buy later" workflow.
 - [ ] Consider mobile scanning only after the web data model supports printing-level ownership.
