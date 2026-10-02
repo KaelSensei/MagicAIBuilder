@@ -123,4 +123,27 @@ describe("ShoppingListModal", () => {
     expect(screen.getByText("Price unavailable")).toBeInTheDocument();
     expect(screen.queryByText(/\$0\.00/)).not.toBeInTheDocument();
   });
+
+  it("excludes deferred cards from the buy-now total without changing the deck", () => {
+    const laterCard = { ...card, price: 5 };
+    const nowCard = { ...card, id: "arcane-signat", scryfallId: "arcane-signat", name: "Arcane Signet", price: 10 };
+    const plannedDeck = { ...deck, cards: [laterCard, nowCard] };
+
+    renderWithIntl(<ShoppingListModal deck={plannedDeck} ownedQuantities={{}} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
+
+    expect(screen.getByText(/\$10\.00/)).toBeInTheDocument();
+    expect(screen.queryByText(/\$15\.00/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy buy-now list" })).toBeEnabled();
+    expect(plannedDeck.cards.map((entry) => entry.quantity)).toEqual([1, 1]);
+  });
+
+  it("disables buy-now exports when every missing card is deferred", () => {
+    renderWithIntl(<ShoppingListModal deck={deck} ownedQuantities={{}} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
+
+    expect(screen.getByText("No cards planned for now")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy buy-now list" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Export buy-now CSV" })).toBeDisabled();
+  });
 });
