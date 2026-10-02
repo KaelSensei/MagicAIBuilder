@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-02: Session-only buy-later planning
+
+#### Added
+
+- The shopping list can defer individual missing printings for later without changing deck or collection ownership. Its buy-now subtotal, copied list and CSV include only cards planned for now; the choice lasts only for the current session.
+
+#### Validation
+
+- The buy-later component tests failed before implementation. All 2,931 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-02: EDHREC feed response validation
 
 #### Fixed
