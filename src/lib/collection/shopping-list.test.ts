@@ -42,6 +42,7 @@ describe("summarizeDeckCollection", () => {
       proxyQuantity: 1,
       missingQuantity: 2,
       missingCost: 10,
+      unpricedQuantity: 0,
       completionRatio: 0.5,
     });
   });
@@ -59,6 +60,7 @@ describe("summarizeDeckCollection", () => {
       proxyQuantity: 1,
       missingQuantity: 3,
       missingCost: 4.5,
+      unpricedQuantity: 0,
       completionRatio: 0.5,
     });
   });

@@ -55,13 +55,19 @@ export function ShoppingListModal({
     [deck.cards, deck.commander, deck.partner, ownedQuantities]
   );
 
-  const totalCost = useMemo(
-    () =>
-      items.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0),
-    [items]
-  );
-
-  const unknownPriceCount = items.filter((item) => item.price === null).length;
+  const { totalCost, unpricedQuantity, pricedQuantity } = useMemo(() => {
+    let totalCost = 0;
+    let unpricedQuantity = 0;
+    let pricedQuantity = 0;
+    for (const item of items) {
+      if (item.price === null) unpricedQuantity += item.quantity;
+      else {
+        pricedQuantity += item.quantity;
+        totalCost += item.price * item.quantity;
+      }
+    }
+    return { totalCost, unpricedQuantity, pricedQuantity };
+  }, [items]);
 
   const handleCopy = () => {
     const text = formatShoppingListText(items);
@@ -121,15 +127,17 @@ export function ShoppingListModal({
           <div className="border-t border-[var(--border)] px-5 py-3 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-[var(--text-secondary)]">
-                {t("buyList.totalToBuy")}
-                {unknownPriceCount > 0 && (
+                {unpricedQuantity > 0 ? t("buyList.knownSubtotal") : t("buyList.totalToBuy")}
+                {unpricedQuantity > 0 && (
                   <span className="text-[10px] ml-1 text-amber-400">
-                    {t("buyList.withoutPrice", { count: unknownPriceCount })}
+                    {t("buyList.withoutPrice", { count: unpricedQuantity })}
                   </span>
                 )}
               </span>
               <span className="font-semibold text-[var(--text-primary)]">
-                {t("buyList.approx", { amount: money(totalCost) })}
+                {pricedQuantity === 0 && unpricedQuantity > 0
+                  ? t("buyList.priceUnavailable")
+                  : t("buyList.approx", { amount: money(totalCost) })}
               </span>
             </div>
 
