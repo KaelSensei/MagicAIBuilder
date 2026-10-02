@@ -8,6 +8,7 @@
   },
   "searchPlaceholder": "Search your collection…",
   "actions": {
+    "manage": "管理收藏",
     "copyText": "Copy collection as text",
     "copy": "Copy",
     "copied": "Copied!",
