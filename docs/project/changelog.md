@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-02: EDHREC feed response validation
+
+#### Fixed
+
+- Malformed EDHREC card-list responses no longer masquerade as an empty recommendation set and overwrite a reliable cache. Legitimately empty lists and missing commander pages still return no recommendations.
+
+#### Validation
+
+- Focused feed-contract tests failed before the fix. All 2,928 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-02: Unpriced collection cards
 
 #### Fixed
