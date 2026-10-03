@@ -321,11 +321,12 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - The cross-deck plan exports a generic CSV of missing quantities with Scryfall printing IDs and known prices; owned copies are excluded.
 - Collection cards now link to private decks using that exact printing, including the deck zone and quantity, without loading usage for every card up front.
 - The collection acquisition plan can focus on one owned deck or all decks, keeping its summary and CSV export scoped to the selected view.
+- The printing selector now puts exact owned editions first and shows combined regular and foil quantities; choosing an edition remains an explicit action.
 
 ### Remaining scope
 
 - [ ] Track the actual owned printing, not only the oracle card.
-- [ ] Prefer owned printings when adding or importing cards.
+- [ ] Prefer owned printings during direct add and import flows; the shared printing selector now prioritizes owned editions, but automatic import matching remains open.
 - [ ] Complete deck/collection reconciliation without mutating ownership accidentally; the unsafe deck-sidebar Reset action has been removed.
 - [ ] Add region-aware price providers, starting with a clearly selected market.
 - [ ] Support a persistent "proxy now / buy later" workflow; the shopping-list buy-later choice is currently session-only and does not track proxies.
