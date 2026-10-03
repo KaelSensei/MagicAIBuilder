@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-03: Deck-list request recovery
+
+#### Fixed
+
+- Stalled deck-list requests now abort after 15 seconds, allowing the existing failure and retry UI to replace an indefinite loading state. Profile loading and other UX-stability work remain open.
+
+#### Validation
+
+- The regression test failed before implementation. All 2,950 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-03: Acquisition plan deck links
 
 #### Added
