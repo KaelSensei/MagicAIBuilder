@@ -55,6 +55,26 @@ describe("parsePlainTextDecklist", () => {
     ]);
   });
 
+  it("recognizes section headings with counts in downloaded decklists", () => {
+    const cards = parsePlainTextDecklist([
+      "Commander (1)",
+      "1 Atraxa, Praetors' Voice",
+      "Deck (1)",
+      "1 Sol Ring",
+      "Sideboard (2)",
+      "2 Negate",
+      "Considering (1)",
+      "1 Ponder",
+    ].join("\n"));
+
+    expect(cards.map(({ name, isCommander, zone }) => ({ name, isCommander, zone }))).toEqual([
+      { name: "Atraxa, Praetors' Voice", isCommander: true, zone: "main" },
+      { name: "Sol Ring", isCommander: false, zone: "main" },
+      { name: "Negate", isCommander: false, zone: "sideboard" },
+      { name: "Ponder", isCommander: false, zone: "maybeboard" },
+    ]);
+  });
+
   it("strips a trailing set code and a // or | comment from the name", () => {
     const cards = parsePlainTextDecklist("1 Sol Ring (C21) 263\n1 Counterspell // draw engine");
     expect(cards.map((c) => c.name)).toEqual(["Sol Ring", "Counterspell"]);
