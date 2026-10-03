@@ -79,8 +79,9 @@ const SOURCE_PATTERNS: Array<{
 export function detectSource(
   url: string
 ): { source: ImportSource; id: string } | null {
+  const candidate = /^https?:\/\//.test(url) ? url : `https://${url}`;
   for (const { source, re, extract } of SOURCE_PATTERNS) {
-    const m = re.exec(url);
+    const m = re.exec(candidate);
     if (m) return { source, id: extract(m) };
   }
 
