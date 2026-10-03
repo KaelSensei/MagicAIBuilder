@@ -5,6 +5,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { PrintingSelectorModal } from "./PrintingSelectorModal";
 import cardMessages from "@/messages/en/card.json";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { useCollectionStore } from "@/lib/collection/store";
+import type { CollectionCard } from "@/lib/collection/types";
 
 const printingsResult = vi.hoisted(() => ({
   current: { data: undefined as { data: ScryfallCard[] } | undefined, isLoading: false },
@@ -40,7 +42,7 @@ const FRENCH_PRINTING = makeCard({
 
 function renderModal(card: ScryfallCard) {
   return render(
-    <NextIntlClientProvider locale="en" messages={{ card: cardMessages }}>
+    <NextIntlClientProvider locale="en" messages={{ card: cardMessages, collection: { ownership: { ownedCount: "Owned (×{count})" } } }}>
       <PrintingSelectorModal card={card} onSelect={() => {}} onClose={() => {}} />
     </NextIntlClientProvider>
   );
@@ -48,7 +50,23 @@ function renderModal(card: ScryfallCard) {
 
 beforeEach(() => {
   printingsResult.current = { data: undefined, isLoading: false };
+  useCollectionStore.setState({ collectionCards: {}, collectionCardsFoil: {} });
 });
+
+function ownedCard(scryfallId: string, quantity: number, foil: boolean): CollectionCard {
+  return {
+    id: `${scryfallId}-${foil}`,
+    scryfallId,
+    name: "Lightning Bolt",
+    quantity,
+    foil,
+    condition: null,
+    acquiredAt: null,
+    price: null,
+    imageUri: "",
+    createdAt: new Date(0),
+  };
+}
 
 describe("PrintingSelectorModal", () => {
   it("shows the English text of an English printing", () => {
@@ -96,5 +114,24 @@ describe("PrintingSelectorModal", () => {
   it("offers Oracle rulings for the previewed printing", () => {
     renderModal(makeCard());
     expect(screen.getByRole("button", { name: "Show rulings" })).toBeDefined();
+  });
+
+  it("places exact owned printings first and shows normal plus foil quantity", () => {
+    const unowned = makeCard({ id: "unowned", set: "AAA", set_name: "First Set" });
+    const owned = makeCard({ id: "owned", set: "BBB", set_name: "Second Set" });
+    printingsResult.current = { data: { data: [unowned, owned] }, isLoading: false };
+    useCollectionStore.setState({
+      collectionCards: { owned: ownedCard("owned", 2, false) },
+      collectionCardsFoil: { owned: ownedCard("owned", 1, true) },
+    });
+
+    renderModal(unowned);
+
+    const printingButtons = screen.getAllByRole("button", { name: /Lightning Bolt —/ });
+    expect(printingButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Lightning Bolt — Second Set",
+      "Lightning Bolt — First Set",
+    ]);
+    expect(screen.getByText("Owned (×3)")).toBeDefined();
   });
 });
