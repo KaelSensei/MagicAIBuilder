@@ -1,7 +1,11 @@
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
+function canonicalApostrophes(name: string): string {
+  return name.replaceAll(/[‘’]/g, "'");
+}
+
 function normalizeNameKey(name: string): string {
-  return name
+  return canonicalApostrophes(name)
     .trim()
     .toLowerCase()
     .replaceAll(/\s+/g, " ");
@@ -23,7 +27,7 @@ function firstFaceName(name: string): string | null {
  * @returns Value to use for the collection API `name` identifier
  */
 export function scryfallCollectionLookupName(decklistName: string): string {
-  const t = decklistName.trim();
+  const t = canonicalApostrophes(decklistName.trim());
   const spacedIdx = t.indexOf(" // ");
   if (spacedIdx >= 0) {
     const front = t.slice(0, spacedIdx).trimEnd();
