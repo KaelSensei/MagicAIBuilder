@@ -165,6 +165,26 @@ describe("parseTextDecklist", () => {
     expect(result.cards[0].name).toBe("Counterspell");
   });
 
+  it("recognizes colon-terminated section headings and counted headings", () => {
+    const result = parseTextDecklist([
+      "Commander:",
+      "1 Atraxa, Praetors' Voice",
+      "Deck:",
+      "1 Sol Ring",
+      "Sideboard (2):",
+      "2 Negate",
+      "Considering:",
+      "1 Ponder",
+    ].join("\n"));
+
+    expect(result.commander).toBe("Atraxa, Praetors' Voice");
+    expect(result.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Negate", quantity: 2, zone: "sideboard" },
+      { name: "Ponder", quantity: 1, zone: "maybeboard" },
+    ]);
+  });
+
   it("limits to 500 lines", () => {
     const lines = Array.from({ length: 600 }, (_, i) => `1 Card${i}`).join("\n");
     const result = parseTextDecklist(lines);
