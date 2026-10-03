@@ -245,6 +245,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 ### Product work
 
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
+  - [x] Abort stalled deck-list requests after 15 seconds so the existing error and retry state can appear.
 - [ ] Use route-level skeletons and cached session/profile data where safe.
 - [ ] Remove React refresh loops, hover jitter, layout shifts and unstable card previews.
 - [x] Make warning panels collapsible and dismissible, with accessible close controls.
