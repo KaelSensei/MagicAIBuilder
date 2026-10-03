@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildImportPreview } from "./import-preview";
 import type { UrlImportResult } from "./url-import";
+import type { ScryfallCard } from "@/lib/scryfall/types";
 
 const result: UrlImportResult = {
   name: "Atraxa list",
@@ -14,9 +15,15 @@ const result: UrlImportResult = {
   ignored: ["Missing Card"],
 };
 
+const foundCards: ScryfallCard[] = [
+  { id: "atraxa", name: "Atraxa, Praetors' Voice", cmc: 4, type_line: "Legendary Creature", color_identity: ["W", "U", "B", "G"] },
+  { id: "sol-ring", name: "Sol Ring", cmc: 1, type_line: "Artifact", color_identity: [] },
+  { id: "command-tower", name: "Command Tower", cmc: 0, type_line: "Land", color_identity: [] },
+];
+
 describe("buildImportPreview", () => {
   it("summarizes commanders, zones, quantities and duplicate decisions", () => {
-    expect(buildImportPreview(result)).toEqual({
+    expect(buildImportPreview(result, foundCards)).toEqual({
       name: "Atraxa list",
       source: "moxfield",
       commanderNames: ["Atraxa, Praetors' Voice"],
@@ -34,6 +41,25 @@ describe("buildImportPreview", () => {
       cards: [{ ...result.cards[1], quantity: 4 }],
       ignored: [],
     };
-    expect(buildImportPreview(basicLand).duplicateNames).toEqual([]);
+    expect(buildImportPreview(basicLand, foundCards).duplicateNames).toEqual([]);
+  });
+
+  it("warns before confirmation about unresolved names without duplicating ignored cards", () => {
+    const imported: UrlImportResult = {
+      ...result,
+      cards: [
+        { name: "Fire", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+        { name: "Unknown Spell", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+        { name: "Unknown Spell", quantity: 1, isCommander: false, isPartner: false, zone: "sideboard" },
+        { name: "Missing Card", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+      ],
+    };
+    const foundCards: ScryfallCard[] = [{
+      id: "fire-ice", name: "Fire // Ice", cmc: 2, type_line: "Instant", color_identity: ["R", "U"],
+    }];
+
+    expect(buildImportPreview(imported, foundCards).ignoredNames).toEqual([
+      "Missing Card", "Unknown Spell",
+    ]);
   });
 });

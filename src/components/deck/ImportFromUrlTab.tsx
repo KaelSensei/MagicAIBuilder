@@ -168,7 +168,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
 
       setMessage(t("import.validating", { count: cardNames.length }));
       const foundCards = await fetchInBatches(cardNames);
-      const nextPreview = buildImportPreview(result);
+      const nextPreview = buildImportPreview(result, foundCards);
       setPendingResult(result);
       setPendingCards(foundCards);
       setPreview(nextPreview);
