@@ -323,6 +323,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - The collection acquisition plan can focus on one owned deck or all decks, keeping its summary and CSV export scoped to the selected view.
 - The printing selector now puts exact owned editions first and shows combined regular and foil quantities; choosing an edition remains an explicit action.
 - The acquisition plan now shows a known-price subtotal for each missing printing and marks unpriced printings on their own rows.
+- Each missing printing in the acquisition plan now links to the player's contributing decks, so the player can inspect where it is needed.
 
 ### Remaining scope
 
