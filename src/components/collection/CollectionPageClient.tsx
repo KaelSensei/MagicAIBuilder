@@ -17,9 +17,9 @@ import {
 import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
 import {
-  formatCollectionCsv,
   formatCollectionText,
 } from "@/lib/collection/shopping-list";
+import { formatCollectionPrintingCsv } from "@/lib/collection/printing-csv";
 import { cn } from "@/components/ui/utils";
 import type { CollectionCard } from "@/lib/collection/types";
 import { CardImage } from "@/components/card/CardImage";
@@ -28,6 +28,8 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { CollectionCardTooltip } from "@/components/collection/CollectionCardTooltip";
 import { CollectionQuantityControl } from "@/components/collection/CollectionQuantityControl";
+import { AcquisitionPlanPanel } from "@/components/collection/AcquisitionPlanPanel";
+import { PrintingDeckUsage } from "@/components/collection/PrintingDeckUsage";
 
 export function CollectionPageClient() {
   const t = useTranslations("collection");
@@ -72,6 +74,7 @@ export function CollectionPageClient() {
   const exportCards = useMemo(
     () =>
       allCards.map((c) => ({
+        scryfallId: c.scryfallId,
         name: c.name,
         quantity: c.quantity,
         foil: c.foil,
@@ -89,7 +92,7 @@ export function CollectionPageClient() {
   }, [exportCards]);
 
   const handleExportCsv = useCallback(() => {
-    const csv = formatCollectionCsv(exportCards);
+    const csv = formatCollectionPrintingCsv(exportCards);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -208,6 +211,8 @@ export function CollectionPageClient() {
             highlight
           />
         </div>
+
+        <AcquisitionPlanPanel />
 
         {/* Search + view toggle */}
         <div className="flex items-center gap-3 mb-4">
@@ -387,6 +392,7 @@ function CollectionGridCard({
           <ImageIcon className="w-3.5 h-3.5" />
           {t("actions.art")}
         </button>
+        <PrintingDeckUsage scryfallId={card.scryfallId} cardName={card.name} compact />
         <CollectionQuantityControl
           cardName={card.name}
           quantity={card.quantity}
@@ -449,6 +455,7 @@ function CollectionListRow({
         >
           <ImageIcon className="w-3.5 h-3.5" />
         </button>
+        <PrintingDeckUsage scryfallId={card.scryfallId} cardName={card.name} />
       </div>
       {/* Qty controls */}
       <CollectionQuantityControl

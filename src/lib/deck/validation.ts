@@ -113,7 +113,7 @@ function checkSingleton(allCards: DeckCard[], maxCopies: number, errors: string[
   const nameCounts: Record<string, number> = {};
   for (const card of allCards) {
     if (!card.typeLine.toLowerCase().includes("basic land")) {
-      nameCounts[card.name] = (nameCounts[card.name] ?? 0) + 1;
+      nameCounts[card.name] = (nameCounts[card.name] ?? 0) + card.quantity;
     }
   }
   const duplicates = Object.entries(nameCounts)

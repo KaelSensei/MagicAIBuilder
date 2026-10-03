@@ -14,17 +14,13 @@ export function FinalCta() {
   const t = useTranslations("landing");
   const { status } = useSession();
   const isLoggedIn = status === "authenticated";
-  const ctaHref = isLoggedIn ? "/decks" : "/auth/signin";
+  const ctaHref = isLoggedIn ? "/decks" : "/builder/guest";
   const ctaLabel = isLoggedIn ? t("cta.ctaLoggedIn") : t("cta.ctaLoggedOut");
 
   return (
     <section className="landing-final-cta">
-      <h2 className="reveal">
-        {t.rich("cta.heading", HEADING_TAGS)}
-      </h2>
-      <p className="reveal">
-        {t("cta.subtitle")}
-      </p>
+      <h2 className="reveal">{t.rich("cta.heading", HEADING_TAGS)}</h2>
+      <p className="reveal">{t("cta.subtitle")}</p>
       <Link href={ctaHref} className="btn-primary reveal">
         {ctaLabel}
       </Link>

@@ -192,6 +192,74 @@ describe("usePlaytestStore", () => {
     expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(1);
   });
 
+  it("creates an independent battlefield copy without changing the deck setup", () => {
+    const deck = makeDeck();
+    usePlaytestStore.getState().startPlaytest(deck);
+    const cardId = usePlaytestStore.getState().engine?.hand[0]?.id;
+    expect(cardId).toBeDefined();
+    if (!cardId) return;
+
+    usePlaytestStore.getState().moveToZone(cardId, "hand", "battlefield");
+    usePlaytestStore.getState().createCardCopy(cardId);
+
+    const battlefield = usePlaytestStore.getState().engine?.battlefield ?? [];
+    expect(battlefield).toHaveLength(2);
+    expect(battlefield[1]?.id).not.toBe(cardId);
+    expect(battlefield[1]?.isSessionCopy).toBe(true);
+
+    usePlaytestStore.getState().resetPlaytest();
+    const reset = usePlaytestStore.getState().engine;
+    expect((reset?.hand.length ?? 0) + (reset?.library.length ?? 0))
+      .toBe(deck.cards.length + 1);
+  });
+
+  it("adds a required token to the active session only", () => {
+    const deck = makeDeck();
+    usePlaytestStore.getState().startPlaytest(deck);
+
+    usePlaytestStore.getState().createToken({
+      name: "Treasure",
+      power: null,
+      colors: [],
+      count: 1,
+      kind: "token",
+    });
+
+    expect(usePlaytestStore.getState().engine?.battlefield[0]).toMatchObject({
+      name: "Treasure token",
+      isSessionCopy: true,
+    });
+    usePlaytestStore.getState().resetPlaytest();
+    expect(usePlaytestStore.getState().engine?.battlefield).toHaveLength(0);
+  });
+
+  it("rolls dice only inside an active session", () => {
+    usePlaytestStore.getState().rollDie(6);
+    expect(usePlaytestStore.getState().engine).toBeNull();
+
+    usePlaytestStore.getState().startPlaytest(makeDeck());
+    usePlaytestStore.getState().rollDie(6);
+    const roll = usePlaytestStore.getState().engine?.diceRolls[0];
+    expect(roll?.sides).toBe(6);
+    expect(roll?.result).toBeGreaterThanOrEqual(1);
+    expect(roll?.result).toBeLessThanOrEqual(6);
+  });
+
+  it("manages editable manual action log entries", () => {
+    usePlaytestStore.getState().startPlaytest(makeDeck());
+    usePlaytestStore.getState().addLogEntry("Made two mana");
+    const entryId = usePlaytestStore.getState().engine?.actionLog.at(-1)?.id;
+    expect(entryId).toBeDefined();
+    if (entryId === undefined) return;
+
+    usePlaytestStore.getState().editLogEntry(entryId, "Made three mana");
+    expect(usePlaytestStore.getState().engine?.actionLog.at(-1)?.description).toBe(
+      "Made three mana"
+    );
+    usePlaytestStore.getState().removeLogEntry(entryId);
+    expect(usePlaytestStore.getState().engine?.actionLog).toEqual([]);
+  });
+
   it("starts Commander decks on 40 life", () => {
     usePlaytestStore.getState().startPlaytest(makeDeck());
     expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(40);

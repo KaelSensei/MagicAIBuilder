@@ -97,6 +97,7 @@ describe("fetchEdhrecData", () => {
 
     const result = await fetchEdhrecData("test");
     expect(result.cards[0].inclusion).toBeCloseTo(0.8);
+    expect(result.cards[0].sample).toEqual({ decksWithCard: 80, eligibleDecks: 100 });
   });
 
   it("uses inclusion field when present", async () => {
@@ -120,6 +121,49 @@ describe("fetchEdhrecData", () => {
     expect(result.cards[0].inclusion).toBe(0.42);
   });
 
+  it("falls back to a valid deck ratio when inclusion is outside zero to one", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          container: {
+            json_dict: {
+              cardlists: [{
+                tag: "staples",
+                cardviews: [{ name: "Sol Ring", inclusion: 42, num_decks: 80, potential_decks: 100 }],
+              }],
+            },
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    const result = await fetchEdhrecData("test");
+    expect(result.cards[0].inclusion).toBe(0.8);
+  });
+
+  it("does not display an impossible ratio when the source counts disagree", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          container: {
+            json_dict: {
+              cardlists: [{
+                tag: "staples",
+                cardviews: [{ name: "Sol Ring", inclusion: -0.2, num_decks: 120, potential_decks: 100 }],
+              }],
+            },
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    const result = await fetchEdhrecData("test");
+    expect(result.cards[0].inclusion).toBe(0);
+    expect(result.cards[0].sample).toBeUndefined();
+  });
+
   it("returns 0 inclusion when potential_decks is zero", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(
@@ -141,7 +185,7 @@ describe("fetchEdhrecData", () => {
     expect(result.cards[0].inclusion).toBe(0);
   });
 
-  it("handles missing cardlists", async () => {
+  it("rejects a changed EDHREC response shape instead of caching an empty recommendation list", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(
         JSON.stringify({ container: { json_dict: {} } }),
@@ -149,8 +193,30 @@ describe("fetchEdhrecData", () => {
       )
     );
 
+    await expect(fetchEdhrecData("test")).rejects.toThrow("Invalid EDHREC response");
+  });
+
+  it("accepts an explicitly empty card list", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ container: { json_dict: { cardlists: [] } } }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
     const result = await fetchEdhrecData("test");
-    expect(result.cards).toHaveLength(0);
+    expect(result.cards).toEqual([]);
+  });
+
+  it("rejects a list without cardviews instead of treating it as no recommendations", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ container: { json_dict: { cardlists: [{ tag: "ramp" }] } } }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    await expect(fetchEdhrecData("test")).rejects.toThrow("Invalid EDHREC response");
   });
 
   it("deduplicates cards with same name", async () => {

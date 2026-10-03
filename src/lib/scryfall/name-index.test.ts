@@ -31,6 +31,10 @@ describe("scryfallCollectionLookupName", () => {
   it("leaves normal card names unchanged", () => {
     expect(scryfallCollectionLookupName("Sol Ring")).toBe("Sol Ring");
   });
+
+  it("uses canonical apostrophes for copied card names", () => {
+    expect(scryfallCollectionLookupName("Urza’s Saga")).toBe("Urza's Saga");
+  });
 });
 
 describe("buildScryfallNameIndex", () => {
@@ -61,5 +65,10 @@ describe("buildScryfallNameIndex", () => {
 
     const index = buildScryfallNameIndex([card]);
     expect(index.get(normalizeImportedName("Etali, Primal Conqueror"))?.id).toBe("id-1");
+  });
+
+  it("matches a pasted smart apostrophe to the canonical card name", () => {
+    const index = buildScryfallNameIndex([makeCard({ name: "Urza's Saga" })]);
+    expect(index.get(normalizeImportedName("Urza’s Saga"))?.id).toBe("id-1");
   });
 });

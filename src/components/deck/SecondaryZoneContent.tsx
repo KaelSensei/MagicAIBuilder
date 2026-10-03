@@ -194,7 +194,7 @@ export function SecondaryZoneContent({
                   "absolute top-1 right-1 z-20 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
                   isSelected
                     ? "border-[var(--accent)] bg-[var(--accent)] opacity-100"
-                    : "border-white/60 bg-black/40 opacity-0 group-hover/card:opacity-100"
+                    : "border-white/60 bg-black/40 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100"
                 )}
                 aria-label={
                   isSelected ? `Deselect ${card.name}` : `Select ${card.name}`
@@ -228,7 +228,7 @@ export function SecondaryZoneContent({
                   e.stopPropagation();
                   handleSingleRemove(card.id);
                 }}
-                className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+                className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
                 aria-label={t("actions.removeCard", { name: card.name })}
               >
                 ×
@@ -236,7 +236,7 @@ export function SecondaryZoneContent({
               <button
                 type="button"
                 onClick={() => moveCardToZone(card.id, "main")}
-                className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10"
+                className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10"
                 title={t("zoneMoveTargets.toMain")}
               >
                 →M
@@ -267,7 +267,7 @@ export function SecondaryZoneContent({
                   "shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all ml-1",
                   isSelected
                     ? "border-[var(--accent)] bg-[var(--accent)]"
-                    : "border-[var(--border)] opacity-0 group-hover/zone:opacity-100"
+                    : "border-[var(--border)] opacity-0 group-hover/zone:opacity-100 focus-visible:opacity-100"
                 )}
                 aria-label={
                   isSelected ? `Deselect ${card.name}` : `Select ${card.name}`
@@ -284,7 +284,7 @@ export function SecondaryZoneContent({
               <div className="flex-1 min-w-0">
                 <CardListItem card={card} onRemove={handleSingleRemove} />
               </div>
-              <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 transition-opacity">
+              <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 group-focus-within/zone:opacity-100 transition-opacity">
                 {moveTargets.map(({ zone: z, label, title }) => (
                   <button
                     type="button"

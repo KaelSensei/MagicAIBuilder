@@ -12,6 +12,13 @@ import {
   applyUndo,
   applyAddCounter,
   applyMulligan,
+  applyCreateCardCopy,
+  applyCreateToken,
+  applyRollDie,
+  applyAddActionLogEntry,
+  applyRecordMana,
+  applyEditActionLogEntry,
+  applyRemoveActionLogEntry,
   PHASES,
   STARTING_LIFE,
   MAX_MULLIGANS,
@@ -100,6 +107,11 @@ describe("applyDrawCard", () => {
     const next = applyDrawCard(state);
     expect(next.history.length).toBeGreaterThan(state.history.length);
   });
+
+  it("records the draw in the action log", () => {
+    expect(applyDrawCard(makeState()).actionLog.at(-1)?.description).toBe("Drew a card");
+    expect(applyDrawCard(makeState()).actionLog.at(-1)?.kind).toBe("draw");
+  });
 });
 
 // ─── Phase progression ────────────────────────────────────────────────────────
@@ -115,6 +127,7 @@ describe("applyNextPhase", () => {
     const next = applyNextPhase(state);
     expect(next.phase).toBe("Untap");
     expect(next.turn).toBe(2);
+    expect(next.actionLog.at(-1)).toMatchObject({ turn: 2, phase: "Untap" });
   });
 
   it("PHASES array starts with Untap", () => {
@@ -128,6 +141,7 @@ describe("applyNextTurn", () => {
     const state = makeState();
     const next = applyNextTurn(state);
     expect(next.turn).toBe(2);
+    expect(next.actionLog.at(-1)).toMatchObject({ turn: 2, phase: "Draw", kind: "draw" });
   });
 
   it("sets phase to Draw", () => {
@@ -140,6 +154,11 @@ describe("applyNextTurn", () => {
     const state = makeState();
     const next = applyNextTurn(state);
     expect(next.hand).toHaveLength(state.hand.length + 1);
+  });
+
+  it("does not claim a draw when the library is empty", () => {
+    const next = applyNextTurn({ ...makeState(), library: [] });
+    expect(next.actionLog.at(-1)?.kind).toBeUndefined();
   });
 
   it("untaps all battlefield permanents", () => {
@@ -232,6 +251,149 @@ describe("applyAddCounter", () => {
     const state = { ...makeState(), battlefield: [permanent] };
     const next = applyAddCounter(state, "p1", -5);
     expect(next.battlefield[0].counters).toBe(0);
+  });
+});
+
+describe("applyCreateCardCopy", () => {
+  it("creates an independent session copy of a battlefield permanent", () => {
+    const permanent = { ...makeCard("p1"), tapped: true, counters: 2 };
+    const state = { ...makeState(), battlefield: [permanent] };
+
+    const next = applyCreateCardCopy(state, "p1", "copy-1");
+
+    expect(next.battlefield).toHaveLength(2);
+    expect(next.battlefield[0]).toEqual(permanent);
+    expect(next.battlefield[1]).toMatchObject({
+      id: "copy-1",
+      name: permanent.name,
+      quantity: 1,
+      tapped: false,
+      counters: 0,
+      isSessionCopy: true,
+    });
+  });
+
+  it("is undoable", () => {
+    const permanent = { ...makeCard("p1"), tapped: false, counters: 0 };
+    const state = { ...makeState(), battlefield: [permanent] };
+
+    expect(applyUndo(applyCreateCardCopy(state, "p1", "copy-1")).battlefield)
+      .toEqual(state.battlefield);
+  });
+
+  it("does nothing for a missing permanent or duplicate id", () => {
+    const permanent = { ...makeCard("p1"), tapped: false, counters: 0 };
+    const state = { ...makeState(), battlefield: [permanent] };
+
+    expect(applyCreateCardCopy(state, "missing", "copy-1")).toBe(state);
+    expect(applyCreateCardCopy(state, "p1", "p1")).toBe(state);
+  });
+
+  it("removes a session copy instead of moving it to another zone", () => {
+    const permanent = { ...makeCard("p1"), tapped: false, counters: 0 };
+    const copied = applyCreateCardCopy(
+      { ...makeState(), battlefield: [permanent] },
+      "p1",
+      "copy-1"
+    );
+
+    const next = applyMoveToZone(copied, "copy-1", "battlefield", "graveyard");
+
+    expect(next.battlefield).toHaveLength(1);
+    expect(next.graveyard).toHaveLength(0);
+  });
+});
+
+describe("applyCreateToken", () => {
+  it("adds an independent playtest token to the battlefield", () => {
+    const state = makeState();
+    const next = applyCreateToken(
+      state,
+      { name: "Soldier", power: "1/1", colors: ["white"], kind: "token" },
+      "token-1"
+    );
+
+    expect(next.battlefield).toHaveLength(1);
+    expect(next.battlefield[0]).toMatchObject({
+      id: "token-1",
+      name: "1/1 Soldier token",
+      typeLine: "Token Creature — Soldier",
+      colorIdentity: ["W"],
+      isSessionCopy: true,
+      tapped: false,
+      counters: 0,
+    });
+  });
+
+  it("creates emblems without creature stats and is undoable", () => {
+    const state = makeState();
+    const next = applyCreateToken(
+      state,
+      { name: "Emblem", power: null, colors: [], kind: "emblem" },
+      "emblem-1"
+    );
+
+    expect(next.battlefield[0]).toMatchObject({
+      name: "Emblem",
+      typeLine: "Emblem",
+    });
+    expect(applyUndo(next).battlefield).toHaveLength(0);
+  });
+});
+
+describe("applyRollDie", () => {
+  it("records a valid die result and is undoable", () => {
+    const state = makeState();
+    const next = applyRollDie(state, 20, 17);
+
+    expect(next.diceRolls).toEqual([{ sides: 20, result: 17 }]);
+    expect(applyUndo(next).diceRolls).toEqual([]);
+  });
+
+  it("rejects invalid sides and results", () => {
+    const state = makeState();
+    expect(applyRollDie(state, 1, 1)).toBe(state);
+    expect(applyRollDie(state, 6, 0)).toBe(state);
+    expect(applyRollDie(state, 6, 7)).toBe(state);
+  });
+
+  it("keeps only the ten most recent results", () => {
+    let state = makeState();
+    for (let result = 1; result <= 12; result++) {
+      state = applyRollDie(state, 20, result);
+    }
+    expect(state.diceRolls).toHaveLength(10);
+    expect(state.diceRolls.at(-1)?.result).toBe(12);
+  });
+});
+
+describe("editable action log", () => {
+  it("records only valid mana amounts and clears evidence after free-text editing", () => {
+    const state = makeState();
+    expect(applyRecordMana(state, 0)).toBe(state);
+    const recorded = applyRecordMana(state, 3);
+    expect(recorded.actionLog.at(-1)).toMatchObject({ kind: "mana", amount: 3 });
+    const edited = applyEditActionLogEntry(recorded, recorded.actionLog[0].id, "Actually no mana");
+    expect(edited.actionLog[0]?.kind).toBeUndefined();
+    expect(edited.actionLog[0]?.amount).toBeUndefined();
+  });
+  it("adds, edits and removes a manual session entry", () => {
+    const added = applyAddActionLogEntry(makeState(), "Produced three green mana");
+    const entry = added.actionLog[0];
+    expect(entry).toMatchObject({ turn: 1, phase: "Draw", description: "Produced three green mana" });
+
+    const edited = applyEditActionLogEntry(added, entry.id, "Produced four green mana");
+    expect(edited.actionLog[0]?.description).toBe("Produced four green mana");
+
+    const removed = applyRemoveActionLogEntry(edited, entry.id);
+    expect(removed.actionLog).toEqual([]);
+  });
+
+  it("ignores blank entries and missing ids", () => {
+    const state = makeState();
+    expect(applyAddActionLogEntry(state, "   ")).toBe(state);
+    expect(applyEditActionLogEntry(state, 99, "Nope")).toBe(state);
+    expect(applyRemoveActionLogEntry(state, 99)).toBe(state);
   });
 });
 

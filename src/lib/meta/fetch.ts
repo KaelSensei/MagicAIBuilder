@@ -9,6 +9,10 @@ export interface MetaCard {
   readonly name: string;
   /** Fraction of decks (0–1), e.g. 0.78 = 78% */
   readonly inclusion: number;
+  readonly sample?: {
+    readonly decksWithCard: number;
+    readonly eligibleDecks: number;
+  };
   readonly imageUri?: string;
 }
 
@@ -76,15 +80,37 @@ import {
 } from "./mtgtop8";
 
 function inclusionFromEdhrecView(view: EdhrecCardView): number {
-  if (view.inclusion != null) return view.inclusion;
   if (
-    view.num_decks != null &&
-    view.potential_decks != null &&
-    view.potential_decks > 0
+    typeof view.inclusion === "number" &&
+    Number.isFinite(view.inclusion) &&
+    view.inclusion >= 0 &&
+    view.inclusion <= 1
+  ) return view.inclusion;
+  if (
+    typeof view.num_decks === "number" &&
+    typeof view.potential_decks === "number" &&
+    Number.isFinite(view.num_decks) &&
+    Number.isFinite(view.potential_decks) &&
+    view.num_decks >= 0 &&
+    view.potential_decks > 0 &&
+    view.num_decks <= view.potential_decks
   ) {
     return view.num_decks / view.potential_decks;
   }
   return 0;
+}
+
+function sampleFromEdhrecView(view: EdhrecCardView): MetaCard["sample"] {
+  if (
+    !Number.isSafeInteger(view.num_decks) ||
+    !Number.isSafeInteger(view.potential_decks) ||
+    view.num_decks === undefined ||
+    view.potential_decks === undefined ||
+    view.num_decks < 0 ||
+    view.potential_decks <= 0 ||
+    view.num_decks > view.potential_decks
+  ) return undefined;
+  return { decksWithCard: view.num_decks, eligibleDecks: view.potential_decks };
 }
 
 function collectMetaCardsFromEdhrecLists(
@@ -101,7 +127,12 @@ function collectMetaCardsFromEdhrecLists(
       if (!view.name || seen.has(view.name)) continue;
       if (cards.length >= 20) break outer;
       seen.add(view.name);
-      cards.push({ name: view.name, inclusion: inclusionFromEdhrecView(view) });
+      const sample = sampleFromEdhrecView(view);
+      cards.push({
+        name: view.name,
+        inclusion: sample ? sample.decksWithCard / sample.eligibleDecks : inclusionFromEdhrecView(view),
+        ...(sample ? { sample } : {}),
+      });
     }
   }
 
@@ -119,8 +150,14 @@ export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData
     throw err;
   }
 
-  const json = parseJson<EdhrecJson>(await res.json());
-  const cardlists = json.container?.json_dict?.cardlists;
+  const json = parseJson<EdhrecJson | null>(await res.json());
+  const cardlists = json?.container?.json_dict?.cardlists;
+  if (
+    !Array.isArray(cardlists) ||
+    cardlists.some((list) => !list || typeof list.tag !== "string" || !Array.isArray(list.cardviews))
+  ) {
+    throw new Error("Invalid EDHREC response: cardlists malformed");
+  }
   const cards = collectMetaCardsFromEdhrecLists(cardlists);
 
   return { cards };

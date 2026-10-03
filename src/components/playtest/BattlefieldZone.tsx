@@ -1,16 +1,21 @@
 "use client";
+import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { RotateCcw } from "lucide-react";
+import { Copy, Plus, RotateCcw } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import type { BattlefieldCard } from "@/lib/playtest/engine";
 import { useLocalizeDeckCard } from "@/components/card/LocalizedDeckTextContext";
+import type { TokenLibraryEntry } from "@/lib/deck/token-library";
 
 interface BattlefieldZoneProps {
   readonly battlefield: readonly BattlefieldCard[];
   readonly onTap: (cardId: string) => void;
   readonly onAddCounter: (cardId: string, amount: number) => void;
+  readonly onCreateCopy: (cardId: string) => void;
+  readonly requiredTokens: readonly TokenLibraryEntry[];
+  readonly onCreateToken: (token: TokenLibraryEntry) => void;
   readonly onRemove: (cardId: string) => void;
 }
 
@@ -18,24 +23,50 @@ export function BattlefieldZone({
   battlefield,
   onTap,
   onAddCounter,
+  onCreateCopy,
+  requiredTokens,
+  onCreateToken,
   onRemove,
 }: BattlefieldZoneProps) {
   const t = useTranslations("playtest.battlefield");
   const localize = useLocalizeDeckCard();
-
-  if (battlefield.length === 0) {
-    return (
-      <div className="bg-[var(--surface)] rounded-xl p-6 flex items-center justify-center">
-        <p className="text-white/30 text-sm">{t("empty")}</p>
-      </div>
-    );
-  }
+  const [selectedTokenIndex, setSelectedTokenIndex] = useState(0);
+  const selectedToken = requiredTokens[selectedTokenIndex];
 
   return (
     <div className="bg-[var(--surface)] rounded-xl p-4 space-y-3">
-      <h3 className="text-white font-semibold text-sm">
-        {t("title", { count: battlefield.length })}
-      </h3>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-white font-semibold text-sm">
+          {t("title", { count: battlefield.length })}
+        </h3>
+        {selectedToken && (
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedTokenIndex}
+              onChange={(event) => setSelectedTokenIndex(Number(event.target.value))}
+              aria-label={t("tokenChoice")}
+              className="rounded-md border border-white/15 bg-black/30 px-2 py-1 text-xs text-white/80"
+            >
+              {requiredTokens.map((token, index) => (
+                <option key={`${token.kind}-${token.name}-${token.power ?? ""}`} value={index}>
+                  {[token.power, token.name].filter(Boolean).join(" ")}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => onCreateToken(selectedToken)}
+              className="flex items-center gap-1 rounded-md bg-purple-500/15 px-2 py-1 text-xs text-purple-200 transition-colors hover:bg-purple-500/25"
+            >
+              <Plus size={12} aria-hidden="true" />
+              {t("addToken")}
+            </button>
+          </div>
+        )}
+      </div>
+      {battlefield.length === 0 ? (
+        <p className="py-8 text-center text-sm text-white/30">{t("empty")}</p>
+      ) : (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {battlefield.map((card) => {
           const view = localize(card);
@@ -102,6 +133,15 @@ export function BattlefieldZone({
                 </button>
                 <button
                   type="button"
+                  onClick={() => onCreateCopy(card.id)}
+                  aria-label={t("copy")}
+                  className="flex items-center gap-0.5 px-1.5 py-1 bg-white/10 hover:bg-white/20 rounded text-[10px] text-white/70 transition-colors"
+                >
+                  <Copy size={10} aria-hidden="true" />
+                  {t("copy")}
+                </button>
+                <button
+                  type="button"
                   onClick={() => onRemove(card.id)}
                   aria-label={t("remove")}
                   className="px-1.5 py-1 bg-red-600/20 hover:bg-red-600/40 rounded text-[10px] text-red-300 transition-colors"
@@ -114,6 +154,7 @@ export function BattlefieldZone({
           );
         })}
       </div>
+      )}
     </div>
   );
 }

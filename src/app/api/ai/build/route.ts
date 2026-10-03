@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { mockDeck } from "./mock-deck";
 import { validateGeneratedDeck } from "@/lib/ai/generated-deck-validation";
+import { createDeckPlan, formatDeckPlanForPrompt } from "@/lib/ai/deck-plan";
 import type {
   AIDeckResponse,
   Bracket,
@@ -54,6 +55,7 @@ function buildPrompt(req: BuildRequest): string {
   const colorSymbols = req.colors.filter((c) => c !== "C").join(""); // e.g. "UB" for Dimir
   const budgetStr = req.budget ? `$${req.budget} max per card` : "No limit";
   const bracketDesc = BRACKET_DESCRIPTIONS[req.bracket];
+  const deckPlan = formatDeckPlanForPrompt(createDeckPlan(req));
 
   const commanderStr = req.commanderName
     ? `Use exactly "${req.commanderName}" as the commander`
@@ -73,6 +75,9 @@ STRATEGY: ${req.strategy}
 BUDGET: ${budgetStr}
 POWER LEVEL: ${bracketDesc}
 COMMANDER: ${commanderStr}
+
+PLAYER-REVIEWED DECK PLAN (FOLLOW THIS STRUCTURE):
+${deckPlan}
 
 Return a complete Commander decklist as ONLY valid JSON (no markdown, no text outside JSON):
 {
@@ -169,7 +174,7 @@ async function callOpenAI(prompt: string): Promise<AIDeckResponse> {
 function streamDeck(
   emit: (event: BuildEvent) => void,
   deck: AIDeckResponse,
-  source: BuildSource,
+  source: BuildSource
 ): void {
   emit({ type: "commander", name: deck.commander });
   emit({ type: "status", message: "Building card list…" });
@@ -219,7 +224,7 @@ export async function POST(request: Request) {
   const rl = checkRateLimit(
     `ai-build:${auth.session.user.id}`,
     RATE_LIMIT,
-    RATE_WINDOW,
+    RATE_WINDOW
   );
   if (!rl.allowed) {
     return NextResponse.json(
@@ -229,7 +234,7 @@ export async function POST(request: Request) {
       {
         status: 429,
         headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
-      },
+      }
     );
   }
 
@@ -244,7 +249,7 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid request body", details: parsed.error.flatten() },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -289,7 +294,9 @@ export async function POST(request: Request) {
 
         const validationIssues = validateGeneratedDeck(deck);
         if (validationIssues.length > 0) {
-          throw new Error(`Generated deck rejected: ${validationIssues.join(" ")}`);
+          throw new Error(
+            `Generated deck rejected: ${validationIssues.join(" ")}`
+          );
         }
 
         streamDeck(emit, deck, source);
@@ -298,7 +305,7 @@ export async function POST(request: Request) {
         // errors (quota, model names, stack fragments) never reach the UI.
         logger.error(
           error instanceof Error ? error.message : String(error),
-          "POST /api/ai/build",
+          "POST /api/ai/build"
         );
         emit({ type: "error", message: "AI deck build failed" });
       } finally {

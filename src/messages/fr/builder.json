@@ -79,10 +79,28 @@
         "land-light": "Peu de terrains : envisagez un mulligan.",
         "balanced": "Départ équilibré.",
         "land-heavy": "Beaucoup de terrains : envisagez un mulligan."
+      },
+      "deadHand": "Main de départ morte : aucun sort n'est actuellement jouable.",
+      "missingColors": "Mana {colors} manquant.",
+      "colors": {
+        "W": "blanc",
+        "U": "bleu",
+        "B": "noir",
+        "R": "rouge",
+        "G": "vert"
       }
     }
   },
+  "guest": {
+    "title": "Deck invité.",
+    "description": "Enregistré uniquement dans ce navigateur. Créez un compte pour le conserver et y accéder partout.",
+    "anotherTabTitle": "Ce deck invité est déjà ouvert dans un autre onglet.",
+    "anotherTabDescription": "Créez un compte pour travailler sur plusieurs onglets sans risquer vos modifications.",
+    "createAccount": "Créer un compte",
+    "dismiss": "Fermer le message du deck invité"
+  },
   "loading": "Chargement du deck…",
+  "saving": "Enregistrement…",
   "deckNotFound": {
     "title": "Deck introuvable",
     "back": "Retour à mes decks"
