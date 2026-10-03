@@ -38,14 +38,12 @@ export function buildImportPreview(
     totalQuantity += card.quantity;
     if (card.isCommander) commanderNames.push(card.name);
     if (card.isPartner) partnerNames.push(card.name);
-    if (!card.isCommander && !card.isPartner) {
-      const key = normalizeImportedName(card.name);
-      const previous = entryCounts.get(key);
-      entryCounts.set(key, {
-        name: previous?.name ?? card.name,
-        count: (previous?.count ?? 0) + 1,
-      });
-    }
+    const key = normalizeImportedName(card.name);
+    const previous = entryCounts.get(key);
+    entryCounts.set(key, {
+      name: previous?.name ?? card.name,
+      count: (previous?.count ?? 0) + 1,
+    });
   }
 
   const duplicateNames = [...entryCounts.values()]
