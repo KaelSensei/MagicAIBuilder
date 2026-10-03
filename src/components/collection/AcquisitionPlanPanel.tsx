@@ -170,7 +170,14 @@ export function AcquisitionPlanPanel() {
                       <p className="font-medium text-[var(--text-primary)]">{item.name}</p>
                       <p className="text-xs text-[var(--text-secondary)]">{item.decks.map((deck) => deck.name).join(" · ")}</p>
                     </div>
-                    <span className="shrink-0 text-[var(--accent-text)]">{t("toAcquire", { count: item.acquireQuantity })}</span>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[var(--accent-text)]">{t("toAcquire", { count: item.acquireQuantity })}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {item.price === null
+                          ? t("unpriced", { count: item.acquireQuantity })
+                          : format.number(item.price * item.acquireQuantity, { style: "currency", currency: "USD" })}
+                      </p>
+                    </div>
                   </li>
                 ))}
               </ul>
