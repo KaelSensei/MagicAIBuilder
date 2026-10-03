@@ -82,6 +82,24 @@ describe("parseTextDecklist", () => {
     expect(result.cards).toHaveLength(1);
   });
 
+  it("uses commented section headings without treating ordinary comments as cards", () => {
+    const result = parseTextDecklist([
+      "// Commander",
+      "1 Atraxa, Praetors' Voice",
+      "# Deck",
+      "1 Sol Ring",
+      "// Sideboard",
+      "2 Negate",
+      "# note: this is not a card",
+    ].join("\n"));
+
+    expect(result.commander).toBe("Atraxa, Praetors' Voice");
+    expect(result.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Negate", quantity: 2, zone: "sideboard" },
+    ]);
+  });
+
   it("strips set code from card name", () => {
     const result = parseTextDecklist("1 Lightning Bolt (M11) 150");
     expect(result.cards[0].name).toBe("Lightning Bolt");
