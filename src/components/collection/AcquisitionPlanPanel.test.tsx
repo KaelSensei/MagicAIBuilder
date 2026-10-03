@@ -16,6 +16,7 @@ describe("AcquisitionPlanPanel", () => {
   it("exports only missing copies with their printing IDs and known prices", async () => {
     const fetchPlan = vi.fn().mockResolvedValue(response({
       deckCount: 1,
+      decks: [{ id: "a", name: "Artifacts" }],
       items: [
         { scryfallId: "ring-a", name: "Sol Ring", requiredQuantity: 3, ownedQuantity: 2, acquireQuantity: 1, price: 2, decks: [{ id: "a", name: "Artifacts", quantity: 3 }] },
         { scryfallId: "ring-b", name: "Sol Ring", requiredQuantity: 2, ownedQuantity: 0, acquireQuantity: 2, price: null, decks: [{ id: "a", name: "Artifacts", quantity: 2 }] },
@@ -55,6 +56,7 @@ describe("AcquisitionPlanPanel", () => {
   it("loads only when opened and shows the missing copies by deck", async () => {
     const fetchPlan = vi.fn().mockResolvedValue(response({
       deckCount: 2,
+      decks: [{ id: "a", name: "Artifacts" }, { id: "b", name: "Spells" }],
       items: [{
         scryfallId: "ring", name: "Sol Ring", requiredQuantity: 2,
         ownedQuantity: 1, acquireQuantity: 1, price: 2,
@@ -77,7 +79,7 @@ describe("AcquisitionPlanPanel", () => {
   it("lets the player retry after a failed request", async () => {
     const fetchPlan = vi.fn()
       .mockResolvedValueOnce(response({ error: "Unavailable" }, 500))
-      .mockResolvedValueOnce(response({ deckCount: 0, items: [] }));
+      .mockResolvedValueOnce(response({ deckCount: 0, decks: [], items: [] }));
     vi.stubGlobal("fetch", fetchPlan);
     const user = userEvent.setup();
 
@@ -92,8 +94,8 @@ describe("AcquisitionPlanPanel", () => {
 
   it("refreshes the plan on demand after collection changes", async () => {
     const fetchPlan = vi.fn()
-      .mockResolvedValueOnce(response({ deckCount: 1, items: [] }))
-      .mockResolvedValueOnce(response({ deckCount: 1, items: [{
+      .mockResolvedValueOnce(response({ deckCount: 1, decks: [{ id: "a", name: "Artifacts" }], items: [] }))
+      .mockResolvedValueOnce(response({ deckCount: 1, decks: [{ id: "a", name: "Artifacts" }], items: [{
         scryfallId: "ring", name: "Sol Ring", requiredQuantity: 1,
         ownedQuantity: 0, acquireQuantity: 1, price: null,
         decks: [{ id: "a", name: "Artifacts", quantity: 1 }],
@@ -107,5 +109,30 @@ describe("AcquisitionPlanPanel", () => {
     await user.click(screen.getByRole("button", { name: "Refresh plan" }));
     await waitFor(() => expect(screen.getByText("Sol Ring")).toBeInTheDocument());
     expect(screen.getByText("Price unavailable for 1 copy")).toBeInTheDocument();
+  });
+
+  it("switches between all decks and one deck without changing ownership", async () => {
+    const decks = [{ id: "a", name: "Artifacts" }, { id: "b", name: "Spells" }];
+    const fetchPlan = vi.fn()
+      .mockResolvedValueOnce(response({
+        deckCount: 2, decks,
+        items: [{ scryfallId: "ring", name: "Sol Ring", requiredQuantity: 2, ownedQuantity: 1, acquireQuantity: 1, price: 2, decks: [{ id: "a", name: "Artifacts", quantity: 1 }, { id: "b", name: "Spells", quantity: 1 }] }],
+      }))
+      .mockResolvedValueOnce(response({ deckCount: 1, decks, items: [] }))
+      .mockResolvedValueOnce(response({ deckCount: 2, decks, items: [] }));
+    vi.stubGlobal("fetch", fetchPlan);
+    const user = userEvent.setup();
+
+    renderWithIntl(<AcquisitionPlanPanel />);
+    await user.click(screen.getByRole("button", { name: "Acquisition plan" }));
+    expect(await screen.findByText("Sol Ring")).toBeInTheDocument();
+    const select = screen.getByRole("combobox", { name: "Deck for acquisition plan" });
+    await user.selectOptions(select, "a");
+
+    expect(await screen.findByText("All cards needed for these decks are in your collection.")).toBeInTheDocument();
+    expect(fetchPlan).toHaveBeenNthCalledWith(2, "/api/collection/acquisition-plan?deckId=a", expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    await user.selectOptions(select, "");
+    await waitFor(() => expect(fetchPlan).toHaveBeenCalledTimes(3));
+    expect(fetchPlan).toHaveBeenNthCalledWith(3, "/api/collection/acquisition-plan", expect.objectContaining({ signal: expect.any(AbortSignal) }));
   });
 });
