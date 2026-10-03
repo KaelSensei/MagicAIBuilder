@@ -317,7 +317,7 @@
     "copyBuyNow": "Copier les achats immédiats",
     "exportBuyNowCsv": "Exporter les achats immédiats en CSV",
     "nothingPlanned": "Aucun achat prévu maintenant",
-    "sessionOnly": "Plan valable pour cette session uniquement. Votre collection ne change pas.",
+    "sessionOnly": "Plan enregistré dans ce navigateur pour ce deck. Votre collection ne change pas.",
     "deferredCount": "{count, plural, one {# carte pour plus tard} other {# cartes pour plus tard}}",
     "knownSubtotal": "Sous-total connu",
     "priceUnavailable": "Prix indisponible",

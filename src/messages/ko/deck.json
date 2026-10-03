@@ -676,7 +676,7 @@
     "copyBuyNow": "지금 구매할 목록 복사",
     "exportBuyNowCsv": "지금 구매할 CSV 내보내기",
     "nothingPlanned": "지금 구매할 카드가 없습니다",
-    "sessionOnly": "이번 세션에서만 유효한 계획입니다. 컬렉션은 변경되지 않습니다.",
+    "sessionOnly": "이 덱의 계획은 이 브라우저에 저장됩니다. 컬렉션은 변경되지 않습니다.",
     "deferredCount": "나중에 구매할 카드 {count}장",
     "knownSubtotal": "확인된 가격 소계",
     "priceUnavailable": "가격 정보 없음",
