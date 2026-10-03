@@ -56,6 +56,20 @@ describe("buildImportPreview", () => {
     expect(buildImportPreview(imported, foundCards).duplicateNames).toEqual(["Sol Ring"]);
   });
 
+  it("warns when the commander is repeated in the main deck", () => {
+    const imported: UrlImportResult = {
+      ...result,
+      cards: [
+        result.cards[0],
+        { ...result.cards[0], name: "atraxa, praetors' voice", isCommander: false },
+      ],
+    };
+
+    expect(buildImportPreview(imported, foundCards).duplicateNames).toEqual([
+      "Atraxa, Praetors' Voice",
+    ]);
+  });
+
   it("warns before confirmation about unresolved names without duplicating ignored cards", () => {
     const imported: UrlImportResult = {
       ...result,
