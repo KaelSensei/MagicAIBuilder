@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-03: Owned-printing preference
+
+#### Added
+
+- The printing selector puts exact owned editions first and shows their combined regular and foil quantity. It leaves the selected edition unchanged until the player chooses one.
+
+#### Validation
+
+- The focused test failed before implementation. All 2,947 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-03: Acquisition plan deck filter
 
 #### Added
