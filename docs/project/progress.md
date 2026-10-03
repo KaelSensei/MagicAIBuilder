@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-10-02                             |
+| Last Updated  | 2026-10-03                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -31,6 +31,7 @@
 
 ## Latest product delivery
 
+- Players can now filter the read-only collection acquisition plan to one of their decks or return to all decks; the summary and CSV follow the selection, and foreign deck IDs are rejected. Route and component tests failed before implementation; all 2,945 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud returned HTTP 403 before analysis and Docker E2E was not run.
 - Collection cards now show the signed-in player's decks that use the exact printing, with zone, quantity and a deck link. Usage loads only when requested and remains read-only. Route and component tests failed before implementation; all 2,942 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud returned HTTP 403 before analysis and Docker E2E was not run.
 - The cross-deck acquisition plan now exports a generic CSV containing only missing quantities, printing IDs and known prices. This does not yet link to regional sellers or preserve collection condition/finish choices. The focused export test failed before implementation; all 2,937 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud returned HTTP 403 before analysis and Docker E2E was not run.
 - The collection page now offers an on-demand, read-only acquisition plan across all owned decks. Players can see missing copies, contributing decks, a known-price subtotal, and unpriced copies, then refresh or retry without mutating ownership. The focused component test failed before implementation; all 2,936 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; SonarCloud returned HTTP 403 before analysis and Docker E2E was not run.
