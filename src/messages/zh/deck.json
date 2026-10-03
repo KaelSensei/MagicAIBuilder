@@ -676,7 +676,7 @@
     "copyBuyNow": "复制现在购买清单",
     "exportBuyNowCsv": "导出现在购买的 CSV",
     "nothingPlanned": "当前没有计划购买的卡牌",
-    "sessionOnly": "此计划仅在本次会话有效。收藏不会更改。",
+    "sessionOnly": "此套牌的计划保存在当前浏览器中。收藏不会更改。",
     "deferredCount": "稍后购买 {count} 张卡牌",
     "knownSubtotal": "已知价格小计",
     "priceUnavailable": "价格不可用",

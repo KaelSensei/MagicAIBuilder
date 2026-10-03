@@ -63,6 +63,7 @@ const initialCollectionState = useCollectionStore.getState();
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
   useCollectionStore.setState(initialCollectionState, true);
 });
 
@@ -116,6 +117,7 @@ describe("ShoppingListModal", () => {
       <ShoppingListModal
         deck={{ ...deck, cards: [{ ...card, price: null }] }}
         ownedQuantities={{}}
+        ownerId="owner"
         onClose={vi.fn()}
       />
     );
@@ -129,7 +131,7 @@ describe("ShoppingListModal", () => {
     const nowCard = { ...card, id: "arcane-signat", scryfallId: "arcane-signat", name: "Arcane Signet", price: 10 };
     const plannedDeck = { ...deck, cards: [laterCard, nowCard] };
 
-    renderWithIntl(<ShoppingListModal deck={plannedDeck} ownedQuantities={{}} onClose={vi.fn()} />);
+    renderWithIntl(<ShoppingListModal deck={plannedDeck} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
 
     expect(screen.getByText("~$10.00")).toBeInTheDocument();
@@ -139,7 +141,7 @@ describe("ShoppingListModal", () => {
   });
 
   it("disables buy-now exports when every missing card is deferred", () => {
-    renderWithIntl(<ShoppingListModal deck={deck} ownedQuantities={{}} onClose={vi.fn()} />);
+    renderWithIntl(<ShoppingListModal deck={deck} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
 
     expect(screen.getByText("No cards planned for now")).toBeInTheDocument();
@@ -155,7 +157,7 @@ describe("ShoppingListModal", () => {
     });
     const nowCard = { ...card, id: "arcane-signat", scryfallId: "arcane-signat", name: "Arcane Signet" };
     renderWithIntl(
-      <ShoppingListModal deck={{ ...deck, cards: [card, nowCard] }} ownedQuantities={{}} onClose={vi.fn()} />
+      <ShoppingListModal deck={{ ...deck, cards: [card, nowCard] }} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
@@ -164,5 +166,32 @@ describe("ShoppingListModal", () => {
     await waitFor(() => expect(writeText).toHaveBeenCalled());
     expect(writeText.mock.calls[0]?.[0]).toContain("Arcane Signet");
     expect(writeText.mock.calls[0]?.[0]).not.toContain("Sol Ring");
+  });
+
+  it("restores deferred printings for the same owner and deck after reopening", async () => {
+    const { unmount } = renderWithIntl(
+      <ShoppingListModal deck={deck} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
+    unmount();
+
+    renderWithIntl(<ShoppingListModal deck={deck} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />);
+    expect(await screen.findByRole("button", { name: "Buy now: Sol Ring" })).toBeInTheDocument();
+    expect(screen.getByText("No cards planned for now")).toBeInTheDocument();
+  });
+
+  it("keeps deferred printings separate across decks and owners", async () => {
+    const { unmount } = renderWithIntl(
+      <ShoppingListModal deck={deck} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
+    unmount();
+
+    renderWithIntl(<ShoppingListModal deck={{ ...deck, id: "other-deck" }} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Buy later: Sol Ring" })).toBeInTheDocument();
+    cleanup();
+
+    renderWithIntl(<ShoppingListModal deck={deck} ownedQuantities={{}} ownerId="other-owner" onClose={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Buy later: Sol Ring" })).toBeInTheDocument();
   });
 });

@@ -317,7 +317,7 @@
     "copyBuyNow": "Copy buy-now list",
     "exportBuyNowCsv": "Export buy-now CSV",
     "nothingPlanned": "No cards planned for now",
-    "sessionOnly": "Plan for this session only. Your collection is unchanged.",
+    "sessionOnly": "Saved in this browser for this deck. Your collection is unchanged.",
     "deferredCount": "{count, plural, one {# card for later} other {# cards for later}}",
     "knownSubtotal": "Known subtotal",
     "priceUnavailable": "Price unavailable",
