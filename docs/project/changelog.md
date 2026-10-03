@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-03: Acquisition plan deck links
+
+#### Added
+
+- Each missing printing in the acquisition plan now links to the player's contributing decks. The read-only plan keeps its existing quantities, prices and deck filter.
+
+#### Validation
+
+- The focused component test failed before implementation. All 2,949 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-03: URL import preview for unresolved cards
 
 #### Fixed
