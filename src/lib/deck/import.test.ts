@@ -92,6 +92,14 @@ describe("parseTextDecklist", () => {
     expect(result.cards[0].name).toBe("Sol Ring");
   });
 
+  it("preserves localized card names and Unicode punctuation", () => {
+    const result = parseTextDecklist("1 渦まく知識\n1 Astarion’s Thirst");
+    expect(result.cards.map((card) => card.name)).toEqual([
+      "渦まく知識",
+      "Astarion’s Thirst",
+    ]);
+  });
+
   it("clamps quantity above 99 to 99", () => {
     const result = parseTextDecklist("200 Forest");
     expect(result.cards[0].quantity).toBe(99);
