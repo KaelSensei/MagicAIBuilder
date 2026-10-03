@@ -322,6 +322,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Collection cards now link to private decks using that exact printing, including the deck zone and quantity, without loading usage for every card up front.
 - The collection acquisition plan can focus on one owned deck or all decks, keeping its summary and CSV export scoped to the selected view.
 - The printing selector now puts exact owned editions first and shows combined regular and foil quantities; choosing an edition remains an explicit action.
+- The acquisition plan now shows a known-price subtotal for each missing printing and marks unpriced printings on their own rows.
 
 ### Remaining scope
 
