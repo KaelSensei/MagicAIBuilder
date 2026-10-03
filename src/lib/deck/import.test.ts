@@ -105,6 +105,14 @@ describe("parseTextDecklist", () => {
     expect(result.cards[0].name).toBe("Lightning Bolt");
   });
 
+  it("strips a standalone uppercase set code but keeps normal parenthetical text", () => {
+    const result = parseTextDecklist("1 Sol Ring (C21)\n1 Test Card (custom)");
+    expect(result.cards.map((card) => card.name)).toEqual([
+      "Sol Ring",
+      "Test Card (custom)",
+    ]);
+  });
+
   it("strips HTML tags from card name", () => {
     const result = parseTextDecklist("1 <b>Sol Ring</b>");
     expect(result.cards[0].name).toBe("Sol Ring");
