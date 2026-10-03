@@ -49,11 +49,11 @@ describe("fetchDecks", () => {
   it("stops waiting when the deck list request stalls", async () => {
     vi.useFakeTimers();
     try {
-      vi.stubGlobal("fetch", vi.fn((_url: string, options: RequestInit) => new Promise((_resolve, reject) => {
-        options.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+      vi.stubGlobal("fetch", vi.fn((_url: string, options?: RequestInit) => new Promise((_resolve, reject) => {
+        options?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
       })));
       const request = fetchDecks();
-      const failure = expect(request).rejects.toThrow();
+      const failure = expect(request).rejects.toThrow("Aborted");
 
       await vi.advanceTimersByTimeAsync(15_000);
 
