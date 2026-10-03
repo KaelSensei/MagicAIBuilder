@@ -10,6 +10,8 @@ import { getCardImageUri } from "@/lib/scryfall/images";
 import { resolveLocalizedText, toScryfallLang } from "@/lib/scryfall/localized";
 import { Modal } from "@/components/ui/Modal";
 import { CardRulingsPanel } from "@/components/card/CardRulingsPanel";
+import { useCollectionStore } from "@/lib/collection/store";
+import type { CollectionCard } from "@/lib/collection/types";
 
 
 interface PrintingSelectorModalProps {
@@ -20,17 +22,34 @@ interface PrintingSelectorModalProps {
 
 import { ManaCostDisplay } from "./ManaSymbol";
 
+function ownedQuantity(
+  id: string,
+  collectionCards: Readonly<Record<string, CollectionCard>>,
+  collectionCardsFoil: Readonly<Record<string, CollectionCard>>
+): number {
+  return (collectionCards[id]?.quantity ?? 0) + (collectionCardsFoil[id]?.quantity ?? 0);
+}
+
 export function PrintingSelectorModal({
   card,
   onSelect,
   onClose,
 }: PrintingSelectorModalProps) {
   const t = useTranslations("card");
+  const tOwnership = useTranslations("collection.ownership");
   const format = useFormatter();
   const { data, isLoading } = useCardPrintings(card.name, toScryfallLang(useLocale()));
   const [previewedPrintingId, setPreviewedPrintingId] = useState(card.id);
+  const collectionCards = useCollectionStore((state) => state.collectionCards);
+  const collectionCardsFoil = useCollectionStore((state) => state.collectionCardsFoil);
 
-  const printings = useMemo(() => data?.data ?? [card], [card, data?.data]);
+  const printings = useMemo(() => {
+    const available = data?.data ?? [card];
+    return [...available].sort((first, second) =>
+      Number(ownedQuantity(second.id, collectionCards, collectionCardsFoil) > 0) -
+      Number(ownedQuantity(first.id, collectionCards, collectionCardsFoil) > 0)
+    );
+  }, [card, data?.data, collectionCards, collectionCardsFoil]);
   const previewedPrinting = useMemo(
     () =>
       printings.find((printing) => printing.id === previewedPrintingId) ??
@@ -130,6 +149,7 @@ export function PrintingSelectorModal({
                     <div key={printing.id} className="flex flex-col gap-1.5">
                       <button
                         type="button"
+                        aria-label={`${printing.name} — ${printing.set_name ?? printing.set}`}
                         onClick={() => {
                           onSelect(printing);
                           onClose();
@@ -163,6 +183,11 @@ export function PrintingSelectorModal({
                       <p className="text-[10px] text-(--text-secondary) text-center truncate uppercase tracking-wide">
                         {printing.set}
                       </p>
+                      {ownedQuantity(printing.id, collectionCards, collectionCardsFoil) > 0 && (
+                        <p className="text-[10px] text-emerald-400 text-center font-medium">
+                          {tOwnership("ownedCount", { count: ownedQuantity(printing.id, collectionCards, collectionCardsFoil) })}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
