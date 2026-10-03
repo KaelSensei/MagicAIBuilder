@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-03: Acquisition plan deck filter
+
+#### Added
+
+- Players can switch the collection acquisition plan between all owned decks and a single deck. Totals and CSV export follow the selected view; unknown or foreign deck IDs are rejected without exposing private data.
+
+#### Validation
+
+- Route and component tests failed before implementation. All 2,945 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-02: Exact-printing deck usage
 
 #### Added
