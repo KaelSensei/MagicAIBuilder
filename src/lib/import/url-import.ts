@@ -95,6 +95,7 @@ export function detectSource(
 }
 
 import { httpGet, parseJson } from "@/lib/http";
+import { normalizeImportedName } from "@/lib/scryfall/name-index";
 import { extractCardsFromHtml, parsePlainTextDecklist } from "./decklist-parse";
 
 // ─── Moxfield ─────────────────────────────────────────────────────────────────
@@ -362,18 +363,25 @@ async function importEdhrec(commanderSlug: string): Promise<UrlImportResult> {
   if (!dict) throw new Error("EDHRec returned unexpected data.");
 
   const cards: UrlImportCard[] = [];
+  const seenNames = new Set<string>();
 
   // Commander card
   if (dict.card?.name) {
     cards.push({ name: dict.card.name, quantity: 1, isCommander: true, isPartner: false, zone: "main" });
+    seenNames.add(normalizeImportedName(dict.card.name));
   }
 
   // Top cards from each category (take first 99 to build a complete deck)
   const cardlists = dict.cardlists ?? [];
+  let mainCount = 0;
   for (const list of cardlists) {
     for (const view of list.cardviews ?? []) {
-      if (cards.filter((c) => !c.isCommander).length >= 99) break;
+      if (mainCount >= 99) break;
+      const key = normalizeImportedName(view.name);
+      if (!key || seenNames.has(key)) continue;
+      seenNames.add(key);
       cards.push({ name: view.name, quantity: 1, isCommander: false, isPartner: false, zone: "main" });
+      mainCount++;
     }
   }
 

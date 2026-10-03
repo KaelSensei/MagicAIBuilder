@@ -452,6 +452,27 @@ describe("importFromUrl", () => {
     expect(result.cards.some((c) => c.name === "Undead Augur")).toBe(true);
   });
 
+  it("EDHRec: keeps unique average-deck cards across recommendation categories", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(new Response(JSON.stringify({
+      container: { json_dict: {
+        card: { name: "Wilhelt, the Rotcleaver" },
+        cardlists: [
+          { tag: "popular", cardviews: [{ name: "Sol Ring" }, { name: "Undead Augur" }] },
+          { tag: "synergy", cardviews: [{ name: "sol ring" }, { name: "Wilhelt, the Rotcleaver" }, { name: "Arcane Signet" }] },
+        ],
+      } },
+    }), { status: 200 }));
+
+    const imported = await importFromUrl("https://edhrec.com/commanders/wilhelt-the-rotcleaver");
+
+    expect(imported.cards.map(({ name }) => name)).toEqual([
+      "Wilhelt, the Rotcleaver",
+      "Sol Ring",
+      "Undead Augur",
+      "Arcane Signet",
+    ]);
+  });
+
   it("EDHRec: throws when json_dict missing", async () => {
     vi.spyOn(http, "httpGet").mockResolvedValueOnce(
       new Response(JSON.stringify({ container: {} }), { status: 200 })
