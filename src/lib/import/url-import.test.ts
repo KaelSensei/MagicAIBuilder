@@ -14,6 +14,14 @@ describe("detectSource", () => {
       .toEqual({ source: "moxfield", id: "xyz-123" });
   });
 
+  it("accepts supported deck URLs pasted without a scheme", () => {
+    expect(detectSource("moxfield.com/decks/xyz-123"))
+      .toEqual({ source: "moxfield", id: "xyz-123" });
+    expect(detectSource("www.archidekt.com/decks/42"))
+      .toEqual({ source: "archidekt", id: "42" });
+    expect(detectSource("example.com/decks/42")).toBeNull();
+  });
+
   it("detects raw moxfield publicId (non-numeric)", () => {
     expect(detectSource("AbCdEfGhIj")).toEqual({ source: "moxfield", id: "AbCdEfGhIj" });
   });
