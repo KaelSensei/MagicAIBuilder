@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-02
+> **Updated:** 2026-10-03
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -320,6 +320,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - The collection page now displays that cross-deck acquisition plan on demand, including missing quantities, contributing decks, a known-price subtotal, unpriced-copy disclosure, and refresh/retry states.
 - The cross-deck plan exports a generic CSV of missing quantities with Scryfall printing IDs and known prices; owned copies are excluded.
 - Collection cards now link to private decks using that exact printing, including the deck zone and quantity, without loading usage for every card up front.
+- The collection acquisition plan can focus on one owned deck or all decks, keeping its summary and CSV export scoped to the selected view.
 
 ### Remaining scope
 
