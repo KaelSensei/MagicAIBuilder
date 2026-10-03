@@ -19,7 +19,7 @@ function sanitizeName(raw: string): string {
   return raw
     // Bounded quantifier prevents ReDoS: HTML tags are at most ~200 chars
     .replaceAll(/<[^>]{0,200}>/g, "") // strip HTML tags
-    .replaceAll(/[^\x20-\x7E\u00C0-\u017E]/g, "") // printable ASCII + latin extended
+    .replaceAll(/[\p{Cc}\p{Cf}\p{Cs}]/gu, "") // controls and invisible formatting, not localized names
     .trim()
     .slice(0, MAX_NAME_LENGTH);
 }
