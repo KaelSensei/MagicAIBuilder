@@ -25,7 +25,7 @@ export function buildImportPreview(
   foundCards: readonly ScryfallCard[]
 ): ImportPreview {
   const zoneCounts = { main: 0, sideboard: 0, maybeboard: 0 };
-  const entryCounts = new Map<string, number>();
+  const entryCounts = new Map<string, { name: string; count: number }>();
   const foundByName = buildScryfallNameIndex(foundCards);
   const ignoredNames = new Set(result.ignored);
   const commanderNames: string[] = [];
@@ -39,13 +39,18 @@ export function buildImportPreview(
     if (card.isCommander) commanderNames.push(card.name);
     if (card.isPartner) partnerNames.push(card.name);
     if (!card.isCommander && !card.isPartner) {
-      entryCounts.set(card.name, (entryCounts.get(card.name) ?? 0) + 1);
+      const key = normalizeImportedName(card.name);
+      const previous = entryCounts.get(key);
+      entryCounts.set(key, {
+        name: previous?.name ?? card.name,
+        count: (previous?.count ?? 0) + 1,
+      });
     }
   }
 
-  const duplicateNames = [...entryCounts.entries()]
-    .filter(([, count]) => count > 1)
-    .map(([name]) => name);
+  const duplicateNames = [...entryCounts.values()]
+    .filter(({ count }) => count > 1)
+    .map(({ name }) => name);
 
   return {
     name: result.name,
