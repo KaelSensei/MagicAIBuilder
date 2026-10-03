@@ -34,6 +34,7 @@ function clampQuantity(n: number): number {
 /** Strip trailing set code + collector number: "Card Name (SET) 123" or "... 123p" or "... 123★" */
 // Bounded quantifiers prevent ReDoS: set codes ≤6 chars, collector numbers ≤6 digits
 const SET_CODE_PATTERN = /\s{1,5}\([A-Z0-9]{1,6}\)\s{1,5}\d{1,6}[a-z*★]{0,3}\s*$/i;
+const SET_ONLY_PATTERN = /\s{1,5}\([A-Z0-9]{2,6}\)$/;
 
 type ParseState = {
   commander: string | null;
@@ -64,8 +65,8 @@ function processImportLine(line: string, state: ParseState): void {
 
   const match = /^(\d+)x?\s+(\S.*)$/.exec(line);
   const rawName = match
-    ? match[2].replace(SET_CODE_PATTERN, "").trim()
-    : line.replace(SET_CODE_PATTERN, "").trim();
+    ? match[2].replace(SET_CODE_PATTERN, "").replace(SET_ONLY_PATTERN, "").trim()
+    : line.replace(SET_CODE_PATTERN, "").replace(SET_ONLY_PATTERN, "").trim();
   const quantity = match ? clampQuantity(Number.parseInt(match[1], 10)) : 1;
   const name = sanitizeName(rawName);
 
