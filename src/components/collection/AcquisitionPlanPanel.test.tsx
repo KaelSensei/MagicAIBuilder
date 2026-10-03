@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { AcquisitionPlanPanel } from "./AcquisitionPlanPanel";
@@ -13,6 +13,26 @@ const response = (body: unknown, status = 200) =>
 afterEach(() => vi.unstubAllGlobals());
 
 describe("AcquisitionPlanPanel", () => {
+  it("shows a known line subtotal and calls out an unpriced printing", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response({
+      deckCount: 1,
+      decks: [{ id: "a", name: "Artifacts" }],
+      items: [
+        { scryfallId: "ring", name: "Sol Ring", requiredQuantity: 3, ownedQuantity: 1, acquireQuantity: 2, price: 2.5, decks: [{ id: "a", name: "Artifacts", quantity: 3 }] },
+        { scryfallId: "rock", name: "Mana Rock", requiredQuantity: 1, ownedQuantity: 0, acquireQuantity: 1, price: null, decks: [{ id: "a", name: "Artifacts", quantity: 1 }] },
+      ],
+    })));
+    const user = userEvent.setup();
+
+    renderWithIntl(<AcquisitionPlanPanel />);
+    await user.click(screen.getByRole("button", { name: "Acquisition plan" }));
+
+    const [priced, unpriced] = await screen.findAllByRole("listitem");
+    expect(within(priced).getByText("2 to acquire")).toBeInTheDocument();
+    expect(within(priced).getByText("$5.00")).toBeInTheDocument();
+    expect(within(unpriced).getByText("Price unavailable for 1 copy")).toBeInTheDocument();
+  });
+
   it("exports only missing copies with their printing IDs and known prices", async () => {
     const fetchPlan = vi.fn().mockResolvedValue(response({
       deckCount: 1,

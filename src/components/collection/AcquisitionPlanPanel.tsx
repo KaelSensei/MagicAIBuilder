@@ -160,7 +160,7 @@ export function AcquisitionPlanPanel() {
               <p className="mb-3 text-sm font-medium text-[var(--text-primary)]">
                 {t("summary", { count: missingCount, decks: state.plan.deckCount, cost: format.number(knownCost, { style: "currency", currency: "USD" }) })}
               </p>
-              {unpricedCount > 0 && (
+              {unpricedCount > 0 && items.length > 1 && (
                 <p className="mb-3 text-xs text-[var(--text-secondary)]">{t("unpriced", { count: unpricedCount })}</p>
               )}
               <ul className="max-h-80 divide-y divide-[var(--border)] overflow-y-auto">
@@ -170,7 +170,14 @@ export function AcquisitionPlanPanel() {
                       <p className="font-medium text-[var(--text-primary)]">{item.name}</p>
                       <p className="text-xs text-[var(--text-secondary)]">{item.decks.map((deck) => deck.name).join(" · ")}</p>
                     </div>
-                    <span className="shrink-0 text-[var(--accent-text)]">{t("toAcquire", { count: item.acquireQuantity })}</span>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[var(--accent-text)]">{t("toAcquire", { count: item.acquireQuantity })}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {item.price === null
+                          ? t("unpriced", { count: item.acquireQuantity })
+                          : format.number(item.price * item.acquireQuantity, { style: "currency", currency: "USD" })}
+                      </p>
+                    </div>
                   </li>
                 ))}
               </ul>
