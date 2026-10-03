@@ -160,7 +160,7 @@ export function AcquisitionPlanPanel() {
               <p className="mb-3 text-sm font-medium text-[var(--text-primary)]">
                 {t("summary", { count: missingCount, decks: state.plan.deckCount, cost: format.number(knownCost, { style: "currency", currency: "USD" }) })}
               </p>
-              {unpricedCount > 0 && (
+              {unpricedCount > 0 && items.length > 1 && (
                 <p className="mb-3 text-xs text-[var(--text-secondary)]">{t("unpriced", { count: unpricedCount })}</p>
               )}
               <ul className="max-h-80 divide-y divide-[var(--border)] overflow-y-auto">
