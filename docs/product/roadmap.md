@@ -316,7 +316,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Deck collection summaries allocate owned copies and proxies once per printing, so remaining quantities and costs stay accurate.
 - The deck sidebar no longer offers a misleading Reset action that subtracts shared, globally owned cards; ownership changes are made from collection management.
 - Deck collection and shopping-list totals now distinguish known-price subtotals from missing copies without a price instead of presenting an incomplete zero-dollar estimate.
-- The shopping list supports session-only buy-now versus buy-later choices without mutating deck or collection ownership; buy-now copy and CSV exclude deferred cards.
+- The shopping list remembers buy-now versus buy-later choices in the same browser per signed-in player and deck, without mutating deck or collection ownership; buy-now copy and CSV exclude deferred cards.
 - A private, read-only acquisition-plan API aggregates required copies across owned decks and subtracts collection quantities without changing ownership.
 - The collection page now displays that cross-deck acquisition plan on demand, including missing quantities, contributing decks, a known-price subtotal, unpriced-copy disclosure, and refresh/retry states.
 - The cross-deck plan exports a generic CSV of missing quantities with Scryfall printing IDs and known prices; owned copies are excluded.
@@ -332,7 +332,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - [ ] Prefer owned printings during direct add and import flows; the shared printing selector now prioritizes owned editions, but automatic import matching remains open.
 - [ ] Complete deck/collection reconciliation without mutating ownership accidentally; the unsafe deck-sidebar Reset action has been removed.
 - [ ] Add region-aware price providers, starting with a clearly selected market.
-- [ ] Support a persistent "proxy now / buy later" workflow; the shopping-list buy-later choice is currently session-only and does not track proxies.
+- [ ] Support a synchronized "proxy now / buy later" workflow across devices; the shopping-list buy-later choice currently persists only in the same browser and does not track proxies.
 - [ ] Consider mobile scanning only after the web data model supports printing-level ownership.
 - [ ] Extend exact-printing usage beyond private decks to saved lists or acquisition plans; deck usage is now visible from the collection.
 - [ ] Add explicit, persistent acquire state; the read-only cross-deck plan is now visible in the collection UI.

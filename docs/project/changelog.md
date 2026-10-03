@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-03: Browser-persistent shopping choices
+
+#### Added
+
+- The shopping list now remembers buy-later printings per signed-in player and deck in the same browser. Buy-now totals and exports still exclude deferred cards without changing deck or collection ownership.
+
+#### Validation
+
+- The reopening regression test failed before implementation. All 2,964 unit tests, TypeScript, lint and production build passed on the personal VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud returned HTTP 403 before analysis; Docker E2E was not run. Cross-device acquisition state and proxy tracking remain open.
+
 ### 2026-10-03: Deck import fidelity batch
 
 #### Added
