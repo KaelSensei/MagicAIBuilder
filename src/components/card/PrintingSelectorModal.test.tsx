@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 
 import { PrintingSelectorModal } from "./PrintingSelectorModal";
@@ -40,10 +40,10 @@ const FRENCH_PRINTING = makeCard({
   printed_text: "Foudre inflige 3 blessures à n'importe quelle cible.",
 });
 
-function renderModal(card: ScryfallCard) {
+function renderModal(card: ScryfallCard, onSelect = () => {}) {
   return render(
     <NextIntlClientProvider locale="en" messages={{ card: cardMessages, collection: { ownership: { ownedCount: "Owned (×{count})" } } }}>
-      <PrintingSelectorModal card={card} onSelect={() => {}} onClose={() => {}} />
+      <PrintingSelectorModal card={card} onSelect={onSelect} onClose={() => {}} />
     </NextIntlClientProvider>
   );
 }
@@ -133,5 +133,19 @@ describe("PrintingSelectorModal", () => {
       "Lightning Bolt — First Set",
     ]);
     expect(screen.getByText("Owned (×3)")).toBeDefined();
+  });
+
+  it("does not replace the requested printing until the player chooses one", () => {
+    const unowned = makeCard({ id: "unowned", set: "AAA", set_name: "First Set" });
+    const owned = makeCard({ id: "owned", set: "BBB", set_name: "Second Set" });
+    printingsResult.current = { data: { data: [unowned, owned] }, isLoading: false };
+    useCollectionStore.setState({ collectionCards: { owned: ownedCard("owned", 1, false) } });
+    const onSelect = vi.fn();
+
+    renderModal(unowned, onSelect);
+
+    expect(onSelect).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Lightning Bolt — First Set" }));
+    expect(onSelect).toHaveBeenCalledWith(unowned);
   });
 });
