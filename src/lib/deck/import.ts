@@ -46,7 +46,9 @@ type ParseState = {
 
 /** Process a single line and mutate state accordingly */
 function processImportLine(line: string, state: ParseState): void {
-  const header = /^(commander|partner|companion|deck|main|mainboard|99|sideboard|maybeboard|considering)(?:\s*\(\d+\))?$/i.exec(line);
+  const isComment = line.startsWith("//") || line.startsWith("#");
+  const heading = isComment ? line.replace(/^[/#]+/, "").trim() : line;
+  const header = /^(commander|partner|companion|deck|main|mainboard|99|sideboard|maybeboard|considering)(?:\s*\(\d+\))?$/i.exec(heading);
   if (header) {
     const section = header[1].toLowerCase();
     if (section === "commander" || section === "partner" || section === "companion" || section === "sideboard") {
@@ -58,6 +60,7 @@ function processImportLine(line: string, state: ParseState): void {
     }
     return;
   }
+  if (isComment) return;
 
   const match = /^(\d+)x?\s+(\S.*)$/.exec(line);
   const rawName = match
@@ -101,7 +104,7 @@ export function parseTextDecklist(text: string): ImportResult {
     .split("\n")
     .slice(0, MAX_LINES)
     .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("//") && !l.startsWith("#"));
+    .filter(Boolean);
 
   const state: ParseState = { commander: null, partner: null, companion: null, cards: [], errors: [], section: "main" };
 
