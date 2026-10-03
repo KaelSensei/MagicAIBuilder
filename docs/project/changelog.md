@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-03: URL import preview for unresolved cards
+
+#### Fixed
+
+- The URL import preview now warns about cards Scryfall could not resolve before confirmation. Repeated unresolved names are listed once, and valid front-face names for double-faced cards are not falsely flagged.
+
+#### Validation
+
+- The focused preview test failed before implementation. All 2,949 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-03: Acquisition plan line costs
 
 #### Added
