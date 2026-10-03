@@ -162,9 +162,15 @@ export async function fetchDecks(
     page: String(page),
     limit: String(limit),
   });
-  const res = await fetch(`/api/decks?${params}`);
-  if (!res.ok) await handleApiError(res, "fetchDecks");
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const res = await fetch(`/api/decks?${params}`, { signal: controller.signal });
+    if (!res.ok) await handleApiError(res, "fetchDecks");
+    return await res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function fetchDeck(id: string): Promise<ApiDeck> {
