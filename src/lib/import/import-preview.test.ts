@@ -44,6 +44,18 @@ describe("buildImportPreview", () => {
     expect(buildImportPreview(basicLand, foundCards).duplicateNames).toEqual([]);
   });
 
+  it("warns when repeated card lines differ only in case or spacing", () => {
+    const imported: UrlImportResult = {
+      ...result,
+      cards: [
+        { ...result.cards[1], name: "Sol Ring" },
+        { ...result.cards[1], name: "sol  ring", zone: "sideboard" },
+      ],
+    };
+
+    expect(buildImportPreview(imported, foundCards).duplicateNames).toEqual(["Sol Ring"]);
+  });
+
   it("warns before confirmation about unresolved names without duplicating ignored cards", () => {
     const imported: UrlImportResult = {
       ...result,
