@@ -8,6 +8,7 @@ import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
 
 const planSchema = z.object({
   deckCount: z.number().int().nonnegative(),
+  decks: z.array(z.object({ id: z.string(), name: z.string() })),
   items: z.array(z.object({
     scryfallId: z.string(),
     name: z.string(),
@@ -36,6 +37,8 @@ export function AcquisitionPlanPanel() {
   const format = useFormatter();
   const [open, setOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedDeckId, setSelectedDeckId] = useState("");
+  const [deckOptions, setDeckOptions] = useState<Plan["decks"]>([]);
   const [state, setState] = useState<PlanState>({ status: "loading" });
 
   useEffect(() => {
@@ -45,13 +48,19 @@ export function AcquisitionPlanPanel() {
 
     async function loadPlan() {
       try {
-        const response = await fetch("/api/collection/acquisition-plan", {
+        const url = selectedDeckId
+          ? `/api/collection/acquisition-plan?deckId=${encodeURIComponent(selectedDeckId)}`
+          : "/api/collection/acquisition-plan";
+        const response = await fetch(url, {
           signal: controller.signal,
         });
         if (!response.ok) throw new Error("Acquisition plan request failed");
         const parsed = planSchema.safeParse(await response.json());
         if (!parsed.success) throw new Error("Invalid acquisition plan response");
-        if (!controller.signal.aborted) setState({ status: "ready", plan: parsed.data });
+        if (!controller.signal.aborted) {
+          setDeckOptions(parsed.data.decks);
+          setState({ status: "ready", plan: parsed.data });
+        }
       } catch {
         if (!controller.signal.aborted) setState({ status: "error" });
       }
@@ -59,7 +68,7 @@ export function AcquisitionPlanPanel() {
 
     void loadPlan();
     return () => controller.abort();
-  }, [open, refreshKey]);
+  }, [open, refreshKey, selectedDeckId]);
 
   const items = state.status === "ready" ? state.plan.items : [];
   const missingCount = items.reduce((sum, item) => sum + item.acquireQuantity, 0);
@@ -125,6 +134,19 @@ export function AcquisitionPlanPanel() {
               </button>
             </div>
           </div>
+          {deckOptions.length > 1 && (
+            <label className="mb-3 inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+              {t("deckFilterLabel")}
+              <select
+                value={selectedDeckId}
+                onChange={(event) => setSelectedDeckId(event.target.value)}
+                className="min-w-36 rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[var(--text-primary)]"
+              >
+                <option value="">{t("allDecks")}</option>
+                {deckOptions.map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
+              </select>
+            </label>
+          )}
           {state.status === "loading" && <p role="status" className="text-sm text-[var(--text-secondary)]">{t("loading")}</p>}
           {state.status === "error" && <p role="alert" className="text-sm text-red-400">{t("error")}</p>}
           {state.status === "ready" && state.plan.deckCount === 0 && (

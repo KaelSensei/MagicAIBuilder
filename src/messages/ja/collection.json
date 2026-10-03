@@ -15,7 +15,9 @@
   },
   "acquisitionPlan": {
     "title": "Acquisition plan",
-    "description": "Copies needed across all decks after counting your collection. Estimated prices; ownership is unchanged.",
+    "description": "Copies needed across all decks or one selected deck after counting your collection. Estimated prices; ownership is unchanged.",
+    "deckFilterLabel": "Deck for acquisition plan",
+    "allDecks": "All decks",
     "loading": "Loading acquisition plan…",
     "error": "Could not load the acquisition plan.",
     "retry": "Try again",

@@ -15,7 +15,9 @@
   },
   "acquisitionPlan": {
     "title": "Plan d’acquisition",
-    "description": "Exemplaires nécessaires pour monter tous vos decks en même temps, après déduction de votre collection. Les prix sont des estimations pour les éditions des decks ; ce plan ne modifie pas la collection.",
+    "description": "Exemplaires nécessaires pour tous vos decks ou un seul deck, après déduction de votre collection. Les prix sont des estimations pour les éditions des decks ; ce plan ne modifie pas la collection.",
+    "deckFilterLabel": "Deck du plan d’acquisition",
+    "allDecks": "Tous les decks",
     "loading": "Chargement du plan d’acquisition…",
     "error": "Impossible de charger le plan d’acquisition.",
     "retry": "Réessayer",
