@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildImportPreview } from "./import-preview";
 import type { UrlImportResult } from "./url-import";
+import type { ScryfallCard } from "@/lib/scryfall/types";
 
 const result: UrlImportResult = {
   name: "Atraxa list",
@@ -35,5 +36,24 @@ describe("buildImportPreview", () => {
       ignored: [],
     };
     expect(buildImportPreview(basicLand).duplicateNames).toEqual([]);
+  });
+
+  it("warns before confirmation about unresolved names without duplicating ignored cards", () => {
+    const imported: UrlImportResult = {
+      ...result,
+      cards: [
+        { name: "Fire", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+        { name: "Unknown Spell", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+        { name: "Unknown Spell", quantity: 1, isCommander: false, isPartner: false, zone: "sideboard" },
+        { name: "Missing Card", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+      ],
+    };
+    const foundCards: ScryfallCard[] = [{
+      id: "fire-ice", name: "Fire // Ice", cmc: 2, type_line: "Instant", color_identity: ["R", "U"],
+    }];
+
+    expect(buildImportPreview(imported, foundCards).ignoredNames).toEqual([
+      "Missing Card", "Unknown Spell",
+    ]);
   });
 });
