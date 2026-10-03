@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-03: Acquisition plan line costs
+
+#### Added
+
+- The acquisition plan now shows a known-price subtotal for each missing printing and identifies rows without a price. Its overall known-price subtotal and ownership remain unchanged.
+
+#### Validation
+
+- The focused component test failed before implementation. All 2,948 unit tests, TypeScript, lint and production build passed on the personal VPS. CI, Lighthouse and Vercel passed; Docker E2E was not run and SonarCloud returned HTTP 403 before analysis.
+
 ### 2026-10-03: Owned-printing preference
 
 #### Added
