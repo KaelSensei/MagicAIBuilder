@@ -5,6 +5,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight, Download, RefreshCw } from "lucide-react";
 import { z } from "zod";
 import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
+import { Link } from "@/i18n/navigation";
 
 const planSchema = z.object({
   deckCount: z.number().int().nonnegative(),
@@ -168,7 +169,16 @@ export function AcquisitionPlanPanel() {
                   <li key={item.scryfallId} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2 text-sm">
                     <div className="min-w-0">
                       <p className="font-medium text-[var(--text-primary)]">{item.name}</p>
-                      <p className="text-xs text-[var(--text-secondary)]">{item.decks.map((deck) => deck.name).join(" · ")}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {item.decks.map((deck, index) => (
+                          <span key={deck.id}>
+                            {index > 0 && " · "}
+                            <Link href={`/builder/${deck.id}`} className="hover:text-[var(--accent-text)] hover:underline focus-visible:underline">
+                              {deck.name}
+                            </Link>
+                          </span>
+                        ))}
+                      </p>
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="text-[var(--accent-text)]">{t("toAcquire", { count: item.acquireQuantity })}</p>
