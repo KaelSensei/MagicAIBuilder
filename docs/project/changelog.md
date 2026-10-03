@@ -9,6 +9,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-03: Deck import fidelity batch
+
+#### Added
+
+- Manual decklist paste preserves Unicode card names and recognizes commented sections, colon-terminated sections, and uppercase set-code suffixes without collector numbers.
+- Scryfall lookup and matching normalize copied smart apostrophes without changing the displayed imported name.
+- Supported deck URLs work without an explicit scheme, and downloaded lists preserve zones from count-labelled section headings.
+- EDHREC average-deck import keeps the first occurrence of each card across recommendation categories, excludes a repeated commander, and limits the main list to 99 distinct cards.
+- Import preview warns about duplicate names despite case or spacing differences and about commanders or partners repeated elsewhere in the list.
+
+#### Validation
+
+- Each of the ten focused regression tests failed before implementation. The integrated `dev` passed 2,962 unit tests, TypeScript, lint and production build on the personal VPS. The isolated VPS build exited successfully but logged a sitemap database diagnostic because `DATABASE_URL` is not configured there. All ten feature PRs passed CI, Lighthouse and Vercel before merging to `dev`. Docker E2E was not run; SonarCloud returned HTTP 403 before code analysis. Exact printing/category round trips and localized-name resolution remain open.
+
 ### 2026-10-03: Deck-list request recovery
 
 #### Fixed
