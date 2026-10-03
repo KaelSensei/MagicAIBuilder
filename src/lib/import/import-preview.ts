@@ -1,4 +1,6 @@
 import type { UrlImportResult } from "./url-import";
+import type { ScryfallCard } from "@/lib/scryfall/types";
+import { buildScryfallNameIndex, normalizeImportedName } from "@/lib/scryfall/name-index";
 
 export interface ImportPreview {
   readonly name: string;
@@ -15,16 +17,23 @@ export interface ImportPreview {
  * Build a confirmation summary without modifying the active deck.
  *
  * @param result - normalized cards returned by an external importer
+ * @param foundCards - cards resolved by Scryfall before confirmation
  * @returns deterministic import preview data for the confirmation step
  */
-export function buildImportPreview(result: UrlImportResult): ImportPreview {
+export function buildImportPreview(
+  result: UrlImportResult,
+  foundCards: readonly ScryfallCard[]
+): ImportPreview {
   const zoneCounts = { main: 0, sideboard: 0, maybeboard: 0 };
   const entryCounts = new Map<string, number>();
+  const foundByName = buildScryfallNameIndex(foundCards);
+  const ignoredNames = new Set(result.ignored);
   const commanderNames: string[] = [];
   const partnerNames: string[] = [];
   let totalQuantity = 0;
 
   for (const card of result.cards) {
+    if (!foundByName.has(normalizeImportedName(card.name))) ignoredNames.add(card.name);
     zoneCounts[card.zone] += card.quantity;
     totalQuantity += card.quantity;
     if (card.isCommander) commanderNames.push(card.name);
@@ -46,6 +55,6 @@ export function buildImportPreview(result: UrlImportResult): ImportPreview {
     zoneCounts,
     totalQuantity,
     duplicateNames,
-    ignoredNames: [...result.ignored],
+    ignoredNames: [...ignoredNames],
   };
 }
