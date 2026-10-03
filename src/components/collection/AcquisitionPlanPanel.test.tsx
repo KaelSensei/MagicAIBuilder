@@ -4,6 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { AcquisitionPlanPanel } from "./AcquisitionPlanPanel";
 
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, className }: { href: string; children: string; className?: string }) =>
+    <a href={href} className={className}>{children}</a>,
+}));
+
 const response = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -91,7 +96,8 @@ describe("AcquisitionPlanPanel", () => {
     await user.click(screen.getByRole("button", { name: "Acquisition plan" }));
 
     expect(await screen.findByText("Sol Ring")).toBeInTheDocument();
-    expect(screen.getByText("Artifacts · Spells")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Artifacts" })).toHaveAttribute("href", "/builder/a");
+    expect(screen.getByRole("link", { name: "Spells" })).toHaveAttribute("href", "/builder/b");
     expect(screen.getByText("1 to acquire")).toBeInTheDocument();
     expect(fetchPlan).toHaveBeenCalledWith("/api/collection/acquisition-plan", expect.objectContaining({ signal: expect.any(AbortSignal) }));
   });
