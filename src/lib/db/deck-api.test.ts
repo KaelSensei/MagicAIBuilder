@@ -45,6 +45,23 @@ describe("fetchDecks", () => {
     mockFetch(null, false, 500);
     await expect(fetchDecks()).rejects.toThrow("HTTP 500");
   });
+
+  it("stops waiting when the deck list request stalls", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal("fetch", vi.fn((_url: string, options: RequestInit) => new Promise((_resolve, reject) => {
+        options.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+      })));
+      const request = fetchDecks();
+      const failure = expect(request).rejects.toThrow();
+
+      await vi.advanceTimersByTimeAsync(15_000);
+
+      await failure;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe("createDeck", () => {
