@@ -100,6 +100,11 @@ describe("parseTextDecklist", () => {
     ]);
   });
 
+  it("removes invisible control characters from localized names", () => {
+    const result = parseTextDecklist("1 渦ま\u200bく知識\u0000");
+    expect(result.cards[0].name).toBe("渦まく知識");
+  });
+
   it("clamps quantity above 99 to 99", () => {
     const result = parseTextDecklist("200 Forest");
     expect(result.cards[0].quantity).toBe(99);
