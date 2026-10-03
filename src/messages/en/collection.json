@@ -15,7 +15,9 @@
   },
   "acquisitionPlan": {
     "title": "Acquisition plan",
-    "description": "Copies needed to build all your decks at once, after counting your collection. Prices are estimates for the deck printings; this plan never changes ownership.",
+    "description": "Copies needed for all decks or one selected deck, after counting your collection. Prices are estimates for the deck printings; this plan never changes ownership.",
+    "deckFilterLabel": "Deck for acquisition plan",
+    "allDecks": "All decks",
     "loading": "Loading acquisition plan…",
     "error": "Could not load the acquisition plan.",
     "retry": "Try again",
