@@ -495,6 +495,7 @@ A recommendation is never presented as universal truth: the user can see where i
 ### Remaining scope
 
 - [ ] Treat import/export formats as versioned contracts with fixtures.
+  - [x] Include a trailing Zone column in simple and full deck CSV exports, preserving main, sideboard and maybeboard values without changing existing column positions (#840). CSV reimport and command-zone rows remain separate scope.
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
 - [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
 - [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
