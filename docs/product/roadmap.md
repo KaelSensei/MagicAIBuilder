@@ -477,6 +477,7 @@ A recommendation is never presented as universal truth: the user can see where i
 ### Already shipped
 
 - Imports from Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks and EDHREC.
+- Plain-text exports mark every card-note line with an explicit comment prefix, so multiline notes and reserved section names cannot introduce cards or change zones during reimport. Notes remain readable in the export; note rehydration remains separate scope.
 - Text URL imports recognize partner and Main, Sideboard and Considering headers when the source provides them.
 - Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, ManaBox, MTGGoldfish, EDHREC and plain text.
 - Goldfish and EDHREC plain-list exports keep Sideboard and Considering cards out of the playable main deck.

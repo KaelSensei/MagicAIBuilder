@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Safe multiline export notes
+
+#### Fixed
+
+- Plain-text exports prefix every note line with `// Note:`, normalizing CRLF, LF and CR separators. Note content can no longer be mistaken for cards or recognized section headings during text reimport. Saved notes remain unchanged; note rehydration is not included.
+
+#### Validation
+
+- The export/parser regression failed before implementation. All 2,973 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Legacy prefix expectations were updated for the explicit comment format. Docker E2E remains deferred.
+
 ### 2026-10-04: Empty meta snapshot evidence
 
 #### Fixed
