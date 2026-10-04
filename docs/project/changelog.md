@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Recommendation filter feedback
+
+#### Fixed
+
+- Filtering EDHREC recommendations to cards absent from the deck now announces when all popular cards are already present. Disabling the filter restores the list. Loading, failure and empty-source states do not show the completion message.
+
+#### Validation
+
+- The component regression test failed before implementation. All 2,966 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403 and Docker E2E remains deferred.
+
 ### 2026-10-04: EDHREC popularity ranking
 
 #### Changed

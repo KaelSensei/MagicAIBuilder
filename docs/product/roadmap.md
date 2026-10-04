@@ -251,6 +251,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 - [x] Make warning panels collapsible and dismissible, with accessible close controls.
 - [x] Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
 - [x] Make card zoom intentional in "View all cards" contexts, not a global hover effect.
+- [x] Explain the empty EDHREC missing-card filter when all popular cards are already in the deck; removing the filter restores the list.
 - [ ] Preserve the established dark/light design language while improving hierarchy, spacing and responsive behavior.
 - [ ] Add visual regression coverage for the Deck Editor, banner, warning panel and card hover states.
 
