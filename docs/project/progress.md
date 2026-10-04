@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- User initialization now keeps its eight-second deadline active while reading and validating the response body. A response that sends headers but stalls its body no longer leaves onboarding and collection initialization pending indefinitely. User-scoped request deduplication remains unchanged. The streaming-body regression test failed before implementation; all 2,968 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Database latency remains separate scope; Docker E2E remains deferred.
+
 - Archidekt exports no longer promote Sideboard or Considering cards into Mainboard or inflate its count. Commander, partner and category tags remain unchanged. The regression test failed before implementation; all 2,967 unit tests, TypeScript, lint and production build passed on the personal VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Dedicated Archidekt secondary-zone export remains open. Docker E2E remains deferred.
 
 - The EDHREC missing-card filter now announces when all popular cards are already in the deck instead of displaying a blank panel. Removing the filter restores the list. The component regression test failed before the fix; 2,966 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
