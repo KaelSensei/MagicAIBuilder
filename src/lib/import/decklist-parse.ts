@@ -89,6 +89,7 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
     const isComment = line.startsWith("//") || line.startsWith("#");
     const heading = (isComment ? line.replace(/^[/#]+/, "").trim() : line)
       .toLowerCase()
+      .replace(/:$/, "")
       .replace(/\s{0,4}\(\d{1,3}\)$/, "");
     if (heading === "commander" || heading === "partner" || heading === "sideboard") {
       section = heading;
