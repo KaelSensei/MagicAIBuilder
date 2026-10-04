@@ -7,6 +7,20 @@ import { extractCardsFromHtml, parsePlainTextDecklist } from "./decklist-parse";
  */
 
 describe("parsePlainTextDecklist", () => {
+  it.each(["\r", "\r\n", "\n"])("preserves zones with line separator %j", (separator) => {
+    const cards = parsePlainTextDecklist([
+      "Commander", "1 Atraxa, Praetors' Voice", "Deck", "2 Island",
+      "Sideboard", "1 Negate", "Considering", "1 Ponder",
+    ].join(separator));
+
+    expect(cards).toEqual([
+      { name: "Atraxa, Praetors' Voice", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Island", quantity: 2, isCommander: false, isPartner: false, zone: "main" },
+      { name: "Negate", quantity: 1, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", quantity: 1, isCommander: false, isPartner: false, zone: "maybeboard" },
+    ]);
+  });
+
   it("parses quantity and name, with or without the x", () => {
     const cards = parsePlainTextDecklist("1 Sol Ring\n4x Lightning Bolt");
     expect(cards).toEqual([
