@@ -446,6 +446,7 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - EDHREC recommendation rows disclose validated per-card sample counts when the source provides them.
 - EDHREC feed contract checks reject malformed card lists so a source change does not overwrite reliable cached recommendations with a false empty result.
 - EDHREC popular-card recommendations now rank distinct cards by observed inclusion across source categories before applying the top-20 limit; category order no longer hides more widely played cards.
+- Meta trend comparisons now withhold reports when either endpoint snapshot is empty, rather than treating missing source data as a rise from zero or fall to zero. Non-empty snapshot bounds remain unchanged; broader trend disclosure work remains open.
 
 ### Remaining scope
 

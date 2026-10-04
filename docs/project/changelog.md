@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Empty meta snapshot evidence
+
+#### Fixed
+
+- Withhold meta shift reports when either comparison endpoint has no cards. Empty source data no longer produces fabricated inclusion bounds from or to zero. Non-empty snapshot comparisons remain unchanged.
+
+#### Validation
+
+- Both empty-endpoint regression cases failed before implementation. All 2,972 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Docker E2E remains deferred.
+
 ### 2026-10-04: Moxfield text export sections
 
 #### Changed
