@@ -10,6 +10,7 @@ import {
   exportEdhrec,
 } from "@/lib/deck/export";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { parseTextDecklist } from "@/lib/deck/import";
 
 function makeCard(name: string, qty = 1, overrides: Partial<DeckCard> = {}): DeckCard {
   return {
@@ -124,6 +125,35 @@ describe("exportPlainText", () => {
 });
 
 describe("exportMoxfield", () => {
+  it("preserves companion and secondary zones on text reimport", () => {
+    const deck = makeDeck({
+      commander: makeCard("Sidar Kondo of Jamuraa"),
+      partner: makeCard("Vial Smasher the Fierce"),
+      companion: makeCard("Umori, the Collector"),
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 3, { zone: "sideboard" }),
+        makeCard("Counterspell", 2, { zone: "maybeboard" }),
+      ],
+    });
+
+    const text = exportMoxfield(deck);
+    expect(text).toContain("// Companion\n1 Umori, the Collector");
+    expect(text).toContain("// Sideboard\n3 Negate");
+    expect(text).toContain("// Considering\n2 Counterspell");
+    expect(parseTextDecklist(text)).toMatchObject({
+      commander: "Sidar Kondo of Jamuraa",
+      partner: "Vial Smasher the Fierce",
+      companion: "Umori, the Collector",
+      cards: [
+        { name: "Sol Ring", quantity: 1 },
+        { name: "Negate", quantity: 3, zone: "sideboard" },
+        { name: "Counterspell", quantity: 2, zone: "maybeboard" },
+      ],
+      errors: [],
+    });
+  });
+
   it("exports with // Commander section header", () => {
     const deck = makeDeck({
       commander: makeCard("Atraxa, Praetor's Voice"),
