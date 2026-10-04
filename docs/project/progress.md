@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Arena exports now retain the selected companion and include it in the exported sideboard without adding another copy when already present or mutating the saved deck. The two companion regression tests failed before implementation; text reimport preserves companion metadata and zone quantities. All 2,970 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Live Arena client import remains unverified; Docker E2E remains deferred.
+
 - User initialization now keeps its eight-second deadline active while reading and validating the response body. A response that sends headers but stalls its body no longer leaves onboarding and collection initialization pending indefinitely. User-scoped request deduplication remains unchanged. The streaming-body regression test failed before implementation; all 2,968 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Database latency remains separate scope; Docker E2E remains deferred.
 
 - Archidekt exports no longer promote Sideboard or Considering cards into Mainboard or inflate its count. Commander, partner and category tags remain unchanged. The regression test failed before implementation; all 2,967 unit tests, TypeScript, lint and production build passed on the personal VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Dedicated Archidekt secondary-zone export remains open. Docker E2E remains deferred.
