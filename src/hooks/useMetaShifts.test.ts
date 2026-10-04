@@ -36,6 +36,28 @@ afterEach(() => {
 });
 
 describe("useMetaShifts", () => {
+  it("discards pending history when the commander changes", async () => {
+    const finish = vi.fn<(response: Response) => void>();
+    vi.mocked(globalThis.fetch).mockReturnValueOnce(
+      new Promise<Response>((resolve) => finish.mockImplementation(resolve))
+    );
+    const { result, rerender } = renderHook(
+      ({ commander }) => useMetaShifts(commander),
+      { initialProps: { commander: "Atraxa" } }
+    );
+    let request = Promise.resolve();
+    act(() => { request = result.current.fetchShifts(); });
+    rerender({ commander: "Krenko" });
+    await act(async () => {
+      finish(jsonResponse({ report: REPORT, snapshotCount: 2 }));
+      await request;
+    });
+
+    expect(result.current.report).toBeNull();
+    expect(result.current.snapshotCount).toBe(0);
+    expect(result.current.isLoading).toBe(false);
+  });
+
   it.each([false, true])("ignores a response after reset (failure: %s)", async (failure) => {
     const finish = vi.fn<() => void>();
     vi.mocked(globalThis.fetch).mockReturnValueOnce(new Promise<Response>((resolve, reject) => {
