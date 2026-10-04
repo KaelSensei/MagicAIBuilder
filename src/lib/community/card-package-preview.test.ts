@@ -8,6 +8,23 @@ const context = {
 };
 
 describe("previewCardPackage", () => {
+  it("does not reserve copies for a rejected oversized package row", () => {
+    const card = { scryfallId: "oversized", name: "Counterspell", quantity: 5, colorIdentity: ["U"], isBanned: false, isBasicLand: false };
+    const preview = previewCardPackage([card, { ...card, scryfallId: "valid-printing", quantity: 1 }], {
+      ...context, format: "modern", existingCards: [{ name: "Counterspell", quantity: 3, isBasicLand: false }],
+    });
+    expect(preview.cards.map((row) => row.status)).toEqual(["blocked", "ready"]);
+    expect(preview.readyCount).toBe(1);
+  });
+
+  it("does not reserve singleton capacity for a banned printing", () => {
+    const card = { scryfallId: "banned", name: "Blue Spell", quantity: 1, colorIdentity: ["U"], isBanned: true, isBasicLand: false };
+    const preview = previewCardPackage([card, { ...card, scryfallId: "legal", isBanned: false }], {
+      ...context, existingCards: [],
+    });
+    expect(preview.cards.map((row) => row.status)).toEqual(["blocked", "ready"]);
+  });
+
   it("blocks package quantities above a non-singleton format copy limit", () => {
     const preview = previewCardPackage([
       { scryfallId: "spell", name: "Counterspell", quantity: 5, colorIdentity: ["U"], isBanned: false, isBasicLand: false },
