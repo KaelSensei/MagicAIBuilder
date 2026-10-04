@@ -9,6 +9,7 @@ export interface PackagePreviewCard {
   readonly colorIdentity: readonly string[];
   readonly isBanned: boolean;
   readonly isBasicLand: boolean;
+  readonly oracleText?: string;
 }
 
 export interface ExistingPreviewCard {
@@ -73,7 +74,7 @@ export function previewCardPackage(
       });
     }
     const quantity = (quantities.get(card.name) ?? 0) + card.quantity;
-    const limit = maxQuantity(card.name, "", "", context.format);
+    const limit = maxQuantity(card.name, "", card.oracleText ?? "", context.format);
     if (!card.isBasicLand && quantity > limit) {
       issues.push(limit === 1
         ? { kind: "singleton", message: `${card.name} exceeds the singleton limit` }

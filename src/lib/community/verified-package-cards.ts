@@ -13,6 +13,7 @@ export interface StoredPackageCard {
 
 export interface VerifiedPackageCard extends StoredPackageCard {
   readonly imageUri: string;
+  readonly oracleText: string;
 }
 
 /** Resolve legality from Scryfall at review time; stored package metadata is user input. */
@@ -33,6 +34,7 @@ export async function verifyPackageCards(
         scryfallId: card.id,
         name: card.name,
         quantity: 1,
+        oracleText: card.oracle_text ?? "",
         colorIdentity: card.color_identity,
         isBanned: legality !== "legal" && legality !== "restricted",
         isBasicLand: /\bbasic land\b/i.test(card.type_line),
