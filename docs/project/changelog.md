@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Quantity-aware exported statistics
+
+#### Fixed
+
+- Exported card totals and type percentages count physical copies instead of distinct rows (#838). Existing export scope and total-price behavior are preserved.
+
+#### Validation
+
+- Both focused regressions failed before implementation. All 17 export tests and all 2,982 unit tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
 ### 2026-10-04: Portable decklist line endings
 
 #### Fixed

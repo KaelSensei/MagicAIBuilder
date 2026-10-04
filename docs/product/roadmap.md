@@ -214,6 +214,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - Banlist and Game Changers detection.
 - Bracket scoring across six dimensions.
 - Mana curve, color distribution and format-specific statistics.
+- Exported statistics count card copies, not distinct rows, including type percentages (#838); the existing export scope is unchanged.
 - Mana alignment and per-color land recommendations.
 - Turn-one playability odds.
 - Combo detection through Commander Spellbook.
