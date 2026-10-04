@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Stable meta history responses
+
+#### Fixed
+
+- Late meta-history successes and failures no longer repopulate a reset panel. An older request finishing last cannot overwrite the newest request's result. Request cancellation and timeout are not added in this increment.
+
+#### Validation
+
+- All three stale-response regressions failed before implementation. All 2,977 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Docker E2E remains deferred.
+
 ### 2026-10-04: Consistent meta trend cutoffs
 
 #### Fixed

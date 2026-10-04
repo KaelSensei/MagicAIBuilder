@@ -249,6 +249,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
   - [x] Keep the user initialization eight-second deadline active through response-body loading and JSON validation, not only until headers arrive. Database latency and broader profile loading work remain open.
 - [ ] Use route-level skeletons and cached session/profile data where safe.
 - [ ] Remove React refresh loops, hover jitter, layout shifts and unstable card previews.
+  - [x] Ignore superseded meta-history responses and invalidate pending results on reset, preventing old trend data or errors from resurfacing.
 - [x] Make warning panels collapsible and dismissible, with accessible close controls.
 - [x] Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
 - [x] Make card zoom intentional in "View all cards" contexts, not a global hover effect.

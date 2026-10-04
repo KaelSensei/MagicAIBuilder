@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- The meta-history panel ignores responses superseded by a newer request or reset, including late failures. Three deterministic regressions failed before implementation; all 2,977 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Request cancellation and timeouts remain separate scope; Docker E2E remains deferred.
+
 - Meta trend bounds now use retained, deduplicated card values rather than discarded duplicate entries. The regression failed before implementation with a -0.85 disappearance bound instead of -0.05; all 2,974 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Broader trend disclosure remains open; Docker E2E remains deferred.
 
 - Plain-text card notes now use an explicit comment prefix on every line, including CRLF, LF and CR line endings. Notes resembling card quantities or zone headings cannot alter the deck structure during text reimport. The regression failed before implementation; all 2,973 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Saved notes remain unchanged; note rehydration is not added. Docker E2E remains deferred.
