@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Consistent meta trend cutoffs
+
+#### Fixed
+
+- Meta trend bounds now use the same first-entry-per-card values as measured shifts. Discarded duplicates no longer distort the cutoff used for cards entering or leaving a snapshot.
+
+#### Validation
+
+- The regression failed before implementation. All 2,974 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Docker E2E remains deferred.
+
 ### 2026-10-04: Safe multiline export notes
 
 #### Fixed
