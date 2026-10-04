@@ -90,6 +90,11 @@ describe("generateDeckCSVFull", () => {
 
 // ─── Export metadata ───────────────────────────────────────────────────────
 describe("buildExportMetadata", () => {
+  it("counts physical copies rather than distinct rows", () => {
+    const deck = makeDeck({ cards: [{ ...makeCard("land", "Forest"), quantity: 12 }] });
+    expect(buildExportMetadata(deck).cardCount).toBe(12);
+    expect(generateDeckCSVFull(deck)).toContain("Card Count,12");
+  });
   it("includes deck name and format", () => {
     const deck = makeDeck();
     const meta = buildExportMetadata(deck);
@@ -119,6 +124,17 @@ describe("buildExportMetadata", () => {
 
 // ─── Type breakdown ────────────────────────────────────────────────────────
 describe("buildTypeBreakdown", () => {
+  it("weights type counts and percentages by quantity", () => {
+    const breakdown = buildTypeBreakdown([
+      { ...makeCard("land", "Forest", 1, "Basic Land"), quantity: 3 },
+      makeCard("creature", "Birds of Paradise", 1, "Creature"),
+    ]);
+    expect(breakdown.total).toBe(4);
+    expect(breakdown.lands).toBe(3);
+    expect(breakdown.creatures).toBe(1);
+    expect(breakdown.landsPct).toBe(75);
+    expect(breakdown.creaturesPct).toBe(25);
+  });
   it("counts cards by type category", () => {
     const cards = [
       makeCard("c1", "A", 1, "Creature"),
