@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- URL import previews group equivalent missing-name warnings using the existing name normalization (#848). First spelling and order are preserved; imported quantities, zones and duplicate-line decisions are unchanged. The focused regression failed before implementation; all 2,992 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 - Deck CSV exports quote carriage returns in card names and metadata without removing their content or changing the schema (#846). Three regressions failed before implementation; all 2,991 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. Spreadsheet-client import remains unverified.
 
 - Downloaded plain-text imports recognize colon-terminated sections, including counted and commented headings (#844), preserving commander, partner, Sideboard and Considering roles. Both regressions failed before implementation; all 2,988 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. Printing resolution and external category fidelity remain open.
