@@ -17,6 +17,38 @@ describe("fetchUserInit", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it("keeps the loading budget active while reading the response body", async () => {
+    vi.useFakeTimers();
+    vi.mocked(globalThis.fetch).mockImplementationOnce((_url, options) => {
+      const body = new ReadableStream({
+        start(controller) {
+          options?.signal?.addEventListener("abort", () => {
+            controller.error(new Error("aborted"));
+          });
+          setTimeout(() => {
+            if (options?.signal?.aborted) return;
+            controller.enqueue(new TextEncoder().encode(
+              JSON.stringify({ onboardingDone: true, collection: [] }),
+            ));
+            controller.close();
+          }, 9_000);
+        },
+      });
+      return Promise.resolve(new Response(body, { status: 200 }));
+    });
+
+    const outcome = fetchUserInit("user-body-timeout").catch((error: unknown) => error);
+    try {
+      await vi.advanceTimersByTimeAsync(8_000);
+      expect(vi.mocked(globalThis.fetch).mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+      expect(await outcome).toEqual(new Error("aborted"));
+    } finally {
+      await vi.advanceTimersByTimeAsync(1_000);
+      await outcome;
+    }
   });
 
   it("shares the pending request for the same user", async () => {
