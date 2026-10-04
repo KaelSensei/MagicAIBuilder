@@ -96,10 +96,10 @@ export function toCaptureDay(date: Date): Date {
 }
 
 /** The lowest inclusion a snapshot listed — the truncation cut-off. */
-function cutoff(cards: readonly MetaCard[]): number {
+function cutoff(inclusions: ReadonlyMap<string, number>): number {
   let lowest = Number.POSITIVE_INFINITY;
-  for (const card of cards) {
-    if (card.inclusion < lowest) lowest = card.inclusion;
+  for (const inclusion of inclusions.values()) {
+    if (inclusion < lowest) lowest = inclusion;
   }
   return Number.isFinite(lowest) ? lowest : 0;
 }
@@ -143,8 +143,8 @@ function diffSnapshots(
 ): MetaShift[] {
   const before = byInclusion(baseline.cards);
   const after = byInclusion(current.cards);
-  const baselineCutoff = cutoff(baseline.cards);
-  const currentCutoff = cutoff(current.cards);
+  const baselineCutoff = cutoff(before);
+  const currentCutoff = cutoff(after);
   const shifts: MetaShift[] = [];
 
   for (const [name, currentInclusion] of after) {
