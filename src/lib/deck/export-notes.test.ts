@@ -62,7 +62,7 @@ describe("exportPlainText — card notes as comments", () => {
     ]);
     const output = exportPlainText(deck);
     expect(output).toContain("1 Counterspell");
-    expect(output).toContain("// Counter all threats");
+    expect(output).toContain("// Note: Counter all threats");
   });
 
   it("places the comment immediately after the card line", () => {
@@ -72,7 +72,7 @@ describe("exportPlainText — card notes as comments", () => {
     const lines = exportPlainText(deck).split("\n");
     const cardIdx = lines.findIndex((l) => l === "1 Sol Ring");
     expect(cardIdx).toBeGreaterThan(-1);
-    expect(lines[cardIdx + 1]).toBe("// Ramp piece");
+    expect(lines[cardIdx + 1]).toBe("// Note: Ramp piece");
   });
 
   it("does NOT emit a comment for cards with null notes", () => {
@@ -96,7 +96,7 @@ describe("exportPlainText — card notes as comments", () => {
   it("trims note whitespace in the comment", () => {
     const deck = makeDeck([makeCard({ notes: "  win condition  " })]);
     const output = exportPlainText(deck);
-    expect(output).toContain("// win condition");
+    expect(output).toContain("// Note: win condition");
   });
 
   it("handles mixed cards — some with notes, some without", () => {
@@ -106,9 +106,9 @@ describe("exportPlainText — card notes as comments", () => {
       makeCard({ id: "c3", name: "Rhystic Study", notes: "Draw engine" }),
     ]);
     const output = exportPlainText(deck);
-    expect(output).toContain("1 Sol Ring\n// Always include");
+    expect(output).toContain("1 Sol Ring\n// Note: Always include");
     expect(output).not.toMatch(/1 Swamp\n\/\//);
-    expect(output).toContain("1 Rhystic Study\n// Draw engine");
+    expect(output).toContain("1 Rhystic Study\n// Note: Draw engine");
   });
 
   it("includes commander section without notes support (commander has no notes field by default)", () => {
