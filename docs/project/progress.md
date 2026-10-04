@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Simple and full deck CSV exports include each card's zone in a trailing column (#840). Existing columns, quantities and export scope are unchanged; CSV reimport and command-zone rows are not added. Both regression tests failed before implementation; all 2,984 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 - Exported card counts and type percentages now account for quantities rather than distinct rows (#838). The existing export scope and price totals are unchanged. Both quantity regressions failed before implementation; all 2,982 unit tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
 
 - Downloaded plain-text decklists now accept CR, CRLF and LF line endings without losing commander, quantities, sideboard or Considering cards (#836). The CR regression failed before implementation; all 2,980 unit tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. Exact printing and category round trips remain open.
