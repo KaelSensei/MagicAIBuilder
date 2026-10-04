@@ -7,7 +7,7 @@
  * reachable. `report: null` is the ordinary answer for a commander with fewer
  * than two recorded days, not an error — `snapshotCount` tells the two apart.
  */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { commanderToSlug } from "@/lib/meta/fetch";
 import type { MetaShift } from "@/lib/meta/history";
 
@@ -46,6 +46,12 @@ const IDLE: MetaShiftsState = {
 export function useMetaShifts(commanderName: string | null) {
   const [state, setState] = useState<MetaShiftsState>(IDLE);
   const requestVersion = useRef(0);
+
+  useEffect(() => {
+    requestVersion.current += 1;
+    setState(IDLE);
+    return () => { requestVersion.current += 1; };
+  }, [commanderName]);
 
   const fetchShifts = useCallback(async () => {
     if (!commanderName) return;
