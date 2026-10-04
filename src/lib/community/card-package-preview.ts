@@ -1,5 +1,6 @@
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
+import { maxQuantity } from "@/lib/deck/multiples";
 
 export interface PackagePreviewCard {
   readonly scryfallId: string;
@@ -22,7 +23,7 @@ export interface PackagePreviewContext {
   readonly existingCards: readonly ExistingPreviewCard[];
 }
 
-export type PackagePreviewIssueKind = "banned" | "colorIdentity" | "singleton";
+export type PackagePreviewIssueKind = "banned" | "colorIdentity" | "singleton" | "copyLimit";
 
 export interface PackagePreviewIssue {
   readonly kind: PackagePreviewIssueKind;
@@ -50,8 +51,10 @@ export function previewCardPackage(
 ): CardPackagePreview {
   const config = getFormatConfig(context.format);
   const allowedColors = new Set(context.commanderColorIdentity);
-  const existingNames = new Set(context.existingCards.map((card) => card.name));
-  const packageNames = new Set<string>();
+  const quantities = new Map<string, number>();
+  for (const card of context.existingCards) {
+    quantities.set(card.name, (quantities.get(card.name) ?? 0) + card.quantity);
+  }
   const previews: PackageCardPreview[] = [];
   let readyCount = 0;
 
@@ -69,10 +72,14 @@ export function previewCardPackage(
         message: `${card.name} is outside the deck's color identity`,
       });
     }
-    if (config.isSingleton && !card.isBasicLand && (existingNames.has(card.name) || packageNames.has(card.name) || card.quantity > 1)) {
-      issues.push({ kind: "singleton", message: `${card.name} exceeds the singleton limit` });
+    const quantity = (quantities.get(card.name) ?? 0) + card.quantity;
+    const limit = maxQuantity(card.name, "", "", context.format);
+    if (config.isSingleton && !card.isBasicLand && quantity > limit) {
+      issues.push(limit === 1
+        ? { kind: "singleton", message: `${card.name} exceeds the singleton limit` }
+        : { kind: "copyLimit", message: `${card.name} exceeds the ${limit}-copy limit` });
     }
-    packageNames.add(card.name);
+    quantities.set(card.name, quantity);
 
     if (issues.length === 0) readyCount += 1;
     previews.push({
