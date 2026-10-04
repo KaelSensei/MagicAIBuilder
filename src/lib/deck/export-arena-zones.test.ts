@@ -43,15 +43,27 @@ describe("Arena deck export zones", () => {
 
     const text = exportArena(deck);
     expect(text).toBe(
-      "Companion\n1 Lurrus of the Dream-Den\n\nDeck\n20 Plains\n\nSideboard\n3 Negate",
+      "Companion\n1 Lurrus of the Dream-Den\n\nDeck\n20 Plains\n\nSideboard\n3 Negate\n1 Lurrus of the Dream-Den",
     );
     expect(parseTextDecklist(text)).toMatchObject({
       companion: "Lurrus of the Dream-Den",
       cards: [
         { name: "Plains", quantity: 20 },
         { name: "Negate", quantity: 3, zone: "sideboard" },
+        { name: "Lurrus of the Dream-Den", quantity: 1, zone: "sideboard" },
       ],
     });
+  });
+
+  it("does not add another sideboard copy when the companion is already there", () => {
+    const deck = createEmptyDeck("arena-existing-companion", "Existing Companion");
+    deck.companion = card("Lurrus of the Dream-Den", 1, "main");
+    deck.cards = [card("Lurrus of the Dream-Den", 1, "sideboard")];
+
+    expect(exportArena(deck)).toBe(
+      "Companion\n1 Lurrus of the Dream-Den\n\nDeck\n\nSideboard\n1 Lurrus of the Dream-Den",
+    );
+    expect(deck.cards).toHaveLength(1);
   });
 
   it("keeps sideboard cards separate and excludes Considering cards", () => {
