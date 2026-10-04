@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Capped multiples in card packages
+
+#### Fixed
+
+- Reusable card packages honor existing named capped-copy exceptions in singleton formats, combining existing deck quantities and package quantities across printings (#850). Ordinary singleton, basic-land, banned-card and color-identity checks remain in place. Oracle-text unlimited-copy exceptions and non-singleton copy limits are outside this increment.
+
+#### Validation
+
+- Both regressions failed before implementation. All five package tests and all 2,994 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
 ### 2026-10-04: Grouped missing-card import warnings
 
 #### Fixed
