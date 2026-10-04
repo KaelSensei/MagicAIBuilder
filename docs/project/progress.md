@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- The EDHREC missing-card filter now announces when all popular cards are already in the deck instead of displaying a blank panel. Removing the filter restores the list. The component regression test failed before the fix; 2,966 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 - EDHREC popular-card recommendations now rank the top 20 by observed inclusion across source categories instead of taking the first category's entries. The regression test failed before implementation; all 2,965 unit tests, TypeScript, lint and production build passed on the personal VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud returned HTTP 403 before analysis; Docker E2E was not run. High-synergy recommendations remain a separate roadmap item.
 
 - Shopping-list buy-later choices now survive reopening in the same browser, scoped to the signed-in owner and deck. Buy-now totals and exports still exclude deferred printings; collection ownership is unchanged. One focused test failed before implementation. On the VPS, 2,964 unit tests, TypeScript, lint and production build passed; GitHub CI, Lighthouse and Vercel passed. SonarCloud returned HTTP 403 before analysis and Docker E2E was not run. Cross-device acquisition state and proxy tracking remain open.
