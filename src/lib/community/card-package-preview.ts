@@ -74,7 +74,7 @@ export function previewCardPackage(
     }
     const quantity = (quantities.get(card.name) ?? 0) + card.quantity;
     const limit = maxQuantity(card.name, "", "", context.format);
-    if (config.isSingleton && !card.isBasicLand && quantity > limit) {
+    if (!card.isBasicLand && quantity > limit) {
       issues.push(limit === 1
         ? { kind: "singleton", message: `${card.name} exceeds the singleton limit` }
         : { kind: "copyLimit", message: `${card.name} exceeds the ${limit}-copy limit` });
