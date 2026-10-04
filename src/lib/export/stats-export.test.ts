@@ -38,6 +38,18 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
 
 // ─── CSV generation ────────────────────────────────────────────────────────
 describe("CSV card zones", () => {
+  it.each(["simple", "full"])("quotes carriage returns in the %s export", (format) => {
+    const deck = makeDeck({ cards: [makeCard("card", "Card\rName")] });
+    const csv = format === "simple" ? generateDeckCSV(deck.cards) : generateDeckCSVFull(deck);
+    expect(csv).toContain('"Card\rName",1,2,Creature,W,5.00');
+  });
+
+  it("quotes carriage returns in deck metadata", () => {
+    const csv = generateDeckCSVFull(makeDeck({ name: "Deck\rName", tags: ["Tag\rName"] }));
+    expect(csv).toContain('Deck:,"Deck\rName"');
+    expect(csv).toContain('Tags:,"Tag\rName"');
+  });
+
   it.each(["simple", "full"])("preserves printing IDs and categories in the %s export", (format) => {
     const deck = makeDeck({ cards: [
       { ...makeCard("printing-a", "Sol Ring"), category: "ramp" },
