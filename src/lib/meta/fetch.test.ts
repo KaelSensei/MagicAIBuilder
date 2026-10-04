@@ -78,6 +78,27 @@ describe("fetchEdhrecData", () => {
     expect(result.cards[0].name).toBe("Card 0");
   });
 
+  it("ranks popular cards across categories before limiting the result", async () => {
+    const earlyCards = Array.from({ length: 20 }, (_, i) => ({
+      name: `Early ${i}`,
+      num_decks: 40 - i,
+      potential_decks: 100,
+    }));
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({
+        container: { json_dict: { cardlists: [
+          { tag: "ramp", cardviews: earlyCards },
+          { tag: "draw", cardviews: [{ name: "Late staple", num_decks: 90, potential_decks: 100 }] },
+        ] } },
+      }), { status: 200, headers: { "Content-Type": "application/json" } })
+    );
+
+    const result = await fetchEdhrecData("test");
+    expect(result.cards).toHaveLength(20);
+    expect(result.cards[0]).toEqual(expect.objectContaining({ name: "Late staple", inclusion: 0.9 }));
+    expect(result.cards.some((card) => card.name === "Early 19")).toBe(false);
+  });
+
   it("computes inclusion from num_decks/potential_decks", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(
