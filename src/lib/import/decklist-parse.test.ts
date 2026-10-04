@@ -7,6 +7,23 @@ import { extractCardsFromHtml, parsePlainTextDecklist } from "./decklist-parse";
  */
 
 describe("parsePlainTextDecklist", () => {
+  it.each([":", " (1):"])("recognizes colon-terminated section headings %s", (suffix) => {
+    const cards = parsePlainTextDecklist([
+      `Commander${suffix}`, "1 Thrasios, Triton Hero",
+      `// Partner${suffix}`, "1 Tymna the Weaver",
+      `# Sideboard${suffix}`, "1 Negate",
+      `Considering${suffix}`, "1 Ponder",
+      `Deck${suffix}`, "1 Sol Ring",
+    ].join("\n"));
+    expect(cards.map(({ name, isCommander, isPartner, zone }) => ({ name, isCommander, isPartner, zone }))).toEqual([
+      { name: "Thrasios, Triton Hero", isCommander: true, isPartner: false, zone: "main" },
+      { name: "Tymna the Weaver", isCommander: false, isPartner: true, zone: "main" },
+      { name: "Negate", isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", isCommander: false, isPartner: false, zone: "maybeboard" },
+      { name: "Sol Ring", isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
   it.each(["\r", "\r\n", "\n"])("preserves zones with line separator %j", (separator) => {
     const cards = parsePlainTextDecklist([
       "Commander", "1 Atraxa, Praetors' Voice", "Deck", "2 Island",
