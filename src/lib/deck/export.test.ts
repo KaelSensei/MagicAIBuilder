@@ -232,6 +232,21 @@ describe("exportTappedOut", () => {
 });
 
 describe("exportArchidekt", () => {
+  it("does not count or export secondary zones as mainboard cards", () => {
+    const deck = makeDeck({
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Forest", 5),
+        makeCard("Negate", 2, { zone: "sideboard" }),
+        makeCard("Counterspell", 3, { zone: "maybeboard" }),
+      ],
+    });
+
+    expect(exportArchidekt(deck)).toBe(
+      "Mainboard (6)\n1x Sol Ring [Other]\n5x Forest [Other]",
+    );
+  });
+
   it("exports with Commander section count", () => {
     const deck = makeDeck({
       commander: makeCard("Atraxa, Praetor's Voice"),
