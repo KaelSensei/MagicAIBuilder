@@ -499,6 +499,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
 - [x] Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
 - [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats.
+  - [x] Preserve commander, quantities and secondary zones in downloaded plain-text lists using CR, CRLF or LF line endings (#836).
   - Import parsing and preview are more resilient, but exact printing and category round trips remain open; preserving a localized name does not guarantee that Scryfall resolves that language.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.

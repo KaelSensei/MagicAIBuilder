@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Downloaded plain-text decklists now accept CR, CRLF and LF line endings without losing commander, quantities, sideboard or Considering cards (#836). The CR regression failed before implementation; all 2,980 unit tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. Exact printing and category round trips remain open.
+
 - The meta-history panel ignores responses superseded by a newer request or reset, including late failures. Three deterministic regressions failed before implementation; all 2,977 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Request cancellation and timeouts remain separate scope; Docker E2E remains deferred.
 
 - Meta trend bounds now use retained, deduplicated card values rather than discarded duplicate entries. The regression failed before implementation with a -0.85 disappearance bound instead of -0.05; all 2,974 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Broader trend disclosure remains open; Docker E2E remains deferred.

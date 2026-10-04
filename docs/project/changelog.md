@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Portable decklist line endings
+
+#### Fixed
+
+- Downloaded plain-text imports recognize CR, CRLF and LF line endings while preserving commander, quantities, sideboard and Considering zones (#836).
+
+#### Validation
+
+- The CR-separated regression failed before implementation. All 21 parser tests and all 2,980 unit tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
 ### 2026-10-04: Stable meta history responses
 
 #### Fixed
