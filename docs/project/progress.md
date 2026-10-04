@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- The Moxfield text exporter now retains companion and secondary-zone sections without changing saved deck data. A sociable export/import regression failed before implementation and now preserves commander, partner, companion and zone quantities. All 2,971 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Live Moxfield comment-header compatibility remains unverified; Docker E2E remains deferred.
+
 - Arena exports now retain the selected companion and include it in the exported sideboard without adding another copy when already present or mutating the saved deck. The two companion regression tests failed before implementation; text reimport preserves companion metadata and zone quantities. All 2,970 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Live Arena client import remains unverified; Docker E2E remains deferred.
 
 - User initialization now keeps its eight-second deadline active while reading and validating the response body. A response that sends headers but stalls its body no longer leaves onboarding and collection initialization pending indefinitely. User-scoped request deduplication remains unchanged. The streaming-body regression test failed before implementation; all 2,968 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Database latency remains separate scope; Docker E2E remains deferred.
