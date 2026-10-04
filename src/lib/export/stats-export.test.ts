@@ -38,6 +38,18 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
 
 // ─── CSV generation ────────────────────────────────────────────────────────
 describe("CSV card zones", () => {
+  it.each(["simple", "full"])("preserves printing IDs and categories in the %s export", (format) => {
+    const deck = makeDeck({ cards: [
+      { ...makeCard("printing-a", "Sol Ring"), category: "ramp" },
+      { ...makeCard("printing-b", "Sol Ring"), category: "artifact" },
+      { ...makeCard("unknown", "Island"), scryfallId: undefined, category: "land" },
+    ] });
+    const csv = format === "simple" ? generateDeckCSV(deck.cards) : generateDeckCSVFull(deck);
+    expect(csv).toContain("Zone,Scryfall ID,Category");
+    expect(csv).toContain("Sol Ring,1,2,Creature,W,5.00,main,printing-a,ramp");
+    expect(csv).toContain("Sol Ring,1,2,Creature,W,5.00,main,printing-b,artifact");
+    expect(csv).toContain("Island,1,2,Creature,W,5.00,main,,land");
+  });
   it.each(["simple", "full"])("preserves every card zone in the %s export", (format) => {
     const deck = makeDeck({ cards: [
       makeCard("main", "Sol Ring"),
