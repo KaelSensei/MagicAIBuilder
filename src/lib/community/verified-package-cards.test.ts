@@ -95,6 +95,7 @@ describe("verifyPackageCards", () => {
     expect(cards).toEqual([{
       scryfallId: "real-id", name: "Red Spell", quantity: 2,
       oracleText: "",
+      isRestricted: false,
       colorIdentity: ["R"], isBanned: true, isBasicLand: false,
       imageUri: "https://cards.scryfall.io/red.jpg",
     }]);
