@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Printing and category metadata in CSV
+
+#### Added
+
+- Simple and full deck CSV exports append Scryfall ID and Category columns (#842), preserving selected editions and application categories. Unknown printing IDs remain blank. CSV reimport and external-tool category mapping are not added.
+
+#### Validation
+
+- Both focused regressions failed before implementation. All 21 export tests and all 2,986 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
 ### 2026-10-04: Card zones in CSV exports
 
 #### Added
