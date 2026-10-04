@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Reusable card packages now enforce existing format copy limits outside singleton formats too (#852), combining existing deck quantities and different package printings. Basic lands and named capped-copy exceptions retain their existing behavior. Both regressions failed before implementation; all seven package tests and all 2,996 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. Oracle-text unlimited-copy exceptions remain separate scope.
+
 - Card package previews and application honor existing named capped-copy exceptions in singleton formats (#850). Quantities already in the deck and across package printings are combined; ordinary singleton, basic-land, banned-card and color-identity checks are preserved. Both regressions failed before implementation; all five package tests and all 2,994 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. Oracle-text unlimited-copy exceptions and non-singleton copy limits remain separate scope.
 
 - URL import previews group equivalent missing-name warnings using the existing name normalization (#848). First spelling and order are preserved; imported quantities, zones and duplicate-line decisions are unchanged. The focused regression failed before implementation; all 2,992 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.

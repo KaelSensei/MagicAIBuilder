@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Format copy limits in card packages
+
+#### Fixed
+
+- Package preview and application enforce existing non-singleton format copy limits, counting existing deck copies and package printings together (#852). Basic lands and named capped-copy exceptions retain their existing behavior; Oracle-text unlimited-copy exceptions remain separate scope.
+
+#### Validation
+
+- Both new regressions failed before implementation. All seven package tests and all 2,996 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-04: Capped multiples in card packages
 
 #### Fixed

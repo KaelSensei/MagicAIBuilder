@@ -151,7 +151,8 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
 - [x] Organize decks into user-defined folders, with move, filter and bulk-move actions.
 - [x] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
-- [x] Honor existing named capped-copy exceptions in singleton card packages, counting existing copies and quantities across printings (#850). Oracle-text unlimited-copy exceptions and non-singleton copy limits remain separate scope.
+- [x] Honor existing named capped-copy exceptions in singleton card packages, counting existing copies and quantities across printings (#850).
+- [x] Apply existing format copy limits to non-singleton card packages, combining deck and package quantities across printings (#852). Oracle-text unlimited-copy exceptions remain separate scope.
 - [x] Add a required-token and emblem summary derived from the current deck, with export support.
 
 ### Engineering enablers
