@@ -70,16 +70,22 @@ import { BulkEditModal } from "@/components/deck/BulkEditModal";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { AISuggestionsPanel } from "@/components/deck/AISuggestionsPanel";
+import type { DeckBrief } from "@/lib/ai/deck-brief";
+import type { DeckQuestion } from "@/lib/ai/deck-question";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 import { MetaPanel } from "@/components/deck/MetaPanel";
 import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
+import { DeckSaveIndicator } from "@/components/deck/DeckSaveIndicator";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
+import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
 import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
+import { GuestDeckNotice } from "@/components/builder/GuestDeckNotice";
+import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 
 type SearchMode = "name" | "set" | "color";
 
@@ -245,6 +251,7 @@ export default function BuilderPage() {
   } = useDeck();
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
+  const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
   const addToMaybeboard = useDeckStore((s) => s.addToMaybeboard);
   const handleDuplicate = useCallback(async () => {
     const newId = await duplicateDeck(deckId);
@@ -263,7 +270,7 @@ export default function BuilderPage() {
 
   // If deck not in store (e.g. direct navigation / page refresh), load from DB
   useEffect(() => {
-    if (deckId && !deck && !isSyncing) {
+    if (deckId && deckId !== GUEST_DECK_ID && !deck && !isSyncing) {
       loadDecks();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-run when deckId changes; loadDecks is stable
@@ -366,11 +373,11 @@ export default function BuilderPage() {
 
   const deckAnalysisCards = useMemo(
     () => [
-      ...(deck.commander ? [deck.commander] : []),
-      ...(deck.partner ? [deck.partner] : []),
-      ...deck.cards,
+      ...(deck?.commander ? [deck.commander] : []),
+      ...(deck?.partner ? [deck.partner] : []),
+      ...(deck?.cards ?? []),
     ],
-    [deck.commander, deck.partner, deck.cards]
+    [deck]
   );
 
   const banlistAlertKey = useMemo(() => {
@@ -450,26 +457,15 @@ export default function BuilderPage() {
     }
   }, []);
 
-  // Replace deck card with a newly selected printing, preserving category
+  // Update the printing in place so deck-building metadata and identity stay stable.
   const handleDeckCardPrintingSelect = useCallback(
     async (newCard: ScryfallCard) => {
       if (!deckCardForPrinting) return;
-      const originalCategory = deckCardForPrinting.category;
-      const originalZone = deckCardForPrinting.zone;
-      const originalQuantity = deckCardForPrinting.quantity;
-      await removeCard(deckCardForPrinting.id);
-      await addCard(newCard, originalQuantity, originalZone);
-      // Restore original category if it differs from the auto-categorized one
-      const addedCard = useDeckStore
-        .getState()
-        .decks[deckId]?.cards.find((c) => c.name === newCard.name);
-      if (addedCard && addedCard.category !== originalCategory) {
-        updateCardCategory(addedCard.id, originalCategory);
-      }
+      await swapCardPrinting(deckCardForPrinting.id, newCard);
       setDeckCardForPrinting(null);
       setDeckCardPrintingCard(null);
     },
-    [deckCardForPrinting, removeCard, addCard, updateCardCategory, deckId]
+    [deckCardForPrinting, swapCardPrinting]
   );
 
   // Keyboard shortcuts — global listener
@@ -496,12 +492,18 @@ export default function BuilderPage() {
     import("@/lib/ai/archetypes").Archetype | null
   >(null);
   const [aiBudgetPerCard, setAIBudgetPerCard] = useState<number | null>(null);
+  const [aiBrief, setAIBrief] = useState<DeckBrief>({
+    theme: "",
+    playPattern: "",
+    dislikes: "",
+  });
 
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
     analyzeAI(deck, stats, bracketScore, {
       archetypeOverride: aiArchetypeOverride,
       budgetPerCard: aiBudgetPerCard,
+      brief: aiBrief,
     });
   }, [
     deck,
@@ -510,12 +512,39 @@ export default function BuilderPage() {
     analyzeAI,
     aiArchetypeOverride,
     aiBudgetPerCard,
+    aiBrief,
   ]);
+
+  const handleAIQuestion = useCallback(
+    (question: DeckQuestion) => {
+      if (!deck || !stats) return;
+      analyzeAI(deck, stats, bracketScore, {
+        archetypeOverride: aiArchetypeOverride,
+        budgetPerCard: aiBudgetPerCard,
+        brief: aiBrief,
+        question,
+      });
+    },
+    [
+      deck,
+      stats,
+      bracketScore,
+      analyzeAI,
+      aiArchetypeOverride,
+      aiBudgetPerCard,
+      aiBrief,
+    ]
+  );
 
   const handleSnapshotRestore = useCallback(() => {
     // Reload all decks from DB so the builder reflects the restored state
     loadDecks();
   }, [loadDecks]);
+
+  const handlePackageApplied = useCallback(async () => {
+    await loadDecks();
+    await setActiveDeck(deckId);
+  }, [deckId, loadDecks, setActiveDeck]);
 
   const handleAIAddCard = useCallback(
     (cardName: string) => {
@@ -638,6 +667,7 @@ export default function BuilderPage() {
     >
       <div className="flex flex-col h-screen overflow-hidden">
         <Header deckId={deckId} />
+        {deckId === GUEST_DECK_ID && <GuestDeckNotice />}
 
         {/* Deck title bar */}
         <div className="border-b border-[var(--border)] bg-[var(--surface)] px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3">
@@ -702,17 +732,20 @@ export default function BuilderPage() {
               (deck.partner ? 1 : 0)}{" "}
             / 100
           </span>
+          <DeckSaveIndicator saving={isSyncing} label={t("saving")} />
           <div className="ml-auto flex items-center gap-1 md:gap-2">
             {/* Duplicate deck */}
-            <button
-              type="button"
-              onClick={handleDuplicate}
-              className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
-              title={t("actions.duplicate")}
-            >
-              <Copy className="w-3 h-3" />
-              <span className="hidden sm:inline">Duplicate</span>
-            </button>
+            {deckId !== GUEST_DECK_ID && (
+              <button
+                type="button"
+                onClick={handleDuplicate}
+                className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+                title={t("actions.duplicate")}
+              >
+                <Copy className="w-3 h-3" />
+                <span className="hidden sm:inline">Duplicate</span>
+              </button>
+            )}
             {/* Bulk edit — edit deck as plain text */}
             <BulkEditModal deck={deck}>
               <button
@@ -745,15 +778,17 @@ export default function BuilderPage() {
               <span className="hidden sm:inline">Export</span>
             </button>
             {/* Visibility toggle — public / private */}
-            <DeckVisibilityToggle
-              deckId={deckId}
-              initialIsPublic={deck.isPublic ?? false}
-              username={
-                (sessionData?.user as { username?: string } | undefined)
-                  ?.username
-              }
-              className="hidden sm:flex"
-            />
+            {deckId !== GUEST_DECK_ID && (
+              <DeckVisibilityToggle
+                deckId={deckId}
+                initialIsPublic={deck.isPublic ?? false}
+                username={
+                  (sessionData?.user as { username?: string } | undefined)
+                    ?.username
+                }
+                className="hidden sm:flex"
+              />
+            )}
           </div>
         </div>
 
@@ -997,6 +1032,12 @@ export default function BuilderPage() {
               onRestore={handleSnapshotRestore}
             />
 
+            <CardPackagesPanel
+              deckId={deckId}
+              cards={deck.cards}
+              onApplied={handlePackageApplied}
+            />
+
             <AISuggestionsPanel
               result={aiResult}
               isLoading={aiLoading}
@@ -1013,6 +1054,11 @@ export default function BuilderPage() {
               onArchetypeChange={setAIArchetypeOverride}
               budgetPerCard={aiBudgetPerCard}
               onBudgetPerCardChange={setAIBudgetPerCard}
+              currentCardNames={deck.cards.map((card) => card.name)}
+              currentCards={deck.cards}
+              brief={aiBrief}
+              onBriefChange={setAIBrief}
+              onAskQuestion={handleAIQuestion}
               analysedAt={analysedAt}
               ignoredSuggestions={ignoredSuggestions}
               onIgnoreSuggestion={ignoreSuggestion}

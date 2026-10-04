@@ -249,7 +249,12 @@ describe("useDeckStore — swapCardPrinting", () => {
   });
 
   it("updates card imageUri and scryfallId optimistically", async () => {
-    const card = makeDeckCard("card-1", "Lightning Bolt");
+    const card = makeDeckCard("card-1", "Lightning Bolt", {
+      category: "removal",
+      quantity: 3,
+      zone: "sideboard",
+      notes: "Keep for creature-heavy pods",
+    });
     useDeckStore.setState({
       decks: { "deck-1": seedDeck({ cards: [card] }) },
       activeDeckId: "deck-1",
@@ -262,20 +267,42 @@ describe("useDeckStore — swapCardPrinting", () => {
     const updated = useDeckStore.getState().decks["deck-1"].cards[0];
     expect(updated.scryfallId).toBe("new-printing-id");
     expect(updated.imageUri).toBe("https://example.com/normal.jpg");
+    expect(updated).toMatchObject({
+      id: "card-1",
+      category: "removal",
+      quantity: 3,
+      zone: "sideboard",
+      notes: "Keep for creature-heavy pods",
+    });
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
-  it("resets isSyncing even when fetch throws", async () => {
-    const card = makeDeckCard("card-1", "Lightning Bolt");
+  it.each(["network error", "server error"])("restores the previous printing after a %s", async (failure) => {
+    const card = makeDeckCard("card-1", "Lightning Bolt", {
+      scryfallId: "old-printing-id",
+      imageUri: "https://example.com/old.jpg",
+      artCropUri: "https://example.com/old-art.jpg",
+      quantity: 3,
+      zone: "sideboard",
+    });
     useDeckStore.setState({
       decks: { "deck-1": seedDeck({ cards: [card] }) },
       activeDeckId: "deck-1",
     });
 
-    globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error("network error"));
+    globalThis.fetch = failure === "network error"
+      ? vi.fn().mockRejectedValueOnce(new Error("network error"))
+      : vi.fn().mockResolvedValueOnce({ ok: false, status: 500 });
 
     await useDeckStore.getState().swapCardPrinting("card-1", mockPrinting);
 
+    expect(useDeckStore.getState().decks["deck-1"].cards[0]).toMatchObject({
+      scryfallId: "old-printing-id",
+      imageUri: "https://example.com/old.jpg",
+      artCropUri: "https://example.com/old-art.jpg",
+      quantity: 3,
+      zone: "sideboard",
+    });
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 });
@@ -289,7 +316,7 @@ describe("useDeckStore — moveToMaybeboard error path", () => {
     expect(deckApi.updateCardZone).not.toHaveBeenCalled();
   });
 
-  it("keeps optimistic state when API throws", async () => {
+  it("restores the main zone when the move fails", async () => {
     vi.mocked(deckApi.updateCardZone).mockRejectedValueOnce(new Error("api error"));
 
     const card = makeDeckCard("card-1", "Counterspell");
@@ -301,10 +328,9 @@ describe("useDeckStore — moveToMaybeboard error path", () => {
     await useDeckStore.getState().moveToMaybeboard("card-1");
 
     const state = useDeckStore.getState().decks["deck-1"];
-    // Optimistic update kept despite API error
     expect(state.cards).toHaveLength(1);
-    expect(state.cards[0].zone).toBe("maybeboard");
-    expect(state.maybeboard).toHaveLength(1);
+    expect(state.cards[0].zone).toBe("main");
+    expect(state.maybeboard).toHaveLength(0);
   });
 });
 
@@ -317,21 +343,21 @@ describe("useDeckStore — moveToDeck error path", () => {
     expect(deckApi.updateCardZone).not.toHaveBeenCalled();
   });
 
-  it("keeps optimistic state when API throws", async () => {
+  it("restores the maybeboard when the move fails", async () => {
     vi.mocked(deckApi.updateCardZone).mockRejectedValueOnce(new Error("api error"));
 
-    const card = makeDeckCard("maybe-1", "Swords to Plowshares");
+    const card = makeDeckCard("maybe-1", "Swords to Plowshares", { zone: "maybeboard" });
     useDeckStore.setState({
-      decks: { "deck-1": seedDeck({ maybeboard: [card] }) },
+      decks: { "deck-1": seedDeck({ cards: [card], maybeboard: [card] }) },
       activeDeckId: "deck-1",
     });
 
     await useDeckStore.getState().moveToDeck("maybe-1");
 
     const state = useDeckStore.getState().decks["deck-1"];
-    expect(state.maybeboard).toHaveLength(0);
+    expect(state.maybeboard).toHaveLength(1);
     expect(state.cards).toHaveLength(1);
-    expect(state.cards[0].zone).toBe("main");
+    expect(state.cards[0].zone).toBe("maybeboard");
   });
 });
 

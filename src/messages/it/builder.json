@@ -1,4 +1,12 @@
 {
+  "guest": {
+    "title": "Guest deck.",
+    "description": "Saved in this browser only. Create an account to keep it safe and access it anywhere.",
+    "anotherTabTitle": "This guest deck is already open in another tab.",
+    "anotherTabDescription": "Create an account to work across tabs without risking your changes.",
+    "createAccount": "Create account",
+    "dismiss": "Dismiss guest deck notice"
+  },
   "categories": {
     "commander": "Commander",
     "companion": "Companion",
@@ -79,10 +87,20 @@
         "land-light": "Land-light: consider a mulligan.",
         "balanced": "Balanced start.",
         "land-heavy": "Land-heavy: consider a mulligan."
+      },
+      "deadHand": "Dead opening hand: no spell is currently playable.",
+      "missingColors": "Missing {colors} mana.",
+      "colors": {
+        "W": "white",
+        "U": "blue",
+        "B": "black",
+        "R": "red",
+        "G": "green"
       }
     }
   },
   "loading": "Loading deck…",
+  "saving": "Saving…",
   "deckNotFound": {
     "title": "Deck not found",
     "back": "Back to My Decks"

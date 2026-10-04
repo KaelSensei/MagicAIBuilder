@@ -52,6 +52,9 @@
     "untap": "Dégager",
     "addCounter": "Ajouter un marqueur",
     "removeCounter": "Retirer un marqueur",
+    "copy": "Copier",
+    "tokenChoice": "Jeton à ajouter",
+    "addToken": "Ajouter le jeton",
     "remove": "Retirer"
   },
   "graveyard": {
@@ -62,6 +65,28 @@
     "cardCount": "{count, plural, one {# carte} other {# cartes}}",
     "restoreToHand": "Remettre en main",
     "play": "Jouer"
+  },
+  "dice": {
+    "title": "Dés",
+    "roll": "Lancer un d{sides}",
+    "latest": "Dernier résultat"
+  },
+  "log": {
+    "title": "Journal des actions",
+    "placeholder": "Noter une action manuelle, comme le mana produit",
+    "add": "Ajouter l’action",
+    "empty": "Les actions apparaîtront ici pendant la partie.",
+    "edit": "Modifier",
+    "editEntry": "Modifier l’action",
+    "remove": "Supprimer l’action",
+    "exportText": "Texte",
+    "exportJson": "JSON",
+    "manaAmount": "Quantité de mana",
+    "recordMana": "Noter le mana",
+    "evidenceTitle": "Indices par tour",
+    "turn": "Tour {turn}",
+    "evidence": "{draws, plural, one {# pioche} other {# pioches}} · {mana} mana · {seen, plural, one {# carte vue} other {# cartes vues}}",
+    "evidenceLimit": "Cartes vues supplémentaires uniquement ; les notes libres ne sont pas comptées."
   },
   "recordResult": "Comment ça s'est passé ?",
   "recording": "Enregistrement…",
@@ -88,11 +113,31 @@
       "insufficient": "Trop peu de parties"
     },
     "byOpponent": "Par adversaire",
-    "matchupValue": "{wins}V–{losses}D · {winRate} %"
+    "matchupValue": "{wins}V–{losses}D · {winRate} %",
+    "proposedChange": "Changement à essayer"
+  },
+  "comparison": {
+    "title": "Comparer les versions du deck",
+    "before": "Version précédente",
+    "after": "Version suivante",
+    "choose": "Choisir une version",
+    "distinct": "Choisissez deux versions différentes.",
+    "versionOption": "{date} · {count, plural, one {# essai} other {# essais}}",
+    "winRate": "Taux de victoire",
+    "speed": "Vitesse de victoire",
+    "mulligans": "Mulligans",
+    "winRateValue": "{delta, number, ::sign-always maximumFractionDigits-0} pts",
+    "speedValue": "{delta, number, maximumFractionDigits-1} tours {direction, select, faster {plus rapide} other {plus lent}}",
+    "mulliganValue": "{delta, number, maximumFractionDigits-1} mulligans {direction, select, fewer {en moins} other {en plus}}",
+    "sampleSize": "{before, plural, one {# essai avant} other {# essais avant}} · {after, plural, one {# essai après} other {# essais après}}",
+    "earlySignal": "Signal préliminaire — enregistrez au moins 3 essais par version avant de conclure.",
+    "methodology": "Indication directionnelle issue de tests auto-déclarés. Ce n’est pas un taux de victoire en tournoi."
   },
   "difficultyLabel": "Adversaire",
   "notesLabel": "Note du test de jeu",
   "notesPlaceholder": "Qu’est-ce qui a fonctionné ou semblé faible ?",
+  "proposedChangeLabel": "Changement à essayer",
+  "proposedChangePlaceholder": "Que modifier pour le prochain essai ?",
   "difficultyUnset": "Sans préciser",
   "difficulty": {
     "budget": "Budget",

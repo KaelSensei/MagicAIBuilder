@@ -5,20 +5,23 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useFormatter } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   Package,
   ShoppingCart,
   Check,
   CheckCheck,
-  RotateCcw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import { useCollectionStore } from "@/lib/collection/store";
-import { computeCollectionStats, summarizeDeckCollection } from "@/lib/collection/shopping-list";
+import {
+  getMissingCollectionCards,
+  summarizeDeckCollection,
+} from "@/lib/collection/shopping-list";
 import { ShoppingListModal } from "./ShoppingListModal";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { Link } from "@/i18n/navigation";
 
 interface CollectionStatsPanelProps {
   readonly deck: Deck;
@@ -31,24 +34,15 @@ export function CollectionStatsPanel({
 }: CollectionStatsPanelProps) {
   const { data: session } = useSession();
   const format = useFormatter();
+  const t = useTranslations("collection");
+  const deckT = useTranslations("deck");
   const [expanded, setExpanded] = useState(false);
   const [showShoppingList, setShowShoppingList] = useState(false);
 
   const collectionCards = useCollectionStore((s) => s.collectionCards);
   const collectionCardsFoil = useCollectionStore((s) => s.collectionCardsFoil);
   const bulkAddToCollection = useCollectionStore((s) => s.bulkAddToCollection);
-  const removeFromCollection = useCollectionStore(
-    (s) => s.removeFromCollection
-  );
   const isSyncing = useCollectionStore((s) => s.isSyncing);
-
-  const ownedScryfallIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const scryfallId of Object.keys(collectionCards)) ids.add(scryfallId);
-    for (const scryfallId of Object.keys(collectionCardsFoil))
-      ids.add(scryfallId);
-    return ids;
-  }, [collectionCards, collectionCardsFoil]);
 
   const collectionQuantities = useMemo(() => {
     const quantities: Record<string, number> = {};
@@ -65,33 +59,12 @@ export function CollectionStatsPanel({
     () => summarizeDeckCollection(deck.cards, deck.commander, deck.partner, collectionQuantities),
     [deck.cards, deck.commander, deck.partner, collectionQuantities]
   );
-  const stats = useMemo(
-    () =>
-      computeCollectionStats(
-        deck.cards,
-        deck.commander,
-        deck.partner,
-        ownedScryfallIds
-      ),
-    [deck.cards, deck.commander, deck.partner, ownedScryfallIds]
-  );
-
   const pct = Math.round(quantitySummary.completionRatio * 100);
 
-  /** Gather all unique non-basic deck cards not yet in collection */
+  /** Gather non-basic deck cards with only the quantity still missing. */
   const getMissingCards = useCallback((): DeckCard[] => {
-    const allCards: DeckCard[] = [];
-    if (deck.commander) allCards.push(deck.commander);
-    if (deck.partner) allCards.push(deck.partner);
-    for (const c of deck.cards) {
-      if (c.zone === "main") allCards.push(c);
-    }
-    return allCards.filter(
-      (c) =>
-        !c.typeLine.toLowerCase().includes("basic land") &&
-        !ownedScryfallIds.has(c.scryfallId ?? c.id)
-    );
-  }, [deck, ownedScryfallIds]);
+    return getMissingCollectionCards(deck.cards, deck.commander, deck.partner, collectionQuantities);
+  }, [deck, collectionQuantities]);
 
   /** Mark all deck cards as owned */
   const handleMarkAllOwned = useCallback(async () => {
@@ -100,29 +73,12 @@ export function CollectionStatsPanel({
     const inputs = missing.map((c) => ({
       scryfallId: c.scryfallId ?? c.id,
       name: c.name,
-      quantity: 1,
+      quantity: c.quantity,
       price: c.price,
       imageUri: c.imageUri,
     }));
     await bulkAddToCollection(inputs);
   }, [getMissingCards, bulkAddToCollection]);
-
-  /** Remove all deck cards from collection */
-  const handleResetCollection = useCallback(async () => {
-    const allCards: DeckCard[] = [];
-    if (deck.commander) allCards.push(deck.commander);
-    if (deck.partner) allCards.push(deck.partner);
-    for (const c of deck.cards) {
-      if (c.zone === "main") allCards.push(c);
-    }
-    for (const card of allCards) {
-      const sid = card.scryfallId ?? card.id;
-      const normal = collectionCards[sid];
-      const foil = collectionCardsFoil[sid];
-      if (normal) await removeFromCollection(normal.id);
-      if (foil) await removeFromCollection(foil.id);
-    }
-  }, [deck, collectionCards, collectionCardsFoil, removeFromCollection]);
 
   if (!session?.user) {
     return (
@@ -143,7 +99,7 @@ export function CollectionStatsPanel({
       {showShoppingList && (
         <ShoppingListModal
           deck={deck}
-          ownedScryfallIds={ownedScryfallIds}
+          ownedQuantities={collectionQuantities}
           onClose={() => setShowShoppingList(false)}
         />
       )}
@@ -164,7 +120,7 @@ export function CollectionStatsPanel({
             Collection
           </span>
           <span className="text-xs text-[var(--text-secondary)]">
-            {stats.ownedCount}/{stats.totalCount}
+            {quantitySummary.ownedQuantity}/{quantitySummary.totalQuantity}
           </span>
         </button>
 
@@ -207,17 +163,28 @@ export function CollectionStatsPanel({
                 </div>
 
                 {/* Missing cost */}
-                {stats.missingCount > 0 && (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--text-secondary)]">
-                      Missing cards cost
-                    </span>
-                    <span className="font-medium text-[var(--text-primary)]">
-                      ~{format.number(stats.missingCost, {
-                        style: "currency",
-                        currency: "USD",
-                      })}
-                    </span>
+                {quantitySummary.missingQuantity > 0 && (
+                  <div className="space-y-0.5 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[var(--text-secondary)]">
+                        {quantitySummary.unpricedQuantity > 0
+                          ? deckT("buyList.knownSubtotal")
+                          : "Missing cards cost"}
+                      </span>
+                      <span className="font-medium text-[var(--text-primary)]">
+                        {quantitySummary.unpricedQuantity === quantitySummary.missingQuantity
+                          ? deckT("buyList.priceUnavailable")
+                          : `~${format.number(quantitySummary.missingCost, {
+                              style: "currency",
+                              currency: "USD",
+                            })}`}
+                      </span>
+                    </div>
+                    {quantitySummary.unpricedQuantity > 0 && (
+                      <p className="text-[10px] text-amber-400">
+                        {deckT("buyList.withoutPrice", { count: quantitySummary.unpricedQuantity })}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -230,20 +197,20 @@ export function CollectionStatsPanel({
                 )}
 
                 {/* Shopping list button */}
-                {stats.missingCount > 0 && (
+                {quantitySummary.missingQuantity > 0 && (
                   <button
                     type="button"
                     onClick={() => setShowShoppingList(true)}
                     className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg border border-[var(--accent)]/50 text-[var(--accent-text)] text-xs font-medium hover:bg-[var(--accent)]/10 transition-colors"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
-                    Shopping List ({stats.missingCount} cards)
+                    Shopping List ({quantitySummary.missingQuantity} cards)
                   </button>
                 )}
 
-                {/* Mark all + Reset */}
+                {/* Ownership is global; edit it only from the collection page. */}
                 <div className="flex gap-2">
-                  {stats.missingCount > 0 && (
+                  {quantitySummary.missingQuantity > 0 && (
                     <button
                       type="button"
                       onClick={handleMarkAllOwned}
@@ -254,17 +221,12 @@ export function CollectionStatsPanel({
                       Mark all owned
                     </button>
                   )}
-                  {stats.ownedCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleResetCollection}
-                      disabled={isSyncing}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-red-500/30 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      Reset
-                    </button>
-                  )}
+                  <Link
+                    href="/collection"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] text-xs font-medium hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+                  >
+                    {t("actions.manage")}
+                  </Link>
                 </div>
               </div>
             </motion.div>

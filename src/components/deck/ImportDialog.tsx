@@ -62,6 +62,7 @@ export function ImportDialog({
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
   const setPartner = useDeckStore((s) => s.setPartner);
+  const setCompanion = useDeckStore((s) => s.setCompanion);
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
 
   /** Add all found cards to the active deck; returns count of added cards */
@@ -90,11 +91,19 @@ export function ImportDialog({
       }
     }
 
-    for (const { name, quantity } of parsed.cards) {
+    if (parsed.companion) {
+      const companion = byName.get(normalizeImportedName(parsed.companion));
+      if (companion) {
+        await setCompanion(companion);
+        added++;
+      }
+    }
+
+    for (const { name, quantity, zone } of parsed.cards) {
       const card = byName.get(normalizeImportedName(name));
       if (!card) continue;
       // Pass quantity directly — addCard handles basics with quantity > 1 in a single call
-      addCard(card, quantity);
+      await addCard(card, quantity, zone ?? "main");
       added++;
     }
     return added;
@@ -117,6 +126,7 @@ export function ImportDialog({
       const allCardNames = [
         ...(parsed.commander ? [{ name: parsed.commander }] : []),
         ...(parsed.partner ? [{ name: parsed.partner }] : []),
+        ...(parsed.companion ? [{ name: parsed.companion }] : []),
         ...Array.from(new Set(parsed.cards.map((c) => c.name))).map((name) => ({
           name,
         })),

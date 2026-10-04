@@ -105,6 +105,22 @@ describe("exportPlainText", () => {
     const text = exportPlainText(deck);
     expect(text).toContain("10 Forest");
   });
+
+  it("exports the companion and secondary zones with their quantities", () => {
+    const deck = makeDeck({
+      companion: makeCard("Lurrus of the Dream-Den"),
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 3, { zone: "sideboard" }),
+        makeCard("Counterspell", 2, { zone: "maybeboard" }),
+      ],
+    });
+    const text = exportPlainText(deck);
+    expect(text).toContain("Companion\n1 Lurrus of the Dream-Den");
+    expect(text).toContain("Deck\n1 Sol Ring");
+    expect(text).toContain("Sideboard\n3 Negate");
+    expect(text).toContain("Considering\n2 Counterspell");
+  });
 });
 
 describe("exportMoxfield", () => {
@@ -149,6 +165,20 @@ describe("exportArena", () => {
 });
 
 describe("exportMTGO", () => {
+  it("keeps sideboard quantities separate from the playable deck", () => {
+    const deck = makeDeck({
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 3, { zone: "sideboard" }),
+        makeCard("Counterspell", 2, { zone: "maybeboard" }),
+      ],
+    });
+    const xml = exportMTGO(deck);
+    expect(xml).toContain('Quantity="1" Sideboard="false" Name="Sol Ring"');
+    expect(xml).toContain('Quantity="3" Sideboard="true" Name="Negate"');
+    expect(xml).not.toContain('Name="Counterspell"');
+  });
+
   it("exports valid XML", () => {
     const deck = makeDeck({
       commander: makeCard("Atraxa, Praetor's Voice"),
@@ -167,6 +197,15 @@ describe("exportMTGO", () => {
     });
     const xml = exportMTGO(deck);
     expect(xml).toContain("&quot;");
+  });
+
+  it("exports XML-special card names without changing the name", () => {
+    const name = 'A & B <C> "D"';
+    const xml = exportMTGO(makeDeck({ cards: [makeCard(name)] }));
+    const document = new DOMParser().parseFromString(xml, "application/xml");
+
+    expect(document.querySelector("parsererror")).toBeNull();
+    expect(document.querySelector("Cards")?.getAttribute("Name")).toBe(name);
   });
 });
 
@@ -237,6 +276,19 @@ describe("exportArchidekt", () => {
 });
 
 describe("exportGoldfish", () => {
+  it("does not turn sideboard or considering cards into main-deck cards", () => {
+    const deck = makeDeck({
+      commander: makeCard("Atraxa"),
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 2, { zone: "sideboard" }),
+        makeCard("Counterspell", 3, { zone: "maybeboard" }),
+      ],
+    });
+
+    expect(exportGoldfish(deck)).toBe("1 Sol Ring\n\n1 Atraxa");
+  });
+
   it("lists the main deck, then the commander in the sideboard slot", () => {
     // MTGGoldfish's text import uses the MTGO convention: the commander is the
     // one-card sideboard after a blank line.
@@ -271,6 +323,19 @@ describe("exportGoldfish", () => {
 });
 
 describe("exportEdhrec", () => {
+  it("omits secondary zones from the plain deck-check list", () => {
+    const deck = makeDeck({
+      commander: makeCard("Atraxa"),
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 2, { zone: "sideboard" }),
+        makeCard("Counterspell", 3, { zone: "maybeboard" }),
+      ],
+    });
+
+    expect(exportEdhrec(deck)).toBe("1 Atraxa\n1 Sol Ring");
+  });
+
   it("puts the commander first as a plain line", () => {
     // EDHRec's deck check takes a plain list and reads the first legal
     // commander as the deck's commander — no marker syntax exists.

@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import { VoteButtons } from "./VoteButtons";
 import type { CommanderDeckSummary } from "@/lib/community/discovery-types";
+import { PublicDeckComparison } from "./PublicDeckComparison";
 
 interface CommanderDecksViewProps {
   readonly commanderName: string;
@@ -24,7 +25,8 @@ function DeckRow({
 }) {
   const t = useTranslations("deck.community");
   const tRatings = useTranslations("deck.ratings");
-  const authorName = deck.author?.name ?? deck.author?.username ?? t("anonymous");
+  const authorName =
+    deck.author?.name ?? deck.author?.username ?? t("anonymous");
 
   return (
     <li className="flex items-center gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
@@ -36,7 +38,9 @@ function DeckRow({
       />
 
       <Image
-        src={deck.commander.artCropUri || deck.commander.imageUri || CARD_BACK_URL}
+        src={
+          deck.commander.artCropUri || deck.commander.imageUri || CARD_BACK_URL
+        }
         alt={deck.commander.name}
         width={64}
         height={46}
@@ -68,7 +72,9 @@ function DeckRow({
             </p>
           </>
         ) : (
-          <p className="text-[11px] text-[var(--text-secondary)]">{t("unrated")}</p>
+          <p className="text-[11px] text-[var(--text-secondary)]">
+            {t("unrated")}
+          </p>
         )}
 
         {deck.badge === "highly_rated" && (
@@ -112,11 +118,14 @@ export function CommanderDecksView({
           {t("noDecks")}
         </p>
       ) : (
-        <ul className="space-y-2">
-          {decks.map((deck) => (
-            <DeckRow key={deck.id} deck={deck} canVote={canVote} />
-          ))}
-        </ul>
+        <>
+          <PublicDeckComparison decks={decks} />
+          <ul className="space-y-2">
+            {decks.map((deck) => (
+              <DeckRow key={deck.id} deck={deck} canVote={canVote} />
+            ))}
+          </ul>
+        </>
       )}
     </main>
   );

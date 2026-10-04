@@ -14,6 +14,14 @@ describe("detectSource", () => {
       .toEqual({ source: "moxfield", id: "xyz-123" });
   });
 
+  it("accepts supported deck URLs pasted without a scheme", () => {
+    expect(detectSource("moxfield.com/decks/xyz-123"))
+      .toEqual({ source: "moxfield", id: "xyz-123" });
+    expect(detectSource("www.archidekt.com/decks/42"))
+      .toEqual({ source: "archidekt", id: "42" });
+    expect(detectSource("example.com/decks/42")).toBeNull();
+  });
+
   it("detects raw moxfield publicId (non-numeric)", () => {
     expect(detectSource("AbCdEfGhIj")).toEqual({ source: "moxfield", id: "AbCdEfGhIj" });
   });
@@ -344,6 +352,10 @@ describe("importFromUrl", () => {
       "10 Island  (TMP) 1",
       "1 Discovery // Dispersal | note",
       "2x Sol Ring",
+      "// Sideboard",
+      "2 Negate",
+      "// Considering",
+      "1 Ponder",
     ].join("\n");
 
     vi.spyOn(http, "httpGet").mockResolvedValueOnce(new Response(txt, { status: 200 }));
@@ -356,6 +368,8 @@ describe("importFromUrl", () => {
     expect(result.cards.some((c) => c.name === "Island")).toBe(true);
     expect(result.cards.some((c) => c.name === "Discovery")).toBe(true);
     expect(result.cards.some((c) => c.name === "Sol Ring")).toBe(true);
+    expect(result.cards.find((c) => c.name === "Negate")?.zone).toBe("sideboard");
+    expect(result.cards.find((c) => c.name === "Ponder")?.zone).toBe("maybeboard");
   });
 
   it("MTGTop8: uses plain-text export when present", async () => {
@@ -436,6 +450,27 @@ describe("importFromUrl", () => {
     expect(result.formatWarning).toContain("average deck");
     expect(result.cards[0].isCommander).toBe(true);
     expect(result.cards.some((c) => c.name === "Undead Augur")).toBe(true);
+  });
+
+  it("EDHRec: keeps unique average-deck cards across recommendation categories", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(new Response(JSON.stringify({
+      container: { json_dict: {
+        card: { name: "Wilhelt, the Rotcleaver" },
+        cardlists: [
+          { tag: "popular", cardviews: [{ name: "Sol Ring" }, { name: "Undead Augur" }] },
+          { tag: "synergy", cardviews: [{ name: "sol ring" }, { name: "Wilhelt, the Rotcleaver" }, { name: "Arcane Signet" }] },
+        ],
+      } },
+    }), { status: 200 }));
+
+    const imported = await importFromUrl("https://edhrec.com/commanders/wilhelt-the-rotcleaver");
+
+    expect(imported.cards.map(({ name }) => name)).toEqual([
+      "Wilhelt, the Rotcleaver",
+      "Sol Ring",
+      "Undead Augur",
+      "Arcane Signet",
+    ]);
   });
 
   it("EDHRec: throws when json_dict missing", async () => {

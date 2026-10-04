@@ -119,6 +119,29 @@ describe("patchDeckSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts a focused public feedback request", () => {
+    const result = patchDeckSchema.safeParse({
+      seekingFeedback: true,
+      feedbackQuestion: "Which two cards would you cut for more interaction?",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a feedback question longer than 240 characters", () => {
+    const result = patchDeckSchema.safeParse({
+      feedbackQuestion: "a".repeat(241),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects enabling feedback without a focused question", () => {
+    const result = patchDeckSchema.safeParse({
+      seekingFeedback: true,
+      feedbackQuestion: "   ",
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("accepts all pairing types", () => {
     const types = ["none", "partner", "partner_with", "friends_forever", "background", "doctor"] as const;
     for (const pairingType of types) {

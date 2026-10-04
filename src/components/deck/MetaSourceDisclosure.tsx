@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
+import type { MetaEvidenceKind } from "@/lib/meta/evidence-label";
 
 type MetaDisclosureSource = "edhrec" | "tournament";
 
@@ -8,6 +9,7 @@ interface MetaSourceDisclosureProps {
   readonly source: MetaDisclosureSource;
   readonly observedAt: string;
   readonly stale?: boolean;
+  readonly kind?: MetaEvidenceKind;
 }
 
 function sourceLabel(source: MetaDisclosureSource): string {
@@ -26,16 +28,18 @@ export function MetaSourceDisclosure({
   source,
   observedAt,
   stale = false,
+  kind,
 }: MetaSourceDisclosureProps) {
   const t = useTranslations("deck");
   const format = useFormatter();
   const observedDate = new Date(observedAt);
   const label = sourceLabel(source);
+  const evidenceKind = kind ?? (source === "edhrec" ? "popular" : "tournament");
 
   if (Number.isNaN(observedDate.getTime())) {
     return (
       <p className="text-[10px] text-[var(--text-secondary)]">
-        {t("meta.sourceDisclosureUnavailable", { source: label })}
+        {t("meta.sourceDisclosureUnavailable", { source: label })} {t("meta.evidenceType", { type: t(`meta.evidence.${evidenceKind}`) })}
       </p>
     );
   }
@@ -56,7 +60,7 @@ export function MetaSourceDisclosure({
       {t(stale ? "meta.staleSourceDisclosure" : "meta.sourceDisclosure", {
         source: label,
         date,
-      })}
+      })} {t("meta.evidenceType", { type: t(`meta.evidence.${evidenceKind}`) })}
     </p>
   );
 }

@@ -19,6 +19,9 @@ describe("BattlefieldZone", () => {
     battlefield: [makePermanent("p1", "Rhystic Study"), makePermanent("p2", "Sol Ring")],
     onTap: vi.fn(),
     onAddCounter: vi.fn(),
+    onCreateCopy: vi.fn(),
+    requiredTokens: [{ name: "Soldier", power: "1/1", colors: ["white"], count: 2, kind: "token" as const }],
+    onCreateToken: vi.fn(),
     onRemove: vi.fn(),
   };
 
@@ -71,8 +74,29 @@ describe("BattlefieldZone", () => {
     expect(onRemove).toHaveBeenCalledWith("p1");
   });
 
+  it("calls onCreateCopy when Copy is clicked", () => {
+    const onCreateCopy = vi.fn();
+    renderWithIntl(<BattlefieldZone {...defaultProps} onCreateCopy={onCreateCopy} />);
+    fireEvent.click(screen.getAllByRole("button", { name: /copy/i })[0]);
+    expect(onCreateCopy).toHaveBeenCalledWith("p1");
+  });
+
   it("shows empty state when battlefield is empty", () => {
     renderWithIntl(<BattlefieldZone {...defaultProps} battlefield={[]} />);
     expect(screen.getByText(/no permanents/i)).toBeDefined();
+  });
+
+  it("adds a required token even when the battlefield is empty", () => {
+    const onCreateToken = vi.fn();
+    renderWithIntl(
+      <BattlefieldZone
+        {...defaultProps}
+        battlefield={[]}
+        onCreateToken={onCreateToken}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /add token/i }));
+    expect(onCreateToken).toHaveBeenCalledWith(defaultProps.requiredTokens[0]);
   });
 });

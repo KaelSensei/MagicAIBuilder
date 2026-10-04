@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-08-26
+> **Updated:** 2026-10-03
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -28,6 +28,7 @@ Our opportunity is the workflow between those products:
 5. The final list is easy to own, print, share and export.
 
 **Positioning sentence:**
+
 > Build the deck you mean, understand why it works, test it before game night.
 
 ### Strategic boundaries
@@ -38,18 +39,36 @@ Our opportunity is the workflow between those products:
 - Do not expand formats, languages or integrations faster than their tests and data contracts can support.
 - Do not add a new external service unless it solves a user-visible problem and has an exit path.
 
+### Competitive functional benchmark — 2026-09-19
+
+The comparison below tracks user workflows rather than trying to match feature counts. It is based on the current public product and help surfaces of Moxfield, Archidekt and TappedOut.
+
+| Competitor strength                                                                                                               | MagicAIBuilder today                                                                                                                                            | Product response                                                                                 |
+| --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Moxfield: fast editing, detailed primers, deck history, tokens, social notifications and rich sandbox controls                    | Editing, snapshots, required-token checklists, a guided primer template, comments and playtesting exist; rich published primers and notification inboxes do not | Complete public deck guides and add relevant notifications without copying a generic social feed |
+| Archidekt: visual organization, folders, deck comparison, reusable card packages, deck-help requests and exportable playtest logs | Owned-deck folders and comparison now exist; packages, public comparison, help requests and downloadable logs remain incomplete                                 | Prioritize reusable packages, public comparison and evidence-rich playtest logs                  |
+| TappedOut: acquireboard, inventory usage map, wishlist checkout, deck folders and explicit feedback-seeking workflows             | Collection reconciliation and shopping lists exist; cross-deck card usage, acquire state and structured help requests do not                                    | Connect collection, decks and acquisition planning, then add a focused request-for-feedback flow |
+
+#### Deliberate non-goals from the benchmark
+
+- Do not build a draft simulator, cube platform, venue directory or full card-trading marketplace in the current roadmap.
+- Do not add paid deck promotion, deck-cycling mechanics or engagement loops that rank visibility by spend.
+- Do not duplicate Scryfall's card database or pursue every format before the Commander workflow is excellent.
+
+Sources reviewed: [Moxfield public feature guide](https://github.com/moxfield/moxfield-public/wiki/Features), [Archidekt product navigation and updates](https://archidekt.com/news), [TappedOut deck help](https://tappedout.net/help-desk/decks/) and [TappedOut inventory and wishlist help](https://tappedout.net/help-desk/ownership/). Product behavior must be revalidated before implementation because competitor capabilities can change.
+
 ---
 
 ## Status And Priorities
 
-| Status | Meaning |
-| --- | --- |
-| **Shipped** | Available in the product and covered by the current test strategy |
-| **In progress** | Partially available or actively being completed |
-| **Next** | High-value work for the next delivery batches |
-| **Later** | Valuable, but not a near-term commitment |
-| **Blocked** | Do not implement until the stated external condition changes |
-| **Parked** | Deliberately deferred; not a product priority right now |
+| Status          | Meaning                                                           |
+| --------------- | ----------------------------------------------------------------- |
+| **Shipped**     | Available in the product and covered by the current test strategy |
+| **In progress** | Partially available or actively being completed                   |
+| **Next**        | High-value work for the next delivery batches                     |
+| **Later**       | Valuable, but not a near-term commitment                          |
+| **Blocked**     | Do not implement until the stated external condition changes      |
+| **Parked**      | Deliberately deferred; not a product priority right now           |
 
 Priority is expressed as **Now**, **Next** and **Later**. A priority is not a promise of a release date.
 
@@ -123,12 +142,16 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 ### Remaining scope
 
 - [ ] Persist main, sideboard and maybeboard zones as the single database source of truth.
-- [ ] Preserve zone and quantity when changing a card printing.
+- [x] Preserve zone and quantity when changing a card printing.
+- [x] Restore the previous card printing and notify the player when its save fails.
 - [ ] Complete cross-zone drag and drop with clear drop targets and no layout jump.
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
 - [ ] Add keyboard and mobile alternatives for every drag action.
 - [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
+- [x] Organize decks into user-defined folders, with move, filter and bulk-move actions.
+- [x] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
+- [x] Add a required-token and emblem summary derived from the current deck, with export support.
 
 ### Engineering enablers
 
@@ -158,16 +181,18 @@ A user can move a card between every legal zone, reload the page, change its pri
 - Budget constraints, cuts and additions.
 - Per-card reasoning, one-click add and ignore actions.
 - Server-side secrets, validation, rate limiting and prompt-injection protections.
+- Optional player brief covering theme, desired play pattern and dislikes, combined with the existing commander, budget and power target.
+- A small regression set for generated deck structure and recommendation evidence; broader usefulness evaluation remains open.
 
 ### Next slice
 
-- [ ] Conversational brief: commander, theme, play pattern, budget, power target and dislikes.
-- [ ] Structured plan before card generation: gameplan, win conditions, roles and constraints.
-- [ ] Explain every suggestion with evidence: role, synergy, curve, color identity, legality and price.
-- [ ] Offer alternatives by budget, power and play pattern instead of one opaque answer.
-- [ ] Diff a proposed change against the current deck before applying it.
-- [ ] Support "why is this card here?" and "what is the weakest card?" questions.
-- [ ] Add a deterministic post-generation validator; the LLM never decides legality.
+- [x] Conversational brief: commander, theme, play pattern, budget, power target and dislikes.
+- [x] Structured plan before card generation: gameplan, win conditions, roles and constraints.
+- [x] Explain every suggestion with evidence: role, synergy, curve, color identity, legality and price.
+- [x] Offer alternatives by budget, power and play pattern instead of one opaque answer.
+- [x] Diff a proposed change against the current deck before applying it.
+- [x] Support "why is this card here?" and "what is the weakest card?" questions.
+- [x] Add a deterministic post-generation validator; the LLM never decides legality.
 - [ ] Build a small golden evaluation set for valid cards, useful explanations and regression checks.
 
 ### Definition of done
@@ -193,14 +218,15 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - Turn-one playability odds.
 - Combo detection through Commander Spellbook.
 - Budget, missing-card and deck-size warnings.
+- Explanations and next actions for legality warnings.
 
 ### Remaining scope
 
-- [ ] Replace long persistent warning blocks with dismissible, grouped and actionable warnings.
-- [ ] Show the rule or calculation behind each warning on demand.
-- [ ] Separate hard legality errors from strategic suggestions and optional advice.
-- [ ] Add confidence and freshness labels to external recommendations.
-- [ ] Let the player compare analysis before and after a proposed change.
+- [x] Replace long persistent warning blocks with dismissible, grouped and actionable warnings.
+- [x] Show the rule or calculation behind legality warnings on demand.
+- [x] Separate hard legality errors from strategic suggestions and optional advice.
+- [x] Add source and freshness labels to external recommendations.
+- [x] Let the player compare analysis before and after a proposed change.
 - [ ] Keep warning calculations deterministic and independent from AI output.
 
 ### Definition of done
@@ -219,11 +245,12 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 ### Product work
 
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
+  - [x] Abort stalled deck-list requests after 15 seconds so the existing error and retry state can appear.
 - [ ] Use route-level skeletons and cached session/profile data where safe.
 - [ ] Remove React refresh loops, hover jitter, layout shifts and unstable card previews.
-- [ ] Make warning panels collapsible and dismissible, with accessible close controls.
-- [ ] Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
-- [ ] Make card zoom intentional in "View all cards" contexts, not a global hover effect.
+- [x] Make warning panels collapsible and dismissible, with accessible close controls.
+- [x] Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
+- [x] Make card zoom intentional in "View all cards" contexts, not a global hover effect.
 - [ ] Preserve the established dark/light design language while improving hierarchy, spacing and responsive behavior.
 - [ ] Add visual regression coverage for the Deck Editor, banner, warning panel and card hover states.
 
@@ -283,15 +310,33 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Missing-card list, budget checks and shopping list.
 - Basic-land defaults, bulk ownership actions and CSV export.
 - Card prices and multi-format exports.
+- Quantity-aware deck reconciliation that preserves surplus collection copies.
+- Shopping-list prioritization, line totals, copied budget summaries and safe CSV escaping.
+- Bulk collection additions now count each missing printing once across duplicate deck rows.
+- Deck collection summaries allocate owned copies and proxies once per printing, so remaining quantities and costs stay accurate.
+- The deck sidebar no longer offers a misleading Reset action that subtracts shared, globally owned cards; ownership changes are made from collection management.
+- Deck collection and shopping-list totals now distinguish known-price subtotals from missing copies without a price instead of presenting an incomplete zero-dollar estimate.
+- The shopping list supports session-only buy-now versus buy-later choices without mutating deck or collection ownership; buy-now copy and CSV exclude deferred cards.
+- A private, read-only acquisition-plan API aggregates required copies across owned decks and subtracts collection quantities without changing ownership.
+- The collection page now displays that cross-deck acquisition plan on demand, including missing quantities, contributing decks, a known-price subtotal, unpriced-copy disclosure, and refresh/retry states.
+- The cross-deck plan exports a generic CSV of missing quantities with Scryfall printing IDs and known prices; owned copies are excluded.
+- Collection cards now link to private decks using that exact printing, including the deck zone and quantity, without loading usage for every card up front.
+- The collection acquisition plan can focus on one owned deck or all decks, keeping its summary and CSV export scoped to the selected view.
+- The printing selector now puts exact owned editions first and shows combined regular and foil quantities; choosing an edition remains an explicit action.
+- The acquisition plan now shows a known-price subtotal for each missing printing and marks unpriced printings on their own rows.
+- Each missing printing in the acquisition plan now links to the player's contributing decks, so the player can inspect where it is needed.
 
 ### Remaining scope
 
 - [ ] Track the actual owned printing, not only the oracle card.
-- [ ] Prefer owned printings when adding or importing cards.
-- [ ] Reconcile a deck against the collection without mutating ownership accidentally.
+- [ ] Prefer owned printings during direct add and import flows; the shared printing selector now prioritizes owned editions, but automatic import matching remains open.
+- [ ] Complete deck/collection reconciliation without mutating ownership accidentally; the unsafe deck-sidebar Reset action has been removed.
 - [ ] Add region-aware price providers, starting with a clearly selected market.
-- [ ] Support a deliberate "proxy now / buy later" workflow.
+- [ ] Support a persistent "proxy now / buy later" workflow; the shopping-list buy-later choice is currently session-only and does not track proxies.
 - [ ] Consider mobile scanning only after the web data model supports printing-level ownership.
+- [ ] Extend exact-printing usage beyond private decks to saved lists or acquisition plans; deck usage is now visible from the collection.
+- [ ] Add explicit, persistent acquire state; the read-only cross-deck plan is now visible in the collection UI.
+- [ ] Export or deep-link the acquisition plan to supported regional sellers while preserving printing, condition and finish choices.
 
 ### Definition of done
 
@@ -311,14 +356,24 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - Opening hand, London mulligan and goldfishing.
 - Turn phases, life tracking, undo, battlefield, graveyard and exile.
 - Session recording, result history, mulligan data and opponent-strength labels.
+- Player-authored evidence notes and explicit self-reported methodology.
+- Snapshot-linked sessions, a deterministic comparison engine, a private comparison API and an in-product snapshot evidence comparison with cohort-size disclosure and early-signal guidance.
+- Recorded sessions now persist deterministic cards-seen and additional-draw evidence from the goldfish engine for later version analysis.
+- Opening-hand evidence now distinguishes land balance from immediate castability, exposing missing mana colors and dead hands before the mulligan decision.
+- Playtest results can link a separate proposed deck change to the player-authored evidence note, keeping observation and next experiment distinct in history.
+- AI deck suggestions can use the latest private, user-owned playtest observations as bounded anecdotal context, scoped server-side by deck and account.
 
 ### Remaining scope
 
-- [ ] Compare playtest results between deck snapshots.
-- [ ] Surface evidence such as mulligans, missing colors, dead opening hands and turn progression.
-- [ ] Let the player attach a short note to a result and a proposed deck change.
-- [ ] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
-- [ ] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
+- [x] Present playtest comparison between deck snapshots in the product UI.
+- [x] Surface missing-color and dead-opening-hand evidence alongside persisted mulligan and draw-progression signals.
+- [x] Let the player attach a short evidence note to a result.
+- [x] Associate a note with a proposed deck change.
+- [x] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
+- [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
+- [x] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
+- [x] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
+- [x] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
 
 ### Definition of done
 
@@ -340,15 +395,30 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - Community discovery by commander.
 - Ratings, reviews, votes, follows and threaded comments.
 - Deck duplication and snapshots.
+- Side-by-side comparison for two owned decks, including card and summary differences.
 
 ### Remaining scope
 
-- [ ] Compare two public or owned decks side by side.
-- [ ] Fork a public deck with clear attribution and a clean ownership boundary.
-- [ ] Show "why this deck differs" using roles, curve, budget and color identity.
-- [ ] Add moderation and abuse-reporting primitives before opening broader social features.
+- [x] Extend side-by-side comparison from owned decks to public decks.
+- [x] Fork a public deck with clear attribution and a clean ownership boundary.
+- [x] Show "why this deck differs" using curve, budget and color identity.
+- [x] Extend the comparison explanation with card-role differences.
+- [x] Persist authenticated, deduplicated abuse reports for public decks without exposing moderation data publicly.
+- [x] Provide a restricted moderation review queue API with auditable decisions.
+- [x] Add the public-deck report action and moderator review interface before opening broader social features.
 - [ ] Build a lightweight following feed only if discovery data shows repeated use.
-- [ ] Keep private decks and share tokens out of search indexes.
+- [x] Keep private decks and share tokens out of search indexes.
+- [x] Provide a structured primer template covering game plan, mulligans, win conditions, key interactions and budget alternatives.
+- [x] Render published primers with safe Markdown headings, lists and navigation.
+- [x] Add explicit sequencing guidance to the structured primer template.
+- [x] Let an owner mark a public deck as "seeking feedback" and ask a focused question instead of only exposing a generic comment box.
+- [ ] Add in-product notifications for replies, mentions, follows and changes to explicitly watched decks, with per-event controls.
+- [x] Persist private folders for saved public decks without claiming ownership or exposing decks that later become private.
+- [x] Add folder management to the community UI.
+- [ ] Decide whether decks from followed builders should share the saved-deck folder model.
+- [x] Persist reusable community card packages with stable author attribution and private-by-default publishing controls.
+- [x] Preview package additions against deck color identity, singleton and ban rules.
+- [x] Apply a reviewed package diff without silently replacing existing cards.
 
 ### Definition of done
 
@@ -370,12 +440,15 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - Player, event, date, placement and event-level context.
 - Meta snapshots over time.
 - Commander Spellbook combo data.
+- Recommendation source and freshness disclosure.
+- EDHREC recommendation rows disclose validated per-card sample counts when the source provides them.
+- EDHREC feed contract checks reject malformed card lists so a source change does not overwrite reliable cached recommendations with a false empty result.
 
 ### Remaining scope
 
-- [ ] Make the source, timestamp and sample window visible beside every external recommendation.
+- [ ] Complete source, timestamp and sample-window disclosure across every external recommendation surface; EDHREC sample counts are shown where available, but the source does not provide a trustworthy sampling date range.
 - [ ] Separate "popular", "high synergy", "tournament observed" and "AI suggested".
-- [ ] Add source-health telemetry and contract tests for every scraper or external feed.
+- [ ] Add source-health telemetry and contract tests for every scraper or external feed; EDHREC card-list shape now has focused regression coverage.
 - [ ] Add trend views that respect EDHREC top-20 truncation bounds.
 - [ ] Revisit richer tournament statistics only with a source that publishes match-level data.
 
@@ -400,14 +473,23 @@ A recommendation is never presented as universal truth: the user can see where i
 ### Already shipped
 
 - Imports from Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks and EDHREC.
+- Text URL imports recognize partner and Main, Sideboard and Considering headers when the source provides them.
 - Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, ManaBox, MTGGoldfish, EDHREC and plain text.
+- Goldfish and EDHREC plain-list exports keep Sideboard and Considering cards out of the playable main deck.
 - Versioned read-only external API under /api/v1.
+- The URL import preview now discloses Scryfall-unresolved card names before confirmation, alongside names ignored by the source; front-face names of double-faced cards still resolve.
+- Pasted decklists preserve Unicode names, accept commented or colon-terminated section headings, and recognize uppercase set codes without collector numbers. Scryfall lookup also handles copied smart apostrophes.
+- URL imports accept supported addresses without a scheme and preserve zones from count-labelled headings. EDHREC average imports keep distinct cards across categories; previews warn about normalized duplicate lines and commanders repeated in the main list.
 
 ### Remaining scope
 
 - [ ] Treat import/export formats as versioned contracts with fixtures.
-- [ ] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
-- [ ] Improve round-trip fidelity for categories, printings, companions and sideboards.
+- [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
+- [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
+- [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
+- [x] Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
+- [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats.
+  - Import parsing and preview are more resilient, but exact printing and category round trips remain open; preserving a localized name does not guarantee that Scryfall resolves that language.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.
 
@@ -501,8 +583,9 @@ These items remain visible so they are not forgotten, but they are not part of t
 
 # Delivery Rules
 
-- Feature and fix branches target staging.
-- Promotion order is always staging -> dev -> main.
+- Feature and fix branches target `dev`.
+- Promotion order is always `dev` -> `staging` -> `main`.
+- `staging` is the QA alpha candidate; `main` receives only code validated by QA and colleagues.
 - A PR is not ready without typecheck, lint, unit tests, the agreed Docker E2E strategy and SonarCloud verification.
 - Roadmap status changes only when the feature is present in code and its acceptance evidence exists.
 - Product initiatives may be split into small PRs, but their definition of done remains the source of truth.

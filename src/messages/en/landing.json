@@ -11,7 +11,7 @@
     "line2": "Start Winning.",
     "subtitle": "You spend <strong>hours building decks</strong> only to sit across the table and realize three cards don’t synergize, your curve is broken, and you’re missing an answer to the meta.<br></br><strong>There’s a smarter way.</strong>",
     "ctaLoggedIn": "✦ Go to My Decks",
-    "ctaLoggedOut": "✦ Build My First Deck",
+    "ctaLoggedOut": "✦ Build without an account",
     "secondaryCta": "See How It Works",
     "note": "100% free · Commander · Standard · Pioneer · All formats",
     "manaColors": "All mana colors"
@@ -83,7 +83,7 @@
     "heading": "Your Next Win<br></br>Starts <span>Right Here.</span>",
     "subtitle": "Stop second-guessing your card choices. Build the deck you meant to build — and win with it.",
     "ctaLoggedIn": "✦ Go to My Decks",
-    "ctaLoggedOut": "✦ Start Building Now"
+    "ctaLoggedOut": "✦ Build without an account"
   },
   "footer": {
     "privacy": "Privacy",

@@ -43,10 +43,15 @@ export interface PublicDeck {
   readonly targetBracket: number;
   readonly isAIGenerated: boolean;
   readonly isOwner: boolean;
+  readonly seekingFeedback?: boolean;
+  readonly feedbackQuestion?: string | null;
   readonly cards: readonly PublicCard[];
   readonly user: PublicDeckAuthor | null;
   readonly createdAt: string;
   readonly updatedAt: string;
+  readonly forkedFromDeckId?: string | null;
+  readonly forkedFromDeckName?: string | null;
+  readonly forkedFromUserName?: string | null;
 }
 
 /** Fetch a deck for the public deck page, forwarding the viewer's cookies. */

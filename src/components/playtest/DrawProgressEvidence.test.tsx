@@ -40,6 +40,9 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
     battlefield: [],
     graveyard: [],
     exile: [],
+    diceRolls: [],
+    actionLog: [],
+    nextActionId: 1,
     history: [],
     ...overrides,
   };

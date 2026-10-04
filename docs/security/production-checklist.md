@@ -51,15 +51,16 @@ place or tracked in **Follow-ups** below. Companion to the fuller
 
 ## Maintenance
 
-| #   | Item                    | Status | Evidence                                                                                                                       |
-| --- | ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| 19  | Dependencies up to date | ✅ ⚠️  | Dependabot weekly, grouped, majors held for review (`.github/dependabot.yml`). No `pnpm audit` / CodeQL job — see follow-up    |
-| 20  | Auto backup             | ⚠️     | Neon provides point-in-time restore by default; the retention window on this project has **not been verified** — see follow-up |
+| #   | Item                    | Status | Evidence                                                                                                                                                                                                                                                 |
+| --- | ----------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 19  | Dependencies up to date | ✅ ⚠️  | Dependabot weekly, grouped, majors held for review (`.github/dependabot.yml`). CI runs production high-severity and full moderate-severity `pnpm audit`; the 2026-09-26 local production audit found no known vulnerabilities. CodeQL is not configured. |
+| 20  | Auto backup             | ⚠️     | Neon provides point-in-time restore by default; the retention window on this project has **not been verified** — see follow-up                                                                                                                           |
 
 ## Follow-ups (not in this change)
 
 - **Distributed rate limiting (#3).** `src/lib/rate-limit.ts` is an in-process `Map`; each Vercel lambda counts alone. Move to Upstash Redis (or Vercel KV) — small, but needs a provisioned store.
 - **Email verification (#6).** Needs a mail provider (Resend is the obvious fit on Vercel), a verification route and a gate on sign-in. Medium effort; the schema is already there.
 - **Backups (#20).** Open the Neon console, confirm the restore window on the production branch (free tier is 24 h at the time of writing; paid tiers go to 7–30 days), and record it here.
-- **Dependency scanning (#19).** Add a `pnpm audit --prod --audit-level=high` step (or CodeQL) to `ci.yml`.
+- **Static analysis.** Restore SonarCloud access: the configured token returns HTTP 403 before analysis, so the current quality gate is unknown. Consider CodeQL as an independent additional check.
+- **Card package provenance.** Package preview and apply now reverify card metadata against Scryfall rather than trusting package authors; monitor upstream availability because verification fails closed.
 - **CSP nonces.** `script-src` still carries `'unsafe-inline'` because Next.js hydrates through inline scripts. Removing it needs a per-request nonce threaded through middleware and the root layout.

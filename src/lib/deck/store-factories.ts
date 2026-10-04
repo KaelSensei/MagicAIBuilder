@@ -13,35 +13,73 @@ import { DFC_LAYOUTS } from "@/lib/scryfall/types";
 import { getCardImageUri, buildScryfallImageUrl } from "@/lib/scryfall/images";
 import type * as deckApi from "@/lib/db/deck-api";
 
-export function buildCardFaces(sc: ScryfallCard): [CardFace, CardFace] | undefined {
+export function buildCardFaces(
+  sc: ScryfallCard
+): [CardFace, CardFace] | undefined {
   if (!DFC_LAYOUTS.has(sc.layout ?? "")) return undefined;
   const faces = sc.card_faces;
   if (!faces || faces.length < 2) return undefined;
   const [f0, f1] = faces;
   return [
-    { name: f0.name, manaCost: f0.mana_cost ?? "", typeLine: f0.type_line ?? "", oracleText: f0.oracle_text ?? "", imageUri: f0.image_uris?.normal ?? getCardImageUri(sc, "normal", "front"), artCropUri: f0.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop", "front") },
-    { name: f1.name, manaCost: f1.mana_cost ?? "", typeLine: f1.type_line ?? "", oracleText: f1.oracle_text ?? "", imageUri: f1.image_uris?.normal ?? getCardImageUri(sc, "normal", "back"), artCropUri: f1.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop", "back") },
+    {
+      name: f0.name,
+      manaCost: f0.mana_cost ?? "",
+      typeLine: f0.type_line ?? "",
+      oracleText: f0.oracle_text ?? "",
+      imageUri: f0.image_uris?.normal ?? getCardImageUri(sc, "normal", "front"),
+      artCropUri:
+        f0.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop", "front"),
+    },
+    {
+      name: f1.name,
+      manaCost: f1.mana_cost ?? "",
+      typeLine: f1.type_line ?? "",
+      oracleText: f1.oracle_text ?? "",
+      imageUri: f1.image_uris?.normal ?? getCardImageUri(sc, "normal", "back"),
+      artCropUri:
+        f1.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop", "back"),
+    },
   ];
 }
 export function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
   const cardFaces = buildCardFaces(scryfallCard);
   const isDfc = cardFaces !== undefined;
   const manaCost = scryfallCard.mana_cost ?? cardFaces?.[0].manaCost ?? "";
-  const isFlexibleLand = isDfc && scryfallCard.layout === "modal_dfc" && (cardFaces?.[1].typeLine ?? "").toLowerCase().includes("land");
+  const isFlexibleLand =
+    isDfc &&
+    scryfallCard.layout === "modal_dfc" &&
+    (cardFaces?.[1].typeLine ?? "").toLowerCase().includes("land");
   const face0 = scryfallCard.card_faces?.[0];
   const power = (face0?.power ?? scryfallCard.power ?? null) || null;
-  const toughness = (face0?.toughness ?? scryfallCard.toughness ?? null) || null;
+  const toughness =
+    (face0?.toughness ?? scryfallCard.toughness ?? null) || null;
   return {
-    id: scryfallCard.id, name: scryfallCard.name, manaCost, cmc: scryfallCard.cmc,
-    typeLine: scryfallCard.type_line, oracleText: scryfallCard.oracle_text ?? cardFaces?.[0].oracleText ?? "",
-    colorIdentity: scryfallCard.color_identity, isGameChanger: false, isBanned: false,
-    price: scryfallCard.prices?.usd ? Number.parseFloat(scryfallCard.prices.usd) : null,
-    imageUri: cardFaces?.[0].imageUri ?? getCardImageUri(scryfallCard, "normal"),
-    artCropUri: cardFaces?.[0].artCropUri ?? getCardImageUri(scryfallCard, "art_crop"),
-    category: isDfc ? categorizeDfcCard(scryfallCard) : categorizeCard(scryfallCard),
+    id: scryfallCard.id,
+    name: scryfallCard.name,
+    manaCost,
+    cmc: scryfallCard.cmc,
+    typeLine: scryfallCard.type_line,
+    oracleText: scryfallCard.oracle_text ?? cardFaces?.[0].oracleText ?? "",
+    colorIdentity: scryfallCard.color_identity,
+    isGameChanger: false,
+    isBanned: false,
+    price: scryfallCard.prices?.usd
+      ? Number.parseFloat(scryfallCard.prices.usd)
+      : null,
+    imageUri:
+      cardFaces?.[0].imageUri ?? getCardImageUri(scryfallCard, "normal"),
+    artCropUri:
+      cardFaces?.[0].artCropUri ?? getCardImageUri(scryfallCard, "art_crop"),
+    category: isDfc
+      ? categorizeDfcCard(scryfallCard)
+      : categorizeCard(scryfallCard),
     power,
     toughness,
-    quantity: 1, zone: "main", layout: scryfallCard.layout, cardFaces, isFlexibleLand,
+    quantity: 1,
+    zone: "main",
+    layout: scryfallCard.layout,
+    cardFaces,
+    isFlexibleLand,
   };
 }
 
@@ -50,21 +88,51 @@ export function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
  * DFC cards have names like "Front Name // Back Name" and their images
  * can be fetched via Scryfall's front/back face URLs using the scryfallId.
  */
-function rebuildCardFaces(scryfallId: string, name: string, typeLine: string, manaCost: string, oracleText: string): [CardFace, CardFace] | undefined {
+function rebuildCardFaces(
+  scryfallId: string,
+  name: string,
+  typeLine: string,
+  manaCost: string,
+  oracleText: string
+): [CardFace, CardFace] | undefined {
   if (!name.includes(" // ")) return undefined;
   const [frontName, backName] = name.split(" // ");
-  const [frontType, backType] = typeLine.includes(" // ") ? typeLine.split(" // ") : [typeLine, ""];
-  const [frontOracle, backOracle] = oracleText.includes(" // ") ? oracleText.split(" // ") : [oracleText, ""];
-  const [frontMana, backMana] = manaCost.includes(" // ") ? manaCost.split(" // ") : [manaCost, ""];
+  const [frontType, backType] = typeLine.includes(" // ")
+    ? typeLine.split(" // ")
+    : [typeLine, ""];
+  const [frontOracle, backOracle] = oracleText.includes(" // ")
+    ? oracleText.split(" // ")
+    : [oracleText, ""];
+  const [frontMana, backMana] = manaCost.includes(" // ")
+    ? manaCost.split(" // ")
+    : [manaCost, ""];
   return [
-    { name: frontName, manaCost: frontMana, typeLine: frontType, oracleText: frontOracle, imageUri: buildScryfallImageUrl(scryfallId, "normal", "front"), artCropUri: buildScryfallImageUrl(scryfallId, "art_crop", "front") },
-    { name: backName, manaCost: backMana, typeLine: backType, oracleText: backOracle, imageUri: buildScryfallImageUrl(scryfallId, "normal", "back"), artCropUri: buildScryfallImageUrl(scryfallId, "art_crop", "back") },
+    {
+      name: frontName,
+      manaCost: frontMana,
+      typeLine: frontType,
+      oracleText: frontOracle,
+      imageUri: buildScryfallImageUrl(scryfallId, "normal", "front"),
+      artCropUri: buildScryfallImageUrl(scryfallId, "art_crop", "front"),
+    },
+    {
+      name: backName,
+      manaCost: backMana,
+      typeLine: backType,
+      oracleText: backOracle,
+      imageUri: buildScryfallImageUrl(scryfallId, "normal", "back"),
+      artCropUri: buildScryfallImageUrl(scryfallId, "art_crop", "back"),
+    },
   ];
 }
 
 /** Displays a toast warning when a Game Changer card is added to the deck. */
 
-export function createEmptyDeck(id: string, name: string, format: Deck["format"] = "commander"): Deck {
+export function createEmptyDeck(
+  id: string,
+  name: string,
+  format: Deck["format"] = "commander"
+): Deck {
   return {
     id,
     name,
@@ -99,17 +167,31 @@ export function createEmptyDeck(id: string, name: string, format: Deck["format"]
  */
 export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
   const allCards = d.cards ?? [];
-  const commanderCard = allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
+  const commanderCard =
+    allCards.find((c) => c.isCommander && !c.isPartner) ?? null;
   const rawPartnerCard = allCards.find((c) => c.isPartner) ?? null;
-  const partnerCard = (rawPartnerCard && rawPartnerCard.name !== commanderCard?.name)
-    ? rawPartnerCard
-    : null;
-  const companionCard = allCards.find((c) => !c.isCommander && !c.isPartner && c.category === "companion") ?? null;
-  const deckCards = allCards.filter((c) => !c.isCommander && !c.isPartner && c.category !== "companion");
+  const partnerCard =
+    rawPartnerCard && rawPartnerCard.name !== commanderCard?.name
+      ? rawPartnerCard
+      : null;
+  const companionCard =
+    allCards.find(
+      (c) => !c.isCommander && !c.isPartner && c.category === "companion"
+    ) ?? null;
+  const deckCards = allCards.filter(
+    (c) => !c.isCommander && !c.isPartner && c.category !== "companion"
+  );
 
   const toDeckCard = (c: deckApi.ApiDeckCard): DeckCard => {
-    const cardFaces = rebuildCardFaces(c.scryfallId, c.name, c.typeLine, c.manaCost, c.oracleText);
-    const isFlexibleLand = cardFaces?.[1].typeLine.toLowerCase().includes("land") ?? false;
+    const cardFaces = rebuildCardFaces(
+      c.scryfallId,
+      c.name,
+      c.typeLine,
+      c.manaCost,
+      c.oracleText
+    );
+    const isFlexibleLand =
+      cardFaces?.[1].typeLine.toLowerCase().includes("land") ?? false;
     return {
       id: c.id,
       scryfallId: c.scryfallId,
@@ -142,6 +224,7 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
   return {
     id: d.id,
     name: d.name,
+    folderId: d.folderId ?? null,
     format: d.format,
     targetBracket: d.targetBracket,
     manualBracket: (d.manualBracket ?? null) as 1 | 2 | 3 | 4 | null,
@@ -158,7 +241,9 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     pairingType: d.pairingType ?? "none",
     cards: deckCards.map(toDeckCard),
     cardCount,
-    maybeboard: deckCards.filter((c) => (c.zone ?? "main") === "maybeboard").map(toDeckCard),
+    maybeboard: deckCards
+      .filter((c) => (c.zone ?? "main") === "maybeboard")
+      .map(toDeckCard),
     createdAt: new Date(d.createdAt),
     updatedAt: new Date(d.updatedAt),
   };

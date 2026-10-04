@@ -44,6 +44,34 @@ describe("parseTextDecklist", () => {
     expect(result.partner).toBe("Tymna the Weaver");
   });
 
+  it("parses a dedicated partner section instead of adding the partner to the deck", () => {
+    const result = parseTextDecklist("Commander\n1 Thrasios\nPartner\n1 Tymna\nDeck\n1 Sol Ring");
+    expect(result.partner).toBe("Tymna");
+    expect(result.cards).toEqual([{ name: "Sol Ring", quantity: 1 }]);
+  });
+
+  it("parses a companion section separately from the main deck", () => {
+    const result = parseTextDecklist("Companion\n1 Lurrus of the Dream-Den\nDeck\n1 Mishra's Bauble");
+    expect(result.companion).toBe("Lurrus of the Dream-Den");
+    expect(result.cards).toEqual([{ name: "Mishra's Bauble", quantity: 1 }]);
+  });
+
+  it("preserves sideboard quantity and zone", () => {
+    const result = parseTextDecklist("Deck\n1 Sol Ring\nSideboard\n3 Negate");
+    expect(result.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Negate", quantity: 3, zone: "sideboard" },
+    ]);
+  });
+
+  it("preserves considering quantity and zone", () => {
+    const result = parseTextDecklist("Deck\n1 Sol Ring\nConsidering\n2 Counterspell");
+    expect(result.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Counterspell", quantity: 2, zone: "maybeboard" },
+    ]);
+  });
+
   it("ignores comment lines starting with //", () => {
     const result = parseTextDecklist("// this is a comment\n4 Lightning Bolt");
     expect(result.cards).toHaveLength(1);
@@ -54,14 +82,53 @@ describe("parseTextDecklist", () => {
     expect(result.cards).toHaveLength(1);
   });
 
+  it("uses commented section headings without treating ordinary comments as cards", () => {
+    const result = parseTextDecklist([
+      "// Commander",
+      "1 Atraxa, Praetors' Voice",
+      "# Deck",
+      "1 Sol Ring",
+      "// Sideboard",
+      "2 Negate",
+      "# note: this is not a card",
+    ].join("\n"));
+
+    expect(result.commander).toBe("Atraxa, Praetors' Voice");
+    expect(result.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Negate", quantity: 2, zone: "sideboard" },
+    ]);
+  });
+
   it("strips set code from card name", () => {
     const result = parseTextDecklist("1 Lightning Bolt (M11) 150");
     expect(result.cards[0].name).toBe("Lightning Bolt");
   });
 
+  it("strips a standalone uppercase set code but keeps normal parenthetical text", () => {
+    const result = parseTextDecklist("1 Sol Ring (C21)\n1 Test Card (custom)");
+    expect(result.cards.map((card) => card.name)).toEqual([
+      "Sol Ring",
+      "Test Card (custom)",
+    ]);
+  });
+
   it("strips HTML tags from card name", () => {
     const result = parseTextDecklist("1 <b>Sol Ring</b>");
     expect(result.cards[0].name).toBe("Sol Ring");
+  });
+
+  it("preserves localized card names and Unicode punctuation", () => {
+    const result = parseTextDecklist("1 渦まく知識\n1 Astarion’s Thirst");
+    expect(result.cards.map((card) => card.name)).toEqual([
+      "渦まく知識",
+      "Astarion’s Thirst",
+    ]);
+  });
+
+  it("removes invisible control characters from localized names", () => {
+    const result = parseTextDecklist("1 渦ま\u200bく知識\u0000");
+    expect(result.cards[0].name).toBe("渦まく知識");
   });
 
   it("clamps quantity above 99 to 99", () => {
@@ -96,6 +163,26 @@ describe("parseTextDecklist", () => {
     const text = "Commander\n1 Atraxa\n\nMainboard\n3 Counterspell";
     const result = parseTextDecklist(text);
     expect(result.cards[0].name).toBe("Counterspell");
+  });
+
+  it("recognizes colon-terminated section headings and counted headings", () => {
+    const result = parseTextDecklist([
+      "Commander:",
+      "1 Atraxa, Praetors' Voice",
+      "Deck:",
+      "1 Sol Ring",
+      "Sideboard (2):",
+      "2 Negate",
+      "Considering:",
+      "1 Ponder",
+    ].join("\n"));
+
+    expect(result.commander).toBe("Atraxa, Praetors' Voice");
+    expect(result.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Negate", quantity: 2, zone: "sideboard" },
+      { name: "Ponder", quantity: 1, zone: "maybeboard" },
+    ]);
   });
 
   it("limits to 500 lines", () => {
@@ -184,5 +271,23 @@ describe("exportToText", () => {
     expect(result).toContain("Deck");
     expect(result).not.toContain("Commander");
     expect(result).not.toContain("Partner");
+  });
+
+  it("round-trips partner, companion and secondary zones", () => {
+    const text = exportToText(
+      makeCard("Thrasios"),
+      makeCard("Tymna"),
+      [makeCard("Sol Ring"), { ...makeCard("Negate", 3), zone: "sideboard" }, { ...makeCard("Counterspell", 2), zone: "maybeboard" }],
+      makeCard("Lurrus of the Dream-Den")
+    );
+    const parsed = parseTextDecklist(text);
+    expect(parsed.commander).toBe("Thrasios");
+    expect(parsed.partner).toBe("Tymna");
+    expect(parsed.companion).toBe("Lurrus of the Dream-Den");
+    expect(parsed.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Negate", quantity: 3, zone: "sideboard" },
+      { name: "Counterspell", quantity: 2, zone: "maybeboard" },
+    ]);
   });
 });

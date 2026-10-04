@@ -1,5 +1,33 @@
 {
   "title": "My Collection",
+  "usage": {
+    "trigger": "Decks",
+    "title": "Decks using {name}",
+    "description": "Only this exact printing in your private decks is shown.",
+    "loading": "Loading deck usage…",
+    "error": "Could not load deck usage.",
+    "retry": "Try again",
+    "empty": "No deck uses this printing yet.",
+    "main": "Main deck",
+    "sideboard": "Sideboard",
+    "maybeboard": "Considering",
+    "copies": "{count, plural, one {# copy} other {# copies}}"
+  },
+  "acquisitionPlan": {
+    "title": "Acquisition plan",
+    "description": "Copies needed across all decks or one selected deck after counting your collection. Estimated prices; ownership is unchanged.",
+    "deckFilterLabel": "Deck for acquisition plan",
+    "allDecks": "All decks",
+    "loading": "Loading acquisition plan…",
+    "error": "Could not load the acquisition plan.",
+    "retry": "Try again",
+    "refresh": "Refresh plan",
+    "noDecks": "Create a deck to start a purchase plan.",
+    "complete": "All cards needed for these decks are in your collection.",
+    "summary": "{count} to acquire across {decks} decks · Known-price subtotal: {cost}",
+    "unpriced": "Price unavailable for {count, plural, one {# copy} other {# copies}}",
+    "toAcquire": "{count} to acquire"
+  },
   "loading": "Loading collection…",
   "stats": {
     "uniqueCards": "Unique Cards",
@@ -8,6 +36,7 @@
   },
   "searchPlaceholder": "Search your collection…",
   "actions": {
+    "manage": "Gerenciar coleção",
     "copyText": "Copy collection as text",
     "copy": "Copy",
     "copied": "Copied!",
