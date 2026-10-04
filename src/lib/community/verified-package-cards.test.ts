@@ -9,6 +9,40 @@ import { previewCardPackage } from "./card-package-preview";
 describe("verifyPackageCards", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it.each([0, 1])("blocks restricted copies above one with %i existing copies", async (existingQuantity) => {
+    getCardCollection.mockResolvedValue({ data: [{
+      id: "restricted", name: "Restricted Spell", color_identity: [],
+      type_line: "Artifact", legalities: { vintage: "restricted" },
+    }], not_found: [] });
+    const cards = await verifyPackageCards([{
+      scryfallId: "restricted", name: "Restricted Spell", quantity: 2 - existingQuantity,
+      colorIdentity: [], isBanned: false, isBasicLand: false,
+    }], "vintage");
+    const preview = previewCardPackage(cards, {
+      format: "vintage", commanderColorIdentity: [], existingCards: existingQuantity === 0 ? [] : [
+        { name: "Restricted Spell", quantity: existingQuantity, isBasicLand: false },
+      ],
+    });
+    expect(preview.cards[0]?.status).toBe("blocked");
+    expect(preview.cards[0]?.issues).toContainEqual({
+      kind: "copyLimit", message: "Restricted Spell exceeds the 1-copy limit",
+    });
+  });
+
+  it("allows one canonical restricted card without treating it as banned", async () => {
+    getCardCollection.mockResolvedValue({ data: [{
+      id: "restricted", name: "Restricted Spell", color_identity: [],
+      type_line: "Artifact", legalities: { vintage: "restricted" },
+    }], not_found: [] });
+    const cards = await verifyPackageCards([{
+      scryfallId: "restricted", name: "Restricted Spell", quantity: 1,
+      colorIdentity: [], isBanned: true, isBasicLand: false,
+    }], "vintage");
+    expect(previewCardPackage(cards, {
+      format: "vintage", commanderColorIdentity: [], existingCards: [],
+    }).cards[0]?.status).toBe("ready");
+  });
+
   it("uses canonical Oracle text to allow multiple copies in a singleton package", async () => {
     getCardCollection.mockResolvedValue({ data: [{
       id: "rats", name: "Relentless Rats", color_identity: ["B"],
