@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Bounded user initialization body loading
+
+#### Fixed
+
+- The eight-second user initialization deadline now includes response-body consumption and JSON validation. Receiving headers no longer disables the timeout while onboarding and collection data are still loading. Request deduplication remains user-scoped; database latency is not changed.
+
+#### Validation
+
+- The streaming-body regression test failed before implementation. All 2,968 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Docker E2E remains deferred.
+
 ### 2026-10-04: Archidekt mainboard scope
 
 #### Fixed
