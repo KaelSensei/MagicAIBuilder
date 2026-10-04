@@ -125,9 +125,10 @@ export function exportArchidekt(deck: Deck): string {
     if (deck.partner) lines.push(`1x ${deck.partner.name} [Commander{top}]`);
     lines.push("");
   }
-  const mainCount = deck.cards.reduce((s, c) => s + c.quantity, 0);
+  const mainCards = deck.cards.filter((card) => card.zone === "main");
+  const mainCount = mainCards.reduce((s, c) => s + c.quantity, 0);
   lines.push(`Mainboard (${mainCount})`);
-  for (const card of deck.cards) {
+  for (const card of mainCards) {
     lines.push(`${card.quantity}x ${card.name} ${archidektCategoryTag(card.category)}`);
   }
   return lines.join("\n");
