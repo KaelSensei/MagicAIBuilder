@@ -185,7 +185,9 @@ function diffSnapshots(
  * Compare the newest snapshot against the oldest one inside `windowDays`.
  *
  * Returns `null` when there is nothing to compare — fewer than two snapshots,
- * or only one distinct day inside the window. A one-snapshot commander is the
+ * only one distinct day inside the window, or an empty comparison endpoint.
+ * An empty list has no measured cut-off and cannot establish a trend bound.
+ * A one-snapshot commander is the
  * normal state of a freshly recorded commander, not an error: history accrues
  * from ordinary traffic, so the first visit can only ever establish a baseline.
  *
@@ -217,6 +219,8 @@ export function computeMetaShifts(
   if (!baseline || baseline.capturedOn.getTime() >= current.capturedOn.getTime()) {
     return null;
   }
+
+  if (baseline.cards.length === 0 || current.cards.length === 0) return null;
 
   const shifts = diffSnapshots(baseline, current).toSorted(
     (a, b) => shiftMagnitude(b) - shiftMagnitude(a) || a.name.localeCompare(b.name)
