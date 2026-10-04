@@ -35,4 +35,29 @@ describe("POST /api/import/moxfield-user", () => {
     expect(response.status).toBe(200);
     expect(fetchMoxfieldUserDecks).toHaveBeenCalledWith("totoro", 2);
   });
+
+  it("limits public profile imports per client before calling Moxfield", async () => {
+    vi.mocked(fetchMoxfieldUserDecks).mockResolvedValue({
+      decks: [],
+      total: 0,
+      hasMore: false,
+    });
+
+    const request = (ip: string) =>
+      new Request("http://localhost/api/import/moxfield-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-real-ip": ip },
+        body: JSON.stringify({ username: "totoro" }),
+      });
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+      expect((await POST(request("203.0.113.42"))).status).toBe(200);
+    }
+
+    const blocked = await POST(request("203.0.113.42"));
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get("Retry-After")).toBe("60");
+    expect(fetchMoxfieldUserDecks).toHaveBeenCalledTimes(10);
+    expect((await POST(request("203.0.113.43"))).status).toBe(200);
+  });
 });
