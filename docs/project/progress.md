@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Archidekt exports no longer promote Sideboard or Considering cards into Mainboard or inflate its count. Commander, partner and category tags remain unchanged. The regression test failed before implementation; all 2,967 unit tests, TypeScript, lint and production build passed on the personal VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Dedicated Archidekt secondary-zone export remains open. Docker E2E remains deferred.
+
 - The EDHREC missing-card filter now announces when all popular cards are already in the deck instead of displaying a blank panel. Removing the filter restores the list. The component regression test failed before the fix; 2,966 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
 
 - EDHREC popular-card recommendations now rank the top 20 by observed inclusion across source categories instead of taking the first category's entries. The regression test failed before implementation; all 2,965 unit tests, TypeScript, lint and production build passed on the personal VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud returned HTTP 403 before analysis; Docker E2E was not run. High-synergy recommendations remain a separate roadmap item.
