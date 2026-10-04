@@ -81,9 +81,10 @@ export function previewCardPackage(
         ? { kind: "singleton", message: `${card.name} exceeds the singleton limit` }
         : { kind: "copyLimit", message: `${card.name} exceeds the ${limit}-copy limit` });
     }
-    quantities.set(card.name, quantity);
-
-    if (issues.length === 0) readyCount += 1;
+    if (issues.length === 0) {
+      quantities.set(card.name, quantity);
+      readyCount += 1;
+    }
     previews.push({
       scryfallId: card.scryfallId,
       name: card.name,
