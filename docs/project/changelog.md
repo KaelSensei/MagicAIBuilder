@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: EDHREC popularity ranking
+
+#### Changed
+
+- The commander meta panel's twenty popular cards are now selected by observed inclusion across EDHREC categories, not by category order.
+
+#### Validation
+
+- The cross-category ranking test failed before implementation. All 2,965 unit tests, TypeScript, lint and production build passed on the personal VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud returned HTTP 403 before analysis and Docker E2E was not run.
+
 ### 2026-10-03: Browser-persistent shopping choices
 
 #### Added
