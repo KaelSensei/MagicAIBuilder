@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Downloaded plain-text imports recognize colon-terminated sections, including counted and commented headings (#844), preserving commander, partner, Sideboard and Considering roles. Both regressions failed before implementation; all 2,988 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. Printing resolution and external category fidelity remain open.
+
 - Simple and full deck CSV exports now retain Scryfall printing IDs and application categories in trailing columns (#842). Missing printing IDs stay blank, never replaced with internal IDs. Both regressions failed before implementation; all 2,986 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. CSV reimport and external-tool category mapping remain open.
 
 - Simple and full deck CSV exports include each card's zone in a trailing column (#840). Existing columns, quantities and export scope are unchanged; CSV reimport and command-zone rows are not added. Both regression tests failed before implementation; all 2,984 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
