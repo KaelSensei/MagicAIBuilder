@@ -9,6 +9,106 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Verified Oracle copy exceptions in card packages
+
+#### Fixed
+
+- Package preview and application reuse the existing multiple-copy policy with canonical Oracle text from Scryfall (#854). Stored author metadata cannot grant an exception; absent Oracle text falls back to existing format limits. The existing 99-copy policy ceiling is unchanged.
+
+#### Validation
+
+- The canonical-exception regression failed before implementation; the forged-metadata regression passed. All 11 focused tests and all 2,998 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-04: Format copy limits in card packages
+
+#### Fixed
+
+- Package preview and application enforce existing non-singleton format copy limits, counting existing deck copies and package printings together (#852). Basic lands and named capped-copy exceptions retain their existing behavior; Oracle-text unlimited-copy exceptions remain separate scope.
+
+#### Validation
+
+- Both new regressions failed before implementation. All seven package tests and all 2,996 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-04: Capped multiples in card packages
+
+#### Fixed
+
+- Reusable card packages honor existing named capped-copy exceptions in singleton formats, combining existing deck quantities and package quantities across printings (#850). Ordinary singleton, basic-land, banned-card and color-identity checks remain in place. Oracle-text unlimited-copy exceptions and non-singleton copy limits are outside this increment.
+
+#### Validation
+
+- Both regressions failed before implementation. All five package tests and all 2,994 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Grouped missing-card import warnings
+
+#### Fixed
+
+- URL import previews show each normalized missing name once, grouping variations in case, whitespace and apostrophes while preserving the first spelling (#848). Imported rows, quantities and zones are unchanged.
+
+#### Validation
+
+- The focused regression failed before implementation. All six preview tests and all 2,992 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Carriage returns in CSV fields
+
+#### Fixed
+
+- Deck CSV exports quote carriage returns in card names and metadata, preserving their contents without breaking records (#846). The schema is unchanged; spreadsheet-client import remains unverified.
+
+#### Validation
+
+- Three regressions failed before implementation. All 24 export tests and all 2,991 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Colon-terminated import sections
+
+#### Fixed
+
+- Downloaded plain-text imports preserve commander, partner and secondary zones when section headings end with a colon, including headings with counts or comment prefixes (#844).
+
+#### Validation
+
+- Both regressions failed before implementation. All 23 parser tests and all 2,988 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Printing and category metadata in CSV
+
+#### Added
+
+- Simple and full deck CSV exports append Scryfall ID and Category columns (#842), preserving selected editions and application categories. Unknown printing IDs remain blank. CSV reimport and external-tool category mapping are not added.
+
+#### Validation
+
+- Both focused regressions failed before implementation. All 21 export tests and all 2,986 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Card zones in CSV exports
+
+#### Added
+
+- Simple and full deck CSV exports include a trailing Zone column with main, sideboard and maybeboard values (#840). Existing column positions and export scope are unchanged. CSV reimport and command-zone rows remain separate scope.
+
+#### Validation
+
+- Both focused regressions failed before implementation. All 19 export tests and all 2,984 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Quantity-aware exported statistics
+
+#### Fixed
+
+- Exported card totals and type percentages count physical copies instead of distinct rows (#838). Existing export scope and total-price behavior are preserved.
+
+#### Validation
+
+- Both focused regressions failed before implementation. All 17 export tests and all 2,982 unit tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Portable decklist line endings
+
+#### Fixed
+
+- Downloaded plain-text imports recognize CR, CRLF and LF line endings while preserving commander, quantities, sideboard and Considering zones (#836).
+
+#### Validation
+
+- The CR-separated regression failed before implementation. All 21 parser tests and all 2,980 unit tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
 ### 2026-10-04: Stable meta history responses
 
 #### Fixed

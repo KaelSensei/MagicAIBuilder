@@ -83,12 +83,13 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
   const cards: UrlImportCard[] = [];
   let section: "main" | "sideboard" | "maybeboard" | "commander" | "partner" = "main";
 
-  for (const rawLine of text.split("\n").slice(0, 500)) {
+  for (const rawLine of text.split(/\r\n|\r|\n/).slice(0, 500)) {
     const line = rawLine.trim();
     if (!line) continue;
     const isComment = line.startsWith("//") || line.startsWith("#");
     const heading = (isComment ? line.replace(/^[/#]+/, "").trim() : line)
       .toLowerCase()
+      .replace(/:$/, "")
       .replace(/\s{0,4}\(\d{1,3}\)$/, "");
     if (heading === "commander" || heading === "partner" || heading === "sideboard") {
       section = heading;

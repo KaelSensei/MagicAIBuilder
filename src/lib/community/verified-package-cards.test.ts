@@ -4,9 +4,47 @@ const getCardCollection = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/scryfall/client", () => ({ getCardCollection }));
 
 import { verifyPackageCards } from "./verified-package-cards";
+import { previewCardPackage } from "./card-package-preview";
 
 describe("verifyPackageCards", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("uses canonical Oracle text to allow multiple copies in a singleton package", async () => {
+    getCardCollection.mockResolvedValue({ data: [{
+      id: "rats", name: "Relentless Rats", color_identity: ["B"],
+      type_line: "Creature", oracle_text: "A deck can have any number of cards named Relentless Rats.",
+      legalities: { commander: "legal" },
+    }], not_found: [] });
+    const cards = await verifyPackageCards([{
+      scryfallId: "rats", name: "Relentless Rats", quantity: 20,
+      colorIdentity: ["B"], isBanned: false, isBasicLand: false,
+    }], "commander");
+    const preview = previewCardPackage(cards, {
+      format: "commander", commanderColorIdentity: ["B"], existingCards: [],
+    });
+    expect(preview.cards[0]?.status).toBe("ready");
+    expect(preview.cards[0]?.quantity).toBe(20);
+  });
+
+  it("ignores forged stored Oracle exceptions when checking copy limits", async () => {
+    getCardCollection.mockResolvedValue({ data: [{
+      id: "spell", name: "Counterspell", color_identity: ["U"],
+      type_line: "Instant", oracle_text: "Counter target spell.",
+      legalities: { commander: "legal" },
+    }], not_found: [] });
+    const forgedCard = {
+      scryfallId: "spell", name: "Counterspell", quantity: 2,
+      colorIdentity: ["U"], isBanned: false, isBasicLand: false,
+      oracleText: "A deck can have any number of cards named Counterspell.",
+    };
+    const cards = await verifyPackageCards([forgedCard], "commander");
+    const preview = previewCardPackage(cards, {
+      format: "commander", commanderColorIdentity: ["U"], existingCards: [],
+    });
+    expect(preview.cards[0]?.issues).toContainEqual({
+      kind: "singleton", message: "Counterspell exceeds the singleton limit",
+    });
+  });
 
   it("replaces forged package metadata with canonical card data", async () => {
     getCardCollection.mockResolvedValue({ data: [{
@@ -22,6 +60,7 @@ describe("verifyPackageCards", () => {
 
     expect(cards).toEqual([{
       scryfallId: "real-id", name: "Red Spell", quantity: 2,
+      oracleText: "",
       colorIdentity: ["R"], isBanned: true, isBasicLand: false,
       imageUri: "https://cards.scryfall.io/red.jpg",
     }]);

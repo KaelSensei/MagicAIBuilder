@@ -151,6 +151,9 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
 - [x] Organize decks into user-defined folders, with move, filter and bulk-move actions.
 - [x] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
+- [x] Honor existing named capped-copy exceptions in singleton card packages, counting existing copies and quantities across printings (#850).
+- [x] Apply existing format copy limits to non-singleton card packages, combining deck and package quantities across printings (#852).
+- [x] Honor Oracle-text multiple-copy exceptions in packages using canonical Scryfall data, never stored author metadata (#854). The existing policy ceiling of 99 copies remains unchanged.
 - [x] Add a required-token and emblem summary derived from the current deck, with export support.
 
 ### Engineering enablers
@@ -214,6 +217,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - Banlist and Game Changers detection.
 - Bracket scoring across six dimensions.
 - Mana curve, color distribution and format-specific statistics.
+- Exported statistics count card copies, not distinct rows, including type percentages (#838); the existing export scope is unchanged.
 - Mana alignment and per-color land recommendations.
 - Turn-one playability odds.
 - Combo detection through Commander Spellbook.
@@ -481,6 +485,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - Imports from Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks and EDHREC.
 - Plain-text exports mark every card-note line with an explicit comment prefix, so multiline notes and reserved section names cannot introduce cards or change zones during reimport. Notes remain readable in the export; note rehydration remains separate scope.
 - Text URL imports recognize partner and Main, Sideboard and Considering headers when the source provides them.
+- Downloaded text lists also recognize colon-terminated section headings, including counted and commented headings, without losing commander, partner or secondary zones (#844).
 - Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, ManaBox, MTGGoldfish, EDHREC and plain text.
 - Goldfish and EDHREC plain-list exports keep Sideboard and Considering cards out of the playable main deck.
 - Archidekt exports now count and list only main-zone cards as Mainboard, preserving commander, partner and category tags. Dedicated secondary-zone Archidekt export remains open.
@@ -488,17 +493,22 @@ A recommendation is never presented as universal truth: the user can see where i
 - The Moxfield text exporter now retains companion, Sideboard and Considering headings instead of flattening zones. Our text parser round trip preserves roles and quantities; live Moxfield comment-header compatibility remains unverified, so external fidelity is still open.
 - Versioned read-only external API under /api/v1.
 - The URL import preview now discloses Scryfall-unresolved card names before confirmation, alongside names ignored by the source; front-face names of double-faced cards still resolve.
+- Missing-name warnings in the URL import preview are grouped across equivalent case, whitespace and apostrophe spellings, preserving the first spelling without merging imported rows or quantities (#848).
 - Pasted decklists preserve Unicode names, accept commented or colon-terminated section headings, and recognize uppercase set codes without collector numbers. Scryfall lookup also handles copied smart apostrophes.
 - URL imports accept supported addresses without a scheme and preserve zones from count-labelled headings. EDHREC average imports keep distinct cards across categories; previews warn about normalized duplicate lines and commanders repeated in the main list.
 
 ### Remaining scope
 
 - [ ] Treat import/export formats as versioned contracts with fixtures.
+  - [x] Quote carriage returns in deck CSV fields so card names and metadata stay within their cells (#846); spreadsheet-client import remains unverified.
+  - [x] Retain printing-specific Scryfall IDs and application categories in simple and full deck CSV exports (#842). Missing printing IDs remain blank; CSV reimport and external category mapping remain open.
+  - [x] Include a trailing Zone column in simple and full deck CSV exports, preserving main, sideboard and maybeboard values without changing existing column positions (#840). CSV reimport and command-zone rows remain separate scope.
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
 - [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
 - [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
 - [x] Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
 - [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats.
+  - [x] Preserve commander, quantities and secondary zones in downloaded plain-text lists using CR, CRLF or LF line endings (#836).
   - Import parsing and preview are more resilient, but exact printing and category round trips remain open; preserving a localized name does not guarantee that Scryfall resolves that language.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.
