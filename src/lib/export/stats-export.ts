@@ -54,7 +54,7 @@ function csvRow(...fields: (string | number | null)[]): string {
 
 // ─── Simple CSV (deck list only) ───────────────────────────────────────────
 export function generateDeckCSV(cards: readonly DeckCard[]): string {
-  const header = csvRow("Card Name", "Qty", "CMC", "Type", "Color Identity", "Price ($USD)", "Zone");
+  const header = csvRow("Card Name", "Qty", "CMC", "Type", "Color Identity", "Price ($USD)", "Zone", "Scryfall ID", "Category");
   const rows = cards.map((c) =>
     csvRow(
       c.name,
@@ -63,7 +63,9 @@ export function generateDeckCSV(cards: readonly DeckCard[]): string {
       c.typeLine.split("—")[0].trim(),
       c.colorIdentity.join("/") || "Colorless",
       c.price === null ? "N/A" : c.price.toFixed(2),
-      c.zone
+      c.zone,
+      c.scryfallId ?? null,
+      c.category
     )
   );
   return [header, ...rows].join("\n");
@@ -83,7 +85,7 @@ export function generateDeckCSVFull(deck: Deck): string {
     csvRow("Tags:", meta.tags.join(", ")),
     "",
     // Deck list
-    csvRow("Card Name", "Qty", "CMC", "Type", "Color Identity", "Price ($USD)", "Zone"),
+    csvRow("Card Name", "Qty", "CMC", "Type", "Color Identity", "Price ($USD)", "Zone", "Scryfall ID", "Category"),
     ...deck.cards.map((c) =>
       csvRow(
         c.name,
@@ -92,7 +94,9 @@ export function generateDeckCSVFull(deck: Deck): string {
         c.typeLine.split("—")[0].trim(),
         c.colorIdentity.join("/") || "Colorless",
         c.price === null ? "N/A" : c.price.toFixed(2),
-        c.zone
+        c.zone,
+        c.scryfallId ?? null,
+        c.category
       )
     ),
     "",
