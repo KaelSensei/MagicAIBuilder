@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Arena companion export
+
+#### Added
+
+- Arena text exports include the selected companion in its dedicated section and exported sideboard, adding one sideboard copy only when absent. Saved deck data and existing quantities remain unchanged; Considering cards remain excluded.
+
+#### Validation
+
+- Both companion contract tests failed before implementation. All 2,970 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Text reimport is covered; live Arena client import remains unverified and Docker E2E remains deferred.
+
 ### 2026-10-04: Bounded user initialization body loading
 
 #### Fixed
