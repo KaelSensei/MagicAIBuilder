@@ -37,6 +37,21 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
 }
 
 // ─── CSV generation ────────────────────────────────────────────────────────
+describe("CSV card zones", () => {
+  it.each(["simple", "full"])("preserves every card zone in the %s export", (format) => {
+    const deck = makeDeck({ cards: [
+      makeCard("main", "Sol Ring"),
+      { ...makeCard("side", "Negate"), quantity: 2, zone: "sideboard" },
+      { ...makeCard("maybe", "Ponder"), zone: "maybeboard" },
+    ] });
+    const csv = format === "simple" ? generateDeckCSV(deck.cards) : generateDeckCSVFull(deck);
+    expect(csv).toContain("Card Name,Qty,CMC,Type,Color Identity,Price ($USD),Zone");
+    expect(csv).toContain("Sol Ring,1,2,Creature,W,5.00,main");
+    expect(csv).toContain("Negate,2,2,Creature,W,5.00,sideboard");
+    expect(csv).toContain("Ponder,1,2,Creature,W,5.00,maybeboard");
+  });
+});
+
 describe("generateDeckCSV", () => {
   it("generates valid CSV with header row", () => {
     const deck = makeDeck();
