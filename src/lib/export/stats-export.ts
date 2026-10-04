@@ -109,16 +109,18 @@ export function generateDeckCSVFull(deck: Deck): string {
 
 // ─── Export metadata ───────────────────────────────────────────────────────
 export function buildExportMetadata(deck: Deck): ExportMetadata {
-  const totalPrice = deck.cards.reduce(
-    (sum, c) => sum + (c.price ?? 0) * c.quantity,
-    0
-  );
+  let totalPrice = 0;
+  let cardCount = 0;
+  for (const card of deck.cards) {
+    totalPrice += (card.price ?? 0) * card.quantity;
+    cardCount += card.quantity;
+  }
 
   return {
     deckName: deck.name,
     commanderName: deck.commander?.name ?? null,
     format: deck.format,
-    cardCount: deck.cards.length,
+    cardCount,
     totalPrice,
     exportDate: new Date().toISOString().split("T")[0],
     tags: deck.tags,
@@ -132,20 +134,21 @@ export function buildTypeBreakdown(cards: readonly DeckCard[]): TypeBreakdown {
   let artifacts = 0;
   let enchantments = 0;
   let spells = 0;
-  const total = cards.length;
+  let total = 0;
 
   for (const card of cards) {
+    total += card.quantity;
     const type = card.typeLine.toLowerCase();
     if (type.includes("creature")) {
-      creatures++;
+      creatures += card.quantity;
     } else if (type.includes("land")) {
-      lands++;
+      lands += card.quantity;
     } else if (type.includes("artifact")) {
-      artifacts++;
+      artifacts += card.quantity;
     } else if (type.includes("enchantment")) {
-      enchantments++;
+      enchantments += card.quantity;
     } else {
-      spells++;
+      spells += card.quantity;
     }
   }
 
