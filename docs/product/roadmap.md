@@ -496,6 +496,7 @@ A recommendation is never presented as universal truth: the user can see where i
 ### Remaining scope
 
 - [ ] Treat import/export formats as versioned contracts with fixtures.
+  - [x] Quote carriage returns in deck CSV fields so card names and metadata stay within their cells (#846); spreadsheet-client import remains unverified.
   - [x] Retain printing-specific Scryfall IDs and application categories in simple and full deck CSV exports (#842). Missing printing IDs remain blank; CSV reimport and external category mapping remain open.
   - [x] Include a trailing Zone column in simple and full deck CSV exports, preserving main, sideboard and maybeboard values without changing existing column positions (#840). CSV reimport and command-zone rows remain separate scope.
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
