@@ -31,9 +31,14 @@ export function exportMoxfield(deck: Deck): string {
   const lines: string[] = [];
   if (deck.commander) { lines.push("// Commander", cardLine(deck.commander), ""); }
   if (deck.partner) { lines.push("// Partner", cardLine(deck.partner), ""); }
+  if (deck.companion) { lines.push("// Companion", cardLine(deck.companion), ""); }
   lines.push("// Deck");
-  for (const card of deck.cards) {
-    lines.push(cardLine(card, card.quantity));
+  for (const zone of ["main", "sideboard", "maybeboard"]) {
+    const zoneCards = deck.cards.filter((card) => card.zone === zone);
+    if (zone !== "main" && zoneCards.length > 0) {
+      lines.push("", zone === "sideboard" ? "// Sideboard" : "// Considering");
+    }
+    for (const card of zoneCards) lines.push(cardLine(card, card.quantity));
   }
   return lines.join("\n");
 }
