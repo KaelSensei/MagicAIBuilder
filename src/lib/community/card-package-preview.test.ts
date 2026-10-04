@@ -8,6 +8,26 @@ const context = {
 };
 
 describe("previewCardPackage", () => {
+  it("allows capped multiples up to their existing card-specific limit", () => {
+    const preview = previewCardPackage([
+      { scryfallId: "dwarves", name: "Seven Dwarves", quantity: 4, colorIdentity: ["R"], isBanned: false, isBasicLand: false },
+    ], { ...context, commanderColorIdentity: ["R"], existingCards: [
+      { name: "Seven Dwarves", quantity: 3, isBasicLand: false },
+    ] });
+    expect(preview.cards[0]?.status).toBe("ready");
+  });
+
+  it("blocks capped multiples once existing and package quantities exceed the cap", () => {
+    const card = { scryfallId: "dwarves", name: "Seven Dwarves", quantity: 3, colorIdentity: ["R"], isBanned: false, isBasicLand: false };
+    const preview = previewCardPackage([card, { ...card, scryfallId: "other-printing" }], {
+      ...context, commanderColorIdentity: ["R"], existingCards: [
+        { name: "Seven Dwarves", quantity: 2, isBasicLand: false },
+      ],
+    });
+    expect(preview.cards[0]?.status).toBe("ready");
+    expect(preview.cards[1]?.issues).toContainEqual({ kind: "copyLimit", message: "Seven Dwarves exceeds the 7-copy limit" });
+  });
+
   it("reports banned, color identity, and singleton violations per card", () => {
     const preview = previewCardPackage(
       [
