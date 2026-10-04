@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Restricted copy limits in card packages
+
+#### Fixed
+
+- Package preview and application limit cards with canonical restricted legality to one copy, including existing deck copies (#859). A single restricted card remains allowed; non-singleton copy-limit errors are distinct from singleton errors. Author-supplied metadata does not determine restricted status.
+
+#### Validation
+
+- Two regressions failed before implementation. All 14 focused tests and all 3,003 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. Rule reference: [Wizards banned and restricted list](https://magic.wizards.com/en/banned-restricted-list).
+
 ### 2026-10-04: Verified Oracle copy exceptions in card packages
 
 #### Fixed
