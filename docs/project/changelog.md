@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Carriage returns in CSV fields
+
+#### Fixed
+
+- Deck CSV exports quote carriage returns in card names and metadata, preserving their contents without breaking records (#846). The schema is unchanged; spreadsheet-client import remains unverified.
+
+#### Validation
+
+- Three regressions failed before implementation. All 24 export tests and all 2,991 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
 ### 2026-10-04: Colon-terminated import sections
 
 #### Fixed
