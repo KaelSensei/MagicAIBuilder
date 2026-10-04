@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-05: Available copy capacity after rejected package rows
+
+#### Fixed
+
+- Package preview and application reserve copies only for ready rows (#863), allowing later valid additions after a rejected oversized or banned row. Existing deck quantities and accepted rows remain cumulative; no copy limits are relaxed.
+
+#### Validation
+
+- Two regressions failed before implementation. All 21 focused tests and all 3,006 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-04: Restricted copy limits in card packages
 
 #### Fixed
