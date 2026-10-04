@@ -20,7 +20,11 @@ export function exportPlainText(deck: Deck): string {
     for (const card of zoneCards) {
       lines.push(cardLine(card, card.quantity));
       const note = card.notes?.trim();
-      if (note) lines.push(`// ${note}`);
+      if (note) {
+        for (const noteLine of note.split(/\r\n|\r|\n/)) {
+          lines.push(`// Note: ${noteLine}`);
+        }
+      }
     }
   }
   return lines.join("\n");

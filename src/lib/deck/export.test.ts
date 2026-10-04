@@ -61,6 +61,26 @@ function makeDeck(overrides: Partial<Deck> = {}): Deck {
 }
 
 describe("exportPlainText", () => {
+  it("keeps every note line commented without introducing cards or zones", () => {
+    const deck = makeDeck({
+      cards: [
+        makeCard("Sol Ring", 1, { notes: "Core ramp\r\nSideboard\n2 Negate\rCommander" }),
+        makeCard("Forest", 5),
+      ],
+    });
+
+    const text = exportPlainText(deck);
+    expect(text).toContain("// Note: Core ramp\n// Note: Sideboard\n// Note: 2 Negate\n// Note: Commander");
+    expect(parseTextDecklist(text)).toMatchObject({
+      commander: null,
+      cards: [
+        { name: "Sol Ring", quantity: 1 },
+        { name: "Forest", quantity: 5 },
+      ],
+      errors: [],
+    });
+  });
+
   it("exports a deck with commander", () => {
     const deck = makeDeck({
       commander: makeCard("Atraxa, Praetor's Voice"),
@@ -98,7 +118,7 @@ describe("exportPlainText", () => {
       cards: [makeCard("Sol Ring", 1, { notes: "Core ramp piece" })],
     });
     const text = exportPlainText(deck);
-    expect(text).toContain("// Core ramp piece");
+    expect(text).toContain("// Note: Core ramp piece");
   });
 
   it("respects quantity", () => {
