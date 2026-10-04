@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Moxfield text export sections
+
+#### Changed
+
+- Preserve companion, Sideboard and Considering sections in the existing Moxfield text export instead of flattening secondary zones into Deck. Commander, partner, quantities and saved deck data remain unchanged.
+
+#### Validation
+
+- The export/import regression failed before implementation. All 2,971 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Our text parser round trip is covered; live Moxfield comment-header compatibility remains unverified. Docker E2E remains deferred.
+
 ### 2026-10-04: Arena companion export
 
 #### Added
