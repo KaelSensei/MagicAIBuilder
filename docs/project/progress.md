@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Meta trends no longer infer inclusion changes from an empty baseline or current snapshot. The existing unavailable-report state is returned because an empty response supplies no observed cutoff. Both regression cases failed before implementation; all 2,972 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Broader trend disclosure remains open; Docker E2E remains deferred.
+
 - The Moxfield text exporter now retains companion and secondary-zone sections without changing saved deck data. A sociable export/import regression failed before implementation and now preserves commander, partner, companion and zone quantities. All 2,971 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Live Moxfield comment-header compatibility remains unverified; Docker E2E remains deferred.
 
 - Arena exports now retain the selected companion and include it in the exported sideboard without adding another copy when already present or mutating the saved deck. The two companion regression tests failed before implementation; text reimport preserves companion metadata and zone quantities. All 2,970 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Live Arena client import remains unverified; Docker E2E remains deferred.
