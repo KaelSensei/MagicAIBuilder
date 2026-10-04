@@ -427,6 +427,7 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [x] Persist reusable community card packages with stable author attribution and private-by-default publishing controls.
 - [x] Preview package additions against deck color identity, singleton and ban rules.
 - [x] Apply a reviewed package diff without silently replacing existing cards.
+- [x] Apply only individually ready package rows, even when a blocked row shares the same printing identifier (#861).
 
 ### Definition of done
 

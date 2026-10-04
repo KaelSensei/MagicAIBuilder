@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Package application now respects each reviewed row instead of admitting all rows sharing a ready Scryfall ID (#861). A blocked duplicate row cannot bypass copy limits through another ready row. The API regression failed before implementation; all 12 package API tests and all 3,004 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 - Card packages enforce a one-copy limit for cards whose canonical Scryfall format legality is restricted (#859), combining package and existing deck quantities without misclassifying a single copy as banned. Two regressions failed before implementation; all 14 focused tests and all 3,003 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
 
 - Card package preview and application now use canonical Scryfall Oracle text for the existing multiple-copy exception policy (#854). Stored author text cannot bypass copy limits; missing Oracle text retains format defaults. The policy ceiling remains 99 copies. The canonical-exception regression failed before implementation; the forged-metadata regression passed. All 11 focused tests and all 2,998 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
