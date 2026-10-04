@@ -70,7 +70,7 @@ describe("exportPlainText", () => {
     });
 
     const text = exportPlainText(deck);
-    expect(text).toContain("// Core ramp\n// Sideboard\n// 2 Negate\n// Commander");
+    expect(text).toContain("// Note: Core ramp\n// Note: Sideboard\n// Note: 2 Negate\n// Note: Commander");
     expect(parseTextDecklist(text)).toMatchObject({
       commander: null,
       cards: [
@@ -118,7 +118,7 @@ describe("exportPlainText", () => {
       cards: [makeCard("Sol Ring", 1, { notes: "Core ramp piece" })],
     });
     const text = exportPlainText(deck);
-    expect(text).toContain("// Core ramp piece");
+    expect(text).toContain("// Note: Core ramp piece");
   });
 
   it("respects quantity", () => {
