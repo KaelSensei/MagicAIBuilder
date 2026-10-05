@@ -78,6 +78,10 @@ Card-note edits appear immediately while saving. If the latest save fails, the
 last successfully saved note is restored and an error asks you to retry. Rapid
 edits of the same card are saved in order rather than racing each other.
 
+When you move several cards between zones in quick succession, the save indicator
+stays active until all pending zone moves finish. A failed move restores the last
+confirmed zone and displays an error so you can retry.
+
 Bulk zone moves recover each card independently: successfully saved cards stay in
 the destination, while a failed card returns to its last confirmed zone and an
 error tells you to retry. Moves of the same card use the existing save queue.
