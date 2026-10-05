@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-05: Resolved-name import duplicate warnings
+
+#### Fixed
+
+- Import previews warn when front-face and full names resolve to the same canonical Scryfall name (#865), without merging rows or changing quantities, zones or the first displayed spelling.
+
+#### Validation
+
+- The regression failed before implementation. All seven focused tests and all 3,007 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-05: Available copy capacity after rejected package rows
 
 #### Fixed
