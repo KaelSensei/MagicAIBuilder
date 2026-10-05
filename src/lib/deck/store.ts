@@ -1306,31 +1306,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   bulkMoveToZone: async (cardIds, zone) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId || cardIds.length === 0) return;
-
-    const idSet = new Set(cardIds);
-    const deck = get().decks[activeDeckId];
-    if (!deck || !cardIds.some((id) => uniqueDeckCards(deck).some((card) => card.id === id && card.zone !== zone))) return;
-
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: setCardsZone(state.decks[activeDeckId], idSet, zone),
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      await Promise.all(
-        cardIds.map((id) => deckApi.updateCardZone(activeDeckId, id, zone))
-      );
-    } catch (err) {
-      logger.error("Unexpected error", "bulkMoveToZone", err);
-    } finally {
-      set({ isSyncing: false });
-    }
+    await Promise.all(cardIds.map((id) => get().moveCardToZone(id, zone)));
   },
 
   bulkRemoveCards: async (cardIds) => {
