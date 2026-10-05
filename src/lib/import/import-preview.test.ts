@@ -22,6 +22,23 @@ const foundCards: ScryfallCard[] = [
 ];
 
 describe("buildImportPreview", () => {
+  it("warns when front-face and full names resolve to the same card", () => {
+    const imported: UrlImportResult = {
+      ...result, ignored: [], cards: [
+        { name: "Fire", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+        { name: "Fire // Ice", quantity: 2, isCommander: false, isPartner: false, zone: "sideboard" },
+      ],
+    };
+    const resolved: ScryfallCard[] = [{
+      id: "fire-ice", name: "Fire // Ice", cmc: 2, type_line: "Instant", color_identity: ["R", "U"],
+    }];
+    const preview = buildImportPreview(imported, resolved);
+    expect(preview.duplicateNames).toEqual(["Fire"]);
+    expect(preview.ignoredNames).toEqual([]);
+    expect(preview.zoneCounts).toEqual({ main: 1, sideboard: 2, maybeboard: 0 });
+    expect(preview.totalQuantity).toBe(3);
+  });
+
   it("reports each unresolved normalized name once, preserving its first spelling", () => {
     const imported: UrlImportResult = {
       ...result,

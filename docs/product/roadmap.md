@@ -428,6 +428,7 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [x] Preview package additions against deck color identity, singleton and ban rules.
 - [x] Apply a reviewed package diff without silently replacing existing cards.
 - [x] Apply only individually ready package rows, even when a blocked row shares the same printing identifier (#861).
+- [x] Reserve package copy capacity only for ready rows, so rejected rows do not prevent later valid additions within the existing limits (#863).
 
 ### Definition of done
 
@@ -488,6 +489,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - Plain-text exports mark every card-note line with an explicit comment prefix, so multiline notes and reserved section names cannot introduce cards or change zones during reimport. Notes remain readable in the export; note rehydration remains separate scope.
 - Text URL imports recognize partner and Main, Sideboard and Considering headers when the source provides them.
 - Downloaded text lists also recognize colon-terminated section headings, including counted and commented headings, without losing commander, partner or secondary zones (#844).
+- Downloaded text lists accept uppercase X quantity markers alongside lowercase x without losing command or secondary zones (#867).
 - Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, ManaBox, MTGGoldfish, EDHREC and plain text.
 - Goldfish and EDHREC plain-list exports keep Sideboard and Considering cards out of the playable main deck.
 - Archidekt exports now count and list only main-zone cards as Mainboard, preserving commander, partner and category tags. Dedicated secondary-zone Archidekt export remains open.
@@ -496,6 +498,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - Versioned read-only external API under /api/v1.
 - The URL import preview now discloses Scryfall-unresolved card names before confirmation, alongside names ignored by the source; front-face names of double-faced cards still resolve.
 - Missing-name warnings in the URL import preview are grouped across equivalent case, whitespace and apostrophe spellings, preserving the first spelling without merging imported rows or quantities (#848).
+- Import duplicate warnings also recognize front-face and full names resolving to the same canonical Scryfall name (#865), preserving first imported spelling, rows, quantities and zones.
 - Pasted decklists preserve Unicode names, accept commented or colon-terminated section headings, and recognize uppercase set codes without collector numbers. Scryfall lookup also handles copied smart apostrophes.
 - URL imports accept supported addresses without a scheme and preserve zones from count-labelled headings. EDHREC average imports keep distinct cards across categories; previews warn about normalized duplicate lines and commanders repeated in the main list.
 

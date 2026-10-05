@@ -19,6 +19,36 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - The API regression failed before implementation. All 12 package API tests and all 3,004 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
 
+### 2026-10-05: Uppercase quantity markers in downloaded lists
+
+#### Fixed
+
+- Downloaded text imports accept uppercase X quantity markers alongside lowercase x (#867), preserving commander and secondary zones. Existing quantity limits and malformed-line handling remain unchanged.
+
+#### Validation
+
+- The regression failed before implementation. All 24 parser tests and all 3,008 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-05: Resolved-name import duplicate warnings
+
+#### Fixed
+
+- Import previews warn when front-face and full names resolve to the same canonical Scryfall name (#865), without merging rows or changing quantities, zones or the first displayed spelling.
+
+#### Validation
+
+- The regression failed before implementation. All seven focused tests and all 3,007 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-05: Available copy capacity after rejected package rows
+
+#### Fixed
+
+- Package preview and application reserve copies only for ready rows (#863), allowing later valid additions after a rejected oversized or banned row. Existing deck quantities and accepted rows remain cumulative; no copy limits are relaxed.
+
+#### Validation
+
+- Two regressions failed before implementation. All 21 focused tests and all 3,006 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-04: Restricted copy limits in card packages
 
 #### Fixed

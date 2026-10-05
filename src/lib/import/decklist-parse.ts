@@ -105,7 +105,7 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
     }
     if (isComment) continue;
 
-    const m = /^(\d+)x?\s+(\S.*)$/.exec(line);
+    const m = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
     if (!m) continue;
 
     const quantity = Math.min(Math.max(1, Number.parseInt(m[1], 10)), 99);
