@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-05: Bulk zone recovery and edition-code imports
+
+#### Fixed
+
+- Recover failed cards independently during partial bulk zone saves, preserving successfully saved moves (#871).
+- Accept lowercase and mixed-case trailing edition codes in downloaded text lists without treating them as card-name text (#869).
+
+#### Validation
+
+- Both regressions were observed before implementation on the VPS. Full unit suites, TypeScript, lint and builds passed there (3,013 tests for #871; 3,012 for #869). GitHub CI and Vercel passed; #871 also passed the performance audit. Sonar remains unavailable before analysis and Docker E2E remains deferred. No local tests or builds were run.
+
 ### 2026-10-04: Individually reviewed package application
 
 #### Fixed
