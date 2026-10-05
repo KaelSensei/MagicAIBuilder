@@ -78,6 +78,10 @@ When you move several cards between zones in quick succession, the save indicato
 stays active until all pending zone moves finish. A failed move restores the last
 confirmed zone and displays an error so you can retry.
 
+Bulk zone moves recover each card independently: successfully saved cards stay in
+the destination, while a failed card returns to its last confirmed zone and an
+error tells you to retry. Moves of the same card use the existing save queue.
+
 #### Grid vs List View
 
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.

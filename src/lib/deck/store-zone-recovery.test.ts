@@ -66,6 +66,25 @@ describe("deck zone save recovery", () => {
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
+  it("restores only failed cards when a bulk move partially succeeds", async () => {
+    const original = seedDeck();
+    const deck = useDeckStore.getState().decks["deck-1"];
+    deck.cards.push({ ...original, id: "card-2", name: "Island" });
+    mocks.updateCardZone
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().bulkMoveToZone(["card-1", "card-2"], "maybeboard");
+
+    const saved = useDeckStore.getState().decks["deck-1"];
+    expect(saved.cards.map(({ id, zone }) => ({ id, zone }))).toEqual([
+      { id: "card-1", zone: "maybeboard" },
+      { id: "card-2", zone: "main" },
+    ]);
+    expect(saved.maybeboard.map(({ id }) => id)).toEqual(["card-1"]);
+    expect(mocks.addToast).toHaveBeenCalledWith("error", expect.stringContaining("move"));
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     seedDeck();
