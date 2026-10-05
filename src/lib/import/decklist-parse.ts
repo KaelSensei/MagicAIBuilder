@@ -62,7 +62,7 @@ function stripTrailingSetCodeSuffix(name: string): string {
   let alnumLen = 0;
   while (k >= 0 && alnumLen < 6) {
     const c = name[k] ?? "";
-    if ((c >= "A" && c <= "Z") || (c >= "0" && c <= "9")) {
+    if ((c >= "A" && c <= "Z") || (c >= "a" && c <= "z") || (c >= "0" && c <= "9")) {
       alnumLen++;
       k--;
       continue;

@@ -334,6 +334,11 @@ Click **Import** in the deck builder header to paste a decklist in:
 - MTGO format
 - Arena format
 
+For downloaded plain-text lists imported from a supported URL, trailing edition
+codes are case-insensitive: `2 Negate (mh3) 42` and `2 Negate (MH3) 42` both
+resolve the card name as `Negate`. Commander roles, quantities and secondary
+zones remain intact. This does not select or restore an exact printing.
+
 ### Exporting a Deck
 
 Click **Export** in the deck builder to copy your deck in various formats.
