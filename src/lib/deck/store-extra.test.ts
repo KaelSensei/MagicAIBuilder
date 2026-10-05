@@ -444,6 +444,30 @@ describe("useDeckStore — updateCardNotes", () => {
     expect(card?.notes).toBe("Draw 2");
   });
 
+  it("restores saved notes and notifies after a failed save", async () => {
+    vi.mocked(deckApi.updateCardNotes).mockRejectedValueOnce(new Error("offline"));
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
+
+    await useDeckStore.getState().updateCardNotes("card-1", "Unsaved note");
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe("Saved note");
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.stringContaining("notes"));
+  });
+
+  it("restores the confirmed note after two rapid edits both fail", async () => {
+    vi.mocked(deckApi.updateCardNotes)
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new Error("offline"));
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
+
+    const first = useDeckStore.getState().updateCardNotes("card-1", "First edit");
+    const second = useDeckStore.getState().updateCardNotes("card-1", "Second edit");
+    await Promise.all([first, second]);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe("Saved note");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("clears notes when null is passed", async () => {
     await useDeckStore.getState().updateCardNotes("card-1", null);
     const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");

@@ -94,6 +94,13 @@ interface PendingZoneWrite {
 
 const pendingZoneWrites = new Map<string, PendingZoneWrite>();
 
+interface PendingNotesWrite {
+  confirmedNotes: string | null | undefined;
+  tail: Promise<void>;
+}
+
+const pendingNotesWrites = new Map<string, PendingNotesWrite>();
+
 export interface DeckStore {
   // State
   decks: Record<string, Deck>;
@@ -1184,6 +1191,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   updateCardNotes: async (cardId: string, notes: string | null) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
+    const deck = get().decks[activeDeckId];
+    const currentCard = deck && uniqueDeckCards(deck).find((card) => card.id === cardId);
+    if (!currentCard) return;
+    const key = `${activeDeckId}:${cardId}`;
+    const pending = pendingNotesWrites.get(key) ?? {
+      confirmedNotes: currentCard.notes,
+      tail: Promise.resolve(),
+    };
+    pendingNotesWrites.set(key, pending);
 
     // Optimistic update
     set((state) => ({
@@ -1196,13 +1212,38 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
 
     set({ isSyncing: true });
-    try {
-      await deckApi.updateCardNotes(activeDeckId, cardId, notes);
-    } catch (err) {
-      logger.error("Unexpected error", "updateCardNotes", err);
-    } finally {
-      set({ isSyncing: false });
-    }
+    const write = pending.tail.then(async () => {
+      try {
+        await deckApi.updateCardNotes(activeDeckId, cardId, notes);
+        pending.confirmedNotes = notes;
+      } catch (err) {
+        logger.error("Unexpected error", "updateCardNotes", err);
+        if (pending.tail === write) {
+          set((state) => {
+            const currentDeck = state.decks[activeDeckId];
+            if (!currentDeck) return state;
+            return {
+              decks: {
+                ...state.decks,
+                [activeDeckId]: updateDeckCards(currentDeck, (cards) => cards.map((card) =>
+                  card.id === cardId && card.notes === notes
+                    ? { ...card, notes: pending.confirmedNotes }
+                    : card
+                )),
+              },
+            };
+          });
+          useToastStore.getState().add("error", "Could not save card notes. Try again.");
+        }
+      } finally {
+        if (pending.tail === write) {
+          pendingNotesWrites.delete(key);
+          set({ isSyncing: pendingNotesWrites.size > 0 || pendingZoneWrites.size > 0 });
+        }
+      }
+    });
+    pending.tail = write;
+    await write;
   },
 
   moveCardToZone: async (cardId: string, zone: DeckZone) => {

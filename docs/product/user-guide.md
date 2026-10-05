@@ -74,6 +74,10 @@ The deck editor has three tabs:
 
 Switch tabs to view, add, or move cards between zones. The card count in the header only reflects Main zone cards.
 
+Card-note edits appear immediately while saving. If the latest save fails, the
+last successfully saved note is restored and an error asks you to retry. Rapid
+edits of the same card are saved in order rather than racing each other.
+
 When you move several cards between zones in quick succession, the save indicator
 stays active until all pending zone moves finish. A failed move restores the last
 confirmed zone and displays an error so you can retry.
