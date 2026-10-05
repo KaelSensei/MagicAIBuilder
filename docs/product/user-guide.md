@@ -74,6 +74,10 @@ The deck editor has three tabs:
 
 Switch tabs to view, add, or move cards between zones. The card count in the header only reflects Main zone cards.
 
+When you move several cards between zones in quick succession, the save indicator
+stays active until all pending zone moves finish. A failed move restores the last
+confirmed zone and displays an error so you can retry.
+
 Bulk zone moves recover each card independently: successfully saved cards stay in
 the destination, while a failed card returns to its last confirmed zone and an
 error tells you to retry. Moves of the same card use the existing save queue.

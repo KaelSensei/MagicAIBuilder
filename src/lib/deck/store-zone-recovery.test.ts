@@ -47,6 +47,25 @@ function seedDeck(): DeckCard {
 }
 
 describe("deck zone save recovery", () => {
+  it("keeps the save indicator active until both cards finish moving", async () => {
+    const original = seedDeck();
+    const deck = useDeckStore.getState().decks["deck-1"];
+    deck.cards.push({ ...original, id: "card-2", name: "Island" });
+    let finishSecond = () => {};
+    const secondSave = new Promise<void>((resolve) => { finishSecond = resolve; });
+    mocks.updateCardZone.mockResolvedValueOnce(undefined).mockReturnValueOnce(secondSave);
+
+    const first = useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    const second = useDeckStore.getState().moveCardToZone("card-2", "maybeboard");
+    await first;
+    const syncingWhileSecondPending = useDeckStore.getState().isSyncing;
+    finishSecond();
+    await second;
+
+    expect(syncingWhileSecondPending).toBe(true);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("restores only failed cards when a bulk move partially succeeds", async () => {
     const original = seedDeck();
     const deck = useDeckStore.getState().decks["deck-1"];
