@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-06: Confirmed notes and consistent editor save activity
+
+#### Fixed
+
+- Restore the last confirmed card note after failed saves and serialize rapid edits (#872).
+- Keep save activity visible across concurrent zone writes and pending card-note saves (#870, #874), preserving successful zone moves when a note fails.
+
+#### Validation
+
+- Regressions failed before implementation on the VPS. Final #874 validation passed 73 focused tests and all 3,017 tests across 274 files, TypeScript, lint and build. GitHub CI, performance and Vercel passed for each merged fix. Sonar failed before analysis with HTTP 403; Docker E2E remains deferred. Other mutation types and the wider editor recovery/undo scope remain open.
+
 ### 2026-10-05: Bulk zone recovery and edition-code imports
 
 #### Fixed

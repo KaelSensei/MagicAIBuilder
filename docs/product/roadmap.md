@@ -146,10 +146,12 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [x] Restore the previous card printing and notify the player when its save fails.
 - [ ] Complete cross-zone drag and drop with clear drop targets and no layout jump.
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
+  - [x] Serialize card-note saves and restore the last confirmed note after a failed latest edit (#872).
   - [x] Recover individual failed bulk zone moves without rolling back successfully saved cards (#871). Broader mutation recovery remains open.
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
 - [ ] Add keyboard and mobile alternatives for every drag action.
 - [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
+  - [x] Keep the existing compact indicator active across concurrent zone writes and overlapping card-note saves (#870, #874). Activity tracking for other mutation types remains open.
 - [x] Organize decks into user-defined folders, with move, filter and bulk-move actions.
 - [x] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
 - [x] Honor existing named capped-copy exceptions in singleton card packages, counting existing copies and quantities across printings (#850).
