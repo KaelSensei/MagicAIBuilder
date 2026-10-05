@@ -31,6 +31,10 @@
 
 ## Latest product delivery
 
+- Bulk zone moves restore each failed card to its confirmed zone while keeping successful moves (#871). Red observed on the VPS; all 3,013 tests, TypeScript, lint and build passed there. GitHub CI, performance and Vercel passed; Sonar failed before analysis with HTTP 403. Docker E2E remains deferred.
+
+- Downloaded text imports accept case-insensitive trailing edition codes without changing commander roles, quantities or secondary zones (#869). Red observed on the VPS; all 3,012 tests, TypeScript, lint and build passed there. CI passed after rerunning a transient font-loader failure; exact-printing restoration remains outside scope.
+
 - Package application now respects each reviewed row instead of admitting all rows sharing a ready Scryfall ID (#861). A blocked duplicate row cannot bypass copy limits through another ready row. The API regression failed before implementation; all 12 package API tests and all 3,004 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
 
 - Downloaded plain-text decklists retain lines with uppercase X quantity markers, preserving commander roles, quantities and secondary zones (#867). The regression failed before implementation; all 24 parser tests and all 3,008 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
