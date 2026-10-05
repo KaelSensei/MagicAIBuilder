@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Import previews detect duplicate lines whose front-face and full names resolve to the same canonical Scryfall name (#865). First imported spelling, rows, quantities and zones remain unchanged; unresolved names retain the existing normalization. The regression failed before implementation; all seven focused tests and all 3,007 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 - Rejected package rows no longer consume copy capacity and block later valid additions (#863). Existing deck quantities and ready rows still count toward the same limits. Two regressions failed before implementation; all 21 focused tests and all 3,006 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
 
 - Card packages enforce a one-copy limit for cards whose canonical Scryfall format legality is restricted (#859), combining package and existing deck quantities without misclassifying a single copy as banned. Two regressions failed before implementation; all 14 focused tests and all 3,003 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
