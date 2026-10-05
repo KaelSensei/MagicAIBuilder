@@ -82,6 +82,9 @@ When you move several cards between zones in quick succession, the save indicato
 stays active until all pending zone moves finish. A failed move restores the last
 confirmed zone and displays an error so you can retry.
 
+The indicator also stays active when a card-note save overlaps a zone move;
+finishing the move does not imply that the note has already been saved.
+
 Bulk zone moves recover each card independently: successfully saved cards stay in
 the destination, while a failed card returns to its last confirmed zone and an
 error tells you to retry. Moves of the same card use the existing save queue.

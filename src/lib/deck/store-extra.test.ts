@@ -434,6 +434,28 @@ describe("useDeckStore — setCompanion", () => {
 });
 
 describe("useDeckStore — updateCardNotes", () => {
+  it("keeps saving visible when a zone move finishes before a pending note", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
+    let finishNote = () => {};
+    const pendingNote = new Promise<void>((resolve) => { finishNote = resolve; });
+    vi.mocked(deckApi.updateCardNotes).mockImplementationOnce(async () => {
+      await pendingNote;
+      throw new Error("offline");
+    });
+
+    const note = useDeckStore.getState().updateCardNotes("card-1", "New note");
+    await useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    const savingWithNotePending = useDeckStore.getState().isSyncing;
+    finishNote();
+    await note;
+
+    expect(savingWithNotePending).toBe(true);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(useDeckStore.getState().decks["deck-1"].cards[0]).toMatchObject({
+      notes: "Saved note", zone: "sideboard",
+    });
+  });
+
   beforeEach(() => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", name: "Counterspell" })] }));
   });
