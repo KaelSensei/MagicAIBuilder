@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-05: Uppercase quantity markers in downloaded lists
+
+#### Fixed
+
+- Downloaded text imports accept uppercase X quantity markers alongside lowercase x (#867), preserving commander and secondary zones. Existing quantity limits and malformed-line handling remain unchanged.
+
+#### Validation
+
+- The regression failed before implementation. All 24 parser tests and all 3,008 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-05: Resolved-name import duplicate warnings
 
 #### Fixed
