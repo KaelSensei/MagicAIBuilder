@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Package application now respects each reviewed row instead of admitting all rows sharing a ready Scryfall ID (#861). A blocked duplicate row cannot bypass copy limits through another ready row. The API regression failed before implementation; all 12 package API tests and all 3,004 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 - Downloaded plain-text decklists retain lines with uppercase X quantity markers, preserving commander roles, quantities and secondary zones (#867). The regression failed before implementation; all 24 parser tests and all 3,008 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
 
 - Import previews detect duplicate lines whose front-face and full names resolve to the same canonical Scryfall name (#865). First imported spelling, rows, quantities and zones remain unchanged; unresolved names retain the existing normalization. The regression failed before implementation; all seven focused tests and all 3,007 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.

@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-04: Individually reviewed package application
+
+#### Fixed
+
+- Package application uses each row's own preview result (#861), preventing a blocked duplicate row from being written merely because another row with the same Scryfall identifier is ready. Canonical verification and existing legality checks remain unchanged.
+
+#### Validation
+
+- The API regression failed before implementation. All 12 package API tests and all 3,004 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-05: Uppercase quantity markers in downloaded lists
 
 #### Fixed
