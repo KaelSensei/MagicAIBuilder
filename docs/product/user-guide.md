@@ -74,6 +74,10 @@ The deck editor has three tabs:
 
 Switch tabs to view, add, or move cards between zones. The card count in the header only reflects Main zone cards.
 
+When you move several cards between zones in quick succession, the save indicator
+stays active until all pending zone moves finish. A failed move restores the last
+confirmed zone and displays an error so you can retry.
+
 #### Grid vs List View
 
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.

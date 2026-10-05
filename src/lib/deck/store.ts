@@ -1256,7 +1256,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       } finally {
         if (pending.tail === write) {
           pendingZoneWrites.delete(key);
-          set({ isSyncing: false });
+          set({ isSyncing: pendingZoneWrites.size > 0 });
         }
       }
     });
