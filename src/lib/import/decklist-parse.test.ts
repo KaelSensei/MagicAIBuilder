@@ -7,6 +7,19 @@ import { extractCardsFromHtml, parsePlainTextDecklist } from "./decklist-parse";
  */
 
 describe("parsePlainTextDecklist", () => {
+  it.each(["c21", "C21", "mh3", "Mh3"])("accepts edition code %s without changing roles or zones", (setCode) => {
+    const cards = parsePlainTextDecklist([
+      "Commander", `1 Atraxa, Praetors' Voice (${setCode}) 1`,
+      "Sideboard", `2 Negate (${setCode}) 42`,
+      "Considering", `3 Ponder (${setCode}) 7`,
+    ].join("\n"));
+    expect(cards).toEqual([
+      { name: "Atraxa, Praetors' Voice", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Negate", quantity: 2, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", quantity: 3, isCommander: false, isPartner: false, zone: "maybeboard" },
+    ]);
+  });
+
   it("preserves uppercase quantity markers across command and secondary zones", () => {
     const cards = parsePlainTextDecklist([
       "Commander", "1X Atraxa, Praetors' Voice", "Deck", "4X Island",
