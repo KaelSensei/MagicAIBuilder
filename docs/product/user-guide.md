@@ -74,6 +74,10 @@ The deck editor has three tabs:
 
 Switch tabs to view, add, or move cards between zones. The card count in the header only reflects Main zone cards.
 
+Bulk zone moves recover each card independently: successfully saved cards stay in
+the destination, while a failed card returns to its last confirmed zone and an
+error tells you to retry. Moves of the same card use the existing save queue.
+
 #### Grid vs List View
 
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
