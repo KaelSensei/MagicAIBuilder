@@ -31,6 +31,10 @@
 
 ## Latest product delivery
 
+- Editor save activity now remains visible across concurrent zone moves and overlapping card-note writes (#870, #874). Failed notes restore their confirmed text without reverting a successful zone move. Red observed on VPS; final #874 validation passed all 3,017 tests, TypeScript, lint and build there, plus GitHub CI, performance and Vercel. Sonar failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+- Card-note writes are serialized per card and recover the last confirmed note after failed rapid edits (#872). Two regressions failed before implementation; VPS focused/full tests, TypeScript, lint and build passed, followed by GitHub CI, performance and Vercel. Broader mutation recovery and undo remain open.
+
 - Bulk zone moves restore each failed card to its confirmed zone while keeping successful moves (#871). Red observed on the VPS; all 3,013 tests, TypeScript, lint and build passed there. GitHub CI, performance and Vercel passed; Sonar failed before analysis with HTTP 403. Docker E2E remains deferred.
 
 - Downloaded text imports accept case-insensitive trailing edition codes without changing commander roles, quantities or secondary zones (#869). Red observed on the VPS; all 3,012 tests, TypeScript, lint and build passed there. CI passed after rerunning a transient font-loader failure; exact-printing restoration remains outside scope.
