@@ -7,6 +7,19 @@ import { extractCardsFromHtml, parsePlainTextDecklist } from "./decklist-parse";
  */
 
 describe("parsePlainTextDecklist", () => {
+  it("preserves uppercase quantity markers across command and secondary zones", () => {
+    const cards = parsePlainTextDecklist([
+      "Commander", "1X Atraxa, Praetors' Voice", "Deck", "4X Island",
+      "Sideboard", "2X Negate", "Considering", "3X Ponder",
+    ].join("\n"));
+    expect(cards).toEqual([
+      { name: "Atraxa, Praetors' Voice", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Island", quantity: 4, isCommander: false, isPartner: false, zone: "main" },
+      { name: "Negate", quantity: 2, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", quantity: 3, isCommander: false, isPartner: false, zone: "maybeboard" },
+    ]);
+  });
+
   it.each([":", " (1):"])("recognizes colon-terminated section headings %s", (suffix) => {
     const cards = parsePlainTextDecklist([
       `Commander${suffix}`, "1 Thrasios, Triton Hero",
