@@ -74,6 +74,10 @@ other successful removals and their undo entries are preserved.
 Undo applies to the deck where the recorded action took place, even if you have
 since opened another deck. Your current deck selection remains unchanged.
 
+If undoing a card addition fails to save, the card is restored with its zone and
+quantity and the undo action remains available to retry. An error replaces the
+success notification.
+
 The deck editor has three tabs:
 
 - **Main** — your 99-card main deck
