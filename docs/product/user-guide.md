@@ -84,6 +84,9 @@ again and the undo action remains available to retry, with an error notification
 A successfully restored card retains its printing, zone and quantity and uses
 the new saved identifier for subsequent edits and removals.
 
+If the same saved card is already present, an obsolete removal undo is discarded
+without adding another copy or changing its current zone and quantity.
+
 The deck editor has three tabs:
 
 - **Main** — your 99-card main deck
