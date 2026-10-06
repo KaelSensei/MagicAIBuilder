@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Rapid category saves execute in order per card and recover the last confirmed value after failed edits (#882). Two Red regressions observed on the VPS; 3,023 tests across 274 files, TypeScript, lint and build passed there. CI passed after rerunning a transient Next.js font-loader failure; performance and Vercel passed. Sonar HTTP 403 and Docker E2E remain unresolved. Broader mutation recovery remains open.
+
 - Failed category edits restore the previously displayed category if the attempted value is still current and show a retry error (#880). Red observed on the VPS; 3,021 unit tests across 274 files, TypeScript, lint and build passed there. CI, performance and Vercel passed. Sonar fails before analysis with HTTP 403. Rapid category-edit serialization, broader save recovery and Docker E2E remain open.
 
 - Quantity, note and zone saves keep the compact indicator visible while any of these tracked writes remain pending (#877, #878). Red regressions observed before implementation; 3,020 unit tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, performance and Vercel passed. The inherited high-severity source-map-js dependency was patched and the production audit passed. Sonar still fails before analysis with HTTP 403; Docker E2E and broader mutation activity remain open.

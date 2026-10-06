@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-06: Ordered category edits
+
+#### Fixed
+
+- Serialize category saves per card and restore the last confirmed category instead of an unsaved intermediate value when rapid edits fail (#882).
+
+#### Validation
+
+- Two regressions failed before implementation. VPS validation passed 3,023 tests across 274 files, TypeScript, lint and build. CI passed after rerunning a transient Next.js font-loader failure; performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-06: Failed category edit recovery
 
 #### Fixed
