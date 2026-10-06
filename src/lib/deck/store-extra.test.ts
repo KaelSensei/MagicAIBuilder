@@ -433,6 +433,19 @@ describe("useDeckStore — setCompanion", () => {
   });
 });
 
+describe("useDeckStore category save recovery", () => {
+  it("restores the previous category and warns when saving fails", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
+    vi.mocked(deckApi.updateCardCategory).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().updateCardCategory("card-1", "ramp");
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe("instant");
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+});
+
 describe("useDeckStore — updateCardNotes", () => {
   it("keeps saving visible when a zone move finishes before a pending note", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));

@@ -1004,8 +1004,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   updateCardCategory: async (cardId: string, category: CardCategory) => {
-    const { activeDeckId } = get();
+    const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
+    const previousCard = uniqueDeckCards(deck).find((card) => card.id === cardId);
+    if (!previousCard) return;
 
     // Optimistic update
     set((state) => ({
@@ -1022,6 +1026,21 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateCardCategory(activeDeckId, cardId, category);
     } catch (err) {
       logger.error("Unexpected error", "updateCardCategory", err);
+      set((state) => {
+        const currentDeck = state.decks[activeDeckId];
+        if (!currentDeck) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [activeDeckId]: updateDeckCards(currentDeck, (cards) => cards.map((card) =>
+              card.id === cardId && card.category === category
+                ? { ...card, category: previousCard.category }
+                : card
+            )),
+          },
+        };
+      });
+      useToastStore.getState().add("error", "Could not save card category. Please retry.");
     } finally {
       set({ isSyncing: false });
     }
