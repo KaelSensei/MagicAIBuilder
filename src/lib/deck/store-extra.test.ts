@@ -165,6 +165,24 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it.each(["ADD_CARD", "REMOVE_CARD"])("preserves %s undo when its deck is not loaded", async (type) => {
+    const card = makeDeckCard({ id: "card-1" });
+    const action: import("@/lib/deck/store").DeckAction = type === "ADD_CARD"
+      ? { type: "ADD_CARD", deckId: "unloaded-deck", card }
+      : { type: "REMOVE_CARD", deckId: "unloaded-deck", card };
+    useDeckStore.setState({ undoStack: [action] });
+    toastAdd.mockClear();
+    vi.mocked(deckApi.addCard).mockClear();
+    vi.mocked(deckApi.removeCard).mockClear();
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().undoStack).toEqual([action]);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+  });
+
   it("does not add a duplicate when a removed card is already present", async () => {
     const card = makeDeckCard({ id: "card-1", isMaybeboard: false, zone: "sideboard", quantity: 3 });
     useDeckStore.setState({
