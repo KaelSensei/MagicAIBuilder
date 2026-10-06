@@ -983,6 +983,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       ? uniqueDeckCards(decks[activeDeckId]).find((c) => c.id === cardId) ?? null
       : null;
     if (!removedCard) return;
+    const originalCards = uniqueDeckCards(decks[activeDeckId]);
+    const removedIndex = originalCards.findIndex((card) => card.id === cardId);
+    const followingCardIds = new Set(originalCards.slice(removedIndex + 1).map((card) => card.id));
     const removalAction: DeckAction = { type: "REMOVE_CARD", deckId: activeDeckId, card: removedCard };
 
     // Optimistic update
@@ -1007,9 +1010,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         return {
           decks: currentDeck ? {
             ...state.decks,
-            [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-              cards.some((card) => card.id === cardId) ? cards : [...cards, removedCard]
-            ),
+            [activeDeckId]: updateDeckCards(currentDeck, (cards) => {
+              if (cards.some((card) => card.id === cardId)) return cards;
+              const followingIndex = cards.findIndex((card) => followingCardIds.has(card.id));
+              const restoreIndex = followingIndex < 0 ? cards.length : followingIndex;
+              return [...cards.slice(0, restoreIndex), removedCard, ...cards.slice(restoreIndex)];
+            }),
           } : state.decks,
           undoStack: state.undoStack.filter((action) => action !== removalAction),
         };
