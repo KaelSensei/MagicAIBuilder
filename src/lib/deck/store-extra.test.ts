@@ -433,6 +433,20 @@ describe("useDeckStore — setCompanion", () => {
   });
 });
 
+describe("useDeckStore failed removal recovery", () => {
+  it("restores a rejected removal without leaving a false undo entry", async () => {
+    const card = makeDeckCard({ id: "card-1", zone: "sideboard", isMaybeboard: false, quantity: 3 });
+    seedDeck(makeActiveDeck({ cards: [card] }));
+    vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().removeCard("card-1");
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([card]);
+    expect(useDeckStore.getState().undoStack).toHaveLength(0);
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+  });
+});
+
 describe("useDeckStore category save recovery", () => {
   it("restores the confirmed category when two rapid saves fail", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));

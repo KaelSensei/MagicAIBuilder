@@ -66,6 +66,9 @@ The builder has three panels:
 
 #### Deck Zones (Main / Sideboard / Considering)
 
+If removing a card fails, the editor restores its zone and quantity and asks you
+to retry. The failed removal does not remain in the undo history.
+
 The deck editor has three tabs:
 
 - **Main** — your 99-card main deck
