@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-06: Card order during removal recovery
+
+#### Fixed
+
+- Restore failed removals before surviving original successors rather than appending the card, while preserving concurrent successful removals and their undo entries (#889).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,025 tests across 274 files, TypeScript, lint and build. CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-06: Rejected card removal recovery
 
 #### Fixed

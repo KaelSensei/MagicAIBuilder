@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Rejected removals restore the card before surviving original successors, preserving concurrent successful removals and their undo entries (#889). Red observed on the VPS; 3,025 tests across 274 files, TypeScript, lint and build passed there. CI, performance and Vercel passed. Sonar HTTP 403, Docker E2E and wider removal concurrency remain open.
+
 - Rejected card removals restore the card with its zone and quantity, remove only the failed operation's undo entry and ask the player to retry (#887). Red observed before implementation on the VPS; all 3,024 tests across 274 files, TypeScript, lint and build passed there. CI, performance and Vercel passed. Sonar HTTP 403, Docker E2E and wider remove/undo concurrency remain open.
 
 - Rapid category saves execute in order per card and recover the last confirmed value after failed edits (#882). Two Red regressions observed on the VPS; 3,023 tests across 274 files, TypeScript, lint and build passed there. CI passed after rerunning a transient Next.js font-loader failure; performance and Vercel passed. Sonar HTTP 403 and Docker E2E remain unresolved. Broader mutation recovery remains open.
