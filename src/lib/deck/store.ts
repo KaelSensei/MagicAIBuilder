@@ -1092,7 +1092,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         if (nextWrite && nextWrite !== write) nextWrite.confirmedQuantity = write.confirmedQuantity;
         if (nextWrite === write) {
           pendingQuantityWrites.delete(writeKey);
-          set({ isSyncing: false });
+          set({ isSyncing: pendingQuantityWrites.size > 0 || pendingNotesWrites.size > 0 || pendingZoneWrites.size > 0 });
         }
       }
     })();

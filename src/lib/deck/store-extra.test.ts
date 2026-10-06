@@ -788,6 +788,25 @@ describe("useDeckStore — updateCardQuantity", () => {
     expect(card?.quantity).toBe(2);
   });
 
+  it("keeps saving visible when quantity finishes before a pending note", async () => {
+    let finishNote = () => {};
+    const pendingNote = new Promise<void>((resolve) => { finishNote = resolve; });
+    vi.mocked(deckApi.updateCardNotes).mockImplementationOnce(async () => {
+      await pendingNote;
+      throw new Error("offline");
+    });
+
+    const note = useDeckStore.getState().updateCardNotes("card-1", "New note");
+    await useDeckStore.getState().updateCardQuantity("card-1", 1);
+    const savingWithNotePending = useDeckStore.getState().isSyncing;
+    finishNote();
+    await note;
+
+    expect(savingWithNotePending).toBe(true);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2);
+  });
+
   it("restores the saved quantity and warns when the server rejects the update", async () => {
     vi.mocked(global.fetch).mockResolvedValueOnce(new Response(null, { status: 500 }));
 

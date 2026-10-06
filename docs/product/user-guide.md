@@ -85,6 +85,9 @@ confirmed zone and displays an error so you can retry.
 The indicator also stays active when a card-note save overlaps a zone move;
 finishing the move does not imply that the note has already been saved.
 
+Finishing a quantity update also keeps the indicator active while other quantity,
+note, or zone updates are still pending.
+
 Bulk zone moves recover each card independently: successfully saved cards stay in
 the destination, while a failed card returns to its last confirmed zone and an
 error tells you to retry. Moves of the same card use the existing save queue.
