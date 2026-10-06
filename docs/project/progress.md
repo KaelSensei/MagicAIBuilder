@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Undo additions/removals now targets the recorded deck after a deck switch instead of modifying the current deck (#891). Both regressions failed before implementation. VPS validation passed 3,027 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader undo failure/concurrency remain open.
+
 - Rejected removals restore the card before surviving original successors, preserving concurrent successful removals and their undo entries (#889). Red observed on the VPS; 3,025 tests across 274 files, TypeScript, lint and build passed there. CI, performance and Vercel passed. Sonar HTTP 403, Docker E2E and wider removal concurrency remain open.
 
 - Rejected card removals restore the card with its zone and quantity, remove only the failed operation's undo entry and ask the player to retry (#887). Red observed before implementation on the VPS; all 3,024 tests across 274 files, TypeScript, lint and build passed there. CI, performance and Vercel passed. Sonar HTTP 403, Docker E2E and wider remove/undo concurrency remain open.

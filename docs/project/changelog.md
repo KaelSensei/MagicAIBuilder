@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-06: Undo deck targeting
+
+#### Fixed
+
+- Apply undo additions/removals to the action's recorded deck after switching decks, without changing the current selection or unrelated deck (#891).
+
+#### Validation
+
+- Both regressions failed before implementation. VPS validation passed 3,027 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-06: Card order during removal recovery
 
 #### Fixed
