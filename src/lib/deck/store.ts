@@ -101,6 +101,13 @@ interface PendingNotesWrite {
 
 const pendingNotesWrites = new Map<string, PendingNotesWrite>();
 
+interface PendingCategoryWrite {
+  confirmedCategory: CardCategory;
+  tail: Promise<void>;
+}
+
+const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
+
 export interface DeckStore {
   // State
   decks: Record<string, Deck>;
@@ -1010,6 +1017,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!deck) return;
     const previousCard = uniqueDeckCards(deck).find((card) => card.id === cardId);
     if (!previousCard) return;
+    const key = `${activeDeckId}:${cardId}`;
+    const pending = pendingCategoryWrites.get(key) ?? {
+      confirmedCategory: previousCard.category,
+      tail: Promise.resolve(),
+    };
+    pendingCategoryWrites.set(key, pending);
 
     // Optimistic update
     set((state) => ({
@@ -1022,28 +1035,38 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
 
     set({ isSyncing: true });
-    try {
-      await deckApi.updateCardCategory(activeDeckId, cardId, category);
-    } catch (err) {
-      logger.error("Unexpected error", "updateCardCategory", err);
-      set((state) => {
-        const currentDeck = state.decks[activeDeckId];
-        if (!currentDeck) return state;
-        return {
-          decks: {
-            ...state.decks,
-            [activeDeckId]: updateDeckCards(currentDeck, (cards) => cards.map((card) =>
-              card.id === cardId && card.category === category
-                ? { ...card, category: previousCard.category }
-                : card
-            )),
-          },
-        };
-      });
-      useToastStore.getState().add("error", "Could not save card category. Please retry.");
-    } finally {
-      set({ isSyncing: false });
-    }
+    const write = pending.tail.then(async () => {
+      try {
+        await deckApi.updateCardCategory(activeDeckId, cardId, category);
+        pending.confirmedCategory = category;
+      } catch (err) {
+        logger.error("Unexpected error", "updateCardCategory", err);
+        if (pending.tail === write) {
+          set((state) => {
+            const currentDeck = state.decks[activeDeckId];
+            if (!currentDeck) return state;
+            return {
+              decks: {
+                ...state.decks,
+                [activeDeckId]: updateDeckCards(currentDeck, (cards) => cards.map((card) =>
+                  card.id === cardId && card.category === category
+                    ? { ...card, category: pending.confirmedCategory }
+                    : card
+                )),
+              },
+            };
+          });
+          useToastStore.getState().add("error", "Could not save card category. Please retry.");
+        }
+      } finally {
+        if (pending.tail === write) {
+          pendingCategoryWrites.delete(key);
+          set({ isSyncing: pendingCategoryWrites.size > 0 || pendingNotesWrites.size > 0 || pendingZoneWrites.size > 0 || pendingQuantityWrites.size > 0 });
+        }
+      }
+    });
+    pending.tail = write;
+    await write;
   },
 
   updateCardQuantity: async (cardId, delta) => {
