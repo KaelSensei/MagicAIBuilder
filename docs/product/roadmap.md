@@ -152,6 +152,7 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [ ] Add keyboard and mobile alternatives for every drag action.
 - [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
   - [x] Keep the existing compact indicator active across concurrent zone writes and overlapping card-note saves (#870, #874). Activity tracking for other mutation types remains open.
+  - [x] Preserve pending quantity, note and zone save activity regardless of which write finishes first (#877, #878). Other mutation types remain outside this coverage.
 - [x] Organize decks into user-defined folders, with move, filter and bulk-move actions.
 - [x] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
 - [x] Honor existing named capped-copy exceptions in singleton card packages, counting existing copies and quantities across printings (#850).

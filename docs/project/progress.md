@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Quantity, note and zone saves keep the compact indicator visible while any of these tracked writes remain pending (#877, #878). Red regressions observed before implementation; 3,020 unit tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, performance and Vercel passed. The inherited high-severity source-map-js dependency was patched and the production audit passed. Sonar still fails before analysis with HTTP 403; Docker E2E and broader mutation activity remain open.
+
 - Editor save activity now remains visible across concurrent zone moves and overlapping card-note writes (#870, #874). Failed notes restore their confirmed text without reverting a successful zone move. Red observed on VPS; final #874 validation passed all 3,017 tests, TypeScript, lint and build there, plus GitHub CI, performance and Vercel. Sonar failed before analysis with HTTP 403; Docker E2E remains deferred.
 
 - Card-note writes are serialized per card and recover the last confirmed note after failed rapid edits (#872). Two regressions failed before implementation; VPS focused/full tests, TypeScript, lint and build passed, followed by GitHub CI, performance and Vercel. Broader mutation recovery and undo remain open.
