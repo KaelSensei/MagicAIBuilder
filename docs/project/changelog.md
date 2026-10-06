@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-06: Restored card identifiers
+
+#### Fixed
+
+- Use the original printing identifier and returned saved row identifier when undo restores a removed card, preserving zone and quantity and enabling subsequent edits/removals (#897).
+
+#### Validation
+
+- Both regressions failed before implementation. VPS validation passed 3,031 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-06: Failed undo removal recovery
 
 #### Fixed
