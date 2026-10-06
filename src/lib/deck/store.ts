@@ -318,6 +318,20 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         });
       } catch (err) {
         logger.error("Unexpected error", "undo:REMOVE_CARD", err);
+        set((state) => {
+          const currentDeck = state.decks[activeDeckId];
+          return {
+            decks: currentDeck ? {
+              ...state.decks,
+              [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
+                cards.filter((card) => card.id !== last.card.id)
+              ),
+            } : state.decks,
+            undoStack: [...state.undoStack, last],
+          };
+        });
+        useToastStore.getState().add("error", "Could not undo card removal. Please retry.");
+        return;
       }
     }
     useToastStore.getState().add("info", "↩ Undo applied");

@@ -165,6 +165,24 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it("removes the unsaved restored card and keeps retry when undoing a removal fails", async () => {
+    const card = makeDeckCard({ id: "card-1", zone: "sideboard", quantity: 3 });
+    const action: import("@/lib/deck/store").DeckAction = { type: "REMOVE_CARD", deckId: "deck-1", card };
+    useDeckStore.setState({
+      decks: { "deck-1": makeActiveDeck({ cards: [] }) },
+      undoStack: [action],
+    });
+    toastAdd.mockClear();
+    vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(0);
+    expect(useDeckStore.getState().undoStack).toEqual([action]);
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(toastAdd).not.toHaveBeenCalledWith("info", expect.any(String));
+  });
+
   it("restores the card and retry action when undoing an addition fails", async () => {
     const card = makeDeckCard({ id: "card-1", isMaybeboard: false, quantity: 3, zone: "sideboard" });
     const action: import("@/lib/deck/store").DeckAction = { type: "ADD_CARD", deckId: "deck-1", card };
