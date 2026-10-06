@@ -165,6 +165,27 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it.each(["ADD_CARD", "REMOVE_CARD"])("targets the recorded deck for %s after switching decks", async (type) => {
+    const card = makeDeckCard({ id: "card-1", name: "Counterspell", isMaybeboard: false });
+    const recordedAction: import("@/lib/deck/store").DeckAction = type === "ADD_CARD"
+      ? { type: "ADD_CARD", deckId: "deck-1", card }
+      : { type: "REMOVE_CARD", deckId: "deck-1", card };
+    useDeckStore.setState({
+      decks: {
+        "deck-1": makeActiveDeck({ cards: type === "ADD_CARD" ? [card] : [] }),
+        "deck-2": makeActiveDeck({ id: "deck-2", cards: [card] }),
+      },
+      activeDeckId: "deck-2",
+      undoStack: [recordedAction],
+    });
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-2"].cards).toEqual([card]);
+    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(type === "ADD_CARD" ? 0 : 1);
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-2");
+  });
+
   it("does nothing when undo stack is empty", async () => {
     useDeckStore.setState({ undoStack: [] });
     await useDeckStore.getState().undo();
