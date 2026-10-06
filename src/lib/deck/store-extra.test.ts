@@ -165,6 +165,23 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it("uses the printing identifier when restoring a removed card", async () => {
+    const card = makeDeckCard({ id: "old-row-id", scryfallId: "printing-id" });
+    useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
+    await useDeckStore.getState().undo();
+    expect(deckApi.addCard).toHaveBeenLastCalledWith("deck-1", expect.objectContaining({ scryfallId: "printing-id" }));
+  });
+
+  it("uses the saved row identifier for subsequent removal of a restored card", async () => {
+    const card = makeDeckCard({ id: "old-row-id", scryfallId: "printing-id", zone: "sideboard", quantity: 3 });
+    useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
+    await useDeckStore.getState().undo();
+    const restored = useDeckStore.getState().decks["deck-1"].cards.find((entry) => entry.name === card.name);
+    expect(restored).toMatchObject({ id: "saved-db-id", scryfallId: "printing-id", zone: "sideboard", quantity: 3 });
+    await useDeckStore.getState().removeCard("saved-db-id");
+    expect(deckApi.removeCard).toHaveBeenLastCalledWith("deck-1", "saved-db-id");
+  });
+
   it("removes the unsaved restored card and keeps retry when undoing a removal fails", async () => {
     const card = makeDeckCard({ id: "card-1", zone: "sideboard", quantity: 3 });
     const action: import("@/lib/deck/store").DeckAction = { type: "REMOVE_CARD", deckId: "deck-1", card };

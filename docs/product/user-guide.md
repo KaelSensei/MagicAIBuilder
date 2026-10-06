@@ -81,6 +81,9 @@ success notification.
 If undoing a card removal fails to save, the unsaved restored card is removed
 again and the undo action remains available to retry, with an error notification.
 
+A successfully restored card retains its printing, zone and quantity and uses
+the new saved identifier for subsequent edits and removals.
+
 The deck editor has three tabs:
 
 - **Main** — your 99-card main deck
