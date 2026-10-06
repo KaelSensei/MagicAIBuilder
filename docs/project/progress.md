@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Undo removal uses the original printing identifier and adopts the returned saved row identifier, retaining zone/quantity and enabling subsequent removal (#897). Both regressions failed before implementation. VPS validation passed 3,031 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader undo concurrency remain open.
+
 - Failed undo removals roll back the unsaved restored card, retain the retry action and display an error instead of success (#895). Red observed before implementation on the VPS; 3,029 tests across 274 files, TypeScript, lint and build passed there. CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and concurrent undo/mutation ownership remain open.
 
 - Failed undo of a card addition restores the card with its zone and quantity, retains the retry action and shows an error rather than success (#893). Red observed on the VPS; 3,028 tests across 274 files, TypeScript, lint and build passed there. CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader undo concurrency/ordering remain open.
