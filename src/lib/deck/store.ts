@@ -252,7 +252,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     if (last.type === "ADD_CARD") {
       // Undo add → remove card (skip recording in undo stack)
-      const { activeDeckId } = get();
+      const activeDeckId = last.deckId;
       if (!activeDeckId) return;
       const deck = get().decks[activeDeckId];
       const card = deck && uniqueDeckCards(deck).find((c) => c.id === last.card.id || c.name === last.card.name);
@@ -272,7 +272,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } else if (last.type === "REMOVE_CARD") {
       // Undo remove → re-add card
-      const { activeDeckId } = get();
+      const activeDeckId = last.deckId;
       if (!activeDeckId) return;
       set((state) => ({
         decks: {

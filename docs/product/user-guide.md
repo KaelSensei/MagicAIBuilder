@@ -71,6 +71,9 @@ to retry. The failed removal does not remain in the undo history.
 Its position is restored before the surviving cards that originally followed it;
 other successful removals and their undo entries are preserved.
 
+Undo applies to the deck where the recorded action took place, even if you have
+since opened another deck. Your current deck selection remains unchanged.
+
 The deck editor has three tabs:
 
 - **Main** — your 99-card main deck
