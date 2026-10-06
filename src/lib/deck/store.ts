@@ -288,6 +288,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       // Undo remove → re-add card
       const activeDeckId = last.deckId;
       if (!activeDeckId) return;
+      const deck = get().decks[activeDeckId];
+      if (!deck || uniqueDeckCards(deck).some((card) => card.id === last.card.id)) return;
       set((state) => ({
         decks: {
           ...state.decks,

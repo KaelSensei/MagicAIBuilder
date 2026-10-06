@@ -165,6 +165,21 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it("does not add a duplicate when a removed card is already present", async () => {
+    const card = makeDeckCard({ id: "card-1", isMaybeboard: false, zone: "sideboard", quantity: 3 });
+    useDeckStore.setState({
+      decks: { "deck-1": makeActiveDeck({ cards: [card] }) },
+      undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }],
+    });
+    vi.mocked(deckApi.addCard).mockClear();
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([card]);
+    expect(useDeckStore.getState().undoStack).toHaveLength(0);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
   it("uses the printing identifier when restoring a removed card", async () => {
     const card = makeDeckCard({ id: "old-row-id", scryfallId: "printing-id" });
     useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
