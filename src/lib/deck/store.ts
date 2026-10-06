@@ -982,6 +982,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const removedCard = decks[activeDeckId]
       ? uniqueDeckCards(decks[activeDeckId]).find((c) => c.id === cardId) ?? null
       : null;
+    if (!removedCard) return;
+    const removalAction: DeckAction = { type: "REMOVE_CARD", deckId: activeDeckId, card: removedCard };
 
     // Optimistic update
     set((state) => ({
@@ -992,12 +994,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         ),
       },
       // Record in undo stack
-      undoStack: removedCard
-        ? [
-            ...state.undoStack,
-            { type: "REMOVE_CARD" as const, deckId: activeDeckId, card: removedCard },
-          ]
-        : state.undoStack,
+      undoStack: [...state.undoStack, removalAction],
     }));
 
     set({ isSyncing: true });
@@ -1005,6 +1002,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.removeCard(activeDeckId, cardId);
     } catch (err) {
       logger.error("Unexpected error", "removeCard", err);
+      set((state) => {
+        const currentDeck = state.decks[activeDeckId];
+        return {
+          decks: currentDeck ? {
+            ...state.decks,
+            [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
+              cards.some((card) => card.id === cardId) ? cards : [...cards, removedCard]
+            ),
+          } : state.decks,
+          undoStack: state.undoStack.filter((action) => action !== removalAction),
+        };
+      });
+      useToastStore.getState().add("error", "Could not remove card. Please retry.");
     } finally {
       set({ isSyncing: false });
     }
