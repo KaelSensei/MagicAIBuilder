@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-06: Failed category edit recovery
+
+#### Fixed
+
+- Restore the previous card category when its save fails and the attempted category is still displayed; notify the player to retry (#880).
+
+#### Validation
+
+- Observed a failing regression before implementation. VPS validation passed 3,021 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis by HTTP 403. Rapid category-edit serialization and Docker E2E remain open.
+
 ### 2026-10-06: Overlapping quantity save activity
 
 #### Fixed
