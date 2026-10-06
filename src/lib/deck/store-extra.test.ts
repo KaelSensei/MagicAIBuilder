@@ -434,6 +434,26 @@ describe("useDeckStore — setCompanion", () => {
 });
 
 describe("useDeckStore failed removal recovery", () => {
+  it("restores card order while preserving a concurrent successful removal", async () => {
+    const cards = ["card-1", "card-2", "card-3"].map((id) => makeDeckCard({ id }));
+    seedDeck(makeActiveDeck({ cards }));
+    let finishRemoval = () => {};
+    const pendingRemoval = new Promise<void>((resolve) => { finishRemoval = resolve; });
+    vi.mocked(deckApi.removeCard).mockImplementationOnce(async () => {
+      await pendingRemoval;
+      throw new Error("offline");
+    });
+
+    const rejectedRemoval = useDeckStore.getState().removeCard("card-2");
+    await useDeckStore.getState().removeCard("card-1");
+    finishRemoval();
+    await rejectedRemoval;
+
+    expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual(["card-2", "card-3"]);
+    expect(useDeckStore.getState().undoStack).toHaveLength(1);
+    expect(useDeckStore.getState().undoStack[0].card.id).toBe("card-1");
+  });
+
   it("restores a rejected removal without leaving a false undo entry", async () => {
     const card = makeDeckCard({ id: "card-1", zone: "sideboard", isMaybeboard: false, quantity: 3 });
     seedDeck(makeActiveDeck({ cards: [card] }));
