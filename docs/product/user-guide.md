@@ -73,6 +73,8 @@ other successful removals and their undo entries are preserved.
 
 Undo applies to the deck where the recorded action took place, even if you have
 since opened another deck. Your current deck selection remains unchanged.
+If the original deck is not loaded, undo keeps its action and asks you to open
+that deck before retrying, without sending an update to the server.
 
 If undoing a card addition fails to save, the card is restored with its zone and
 quantity and the undo action remains available to retry. An error replaces the

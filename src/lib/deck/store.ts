@@ -247,6 +247,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (undoStack.length === 0) return;
     const last = undoStack.at(-1);
     if (!last) return;
+    if (!get().decks[last.deckId]) {
+      useToastStore.getState().add("error", "Open the original deck before retrying undo.");
+      return;
+    }
     // Pop the action
     set((s) => ({ undoStack: s.undoStack.slice(0, -1) }));
 
