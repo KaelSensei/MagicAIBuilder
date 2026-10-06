@@ -434,6 +434,41 @@ describe("useDeckStore — setCompanion", () => {
 });
 
 describe("useDeckStore category save recovery", () => {
+  it("restores the confirmed category when two rapid saves fail", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
+    vi.mocked(deckApi.updateCardCategory)
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new Error("offline"));
+
+    const first = useDeckStore.getState().updateCardCategory("card-1", "ramp");
+    const second = useDeckStore.getState().updateCardCategory("card-1", "draw");
+    await Promise.all([first, second]);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe("instant");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("saves rapid category edits in order", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
+    let finishFirst = () => {};
+    const pendingFirst = new Promise<void>((resolve) => { finishFirst = resolve; });
+    vi.mocked(deckApi.updateCardCategory).mockImplementationOnce(async () => {
+      await pendingFirst;
+      throw new Error("offline");
+    });
+    const first = useDeckStore.getState().updateCardCategory("card-1", "ramp");
+    await vi.waitFor(() => expect(deckApi.updateCardCategory).toHaveBeenCalled());
+    const callsBeforeSecond = vi.mocked(deckApi.updateCardCategory).mock.calls.length;
+    const second = useDeckStore.getState().updateCardCategory("card-1", "draw");
+    await Promise.resolve();
+    const callsWithFirstPending = vi.mocked(deckApi.updateCardCategory).mock.calls.length;
+    finishFirst();
+    await Promise.all([first, second]);
+
+    expect(callsWithFirstPending).toBe(callsBeforeSecond);
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe("draw");
+  });
+
   it("restores the previous category and warns when saving fails", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
     vi.mocked(deckApi.updateCardCategory).mockRejectedValueOnce(new Error("offline"));

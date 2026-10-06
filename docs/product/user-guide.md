@@ -74,8 +74,8 @@ The deck editor has three tabs:
 
 Switch tabs to view, add, or move cards between zones. The card count in the header only reflects Main zone cards.
 
-The editor restores the previously displayed category when a category save fails,
-provided it has not since been changed again, and asks you to retry.
+Category edits are saved in order for each card. If the latest save fails, the
+editor restores the last confirmed category and asks you to retry.
 
 Card-note edits appear immediately while saving. If the latest save fails, the
 last successfully saved note is restored and an error asks you to retry. Rapid
