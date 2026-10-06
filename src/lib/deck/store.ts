@@ -295,8 +295,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         },
       }));
       try {
-        await deckApi.addCard(activeDeckId, {
-          scryfallId: last.card.id,
+        const saved = await deckApi.addCard(activeDeckId, {
+          scryfallId: last.card.scryfallId ?? last.card.id,
           name: last.card.name,
           manaCost: last.card.manaCost,
           cmc: last.card.cmc,
@@ -315,6 +315,18 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           isCommander: false,
           isPartner: false,
           zone: last.card.zone,
+        });
+        set((state) => {
+          const currentDeck = state.decks[activeDeckId];
+          if (!currentDeck) return state;
+          return {
+            decks: {
+              ...state.decks,
+              [activeDeckId]: updateDeckCards(currentDeck, (cards) => cards.map((card) =>
+                card.id === last.card.id ? { ...card, id: saved.id } : card
+              )),
+            },
+          };
         });
       } catch (err) {
         logger.error("Unexpected error", "undo:REMOVE_CARD", err);
