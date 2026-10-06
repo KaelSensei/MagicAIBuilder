@@ -30,30 +30,28 @@ export function fetchUserInit(userId: string): Promise<UserInitData> {
   if (pending) return pending;
 
   const request = fetchWithTimeout()
-    .then(async (response) => {
-      if (!response.ok) {
-        throw new Error(`User initialization failed with HTTP ${response.status}`);
-      }
-
-      const data: unknown = await response.json();
-      if (!isUserInitData(data)) {
-        throw new Error("User initialization returned an invalid payload");
-      }
-
-      return data;
-    })
     .finally(() => pendingRequests.delete(userId));
 
   pendingRequests.set(userId, request);
   return request;
 }
 
-async function fetchWithTimeout(): Promise<Response> {
+async function fetchWithTimeout(): Promise<UserInitData> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), USER_INIT_TIMEOUT_MS);
 
   try {
-    return await fetch("/api/user/init", { signal: controller.signal });
+    const response = await fetch("/api/user/init", { signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`User initialization failed with HTTP ${response.status}`);
+    }
+
+    const data: unknown = await response.json();
+    if (!isUserInitData(data)) {
+      throw new Error("User initialization returned an invalid payload");
+    }
+
+    return data;
   } finally {
     clearTimeout(timeoutId);
   }

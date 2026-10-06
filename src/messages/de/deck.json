@@ -676,7 +676,7 @@
     "copyBuyNow": "Jetzt-kaufen-Liste kopieren",
     "exportBuyNowCsv": "Jetzt-kaufen-CSV exportieren",
     "nothingPlanned": "Derzeit keine Karten zum Kauf geplant",
-    "sessionOnly": "Nur für diese Sitzung. Deine Sammlung bleibt unverändert.",
+    "sessionOnly": "Für dieses Deck in diesem Browser gespeichert. Deine Sammlung bleibt unverändert.",
     "deferredCount": "{count} Karten für später",
     "knownSubtotal": "Bekannte Zwischensumme",
     "priceUnavailable": "Preis nicht verfügbar",

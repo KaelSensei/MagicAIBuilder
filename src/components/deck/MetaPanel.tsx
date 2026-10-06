@@ -467,13 +467,17 @@ export function MetaPanel({
                             onAdd={onAddCard}
                           />
                         ))}
-                        {showOnlyMissing && filteredCards.length === 0 && (
-                          <p className="text-xs text-green-400 text-center py-2">
-                            {t("meta.allPopularInDeck")}
-                          </p>
-                        )}
                       </div>
                     )}
+                    {showOnlyMissing &&
+                      !isLoadingEdhrec &&
+                      !errorEdhrec &&
+                      edhrecCards.length > 0 &&
+                      filteredCards.length === 0 && (
+                        <p role="status" className="text-xs text-green-400 text-center py-2">
+                          {t("meta.allPopularInDeck")}
+                        </p>
+                      )}
                   </div>
 
                   {/* ─ Meta shifts ─ */}

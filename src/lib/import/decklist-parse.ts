@@ -62,7 +62,7 @@ function stripTrailingSetCodeSuffix(name: string): string {
   let alnumLen = 0;
   while (k >= 0 && alnumLen < 6) {
     const c = name[k] ?? "";
-    if ((c >= "A" && c <= "Z") || (c >= "0" && c <= "9")) {
+    if ((c >= "A" && c <= "Z") || (c >= "a" && c <= "z") || (c >= "0" && c <= "9")) {
       alnumLen++;
       k--;
       continue;
@@ -83,12 +83,13 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
   const cards: UrlImportCard[] = [];
   let section: "main" | "sideboard" | "maybeboard" | "commander" | "partner" = "main";
 
-  for (const rawLine of text.split("\n").slice(0, 500)) {
+  for (const rawLine of text.split(/\r\n|\r|\n/).slice(0, 500)) {
     const line = rawLine.trim();
     if (!line) continue;
     const isComment = line.startsWith("//") || line.startsWith("#");
     const heading = (isComment ? line.replace(/^[/#]+/, "").trim() : line)
       .toLowerCase()
+      .replace(/:$/, "")
       .replace(/\s{0,4}\(\d{1,3}\)$/, "");
     if (heading === "commander" || heading === "partner" || heading === "sideboard") {
       section = heading;
@@ -104,7 +105,7 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
     }
     if (isComment) continue;
 
-    const m = /^(\d+)x?\s+(\S.*)$/.exec(line);
+    const m = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
     if (!m) continue;
 
     const quantity = Math.min(Math.max(1, Number.parseInt(m[1], 10)), 99);

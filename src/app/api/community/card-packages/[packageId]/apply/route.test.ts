@@ -61,6 +61,22 @@ describe("POST /api/community/card-packages/[packageId]/apply", () => {
     })] });
   });
 
+  it("does not apply a blocked row sharing an identifier with a ready row", async () => {
+    const card = { scryfallId: "ready", name: "Blue Spell", quantity: 1, colorIdentity: ["U"], isBanned: false, isBasicLand: false };
+    mockPackageFindFirst.mockResolvedValue({ cards: [card, { ...card, quantity: 2 }] });
+    mockGetCardCollection.mockResolvedValue({ data: [{
+      id: "ready", name: "Blue Spell", color_identity: ["U"], type_line: "Instant",
+      legalities: { commander: "legal" }, image_uris: {},
+    }], not_found: [] });
+
+    const response = await POST(request(), context);
+
+    expect(await response.json()).toEqual({ addedCount: 1, blockedCount: 1 });
+    expect(mockCreateMany).toHaveBeenCalledWith({ data: [expect.objectContaining({
+      scryfallId: "ready", name: "Blue Spell", quantity: 1,
+    })] });
+  });
+
   it("does not write when every accepted card is blocked", async () => {
     const blockedOnly = new Request("http://localhost", {
       method: "POST",

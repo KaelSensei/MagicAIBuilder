@@ -84,6 +84,24 @@ describe("TournamentDeckRow", () => {
 });
 
 describe("MetaPanel", () => {
+  it("explains when all popular cards are in the deck and restores the list when unfiltered", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
+        <MetaPanel commanderName="Atraxa" deckCardNames={new Set(["Sol Ring"])} onAddCard={vi.fn()} />
+      </NextIntlClientProvider>
+    );
+    fireEvent.click(screen.getByRole("button", { name: /meta analysis/i }));
+    const missingFilter = screen.getByRole("checkbox", { name: "Not in deck" });
+    fireEvent.click(missingFilter);
+
+    expect(screen.getByText("All popular cards already in your deck!")).toBeInTheDocument();
+    expect(screen.queryByText("Sol Ring")).not.toBeInTheDocument();
+
+    fireEvent.click(missingFilter);
+    expect(screen.getByText("Sol Ring")).toBeInTheDocument();
+    expect(screen.queryByText("All popular cards already in your deck!")).not.toBeInTheDocument();
+  });
+
   it("shows source observation times beside external recommendation sections", () => {
     render(
       <NextIntlClientProvider

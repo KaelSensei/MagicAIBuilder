@@ -27,20 +27,25 @@ export function buildImportPreview(
   const zoneCounts = { main: 0, sideboard: 0, maybeboard: 0 };
   const entryCounts = new Map<string, { name: string; count: number }>();
   const foundByName = buildScryfallNameIndex(foundCards);
-  const ignoredNames = new Set(result.ignored);
+  const ignoredNames = new Map<string, string>();
+  for (const name of result.ignored) {
+    const key = normalizeImportedName(name);
+    if (!ignoredNames.has(key)) ignoredNames.set(key, name);
+  }
   const commanderNames: string[] = [];
   const partnerNames: string[] = [];
   let totalQuantity = 0;
 
   for (const card of result.cards) {
-    if (!foundByName.has(normalizeImportedName(card.name))) ignoredNames.add(card.name);
+    const key = normalizeImportedName(card.name);
+    if (!foundByName.has(key) && !ignoredNames.has(key)) ignoredNames.set(key, card.name);
     zoneCounts[card.zone] += card.quantity;
     totalQuantity += card.quantity;
     if (card.isCommander) commanderNames.push(card.name);
     if (card.isPartner) partnerNames.push(card.name);
-    const key = normalizeImportedName(card.name);
-    const previous = entryCounts.get(key);
-    entryCounts.set(key, {
+    const duplicateKey = normalizeImportedName(foundByName.get(key)?.name ?? card.name);
+    const previous = entryCounts.get(duplicateKey);
+    entryCounts.set(duplicateKey, {
       name: previous?.name ?? card.name,
       count: (previous?.count ?? 0) + 1,
     });
@@ -58,6 +63,6 @@ export function buildImportPreview(
     zoneCounts,
     totalQuantity,
     duplicateNames,
-    ignoredNames: [...ignoredNames],
+    ignoredNames: [...ignoredNames.values()],
   };
 }

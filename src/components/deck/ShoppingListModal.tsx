@@ -2,7 +2,7 @@
 /**
  * ShoppingListModal — lists all missing cards with prices, copy/export.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { X, Copy, Download, Check } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -18,6 +18,7 @@ import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 interface ShoppingListModalProps {
   readonly deck: Deck;
   readonly ownedQuantities: Readonly<Record<string, number>>;
+  readonly ownerId: string;
   readonly onClose: () => void;
 }
 
@@ -34,12 +35,23 @@ function downloadFile(content: string, filename: string, mime: string): void {
 export function ShoppingListModal({
   deck,
   ownedQuantities,
+  ownerId,
   onClose,
 }: ShoppingListModalProps) {
   const t = useTranslations("deck");
   const format = useFormatter();
   const [copied, copy] = useCopyToClipboard();
   const [deferredIds, setDeferredIds] = useState<ReadonlySet<string>>(() => new Set());
+  const storageKey = `shopping-deferred:v1:${encodeURIComponent(ownerId)}:${encodeURIComponent(deck.id)}`;
+
+  useEffect(() => {
+    try {
+      const saved: unknown = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+      setDeferredIds(new Set(Array.isArray(saved) ? saved.slice(0, 500).filter((id): id is string => typeof id === "string") : []));
+    } catch {
+      setDeferredIds(new Set());
+    }
+  }, [storageKey]);
 
   // USD, like every other price surface — see BudgetOptimizationModal.
   const money = (value: number) =>
@@ -63,12 +75,15 @@ export function ShoppingListModal({
   const deferredCount = items.length - buyNowItems.length;
 
   const toggleDeferred = (scryfallId: string) => {
-    setDeferredIds((current) => {
-      const next = new Set(current);
-      if (next.has(scryfallId)) next.delete(scryfallId);
-      else next.add(scryfallId);
-      return next;
-    });
+    const next = new Set(deferredIds);
+    if (next.has(scryfallId)) next.delete(scryfallId);
+    else next.add(scryfallId);
+    setDeferredIds(next);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify([...next]));
+    } catch {
+      // The in-memory choice still works when browser storage is unavailable.
+    }
   };
 
   const { totalCost, unpricedQuantity, pricedQuantity } = useMemo(() => {

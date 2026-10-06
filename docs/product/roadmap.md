@@ -146,11 +146,21 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [x] Restore the previous card printing and notify the player when its save fails.
 - [ ] Complete cross-zone drag and drop with clear drop targets and no layout jump.
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
+  - [x] Restore the previously displayed category after a failed category edit when it still matches the attempted value, with a retry notification (#880).
+  - [x] Serialize category writes per card and restore the last confirmed category after failed rapid edits (#882). Broader mutation recovery remains open.
+  - [x] Serialize card-note saves and restore the last confirmed note after a failed latest edit (#872).
+  - [x] Recover individual failed bulk zone moves without rolling back successfully saved cards (#871). Broader mutation recovery remains open.
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
 - [ ] Add keyboard and mobile alternatives for every drag action.
 - [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
+  - [x] Keep the existing compact indicator active across concurrent zone writes and overlapping card-note saves (#870, #874). Activity tracking for other mutation types remains open.
+  - [x] Preserve pending quantity, note and zone save activity regardless of which write finishes first (#877, #878). Other mutation types remain outside this coverage.
 - [x] Organize decks into user-defined folders, with move, filter and bulk-move actions.
 - [x] Save reusable card packages such as mana bases, interaction suites or tribal cores and preview their legal additions before applying them.
+- [x] Honor existing named capped-copy exceptions in singleton card packages, counting existing copies and quantities across printings (#850).
+- [x] Apply existing format copy limits to non-singleton card packages, combining deck and package quantities across printings (#852).
+- [x] Honor Oracle-text multiple-copy exceptions in packages using canonical Scryfall data, never stored author metadata (#854). The existing policy ceiling of 99 copies remains unchanged.
+- [x] Limit canonically restricted package cards to one copy, including existing deck quantities; a single restricted card remains allowed (#859).
 - [x] Add a required-token and emblem summary derived from the current deck, with export support.
 
 ### Engineering enablers
@@ -214,6 +224,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - Banlist and Game Changers detection.
 - Bracket scoring across six dimensions.
 - Mana curve, color distribution and format-specific statistics.
+- Exported statistics count card copies, not distinct rows, including type percentages (#838); the existing export scope is unchanged.
 - Mana alignment and per-color land recommendations.
 - Turn-one playability odds.
 - Combo detection through Commander Spellbook.
@@ -246,11 +257,14 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
   - [x] Abort stalled deck-list requests after 15 seconds so the existing error and retry state can appear.
+  - [x] Keep the user initialization eight-second deadline active through response-body loading and JSON validation, not only until headers arrive. Database latency and broader profile loading work remain open.
 - [ ] Use route-level skeletons and cached session/profile data where safe.
 - [ ] Remove React refresh loops, hover jitter, layout shifts and unstable card previews.
+  - [x] Ignore superseded meta-history responses and invalidate pending results on reset, preventing old trend data or errors from resurfacing.
 - [x] Make warning panels collapsible and dismissible, with accessible close controls.
 - [x] Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
 - [x] Make card zoom intentional in "View all cards" contexts, not a global hover effect.
+- [x] Explain the empty EDHREC missing-card filter when all popular cards are already in the deck; removing the filter restores the list.
 - [ ] Preserve the established dark/light design language while improving hierarchy, spacing and responsive behavior.
 - [ ] Add visual regression coverage for the Deck Editor, banner, warning panel and card hover states.
 
@@ -316,7 +330,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Deck collection summaries allocate owned copies and proxies once per printing, so remaining quantities and costs stay accurate.
 - The deck sidebar no longer offers a misleading Reset action that subtracts shared, globally owned cards; ownership changes are made from collection management.
 - Deck collection and shopping-list totals now distinguish known-price subtotals from missing copies without a price instead of presenting an incomplete zero-dollar estimate.
-- The shopping list supports session-only buy-now versus buy-later choices without mutating deck or collection ownership; buy-now copy and CSV exclude deferred cards.
+- The shopping list remembers buy-now versus buy-later choices in the same browser per signed-in player and deck, without mutating deck or collection ownership; buy-now copy and CSV exclude deferred cards.
 - A private, read-only acquisition-plan API aggregates required copies across owned decks and subtracts collection quantities without changing ownership.
 - The collection page now displays that cross-deck acquisition plan on demand, including missing quantities, contributing decks, a known-price subtotal, unpriced-copy disclosure, and refresh/retry states.
 - The cross-deck plan exports a generic CSV of missing quantities with Scryfall printing IDs and known prices; owned copies are excluded.
@@ -332,7 +346,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - [ ] Prefer owned printings during direct add and import flows; the shared printing selector now prioritizes owned editions, but automatic import matching remains open.
 - [ ] Complete deck/collection reconciliation without mutating ownership accidentally; the unsafe deck-sidebar Reset action has been removed.
 - [ ] Add region-aware price providers, starting with a clearly selected market.
-- [ ] Support a persistent "proxy now / buy later" workflow; the shopping-list buy-later choice is currently session-only and does not track proxies.
+- [ ] Support a synchronized "proxy now / buy later" workflow across devices; the shopping-list buy-later choice currently persists only in the same browser and does not track proxies.
 - [ ] Consider mobile scanning only after the web data model supports printing-level ownership.
 - [ ] Extend exact-printing usage beyond private decks to saved lists or acquisition plans; deck usage is now visible from the collection.
 - [ ] Add explicit, persistent acquire state; the read-only cross-deck plan is now visible in the collection UI.
@@ -419,6 +433,8 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [x] Persist reusable community card packages with stable author attribution and private-by-default publishing controls.
 - [x] Preview package additions against deck color identity, singleton and ban rules.
 - [x] Apply a reviewed package diff without silently replacing existing cards.
+- [x] Apply only individually ready package rows, even when a blocked row shares the same printing identifier (#861).
+- [x] Reserve package copy capacity only for ready rows, so rejected rows do not prevent later valid additions within the existing limits (#863).
 
 ### Definition of done
 
@@ -443,6 +459,9 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - Recommendation source and freshness disclosure.
 - EDHREC recommendation rows disclose validated per-card sample counts when the source provides them.
 - EDHREC feed contract checks reject malformed card lists so a source change does not overwrite reliable cached recommendations with a false empty result.
+- EDHREC popular-card recommendations now rank distinct cards by observed inclusion across source categories before applying the top-20 limit; category order no longer hides more widely played cards.
+- Meta trend comparisons now withhold reports when either endpoint snapshot is empty, rather than treating missing source data as a rise from zero or fall to zero. Non-empty snapshot bounds remain unchanged; broader trend disclosure work remains open.
+- Meta trend cutoffs now use the same retained first entry per card name as measured shifts, so discarded duplicate values cannot distort entry and exit bounds.
 
 ### Remaining scope
 
@@ -473,22 +492,35 @@ A recommendation is never presented as universal truth: the user can see where i
 ### Already shipped
 
 - Imports from Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks and EDHREC.
+- Plain-text exports mark every card-note line with an explicit comment prefix, so multiline notes and reserved section names cannot introduce cards or change zones during reimport. Notes remain readable in the export; note rehydration remains separate scope.
 - Text URL imports recognize partner and Main, Sideboard and Considering headers when the source provides them.
+- Downloaded text lists also recognize colon-terminated section headings, including counted and commented headings, without losing commander, partner or secondary zones (#844).
+- Downloaded text lists accept uppercase X quantity markers alongside lowercase x without losing command or secondary zones (#867).
+- Downloaded text lists accept lowercase and mixed-case trailing edition codes without including them in card names (#869); exact-printing restoration remains open.
 - Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, ManaBox, MTGGoldfish, EDHREC and plain text.
 - Goldfish and EDHREC plain-list exports keep Sideboard and Considering cards out of the playable main deck.
+- Archidekt exports now count and list only main-zone cards as Mainboard, preserving commander, partner and category tags. Dedicated secondary-zone Archidekt export remains open.
+- Arena text exports preserve the selected companion in a dedicated section and include its sideboard copy only when absent, without changing the stored deck. Companion metadata and secondary-zone quantities are covered by local-parser round-trip tests; live Arena client import remains unverified.
+- The Moxfield text exporter now retains companion, Sideboard and Considering headings instead of flattening zones. Our text parser round trip preserves roles and quantities; live Moxfield comment-header compatibility remains unverified, so external fidelity is still open.
 - Versioned read-only external API under /api/v1.
 - The URL import preview now discloses Scryfall-unresolved card names before confirmation, alongside names ignored by the source; front-face names of double-faced cards still resolve.
+- Missing-name warnings in the URL import preview are grouped across equivalent case, whitespace and apostrophe spellings, preserving the first spelling without merging imported rows or quantities (#848).
+- Import duplicate warnings also recognize front-face and full names resolving to the same canonical Scryfall name (#865), preserving first imported spelling, rows, quantities and zones.
 - Pasted decklists preserve Unicode names, accept commented or colon-terminated section headings, and recognize uppercase set codes without collector numbers. Scryfall lookup also handles copied smart apostrophes.
 - URL imports accept supported addresses without a scheme and preserve zones from count-labelled headings. EDHREC average imports keep distinct cards across categories; previews warn about normalized duplicate lines and commanders repeated in the main list.
 
 ### Remaining scope
 
 - [ ] Treat import/export formats as versioned contracts with fixtures.
+  - [x] Quote carriage returns in deck CSV fields so card names and metadata stay within their cells (#846); spreadsheet-client import remains unverified.
+  - [x] Retain printing-specific Scryfall IDs and application categories in simple and full deck CSV exports (#842). Missing printing IDs remain blank; CSV reimport and external category mapping remain open.
+  - [x] Include a trailing Zone column in simple and full deck CSV exports, preserving main, sideboard and maybeboard values without changing existing column positions (#840). CSV reimport and command-zone rows remain separate scope.
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
 - [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
 - [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
 - [x] Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
 - [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats.
+  - [x] Preserve commander, quantities and secondary zones in downloaded plain-text lists using CR, CRLF or LF line endings (#836).
   - Import parsing and preview are more resilient, but exact printing and category round trips remain open; preserving a localized name does not guarantee that Scryfall resolves that language.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.

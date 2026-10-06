@@ -9,6 +9,319 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-06: Ordered category edits
+
+#### Fixed
+
+- Serialize category saves per card and restore the last confirmed category instead of an unsaved intermediate value when rapid edits fail (#882).
+
+#### Validation
+
+- Two regressions failed before implementation. VPS validation passed 3,023 tests across 274 files, TypeScript, lint and build. CI passed after rerunning a transient Next.js font-loader failure; performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-06: Failed category edit recovery
+
+#### Fixed
+
+- Restore the previous card category when its save fails and the attempted category is still displayed; notify the player to retry (#880).
+
+#### Validation
+
+- Observed a failing regression before implementation. VPS validation passed 3,021 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis by HTTP 403. Rapid category-edit serialization and Docker E2E remain open.
+
+### 2026-10-06: Overlapping quantity save activity
+
+#### Fixed
+
+- Keep the saving indicator visible when quantity, note and zone updates overlap, whichever tracked write finishes first (#877, #878).
+- Refresh vulnerable source-map-js transitive resolutions to the patched version; production dependency audit passed (#877).
+
+#### Validation
+
+- Observed failing store regressions before implementation. Final VPS validation passed all 3,020 tests across 274 files, TypeScript, lint and build. GitHub CI, performance and Vercel passed. Sonar remains blocked before analysis by HTTP 403; Docker E2E and activity tracking for other mutation types remain open.
+
+### 2026-10-06: Confirmed notes and consistent editor save activity
+
+#### Fixed
+
+- Restore the last confirmed card note after failed saves and serialize rapid edits (#872).
+- Keep save activity visible across concurrent zone writes and pending card-note saves (#870, #874), preserving successful zone moves when a note fails.
+
+#### Validation
+
+- Regressions failed before implementation on the VPS. Final #874 validation passed 73 focused tests and all 3,017 tests across 274 files, TypeScript, lint and build. GitHub CI, performance and Vercel passed for each merged fix. Sonar failed before analysis with HTTP 403; Docker E2E remains deferred. Other mutation types and the wider editor recovery/undo scope remain open.
+
+### 2026-10-05: Bulk zone recovery and edition-code imports
+
+#### Fixed
+
+- Recover failed cards independently during partial bulk zone saves, preserving successfully saved moves (#871).
+- Accept lowercase and mixed-case trailing edition codes in downloaded text lists without treating them as card-name text (#869).
+
+#### Validation
+
+- Both regressions were observed before implementation on the VPS. Full unit suites, TypeScript, lint and builds passed there (3,013 tests for #871; 3,012 for #869). GitHub CI and Vercel passed; #871 also passed the performance audit. Sonar remains unavailable before analysis and Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Individually reviewed package application
+
+#### Fixed
+
+- Package application uses each row's own preview result (#861), preventing a blocked duplicate row from being written merely because another row with the same Scryfall identifier is ready. Canonical verification and existing legality checks remain unchanged.
+
+#### Validation
+
+- The API regression failed before implementation. All 12 package API tests and all 3,004 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-05: Uppercase quantity markers in downloaded lists
+
+#### Fixed
+
+- Downloaded text imports accept uppercase X quantity markers alongside lowercase x (#867), preserving commander and secondary zones. Existing quantity limits and malformed-line handling remain unchanged.
+
+#### Validation
+
+- The regression failed before implementation. All 24 parser tests and all 3,008 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-05: Resolved-name import duplicate warnings
+
+#### Fixed
+
+- Import previews warn when front-face and full names resolve to the same canonical Scryfall name (#865), without merging rows or changing quantities, zones or the first displayed spelling.
+
+#### Validation
+
+- The regression failed before implementation. All seven focused tests and all 3,007 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-05: Available copy capacity after rejected package rows
+
+#### Fixed
+
+- Package preview and application reserve copies only for ready rows (#863), allowing later valid additions after a rejected oversized or banned row. Existing deck quantities and accepted rows remain cumulative; no copy limits are relaxed.
+
+#### Validation
+
+- Two regressions failed before implementation. All 21 focused tests and all 3,006 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-04: Restricted copy limits in card packages
+
+#### Fixed
+
+- Package preview and application limit cards with canonical restricted legality to one copy, including existing deck copies (#859). A single restricted card remains allowed; non-singleton copy-limit errors are distinct from singleton errors. Author-supplied metadata does not determine restricted status.
+
+#### Validation
+
+- Two regressions failed before implementation. All 14 focused tests and all 3,003 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. Rule reference: [Wizards banned and restricted list](https://magic.wizards.com/en/banned-restricted-list).
+
+### 2026-10-04: Verified Oracle copy exceptions in card packages
+
+#### Fixed
+
+- Package preview and application reuse the existing multiple-copy policy with canonical Oracle text from Scryfall (#854). Stored author metadata cannot grant an exception; absent Oracle text falls back to existing format limits. The existing 99-copy policy ceiling is unchanged.
+
+#### Validation
+
+- The canonical-exception regression failed before implementation; the forged-metadata regression passed. All 11 focused tests and all 2,998 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-04: Format copy limits in card packages
+
+#### Fixed
+
+- Package preview and application enforce existing non-singleton format copy limits, counting existing deck copies and package printings together (#852). Basic lands and named capped-copy exceptions retain their existing behavior; Oracle-text unlimited-copy exceptions remain separate scope.
+
+#### Validation
+
+- Both new regressions failed before implementation. All seven package tests and all 2,996 tests across 274 files, TypeScript, lint and build passed on the VPS only. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-04: Capped multiples in card packages
+
+#### Fixed
+
+- Reusable card packages honor existing named capped-copy exceptions in singleton formats, combining existing deck quantities and package quantities across printings (#850). Ordinary singleton, basic-land, banned-card and color-identity checks remain in place. Oracle-text unlimited-copy exceptions and non-singleton copy limits are outside this increment.
+
+#### Validation
+
+- Both regressions failed before implementation. All five package tests and all 2,994 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Grouped missing-card import warnings
+
+#### Fixed
+
+- URL import previews show each normalized missing name once, grouping variations in case, whitespace and apostrophes while preserving the first spelling (#848). Imported rows, quantities and zones are unchanged.
+
+#### Validation
+
+- The focused regression failed before implementation. All six preview tests and all 2,992 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Carriage returns in CSV fields
+
+#### Fixed
+
+- Deck CSV exports quote carriage returns in card names and metadata, preserving their contents without breaking records (#846). The schema is unchanged; spreadsheet-client import remains unverified.
+
+#### Validation
+
+- Three regressions failed before implementation. All 24 export tests and all 2,991 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Colon-terminated import sections
+
+#### Fixed
+
+- Downloaded plain-text imports preserve commander, partner and secondary zones when section headings end with a colon, including headings with counts or comment prefixes (#844).
+
+#### Validation
+
+- Both regressions failed before implementation. All 23 parser tests and all 2,988 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Printing and category metadata in CSV
+
+#### Added
+
+- Simple and full deck CSV exports append Scryfall ID and Category columns (#842), preserving selected editions and application categories. Unknown printing IDs remain blank. CSV reimport and external-tool category mapping are not added.
+
+#### Validation
+
+- Both focused regressions failed before implementation. All 21 export tests and all 2,986 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Card zones in CSV exports
+
+#### Added
+
+- Simple and full deck CSV exports include a trailing Zone column with main, sideboard and maybeboard values (#840). Existing column positions and export scope are unchanged. CSV reimport and command-zone rows remain separate scope.
+
+#### Validation
+
+- Both focused regressions failed before implementation. All 19 export tests and all 2,984 tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Quantity-aware exported statistics
+
+#### Fixed
+
+- Exported card totals and type percentages count physical copies instead of distinct rows (#838). Existing export scope and total-price behavior are preserved.
+
+#### Validation
+
+- Both focused regressions failed before implementation. All 17 export tests and all 2,982 unit tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Portable decklist line endings
+
+#### Fixed
+
+- Downloaded plain-text imports recognize CR, CRLF and LF line endings while preserving commander, quantities, sideboard and Considering zones (#836).
+
+#### Validation
+
+- The CR-separated regression failed before implementation. All 21 parser tests and all 2,980 unit tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud failed before analysis with HTTP 403; Docker E2E remains deferred. No local tests or builds were run.
+
+### 2026-10-04: Stable meta history responses
+
+#### Fixed
+
+- Late meta-history successes and failures no longer repopulate a reset panel. An older request finishing last cannot overwrite the newest request's result. Request cancellation and timeout are not added in this increment.
+
+#### Validation
+
+- All three stale-response regressions failed before implementation. All 2,977 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Docker E2E remains deferred.
+
+### 2026-10-04: Consistent meta trend cutoffs
+
+#### Fixed
+
+- Meta trend bounds now use the same first-entry-per-card values as measured shifts. Discarded duplicates no longer distort the cutoff used for cards entering or leaving a snapshot.
+
+#### Validation
+
+- The regression failed before implementation. All 2,974 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Docker E2E remains deferred.
+
+### 2026-10-04: Safe multiline export notes
+
+#### Fixed
+
+- Plain-text exports prefix every note line with `// Note:`, normalizing CRLF, LF and CR separators. Note content can no longer be mistaken for cards or recognized section headings during text reimport. Saved notes remain unchanged; note rehydration is not included.
+
+#### Validation
+
+- The export/parser regression failed before implementation. All 2,973 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Legacy prefix expectations were updated for the explicit comment format. Docker E2E remains deferred.
+
+### 2026-10-04: Empty meta snapshot evidence
+
+#### Fixed
+
+- Withhold meta shift reports when either comparison endpoint has no cards. Empty source data no longer produces fabricated inclusion bounds from or to zero. Non-empty snapshot comparisons remain unchanged.
+
+#### Validation
+
+- Both empty-endpoint regression cases failed before implementation. All 2,972 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Docker E2E remains deferred.
+
+### 2026-10-04: Moxfield text export sections
+
+#### Changed
+
+- Preserve companion, Sideboard and Considering sections in the existing Moxfield text export instead of flattening secondary zones into Deck. Commander, partner, quantities and saved deck data remain unchanged.
+
+#### Validation
+
+- The export/import regression failed before implementation. All 2,971 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Our text parser round trip is covered; live Moxfield comment-header compatibility remains unverified. Docker E2E remains deferred.
+
+### 2026-10-04: Arena companion export
+
+#### Added
+
+- Arena text exports include the selected companion in its dedicated section and exported sideboard, adding one sideboard copy only when absent. Saved deck data and existing quantities remain unchanged; Considering cards remain excluded.
+
+#### Validation
+
+- Both companion contract tests failed before implementation. All 2,970 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Text reimport is covered; live Arena client import remains unverified and Docker E2E remains deferred.
+
+### 2026-10-04: Bounded user initialization body loading
+
+#### Fixed
+
+- The eight-second user initialization deadline now includes response-body consumption and JSON validation. Receiving headers no longer disables the timeout while onboarding and collection data are still loading. Request deduplication remains user-scoped; database latency is not changed.
+
+#### Validation
+
+- The streaming-body regression test failed before implementation. All 2,968 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Docker E2E remains deferred.
+
+### 2026-10-04: Archidekt mainboard scope
+
+#### Fixed
+
+- Archidekt exports exclude Sideboard and Considering cards from Mainboard and its count. Commander, partner and category tags are preserved. Dedicated secondary-zone export is not included in this increment.
+
+#### Validation
+
+- The regression test failed on the VPS before implementation. All 2,967 unit tests across 274 files, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403. Docker E2E remains deferred.
+
+### 2026-10-04: Recommendation filter feedback
+
+#### Fixed
+
+- Filtering EDHREC recommendations to cards absent from the deck now announces when all popular cards are already present. Disabling the filter restores the list. Loading, failure and empty-source states do not show the completion message.
+
+#### Validation
+
+- The component regression test failed before implementation. All 2,966 unit tests, TypeScript, lint and production build passed on the VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud failed before analysis with HTTP 403 and Docker E2E remains deferred.
+
+### 2026-10-04: EDHREC popularity ranking
+
+#### Changed
+
+- The commander meta panel's twenty popular cards are now selected by observed inclusion across EDHREC categories, not by category order.
+
+#### Validation
+
+- The cross-category ranking test failed before implementation. All 2,965 unit tests, TypeScript, lint and production build passed on the personal VPS. GitHub CI, Lighthouse and Vercel passed; SonarCloud returned HTTP 403 before analysis and Docker E2E was not run.
+
+### 2026-10-03: Browser-persistent shopping choices
+
+#### Added
+
+- The shopping list now remembers buy-later printings per signed-in player and deck in the same browser. Buy-now totals and exports still exclude deferred cards without changing deck or collection ownership.
+
+#### Validation
+
+- The reopening regression test failed before implementation. All 2,964 unit tests, TypeScript, lint and production build passed on the personal VPS. GitHub CI, Lighthouse and Vercel passed. SonarCloud returned HTTP 403 before analysis; Docker E2E was not run. Cross-device acquisition state and proxy tracking remain open.
+
 ### 2026-10-03: Deck import fidelity batch
 
 #### Added

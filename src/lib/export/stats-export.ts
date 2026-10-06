@@ -42,7 +42,7 @@ export interface TypeBreakdown {
 function escapeCSV(value: string | number | null): string {
   if (value === null || value === undefined) return "";
   const str = String(value);
-  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+  if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
     return `"${str.replaceAll('"', '""')}"`;
   }
   return str;
@@ -54,7 +54,7 @@ function csvRow(...fields: (string | number | null)[]): string {
 
 // ─── Simple CSV (deck list only) ───────────────────────────────────────────
 export function generateDeckCSV(cards: readonly DeckCard[]): string {
-  const header = csvRow("Card Name", "Qty", "CMC", "Type", "Color Identity", "Price ($USD)");
+  const header = csvRow("Card Name", "Qty", "CMC", "Type", "Color Identity", "Price ($USD)", "Zone", "Scryfall ID", "Category");
   const rows = cards.map((c) =>
     csvRow(
       c.name,
@@ -62,7 +62,10 @@ export function generateDeckCSV(cards: readonly DeckCard[]): string {
       c.cmc,
       c.typeLine.split("—")[0].trim(),
       c.colorIdentity.join("/") || "Colorless",
-      c.price === null ? "N/A" : c.price.toFixed(2)
+      c.price === null ? "N/A" : c.price.toFixed(2),
+      c.zone,
+      c.scryfallId ?? null,
+      c.category
     )
   );
   return [header, ...rows].join("\n");
@@ -82,7 +85,7 @@ export function generateDeckCSVFull(deck: Deck): string {
     csvRow("Tags:", meta.tags.join(", ")),
     "",
     // Deck list
-    csvRow("Card Name", "Qty", "CMC", "Type", "Color Identity", "Price ($USD)"),
+    csvRow("Card Name", "Qty", "CMC", "Type", "Color Identity", "Price ($USD)", "Zone", "Scryfall ID", "Category"),
     ...deck.cards.map((c) =>
       csvRow(
         c.name,
@@ -90,7 +93,10 @@ export function generateDeckCSVFull(deck: Deck): string {
         c.cmc,
         c.typeLine.split("—")[0].trim(),
         c.colorIdentity.join("/") || "Colorless",
-        c.price === null ? "N/A" : c.price.toFixed(2)
+        c.price === null ? "N/A" : c.price.toFixed(2),
+        c.zone,
+        c.scryfallId ?? null,
+        c.category
       )
     ),
     "",
@@ -109,16 +115,18 @@ export function generateDeckCSVFull(deck: Deck): string {
 
 // ─── Export metadata ───────────────────────────────────────────────────────
 export function buildExportMetadata(deck: Deck): ExportMetadata {
-  const totalPrice = deck.cards.reduce(
-    (sum, c) => sum + (c.price ?? 0) * c.quantity,
-    0
-  );
+  let totalPrice = 0;
+  let cardCount = 0;
+  for (const card of deck.cards) {
+    totalPrice += (card.price ?? 0) * card.quantity;
+    cardCount += card.quantity;
+  }
 
   return {
     deckName: deck.name,
     commanderName: deck.commander?.name ?? null,
     format: deck.format,
-    cardCount: deck.cards.length,
+    cardCount,
     totalPrice,
     exportDate: new Date().toISOString().split("T")[0],
     tags: deck.tags,
@@ -132,20 +140,21 @@ export function buildTypeBreakdown(cards: readonly DeckCard[]): TypeBreakdown {
   let artifacts = 0;
   let enchantments = 0;
   let spells = 0;
-  const total = cards.length;
+  let total = 0;
 
   for (const card of cards) {
+    total += card.quantity;
     const type = card.typeLine.toLowerCase();
     if (type.includes("creature")) {
-      creatures++;
+      creatures += card.quantity;
     } else if (type.includes("land")) {
-      lands++;
+      lands += card.quantity;
     } else if (type.includes("artifact")) {
-      artifacts++;
+      artifacts += card.quantity;
     } else if (type.includes("enchantment")) {
-      enchantments++;
+      enchantments += card.quantity;
     } else {
-      spells++;
+      spells += card.quantity;
     }
   }
 

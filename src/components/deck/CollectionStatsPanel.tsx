@@ -100,6 +100,7 @@ export function CollectionStatsPanel({
         <ShoppingListModal
           deck={deck}
           ownedQuantities={collectionQuantities}
+          ownerId={session.user.id}
           onClose={() => setShowShoppingList(false)}
         />
       )}

@@ -22,6 +22,40 @@ const foundCards: ScryfallCard[] = [
 ];
 
 describe("buildImportPreview", () => {
+  it("warns when front-face and full names resolve to the same card", () => {
+    const imported: UrlImportResult = {
+      ...result, ignored: [], cards: [
+        { name: "Fire", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+        { name: "Fire // Ice", quantity: 2, isCommander: false, isPartner: false, zone: "sideboard" },
+      ],
+    };
+    const resolved: ScryfallCard[] = [{
+      id: "fire-ice", name: "Fire // Ice", cmc: 2, type_line: "Instant", color_identity: ["R", "U"],
+    }];
+    const preview = buildImportPreview(imported, resolved);
+    expect(preview.duplicateNames).toEqual(["Fire"]);
+    expect(preview.ignoredNames).toEqual([]);
+    expect(preview.zoneCounts).toEqual({ main: 1, sideboard: 2, maybeboard: 0 });
+    expect(preview.totalQuantity).toBe(3);
+  });
+
+  it("reports each unresolved normalized name once, preserving its first spelling", () => {
+    const imported: UrlImportResult = {
+      ...result,
+      ignored: ["Unknown Spell", "unknown  spell", "Mage's Secret"],
+      cards: [
+        { ...result.cards[1], name: " UNKNOWN SPELL " },
+        { ...result.cards[1], name: "Mage\u2019s Secret", zone: "sideboard" },
+        { ...result.cards[1], name: "Other Spell", zone: "maybeboard" },
+        { ...result.cards[1], name: "other  spell", zone: "maybeboard" },
+      ],
+    };
+    const preview = buildImportPreview(imported, []);
+    expect(preview.ignoredNames).toEqual(["Unknown Spell", "Mage's Secret", "Other Spell"]);
+    expect(preview.totalQuantity).toBe(4);
+    expect(preview.zoneCounts).toEqual({ main: 1, sideboard: 1, maybeboard: 2 });
+  });
+
   it("summarizes commanders, zones, quantities and duplicate decisions", () => {
     expect(buildImportPreview(result, foundCards)).toEqual({
       name: "Atraxa list",
