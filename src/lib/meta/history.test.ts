@@ -35,6 +35,22 @@ describe("toCaptureDay", () => {
 });
 
 describe("computeMetaShifts", () => {
+  it("uses the retained duplicate value for the disappearance cutoff", () => {
+    const current: MetaSnapshotInput = {
+      capturedOn: new Date("2026-08-22T00:00:00.000Z"),
+      cards: [
+        { name: "A", inclusion: 0.9 },
+        { name: "A", inclusion: 0.1 },
+      ],
+    };
+    const report = computeMetaShifts([
+      snapshot("2026-08-01", { A: 0.8, B: 0.95 }), current,
+    ], 60);
+
+    const gone = shiftFor(report?.shifts ?? [], "B");
+    expect(gone.kind === "left" && gone.deltaAtMost).toBeCloseTo(-0.05, 10);
+  });
+
   it("returns null with a single snapshot — the first visit can only set a baseline", () => {
     expect(computeMetaShifts([snapshot("2026-08-22", { "Sol Ring": 0.9 })], 30)).toBeNull();
   });
@@ -203,14 +219,13 @@ describe("computeMetaShifts", () => {
     expect(report?.shifts).toHaveLength(1);
   });
 
-  it("survives an empty snapshot on either end", () => {
-    const emptied = computeMetaShifts(
-      [snapshot("2026-08-01", { A: 0.5 }), snapshot("2026-08-22", {})],
-      60
-    );
-    expect(emptied?.shifts).toEqual([
-      { kind: "left", name: "A", baseline: 0.5, deltaAtMost: -0.5 },
-    ]);
+  it.each(["baseline", "current"])("does not infer shifts from an empty %s snapshot", (emptyEnd) => {
+    const report = computeMetaShifts([
+      snapshot("2026-08-01", emptyEnd === "baseline" ? {} : { A: 0.5 }),
+      snapshot("2026-08-22", emptyEnd === "current" ? {} : { A: 0.7 }),
+    ], 60);
+
+    expect(report).toBeNull();
   });
 });
 

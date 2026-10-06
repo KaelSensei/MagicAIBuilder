@@ -94,6 +94,20 @@ interface PendingZoneWrite {
 
 const pendingZoneWrites = new Map<string, PendingZoneWrite>();
 
+interface PendingNotesWrite {
+  confirmedNotes: string | null | undefined;
+  tail: Promise<void>;
+}
+
+const pendingNotesWrites = new Map<string, PendingNotesWrite>();
+
+interface PendingCategoryWrite {
+  confirmedCategory: CardCategory;
+  tail: Promise<void>;
+}
+
+const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
+
 export interface DeckStore {
   // State
   decks: Record<string, Deck>;
@@ -997,8 +1011,18 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   updateCardCategory: async (cardId: string, category: CardCategory) => {
-    const { activeDeckId } = get();
+    const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
+    const deck = decks[activeDeckId];
+    if (!deck) return;
+    const previousCard = uniqueDeckCards(deck).find((card) => card.id === cardId);
+    if (!previousCard) return;
+    const key = `${activeDeckId}:${cardId}`;
+    const pending = pendingCategoryWrites.get(key) ?? {
+      confirmedCategory: previousCard.category,
+      tail: Promise.resolve(),
+    };
+    pendingCategoryWrites.set(key, pending);
 
     // Optimistic update
     set((state) => ({
@@ -1011,13 +1035,38 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
 
     set({ isSyncing: true });
-    try {
-      await deckApi.updateCardCategory(activeDeckId, cardId, category);
-    } catch (err) {
-      logger.error("Unexpected error", "updateCardCategory", err);
-    } finally {
-      set({ isSyncing: false });
-    }
+    const write = pending.tail.then(async () => {
+      try {
+        await deckApi.updateCardCategory(activeDeckId, cardId, category);
+        pending.confirmedCategory = category;
+      } catch (err) {
+        logger.error("Unexpected error", "updateCardCategory", err);
+        if (pending.tail === write) {
+          set((state) => {
+            const currentDeck = state.decks[activeDeckId];
+            if (!currentDeck) return state;
+            return {
+              decks: {
+                ...state.decks,
+                [activeDeckId]: updateDeckCards(currentDeck, (cards) => cards.map((card) =>
+                  card.id === cardId && card.category === category
+                    ? { ...card, category: pending.confirmedCategory }
+                    : card
+                )),
+              },
+            };
+          });
+          useToastStore.getState().add("error", "Could not save card category. Please retry.");
+        }
+      } finally {
+        if (pending.tail === write) {
+          pendingCategoryWrites.delete(key);
+          set({ isSyncing: pendingCategoryWrites.size > 0 || pendingNotesWrites.size > 0 || pendingZoneWrites.size > 0 || pendingQuantityWrites.size > 0 });
+        }
+      }
+    });
+    pending.tail = write;
+    await write;
   },
 
   updateCardQuantity: async (cardId, delta) => {
@@ -1085,7 +1134,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         if (nextWrite && nextWrite !== write) nextWrite.confirmedQuantity = write.confirmedQuantity;
         if (nextWrite === write) {
           pendingQuantityWrites.delete(writeKey);
-          set({ isSyncing: false });
+          set({ isSyncing: pendingQuantityWrites.size > 0 || pendingNotesWrites.size > 0 || pendingZoneWrites.size > 0 });
         }
       }
     })();
@@ -1184,6 +1233,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   updateCardNotes: async (cardId: string, notes: string | null) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
+    const deck = get().decks[activeDeckId];
+    const currentCard = deck && uniqueDeckCards(deck).find((card) => card.id === cardId);
+    if (!currentCard) return;
+    const key = `${activeDeckId}:${cardId}`;
+    const pending = pendingNotesWrites.get(key) ?? {
+      confirmedNotes: currentCard.notes,
+      tail: Promise.resolve(),
+    };
+    pendingNotesWrites.set(key, pending);
 
     // Optimistic update
     set((state) => ({
@@ -1196,13 +1254,38 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
 
     set({ isSyncing: true });
-    try {
-      await deckApi.updateCardNotes(activeDeckId, cardId, notes);
-    } catch (err) {
-      logger.error("Unexpected error", "updateCardNotes", err);
-    } finally {
-      set({ isSyncing: false });
-    }
+    const write = pending.tail.then(async () => {
+      try {
+        await deckApi.updateCardNotes(activeDeckId, cardId, notes);
+        pending.confirmedNotes = notes;
+      } catch (err) {
+        logger.error("Unexpected error", "updateCardNotes", err);
+        if (pending.tail === write) {
+          set((state) => {
+            const currentDeck = state.decks[activeDeckId];
+            if (!currentDeck) return state;
+            return {
+              decks: {
+                ...state.decks,
+                [activeDeckId]: updateDeckCards(currentDeck, (cards) => cards.map((card) =>
+                  card.id === cardId && card.notes === notes
+                    ? { ...card, notes: pending.confirmedNotes }
+                    : card
+                )),
+              },
+            };
+          });
+          useToastStore.getState().add("error", "Could not save card notes. Try again.");
+        }
+      } finally {
+        if (pending.tail === write) {
+          pendingNotesWrites.delete(key);
+          set({ isSyncing: pendingNotesWrites.size > 0 || pendingZoneWrites.size > 0 || pendingQuantityWrites.size > 0 });
+        }
+      }
+    });
+    pending.tail = write;
+    await write;
   },
 
   moveCardToZone: async (cardId: string, zone: DeckZone) => {
@@ -1256,7 +1339,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       } finally {
         if (pending.tail === write) {
           pendingZoneWrites.delete(key);
-          set({ isSyncing: false });
+          set({ isSyncing: pendingZoneWrites.size > 0 || pendingNotesWrites.size > 0 || pendingQuantityWrites.size > 0 });
         }
       }
     });
@@ -1265,31 +1348,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   bulkMoveToZone: async (cardIds, zone) => {
-    const { activeDeckId } = get();
-    if (!activeDeckId || cardIds.length === 0) return;
-
-    const idSet = new Set(cardIds);
-    const deck = get().decks[activeDeckId];
-    if (!deck || !cardIds.some((id) => uniqueDeckCards(deck).some((card) => card.id === id && card.zone !== zone))) return;
-
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [activeDeckId]: setCardsZone(state.decks[activeDeckId], idSet, zone),
-      },
-    }));
-
-    set({ isSyncing: true });
-    try {
-      await Promise.all(
-        cardIds.map((id) => deckApi.updateCardZone(activeDeckId, id, zone))
-      );
-    } catch (err) {
-      logger.error("Unexpected error", "bulkMoveToZone", err);
-    } finally {
-      set({ isSyncing: false });
-    }
+    await Promise.all(cardIds.map((id) => get().moveCardToZone(id, zone)));
   },
 
   bulkRemoveCards: async (cardIds) => {

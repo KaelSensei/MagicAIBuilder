@@ -96,10 +96,10 @@ export function toCaptureDay(date: Date): Date {
 }
 
 /** The lowest inclusion a snapshot listed — the truncation cut-off. */
-function cutoff(cards: readonly MetaCard[]): number {
+function cutoff(inclusions: ReadonlyMap<string, number>): number {
   let lowest = Number.POSITIVE_INFINITY;
-  for (const card of cards) {
-    if (card.inclusion < lowest) lowest = card.inclusion;
+  for (const inclusion of inclusions.values()) {
+    if (inclusion < lowest) lowest = inclusion;
   }
   return Number.isFinite(lowest) ? lowest : 0;
 }
@@ -143,8 +143,8 @@ function diffSnapshots(
 ): MetaShift[] {
   const before = byInclusion(baseline.cards);
   const after = byInclusion(current.cards);
-  const baselineCutoff = cutoff(baseline.cards);
-  const currentCutoff = cutoff(current.cards);
+  const baselineCutoff = cutoff(before);
+  const currentCutoff = cutoff(after);
   const shifts: MetaShift[] = [];
 
   for (const [name, currentInclusion] of after) {
@@ -185,7 +185,9 @@ function diffSnapshots(
  * Compare the newest snapshot against the oldest one inside `windowDays`.
  *
  * Returns `null` when there is nothing to compare — fewer than two snapshots,
- * or only one distinct day inside the window. A one-snapshot commander is the
+ * only one distinct day inside the window, or an empty comparison endpoint.
+ * An empty list has no measured cut-off and cannot establish a trend bound.
+ * A one-snapshot commander is the
  * normal state of a freshly recorded commander, not an error: history accrues
  * from ordinary traffic, so the first visit can only ever establish a baseline.
  *
@@ -217,6 +219,8 @@ export function computeMetaShifts(
   if (!baseline || baseline.capturedOn.getTime() >= current.capturedOn.getTime()) {
     return null;
   }
+
+  if (baseline.cards.length === 0 || current.cards.length === 0) return null;
 
   const shifts = diffSnapshots(baseline, current).toSorted(
     (a, b) => shiftMagnitude(b) - shiftMagnitude(a) || a.name.localeCompare(b.name)

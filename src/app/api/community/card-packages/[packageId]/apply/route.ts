@@ -85,10 +85,9 @@ export async function POST(request: Request, context: RouteContext) {
         isBasicLand: card.typeLine.toLowerCase().includes("basic land"),
       })),
     });
-    const readyIds = new Set(
-      preview.cards.filter((card) => card.status === "ready").map((card) => card.scryfallId)
+    const readyCards = acceptedCards.filter(
+      (_card, index) => preview.cards[index]?.status === "ready"
     );
-    const readyCards = acceptedCards.filter((card) => readyIds.has(card.scryfallId));
     if (readyCards.length === 0) {
       return NextResponse.json({ addedCount: 0, blockedCount: preview.blockedCount });
     }

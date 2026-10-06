@@ -122,10 +122,9 @@ function collectMetaCardsFromEdhrecLists(
   const seen = new Set<string>();
   const cards: MetaCard[] = [];
 
-  outer: for (const list of lists) {
+  for (const list of lists) {
     for (const view of list.cardviews ?? []) {
       if (!view.name || seen.has(view.name)) continue;
-      if (cards.length >= 20) break outer;
       seen.add(view.name);
       const sample = sampleFromEdhrecView(view);
       cards.push({
@@ -136,7 +135,7 @@ function collectMetaCardsFromEdhrecLists(
     }
   }
 
-  return cards;
+  return cards.sort((a, b) => b.inclusion - a.inclusion).slice(0, 20);
 }
 
 export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData> {

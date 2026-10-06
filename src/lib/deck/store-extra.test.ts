@@ -433,7 +433,77 @@ describe("useDeckStore — setCompanion", () => {
   });
 });
 
+describe("useDeckStore category save recovery", () => {
+  it("restores the confirmed category when two rapid saves fail", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
+    vi.mocked(deckApi.updateCardCategory)
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new Error("offline"));
+
+    const first = useDeckStore.getState().updateCardCategory("card-1", "ramp");
+    const second = useDeckStore.getState().updateCardCategory("card-1", "draw");
+    await Promise.all([first, second]);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe("instant");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("saves rapid category edits in order", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
+    let finishFirst = () => {};
+    const pendingFirst = new Promise<void>((resolve) => { finishFirst = resolve; });
+    vi.mocked(deckApi.updateCardCategory).mockImplementationOnce(async () => {
+      await pendingFirst;
+      throw new Error("offline");
+    });
+    const first = useDeckStore.getState().updateCardCategory("card-1", "ramp");
+    await vi.waitFor(() => expect(deckApi.updateCardCategory).toHaveBeenCalled());
+    const callsBeforeSecond = vi.mocked(deckApi.updateCardCategory).mock.calls.length;
+    const second = useDeckStore.getState().updateCardCategory("card-1", "draw");
+    await Promise.resolve();
+    const callsWithFirstPending = vi.mocked(deckApi.updateCardCategory).mock.calls.length;
+    finishFirst();
+    await Promise.all([first, second]);
+
+    expect(callsWithFirstPending).toBe(callsBeforeSecond);
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe("draw");
+  });
+
+  it("restores the previous category and warns when saving fails", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", category: "instant" })] }));
+    vi.mocked(deckApi.updateCardCategory).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().updateCardCategory("card-1", "ramp");
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].category).toBe("instant");
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+});
+
 describe("useDeckStore — updateCardNotes", () => {
+  it("keeps saving visible when a zone move finishes before a pending note", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
+    let finishNote = () => {};
+    const pendingNote = new Promise<void>((resolve) => { finishNote = resolve; });
+    vi.mocked(deckApi.updateCardNotes).mockImplementationOnce(async () => {
+      await pendingNote;
+      throw new Error("offline");
+    });
+
+    const note = useDeckStore.getState().updateCardNotes("card-1", "New note");
+    await useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    const savingWithNotePending = useDeckStore.getState().isSyncing;
+    finishNote();
+    await note;
+
+    expect(savingWithNotePending).toBe(true);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(useDeckStore.getState().decks["deck-1"].cards[0]).toMatchObject({
+      notes: "Saved note", zone: "sideboard",
+    });
+  });
+
   beforeEach(() => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", name: "Counterspell" })] }));
   });
@@ -442,6 +512,30 @@ describe("useDeckStore — updateCardNotes", () => {
     await useDeckStore.getState().updateCardNotes("card-1", "Draw 2");
     const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
     expect(card?.notes).toBe("Draw 2");
+  });
+
+  it("restores saved notes and notifies after a failed save", async () => {
+    vi.mocked(deckApi.updateCardNotes).mockRejectedValueOnce(new Error("offline"));
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
+
+    await useDeckStore.getState().updateCardNotes("card-1", "Unsaved note");
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe("Saved note");
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.stringContaining("notes"));
+  });
+
+  it("restores the confirmed note after two rapid edits both fail", async () => {
+    vi.mocked(deckApi.updateCardNotes)
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new Error("offline"));
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
+
+    const first = useDeckStore.getState().updateCardNotes("card-1", "First edit");
+    const second = useDeckStore.getState().updateCardNotes("card-1", "Second edit");
+    await Promise.all([first, second]);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].notes).toBe("Saved note");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
   it("clears notes when null is passed", async () => {
@@ -740,6 +834,49 @@ describe("useDeckStore — updateCardQuantity", () => {
     await useDeckStore.getState().updateCardQuantity("card-1", 1);
     const card = useDeckStore.getState().decks["deck-1"].cards.find((c) => c.id === "card-1");
     expect(card?.quantity).toBe(2);
+  });
+
+  it.each(["note", "zone"])("keeps saving visible when a %s finishes before a pending quantity", async (action) => {
+    let finishQuantity = () => {};
+    const pendingQuantity = new Promise<void>((resolve) => { finishQuantity = resolve; });
+    vi.mocked(global.fetch).mockImplementationOnce(async () => {
+      await pendingQuantity;
+      return new Response(null, { status: 200 });
+    });
+
+    const quantity = useDeckStore.getState().updateCardQuantity("card-1", 1);
+    await vi.waitFor(() => expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2));
+    if (action === "note") {
+      await useDeckStore.getState().updateCardNotes("card-1", "Saved note");
+    } else {
+      await useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    }
+    const savingWithQuantityPending = useDeckStore.getState().isSyncing;
+    finishQuantity();
+    await quantity;
+
+    expect(savingWithQuantityPending).toBe(true);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2);
+  });
+
+  it("keeps saving visible when quantity finishes before a pending note", async () => {
+    let finishNote = () => {};
+    const pendingNote = new Promise<void>((resolve) => { finishNote = resolve; });
+    vi.mocked(deckApi.updateCardNotes).mockImplementationOnce(async () => {
+      await pendingNote;
+      throw new Error("offline");
+    });
+
+    const note = useDeckStore.getState().updateCardNotes("card-1", "New note");
+    await useDeckStore.getState().updateCardQuantity("card-1", 1);
+    const savingWithNotePending = useDeckStore.getState().isSyncing;
+    finishNote();
+    await note;
+
+    expect(savingWithNotePending).toBe(true);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2);
   });
 
   it("restores the saved quantity and warns when the server rejects the update", async () => {

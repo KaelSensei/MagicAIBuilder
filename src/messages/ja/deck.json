@@ -676,7 +676,7 @@
     "copyBuyNow": "今購入するリストをコピー",
     "exportBuyNowCsv": "今購入するCSVを出力",
     "nothingPlanned": "今購入するカードはありません",
-    "sessionOnly": "このセッションのみの計画です。コレクションは変更されません。",
+    "sessionOnly": "このデッキのプランはこのブラウザーに保存されます。コレクションは変更されません。",
     "deferredCount": "後で購入: {count} 枚",
     "knownSubtotal": "価格が判明している分の小計",
     "priceUnavailable": "価格不明",

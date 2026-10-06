@@ -36,6 +36,66 @@ afterEach(() => {
 });
 
 describe("useMetaShifts", () => {
+  it("discards pending history when the commander changes", async () => {
+    const finish = vi.fn<(response: Response) => void>();
+    vi.mocked(globalThis.fetch).mockReturnValueOnce(
+      new Promise<Response>((resolve) => finish.mockImplementation(resolve))
+    );
+    const { result, rerender } = renderHook(
+      ({ commander }) => useMetaShifts(commander),
+      { initialProps: { commander: "Atraxa" } }
+    );
+    let request = Promise.resolve();
+    act(() => { request = result.current.fetchShifts(); });
+    rerender({ commander: "Krenko" });
+    await act(async () => {
+      finish(jsonResponse({ report: REPORT, snapshotCount: 2 }));
+      await request;
+    });
+
+    expect(result.current.report).toBeNull();
+    expect(result.current.snapshotCount).toBe(0);
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it.each([false, true])("ignores a response after reset (failure: %s)", async (failure) => {
+    const finish = vi.fn<() => void>();
+    vi.mocked(globalThis.fetch).mockReturnValueOnce(new Promise<Response>((resolve, reject) => {
+      finish.mockImplementation(() => failure
+        ? reject(new Error("late failure"))
+        : resolve(jsonResponse({ report: REPORT, snapshotCount: 2 })));
+    }));
+    const { result } = renderHook(() => useMetaShifts("Atraxa"));
+    let request = Promise.resolve();
+    act(() => { request = result.current.fetchShifts(); });
+    act(() => result.current.reset());
+    await act(async () => { finish(); await request; });
+
+    expect(result.current.report).toBeNull();
+    expect(result.current.error).toBeNull();
+    expect(result.current.snapshotCount).toBe(0);
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("keeps the newest result when an older request resolves last", async () => {
+    const finish = vi.fn<(response: Response) => void>();
+    vi.mocked(globalThis.fetch)
+      .mockReturnValueOnce(new Promise<Response>((resolve) => finish.mockImplementation(resolve)))
+      .mockResolvedValueOnce(jsonResponse({ report: null, snapshotCount: 1 }));
+    const { result } = renderHook(() => useMetaShifts("Atraxa"));
+    let olderRequest = Promise.resolve();
+    act(() => { olderRequest = result.current.fetchShifts(); });
+    await act(async () => { await result.current.fetchShifts(); });
+    await act(async () => {
+      finish(jsonResponse({ report: REPORT, snapshotCount: 2 }));
+      await olderRequest;
+    });
+
+    expect(result.current.report).toBeNull();
+    expect(result.current.snapshotCount).toBe(1);
+    expect(result.current.isLoading).toBe(false);
+  });
+
   it("does not fetch without a commander", async () => {
     const { result } = renderHook(() => useMetaShifts(null));
     await act(async () => {

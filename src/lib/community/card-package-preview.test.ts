@@ -8,6 +8,63 @@ const context = {
 };
 
 describe("previewCardPackage", () => {
+  it("does not reserve copies for a rejected oversized package row", () => {
+    const card = { scryfallId: "oversized", name: "Counterspell", quantity: 5, colorIdentity: ["U"], isBanned: false, isBasicLand: false };
+    const preview = previewCardPackage([card, { ...card, scryfallId: "valid-printing", quantity: 1 }], {
+      ...context, format: "modern", existingCards: [{ name: "Counterspell", quantity: 3, isBasicLand: false }],
+    });
+    expect(preview.cards.map((row) => row.status)).toEqual(["blocked", "ready"]);
+    expect(preview.readyCount).toBe(1);
+  });
+
+  it("does not reserve singleton capacity for a banned printing", () => {
+    const card = { scryfallId: "banned", name: "Blue Spell", quantity: 1, colorIdentity: ["U"], isBanned: true, isBasicLand: false };
+    const preview = previewCardPackage([card, { ...card, scryfallId: "legal", isBanned: false }], {
+      ...context, existingCards: [],
+    });
+    expect(preview.cards.map((row) => row.status)).toEqual(["blocked", "ready"]);
+  });
+
+  it("blocks package quantities above a non-singleton format copy limit", () => {
+    const preview = previewCardPackage([
+      { scryfallId: "spell", name: "Counterspell", quantity: 5, colorIdentity: ["U"], isBanned: false, isBasicLand: false },
+    ], { ...context, format: "modern", existingCards: [] });
+    expect(preview.cards[0]?.status).toBe("blocked");
+    expect(preview.cards[0]?.issues).toContainEqual({ kind: "copyLimit", message: "Counterspell exceeds the 4-copy limit" });
+  });
+
+  it("counts existing copies and different package printings against the format limit", () => {
+    const card = { scryfallId: "spell", name: "Counterspell", quantity: 2, colorIdentity: ["U"], isBanned: false, isBasicLand: false };
+    const preview = previewCardPackage([card, { ...card, scryfallId: "other-printing", quantity: 1 }], {
+      ...context, format: "modern", existingCards: [
+        { name: "Counterspell", quantity: 2, isBasicLand: false },
+      ],
+    });
+    expect(preview.cards[0]?.status).toBe("ready");
+    expect(preview.cards[1]?.status).toBe("blocked");
+    expect(preview.cards[1]?.issues).toContainEqual({ kind: "copyLimit", message: "Counterspell exceeds the 4-copy limit" });
+  });
+
+  it("allows capped multiples up to their existing card-specific limit", () => {
+    const preview = previewCardPackage([
+      { scryfallId: "dwarves", name: "Seven Dwarves", quantity: 4, colorIdentity: ["R"], isBanned: false, isBasicLand: false },
+    ], { ...context, commanderColorIdentity: ["R"], existingCards: [
+      { name: "Seven Dwarves", quantity: 3, isBasicLand: false },
+    ] });
+    expect(preview.cards[0]?.status).toBe("ready");
+  });
+
+  it("blocks capped multiples once existing and package quantities exceed the cap", () => {
+    const card = { scryfallId: "dwarves", name: "Seven Dwarves", quantity: 3, colorIdentity: ["R"], isBanned: false, isBasicLand: false };
+    const preview = previewCardPackage([card, { ...card, scryfallId: "other-printing" }], {
+      ...context, commanderColorIdentity: ["R"], existingCards: [
+        { name: "Seven Dwarves", quantity: 2, isBasicLand: false },
+      ],
+    });
+    expect(preview.cards[0]?.status).toBe("ready");
+    expect(preview.cards[1]?.issues).toContainEqual({ kind: "copyLimit", message: "Seven Dwarves exceeds the 7-copy limit" });
+  });
+
   it("reports banned, color identity, and singleton violations per card", () => {
     const preview = previewCardPackage(
       [

@@ -7,7 +7,7 @@
  * reachable. `report: null` is the ordinary answer for a commander with fewer
  * than two recorded days, not an error — `snapshotCount` tells the two apart.
  */
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { commanderToSlug } from "@/lib/meta/fetch";
 import type { MetaShift } from "@/lib/meta/history";
 
@@ -45,10 +45,18 @@ const IDLE: MetaShiftsState = {
 
 export function useMetaShifts(commanderName: string | null) {
   const [state, setState] = useState<MetaShiftsState>(IDLE);
+  const requestVersion = useRef(0);
+
+  useEffect(() => {
+    requestVersion.current += 1;
+    setState(IDLE);
+    return () => { requestVersion.current += 1; };
+  }, [commanderName]);
 
   const fetchShifts = useCallback(async () => {
     if (!commanderName) return;
     const slug = commanderToSlug(commanderName);
+    const version = ++requestVersion.current;
 
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
@@ -57,6 +65,7 @@ export function useMetaShifts(commanderName: string | null) {
         `/api/meta/${encodeURIComponent(slug)}/history?days=${SHIFT_WINDOW_DAYS}`
       );
       const data = (await res.json()) as HistoryApiResponse;
+      if (version !== requestVersion.current) return;
 
       if (!res.ok || data.error) {
         throw new Error(data.error ?? `HTTP ${res.status}`);
@@ -69,6 +78,7 @@ export function useMetaShifts(commanderName: string | null) {
         error: null,
       });
     } catch (err) {
+      if (version !== requestVersion.current) return;
       setState({
         ...IDLE,
         error: err instanceof Error ? err.message : "Failed to load meta shifts",
@@ -76,7 +86,10 @@ export function useMetaShifts(commanderName: string | null) {
     }
   }, [commanderName]);
 
-  const reset = useCallback(() => setState(IDLE), []);
+  const reset = useCallback(() => {
+    requestVersion.current += 1;
+    setState(IDLE);
+  }, []);
 
   return { ...state, fetchShifts, reset };
 }

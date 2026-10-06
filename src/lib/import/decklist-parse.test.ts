@@ -7,6 +7,63 @@ import { extractCardsFromHtml, parsePlainTextDecklist } from "./decklist-parse";
  */
 
 describe("parsePlainTextDecklist", () => {
+  it.each(["c21", "C21", "mh3", "Mh3"])("accepts edition code %s without changing roles or zones", (setCode) => {
+    const cards = parsePlainTextDecklist([
+      "Commander", `1 Atraxa, Praetors' Voice (${setCode}) 1`,
+      "Sideboard", `2 Negate (${setCode}) 42`,
+      "Considering", `3 Ponder (${setCode}) 7`,
+    ].join("\n"));
+    expect(cards).toEqual([
+      { name: "Atraxa, Praetors' Voice", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Negate", quantity: 2, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", quantity: 3, isCommander: false, isPartner: false, zone: "maybeboard" },
+    ]);
+  });
+
+  it("preserves uppercase quantity markers across command and secondary zones", () => {
+    const cards = parsePlainTextDecklist([
+      "Commander", "1X Atraxa, Praetors' Voice", "Deck", "4X Island",
+      "Sideboard", "2X Negate", "Considering", "3X Ponder",
+    ].join("\n"));
+    expect(cards).toEqual([
+      { name: "Atraxa, Praetors' Voice", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Island", quantity: 4, isCommander: false, isPartner: false, zone: "main" },
+      { name: "Negate", quantity: 2, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", quantity: 3, isCommander: false, isPartner: false, zone: "maybeboard" },
+    ]);
+  });
+
+  it.each([":", " (1):"])("recognizes colon-terminated section headings %s", (suffix) => {
+    const cards = parsePlainTextDecklist([
+      `Commander${suffix}`, "1 Thrasios, Triton Hero",
+      `// Partner${suffix}`, "1 Tymna the Weaver",
+      `# Sideboard${suffix}`, "1 Negate",
+      `Considering${suffix}`, "1 Ponder",
+      `Deck${suffix}`, "1 Sol Ring",
+    ].join("\n"));
+    expect(cards.map(({ name, isCommander, isPartner, zone }) => ({ name, isCommander, isPartner, zone }))).toEqual([
+      { name: "Thrasios, Triton Hero", isCommander: true, isPartner: false, zone: "main" },
+      { name: "Tymna the Weaver", isCommander: false, isPartner: true, zone: "main" },
+      { name: "Negate", isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", isCommander: false, isPartner: false, zone: "maybeboard" },
+      { name: "Sol Ring", isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
+  it.each(["\r", "\r\n", "\n"])("preserves zones with line separator %j", (separator) => {
+    const cards = parsePlainTextDecklist([
+      "Commander", "1 Atraxa, Praetors' Voice", "Deck", "2 Island",
+      "Sideboard", "1 Negate", "Considering", "1 Ponder",
+    ].join(separator));
+
+    expect(cards).toEqual([
+      { name: "Atraxa, Praetors' Voice", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Island", quantity: 2, isCommander: false, isPartner: false, zone: "main" },
+      { name: "Negate", quantity: 1, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Ponder", quantity: 1, isCommander: false, isPartner: false, zone: "maybeboard" },
+    ]);
+  });
+
   it("parses quantity and name, with or without the x", () => {
     const cards = parsePlainTextDecklist("1 Sol Ring\n4x Lightning Bolt");
     expect(cards).toEqual([

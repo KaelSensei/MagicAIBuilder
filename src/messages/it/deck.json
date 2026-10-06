@@ -676,7 +676,7 @@
     "copyBuyNow": "Copia la lista da comprare ora",
     "exportBuyNowCsv": "Esporta CSV da comprare ora",
     "nothingPlanned": "Nessuna carta da comprare ora",
-    "sessionOnly": "Piano valido solo per questa sessione. La collezione non cambia.",
+    "sessionOnly": "Salvato in questo browser per questo mazzo. La collezione non cambia.",
     "deferredCount": "{count} carte per più tardi",
     "knownSubtotal": "Subtotale noto",
     "priceUnavailable": "Prezzo non disponibile",

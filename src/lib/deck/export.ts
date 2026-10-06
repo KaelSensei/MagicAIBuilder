@@ -20,7 +20,11 @@ export function exportPlainText(deck: Deck): string {
     for (const card of zoneCards) {
       lines.push(cardLine(card, card.quantity));
       const note = card.notes?.trim();
-      if (note) lines.push(`// ${note}`);
+      if (note) {
+        for (const noteLine of note.split(/\r\n|\r|\n/)) {
+          lines.push(`// Note: ${noteLine}`);
+        }
+      }
     }
   }
   return lines.join("\n");
@@ -31,9 +35,14 @@ export function exportMoxfield(deck: Deck): string {
   const lines: string[] = [];
   if (deck.commander) { lines.push("// Commander", cardLine(deck.commander), ""); }
   if (deck.partner) { lines.push("// Partner", cardLine(deck.partner), ""); }
+  if (deck.companion) { lines.push("// Companion", cardLine(deck.companion), ""); }
   lines.push("// Deck");
-  for (const card of deck.cards) {
-    lines.push(cardLine(card, card.quantity));
+  for (const zone of ["main", "sideboard", "maybeboard"]) {
+    const zoneCards = deck.cards.filter((card) => card.zone === zone);
+    if (zone !== "main" && zoneCards.length > 0) {
+      lines.push("", zone === "sideboard" ? "// Sideboard" : "// Considering");
+    }
+    for (const card of zoneCards) lines.push(cardLine(card, card.quantity));
   }
   return lines.join("\n");
 }
@@ -41,6 +50,9 @@ export function exportMoxfield(deck: Deck): string {
 /** MTG Arena format — requires "Commander" / "Deck" sections with set/number if available */
 export function exportArena(deck: Deck): string {
   const lines: string[] = [];
+  if (deck.companion) {
+    lines.push("Companion", cardLine(deck.companion), "");
+  }
   if (deck.commander || deck.partner) {
     lines.push("Commander");
     if (deck.commander) lines.push(cardLine(deck.commander));
@@ -52,6 +64,10 @@ export function exportArena(deck: Deck): string {
     lines.push(cardLine(card, card.quantity));
   }
   const sideboard = deck.cards.filter((card) => card.zone === "sideboard");
+  const companion = deck.companion;
+  if (companion && !sideboard.some((card) => card.name === companion.name)) {
+    sideboard.push({ ...companion, quantity: 1, zone: "sideboard" });
+  }
   if (sideboard.length > 0) {
     lines.push("", "Sideboard");
     for (const card of sideboard) lines.push(cardLine(card, card.quantity));
@@ -125,9 +141,10 @@ export function exportArchidekt(deck: Deck): string {
     if (deck.partner) lines.push(`1x ${deck.partner.name} [Commander{top}]`);
     lines.push("");
   }
-  const mainCount = deck.cards.reduce((s, c) => s + c.quantity, 0);
+  const mainCards = deck.cards.filter((card) => card.zone === "main");
+  const mainCount = mainCards.reduce((s, c) => s + c.quantity, 0);
   lines.push(`Mainboard (${mainCount})`);
-  for (const card of deck.cards) {
+  for (const card of mainCards) {
     lines.push(`${card.quantity}x ${card.name} ${archidektCategoryTag(card.category)}`);
   }
   return lines.join("\n");

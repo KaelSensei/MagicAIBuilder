@@ -74,6 +74,30 @@ The deck editor has three tabs:
 
 Switch tabs to view, add, or move cards between zones. The card count in the header only reflects Main zone cards.
 
+Category edits are saved in order for each card. If the latest save fails, the
+editor restores the last confirmed category and asks you to retry.
+
+Card-note edits appear immediately while saving. If the latest save fails, the
+last successfully saved note is restored and an error asks you to retry. Rapid
+edits of the same card are saved in order rather than racing each other.
+
+When you move several cards between zones in quick succession, the save indicator
+stays active until all pending zone moves finish. A failed move restores the last
+confirmed zone and displays an error so you can retry.
+
+The indicator also stays active when a card-note save overlaps a zone move;
+finishing the move does not imply that the note has already been saved.
+
+Finishing a quantity update also keeps the indicator active while other quantity,
+note, or zone updates are still pending.
+
+Likewise, completing a note or zone save does not hide a quantity save that is
+still in progress.
+
+Bulk zone moves recover each card independently: successfully saved cards stay in
+the destination, while a failed card returns to its last confirmed zone and an
+error tells you to retry. Moves of the same card use the existing save queue.
+
 #### Grid vs List View
 
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
@@ -333,6 +357,11 @@ Click **Import** in the deck builder header to paste a decklist in:
 - Plain text format (one card per line: `1 Card Name`)
 - MTGO format
 - Arena format
+
+For downloaded plain-text lists imported from a supported URL, trailing edition
+codes are case-insensitive: `2 Negate (mh3) 42` and `2 Negate (MH3) 42` both
+resolve the card name as `Negate`. Commander roles, quantities and secondary
+zones remain intact. This does not select or restore an exact printing.
 
 ### Exporting a Deck
 
