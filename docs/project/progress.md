@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Undo additions/removals retain their action when the original deck is unloaded and ask the player to open it, without issuing server mutations (#901). Both regressions failed before implementation. VPS validation passed 3,034 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader undo concurrency remain open.
+
 - Obsolete removal undo no longer duplicates an already present saved card or issues another addition request; current zone/quantity are preserved (#899). Red observed before implementation. VPS validation passed 3,032 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader undo concurrency remain open.
 
 - Undo removal uses the original printing identifier and adopts the returned saved row identifier, retaining zone/quantity and enabling subsequent removal (#897). Both regressions failed before implementation. VPS validation passed 3,031 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader undo concurrency remain open.
