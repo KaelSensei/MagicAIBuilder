@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-06: Overlapping quantity save activity
+
+#### Fixed
+
+- Keep the saving indicator visible when quantity, note and zone updates overlap, whichever tracked write finishes first (#877, #878).
+- Refresh vulnerable source-map-js transitive resolutions to the patched version; production dependency audit passed (#877).
+
+#### Validation
+
+- Observed failing store regressions before implementation. Final VPS validation passed all 3,020 tests across 274 files, TypeScript, lint and build. GitHub CI, performance and Vercel passed. Sonar remains blocked before analysis by HTTP 403; Docker E2E and activity tracking for other mutation types remain open.
+
 ### 2026-10-06: Confirmed notes and consistent editor save activity
 
 #### Fixed
