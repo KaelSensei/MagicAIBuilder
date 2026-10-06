@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Failed category edits restore the previously displayed category if the attempted value is still current and show a retry error (#880). Red observed on the VPS; 3,021 unit tests across 274 files, TypeScript, lint and build passed there. CI, performance and Vercel passed. Sonar fails before analysis with HTTP 403. Rapid category-edit serialization, broader save recovery and Docker E2E remain open.
+
 - Quantity, note and zone saves keep the compact indicator visible while any of these tracked writes remain pending (#877, #878). Red regressions observed before implementation; 3,020 unit tests across 274 files, TypeScript, lint and build passed on the VPS. GitHub CI, performance and Vercel passed. The inherited high-severity source-map-js dependency was patched and the production audit passed. Sonar still fails before analysis with HTTP 403; Docker E2E and broader mutation activity remain open.
 
 - Editor save activity now remains visible across concurrent zone moves and overlapping card-note writes (#870, #874). Failed notes restore their confirmed text without reverting a successful zone move. Red observed on VPS; final #874 validation passed all 3,017 tests, TypeScript, lint and build there, plus GitHub CI, performance and Vercel. Sonar failed before analysis with HTTP 403; Docker E2E remains deferred.
