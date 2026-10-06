@@ -88,6 +88,9 @@ finishing the move does not imply that the note has already been saved.
 Finishing a quantity update also keeps the indicator active while other quantity,
 note, or zone updates are still pending.
 
+Likewise, completing a note or zone save does not hide a quantity save that is
+still in progress.
+
 Bulk zone moves recover each card independently: successfully saved cards stay in
 the destination, while a failed card returns to its last confirmed zone and an
 error tells you to retry. Moves of the same card use the existing save queue.

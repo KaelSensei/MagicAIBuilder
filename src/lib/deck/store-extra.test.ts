@@ -788,6 +788,30 @@ describe("useDeckStore — updateCardQuantity", () => {
     expect(card?.quantity).toBe(2);
   });
 
+  it.each(["note", "zone"])("keeps saving visible when a %s finishes before a pending quantity", async (action) => {
+    let finishQuantity = () => {};
+    const pendingQuantity = new Promise<void>((resolve) => { finishQuantity = resolve; });
+    vi.mocked(global.fetch).mockImplementationOnce(async () => {
+      await pendingQuantity;
+      return new Response(null, { status: 200 });
+    });
+
+    const quantity = useDeckStore.getState().updateCardQuantity("card-1", 1);
+    await vi.waitFor(() => expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2));
+    if (action === "note") {
+      await useDeckStore.getState().updateCardNotes("card-1", "Saved note");
+    } else {
+      await useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    }
+    const savingWithQuantityPending = useDeckStore.getState().isSyncing;
+    finishQuantity();
+    await quantity;
+
+    expect(savingWithQuantityPending).toBe(true);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(useDeckStore.getState().decks["deck-1"].cards[0].quantity).toBe(2);
+  });
+
   it("keeps saving visible when quantity finishes before a pending note", async () => {
     let finishNote = () => {};
     const pendingNote = new Promise<void>((resolve) => { finishNote = resolve; });
