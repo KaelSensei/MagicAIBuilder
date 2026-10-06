@@ -269,6 +269,20 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         await deckApi.removeCard(activeDeckId, card.id);
       } catch (err) {
         logger.error("Unexpected error", "undo:ADD_CARD", err);
+        set((state) => {
+          const currentDeck = state.decks[activeDeckId];
+          return {
+            decks: currentDeck ? {
+              ...state.decks,
+              [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
+                cards.some((current) => current.id === card.id) ? cards : [...cards, card]
+              ),
+            } : state.decks,
+            undoStack: [...state.undoStack, last],
+          };
+        });
+        useToastStore.getState().add("error", "Could not undo card addition. Please retry.");
+        return;
       }
     } else if (last.type === "REMOVE_CARD") {
       // Undo remove → re-add card
