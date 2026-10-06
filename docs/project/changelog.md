@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-07: Obsolete undo duplicate prevention
+
+#### Fixed
+
+- Discard obsolete removal undo when its saved card is already present, without another API addition or changes to current zone/quantity (#899).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,032 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-06: Restored card identifiers
 
 #### Fixed
