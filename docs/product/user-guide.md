@@ -68,6 +68,8 @@ The builder has three panels:
 
 If removing a card fails, the editor restores its zone and quantity and asks you
 to retry. The failed removal does not remain in the undo history.
+Its position is restored before the surviving cards that originally followed it;
+other successful removals and their undo entries are preserved.
 
 The deck editor has three tabs:
 
