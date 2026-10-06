@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-06: Failed undo removal recovery
+
+#### Fixed
+
+- Roll back unsaved restored cards after failed undo removals, retain retry actions and replace false success notifications with errors (#895).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,029 tests across 274 files, TypeScript, lint and build. CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-06: Failed undo addition recovery
 
 #### Fixed
