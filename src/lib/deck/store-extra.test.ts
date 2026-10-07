@@ -165,6 +165,50 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it("keeps another deck's undo usable after deleting the latest action's deck", async () => {
+    const card = makeDeckCard();
+    const deletedCard = makeDeckCard({ id: "deleted-card" });
+    const retainedAction: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: "deck-1", card,
+    };
+    const deletedAction: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: "deck-2", card: deletedCard,
+    };
+    useDeckStore.setState({
+      decks: {
+        "deck-1": makeActiveDeck({ cards: [card] }),
+        "deck-2": makeActiveDeck({ id: "deck-2", cards: [deletedCard] }),
+      },
+      undoStack: [retainedAction, deletedAction],
+    });
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    vi.mocked(deckApi.removeCard).mockClear();
+
+    await useDeckStore.getState().deleteDeck("deck-2");
+
+    expect(useDeckStore.getState().undoStack).toEqual([retainedAction]);
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-1");
+    await useDeckStore.getState().undo();
+    expect(deckApi.removeCard).toHaveBeenCalledWith("deck-1", card.id);
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([]);
+  });
+
+  it("preserves the deck and undo history when deletion is rejected", async () => {
+    const deck = makeActiveDeck();
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: deck.id, card: makeDeckCard(),
+    };
+    useDeckStore.setState({ decks: { [deck.id]: deck }, undoStack: [action] });
+    vi.mocked(deckApi.deleteDeck).mockRejectedValueOnce(new Error("Deletion rejected"));
+
+    await expect(useDeckStore.getState().deleteDeck(deck.id)).rejects.toThrow("Deletion rejected");
+
+    expect(useDeckStore.getState().decks[deck.id]).toEqual(deck);
+    expect(useDeckStore.getState().undoStack).toEqual([action]);
+    expect(useDeckStore.getState().activeDeckId).toBe(deck.id);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("preserves cards and the undo action when name-only matching is ambiguous", async () => {
     const cards = ["printing-1", "printing-2"].map((id) => makeDeckCard({ id, name: "Counterspell", isMaybeboard: false }));
     const action: import("@/lib/deck/store").DeckAction = {
