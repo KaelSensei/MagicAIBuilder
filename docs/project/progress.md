@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Individual server deck fetches now stop waiting after 15 seconds, including JSON reading; guest decks remain local (#909). Red observed before implementation. VPS validation passed 3,037 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader loading/retry work remain open.
+
 - Ambiguous legacy name-only undo no longer deletes an arbitrary printing: cards and the action are preserved, with an error (#907). Red observed before implementation. VPS validation passed 3,036 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader undo concurrency remain open.
 
 - Undo additions prioritize the recorded card ID over an earlier same-name printing, preserving other editions (#905). Red observed before implementation. VPS validation passed 3,035 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and legacy fallback ambiguity remain open.
