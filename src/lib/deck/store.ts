@@ -469,6 +469,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         return {
           decks: rest,
           activeDeckId: state.activeDeckId === id ? null : state.activeDeckId,
+          undoStack: state.undoStack.filter((action) => action.deckId !== id),
         };
       });
     } finally {

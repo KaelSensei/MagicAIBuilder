@@ -85,6 +85,9 @@ printing. Legacy name matching still works when only one card matches.
 If the original deck is not loaded, undo keeps its action and asks you to open
 that deck before retrying, without sending an update to the server.
 
+After a deck is successfully deleted, its undo actions are removed so they cannot
+block undo in another deck. A rejected deletion keeps the deck and its history.
+
 If undoing a card addition fails to save, the card is restored with its zone and
 quantity and the undo action remains available to retry. An error replaces the
 success notification.
