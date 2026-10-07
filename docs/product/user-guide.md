@@ -68,6 +68,7 @@ The builder has three panels:
 
 Server requests to open an individual deck stop waiting after 15 seconds rather
 than remaining pending indefinitely. Local guest decks do not make this request.
+If opening a server deck fails, an error notification asks you to try again.
 
 If removing a card fails, the editor restores its zone and quantity and asks you
 to retry. The failed removal does not remain in the undo history.
