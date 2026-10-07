@@ -541,6 +541,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
+      useToastStore.getState().add("error", "Could not open deck. Please try again.");
     }
   },
 
