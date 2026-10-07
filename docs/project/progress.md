@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Successful deck deletion removes only its undo entries, so other decks' undo stays usable; rejected deletion preserves state (#915). One observed Red/Green cycle and an additional rejected-deletion regression. VPS: 3,040 unit tests across 274 files, TypeScript, lint and build passed. Docker Playwright: 66 scenarios passed after disambiguating existing zone selectors, with unchanged external/performance exclusions. CI, performance and Vercel passed. Sonar HTTP 403, concurrent delete/undo ownership and promotion beyond dev remain open.
+
 - Failed individual deck opening displays a retry error notification without creating a fake empty deck (#911). Red observed before implementation. VPS validation passed 3,038 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Dedicated visual error/retry states, Sonar HTTP 403 and deferred Docker E2E remain open.
 
 - Individual server deck fetches now stop waiting after 15 seconds, including JSON reading; guest decks remain local (#909). Red observed before implementation. VPS validation passed 3,037 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader loading/retry work remain open.

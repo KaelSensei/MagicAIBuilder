@@ -9,6 +9,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-07: Deleted deck undo cleanup
+
+#### Fixed
+
+- Successful deck deletion removes only its undo entries, keeping other decks' undo usable; rejected deletion retains the deck and history (#915).
+- Zone-persistence E2E assertions distinguish rendered card names from menu options and zone tabs from move actions, retaining save and reload checks.
+
+#### Validation
+
+- Observed one focused Red before the minimal store change, then Green. VPS validation passed 3,040 unit tests across 274 files, TypeScript, lint and build. The complete blocking Docker Playwright suite passed 66 scenarios (existing external/performance exclusions unchanged) in an isolated Compose project without published database ports. CI, performance and Vercel passed. Local Sonar lacks configuration; CI Sonar remains blocked before analysis with HTTP 403.
+- Broader concurrent delete/undo ownership and staging/main promotion remain open; this delivery is integrated into dev.
+
 ### 2026-10-07: Deck opening failure feedback
 
 #### Fixed
