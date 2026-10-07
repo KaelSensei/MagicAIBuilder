@@ -66,6 +66,9 @@ The builder has three panels:
 
 #### Deck Zones (Main / Sideboard / Considering)
 
+Server requests to open an individual deck stop waiting after 15 seconds rather
+than remaining pending indefinitely. Local guest decks do not make this request.
+
 If removing a card fails, the editor restores its zone and quantity and asks you
 to retry. The failed removal does not remain in the undo history.
 Its position is restored before the surviving cards that originally followed it;
