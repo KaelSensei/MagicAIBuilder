@@ -165,6 +165,23 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it("preserves cards and the undo action when name-only matching is ambiguous", async () => {
+    const cards = ["printing-1", "printing-2"].map((id) => makeDeckCard({ id, name: "Counterspell", isMaybeboard: false }));
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: "deck-1", card: makeDeckCard({ id: "missing-id", name: "Counterspell" }),
+    };
+    useDeckStore.setState({ decks: { "deck-1": makeActiveDeck({ cards }) }, undoStack: [action] });
+    vi.mocked(deckApi.removeCard).mockClear();
+    toastAdd.mockClear();
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual(cards);
+    expect(useDeckStore.getState().undoStack).toEqual([action]);
+    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+  });
+
   it("undoes the recorded card rather than an earlier printing with the same name", async () => {
     const earlier = makeDeckCard({ id: "earlier-printing", name: "Counterspell", isMaybeboard: false });
     const added = makeDeckCard({ id: "added-printing", name: "Counterspell", isMaybeboard: false });

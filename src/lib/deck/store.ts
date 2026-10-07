@@ -260,8 +260,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       if (!activeDeckId) return;
       const deck = get().decks[activeDeckId];
       const cards = deck ? uniqueDeckCards(deck) : [];
-      const card = cards.find((candidate) => candidate.id === last.card.id)
-        ?? cards.find((candidate) => candidate.name === last.card.name);
+      const exactCard = cards.find((candidate) => candidate.id === last.card.id);
+      const nameMatches = exactCard ? [] : cards.filter((candidate) => candidate.name === last.card.name);
+      if (!exactCard && nameMatches.length > 1) {
+        set((state) => ({ undoStack: [...state.undoStack, last] }));
+        useToastStore.getState().add("error", "Could not identify the card to undo: multiple printings match.");
+        return;
+      }
+      const card = exactCard ?? nameMatches[0];
       if (!card) return;
       set((state) => ({
         decks: {

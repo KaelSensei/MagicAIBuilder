@@ -75,6 +75,9 @@ Undo applies to the deck where the recorded action took place, even if you have
 since opened another deck. Your current deck selection remains unchanged.
 When several printings share a card name, undoing an addition prioritizes the
 recorded card identifier instead of another printing with the same name.
+If that identifier is missing and several cards share the name, undo preserves
+the cards and action and reports the ambiguity rather than removing an arbitrary
+printing. Legacy name matching still works when only one card matches.
 If the original deck is not loaded, undo keeps its action and asks you to open
 that deck before retrying, without sending an update to the server.
 
