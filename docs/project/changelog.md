@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-07: Exact printing undo targeting
+
+#### Fixed
+
+- Prioritize the recorded card identifier before the existing same-name fallback when undoing additions, preserving other printings (#905).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,035 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### Unloaded deck undo recovery
 
 #### Fixed
