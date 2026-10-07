@@ -73,6 +73,8 @@ other successful removals and their undo entries are preserved.
 
 Undo applies to the deck where the recorded action took place, even if you have
 since opened another deck. Your current deck selection remains unchanged.
+When several printings share a card name, undoing an addition prioritizes the
+recorded card identifier instead of another printing with the same name.
 If the original deck is not loaded, undo keeps its action and asks you to open
 that deck before retrying, without sending an update to the server.
 

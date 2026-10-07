@@ -259,7 +259,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const activeDeckId = last.deckId;
       if (!activeDeckId) return;
       const deck = get().decks[activeDeckId];
-      const card = deck && uniqueDeckCards(deck).find((c) => c.id === last.card.id || c.name === last.card.name);
+      const cards = deck ? uniqueDeckCards(deck) : [];
+      const card = cards.find((candidate) => candidate.id === last.card.id)
+        ?? cards.find((candidate) => candidate.name === last.card.name);
       if (!card) return;
       set((state) => ({
         decks: {

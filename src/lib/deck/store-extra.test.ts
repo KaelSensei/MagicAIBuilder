@@ -165,6 +165,20 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it("undoes the recorded card rather than an earlier printing with the same name", async () => {
+    const earlier = makeDeckCard({ id: "earlier-printing", name: "Counterspell", isMaybeboard: false });
+    const added = makeDeckCard({ id: "added-printing", name: "Counterspell", isMaybeboard: false });
+    useDeckStore.setState({
+      decks: { "deck-1": makeActiveDeck({ cards: [earlier, added] }) },
+      undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card: added }],
+    });
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([earlier]);
+    expect(deckApi.removeCard).toHaveBeenLastCalledWith("deck-1", "added-printing");
+  });
+
   it.each(["ADD_CARD", "REMOVE_CARD"])("preserves %s undo when its deck is not loaded", async (type) => {
     const card = makeDeckCard({ id: "card-1" });
     const action: import("@/lib/deck/store").DeckAction = type === "ADD_CARD"
