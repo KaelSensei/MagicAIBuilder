@@ -46,7 +46,7 @@ test.describe("Deck Editor zones", () => {
       await page.goto(`/builder/${deckId}`);
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
 
-      const sideboardTab = page.getByRole("button", { name: /Sideboard/ });
+      const sideboardTab = page.getByRole("button", { name: /^Sideboard\b/ });
       await expect(sideboardTab).toHaveText(/1/);
       await sideboardTab.click();
       const sideboardCard = page.locator("span").getByText("Zone Sideboard Card", { exact: true });
@@ -69,7 +69,7 @@ test.describe("Deck Editor zones", () => {
 
       await page.reload();
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
-      await page.getByRole("button", { name: /Considering/ }).click();
+      await page.getByRole("button", { name: /^Considering\b/ }).click();
       await expect(sideboardCard).toBeVisible();
     } finally {
       await request.delete(`/api/decks/${deckId}`);
