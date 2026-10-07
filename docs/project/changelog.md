@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-07: Deck opening failure feedback
+
+#### Fixed
+
+- Display a retry error notification when individual deck opening fails instead of logging silently (#911).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,038 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
 ### 2026-10-07: Individual deck loading deadline
 
 #### Fixed

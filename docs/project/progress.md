@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Failed individual deck opening displays a retry error notification without creating a fake empty deck (#911). Red observed before implementation. VPS validation passed 3,038 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Dedicated visual error/retry states, Sonar HTTP 403 and deferred Docker E2E remain open.
+
 - Individual server deck fetches now stop waiting after 15 seconds, including JSON reading; guest decks remain local (#909). Red observed before implementation. VPS validation passed 3,037 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader loading/retry work remain open.
 
 - Ambiguous legacy name-only undo no longer deletes an arbitrary printing: cards and the action are preserved, with an error (#907). Red observed before implementation. VPS validation passed 3,036 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar HTTP 403, deferred Docker E2E and broader undo concurrency remain open.
