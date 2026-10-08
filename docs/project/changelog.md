@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-08: Obsolete undo success feedback
+
+#### Fixed
+
+- Undo completion no longer announces a successful edit when its original deck has disappeared after deletion (#919). Late restoration responses do not recreate the deleted deck; ordinary undo feedback for present decks is unchanged.
+
+#### Validation
+
+- Observed one focused Red/Green cycle for late addition undo, followed by passing restoration characterization coverage. VPS: 3,044 unit tests across 274 files, TypeScript, lint and build passed. Full blocking Docker Playwright: 66 scenarios passed with existing external/performance exclusions in an isolated Compose project. CI, performance and Vercel passed. Local Sonar lacks configuration; CI Sonar remains blocked before analysis with HTTP 403.
+- Broader unloading, late-response ownership and concurrent mutations remain open. Integrated into dev; staging/main promotion remains pending.
+
 ### 2026-10-08: Pending undo after deck deletion
 
 #### Fixed
