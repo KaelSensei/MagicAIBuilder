@@ -12,6 +12,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
+const toastAdd = vi.hoisted(() => vi.fn());
+
 // ── Mock deck-api BEFORE importing the store ─────────────────────────────────
 vi.mock("@/lib/db/deck-api", () => ({
   fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
@@ -71,7 +73,7 @@ vi.mock("@/lib/db/deck-api", () => ({
 
 // ── Mock useToast so the store doesn't blow up ────────────────────────────────
 vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
+  useToastStore: { getState: () => ({ add: toastAdd }) },
 }));
 
 import * as deckApi from "@/lib/db/deck-api";
@@ -431,11 +433,35 @@ describe("useDeckStore — renameDeck", () => {
     expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", { name: "Renamed Deck" });
   });
 
-  it("keeps the optimistic name even if API fails", async () => {
+  it("restores the previous name when its save fails", async () => {
     (deckApi.updateDeck as Mock).mockRejectedValueOnce(new Error("server error"));
     await useDeckStore.getState().renameDeck("deck-1", "New Name");
-    expect(useDeckStore.getState().decks["deck-1"].name).toBe("New Name");
+    expect(useDeckStore.getState().decks["deck-1"].name).toBe("Test Deck");
     expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not rename deck. Please retry.");
+  });
+
+  it("preserves a newer successful name when an older rename fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderRename = useDeckStore.getState().renameDeck("deck-1", "Older Name");
+    await useDeckStore.getState().renameDeck("deck-1", "Latest Name");
+    pending.reject(new Error("offline"));
+    await olderRename;
+
+    expect(useDeckStore.getState().decks["deck-1"].name).toBe("Latest Name");
+  });
+
+  it("does not recreate a deleted deck or warn when its rename fails late", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const rename = useDeckStore.getState().renameDeck("deck-1", "New Name");
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await rename;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
   });
 });
 

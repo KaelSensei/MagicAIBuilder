@@ -96,6 +96,9 @@ the deck deleted and does not announce a successful save.
 If refreshing an existing deck fails, an error asks you to retry and leaves the
 current deck unchanged. A late failure after deletion does not show an obsolete
 refresh warning.
+If renaming a deck fails, its previous name is restored when the failed name is
+still displayed, and a retry message appears. A different, newer name is kept;
+a failed rename cannot recreate a deleted deck.
 
 If undoing a card addition fails to save, the card is restored with its zone and
 quantity and the undo action remains available to retry. An error replaces the
