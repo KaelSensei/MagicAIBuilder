@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-08: Deck budget save recovery
+
+#### Fixed
+
+- Rejected budget saves or clears restore the previous displayed budget when the attempted value is still current and show retry feedback. A different newer budget is preserved; late failures neither recreate nor warn about deleted decks (#929).
+
+#### Validation
+
+- Observed focused Red/Green: attempted budget 200 remained instead of previous null. Supplementary passing characterization covers clearing an existing limit, a different newer successful budget and deletion during the request. VPS: 3,056 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright: 66 passed in isolated Compose with diagnostic logging, unchanged exclusions and no retries or bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI is blocked before analysis by HTTP 403. General budget-write serialization, repeated identical values, confirmed-baseline recovery and global activity accounting remain open. Integrated into dev; staging/main promotion remains pending. The existing intermittent E2E outage is not claimed fixed.
+
 ### 2026-10-08: Target bracket save recovery
 
 #### Fixed
