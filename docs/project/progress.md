@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Failed deck renames restore the prior displayed name when the attempted name remains current and show a retry notification; different newer names and deleted decks are preserved (#925). One observed Red/Green cycle plus passing characterization. VPS: 3,050 unit tests across 274 files, TypeScript, lint and build passed. Full Docker Playwright: 66 passed with diagnostic logging and unchanged exclusions. CI, performance and Vercel passed. Sonar HTTP 403, general rename serialization, repeated identical names, confirmed-baseline recovery and promotion beyond dev remain open.
+
 - Failed manual deck refresh now asks the player to retry while preserving the current deck; late failure after deletion is silent (#923). Two observed Red/Green cycles. VPS: 3,048 unit tests across 274 files, TypeScript, lint and build passed. Full blocking Docker E2E eventually passed 66 scenarios after two authentication setup failures; the intermittent server outage remains unresolved and evidence is retained. CI, performance and Vercel passed. Sonar HTTP 403, dedicated visual retry states and promotion beyond dev remain open.
 
 - Save refresh responses no longer recreate a deck deleted while the request was pending or announce misleading success; rejected deletion still allows refresh (#921). One observed Red/Green cycle plus passing rejection and feedback characterization. VPS: 3,046 unit tests across 274 files, TypeScript, lint and production build passed. Docker Playwright: 66 scenarios passed with existing exclusions. CI, performance and Vercel passed. Sonar HTTP 403, broader stale-response ownership and promotion beyond dev remain open.
