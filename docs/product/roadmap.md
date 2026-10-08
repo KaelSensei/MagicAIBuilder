@@ -146,6 +146,7 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [x] Restore the previous card printing and notify the player when its save fails.
 - [ ] Complete cross-zone drag and drop with clear drop targets and no layout jump.
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
+  - [x] Ignore save refresh responses after their deck has been deleted, without recreating the deck or announcing success; rejected deletion still permits refresh (#921). Broader stale-response ownership and concurrent edits remain open.
   - [x] Suppress obsolete success feedback when addition/removal undo completes after its deck was deleted, without recreating the deck (#919). Broader unloading, late-response ownership and mutation concurrency remain open.
   - [x] Discard failed in-flight addition/removal undo retries after their deck has been successfully deleted (#917). Successful late responses, unloading races and broader mutation ownership remain open.
   - [x] Remove a successfully deleted deck's undo entries without blocking other decks; rejected deletion preserves the deck and history (#915). Concurrent deletion and in-flight undo remain open.

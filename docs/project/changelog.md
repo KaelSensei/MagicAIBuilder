@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-08: Deleted deck refresh protection
+
+#### Fixed
+
+- A save refresh completing after successful deck deletion no longer restores the deleted deck or announces a successful save (#921). If deletion is rejected, refresh still updates the existing deck.
+
+#### Validation
+
+- One observed focused Red/Green cycle reproduced the deleted deck being recreated. Additional passing characterization covers rejected deletion and obsolete save feedback. VPS: 3,046 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright: 66 scenarios passed with existing external/performance exclusions in an isolated Compose project. CI, performance and Vercel passed.
+- Local Sonar execution lacks configuration; CI Sonar is blocked before analysis by HTTP 403. Broader unloading, stale-response ownership and concurrent edits remain open. Integrated into dev; staging/main promotion remains pending.
+
 ### 2026-10-08: Obsolete undo success feedback
 
 #### Fixed
