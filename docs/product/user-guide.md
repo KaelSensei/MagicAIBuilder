@@ -87,6 +87,8 @@ that deck before retrying, without sending an update to the server.
 
 After a deck is successfully deleted, its undo actions are removed so they cannot
 block undo in another deck. A rejected deletion keeps the deck and its history.
+If an undo request fails after its deck has been successfully deleted, it does
+not put an obsolete retry action back into the history.
 
 If undoing a card addition fails to save, the card is restored with its zone and
 quantity and the undo action remains available to retry. An error replaces the

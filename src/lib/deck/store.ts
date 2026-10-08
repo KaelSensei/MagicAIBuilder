@@ -281,6 +281,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         await deckApi.removeCard(activeDeckId, card.id);
       } catch (err) {
         logger.error("Unexpected error", "undo:ADD_CARD", err);
+        if (!get().decks[activeDeckId]) return;
         set((state) => {
           const currentDeck = state.decks[activeDeckId];
           return {
@@ -344,6 +345,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         });
       } catch (err) {
         logger.error("Unexpected error", "undo:REMOVE_CARD", err);
+        if (!get().decks[activeDeckId]) return;
         set((state) => {
           const currentDeck = state.decks[activeDeckId];
           return {
