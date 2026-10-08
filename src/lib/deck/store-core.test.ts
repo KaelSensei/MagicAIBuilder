@@ -553,6 +553,42 @@ describe("useDeckStore — setBudget", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — setManualBracket", () => {
+  it("preserves a newer manual bracket when an older save fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderSave = useDeckStore.getState().setManualBracket(4);
+    await useDeckStore.getState().setManualBracket(3);
+    pending.reject(new Error("offline"));
+    await olderSave;
+    expect(useDeckStore.getState().decks["deck-1"].manualBracket).toBe(3);
+  });
+
+  it("does not recreate or notify about a deleted deck after a failed save", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const save = useDeckStore.getState().setManualBracket(4);
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await save;
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("restores the previous override when clearing it fails", async () => {
+    seedDeck(makeActiveDeck({ manualBracket: 2 }));
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setManualBracket(null);
+    expect(useDeckStore.getState().decks["deck-1"].manualBracket).toBe(2);
+  });
+
+  it("restores automatic calculation when saving a manual bracket fails", async () => {
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setManualBracket(4);
+    expect(useDeckStore.getState().decks["deck-1"].manualBracket).toBeNull();
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save manual bracket. Please retry.");
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     seedDeck();
