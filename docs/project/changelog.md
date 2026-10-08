@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-08: Pending undo after deck deletion
+
+#### Fixed
+
+- Failed in-flight undo additions/removals no longer restore obsolete retry entries when their original deck is absent after successful deletion (#917). Existing failure recovery for still-present decks is unchanged.
+
+#### Validation
+
+- Two sequential observed Red/Green cycles, one for each undo kind. VPS: 3,042 unit tests across 274 files, TypeScript, lint and build passed. Full Docker Playwright: 66 scenarios passed with existing external/performance exclusions, using an isolated Compose project without published database ports. CI, performance and Vercel passed. Local Sonar configuration is absent; CI Sonar remains blocked before analysis with HTTP 403.
+- Successful late responses, unloading races and broader mutation ownership remain open. Integrated into dev; staging/main promotion remains pending.
+
 ### 2026-10-07: Deleted deck undo cleanup
 
 #### Fixed
