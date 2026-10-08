@@ -211,6 +211,33 @@ describe("useDeckStore — forceSave", () => {
     await useDeckStore.getState().forceSave();
     expect(useDeckStore.getState().isSyncing).toBe(false);
   });
+
+  it("reports a failed refresh without changing the current deck", async () => {
+    const originalDeck = useDeckStore.getState().decks["deck-1"];
+    vi.mocked(deckApi.fetchDeck).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().forceSave();
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBe(originalDeck);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith(
+      "error", "Could not refresh deck. Please retry.",
+    );
+  });
+
+  it("does not report a failed refresh after the deck was deleted", async () => {
+    const pending = Promise.withResolvers<deckApi.ApiDeck>();
+    vi.mocked(deckApi.fetchDeck).mockReturnValueOnce(pending.promise);
+
+    const refresh = useDeckStore.getState().forceSave();
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await refresh;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
 });
 
 // ── promoteToCommander ────────────────────────────────────────────────────────
