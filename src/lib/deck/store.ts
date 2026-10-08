@@ -372,6 +372,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     try {
       const apiDeck = await deckApi.fetchDeck(activeDeckId);
+      if (!get().decks[activeDeckId]) return;
       const fullDeck = apiDeckToStoreDeck(apiDeck);
       set((state) => ({
         decks: { ...state.decks, [activeDeckId]: fullDeck },
