@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-08: Manual bracket save recovery
+
+#### Fixed
+
+- Rejected manual bracket overrides or returns to automatic calculation restore the previous displayed setting when the attempted value remains current and show retry feedback. Different newer settings are preserved; late failures do not recreate or warn about deleted decks (#931).
+
+#### Validation
+
+- Observed focused Red: rejected override left bracket 4 instead of null. Minimal Green restores the prior setting. Three additional passing characterization tests cover clearing an existing override, a different newer successful setting and deletion during the request. VPS: 3,060 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright passed 66 scenarios with unchanged exclusions and no bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. General write serialization, repeated identical values, confirmed-baseline recovery and global activity accounting remain open. Integrated into dev; staging/main promotion remains pending. The existing intermittent E2E outage is not claimed fixed.
+
 ### 2026-10-08: Deck budget save recovery
 
 #### Fixed
