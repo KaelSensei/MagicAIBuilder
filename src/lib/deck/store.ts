@@ -380,6 +380,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       useToastStore.getState().add("success", "✓ Deck saved");
     } catch (err) {
       logger.error("Unexpected error", "forceSave", err);
+      if (!get().decks[activeDeckId]) return;
+      useToastStore.getState().add("error", "Could not refresh deck. Please retry.");
     } finally {
       set({ isSyncing: false });
     }
