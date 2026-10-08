@@ -108,6 +108,8 @@ interface PendingCategoryWrite {
 
 const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
+let pendingManualBracketWrites = 0;
+
 export interface DeckStore {
   // State
   decks: Record<string, Deck>;
@@ -1532,6 +1534,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     set({ isSyncing: true });
     try {
+      pendingManualBracketWrites += 1;
       await deckApi.updateDeck(activeDeckId, { manualBracket: bracket });
     } catch (err) {
       logger.error("Unexpected error", "setManualBracket", err);
@@ -1549,7 +1552,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         useToastStore.getState().add("error", "Could not save manual bracket. Please retry.");
       }
     } finally {
-      set({ isSyncing: false });
+      pendingManualBracketWrites -= 1;
+      set({ isSyncing: pendingManualBracketWrites > 0 });
     }
   },
 

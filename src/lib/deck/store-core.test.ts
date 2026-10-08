@@ -553,6 +553,29 @@ describe("useDeckStore — setBudget", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — setManualBracket", () => {
+  it("keeps syncing after a rejected save until the other request finishes", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const firstSave = useDeckStore.getState().setManualBracket(4);
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setManualBracket(3);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve(await deckApi.createDeck("Test Deck"));
+    await firstSave;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("keeps syncing while another manual bracket save is pending", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const firstSave = useDeckStore.getState().setManualBracket(4);
+    await useDeckStore.getState().setManualBracket(3);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve(await deckApi.createDeck("Test Deck"));
+    await firstSave;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("preserves a newer manual bracket when an older save fails", async () => {
     const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
     vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
