@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Failed in-flight undo additions/removals do not resurrect retry entries after their original deck has been deleted (#917). Two separate observed Red/Green cycles; VPS validation passed 3,042 unit tests across 274 files, TypeScript, lint and build. Docker Playwright passed 66 scenarios with existing exclusions. CI, performance and Vercel passed. Sonar HTTP 403, successful late responses, unloading races and promotion beyond dev remain open.
+
 - Successful deck deletion removes only its undo entries, so other decks' undo stays usable; rejected deletion preserves state (#915). One observed Red/Green cycle and an additional rejected-deletion regression. VPS: 3,040 unit tests across 274 files, TypeScript, lint and build passed. Docker Playwright: 66 scenarios passed after disambiguating existing zone selectors, with unchanged external/performance exclusions. CI, performance and Vercel passed. Sonar HTTP 403, concurrent delete/undo ownership and promotion beyond dev remain open.
 
 - Failed individual deck opening displays a retry error notification without creating a fake empty deck (#911). Red observed before implementation. VPS validation passed 3,038 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Dedicated visual error/retry states, Sonar HTTP 403 and deferred Docker E2E remain open.
