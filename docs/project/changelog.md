@@ -9,6 +9,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-08: Deck refresh failure feedback
+
+#### Fixed
+
+- Failed manual deck refresh asks the player to retry without changing the existing deck. Late failures after successful deletion do not display an obsolete warning (#923).
+
+#### Validation
+
+- Two sequential observed Red/Green cycles: missing error feedback, then obsolete feedback after deletion. VPS validation passed 3,048 unit tests across 274 files, TypeScript, lint and production build. CI, performance and Vercel passed; Sonar remains blocked before analysis by HTTP 403 and local configuration is absent.
+- The full blocking Docker Playwright gate passed all 66 scenarios with unchanged exclusions and no test retries or hook bypass. Two earlier full runs failed at authentication setup with a socket hang up (63 passed, two not run). Isolated authentication and a subsequent full run with server diagnostic logging passed. The intermittent test-server outage is not claimed resolved; failure evidence is retained on the VPS.
+- Integrated into dev. Dedicated visual retry states, broader loading ownership and staging/main promotion remain open.
+
 ### 2026-10-08: Deleted deck refresh protection
 
 #### Fixed
