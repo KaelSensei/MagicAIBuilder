@@ -165,6 +165,46 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it("does not announce a late successful undo for a deleted deck", async () => {
+    const card = makeDeckCard();
+    seedDeck(makeActiveDeck({ cards: [card] }));
+    useDeckStore.setState({ undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card }] });
+    const pending = Promise.withResolvers<void>();
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    toastAdd.mockClear();
+    const undo = useDeckStore.getState().undo();
+
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.resolve();
+    await undo;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("does not announce a late successful restoration for a deleted deck", async () => {
+    const card = makeDeckCard();
+    useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
+    vi.mocked(deckApi.addCard).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    toastAdd.mockClear();
+    const undo = useDeckStore.getState().undo();
+
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.resolve({
+      ...card, id: "saved-card", deckId: "deck-1", scryfallId: card.id,
+      isCommander: false, isPartner: false,
+    });
+    await undo;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
   it("does not restore a failed pending addition undo after its deck is deleted", async () => {
     const card = makeDeckCard();
     const action: import("@/lib/deck/store").DeckAction = {
