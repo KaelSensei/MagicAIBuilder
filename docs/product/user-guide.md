@@ -108,6 +108,11 @@ restored when the attempted value is still current, and a retry message appears.
 A different newer budget is preserved; a late failure does not recreate or warn
 about a deleted deck.
 
+If saving a manual bracket or returning to automatic calculation fails, the
+previous setting is restored when the attempted value is still current, and a
+retry message appears. A different newer setting is preserved; a late failure
+does not recreate or warn about a deleted deck.
+
 If undoing a card addition fails to save, the card is restored with its zone and
 quantity and the undo action remains available to retry. An error replaces the
 success notification.
