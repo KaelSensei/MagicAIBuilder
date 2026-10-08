@@ -1541,6 +1541,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   setBudget: async (budget) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
+    const previousDeck = get().decks[activeDeckId];
+    if (!previousDeck) return;
 
     // Optimistic update
     set((state) => ({
@@ -1559,6 +1561,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateDeck(activeDeckId, { budget });
     } catch (err) {
       logger.error("Unexpected error", "setBudget", err);
+      set((state) => {
+        const currentDeck = state.decks[activeDeckId];
+        if (!currentDeck || currentDeck.budget !== budget) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [activeDeckId]: { ...currentDeck, budget: previousDeck.budget },
+          },
+        };
+      });
+      if (get().decks[activeDeckId]) {
+        useToastStore.getState().add("error", "Could not save deck budget. Please retry.");
+      }
     } finally {
       set({ isSyncing: false });
     }
