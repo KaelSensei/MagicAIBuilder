@@ -362,6 +362,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         return;
       }
     }
+    if (!get().decks[last.deckId]) return;
     useToastStore.getState().add("info", "↩ Undo applied");
   },
 
