@@ -165,6 +165,44 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it("does not restore a failed pending addition undo after its deck is deleted", async () => {
+    const card = makeDeckCard();
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: "deck-1", card,
+    };
+    seedDeck(makeActiveDeck({ cards: [card] }));
+    useDeckStore.setState({ undoStack: [action] });
+    const pending = Promise.withResolvers<void>();
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    const undo = useDeckStore.getState().undo();
+
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("Deck deleted"));
+    await undo;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+  });
+
+  it("does not restore a failed pending removal undo after its deck is deleted", async () => {
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "REMOVE_CARD", deckId: "deck-1", card: makeDeckCard(),
+    };
+    useDeckStore.setState({ undoStack: [action] });
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
+    vi.mocked(deckApi.addCard).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    const undo = useDeckStore.getState().undo();
+
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("Deck deleted"));
+    await undo;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+  });
+
   it("keeps another deck's undo usable after deleting the latest action's deck", async () => {
     const card = makeDeckCard();
     const deletedCard = makeDeckCard({ id: "deleted-card" });
