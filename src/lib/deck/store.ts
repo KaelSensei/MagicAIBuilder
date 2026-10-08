@@ -500,6 +500,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   renameDeck: async (id: string, name: string) => {
+    const previousDeck = get().decks[id];
+    if (!previousDeck) return;
     // Optimistic update
     set((state) => ({
       decks: {
@@ -512,6 +514,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateDeck(id, { name });
     } catch (err) {
       logger.error("Unexpected error", "renameDeck", err);
+      set((state) => {
+        const currentDeck = state.decks[id];
+        if (!currentDeck || currentDeck.name !== name) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [id]: { ...currentDeck, name: previousDeck.name },
+          },
+        };
+      });
+      if (get().decks[id]) {
+        useToastStore.getState().add("error", "Could not rename deck. Please retry.");
+      }
     } finally {
       set({ isSyncing: false });
     }
