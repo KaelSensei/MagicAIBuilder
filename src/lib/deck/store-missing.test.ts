@@ -6,6 +6,8 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const toastAdd = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/scryfall/types", () => ({
   DFC_LAYOUTS: new Set(["modal_dfc", "transform", "reversible_card"]),
 }));
@@ -72,7 +74,7 @@ vi.mock("@/lib/db/deck-api", () => ({
 }));
 
 vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
+  useToastStore: { getState: () => ({ add: toastAdd }) },
 }));
 
 vi.mock("@/lib/scryfall/images", () => ({
@@ -150,6 +152,40 @@ beforeEach(() => {
 // ── forceSave ─────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — forceSave", () => {
+  it("does not recreate a deleted deck from a late refresh response", async () => {
+    const response = await deckApi.fetchDeck("deck-1");
+    const pending = Promise.withResolvers<deckApi.ApiDeck>();
+    vi.mocked(deckApi.fetchDeck).mockReturnValueOnce(pending.promise);
+
+    const refresh = useDeckStore.getState().forceSave();
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.resolve(response);
+    await refresh;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().activeDeckId).toBeNull();
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("still refreshes a deck when its deletion is rejected", async () => {
+    const response = await deckApi.fetchDeck("deck-1");
+    const pending = Promise.withResolvers<deckApi.ApiDeck>();
+    vi.mocked(deckApi.fetchDeck).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockRejectedValueOnce(new Error("offline"));
+
+    const refresh = useDeckStore.getState().forceSave();
+    await expect(useDeckStore.getState().deleteDeck("deck-1")).rejects.toThrow("offline");
+    toastAdd.mockClear();
+    pending.resolve({ ...response, name: "Refreshed deck" });
+    await refresh;
+
+    expect(useDeckStore.getState().decks["deck-1"]?.name).toBe("Refreshed deck");
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-1");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledWith("success", "✓ Deck saved");
+  });
+
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
     await useDeckStore.getState().forceSave();

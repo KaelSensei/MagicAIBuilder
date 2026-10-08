@@ -91,6 +91,8 @@ If an undo request fails after its deck has been successfully deleted, it does
 not put an obsolete retry action back into the history.
 An undo that completes successfully after its deck is deleted does not announce
 a successful edit or recreate the deleted deck.
+A pending save refresh that returns after successful deck deletion also leaves
+the deck deleted and does not announce a successful save.
 
 If undoing a card addition fails to save, the card is restored with its zone and
 quantity and the undo action remains available to retry. An error replaces the
