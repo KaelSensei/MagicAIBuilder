@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-08: Target bracket save recovery
+
+#### Fixed
+
+- Rejected target bracket saves restore the previous displayed target when the attempted value is still current and show retry feedback. A different newer target is preserved; late failures neither recreate nor warn about deleted decks (#927).
+
+#### Validation
+
+- Observed focused Red/Green: attempted target 4 remained instead of previous target 2. Supplementary passing characterization covers feedback, a different newer successful target and deletion during the request. VPS: 3,053 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright: 66 passed in isolated Compose with diagnostic server logging, unchanged exclusions and no retries or bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI is blocked before analysis by HTTP 403. General target-write serialization, repeated identical values, confirmed-baseline recovery and global activity accounting remain open. Integrated into dev; staging/main promotion remains pending. The existing intermittent E2E outage is not claimed fixed.
+
 ### 2026-10-08: Failed deck rename recovery
 
 #### Fixed
