@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-08: Failed deck rename recovery
+
+#### Fixed
+
+- Failed deck renames restore the previous displayed name when the attempted name is still current and show a retry notification. A different newer name remains intact; a late failure neither recreates a deleted deck nor warns about it (#925).
+
+#### Validation
+
+- Observed one focused Red/Green cycle by replacing the existing test of unwanted optimistic-name retention. Supplementary passing characterization covers retry feedback, a newer different successful name and deletion during the request. VPS: 3,050 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright: 66 scenarios passed in an isolated Compose project with diagnostic logging, unchanged exclusions and no retries or bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent and CI remains blocked before analysis by HTTP 403. General rename serialization, repeated identical names and confirmed-baseline recovery remain open. The previously documented intermittent E2E server outage is not claimed fixed. Integrated into dev; staging/main promotion remains pending.
+
 ### 2026-10-08: Deck refresh failure feedback
 
 #### Fixed
