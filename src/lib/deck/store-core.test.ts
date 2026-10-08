@@ -468,6 +468,35 @@ describe("useDeckStore — renameDeck", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — setTargetBracket", () => {
+  it("preserves a different newer target when an older save fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderSave = useDeckStore.getState().setTargetBracket(4);
+    await useDeckStore.getState().setTargetBracket(3);
+    pending.reject(new Error("offline"));
+    await olderSave;
+    expect(useDeckStore.getState().decks["deck-1"].targetBracket).toBe(3);
+  });
+
+  it("does not recreate or warn about a deleted deck after a late failure", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const save = useDeckStore.getState().setTargetBracket(4);
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await save;
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("restores the previous target bracket when saving fails", async () => {
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setTargetBracket(4);
+    expect(useDeckStore.getState().decks["deck-1"].targetBracket).toBe(2);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save target bracket. Please retry.");
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     seedDeck();

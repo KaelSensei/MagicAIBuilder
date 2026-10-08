@@ -1474,6 +1474,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   setTargetBracket: async (bracket) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
+    const previousDeck = get().decks[activeDeckId];
+    if (!previousDeck) return;
 
     // Optimistic update
     set((state) => ({
@@ -1492,6 +1494,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateDeck(activeDeckId, { targetBracket: bracket });
     } catch (err) {
       logger.error("Unexpected error", "setTargetBracket", err);
+      set((state) => {
+        const currentDeck = state.decks[activeDeckId];
+        if (!currentDeck || currentDeck.targetBracket !== bracket) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [activeDeckId]: { ...currentDeck, targetBracket: previousDeck.targetBracket },
+          },
+        };
+      });
+      if (get().decks[activeDeckId]) {
+        useToastStore.getState().add("error", "Could not save target bracket. Please retry.");
+      }
     } finally {
       set({ isSyncing: false });
     }

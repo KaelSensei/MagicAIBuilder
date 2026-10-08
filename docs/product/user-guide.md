@@ -99,6 +99,10 @@ refresh warning.
 If renaming a deck fails, its previous name is restored when the failed name is
 still displayed, and a retry message appears. A different, newer name is kept;
 a failed rename cannot recreate a deleted deck.
+If saving the target bracket fails, the previous displayed target is restored
+when the attempted value is still current, and a retry message appears. A
+different newer target is preserved; deleted decks are not restored or warned
+about by a late failure.
 
 If undoing a card addition fails to save, the card is restored with its zone and
 quantity and the undo action remains available to retry. An error replaces the
