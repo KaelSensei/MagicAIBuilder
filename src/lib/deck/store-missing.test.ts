@@ -486,13 +486,42 @@ describe("useDeckStore — removeFromMaybeboard error path", () => {
 // ── setBudget error path ──────────────────────────────────────────────────────
 
 describe("useDeckStore — setBudget error path", () => {
-  it("keeps optimistic value when API throws", async () => {
+  it("restores a budget when removing its limit fails", async () => {
+    useDeckStore.setState({ decks: { "deck-1": seedDeck({ budget: 100 }) } });
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setBudget(null);
+    expect(useDeckStore.getState().decks["deck-1"].budget).toBe(100);
+  });
+
+  it("preserves a different newer budget when an older save fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderSave = useDeckStore.getState().setBudget(200);
+    await useDeckStore.getState().setBudget(300);
+    pending.reject(new Error("offline"));
+    await olderSave;
+    expect(useDeckStore.getState().decks["deck-1"].budget).toBe(300);
+  });
+
+  it("does not recreate or warn about a deleted deck after a late failure", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const save = useDeckStore.getState().setBudget(200);
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await save;
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("restores the previous budget when API throws", async () => {
     vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("api error"));
 
     await useDeckStore.getState().setBudget(200);
 
-    expect(useDeckStore.getState().decks["deck-1"].budget).toBe(200);
+    expect(useDeckStore.getState().decks["deck-1"].budget).toBeNull();
     expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save deck budget. Please retry.");
   });
 });
 

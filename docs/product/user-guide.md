@@ -103,6 +103,10 @@ If saving the target bracket fails, the previous displayed target is restored
 when the attempted value is still current, and a retry message appears. A
 different newer target is preserved; deleted decks are not restored or warned
 about by a late failure.
+If saving or clearing the deck budget fails, the previous displayed budget is
+restored when the attempted value is still current, and a retry message appears.
+A different newer budget is preserved; a late failure does not recreate or warn
+about a deleted deck.
 
 If undoing a card addition fails to save, the card is restored with its zone and
 quantity and the undo action remains available to retry. An error replaces the
