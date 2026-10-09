@@ -185,6 +185,10 @@ When bulk removal batches overlap, the save indicator stays active until all
 of those batches finish. Activity shared with other action types remains
 outside this guarantee.
 
+Bulk removal and manual bracket saves also keep each other's activity visible:
+finishing either action does not hide the other while it is still pending.
+Other action combinations remain outside this guarantee.
+
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
 
 In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default is 6.

@@ -170,6 +170,30 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — bulkRemoveCards recovery", () => {
+  it("keeps bulk removal activity after a manual bracket save finishes", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    const pending = Promise.withResolvers<void>();
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    const removal = useDeckStore.getState().bulkRemoveCards(["card-1"]);
+    await useDeckStore.getState().setManualBracket(3);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve();
+    await removal;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("keeps manual bracket activity after a bulk removal finishes", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const manualSave = useDeckStore.getState().setManualBracket(3);
+    await useDeckStore.getState().bulkRemoveCards(["card-1"]);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve(await deckApi.createDeck("Test Deck"));
+    await manualSave;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("keeps syncing until all overlapping bulk removals finish", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "first" }), makeDeckCard({ id: "second" })] }));
     const pending = Promise.withResolvers<void>();
