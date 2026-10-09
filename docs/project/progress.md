@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Bulk removal and manual bracket completion preserve each other's pending save activity (#947). Two observed Red/Green cycles cover both completion orders. VPS: 3,073 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar HTTP 403 before analysis. Other action combinations, mutation ownership and promotion beyond dev remain open.
+
 - Overlapping bulk removal batches retain save activity until all batches finish (#945). Observed Red/Green. VPS: 3,071 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar HTTP 403 before analysis. Cross-action activity, overlapping recovery ownership and promotion beyond dev remain open.
 
 - Bulk removals ignore identifiers absent from the active deck; entirely stale selections are a no-op (#943). Observed Red/Green plus no-op characterization. VPS: 3,070 unit tests across 274 files, TypeScript, lint and build passed. Initial E2E: 64 passed and two authenticated deck-list failures; a fresh full run passed all 66 without assertion changes, retries or bypass. CI, performance and Vercel passed. Sonar HTTP 403 before analysis. Intermittent loading/session failure is not claimed fixed; cross-batch ownership and promotion beyond dev remain open.

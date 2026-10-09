@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-09: Shared bulk and manual bracket activity
+
+#### Fixed
+
+- Completing a bulk removal no longer hides pending manual bracket save activity, and manual bracket completion no longer hides a pending bulk removal (#947). Other action combinations and mutation ownership remain follow-up work.
+
+#### Validation
+
+- Two separately observed Red/Green cycles reproduce both completion orders. Minimal Green checks the two existing counters in both completion paths. VPS: 3,073 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
 ### 2026-10-09: Concurrent bulk removal activity
 
 #### Fixed
