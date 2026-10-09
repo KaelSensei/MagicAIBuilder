@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-09: Manual bracket save activity
+
+#### Fixed
+
+- The compact save indicator stays active until every overlapping manual bracket request finishes, including rejected requests (#933). This increment covers manual bracket requests only, not shared activity across other actions or server write ordering.
+
+#### Validation
+
+- Observed focused Red: isSyncing became false while the first request remained pending. Minimal Green tracks pending manual bracket requests; passing characterization covers rejection during another pending save. VPS: 3,062 unit tests across 274 files, TypeScript, lint and production build passed. Initial full E2E run: 63 passed, one authentication socket hang up, two not run. A fresh full run passed all 66 scenarios with unchanged exclusions, no added retries and no bypass. CI, performance and Vercel passed.
+- Sonar local configuration is absent; CI failed before analysis with HTTP 403. The intermittent authentication outage is not claimed fixed. Integrated into dev only; staging/main promotion awaits the QA cycle.
+
 ### 2026-10-08: Manual bracket save recovery
 
 #### Fixed
