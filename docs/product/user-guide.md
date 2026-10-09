@@ -171,6 +171,9 @@ or to the end when no original successor remains. This preserves their relative
 order even when failures finish out of order. Overlapping removal recovery
 remains follow-up work.
 
+A bulk removal with several rejected cards shows a single retry notification
+after the batch finishes, rather than one notification for every rejected card.
+
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
 
 In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default is 6.

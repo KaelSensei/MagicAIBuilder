@@ -1447,6 +1447,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   bulkRemoveCards: async (cardIds) => {
+    let hasRejectedRemoval = false;
     const { activeDeckId } = get();
     if (!activeDeckId || cardIds.length === 0) return;
 
@@ -1492,15 +1493,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
                 },
               };
             });
-            if (get().decks[activeDeckId]) {
-              useToastStore.getState().add("error", "Could not remove card. Please retry.");
-            }
+            hasRejectedRemoval = true;
           }
         })
       );
     } catch (err) {
       logger.error("Unexpected error", "bulkRemoveCards", err);
     } finally {
+      if (hasRejectedRemoval && get().decks[activeDeckId]) {
+        useToastStore.getState().add("error", "Could not remove card. Please retry.");
+      }
       set({ isSyncing: false });
     }
   },

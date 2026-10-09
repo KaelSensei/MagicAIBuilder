@@ -170,6 +170,16 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — bulkRemoveCards recovery", () => {
+  it("shows one retry notification for multiple rejected removals", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "first" }), makeDeckCard({ id: "second" })] }));
+    vi.mocked(deckApi.removeCard)
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().bulkRemoveCards(["first", "second"]);
+    expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual(["first", "second"]);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not remove card. Please retry.");
+  });
+
   it("preserves original order when rejected removals finish in reverse order", async () => {
     const first = Promise.withResolvers<void>();
     const second = Promise.withResolvers<void>();
