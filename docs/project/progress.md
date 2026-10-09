@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Added [Fix History](fix-history.md), a dated register of conventional fix commits since project inception, generated from Git evidence with an explicit source snapshot. It separates historical commits from open follow-ups and does not infer QA or deployment status. Regeneration runs on the VPS.
+
 - Bulk removal and manual bracket completion preserve each other's pending save activity (#947). Two observed Red/Green cycles cover both completion orders. VPS: 3,073 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar HTTP 403 before analysis. Other action combinations, mutation ownership and promotion beyond dev remain open.
 
 - Overlapping bulk removal batches retain save activity until all batches finish (#945). Observed Red/Green. VPS: 3,071 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar HTTP 403 before analysis. Cross-action activity, overlapping recovery ownership and promotion beyond dev remain open.
