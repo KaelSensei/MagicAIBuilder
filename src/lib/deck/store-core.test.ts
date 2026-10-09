@@ -170,6 +170,13 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — bulkRemoveCards recovery", () => {
+  it("sends only one removal request for a repeated card identifier", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    await useDeckStore.getState().bulkRemoveCards(["card-1", "card-1"]);
+    expect(deckApi.removeCard).toHaveBeenCalledExactlyOnceWith("deck-1", "card-1");
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([]);
+  });
+
   it("shows one retry notification for multiple rejected removals", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "first" }), makeDeckCard({ id: "second" })] }));
     vi.mocked(deckApi.removeCard)

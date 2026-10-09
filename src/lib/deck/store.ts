@@ -1469,7 +1469,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     try {
       await Promise.all(
-        cardIds.map(async (id) => {
+        [...idSet].map(async (id) => {
           try {
             await deckApi.removeCard(activeDeckId, id);
           } catch (err) {
