@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   fetchDecks,
+  fetchDeck,
   createDeck,
   updateDeck,
   deleteDeck,
@@ -58,6 +59,27 @@ describe("fetchDecks", () => {
       await vi.advanceTimersByTimeAsync(15_000);
 
       await failure;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("fetchDeck", () => {
+  it("aborts a stalled deck detail request after fifteen seconds", async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchMock = vi.fn((_url: string, options?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+        options?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+      }));
+      vi.stubGlobal("fetch", fetchMock);
+      const request = fetchDeck("deck-1");
+      const outcome = request.catch(() => undefined);
+
+      await vi.advanceTimersByTimeAsync(15_000);
+
+      expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true);
+      await outcome;
     } finally {
       vi.useRealTimers();
     }

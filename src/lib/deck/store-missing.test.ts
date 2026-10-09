@@ -6,6 +6,8 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const toastAdd = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/scryfall/types", () => ({
   DFC_LAYOUTS: new Set(["modal_dfc", "transform", "reversible_card"]),
 }));
@@ -72,7 +74,7 @@ vi.mock("@/lib/db/deck-api", () => ({
 }));
 
 vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
+  useToastStore: { getState: () => ({ add: toastAdd }) },
 }));
 
 vi.mock("@/lib/scryfall/images", () => ({
@@ -150,6 +152,40 @@ beforeEach(() => {
 // ── forceSave ─────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — forceSave", () => {
+  it("does not recreate a deleted deck from a late refresh response", async () => {
+    const response = await deckApi.fetchDeck("deck-1");
+    const pending = Promise.withResolvers<deckApi.ApiDeck>();
+    vi.mocked(deckApi.fetchDeck).mockReturnValueOnce(pending.promise);
+
+    const refresh = useDeckStore.getState().forceSave();
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.resolve(response);
+    await refresh;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().activeDeckId).toBeNull();
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("still refreshes a deck when its deletion is rejected", async () => {
+    const response = await deckApi.fetchDeck("deck-1");
+    const pending = Promise.withResolvers<deckApi.ApiDeck>();
+    vi.mocked(deckApi.fetchDeck).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockRejectedValueOnce(new Error("offline"));
+
+    const refresh = useDeckStore.getState().forceSave();
+    await expect(useDeckStore.getState().deleteDeck("deck-1")).rejects.toThrow("offline");
+    toastAdd.mockClear();
+    pending.resolve({ ...response, name: "Refreshed deck" });
+    await refresh;
+
+    expect(useDeckStore.getState().decks["deck-1"]?.name).toBe("Refreshed deck");
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-1");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledWith("success", "✓ Deck saved");
+  });
+
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
     await useDeckStore.getState().forceSave();
@@ -174,6 +210,33 @@ describe("useDeckStore — forceSave", () => {
     vi.mocked(deckApi.fetchDeck).mockRejectedValueOnce(new Error("network error"));
     await useDeckStore.getState().forceSave();
     expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("reports a failed refresh without changing the current deck", async () => {
+    const originalDeck = useDeckStore.getState().decks["deck-1"];
+    vi.mocked(deckApi.fetchDeck).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().forceSave();
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBe(originalDeck);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith(
+      "error", "Could not refresh deck. Please retry.",
+    );
+  });
+
+  it("does not report a failed refresh after the deck was deleted", async () => {
+    const pending = Promise.withResolvers<deckApi.ApiDeck>();
+    vi.mocked(deckApi.fetchDeck).mockReturnValueOnce(pending.promise);
+
+    const refresh = useDeckStore.getState().forceSave();
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await refresh;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).not.toHaveBeenCalled();
   });
 });
 
@@ -423,13 +486,42 @@ describe("useDeckStore — removeFromMaybeboard error path", () => {
 // ── setBudget error path ──────────────────────────────────────────────────────
 
 describe("useDeckStore — setBudget error path", () => {
-  it("keeps optimistic value when API throws", async () => {
+  it("restores a budget when removing its limit fails", async () => {
+    useDeckStore.setState({ decks: { "deck-1": seedDeck({ budget: 100 }) } });
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setBudget(null);
+    expect(useDeckStore.getState().decks["deck-1"].budget).toBe(100);
+  });
+
+  it("preserves a different newer budget when an older save fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderSave = useDeckStore.getState().setBudget(200);
+    await useDeckStore.getState().setBudget(300);
+    pending.reject(new Error("offline"));
+    await olderSave;
+    expect(useDeckStore.getState().decks["deck-1"].budget).toBe(300);
+  });
+
+  it("does not recreate or warn about a deleted deck after a late failure", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const save = useDeckStore.getState().setBudget(200);
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await save;
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("restores the previous budget when API throws", async () => {
     vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("api error"));
 
     await useDeckStore.getState().setBudget(200);
 
-    expect(useDeckStore.getState().decks["deck-1"].budget).toBe(200);
+    expect(useDeckStore.getState().decks["deck-1"].budget).toBeNull();
     expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save deck budget. Please retry.");
   });
 });
 

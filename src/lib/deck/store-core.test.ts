@@ -12,6 +12,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
+const toastAdd = vi.hoisted(() => vi.fn());
+
 // ── Mock deck-api BEFORE importing the store ─────────────────────────────────
 vi.mock("@/lib/db/deck-api", () => ({
   fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
@@ -71,7 +73,7 @@ vi.mock("@/lib/db/deck-api", () => ({
 
 // ── Mock useToast so the store doesn't blow up ────────────────────────────────
 vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
+  useToastStore: { getState: () => ({ add: toastAdd }) },
 }));
 
 import * as deckApi from "@/lib/db/deck-api";
@@ -166,6 +168,134 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
+
+describe("useDeckStore — bulkRemoveCards recovery", () => {
+  it("keeps bulk removal activity after a manual bracket save finishes", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    const pending = Promise.withResolvers<void>();
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    const removal = useDeckStore.getState().bulkRemoveCards(["card-1"]);
+    await useDeckStore.getState().setManualBracket(3);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve();
+    await removal;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("keeps manual bracket activity after a bulk removal finishes", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const manualSave = useDeckStore.getState().setManualBracket(3);
+    await useDeckStore.getState().bulkRemoveCards(["card-1"]);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve(await deckApi.createDeck("Test Deck"));
+    await manualSave;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("keeps syncing until all overlapping bulk removals finish", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "first" }), makeDeckCard({ id: "second" })] }));
+    const pending = Promise.withResolvers<void>();
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    const firstBatch = useDeckStore.getState().bulkRemoveCards(["first"]);
+    await useDeckStore.getState().bulkRemoveCards(["second"]);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve();
+    await firstBatch;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("leaves the deck and activity unchanged for an entirely stale selection", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    const deck = useDeckStore.getState().decks["deck-1"];
+    await useDeckStore.getState().bulkRemoveCards(["missing"]);
+    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(useDeckStore.getState().decks["deck-1"]).toBe(deck);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("does not send removal requests for cards absent from the active deck", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    await useDeckStore.getState().bulkRemoveCards(["missing", "card-1"]);
+    expect(deckApi.removeCard).toHaveBeenCalledExactlyOnceWith("deck-1", "card-1");
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([]);
+  });
+
+  it("sends only one removal request for a repeated card identifier", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    await useDeckStore.getState().bulkRemoveCards(["card-1", "card-1"]);
+    expect(deckApi.removeCard).toHaveBeenCalledExactlyOnceWith("deck-1", "card-1");
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([]);
+  });
+
+  it("shows one retry notification for multiple rejected removals", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "first" }), makeDeckCard({ id: "second" })] }));
+    vi.mocked(deckApi.removeCard)
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().bulkRemoveCards(["first", "second"]);
+    expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual(["first", "second"]);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not remove card. Please retry.");
+  });
+
+  it("preserves original order when rejected removals finish in reverse order", async () => {
+    const first = Promise.withResolvers<void>();
+    const second = Promise.withResolvers<void>();
+    const cards = ["first", "second", "removed", "last"].map((id) => makeDeckCard({ id }));
+    seedDeck(makeActiveDeck({ cards }));
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    const removal = useDeckStore.getState().bulkRemoveCards(["first", "second", "removed"]);
+    second.reject(new Error("offline"));
+    await Promise.resolve();
+    first.reject(new Error("offline"));
+    await removal;
+    expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual([
+      "first", "second", "last",
+    ]);
+  });
+
+  it("restores a rejected bulk removal before its surviving successor", async () => {
+    const first = makeDeckCard({ id: "first" });
+    const middle = makeDeckCard({ id: "middle" });
+    const last = makeDeckCard({ id: "last" });
+    seedDeck(makeActiveDeck({ cards: [first, middle, last] }));
+    vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().bulkRemoveCards(["middle"]);
+    expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual([
+      "first", "middle", "last",
+    ]);
+  });
+
+  it("does not recreate a deleted deck after a rejected bulk removal", async () => {
+    const pending = Promise.withResolvers<void>();
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    const removal = useDeckStore.getState().bulkRemoveCards(["card-1"]);
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await removal;
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    seedDeck();
+  });
+
+  it("restores a rejected removal without restoring successful removals", async () => {
+    const rejected = makeDeckCard({ id: "rejected", zone: "sideboard", quantity: 3, isMaybeboard: false });
+    const removed = makeDeckCard({ id: "removed" });
+    seedDeck(makeActiveDeck({ cards: [rejected, removed] }));
+    vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().bulkRemoveCards(["rejected", "removed"]);
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([rejected]);
+    expect(toastAdd).toHaveBeenCalledWith("error", "Could not remove card. Please retry.");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+});
 
 describe("useDeckStore — setGameChangerNames / setBannedNames", () => {
   beforeEach(() => {
@@ -431,17 +561,70 @@ describe("useDeckStore — renameDeck", () => {
     expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", { name: "Renamed Deck" });
   });
 
-  it("keeps the optimistic name even if API fails", async () => {
+  it("restores the previous name when its save fails", async () => {
     (deckApi.updateDeck as Mock).mockRejectedValueOnce(new Error("server error"));
     await useDeckStore.getState().renameDeck("deck-1", "New Name");
-    expect(useDeckStore.getState().decks["deck-1"].name).toBe("New Name");
+    expect(useDeckStore.getState().decks["deck-1"].name).toBe("Test Deck");
     expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not rename deck. Please retry.");
+  });
+
+  it("preserves a newer successful name when an older rename fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderRename = useDeckStore.getState().renameDeck("deck-1", "Older Name");
+    await useDeckStore.getState().renameDeck("deck-1", "Latest Name");
+    pending.reject(new Error("offline"));
+    await olderRename;
+
+    expect(useDeckStore.getState().decks["deck-1"].name).toBe("Latest Name");
+  });
+
+  it("does not recreate a deleted deck or warn when its rename fails late", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const rename = useDeckStore.getState().renameDeck("deck-1", "New Name");
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await rename;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
   });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — setTargetBracket", () => {
+  it("preserves a different newer target when an older save fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderSave = useDeckStore.getState().setTargetBracket(4);
+    await useDeckStore.getState().setTargetBracket(3);
+    pending.reject(new Error("offline"));
+    await olderSave;
+    expect(useDeckStore.getState().decks["deck-1"].targetBracket).toBe(3);
+  });
+
+  it("does not recreate or warn about a deleted deck after a late failure", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const save = useDeckStore.getState().setTargetBracket(4);
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await save;
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("restores the previous target bracket when saving fails", async () => {
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setTargetBracket(4);
+    expect(useDeckStore.getState().decks["deck-1"].targetBracket).toBe(2);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save target bracket. Please retry.");
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     seedDeck();
@@ -498,6 +681,65 @@ describe("useDeckStore — setBudget", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — setManualBracket", () => {
+  it("keeps syncing after a rejected save until the other request finishes", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const firstSave = useDeckStore.getState().setManualBracket(4);
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setManualBracket(3);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve(await deckApi.createDeck("Test Deck"));
+    await firstSave;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("keeps syncing while another manual bracket save is pending", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const firstSave = useDeckStore.getState().setManualBracket(4);
+    await useDeckStore.getState().setManualBracket(3);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve(await deckApi.createDeck("Test Deck"));
+    await firstSave;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("preserves a newer manual bracket when an older save fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderSave = useDeckStore.getState().setManualBracket(4);
+    await useDeckStore.getState().setManualBracket(3);
+    pending.reject(new Error("offline"));
+    await olderSave;
+    expect(useDeckStore.getState().decks["deck-1"].manualBracket).toBe(3);
+  });
+
+  it("does not recreate or notify about a deleted deck after a failed save", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const save = useDeckStore.getState().setManualBracket(4);
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await save;
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("restores the previous override when clearing it fails", async () => {
+    seedDeck(makeActiveDeck({ manualBracket: 2 }));
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setManualBracket(null);
+    expect(useDeckStore.getState().decks["deck-1"].manualBracket).toBe(2);
+  });
+
+  it("restores automatic calculation when saving a manual bracket fails", async () => {
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().setManualBracket(4);
+    expect(useDeckStore.getState().decks["deck-1"].manualBracket).toBeNull();
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save manual bracket. Please retry.");
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     seedDeck();

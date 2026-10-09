@@ -108,6 +108,9 @@ interface PendingCategoryWrite {
 
 const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
+let pendingManualBracketWrites = 0;
+let pendingBulkRemovals = 0;
+
 export interface DeckStore {
   // State
   decks: Record<string, Deck>;
@@ -259,7 +262,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const activeDeckId = last.deckId;
       if (!activeDeckId) return;
       const deck = get().decks[activeDeckId];
-      const card = deck && uniqueDeckCards(deck).find((c) => c.id === last.card.id || c.name === last.card.name);
+      const cards = deck ? uniqueDeckCards(deck) : [];
+      const exactCard = cards.find((candidate) => candidate.id === last.card.id);
+      const nameMatches = exactCard ? [] : cards.filter((candidate) => candidate.name === last.card.name);
+      if (!exactCard && nameMatches.length > 1) {
+        set((state) => ({ undoStack: [...state.undoStack, last] }));
+        useToastStore.getState().add("error", "Could not identify the card to undo: multiple printings match.");
+        return;
+      }
+      const card = exactCard ?? nameMatches[0];
       if (!card) return;
       set((state) => ({
         decks: {
@@ -273,6 +284,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         await deckApi.removeCard(activeDeckId, card.id);
       } catch (err) {
         logger.error("Unexpected error", "undo:ADD_CARD", err);
+        if (!get().decks[activeDeckId]) return;
         set((state) => {
           const currentDeck = state.decks[activeDeckId];
           return {
@@ -336,6 +348,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         });
       } catch (err) {
         logger.error("Unexpected error", "undo:REMOVE_CARD", err);
+        if (!get().decks[activeDeckId]) return;
         set((state) => {
           const currentDeck = state.decks[activeDeckId];
           return {
@@ -352,6 +365,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         return;
       }
     }
+    if (!get().decks[last.deckId]) return;
     useToastStore.getState().add("info", "↩ Undo applied");
   },
 
@@ -361,6 +375,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     try {
       const apiDeck = await deckApi.fetchDeck(activeDeckId);
+      if (!get().decks[activeDeckId]) return;
       const fullDeck = apiDeckToStoreDeck(apiDeck);
       set((state) => ({
         decks: { ...state.decks, [activeDeckId]: fullDeck },
@@ -368,6 +383,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       useToastStore.getState().add("success", "✓ Deck saved");
     } catch (err) {
       logger.error("Unexpected error", "forceSave", err);
+      if (!get().decks[activeDeckId]) return;
+      useToastStore.getState().add("error", "Could not refresh deck. Please retry.");
     } finally {
       set({ isSyncing: false });
     }
@@ -461,6 +478,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         return {
           decks: rest,
           activeDeckId: state.activeDeckId === id ? null : state.activeDeckId,
+          undoStack: state.undoStack.filter((action) => action.deckId !== id),
         };
       });
     } finally {
@@ -485,6 +503,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   renameDeck: async (id: string, name: string) => {
+    const previousDeck = get().decks[id];
+    if (!previousDeck) return;
     // Optimistic update
     set((state) => ({
       decks: {
@@ -497,6 +517,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateDeck(id, { name });
     } catch (err) {
       logger.error("Unexpected error", "renameDeck", err);
+      set((state) => {
+        const currentDeck = state.decks[id];
+        if (!currentDeck || currentDeck.name !== name) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [id]: { ...currentDeck, name: previousDeck.name },
+          },
+        };
+      });
+      if (get().decks[id]) {
+        useToastStore.getState().add("error", "Could not rename deck. Please retry.");
+      }
     } finally {
       set({ isSyncing: false });
     }
@@ -533,6 +566,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
+      useToastStore.getState().add("error", "Could not open deck. Please try again.");
     }
   },
 
@@ -1414,10 +1448,17 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   bulkRemoveCards: async (cardIds) => {
+    let hasRejectedRemoval = false;
     const { activeDeckId } = get();
     if (!activeDeckId || cardIds.length === 0) return;
 
-    const idSet = new Set(cardIds);
+    const previousDeck = get().decks[activeDeckId];
+    if (!previousDeck) return;
+    const originalCards = uniqueDeckCards(previousDeck);
+
+    const selectedIds = new Set(cardIds);
+    const idSet = new Set(originalCards.filter((card) => selectedIds.has(card.id)).map((card) => card.id));
+    if (idSet.size === 0) return;
     // Optimistic update
     set((state) => ({
       decks: {
@@ -1429,20 +1470,53 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
 
     set({ isSyncing: true });
+    pendingBulkRemovals += 1;
     try {
       await Promise.all(
-        cardIds.map((id) => deckApi.removeCard(activeDeckId, id))
+        [...idSet].map(async (id) => {
+          try {
+            await deckApi.removeCard(activeDeckId, id);
+          } catch (err) {
+            logger.error("Unexpected error", "bulkRemoveCards", err);
+            const removedCard = originalCards.find((card) => card.id === id);
+            if (!removedCard) return;
+            const removedIndex = originalCards.findIndex((card) => card.id === id);
+            const followingCardIds = new Set(originalCards.slice(removedIndex + 1).map((card) => card.id));
+            set((state) => {
+              const currentDeck = state.decks[activeDeckId];
+              if (!currentDeck) return state;
+              return {
+                decks: {
+                  ...state.decks,
+                  [activeDeckId]: updateDeckCards(currentDeck, (cards) => {
+                    if (cards.some((card) => card.id === id)) return cards;
+                    const followingIndex = cards.findIndex((card) => followingCardIds.has(card.id));
+                    const restoreIndex = followingIndex < 0 ? cards.length : followingIndex;
+                    return [...cards.slice(0, restoreIndex), removedCard, ...cards.slice(restoreIndex)];
+                  }),
+                },
+              };
+            });
+            hasRejectedRemoval = true;
+          }
+        })
       );
     } catch (err) {
       logger.error("Unexpected error", "bulkRemoveCards", err);
     } finally {
-      set({ isSyncing: false });
+      if (hasRejectedRemoval && get().decks[activeDeckId]) {
+        useToastStore.getState().add("error", "Could not remove card. Please retry.");
+      }
+      pendingBulkRemovals -= 1;
+      set({ isSyncing: pendingBulkRemovals > 0 || pendingManualBracketWrites > 0 });
     }
   },
 
   setTargetBracket: async (bracket) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
+    const previousDeck = get().decks[activeDeckId];
+    if (!previousDeck) return;
 
     // Optimistic update
     set((state) => ({
@@ -1461,6 +1535,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateDeck(activeDeckId, { targetBracket: bracket });
     } catch (err) {
       logger.error("Unexpected error", "setTargetBracket", err);
+      set((state) => {
+        const currentDeck = state.decks[activeDeckId];
+        if (!currentDeck || currentDeck.targetBracket !== bracket) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [activeDeckId]: { ...currentDeck, targetBracket: previousDeck.targetBracket },
+          },
+        };
+      });
+      if (get().decks[activeDeckId]) {
+        useToastStore.getState().add("error", "Could not save target bracket. Please retry.");
+      }
     } finally {
       set({ isSyncing: false });
     }
@@ -1469,6 +1556,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   setManualBracket: async (bracket) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
+    const previousDeck = get().decks[activeDeckId];
+    if (!previousDeck) return;
 
     // Optimistic update
     set((state) => ({
@@ -1484,17 +1573,34 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
     set({ isSyncing: true });
     try {
+      pendingManualBracketWrites += 1;
       await deckApi.updateDeck(activeDeckId, { manualBracket: bracket });
     } catch (err) {
       logger.error("Unexpected error", "setManualBracket", err);
+      set((state) => {
+        const currentDeck = state.decks[activeDeckId];
+        if (!currentDeck || currentDeck.manualBracket !== bracket) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [activeDeckId]: { ...currentDeck, manualBracket: previousDeck.manualBracket },
+          },
+        };
+      });
+      if (get().decks[activeDeckId]) {
+        useToastStore.getState().add("error", "Could not save manual bracket. Please retry.");
+      }
     } finally {
-      set({ isSyncing: false });
+      pendingManualBracketWrites -= 1;
+      set({ isSyncing: pendingManualBracketWrites > 0 || pendingBulkRemovals > 0 });
     }
   },
 
   setBudget: async (budget) => {
     const { activeDeckId } = get();
     if (!activeDeckId) return;
+    const previousDeck = get().decks[activeDeckId];
+    if (!previousDeck) return;
 
     // Optimistic update
     set((state) => ({
@@ -1513,6 +1619,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateDeck(activeDeckId, { budget });
     } catch (err) {
       logger.error("Unexpected error", "setBudget", err);
+      set((state) => {
+        const currentDeck = state.decks[activeDeckId];
+        if (!currentDeck || currentDeck.budget !== budget) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [activeDeckId]: { ...currentDeck, budget: previousDeck.budget },
+          },
+        };
+      });
+      if (get().decks[activeDeckId]) {
+        useToastStore.getState().add("error", "Could not save deck budget. Please retry.");
+      }
     } finally {
       set({ isSyncing: false });
     }

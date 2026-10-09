@@ -66,6 +66,10 @@ The builder has three panels:
 
 #### Deck Zones (Main / Sideboard / Considering)
 
+Server requests to open an individual deck stop waiting after 15 seconds rather
+than remaining pending indefinitely. Local guest decks do not make this request.
+If opening a server deck fails, an error notification asks you to try again.
+
 If removing a card fails, the editor restores its zone and quantity and asks you
 to retry. The failed removal does not remain in the undo history.
 Its position is restored before the surviving cards that originally followed it;
@@ -73,8 +77,44 @@ other successful removals and their undo entries are preserved.
 
 Undo applies to the deck where the recorded action took place, even if you have
 since opened another deck. Your current deck selection remains unchanged.
+When several printings share a card name, undoing an addition prioritizes the
+recorded card identifier instead of another printing with the same name.
+If that identifier is missing and several cards share the name, undo preserves
+the cards and action and reports the ambiguity rather than removing an arbitrary
+printing. Legacy name matching still works when only one card matches.
 If the original deck is not loaded, undo keeps its action and asks you to open
 that deck before retrying, without sending an update to the server.
+
+After a deck is successfully deleted, its undo actions are removed so they cannot
+block undo in another deck. A rejected deletion keeps the deck and its history.
+If an undo request fails after its deck has been successfully deleted, it does
+not put an obsolete retry action back into the history.
+An undo that completes successfully after its deck is deleted does not announce
+a successful edit or recreate the deleted deck.
+A pending save refresh that returns after successful deck deletion also leaves
+the deck deleted and does not announce a successful save.
+If refreshing an existing deck fails, an error asks you to retry and leaves the
+current deck unchanged. A late failure after deletion does not show an obsolete
+refresh warning.
+If renaming a deck fails, its previous name is restored when the failed name is
+still displayed, and a retry message appears. A different, newer name is kept;
+a failed rename cannot recreate a deleted deck.
+If saving the target bracket fails, the previous displayed target is restored
+when the attempted value is still current, and a retry message appears. A
+different newer target is preserved; deleted decks are not restored or warned
+about by a late failure.
+If saving or clearing the deck budget fails, the previous displayed budget is
+restored when the attempted value is still current, and a retry message appears.
+A different newer budget is preserved; a late failure does not recreate or warn
+about a deleted deck.
+
+If saving a manual bracket or returning to automatic calculation fails, the
+previous setting is restored when the attempted value is still current, and a
+retry message appears. A different newer setting is preserved; a late failure
+does not recreate or warn about a deleted deck.
+
+When manual bracket saves overlap, the save indicator remains active until all
+of those requests have finished, including rejected requests.
 
 If undoing a card addition fails to save, the card is restored with its zone and
 quantity and the undo action remains available to retry. An error replaces the
@@ -122,6 +162,32 @@ the destination, while a failed card returns to its last confirmed zone and an
 error tells you to retry. Moves of the same card use the existing save queue.
 
 #### Grid vs List View
+
+When a bulk removal partially fails, only the rejected cards return to the
+editor, with their original zone and quantity. Successfully removed cards stay
+removed, and a retry message appears. A late failure does not recreate a
+deleted deck. Rejected cards return before their next surviving original card,
+or to the end when no original successor remains. This preserves their relative
+order even when failures finish out of order. Overlapping removal recovery
+remains follow-up work.
+
+A bulk removal with several rejected cards shows a single retry notification
+after the batch finishes, rather than one notification for every rejected card.
+
+Repeated card identifiers in a bulk removal are processed once, preventing
+duplicate requests and conflicting recovery for the same card.
+
+Bulk removal ignores selected identifiers that are no longer present in the
+active deck. An entirely stale selection does not send a request or change the
+deck or its save indicator.
+
+When bulk removal batches overlap, the save indicator stays active until all
+of those batches finish. Activity shared with other action types remains
+outside this guarantee.
+
+Bulk removal and manual bracket saves also keep each other's activity visible:
+finishing either action does not hide the other while it is still pending.
+Other action combinations remain outside this guarantee.
 
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
 
