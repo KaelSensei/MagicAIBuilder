@@ -174,6 +174,9 @@ remains follow-up work.
 A bulk removal with several rejected cards shows a single retry notification
 after the batch finishes, rather than one notification for every rejected card.
 
+Repeated card identifiers in a bulk removal are processed once, preventing
+duplicate requests and conflicting recovery for the same card.
+
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
 
 In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default is 6.
