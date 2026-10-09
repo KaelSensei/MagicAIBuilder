@@ -170,6 +170,23 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — bulkRemoveCards recovery", () => {
+  it("leaves the deck and activity unchanged for an entirely stale selection", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    const deck = useDeckStore.getState().decks["deck-1"];
+    await useDeckStore.getState().bulkRemoveCards(["missing"]);
+    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(useDeckStore.getState().decks["deck-1"]).toBe(deck);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("does not send removal requests for cards absent from the active deck", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    await useDeckStore.getState().bulkRemoveCards(["missing", "card-1"]);
+    expect(deckApi.removeCard).toHaveBeenCalledExactlyOnceWith("deck-1", "card-1");
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([]);
+  });
+
   it("sends only one removal request for a repeated card identifier", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
     await useDeckStore.getState().bulkRemoveCards(["card-1", "card-1"]);

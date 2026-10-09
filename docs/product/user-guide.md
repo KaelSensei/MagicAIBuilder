@@ -177,6 +177,10 @@ after the batch finishes, rather than one notification for every rejected card.
 Repeated card identifiers in a bulk removal are processed once, preventing
 duplicate requests and conflicting recovery for the same card.
 
+Bulk removal ignores selected identifiers that are no longer present in the
+active deck. An entirely stale selection does not send a request or change the
+deck or its save indicator.
+
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
 
 In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default is 6.
