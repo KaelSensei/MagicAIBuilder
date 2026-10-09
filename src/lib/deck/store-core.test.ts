@@ -170,6 +170,34 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — bulkRemoveCards recovery", () => {
+  it("preserves original order when rejected removals finish in reverse order", async () => {
+    const first = Promise.withResolvers<void>();
+    const second = Promise.withResolvers<void>();
+    const cards = ["first", "second", "removed", "last"].map((id) => makeDeckCard({ id }));
+    seedDeck(makeActiveDeck({ cards }));
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    const removal = useDeckStore.getState().bulkRemoveCards(["first", "second", "removed"]);
+    second.reject(new Error("offline"));
+    await Promise.resolve();
+    first.reject(new Error("offline"));
+    await removal;
+    expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual([
+      "first", "second", "last",
+    ]);
+  });
+
+  it("restores a rejected bulk removal before its surviving successor", async () => {
+    const first = makeDeckCard({ id: "first" });
+    const middle = makeDeckCard({ id: "middle" });
+    const last = makeDeckCard({ id: "last" });
+    seedDeck(makeActiveDeck({ cards: [first, middle, last] }));
+    vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().bulkRemoveCards(["middle"]);
+    expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual([
+      "first", "middle", "last",
+    ]);
+  });
+
   it("does not recreate a deleted deck after a rejected bulk removal", async () => {
     const pending = Promise.withResolvers<void>();
     seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));

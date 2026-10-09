@@ -1475,15 +1475,20 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             logger.error("Unexpected error", "bulkRemoveCards", err);
             const removedCard = originalCards.find((card) => card.id === id);
             if (!removedCard) return;
+            const removedIndex = originalCards.findIndex((card) => card.id === id);
+            const followingCardIds = new Set(originalCards.slice(removedIndex + 1).map((card) => card.id));
             set((state) => {
               const currentDeck = state.decks[activeDeckId];
               if (!currentDeck) return state;
               return {
                 decks: {
                   ...state.decks,
-                  [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                    cards.some((card) => card.id === id) ? cards : [...cards, removedCard]
-                  ),
+                  [activeDeckId]: updateDeckCards(currentDeck, (cards) => {
+                    if (cards.some((card) => card.id === id)) return cards;
+                    const followingIndex = cards.findIndex((card) => followingCardIds.has(card.id));
+                    const restoreIndex = followingIndex < 0 ? cards.length : followingIndex;
+                    return [...cards.slice(0, restoreIndex), removedCard, ...cards.slice(restoreIndex)];
+                  }),
                 },
               };
             });
