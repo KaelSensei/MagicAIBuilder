@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Bulk removal failures now produce one retry notification per completed batch rather than one per rejected card, preserving per-card recovery and deleted-deck suppression (#939). Observed Red/Green. VPS: 3,067 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar failed before analysis with HTTP 403. Overlapping removal ownership and promotion beyond dev remain open.
+
 - Rejected bulk removals preserve relative card order even when failures finish out of order, without restoring successful removals (#937). Observed Red/Green plus reverse-order characterization. VPS: 3,066 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar failed before analysis with HTTP 403. Overlapping removal recovery, aggregate failure feedback and promotion beyond dev remain open.
 
 - Rejected bulk card removals restore only failed cards with original zone and quantity, retaining successful removals and leaving deleted decks absent (#935). Observed Red/Green plus deletion characterization. VPS: 3,064 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar failed before analysis with HTTP 403. Original ordering, overlapping recovery, aggregate error feedback and promotion beyond dev remain open; bulk undo behavior is unchanged.
