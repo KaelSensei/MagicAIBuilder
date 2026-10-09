@@ -169,6 +169,36 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
+describe("useDeckStore — bulkRemoveCards recovery", () => {
+  it("does not recreate a deleted deck after a rejected bulk removal", async () => {
+    const pending = Promise.withResolvers<void>();
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    const removal = useDeckStore.getState().bulkRemoveCards(["card-1"]);
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await removal;
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    seedDeck();
+  });
+
+  it("restores a rejected removal without restoring successful removals", async () => {
+    const rejected = makeDeckCard({ id: "rejected", zone: "sideboard", quantity: 3, isMaybeboard: false });
+    const removed = makeDeckCard({ id: "removed" });
+    seedDeck(makeActiveDeck({ cards: [rejected, removed] }));
+    vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
+    await useDeckStore.getState().bulkRemoveCards(["rejected", "removed"]);
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([rejected]);
+    expect(toastAdd).toHaveBeenCalledWith("error", "Could not remove card. Please retry.");
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+});
+
 describe("useDeckStore — setGameChangerNames / setBannedNames", () => {
   beforeEach(() => {
     vi.clearAllMocks();
