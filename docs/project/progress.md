@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Overlapping bulk removal batches retain save activity until all batches finish (#945). Observed Red/Green. VPS: 3,071 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar HTTP 403 before analysis. Cross-action activity, overlapping recovery ownership and promotion beyond dev remain open.
+
 - Bulk removals ignore identifiers absent from the active deck; entirely stale selections are a no-op (#943). Observed Red/Green plus no-op characterization. VPS: 3,070 unit tests across 274 files, TypeScript, lint and build passed. Initial E2E: 64 passed and two authenticated deck-list failures; a fresh full run passed all 66 without assertion changes, retries or bypass. CI, performance and Vercel passed. Sonar HTTP 403 before analysis. Intermittent loading/session failure is not claimed fixed; cross-batch ownership and promotion beyond dev remain open.
 
 - Repeated card identifiers within a bulk removal now produce one request per card (#941). Observed Red/Green. VPS: 3,068 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar failed before analysis with HTTP 403. Cross-batch ownership and promotion beyond dev remain open.
