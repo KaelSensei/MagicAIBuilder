@@ -170,6 +170,18 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — bulkRemoveCards recovery", () => {
+  it("keeps syncing until all overlapping bulk removals finish", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "first" }), makeDeckCard({ id: "second" })] }));
+    const pending = Promise.withResolvers<void>();
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    const firstBatch = useDeckStore.getState().bulkRemoveCards(["first"]);
+    await useDeckStore.getState().bulkRemoveCards(["second"]);
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve();
+    await firstBatch;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("leaves the deck and activity unchanged for an entirely stale selection", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
     const deck = useDeckStore.getState().decks["deck-1"];
