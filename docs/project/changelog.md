@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-09: Bulk removal failure recovery
+
+#### Fixed
+
+- Rejected bulk removals restore only failed cards with their original zone and quantity and show retry feedback. Successful removals remain removed; late failures do not recreate or warn about deleted decks (#935). Restored cards append to the list. Original ordering, overlapping recovery and aggregate feedback remain follow-up work; bulk undo behavior is unchanged.
+
+#### Validation
+
+- Observed focused Red reproduced a missing card after a rejected removal. Minimal Green recovers each rejection independently. Passing characterization covers deletion during a pending request. VPS: 3,064 unit tests across 274 files, TypeScript, lint and production build passed; full blocking Docker Playwright passed all 66 scenarios with unchanged exclusions and no bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
 ### 2026-10-09: Manual bracket save activity
 
 #### Fixed
