@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-09: Stale bulk removal selections
+
+#### Fixed
+
+- Request bulk removal only for cards present in the active deck. An entirely stale selection leaves the deck and save activity unchanged and sends no request (#943). Cross-batch ownership remains follow-up work.
+
+#### Validation
+
+- Observed focused Red sent requests for an absent card and a present card instead of only the present card. Minimal Green intersects selection with current identifiers; passing characterization covers an entirely stale selection. VPS: 3,070 unit tests across 274 files, TypeScript, lint and build passed. Initial E2E: 64 passed and two authenticated deck-list failures; a fresh full run passed all 66 without assertion changes, retries or bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Intermittent loading/session failure is not claimed fixed. Integrated into dev only; staging/main promotion awaits QA validation.
+
 ### 2026-10-09: Unique bulk removal requests
 
 #### Fixed
