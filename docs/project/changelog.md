@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-09: Grouped bulk removal feedback
+
+#### Fixed
+
+- Show one retry notification after a bulk removal batch finishes, even when several cards are rejected. Individual recovery remains unchanged; no notification is shown for a deleted deck (#939). Overlapping removal ownership remains follow-up work.
+
+#### Validation
+
+- Observed focused Red produced two notifications instead of one. Minimal Green aggregates rejected removals within the batch. Existing partial-success, deletion and ordering regressions pass. VPS: 3,067 unit tests across 274 files, TypeScript, lint and production build passed; full blocking Docker E2E passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
 ### 2026-10-09: Bulk removal recovery ordering
 
 #### Fixed
