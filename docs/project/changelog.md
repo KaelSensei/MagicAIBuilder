@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-09: Unique bulk removal requests
+
+#### Fixed
+
+- Process repeated card identifiers once per bulk removal, avoiding duplicate server writes and conflicting recovery for the same card (#941). Cross-batch ownership remains follow-up work.
+
+#### Validation
+
+- Observed focused Red produced two removal requests instead of one. Minimal Green reuses the existing identifier set for requests; existing recovery regressions pass. VPS: 3,068 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
 ### 2026-10-09: Grouped bulk removal feedback
 
 #### Fixed
