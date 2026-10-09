@@ -166,8 +166,10 @@ error tells you to retry. Moves of the same card use the existing save queue.
 When a bulk removal partially fails, only the rejected cards return to the
 editor, with their original zone and quantity. Successfully removed cards stay
 removed, and a retry message appears. A late failure does not recreate a
-deleted deck. Restored cards may appear at the end of the list; original
-ordering and overlapping removal recovery remain follow-up work.
+deleted deck. Rejected cards return before their next surviving original card,
+or to the end when no original successor remains. This preserves their relative
+order even when failures finish out of order. Overlapping removal recovery
+remains follow-up work.
 
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
 
