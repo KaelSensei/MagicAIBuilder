@@ -7,6 +7,12 @@ import type { Mock } from "vitest";
 
 vi.mock("@/lib/db/deck-api", () => ({
   fetchDecks: vi.fn(),
+  fetchDeck: vi.fn(),
+}));
+
+const toastAdd = vi.hoisted(() => vi.fn());
+vi.mock("@/hooks/useToast", () => ({
+  useToastStore: { getState: () => ({ add: toastAdd }) },
 }));
 
 import * as deckApi from "@/lib/db/deck-api";
@@ -20,6 +26,15 @@ beforeEach(() => {
 });
 
 describe("useDeckStore.loadDecks — failure reporting", () => {
+  it("notifies the player when opening an individual deck fails", async () => {
+    vi.mocked(deckApi.fetchDeck).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().setActiveDeck("deck-1");
+
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(useDeckStore.getState().decks).toEqual({});
+  });
+
   it("starts with no load error", () => {
     expect(useDeckStore.getState().loadError).toBeNull();
   });

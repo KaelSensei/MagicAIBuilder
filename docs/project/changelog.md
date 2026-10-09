@@ -9,6 +9,315 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-09: Shared bulk and manual bracket activity
+
+#### Fixed
+
+- Completing a bulk removal no longer hides pending manual bracket save activity, and manual bracket completion no longer hides a pending bulk removal (#947). Other action combinations and mutation ownership remain follow-up work.
+
+#### Validation
+
+- Two separately observed Red/Green cycles reproduce both completion orders. Minimal Green checks the two existing counters in both completion paths. VPS: 3,073 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
+### 2026-10-09: Concurrent bulk removal activity
+
+#### Fixed
+
+- Keep the save indicator active until every overlapping bulk removal batch finishes (#945). This covers bulk removal batches only; cross-action tracking and overlapping recovery ownership remain follow-up work.
+
+#### Validation
+
+- Observed focused Red hid activity while an earlier batch remained pending. Minimal Green counts pending batches; existing recovery regressions pass. VPS: 3,071 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
+### 2026-10-09: Stale bulk removal selections
+
+#### Fixed
+
+- Request bulk removal only for cards present in the active deck. An entirely stale selection leaves the deck and save activity unchanged and sends no request (#943). Cross-batch ownership remains follow-up work.
+
+#### Validation
+
+- Observed focused Red sent requests for an absent card and a present card instead of only the present card. Minimal Green intersects selection with current identifiers; passing characterization covers an entirely stale selection. VPS: 3,070 unit tests across 274 files, TypeScript, lint and build passed. Initial E2E: 64 passed and two authenticated deck-list failures; a fresh full run passed all 66 without assertion changes, retries or bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Intermittent loading/session failure is not claimed fixed. Integrated into dev only; staging/main promotion awaits QA validation.
+
+### 2026-10-09: Unique bulk removal requests
+
+#### Fixed
+
+- Process repeated card identifiers once per bulk removal, avoiding duplicate server writes and conflicting recovery for the same card (#941). Cross-batch ownership remains follow-up work.
+
+#### Validation
+
+- Observed focused Red produced two removal requests instead of one. Minimal Green reuses the existing identifier set for requests; existing recovery regressions pass. VPS: 3,068 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
+### 2026-10-09: Grouped bulk removal feedback
+
+#### Fixed
+
+- Show one retry notification after a bulk removal batch finishes, even when several cards are rejected. Individual recovery remains unchanged; no notification is shown for a deleted deck (#939). Overlapping removal ownership remains follow-up work.
+
+#### Validation
+
+- Observed focused Red produced two notifications instead of one. Minimal Green aggregates rejected removals within the batch. Existing partial-success, deletion and ordering regressions pass. VPS: 3,067 unit tests across 274 files, TypeScript, lint and production build passed; full blocking Docker E2E passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
+### 2026-10-09: Bulk removal recovery ordering
+
+#### Fixed
+
+- Restore rejected bulk removals before the next surviving original card, or append when no successor remains. Relative order is preserved when rejections finish out of order; successful removals remain applied (#937). Overlapping removal recovery and aggregate feedback remain follow-up work.
+
+#### Validation
+
+- Observed focused Red placed the restored middle card after the last card. Minimal Green uses original successor identifiers; passing characterization covers reverse-order failures with a successful removal. VPS: 3,066 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker Playwright passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
+### 2026-10-09: Bulk removal failure recovery
+
+#### Fixed
+
+- Rejected bulk removals restore only failed cards with their original zone and quantity and show retry feedback. Successful removals remain removed; late failures do not recreate or warn about deleted decks (#935). Restored cards append to the list. Original ordering, overlapping recovery and aggregate feedback remain follow-up work; bulk undo behavior is unchanged.
+
+#### Validation
+
+- Observed focused Red reproduced a missing card after a rejected removal. Minimal Green recovers each rejection independently. Passing characterization covers deletion during a pending request. VPS: 3,064 unit tests across 274 files, TypeScript, lint and production build passed; full blocking Docker Playwright passed all 66 scenarios with unchanged exclusions and no bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
+### 2026-10-09: Manual bracket save activity
+
+#### Fixed
+
+- The compact save indicator stays active until every overlapping manual bracket request finishes, including rejected requests (#933). This increment covers manual bracket requests only, not shared activity across other actions or server write ordering.
+
+#### Validation
+
+- Observed focused Red: isSyncing became false while the first request remained pending. Minimal Green tracks pending manual bracket requests; passing characterization covers rejection during another pending save. VPS: 3,062 unit tests across 274 files, TypeScript, lint and production build passed. Initial full E2E run: 63 passed, one authentication socket hang up, two not run. A fresh full run passed all 66 scenarios with unchanged exclusions, no added retries and no bypass. CI, performance and Vercel passed.
+- Sonar local configuration is absent; CI failed before analysis with HTTP 403. The intermittent authentication outage is not claimed fixed. Integrated into dev only; staging/main promotion awaits the QA cycle.
+
+### 2026-10-08: Manual bracket save recovery
+
+#### Fixed
+
+- Rejected manual bracket overrides or returns to automatic calculation restore the previous displayed setting when the attempted value remains current and show retry feedback. Different newer settings are preserved; late failures do not recreate or warn about deleted decks (#931).
+
+#### Validation
+
+- Observed focused Red: rejected override left bracket 4 instead of null. Minimal Green restores the prior setting. Three additional passing characterization tests cover clearing an existing override, a different newer successful setting and deletion during the request. VPS: 3,060 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright passed 66 scenarios with unchanged exclusions and no bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. General write serialization, repeated identical values, confirmed-baseline recovery and global activity accounting remain open. Integrated into dev; staging/main promotion remains pending. The existing intermittent E2E outage is not claimed fixed.
+
+### 2026-10-08: Deck budget save recovery
+
+#### Fixed
+
+- Rejected budget saves or clears restore the previous displayed budget when the attempted value is still current and show retry feedback. A different newer budget is preserved; late failures neither recreate nor warn about deleted decks (#929).
+
+#### Validation
+
+- Observed focused Red/Green: attempted budget 200 remained instead of previous null. Supplementary passing characterization covers clearing an existing limit, a different newer successful budget and deletion during the request. VPS: 3,056 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright: 66 passed in isolated Compose with diagnostic logging, unchanged exclusions and no retries or bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI is blocked before analysis by HTTP 403. General budget-write serialization, repeated identical values, confirmed-baseline recovery and global activity accounting remain open. Integrated into dev; staging/main promotion remains pending. The existing intermittent E2E outage is not claimed fixed.
+
+### 2026-10-08: Target bracket save recovery
+
+#### Fixed
+
+- Rejected target bracket saves restore the previous displayed target when the attempted value is still current and show retry feedback. A different newer target is preserved; late failures neither recreate nor warn about deleted decks (#927).
+
+#### Validation
+
+- Observed focused Red/Green: attempted target 4 remained instead of previous target 2. Supplementary passing characterization covers feedback, a different newer successful target and deletion during the request. VPS: 3,053 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright: 66 passed in isolated Compose with diagnostic server logging, unchanged exclusions and no retries or bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI is blocked before analysis by HTTP 403. General target-write serialization, repeated identical values, confirmed-baseline recovery and global activity accounting remain open. Integrated into dev; staging/main promotion remains pending. The existing intermittent E2E outage is not claimed fixed.
+
+### 2026-10-08: Failed deck rename recovery
+
+#### Fixed
+
+- Failed deck renames restore the previous displayed name when the attempted name is still current and show a retry notification. A different newer name remains intact; a late failure neither recreates a deleted deck nor warns about it (#925).
+
+#### Validation
+
+- Observed one focused Red/Green cycle by replacing the existing test of unwanted optimistic-name retention. Supplementary passing characterization covers retry feedback, a newer different successful name and deletion during the request. VPS: 3,050 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright: 66 scenarios passed in an isolated Compose project with diagnostic logging, unchanged exclusions and no retries or bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent and CI remains blocked before analysis by HTTP 403. General rename serialization, repeated identical names and confirmed-baseline recovery remain open. The previously documented intermittent E2E server outage is not claimed fixed. Integrated into dev; staging/main promotion remains pending.
+
+### 2026-10-08: Deck refresh failure feedback
+
+#### Fixed
+
+- Failed manual deck refresh asks the player to retry without changing the existing deck. Late failures after successful deletion do not display an obsolete warning (#923).
+
+#### Validation
+
+- Two sequential observed Red/Green cycles: missing error feedback, then obsolete feedback after deletion. VPS validation passed 3,048 unit tests across 274 files, TypeScript, lint and production build. CI, performance and Vercel passed; Sonar remains blocked before analysis by HTTP 403 and local configuration is absent.
+- The full blocking Docker Playwright gate passed all 66 scenarios with unchanged exclusions and no test retries or hook bypass. Two earlier full runs failed at authentication setup with a socket hang up (63 passed, two not run). Isolated authentication and a subsequent full run with server diagnostic logging passed. The intermittent test-server outage is not claimed resolved; failure evidence is retained on the VPS.
+- Integrated into dev. Dedicated visual retry states, broader loading ownership and staging/main promotion remain open.
+
+### 2026-10-08: Deleted deck refresh protection
+
+#### Fixed
+
+- A save refresh completing after successful deck deletion no longer restores the deleted deck or announces a successful save (#921). If deletion is rejected, refresh still updates the existing deck.
+
+#### Validation
+
+- One observed focused Red/Green cycle reproduced the deleted deck being recreated. Additional passing characterization covers rejected deletion and obsolete save feedback. VPS: 3,046 unit tests across 274 files, TypeScript, lint and production build passed. Full blocking Docker Playwright: 66 scenarios passed with existing external/performance exclusions in an isolated Compose project. CI, performance and Vercel passed.
+- Local Sonar execution lacks configuration; CI Sonar is blocked before analysis by HTTP 403. Broader unloading, stale-response ownership and concurrent edits remain open. Integrated into dev; staging/main promotion remains pending.
+
+### 2026-10-08: Obsolete undo success feedback
+
+#### Fixed
+
+- Undo completion no longer announces a successful edit when its original deck has disappeared after deletion (#919). Late restoration responses do not recreate the deleted deck; ordinary undo feedback for present decks is unchanged.
+
+#### Validation
+
+- Observed one focused Red/Green cycle for late addition undo, followed by passing restoration characterization coverage. VPS: 3,044 unit tests across 274 files, TypeScript, lint and build passed. Full blocking Docker Playwright: 66 scenarios passed with existing external/performance exclusions in an isolated Compose project. CI, performance and Vercel passed. Local Sonar lacks configuration; CI Sonar remains blocked before analysis with HTTP 403.
+- Broader unloading, late-response ownership and concurrent mutations remain open. Integrated into dev; staging/main promotion remains pending.
+
+### 2026-10-08: Pending undo after deck deletion
+
+#### Fixed
+
+- Failed in-flight undo additions/removals no longer restore obsolete retry entries when their original deck is absent after successful deletion (#917). Existing failure recovery for still-present decks is unchanged.
+
+#### Validation
+
+- Two sequential observed Red/Green cycles, one for each undo kind. VPS: 3,042 unit tests across 274 files, TypeScript, lint and build passed. Full Docker Playwright: 66 scenarios passed with existing external/performance exclusions, using an isolated Compose project without published database ports. CI, performance and Vercel passed. Local Sonar configuration is absent; CI Sonar remains blocked before analysis with HTTP 403.
+- Successful late responses, unloading races and broader mutation ownership remain open. Integrated into dev; staging/main promotion remains pending.
+
+### 2026-10-07: Deleted deck undo cleanup
+
+#### Fixed
+
+- Successful deck deletion removes only its undo entries, keeping other decks' undo usable; rejected deletion retains the deck and history (#915).
+- Zone-persistence E2E assertions distinguish rendered card names from menu options and zone tabs from move actions, retaining save and reload checks.
+
+#### Validation
+
+- Observed one focused Red before the minimal store change, then Green. VPS validation passed 3,040 unit tests across 274 files, TypeScript, lint and build. The complete blocking Docker Playwright suite passed 66 scenarios (existing external/performance exclusions unchanged) in an isolated Compose project without published database ports. CI, performance and Vercel passed. Local Sonar lacks configuration; CI Sonar remains blocked before analysis with HTTP 403.
+- Broader concurrent delete/undo ownership and staging/main promotion remain open; this delivery is integrated into dev.
+
+### 2026-10-07: Deck opening failure feedback
+
+#### Fixed
+
+- Display a retry error notification when individual deck opening fails instead of logging silently (#911).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,038 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-07: Individual deck loading deadline
+
+#### Fixed
+
+- Abort stalled individual server deck requests after 15 seconds, including response-body reading, without changing local guest loading (#909).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,037 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-07: Ambiguous legacy undo protection
+
+#### Fixed
+
+- Preserve cards and undo actions when recorded ID is absent and multiple same-name candidates exist, reporting ambiguity without deletion (#907).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,036 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-07: Exact printing undo targeting
+
+#### Fixed
+
+- Prioritize the recorded card identifier before the existing same-name fallback when undoing additions, preserving other printings (#905).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,035 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### Unloaded deck undo recovery
+
+#### Fixed
+
+- Preserve undo actions for unloaded original decks and ask the player to open them before retrying, without server mutations (#901).
+
+#### Validation
+
+- Both regressions failed before implementation. VPS validation passed 3,034 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-07: Obsolete undo duplicate prevention
+
+#### Fixed
+
+- Discard obsolete removal undo when its saved card is already present, without another API addition or changes to current zone/quantity (#899).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,032 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-06: Restored card identifiers
+
+#### Fixed
+
+- Use the original printing identifier and returned saved row identifier when undo restores a removed card, preserving zone and quantity and enabling subsequent edits/removals (#897).
+
+#### Validation
+
+- Both regressions failed before implementation. VPS validation passed 3,031 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-06: Failed undo removal recovery
+
+#### Fixed
+
+- Roll back unsaved restored cards after failed undo removals, retain retry actions and replace false success notifications with errors (#895).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,029 tests across 274 files, TypeScript, lint and build. CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-06: Failed undo addition recovery
+
+#### Fixed
+
+- Restore cards and retry actions after failed undo additions, retaining zone and quantity and replacing the false success notification with an error (#893).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,028 tests across 274 files, TypeScript, lint and build. CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-06: Undo deck targeting
+
+#### Fixed
+
+- Apply undo additions/removals to the action's recorded deck after switching decks, without changing the current selection or unrelated deck (#891).
+
+#### Validation
+
+- Both regressions failed before implementation. VPS validation passed 3,027 tests across 274 files, TypeScript, lint and build; CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-06: Card order during removal recovery
+
+#### Fixed
+
+- Restore failed removals before surviving original successors rather than appending the card, while preserving concurrent successful removals and their undo entries (#889).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,025 tests across 274 files, TypeScript, lint and build. CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403; Docker E2E remains deferred.
+
+### 2026-10-06: Rejected card removal recovery
+
+#### Fixed
+
+- Restore cards after failed removal saves, retaining their zone and quantity and removing the corresponding undo entry; display a retry error (#887).
+
+#### Validation
+
+- Regression failed before implementation. VPS validation passed 3,024 tests across 274 files, TypeScript, lint and build. CI, performance and Vercel passed. Sonar remains blocked before analysis with HTTP 403. Docker E2E and wider remove/undo concurrency remain open.
+
 ### 2026-10-06: Ordered category edits
 
 #### Fixed

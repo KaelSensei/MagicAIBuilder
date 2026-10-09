@@ -165,6 +165,266 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 describe("useDeckStore — undo", () => {
   beforeEach(() => seedDeck());
 
+  it("does not announce a late successful undo for a deleted deck", async () => {
+    const card = makeDeckCard();
+    seedDeck(makeActiveDeck({ cards: [card] }));
+    useDeckStore.setState({ undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card }] });
+    const pending = Promise.withResolvers<void>();
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    toastAdd.mockClear();
+    const undo = useDeckStore.getState().undo();
+
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.resolve();
+    await undo;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("does not announce a late successful restoration for a deleted deck", async () => {
+    const card = makeDeckCard();
+    useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
+    vi.mocked(deckApi.addCard).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    toastAdd.mockClear();
+    const undo = useDeckStore.getState().undo();
+
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.resolve({
+      ...card, id: "saved-card", deckId: "deck-1", scryfallId: card.id,
+      isCommander: false, isPartner: false,
+    });
+    await undo;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("does not restore a failed pending addition undo after its deck is deleted", async () => {
+    const card = makeDeckCard();
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: "deck-1", card,
+    };
+    seedDeck(makeActiveDeck({ cards: [card] }));
+    useDeckStore.setState({ undoStack: [action] });
+    const pending = Promise.withResolvers<void>();
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    const undo = useDeckStore.getState().undo();
+
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("Deck deleted"));
+    await undo;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+  });
+
+  it("does not restore a failed pending removal undo after its deck is deleted", async () => {
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "REMOVE_CARD", deckId: "deck-1", card: makeDeckCard(),
+    };
+    useDeckStore.setState({ undoStack: [action] });
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
+    vi.mocked(deckApi.addCard).mockReturnValueOnce(pending.promise);
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    const undo = useDeckStore.getState().undo();
+
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("Deck deleted"));
+    await undo;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(useDeckStore.getState().undoStack).toEqual([]);
+  });
+
+  it("keeps another deck's undo usable after deleting the latest action's deck", async () => {
+    const card = makeDeckCard();
+    const deletedCard = makeDeckCard({ id: "deleted-card" });
+    const retainedAction: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: "deck-1", card,
+    };
+    const deletedAction: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: "deck-2", card: deletedCard,
+    };
+    useDeckStore.setState({
+      decks: {
+        "deck-1": makeActiveDeck({ cards: [card] }),
+        "deck-2": makeActiveDeck({ id: "deck-2", cards: [deletedCard] }),
+      },
+      undoStack: [retainedAction, deletedAction],
+    });
+    vi.mocked(deckApi.deleteDeck).mockResolvedValueOnce(undefined);
+    vi.mocked(deckApi.removeCard).mockClear();
+
+    await useDeckStore.getState().deleteDeck("deck-2");
+
+    expect(useDeckStore.getState().undoStack).toEqual([retainedAction]);
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-1");
+    await useDeckStore.getState().undo();
+    expect(deckApi.removeCard).toHaveBeenCalledWith("deck-1", card.id);
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([]);
+  });
+
+  it("preserves the deck and undo history when deletion is rejected", async () => {
+    const deck = makeActiveDeck();
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: deck.id, card: makeDeckCard(),
+    };
+    useDeckStore.setState({ decks: { [deck.id]: deck }, undoStack: [action] });
+    vi.mocked(deckApi.deleteDeck).mockRejectedValueOnce(new Error("Deletion rejected"));
+
+    await expect(useDeckStore.getState().deleteDeck(deck.id)).rejects.toThrow("Deletion rejected");
+
+    expect(useDeckStore.getState().decks[deck.id]).toEqual(deck);
+    expect(useDeckStore.getState().undoStack).toEqual([action]);
+    expect(useDeckStore.getState().activeDeckId).toBe(deck.id);
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
+  it("preserves cards and the undo action when name-only matching is ambiguous", async () => {
+    const cards = ["printing-1", "printing-2"].map((id) => makeDeckCard({ id, name: "Counterspell", isMaybeboard: false }));
+    const action: import("@/lib/deck/store").DeckAction = {
+      type: "ADD_CARD", deckId: "deck-1", card: makeDeckCard({ id: "missing-id", name: "Counterspell" }),
+    };
+    useDeckStore.setState({ decks: { "deck-1": makeActiveDeck({ cards }) }, undoStack: [action] });
+    vi.mocked(deckApi.removeCard).mockClear();
+    toastAdd.mockClear();
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual(cards);
+    expect(useDeckStore.getState().undoStack).toEqual([action]);
+    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+  });
+
+  it("undoes the recorded card rather than an earlier printing with the same name", async () => {
+    const earlier = makeDeckCard({ id: "earlier-printing", name: "Counterspell", isMaybeboard: false });
+    const added = makeDeckCard({ id: "added-printing", name: "Counterspell", isMaybeboard: false });
+    useDeckStore.setState({
+      decks: { "deck-1": makeActiveDeck({ cards: [earlier, added] }) },
+      undoStack: [{ type: "ADD_CARD", deckId: "deck-1", card: added }],
+    });
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([earlier]);
+    expect(deckApi.removeCard).toHaveBeenLastCalledWith("deck-1", "added-printing");
+  });
+
+  it.each(["ADD_CARD", "REMOVE_CARD"])("preserves %s undo when its deck is not loaded", async (type) => {
+    const card = makeDeckCard({ id: "card-1" });
+    const action: import("@/lib/deck/store").DeckAction = type === "ADD_CARD"
+      ? { type: "ADD_CARD", deckId: "unloaded-deck", card }
+      : { type: "REMOVE_CARD", deckId: "unloaded-deck", card };
+    useDeckStore.setState({ undoStack: [action] });
+    toastAdd.mockClear();
+    vi.mocked(deckApi.addCard).mockClear();
+    vi.mocked(deckApi.removeCard).mockClear();
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().undoStack).toEqual([action]);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+    expect(deckApi.removeCard).not.toHaveBeenCalled();
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+  });
+
+  it("does not add a duplicate when a removed card is already present", async () => {
+    const card = makeDeckCard({ id: "card-1", isMaybeboard: false, zone: "sideboard", quantity: 3 });
+    useDeckStore.setState({
+      decks: { "deck-1": makeActiveDeck({ cards: [card] }) },
+      undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }],
+    });
+    vi.mocked(deckApi.addCard).mockClear();
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([card]);
+    expect(useDeckStore.getState().undoStack).toHaveLength(0);
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("uses the printing identifier when restoring a removed card", async () => {
+    const card = makeDeckCard({ id: "old-row-id", scryfallId: "printing-id" });
+    useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
+    await useDeckStore.getState().undo();
+    expect(deckApi.addCard).toHaveBeenLastCalledWith("deck-1", expect.objectContaining({ scryfallId: "printing-id" }));
+  });
+
+  it("uses the saved row identifier for subsequent removal of a restored card", async () => {
+    const card = makeDeckCard({ id: "old-row-id", scryfallId: "printing-id", zone: "sideboard", quantity: 3 });
+    useDeckStore.setState({ undoStack: [{ type: "REMOVE_CARD", deckId: "deck-1", card }] });
+    await useDeckStore.getState().undo();
+    const restored = useDeckStore.getState().decks["deck-1"].cards.find((entry) => entry.name === card.name);
+    expect(restored).toMatchObject({ id: "saved-db-id", scryfallId: "printing-id", zone: "sideboard", quantity: 3 });
+    await useDeckStore.getState().removeCard("saved-db-id");
+    expect(deckApi.removeCard).toHaveBeenLastCalledWith("deck-1", "saved-db-id");
+  });
+
+  it("removes the unsaved restored card and keeps retry when undoing a removal fails", async () => {
+    const card = makeDeckCard({ id: "card-1", zone: "sideboard", quantity: 3 });
+    const action: import("@/lib/deck/store").DeckAction = { type: "REMOVE_CARD", deckId: "deck-1", card };
+    useDeckStore.setState({
+      decks: { "deck-1": makeActiveDeck({ cards: [] }) },
+      undoStack: [action],
+    });
+    toastAdd.mockClear();
+    vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(0);
+    expect(useDeckStore.getState().undoStack).toEqual([action]);
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(toastAdd).not.toHaveBeenCalledWith("info", expect.any(String));
+  });
+
+  it("restores the card and retry action when undoing an addition fails", async () => {
+    const card = makeDeckCard({ id: "card-1", isMaybeboard: false, quantity: 3, zone: "sideboard" });
+    const action: import("@/lib/deck/store").DeckAction = { type: "ADD_CARD", deckId: "deck-1", card };
+    useDeckStore.setState({
+      decks: { "deck-1": makeActiveDeck({ cards: [card] }) },
+      undoStack: [action],
+    });
+    toastAdd.mockClear();
+    vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([card]);
+    expect(useDeckStore.getState().undoStack).toEqual([action]);
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
+    expect(toastAdd).not.toHaveBeenCalledWith("info", expect.any(String));
+  });
+
+  it.each(["ADD_CARD", "REMOVE_CARD"])("targets the recorded deck for %s after switching decks", async (type) => {
+    const card = makeDeckCard({ id: "card-1", name: "Counterspell", isMaybeboard: false });
+    const recordedAction: import("@/lib/deck/store").DeckAction = type === "ADD_CARD"
+      ? { type: "ADD_CARD", deckId: "deck-1", card }
+      : { type: "REMOVE_CARD", deckId: "deck-1", card };
+    useDeckStore.setState({
+      decks: {
+        "deck-1": makeActiveDeck({ cards: type === "ADD_CARD" ? [card] : [] }),
+        "deck-2": makeActiveDeck({ id: "deck-2", cards: [card] }),
+      },
+      activeDeckId: "deck-2",
+      undoStack: [recordedAction],
+    });
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-2"].cards).toEqual([card]);
+    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(type === "ADD_CARD" ? 0 : 1);
+    expect(useDeckStore.getState().activeDeckId).toBe("deck-2");
+  });
+
   it("does nothing when undo stack is empty", async () => {
     useDeckStore.setState({ undoStack: [] });
     await useDeckStore.getState().undo();
@@ -430,6 +690,40 @@ describe("useDeckStore — setCompanion", () => {
     });
     await useDeckStore.getState().setCompanion(card);
     expect(useDeckStore.getState().decks["deck-1"].companion).toBeNull();
+  });
+});
+
+describe("useDeckStore failed removal recovery", () => {
+  it("restores card order while preserving a concurrent successful removal", async () => {
+    const cards = ["card-1", "card-2", "card-3"].map((id) => makeDeckCard({ id }));
+    seedDeck(makeActiveDeck({ cards }));
+    let finishRemoval = () => {};
+    const pendingRemoval = new Promise<void>((resolve) => { finishRemoval = resolve; });
+    vi.mocked(deckApi.removeCard).mockImplementationOnce(async () => {
+      await pendingRemoval;
+      throw new Error("offline");
+    });
+
+    const rejectedRemoval = useDeckStore.getState().removeCard("card-2");
+    await useDeckStore.getState().removeCard("card-1");
+    finishRemoval();
+    await rejectedRemoval;
+
+    expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual(["card-2", "card-3"]);
+    expect(useDeckStore.getState().undoStack).toHaveLength(1);
+    expect(useDeckStore.getState().undoStack[0].card.id).toBe("card-1");
+  });
+
+  it("restores a rejected removal without leaving a false undo entry", async () => {
+    const card = makeDeckCard({ id: "card-1", zone: "sideboard", isMaybeboard: false, quantity: 3 });
+    seedDeck(makeActiveDeck({ cards: [card] }));
+    vi.mocked(deckApi.removeCard).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().removeCard("card-1");
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([card]);
+    expect(useDeckStore.getState().undoStack).toHaveLength(0);
+    expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
   });
 });
 

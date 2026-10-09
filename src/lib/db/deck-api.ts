@@ -175,9 +175,15 @@ export async function fetchDecks(
 
 export async function fetchDeck(id: string): Promise<ApiDeck> {
   if (isGuestDeckId(id)) return getGuestApiDeck();
-  const res = await fetch(`/api/decks/${id}`);
-  if (!res.ok) await handleApiError(res, "fetchDeck");
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const res = await fetch(`/api/decks/${id}`, { signal: controller.signal });
+    if (!res.ok) await handleApiError(res, "fetchDeck");
+    return await res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function createDeck(
