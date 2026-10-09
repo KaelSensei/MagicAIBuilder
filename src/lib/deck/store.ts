@@ -1508,7 +1508,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         useToastStore.getState().add("error", "Could not remove card. Please retry.");
       }
       pendingBulkRemovals -= 1;
-      set({ isSyncing: pendingBulkRemovals > 0 });
+      set({ isSyncing: pendingBulkRemovals > 0 || pendingManualBracketWrites > 0 });
     }
   },
 
@@ -1592,7 +1592,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } finally {
       pendingManualBracketWrites -= 1;
-      set({ isSyncing: pendingManualBracketWrites > 0 });
+      set({ isSyncing: pendingManualBracketWrites > 0 || pendingBulkRemovals > 0 });
     }
   },
 
