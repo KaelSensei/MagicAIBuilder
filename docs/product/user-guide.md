@@ -163,6 +163,12 @@ error tells you to retry. Moves of the same card use the existing save queue.
 
 #### Grid vs List View
 
+When a bulk removal partially fails, only the rejected cards return to the
+editor, with their original zone and quantity. Successfully removed cards stay
+removed, and a retry message appears. A late failure does not recreate a
+deleted deck. Restored cards may appear at the end of the list; original
+ordering and overlapping removal recovery remain follow-up work.
+
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
 
 In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default is 6.
