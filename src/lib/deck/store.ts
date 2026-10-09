@@ -1455,7 +1455,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!previousDeck) return;
     const originalCards = uniqueDeckCards(previousDeck);
 
-    const idSet = new Set(cardIds);
+    const selectedIds = new Set(cardIds);
+    const idSet = new Set(originalCards.filter((card) => selectedIds.has(card.id)).map((card) => card.id));
+    if (idSet.size === 0) return;
     // Optimistic update
     set((state) => ({
       decks: {
