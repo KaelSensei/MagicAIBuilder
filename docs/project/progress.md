@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- Rejected bulk removals preserve relative card order even when failures finish out of order, without restoring successful removals (#937). Observed Red/Green plus reverse-order characterization. VPS: 3,066 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar failed before analysis with HTTP 403. Overlapping removal recovery, aggregate failure feedback and promotion beyond dev remain open.
+
 - Rejected bulk card removals restore only failed cards with original zone and quantity, retaining successful removals and leaving deleted decks absent (#935). Observed Red/Green plus deletion characterization. VPS: 3,064 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar failed before analysis with HTTP 403. Original ordering, overlapping recovery, aggregate error feedback and promotion beyond dev remain open; bulk undo behavior is unchanged.
 
 - Overlapping manual bracket saves retain the compact activity indicator until all requests finish, including failures (#933). Observed Red/Green plus passing failure characterization. VPS: 3,062 unit tests across 274 files, TypeScript, lint and build passed. First E2E run: 63 passed, authentication socket hang up, two not run; a fresh full run passed all 66 scenarios without retries or bypass. CI, performance and Vercel passed. Sonar HTTP 403 before analysis. Cross-action accounting, server ordering and promotion beyond dev remain open; intermittent authentication failure is not claimed fixed.

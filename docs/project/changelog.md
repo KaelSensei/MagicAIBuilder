@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-09: Bulk removal recovery ordering
+
+#### Fixed
+
+- Restore rejected bulk removals before the next surviving original card, or append when no successor remains. Relative order is preserved when rejections finish out of order; successful removals remain applied (#937). Overlapping removal recovery and aggregate feedback remain follow-up work.
+
+#### Validation
+
+- Observed focused Red placed the restored middle card after the last card. Minimal Green uses original successor identifiers; passing characterization covers reverse-order failures with a successful removal. VPS: 3,066 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker Playwright passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
 ### 2026-10-09: Bulk removal failure recovery
 
 #### Fixed
