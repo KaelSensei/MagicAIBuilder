@@ -109,6 +109,7 @@ interface PendingCategoryWrite {
 const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
 let pendingManualBracketWrites = 0;
+let pendingBulkRemovals = 0;
 
 export interface DeckStore {
   // State
@@ -1469,6 +1470,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }));
 
     set({ isSyncing: true });
+    pendingBulkRemovals += 1;
     try {
       await Promise.all(
         [...idSet].map(async (id) => {
@@ -1505,7 +1507,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       if (hasRejectedRemoval && get().decks[activeDeckId]) {
         useToastStore.getState().add("error", "Could not remove card. Please retry.");
       }
-      set({ isSyncing: false });
+      pendingBulkRemovals -= 1;
+      set({ isSyncing: pendingBulkRemovals > 0 });
     }
   },
 

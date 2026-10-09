@@ -181,6 +181,10 @@ Bulk removal ignores selected identifiers that are no longer present in the
 active deck. An entirely stale selection does not send a request or change the
 deck or its save indicator.
 
+When bulk removal batches overlap, the save indicator stays active until all
+of those batches finish. Activity shared with other action types remains
+outside this guarantee.
+
 Toggle between **Grid** (card images) and **List** (categorized rows) using the icons in the toolbar.
 
 In **Grid mode**, a density picker appears (2 / 3 / 4 / 6 / 8 columns). Default is 6.
