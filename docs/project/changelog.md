@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-09: Concurrent bulk removal activity
+
+#### Fixed
+
+- Keep the save indicator active until every overlapping bulk removal batch finishes (#945). This covers bulk removal batches only; cross-action tracking and overlapping recovery ownership remain follow-up work.
+
+#### Validation
+
+- Observed focused Red hid activity while an earlier batch remained pending. Minimal Green counts pending batches; existing recovery regressions pass. VPS: 3,071 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios without bypass. CI, performance and Vercel passed.
+- Local Sonar configuration is absent; CI failed before analysis with HTTP 403. Integrated into dev only; staging/main promotion awaits QA validation.
+
 ### 2026-10-09: Stale bulk removal selections
 
 #### Fixed
