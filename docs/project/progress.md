@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- 2026-10-10: #953 fixes premature completion in URL imports, existing-card quantity additions and deck activation for imports, forks and the AI wizard. Observed Red/Green regression; VPS validation: 3,074 unit tests across 274 files, typecheck, lint, production build and 66 Docker E2E scenarios passed. CI, performance and Vercel passed. Sonar CI remains blocked before analysis by HTTP 403; no green quality gate is claimed. Integrated into `dev`; QA promotion is pending.
+
 - Added [Fix History](fix-history.md), a dated register of conventional fix commits since project inception, generated from Git evidence with an explicit source snapshot. It separates historical commits from open follow-ups and does not infer QA or deployment status. Regeneration runs on the VPS.
 
 - Bulk removal and manual bracket completion preserve each other's pending save activity (#947). Two observed Red/Green cycles cover both completion orders. VPS: 3,073 unit tests across 274 files, TypeScript, lint and build passed; full blocking Docker E2E passed 66 scenarios. CI, performance and Vercel passed. Sonar HTTP 403 before analysis. Other action combinations, mutation ownership and promotion beyond dev remain open.
