@@ -126,7 +126,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     for (const c of rest) {
       const card = byName.get(normalizeImportedName(c.name));
       if (card) {
-        addCard(card, c.quantity, c.zone);
+        await addCard(card, c.quantity, c.zone);
         added++;
       } else ignoredNames.push(c.name);
     }

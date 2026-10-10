@@ -907,7 +907,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       const deckId = await createDeck(`AI Deck — ${strategy}`, {
         isAIGenerated: true,
       });
-      setActiveDeck(deckId);
+      await setActiveDeck(deckId);
 
       // Read the commander off the build result, not off `buildState`: this
       // closure captured the render-time snapshot, where it is still null.

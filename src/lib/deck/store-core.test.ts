@@ -169,6 +169,25 @@ function seedDeck(deck: Deck = makeActiveDeck()): void {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
+describe("addCard quantity save completion", () => {
+  it("waits for an existing card quantity save before completing", async () => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ name: "Relentless Rats" })] }));
+    const pending = Promise.withResolvers<void>();
+    const update = vi.spyOn(useDeckStore.getState(), "updateCardQuantity").mockReturnValueOnce(pending.promise);
+    let completed = false;
+    const addition = useDeckStore.getState().addCard(makeScryfallCard({ name: "Relentless Rats", oracle_text: "A deck can have any number of cards named Relentless Rats." }))
+      .then(() => { completed = true; });
+    try {
+      await vi.waitFor(() => expect(update).toHaveBeenCalled());
+      expect(completed).toBe(false);
+    } finally {
+      pending.resolve();
+      await addition;
+      update.mockRestore();
+    }
+  });
+});
+
 describe("useDeckStore — bulkRemoveCards recovery", () => {
   it("keeps bulk removal activity after a manual bracket save finishes", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));

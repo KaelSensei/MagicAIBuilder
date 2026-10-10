@@ -907,7 +907,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       // Already at max → skip
       if (exists.quantity >= max) return;
       // Can add more → increment quantity
-      get().updateCardQuantity(exists.id, 1);
+      await get().updateCardQuantity(exists.id, 1);
       return;
     }
 
@@ -995,7 +995,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const exists = uniqueDeckCards(deck).find((c) => c.name === card.name && c.zone === card.zone);
     if (exists) {
       if (exists.quantity >= max) return;
-      get().updateCardQuantity(exists.id, 1);
+      await get().updateCardQuantity(exists.id, 1);
       return;
     }
     const enriched = {
