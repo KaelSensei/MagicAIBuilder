@@ -9,27 +9,29 @@
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
-## Current metrics (2026-09-28)
+## Recorded metrics (updated where verified)
 
-| Metric              | Value                                                                                                                                   |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 2887 across 264 files                                                                                                                   |
-| E2E tests           | 65 passing (`@external` / `@perf` excluded) — ~3.7-5 min, serial since #535                                                             |
-| Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                   |
-| SonarCloud          | **unknown — no analysis has run since 2026-08-23**; `SONAR_TOKEN` returns HTTP 403                                                      |
-| Source files        | 327 (`.ts`/`.tsx`, excluding tests)                                                                                                     |
-| Components          | 145 — every `.tsx` under `src/` excluding tests, pages included (the label undercounts what it measures; `src/components` alone is 123) |
-| API routes          | 46                                                                                                                                      |
-| Prisma models       | 22                                                                                                                                      |
-| Prisma migrations   | 27                                                                                                                                      |
-| Hooks               | 26                                                                                                                                      |
-| Locales served      | 2 (`en`, `fr`) + 8 dormant                                                                                                              |
-| Production database | Neon (Vercel Marketplace)                                                                                                               |
-| CI workflows        | 3 (CI, SonarCloud, Lighthouse) — all on PRs into `staging`, `dev`, `main`                                                               |
+| Metric              | Value                                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit tests          | 3077 across 275 files, validated on 2026-10-10                                                                                              |
+| E2E tests           | 66 passing (`@external` / `@perf` excluded), full Docker gate on the VPS, validated on 2026-10-10                                           |
+| Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
+| SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
+| Source files        | 327 (`.ts`/`.tsx`, excluding tests)                                                                                                         |
+| Components          | 145 — every `.tsx` under `src/` excluding tests, pages included (the label undercounts what it measures; `src/components` alone is 123)     |
+| API routes          | 46                                                                                                                                          |
+| Prisma models       | 22                                                                                                                                          |
+| Prisma migrations   | 27                                                                                                                                          |
+| Hooks               | 26                                                                                                                                          |
+| Locales served      | 2 (`en`, `fr`) + 8 dormant                                                                                                                  |
+| Production database | Neon (Vercel Marketplace)                                                                                                                   |
+| CI workflows        | 3 (CI, SonarCloud, Lighthouse) — all on PRs into `staging`, `dev`, `main`                                                                   |
 
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+
+- 2026-10-10: #955 and #956 restore the Sonar reliability baseline and simplify 23 maintainability findings. The report moved from 120 open issues to 65, with zero bugs and a green Quality Gate. Both PRs passed CI and full VPS validation; no local tests/builds, new rule suppression or new coverage exclusion. Remaining findings are tracked in [Sonar status](../engineering/sonar-status.md). Integrated into `dev`, pending QA promotion.
 
 - 2026-10-10: #953 fixes premature completion in URL imports, existing-card quantity additions and deck activation for imports, forks and the AI wizard. Observed Red/Green regression; VPS validation: 3,074 unit tests across 274 files, typecheck, lint, production build and 66 Docker E2E scenarios passed. CI, performance and Vercel passed. Sonar CI remains blocked before analysis by HTTP 403; no green quality gate is claimed. Integrated into `dev`; QA promotion is pending.
 

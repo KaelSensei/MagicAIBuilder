@@ -2,6 +2,8 @@
 
 > **Updated:** 2026-10-10
 
+> **Latest quality delivery:** #955 and #956 restore working VPS/CI Sonar analysis and a green Quality Gate, with zero bugs and 65 code smells still open. Google failure feedback and description-save completion have separate Red/Green regressions. All validations ran on the VPS. The remaining maintainability backlog is tracked in [Sonar status](../engineering/sonar-status.md); QA promotion remains pending.
+
 > **Latest reliability delivery:** #953 awaits deck activation before import, fork and AI wizard follow-up actions, and awaits URL import additions and existing-card quantity saves before completion. Validated on the VPS; integrated into `dev`, awaiting QA promotion. This does not close the broader save-recovery or Sonar initiatives.
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
