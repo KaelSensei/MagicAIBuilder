@@ -42,8 +42,16 @@ export function exportActionLogText(
   entries: readonly PlaytestActionLogEntry[]
 ): string {
   const turns = summarizeActionLog(entries).map(
-    ({ turn, entries: turnEntries, draws, manaProduced, cardsSeen }) =>
-      `Turn ${turn}${draws + manaProduced + cardsSeen > 0 ? `\nEvidence: ${draws} draws, ${manaProduced} mana, ${cardsSeen} additional cards seen` : ""}\n${turnEntries.map((entry) => `- ${entry.phase}: ${entry.description}`).join("\n")}`
+    ({ turn, entries: turnEntries, draws, manaProduced, cardsSeen }) => {
+      const evidence =
+        draws + manaProduced + cardsSeen > 0
+          ? `\nEvidence: ${draws} draws, ${manaProduced} mana, ${cardsSeen} additional cards seen`
+          : "";
+      const actions = turnEntries
+        .map((entry) => `- ${entry.phase}: ${entry.description}`)
+        .join("\n");
+      return `Turn ${turn}${evidence}\n${actions}`;
+    }
   );
   return `${deckName} — playtest log\n\n${turns.join("\n\n")}`;
 }

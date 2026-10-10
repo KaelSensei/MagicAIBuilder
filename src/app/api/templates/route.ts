@@ -17,7 +17,10 @@ const TemplateQuerySchema = z.object({
 
 const CreateTemplateSchema = z.object({
   deckId: z.uuid("Invalid deck ID"),
-  templateName: z.string().min(3, "Name must be 3+ chars").max(100, "Name max 100 chars"),
+  templateName: z
+    .string()
+    .min(3, "Name must be 3+ chars")
+    .max(100, "Name max 100 chars"),
   archetype: z.enum([
     "Combo",
     "Control",
@@ -37,7 +40,7 @@ const CreateTemplateSchema = z.object({
  * Query: ?commander=Atraxa, Grand Unifier
  * Returns: templates sorted by upvotes (descending)
  */
-export async function GET(request: NextRequest) {
+export function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const commander = searchParams.get("commander");

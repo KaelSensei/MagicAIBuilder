@@ -85,7 +85,8 @@ function inclusionFromEdhrecView(view: EdhrecCardView): number {
     Number.isFinite(view.inclusion) &&
     view.inclusion >= 0 &&
     view.inclusion <= 1
-  ) return view.inclusion;
+  )
+    return view.inclusion;
   if (
     typeof view.num_decks === "number" &&
     typeof view.potential_decks === "number" &&
@@ -109,14 +110,13 @@ function sampleFromEdhrecView(view: EdhrecCardView): MetaCard["sample"] {
     view.num_decks < 0 ||
     view.potential_decks <= 0 ||
     view.num_decks > view.potential_decks
-  ) return undefined;
+  )
+    return undefined;
   return { decksWithCard: view.num_decks, eligibleDecks: view.potential_decks };
 }
 
 function collectMetaCardsFromEdhrecLists(
-  cardlists:
-    | Array<{ tag: string; cardviews?: EdhrecCardView[] }>
-    | undefined
+  cardlists: Array<{ tag: string; cardviews?: EdhrecCardView[] }> | undefined
 ): MetaCard[] {
   const lists = cardlists ?? [];
   const seen = new Set<string>();
@@ -129,19 +129,26 @@ function collectMetaCardsFromEdhrecLists(
       const sample = sampleFromEdhrecView(view);
       cards.push({
         name: view.name,
-        inclusion: sample ? sample.decksWithCard / sample.eligibleDecks : inclusionFromEdhrecView(view),
+        inclusion: sample
+          ? sample.decksWithCard / sample.eligibleDecks
+          : inclusionFromEdhrecView(view),
         ...(sample ? { sample } : {}),
       });
     }
   }
 
-  return cards.sort((a, b) => b.inclusion - a.inclusion).slice(0, 20);
+  const rankedCards = cards.sort((a, b) => b.inclusion - a.inclusion);
+  return rankedCards.slice(0, 20);
 }
 
-export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData> {
+export async function fetchEdhrecData(
+  commanderSlug: string
+): Promise<EdhrecData> {
   let res: Response;
   try {
-    res = await httpGet(`https://json.edhrec.com/pages/commanders/${commanderSlug}.json`);
+    res = await httpGet(
+      `https://json.edhrec.com/pages/commanders/${commanderSlug}.json`
+    );
   } catch (err) {
     if (err instanceof Error && err.message.includes("not found")) {
       return { cards: [] };
@@ -153,7 +160,10 @@ export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData
   const cardlists = json?.container?.json_dict?.cardlists;
   if (
     !Array.isArray(cardlists) ||
-    cardlists.some((list) => !list || typeof list.tag !== "string" || !Array.isArray(list.cardviews))
+    cardlists.some(
+      (list) =>
+        !list || typeof list.tag !== "string" || !Array.isArray(list.cardviews)
+    )
   ) {
     throw new Error("Invalid EDHREC response: cardlists malformed");
   }
@@ -167,8 +177,10 @@ export async function fetchEdhrecData(commanderSlug: string): Promise<EdhrecData
 const MAX_TOURNAMENT_DECKS = 5;
 const ARCHETYPE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
-let archetypeCache: { readonly options: ReadonlyMap<string, number>; readonly expiresAt: number } | null =
-  null;
+let archetypeCache: {
+  readonly options: ReadonlyMap<string, number>;
+  readonly expiresAt: number;
+} | null = null;
 
 /** Reset the archetype form cache (tests only). @internal */
 export function __resetArchetypeCache(): void {
@@ -182,8 +194,11 @@ export function __resetArchetypeCache(): void {
  * each lookup.
  */
 async function loadArchetypeOptions(): Promise<ReadonlyMap<string, number>> {
-  if (archetypeCache && archetypeCache.expiresAt > Date.now()) return archetypeCache.options;
-  const res = await httpGet(MTGTOP8_SEARCH_URL, { headers: { Accept: "text/html" } });
+  if (archetypeCache && archetypeCache.expiresAt > Date.now())
+    return archetypeCache.options;
+  const res = await httpGet(MTGTOP8_SEARCH_URL, {
+    headers: { Accept: "text/html" },
+  });
   const options = parseArchetypeOptions(decodeLatin1(await res.arrayBuffer()));
   archetypeCache = { options, expiresAt: Date.now() + ARCHETYPE_CACHE_TTL_MS };
   return options;
@@ -199,7 +214,9 @@ async function loadArchetypeOptions(): Promise<ReadonlyMap<string, number>> {
  *
  * @param commanderName - display name, or the slug's words as the meta route passes them
  */
-export async function fetchTournamentData(commanderName: string): Promise<TournamentData> {
+export async function fetchTournamentData(
+  commanderName: string
+): Promise<TournamentData> {
   try {
     const options = await loadArchetypeOptions();
     const archetypeId = findArchetypeId(options, commanderName);
@@ -217,4 +234,3 @@ export async function fetchTournamentData(commanderName: string): Promise<Tourna
     return { decks: [] };
   }
 }
-
