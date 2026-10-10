@@ -190,7 +190,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
     setImporting(true);
     try {
       const fork = await forkPublicDeck(deck.id);
-      setActiveDeck(fork.id);
+      await setActiveDeck(fork.id);
       setImported(true);
       setTimeout(() => router.push(`/builder/${fork.id}`), 800);
     } catch (err) {
