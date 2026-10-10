@@ -1,5 +1,6 @@
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getCardCollection } from "@/lib/scryfall/client";
+import { forEachSequential } from "@/lib/async/sequential";
 
 export interface StoredPackageCard {
   readonly scryfallId: string;
@@ -25,7 +26,8 @@ export async function verifyPackageCards(
   const ids = [...new Set(cards.map((card) => card.scryfallId))];
   const verified = new Map<string, VerifiedPackageCard>();
 
-  for (let offset = 0; offset < ids.length; offset += 75) {
+  const offsets = Array.from({ length: Math.ceil(ids.length / 75) }, (_, index) => index * 75);
+  await forEachSequential(offsets, async (offset) => {
     const result = await getCardCollection(
       ids.slice(offset, offset + 75).map((id) => ({ id }))
     );
@@ -43,7 +45,7 @@ export async function verifyPackageCards(
         imageUri: card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? "",
       });
     }
-  }
+  });
 
   return cards.map((stored) => {
     const card = verified.get(stored.scryfallId);

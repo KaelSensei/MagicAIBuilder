@@ -105,6 +105,6 @@ describe("useScrollReveal", () => {
 
     unmount();
 
-    expect(disconnect.mock.calls.length).toBe(before + 1);
+    expect(disconnect).toHaveBeenCalledTimes(before + 1);
   });
 });

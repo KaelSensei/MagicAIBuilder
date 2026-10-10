@@ -29,18 +29,14 @@ export function SuggestionEvidenceDetails({
     evidence.colorIdentity.length > 0
       ? evidence.colorIdentity.join("/")
       : t("colorless");
-  const colorStatus =
-    evidence.colorCompatible === null
-      ? t("unknown")
-      : evidence.colorCompatible
-        ? t("compatible")
-        : t("incompatible");
-  const legalStatus =
-    evidence.commanderLegal === null
-      ? t("unknown")
-      : evidence.commanderLegal
-        ? t("commanderLegal")
-        : t("commanderIllegal");
+  let colorStatus = t("unknown");
+  if (evidence.colorCompatible !== null) {
+    colorStatus = evidence.colorCompatible ? t("compatible") : t("incompatible");
+  }
+  let legalStatus = t("unknown");
+  if (evidence.commanderLegal !== null) {
+    legalStatus = evidence.commanderLegal ? t("commanderLegal") : t("commanderIllegal");
+  }
 
   return (
     <div className="mt-2 rounded-md border border-[var(--border)]/80 bg-[var(--surface)]/60 p-2">

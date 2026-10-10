@@ -63,11 +63,14 @@ function buildSuggestPayload(
   stats: DeckStats,
   bracketScore: BracketScore | null,
   bracket: number,
-  archetypeOverride?: Archetype | null,
-  budgetPerCard?: number | null,
-  brief?: DeckBrief,
-  question?: DeckQuestion
+  options?: {
+    readonly archetypeOverride?: Archetype | null;
+    readonly budgetPerCard?: number | null;
+    readonly brief?: DeckBrief;
+    readonly question?: DeckQuestion;
+  }
 ) {
+  const { archetypeOverride, budgetPerCard, brief, question } = options ?? {};
   const cardNames = deck.cards.map((c) => c.name);
   const categories = {
     ramp: stats.ramp,
@@ -325,10 +328,7 @@ export function useAISuggestions() {
           stats,
           bracketScore,
           bracket,
-          options?.archetypeOverride,
-          options?.budgetPerCard,
-          options?.brief,
-          options?.question
+          options
         );
         const response = await fetch("/api/ai/suggest", {
           method: "POST",

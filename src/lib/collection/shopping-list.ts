@@ -135,12 +135,10 @@ export function getDeckCardStatuses(
     }
     const availableQuantity = physical + proxy;
     const neededQuantity = card.quantity - availableQuantity;
-    const status: DeckCardStatus =
-      isBasic || physical >= card.quantity
-        ? "owned"
-        : proxy > 0
-          ? "proxy"
-          : "missing";
+    let status: DeckCardStatus = "owned";
+    if (!isBasic && physical < card.quantity) {
+      status = proxy > 0 ? "proxy" : "missing";
+    }
 
     result.push({
       scryfallId,

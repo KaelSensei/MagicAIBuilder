@@ -1,6 +1,7 @@
 // Scryfall API client with rate limiting (max 10 req/s = 100ms between requests)
 // Cards are cached in the DB via /api/cache/cards (TTL: 24h)
 // Search results are cached in the DB via /api/cache/search (TTL: 1h)
+import { forEachSequential } from "@/lib/async/sequential";
 import type {
   ScryfallCard,
   ScryfallSearchResponse,
@@ -238,17 +239,15 @@ export async function fetchAllPages(
   includeMultilingual = false
 ): Promise<ScryfallCard[]> {
   const allCards: ScryfallCard[] = [];
-  let page = 1;
   const PAGE_SAFETY_CAP = 20;
-
-  let hasMore = true;
-  while (hasMore && page <= PAGE_SAFETY_CAP) {
+  async function appendPage(page: number): Promise<void> {
     const response = await searchCards(query, page, includeMultilingual);
     allCards.push(...response.data);
-    hasMore = response.has_more ?? false;
-    page++;
+    if (response.has_more && page < PAGE_SAFETY_CAP) {
+      await appendPage(page + 1);
+    }
   }
-
+  await appendPage(1);
   return allCards;
 }
 
@@ -268,14 +267,14 @@ export async function fetchLocalizedPrintingsByNames(
   lang: string
 ): Promise<ScryfallCard[]> {
   const cards: ScryfallCard[] = [];
-  for (const query of buildLocalizedNamesQueries(names, lang)) {
+  await forEachSequential(buildLocalizedNamesQueries(names, lang), async (query) => {
     try {
       const response = await searchCards(query, 1, true);
       cards.push(...response.data);
     } catch {
       // Leave this chunk English.
     }
-  }
+  });
   return cards;
 }
 

@@ -100,6 +100,13 @@ export function ShoppingListModal({
     return { totalCost, unpricedQuantity, pricedQuantity };
   }, [buyNowItems]);
 
+  let totalLabel = t("buyList.approx", { amount: money(totalCost) });
+  if (buyNowItems.length === 0 && items.length > 0) {
+    totalLabel = t("buyList.nothingPlanned");
+  } else if (pricedQuantity === 0 && unpricedQuantity > 0) {
+    totalLabel = t("buyList.priceUnavailable");
+  }
+
   const handleCopy = () => {
     const text = formatShoppingListText(buyNowItems);
     void copy(text);
@@ -182,11 +189,7 @@ export function ShoppingListModal({
                 )}
               </span>
               <span className="font-semibold text-[var(--text-primary)]">
-                {buyNowItems.length === 0 && items.length > 0
-                  ? t("buyList.nothingPlanned")
-                  : pricedQuantity === 0 && unpricedQuantity > 0
-                  ? t("buyList.priceUnavailable")
-                  : t("buyList.approx", { amount: money(totalCost) })}
+                {totalLabel}
               </span>
             </div>
 

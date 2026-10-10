@@ -92,7 +92,7 @@ export function PrintingDeckUsage({ scryfallId, cardName, compact = false }: Pri
           <Dialog.Description className="mb-4 text-xs text-[var(--text-secondary)]">
             {t("description")}
           </Dialog.Description>
-          {state.status === "loading" && <p role="status" className="text-sm text-[var(--text-secondary)]">{t("loading")}</p>}
+          {state.status === "loading" && <output className="block text-sm text-[var(--text-secondary)]">{t("loading")}</output>}
           {state.status === "error" && (
             <div role="alert" className="text-sm text-red-400">
               {t("error")}

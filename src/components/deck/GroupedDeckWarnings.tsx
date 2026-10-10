@@ -16,8 +16,8 @@ interface WarningSectionProps {
 
 function WarningSection({ title, warnings, tone }: WarningSectionProps) {
   if (warnings.length === 0) return null;
-  const Icon = tone === "red" ? AlertCircle : tone === "amber" ? AlertTriangle : Lightbulb;
-  const color = tone === "red" ? "text-red-400" : tone === "amber" ? "text-amber-400" : "text-blue-400";
+  const Icon = { red: AlertCircle, amber: AlertTriangle, blue: Lightbulb }[tone];
+  const color = { red: "text-red-400", amber: "text-amber-400", blue: "text-blue-400" }[tone];
 
   return (
     <section className="space-y-1" aria-label={title}>

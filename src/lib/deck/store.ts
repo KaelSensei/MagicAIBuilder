@@ -34,6 +34,27 @@ export type DeckAction =
   | { type: "ADD_CARD"; deckId: string; card: DeckCard }
   | { type: "REMOVE_CARD"; deckId: string; card: DeckCard };
 
+function restoreCardCategory(cards: DeckCard[], cardId: string, attempted: CardCategory, confirmed: CardCategory): DeckCard[] {
+  return cards.map((card) => card.id === cardId && card.category === attempted
+    ? { ...card, category: confirmed } : card);
+}
+
+function restoreCardQuantity(cards: DeckCard[], cardId: string, quantity: number): DeckCard[] {
+  return cards.map((card) => card.id === cardId ? { ...card, quantity } : card);
+}
+
+function restoreCardNotes(cards: DeckCard[], cardId: string, attempted: DeckCard["notes"], confirmed: DeckCard["notes"]): DeckCard[] {
+  return cards.map((card) => card.id === cardId && card.notes === attempted
+    ? { ...card, notes: confirmed } : card);
+}
+
+function restoreRemovedCard(cards: DeckCard[], removedCard: DeckCard, followingCardIds: ReadonlySet<string>): DeckCard[] {
+  if (cards.some((card) => card.id === removedCard.id)) return cards;
+  const followingIndex = cards.findIndex((card) => followingCardIds.has(card.id));
+  const restoreIndex = followingIndex < 0 ? cards.length : followingIndex;
+  return [...cards.slice(0, restoreIndex), removedCard, ...cards.slice(restoreIndex)];
+}
+
 function notifyGameChangerAdded(cardName: string, newTotal: number): void {
   const toast = useToastStore.getState();
   if (newTotal === 1) {
@@ -1289,11 +1310,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               decks: {
                 ...state.decks,
                 [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                  cards.map((card) =>
-                    card.id === cardId && card.category === category
-                      ? { ...card, category: pending.confirmedCategory }
-                      : card
-                  )
+                  restoreCardCategory(cards, cardId, category, pending.confirmedCategory)
                 ),
               },
             };
@@ -1382,9 +1399,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               decks: {
                 ...state.decks,
                 [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                  cards.map((c) =>
-                    c.id === cardId ? { ...c, quantity: savedQuantity } : c
-                  )
+                  restoreCardQuantity(cards, cardId, savedQuantity)
                 ),
               },
             };
@@ -1585,11 +1600,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               decks: {
                 ...state.decks,
                 [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                  cards.map((card) =>
-                    card.id === cardId && card.notes === notes
-                      ? { ...card, notes: pending.confirmedNotes }
-                      : card
-                  )
+                  restoreCardNotes(cards, cardId, notes, pending.confirmedNotes)
                 ),
               },
             };
@@ -1661,8 +1672,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           set((state) => {
             const currentDeck = state.decks[activeDeckId];
             const latestCard =
-              currentDeck &&
-              uniqueDeckCards(currentDeck).find((card) => card.id === cardId);
+              currentDeck ? uniqueDeckCards(currentDeck).find((card) => card.id === cardId) : undefined;
             if (!latestCard || latestCard.zone !== zone) return state;
             return {
               decks: {
@@ -1748,19 +1758,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               return {
                 decks: {
                   ...state.decks,
-                  [activeDeckId]: updateDeckCards(currentDeck, (cards) => {
-                    if (cards.some((card) => card.id === id)) return cards;
-                    const followingIndex = cards.findIndex((card) =>
-                      followingCardIds.has(card.id)
-                    );
-                    const restoreIndex =
-                      followingIndex < 0 ? cards.length : followingIndex;
-                    return [
-                      ...cards.slice(0, restoreIndex),
-                      removedCard,
-                      ...cards.slice(restoreIndex),
-                    ];
-                  }),
+                  [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
+                    restoreRemovedCard(cards, removedCard, followingCardIds)),
                 },
               };
             });

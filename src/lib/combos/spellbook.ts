@@ -1,4 +1,5 @@
 // Commander Spellbook API integration for combo detection
+import { forEachSequential } from "@/lib/async/sequential";
 
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -105,11 +106,12 @@ export async function fetchCombosForDeck(
   const CONCURRENCY = 10;
   const allVariantArrays: SpellbookVariant[][] = [];
 
-  for (let i = 0; i < uniqueNames.length; i += CONCURRENCY) {
+  const offsets = Array.from({ length: Math.ceil(uniqueNames.length / CONCURRENCY) }, (_, index) => index * CONCURRENCY);
+  await forEachSequential(offsets, async (i) => {
     const slice = uniqueNames.slice(i, i + CONCURRENCY);
     const batch = await Promise.all(slice.map((name) => fetchCombosForCard(name)));
     allVariantArrays.push(...batch);
-  }
+  });
 
   // Flatten and deduplicate by variant id
   const seen = new Map<string, SpellbookVariant>();

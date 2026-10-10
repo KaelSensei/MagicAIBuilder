@@ -1,4 +1,5 @@
 "use client";
+import { forEachSequential } from "@/lib/async/sequential";
 /**
  * DeckWizard — 4-step AI-guided Commander deck builder.
  *
@@ -746,13 +747,14 @@ async function importCardsInBatches(
   const byName = new Map(entries.map((e) => [e.name, e]));
   let imported = 0;
 
-  for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+  const offsets = Array.from({ length: Math.ceil(entries.length / BATCH_SIZE) }, (_, index) => index * BATCH_SIZE);
+  await forEachSequential(offsets, async (i) => {
     const batch = entries.slice(i, i + BATCH_SIZE);
     try {
       const result = await getCardCollection(
         batch.map((entry) => ({ name: entry.name }))
       );
-      for (const sc of result.data) {
+      await forEachSequential(result.data, async (sc) => {
         const entry = byName.get(sc.name);
         const deckCard: DeckCard = {
           id: sc.id,
@@ -777,11 +779,11 @@ async function importCardsInBatches(
         await addDeckCard(deckCard);
         imported += deckCard.quantity;
         onProgress(imported);
-      }
+      });
     } catch (err) {
       logger.error("Batch import error", "DeckWizard", err);
     }
-  }
+  });
 }
 
 export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
