@@ -21,6 +21,14 @@ function isEcmaWhitespaceChar(c: string): boolean {
   return /\s/.test(c);
 }
 
+function isSetCodeChar(c: string): boolean {
+  return /^[a-z0-9]$/i.test(c);
+}
+
+function isCollectorSuffixChar(c: string): boolean {
+  return isEcmaWhitespaceChar(c) || /^\d$/.test(c);
+}
+
 /**
  * Drop a suffix starting at the leftmost “optional whitespace + `//` or `|`”.
  * Replaces legacy `.replace(/\s*(\/\/|\|).*$/, "")` with linear-time scanning.
@@ -47,10 +55,7 @@ function stripTrailingSetCodeSuffix(name: string): string {
   let i = name.length;
   while (i > 0) {
     const ch = name[i - 1] ?? "";
-    if (
-      isEcmaWhitespaceChar(ch) ||
-      (ch >= "0" && ch <= "9")
-    ) {
+    if (isCollectorSuffixChar(ch)) {
       i--;
       continue;
     }
@@ -62,7 +67,7 @@ function stripTrailingSetCodeSuffix(name: string): string {
   let alnumLen = 0;
   while (k >= 0 && alnumLen < 6) {
     const c = name[k] ?? "";
-    if ((c >= "A" && c <= "Z") || (c >= "a" && c <= "z") || (c >= "0" && c <= "9")) {
+    if (isSetCodeChar(c)) {
       alnumLen++;
       k--;
       continue;
@@ -79,9 +84,40 @@ function stripTrailingSetCodeSuffix(name: string): string {
   return name.slice(0, beforeParen);
 }
 
+type DecklistSection = "main" | "sideboard" | "maybeboard" | "commander" | "partner";
+
+function headingSection(heading: string): DecklistSection | undefined {
+  switch (heading) {
+    case "commander": return "commander";
+    case "partner": return "partner";
+    case "sideboard": return "sideboard";
+    case "considering":
+    case "maybeboard": return "maybeboard";
+    case "deck":
+    case "main":
+    case "mainboard": return "main";
+    default: return undefined;
+  }
+}
+
+function parseDecklistCard(line: string, section: DecklistSection): UrlImportCard | null {
+  const match = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
+  if (!match) return null;
+  const quantity = Math.min(Math.max(1, Number.parseInt(match[1], 10)), 99);
+  const name = stripTrailingSetCodeSuffix(stripSlashOrPipeCommentSuffix(match[2])).trim();
+  if (!name) return null;
+  return {
+    name,
+    quantity,
+    isCommander: section === "commander",
+    isPartner: section === "partner",
+    zone: section === "sideboard" || section === "maybeboard" ? section : "main",
+  };
+}
+
 export function parsePlainTextDecklist(text: string): UrlImportCard[] {
   const cards: UrlImportCard[] = [];
-  let section: "main" | "sideboard" | "maybeboard" | "commander" | "partner" = "main";
+  let section: DecklistSection = "main";
 
   for (const rawLine of text.split(/\r\n|\r|\n/).slice(0, 500)) {
     const line = rawLine.trim();
@@ -91,37 +127,16 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
       .toLowerCase()
       .replace(/:$/, "")
       .replace(/\s{0,4}\(\d{1,3}\)$/, "");
-    if (heading === "commander" || heading === "partner" || heading === "sideboard") {
-      section = heading;
-      continue;
-    }
-    if (heading === "considering" || heading === "maybeboard") {
-      section = "maybeboard";
-      continue;
-    }
-    if (heading === "deck" || heading === "main" || heading === "mainboard") {
-      section = "main";
+    const nextSection = headingSection(heading);
+    if (nextSection) {
+      section = nextSection;
       continue;
     }
     if (isComment) continue;
 
-    const m = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
-    if (!m) continue;
-
-    const quantity = Math.min(Math.max(1, Number.parseInt(m[1], 10)), 99);
-    const name = stripTrailingSetCodeSuffix(
-      stripSlashOrPipeCommentSuffix(m[2])
-    ).trim();
-
-    if (!name) continue;
-
-    cards.push({
-      name,
-      quantity,
-      isCommander: section === "commander",
-      isPartner: section === "partner",
-      zone: section === "sideboard" || section === "maybeboard" ? section : "main",
-    });
+    const card = parseDecklistCard(line, section);
+    if (!card) continue;
+    cards.push(card);
     if (section === "commander" || section === "partner") section = "main";
   }
 

@@ -83,16 +83,16 @@ export function DeckComparisonPanel({
             {t("description")}
           </p>
         </div>
-        {[leftId, rightId].map((value, index) => (
+        {([{ slot: "first", value: leftId }, { slot: "second", value: rightId }]).map(({ slot, value }) => (
           <label
-            key={index}
+            key={slot}
             className="grid gap-1 text-xs text-[var(--text-secondary)]"
           >
-            {index === 0 ? t("firstDeck") : t("secondDeck")}
+            {slot === "first" ? t("firstDeck") : t("secondDeck")}
             <select
               value={value}
               onChange={(event) =>
-                index === 0
+                slot === "first"
                   ? setLeftId(event.target.value)
                   : setRightId(event.target.value)
               }

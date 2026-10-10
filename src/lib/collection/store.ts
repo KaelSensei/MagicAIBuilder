@@ -1,6 +1,7 @@
 "use client";
 // Zustand collection store — tracks cards owned in the physical collection
 import { create } from "zustand";
+import { forEachSequential } from "@/lib/async/sequential";
 import type { CollectionCard, AddToCollectionInput, CardCondition } from "./types";
 import { logger } from "@/lib/logger";
 import { isRecord, parseCollectionCard } from "./parse";
@@ -139,7 +140,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
     if (inputs.length === 0) return;
     set({ isSyncing: true });
     try {
-      for (const input of inputs) {
+      await forEachSequential(inputs, async (input) => {
         const res = await fetch("/api/collection", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -153,7 +154,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
             imageUri: input.imageUri ?? "",
           }),
         });
-        if (!res.ok) continue;
+        if (!res.ok) return;
         const card: CollectionCard = await res.json();
         const hydrated: CollectionCard = {
           ...card,
@@ -167,7 +168,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
           }
           return { collectionCards: { ...state.collectionCards, [hydrated.scryfallId]: hydrated } };
         });
-      }
+      });
     } catch (err) {
       logger.error("Unexpected error", "bulkAddToCollection", err);
     } finally {

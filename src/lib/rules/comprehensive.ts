@@ -207,6 +207,16 @@ export interface RulesSearchResult {
 }
 
 /** Search the locally parsed rules corpus; no network access is performed. */
+function* searchableRuleParagraphs(rules: ComprehensiveRules) {
+  for (const section of rules.sections) {
+    for (const chapter of section.chapters) {
+      for (const paragraph of chapter.paragraphs) {
+        yield { chapter, paragraph };
+      }
+    }
+  }
+}
+
 export function searchComprehensiveRules(
   rules: ComprehensiveRules,
   query: string,
@@ -216,19 +226,15 @@ export function searchComprehensiveRules(
   if (!normalizedQuery || limit <= 0) return [];
 
   const results: RulesSearchResult[] = [];
-  for (const section of rules.sections) {
-    for (const chapter of section.chapters) {
-      for (const paragraph of chapter.paragraphs) {
-        if (paragraph.text.toLocaleLowerCase().includes(normalizedQuery)) {
-          results.push({
-            kind: "rule",
-            chapter: chapter.number,
-            reference: paragraph.ref ?? chapter.number,
-            text: paragraph.text,
-          });
-          if (results.length >= limit) return results;
-        }
-      }
+  for (const { chapter, paragraph } of searchableRuleParagraphs(rules)) {
+    if (paragraph.text.toLocaleLowerCase().includes(normalizedQuery)) {
+      results.push({
+        kind: "rule",
+        chapter: chapter.number,
+        reference: paragraph.ref ?? chapter.number,
+        text: paragraph.text,
+      });
+      if (results.length >= limit) return results;
     }
   }
 

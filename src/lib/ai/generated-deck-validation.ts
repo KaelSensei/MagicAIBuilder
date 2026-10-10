@@ -20,6 +20,25 @@ const CAPPED_MULTIPLES_BY_NAME = new Map(
  * @param value - Untrusted provider output
  * @returns A list of actionable validation issues, empty when the deck is structurally valid
  */
+function validateCardCopies(name: string, quantity: number, quantitiesByName: Map<string, number>): string[] {
+  const issues: string[] = [];
+  const normalizedName = name.toLocaleLowerCase();
+  const previousQuantity = quantitiesByName.get(normalizedName) ?? 0;
+  const cappedLimit = CAPPED_MULTIPLES_BY_NAME.get(normalizedName);
+  const isBasic = BASIC_LANDS.has(normalizedName);
+  if (previousQuantity > 0 && !isBasic && cappedLimit === undefined) {
+    issues.push(`${name} is duplicated in the generated deck.`);
+  }
+  const combinedQuantity = previousQuantity + quantity;
+  quantitiesByName.set(normalizedName, combinedQuantity);
+  if (cappedLimit !== undefined && combinedQuantity > cappedLimit && previousQuantity <= cappedLimit) {
+    issues.push(`${name} exceeds the ${cappedLimit}-copy limit.`);
+  } else if (quantity > 1 && !isBasic && cappedLimit === undefined) {
+    issues.push(`${name} has more than one copy but is not a basic land.`);
+  }
+  return issues;
+}
+
 export function validateGeneratedDeck(value: unknown): readonly string[] {
   if (!isAIDeckResponse(value)) {
     return ["The AI returned an invalid deck structure."];
@@ -58,19 +77,7 @@ export function validateGeneratedDeck(value: unknown): readonly string[] {
       issues.push(`The partner ${name} is duplicated in the card list.`);
     }
 
-    const previousQuantity = quantitiesByName.get(normalizedName) ?? 0;
-    const cappedLimit = CAPPED_MULTIPLES_BY_NAME.get(normalizedName);
-    if (previousQuantity > 0 && !BASIC_LANDS.has(normalizedName) && cappedLimit === undefined) {
-      issues.push(`${name} is duplicated in the generated deck.`);
-    }
-    const combinedQuantity = previousQuantity + card.quantity;
-    quantitiesByName.set(normalizedName, combinedQuantity);
-
-    if (cappedLimit !== undefined && combinedQuantity > cappedLimit && previousQuantity <= cappedLimit) {
-      issues.push(`${name} exceeds the ${cappedLimit}-copy limit.`);
-    } else if (card.quantity > 1 && !BASIC_LANDS.has(normalizedName) && cappedLimit === undefined) {
-      issues.push(`${name} has more than one copy but is not a basic land.`);
-    }
+    issues.push(...validateCardCopies(name, card.quantity, quantitiesByName));
   }
 
   if (totalCards !== expectedCardCount) {

@@ -12,7 +12,7 @@ const PackageCardSchema = z.object({
   colorIdentity: z.array(z.enum(["W", "U", "B", "R", "G", "C"])).max(6),
   isBanned: z.boolean().optional().default(false),
   isBasicLand: z.boolean().optional().default(false),
-  imageUri: z.string().url().or(z.literal("")).optional().default(""),
+  imageUri: z.url().or(z.literal("")).optional().default(""),
 });
 
 const CreatePackageSchema = z.object({

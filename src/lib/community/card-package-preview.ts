@@ -47,11 +47,33 @@ export interface CardPackagePreview {
 }
 
 /** Preview deterministic package violations without mutating the target deck. */
+function previewCardIssues(
+  card: PackagePreviewCard,
+  context: PackagePreviewContext,
+  allowedColors: ReadonlySet<string>,
+  quantity: number
+): PackagePreviewIssue[] {
+  const config = getFormatConfig(context.format);
+  const issues: PackagePreviewIssue[] = [];
+  if (card.isBanned) {
+    issues.push({ kind: "banned", message: `${card.name} is banned in ${config.label}` });
+  }
+  if (config.hasColorIdentity && card.colorIdentity.some((color) => color !== "C" && !allowedColors.has(color))) {
+    issues.push({ kind: "colorIdentity", message: `${card.name} is outside the deck's color identity` });
+  }
+  const limit = card.isRestricted ? 1 : maxQuantity(card.name, "", card.oracleText ?? "", context.format);
+  if (!card.isBasicLand && quantity > limit) {
+    issues.push(config.isSingleton && limit === 1
+      ? { kind: "singleton", message: `${card.name} exceeds the singleton limit` }
+      : { kind: "copyLimit", message: `${card.name} exceeds the ${limit}-copy limit` });
+  }
+  return issues;
+}
+
 export function previewCardPackage(
   cards: readonly PackagePreviewCard[],
   context: PackagePreviewContext
 ): CardPackagePreview {
-  const config = getFormatConfig(context.format);
   const allowedColors = new Set(context.commanderColorIdentity);
   const quantities = new Map<string, number>();
   for (const card of context.existingCards) {
@@ -61,26 +83,8 @@ export function previewCardPackage(
   let readyCount = 0;
 
   for (const card of cards) {
-    const issues: PackagePreviewIssue[] = [];
-    if (card.isBanned) {
-      issues.push({ kind: "banned", message: `${card.name} is banned in ${config.label}` });
-    }
-    if (
-      config.hasColorIdentity &&
-      card.colorIdentity.some((color) => color !== "C" && !allowedColors.has(color))
-    ) {
-      issues.push({
-        kind: "colorIdentity",
-        message: `${card.name} is outside the deck's color identity`,
-      });
-    }
     const quantity = (quantities.get(card.name) ?? 0) + card.quantity;
-    const limit = card.isRestricted ? 1 : maxQuantity(card.name, "", card.oracleText ?? "", context.format);
-    if (!card.isBasicLand && quantity > limit) {
-      issues.push(config.isSingleton && limit === 1
-        ? { kind: "singleton", message: `${card.name} exceeds the singleton limit` }
-        : { kind: "copyLimit", message: `${card.name} exceeds the ${limit}-copy limit` });
-    }
+    const issues = previewCardIssues(card, context, allowedColors, quantity);
     if (issues.length === 0) {
       quantities.set(card.name, quantity);
       readyCount += 1;

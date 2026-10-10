@@ -64,22 +64,22 @@ function parsePrimer(description: string): readonly PrimerBlock[] {
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
-    const heading = /^(#{1,3})\s+(.+)$/.exec(line);
-    const listItem = /^(?:([-*])|(\d+)\.)\s+(.+)$/.exec(line);
+    const heading = /^(#{1,3})\s(.+)$/.exec(line);
+    const listItem = /^(?:([-*])|(\d+)\.)\s(.+)$/.exec(line);
     if (heading) {
       flushParagraph();
       flushList();
       blocks.push({
         kind: "heading",
         level: heading[1].length,
-        text: heading[2],
+        text: heading[2].trimStart(),
       });
     } else if (listItem) {
       flushParagraph();
       const nextOrdered = listItem[2] !== undefined;
       if (listItems.length > 0 && ordered !== nextOrdered) flushList();
       ordered = nextOrdered;
-      listItems.push(listItem[3]);
+      listItems.push(listItem[3].trimStart());
     } else if (line === "") {
       flushParagraph();
       flushList();

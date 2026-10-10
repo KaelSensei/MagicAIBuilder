@@ -167,13 +167,7 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
               <li key={session.id} className="text-[11px] text-white/60">
                 <div className="flex items-center justify-between gap-2">
                   <span
-                    className={
-                      session.result === "win"
-                        ? "text-green-400"
-                        : session.result === "loss"
-                          ? "text-red-400"
-                          : "text-white/70"
-                    }
+                    className={{ win: "text-green-400", loss: "text-red-400", draw: "text-white/70" }[session.result] ?? "text-white/70"}
                   >
                     {t(`result.${session.result}`)}
                   </span>
