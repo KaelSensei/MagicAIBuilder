@@ -28,6 +28,12 @@ export function SuggestionAlternatives({
         {alternatives.map((alternative) => {
           const isBlocked =
             getSuggestionLegality(alternative.evidence).status === "blocked";
+          let actionLabel = t("addCard", { name: alternative.name });
+          if (addedCards.has(alternative.name)) {
+            actionLabel = t("deselectCard", { name: alternative.name });
+          } else if (isBlocked) {
+            actionLabel = t("legality.blockedAction", { name: alternative.name });
+          }
           return (
             <div
               key={`${alternative.dimension}-${alternative.name}`}
@@ -54,15 +60,7 @@ export function SuggestionAlternatives({
                   disabled={isBlocked}
                   onClick={() => onAdd(alternative.name)}
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white disabled:cursor-not-allowed disabled:bg-red-500/40 ${addedCards.has(alternative.name) ? "bg-green-600" : "bg-[var(--accent)]"}`}
-                  aria-label={
-                    addedCards.has(alternative.name)
-                      ? t("deselectCard", { name: alternative.name })
-                      : isBlocked
-                        ? t("legality.blockedAction", {
-                            name: alternative.name,
-                          })
-                        : t("addCard", { name: alternative.name })
-                  }
+                  aria-label={actionLabel}
                 >
                   {addedCards.has(alternative.name) ? (
                     "✓"

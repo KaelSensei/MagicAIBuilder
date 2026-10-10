@@ -189,6 +189,10 @@ describe("addCard quantity save completion", () => {
 });
 
 describe("useDeckStore — bulkRemoveCards recovery", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    seedDeck();
+  });
   it("keeps bulk removal activity after a manual bracket save finishes", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
     const pending = Promise.withResolvers<void>();
@@ -297,11 +301,6 @@ describe("useDeckStore — bulkRemoveCards recovery", () => {
     await removal;
     expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
     expect(toastAdd).not.toHaveBeenCalled();
-  });
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    seedDeck();
   });
 
   it("restores a rejected removal without restoring successful removals", async () => {
@@ -615,6 +614,10 @@ describe("useDeckStore — renameDeck", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — setTargetBracket", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    seedDeck();
+  });
   it("preserves a different newer target when an older save fails", async () => {
     const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
     vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
@@ -642,11 +645,6 @@ describe("useDeckStore — setTargetBracket", () => {
     expect(useDeckStore.getState().decks["deck-1"].targetBracket).toBe(2);
     expect(useDeckStore.getState().isSyncing).toBe(false);
     expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save target bracket. Please retry.");
-  });
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    seedDeck();
   });
 
   it("updates targetBracket optimistically", async () => {
@@ -700,6 +698,10 @@ describe("useDeckStore — setBudget", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — setManualBracket", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    seedDeck();
+  });
   it("keeps syncing after a rejected save until the other request finishes", async () => {
     const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
     vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
@@ -757,11 +759,6 @@ describe("useDeckStore — setManualBracket", () => {
     expect(useDeckStore.getState().decks["deck-1"].manualBracket).toBeNull();
     expect(useDeckStore.getState().isSyncing).toBe(false);
     expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save manual bracket. Please retry.");
-  });
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    seedDeck();
   });
 
   it("sets manualBracket optimistically", async () => {

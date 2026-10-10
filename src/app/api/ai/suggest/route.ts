@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { forEachSequential } from "@/lib/async/sequential";
 import { sanitizeForPrompt } from "@/lib/validation/ai";
 import { ARCHETYPE_PROMPT_HINTS, ARCHETYPES } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
@@ -498,14 +499,14 @@ async function streamResponse(
     content: result.analysis,
     provider: result.provider,
   });
-  for (const suggestion of result.suggestions) {
+  await forEachSequential(result.suggestions, async (suggestion) => {
     await delay(80);
     emit({ type: "suggestion", data: suggestion });
-  }
-  for (const removal of result.removals) {
+  });
+  await forEachSequential(result.removals, async (removal) => {
     await delay(80);
     emit({ type: "removal", data: removal });
-  }
+  });
   emit({ type: "done" });
 }
 

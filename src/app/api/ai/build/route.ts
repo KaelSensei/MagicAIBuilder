@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { flattenError } from "zod";
 import { buildSchema, sanitizeForPrompt } from "@/lib/validation/ai";
 import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -128,7 +129,8 @@ async function callAnthropic(prompt: string): Promise<AIDeckResponse> {
   // Strip markdown fences if the model wrapped output anyway
   const cleaned = text
     .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```\s*$/i, "")
+    .trimEnd()
+    .replace(/```$/, "")
     .trim();
   return JSON.parse(cleaned) as AIDeckResponse;
 }
@@ -248,7 +250,7 @@ export async function POST(request: Request) {
   const parsed = buildSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Invalid request body", details: parsed.error.flatten() },
+      { error: "Invalid request body", details: flattenError(parsed.error) },
       { status: 400 }
     );
   }

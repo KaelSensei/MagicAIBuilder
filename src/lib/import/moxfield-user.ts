@@ -33,11 +33,12 @@ function readItems(data: unknown): { items: readonly unknown[]; total: number } 
   if (!isRecord(data)) return { items: [], total: 0 };
 
   const nested = isRecord(data.results) ? data.results : null;
-  const items = Array.isArray(nested?.items)
-    ? nested.items
-    : Array.isArray(data.data)
-      ? data.data
-      : [];
+  let items: readonly unknown[] = [];
+  if (Array.isArray(nested?.items)) {
+    items = nested.items;
+  } else if (Array.isArray(data.data)) {
+    items = data.data;
+  }
   const rawTotal = nested?.total ?? data.totalResults ?? data.total;
   const total = typeof rawTotal === "number" && Number.isFinite(rawTotal)
     ? rawTotal

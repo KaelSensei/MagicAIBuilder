@@ -73,6 +73,33 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function isOptionalText(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === "string";
+}
+
+function isOptionalSnapshotId(value: unknown): value is string | undefined {
+  return value === undefined || (typeof value === "string" && value.trim().length > 0);
+}
+
+function isWholeNumberInRange(value: unknown, minimum: number, maximum = Number.POSITIVE_INFINITY): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= minimum && value <= maximum;
+}
+
+function parseDrawEvidence(cardsSeen: unknown, additionalCardsSeen: unknown):
+  | { readonly ok: true; readonly value: { readonly cardsSeen?: number; readonly additionalCardsSeen?: number } }
+  | { readonly ok: false; readonly error: string } {
+  if (cardsSeen === undefined && additionalCardsSeen === undefined) {
+    return { ok: true, value: {} };
+  }
+  if (typeof cardsSeen !== "number" || !Number.isInteger(cardsSeen) || cardsSeen < 0) {
+    return { ok: false, error: "cardsSeen must be a non-negative whole number" };
+  }
+  if (typeof additionalCardsSeen !== "number" || !Number.isInteger(additionalCardsSeen) || additionalCardsSeen < 0 || additionalCardsSeen > cardsSeen) {
+    return { ok: false, error: "additionalCardsSeen must be a whole number between 0 and cardsSeen" };
+  }
+  return { ok: true, value: { cardsSeen, additionalCardsSeen } };
+}
+
 function fail(error: string): ParseResult {
   return { ok: false, error };
 }
@@ -103,19 +130,14 @@ export function parseSessionInput(payload: unknown): ParseResult {
   }
 
   // A game always has a first turn, so zero is not a legitimate short game.
-  if (typeof turns !== "number" || !Number.isInteger(turns) || turns < 1) {
+  if (!isWholeNumberInRange(turns, 1)) {
     return fail("turns must be a whole number of at least 1");
   }
 
   const mulligans = mulliganCount ?? 0;
   // The London mulligan bottoms one card per mulligan; past a full hand there
   // is nothing left to keep, so a larger count cannot have happened.
-  if (
-    typeof mulligans !== "number" ||
-    !Number.isInteger(mulligans) ||
-    mulligans < 0 ||
-    mulligans > OPENING_HAND_SIZE
-  ) {
+  if (!isWholeNumberInRange(mulligans, 0, OPENING_HAND_SIZE)) {
     return fail(`mulliganCount must be a whole number between 0 and ${OPENING_HAND_SIZE}`);
   }
 
@@ -123,42 +145,20 @@ export function parseSessionInput(payload: unknown): ParseResult {
     return fail(`difficulty must be one of ${SESSION_DIFFICULTIES.join(", ")}`);
   }
 
-  if (notes !== undefined && typeof notes !== "string") {
+  if (!isOptionalText(notes)) {
     return fail("notes must be text");
   }
 
-  if (proposedChange !== undefined && typeof proposedChange !== "string") {
+  if (!isOptionalText(proposedChange)) {
     return fail("proposedChange must be text");
   }
 
-  if (
-    snapshotId !== undefined &&
-    (typeof snapshotId !== "string" || snapshotId.trim().length === 0)
-  ) {
+  if (!isOptionalSnapshotId(snapshotId)) {
     return fail("snapshotId must be non-empty text");
   }
 
-  const hasDrawEvidence = cardsSeen !== undefined || additionalCardsSeen !== undefined;
-  if (
-    hasDrawEvidence &&
-    (typeof cardsSeen !== "number" || !Number.isInteger(cardsSeen) || cardsSeen < 0)
-  ) {
-    return fail("cardsSeen must be a non-negative whole number");
-  }
-  if (
-    hasDrawEvidence &&
-    (typeof additionalCardsSeen !== "number" ||
-      !Number.isInteger(additionalCardsSeen) ||
-      additionalCardsSeen < 0 ||
-      additionalCardsSeen > (cardsSeen as number))
-  ) {
-    return fail("additionalCardsSeen must be a whole number between 0 and cardsSeen");
-  }
-
-  const drawEvidence =
-    typeof cardsSeen === "number" && typeof additionalCardsSeen === "number"
-      ? { cardsSeen, additionalCardsSeen }
-      : {};
+  const drawEvidence = parseDrawEvidence(cardsSeen, additionalCardsSeen);
+  if (!drawEvidence.ok) return fail(drawEvidence.error);
 
   // Whitespace-only notes are the same as none; storing them would put an empty
   // row in the UI that the player cannot tell apart from a real note.
@@ -181,7 +181,7 @@ export function parseSessionInput(payload: unknown): ParseResult {
       notes: trimmed === "" ? undefined : trimmed,
       proposedChange: trimmedProposedChange === "" ? undefined : trimmedProposedChange,
       snapshotId: typeof snapshotId === "string" ? snapshotId.trim() : undefined,
-      ...drawEvidence,
+      ...drawEvidence.value,
     },
   };
 }

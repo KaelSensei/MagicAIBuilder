@@ -1,4 +1,5 @@
 "use client";
+import { forEachSequential } from "@/lib/async/sequential";
 // Bulk Edit modal — edit the entire deck as plain text, Moxfield-style
 import { useState, useEffect, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -89,13 +90,13 @@ export function BulkEditModal({ deck, children }: BulkEditModalProps) {
       }
     }
 
-    for (const { name, quantity, zone } of parsed.cards) {
+    await forEachSequential(parsed.cards, async ({ name, quantity, zone }) => {
       const card = byName.get(normalizeImportedName(name));
-      if (!card) continue;
+      if (!card) return;
       // Pass quantity directly — addCard handles basics with quantity > 1 in a single call
       await addCard(card, quantity, zone ?? "main");
       added++;
-    }
+    });
     return added;
   }
 

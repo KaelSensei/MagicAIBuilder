@@ -1,4 +1,5 @@
 "use client";
+import { forEachSequential } from "@/lib/async/sequential";
 // Import deck from supported URL sources (Moxfield, Archidekt, MTGTop8, MTGDecks, EDHRec)
 import { useState } from "react";
 import { useTranslations } from "next-intl";
@@ -107,29 +108,29 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
     const partners = importedCards.filter((c) => c.isPartner);
     const rest = importedCards.filter((c) => !c.isCommander && !c.isPartner);
 
-    for (const c of commanders) {
+    await forEachSequential(commanders, async (c) => {
       const card = byName.get(normalizeImportedName(c.name));
       if (card) {
         await setCommander(card);
         added++;
       } else ignoredNames.push(c.name);
-    }
+    });
 
-    for (const c of partners) {
+    await forEachSequential(partners, async (c) => {
       const card = byName.get(normalizeImportedName(c.name));
       if (card) {
         await setPartner(card);
         added++;
       } else ignoredNames.push(c.name);
-    }
+    });
 
-    for (const c of rest) {
+    await forEachSequential(rest, async (c) => {
       const card = byName.get(normalizeImportedName(c.name));
       if (card) {
         await addCard(card, c.quantity, c.zone);
         added++;
       } else ignoredNames.push(c.name);
-    }
+    });
 
     return { added, ignoredNames };
   }
