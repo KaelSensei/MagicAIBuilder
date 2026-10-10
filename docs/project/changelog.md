@@ -9,6 +9,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-10: Sonar reliability and maintainability recovery
+
+#### Fixed
+
+- Google authentication failures now show recoverable feedback on sign-in and sign-up pages. Description editing waits for save completion; the AI card import promise chain has one rejection handler. Background UI calls are explicit where existing stores/hooks already handle errors (#955).
+- Simplified exact public-route membership, unnecessary async wrappers, optional-chain guards, array sorting and text export formatting. Test setup precedes test cases (#956).
+
+#### Validation
+
+- Three separately observed Red/Green cycles protect description-save completion and both Google failure paths. The refactoring lot passed 1,005 targeted tests before and after changes.
+- VPS only: 3,077 unit tests across 275 files, typecheck, lint, production build and 66 Docker E2E scenarios passed. CI, Sonar, performance and Vercel passed for both PRs.
+- The approved secret refresh restored GitHub analysis. Fresh Sonar API evidence: Quality Gate OK, new-code reliability/security/maintainability A, 91.3% new-code coverage under existing exclusions, 0.5% new-code duplication, zero bugs and 65 remaining code smells. No threshold reduction or additional exclusion was introduced. See [Sonar status](../engineering/sonar-status.md).
+- Integrated into `dev`; staging/main promotion awaits QA. The remaining code smells are not claimed fixed.
+
 ### 2026-10-10: Reliable import and deck activation completion
 
 #### Fixed
