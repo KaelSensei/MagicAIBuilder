@@ -137,8 +137,8 @@ function collectMetaCardsFromEdhrecLists(
     }
   }
 
-  const rankedCards = cards.sort((a, b) => b.inclusion - a.inclusion);
-  return rankedCards.slice(0, 20);
+  cards.sort((a, b) => b.inclusion - a.inclusion);
+  return cards.slice(0, 20);
 }
 
 export async function fetchEdhrecData(
