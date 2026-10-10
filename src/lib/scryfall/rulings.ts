@@ -59,7 +59,7 @@ function parseCacheEntry(value: unknown): RulingCacheEntry | null {
 }
 
 function readCache(): readonly RulingCacheEntry[] {
-  if (typeof globalThis.localStorage === "undefined") return [];
+  if (globalThis.localStorage === undefined) return [];
   try {
     const parsed: unknown = JSON.parse(
       globalThis.localStorage.getItem(RULINGS_CACHE_KEY) ?? "[]"
@@ -84,7 +84,7 @@ function findCachedRulings(cardId: string): readonly CardRuling[] | null {
 }
 
 function writeCache(cardId: string, rulings: readonly CardRuling[]): void {
-  if (typeof globalThis.localStorage === "undefined") return;
+  if (globalThis.localStorage === undefined) return;
   const entries: RulingCacheEntry[] = [{ cardId, rulings }];
   for (const entry of readCache()) {
     if (entry.cardId !== cardId && entries.length < MAX_CACHED_CARDS) {
@@ -119,7 +119,9 @@ async function fetchRulings(cardId: string): Promise<readonly CardRuling[]> {
  * @param cardId - Scryfall printing ID whose Oracle rulings should be loaded.
  * @returns Rulings plus whether they came from the network or offline cache.
  */
-export async function getCardRulings(cardId: string): Promise<CardRulingsResult> {
+export async function getCardRulings(
+  cardId: string
+): Promise<CardRulingsResult> {
   try {
     const rulings = await fetchRulings(cardId);
     writeCache(cardId, rulings);

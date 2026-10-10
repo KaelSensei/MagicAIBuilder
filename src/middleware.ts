@@ -22,7 +22,7 @@ const PUBLIC_PATH_PREFIXES: readonly string[] = [
   "/commanders", // public deck discovery by commander
 ];
 
-const PUBLIC_EXACT_PATHS: readonly string[] = ["/builder/guest"];
+const PUBLIC_EXACT_PATHS = new Set(["/builder/guest"]);
 
 /**
  * Removes a supported locale prefix from a pathname.
@@ -56,7 +56,7 @@ function isPublicPage(pathname: string): boolean {
 
   return (
     normalizedPathname === "/" ||
-    PUBLIC_EXACT_PATHS.includes(normalizedPathname) ||
+    PUBLIC_EXACT_PATHS.has(normalizedPathname) ||
     PUBLIC_PATH_PREFIXES.some((prefix) =>
       matchesPathPrefix(normalizedPathname, prefix)
     )
@@ -118,7 +118,7 @@ function getAuthorizationResponse(req: NextAuthRequest) {
  * @param req Incoming Next.js request.
  * @returns Middleware response for auth and locale handling.
  */
-export default auth(async (req) => {
+export default auth((req) => {
   if (isPublicPage(req.nextUrl.pathname)) return intlMiddleware(req);
 
   const authorizationResponse = getAuthorizationResponse(req);

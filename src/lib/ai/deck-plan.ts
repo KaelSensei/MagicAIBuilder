@@ -168,5 +168,9 @@ export function formatDeckPlanForPrompt(plan: DeckPlan): string {
   const roles = plan.roles
     .map(({ role, target }) => `- ${role}: ${target} cards`)
     .join("\n");
-  return `GAMEPLAN:\n${plan.gameplan}\n\nWIN CONDITIONS:\n${plan.winConditions.map((item) => `- ${item}`).join("\n")}\n\nROLE TARGETS:\n${roles}\n\nREVIEWED CONSTRAINTS:\n${plan.constraints.map((item) => `- ${item}`).join("\n")}`;
+  const winConditions = plan.winConditions
+    .map((item) => `- ${item}`)
+    .join("\n");
+  const constraints = plan.constraints.map((item) => `- ${item}`).join("\n");
+  return `GAMEPLAN:\n${plan.gameplan}\n\nWIN CONDITIONS:\n${winConditions}\n\nROLE TARGETS:\n${roles}\n\nREVIEWED CONSTRAINTS:\n${constraints}`;
 }
