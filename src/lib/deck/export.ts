@@ -7,6 +7,15 @@ function cardLine(card: DeckCard, qty = 1): string {
   return `${qty} ${card.name}`;
 }
 
+function plainTextCardLines(card: DeckCard): string[] {
+  const lines = [cardLine(card, card.quantity)];
+  const note = card.notes?.trim();
+  if (note) {
+    lines.push(...note.split(/\r\n|\r|\n/).map((line) => `// Note: ${line}`));
+  }
+  return lines;
+}
+
 /** Plain text export — simple "1 Card Name" format, with optional // note lines */
 export function exportPlainText(deck: Deck): string {
   const lines: string[] = [];
@@ -17,15 +26,7 @@ export function exportPlainText(deck: Deck): string {
   for (const [zone, heading] of [["main", ""], ["sideboard", "Sideboard"], ["maybeboard", "Considering"]] as const) {
     const zoneCards = deck.cards.filter((card) => card.zone === zone);
     if (zone !== "main" && zoneCards.length > 0) lines.push("", heading);
-    for (const card of zoneCards) {
-      lines.push(cardLine(card, card.quantity));
-      const note = card.notes?.trim();
-      if (note) {
-        for (const noteLine of note.split(/\r\n|\r|\n/)) {
-          lines.push(`// Note: ${noteLine}`);
-        }
-      }
-    }
+    for (const card of zoneCards) lines.push(...plainTextCardLines(card));
   }
   return lines.join("\n");
 }

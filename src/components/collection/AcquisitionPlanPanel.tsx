@@ -148,7 +148,7 @@ export function AcquisitionPlanPanel() {
               </select>
             </label>
           )}
-          {state.status === "loading" && <p role="status" className="text-sm text-[var(--text-secondary)]">{t("loading")}</p>}
+          {state.status === "loading" && <output className="block text-sm text-[var(--text-secondary)]">{t("loading")}</output>}
           {state.status === "error" && <p role="alert" className="text-sm text-red-400">{t("error")}</p>}
           {state.status === "ready" && state.plan.deckCount === 0 && (
             <p className="text-sm text-[var(--text-secondary)]">{t("noDecks")}</p>

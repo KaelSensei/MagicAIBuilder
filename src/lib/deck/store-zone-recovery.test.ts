@@ -47,6 +47,10 @@ function seedDeck(): DeckCard {
 }
 
 describe("deck zone save recovery", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    seedDeck();
+  });
   it("keeps the save indicator active until both cards finish moving", async () => {
     const original = seedDeck();
     const deck = useDeckStore.getState().decks["deck-1"];
@@ -83,11 +87,6 @@ describe("deck zone save recovery", () => {
     ]);
     expect(saved.maybeboard.map(({ id }) => id)).toEqual(["card-1"]);
     expect(mocks.addToast).toHaveBeenCalledWith("error", expect.stringContaining("move"));
-  });
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    seedDeck();
   });
 
   it("restores the previous zone and notifies when a move fails", async () => {

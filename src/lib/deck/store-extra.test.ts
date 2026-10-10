@@ -776,6 +776,9 @@ describe("useDeckStore category save recovery", () => {
 });
 
 describe("useDeckStore — updateCardNotes", () => {
+  beforeEach(() => {
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", name: "Counterspell" })] }));
+  });
   it("keeps saving visible when a zone move finishes before a pending note", async () => {
     seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", notes: "Saved note" })] }));
     let finishNote = () => {};
@@ -796,10 +799,6 @@ describe("useDeckStore — updateCardNotes", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards[0]).toMatchObject({
       notes: "Saved note", zone: "sideboard",
     });
-  });
-
-  beforeEach(() => {
-    seedDeck(makeActiveDeck({ cards: [makeDeckCard({ id: "card-1", name: "Counterspell" })] }));
   });
 
   it("updates notes optimistically", async () => {

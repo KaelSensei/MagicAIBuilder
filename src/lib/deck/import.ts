@@ -45,6 +45,30 @@ type ParseState = {
   section: "commander" | "partner" | "companion" | DeckZone;
 };
 
+function assignImportCard(state: ParseState, name: string, quantity: number): void {
+  if (state.section === "commander") {
+    if (!state.commander) {
+      state.commander = name;
+      return;
+    }
+    if (!state.partner) {
+      state.partner = name;
+      return;
+    }
+  }
+  if (state.section === "partner" && !state.partner) {
+    state.partner = name;
+    return;
+  }
+  if (state.section === "companion" && !state.companion) {
+    state.companion = name;
+    return;
+  }
+  state.cards.push(state.section === "sideboard" || state.section === "maybeboard"
+    ? { name, quantity, zone: state.section }
+    : { name, quantity });
+}
+
 /** Process a single line and mutate state accordingly */
 function processImportLine(line: string, state: ParseState): void {
   const isComment = line.startsWith("//") || line.startsWith("#");
@@ -75,24 +99,7 @@ function processImportLine(line: string, state: ParseState): void {
     return;
   }
 
-  if (state.section === "commander") {
-    if (!state.commander) {
-      state.commander = name;
-    } else if (!state.partner) {
-      // Second card in Commander section = partner
-      state.partner = name;
-    } else {
-      state.cards.push({ name, quantity });
-    }
-  } else if (state.section === "partner" && !state.partner) {
-    state.partner = name;
-  } else if (state.section === "companion" && !state.companion) {
-    state.companion = name;
-  } else {
-    state.cards.push(state.section === "sideboard" || state.section === "maybeboard"
-      ? { name, quantity, zone: state.section }
-      : { name, quantity });
-  }
+  assignImportCard(state, name, quantity);
 }
 
 /** Parse a plain-text decklist (1x Card Name or 1 Card Name format) */

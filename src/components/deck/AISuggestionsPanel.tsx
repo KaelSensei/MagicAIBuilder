@@ -391,9 +391,8 @@ export function AISuggestionsPanel({
                       </button>
                     )}
                   </div>
-                  <div
+                  <fieldset
                     className="flex gap-1"
-                    role="group"
                     aria-label="Suggestion priority"
                   >
                     {(["all", "high", "medium", "low"] as const).map(
@@ -417,7 +416,7 @@ export function AISuggestionsPanel({
                         </button>
                       )
                     )}
-                  </div>
+                  </fieldset>
                   <div className="space-y-1.5">
                     <AnimatePresence initial={false}>
                       {visibleSuggestions.map((s) => {
