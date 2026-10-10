@@ -24,15 +24,21 @@ export async function POST(request: Request, { params }: Params) {
     if (!jsonBody.ok) return jsonBody.response;
     const parsed = ReportSchema.safeParse(jsonBody.value);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid report reason" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid report reason" },
+        { status: 400 }
+      );
     }
 
     const deck = await findVisibleDeck(id, userId);
-    if (!deck || !deck.isPublic) {
+    if (!deck?.isPublic) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
     if (deck.userId === userId) {
-      return NextResponse.json({ error: "You cannot report your own deck" }, { status: 403 });
+      return NextResponse.json(
+        { error: "You cannot report your own deck" },
+        { status: 403 }
+      );
     }
 
     await prisma.deckReport.upsert({
@@ -42,7 +48,14 @@ export async function POST(request: Request, { params }: Params) {
     });
     return NextResponse.json({ status: "pending" }, { status: 201 });
   } catch (error) {
-    logger.error("Unexpected error", "POST /api/community/decks/:id/reports", error);
-    return NextResponse.json({ error: "Failed to submit report" }, { status: 500 });
+    logger.error(
+      "Unexpected error",
+      "POST /api/community/decks/:id/reports",
+      error
+    );
+    return NextResponse.json(
+      { error: "Failed to submit report" },
+      { status: 500 }
+    );
   }
 }
