@@ -153,7 +153,7 @@ export function SetAutocomplete({
           }}
           onFocus={() => {
             setOpen(true);
-            loadSets();
+            void loadSets();
           }}
           placeholder={t("setPlaceholder")}
           className="flex-1 bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] outline-none"
@@ -177,11 +177,14 @@ export function SetAutocomplete({
               {t("setsLoadFailed")}
             </div>
           )}
-          {!loading && !hasError && filtered.length === 0 && input.length > 0 && (
-            <div className="px-3 py-3 text-sm text-[var(--text-secondary)]">
-              {t("noSetsFound", { query: input })}
-            </div>
-          )}
+          {!loading &&
+            !hasError &&
+            filtered.length === 0 &&
+            input.length > 0 && (
+              <div className="px-3 py-3 text-sm text-[var(--text-secondary)]">
+                {t("noSetsFound", { query: input })}
+              </div>
+            )}
           {!loading && !hasError && filtered.length > 0 && (
             <div className="max-h-64 overflow-y-auto">
               {filtered.map((s) => (

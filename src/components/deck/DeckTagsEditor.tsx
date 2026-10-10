@@ -39,7 +39,7 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
   const handleAddTag = (tag: string) => {
     const trimmed = tag.trim();
     if (!trimmed || tags.includes(trimmed)) return;
-    addTag(deckId, trimmed);
+    void addTag(deckId, trimmed);
     setInputValue("");
     setShowInput(false);
   };

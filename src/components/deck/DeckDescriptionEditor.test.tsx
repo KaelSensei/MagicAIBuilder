@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
@@ -10,6 +10,31 @@ vi.mock("@/lib/deck/store", () => ({
 }));
 
 describe("DeckDescriptionEditor", () => {
+  it("keeps the description draft open until saving completes", async () => {
+    const pending = Promise.withResolvers<void>();
+    updateDeckDescription.mockReturnValueOnce(pending.promise);
+    renderWithIntl(
+      <DeckDescriptionEditor deckId="deck-1" description="Original" />
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Edit description" }));
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "Updated" },
+    });
+    fireEvent.keyDown(screen.getByRole("textbox"), {
+      key: "Enter",
+      ctrlKey: true,
+    });
+    try {
+      expect(screen.getByRole("textbox")).toHaveValue("Updated");
+    } finally {
+      await act(async () => {
+        pending.resolve();
+        await pending.promise;
+      });
+    }
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
   beforeEach(() => {
     updateDeckDescription.mockReset();
   });
