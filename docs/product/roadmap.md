@@ -1,6 +1,8 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-09
+> **Updated:** 2026-10-10
+
+> **Latest reliability delivery:** #953 awaits deck activation before import, fork and AI wizard follow-up actions, and awaits URL import additions and existing-card quantity saves before completion. Validated on the VPS; integrated into `dev`, awaiting QA promotion. This does not close the broader save-recovery or Sonar initiatives.
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.

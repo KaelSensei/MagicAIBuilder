@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-10: Reliable import and deck activation completion
+
+#### Fixed
+
+- Await deck activation before import, public fork and AI wizard follow-up actions, await each URL import addition, and await existing-card quantity persistence before completing the addition (#953).
+
+#### Validation
+
+- Observed Red: an addition resolved before its pending quantity save. Minimal Green awaits the mutation. VPS: 3,074 unit tests across 274 files, typecheck, lint, build and 66 full Docker E2E scenarios passed. CI, performance and Vercel passed.
+- Sonar CI fails before analysis with HTTP 403. Integrated into `dev` only; staging/main promotion awaits QA. Broader Sonar and save-recovery work remains open.
+
 ### 2026-10-09: Shared bulk and manual bracket activity
 
 #### Fixed
