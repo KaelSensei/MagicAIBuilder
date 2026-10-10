@@ -265,13 +265,13 @@ export default function BuilderPage() {
 
   // Set active deck on mount
   useEffect(() => {
-    if (deckId) setActiveDeck(deckId);
+    if (deckId) void setActiveDeck(deckId);
   }, [deckId, setActiveDeck]);
 
   // If deck not in store (e.g. direct navigation / page refresh), load from DB
   useEffect(() => {
     if (deckId && deckId !== GUEST_DECK_ID && !deck && !isSyncing) {
-      loadDecks();
+      void loadDecks();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only re-run when deckId changes; loadDecks is stable
   }, [deckId]);
@@ -439,7 +439,7 @@ export default function BuilderPage() {
 
   const handlePrintingSelect = useCallback(
     (card: ScryfallCard) => {
-      addCard(card, undefined, activeZone);
+      void addCard(card, undefined, activeZone);
       setPrintingCard(null);
     },
     [addCard, activeZone]
@@ -500,7 +500,7 @@ export default function BuilderPage() {
 
   const handleAIAnalyze = useCallback(() => {
     if (!deck || !stats) return;
-    analyzeAI(deck, stats, bracketScore, {
+    void analyzeAI(deck, stats, bracketScore, {
       archetypeOverride: aiArchetypeOverride,
       budgetPerCard: aiBudgetPerCard,
       brief: aiBrief,
@@ -518,7 +518,7 @@ export default function BuilderPage() {
   const handleAIQuestion = useCallback(
     (question: DeckQuestion) => {
       if (!deck || !stats) return;
-      analyzeAI(deck, stats, bracketScore, {
+      void analyzeAI(deck, stats, bracketScore, {
         archetypeOverride: aiArchetypeOverride,
         budgetPerCard: aiBudgetPerCard,
         brief: aiBrief,
@@ -538,7 +538,7 @@ export default function BuilderPage() {
 
   const handleSnapshotRestore = useCallback(() => {
     // Reload all decks from DB so the builder reflects the restored state
-    loadDecks();
+    void loadDecks();
   }, [loadDecks]);
 
   const handlePackageApplied = useCallback(async () => {
@@ -550,11 +550,10 @@ export default function BuilderPage() {
     (cardName: string) => {
       // Search for the card by name and add it
       // We use getCardByName from Scryfall client
-      import("@/lib/scryfall/client").then(({ getCardByName }) => {
-        getCardByName(cardName)
-          .then((card) => addCard(card))
-          .catch(() => logger.warn("Could not find card", "builder", cardName));
-      });
+      void import("@/lib/scryfall/client")
+        .then(({ getCardByName }) => getCardByName(cardName))
+        .then((card) => addCard(card))
+        .catch(() => logger.warn("Could not find card", "builder", cardName));
     },
     [addCard]
   );
@@ -562,7 +561,7 @@ export default function BuilderPage() {
   const dropSearchCard = useCallback(
     (searchCard: ScryfallCard, overId: string) => {
       const zone = getDropZoneFromId(overId, activeZone);
-      addCard(searchCard, undefined, zone);
+      void addCard(searchCard, undefined, zone);
     },
     [addCard, activeZone]
   );
@@ -576,7 +575,7 @@ export default function BuilderPage() {
     ) => {
       const categoryFromDrop = getCategoryFromDropId(overId);
       if (categoryFromDrop && categoryFromDrop !== sourceCategory) {
-        updateCardCategory(cardId, categoryFromDrop as CardCategory);
+        void updateCardCategory(cardId, categoryFromDrop as CardCategory);
         return;
       }
 
@@ -584,7 +583,7 @@ export default function BuilderPage() {
         const targetCardId = overId.replace("deck-card-", "");
         const targetCard = deckCards.find((c) => c.id === targetCardId);
         if (targetCard && targetCard.category !== sourceCategory) {
-          updateCardCategory(cardId, targetCard.category);
+          void updateCardCategory(cardId, targetCard.category);
         }
       }
     },
@@ -610,7 +609,7 @@ export default function BuilderPage() {
           string | undefined;
         const targetZone = getExplicitDropZone(overId);
         if (targetZone) {
-          moveCardToZone(cardId, targetZone);
+          void moveCardToZone(cardId, targetZone);
           return;
         }
         moveIntraDeck(cardId, overId, sourceCategory, deck?.cards ?? []);
@@ -691,7 +690,7 @@ export default function BuilderPage() {
                 onChange={(e) => setNameInput(e.target.value)}
                 onBlur={handleSaveName}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSaveName();
+                  if (e.key === "Enter") void handleSaveName();
                   if (e.key === "Escape") setIsEditingName(false);
                 }}
                 className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] outline-none min-w-0"
@@ -1046,7 +1045,7 @@ export default function BuilderPage() {
               onAddCard={handleAIAddCard}
               onRemoveCard={(cardName) => {
                 const card = deck?.cards.find((c) => c.name === cardName);
-                if (card) removeCard(card.id);
+                if (card) void removeCard(card.id);
               }}
               disabled={!deck?.commander}
               detectedArchetype={detectedArchetype}

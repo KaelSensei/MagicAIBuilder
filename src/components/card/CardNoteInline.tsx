@@ -35,7 +35,7 @@ export function CardNoteInline({ cardId, notes }: CardNoteInlineProps) {
   const handleSave = () => {
     setOpen(false);
     const trimmed = draft.trim() || null;
-    updateCardNotes(cardId, trimmed ?? "");
+    void updateCardNotes(cardId, trimmed ?? "");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

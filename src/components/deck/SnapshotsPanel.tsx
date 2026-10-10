@@ -88,7 +88,7 @@ export function SnapshotsPanel({
 
   // Load on expand
   useEffect(() => {
-    if (isExpanded) load();
+    if (isExpanded) void load();
   }, [isExpanded, load]);
 
   // Focus input when popover opens
@@ -107,7 +107,7 @@ export function SnapshotsPanel({
       await createSnapshot(deckId, name);
       setSnapshotName("");
       setShowSavePopover(false);
-      if (isExpanded) load();
+      if (isExpanded) await load();
     } catch (err) {
       setSaveError(
         err instanceof Error ? err.message : "Failed to save snapshot"
@@ -173,7 +173,7 @@ export function SnapshotsPanel({
                 value={snapshotName}
                 onChange={(e) => setSnapshotName(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSave();
+                  if (e.key === "Enter") void handleSave();
                   if (e.key === "Escape") setShowSavePopover(false);
                 }}
                 placeholder={t("snapshots.placeholder")}

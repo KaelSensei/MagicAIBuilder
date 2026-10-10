@@ -79,7 +79,7 @@ export default function DecksPage() {
 
   useEffect(() => {
     if (sessionStatus !== "authenticated") return;
-    loadDecks().finally(() => setIsLoading(false));
+    void loadDecks().finally(() => setIsLoading(false));
   }, [loadDecks, sessionStatus]);
 
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function DecksPage() {
 
   const handleRetryLoad = useCallback(() => {
     setIsLoading(true);
-    loadDecks().finally(() => setIsLoading(false));
+    void loadDecks().finally(() => setIsLoading(false));
   }, [loadDecks]);
 
   const handleSetViewMode = useCallback((mode: DecksViewMode) => {
