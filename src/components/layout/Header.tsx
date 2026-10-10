@@ -55,7 +55,7 @@ export function Header({ deckId }: HeaderProps = {}) {
       const id = await createDeck(
         `Imported Deck — ${new Date().toLocaleString()}`
       );
-      setActiveDeck(id);
+      await setActiveDeck(id);
       setImportOpen(true);
     } finally {
       setIsCreatingImportDeck(false);
