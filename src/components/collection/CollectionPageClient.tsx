@@ -16,9 +16,7 @@ import {
 } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
-import {
-  formatCollectionText,
-} from "@/lib/collection/shopping-list";
+import { formatCollectionText } from "@/lib/collection/shopping-list";
 import { formatCollectionPrintingCsv } from "@/lib/collection/printing-csv";
 import { cn } from "@/components/ui/utils";
 import type { CollectionCard } from "@/lib/collection/types";
@@ -47,7 +45,7 @@ export function CollectionPageClient() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    loadCollection();
+    void loadCollection();
   }, [loadCollection]);
 
   const allCards = [
@@ -392,7 +390,11 @@ function CollectionGridCard({
           <ImageIcon className="w-3.5 h-3.5" />
           {t("actions.art")}
         </button>
-        <PrintingDeckUsage scryfallId={card.scryfallId} cardName={card.name} compact />
+        <PrintingDeckUsage
+          scryfallId={card.scryfallId}
+          cardName={card.name}
+          compact
+        />
         <CollectionQuantityControl
           cardName={card.name}
           quantity={card.quantity}

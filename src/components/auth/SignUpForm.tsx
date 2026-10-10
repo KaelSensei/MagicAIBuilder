@@ -56,8 +56,10 @@ export function SignUpForm() {
   );
 
   const handleGoogle = useCallback(() => {
-    signIn("google", { callbackUrl: "/decks" });
-  }, []);
+    void signIn("google", { callbackUrl: "/decks" }).catch(() => {
+      setError(t("google.failed"));
+    });
+  }, [t]);
 
   return (
     <AuthPageShell subtitle={t("signUp.title")} error={error}>
@@ -131,7 +133,10 @@ export function SignUpForm() {
 
       <p className="text-center text-sm text-[var(--text-secondary)]">
         {t("signUp.hasAccount")}{" "}
-        <Link href="/auth/signin" className="text-[var(--accent-text)] hover:underline">
+        <Link
+          href="/auth/signin"
+          className="text-[var(--accent-text)] hover:underline"
+        >
           {t("signUp.signInLink")}
         </Link>
       </p>

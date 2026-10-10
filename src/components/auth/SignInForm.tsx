@@ -46,8 +46,10 @@ export function SignInForm() {
   );
 
   const handleGoogle = useCallback(() => {
-    signIn("google", { callbackUrl });
-  }, [callbackUrl]);
+    void signIn("google", { callbackUrl }).catch(() => {
+      setError(t("google.failed"));
+    });
+  }, [callbackUrl, t]);
 
   const displayError =
     error === "OAuthAccountNotLinked"
@@ -108,7 +110,10 @@ export function SignInForm() {
 
       <p className="text-center text-sm text-[var(--text-secondary)]">
         {t("signIn.noAccount")}{" "}
-        <Link href="/auth/signup" className="text-[var(--accent-text)] underline">
+        <Link
+          href="/auth/signup"
+          className="text-[var(--accent-text)] underline"
+        >
           {t("signIn.signUpLink")}
         </Link>
       </p>

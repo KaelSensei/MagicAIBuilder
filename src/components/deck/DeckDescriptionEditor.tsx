@@ -42,9 +42,9 @@ export function DeckDescriptionEditor({
     startEditing();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    await updateDeckDescription(deckId, draft.trim());
     setEditing(false);
-    updateDeckDescription(deckId, draft.trim());
   };
 
   const insertPrimerTemplate = () => {
@@ -59,7 +59,7 @@ export function DeckDescriptionEditor({
     }
     // Ctrl+Enter or Cmd+Enter saves
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      handleSave();
+      void handleSave();
     }
   };
 

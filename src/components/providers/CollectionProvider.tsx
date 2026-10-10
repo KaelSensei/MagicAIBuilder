@@ -4,13 +4,17 @@ import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useCollectionStore } from "@/lib/collection/store";
 
-export function CollectionProvider({ children }: { readonly children: React.ReactNode }) {
+export function CollectionProvider({
+  children,
+}: {
+  readonly children: React.ReactNode;
+}) {
   const { status } = useSession();
   const loadCollection = useCollectionStore((s) => s.loadCollection);
 
   useEffect(() => {
     if (status === "authenticated") {
-      loadCollection();
+      void loadCollection();
     }
   }, [status, loadCollection]);
 
