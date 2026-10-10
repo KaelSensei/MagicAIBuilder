@@ -1673,7 +1673,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             const currentDeck = state.decks[activeDeckId];
             const latestCard =
               currentDeck ? uniqueDeckCards(currentDeck).find((card) => card.id === cardId) : undefined;
-            if (!latestCard || latestCard.zone !== zone) return state;
+            if (latestCard?.zone !== zone) return state;
             return {
               decks: {
                 ...state.decks,

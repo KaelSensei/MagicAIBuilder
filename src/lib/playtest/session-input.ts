@@ -73,6 +73,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function isOptionalText(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === "string";
+}
+
+function isOptionalSnapshotId(value: unknown): value is string | undefined {
+  return value === undefined || (typeof value === "string" && value.trim().length > 0);
+}
+
 function isWholeNumberInRange(value: unknown, minimum: number, maximum = Number.POSITIVE_INFINITY): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= minimum && value <= maximum;
 }
@@ -137,18 +145,15 @@ export function parseSessionInput(payload: unknown): ParseResult {
     return fail(`difficulty must be one of ${SESSION_DIFFICULTIES.join(", ")}`);
   }
 
-  if (notes !== undefined && typeof notes !== "string") {
+  if (!isOptionalText(notes)) {
     return fail("notes must be text");
   }
 
-  if (proposedChange !== undefined && typeof proposedChange !== "string") {
+  if (!isOptionalText(proposedChange)) {
     return fail("proposedChange must be text");
   }
 
-  if (
-    snapshotId !== undefined &&
-    (typeof snapshotId !== "string" || snapshotId.trim().length === 0)
-  ) {
+  if (!isOptionalSnapshotId(snapshotId)) {
     return fail("snapshotId must be non-empty text");
   }
 

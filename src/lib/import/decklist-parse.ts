@@ -26,7 +26,7 @@ function isSetCodeChar(c: string): boolean {
 }
 
 function isCollectorSuffixChar(c: string): boolean {
-  return isEcmaWhitespaceChar(c) || /^[0-9]$/.test(c);
+  return isEcmaWhitespaceChar(c) || /^\d$/.test(c);
 }
 
 /**
@@ -100,6 +100,21 @@ function headingSection(heading: string): DecklistSection | undefined {
   }
 }
 
+function parseDecklistCard(line: string, section: DecklistSection): UrlImportCard | null {
+  const match = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
+  if (!match) return null;
+  const quantity = Math.min(Math.max(1, Number.parseInt(match[1], 10)), 99);
+  const name = stripTrailingSetCodeSuffix(stripSlashOrPipeCommentSuffix(match[2])).trim();
+  if (!name) return null;
+  return {
+    name,
+    quantity,
+    isCommander: section === "commander",
+    isPartner: section === "partner",
+    zone: section === "sideboard" || section === "maybeboard" ? section : "main",
+  };
+}
+
 export function parsePlainTextDecklist(text: string): UrlImportCard[] {
   const cards: UrlImportCard[] = [];
   let section: DecklistSection = "main";
@@ -119,23 +134,9 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
     }
     if (isComment) continue;
 
-    const m = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
-    if (!m) continue;
-
-    const quantity = Math.min(Math.max(1, Number.parseInt(m[1], 10)), 99);
-    const name = stripTrailingSetCodeSuffix(
-      stripSlashOrPipeCommentSuffix(m[2])
-    ).trim();
-
-    if (!name) continue;
-
-    cards.push({
-      name,
-      quantity,
-      isCommander: section === "commander",
-      isPartner: section === "partner",
-      zone: section === "sideboard" || section === "maybeboard" ? section : "main",
-    });
+    const card = parseDecklistCard(line, section);
+    if (!card) continue;
+    cards.push(card);
     if (section === "commander" || section === "partner") section = "main";
   }
 
