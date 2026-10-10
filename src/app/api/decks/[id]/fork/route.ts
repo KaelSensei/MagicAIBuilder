@@ -25,8 +25,11 @@ export async function POST(_req: Request, { params }: Params) {
       },
     });
 
-    if (!source || !source.isPublic) {
-      return NextResponse.json({ error: "Public deck not found" }, { status: 404 });
+    if (!source?.isPublic) {
+      return NextResponse.json(
+        { error: "Public deck not found" },
+        { status: 404 }
+      );
     }
 
     const forkData = buildForkData(
@@ -47,7 +50,10 @@ export async function POST(_req: Request, { params }: Params) {
         userName: source.user?.name ?? source.user?.username ?? null,
         cards: source.cards.map((card) => ({
           ...card,
-          zone: card.zone === "sideboard" || card.zone === "maybeboard" ? card.zone : "main",
+          zone:
+            card.zone === "sideboard" || card.zone === "maybeboard"
+              ? card.zone
+              : "main",
         })),
       },
       authentication.session.user.id

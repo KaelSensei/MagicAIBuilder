@@ -17,7 +17,7 @@ const AddFavoriteSchema = z.object({
   imageUri: z.string().default(""),
 });
 
-export async function GET() {
+export function GET() {
   // Persistence is intentionally deferred for the MVP favorites route.
   return NextResponse.json([], { status: 200 });
 }
@@ -37,8 +37,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Persistence is intentionally deferred for the MVP favorites route.
-    return NextResponse.json({ ...validation.data, addedAt: new Date() }, { status: 201 });
+    return NextResponse.json(
+      { ...validation.data, addedAt: new Date() },
+      { status: 201 }
+    );
   } catch {
-    return NextResponse.json({ error: "Failed to add favorite" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to add favorite" },
+      { status: 500 }
+    );
   }
 }

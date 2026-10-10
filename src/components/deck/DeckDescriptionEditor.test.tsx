@@ -10,6 +10,10 @@ vi.mock("@/lib/deck/store", () => ({
 }));
 
 describe("DeckDescriptionEditor", () => {
+  beforeEach(() => {
+    updateDeckDescription.mockReset();
+  });
+
   it("keeps the description draft open until saving completes", async () => {
     const pending = Promise.withResolvers<void>();
     updateDeckDescription.mockReturnValueOnce(pending.promise);
@@ -33,10 +37,6 @@ describe("DeckDescriptionEditor", () => {
       });
     }
     expect(screen.queryByRole("textbox")).toBeNull();
-  });
-
-  beforeEach(() => {
-    updateDeckDescription.mockReset();
   });
 
   it("offers a primer template for an empty description", () => {

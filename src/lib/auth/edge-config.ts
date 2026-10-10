@@ -22,7 +22,7 @@ const PUBLIC_API_AND_PAGE_PATHS: readonly string[] = [
   "/commanders",
 ];
 
-const PUBLIC_EXACT_PAGE_PATHS: readonly string[] = ["/builder/guest"];
+const PUBLIC_EXACT_PAGE_PATHS = new Set(["/builder/guest"]);
 
 /**
  * Checks whether a pathname equals a prefix or is nested under it.
@@ -62,13 +62,13 @@ export const edgeAuthConfig = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    jwt({ token, user }) {
       if (user) {
         token.id = user.id;
       }
       return token;
     },
-    async session({ session, token }) {
+    session({ session, token }) {
       if (token?.id) {
         session.user.id = token.id as string;
       }
@@ -92,7 +92,7 @@ export const edgeAuthConfig = {
       // Public paths — always allow
       const isPublic =
         pathname === "/" ||
-        PUBLIC_EXACT_PAGE_PATHS.includes(pathname) ||
+        PUBLIC_EXACT_PAGE_PATHS.has(pathname) ||
         PUBLIC_API_AND_PAGE_PATHS.some((p) => matchesPathPrefix(pathname, p));
       if (isPublic) return true;
 
