@@ -112,7 +112,6 @@ export function AddToCollectionDialog() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
               <input
                 type="text"
-                autoFocus
                 placeholder={t("searchPlaceholder")}
                 value={query}
                 onChange={(e) => handleSearch(e.target.value)}
