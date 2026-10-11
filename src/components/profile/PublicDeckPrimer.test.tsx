@@ -3,6 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
 
 describe("PublicDeckPrimer", () => {
+  it("preserves nested opening brackets, invalid markup and consecutive links", () => {
+    render(<PublicDeckPrimer description={"Before [[nested](https://example.com/a)[next](/decks) after [broken](bad url)."} />);
+    expect(screen.getByRole("link", { name: "[nested" })).toHaveAttribute("href", "https://example.com/a");
+    expect(screen.getByRole("link", { name: "next" })).toHaveAttribute("href", "/decks");
+    expect(screen.getByText(/after \[broken\]\(bad url\)/)).toBeVisible();
+  });
+
   it("renders primer headings, lists and paragraphs as readable sections", () => {
     render(
       <PublicDeckPrimer
