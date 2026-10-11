@@ -23,7 +23,41 @@ type PrimerBlock =
     };
 
 const SAFE_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
-const LINK_PATTERN = /\[([^\]]+)]\(([^)\s]+)\)/g;
+
+function destinationEndings(text: string): readonly number[] {
+  // Precompute destination endings so malformed nested links cannot rescan
+  // the remaining text for every opening bracket.
+  const destinationEnds: number[] = [];
+  let end = text.length;
+  for (let index = text.length - 1; index >= 0; index -= 1) {
+    if (text[index] === ")" || /\s/.test(text[index])) end = index;
+    destinationEnds[index] = end;
+  }
+  return destinationEnds;
+}
+
+function* primerLinks(text: string) {
+  const destinationEnds = destinationEndings(text);
+  let cursor = 0;
+  while (cursor < text.length) {
+    const start = text.indexOf("[", cursor);
+    if (start < 0) return;
+    const labelEnd = text.indexOf("]", start + 1);
+    if (labelEnd < 0) return;
+    cursor = labelEnd + 1;
+    if (labelEnd === start + 1 || text[cursor] !== "(") continue;
+    const destinationStart = cursor + 1;
+    const destinationEnd = destinationEnds[destinationStart] ?? text.length;
+    if (destinationEnd === destinationStart || text[destinationEnd] !== ")") continue;
+    cursor = destinationEnd + 1;
+    yield {
+      index: start,
+      end: cursor,
+      label: text.slice(start + 1, labelEnd),
+      url: text.slice(destinationStart, destinationEnd),
+    };
+  }
+}
 
 function headingId(text: string): string {
   const slug = text
@@ -96,11 +130,11 @@ function parsePrimer(description: string): readonly PrimerBlock[] {
 function renderInline(text: string): readonly ReactNode[] {
   const nodes: ReactNode[] = [];
   let cursor = 0;
-  for (const match of text.matchAll(LINK_PATTERN)) {
+  for (const match of primerLinks(text)) {
     const index = match.index;
     if (index > cursor) nodes.push(text.slice(cursor, index));
-    const href = safePrimerUrl(match[2]);
-    const label = match[1];
+    const href = safePrimerUrl(match.url);
+    const label = match.label;
     nodes.push(
       href ? (
         <a
@@ -116,7 +150,7 @@ function renderInline(text: string): readonly ReactNode[] {
         <span key={`${index}-unsafe`}>{label}</span>
       )
     );
-    cursor = index + match[0].length;
+    cursor = match.end;
   }
   if (cursor < text.length) nodes.push(text.slice(cursor));
   return nodes;
