@@ -34,6 +34,18 @@ export type DeckAction =
   | { type: "ADD_CARD"; deckId: string; card: DeckCard }
   | { type: "REMOVE_CARD"; deckId: string; card: DeckCard };
 
+function withoutCard(cards: DeckCard[], cardId: string): DeckCard[] {
+  return cards.filter((card) => card.id !== cardId);
+}
+
+function restoreUndoCard(cards: DeckCard[], restored: DeckCard): DeckCard[] {
+  return cards.some((card) => card.id === restored.id) ? cards : [...cards, restored];
+}
+
+function replaceUndoCardId(cards: DeckCard[], previousId: string, savedId: string): DeckCard[] {
+  return cards.map((card) => card.id === previousId ? { ...card, id: savedId } : card);
+}
+
 function restoreCardCategory(cards: DeckCard[], cardId: string, attempted: CardCategory, confirmed: CardCategory): DeckCard[] {
   return cards.map((card) => card.id === cardId && card.category === attempted
     ? { ...card, category: confirmed } : card);
@@ -319,7 +331,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     // Pop the action
     set((s) => ({ undoStack: s.undoStack.slice(0, -1) }));
 
-    if (last.type === "ADD_CARD") {
+    const undoAddition = async () => {
       // Undo add → remove card (skip recording in undo stack)
       const activeDeckId = last.deckId;
       if (!activeDeckId) return;
@@ -347,7 +359,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         decks: {
           ...state.decks,
           [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
-            cards.filter((c) => c.id !== card.id)
+            withoutCard(cards, card.id)
           ),
         },
       }));
@@ -363,9 +375,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               ? {
                   ...state.decks,
                   [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                    cards.some((current) => current.id === card.id)
-                      ? cards
-                      : [...cards, card]
+                    restoreUndoCard(cards, card)
                   ),
                 }
               : state.decks,
@@ -377,7 +387,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .add("error", "Could not undo card addition. Please retry.");
         return;
       }
-    } else if (last.type === "REMOVE_CARD") {
+      return true;
+    };
+    const undoRemoval = async () => {
       // Undo remove → re-add card
       const activeDeckId = last.deckId;
       if (!activeDeckId) return;
@@ -425,9 +437,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
             decks: {
               ...state.decks,
               [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                cards.map((card) =>
-                  card.id === last.card.id ? { ...card, id: saved.id } : card
-                )
+                replaceUndoCardId(cards, last.card.id, saved.id)
               ),
             },
           };
@@ -442,7 +452,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
               ? {
                   ...state.decks,
                   [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
-                    cards.filter((card) => card.id !== last.card.id)
+                    withoutCard(cards, last.card.id)
                   ),
                 }
               : state.decks,
@@ -454,7 +464,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .add("error", "Could not undo card removal. Please retry.");
         return;
       }
-    }
+      return true;
+    };
+    const applied = last.type === "ADD_CARD"
+      ? await undoAddition()
+      : await undoRemoval();
+    if (!applied) return;
     if (!get().decks[last.deckId]) return;
     useToastStore.getState().add("info", "↩ Undo applied");
   },
