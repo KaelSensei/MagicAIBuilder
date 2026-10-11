@@ -4,7 +4,7 @@ import { openBuilder, seedPublicDeck } from "./helpers";
 test("rename keeps keyboard focus and persists the deck title", async ({ page }) => {
   await openBuilder(page);
   await page.getByRole("heading", { level: 1 }).locator("..").click();
-  const name = page.getByRole("textbox", { name: "Rename", exact: true });
+  const name = page.getByRole("textbox", { name: "Click to rename", exact: true });
   await expect(name).toBeFocused();
   await name.fill("Keyboard renamed deck");
   await name.press("Enter");
