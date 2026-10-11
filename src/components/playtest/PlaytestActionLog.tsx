@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PlaytestActionLogEntry } from "@/lib/playtest/engine";
@@ -21,6 +21,10 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
   const [draft, setDraft] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (editingId !== null) editInputRef.current?.focus({ preventScroll: true });
+  }, [editingId]);
   const [manaAmount, setManaAmount] = useState("1");
   const summaries = useMemo(() => summarizeActionLog(entries), [entries]);
   const fileStem = deckName.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "deck";
@@ -105,12 +109,12 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
               <span className="shrink-0 text-[10px] text-white/35">T{entry.turn} · {entry.phase}</span>
               {editingId === entry.id ? (
                 <input
+                  ref={editInputRef}
                   value={editingText}
                   onChange={(event) => setEditingText(event.target.value)}
                   onBlur={() => saveEdit(entry.id)}
                   onKeyDown={(event) => event.key === "Enter" && saveEdit(entry.id)}
                   aria-label={t("editEntry")}
-                  autoFocus
                   className="min-w-0 flex-1 rounded border border-purple-400/50 bg-black/30 px-2 py-1 text-white outline-none"
                 />
               ) : (

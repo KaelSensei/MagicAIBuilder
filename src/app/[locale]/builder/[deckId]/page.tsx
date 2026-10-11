@@ -648,7 +648,10 @@ export default function BuilderPage() {
   const handleStartEditName = () => {
     setNameInput(deck.name);
     setIsEditingName(true);
-    setTimeout(() => nameInputRef.current?.select(), 0);
+    setTimeout(() => {
+      nameInputRef.current?.focus({ preventScroll: true });
+      nameInputRef.current?.select();
+    }, 0);
   };
 
   const handleSaveName = async () => {
@@ -695,7 +698,6 @@ export default function BuilderPage() {
                 }}
                 className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] outline-none min-w-0"
                 maxLength={200}
-                autoFocus
               />
               <button
                 type="button"
