@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Flag, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -29,6 +29,17 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
       triggerRef.current?.focus({ preventScroll: true });
     };
   }, [open]);
+
+  const handleDialogKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
+    if (event.key !== "Tab" || !event.shiftKey) return;
+    const controls = event.currentTarget.querySelectorAll<HTMLElement>("button:not(:disabled), select:not(:disabled)");
+    const first = controls.item(0);
+    const last = controls.item(controls.length - 1);
+    if (first && last && document.activeElement === first) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+    }
+  };
 
   if (!isSignedIn || isOwner) return null;
 
@@ -63,7 +74,7 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
         {t("action")}
       </button>
       {open && (
-          <dialog ref={dialogRef} onCancel={() => setOpen(false)} aria-labelledby="report-title" className="m-auto w-[calc(100%_-_2rem)] max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl backdrop:bg-black/70">
+          <dialog ref={dialogRef} onKeyDown={handleDialogKeyDown} onCancel={() => setOpen(false)} aria-labelledby="report-title" className="m-auto w-[calc(100%_-_2rem)] max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl backdrop:bg-black/70">
             <div className="mb-4 flex items-center justify-between">
               <h2 id="report-title" className="font-semibold text-[var(--text-primary)]">{t("title")}</h2>
               <button type="button" onClick={() => setOpen(false)} aria-label={t("close")} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">

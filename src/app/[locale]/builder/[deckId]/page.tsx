@@ -689,6 +689,7 @@ export default function BuilderPage() {
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <input
                 ref={nameInputRef}
+                aria-label={t("actions.rename")}
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
                 onBlur={handleSaveName}

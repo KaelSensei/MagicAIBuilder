@@ -22,6 +22,14 @@ afterAll(() => {
 });
 
 describe("DeckReportButton", () => {
+  it("wraps backward keyboard navigation inside the report dialog", () => {
+    renderWithIntl(<DeckReportButton deckId="deck-1" isSignedIn isOwner={false} />);
+    fireEvent.click(screen.getByRole("button", { name: /report deck/i }));
+    const close = screen.getByRole("button", { name: /close/i });
+    close.focus();
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
+    expect(screen.getByRole("button", { name: /submit report/i })).toHaveFocus();
+  });
   it("dismisses native cancellation and restores focus to the report trigger", () => {
     renderWithIntl(<DeckReportButton deckId="deck-1" isSignedIn isOwner={false} />);
     const trigger = screen.getByRole("button", { name: /report deck/i });
