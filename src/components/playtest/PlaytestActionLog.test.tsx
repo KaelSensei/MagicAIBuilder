@@ -4,6 +4,17 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { PlaytestActionLog } from "./PlaytestActionLog";
 
 describe("PlaytestActionLog", () => {
+  it("focuses an explicitly edited action without scrolling the viewport", () => {
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+    const focus = vi.spyOn(HTMLElement.prototype, "focus");
+    try {
+      fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
+      expect(screen.getByLabelText(/edit action/i)).toHaveFocus();
+      expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    } finally {
+      focus.mockRestore();
+    }
+  });
   it("adds a manual entry", () => {
     const onAdd = vi.fn();
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[]} onAdd={onAdd} onEdit={vi.fn()} onRemove={vi.fn()} />);

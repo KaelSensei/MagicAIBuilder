@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Flag, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -17,6 +17,29 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<ReportReason>("spam");
   const [status, setStatus] = useState<"idle" | "submitting" | "sent" | "error">("idle");
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    dialog.showModal();
+    return () => {
+      dialog.close();
+      triggerRef.current?.focus({ preventScroll: true });
+    };
+  }, [open]);
+
+  const handleDialogKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
+    if (event.key !== "Tab" || !event.shiftKey) return;
+    const controls = event.currentTarget.querySelectorAll<HTMLElement>("button:not(:disabled), select:not(:disabled)");
+    const first = controls.item(0);
+    const last = controls.item(controls.length - 1);
+    if (first && last && document.activeElement === first) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+    }
+  };
 
   if (!isSignedIn || isOwner) return null;
 
@@ -29,6 +52,7 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
         body: JSON.stringify({ reason }),
       });
       setStatus(response.ok ? "sent" : "error");
+      if (response.ok) setOpen(false);
     } catch {
       setStatus("error");
     }
@@ -41,6 +65,7 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
         className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-red-300"
@@ -49,8 +74,7 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
         {t("action")}
       </button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div role="dialog" aria-modal="true" aria-labelledby="report-title" className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl">
+          <dialog ref={dialogRef} onKeyDown={handleDialogKeyDown} onCancel={() => setOpen(false)} aria-labelledby="report-title" className="m-auto w-[calc(100%_-_2rem)] max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl backdrop:bg-black/70">
             <div className="mb-4 flex items-center justify-between">
               <h2 id="report-title" className="font-semibold text-[var(--text-primary)]">{t("title")}</h2>
               <button type="button" onClick={() => setOpen(false)} aria-label={t("close")} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
@@ -69,8 +93,7 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
             <button type="button" onClick={() => void submit()} disabled={status === "submitting"} className="w-full rounded-lg bg-red-500/15 px-4 py-2 text-sm font-medium text-red-200 hover:bg-red-500/25 disabled:opacity-50">
               {status === "submitting" ? t("submitting") : t("submit")}
             </button>
-          </div>
-        </div>
+          </dialog>
       )}
     </>
   );
