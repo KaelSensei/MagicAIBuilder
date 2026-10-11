@@ -25,6 +25,23 @@ function card(name: string, oracleText: string): DeckCard {
 }
 
 describe("buildTokenLibrary", () => {
+  it.each([
+    ["Creates ten 2/2 blue black Zombie creature tokens.", "Zombie", ["blue", "black"], 10],
+    ["Create 12 0/1 colorless Eldrazi-Spawn tokens.", "Eldrazi-Spawn", ["colorless"], 12],
+    ["Create a 1/1 green token.", "green", [], 1],
+    ["Create 1/1 Elf token.", "Elf", [], 1],
+    ["Create an 1/1 WHITE Soldier creature token.", "Soldier", ["WHITE"], 1],
+  ])("preserves the existing token grammar for %s", (text, name, colors, count) => {
+    expect(buildTokenLibrary([card("Source", text)])).toEqual([
+      expect.objectContaining({ name, colors, count }),
+    ]);
+  });
+
+  it("ignores unsupported amounts without hiding a later valid creation", () => {
+    expect(buildTokenLibrary([card("Source", "Create several 1/1 Elf tokens. Create two 2/2 Wolf tokens.")]))
+      .toEqual([expect.objectContaining({ name: "Wolf", count: 2 })]);
+  });
+
   it("extracts and deduplicates created tokens and emblems", () => {
     const entries = buildTokenLibrary([
       card("Raise the Alarm", "Create two 1/1 white Soldier creature tokens."),

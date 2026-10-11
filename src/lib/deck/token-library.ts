@@ -11,7 +11,9 @@ export interface TokenLibraryEntry {
 }
 
 const TOKEN_PATTERN =
-  /create(?:s)?\s+(?:(one|two|three|four|five|six|seven|eight|nine|ten|a|an|\d+)\s+)?(\d+\/\d+)\s+((?:(?:white|blue|black|red|green|colorless)\s+)*)([A-Z][A-Za-z'’-]*)\s+(?:creature\s+)?tokens?/gi;
+  /creates?\s+(?:(\w+)\s+)?(\d+\/\d+)\s+/gi;
+const TOKEN_DESCRIPTION_PATTERN =
+  /^((?:(?:white|blue|black|red|green|colorless)\s+)*)([a-z][a-z'’-]*)\s+(?:creature\s+)?tokens?/i;
 const EMBLEM_PATTERN = /\b(?:get|create)\s+(?:an?\s+)?emblem\b/gi;
 const NUMBER_WORDS: Readonly<Record<string, number>> = {
   one: 1,
@@ -49,9 +51,15 @@ export function buildTokenLibrary(
 
   for (const card of cards) {
     for (const match of card.oracleText.matchAll(TOKEN_PATTERN)) {
-      const colors = match[3].trim() === "" ? [] : match[3].trim().split(/\s+/);
+      const count = match[1];
+      if (count && !Object.hasOwn(NUMBER_WORDS, count.toLowerCase()) && !/^\d+$/.test(count)) continue;
+      const description = TOKEN_DESCRIPTION_PATTERN.exec(
+        card.oracleText.slice(match.index + match[0].length)
+      );
+      if (!description) continue;
+      const colors = description[1].trim() === "" ? [] : description[1].trim().split(/\s+/);
       add({
-        name: match[4],
+        name: description[2],
         power: match[2],
         colors,
         count: amount(match[1]) * card.quantity,
