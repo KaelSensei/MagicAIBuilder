@@ -140,6 +140,7 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - List and grid presentations.
 - Categories, quantities, notes, tags and bulk actions.
 - Card printing selection and card hover previews.
+- Explicit keyboard-accessible moves from the main deck to Sideboard or Considering, and between secondary zones.
 - Snapshots, undo, import/export and color identity validation.
 - Bracket, Game Changers, banlist and deck warnings.
 
@@ -179,7 +180,9 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
   - [x] Recover individual failed bulk zone moves without rolling back successfully saved cards (#871). Broader mutation recovery remains open.
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
 - [ ] Add keyboard and mobile alternatives for every drag action.
-- [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
+  - [x] Provide card-specific Main → Sideboard/Considering controls in grid and list views (#970).
+  - [ ] Add keyboard reordering and complete mobile alternatives for the remaining drag-only actions.
+- [x] Add a compact activity indicator instead of blocking the whole editor during saves.
   - [x] Preserve shared activity between bulk removal and manual bracket saves regardless of which action finishes first (#947). Other action combinations and mutation ownership remain open.
   - [x] Retain save activity until all overlapping bulk removal batches finish (#945). Cross-action activity tracking and overlapping recovery ownership remain open.
   - [x] Keep the indicator active until all overlapping manual bracket saves finish, including rejected requests (#933). Cross-action accounting and server write ordering remain open.

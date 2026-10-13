@@ -1037,6 +1037,7 @@ _(Previously documented as "Phase 13 features" in changelog)_
 - [x] **Grid view for Sideboard & Maybeboard** — same grid/density as Main zone
 - [x] **Active zone–aware card add** — click/D&D adds to current tab (Main/Sideboard/Considering)
 - [x] **Drag & drop cross-panel** — `MeasuringStrategy.Always` + `DroppableZone` wrappers
+- [x] **Keyboard-accessible zone moves** — explicit Main → Sideboard/Considering and secondary-zone controls (#970)
 - [x] **Commander/Partner clickable in grid** — opens printing selector like regular cards
 - [x] **Bracket 4 for 2-card infinite combos** — RC rule enforced via Spellbook data
 - [x] **∞ badge in BracketIndicator** — red badge when 2-card infinite combo detected
@@ -1046,6 +1047,7 @@ _(Previously documented as "Phase 13 features" in changelog)_
 - [x] **Mobile responsiveness** — header hamburger menu, builder tab navigation, collection grid (#189)
 - [ ] Persist deck zone (sideboard/maybeboard) state to DB
 - [ ] E2E tests (Playwright) for new drag & drop flows
+- [ ] Add keyboard reordering and complete mobile alternatives for remaining drag-only actions
 
 ---
 
