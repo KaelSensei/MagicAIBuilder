@@ -14,7 +14,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Bookmark, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { Bookmark, ChevronDown, ChevronRight, GripVertical, Layers } from "lucide-react";
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
@@ -30,6 +30,7 @@ interface CategorySectionProps {
   readonly cards: Deck["cards"];
   readonly onRemoveCard: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly onMoveToSideboard?: (id: string) => void;
 }
 
 // Draggable card list item (for intra-deck category drag)
@@ -37,11 +38,13 @@ function DraggableDeckCard({
   card,
   onRemove,
   onMoveToMaybeboard,
+  onMoveToSideboard,
   isColorIdentityViolation = false,
 }: {
   readonly card: DeckCard;
   readonly onRemove: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly onMoveToSideboard?: (id: string) => void;
   readonly isColorIdentityViolation?: boolean;
 }) {
   const t = useTranslations("builder");
@@ -84,6 +87,7 @@ function DraggableDeckCard({
           card={card}
           onRemove={onRemove}
           onMoveToMaybeboard={onMoveToMaybeboard}
+          onMoveToSideboard={onMoveToSideboard}
           showNotes
           className={cn(
             isColorIdentityViolation &&
@@ -101,12 +105,14 @@ function GenericGroup({
   cards,
   onRemoveCard,
   onMoveToMaybeboard,
+  onMoveToSideboard,
   violationCardIds,
 }: {
   readonly label: string;
   readonly cards: Deck["cards"];
   readonly onRemoveCard: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly onMoveToSideboard?: (id: string) => void;
   readonly violationCardIds: ReadonlySet<string>;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -137,6 +143,7 @@ function GenericGroup({
               card={card}
               onRemove={onRemoveCard}
               onMoveToMaybeboard={onMoveToMaybeboard}
+              onMoveToSideboard={onMoveToSideboard}
               isColorIdentityViolation={violationCardIds.has(card.id)}
             />
           ))}
@@ -159,6 +166,7 @@ function DroppableCategory({
   cards,
   onRemoveCard,
   onMoveToMaybeboard,
+  onMoveToSideboard,
   violationCardIds,
 }: CategorySectionProps & { readonly violationCardIds: ReadonlySet<string> }) {
   const t = useTranslations("builder");
@@ -211,6 +219,7 @@ function DroppableCategory({
                 card={card}
                 onRemove={onRemoveCard}
                 onMoveToMaybeboard={onMoveToMaybeboard}
+                onMoveToSideboard={onMoveToSideboard}
                 isColorIdentityViolation={violationCardIds.has(card.id)}
               />
             ))}
@@ -244,6 +253,7 @@ export interface MainZoneContentProps {
   readonly setPartner: (p: null) => void;
   readonly clearCompanion: () => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly onMoveToSideboard?: (id: string) => void;
 }
 
 export function MainZoneContent({
@@ -259,8 +269,10 @@ export function MainZoneContent({
   setPartner,
   clearCompanion,
   onMoveToMaybeboard,
+  onMoveToSideboard,
 }: MainZoneContentProps) {
   const t = useTranslations("builder");
+  const tCard = useTranslations("card");
   if (viewMode === "grid") {
     return (
       <div className={gridColsClass(gridCols)}>
@@ -396,6 +408,18 @@ export function MainZoneContent({
             </button>
             <button
               type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onMoveToSideboard?.(card.id);
+              }}
+              className="absolute bottom-1 right-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity bg-black/75 hover:bg-sky-500/90 focus-visible:bg-sky-500/90 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg z-10"
+              aria-label={tCard("moveNamedToSideboard", { name: card.name })}
+              title={t("zoneMoveTargets.toSideboard")}
+            >
+              <Layers className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onRemoveCard(card.id);
@@ -435,6 +459,7 @@ export function MainZoneContent({
               cards={group.cards}
               onRemoveCard={onRemoveCard}
               onMoveToMaybeboard={onMoveToMaybeboard}
+              onMoveToSideboard={onMoveToSideboard}
               violationCardIds={violationCardIds}
             />
           );
@@ -446,6 +471,7 @@ export function MainZoneContent({
             cards={group.cards}
             onRemoveCard={onRemoveCard}
             onMoveToMaybeboard={onMoveToMaybeboard}
+            onMoveToSideboard={onMoveToSideboard}
             violationCardIds={violationCardIds}
           />
         );

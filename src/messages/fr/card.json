@@ -7,6 +7,7 @@
   "gameChanger": "Game Changer",
   "banned": "Bannie",
   "moveNamedToMaybeboard": "Déplacer {name} vers À l'étude",
+  "moveNamedToSideboard": "Déplacer {name} vers la réserve",
   "removeNamed": "Retirer {name}",
   "noText": "Aucun texte",
   "noCardsFound": "Aucune carte trouvée",
