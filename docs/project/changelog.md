@@ -9,6 +9,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-13: Accessible main-deck zone moves
+
+#### Added
+
+- Added explicit Sideboard actions to main-deck cards in grid and list views without removing the existing drag-and-drop workflow.
+- Gave repeated zone controls card-specific accessible names and aligned every locale catalog.
+- Added three Red/Green behavior cycles and validated 3,095 unit tests, 68 Docker-backed E2E tests, the production build and a zero-issue Sonar report.
+
 ### 2026-10-10: Sonar reliability and maintainability recovery
 
 #### Fixed
