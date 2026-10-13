@@ -93,6 +93,22 @@ describe("MainZoneContent", () => {
 
       expect(onMoveToMaybeboard).toHaveBeenCalledWith("c1");
     });
+
+    it("moves a card to the sideboard without requiring drag and drop", () => {
+      const onMoveToSideboard = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="grid"
+          mainCards={[card("c1", "Sol Ring")]}
+          onMoveToSideboard={onMoveToSideboard}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /move sol ring.*sideboard/i }));
+
+      expect(onMoveToSideboard).toHaveBeenCalledWith("c1");
+    });
   });
 
   describe("list view", () => {
@@ -137,6 +153,22 @@ describe("MainZoneContent", () => {
       fireEvent.click(screen.getByRole("button", { name: /move sol ring.*considering/i }));
 
       expect(onMoveToMaybeboard).toHaveBeenCalledWith("c1");
+    });
+
+    it("moves a listed card to the sideboard without requiring drag and drop", () => {
+      const onMoveToSideboard = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="list"
+          cardGroups={[group("artifact", [card("c1", "Sol Ring")])]}
+          onMoveToSideboard={onMoveToSideboard}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /move sol ring.*sideboard/i }));
+
+      expect(onMoveToSideboard).toHaveBeenCalledWith("c1");
     });
 
     it("renders nothing rather than crashing when there are no groups", () => {

@@ -7,6 +7,7 @@
   "gameChanger": "Game Changer",
   "banned": "Banned",
   "moveNamedToMaybeboard": "Move {name} to Considering",
+  "moveNamedToSideboard": "Move {name} to Sideboard",
   "removeNamed": "Remove {name}",
   "noCardsFound": "No cards found",
   "loadingPrintings": "Loading printings…",

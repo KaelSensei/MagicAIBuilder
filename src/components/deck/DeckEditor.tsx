@@ -292,6 +292,7 @@ export function DeckEditor({
             setPartner={setPartner}
             clearCompanion={clearCompanion}
             onMoveToMaybeboard={moveToMaybeboard}
+            onMoveToSideboard={(id) => void moveCardToZone(id, "sideboard")}
           />
         )}
         {activeZone === "sideboard" && (
