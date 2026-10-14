@@ -15,8 +15,6 @@ services:
       POSTGRES_DB: magicaibuilder
       POSTGRES_USER: magic
       POSTGRES_PASSWORD: magic_dev_only
-    ports:
-      - "5433:5432"
     volumes:
       - pgdata_e2e:/var/lib/postgresql/data
     healthcheck:
