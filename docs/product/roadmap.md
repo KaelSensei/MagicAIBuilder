@@ -583,6 +583,7 @@ A deck can make a round trip through supported tools without silently changing c
 - Localized card names, type lines, rules text and card images where Scryfall provides them.
 - Localized deck rows, tooltips, playtest zones and proxies.
 - AI suggestion evidence formats Scryfall USD prices for the active locale without relabeling them as local-market quotes (#980).
+- Public deck card counts use the active English or French locale with singular and plural forms; the shared deck-count label is consistent across public and share views (#982).
 
 ### Remaining scope
 
