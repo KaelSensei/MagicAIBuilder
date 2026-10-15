@@ -9,6 +9,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-15: Public deck card-count localization
+
+#### Changed
+
+- Localized the public deck card count in English and French, including singular and plural forms, using the shared deck-count message (#982).
+- Added component tests for one and multiple copies and verified catalog parity.
+
 ### 2026-10-15: Locale-aware suggestion prices
 
 #### Changed
