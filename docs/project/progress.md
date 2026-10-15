@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-10-03                             |
+| Last Updated  | 2026-10-15                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -30,6 +30,8 @@
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+
+- 2026-10-15: #974 distinguishes failed builder deck-list loading from a genuinely missing deck and offers a localized retry. Observed Red/Green; VPS validation: TypeScript, lint, 3,097 unit tests, build and 68 Docker E2E scenarios passed. SonarCloud showed zero open issues and all PR checks passed. Integrated into `dev`; individual deck-fetch errors, initial loading ownership and QA promotion remain open.
 
 - 2026-10-10: #955 and #956 restore the Sonar reliability baseline and simplify 23 maintainability findings. The report moved from 120 open issues to 65, with zero bugs and a green Quality Gate. Both PRs passed CI and full VPS validation; no local tests/builds, new rule suppression or new coverage exclusion. Remaining findings are tracked in [Sonar status](../engineering/sonar-status.md). Integrated into `dev`, pending QA promotion.
 

@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-15: Recoverable builder loading
+
+#### Fixed
+
+- Direct builder navigation now shows a localized retry action when the deck-list request fails instead of incorrectly saying the deck is missing (#974). A successfully loaded list without that deck still shows the missing-deck state.
+
+#### Validation
+
+- Observed Red/Green for the failed-load and missing-deck states. VPS only: TypeScript, lint, 3,097 unit tests, production build and 68 Docker Playwright scenarios passed. SonarCloud reported zero open issues, and all PR checks passed. Integrated into `dev`; QA promotion remains pending.
+
 ### 2026-10-13: Accessible main-deck zone moves
 
 #### Added

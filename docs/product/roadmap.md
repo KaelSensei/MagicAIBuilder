@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-10
+> **Updated:** 2026-10-15
 
 > **Latest quality delivery:** #955 and #956 restore working VPS/CI Sonar analysis and a green Quality Gate, with zero bugs and 65 code smells still open. Google failure feedback and description-save completion have separate Red/Green regressions. All validations ran on the VPS. The remaining maintainability backlog is tracked in [Sonar status](../engineering/sonar-status.md); QA promotion remains pending.
 
@@ -289,6 +289,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 ### Product work
 
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
+  - [x] Distinguish failed deck-list loading from a missing deck on direct builder navigation, with a localized retry action (#974). Individual deck-fetch failure and initial loading ownership remain open.
   - [x] Report failed manual deck refresh without changing the current deck, and suppress late failure feedback after deletion (#923). Dedicated visual retry states and broader loading ownership remain open.
   - [x] Notify the player when individual deck opening fails instead of logging silently (#911). Dedicated visual error/retry states remain open.
   - [x] Bound individual server deck fetches to 15 seconds, keeping the deadline through JSON reading and leaving guest loading local (#909). Broader UI retry and profile latency work remain open.
