@@ -31,6 +31,8 @@
 
 ## Latest product delivery
 
+- 2026-10-15: #978 adds an optional owned-only filter to the printing selector used during direct deck additions. The default remains all editions; normal and foil ownership both count, an empty filter explains the result, and no printing is chosen automatically. Three observed Red/Green cycles; VPS validation: TypeScript, lint, 3,101 unit tests, build and 69 Docker E2E scenarios passed. Automatic owned-printing matching during imports remains open; QA promotion is separate.
+
 - 2026-10-15: #976 adds an explicit individual-deck loading error and retry to direct builder navigation, preventing the lightweight listing stub from appearing as an empty editor. Observed Red/Green and a 503-to-retry browser regression; VPS validation: TypeScript, lint, 3,099 unit tests, build and 69 Docker E2E scenarios passed. SonarCloud public issue search showed zero open issues. Broader initial loading ownership and profile latency remain open; QA promotion is separate.
 
 - 2026-10-15: #974 distinguishes failed builder deck-list loading from a genuinely missing deck and offers a localized retry. Observed Red/Green; VPS validation: TypeScript, lint, 3,097 unit tests, build and 68 Docker E2E scenarios passed. SonarCloud showed zero open issues and all PR checks passed. Integrated into `dev`; individual deck-fetch errors, initial loading ownership and QA promotion remain open.
