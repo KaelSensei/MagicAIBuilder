@@ -3,9 +3,37 @@ import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it } from "vitest";
 
 import deckMessages from "@/messages/en/deck.json";
+import frDeckMessages from "@/messages/fr/deck.json";
 import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
 
 describe("SuggestionEvidenceDetails", () => {
+  it("formats a Scryfall USD price for French without converting it to euros", () => {
+    render(
+      <NextIntlClientProvider locale="fr" messages={{ deck: frDeckMessages }}>
+        <SuggestionEvidenceDetails
+          evidence={{
+            role: "ramp",
+            synergy: "Acceleration.",
+            manaValue: 2,
+            curveImpact: "Below average",
+            colorIdentity: [],
+            colorCompatible: true,
+            commanderLegal: true,
+            priceUsd: 1234.5,
+            verified: true,
+          }}
+        />
+      </NextIntlClientProvider>
+    );
+
+    expect(
+      screen.getByText(
+        new Intl.NumberFormat("fr", { style: "currency", currency: "USD" }).format(1234.5),
+        { normalizer: (value) => value.trim() }
+      )
+    ).toBeInTheDocument();
+  });
+
   it("shows verified legality, colors, curve and price", () => {
     render(
       <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>

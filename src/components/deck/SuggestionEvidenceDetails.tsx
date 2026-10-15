@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   Tag,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import type { SuggestionEvidence } from "@/lib/ai/suggestion-evidence";
 import { cn } from "@/components/ui/utils";
@@ -25,6 +25,7 @@ export function SuggestionEvidenceDetails({
   readonly evidence: SuggestionEvidence;
 }) {
   const t = useTranslations("deck.ai.evidence");
+  const format = useFormatter();
   const colors =
     evidence.colorIdentity.length > 0
       ? evidence.colorIdentity.join("/")
@@ -86,7 +87,7 @@ export function SuggestionEvidenceDetails({
           <CircleDollarSign className="h-3 w-3 shrink-0" />
           {evidence.priceUsd === null
             ? t("unknown")
-            : `$${evidence.priceUsd.toFixed(2)}`}
+            : format.number(evidence.priceUsd, { style: "currency", currency: "USD" })}
         </span>
       </div>
     </div>
