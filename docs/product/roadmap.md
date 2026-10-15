@@ -582,6 +582,7 @@ A deck can make a round trip through supported tools without silently changing c
 - Locale switcher and catalog parity guard.
 - Localized card names, type lines, rules text and card images where Scryfall provides them.
 - Localized deck rows, tooltips, playtest zones and proxies.
+- AI suggestion evidence formats Scryfall USD prices for the active locale without relabeling them as local-market quotes (#980).
 
 ### Remaining scope
 

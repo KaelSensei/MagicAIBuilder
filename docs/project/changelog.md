@@ -9,6 +9,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-15: Locale-aware suggestion prices
+
+#### Changed
+
+- Formatted Scryfall USD prices in AI suggestion evidence according to the active locale while retaining the USD currency (#980).
+- Added French component coverage for grouping, decimals and currency placement.
+
 ### 2026-10-15: Owned printing filter
 
 #### Added
