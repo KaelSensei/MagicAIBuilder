@@ -25,6 +25,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
+import { isDeckStub } from "@/lib/deck/store-factories";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
 import { useDeck } from "@/hooks/useDeck";
@@ -262,8 +263,11 @@ export default function BuilderPage() {
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
   const loadError = useDeckStore((s) => s.loadError);
+  const deckOpenError = useDeckStore((s) => s.deckOpenError);
   const isSyncing = useDeckStore((s) => s.isSyncing);
   const deck = decks[deckId] ?? null;
+  const activeDeckOpenError = deckOpenError?.deckId === deckId ? deckOpenError : null;
+  const isDeckIncomplete = deck !== null && isDeckStub(deck);
 
   // Set active deck on mount
   useEffect(() => {
@@ -620,16 +624,21 @@ export default function BuilderPage() {
     [dropSearchCard, moveIntraDeck, deck, moveCardToZone]
   );
 
-  if (!deck) {
+  if (!deck || isDeckIncomplete) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <DeckUnavailableState
-            isLoading={isSyncing}
-            loadError={loadError}
+            isLoading={isSyncing || (isDeckIncomplete && !activeDeckOpenError && !loadError)}
+            loadError={activeDeckOpenError?.reason ?? loadError}
+            errorSource={activeDeckOpenError ? "deck" : "list"}
             onRetry={() => {
-              void loadDecks().then(() => setActiveDeck(deckId));
+              if (activeDeckOpenError) {
+                void setActiveDeck(deckId);
+              } else {
+                void loadDecks().then(() => setActiveDeck(deckId));
+              }
             }}
           />
         </div>

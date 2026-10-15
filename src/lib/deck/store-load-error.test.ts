@@ -22,7 +22,7 @@ const fetchDecks = deckApi.fetchDecks as Mock;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  useDeckStore.setState({ decks: {}, loadError: null, isSyncing: false });
+  useDeckStore.setState({ decks: {}, activeDeckId: null, loadError: null, deckOpenError: null, isSyncing: false });
 });
 
 describe("useDeckStore.loadDecks — failure reporting", () => {
@@ -33,6 +33,7 @@ describe("useDeckStore.loadDecks — failure reporting", () => {
 
     expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
     expect(useDeckStore.getState().decks).toEqual({});
+    expect(useDeckStore.getState().deckOpenError).toEqual({ deckId: "deck-1", reason: "offline" });
   });
 
   it("starts with no load error", () => {

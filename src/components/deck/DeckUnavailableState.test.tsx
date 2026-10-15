@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import React from "react";
 import builderMessages from "@/messages/en/builder.json";
 import deckMessages from "@/messages/en/deck.json";
+import commonMessages from "@/messages/en/common.json";
 import { DeckUnavailableState } from "./DeckUnavailableState";
 
 vi.mock("@/i18n/navigation", () => ({
@@ -14,7 +15,7 @@ vi.mock("@/i18n/navigation", () => ({
 
 function show(loadError: string | null, onRetry = vi.fn()) {
   render(
-    <NextIntlClientProvider locale="en" messages={{ builder: builderMessages, deck: deckMessages }}>
+    <NextIntlClientProvider locale="en" messages={{ builder: builderMessages, deck: deckMessages, common: commonMessages }}>
       <DeckUnavailableState isLoading={false} loadError={loadError} onRetry={onRetry} />
     </NextIntlClientProvider>
   );
@@ -36,5 +37,19 @@ describe("DeckUnavailableState", () => {
 
     expect(screen.getByText("Deck not found")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+  });
+
+  it("offers retry for an individual deck failure without calling it a list failure", () => {
+    const retry = vi.fn();
+    render(
+      <NextIntlClientProvider locale="en" messages={{ builder: builderMessages, deck: deckMessages, common: commonMessages }}>
+        <DeckUnavailableState isLoading={false} loadError="offline" errorSource="deck" onRetry={retry} />
+      </NextIntlClientProvider>
+    );
+
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.queryByText("Could not load your decks")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(retry).toHaveBeenCalledOnce();
   });
 });

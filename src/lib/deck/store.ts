@@ -172,6 +172,8 @@ export interface DeckStore {
   isSyncing: boolean;
   /** Why the last deck listing failed, or null when it succeeded. */
   loadError: string | null;
+  /** Individual deck hydration failure, scoped to the deck being opened. */
+  deckOpenError: { readonly deckId: string; readonly reason: string } | null;
 
   // Undo stack
   undoStack: DeckAction[];
@@ -270,6 +272,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   activeDeckId: null,
   isSyncing: false,
   loadError: null,
+  deckOpenError: null,
   undoStack: [],
   gameChangerNames: new Set<string>(),
   bannedNames: new Set<string>(),
@@ -678,9 +681,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const fullDeck = apiDeckToStoreDeck(apiDeck);
       set((state) => ({
         decks: { ...state.decks, [id]: fullDeck },
+        deckOpenError: state.deckOpenError?.deckId === id ? null : state.deckOpenError,
       }));
     } catch (err) {
       logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
+      set({
+        deckOpenError: {
+          deckId: id,
+          reason: err instanceof Error ? err.message : "Failed to open deck",
+        },
+      });
       useToastStore
         .getState()
         .add("error", "Could not open deck. Please try again.");

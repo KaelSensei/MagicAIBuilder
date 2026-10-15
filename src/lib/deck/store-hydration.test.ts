@@ -97,7 +97,7 @@ const TWENTY_CARDS = Array.from({ length: 20 }, (_, i) => `c${i}`);
 describe("setActiveDeck — cold load hydration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useDeckStore.setState({ decks: {}, activeDeckId: null, isSyncing: false });
+    useDeckStore.setState({ decks: {}, activeDeckId: null, isSyncing: false, deckOpenError: null });
     mockFetchDecks.mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 });
   });
 
@@ -164,12 +164,24 @@ describe("setActiveDeck — cold load hydration", () => {
 
     expect(useDeckStore.getState().activeDeckId).toBe("deck-1");
   });
+
+  it("clears the individual load error after a successful retry", async () => {
+    mockFetchDeck.mockRejectedValueOnce(new Error("offline"));
+    mockFetchDeck.mockResolvedValueOnce(apiDeck(TWENTY_CARDS));
+
+    await useDeckStore.getState().setActiveDeck("deck-1");
+    expect(useDeckStore.getState().deckOpenError?.deckId).toBe("deck-1");
+
+    await useDeckStore.getState().setActiveDeck("deck-1");
+    expect(useDeckStore.getState().deckOpenError).toBeNull();
+    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(20);
+  });
 });
 
 describe("loadDecks — preserving hydrated decks", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useDeckStore.setState({ decks: {}, activeDeckId: null, isSyncing: false });
+    useDeckStore.setState({ decks: {}, activeDeckId: null, isSyncing: false, deckOpenError: null });
   });
 
   // loadDecks replaces the whole map from the lightweight listing. Running
