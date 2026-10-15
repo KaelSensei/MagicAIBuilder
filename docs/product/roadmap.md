@@ -374,14 +374,14 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - The cross-deck plan exports a generic CSV of missing quantities with Scryfall printing IDs and known prices; owned copies are excluded.
 - Collection cards now link to private decks using that exact printing, including the deck zone and quantity, without loading usage for every card up front.
 - The collection acquisition plan can focus on one owned deck or all decks, keeping its summary and CSV export scoped to the selected view.
-- The printing selector now puts exact owned editions first and shows combined regular and foil quantities; choosing an edition remains an explicit action.
+- The printing selector now puts exact owned editions first, shows combined regular and foil quantities, and offers an optional owned-only filter with an empty state (#978); choosing an edition remains an explicit action.
 - The acquisition plan now shows a known-price subtotal for each missing printing and marks unpriced printings on their own rows.
 - Each missing printing in the acquisition plan now links to the player's contributing decks, so the player can inspect where it is needed.
 
 ### Remaining scope
 
 - [ ] Track the actual owned printing, not only the oracle card.
-- [ ] Prefer owned printings during direct add and import flows; the shared printing selector now prioritizes owned editions, but automatic import matching remains open.
+- [ ] Prefer owned printings during direct add and import flows; the shared printing selector prioritizes owned editions and can filter to owned-only (#978), but automatic import matching remains open.
 - [ ] Complete deck/collection reconciliation without mutating ownership accidentally; the unsafe deck-sidebar Reset action has been removed.
 - [ ] Add region-aware price providers, starting with a clearly selected market.
 - [ ] Support a synchronized "proxy now / buy later" workflow across devices; the shopping-list buy-later choice currently persists only in the same browser and does not track proxies.

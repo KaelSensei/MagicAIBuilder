@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-15: Owned printing filter
+
+#### Added
+
+- The printing selector can show only editions already in the player's collection, counting regular and foil copies. Its default remains the full list, and selecting an edition remains explicit (#978).
+- An empty owned-only view explains the result and can be switched back to all editions without leaving the selector.
+
+#### Validation
+
+- Three observed Red/Green cycles. VPS only: TypeScript, lint, 3,101 unit tests, production build and 69 Docker Playwright scenarios passed. Automatic edition matching on import remains separate scope; staging and main require QA promotion.
+
 ### 2026-10-15: Individual deck loading retry
 
 #### Fixed
