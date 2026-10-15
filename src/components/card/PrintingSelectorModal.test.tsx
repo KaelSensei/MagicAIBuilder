@@ -148,4 +148,35 @@ describe("PrintingSelectorModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Lightning Bolt — First Set" }));
     expect(onSelect).toHaveBeenCalledWith(unowned);
   });
+
+  it("filters to owned printings only after the player requests it", () => {
+    const unowned = makeCard({ id: "unowned", set: "AAA", set_name: "First Set" });
+    const owned = makeCard({ id: "owned", set: "BBB", set_name: "Second Set" });
+    printingsResult.current = { data: { data: [unowned, owned] }, isLoading: false };
+    useCollectionStore.setState({ collectionCards: { owned: ownedCard("owned", 1, false) } });
+    const onSelect = vi.fn();
+
+    renderModal(unowned, onSelect);
+    fireEvent.click(screen.getByRole("button", { name: "Owned only" }));
+
+    expect(screen.getByRole("button", { name: "Owned only" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Lightning Bolt — Second Set" })).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Lightning Bolt — First Set" })).toBeNull();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("explains an empty owned filter and lets the player show every printing again", () => {
+    const unowned = makeCard({ id: "unowned", set: "AAA", set_name: "First Set" });
+    printingsResult.current = { data: { data: [unowned] }, isLoading: false };
+
+    renderModal(unowned);
+    fireEvent.click(screen.getByRole("button", { name: "Owned only" }));
+
+    expect(screen.getByText("No owned printings for this card.")).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Lightning Bolt — First Set" })).toBeNull();
+    expect(screen.queryByText("First Set")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Owned only" }));
+    expect(screen.getByRole("button", { name: "Lightning Bolt — First Set" })).toBeDefined();
+  });
 });

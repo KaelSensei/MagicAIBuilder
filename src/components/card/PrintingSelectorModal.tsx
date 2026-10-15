@@ -40,6 +40,7 @@ export function PrintingSelectorModal({
   const format = useFormatter();
   const { data, isLoading } = useCardPrintings(card.name, toScryfallLang(useLocale()));
   const [previewedPrintingId, setPreviewedPrintingId] = useState(card.id);
+  const [ownedOnly, setOwnedOnly] = useState(false);
   const collectionCards = useCollectionStore((state) => state.collectionCards);
   const collectionCardsFoil = useCollectionStore((state) => state.collectionCardsFoil);
 
@@ -50,13 +51,13 @@ export function PrintingSelectorModal({
       Number(ownedQuantity(first.id, collectionCards, collectionCardsFoil) > 0)
     );
   }, [card, data?.data, collectionCards, collectionCardsFoil]);
-  const previewedPrinting = useMemo(
-    () =>
-      printings.find((printing) => printing.id === previewedPrintingId) ??
-      printings[0] ??
-      card,
-    [card, previewedPrintingId, printings]
-  );
+  const visiblePrintings = ownedOnly
+    ? printings.filter((printing) => ownedQuantity(printing.id, collectionCards, collectionCardsFoil) > 0)
+    : printings;
+  const previewedPrinting =
+    visiblePrintings.find((printing) => printing.id === previewedPrintingId) ??
+    visiblePrintings[0] ??
+    card;
 
   useEffect(() => {
     setPreviewedPrintingId(card.id);
@@ -85,7 +86,7 @@ export function PrintingSelectorModal({
           <p className="text-xs text-(--text-secondary) mt-0.5">
             {isLoading
               ? t("loadingPrintings")
-              : t("printingsAvailable", { count: printings.length })}
+              : t("printingsAvailable", { count: visiblePrintings.length })}
           </p>
         </div>
         <button
@@ -143,9 +144,22 @@ export function PrintingSelectorModal({
             </div>
           ) : (
             <div className="flex h-full gap-4">
-              <div className="min-w-0 flex-1 overflow-y-auto">
-                <div className="grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {printings.map((printing) => (
+              <div className="min-w-0 flex-1 flex flex-col gap-3">
+                <button
+                  type="button"
+                  aria-pressed={ownedOnly}
+                  onClick={() => setOwnedOnly((value) => !value)}
+                  className={`self-start rounded-md border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent) ${ownedOnly ? "border-(--accent) bg-(--surface) text-(--text-primary)" : "border-(--border) text-(--text-secondary) hover:text-(--text-primary)"}`}
+                >
+                  {t("ownedPrintingsOnly")}
+                </button>
+                <div className="min-h-0 flex-1 overflow-y-auto grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 content-start gap-4">
+                  {ownedOnly && visiblePrintings.length === 0 && (
+                    <p className="col-span-full py-10 text-center text-sm text-(--text-secondary)" role="status">
+                      {t("noOwnedPrintings")}
+                    </p>
+                  )}
+                  {visiblePrintings.map((printing) => (
                     <div key={printing.id} className="flex flex-col gap-1.5">
                       <button
                         type="button"
@@ -193,26 +207,28 @@ export function PrintingSelectorModal({
                 </div>
               </div>
 
-              <aside className="hidden lg:flex w-72 shrink-0 flex-col rounded-xl border border-(--border) bg-(--surface) p-3">
-                <div className="overflow-hidden rounded-[4.75%] border border-(--border)">
-                  <Image
-                    src={getCardImageUri(previewedPrinting, "large")}
-                    alt={`${previewedPrinting.name} — enlarged preview`}
-                    width={336}
-                    height={468}
-                    className="block w-full h-auto"
-                    unoptimized
-                  />
-                </div>
-                <div className="pt-3">
-                  <p className="text-sm font-medium text-(--text-primary)">
-                    {previewedPrinting.set_name ?? previewedPrinting.name}
-                  </p>
-                  <p className="mt-1 text-xs uppercase tracking-wide text-(--text-secondary)">
-                    {previewedPrinting.set}
-                  </p>
-                </div>
-              </aside>
+              {visiblePrintings.length > 0 && (
+                <aside className="hidden lg:flex w-72 shrink-0 flex-col rounded-xl border border-(--border) bg-(--surface) p-3">
+                  <div className="overflow-hidden rounded-[4.75%] border border-(--border)">
+                    <Image
+                      src={getCardImageUri(previewedPrinting, "large")}
+                      alt={`${previewedPrinting.name} — enlarged preview`}
+                      width={336}
+                      height={468}
+                      className="block w-full h-auto"
+                      unoptimized
+                    />
+                  </div>
+                  <div className="pt-3">
+                    <p className="text-sm font-medium text-(--text-primary)">
+                      {previewedPrinting.set_name ?? previewedPrinting.name}
+                    </p>
+                    <p className="mt-1 text-xs uppercase tracking-wide text-(--text-secondary)">
+                      {previewedPrinting.set}
+                    </p>
+                  </div>
+                </aside>
+              )}
             </div>
           )}
         </div>
