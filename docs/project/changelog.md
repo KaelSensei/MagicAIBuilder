@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-15: Individual deck loading retry
+
+#### Fixed
+
+- Direct builder navigation now shows a localized retry state when fetching the individual deck fails, rather than displaying the incomplete deck-list stub as an empty editor (#976). A successful retry hydrates the full deck and clears the error.
+
+#### Validation
+
+- Observed Red/Green for failure reporting, error clearing and the retry UI. VPS only: TypeScript, lint, 3,099 unit tests, production build and 69 Docker Playwright scenarios passed. SonarCloud public issue search returned zero open issues. Broader loading ownership remains open; staging and main require QA promotion.
+
 ### 2026-10-15: Recoverable builder loading
 
 #### Fixed

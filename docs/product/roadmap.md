@@ -289,9 +289,10 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 ### Product work
 
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
-  - [x] Distinguish failed deck-list loading from a missing deck on direct builder navigation, with a localized retry action (#974). Individual deck-fetch failure and initial loading ownership remain open.
+  - [x] Distinguish failed deck-list loading from a missing deck on direct builder navigation, with a localized retry action (#974). Initial loading ownership remains open.
+  - [x] Show a recoverable error when an individual deck fetch fails on direct builder navigation, then retry that deck without exposing its incomplete listing stub (#976). Broader loading ownership remains open.
   - [x] Report failed manual deck refresh without changing the current deck, and suppress late failure feedback after deletion (#923). Dedicated visual retry states and broader loading ownership remain open.
-  - [x] Notify the player when individual deck opening fails instead of logging silently (#911). Dedicated visual error/retry states remain open.
+  - [x] Notify the player when individual deck opening fails instead of logging silently (#911). The direct-builder retry state is covered by #976; manual-refresh retry UX remains open.
   - [x] Bound individual server deck fetches to 15 seconds, keeping the deadline through JSON reading and leaving guest loading local (#909). Broader UI retry and profile latency work remain open.
   - [x] Abort stalled deck-list requests after 15 seconds so the existing error and retry state can appear.
   - [x] Keep the user initialization eight-second deadline active through response-body loading and JSON validation, not only until headers arrive. Database latency and broader profile loading work remain open.
