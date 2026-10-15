@@ -589,7 +589,7 @@
     "imported": "Importé !",
     "importing": "Importation…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
-    "cardCountLabel": "{count} cartes",
+    "cardCountLabel": "{count, plural, one {# carte} other {# cartes}}",
     "openShare": "Partager le deck",
     "forkThisDeck": "Créer une branche de ce deck"
   },
