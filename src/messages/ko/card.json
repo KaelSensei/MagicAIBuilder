@@ -12,6 +12,8 @@
   "noCardsFound": "No cards found",
   "loadingPrintings": "Loading printings…",
   "printingsAvailable": "{count, plural, one {# printing available} other {# printings available}}",
+  "ownedPrintingsOnly": "Owned only",
+  "noOwnedPrintings": "No owned printings for this card.",
   "rulings": {
     "show": "Show rulings",
     "loading": "Loading rulings…",
