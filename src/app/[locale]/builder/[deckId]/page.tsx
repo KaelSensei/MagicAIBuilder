@@ -78,6 +78,7 @@ import { MetaPanel } from "@/components/deck/MetaPanel";
 import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { DeckSaveIndicator } from "@/components/deck/DeckSaveIndicator";
+import { DeckUnavailableState } from "@/components/deck/DeckUnavailableState";
 import { useSession } from "next-auth/react";
 import { SnapshotsPanel } from "@/components/deck/SnapshotsPanel";
 import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
@@ -260,6 +261,7 @@ export default function BuilderPage() {
   const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
+  const loadError = useDeckStore((s) => s.loadError);
   const isSyncing = useDeckStore((s) => s.isSyncing);
   const deck = decks[deckId] ?? null;
 
@@ -623,23 +625,13 @@ export default function BuilderPage() {
       <div className="flex flex-col min-h-screen">
         <Header />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            {isSyncing ? (
-              <p className="text-[var(--text-secondary)]">{t("loading")}</p>
-            ) : (
-              <>
-                <p className="text-[var(--text-secondary)] mb-4">
-                  {t("deckNotFound.title")}
-                </p>
-                <Link
-                  href="/decks"
-                  className="text-[var(--accent-text)] hover:underline text-sm"
-                >
-                  ← {t("deckNotFound.back")}
-                </Link>
-              </>
-            )}
-          </div>
+          <DeckUnavailableState
+            isLoading={isSyncing}
+            loadError={loadError}
+            onRetry={() => {
+              void loadDecks().then(() => setActiveDeck(deckId));
+            }}
+          />
         </div>
       </div>
     );
