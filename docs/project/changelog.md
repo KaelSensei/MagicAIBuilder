@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-16: Touch-friendly deck categories
+
+#### Added
+
+- Let players change a card's category from a touch-friendly menu in the grouped deck list, using the existing persisted category update (#999).
+
+#### Validation
+
+- VPS typecheck, lint, 3,121 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
 ### 2026-10-16: Keyboard deck card sorting
 
 #### Added
