@@ -77,7 +77,6 @@ function DraggableDeckCard({
         {...attributes}
         {...listeners}
         className="p-1 cursor-grab active:cursor-grabbing text-[var(--text-secondary)] opacity-0 group-hover/drag:opacity-50 hover:!opacity-100 transition-opacity shrink-0"
-        tabIndex={-1}
         aria-label={t("actions.dragToReorder")}
       >
         <GripVertical className="w-3 h-3" />
