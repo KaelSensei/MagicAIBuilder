@@ -46,6 +46,7 @@
     "removeCompanion": "Retirer le compagnon",
     "removeCard": "Retirer {name}",
     "dragToReorder": "Glisser pour réorganiser",
+    "changeCategoryFor": "Changer la catégorie de {name}",
     "backToDecks": "Retour à mes decks",
     "rename": "Cliquer pour renommer",
     "duplicate": "Dupliquer le deck",
