@@ -2,9 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fetchPublicDeck } from "@/lib/deck/public-deck";
 
 /**
- * fetchPublicDeck swallows every failure into `null`, and the deck page turns
- * that null straight into notFound(). So each null path below is a distinct way
- * a real deck page 404s — worth pinning individually.
+ * A real 404 means the deck is missing; transient API, network and body errors
+ * must instead reach the page's retryable route error boundary.
  */
 
 const DECK_FIXTURE = { id: "deck-1", name: "Atraxa", isOwner: false };
@@ -27,6 +26,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 
 describe("fetchPublicDeck", () => {
@@ -36,21 +36,27 @@ describe("fetchPublicDeck", () => {
     await expect(fetchPublicDeck("deck-1", null)).resolves.toEqual(DECK_FIXTURE);
   });
 
-  it("returns null on a non-ok response rather than throwing", async () => {
+  it("returns null for a 404 response", async () => {
     mockFetch(() => ({ ok: false, status: 404, json: async () => ({}) }));
 
     await expect(fetchPublicDeck("missing", null)).resolves.toBeNull();
   });
 
-  it("returns null when the fetch itself rejects", async () => {
+  it("rejects an unavailable deck service instead of reporting a missing deck", async () => {
+    mockFetch(() => ({ ok: false, status: 503, json: async () => ({}) }));
+
+    await expect(fetchPublicDeck("deck-1", null)).rejects.toThrow("PUBLIC_DECK_UNAVAILABLE");
+  });
+
+  it("rejects when the fetch itself fails", async () => {
     mockFetch(() => {
       throw new Error("ECONNREFUSED");
     });
 
-    await expect(fetchPublicDeck("deck-1", null)).resolves.toBeNull();
+    await expect(fetchPublicDeck("deck-1", null)).rejects.toThrow("PUBLIC_DECK_UNAVAILABLE");
   });
 
-  it("returns null when the body is not valid JSON", async () => {
+  it("rejects an invalid deck response instead of reporting a missing deck", async () => {
     mockFetch(() => ({
       ok: true,
       status: 200,
@@ -59,7 +65,7 @@ describe("fetchPublicDeck", () => {
       },
     }));
 
-    await expect(fetchPublicDeck("deck-1", null)).resolves.toBeNull();
+    await expect(fetchPublicDeck("deck-1", null)).rejects.toThrow("PUBLIC_DECK_UNAVAILABLE");
   });
 
   it("forwards the session cookie and skips the cache for a signed-in viewer", async () => {
@@ -87,6 +93,20 @@ describe("fetchPublicDeck", () => {
     expect(init.headers).toBeUndefined();
     expect(init.cache).toBeUndefined();
     expect(init.next).toEqual({ revalidate: 60 });
+  });
+
+  it("limits public-deck API loading to 15 seconds", async () => {
+    const signal = new AbortController().signal;
+    const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(signal);
+    const fetchMock = mockFetch(() => okResponse(DECK_FIXTURE));
+
+    await fetchPublicDeck("deck-1", null);
+
+    expect(timeout).toHaveBeenCalledWith(15_000);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ signal })
+    );
   });
 });
 

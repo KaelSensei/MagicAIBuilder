@@ -18,7 +18,12 @@ async function fetchDeckForViewer(id: string) {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id, locale } = await params;
-  const deck = await fetchDeckForViewer(id);
+  let deck;
+  try {
+    deck = await fetchDeckForViewer(id);
+  } catch {
+    return { title: "Deck unavailable — MagicAIBuilder" };
+  }
 
   if (!deck) return { title: "Deck not found — MagicAIBuilder" };
 
