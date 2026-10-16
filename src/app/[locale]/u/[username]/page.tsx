@@ -24,18 +24,24 @@ async function fetchProfile(username: string) {
     const cookieHeader = (await headers()).get("cookie");
     const res = await fetch(
       `${resolveAppBaseUrl()}/api/users/${username}`,
-      buildViewerScopedRequestInit(cookieHeader)
+      { ...buildViewerScopedRequestInit(cookieHeader), signal: AbortSignal.timeout(15_000) }
     );
-    if (!res.ok) return null;
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error("PROFILE_UNAVAILABLE");
     return res.json();
   } catch {
-    return null;
+    throw new Error("PROFILE_UNAVAILABLE");
   }
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { username, locale } = await params;
-  const profile = await fetchProfile(username);
+  let profile;
+  try {
+    profile = await fetchProfile(username);
+  } catch {
+    return { title: "Profile unavailable — MagicAIBuilder" };
+  }
 
   if (!profile) {
     return { title: "Profile not found — MagicAIBuilder" };
