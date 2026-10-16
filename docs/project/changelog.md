@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-16: Deck-list retry reliability
+
+#### Fixed
+
+- Ignore an older deck-list response after a newer request completes, preventing a stale failure from undoing a successful retry (#984).
+- Show a compact, localized warning and retry action when a failed refresh leaves cached decks visible (#985).
+
+#### Validation
+
+- Both changes were tested and built on the VPS, with observed test-first failures and 3,105 passing unit tests for the latest branch. CI, SonarCloud, Lighthouse and Vercel passed before each merge into `dev`. QA promotion remains separate.
+
 ### 2026-10-15: Public deck card-count localization
 
 #### Changed
