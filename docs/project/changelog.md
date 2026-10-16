@@ -9,6 +9,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-16: Public deck loading feedback
+
+#### Added
+
+- Show an accessible English/French loading skeleton while a public deck route resolves (#991).
+
+#### Changed
+
+- Share the public deck and profile loading presentation and use semantic output for the loading status (#991).
+
+#### Validation
+
+- VPS typecheck, lint, 3,113 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`; Sonar new-code duplication was 0%.
+
 ### 2026-10-16: Recoverable public profile failures
 
 #### Fixed
