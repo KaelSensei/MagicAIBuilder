@@ -267,6 +267,8 @@ export interface DeckStore {
   getActiveDeck: () => Deck | null;
 }
 
+let latestDeckListRequest = 0;
+
 export const useDeckStore = create<DeckStore>()((set, get) => ({
   decks: {},
   activeDeckId: null,
@@ -502,9 +504,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
   // Load deck listing from the DB (lightweight: only commander/partner/companion + card count)
   loadDecks: async () => {
+    const requestId = ++latestDeckListRequest;
     set({ isSyncing: true });
     try {
       const response = await deckApi.fetchDecks();
+      if (requestId !== latestDeckListRequest) return;
 
       set((state) => {
         const decks: Record<string, Deck> = {};
@@ -522,6 +526,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         return { decks, loadError: null };
       });
     } catch (err) {
+      if (requestId !== latestDeckListRequest) return;
       // Record the failure as well as logging it. Swallowing it left the page
       // rendering "No decks yet" after a 500 — an outage disguised as an empty
       // account, with no way for the user to tell the difference or retry.
@@ -530,7 +535,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         loadError: err instanceof Error ? err.message : "Failed to load decks",
       });
     } finally {
-      set({ isSyncing: false });
+      if (requestId === latestDeckListRequest) set({ isSyncing: false });
     }
   },
 

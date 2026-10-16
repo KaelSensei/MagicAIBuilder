@@ -74,4 +74,21 @@ describe("useDeckStore.loadDecks — failure reporting", () => {
     await useDeckStore.getState().loadDecks();
     expect(useDeckStore.getState().loadError).toBeNull();
   });
+
+  it("ignores an older failure after a newer listing succeeds", async () => {
+    let rejectOlder: (reason: Error) => void = () => {};
+    fetchDecks
+      .mockImplementationOnce(() => new Promise((_, reject) => {
+        rejectOlder = reject;
+      }))
+      .mockResolvedValueOnce({ decks: [], total: 0, page: 0, limit: 20 });
+
+    const older = useDeckStore.getState().loadDecks();
+    await useDeckStore.getState().loadDecks();
+    rejectOlder(new Error("stale failure"));
+    await older;
+
+    expect(useDeckStore.getState().loadError).toBeNull();
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
 });
