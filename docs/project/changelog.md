@@ -9,6 +9,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-16: Public profile loading feedback
+
+#### Added
+
+- Show a localized, accessible loading skeleton while a public profile route resolves (#987).
+
+#### Fixed
+
+- Restore focus to the deck-report trigger after closing its dialog without a React hook lint warning (#987).
+
+#### Validation
+
+- Typecheck, zero-warning lint, 3,108 unit tests and production build passed on the VPS. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
 ### 2026-10-16: Deck-list retry reliability
 
 #### Fixed

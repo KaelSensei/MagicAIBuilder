@@ -299,6 +299,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
   - [x] Abort stalled deck-list requests after 15 seconds so the existing error and retry state can appear.
   - [x] Keep the user initialization eight-second deadline active through response-body loading and JSON validation, not only until headers arrive. Database latency and broader profile loading work remain open.
 - [ ] Use route-level skeletons and cached session/profile data where safe.
+  - [x] Show a localized, accessible route-level loading skeleton for public profiles (#987). Cached profile data and other route loading states remain open.
 - [ ] Remove React refresh loops, hover jitter, layout shifts and unstable card previews.
   - [x] Ignore superseded meta-history responses and invalidate pending results on reset, preventing old trend data or errors from resurfacing.
 - [x] Make warning panels collapsible and dismissible, with accessible close controls.
