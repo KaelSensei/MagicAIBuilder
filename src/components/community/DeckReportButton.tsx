@@ -23,10 +23,11 @@ export function DeckReportButton({ deckId, isSignedIn, isOwner }: DeckReportButt
     if (!open) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
+    const trigger = triggerRef.current;
     dialog.showModal();
     return () => {
       dialog.close();
-      triggerRef.current?.focus({ preventScroll: true });
+      trigger?.focus({ preventScroll: true });
     };
   }, [open]);
 
