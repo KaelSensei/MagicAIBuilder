@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-16: Keyboard deck card sorting
+
+#### Added
+
+- Keep category reorder handles in the keyboard tab order and enable vertical keyboard sorting in the deck editor (#997).
+
+#### Validation
+
+- VPS typecheck, lint, 3,120 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
 ### 2026-10-16: Acquisition plan loading timeout
 
 #### Fixed

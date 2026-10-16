@@ -181,7 +181,8 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
 - [ ] Add keyboard and mobile alternatives for every drag action.
   - [x] Provide card-specific Main → Sideboard/Considering controls in grid and list views (#970).
-  - [ ] Add keyboard reordering and complete mobile alternatives for the remaining drag-only actions.
+  - [x] Enable keyboard sorting for categorized deck cards using the reorder handle and standard vertical controls (#997).
+  - [ ] Complete mobile alternatives for the remaining drag-only actions.
 - [x] Add a compact activity indicator instead of blocking the whole editor during saves.
   - [x] Preserve shared activity between bulk removal and manual bracket saves regardless of which action finishes first (#947). Other action combinations and mutation ownership remain open.
   - [x] Retain save activity until all overlapping bulk removal batches finish (#945). Cross-action activity tracking and overlapping recovery ownership remain open.
