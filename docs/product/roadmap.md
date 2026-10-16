@@ -288,6 +288,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 
 ### Product work
 
+- [x] Time out stalled acquisition-plan loading after 15 seconds and expose its existing localized retry action without losing close/filter cancellation (#995).
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
   - [x] Treat temporary public-deck API, network and invalid-response failures as retryable rather than a false 404; bound the fetch to 15 seconds (#993). Authentication latency and broader loading ownership remain open.
   - [x] Bound public-profile API fetches to 15 seconds and show the existing retryable route error for temporary failures rather than a false 404 (#989). Authentication latency and the underlying profile API remain open.

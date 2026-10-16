@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-16: Acquisition plan loading timeout
+
+#### Fixed
+
+- Show the existing retry state if the acquisition-plan request stalls for 15 seconds, while preserving cancellation when the panel closes or its filter changes (#995).
+
+#### Validation
+
+- VPS typecheck, lint, 3,119 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
 ### 2026-10-16: Recoverable public deck failures
 
 #### Fixed
