@@ -15,9 +15,30 @@ const response = (body: unknown, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe("AcquisitionPlanPanel", () => {
+  it("offers retry when a stalled acquisition plan request times out", async () => {
+    const timeoutController = new AbortController();
+    const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
+    vi.stubGlobal("fetch", vi.fn((_url: string, init: RequestInit) => new Promise((_resolve, reject) => {
+      init.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+    })));
+    const user = userEvent.setup();
+
+    renderWithIntl(<AcquisitionPlanPanel />);
+    await user.click(screen.getByRole("button", { name: "Acquisition plan" }));
+    expect(await screen.findByText(/Loading acquisition plan/)).toBeInTheDocument();
+
+    expect(timeout).toHaveBeenCalledWith(15_000);
+    timeoutController.abort();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not load the acquisition plan.");
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
   it("shows a known line subtotal and calls out an unpriced printing", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response({
       deckCount: 1,
