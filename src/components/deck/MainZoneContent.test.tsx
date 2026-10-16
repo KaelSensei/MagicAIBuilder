@@ -12,7 +12,7 @@ vi.mock("@dnd-kit/core", () => ({
 vi.mock("@dnd-kit/sortable", () => ({
   SortableContext: ({ children }: { readonly children: React.ReactNode }) => <>{children}</>,
   useSortable: () => ({
-    attributes: {},
+    attributes: { role: "button", tabIndex: 0 },
     listeners: {},
     setNodeRef: vi.fn(),
     transform: null,
@@ -59,6 +59,18 @@ const baseProps = {
 };
 
 describe("MainZoneContent", () => {
+  it("keeps the category reorder handle keyboard-focusable", () => {
+    renderWithIntl(
+      <MainZoneContent
+        {...baseProps}
+        viewMode="list"
+        cardGroups={[group("artifact", [card("c1", "Sol Ring")])]}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /drag to reorder/i })).toHaveAttribute("tabindex", "0");
+  });
+
   describe("grid view", () => {
     it("invites the first card when the deck is empty and has no commander", () => {
       renderWithIntl(<MainZoneContent {...baseProps} viewMode="grid" />);
