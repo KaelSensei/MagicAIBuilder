@@ -17,6 +17,7 @@ import { DeckListTable } from "@/components/deck/DeckListTable";
 import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
 import { DeckComparisonPanel } from "@/components/deck/DeckComparisonPanel";
 import { DeckFolderControls } from "@/components/deck/DeckFolderControls";
+import { DeckListRefreshNotice } from "@/components/deck/DeckListRefreshNotice";
 import {
   getStoredDecksViewMode,
   sortDecks,
@@ -195,6 +196,10 @@ export default function DecksPage() {
             isCreating={isCreating}
           />
         </div>
+
+        {!isLoading && loadError !== null && deckList.length > 0 && (
+          <DeckListRefreshNotice onRetry={handleRetryLoad} />
+        )}
 
         {!isLoading && !hasLoadFailed && (
           <>
