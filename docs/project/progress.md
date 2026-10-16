@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3,113 across 284 files, validated on the VPS on 2026-10-16                                                                                 |
+| Unit tests          | 3,118 across 285 files, validated on the VPS on 2026-10-16                                                                                 |
 | E2E tests           | 66 passing (`@external` / `@perf` excluded), full Docker gate on the VPS, validated on 2026-10-10                                           |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
@@ -31,6 +31,7 @@
 
 ## Latest product delivery
 
+- 2026-10-16: #993 keeps real public-deck 404s distinct from temporary API, network and invalid-response failures, which now reach the existing retryable route error. Public-deck loading is bounded to 15 seconds. Observed Red/Green cycles; VPS typecheck, lint, 3,118 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Authentication latency, broader loading ownership and QA promotion remain open.
 - 2026-10-16: #991 adds a localized and accessible route-level loading skeleton for public decks, sharing the visual fallback with public profiles. Two observed Red/Green cycles plus a semantic-status correction; VPS typecheck, lint, 3,113 unit tests and build passed. CI, SonarCloud, Lighthouse and Vercel passed; Sonar new-code duplication was 0%. Other route loading states, cached data and QA promotion remain open.
 - 2026-10-16: #989 distinguishes unavailable public profiles from missing users and bounds the API fetch to 15 seconds. The existing localized route error offers retry. Two observed Red/Green cycles; VPS typecheck, lint, 3,111 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Authentication latency, the underlying profile API and QA promotion remain open.
 - 2026-10-16: #987 adds a localized and accessible route-level loading skeleton for public profiles. Typecheck, zero-warning lint, 3,108 unit tests, production build, CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Cached profile data, other loading states and QA promotion remain open.

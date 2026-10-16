@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-16: Recoverable public deck failures
+
+#### Fixed
+
+- Preserve not-found behavior for a missing deck, but show the existing retryable route error when the public-deck API, network or response fails (#993).
+- Abort public-deck API loading after 15 seconds and avoid labeling temporary failures as missing in metadata (#993).
+
+#### Validation
+
+- VPS typecheck, lint, 3,118 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
 ### 2026-10-16: Public deck loading feedback
 
 #### Added
