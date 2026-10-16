@@ -289,6 +289,8 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 ### Product work
 
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
+  - [x] Ignore superseded deck-list responses so an older failure cannot override a successful retry (#984).
+  - [x] Warn when a failed refresh leaves cached decks visible, with a localized retry action (#985). Initial loading ownership and profile latency remain open.
   - [x] Distinguish failed deck-list loading from a missing deck on direct builder navigation, with a localized retry action (#974). Initial loading ownership remains open.
   - [x] Show a recoverable error when an individual deck fetch fails on direct builder navigation, then retry that deck without exposing its incomplete listing stub (#976). Broader loading ownership remains open.
   - [x] Report failed manual deck refresh without changing the current deck, and suppress late failure feedback after deletion (#923). Dedicated visual retry states and broader loading ownership remain open.

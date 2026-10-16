@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-10-15                             |
+| Last Updated  | 2026-10-16                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3077 across 275 files, validated on 2026-10-10                                                                                              |
+| Unit tests          | 3,105 across 281 files, validated on the VPS on 2026-10-16                                                                                 |
 | E2E tests           | 66 passing (`@external` / `@perf` excluded), full Docker gate on the VPS, validated on 2026-10-10                                           |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
@@ -30,6 +30,8 @@
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+
+- 2026-10-16: #984 ignores superseded deck-list responses, and #985 warns with a localized retry when cached decks remain visible after a failed refresh. Both were merged into `dev` after CI, SonarCloud, Lighthouse and Vercel passed. VPS validation covered typecheck, lint, 3,105 unit tests and a production build for #985. Initial loading ownership, profile latency and QA promotion remain open.
 
 - 2026-10-15: #978 adds an optional owned-only filter to the printing selector used during direct deck additions. The default remains all editions; normal and foil ownership both count, an empty filter explains the result, and no printing is chosen automatically. Three observed Red/Green cycles; VPS validation: TypeScript, lint, 3,101 unit tests, build and 69 Docker E2E scenarios passed. Automatic owned-printing matching during imports remains open; QA promotion is separate.
 
