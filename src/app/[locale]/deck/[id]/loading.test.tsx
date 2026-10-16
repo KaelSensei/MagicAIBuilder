@@ -8,6 +8,7 @@ it("announces that a public deck is loading", () => {
 
   expect(screen.getByRole("status")).toHaveTextContent("Loading deck...");
   expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
+  expect(screen.getByRole("status").tagName).toBe("OUTPUT");
 });
 
 it("announces the public-deck loading state in French", () => {

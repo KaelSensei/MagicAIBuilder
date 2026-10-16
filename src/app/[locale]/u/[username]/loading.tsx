@@ -1,45 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { PublicPageLoading } from "@/components/profile/PublicPageLoading";
 
 /** Route fallback while the public profile and viewer context are loading. */
 export default function Loading() {
   const t = useTranslations("profile");
-
-  return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
-      <div aria-hidden="true" className="h-16 border-b border-[var(--border)]">
-        <div className="mx-auto flex h-full max-w-5xl items-center gap-6 px-4">
-          <div className="h-5 w-36 rounded bg-[var(--surface)]" />
-          <div className="hidden h-4 w-44 rounded bg-[var(--surface)] sm:block" />
-        </div>
-      </div>
-      <main className="mx-auto w-full max-w-4xl px-4 py-8">
-        <div role="status" aria-busy="true">
-          <span className="sr-only">{t("loading")}</span>
-          <div aria-hidden="true" className="motion-safe:animate-pulse">
-            <div className="mb-8 flex items-center gap-4">
-              <div className="h-16 w-16 shrink-0 rounded-full bg-[var(--surface)]" />
-              <div className="flex-1 space-y-3">
-                <div className="h-6 w-48 max-w-full rounded bg-[var(--surface)]" />
-                <div className="h-4 w-64 max-w-full rounded bg-[var(--surface)]" />
-              </div>
-            </div>
-            <div className="mb-4 h-5 w-32 rounded bg-[var(--surface)]" />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {[0, 1, 2].map((slot) => (
-                <div key={slot} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-                  <div className="h-24 bg-[var(--border)]/50" />
-                  <div className="space-y-3 p-3">
-                    <div className="h-4 w-3/4 rounded bg-[var(--border)]" />
-                    <div className="h-3 w-1/2 rounded bg-[var(--border)]" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+  return <PublicPageLoading label={t("loading")} variant="profile" />;
 }
