@@ -59,6 +59,24 @@ const baseProps = {
 };
 
 describe("MainZoneContent", () => {
+  it("changes a card category from its mobile-friendly category menu", () => {
+    const onChangeCategory = vi.fn();
+    renderWithIntl(
+      <MainZoneContent
+        {...baseProps}
+        viewMode="list"
+        cardGroups={[group("artifact", [card("c1", "Sol Ring")])]}
+        onChangeCategory={onChangeCategory}
+      />
+    );
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Change category for Sol Ring" }), {
+      target: { value: "ramp" },
+    });
+
+    expect(onChangeCategory).toHaveBeenCalledWith("c1", "ramp");
+  });
+
   it("keeps the category reorder handle keyboard-focusable", () => {
     renderWithIntl(
       <MainZoneContent

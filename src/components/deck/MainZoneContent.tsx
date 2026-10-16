@@ -25,12 +25,18 @@ import { isCompanionOutsideColorIdentity } from "@/lib/deck/color-identity";
 import type { CardGroup } from "@/lib/deck/sort";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 
+const CARD_CATEGORIES: readonly CardCategory[] = [
+  "creature", "instant", "sorcery", "artifact", "enchantment", "planeswalker",
+  "land", "ramp", "draw", "removal", "boardWipe", "winCondition", "protection", "other",
+];
+
 interface CategorySectionProps {
   readonly category: CardCategory;
   readonly cards: Deck["cards"];
   readonly onRemoveCard: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
   readonly onMoveToSideboard?: (id: string) => void;
+  readonly onChangeCategory?: (id: string, category: CardCategory) => void;
 }
 
 // Draggable card list item (for intra-deck category drag)
@@ -39,12 +45,14 @@ function DraggableDeckCard({
   onRemove,
   onMoveToMaybeboard,
   onMoveToSideboard,
+  onChangeCategory,
   isColorIdentityViolation = false,
 }: {
   readonly card: DeckCard;
   readonly onRemove: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
   readonly onMoveToSideboard?: (id: string) => void;
+  readonly onChangeCategory?: (id: string, category: CardCategory) => void;
   readonly isColorIdentityViolation?: boolean;
 }) {
   const t = useTranslations("builder");
@@ -81,6 +89,38 @@ function DraggableDeckCard({
       >
         <GripVertical className="w-3 h-3" />
       </button>
+      {onChangeCategory && (
+        <details className="relative shrink-0">
+          <summary
+            aria-label={t("actions.changeCategoryFor", { name: card.name })}
+            className="flex h-7 w-7 cursor-pointer list-none items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] [&::-webkit-details-marker]:hidden"
+          >
+            <Layers className="h-3.5 w-3.5" />
+          </summary>
+          <div className="absolute right-0 top-full z-30 mt-1 min-w-40 rounded-md border border-[var(--border)] bg-[var(--surface)] p-2 shadow-xl">
+            <label className="sr-only" htmlFor={`category-${card.id}`}>
+              {t("actions.changeCategoryFor", { name: card.name })}
+            </label>
+            <select
+              id={`category-${card.id}`}
+              value={card.category}
+              onChange={(event) => {
+                const category = CARD_CATEGORIES.find(
+                  (candidate) => candidate === event.currentTarget.value
+                );
+                if (category) onChangeCategory(card.id, category);
+              }}
+              className="w-full rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm text-[var(--text-primary)]"
+            >
+              {CARD_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {t(`categories.${category}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </details>
+      )}
       <div className="flex-1 min-w-0">
         <CardListItem
           card={card}
@@ -166,6 +206,7 @@ function DroppableCategory({
   onRemoveCard,
   onMoveToMaybeboard,
   onMoveToSideboard,
+  onChangeCategory,
   violationCardIds,
 }: CategorySectionProps & { readonly violationCardIds: ReadonlySet<string> }) {
   const t = useTranslations("builder");
@@ -219,6 +260,7 @@ function DroppableCategory({
                 onRemove={onRemoveCard}
                 onMoveToMaybeboard={onMoveToMaybeboard}
                 onMoveToSideboard={onMoveToSideboard}
+                onChangeCategory={onChangeCategory}
                 isColorIdentityViolation={violationCardIds.has(card.id)}
               />
             ))}
@@ -253,6 +295,7 @@ export interface MainZoneContentProps {
   readonly clearCompanion: () => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
   readonly onMoveToSideboard?: (id: string) => void;
+  readonly onChangeCategory?: (id: string, category: CardCategory) => void;
 }
 
 export function MainZoneContent({
@@ -269,6 +312,7 @@ export function MainZoneContent({
   clearCompanion,
   onMoveToMaybeboard,
   onMoveToSideboard,
+  onChangeCategory,
 }: MainZoneContentProps) {
   const t = useTranslations("builder");
   const tCard = useTranslations("card");
@@ -459,6 +503,7 @@ export function MainZoneContent({
               onRemoveCard={onRemoveCard}
               onMoveToMaybeboard={onMoveToMaybeboard}
               onMoveToSideboard={onMoveToSideboard}
+              onChangeCategory={onChangeCategory}
               violationCardIds={violationCardIds}
             />
           );
