@@ -145,6 +145,7 @@ function GenericGroup({
   onRemoveCard,
   onMoveToMaybeboard,
   onMoveToSideboard,
+  onChangeCategory,
   violationCardIds,
 }: {
   readonly label: string;
@@ -152,6 +153,7 @@ function GenericGroup({
   readonly onRemoveCard: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
   readonly onMoveToSideboard?: (id: string) => void;
+  readonly onChangeCategory?: (id: string, category: CardCategory) => void;
   readonly violationCardIds: ReadonlySet<string>;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -183,6 +185,7 @@ function GenericGroup({
               onRemove={onRemoveCard}
               onMoveToMaybeboard={onMoveToMaybeboard}
               onMoveToSideboard={onMoveToSideboard}
+              onChangeCategory={onChangeCategory}
               isColorIdentityViolation={violationCardIds.has(card.id)}
             />
           ))}
@@ -535,6 +538,7 @@ export function MainZoneContent({
             onRemoveCard={onRemoveCard}
             onMoveToMaybeboard={onMoveToMaybeboard}
             onMoveToSideboard={onMoveToSideboard}
+            onChangeCategory={onChangeCategory}
             violationCardIds={violationCardIds}
           />
         );
