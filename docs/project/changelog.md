@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Guest deck-list loading state
+
+#### Fixed
+
+- Show the empty deck state rather than an indefinite loading skeleton to signed-out visitors after session resolution (#1011). Keep the skeleton during session resolution and authenticated deck loading.
+
+#### Validation
+
+- The focused regression test failed before implementation because the guest empty state was absent. VPS typecheck, lint, 3,131 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
 ### 2026-10-17: Builder loading skeleton
 
 #### Improved
