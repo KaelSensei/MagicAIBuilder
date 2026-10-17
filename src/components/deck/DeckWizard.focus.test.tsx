@@ -9,7 +9,7 @@ it("does not steal focus when reaching the commander search step", async () => {
   renderWithIntl(<QueryClientProvider client={client}><DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} /></QueryClientProvider>);
   fireEvent.click(screen.getByRole("button", { name: /Budget.*50/ }));
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-  fireEvent.click(await screen.findByRole("button", { name: "U" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Blue" }));
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
   fireEvent.click(await screen.findByRole("button", { name: /Fast and aggressive/ }));
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));

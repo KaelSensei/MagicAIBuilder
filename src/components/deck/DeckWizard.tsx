@@ -52,14 +52,14 @@ interface DeckWizardProps {
 type Budget = null | 50 | 200 | 500;
 type ColorKey = "W" | "U" | "B" | "R" | "G" | "C";
 
-const COLORS: { key: ColorKey; label: string }[] = [
-  { key: "W", label: "White" },
-  { key: "U", label: "Blue" },
-  { key: "B", label: "Black" },
-  { key: "R", label: "Red" },
-  { key: "G", label: "Green" },
-  { key: "C", label: "Colorless" },
-];
+const COLORS = [
+  { key: "W", labelKey: "colorWhite" },
+  { key: "U", labelKey: "colorBlue" },
+  { key: "B", labelKey: "colorBlack" },
+  { key: "R", labelKey: "colorRed" },
+  { key: "G", labelKey: "colorGreen" },
+  { key: "C", labelKey: "colorColorless" },
+] as const;
 
 const STRATEGIES = [
   {
@@ -163,10 +163,12 @@ function ProgressBar({
 // Color symbol button using Scryfall SVG
 function ColorButton({
   colorKey,
+  label,
   selected,
   onToggle,
 }: {
   readonly colorKey: ColorKey;
+  readonly label: string;
   readonly selected: boolean;
   readonly onToggle: () => void;
 }) {
@@ -174,6 +176,7 @@ function ColorButton({
     <button
       type="button"
       onClick={onToggle}
+      aria-label={label}
       className={`
         w-14 h-14 rounded-full flex items-center justify-center transition-all border-2
         ${
@@ -182,12 +185,12 @@ function ColorButton({
             : "border-white/10 hover:border-white/30 opacity-60 hover:opacity-100"
         }
       `}
-      title={COLORS.find((c) => c.key === colorKey)?.label}
+      title={label}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`https://svgs.scryfall.io/card-symbols/${colorKey}.svg`}
-        alt={colorKey}
+        alt=""
         className="w-9 h-9"
         draggable={false}
       />
@@ -243,12 +246,14 @@ function StepColors({
   readonly selected: ColorKey[];
   readonly onToggle: (c: ColorKey) => void;
 }) {
+  const t = useTranslations("deck.wizard");
   return (
     <div className="flex flex-wrap justify-center gap-4 max-w-xs mx-auto">
       {COLORS.map((c) => (
         <ColorButton
           key={c.key}
           colorKey={c.key}
+          label={t(c.labelKey)}
           selected={selected.includes(c.key)}
           onToggle={() => onToggle(c.key)}
         />
