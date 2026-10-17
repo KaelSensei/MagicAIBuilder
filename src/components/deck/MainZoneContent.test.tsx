@@ -188,6 +188,24 @@ describe("MainZoneContent", () => {
   });
 
   describe("list view", () => {
+    it("changes a card category while grouped by mana value", () => {
+      const onChangeCategory = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="list"
+          cardGroups={[group("mana-value-1", [card("c1", "Sol Ring")])]}
+          onChangeCategory={onChangeCategory}
+        />
+      );
+
+      fireEvent.change(screen.getByRole("combobox", { name: "Change category for Sol Ring" }), {
+        target: { value: "ramp" },
+      });
+
+      expect(onChangeCategory).toHaveBeenCalledWith("c1", "ramp");
+    });
+
     it("renders each group's cards", () => {
       renderWithIntl(
         <MainZoneContent
