@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
 import builderMessages from "@/messages/en/builder.json";
+import frBuilderMessages from "@/messages/fr/builder.json";
 import deckMessages from "@/messages/en/deck.json";
 import commonMessages from "@/messages/en/common.json";
 import { DeckUnavailableState } from "./DeckUnavailableState";
@@ -35,6 +36,16 @@ describe("DeckUnavailableState", () => {
     expect(status).toHaveAttribute("aria-busy", "true");
     expect(container.querySelectorAll("aside")).toHaveLength(2);
     expect(container.querySelector("main")).toBeInTheDocument();
+  });
+
+  it("announces the loading skeleton in French", () => {
+    render(
+      <NextIntlClientProvider locale="fr" messages={{ builder: frBuilderMessages, deck: deckMessages, common: commonMessages }}>
+        <DeckUnavailableState isLoading loadError={null} onRetry={vi.fn()} />
+      </NextIntlClientProvider>
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("Chargement du deck");
   });
 
   it("distinguishes a failed load from a missing deck and offers retry", () => {
