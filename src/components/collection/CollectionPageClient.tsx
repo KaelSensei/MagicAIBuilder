@@ -12,6 +12,8 @@ import {
   Download,
   Copy,
   Check,
+  AlertTriangle,
+  RefreshCw,
   Image as ImageIcon,
 } from "lucide-react";
 import { useCollectionStore } from "@/lib/collection/store";
@@ -29,6 +31,24 @@ import { CollectionQuantityControl } from "@/components/collection/CollectionQua
 import { AcquisitionPlanPanel } from "@/components/collection/AcquisitionPlanPanel";
 import { PrintingDeckUsage } from "@/components/collection/PrintingDeckUsage";
 
+function CollectionLoadNotice({ onRetry }: { readonly onRetry: () => Promise<void> }) {
+  const t = useTranslations("collection");
+  return (
+    <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-[var(--text-primary)]">
+      <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" aria-hidden="true" />
+      <span>{t("loadFailed")}</span>
+      <button
+        type="button"
+        onClick={() => void onRetry()}
+        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 font-medium hover:border-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+      >
+        <RefreshCw className="h-4 w-4" aria-hidden="true" />
+        {t("retry")}
+      </button>
+    </div>
+  );
+}
+
 export function CollectionPageClient() {
   const t = useTranslations("collection");
   const format = useFormatter();
@@ -36,6 +56,7 @@ export function CollectionPageClient() {
     collectionCards,
     collectionCardsFoil,
     isLoading,
+    loadError,
     loadCollection,
     removeFromCollection,
     updateQuantity,
@@ -137,8 +158,21 @@ export function CollectionPageClient() {
     );
   }
 
+  if (loadError && allCards.length === 0) {
+    return (
+      <main className="flex flex-1 items-center justify-center p-6">
+        <CollectionLoadNotice onRetry={loadCollection} />
+      </main>
+    );
+  }
+
   return (
     <main className="flex-1 overflow-y-auto p-6">
+      {loadError && (
+        <div className="mx-auto mb-6 max-w-6xl">
+          <CollectionLoadNotice onRetry={loadCollection} />
+        </div>
+      )}
       {/* Printings modal */}
       {printingsCard && (
         <PrintingSelectorModal

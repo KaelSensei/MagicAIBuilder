@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { CollectionCard } from "@/lib/collection/types";
 
@@ -60,6 +60,52 @@ describe("Collection store — getByScryfall / getTotalOwned", () => {
       collectionCardsFoil: { "scryfall-1": foil },
     });
     expect(useCollectionStore.getState().getTotalOwned("scryfall-1")).toBe(5);
+  });
+});
+
+describe("Collection store — loadCollection", () => {
+  beforeEach(() => {
+    useCollectionStore.setState({
+      collectionCards: {},
+      collectionCardsFoil: {},
+      isLoading: false,
+      loadError: false,
+    });
+    vi.restoreAllMocks();
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("reports a failed refresh without discarding cached cards", async () => {
+    const card = makeCollectionCard();
+    useCollectionStore.setState({ collectionCards: { [card.scryfallId]: card } });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+
+    await useCollectionStore.getState().loadCollection();
+
+    expect(useCollectionStore.getState().loadError).toBe(true);
+    expect(useCollectionStore.getState().isLoading).toBe(false);
+    expect(useCollectionStore.getState().collectionCards[card.scryfallId]).toEqual(card);
+  });
+
+  it("stops a stalled collection request after 15 seconds", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn((_url: string, options?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        options?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const loading = useCollectionStore.getState().loadCollection();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/collection",
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+    await vi.advanceTimersByTimeAsync(15_000);
+    await loading;
+
+    expect(useCollectionStore.getState().isLoading).toBe(false);
+    expect(useCollectionStore.getState().loadError).toBe(true);
   });
 });
 
