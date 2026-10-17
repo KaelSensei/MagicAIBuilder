@@ -77,3 +77,16 @@ export function buildScryfallNameIndex(
 export function normalizeImportedName(importedName: string): string {
   return normalizeNameKey(importedName);
 }
+
+/** Return distinct imported names that could not be resolved to a card. */
+export function getUnmatchedImportedNames(
+  names: readonly string[],
+  index: ReadonlyMap<string, ScryfallCard>
+): string[] {
+  const missing = new Map<string, string>();
+  for (const name of names) {
+    const key = normalizeImportedName(name);
+    if (!index.has(key) && !missing.has(key)) missing.set(key, name.trim());
+  }
+  return Array.from(missing.values());
+}

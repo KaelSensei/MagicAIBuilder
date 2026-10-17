@@ -13,6 +13,7 @@ import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import {
   buildScryfallNameIndex,
+  getUnmatchedImportedNames,
   normalizeImportedName,
 } from "@/lib/scryfall/name-index";
 
@@ -26,7 +27,7 @@ type ImportDialogProps =
       onOpenChange: (v: boolean) => void;
     };
 
-type ImportStatus = "idle" | "validating" | "done" | "error";
+type ImportStatus = "idle" | "validating" | "done" | "warning" | "error";
 
 const DESCRIPTION_RICH_TAGS = {
   code: (chunks: ReactNode) => (
@@ -38,6 +39,7 @@ const DESCRIPTION_RICH_TAGS = {
 
 function getStatusTextClass(status: ImportStatus): string {
   if (status === "error") return "text-red-400";
+  if (status === "warning") return "text-amber-400";
   if (status === "done") return "text-green-400";
   return "text-[var(--text-secondary)]";
 }
@@ -53,6 +55,7 @@ export function ImportDialog({
   const [text, setText] = useState("");
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [message, setMessage] = useState("");
+  const [missingNames, setMissingNames] = useState<string[]>([]);
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -120,6 +123,7 @@ export function ImportDialog({
 
     setStatus("validating");
     setMessage(t("import.parsing"));
+    setMissingNames([]);
 
     try {
       const parsed = parseTextDecklist(text);
@@ -142,8 +146,13 @@ export function ImportDialog({
       setMessage(t("import.validating", { count: allCardNames.length }));
       const foundCards = await fetchInBatches(allCardNames);
       const added = await addParsedCards(parsed, foundCards);
+      const missing = getUnmatchedImportedNames(
+        allCardNames.map(({ name }) => name),
+        buildScryfallNameIndex(foundCards)
+      );
 
-      setStatus("done");
+      setMissingNames(missing);
+      setStatus(missing.length > 0 ? "warning" : "done");
       setMessage(t("import.importSuccess", { count: added }));
     } catch (err) {
       setStatus("error");
@@ -157,6 +166,7 @@ export function ImportDialog({
       setText("");
       setStatus("idle");
       setMessage("");
+      setMissingNames([]);
       setActiveTab("text");
     }, 200);
   };
@@ -257,10 +267,18 @@ export function ImportDialog({
                   {status === "done" && (
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                   )}
-                  {status === "error" && (
+                  {(status === "error" || status === "warning") && (
                     <AlertCircle className="w-4 h-4 shrink-0" />
                   )}
                   {message}
+                </div>
+              )}
+              {missingNames.length > 0 && (
+                <div role="alert" className="text-sm text-amber-400">
+                  <p>{t("import.url.notFound", { count: missingNames.length })}</p>
+                  <ul className="max-h-24 overflow-y-auto list-disc list-inside break-words">
+                    {missingNames.map((name) => <li key={name}>{name}</li>)}
+                  </ul>
                 </div>
               )}
 
@@ -271,9 +289,9 @@ export function ImportDialog({
                   onClick={handleClose}
                   className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors"
                 >
-                  {status === "done" ? t("import.close") : t("import.cancel")}
+                  {status === "done" || status === "warning" ? t("import.close") : t("import.cancel")}
                 </button>
-                {status !== "done" && (
+                {status !== "done" && status !== "warning" && (
                   <button
                     type="button"
                     onClick={handleImport}
