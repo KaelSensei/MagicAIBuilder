@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Localized deck wizard color names
+
+#### Improved
+
+- Announce deck creation color choices in the active English or French language, including accessible button names and tooltips, while preserving mana symbols and selection behavior (#1019).
+
+#### Validation
+
+- A French accessible-name test failed before implementation. VPS typecheck, lint, 3,139 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
 ### 2026-10-17: Localized deck wizard budget choices
 
 #### Improved
