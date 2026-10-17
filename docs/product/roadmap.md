@@ -184,6 +184,7 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
   - [x] Enable keyboard sorting for categorized deck cards using the reorder handle and standard vertical controls (#997).
   - [x] Change a categorized card from a touch-friendly menu in the grouped list, without drag and drop (#999).
   - [x] Move Sideboard and Considering cards to either legal destination from grid or list view with controls that remain visible on touch devices (#1001).
+  - [x] Keep Main-grid moves to Sideboard and Considering, plus card removal, visible and reachable on touch devices (#1003).
   - [ ] Complete mobile alternatives for the remaining drag-only actions.
 - [x] Add a compact activity indicator instead of blocking the whole editor during saves.
   - [x] Preserve shared activity between bulk removal and manual bracket saves regardless of which action finishes first (#947). Other action combinations and mutation ownership remain open.
