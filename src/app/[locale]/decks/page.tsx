@@ -59,6 +59,9 @@ export default function DecksPage() {
   // Fine-grained selector: `add` is stable, so it can sit in a useCallback dep.
   const addToast = useToastStore((state) => state.add);
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading =
+    sessionStatus === "loading" ||
+    (sessionStatus === "authenticated" && isLoading);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -173,13 +176,13 @@ export default function DecksPage() {
               {t("home.title")}
             </h1>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              {isLoading && t("home.loading")}
-              {!isLoading && hasLoadFailed && t("home.loadFailedSubtitle")}
-              {!isLoading &&
+              {showLoading && t("home.loading")}
+              {!showLoading && hasLoadFailed && t("home.loadFailedSubtitle")}
+              {!showLoading &&
                 !hasLoadFailed &&
                 deckList.length === 0 &&
                 t("home.empty")}
-              {!isLoading &&
+              {!showLoading &&
                 deckList.length > 0 &&
                 t("home.deckCount", { count: deckList.length })}
             </p>
@@ -197,11 +200,11 @@ export default function DecksPage() {
           />
         </div>
 
-        {!isLoading && loadError !== null && deckList.length > 0 && (
+        {!showLoading && loadError !== null && deckList.length > 0 && (
           <DeckListRefreshNotice onRetry={handleRetryLoad} />
         )}
 
-        {!isLoading && !hasLoadFailed && (
+        {!showLoading && !hasLoadFailed && (
           <>
             <DeckFolderControls
               decks={deckList}
@@ -213,7 +216,7 @@ export default function DecksPage() {
           </>
         )}
 
-        {isLoading && (
+        {showLoading && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {SKELETON_KEYS.map((key) => (
               <DeckCardSkeleton key={key} />
@@ -221,7 +224,7 @@ export default function DecksPage() {
           </div>
         )}
 
-        {!isLoading && hasLoadFailed && (
+        {!showLoading && hasLoadFailed && (
           <motion.div
             className="flex flex-col items-center justify-center py-24 text-center"
             initial={{ opacity: 0, y: 20 }}
@@ -248,7 +251,7 @@ export default function DecksPage() {
           </motion.div>
         )}
 
-        {!isLoading && !hasLoadFailed && deckList.length === 0 && (
+        {!showLoading && !hasLoadFailed && deckList.length === 0 && (
           <motion.div
             className="flex flex-col items-center justify-center py-24 text-center"
             initial={{ opacity: 0, y: 20 }}
@@ -277,7 +280,7 @@ export default function DecksPage() {
           </motion.div>
         )}
 
-        {!isLoading && deckList.length > 0 && (
+        {!showLoading && deckList.length > 0 && (
           <>
             {viewMode === "list" ? (
               <motion.div
