@@ -62,55 +62,15 @@ const COLORS = [
 ] as const;
 
 const STRATEGIES = [
-  {
-    value: "Aggro",
-    emoji: "⚡",
-    label: "Aggro",
-    subtitle: "Fast and aggressive",
-  },
-  {
-    value: "Control",
-    emoji: "🧠",
-    label: "Control",
-    subtitle: "Counter and control",
-  },
-  {
-    value: "Combo",
-    emoji: "🔄",
-    label: "Combo",
-    subtitle: "Find the winning combo",
-  },
-  {
-    value: "Midrange",
-    emoji: "🤝",
-    label: "Midrange",
-    subtitle: "Balanced power",
-  },
-  {
-    value: "Tokens",
-    emoji: "🔁",
-    label: "Tokens",
-    subtitle: "Go wide with tokens",
-  },
-  {
-    value: "Sacrifice",
-    emoji: "💀",
-    label: "Sacrifice",
-    subtitle: "Death and reanimation",
-  },
-  {
-    value: "Ramp",
-    emoji: "🌿",
-    label: "Ramp",
-    subtitle: "Accelerate your mana",
-  },
-  {
-    value: "Voltron",
-    emoji: "🎯",
-    label: "Voltron",
-    subtitle: "Buff your commander",
-  },
-];
+  { value: "Aggro", emoji: "⚡", labelKey: "stratAggro", subtitleKey: "stratAggroSub" },
+  { value: "Control", emoji: "🧠", labelKey: "stratControl", subtitleKey: "stratControlSub" },
+  { value: "Combo", emoji: "🔄", labelKey: "stratCombo", subtitleKey: "stratComboSub" },
+  { value: "Midrange", emoji: "🤝", labelKey: "stratMidrange", subtitleKey: "stratMidrangeSub" },
+  { value: "Tokens", emoji: "🔁", labelKey: "stratTokens", subtitleKey: "stratTokensSub" },
+  { value: "Sacrifice", emoji: "💀", labelKey: "stratSacrifice", subtitleKey: "stratSacrificeSub" },
+  { value: "Ramp", emoji: "🌿", labelKey: "stratRamp", subtitleKey: "stratRampSub" },
+  { value: "Voltron", emoji: "🎯", labelKey: "stratVoltron", subtitleKey: "stratVoltronSub" },
+] as const;
 
 const BUDGET_OPTIONS = [
   { value: 50, labelKey: "budgetOption", subtitleKey: "budgetOptionSub" },
@@ -269,6 +229,7 @@ function StepStrategy({
   readonly value: string | null;
   readonly onChange: (v: string) => void;
 }) {
+  const t = useTranslations("deck.wizard");
   return (
     <div className="grid grid-cols-2 gap-3 w-full max-w-md mx-auto">
       {STRATEGIES.map((s) => (
@@ -286,8 +247,8 @@ function StepStrategy({
           `}
         >
           <span className="text-xl mb-1">{s.emoji}</span>
-          <span className="font-semibold text-sm">{s.label}</span>
-          <span className="text-xs opacity-60 mt-0.5">{s.subtitle}</span>
+          <span className="font-semibold text-sm">{t(s.labelKey)}</span>
+          <span className="text-xs opacity-60 mt-0.5">{t(s.subtitleKey)}</span>
         </button>
       ))}
     </div>
@@ -298,43 +259,41 @@ function StepStrategy({
 const BRACKET_OPTIONS = [
   {
     value: 1 as const,
-    label: "Bracket 1",
-    subtitle: "Exhibition",
-    description: "No interaction, no synergy — pure theme or storytelling",
+    labelKey: "bracket1",
+    subtitleKey: "bracket1Sub",
+    descriptionKey: "bracket1Desc",
     color: "text-green-400",
     border: "border-green-500/40",
     bg: "bg-green-500/10",
   },
   {
     value: 2 as const,
-    label: "Bracket 2",
-    subtitle: "Casual",
-    description:
-      "Precons and light upgrades, 0–1 game changers, no infinite combos",
+    labelKey: "bracket2",
+    subtitleKey: "bracket2Sub",
+    descriptionKey: "bracket2Desc",
     color: "text-blue-400",
     border: "border-blue-500/40",
     bg: "bg-blue-500/10",
   },
   {
     value: 3 as const,
-    label: "Bracket 3",
-    subtitle: "Powered",
-    description:
-      "Optimised synergies, up to 3 game changers, some strong staples",
+    labelKey: "bracket3",
+    subtitleKey: "bracket3Sub",
+    descriptionKey: "bracket3Desc",
     color: "text-amber-400",
     border: "border-amber-500/40",
     bg: "bg-amber-500/10",
   },
   {
     value: 4 as const,
-    label: "Bracket 4",
-    subtitle: "cEDH",
-    description: "Fully optimised, fast combos, any legal card",
+    labelKey: "bracket4",
+    subtitleKey: "bracket4Sub",
+    descriptionKey: "bracket4Desc",
     color: "text-red-400",
     border: "border-red-500/40",
     bg: "bg-red-500/10",
   },
-];
+] as const;
 
 function StepBracket({
   value,
@@ -343,6 +302,7 @@ function StepBracket({
   readonly value: 1 | 2 | 3 | 4 | null;
   readonly onChange: (v: 1 | 2 | 3 | 4) => void;
 }) {
+  const t = useTranslations("deck.wizard");
   return (
     <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
       {BRACKET_OPTIONS.map((opt) => (
@@ -368,10 +328,10 @@ function StepBracket({
             <div
               className={`font-semibold text-sm ${value === opt.value ? opt.color : "text-[var(--text-primary)]"}`}
             >
-              {opt.label} — {opt.subtitle}
+              {t(opt.labelKey)} — {t(opt.subtitleKey)}
             </div>
             <div className="text-xs text-[var(--text-secondary)] mt-0.5">
-              {opt.description}
+              {t(opt.descriptionKey)}
             </div>
           </div>
           {value === opt.value && (
