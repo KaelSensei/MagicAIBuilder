@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Localized deck wizard budget choices
+
+#### Improved
+
+- Display the four deck creation budget choices from the active locale catalog instead of hardcoded English labels, without converting their USD limits (#1017).
+
+#### Validation
+
+- A French UI regression test failed on the previous English label before implementation. VPS typecheck, lint, 3,138 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
 ### 2026-10-17: Locale-aware AI impact metrics
 
 #### Improved
