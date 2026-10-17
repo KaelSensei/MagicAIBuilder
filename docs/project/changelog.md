@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Localized deck wizard strategy and bracket choices
+
+#### Improved
+
+- Show the existing English or French strategy names/descriptions and bracket names/descriptions in deck creation, without changing the selected strategy value or bracket level (#1021).
+
+#### Validation
+
+- Separate French UI tests for strategy and bracket descriptions failed before their respective implementation steps. VPS typecheck, lint, 3,141 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
 ### 2026-10-17: Localized deck wizard color names
 
 #### Improved
