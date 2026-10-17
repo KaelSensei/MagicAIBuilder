@@ -29,3 +29,37 @@ it("names color choices in French for assistive technology", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
   expect(await screen.findByRole("button", { name: "Bleu" })).toBeInTheDocument();
 });
+
+it("shows translated strategy choices in the French deck wizard", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  renderWithIntl(
+    <QueryClientProvider client={client}>
+      <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />
+    </QueryClientProvider>,
+    { locale: "fr" }
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Budget < 50 $" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Bleu" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
+  expect(await screen.findByRole("button", { name: /Contrôle Contrer et contrôler/ })).toBeInTheDocument();
+});
+
+it("shows the translated bracket description in the French deck wizard", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  renderWithIntl(
+    <QueryClientProvider client={client}>
+      <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />
+    </QueryClientProvider>,
+    { locale: "fr" }
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Budget < 50 $" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Bleu" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Contrôle Contrer et contrôler/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
+  expect(await screen.findByRole("button", { name: /Optimisé Synergies optimisées/ })).toBeInTheDocument();
+});
