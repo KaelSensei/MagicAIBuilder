@@ -62,54 +62,14 @@ const COLORS = [
 ] as const;
 
 const STRATEGIES = [
-  {
-    value: "Aggro",
-    emoji: "⚡",
-    labelKey: "stratAggro",
-    subtitleKey: "stratAggroSub",
-  },
-  {
-    value: "Control",
-    emoji: "🧠",
-    labelKey: "stratControl",
-    subtitleKey: "stratControlSub",
-  },
-  {
-    value: "Combo",
-    emoji: "🔄",
-    labelKey: "stratCombo",
-    subtitleKey: "stratComboSub",
-  },
-  {
-    value: "Midrange",
-    emoji: "🤝",
-    labelKey: "stratMidrange",
-    subtitleKey: "stratMidrangeSub",
-  },
-  {
-    value: "Tokens",
-    emoji: "🔁",
-    labelKey: "stratTokens",
-    subtitleKey: "stratTokensSub",
-  },
-  {
-    value: "Sacrifice",
-    emoji: "💀",
-    labelKey: "stratSacrifice",
-    subtitleKey: "stratSacrificeSub",
-  },
-  {
-    value: "Ramp",
-    emoji: "🌿",
-    labelKey: "stratRamp",
-    subtitleKey: "stratRampSub",
-  },
-  {
-    value: "Voltron",
-    emoji: "🎯",
-    labelKey: "stratVoltron",
-    subtitleKey: "stratVoltronSub",
-  },
+  { value: "Aggro", emoji: "⚡", labelKey: "stratAggro", subtitleKey: "stratAggroSub" },
+  { value: "Control", emoji: "🧠", labelKey: "stratControl", subtitleKey: "stratControlSub" },
+  { value: "Combo", emoji: "🔄", labelKey: "stratCombo", subtitleKey: "stratComboSub" },
+  { value: "Midrange", emoji: "🤝", labelKey: "stratMidrange", subtitleKey: "stratMidrangeSub" },
+  { value: "Tokens", emoji: "🔁", labelKey: "stratTokens", subtitleKey: "stratTokensSub" },
+  { value: "Sacrifice", emoji: "💀", labelKey: "stratSacrifice", subtitleKey: "stratSacrificeSub" },
+  { value: "Ramp", emoji: "🌿", labelKey: "stratRamp", subtitleKey: "stratRampSub" },
+  { value: "Voltron", emoji: "🎯", labelKey: "stratVoltron", subtitleKey: "stratVoltronSub" },
 ] as const;
 
 const BUDGET_OPTIONS = [
