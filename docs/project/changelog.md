@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Ignore stale zone-save errors after deck removal
+
+#### Fixed
+
+- Do not show a failed card-move message when its deck has already been removed (#1025). Zone-save recovery for existing decks is unchanged.
+
+#### Validation
+
+- Focused Red/Green test, VPS typecheck, lint, 3,143 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E was not run for this slice.
+
 ### 2026-10-17: Visible omissions in pasted deck imports
 
 #### Changed
