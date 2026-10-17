@@ -1698,7 +1698,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         pending.confirmedZone = zone;
       } catch (err) {
         logger.error("Unexpected error", "moveCardToZone", err);
-        if (pending.tail === write) {
+        if (pending.tail === write && get().decks[activeDeckId]) {
           set((state) => {
             const currentDeck = state.decks[activeDeckId];
             const latestCard =
