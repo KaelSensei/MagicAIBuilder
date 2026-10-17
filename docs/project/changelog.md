@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Builder loading skeleton
+
+#### Improved
+
+- Replace the initial deck-loading text with an accessible, responsive silhouette of the editor's search, deck and statistics panels (#1009). Missing-deck and retryable error states are unchanged.
+
+#### Validation
+
+- The focused test failed before implementation because the loading status was not marked busy and no editor structure existed. VPS typecheck, lint, 3,130 unit tests and production build passed. CI, SonarCloud, Lighthouse and the final Vercel preview passed before merge into `dev`; an earlier Vercel preview failed without accessible logs. Docker E2E and QA promotion remain pending.
+
 ### 2026-10-17: Category editing in every Main list grouping
 
 #### Fixed
