@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Locale-aware AI impact metrics
+
+#### Improved
+
+- Format average mana value and known USD card value in the AI suggestion impact preview for the active locale, without implying a currency conversion (#1015).
+
+#### Validation
+
+- Separate focused tests observed French currency and decimal-separator failures before implementation. VPS typecheck, zero-warning lint, 3,137 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
 ### 2026-10-17: Recoverable collection loading
 
 #### Fixed
