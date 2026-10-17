@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Main-grid category editing
+
+#### Added
+
+- Change a Main card's category directly in grid view using an accessible native selector, without switching views or dragging (#1005).
+
+#### Validation
+
+- The focused test failed before implementation because the grid had no named category control. VPS typecheck, lint, 3,127 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
 ### 2026-10-17: Touch-friendly Main grid actions
 
 #### Added
