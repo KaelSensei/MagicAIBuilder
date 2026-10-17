@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3,138 across 288 files, validated on the VPS on 2026-10-17                                                                                 |
+| Unit tests          | 3,139 across 288 files, validated on the VPS on 2026-10-17                                                                                 |
 | E2E tests           | 66 passing (`@external` / `@perf` excluded), full Docker gate on the VPS, validated on 2026-10-10                                           |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
@@ -30,6 +30,8 @@
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+
+- 2026-10-17: #1019 localizes accessible color names and tooltips in the deck creation wizard while retaining the mana symbols and color-selection behavior. The French accessible-name test was observed red. VPS typecheck, lint, 3,139 unit tests and production build passed; CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
 
 - 2026-10-17: #1017 localizes the deck creation wizard's budget choices using existing English and French catalogs while preserving USD limits. Its French label test was observed red. VPS typecheck, lint, 3,138 unit tests and production build passed; CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
 

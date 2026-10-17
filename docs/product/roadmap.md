@@ -601,6 +601,7 @@ A deck can make a round trip through supported tools without silently changing c
 - AI suggestion evidence formats Scryfall USD prices for the active locale without relabeling them as local-market quotes (#980).
 - AI suggestion impact formats average mana value and known USD price for the active locale without implying a currency conversion (#1015).
 - Deck creation wizard budget choices use the active English or French catalog, retaining their USD-denominated limits (#1017).
+- Deck creation color choices announce localized names to assistive technology and use localized tooltips, while retaining the same mana symbols (#1019).
 - Public deck card counts use the active English or French locale with singular and plural forms; the shared deck-count label is consistent across public and share views (#982).
 
 ### Remaining scope
