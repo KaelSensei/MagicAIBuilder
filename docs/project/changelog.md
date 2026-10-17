@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Category editing in every Main list grouping
+
+#### Fixed
+
+- Keep the existing accessible category menu available when cards are grouped by mana value or color, not only by card category (#1007).
+
+#### Validation
+
+- The focused test failed before implementation because the grouped card lacked the category control. VPS typecheck, lint, 3,128 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
 ### 2026-10-17: Main-grid category editing
 
 #### Added
