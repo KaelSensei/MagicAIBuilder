@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Recoverable collection loading
+
+#### Fixed
+
+- Stop stalled collection reads after 15 seconds and offer a localized retry instead of an endless spinner or a false empty collection (#1013). Failed refreshes keep saved cards visible with a warning.
+
+#### Validation
+
+- Focused Red/Green cycles covered failure reporting, visible retry and timeout. VPS typecheck, zero-warning lint, 3,135 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
 ### 2026-10-17: Guest deck-list loading state
 
 #### Fixed
