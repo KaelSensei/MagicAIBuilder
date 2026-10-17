@@ -443,7 +443,7 @@ export function MainZoneContent({
                 e.stopPropagation();
                 onMoveToMaybeboard?.(card.id);
               }}
-              className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-amber-500/90 focus-visible:bg-amber-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10"
+              className={cn("absolute left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-amber-500/90 focus-visible:bg-amber-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10", onChangeCategory ? "bottom-10" : "bottom-1")}
               aria-label={t("zoneMoveTargets.toMaybeboard")}
               title={t("zoneMoveTargets.toMaybeboard")}
             >
@@ -455,7 +455,7 @@ export function MainZoneContent({
                 event.stopPropagation();
                 onMoveToSideboard?.(card.id);
               }}
-              className="absolute bottom-1 right-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-sky-500/90 focus-visible:bg-sky-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10"
+              className={cn("absolute right-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-sky-500/90 focus-visible:bg-sky-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10", onChangeCategory ? "bottom-10" : "bottom-1")}
               aria-label={tCard("moveNamedToSideboard", { name: card.name })}
               title={t("zoneMoveTargets.toSideboard")}
             >
@@ -472,6 +472,25 @@ export function MainZoneContent({
             >
               ×
             </button>
+            {onChangeCategory && (
+              <select
+                aria-label={t("actions.changeCategoryFor", { name: card.name })}
+                value={card.category}
+                onChange={(event) => {
+                  const category = CARD_CATEGORIES.find(
+                    (candidate) => candidate === event.currentTarget.value
+                  );
+                  if (category) onChangeCategory(card.id, category);
+                }}
+                className="mt-1 h-8 w-full min-w-0 rounded border border-[var(--border)] bg-[var(--surface)] px-1 text-xs text-[var(--text-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+              >
+                {CARD_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {t(`categories.${category}`)}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         ))}
         {!deck.commander && mainCards.length === 0 && (
