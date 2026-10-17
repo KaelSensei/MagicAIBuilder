@@ -23,6 +23,34 @@ const currentCard: DeckCard = {
 };
 
 describe("SuggestionImpactPreview", () => {
+  it("formats the known USD price for the active French locale", () => {
+    renderWithIntl(
+      <SuggestionImpactPreview currentCards={[currentCard]} additions={[]} removals={[]} />,
+      { locale: "fr" }
+    );
+
+    const price = new Intl.NumberFormat("fr", {
+      style: "currency",
+      currency: "USD",
+    }).format(4);
+    expect(screen.getAllByText(price.replace(/\s+/gu, " "))).toHaveLength(2);
+    expect(screen.queryByText("$4.00")).not.toBeInTheDocument();
+  });
+
+  it("formats average mana with the active locale's decimal separator", () => {
+    renderWithIntl(
+      <SuggestionImpactPreview currentCards={[currentCard]} additions={[]} removals={[]} />,
+      { locale: "fr" }
+    );
+
+    const average = new Intl.NumberFormat("fr", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(6);
+    expect(screen.getAllByText(average)).toHaveLength(2);
+    expect(screen.queryByText("6.00")).not.toBeInTheDocument();
+  });
+
   it("shows deterministic before and after metrics with evidence limits", () => {
     renderWithIntl(
       <SuggestionImpactPreview
