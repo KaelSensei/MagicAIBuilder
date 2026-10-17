@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3,126 across 285 files, validated on the VPS on 2026-10-17                                                                                 |
+| Unit tests          | 3,127 across 285 files, validated on the VPS on 2026-10-17                                                                                 |
 | E2E tests           | 66 passing (`@external` / `@perf` excluded), full Docker gate on the VPS, validated on 2026-10-10                                           |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
@@ -30,6 +30,8 @@
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+
+- 2026-10-17: #1005 adds accessible category editing beneath Main-grid cards, without changing views or dragging. The focused test failed before implementation; VPS typecheck, lint, 3,127 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Other mobile drag alternatives, Docker E2E and QA promotion remain open.
 
 - 2026-10-17: #1003 keeps Main-grid moves to Sideboard and Considering and card removal visible on touch devices, with larger targets. Two focused tests failed before their respective changes; VPS typecheck, lint, 3,126 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Other mobile drag alternatives, Docker E2E and QA promotion remain open.
 - 2026-10-17: #1001 adds both legal move destinations to secondary-zone cards in grid view and keeps grid/list move controls visible on touch devices. Three focused tests failed before their respective changes; VPS typecheck, lint, 3,124 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Other mobile drag alternatives, Docker E2E and QA promotion remain open.
