@@ -26,7 +26,7 @@ function card(id: string, name: string, overrides: Partial<DeckCard> = {}): Deck
   return {
     id, name, manaCost: "{1}", cmc: 1, typeLine: "Artifact",
     oracleText: "", colorIdentity: [], isGameChanger: false,
-    isBanned: false, price: null, imageUri: "", artCropUri: "",
+    isBanned: false, price: null, imageUri: "https://cards.scryfall.io/normal/front/a/b/card.jpg", artCropUri: "",
     category: "artifact", quantity: 1, zone: "main", scryfallId: id,
     ...overrides,
   };
@@ -138,6 +138,34 @@ describe("MainZoneContent", () => {
       fireEvent.click(screen.getByRole("button", { name: /move sol ring.*sideboard/i }));
 
       expect(onMoveToSideboard).toHaveBeenCalledWith("c1");
+    });
+
+    it("keeps both move controls visible on touch devices", () => {
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="grid"
+          mainCards={[card("c1", "Sol Ring")]}
+        />
+      );
+
+      expect(screen.getByRole("button", { name: /move.*considering/i }))
+        .toHaveClass("[@media(hover:none)]:opacity-100");
+      expect(screen.getByRole("button", { name: /move sol ring.*sideboard/i }))
+        .toHaveClass("[@media(hover:none)]:opacity-100");
+    });
+
+    it("keeps card removal visible on touch devices", () => {
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="grid"
+          mainCards={[card("c1", "Sol Ring")]}
+        />
+      );
+
+      expect(screen.getByRole("button", { name: "Remove Sol Ring" }))
+        .toHaveClass("[@media(hover:none)]:opacity-100");
     });
   });
 

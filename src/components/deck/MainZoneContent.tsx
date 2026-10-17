@@ -443,7 +443,7 @@ export function MainZoneContent({
                 e.stopPropagation();
                 onMoveToMaybeboard?.(card.id);
               }}
-              className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity bg-black/75 hover:bg-amber-500/90 focus-visible:bg-amber-500/90 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg z-10"
+              className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-amber-500/90 focus-visible:bg-amber-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10"
               aria-label={t("zoneMoveTargets.toMaybeboard")}
               title={t("zoneMoveTargets.toMaybeboard")}
             >
@@ -455,7 +455,7 @@ export function MainZoneContent({
                 event.stopPropagation();
                 onMoveToSideboard?.(card.id);
               }}
-              className="absolute bottom-1 right-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity bg-black/75 hover:bg-sky-500/90 focus-visible:bg-sky-500/90 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg z-10"
+              className="absolute bottom-1 right-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-sky-500/90 focus-visible:bg-sky-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10"
               aria-label={tCard("moveNamedToSideboard", { name: card.name })}
               title={t("zoneMoveTargets.toSideboard")}
             >
@@ -467,7 +467,7 @@ export function MainZoneContent({
                 e.stopPropagation();
                 onRemoveCard(card.id);
               }}
-              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center text-xs shadow-lg z-10"
               aria-label={t("actions.removeCard", { name: card.name })}
             >
               ×
