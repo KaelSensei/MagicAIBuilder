@@ -233,14 +233,20 @@ export function SecondaryZoneContent({
               >
                 ×
               </button>
-              <button
-                type="button"
-                onClick={() => moveCardToZone(card.id, "main")}
-                className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity bg-black/70 text-white text-[8px] px-1 rounded z-10"
-                title={t("zoneMoveTargets.toMain")}
-              >
-                →M
-              </button>
+              <div className="absolute bottom-1 left-1 right-1 z-20 flex flex-wrap gap-1 opacity-0 group-hover/card:opacity-100 group-focus-within/card:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
+                {moveTargets.map(({ zone: targetZone, label, title }) => (
+                  <button
+                    type="button"
+                    key={targetZone}
+                    onClick={() => moveCardToZone(card.id, targetZone)}
+                    className="min-h-8 rounded bg-black/80 px-1.5 py-1 text-[10px] text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+                    aria-label={title}
+                    title={title}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           );
         })}
@@ -284,13 +290,13 @@ export function SecondaryZoneContent({
               <div className="flex-1 min-w-0">
                 <CardListItem card={card} onRemove={handleSingleRemove} />
               </div>
-              <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 group-focus-within/zone:opacity-100 transition-opacity">
+              <div className="shrink-0 flex gap-0.5 opacity-0 group-hover/zone:opacity-100 group-focus-within/zone:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
                 {moveTargets.map(({ zone: z, label, title }) => (
                   <button
                     type="button"
                     key={z}
                     onClick={() => moveCardToZone(card.id, z)}
-                    className="text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                    className="min-h-8 text-[10px] px-1 py-0.5 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                     title={title}
                   >
                     {label}
