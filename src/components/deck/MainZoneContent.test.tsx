@@ -90,6 +90,24 @@ describe("MainZoneContent", () => {
   });
 
   describe("grid view", () => {
+    it("changes a card category without switching to list view", () => {
+      const onChangeCategory = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="grid"
+          mainCards={[card("c1", "Sol Ring")]}
+          onChangeCategory={onChangeCategory}
+        />
+      );
+
+      fireEvent.change(screen.getByRole("combobox", { name: "Change category for Sol Ring" }), {
+        target: { value: "ramp" },
+      });
+
+      expect(onChangeCategory).toHaveBeenCalledWith("c1", "ramp");
+    });
+
     it("invites the first card when the deck is empty and has no commander", () => {
       renderWithIntl(<MainZoneContent {...baseProps} viewMode="grid" />);
       expect(screen.getByText(/no cards yet/i)).toBeInTheDocument();
