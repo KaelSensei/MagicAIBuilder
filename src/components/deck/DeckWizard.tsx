@@ -112,12 +112,12 @@ const STRATEGIES = [
   },
 ];
 
-const BUDGET_OPTIONS: { value: Budget; label: string; subtitle: string }[] = [
-  { value: 50, label: "Budget", subtitle: "< $50" },
-  { value: 200, label: "Moderate", subtitle: "$50 – $200" },
-  { value: 500, label: "Competitive", subtitle: "$200 – $500" },
-  { value: null, label: "No Limit", subtitle: "Spare no expense" },
-];
+const BUDGET_OPTIONS = [
+  { value: 50, labelKey: "budgetOption", subtitleKey: "budgetOptionSub" },
+  { value: 200, labelKey: "moderateOption", subtitleKey: "moderateOptionSub" },
+  { value: 500, labelKey: "competitiveOption", subtitleKey: "competitiveOptionSub" },
+  { value: null, labelKey: "noLimitOption", subtitleKey: "noLimitOptionSub" },
+] as const;
 
 // ---------------------------------------------------------------------------
 // Animation variants
@@ -206,6 +206,7 @@ function StepBudget({
   readonly value: Budget;
   readonly onChange: (v: Budget) => void;
 }) {
+  const t = useTranslations("deck.wizard");
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
       {BUDGET_OPTIONS.map((opt) => (
@@ -223,8 +224,8 @@ function StepBudget({
           `}
         >
           <div className="text-left">
-            <div className="font-semibold text-base">{opt.label}</div>
-            <div className="text-sm opacity-70 mt-0.5">{opt.subtitle}</div>
+            <div className="font-semibold text-base">{t(opt.labelKey)}</div>
+            <div className="text-sm opacity-70 mt-0.5">{t(opt.subtitleKey)}</div>
           </div>
           {value === opt.value && (
             <Check className="w-5 h-5 text-[var(--accent-text)] shrink-0" />
