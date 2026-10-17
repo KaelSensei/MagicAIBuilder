@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -14,4 +14,18 @@ it("shows translated budget choices in the French deck wizard", () => {
   );
 
   expect(screen.getByRole("button", { name: "Modéré 50 $ – 200 $" })).toBeInTheDocument();
+});
+
+it("names color choices in French for assistive technology", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  renderWithIntl(
+    <QueryClientProvider client={client}>
+      <DeckWizard open onClose={vi.fn()} onComplete={vi.fn()} />
+    </QueryClientProvider>,
+    { locale: "fr" }
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Budget < 50 $" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
+  expect(await screen.findByRole("button", { name: "Bleu" })).toBeInTheDocument();
 });
