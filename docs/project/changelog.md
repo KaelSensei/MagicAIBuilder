@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-17: Touch-friendly secondary zone moves
+
+#### Added
+
+- Offer both legal destinations for Sideboard and Considering cards in grid view, and keep the existing move controls visible on touch devices in grid and list views (#1001).
+
+#### Validation
+
+- Three focused Red/Green cycles, VPS typecheck, lint, 3,124 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E was not run for this slice.
+
 ### 2026-10-16: Touch-friendly deck categories
 
 #### Added
