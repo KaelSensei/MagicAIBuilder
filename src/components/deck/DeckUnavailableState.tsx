@@ -25,7 +25,41 @@ export function DeckUnavailableState({
   const retryLabel = errorSource === "deck" ? common("error.retry") : deck("home.retry");
 
   if (isLoading) {
-    return <p className="text-[var(--text-secondary)]" role="status">{t("loading")}</p>;
+    return (
+      <div role="status" aria-busy="true" className="flex w-full flex-col self-stretch text-[var(--text-secondary)]">
+        <div className="flex h-11 items-center gap-4 border-b border-[var(--border)] px-4">
+          <span className="text-sm">{t("loading")}</span>
+          <div aria-hidden="true" className="h-2 w-20 rounded bg-[var(--surface)]" />
+        </div>
+        <div aria-hidden="true" className="grid flex-1 grid-cols-1 motion-safe:animate-pulse lg:grid-cols-[15rem_minmax(0,1fr)_16rem]">
+          <aside className="hidden border-r border-[var(--border)] p-3 lg:block">
+            <div className="mb-4 h-9 rounded bg-[var(--surface)]" />
+            <div className="grid grid-cols-2 gap-2">
+              {[0, 1, 2, 3].map((slot) => (
+                <div key={slot} className="aspect-[3/4] rounded bg-[var(--surface)]" />
+              ))}
+            </div>
+          </aside>
+          <main className="min-w-0 p-4">
+            <div className="mb-4 h-20 rounded-lg bg-[var(--surface)]" />
+            <div className="mb-5 h-8 rounded bg-[var(--surface)]" />
+            <div className="space-y-3">
+              {[0, 1, 2, 3, 4].map((slot) => (
+                <div key={slot} className="h-10 rounded bg-[var(--surface)]" />
+              ))}
+            </div>
+          </main>
+          <aside className="hidden border-l border-[var(--border)] p-3 lg:block">
+            {[0, 1, 2].map((slot) => (
+              <div key={slot} className="mb-4 rounded-lg border border-[var(--border)] p-4">
+                <div className="mb-3 h-4 w-2/3 rounded bg-[var(--surface)]" />
+                <div className="h-20 rounded bg-[var(--surface)]" />
+              </div>
+            ))}
+          </aside>
+        </div>
+      </div>
+    );
   }
 
   return (

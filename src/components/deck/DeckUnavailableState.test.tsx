@@ -23,6 +23,20 @@ function show(loadError: string | null, onRetry = vi.fn()) {
 }
 
 describe("DeckUnavailableState", () => {
+  it("shows an accessible editor-shaped skeleton while a deck loads", () => {
+    const { container } = render(
+      <NextIntlClientProvider locale="en" messages={{ builder: builderMessages, deck: deckMessages, common: commonMessages }}>
+        <DeckUnavailableState isLoading loadError={null} onRetry={vi.fn()} />
+      </NextIntlClientProvider>
+    );
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Loading deck");
+    expect(status).toHaveAttribute("aria-busy", "true");
+    expect(container.querySelectorAll("aside")).toHaveLength(2);
+    expect(container.querySelector("main")).toBeInTheDocument();
+  });
+
   it("distinguishes a failed load from a missing deck and offers retry", () => {
     const retry = show("Network timeout");
 
