@@ -181,6 +181,7 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
   - [x] Serialize card-note saves and restore the last confirmed note after a failed latest edit (#872).
   - [x] Recover individual failed bulk zone moves without rolling back successfully saved cards (#871). Broader mutation recovery remains open.
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
+  - [x] Verify a rejected Sideboard-to-Considering move retains its card and saved zone after reload in Docker-backed Playwright (#1029). Add-flow and broader recovery E2E remain open.
 - [ ] Add keyboard and mobile alternatives for every drag action.
   - [x] Provide card-specific Main → Sideboard/Considering controls in grid and list views (#970).
   - [x] Enable keyboard sorting for categorized deck cards using the reorder handle and standard vertical controls (#997).

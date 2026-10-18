@@ -30,6 +30,7 @@
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+- 2026-10-18: #1029 adds Docker-backed Playwright coverage for a rejected Sideboard-to-Considering save, including visible error, retained API zone, and reload recovery. Focused E2E passed (3 tests, including warmup), as did VPS typecheck, lint, 3,144 unit tests, build, and all PR checks. Add-flow and broader recovery E2E remain open; QA promotion remains pending.
 
 - 2026-10-18: #1027 suppresses obsolete card-move error feedback after the card is removed while keeping recovery for cards still in the deck. The focused test failed before the fix; VPS typecheck, lint, 3,144 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Broader concurrent mutation ownership, Docker E2E and QA promotion remain open.
 - 2026-10-17: #1025 suppresses obsolete card-move error feedback after a deck is removed while keeping recovery for existing decks. The focused test failed before the fix; VPS typecheck, lint, 3,143 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Broader concurrent mutation ownership, Docker E2E and QA promotion remain open.

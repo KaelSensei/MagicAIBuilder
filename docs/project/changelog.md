@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-18: Cover failed deck-zone save and reload in E2E
+
+#### Tests
+
+- Add a Docker-backed browser scenario that rejects a Sideboard-to-Considering save, verifies the retry message and retained card, checks the saved zone through the API, and confirms the card remains after reload (#1029).
+
+#### Validation
+
+- VPS typecheck, lint, 3,144 unit tests, production build, and focused Docker E2E (3 passed) succeeded. CI, SonarCloud, Lighthouse, and Vercel passed before merge into `dev`. No production behavior changed.
+
 ### 2026-10-18: Ignore stale zone-save errors after card removal
 
 #### Fixed
