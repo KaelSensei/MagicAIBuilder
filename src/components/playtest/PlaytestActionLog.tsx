@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PlaytestActionLogEntry } from "@/lib/playtest/engine";
 import { exportActionLogJson, exportActionLogText, summarizeActionLog } from "@/lib/playtest/action-log-export";
@@ -26,8 +26,18 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
     if (editingId !== null) editInputRef.current?.focus({ preventScroll: true });
   }, [editingId]);
   const [manaAmount, setManaAmount] = useState("1");
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
   const summaries = useMemo(() => summarizeActionLog(entries), [entries]);
   const fileStem = deckName.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "deck";
+
+  const copyLog = async () => {
+    try {
+      await navigator.clipboard.writeText(exportActionLogText(deckName, entries));
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("error");
+    }
+  };
 
   const addEntry = () => {
     if (draft.trim() === "") return;
@@ -49,6 +59,13 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
           <div className="flex gap-1">
             <button
               type="button"
+              onClick={() => void copyLog()}
+              className="flex items-center gap-1 rounded px-2 py-1 text-[10px] text-white/50 hover:bg-white/5 hover:text-white"
+            >
+              <Copy className="h-3 w-3" aria-hidden="true" /> {t("copy")}
+            </button>
+            <button
+              type="button"
               onClick={() => downloadFile(exportActionLogText(deckName, entries), `${fileStem}-playtest.txt`)}
               className="flex items-center gap-1 rounded px-2 py-1 text-[10px] text-white/50 hover:bg-white/5 hover:text-white"
             >
@@ -64,6 +81,8 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
           </div>
         )}
       </div>
+      {copyStatus === "copied" && <p role="status" className="mb-2 text-xs text-emerald-300">{t("copied")}</p>}
+      {copyStatus === "error" && <p role="alert" className="mb-2 text-xs text-amber-300">{t("copyFailed")}</p>}
       <div className="mb-3 flex gap-2">
         <input
           value={draft}
