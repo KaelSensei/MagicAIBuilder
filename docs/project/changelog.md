@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-18: Cover searched-card addition and reload in E2E
+
+#### Tests
+
+- Add a Docker-backed browser scenario that searches for a card, selects a printing, verifies its saved Main-zone row and confirms it remains in the editor after reload (#1031).
+
+#### Validation
+
+- VPS typecheck, lint, 3,144 unit tests, production build and focused Docker E2E (4 passed) succeeded. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. No production behavior changed.
+
 ### 2026-10-18: Cover failed deck-zone save and reload in E2E
 
 #### Tests
