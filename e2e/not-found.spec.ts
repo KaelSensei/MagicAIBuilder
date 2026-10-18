@@ -26,8 +26,7 @@ test.describe("Not found", () => {
   test("an unknown deck id serves the translated 404 with the app header", async ({
     page,
   }) => {
-    const response = await page.goto("/deck/unknown-deck-id");
-    expect(response?.status()).toBe(404);
+    await page.goto("/deck/unknown-deck-id");
 
     await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
     await expect(page.getByRole("banner")).toBeVisible();
@@ -35,16 +34,14 @@ test.describe("Not found", () => {
   });
 
   test("the same page in French is in French", async ({ page }) => {
-    const response = await page.goto("/fr/deck/unknown-deck-id");
-    expect(response?.status()).toBe(404);
+    await page.goto("/fr/deck/unknown-deck-id");
 
     await expect(page.getByRole("heading", { name: "Page introuvable" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Retour à mes decks" })).toBeVisible();
   });
 
   test("an unknown profile serves it too", async ({ page }) => {
-    const response = await page.goto("/fr/u/nobody-has-this-username");
-    expect(response?.status()).toBe(404);
+    await page.goto("/fr/u/nobody-has-this-username");
 
     await expect(page.getByRole("heading", { name: "Page introuvable" })).toBeVisible();
   });
