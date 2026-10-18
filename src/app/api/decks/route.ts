@@ -46,9 +46,14 @@ const createDeckSchema = z.object({
 
 // GET /api/decks — paginated lightweight listing (commander/partner/companion only + card count)
 export async function GET(request: NextRequest) {
+  const startedAt = performance.now();
+  let status = 500;
   try {
     const result = await requireAuth();
-    if (result.error) return result.error;
+    if (result.error) {
+      status = result.error.status;
+      return result.error;
+    }
 
     const { searchParams } = request.nextUrl;
     const page = Math.max(0, readWholeNumber(searchParams.get("page"), 0));
@@ -105,6 +110,7 @@ export async function GET(request: NextRequest) {
       prisma.deck.count({ where: { userId } }),
     ]);
 
+    status = 200;
     return NextResponse.json({ decks, total, page, limit });
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "GET /api/decks");
@@ -112,6 +118,11 @@ export async function GET(request: NextRequest) {
       { error: "Failed to fetch decks" },
       { status: 500 }
     );
+  } finally {
+    logger.info("Deck list request completed", "GET /api/decks", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
   }
 }
 
