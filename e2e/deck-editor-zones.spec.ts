@@ -75,4 +75,51 @@ test.describe("Deck Editor zones", () => {
       await request.delete(`/api/decks/${deckId}`);
     }
   });
+
+  test("restores a card after its zone save fails and a page reload", async ({ page, request }) => {
+    const deckId = await createDeckWithZones(request);
+
+    try {
+      await suppressOnboarding(page);
+      await page.goto(`/builder/${deckId}`);
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+
+      const sideboardTab = page.getByRole("button", { name: /^Sideboard\b/ });
+      await sideboardTab.click();
+      const sideboardCard = page.locator("span").getByText("Zone Sideboard Card", { exact: true });
+      await expect(sideboardCard).toBeVisible();
+
+      await page.route(`**/api/decks/${deckId}/cards/*`, async (route) => {
+        if (route.request().method() === "PATCH") {
+          await route.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+          return;
+        }
+        await route.continue();
+      });
+
+      const rejectedMove = page.waitForResponse(
+        (response) => response.request().method() === "PATCH" &&
+          response.url().includes(`/api/decks/${deckId}/cards/`)
+      );
+      await page.getByTitle("Move to Considering").click();
+      expect((await rejectedMove).status()).toBe(503);
+      await expect(page.getByText("Could not move card. Try again.")).toBeVisible();
+      await expect(sideboardCard).toBeVisible();
+
+      const loaded = await request.get(`/api/decks/${deckId}`);
+      expect(loaded.ok()).toBe(true);
+      expect(await loaded.json()).toEqual(expect.objectContaining({
+        cards: expect.arrayContaining([
+          expect.objectContaining({ name: "Zone Sideboard Card", zone: "sideboard" }),
+        ]),
+      }));
+
+      await page.reload();
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await sideboardTab.click();
+      await expect(sideboardCard).toBeVisible();
+    } finally {
+      await request.delete(`/api/decks/${deckId}`);
+    }
+  });
 });
