@@ -122,4 +122,41 @@ test.describe("Deck Editor zones", () => {
       await request.delete(`/api/decks/${deckId}`);
     }
   });
+
+  test("keeps a searched card in the main deck after reload", async ({ page, request }) => {
+    const deckId = await createDeckWithZones(request);
+
+    try {
+      await suppressOnboarding(page);
+      await page.goto(`/builder/${deckId}`);
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+
+      await page.getByTestId("search-input").fill("Grizzly Bears");
+      await page.getByAltText(/^Grizzly Bears$/i).first().click();
+      await expect(page.getByRole("heading", { name: /Grizzly Bears/i })).toBeVisible();
+      await expect(page.getByText("Loading printings…")).not.toBeVisible({ timeout: 30_000 });
+
+      const addedCard = page.waitForResponse(
+        (response) => response.request().method() === "POST" &&
+          response.url().endsWith(`/api/decks/${deckId}/cards`)
+      );
+      await page.getByRole("button", { name: /Grizzly Bears —/i }).first().click();
+      expect((await addedCard).ok()).toBe(true);
+
+      const loaded = await request.get(`/api/decks/${deckId}`);
+      expect(loaded.ok()).toBe(true);
+      const deck = (await loaded.json()) as {
+        cards: readonly { name: string; zone: string }[];
+      };
+      expect(deck.cards.filter((card) => card.name === "Grizzly Bears")).toEqual([
+        expect.objectContaining({ zone: "main" }),
+      ]);
+
+      await page.reload();
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toBeVisible();
+    } finally {
+      await request.delete(`/api/decks/${deckId}`);
+    }
+  });
 });
