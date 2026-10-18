@@ -1,9 +1,35 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { exportActionLogText } from "@/lib/playtest/action-log-export";
 import { PlaytestActionLog } from "./PlaytestActionLog";
 
 describe("PlaytestActionLog", () => {
+  it("copies the exported playtest log", async () => {
+    const entries = [{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }] as const;
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={entries} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy log" }));
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(exportActionLogText("Test", entries));
+    });
+  });
+
+  it("explains when the browser blocks clipboard access", async () => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn().mockRejectedValue(new Error("blocked")) },
+    });
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 1, phase: "Draw", description: "Drew a card" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy log" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not copy the log. Download the text file instead.");
+  });
+
   it("focuses an explicitly edited action without scrolling the viewport", () => {
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
     const focus = vi.spyOn(HTMLElement.prototype, "focus");
