@@ -16,6 +16,7 @@ import {
   storeSearchCache,
 } from "@/lib/db/deck-api";
 import { buildLocalizedNamesQueries } from "./localized";
+import { logger } from "@/lib/logger";
 
 const SCRYFALL_BASE = "https://api.scryfall.com";
 const MIN_DELAY_MS = 100;
@@ -135,23 +136,33 @@ export async function searchCards(
     order: "edhrec",
   });
   if (includeMultilingual) params.set("include_multilingual", "true");
-  const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/search?${params}`
-  );
+  const startedAt = performance.now();
+  let status: number | null = null;
+  try {
+    const response = await rateLimitedFetch(
+      `${SCRYFALL_BASE}/cards/search?${params}`
+    );
+    status = response.status;
 
-  // Scryfall returns 404 for a valid query with zero matches — treat as empty, not an error
-  if (response.status === 404) {
-    return EMPTY_SEARCH_RESPONSE;
+    // Scryfall returns 404 for a valid query with zero matches — treat as empty, not an error
+    if (status === 404) {
+      return EMPTY_SEARCH_RESPONSE;
+    }
+
+    const data = await handleResponse<ScryfallSearchResponse>(response);
+
+    // Store in DB cache (fire-and-forget)
+    storeSearchCache(query, page, data).catch(() => {
+      /* non-fatal */
+    });
+
+    return data;
+  } finally {
+    logger.info("Scryfall search completed", "Scryfall search", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
   }
-
-  const data = await handleResponse<ScryfallSearchResponse>(response);
-
-  // Store in DB cache (fire-and-forget)
-  storeSearchCache(query, page, data).catch(() => {
-    /* non-fatal */
-  });
-
-  return data;
 }
 
 /** Look up a single card by exact name */
@@ -206,15 +217,12 @@ export async function getCardById(id: string): Promise<ScryfallCard> {
 }
 
 /** Autocomplete partial card name */
-export async function autocompleteCardName(
-  partial: string
-): Promise<string[]> {
+export async function autocompleteCardName(partial: string): Promise<string[]> {
   const params = new URLSearchParams({ q: partial });
   const response = await rateLimitedFetch(
     `${SCRYFALL_BASE}/cards/autocomplete?${params}`
   );
-  const data =
-    await handleResponse<ScryfallAutocompleteResponse>(response);
+  const data = await handleResponse<ScryfallAutocompleteResponse>(response);
   return data.data;
 }
 
@@ -222,14 +230,11 @@ export async function autocompleteCardName(
 export async function getCardCollection(
   identifiers: ScryfallCollectionIdentifier[]
 ): Promise<ScryfallCollectionResponse> {
-  const response = await rateLimitedFetch(
-    `${SCRYFALL_BASE}/cards/collection`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifiers }),
-    }
-  );
+  const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/collection`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifiers }),
+  });
   return handleResponse<ScryfallCollectionResponse>(response);
 }
 
@@ -267,14 +272,17 @@ export async function fetchLocalizedPrintingsByNames(
   lang: string
 ): Promise<ScryfallCard[]> {
   const cards: ScryfallCard[] = [];
-  await forEachSequential(buildLocalizedNamesQueries(names, lang), async (query) => {
-    try {
-      const response = await searchCards(query, 1, true);
-      cards.push(...response.data);
-    } catch {
-      // Leave this chunk English.
+  await forEachSequential(
+    buildLocalizedNamesQueries(names, lang),
+    async (query) => {
+      try {
+        const response = await searchCards(query, 1, true);
+        cards.push(...response.data);
+      } catch {
+        // Leave this chunk English.
+      }
     }
-  });
+  );
   return cards;
 }
 
@@ -316,6 +324,8 @@ export async function searchCardPrintings(
   });
   if (wantsTranslation) params.set("include_multilingual", "true");
 
-  const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/search?${params}`);
+  const response = await rateLimitedFetch(
+    `${SCRYFALL_BASE}/cards/search?${params}`
+  );
   return handleResponse<ScryfallSearchResponse>(response);
 }

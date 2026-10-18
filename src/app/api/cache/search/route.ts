@@ -8,7 +8,6 @@ import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
 import { readJsonBody, readRecord } from "@/lib/api/json-body";
 import { toJsonPayload } from "@/lib/api/json-payload";
 
-
 const WRITE_RATE_LIMIT = 60; // max cache writes
 const WRITE_RATE_WINDOW = 60_000; // per 60 seconds per user
 
@@ -21,41 +20,58 @@ function generateCacheKey(query: string, page: number): string {
 
 // GET /api/cache/search?query=<string>&page=<number> — lookup cached search result
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get("query");
-  const pageStr = searchParams.get("page");
-  const page = pageStr ? Number.parseInt(pageStr, 10) : 1;
-
-  if (!query || query.length === 0 || Number.isNaN(page)) {
-    return NextResponse.json({ hit: false });
-  }
-
-  const cacheKey = generateCacheKey(query, page);
-
+  const startedAt = performance.now();
+  let hit = false;
+  let failed = false;
   try {
-    const cached = await prisma.scryfallSearchCache.findUnique({
-      where: { cacheKey },
-    });
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get("query");
+    const pageStr = searchParams.get("page");
+    const page = pageStr ? Number.parseInt(pageStr, 10) : 1;
 
-    if (!cached) {
+    if (!query || query.length === 0 || Number.isNaN(page)) {
       return NextResponse.json({ hit: false });
     }
 
-    const age = Date.now() - new Date(cached.cachedAt).getTime();
-    if (age > CACHE_TTL_MS) {
-      // Stale — delete and report miss
-      await prisma.scryfallSearchCache.delete({ where: { cacheKey } });
+    const cacheKey = generateCacheKey(query, page);
+
+    try {
+      const cached = await prisma.scryfallSearchCache.findUnique({
+        where: { cacheKey },
+      });
+
+      if (!cached) {
+        return NextResponse.json({ hit: false });
+      }
+
+      const age = Date.now() - new Date(cached.cachedAt).getTime();
+      if (age > CACHE_TTL_MS) {
+        // Stale — delete and report miss
+        await prisma.scryfallSearchCache.delete({ where: { cacheKey } });
+        return NextResponse.json({ hit: false });
+      }
+
+      hit = true;
+      return NextResponse.json({ hit: true, data: cached.data });
+    } catch (error) {
+      failed = true;
+      logger.error(
+        error instanceof Error ? error.message : "unknown",
+        "GET /api/cache/search",
+        { key: String(cacheKey).slice(0, 50) }
+      );
       return NextResponse.json({ hit: false });
     }
-
-    return NextResponse.json({ hit: true, data: cached.data });
-  } catch (error) {
-    logger.error(
-      error instanceof Error ? error.message : "unknown",
+  } finally {
+    logger.info(
+      "Scryfall search cache lookup completed",
       "GET /api/cache/search",
-      { key: String(cacheKey).slice(0, 50) }
+      {
+        hit,
+        failed,
+        durationMs: Math.round(performance.now() - startedAt),
+      }
     );
-    return NextResponse.json({ hit: false });
   }
 }
 
@@ -64,11 +80,18 @@ export async function POST(request: Request) {
   const auth = await requireAuth();
   if (auth.error) return auth.error;
 
-  const rl = checkRateLimit(`cache-search:${auth.session.user.id}`, WRITE_RATE_LIMIT, WRITE_RATE_WINDOW);
+  const rl = checkRateLimit(
+    `cache-search:${auth.session.user.id}`,
+    WRITE_RATE_LIMIT,
+    WRITE_RATE_WINDOW
+  );
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "Too many requests" },
-      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
+      }
     );
   }
 
