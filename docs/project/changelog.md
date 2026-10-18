@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-18: Copy the playtest action log
+
+- Copy the existing text log without downloading it; confirm success and explain clipboard failures with the text export as a fallback (#1040).
+- Keep English and French messages available while preserving key parity in dormant catalogs.
+- Validated on the VPS with typecheck, lint, 3,157 unit tests, production build and 72 Docker E2E checks. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
 ### 2026-10-18: Record Scryfall search and cache timing
 
 - Record external Scryfall search status and duration without including query text or card data (#1036).
