@@ -606,6 +606,7 @@ A deck can make a round trip through supported tools without silently changing c
 - Localized card names, type lines, rules text and card images where Scryfall provides them.
 - Localized deck rows, tooltips, playtest zones and proxies.
 - AI suggestion evidence formats Scryfall USD prices for the active locale without relabeling them as local-market quotes (#980).
+- AI suggestion evidence displays known card roles in the active locale, with a readable fallback for unknown provider categories (#1038).
 - AI suggestion impact formats average mana value and known USD price for the active locale without implying a currency conversion (#1015).
 - Deck creation wizard budget choices use the active English or French catalog, retaining their USD-denominated limits (#1017).
 - Deck creation color choices announce localized names to assistive technology and use localized tooltips, while retaining the same mana symbols (#1019).
