@@ -356,6 +356,7 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 - [ ] Upgrade Prisma only after the local Node toolchain is at least 22.12.
 - [ ] Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
   - `GET /api/decks` status and duration shipped in #1034. Profile and Scryfall paths remain open; do not close this item yet.
+  - External card search and server-side search-cache outcomes shipped in #1036. Browser search diagnostics are not centralized; profile and other Scryfall paths remain open.
 
 ### Blocked or conditional work
 
