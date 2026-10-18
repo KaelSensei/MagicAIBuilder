@@ -4,9 +4,32 @@ import { describe, expect, it } from "vitest";
 
 import deckMessages from "@/messages/en/deck.json";
 import frDeckMessages from "@/messages/fr/deck.json";
+import frBuilderMessages from "@/messages/fr/builder.json";
 import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
 
 describe("SuggestionEvidenceDetails", () => {
+  it("shows a localized role for a French suggestion", () => {
+    render(
+      <NextIntlClientProvider locale="fr" messages={{ deck: frDeckMessages, builder: frBuilderMessages }}>
+        <SuggestionEvidenceDetails
+          evidence={{
+            role: "draw",
+            synergy: "Accelerates the commander.",
+            manaValue: 2,
+            curveImpact: "Below the deck average (3.40)",
+            colorIdentity: [],
+            colorCompatible: true,
+            commanderLegal: true,
+            priceUsd: 1.25,
+            verified: true,
+          }}
+        />
+      </NextIntlClientProvider>
+    );
+
+    expect(screen.getByText("Pioche")).toBeInTheDocument();
+  });
+
   it("formats a Scryfall USD price for French without converting it to euros", () => {
     render(
       <NextIntlClientProvider locale="fr" messages={{ deck: frDeckMessages }}>
