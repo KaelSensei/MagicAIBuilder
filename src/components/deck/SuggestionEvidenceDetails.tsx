@@ -25,6 +25,7 @@ export function SuggestionEvidenceDetails({
   readonly evidence: SuggestionEvidence;
 }) {
   const t = useTranslations("deck.ai.evidence");
+  const category = useTranslations("builder.categories");
   const format = useFormatter();
   const colors =
     evidence.colorIdentity.length > 0
@@ -54,7 +55,7 @@ export function SuggestionEvidenceDetails({
         <span className="flex items-center gap-1">
           <Tag className="h-3 w-3 shrink-0" />
           <span className="text-[var(--text-primary)]">
-            {titleCase(evidence.role)}
+            {category.has(evidence.role) ? category(evidence.role) : titleCase(evidence.role)}
           </span>
         </span>
         <span className="flex items-center gap-1">
