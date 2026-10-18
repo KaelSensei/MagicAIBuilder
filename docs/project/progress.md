@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-10-17                             |
+| Last Updated  | 2026-10-18                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3,143 across 288 files, validated on the VPS on 2026-10-17                                                                                 |
+| Unit tests          | 3,144 across 288 files, validated on the VPS on 2026-10-18                                                                                 |
 | E2E tests           | 66 passing (`@external` / `@perf` excluded), full Docker gate on the VPS, validated on 2026-10-10                                           |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
@@ -31,6 +31,7 @@
 
 ## Latest product delivery
 
+- 2026-10-18: #1027 suppresses obsolete card-move error feedback after the card is removed while keeping recovery for cards still in the deck. The focused test failed before the fix; VPS typecheck, lint, 3,144 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Broader concurrent mutation ownership, Docker E2E and QA promotion remain open.
 - 2026-10-17: #1025 suppresses obsolete card-move error feedback after a deck is removed while keeping recovery for existing decks. The focused test failed before the fix; VPS typecheck, lint, 3,143 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Broader concurrent mutation ownership, Docker E2E and QA promotion remain open.
 - 2026-10-17: #1023 exposes unresolved names after a pasted decklist import, while keeping the cards that resolved successfully. The focused name-resolution test failed before implementation; VPS typecheck, lint, 3,142 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Exact-printing and category round trips, Docker E2E and QA promotion remain open.
 - 2026-10-17: #1021 localizes strategy and bracket names/descriptions in the deck creation wizard without changing their selected values. Two separate French UI tests were observed red before implementation. VPS typecheck, lint, 3,141 unit tests and production build passed; CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
