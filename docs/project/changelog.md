@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-18: Record Scryfall search and cache timing
+
+- Record external Scryfall search status and duration without including query text or card data (#1036).
+- Record server-side cache hit, miss and database failure duration while preserving existing responses.
+- Validated on the VPS with typecheck, lint, 3,154 unit tests, production build and 72 Docker E2E checks. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
 ### 2026-10-18: Record deck-list request outcomes
 
 - Log the status and duration of `GET /api/decks`, including authentication and server failures, without recording user identifiers (#1034).
