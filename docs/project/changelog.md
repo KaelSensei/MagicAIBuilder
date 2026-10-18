@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-18: Record deck-list request outcomes
+
+- Log the status and duration of `GET /api/decks`, including authentication and server failures, without recording user identifiers (#1034).
+- Split Docker Playwright into anonymous and authenticated runs so Next.js starts fresh before signed-in flows; keep all 72 scenarios in the pre-push gate.
+- Validated on the VPS with typecheck, lint, 3,145 unit tests, production build and the full Docker E2E gate. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
 ### 2026-10-18: Cover searched-card addition and reload in E2E
 
 #### Tests

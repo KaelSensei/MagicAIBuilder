@@ -355,6 +355,7 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 - [ ] Record the E2E Docker strategy and required environment variables.
 - [ ] Upgrade Prisma only after the local Node toolchain is at least 22.12.
 - [ ] Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
+  - `GET /api/decks` status and duration shipped in #1034. Profile and Scryfall paths remain open; do not close this item yet.
 
 ### Blocked or conditional work
 
