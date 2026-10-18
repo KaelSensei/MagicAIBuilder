@@ -33,6 +33,7 @@ vi.mock("@/lib/auth/config", () => ({
 // ─── Import after mocks ──────────────────────────────────────────────────────
 
 import { GET, PATCH, DELETE } from "./route";
+import { logger } from "@/lib/logger";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -76,6 +77,55 @@ describe("GET /api/user/profile", () => {
     expect(body.createdAt).toBe("2026-01-01T00:00:00.000Z");
     expect(body.onboardingDone).toBe(true);
     expect(mockUserFindUnique).toHaveBeenCalledTimes(1);
+  });
+
+  it("records profile response latency without user details", async () => {
+    const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    try {
+      authed();
+      expect((await GET()).status).toBe(200);
+      expect(info).toHaveBeenCalledWith(
+        "Profile request completed",
+        "GET /api/user/profile",
+        expect.objectContaining({ status: 200, durationMs: expect.any(Number) })
+      );
+      expect(JSON.stringify(info.mock.calls)).not.toContain(USER_FIXTURE.email);
+    } finally {
+      info.mockRestore();
+    }
+  });
+
+  it("records rejected profile requests without user details", async () => {
+    const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    try {
+      unauthed();
+      expect((await GET()).status).toBe(401);
+      expect(info).toHaveBeenCalledWith(
+        "Profile request completed",
+        "GET /api/user/profile",
+        expect.objectContaining({ status: 401, durationMs: expect.any(Number) })
+      );
+    } finally {
+      info.mockRestore();
+    }
+  });
+
+  it("records a failed profile request with its response status", async () => {
+    const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    const error = vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    try {
+      mockAuth.mockRejectedValueOnce(new Error("auth unavailable"));
+      const response = await GET();
+      expect(response.status).toBe(500);
+      expect(info).toHaveBeenCalledWith(
+        "Profile request completed",
+        "GET /api/user/profile",
+        expect.objectContaining({ status: 500, durationMs: expect.any(Number) })
+      );
+    } finally {
+      info.mockRestore();
+      error.mockRestore();
+    }
   });
 
   it("returns 401 when not authenticated", async () => {
