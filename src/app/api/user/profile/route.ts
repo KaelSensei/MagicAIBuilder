@@ -7,15 +7,26 @@ import { readJsonBody } from "@/lib/api/json-body";
 
 /** GET /api/user/profile — Get current user's profile */
 export async function GET() {
+  const startedAt = performance.now();
+  let status = 500;
   try {
     const result = await requireAuth();
-    if (result.error) return result.error;
+    if (result.error) {
+      status = result.error.status;
+      return result.error;
+    }
 
     const { id, name, email, image, createdAt, onboardingDone } = result.session.user;
+    status = 200;
     return NextResponse.json({ id, name, email, image, createdAt, onboardingDone });
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "GET /api/user/profile");
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
+  } finally {
+    logger.info("Profile request completed", "GET /api/user/profile", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
   }
 }
 
