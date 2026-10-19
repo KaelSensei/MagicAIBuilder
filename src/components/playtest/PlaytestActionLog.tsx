@@ -140,7 +140,10 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
                   value={editingText}
                   onChange={(event) => setEditingText(event.target.value)}
                   onBlur={() => saveEdit(entry.id)}
-                  onKeyDown={(event) => event.key === "Enter" && saveEdit(entry.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") saveEdit(entry.id);
+                    if (event.key === "Escape") setEditingId(null);
+                  }}
                   aria-label={t("editEntry")}
                   className="min-w-0 flex-1 rounded border border-purple-400/50 bg-black/30 px-2 py-1 text-white outline-none"
                 />
