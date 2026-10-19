@@ -28,7 +28,14 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
   }, [editingId]);
   const [manaAmount, setManaAmount] = useState("1");
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [selectedTurn, setSelectedTurn] = useState<number | null>(null);
+  const turns = [...new Set(entries.map((entry) => entry.turn))].sort((first, second) => first - second);
+  const activeTurn = selectedTurn !== null && turns.includes(selectedTurn) ? selectedTurn : null;
+  const visibleEntries = activeTurn === null ? entries : entries.filter((entry) => entry.turn === activeTurn);
   const summaries = useMemo(() => summarizeActionLog(entries), [entries]);
+  const visibleSummaries = summaries.filter((summary) =>
+    (activeTurn === null || summary.turn === activeTurn) && summary.draws + summary.manaProduced + summary.cardsSeen > 0
+  );
   const fileStem = deckName.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "deck";
   const textFormat = {
     title: t("title"),
@@ -116,10 +123,10 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
           <button type="button" disabled={!Number.isInteger(Number(manaAmount)) || Number(manaAmount) < 1 || Number(manaAmount) > 100} onClick={() => onRecordMana(Number(manaAmount))} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 disabled:opacity-40">{t("recordMana")}</button>
         </div>
       )}
-      {summaries.some((summary) => summary.draws + summary.manaProduced + summary.cardsSeen > 0) && (
+      {visibleSummaries.length > 0 && (
         <div className="mb-3 space-y-1 rounded-md border border-white/10 bg-black/10 p-2" aria-label={t("evidenceTitle")}>
           <p className="text-[10px] font-semibold uppercase tracking-wide text-white/50">{t("evidenceTitle")}</p>
-          {summaries.filter((summary) => summary.draws + summary.manaProduced + summary.cardsSeen > 0).map((summary) => (
+          {visibleSummaries.map((summary) => (
             <p key={summary.turn} className="text-xs text-white/70">
               <span className="font-semibold text-white/85">{t("turn", { turn: summary.turn })}</span> · {t("evidence", { draws: summary.draws, mana: summary.manaProduced, seen: summary.cardsSeen })}
             </p>
@@ -127,11 +134,23 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
           <p className="text-[10px] text-white/40">{t("evidenceLimit")}</p>
         </div>
       )}
+      {turns.length > 1 && (
+        <div role="group" aria-label={t("title")} className="mb-3 flex flex-wrap gap-1">
+          <button type="button" aria-pressed={activeTurn === null} onClick={() => setSelectedTurn(null)} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
+            {t("title")}
+          </button>
+          {turns.map((turn) => (
+            <button key={turn} type="button" aria-pressed={activeTurn === turn} onClick={() => setSelectedTurn(turn)} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
+              {t("turn", { turn })}
+            </button>
+          ))}
+        </div>
+      )}
       {entries.length === 0 ? (
         <p className="text-xs text-white/35">{t("empty")}</p>
       ) : (
         <ol className="max-h-48 space-y-1 overflow-y-auto">
-          {[...entries].reverse().map((entry) => (
+          {[...visibleEntries].reverse().map((entry) => (
             <li key={entry.id} className="flex items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-white/5">
               <span className="shrink-0 text-[10px] text-white/35">{t("turn", { turn: entry.turn })} · {phaseLabel(entry.phase)}</span>
               {editingId === entry.id ? (
