@@ -23,7 +23,7 @@ test.describe("Playtest mode", () => {
     // under full-suite parallelism the single next-dev process queues this
     // fetch behind the heavy proxy-export tests, and the default 5s was
     // observed timing out while the load was merely slow, not broken.
-    await expect(page.getByText("Fixture Card 0").first()).toBeVisible({
+    await expect(page.getByRole("button", { name: "Move Fixture Card 0 to Considering" })).toBeVisible({
       timeout: 30_000,
     });
 

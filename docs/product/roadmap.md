@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-10
+> **Updated:** 2026-10-15
 
 > **Latest quality delivery:** #955 and #956 restore working VPS/CI Sonar analysis and a green Quality Gate, with zero bugs and 65 code smells still open. Google failure feedback and description-save completion have separate Red/Green regressions. All validations ran on the VPS. The remaining maintainability backlog is tracked in [Sonar status](../engineering/sonar-status.md); QA promotion remains pending.
 
@@ -140,6 +140,7 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - List and grid presentations.
 - Categories, quantities, notes, tags and bulk actions.
 - Card printing selection and card hover previews.
+- Explicit keyboard-accessible moves from the main deck to Sideboard or Considering, and between secondary zones.
 - Snapshots, undo, import/export and color identity validation.
 - Bracket, Game Changers, banlist and deck warnings.
 
@@ -150,6 +151,8 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [x] Restore the previous card printing and notify the player when its save fails.
 - [ ] Complete cross-zone drag and drop with clear drop targets and no layout jump.
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
+  - [x] Suppress failed zone-move feedback after the card itself has been removed, without changing recovery for cards still in the deck (#1027). Broader concurrent mutation ownership remains open.
+  - [x] Suppress failed zone-move feedback after its deck has been removed, without changing recovery for existing decks (#1025). Broader concurrent mutation ownership remains open.
   - [x] Ignore bulk removal identifiers absent from the active deck; entirely stale selections preserve the deck and save activity without requests (#943). Cross-batch ownership remains open.
   - [x] Deduplicate card identifiers within bulk removals to avoid duplicate requests and conflicting recovery for one card (#941). Cross-batch ownership remains open.
   - [x] Group rejected bulk removal feedback into one retry notification after the batch finishes, preserving individual recovery and suppressing feedback for deleted decks (#939). Overlapping removal ownership remains open.
@@ -178,8 +181,18 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
   - [x] Serialize card-note saves and restore the last confirmed note after a failed latest edit (#872).
   - [x] Recover individual failed bulk zone moves without rolling back successfully saved cards (#871). Broader mutation recovery remains open.
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
+  - [x] Verify a rejected Sideboard-to-Considering move retains its card and saved zone after reload in Docker-backed Playwright (#1029). Other add-flow and recovery E2E remain open.
+  - [x] Verify a searched card is added to Main, persisted through the API and still present after reload in Docker-backed Playwright (#1031). Other add/recovery variants remain open.
 - [ ] Add keyboard and mobile alternatives for every drag action.
-- [ ] Add a compact activity indicator instead of blocking the whole editor during saves.
+  - [x] Provide card-specific Main → Sideboard/Considering controls in grid and list views (#970).
+  - [x] Enable keyboard sorting for categorized deck cards using the reorder handle and standard vertical controls (#997).
+  - [x] Change a categorized card from a touch-friendly menu in the grouped list, without drag and drop (#999).
+  - [x] Move Sideboard and Considering cards to either legal destination from grid or list view with controls that remain visible on touch devices (#1001).
+  - [x] Keep Main-grid moves to Sideboard and Considering, plus card removal, visible and reachable on touch devices (#1003).
+  - [x] Change Main-card categories directly in grid view with an accessible touch-friendly selector (#1005).
+  - [x] Keep category editing available when the Main list is grouped by mana value or color (#1007).
+  - [ ] Complete mobile alternatives for the remaining drag-only actions.
+- [x] Add a compact activity indicator instead of blocking the whole editor during saves.
   - [x] Preserve shared activity between bulk removal and manual bracket saves regardless of which action finishes first (#947). Other action combinations and mutation ownership remain open.
   - [x] Retain save activity until all overlapping bulk removal batches finish (#945). Cross-action activity tracking and overlapping recovery ownership remain open.
   - [x] Keep the indicator active until all overlapping manual bracket saves finish, including rejected requests (#933). Cross-action accounting and server write ordering remain open.
@@ -285,13 +298,25 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 
 ### Product work
 
+- [x] Bound collection loading to 15 seconds and show a localized retry rather than an endless spinner or a false empty state; retain cached cards after failed refreshes (#1013).
+- [x] Time out stalled acquisition-plan loading after 15 seconds and expose its existing localized retry action without losing close/filter cancellation (#995).
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
+  - [x] End the indefinite My Decks skeleton for signed-out visitors after session resolution (#1011). Profile latency and other loading ownership remain open.
+  - [x] Show an accessible, responsive editor-shaped skeleton while the initial deck data loads (#1009). Profile latency and other loading ownership remain open.
+  - [x] Treat temporary public-deck API, network and invalid-response failures as retryable rather than a false 404; bound the fetch to 15 seconds (#993). Authentication latency and broader loading ownership remain open.
+  - [x] Bound public-profile API fetches to 15 seconds and show the existing retryable route error for temporary failures rather than a false 404 (#989). Authentication latency and the underlying profile API remain open.
+  - [x] Ignore superseded deck-list responses so an older failure cannot override a successful retry (#984).
+  - [x] Warn when a failed refresh leaves cached decks visible, with a localized retry action (#985). Initial loading ownership and profile latency remain open.
+  - [x] Distinguish failed deck-list loading from a missing deck on direct builder navigation, with a localized retry action (#974). Initial loading ownership remains open.
+  - [x] Show a recoverable error when an individual deck fetch fails on direct builder navigation, then retry that deck without exposing its incomplete listing stub (#976). Broader loading ownership remains open.
   - [x] Report failed manual deck refresh without changing the current deck, and suppress late failure feedback after deletion (#923). Dedicated visual retry states and broader loading ownership remain open.
-  - [x] Notify the player when individual deck opening fails instead of logging silently (#911). Dedicated visual error/retry states remain open.
+  - [x] Notify the player when individual deck opening fails instead of logging silently (#911). The direct-builder retry state is covered by #976; manual-refresh retry UX remains open.
   - [x] Bound individual server deck fetches to 15 seconds, keeping the deadline through JSON reading and leaving guest loading local (#909). Broader UI retry and profile latency work remain open.
   - [x] Abort stalled deck-list requests after 15 seconds so the existing error and retry state can appear.
   - [x] Keep the user initialization eight-second deadline active through response-body loading and JSON validation, not only until headers arrive. Database latency and broader profile loading work remain open.
 - [ ] Use route-level skeletons and cached session/profile data where safe.
+  - [x] Show a localized, accessible route-level loading skeleton for public profiles (#987). Cached profile data and other route loading states remain open.
+  - [x] Show a localized, accessible route-level loading skeleton for public decks, sharing the visual fallback with public profiles (#991). Cached data and other route loading states remain open.
 - [ ] Remove React refresh loops, hover jitter, layout shifts and unstable card previews.
   - [x] Ignore superseded meta-history responses and invalidate pending results on reset, preventing old trend data or errors from resurfacing.
 - [x] Make warning panels collapsible and dismissible, with accessible close controls.
@@ -330,6 +355,8 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 - [ ] Record the E2E Docker strategy and required environment variables.
 - [ ] Upgrade Prisma only after the local Node toolchain is at least 22.12.
 - [ ] Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
+  - `GET /api/decks` status and duration shipped in #1034. Profile and Scryfall paths remain open; do not close this item yet.
+  - External card search and server-side search-cache outcomes shipped in #1036. Browser search diagnostics are not centralized; profile and other Scryfall paths remain open.
 
 ### Blocked or conditional work
 
@@ -369,14 +396,14 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - The cross-deck plan exports a generic CSV of missing quantities with Scryfall printing IDs and known prices; owned copies are excluded.
 - Collection cards now link to private decks using that exact printing, including the deck zone and quantity, without loading usage for every card up front.
 - The collection acquisition plan can focus on one owned deck or all decks, keeping its summary and CSV export scoped to the selected view.
-- The printing selector now puts exact owned editions first and shows combined regular and foil quantities; choosing an edition remains an explicit action.
+- The printing selector now puts exact owned editions first, shows combined regular and foil quantities, and offers an optional owned-only filter with an empty state (#978); choosing an edition remains an explicit action.
 - The acquisition plan now shows a known-price subtotal for each missing printing and marks unpriced printings on their own rows.
 - Each missing printing in the acquisition plan now links to the player's contributing decks, so the player can inspect where it is needed.
 
 ### Remaining scope
 
 - [ ] Track the actual owned printing, not only the oracle card.
-- [ ] Prefer owned printings during direct add and import flows; the shared printing selector now prioritizes owned editions, but automatic import matching remains open.
+- [ ] Prefer owned printings during direct add and import flows; the shared printing selector prioritizes owned editions and can filter to owned-only (#978), but automatic import matching remains open.
 - [ ] Complete deck/collection reconciliation without mutating ownership accidentally; the unsafe deck-sidebar Reset action has been removed.
 - [ ] Add region-aware price providers, starting with a clearly selected market.
 - [ ] Support a synchronized "proxy now / buy later" workflow across devices; the shopping-list buy-later choice currently persists only in the same browser and does not track proxies.
@@ -419,7 +446,9 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
 - [x] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
+  - [x] Let players cancel an action-log edit with Escape without saving its draft (#1043).
 - [x] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
+  - [x] Let players copy the human-readable action log directly, with success and clipboard-error feedback (#1040).
 - [x] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
 
 ### Definition of done
@@ -537,6 +566,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - The Moxfield text exporter now retains companion, Sideboard and Considering headings instead of flattening zones. Our text parser round trip preserves roles and quantities; live Moxfield comment-header compatibility remains unverified, so external fidelity is still open.
 - Versioned read-only external API under /api/v1.
 - The URL import preview now discloses Scryfall-unresolved card names before confirmation, alongside names ignored by the source; front-face names of double-faced cards still resolve.
+- Pasted plain-text imports now disclose unresolved names after import instead of implying complete success; resolved cards remain in the deck (#1023). Pre-import preview for pasted text remains separate scope.
 - Missing-name warnings in the URL import preview are grouped across equivalent case, whitespace and apostrophe spellings, preserving the first spelling without merging imported rows or quantities (#848).
 - Import duplicate warnings also recognize front-face and full names resolving to the same canonical Scryfall name (#865), preserving first imported spelling, rows, quantities and zones.
 - Pasted decklists preserve Unicode names, accept commented or colon-terminated section headings, and recognize uppercase set codes without collector numbers. Scryfall lookup also handles copied smart apostrophes.
@@ -577,6 +607,14 @@ A deck can make a round trip through supported tools without silently changing c
 - Locale switcher and catalog parity guard.
 - Localized card names, type lines, rules text and card images where Scryfall provides them.
 - Localized deck rows, tooltips, playtest zones and proxies.
+- Playtest action-log turn and phase labels and human-readable exports follow the active English or French locale; player-authored descriptions and JSON data remain unchanged (#1042).
+- AI suggestion evidence formats Scryfall USD prices for the active locale without relabeling them as local-market quotes (#980).
+- AI suggestion evidence displays known card roles in the active locale, with a readable fallback for unknown provider categories (#1038).
+- AI suggestion impact formats average mana value and known USD price for the active locale without implying a currency conversion (#1015).
+- Deck creation wizard budget choices use the active English or French catalog, retaining their USD-denominated limits (#1017).
+- Deck creation color choices announce localized names to assistive technology and use localized tooltips, while retaining the same mana symbols (#1019).
+- Deck creation strategy and bracket descriptions use the active English or French catalog, preserving the underlying strategy and bracket values (#1021).
+- Public deck card counts use the active English or French locale with singular and plural forms; the shared deck-count label is consistent across public and share views (#982).
 
 ### Remaining scope
 

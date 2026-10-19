@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   buildScryfallNameIndex,
+  getUnmatchedImportedNames,
   normalizeImportedName,
   scryfallCollectionLookupName,
 } from "./name-index";
@@ -70,5 +71,16 @@ describe("buildScryfallNameIndex", () => {
   it("matches a pasted smart apostrophe to the canonical card name", () => {
     const index = buildScryfallNameIndex([makeCard({ name: "Urza's Saga" })]);
     expect(index.get(normalizeImportedName("Urza’s Saga"))?.id).toBe("id-1");
+  });
+});
+
+describe("getUnmatchedImportedNames", () => {
+  it("reports unresolved pasted names without repeating equivalent names", () => {
+    const index = buildScryfallNameIndex([makeCard({ name: "Urza's Saga" })]);
+
+    expect(getUnmatchedImportedNames(
+      ["Urza’s Saga", "Unknown Card", " unknown  card "],
+      index
+    )).toEqual(["Unknown Card"]);
   });
 });

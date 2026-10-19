@@ -29,6 +29,8 @@
     "toAcquire": "{count} to acquire"
   },
   "loading": "Loading collection…",
+  "loadFailed": "Could not refresh your collection. Your saved cards are unchanged.",
+  "retry": "Try again",
   "stats": {
     "uniqueCards": "Unique Cards",
     "totalCards": "Total Cards",

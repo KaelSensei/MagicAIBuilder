@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, ArrowRight } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import type { CardSuggestion } from "@/hooks/useAISuggestions";
 import type { DeckCard } from "@/lib/deck/types";
 import { buildSuggestionImpact } from "@/lib/ai/suggestion-impact";
@@ -38,6 +38,7 @@ export function SuggestionImpactPreview({
   removals,
 }: Props) {
   const t = useTranslations("deck.ai.impact");
+  const format = useFormatter();
   const impact = buildSuggestionImpact(
     currentCards.map((card) => ({
       name: card.name,
@@ -75,13 +76,25 @@ export function SuggestionImpactPreview({
       />
       <Metric
         label={t("averageMana")}
-        before={impact.before.averageManaValue.toFixed(2)}
-        after={impact.after.averageManaValue.toFixed(2)}
+        before={format.number(impact.before.averageManaValue, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}
+        after={format.number(impact.after.averageManaValue, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}
       />
       <Metric
         label={t("knownPrice")}
-        before={`$${impact.before.knownPriceUsd.toFixed(2)}`}
-        after={`$${impact.after.knownPriceUsd.toFixed(2)}`}
+        before={format.number(impact.before.knownPriceUsd, {
+          style: "currency",
+          currency: "USD",
+        })}
+        after={format.number(impact.after.knownPriceUsd, {
+          style: "currency",
+          currency: "USD",
+        })}
       />
       {warningCount > 0 && (
         <div className="flex items-start gap-1.5 pt-1 text-[10px] text-amber-400">

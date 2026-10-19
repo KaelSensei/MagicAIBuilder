@@ -54,6 +54,7 @@
     "removeCompanion": "Remove companion",
     "removeCard": "Remove {name}",
     "dragToReorder": "Drag to reorder",
+    "changeCategoryFor": "Change category for {name}",
     "backToDecks": "Back to my decks",
     "rename": "Click to rename",
     "duplicate": "Duplicate deck",

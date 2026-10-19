@@ -12,7 +12,7 @@ function card(id: string, name: string): DeckCard {
   return {
     id, name, manaCost: "{1}", cmc: 1, typeLine: "Artifact",
     oracleText: "", colorIdentity: [], isGameChanger: false,
-    isBanned: false, price: null, imageUri: "", artCropUri: "",
+    isBanned: false, price: null, imageUri: "https://cards.scryfall.io/normal/front/a/b/card.jpg", artCropUri: "",
     category: "artifact", quantity: 1, zone: "sideboard", scryfallId: id,
   };
 }
@@ -39,6 +39,38 @@ describe("SecondaryZoneContent", () => {
    * it is already in.
    */
   describe("move targets", () => {
+    it("offers both destinations in grid view without dragging", () => {
+      const moveCardToZone = vi.fn();
+      renderWithIntl(
+        <SecondaryZoneContent
+          {...baseProps}
+          zone="sideboard"
+          viewMode="grid"
+          moveCardToZone={moveCardToZone}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Move to Considering" }));
+
+      expect(moveCardToZone).toHaveBeenCalledWith("c1", "maybeboard");
+    });
+
+    it("keeps grid move actions visible on touch devices", () => {
+      renderWithIntl(
+        <SecondaryZoneContent {...baseProps} zone="sideboard" viewMode="grid" />
+      );
+
+      expect(screen.getByRole("button", { name: "Move to Considering" }).parentElement)
+        .toHaveClass("[@media(hover:none)]:opacity-100");
+    });
+
+    it("keeps list move actions visible on touch devices", () => {
+      renderWithIntl(<SecondaryZoneContent {...baseProps} zone="sideboard" />);
+
+      expect(screen.getByRole("button", { name: "→ Considering" }).parentElement)
+        .toHaveClass("[@media(hover:none)]:opacity-100");
+    });
+
     it("offers main and considering from the sideboard", () => {
       renderWithIntl(<SecondaryZoneContent {...baseProps} zone="sideboard" />);
 

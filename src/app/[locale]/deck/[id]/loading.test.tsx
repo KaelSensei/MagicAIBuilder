@@ -1,0 +1,18 @@
+import { renderWithIntl } from "@/test/render-with-intl";
+import { screen } from "@testing-library/react";
+import { expect, it } from "vitest";
+import Loading from "./loading";
+
+it("announces that a public deck is loading", () => {
+  renderWithIntl(<Loading />, { locale: "en" });
+
+  expect(screen.getByRole("status")).toHaveTextContent("Loading deck...");
+  expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
+  expect(screen.getByRole("status").tagName).toBe("OUTPUT");
+});
+
+it("announces the public-deck loading state in French", () => {
+  renderWithIntl(<Loading />, { locale: "fr" });
+
+  expect(screen.getByRole("status")).toHaveTextContent("Chargement du deck...");
+});

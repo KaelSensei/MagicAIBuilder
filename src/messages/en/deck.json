@@ -1,4 +1,5 @@
 {
+  "publicLoading": "Loading deck...",
   "savedFolders": {
     "eyebrow": "Community library",
     "title": "Saved public decks",
@@ -589,7 +590,7 @@
     "imported": "Imported!",
     "importing": "Importing…",
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
-    "cardCountLabel": "{count} cards",
+    "cardCountLabel": "{count, plural, one {# card} other {# cards}}",
     "openShare": "Share deck",
     "forkThisDeck": "Fork this deck"
   },

@@ -12,6 +12,7 @@ export interface CollectionStore {
   collectionCards: Record<string, CollectionCard>; // keyed by scryfallId (non-foil)
   collectionCardsFoil: Record<string, CollectionCard>; // keyed by scryfallId (foil)
   isLoading: boolean;
+  loadError: boolean;
   isSyncing: boolean;
 
   // Helpers
@@ -34,6 +35,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
   collectionCards: {},
   collectionCardsFoil: {},
   isLoading: false,
+  loadError: false,
   isSyncing: false,
 
   getByScryfall: (scryfallId: string) => {
@@ -65,13 +67,15 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
       }
     }
 
-    set({ collectionCards, collectionCardsFoil, isLoading: false });
+    set({ collectionCards, collectionCardsFoil, isLoading: false, loadError: false });
   },
 
   loadCollection: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, loadError: false });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15_000);
     try {
-      const res = await fetch("/api/collection");
+      const res = await fetch("/api/collection", { signal: controller.signal });
       if (!res.ok) throw new Error("Failed to load collection");
       const cards: CollectionCard[] = await res.json();
 
@@ -94,7 +98,9 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
       set({ collectionCards, collectionCardsFoil });
     } catch (err) {
       logger.error("Unexpected error", "loadCollection", err);
+      set({ loadError: true });
     } finally {
+      clearTimeout(timeoutId);
       set({ isLoading: false });
     }
   },

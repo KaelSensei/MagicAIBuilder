@@ -45,6 +45,7 @@ export function AcquisitionPlanPanel() {
   useEffect(() => {
     if (!open) return;
     const controller = new AbortController();
+    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]);
     setState({ status: "loading" });
 
     async function loadPlan() {
@@ -53,7 +54,7 @@ export function AcquisitionPlanPanel() {
           ? `/api/collection/acquisition-plan?deckId=${encodeURIComponent(selectedDeckId)}`
           : "/api/collection/acquisition-plan";
         const response = await fetch(url, {
-          signal: controller.signal,
+          signal,
         });
         if (!response.ok) throw new Error("Acquisition plan request failed");
         const parsed = planSchema.safeParse(await response.json());

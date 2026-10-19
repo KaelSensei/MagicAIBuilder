@@ -89,6 +89,37 @@ describe("deck zone save recovery", () => {
     expect(mocks.addToast).toHaveBeenCalledWith("error", expect.stringContaining("move"));
   });
 
+  it("does not report a failed zone save after its deck is removed", async () => {
+    let rejectSave: (error: Error) => void = () => {};
+    mocks.updateCardZone.mockReturnValueOnce(new Promise<void>((_, reject) => {
+      rejectSave = reject;
+    }));
+
+    const move = useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    useDeckStore.setState({ decks: {}, activeDeckId: null });
+    rejectSave(new Error("offline"));
+    await move;
+
+    expect(useDeckStore.getState().decks).toEqual({});
+    expect(mocks.addToast).not.toHaveBeenCalled();
+  });
+
+  it("does not report a failed zone save after its card is removed", async () => {
+    let rejectSave: (error: Error) => void = () => {};
+    mocks.updateCardZone.mockReturnValueOnce(new Promise<void>((_, reject) => {
+      rejectSave = reject;
+    }));
+
+    const move = useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    const deck = useDeckStore.getState().decks["deck-1"];
+    useDeckStore.setState({ decks: { "deck-1": { ...deck, cards: [], maybeboard: [] } } });
+    rejectSave(new Error("offline"));
+    await move;
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toEqual([]);
+    expect(mocks.addToast).not.toHaveBeenCalled();
+  });
+
   it("restores the previous zone and notifies when a move fails", async () => {
     mocks.updateCardZone.mockRejectedValueOnce(new Error("offline"));
 

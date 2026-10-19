@@ -15,8 +15,6 @@ services:
       POSTGRES_DB: magicaibuilder
       POSTGRES_USER: magic
       POSTGRES_PASSWORD: magic_dev_only
-    ports:
-      - "5433:5432"
     volumes:
       - pgdata_e2e:/var/lib/postgresql/data
     healthcheck:
@@ -76,14 +74,18 @@ services:
       #     under full-suite contention.
       # Set this to "" to run them deliberately.
       PLAYWRIGHT_GREP_INVERT: "${PLAYWRIGHT_GREP_INVERT-@external|@perf}"
+    # Two invocations cover every project while restarting next dev before
+    # authenticated flows; one long run reaches its memory restart threshold.
     command: >
       sh -lc "
-        pnpm exec prisma migrate deploy &&
-        if [ -n \"$${PLAYWRIGHT_GREP_INVERT}\" ]; then
-          pnpm exec playwright test $${PLAYWRIGHT_SPEC} --grep-invert \"$${PLAYWRIGHT_GREP_INVERT}\"
-        else
-          pnpm exec playwright test $${PLAYWRIGHT_SPEC}
-        fi
+        pnpm exec prisma migrate deploy || exit $$?;
+        for project in chromium authenticated; do
+          if [ -n \"$${PLAYWRIGHT_GREP_INVERT}\" ]; then
+            pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project \"$$project\" --grep-invert \"$${PLAYWRIGHT_GREP_INVERT}\" || exit $$?;
+          else
+            pnpm exec playwright test $${PLAYWRIGHT_SPEC} --project \"$$project\" || exit $$?;
+          fi;
+        done
       "
 
 volumes:

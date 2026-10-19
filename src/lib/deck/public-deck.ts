@@ -59,15 +59,21 @@ export async function fetchPublicDeck(
   id: string,
   cookieHeader: string | null
 ): Promise<PublicDeck | null> {
+  let res: Response;
   try {
-    const res = await fetch(
+    res = await fetch(
       `${resolveAppBaseUrl()}/api/deck/${id}`,
-      buildViewerScopedRequestInit(cookieHeader)
+      { ...buildViewerScopedRequestInit(cookieHeader), signal: AbortSignal.timeout(15_000) }
     );
-    if (!res.ok) return null;
+  } catch {
+    throw new Error("PUBLIC_DECK_UNAVAILABLE");
+  }
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("PUBLIC_DECK_UNAVAILABLE");
+  try {
     const deck: PublicDeck = await res.json();
     return deck;
   } catch {
-    return null;
+    throw new Error("PUBLIC_DECK_UNAVAILABLE");
   }
 }

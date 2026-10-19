@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-10-03                             |
+| Last Updated  | 2026-10-19                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3077 across 275 files, validated on 2026-10-10                                                                                              |
+| Unit tests          | 3,144 across 288 files, validated on the VPS on 2026-10-18                                                                                 |
 | E2E tests           | 66 passing (`@external` / `@perf` excluded), full Docker gate on the VPS, validated on 2026-10-10                                           |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
@@ -30,6 +30,45 @@
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+- 2026-10-19: #1043 lets players cancel an action-log edit with Escape without saving its draft. Observed focused Red/Green; VPS typecheck, lint, 3,160 unit tests and production build passed. QA promotion remains pending.
+- 2026-10-18: #1042 localizes playtest turn and phase labels plus human-readable exports for English and French. VPS typecheck, lint, 3,159 unit tests, build and Docker E2E passed. CI, SonarCloud and Lighthouse passed; Vercel failed and the user explicitly approved merging into `dev` despite it. QA promotion remains pending.
+- 2026-10-18: #1040 lets players copy their playtest action log, confirms success and explains browser clipboard failures. Two focused Red/Green cycles; VPS typecheck, lint, 3,157 unit tests, build and all 72 Docker E2E checks passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`; QA promotion remains pending.
+- 2026-10-18: #1036 adds privacy-conscious timing/status logs for external Scryfall searches and server-side cache outcomes. VPS typecheck, lint, 3,154 unit tests, build and all 72 Docker E2E checks passed; all PR checks passed before merge into `dev`. Browser search logs are local to the browser, while cache logs appear in server logs. Profile and other Scryfall paths, plus QA promotion, remain open.
+- 2026-10-18: #1034 records `GET /api/decks` status and duration without user identifiers. The full Docker pre-push suite passed in two phases (65 anonymous and 7 authenticated tests) on the VPS, alongside typecheck, lint, 3,145 unit tests and build. All PR checks passed before merge into `dev`; profile and Scryfall observability and QA promotion remain open.
+- 2026-10-18: #1031 adds Docker-backed Playwright coverage for searched-card addition and reload. Focused E2E passed (4 tests, including warmup), as did VPS typecheck, lint, 3,144 unit tests, build, and all PR checks. Other add/recovery E2E variants remain open; QA promotion remains pending.
+- 2026-10-18: #1029 adds Docker-backed Playwright coverage for a rejected Sideboard-to-Considering save, including visible error, retained API zone, and reload recovery. Focused E2E passed (3 tests, including warmup), as did VPS typecheck, lint, 3,144 unit tests, build, and all PR checks. Add-flow and broader recovery E2E remain open; QA promotion remains pending.
+
+- 2026-10-18: #1027 suppresses obsolete card-move error feedback after the card is removed while keeping recovery for cards still in the deck. The focused test failed before the fix; VPS typecheck, lint, 3,144 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Broader concurrent mutation ownership, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1025 suppresses obsolete card-move error feedback after a deck is removed while keeping recovery for existing decks. The focused test failed before the fix; VPS typecheck, lint, 3,143 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Broader concurrent mutation ownership, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1023 exposes unresolved names after a pasted decklist import, while keeping the cards that resolved successfully. The focused name-resolution test failed before implementation; VPS typecheck, lint, 3,142 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Exact-printing and category round trips, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1021 localizes strategy and bracket names/descriptions in the deck creation wizard without changing their selected values. Two separate French UI tests were observed red before implementation. VPS typecheck, lint, 3,141 unit tests and production build passed; CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+- 2026-10-17: #1019 localizes accessible color names and tooltips in the deck creation wizard while retaining the mana symbols and color-selection behavior. The French accessible-name test was observed red. VPS typecheck, lint, 3,139 unit tests and production build passed; CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+- 2026-10-17: #1017 localizes the deck creation wizard's budget choices using existing English and French catalogs while preserving USD limits. Its French label test was observed red. VPS typecheck, lint, 3,138 unit tests and production build passed; CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+- 2026-10-17: #1015 uses the active locale to format AI suggestion impact mana values and USD prices, with no currency conversion. Two observed focused Red/Green cycles; VPS typecheck, lint, 3,137 unit tests and build passed. CI, SonarCloud, Lighthouse and Vercel passed. Other regional formatting, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1013 bounds stalled collection loading to 15 seconds, gives an initial failure a localized retry instead of a false empty state, and keeps cached cards visible with a refresh warning. Focused Red/Green cycles; VPS typecheck, lint, 3,135 unit tests and build passed. CI, SonarCloud, Lighthouse and Vercel passed. Profile latency, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1011 ends the endless My Decks skeleton for signed-out visitors after session resolution, while retaining it for pending sessions and authenticated deck fetches. The focused regression test failed before implementation; VPS typecheck, lint, 3,131 unit tests and build passed. CI, SonarCloud, Lighthouse and Vercel passed. Profile latency, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1009 replaces initial builder loading text with an accessible editor-shaped skeleton in English and French. The focused test failed before implementation; VPS typecheck, lint, 3,130 unit tests and build passed. CI, SonarCloud, Lighthouse and the final Vercel preview passed. Profile latency, other loading states, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1007 keeps category editing available when the Main list is grouped by mana value or color. The focused test failed before implementation; VPS typecheck, lint, 3,128 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Other mobile drag alternatives, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1005 adds accessible category editing beneath Main-grid cards, without changing views or dragging. The focused test failed before implementation; VPS typecheck, lint, 3,127 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Other mobile drag alternatives, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1003 keeps Main-grid moves to Sideboard and Considering and card removal visible on touch devices, with larger targets. Two focused tests failed before their respective changes; VPS typecheck, lint, 3,126 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Other mobile drag alternatives, Docker E2E and QA promotion remain open.
+- 2026-10-17: #1001 adds both legal move destinations to secondary-zone cards in grid view and keeps grid/list move controls visible on touch devices. Three focused tests failed before their respective changes; VPS typecheck, lint, 3,124 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Other mobile drag alternatives, Docker E2E and QA promotion remain open.
+- 2026-10-16: #999 adds a touch-friendly category selector to categorized deck cards and persists the choice through the existing deck store action. The focused component test failed before implementation; VPS typecheck, lint, 3,121 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Other mobile drag alternatives and QA promotion remain open.
+- 2026-10-16: #997 makes category reorder handles keyboard-focusable and enables dnd-kit keyboard sorting in the deck editor. The focused test failed before implementation; VPS typecheck, lint, 3,120 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Mobile alternatives for remaining drag actions and QA promotion remain open.
+- 2026-10-16: #995 bounds stalled acquisition-plan loading to 15 seconds and reveals the existing localized retry action on timeout, while preserving cancellation on panel close or filter changes. The focused test failed before implementation; VPS typecheck, lint, 3,119 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Other loading ownership and QA promotion remain open.
+- 2026-10-16: #993 keeps real public-deck 404s distinct from temporary API, network and invalid-response failures, which now reach the existing retryable route error. Public-deck loading is bounded to 15 seconds. Observed Red/Green cycles; VPS typecheck, lint, 3,118 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Authentication latency, broader loading ownership and QA promotion remain open.
+- 2026-10-16: #991 adds a localized and accessible route-level loading skeleton for public decks, sharing the visual fallback with public profiles. Two observed Red/Green cycles plus a semantic-status correction; VPS typecheck, lint, 3,113 unit tests and build passed. CI, SonarCloud, Lighthouse and Vercel passed; Sonar new-code duplication was 0%. Other route loading states, cached data and QA promotion remain open.
+- 2026-10-16: #989 distinguishes unavailable public profiles from missing users and bounds the API fetch to 15 seconds. The existing localized route error offers retry. Two observed Red/Green cycles; VPS typecheck, lint, 3,111 unit tests and build passed, as did CI, SonarCloud, Lighthouse and Vercel. Authentication latency, the underlying profile API and QA promotion remain open.
+- 2026-10-16: #987 adds a localized and accessible route-level loading skeleton for public profiles. Typecheck, zero-warning lint, 3,108 unit tests, production build, CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Cached profile data, other loading states and QA promotion remain open.
+- 2026-10-16: #984 ignores superseded deck-list responses, and #985 warns with a localized retry when cached decks remain visible after a failed refresh. Both were merged into `dev` after CI, SonarCloud, Lighthouse and Vercel passed. VPS validation covered typecheck, lint, 3,105 unit tests and a production build for #985. Initial loading ownership, profile latency and QA promotion remain open.
+
+- 2026-10-15: #978 adds an optional owned-only filter to the printing selector used during direct deck additions. The default remains all editions; normal and foil ownership both count, an empty filter explains the result, and no printing is chosen automatically. Three observed Red/Green cycles; VPS validation: TypeScript, lint, 3,101 unit tests, build and 69 Docker E2E scenarios passed. Automatic owned-printing matching during imports remains open; QA promotion is separate.
+
+- 2026-10-15: #976 adds an explicit individual-deck loading error and retry to direct builder navigation, preventing the lightweight listing stub from appearing as an empty editor. Observed Red/Green and a 503-to-retry browser regression; VPS validation: TypeScript, lint, 3,099 unit tests, build and 69 Docker E2E scenarios passed. SonarCloud public issue search showed zero open issues. Broader initial loading ownership and profile latency remain open; QA promotion is separate.
+
+- 2026-10-15: #974 distinguishes failed builder deck-list loading from a genuinely missing deck and offers a localized retry. Observed Red/Green; VPS validation: TypeScript, lint, 3,097 unit tests, build and 68 Docker E2E scenarios passed. SonarCloud showed zero open issues and all PR checks passed. Integrated into `dev`; individual deck-fetch errors, initial loading ownership and QA promotion remain open.
 
 - 2026-10-10: #955 and #956 restore the Sonar reliability baseline and simplify 23 maintainability findings. The report moved from 120 open issues to 65, with zero bugs and a green Quality Gate. Both PRs passed CI and full VPS validation; no local tests/builds, new rule suppression or new coverage exclusion. Remaining findings are tracked in [Sonar status](../engineering/sonar-status.md). Integrated into `dev`, pending QA promotion.
 
@@ -1037,6 +1076,7 @@ _(Previously documented as "Phase 13 features" in changelog)_
 - [x] **Grid view for Sideboard & Maybeboard** — same grid/density as Main zone
 - [x] **Active zone–aware card add** — click/D&D adds to current tab (Main/Sideboard/Considering)
 - [x] **Drag & drop cross-panel** — `MeasuringStrategy.Always` + `DroppableZone` wrappers
+- [x] **Keyboard-accessible zone moves** — explicit Main → Sideboard/Considering and secondary-zone controls (#970)
 - [x] **Commander/Partner clickable in grid** — opens printing selector like regular cards
 - [x] **Bracket 4 for 2-card infinite combos** — RC rule enforced via Spellbook data
 - [x] **∞ badge in BracketIndicator** — red badge when 2-card infinite combo detected
@@ -1046,6 +1086,7 @@ _(Previously documented as "Phase 13 features" in changelog)_
 - [x] **Mobile responsiveness** — header hamburger menu, builder tab navigation, collection grid (#189)
 - [ ] Persist deck zone (sideboard/maybeboard) state to DB
 - [ ] E2E tests (Playwright) for new drag & drop flows
+- [ ] Add keyboard reordering and complete mobile alternatives for remaining drag-only actions
 
 ---
 

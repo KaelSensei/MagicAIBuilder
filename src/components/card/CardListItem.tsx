@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { useFormatter, useTranslations } from "next-intl";
-import { X, AlertTriangle, Zap, Bookmark, RefreshCw } from "lucide-react";
+import { X, AlertTriangle, Zap, Bookmark, RefreshCw, Layers } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
@@ -11,6 +11,7 @@ interface CardListItemProps {
   readonly card: DeckCard;
   readonly onRemove?: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly onMoveToSideboard?: (id: string) => void;
   readonly className?: string;
   readonly showNotes?: boolean;
 }
@@ -71,6 +72,7 @@ export function CardListItem({
   card,
   onRemove,
   onMoveToMaybeboard,
+  onMoveToSideboard,
   className,
   showNotes: _showNotes,
 }: CardListItemProps) {
@@ -150,6 +152,17 @@ export function CardListItem({
             title={tBuilder("zoneMoveTargets.toMaybeboard")}
           >
             <Bookmark className="w-3 h-3" />
+          </button>
+        )}
+        {onMoveToSideboard && (
+          <button
+            type="button"
+            onClick={() => onMoveToSideboard(card.id)}
+            className="opacity-0 group-hover:opacity-60 focus-visible:opacity-100 hover:!opacity-100 transition-opacity p-0.5 rounded hover:bg-sky-500/20 text-[var(--text-secondary)] hover:text-sky-400"
+            aria-label={t("moveNamedToSideboard", { name: card.name })}
+            title={tBuilder("zoneMoveTargets.toSideboard")}
+          >
+            <Layers className="w-3 h-3" />
           </button>
         )}
         {onRemove && (

@@ -7,10 +7,13 @@
   "gameChanger": "Game Changer",
   "banned": "Banned",
   "moveNamedToMaybeboard": "Move {name} to Considering",
+  "moveNamedToSideboard": "Move {name} to Sideboard",
   "removeNamed": "Remove {name}",
   "noCardsFound": "No cards found",
   "loadingPrintings": "Loading printings…",
   "printingsAvailable": "{count, plural, one {# printing available} other {# printings available}}",
+  "ownedPrintingsOnly": "Owned only",
+  "noOwnedPrintings": "No owned printings for this card.",
   "rulings": {
     "show": "Show rulings",
     "loading": "Loading rulings…",

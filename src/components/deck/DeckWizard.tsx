@@ -52,72 +52,32 @@ interface DeckWizardProps {
 type Budget = null | 50 | 200 | 500;
 type ColorKey = "W" | "U" | "B" | "R" | "G" | "C";
 
-const COLORS: { key: ColorKey; label: string }[] = [
-  { key: "W", label: "White" },
-  { key: "U", label: "Blue" },
-  { key: "B", label: "Black" },
-  { key: "R", label: "Red" },
-  { key: "G", label: "Green" },
-  { key: "C", label: "Colorless" },
-];
+const COLORS = [
+  { key: "W", labelKey: "colorWhite" },
+  { key: "U", labelKey: "colorBlue" },
+  { key: "B", labelKey: "colorBlack" },
+  { key: "R", labelKey: "colorRed" },
+  { key: "G", labelKey: "colorGreen" },
+  { key: "C", labelKey: "colorColorless" },
+] as const;
 
 const STRATEGIES = [
-  {
-    value: "Aggro",
-    emoji: "⚡",
-    label: "Aggro",
-    subtitle: "Fast and aggressive",
-  },
-  {
-    value: "Control",
-    emoji: "🧠",
-    label: "Control",
-    subtitle: "Counter and control",
-  },
-  {
-    value: "Combo",
-    emoji: "🔄",
-    label: "Combo",
-    subtitle: "Find the winning combo",
-  },
-  {
-    value: "Midrange",
-    emoji: "🤝",
-    label: "Midrange",
-    subtitle: "Balanced power",
-  },
-  {
-    value: "Tokens",
-    emoji: "🔁",
-    label: "Tokens",
-    subtitle: "Go wide with tokens",
-  },
-  {
-    value: "Sacrifice",
-    emoji: "💀",
-    label: "Sacrifice",
-    subtitle: "Death and reanimation",
-  },
-  {
-    value: "Ramp",
-    emoji: "🌿",
-    label: "Ramp",
-    subtitle: "Accelerate your mana",
-  },
-  {
-    value: "Voltron",
-    emoji: "🎯",
-    label: "Voltron",
-    subtitle: "Buff your commander",
-  },
-];
+  { value: "Aggro", emoji: "⚡", labelKey: "stratAggro", subtitleKey: "stratAggroSub" },
+  { value: "Control", emoji: "🧠", labelKey: "stratControl", subtitleKey: "stratControlSub" },
+  { value: "Combo", emoji: "🔄", labelKey: "stratCombo", subtitleKey: "stratComboSub" },
+  { value: "Midrange", emoji: "🤝", labelKey: "stratMidrange", subtitleKey: "stratMidrangeSub" },
+  { value: "Tokens", emoji: "🔁", labelKey: "stratTokens", subtitleKey: "stratTokensSub" },
+  { value: "Sacrifice", emoji: "💀", labelKey: "stratSacrifice", subtitleKey: "stratSacrificeSub" },
+  { value: "Ramp", emoji: "🌿", labelKey: "stratRamp", subtitleKey: "stratRampSub" },
+  { value: "Voltron", emoji: "🎯", labelKey: "stratVoltron", subtitleKey: "stratVoltronSub" },
+] as const;
 
-const BUDGET_OPTIONS: { value: Budget; label: string; subtitle: string }[] = [
-  { value: 50, label: "Budget", subtitle: "< $50" },
-  { value: 200, label: "Moderate", subtitle: "$50 – $200" },
-  { value: 500, label: "Competitive", subtitle: "$200 – $500" },
-  { value: null, label: "No Limit", subtitle: "Spare no expense" },
-];
+const BUDGET_OPTIONS = [
+  { value: 50, labelKey: "budgetOption", subtitleKey: "budgetOptionSub" },
+  { value: 200, labelKey: "moderateOption", subtitleKey: "moderateOptionSub" },
+  { value: 500, labelKey: "competitiveOption", subtitleKey: "competitiveOptionSub" },
+  { value: null, labelKey: "noLimitOption", subtitleKey: "noLimitOptionSub" },
+] as const;
 
 // ---------------------------------------------------------------------------
 // Animation variants
@@ -163,10 +123,12 @@ function ProgressBar({
 // Color symbol button using Scryfall SVG
 function ColorButton({
   colorKey,
+  label,
   selected,
   onToggle,
 }: {
   readonly colorKey: ColorKey;
+  readonly label: string;
   readonly selected: boolean;
   readonly onToggle: () => void;
 }) {
@@ -174,6 +136,7 @@ function ColorButton({
     <button
       type="button"
       onClick={onToggle}
+      aria-label={label}
       className={`
         w-14 h-14 rounded-full flex items-center justify-center transition-all border-2
         ${
@@ -182,12 +145,12 @@ function ColorButton({
             : "border-white/10 hover:border-white/30 opacity-60 hover:opacity-100"
         }
       `}
-      title={COLORS.find((c) => c.key === colorKey)?.label}
+      title={label}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`https://svgs.scryfall.io/card-symbols/${colorKey}.svg`}
-        alt={colorKey}
+        alt=""
         className="w-9 h-9"
         draggable={false}
       />
@@ -206,6 +169,7 @@ function StepBudget({
   readonly value: Budget;
   readonly onChange: (v: Budget) => void;
 }) {
+  const t = useTranslations("deck.wizard");
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
       {BUDGET_OPTIONS.map((opt) => (
@@ -223,8 +187,8 @@ function StepBudget({
           `}
         >
           <div className="text-left">
-            <div className="font-semibold text-base">{opt.label}</div>
-            <div className="text-sm opacity-70 mt-0.5">{opt.subtitle}</div>
+            <div className="font-semibold text-base">{t(opt.labelKey)}</div>
+            <div className="text-sm opacity-70 mt-0.5">{t(opt.subtitleKey)}</div>
           </div>
           {value === opt.value && (
             <Check className="w-5 h-5 text-[var(--accent-text)] shrink-0" />
@@ -242,12 +206,14 @@ function StepColors({
   readonly selected: ColorKey[];
   readonly onToggle: (c: ColorKey) => void;
 }) {
+  const t = useTranslations("deck.wizard");
   return (
     <div className="flex flex-wrap justify-center gap-4 max-w-xs mx-auto">
       {COLORS.map((c) => (
         <ColorButton
           key={c.key}
           colorKey={c.key}
+          label={t(c.labelKey)}
           selected={selected.includes(c.key)}
           onToggle={() => onToggle(c.key)}
         />
@@ -263,6 +229,7 @@ function StepStrategy({
   readonly value: string | null;
   readonly onChange: (v: string) => void;
 }) {
+  const t = useTranslations("deck.wizard");
   return (
     <div className="grid grid-cols-2 gap-3 w-full max-w-md mx-auto">
       {STRATEGIES.map((s) => (
@@ -280,8 +247,8 @@ function StepStrategy({
           `}
         >
           <span className="text-xl mb-1">{s.emoji}</span>
-          <span className="font-semibold text-sm">{s.label}</span>
-          <span className="text-xs opacity-60 mt-0.5">{s.subtitle}</span>
+          <span className="font-semibold text-sm">{t(s.labelKey)}</span>
+          <span className="text-xs opacity-60 mt-0.5">{t(s.subtitleKey)}</span>
         </button>
       ))}
     </div>
@@ -292,43 +259,41 @@ function StepStrategy({
 const BRACKET_OPTIONS = [
   {
     value: 1 as const,
-    label: "Bracket 1",
-    subtitle: "Exhibition",
-    description: "No interaction, no synergy — pure theme or storytelling",
+    labelKey: "bracket1",
+    subtitleKey: "bracket1Sub",
+    descriptionKey: "bracket1Desc",
     color: "text-green-400",
     border: "border-green-500/40",
     bg: "bg-green-500/10",
   },
   {
     value: 2 as const,
-    label: "Bracket 2",
-    subtitle: "Casual",
-    description:
-      "Precons and light upgrades, 0–1 game changers, no infinite combos",
+    labelKey: "bracket2",
+    subtitleKey: "bracket2Sub",
+    descriptionKey: "bracket2Desc",
     color: "text-blue-400",
     border: "border-blue-500/40",
     bg: "bg-blue-500/10",
   },
   {
     value: 3 as const,
-    label: "Bracket 3",
-    subtitle: "Powered",
-    description:
-      "Optimised synergies, up to 3 game changers, some strong staples",
+    labelKey: "bracket3",
+    subtitleKey: "bracket3Sub",
+    descriptionKey: "bracket3Desc",
     color: "text-amber-400",
     border: "border-amber-500/40",
     bg: "bg-amber-500/10",
   },
   {
     value: 4 as const,
-    label: "Bracket 4",
-    subtitle: "cEDH",
-    description: "Fully optimised, fast combos, any legal card",
+    labelKey: "bracket4",
+    subtitleKey: "bracket4Sub",
+    descriptionKey: "bracket4Desc",
     color: "text-red-400",
     border: "border-red-500/40",
     bg: "bg-red-500/10",
   },
-];
+] as const;
 
 function StepBracket({
   value,
@@ -337,6 +302,7 @@ function StepBracket({
   readonly value: 1 | 2 | 3 | 4 | null;
   readonly onChange: (v: 1 | 2 | 3 | 4) => void;
 }) {
+  const t = useTranslations("deck.wizard");
   return (
     <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
       {BRACKET_OPTIONS.map((opt) => (
@@ -362,10 +328,10 @@ function StepBracket({
             <div
               className={`font-semibold text-sm ${value === opt.value ? opt.color : "text-[var(--text-primary)]"}`}
             >
-              {opt.label} — {opt.subtitle}
+              {t(opt.labelKey)} — {t(opt.subtitleKey)}
             </div>
             <div className="text-xs text-[var(--text-secondary)] mt-0.5">
-              {opt.description}
+              {t(opt.descriptionKey)}
             </div>
           </div>
           {value === opt.value && (
