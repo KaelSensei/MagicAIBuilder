@@ -1,10 +1,34 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { exportActionLogText } from "@/lib/playtest/action-log-export";
 import { PlaytestActionLog } from "./PlaytestActionLog";
 
 describe("PlaytestActionLog", () => {
+  it("shows localized turn and phase names in French", () => {
+    renderWithIntl(
+      <PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />,
+      { locale: "fr" }
+    );
+
+    expect(screen.getByText("Tour 2 · Principale 1")).toBeInTheDocument();
+  });
+
+  it("copies a French-labeled text log without rewriting the action description", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    renderWithIntl(
+      <PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />,
+      { locale: "fr" }
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Copier le journal" }));
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith("Test — Journal des actions\n\nTour 2\n- Principale 1: Made mana");
+    });
+  });
+
+
   it("copies the exported playtest log", async () => {
     const entries = [{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }] as const;
     const writeText = vi.fn().mockResolvedValue(undefined);
@@ -14,7 +38,7 @@ describe("PlaytestActionLog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copy log" }));
 
     await waitFor(() => {
-      expect(writeText).toHaveBeenCalledWith(exportActionLogText("Test", entries));
+      expect(writeText).toHaveBeenCalledWith("Test — Action log\n\nTurn 2\n- Main 1: Made mana");
     });
   });
 

@@ -18,6 +18,7 @@ interface PlaytestActionLogProps {
 
 export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEdit, onRemove }: PlaytestActionLogProps) {
   const t = useTranslations("playtest.log");
+  const phaseLabel = useTranslations("playtest.phases");
   const [draft, setDraft] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState("");
@@ -29,10 +30,17 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
   const summaries = useMemo(() => summarizeActionLog(entries), [entries]);
   const fileStem = deckName.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "deck";
+  const textFormat = {
+    title: t("title"),
+    turn: (turn: number) => t("turn", { turn }),
+    phase: (phase: PlaytestActionLogEntry["phase"]) => phaseLabel(phase),
+    evidenceTitle: t("evidenceTitle"),
+    evidence: (draws: number, mana: number, seen: number) => t("evidence", { draws, mana, seen }),
+  };
 
   const copyLog = async () => {
     try {
-      await navigator.clipboard.writeText(exportActionLogText(deckName, entries));
+      await navigator.clipboard.writeText(exportActionLogText(deckName, entries, textFormat));
       setCopyStatus("copied");
     } catch {
       setCopyStatus("error");
@@ -66,7 +74,7 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
             </button>
             <button
               type="button"
-              onClick={() => downloadFile(exportActionLogText(deckName, entries), `${fileStem}-playtest.txt`)}
+              onClick={() => downloadFile(exportActionLogText(deckName, entries, textFormat), `${fileStem}-playtest.txt`)}
               className="flex items-center gap-1 rounded px-2 py-1 text-[10px] text-white/50 hover:bg-white/5 hover:text-white"
             >
               <Download className="h-3 w-3" aria-hidden="true" /> {t("exportText")}
@@ -125,7 +133,7 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
         <ol className="max-h-48 space-y-1 overflow-y-auto">
           {[...entries].reverse().map((entry) => (
             <li key={entry.id} className="flex items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-white/5">
-              <span className="shrink-0 text-[10px] text-white/35">T{entry.turn} · {entry.phase}</span>
+              <span className="shrink-0 text-[10px] text-white/35">{t("turn", { turn: entry.turn })} · {phaseLabel(entry.phase)}</span>
               {editingId === entry.id ? (
                 <input
                   ref={editInputRef}
