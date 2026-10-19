@@ -22,7 +22,7 @@ const fetchDecks = deckApi.fetchDecks as Mock;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  useDeckStore.setState({ decks: {}, loadError: null, isSyncing: false });
+  useDeckStore.setState({ decks: {}, activeDeckId: null, loadError: null, deckOpenError: null, isSyncing: false });
 });
 
 describe("useDeckStore.loadDecks — failure reporting", () => {
@@ -33,6 +33,7 @@ describe("useDeckStore.loadDecks — failure reporting", () => {
 
     expect(toastAdd).toHaveBeenCalledWith("error", expect.any(String));
     expect(useDeckStore.getState().decks).toEqual({});
+    expect(useDeckStore.getState().deckOpenError).toEqual({ deckId: "deck-1", reason: "offline" });
   });
 
   it("starts with no load error", () => {
@@ -72,5 +73,22 @@ describe("useDeckStore.loadDecks — failure reporting", () => {
     fetchDecks.mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 });
     await useDeckStore.getState().loadDecks();
     expect(useDeckStore.getState().loadError).toBeNull();
+  });
+
+  it("ignores an older failure after a newer listing succeeds", async () => {
+    let rejectOlder: (reason: Error) => void = () => {};
+    fetchDecks
+      .mockImplementationOnce(() => new Promise((_, reject) => {
+        rejectOlder = reject;
+      }))
+      .mockResolvedValueOnce({ decks: [], total: 0, page: 0, limit: 20 });
+
+    const older = useDeckStore.getState().loadDecks();
+    await useDeckStore.getState().loadDecks();
+    rejectOlder(new Error("stale failure"));
+    await older;
+
+    expect(useDeckStore.getState().loadError).toBeNull();
+    expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 });

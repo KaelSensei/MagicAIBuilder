@@ -56,6 +56,7 @@ export function DeckEditor({
   }, [setCompanion]);
   const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const moveToMaybeboard = useDeckStore((s) => s.moveToMaybeboard);
+  const updateCardCategory = useDeckStore((s) => s.updateCardCategory);
   const sortField = useDeckStore((s) => s.sortField);
   const sortDirection = useDeckStore((s) => s.sortDirection);
   const groupBy = useDeckStore((s) => s.groupBy);
@@ -292,6 +293,8 @@ export function DeckEditor({
             setPartner={setPartner}
             clearCompanion={clearCompanion}
             onMoveToMaybeboard={moveToMaybeboard}
+            onMoveToSideboard={(id) => void moveCardToZone(id, "sideboard")}
+            onChangeCategory={(id, category) => void updateCardCategory(id, category)}
           />
         )}
         {activeZone === "sideboard" && (

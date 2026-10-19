@@ -172,6 +172,8 @@ export interface DeckStore {
   isSyncing: boolean;
   /** Why the last deck listing failed, or null when it succeeded. */
   loadError: string | null;
+  /** Individual deck hydration failure, scoped to the deck being opened. */
+  deckOpenError: { readonly deckId: string; readonly reason: string } | null;
 
   // Undo stack
   undoStack: DeckAction[];
@@ -265,11 +267,14 @@ export interface DeckStore {
   getActiveDeck: () => Deck | null;
 }
 
+let latestDeckListRequest = 0;
+
 export const useDeckStore = create<DeckStore>()((set, get) => ({
   decks: {},
   activeDeckId: null,
   isSyncing: false,
   loadError: null,
+  deckOpenError: null,
   undoStack: [],
   gameChangerNames: new Set<string>(),
   bannedNames: new Set<string>(),
@@ -499,9 +504,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
 
   // Load deck listing from the DB (lightweight: only commander/partner/companion + card count)
   loadDecks: async () => {
+    const requestId = ++latestDeckListRequest;
     set({ isSyncing: true });
     try {
       const response = await deckApi.fetchDecks();
+      if (requestId !== latestDeckListRequest) return;
 
       set((state) => {
         const decks: Record<string, Deck> = {};
@@ -519,6 +526,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         return { decks, loadError: null };
       });
     } catch (err) {
+      if (requestId !== latestDeckListRequest) return;
       // Record the failure as well as logging it. Swallowing it left the page
       // rendering "No decks yet" after a 500 — an outage disguised as an empty
       // account, with no way for the user to tell the difference or retry.
@@ -527,7 +535,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         loadError: err instanceof Error ? err.message : "Failed to load decks",
       });
     } finally {
-      set({ isSyncing: false });
+      if (requestId === latestDeckListRequest) set({ isSyncing: false });
     }
   },
 
@@ -678,9 +686,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const fullDeck = apiDeckToStoreDeck(apiDeck);
       set((state) => ({
         decks: { ...state.decks, [id]: fullDeck },
+        deckOpenError: state.deckOpenError?.deckId === id ? null : state.deckOpenError,
       }));
     } catch (err) {
       logger.error("Unexpected error", "setActiveDeck.lazyLoad", err);
+      set({
+        deckOpenError: {
+          deckId: id,
+          reason: err instanceof Error ? err.message : "Failed to open deck",
+        },
+      });
       useToastStore
         .getState()
         .add("error", "Could not open deck. Please try again.");
@@ -1683,7 +1698,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         pending.confirmedZone = zone;
       } catch (err) {
         logger.error("Unexpected error", "moveCardToZone", err);
-        if (pending.tail === write) {
+        const deckAtFailure = get().decks[activeDeckId];
+        if (
+          pending.tail === write &&
+          deckAtFailure &&
+          uniqueDeckCards(deckAtFailure).some((card) => card.id === cardId)
+        ) {
           set((state) => {
             const currentDeck = state.decks[activeDeckId];
             const latestCard =

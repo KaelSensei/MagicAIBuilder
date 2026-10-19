@@ -8,6 +8,22 @@ export interface PlaytestTurnSummary {
   readonly cardsSeen: number;
 }
 
+export interface ActionLogTextFormat {
+  readonly title: string;
+  readonly turn: (turn: number) => string;
+  readonly phase: (phase: PlaytestActionLogEntry["phase"]) => string;
+  readonly evidenceTitle: string;
+  readonly evidence: (draws: number, mana: number, seen: number) => string;
+}
+
+const englishTextFormat: ActionLogTextFormat = {
+  title: "playtest log",
+  turn: (turn) => `Turn ${turn}`,
+  phase: (phase) => phase,
+  evidenceTitle: "Evidence",
+  evidence: (draws, mana, seen) => `${draws} draws, ${mana} mana, ${seen} additional cards seen`,
+};
+
 export function summarizeActionLog(
   entries: readonly PlaytestActionLogEntry[]
 ): readonly PlaytestTurnSummary[] {
@@ -39,21 +55,22 @@ export function summarizeActionLog(
 
 export function exportActionLogText(
   deckName: string,
-  entries: readonly PlaytestActionLogEntry[]
+  entries: readonly PlaytestActionLogEntry[],
+  format: ActionLogTextFormat = englishTextFormat
 ): string {
   const turns = summarizeActionLog(entries).map(
     ({ turn, entries: turnEntries, draws, manaProduced, cardsSeen }) => {
       const evidence =
         draws + manaProduced + cardsSeen > 0
-          ? `\nEvidence: ${draws} draws, ${manaProduced} mana, ${cardsSeen} additional cards seen`
+          ? `\n${format.evidenceTitle}: ${format.evidence(draws, manaProduced, cardsSeen)}`
           : "";
       const actions = turnEntries
-        .map((entry) => `- ${entry.phase}: ${entry.description}`)
+        .map((entry) => `- ${format.phase(entry.phase)}: ${entry.description}`)
         .join("\n");
-      return `Turn ${turn}${evidence}\n${actions}`;
+      return `${format.turn(turn)}${evidence}\n${actions}`;
     }
   );
-  return `${deckName} — playtest log\n\n${turns.join("\n\n")}`;
+  return `${deckName} — ${format.title}\n\n${turns.join("\n\n")}`;
 }
 
 export function exportActionLogJson(

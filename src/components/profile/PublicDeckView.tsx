@@ -133,7 +133,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
               {deck.format}
             </span>
             <span className="text-xs text-[var(--text-secondary)]">
-              {totalCards} cards
+              {t("share.cardCountLabel", { count: totalCards })}
             </span>
             {deck.isAIGenerated && (
               <span className="text-xs text-purple-400">✦ AI generated</span>

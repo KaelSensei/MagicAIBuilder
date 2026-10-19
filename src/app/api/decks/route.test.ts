@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { logger } from "@/lib/logger";
 
 const { mockFindMany, mockCount, mockCreate, mockUserFindUnique, mockUserUpsert } =
   vi.hoisted(() => ({
@@ -72,6 +73,22 @@ describe("GET /api/decks", () => {
     mockCount.mockResolvedValue(0);
   });
 
+  it("records the successful listing status and duration without account data", async () => {
+    authed();
+    const log = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+
+    const response = await GET(listRequest());
+
+    expect(response.status).toBe(200);
+    expect(log).toHaveBeenCalledWith(
+      "Deck list request completed",
+      "GET /api/decks",
+      { status: 200, durationMs: expect.any(Number) }
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain(OWNER);
+    log.mockRestore();
+  });
+
   it("scopes the listing to the session's own user id", async () => {
     authed();
 
@@ -127,21 +144,27 @@ describe("GET /api/decks", () => {
 
   it("returns 401 and queries nothing when unauthenticated", async () => {
     unauthed();
+    const log = vi.spyOn(logger, "info").mockImplementation(() => undefined);
 
     const response = await GET(listRequest());
 
     expect(response.status).toBe(401);
     expect(mockFindMany).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith("Deck list request completed", "GET /api/decks", { status: 401, durationMs: expect.any(Number) });
+    log.mockRestore();
   });
 
   it("reports a query failure as a 500 without leaking the message", async () => {
     authed();
+    const log = vi.spyOn(logger, "info").mockImplementation(() => undefined);
     mockFindMany.mockRejectedValueOnce(new Error("connect ECONNREFUSED 10.0.0.1:5432"));
 
     const response = await GET(listRequest());
 
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({ error: "Failed to fetch decks" });
+    expect(log).toHaveBeenCalledWith("Deck list request completed", "GET /api/decks", { status: 500, durationMs: expect.any(Number) });
+    log.mockRestore();
   });
 });
 

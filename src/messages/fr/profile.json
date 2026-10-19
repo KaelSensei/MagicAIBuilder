@@ -1,4 +1,5 @@
 {
+  "loading": "Chargement du profil...",
   "memberSince": "@{username} · Membre depuis {date}",
   "publicDecks": "Decks publics",
   "noPublicDecks": "Aucun deck public pour le moment.",

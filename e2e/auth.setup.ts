@@ -43,8 +43,6 @@ setup("authenticate", async ({ page, request }) => {
   // The form redirects with `location.href`, so the URL change is the signal
   // that the credentials call came back without an error.
   await page.waitForURL(/\/decks$/);
-  await expect(page.getByRole("button", { name: "User menu" })).toBeVisible();
-
   // suppressOnboarding only covers the signed-OUT path: useOnboarding reads the
   // localStorage flag for anonymous visitors and `user.onboardingDone` from the
   // database for everyone else. So the wizard mounts for this account whatever
@@ -52,6 +50,8 @@ setup("authenticate", async ({ page, request }) => {
   // Marking it done through the app own route is the signed-in equivalent.
   const onboarded = await page.request.post("/api/user/onboarding");
   expect(onboarded.ok(), await onboarded.text()).toBe(true);
+  await page.reload();
+  await expect(page.getByRole("button", { name: "User menu" })).toBeVisible();
 
   await page.context().storageState({ path: STORAGE_STATE });
 });

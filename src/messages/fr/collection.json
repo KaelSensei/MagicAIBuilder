@@ -29,6 +29,8 @@
     "toAcquire": "{count} à acquérir"
   },
   "loading": "Chargement de la collection…",
+  "loadFailed": "Impossible d’actualiser votre collection. Vos cartes enregistrées sont inchangées.",
+  "retry": "Réessayer",
   "stats": {
     "uniqueCards": "Cartes uniques",
     "totalCards": "Cartes totales",

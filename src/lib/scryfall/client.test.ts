@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+vi.mock("@/lib/logger", () => ({
+  logger: { info: vi.fn() },
+}));
+
 // Mock deck-api cache functions before importing client
 vi.mock("@/lib/db/deck-api", () => ({
   lookupCardCache: vi.fn(async () => null),
@@ -22,7 +26,11 @@ import {
   __resetRateLimiter,
 } from "@/lib/scryfall/client";
 import { lookupCardCache } from "@/lib/db/deck-api";
-import type { ScryfallCard, ScryfallSearchResponse } from "@/lib/scryfall/types";
+import { logger } from "@/lib/logger";
+import type {
+  ScryfallCard,
+  ScryfallSearchResponse,
+} from "@/lib/scryfall/types";
 
 function makeScryfallCard(id = "card-1"): ScryfallCard {
   return {
@@ -39,13 +47,22 @@ function makeScryfallCard(id = "card-1"): ScryfallCard {
     set_name: "Commander",
     rarity: "uncommon",
     prices: { usd: "1.00", usd_foil: null, eur: null },
-    image_uris: { small: "", normal: "", large: "", art_crop: "", border_crop: "", png: "" },
+    image_uris: {
+      small: "",
+      normal: "",
+      large: "",
+      art_crop: "",
+      border_crop: "",
+      png: "",
+    },
     card_faces: undefined,
     legalities: { commander: "legal" },
   };
 }
 
-function makeSearchResponse(cards: ScryfallCard[] = []): ScryfallSearchResponse {
+function makeSearchResponse(
+  cards: ScryfallCard[] = []
+): ScryfallSearchResponse {
   return {
     object: "list",
     total_cards: cards.length,
@@ -55,24 +72,95 @@ function makeSearchResponse(cards: ScryfallCard[] = []): ScryfallSearchResponse 
 }
 
 function mockFetchSuccess(data: unknown) {
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-    ok: true,
-    json: async () => data,
-  }));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => data,
+    })
+  );
 }
 
 function mockFetchError(status = 404, statusText = "Not Found") {
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-    ok: false,
-    status,
-    statusText,
-    json: async () => ({ details: statusText }),
-  }));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status,
+      statusText,
+      json: async () => ({ details: statusText }),
+    })
+  );
 }
 
 describe("searchCards", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.mocked(logger.info).mockClear();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    __resetRateLimiter();
+  });
+
+  it("records a successful external search without logging its query", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => makeSearchResponse(),
+      })
+    );
+
+    const promise = searchCards("private deck idea");
+    vi.runAllTimers();
+    await promise;
+
+    expect(logger.info).toHaveBeenCalledWith(
+      "Scryfall search completed",
+      "Scryfall search",
+      expect.objectContaining({ status: 200, durationMs: expect.any(Number) })
+    );
+    expect(JSON.stringify(vi.mocked(logger.info).mock.calls)).not.toContain(
+      "private deck idea"
+    );
+  });
+
+  it("records an upstream failure without logging its query", async () => {
+    mockFetchError(503, "Unavailable");
+
+    const promise = searchCards("private deck idea");
+    vi.runAllTimers();
+    await expect(promise).rejects.toThrow("Scryfall API error 503");
+
+    expect(logger.info).toHaveBeenCalledWith(
+      "Scryfall search completed",
+      "Scryfall search",
+      expect.objectContaining({ status: 503, durationMs: expect.any(Number) })
+    );
+    expect(JSON.stringify(vi.mocked(logger.info).mock.calls)).not.toContain(
+      "private deck idea"
+    );
+  });
+
+  it("records a network failure without exposing the query", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+
+    const promise = searchCards("private deck idea");
+    vi.runAllTimers();
+    await expect(promise).rejects.toThrow("offline");
+
+    expect(logger.info).toHaveBeenCalledWith(
+      "Scryfall search completed",
+      "Scryfall search",
+      expect.objectContaining({ status: null, durationMs: expect.any(Number) })
+    );
+    expect(JSON.stringify(vi.mocked(logger.info).mock.calls)).not.toContain(
+      "private deck idea"
+    );
+  });
 
   it("calls the correct Scryfall endpoint", async () => {
     const searchResponse = makeSearchResponse([makeScryfallCard()]);
@@ -84,7 +172,8 @@ describe("searchCards", () => {
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0].name).toBe("Sol Ring");
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
     expect(fetchCall).toContain("/cards/search");
     expect(fetchCall).toContain("Sol+Ring");
   });
@@ -104,12 +193,23 @@ describe("searchCards", () => {
     expect(result.data).toHaveLength(0);
     expect(result.total_cards).toBe(0);
     expect(result.has_more).toBe(false);
+    expect(logger.info).toHaveBeenCalledWith(
+      "Scryfall search completed",
+      "Scryfall search",
+      expect.objectContaining({ status: 404, durationMs: expect.any(Number) })
+    );
   });
 });
 
 describe("getCardByName", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    __resetRateLimiter();
+  });
 
   it("fetches a card by exact name", async () => {
     const card = makeScryfallCard();
@@ -118,15 +218,22 @@ describe("getCardByName", () => {
     vi.runAllTimers();
     const result = await promise;
     expect(result.name).toBe("Sol Ring");
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
     expect(fetchCall).toContain("/cards/named");
     expect(fetchCall).toContain("exact=Sol+Ring");
   });
 });
 
 describe("getCardByNameFuzzy", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    __resetRateLimiter();
+  });
 
   it("fetches a card by fuzzy name", async () => {
     const card = makeScryfallCard();
@@ -135,18 +242,23 @@ describe("getCardByNameFuzzy", () => {
     vi.runAllTimers();
     const result = await promise;
     expect(result.name).toBe("Sol Ring");
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
     expect(fetchCall).toContain("fuzzy=");
   });
 });
 
 describe("getCardById", () => {
-  afterEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   it("returns cached card without fetching", async () => {
     const cachedCard = makeScryfallCard("cached-id");
     vi.mocked(lookupCardCache).mockResolvedValueOnce(cachedCard);
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => cachedCard });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => cachedCard });
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await getCardById("cached-id");
@@ -156,7 +268,9 @@ describe("getCardById", () => {
   it("fetches from Scryfall when not in cache", async () => {
     vi.mocked(lookupCardCache).mockResolvedValueOnce(null);
     const card = makeScryfallCard("fresh-card");
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => card });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => card });
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await getCardById("fresh-card");
@@ -166,16 +280,24 @@ describe("getCardById", () => {
 });
 
 describe("handleResponse edge cases", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   it("falls back to statusText when error response JSON parsing fails", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 503,
-      statusText: "Service Unavailable",
-      json: () => Promise.reject(new Error("invalid json")),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+        statusText: "Service Unavailable",
+        json: () => Promise.reject(new Error("invalid json")),
+      })
+    );
     const promise = searchCards("fail");
     vi.runAllTimers();
     await expect(promise).rejects.toThrow("Service Unavailable");
@@ -183,12 +305,17 @@ describe("handleResponse edge cases", () => {
 });
 
 describe("getCardById — cache failure", () => {
-  afterEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   it("falls through to Scryfall when cache lookup throws", async () => {
     vi.mocked(lookupCardCache).mockRejectedValueOnce(new Error("cache down"));
     const card = makeScryfallCard("fallback-card");
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => card }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, json: async () => card })
+    );
 
     const result = await getCardById("fallback-card");
     expect(result.id).toBe("fallback-card");
@@ -196,11 +323,19 @@ describe("getCardById — cache failure", () => {
 });
 
 describe("autocompleteCardName", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   it("returns autocomplete suggestions", async () => {
-    mockFetchSuccess({ object: "catalog", data: ["Sol Ring", "Sol'Kanar the Swamp King"] });
+    mockFetchSuccess({
+      object: "catalog",
+      data: ["Sol Ring", "Sol'Kanar the Swamp King"],
+    });
     const promise = autocompleteCardName("Sol");
     vi.runAllTimers();
     const result = await promise;
@@ -209,8 +344,13 @@ describe("autocompleteCardName", () => {
 });
 
 describe("getCardCollection", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   it("POSTs to cards/collection", async () => {
     const card = makeScryfallCard();
@@ -219,14 +359,21 @@ describe("getCardCollection", () => {
     vi.runAllTimers();
     const result = await promise;
     expect(result.data).toHaveLength(1);
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
     expect(fetchCall).toContain("/cards/collection");
   });
 });
 
 describe("fetchLocalizedPrintingsByNames", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    __resetRateLimiter();
+  });
 
   it("sends one multilingual search per chunk and concatenates the printings", async () => {
     mockFetchSuccess(makeSearchResponse([makeScryfallCard("fr-1")]));
@@ -259,36 +406,56 @@ describe("fetchLocalizedPrintingsByNames", () => {
 });
 
 describe("getGameChangers", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    __resetRateLimiter();
+  });
 
   it("searches for is:gamechanger", async () => {
     mockFetchSuccess(makeSearchResponse());
     const promise = getGameChangers();
     vi.runAllTimers();
     await promise;
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
     expect(fetchCall).toContain("gamechanger");
   });
 });
 
 describe("getCommanderBanlist", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    __resetRateLimiter();
+  });
 
   it("searches for banned:commander", async () => {
     mockFetchSuccess(makeSearchResponse());
     const promise = getCommanderBanlist();
     vi.runAllTimers();
     await promise;
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
     expect(fetchCall).toContain("banned%3Acommander");
   });
 });
 
 describe("searchCardPrintings", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); __resetRateLimiter(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    __resetRateLimiter();
+  });
 
   it("searches printings with unique=prints", async () => {
     mockFetchSuccess(makeSearchResponse([makeScryfallCard()]));
@@ -296,7 +463,8 @@ describe("searchCardPrintings", () => {
     vi.runAllTimers();
     const result = await promise;
     expect(result.data).toHaveLength(1);
-    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
     expect(fetchCall).toContain("unique=prints");
     expect(fetchCall).toContain("game%3Apaper");
   });
@@ -307,16 +475,24 @@ describe("searchCardPrintings", () => {
 // The delay itself is skipped under isTestMode(); what is asserted here is the
 // ordering the mutex exists to provide, which is what the 100ms spacing rides on.
 describe("rate limiting", () => {
-  afterEach(() => { vi.restoreAllMocks(); __resetRateLimiter(); });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    __resetRateLimiter();
+  });
 
   it("holds a concurrent request until the one in flight settles", async () => {
     let releaseFirst: (value: unknown) => void = () => {};
-    const firstInFlight = new Promise((resolve) => { releaseFirst = resolve; });
+    const firstInFlight = new Promise((resolve) => {
+      releaseFirst = resolve;
+    });
 
     const fetchMock = vi
       .fn()
       .mockImplementationOnce(() => firstInFlight)
-      .mockResolvedValue({ ok: true, json: async () => makeScryfallCard("second") });
+      .mockResolvedValue({
+        ok: true,
+        json: async () => makeScryfallCard("second"),
+      });
     vi.stubGlobal("fetch", fetchMock);
 
     const first = getCardByName("Sol Ring");
@@ -336,7 +512,10 @@ describe("rate limiting", () => {
     const fetchMock = vi
       .fn()
       .mockRejectedValueOnce(new Error("network down"))
-      .mockResolvedValue({ ok: true, json: async () => makeScryfallCard("after-failure") });
+      .mockResolvedValue({
+        ok: true,
+        json: async () => makeScryfallCard("after-failure"),
+      });
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getCardByName("Sol Ring")).rejects.toThrow("network down");

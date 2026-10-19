@@ -9,6 +9,338 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-19: Cancel playtest action edits
+
+- Press Escape to leave an action-log edit without saving its draft (#1043). Enter and blur continue to save.
+- The focused test failed before the change and passed afterward. VPS typecheck, lint, 3,160 unit tests and production build passed.
+
+### 2026-10-18: Localize playtest action logs
+
+- Use the active English or French locale for action-log turn and phase labels and copied or downloaded text, while leaving player-authored descriptions and JSON exports unchanged (#1042).
+- VPS typecheck, lint, 3,159 unit tests, production build and Docker E2E passed. CI, SonarCloud and Lighthouse passed; Vercel failed independently, and the merge into `dev` was explicitly approved despite that check.
+
+### 2026-10-18: Copy the playtest action log
+
+- Copy the existing text log without downloading it; confirm success and explain clipboard failures with the text export as a fallback (#1040).
+- Keep English and French messages available while preserving key parity in dormant catalogs.
+- Validated on the VPS with typecheck, lint, 3,157 unit tests, production build and 72 Docker E2E checks. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
+### 2026-10-18: Record Scryfall search and cache timing
+
+- Record external Scryfall search status and duration without including query text or card data (#1036).
+- Record server-side cache hit, miss and database failure duration while preserving existing responses.
+- Validated on the VPS with typecheck, lint, 3,154 unit tests, production build and 72 Docker E2E checks. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
+### 2026-10-18: Record deck-list request outcomes
+
+- Log the status and duration of `GET /api/decks`, including authentication and server failures, without recording user identifiers (#1034).
+- Split Docker Playwright into anonymous and authenticated runs so Next.js starts fresh before signed-in flows; keep all 72 scenarios in the pre-push gate.
+- Validated on the VPS with typecheck, lint, 3,145 unit tests, production build and the full Docker E2E gate. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
+### 2026-10-18: Cover searched-card addition and reload in E2E
+
+#### Tests
+
+- Add a Docker-backed browser scenario that searches for a card, selects a printing, verifies its saved Main-zone row and confirms it remains in the editor after reload (#1031).
+
+#### Validation
+
+- VPS typecheck, lint, 3,144 unit tests, production build and focused Docker E2E (4 passed) succeeded. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. No production behavior changed.
+
+### 2026-10-18: Cover failed deck-zone save and reload in E2E
+
+#### Tests
+
+- Add a Docker-backed browser scenario that rejects a Sideboard-to-Considering save, verifies the retry message and retained card, checks the saved zone through the API, and confirms the card remains after reload (#1029).
+
+#### Validation
+
+- VPS typecheck, lint, 3,144 unit tests, production build, and focused Docker E2E (3 passed) succeeded. CI, SonarCloud, Lighthouse, and Vercel passed before merge into `dev`. No production behavior changed.
+
+### 2026-10-18: Ignore stale zone-save errors after card removal
+
+#### Fixed
+
+- Do not show a failed card-move message when that card has already been removed from its deck (#1027). Recovery for cards still in the deck is unchanged.
+
+#### Validation
+
+- Focused Red/Green test, VPS typecheck, lint, 3,144 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E was not run for this slice.
+
+### 2026-10-17: Ignore stale zone-save errors after deck removal
+
+#### Fixed
+
+- Do not show a failed card-move message when its deck has already been removed (#1025). Zone-save recovery for existing decks is unchanged.
+
+#### Validation
+
+- Focused Red/Green test, VPS typecheck, lint, 3,143 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E was not run for this slice.
+
+### 2026-10-17: Visible omissions in pasted deck imports
+
+#### Changed
+
+- Show unresolved card names after a plain-text decklist import rather than presenting a partial import as complete (#1023). Successfully resolved cards are still added.
+
+#### Validation
+
+- Focused Red/Green test, VPS typecheck, lint, 3,142 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E was not run for this slice.
+
+### 2026-10-17: Localized deck wizard strategy and bracket choices
+
+#### Improved
+
+- Show the existing English or French strategy names/descriptions and bracket names/descriptions in deck creation, without changing the selected strategy value or bracket level (#1021).
+
+#### Validation
+
+- Separate French UI tests for strategy and bracket descriptions failed before their respective implementation steps. VPS typecheck, lint, 3,141 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+### 2026-10-17: Localized deck wizard color names
+
+#### Improved
+
+- Announce deck creation color choices in the active English or French language, including accessible button names and tooltips, while preserving mana symbols and selection behavior (#1019).
+
+#### Validation
+
+- A French accessible-name test failed before implementation. VPS typecheck, lint, 3,139 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+### 2026-10-17: Localized deck wizard budget choices
+
+#### Improved
+
+- Display the four deck creation budget choices from the active locale catalog instead of hardcoded English labels, without converting their USD limits (#1017).
+
+#### Validation
+
+- A French UI regression test failed on the previous English label before implementation. VPS typecheck, lint, 3,138 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+### 2026-10-17: Locale-aware AI impact metrics
+
+#### Improved
+
+- Format average mana value and known USD card value in the AI suggestion impact preview for the active locale, without implying a currency conversion (#1015).
+
+#### Validation
+
+- Separate focused tests observed French currency and decimal-separator failures before implementation. VPS typecheck, zero-warning lint, 3,137 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+### 2026-10-17: Recoverable collection loading
+
+#### Fixed
+
+- Stop stalled collection reads after 15 seconds and offer a localized retry instead of an endless spinner or a false empty collection (#1013). Failed refreshes keep saved cards visible with a warning.
+
+#### Validation
+
+- Focused Red/Green cycles covered failure reporting, visible retry and timeout. VPS typecheck, zero-warning lint, 3,135 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+### 2026-10-17: Guest deck-list loading state
+
+#### Fixed
+
+- Show the empty deck state rather than an indefinite loading skeleton to signed-out visitors after session resolution (#1011). Keep the skeleton during session resolution and authenticated deck loading.
+
+#### Validation
+
+- The focused regression test failed before implementation because the guest empty state was absent. VPS typecheck, lint, 3,131 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+### 2026-10-17: Builder loading skeleton
+
+#### Improved
+
+- Replace the initial deck-loading text with an accessible, responsive silhouette of the editor's search, deck and statistics panels (#1009). Missing-deck and retryable error states are unchanged.
+
+#### Validation
+
+- The focused test failed before implementation because the loading status was not marked busy and no editor structure existed. VPS typecheck, lint, 3,130 unit tests and production build passed. CI, SonarCloud, Lighthouse and the final Vercel preview passed before merge into `dev`; an earlier Vercel preview failed without accessible logs. Docker E2E and QA promotion remain pending.
+
+### 2026-10-17: Category editing in every Main list grouping
+
+#### Fixed
+
+- Keep the existing accessible category menu available when cards are grouped by mana value or color, not only by card category (#1007).
+
+#### Validation
+
+- The focused test failed before implementation because the grouped card lacked the category control. VPS typecheck, lint, 3,128 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+### 2026-10-17: Main-grid category editing
+
+#### Added
+
+- Change a Main card's category directly in grid view using an accessible native selector, without switching views or dragging (#1005).
+
+#### Validation
+
+- The focused test failed before implementation because the grid had no named category control. VPS typecheck, lint, 3,127 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E and QA promotion remain pending.
+
+### 2026-10-17: Touch-friendly Main grid actions
+
+#### Added
+
+- Keep a Main-grid card's moves to Sideboard and Considering and its removal action visible on touch devices, with larger touch targets and keyboard focus visibility (#1003).
+
+#### Validation
+
+- Two focused Red/Green cycles, VPS typecheck, lint, 3,126 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E was not run for this slice.
+
+### 2026-10-17: Touch-friendly secondary zone moves
+
+#### Added
+
+- Offer both legal destinations for Sideboard and Considering cards in grid view, and keep the existing move controls visible on touch devices in grid and list views (#1001).
+
+#### Validation
+
+- Three focused Red/Green cycles, VPS typecheck, lint, 3,124 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`. Docker E2E was not run for this slice.
+
+### 2026-10-16: Touch-friendly deck categories
+
+#### Added
+
+- Let players change a card's category from a touch-friendly menu in the grouped deck list, using the existing persisted category update (#999).
+
+#### Validation
+
+- VPS typecheck, lint, 3,121 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
+### 2026-10-16: Keyboard deck card sorting
+
+#### Added
+
+- Keep category reorder handles in the keyboard tab order and enable vertical keyboard sorting in the deck editor (#997).
+
+#### Validation
+
+- VPS typecheck, lint, 3,120 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
+### 2026-10-16: Acquisition plan loading timeout
+
+#### Fixed
+
+- Show the existing retry state if the acquisition-plan request stalls for 15 seconds, while preserving cancellation when the panel closes or its filter changes (#995).
+
+#### Validation
+
+- VPS typecheck, lint, 3,119 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
+### 2026-10-16: Recoverable public deck failures
+
+#### Fixed
+
+- Preserve not-found behavior for a missing deck, but show the existing retryable route error when the public-deck API, network or response fails (#993).
+- Abort public-deck API loading after 15 seconds and avoid labeling temporary failures as missing in metadata (#993).
+
+#### Validation
+
+- VPS typecheck, lint, 3,118 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
+### 2026-10-16: Public deck loading feedback
+
+#### Added
+
+- Show an accessible English/French loading skeleton while a public deck route resolves (#991).
+
+#### Changed
+
+- Share the public deck and profile loading presentation and use semantic output for the loading status (#991).
+
+#### Validation
+
+- VPS typecheck, lint, 3,113 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`; Sonar new-code duplication was 0%.
+
+### 2026-10-16: Recoverable public profile failures
+
+#### Fixed
+
+- Preserve not-found behavior for a missing user, but show the existing localized retryable route error when the public-profile API or network fails (#989).
+- Abort a public-profile API fetch after 15 seconds and avoid presenting unavailable metadata as a missing profile (#989).
+
+#### Validation
+
+- Two observed Red/Green cycles; VPS typecheck, lint, 3,111 unit tests and production build passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
+### 2026-10-16: Public profile loading feedback
+
+#### Added
+
+- Show a localized, accessible loading skeleton while a public profile route resolves (#987).
+
+#### Fixed
+
+- Restore focus to the deck-report trigger after closing its dialog without a React hook lint warning (#987).
+
+#### Validation
+
+- Typecheck, zero-warning lint, 3,108 unit tests and production build passed on the VPS. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`.
+
+### 2026-10-16: Deck-list retry reliability
+
+#### Fixed
+
+- Ignore an older deck-list response after a newer request completes, preventing a stale failure from undoing a successful retry (#984).
+- Show a compact, localized warning and retry action when a failed refresh leaves cached decks visible (#985).
+
+#### Validation
+
+- Both changes were tested and built on the VPS, with observed test-first failures and 3,105 passing unit tests for the latest branch. CI, SonarCloud, Lighthouse and Vercel passed before each merge into `dev`. QA promotion remains separate.
+
+### 2026-10-15: Public deck card-count localization
+
+#### Changed
+
+- Localized the public deck card count in English and French, including singular and plural forms, using the shared deck-count message (#982).
+- Added component tests for one and multiple copies and verified catalog parity.
+
+### 2026-10-15: Locale-aware suggestion prices
+
+#### Changed
+
+- Formatted Scryfall USD prices in AI suggestion evidence according to the active locale while retaining the USD currency (#980).
+- Added French component coverage for grouping, decimals and currency placement.
+
+### 2026-10-15: Owned printing filter
+
+#### Added
+
+- The printing selector can show only editions already in the player's collection, counting regular and foil copies. Its default remains the full list, and selecting an edition remains explicit (#978).
+- An empty owned-only view explains the result and can be switched back to all editions without leaving the selector.
+
+#### Validation
+
+- Three observed Red/Green cycles. VPS only: TypeScript, lint, 3,101 unit tests, production build and 69 Docker Playwright scenarios passed. Automatic edition matching on import remains separate scope; staging and main require QA promotion.
+
+### 2026-10-15: Individual deck loading retry
+
+#### Fixed
+
+- Direct builder navigation now shows a localized retry state when fetching the individual deck fails, rather than displaying the incomplete deck-list stub as an empty editor (#976). A successful retry hydrates the full deck and clears the error.
+
+#### Validation
+
+- Observed Red/Green for failure reporting, error clearing and the retry UI. VPS only: TypeScript, lint, 3,099 unit tests, production build and 69 Docker Playwright scenarios passed. SonarCloud public issue search returned zero open issues. Broader loading ownership remains open; staging and main require QA promotion.
+
+### 2026-10-15: Recoverable builder loading
+
+#### Fixed
+
+- Direct builder navigation now shows a localized retry action when the deck-list request fails instead of incorrectly saying the deck is missing (#974). A successfully loaded list without that deck still shows the missing-deck state.
+
+#### Validation
+
+- Observed Red/Green for the failed-load and missing-deck states. VPS only: TypeScript, lint, 3,097 unit tests, production build and 68 Docker Playwright scenarios passed. SonarCloud reported zero open issues, and all PR checks passed. Integrated into `dev`; QA promotion remains pending.
+
+### 2026-10-13: Accessible main-deck zone moves
+
+#### Added
+
+- Added explicit Sideboard actions to main-deck cards in grid and list views without removing the existing drag-and-drop workflow.
+- Gave repeated zone controls card-specific accessible names and aligned every locale catalog.
+- Added three Red/Green behavior cycles and validated 3,095 unit tests, 68 Docker-backed E2E tests, the production build and a zero-issue Sonar report.
+
 ### 2026-10-10: Sonar reliability and maintainability recovery
 
 #### Fixed

@@ -57,7 +57,7 @@ export async function openBuilder(page: Page): Promise<void> {
   // resolves to the header button *and* every matching deck card. page.click
   // silently takes the first, so a run could open an existing deck, pass
   // waitForURL and its assertions, and create nothing at all.
-  await page.getByRole("button", { name: "New Deck", exact: true }).click();
+  await page.getByRole("banner").getByRole("button", { name: "New Deck", exact: true }).click();
   await page.waitForURL(/\/builder\//);
   await page
     .getByRole("link", { name: "Back to my decks" })

@@ -80,7 +80,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "cross-env PLAYWRIGHT_TEST=1 pnpm dev",
+    command: "cross-env NODE_OPTIONS=--max-old-space-size=4096 PLAYWRIGHT_TEST=1 pnpm dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 300000,

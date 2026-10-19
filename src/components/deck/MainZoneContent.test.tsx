@@ -12,7 +12,7 @@ vi.mock("@dnd-kit/core", () => ({
 vi.mock("@dnd-kit/sortable", () => ({
   SortableContext: ({ children }: { readonly children: React.ReactNode }) => <>{children}</>,
   useSortable: () => ({
-    attributes: {},
+    attributes: { role: "button", tabIndex: 0 },
     listeners: {},
     setNodeRef: vi.fn(),
     transform: null,
@@ -26,7 +26,7 @@ function card(id: string, name: string, overrides: Partial<DeckCard> = {}): Deck
   return {
     id, name, manaCost: "{1}", cmc: 1, typeLine: "Artifact",
     oracleText: "", colorIdentity: [], isGameChanger: false,
-    isBanned: false, price: null, imageUri: "", artCropUri: "",
+    isBanned: false, price: null, imageUri: "https://cards.scryfall.io/normal/front/a/b/card.jpg", artCropUri: "",
     category: "artifact", quantity: 1, zone: "main", scryfallId: id,
     ...overrides,
   };
@@ -59,7 +59,55 @@ const baseProps = {
 };
 
 describe("MainZoneContent", () => {
+  it("changes a card category from its mobile-friendly category menu", () => {
+    const onChangeCategory = vi.fn();
+    renderWithIntl(
+      <MainZoneContent
+        {...baseProps}
+        viewMode="list"
+        cardGroups={[group("artifact", [card("c1", "Sol Ring")])]}
+        onChangeCategory={onChangeCategory}
+      />
+    );
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Change category for Sol Ring" }), {
+      target: { value: "ramp" },
+    });
+
+    expect(onChangeCategory).toHaveBeenCalledWith("c1", "ramp");
+  });
+
+  it("keeps the category reorder handle keyboard-focusable", () => {
+    renderWithIntl(
+      <MainZoneContent
+        {...baseProps}
+        viewMode="list"
+        cardGroups={[group("artifact", [card("c1", "Sol Ring")])]}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /drag to reorder/i })).toHaveAttribute("tabindex", "0");
+  });
+
   describe("grid view", () => {
+    it("changes a card category without switching to list view", () => {
+      const onChangeCategory = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="grid"
+          mainCards={[card("c1", "Sol Ring")]}
+          onChangeCategory={onChangeCategory}
+        />
+      );
+
+      fireEvent.change(screen.getByRole("combobox", { name: "Change category for Sol Ring" }), {
+        target: { value: "ramp" },
+      });
+
+      expect(onChangeCategory).toHaveBeenCalledWith("c1", "ramp");
+    });
+
     it("invites the first card when the deck is empty and has no commander", () => {
       renderWithIntl(<MainZoneContent {...baseProps} viewMode="grid" />);
       expect(screen.getByText(/no cards yet/i)).toBeInTheDocument();
@@ -93,9 +141,71 @@ describe("MainZoneContent", () => {
 
       expect(onMoveToMaybeboard).toHaveBeenCalledWith("c1");
     });
+
+    it("moves a card to the sideboard without requiring drag and drop", () => {
+      const onMoveToSideboard = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="grid"
+          mainCards={[card("c1", "Sol Ring")]}
+          onMoveToSideboard={onMoveToSideboard}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /move sol ring.*sideboard/i }));
+
+      expect(onMoveToSideboard).toHaveBeenCalledWith("c1");
+    });
+
+    it("keeps both move controls visible on touch devices", () => {
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="grid"
+          mainCards={[card("c1", "Sol Ring")]}
+        />
+      );
+
+      expect(screen.getByRole("button", { name: /move.*considering/i }))
+        .toHaveClass("[@media(hover:none)]:opacity-100");
+      expect(screen.getByRole("button", { name: /move sol ring.*sideboard/i }))
+        .toHaveClass("[@media(hover:none)]:opacity-100");
+    });
+
+    it("keeps card removal visible on touch devices", () => {
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="grid"
+          mainCards={[card("c1", "Sol Ring")]}
+        />
+      );
+
+      expect(screen.getByRole("button", { name: "Remove Sol Ring" }))
+        .toHaveClass("[@media(hover:none)]:opacity-100");
+    });
   });
 
   describe("list view", () => {
+    it("changes a card category while grouped by mana value", () => {
+      const onChangeCategory = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="list"
+          cardGroups={[group("mana-value-1", [card("c1", "Sol Ring")])]}
+          onChangeCategory={onChangeCategory}
+        />
+      );
+
+      fireEvent.change(screen.getByRole("combobox", { name: "Change category for Sol Ring" }), {
+        target: { value: "ramp" },
+      });
+
+      expect(onChangeCategory).toHaveBeenCalledWith("c1", "ramp");
+    });
+
     it("renders each group's cards", () => {
       renderWithIntl(
         <MainZoneContent
@@ -137,6 +247,22 @@ describe("MainZoneContent", () => {
       fireEvent.click(screen.getByRole("button", { name: /move sol ring.*considering/i }));
 
       expect(onMoveToMaybeboard).toHaveBeenCalledWith("c1");
+    });
+
+    it("moves a listed card to the sideboard without requiring drag and drop", () => {
+      const onMoveToSideboard = vi.fn();
+      renderWithIntl(
+        <MainZoneContent
+          {...baseProps}
+          viewMode="list"
+          cardGroups={[group("artifact", [card("c1", "Sol Ring")])]}
+          onMoveToSideboard={onMoveToSideboard}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /move sol ring.*sideboard/i }));
+
+      expect(onMoveToSideboard).toHaveBeenCalledWith("c1");
     });
 
     it("renders nothing rather than crashing when there are no groups", () => {

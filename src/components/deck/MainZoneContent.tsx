@@ -14,7 +14,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Bookmark, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { Bookmark, ChevronDown, ChevronRight, GripVertical, Layers } from "lucide-react";
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
@@ -25,11 +25,18 @@ import { isCompanionOutsideColorIdentity } from "@/lib/deck/color-identity";
 import type { CardGroup } from "@/lib/deck/sort";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 
+const CARD_CATEGORIES: readonly CardCategory[] = [
+  "creature", "instant", "sorcery", "artifact", "enchantment", "planeswalker",
+  "land", "ramp", "draw", "removal", "boardWipe", "winCondition", "protection", "other",
+];
+
 interface CategorySectionProps {
   readonly category: CardCategory;
   readonly cards: Deck["cards"];
   readonly onRemoveCard: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly onMoveToSideboard?: (id: string) => void;
+  readonly onChangeCategory?: (id: string, category: CardCategory) => void;
 }
 
 // Draggable card list item (for intra-deck category drag)
@@ -37,11 +44,15 @@ function DraggableDeckCard({
   card,
   onRemove,
   onMoveToMaybeboard,
+  onMoveToSideboard,
+  onChangeCategory,
   isColorIdentityViolation = false,
 }: {
   readonly card: DeckCard;
   readonly onRemove: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly onMoveToSideboard?: (id: string) => void;
+  readonly onChangeCategory?: (id: string, category: CardCategory) => void;
   readonly isColorIdentityViolation?: boolean;
 }) {
   const t = useTranslations("builder");
@@ -74,16 +85,48 @@ function DraggableDeckCard({
         {...attributes}
         {...listeners}
         className="p-1 cursor-grab active:cursor-grabbing text-[var(--text-secondary)] opacity-0 group-hover/drag:opacity-50 hover:!opacity-100 transition-opacity shrink-0"
-        tabIndex={-1}
         aria-label={t("actions.dragToReorder")}
       >
         <GripVertical className="w-3 h-3" />
       </button>
+      {onChangeCategory && (
+        <details className="relative shrink-0">
+          <summary
+            aria-label={t("actions.changeCategoryFor", { name: card.name })}
+            className="flex h-7 w-7 cursor-pointer list-none items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] [&::-webkit-details-marker]:hidden"
+          >
+            <Layers className="h-3.5 w-3.5" />
+          </summary>
+          <div className="absolute right-0 top-full z-30 mt-1 min-w-40 rounded-md border border-[var(--border)] bg-[var(--surface)] p-2 shadow-xl">
+            <label className="sr-only" htmlFor={`category-${card.id}`}>
+              {t("actions.changeCategoryFor", { name: card.name })}
+            </label>
+            <select
+              id={`category-${card.id}`}
+              value={card.category}
+              onChange={(event) => {
+                const category = CARD_CATEGORIES.find(
+                  (candidate) => candidate === event.currentTarget.value
+                );
+                if (category) onChangeCategory(card.id, category);
+              }}
+              className="w-full rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm text-[var(--text-primary)]"
+            >
+              {CARD_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {t(`categories.${category}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </details>
+      )}
       <div className="flex-1 min-w-0">
         <CardListItem
           card={card}
           onRemove={onRemove}
           onMoveToMaybeboard={onMoveToMaybeboard}
+          onMoveToSideboard={onMoveToSideboard}
           showNotes
           className={cn(
             isColorIdentityViolation &&
@@ -101,12 +144,16 @@ function GenericGroup({
   cards,
   onRemoveCard,
   onMoveToMaybeboard,
+  onMoveToSideboard,
+  onChangeCategory,
   violationCardIds,
 }: {
   readonly label: string;
   readonly cards: Deck["cards"];
   readonly onRemoveCard: (id: string) => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly onMoveToSideboard?: (id: string) => void;
+  readonly onChangeCategory?: (id: string, category: CardCategory) => void;
   readonly violationCardIds: ReadonlySet<string>;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -137,6 +184,8 @@ function GenericGroup({
               card={card}
               onRemove={onRemoveCard}
               onMoveToMaybeboard={onMoveToMaybeboard}
+              onMoveToSideboard={onMoveToSideboard}
+              onChangeCategory={onChangeCategory}
               isColorIdentityViolation={violationCardIds.has(card.id)}
             />
           ))}
@@ -159,6 +208,8 @@ function DroppableCategory({
   cards,
   onRemoveCard,
   onMoveToMaybeboard,
+  onMoveToSideboard,
+  onChangeCategory,
   violationCardIds,
 }: CategorySectionProps & { readonly violationCardIds: ReadonlySet<string> }) {
   const t = useTranslations("builder");
@@ -211,6 +262,8 @@ function DroppableCategory({
                 card={card}
                 onRemove={onRemoveCard}
                 onMoveToMaybeboard={onMoveToMaybeboard}
+                onMoveToSideboard={onMoveToSideboard}
+                onChangeCategory={onChangeCategory}
                 isColorIdentityViolation={violationCardIds.has(card.id)}
               />
             ))}
@@ -244,6 +297,8 @@ export interface MainZoneContentProps {
   readonly setPartner: (p: null) => void;
   readonly clearCompanion: () => void;
   readonly onMoveToMaybeboard?: (id: string) => void;
+  readonly onMoveToSideboard?: (id: string) => void;
+  readonly onChangeCategory?: (id: string, category: CardCategory) => void;
 }
 
 export function MainZoneContent({
@@ -259,8 +314,11 @@ export function MainZoneContent({
   setPartner,
   clearCompanion,
   onMoveToMaybeboard,
+  onMoveToSideboard,
+  onChangeCategory,
 }: MainZoneContentProps) {
   const t = useTranslations("builder");
+  const tCard = useTranslations("card");
   if (viewMode === "grid") {
     return (
       <div className={gridColsClass(gridCols)}>
@@ -388,7 +446,7 @@ export function MainZoneContent({
                 e.stopPropagation();
                 onMoveToMaybeboard?.(card.id);
               }}
-              className="absolute bottom-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity bg-black/75 hover:bg-amber-500/90 focus-visible:bg-amber-500/90 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg z-10"
+              className={cn("absolute left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-amber-500/90 focus-visible:bg-amber-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10", onChangeCategory ? "bottom-10" : "bottom-1")}
               aria-label={t("zoneMoveTargets.toMaybeboard")}
               title={t("zoneMoveTargets.toMaybeboard")}
             >
@@ -396,15 +454,46 @@ export function MainZoneContent({
             </button>
             <button
               type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onMoveToSideboard?.(card.id);
+              }}
+              className={cn("absolute right-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-sky-500/90 focus-visible:bg-sky-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10", onChangeCategory ? "bottom-10" : "bottom-1")}
+              aria-label={tCard("moveNamedToSideboard", { name: card.name })}
+              title={t("zoneMoveTargets.toSideboard")}
+            >
+              <Layers className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onRemoveCard(card.id);
               }}
-              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg z-10"
+              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center text-xs shadow-lg z-10"
               aria-label={t("actions.removeCard", { name: card.name })}
             >
               ×
             </button>
+            {onChangeCategory && (
+              <select
+                aria-label={t("actions.changeCategoryFor", { name: card.name })}
+                value={card.category}
+                onChange={(event) => {
+                  const category = CARD_CATEGORIES.find(
+                    (candidate) => candidate === event.currentTarget.value
+                  );
+                  if (category) onChangeCategory(card.id, category);
+                }}
+                className="mt-1 h-8 w-full min-w-0 rounded border border-[var(--border)] bg-[var(--surface)] px-1 text-xs text-[var(--text-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+              >
+                {CARD_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {t(`categories.${category}`)}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         ))}
         {!deck.commander && mainCards.length === 0 && (
@@ -435,6 +524,8 @@ export function MainZoneContent({
               cards={group.cards}
               onRemoveCard={onRemoveCard}
               onMoveToMaybeboard={onMoveToMaybeboard}
+              onMoveToSideboard={onMoveToSideboard}
+              onChangeCategory={onChangeCategory}
               violationCardIds={violationCardIds}
             />
           );
@@ -446,6 +537,8 @@ export function MainZoneContent({
             cards={group.cards}
             onRemoveCard={onRemoveCard}
             onMoveToMaybeboard={onMoveToMaybeboard}
+            onMoveToSideboard={onMoveToSideboard}
+            onChangeCategory={onChangeCategory}
             violationCardIds={violationCardIds}
           />
         );
