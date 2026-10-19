@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-10-18                             |
+| Last Updated  | 2026-10-19                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -30,6 +30,8 @@
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+- 2026-10-19: #1043 lets players cancel an action-log edit with Escape without saving its draft. Observed focused Red/Green; VPS typecheck, lint, 3,160 unit tests and production build passed. QA promotion remains pending.
+- 2026-10-18: #1042 localizes playtest turn and phase labels plus human-readable exports for English and French. VPS typecheck, lint, 3,159 unit tests, build and Docker E2E passed. CI, SonarCloud and Lighthouse passed; Vercel failed and the user explicitly approved merging into `dev` despite it. QA promotion remains pending.
 - 2026-10-18: #1040 lets players copy their playtest action log, confirms success and explains browser clipboard failures. Two focused Red/Green cycles; VPS typecheck, lint, 3,157 unit tests, build and all 72 Docker E2E checks passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`; QA promotion remains pending.
 - 2026-10-18: #1036 adds privacy-conscious timing/status logs for external Scryfall searches and server-side cache outcomes. VPS typecheck, lint, 3,154 unit tests, build and all 72 Docker E2E checks passed; all PR checks passed before merge into `dev`. Browser search logs are local to the browser, while cache logs appear in server logs. Profile and other Scryfall paths, plus QA promotion, remain open.
 - 2026-10-18: #1034 records `GET /api/decks` status and duration without user identifiers. The full Docker pre-push suite passed in two phases (65 anonymous and 7 authenticated tests) on the VPS, alongside typecheck, lint, 3,145 unit tests and build. All PR checks passed before merge into `dev`; profile and Scryfall observability and QA promotion remain open.
