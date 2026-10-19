@@ -446,6 +446,7 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Feed playtest evidence into AI prompts only as user-owned context, never as unexplained training data.
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
 - [x] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
+  - [x] Let players cancel an action-log edit with Escape without saving its draft (#1043).
 - [x] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
   - [x] Let players copy the human-readable action log directly, with success and clipboard-error feedback (#1040).
 - [x] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
@@ -606,6 +607,7 @@ A deck can make a round trip through supported tools without silently changing c
 - Locale switcher and catalog parity guard.
 - Localized card names, type lines, rules text and card images where Scryfall provides them.
 - Localized deck rows, tooltips, playtest zones and proxies.
+- Playtest action-log turn and phase labels and human-readable exports follow the active English or French locale; player-authored descriptions and JSON data remain unchanged (#1042).
 - AI suggestion evidence formats Scryfall USD prices for the active locale without relabeling them as local-market quotes (#980).
 - AI suggestion evidence displays known card roles in the active locale, with a readable fallback for unknown provider categories (#1038).
 - AI suggestion impact formats average mana value and known USD price for the active locale without implying a currency conversion (#1015).

@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-19: Cancel playtest action edits
+
+- Press Escape to leave an action-log edit without saving its draft (#1043). Enter and blur continue to save.
+- The focused test failed before the change and passed afterward. VPS typecheck, lint, 3,160 unit tests and production build passed.
+
+### 2026-10-18: Localize playtest action logs
+
+- Use the active English or French locale for action-log turn and phase labels and copied or downloaded text, while leaving player-authored descriptions and JSON exports unchanged (#1042).
+- VPS typecheck, lint, 3,159 unit tests, production build and Docker E2E passed. CI, SonarCloud and Lighthouse passed; Vercel failed independently, and the merge into `dev` was explicitly approved despite that check.
+
 ### 2026-10-18: Copy the playtest action log
 
 - Copy the existing text log without downloading it; confirm success and explain clipboard failures with the text export as a fallback (#1040).
