@@ -65,6 +65,19 @@ describe("PlaytestActionLog", () => {
       focus.mockRestore();
     }
   });
+  it("cancels an edited action with Escape without saving it", () => {
+    const onEdit = vi.fn();
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={onEdit} onRemove={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
+    const input = screen.getByLabelText(/edit action/i);
+    fireEvent.change(input, { target: { value: "Changed mana" } });
+    fireEvent.keyDown(input, { key: "Escape" });
+
+    expect(screen.queryByLabelText(/edit action/i)).not.toBeInTheDocument();
+    expect(screen.getByText("Made mana")).toBeInTheDocument();
+    expect(onEdit).not.toHaveBeenCalled();
+  });
   it("adds a manual entry", () => {
     const onAdd = vi.fn();
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[]} onAdd={onAdd} onEdit={vi.fn()} onRemove={vi.fn()} />);
