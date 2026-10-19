@@ -30,6 +30,7 @@
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+- 2026-10-19: #1045 adds a turn selector to the playtest action log. It filters visible actions and evidence, not the stored session or exports. Two observed Red/Green cycles plus a full-export regression; VPS typecheck, lint, 3,163 unit tests, build on retry and all 72 Docker E2E checks passed. QA promotion remains pending.
 - 2026-10-19: #1043 lets players cancel an action-log edit with Escape without saving its draft. Observed focused Red/Green; VPS typecheck, lint, 3,160 unit tests and production build passed. QA promotion remains pending.
 - 2026-10-18: #1042 localizes playtest turn and phase labels plus human-readable exports for English and French. VPS typecheck, lint, 3,159 unit tests, build and Docker E2E passed. CI, SonarCloud and Lighthouse passed; Vercel failed and the user explicitly approved merging into `dev` despite it. QA promotion remains pending.
 - 2026-10-18: #1040 lets players copy their playtest action log, confirms success and explains browser clipboard failures. Two focused Red/Green cycles; VPS typecheck, lint, 3,157 unit tests, build and all 72 Docker E2E checks passed. CI, SonarCloud, Lighthouse and Vercel passed before merge into `dev`; QA promotion remains pending.
