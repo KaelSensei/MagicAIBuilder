@@ -4,6 +4,46 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { PlaytestActionLog } from "./PlaytestActionLog";
 
 describe("PlaytestActionLog", () => {
+  it("filters visible actions by turn and can show the full log again", () => {
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
+      { id: 1, turn: 1, phase: "Draw", description: "First turn draw" },
+      { id: 2, turn: 2, phase: "Draw", description: "Second turn draw" },
+    ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Turn 1" }));
+    expect(screen.getByText("First turn draw")).toBeInTheDocument();
+    expect(screen.queryByText("Second turn draw")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Action log" }));
+    expect(screen.getByText("Second turn draw")).toBeInTheDocument();
+  });
+
+  it("limits turn evidence to the selected turn", () => {
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
+      { id: 1, turn: 1, phase: "Draw", description: "First draw", kind: "draw" },
+      { id: 2, turn: 2, phase: "Draw", description: "Second draw", kind: "draw" },
+    ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Turn 1" }));
+
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent?.includes("Turn 1 · 1 draw") === true)).toBeInTheDocument();
+    expect(screen.queryByText((_, element) => element?.tagName === "P" && element.textContent?.includes("Turn 2 · 1 draw") === true)).not.toBeInTheDocument();
+  });
+
+  it("keeps the complete export when viewing one turn", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
+      { id: 1, turn: 1, phase: "Draw", description: "First draw" },
+      { id: 2, turn: 2, phase: "Draw", description: "Second draw" },
+    ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Turn 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy log" }));
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringContaining("Second draw")));
+  });
+
   it("shows localized turn and phase names in French", () => {
     renderWithIntl(
       <PlaytestActionLog deckName="Test" entries={[{ id: 1, turn: 2, phase: "Main1", description: "Made mana" }]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />,
