@@ -10,6 +10,7 @@ import { parseTextDecklist } from "@/lib/deck/import";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { useDeckStore } from "@/lib/deck/store";
 import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
+import { getDuplicateImportedNames } from "@/lib/import/import-preview";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import {
   buildScryfallNameIndex,
@@ -79,6 +80,14 @@ export function ImportDialog({
   const setPartner = useDeckStore((s) => s.setPartner);
   const setCompanion = useDeckStore((s) => s.setCompanion);
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
+  const duplicateNames = preview && previewCards
+    ? getDuplicateImportedNames([
+        ...(preview.commander ? [{ name: preview.commander }] : []),
+        ...(preview.partner ? [{ name: preview.partner }] : []),
+        ...(preview.companion ? [{ name: preview.companion }] : []),
+        ...preview.cards,
+      ], buildScryfallNameIndex(previewCards))
+    : [];
 
   /** Add all found cards to the active deck; returns count of added cards */
   async function addParsedCards(
@@ -291,6 +300,9 @@ export function ImportDialog({
                   <p className="font-semibold">{t("import.url.previewReady")}</p>
                   {preview.commander && <p>{t("import.url.commanders", { names: preview.commander })}</p>}
                   <p>{t("import.url.zones", countPreviewZones(preview.cards))}</p>
+                  {duplicateNames.length > 0 && (
+                    <p className="text-amber-300">{t("import.url.duplicates", { names: duplicateNames.join(", ") })}</p>
+                  )}
                   <ul className="mt-2 max-h-32 overflow-y-auto text-[var(--text-secondary)]">
                     {preview.cards.map((card, index) => (
                       <li key={`${index}-${card.name}`}>{card.quantity} × {card.name}</li>
