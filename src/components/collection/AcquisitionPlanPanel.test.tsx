@@ -44,6 +44,7 @@ describe("AcquisitionPlanPanel", () => {
     expect(within(line).getByText("2 copies")).toBeInTheDocument();
     expect(within(line).getByRole("link", { name: "Spells" })).toBeInTheDocument();
     expect(within(line).getByText("1 copy")).toBeInTheDocument();
+    expect(within(line).getByText("You own 1 copy")).toBeInTheDocument();
   });
 
   it("offers retry when a stalled acquisition plan request times out", async () => {
