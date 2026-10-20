@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Label AI suggestion provenance
+
+- Show the AI provenance of each generated card rationale in English and French, distinct from Scryfall card verification (#1052). The broader meta-source separation remains open.
+- Observed bilingual Red/Green component tests. VPS typecheck, lint, 3,167 unit tests, production build and 72 Docker E2E scenarios passed; CI, SonarCloud, Vercel and the performance/accessibility audit passed before merge into `dev`.
+
 ### 2026-10-20: Filter playtest actions by phase
 
 - Filter the visible playtest action log by phase, optionally within one turn. Changing turns clears the phase choice; copying and downloading still include the full session (#1050).
