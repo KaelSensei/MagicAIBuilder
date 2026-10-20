@@ -106,10 +106,10 @@ function EdhrecCardRow({
             onAdd(card.name);
             setAdded(true);
           }}
-          className="shrink-0 w-5 h-5 rounded-full bg-[var(--accent)]/20 hover:bg-[var(--accent)] flex items-center justify-center text-[var(--accent-text)] hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+          className="shrink-0 w-10 h-10 rounded-lg bg-[var(--accent)]/20 hover:bg-[var(--accent)] flex items-center justify-center text-[var(--accent-text)] hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
           aria-label={t("meta.addNamedCard", { name: card.name })}
         >
-          <Plus className="w-3 h-3" />
+          <Plus className="w-4 h-4" />
         </button>
       )}
     </div>

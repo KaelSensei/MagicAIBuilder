@@ -34,6 +34,8 @@ type PlanState =
 /** Read-only, on-demand view of copies still needed across the player's decks. */
 export function AcquisitionPlanPanel() {
   const t = useTranslations("collection.acquisitionPlan");
+  const usage = useTranslations("collection.usage");
+  const quickAdd = useTranslations("collection.quickAdd");
   const actions = useTranslations("collection.actions");
   const format = useFormatter();
   const [open, setOpen] = useState(false);
@@ -170,6 +172,11 @@ export function AcquisitionPlanPanel() {
                   <li key={item.scryfallId} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2 text-sm">
                     <div className="min-w-0">
                       <p className="font-medium text-[var(--text-primary)]">{item.name}</p>
+                      {item.ownedQuantity > 0 && (
+                        <p className="text-xs text-[var(--text-secondary)]">
+                          {quickAdd("owned", { count: item.ownedQuantity })}
+                        </p>
+                      )}
                       <p className="text-xs text-[var(--text-secondary)]">
                         {item.decks.map((deck, index) => (
                           <span key={deck.id}>
@@ -177,6 +184,7 @@ export function AcquisitionPlanPanel() {
                             <Link href={`/builder/${deck.id}`} className="hover:text-[var(--accent-text)] hover:underline focus-visible:underline">
                               {deck.name}
                             </Link>
+                            <span className="ml-1">{usage("copies", { count: deck.quantity })}</span>
                           </span>
                         ))}
                       </p>
