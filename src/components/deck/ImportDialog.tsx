@@ -2,7 +2,7 @@
 import { forEachSequential } from "@/lib/async/sequential";
 // Import deck from plain text or URL — Radix Dialog
 // Supports both trigger-based (children) and controlled (open/onOpenChange) usage
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -65,6 +65,8 @@ export function ImportDialog({
   const [message, setMessage] = useState("");
   const [missingNames, setMissingNames] = useState<string[]>([]);
   const [preview, setPreview] = useState<ReturnType<typeof parseTextDecklist> | null>(null);
+  const [previewCards, setPreviewCards] = useState<ScryfallCard[] | null>(null);
+  const previewRequest = useRef(0);
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -123,7 +125,7 @@ export function ImportDialog({
   }
 
   const handleImport = async () => {
-    if (!preview) return;
+    if (!preview || !previewCards) return;
     if (!activeDeckId) {
       setStatus("error");
       setMessage(t("import.noDeckSelected"));
@@ -132,36 +134,9 @@ export function ImportDialog({
 
     setStatus("validating");
     setMessage(t("import.parsing"));
-    setMissingNames([]);
-
     try {
-      const parsed = preview;
-      // Deduplicate card names before sending to Scryfall batch (user may list same card twice)
-      const allCardNames = [
-        ...(parsed.commander ? [{ name: parsed.commander }] : []),
-        ...(parsed.partner ? [{ name: parsed.partner }] : []),
-        ...(parsed.companion ? [{ name: parsed.companion }] : []),
-        ...Array.from(new Set(parsed.cards.map((c) => c.name))).map((name) => ({
-          name,
-        })),
-      ];
-
-      if (allCardNames.length === 0) {
-        setStatus("error");
-        setMessage(t("import.noCardsFound"));
-        return;
-      }
-
-      setMessage(t("import.validating", { count: allCardNames.length }));
-      const foundCards = await fetchInBatches(allCardNames);
-      const added = await addParsedCards(parsed, foundCards);
-      const missing = getUnmatchedImportedNames(
-        allCardNames.map(({ name }) => name),
-        buildScryfallNameIndex(foundCards)
-      );
-
-      setMissingNames(missing);
-      setStatus(missing.length > 0 ? "warning" : "done");
+      const added = await addParsedCards(preview, previewCards);
+      setStatus(missingNames.length > 0 ? "warning" : "done");
       setMessage(t("import.importSuccess", { count: added }));
     } catch (err) {
       setStatus("error");
@@ -169,19 +144,43 @@ export function ImportDialog({
     }
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     const parsed = parseTextDecklist(text);
     if (!parsed.commander && !parsed.partner && !parsed.companion && parsed.cards.length === 0) {
       setStatus("error");
       setMessage(t("import.noCardsFound"));
       return;
     }
-    setPreview(parsed);
-    setStatus("idle");
-    setMessage("");
+    const allCardNames = [
+      ...(parsed.commander ? [{ name: parsed.commander }] : []),
+      ...(parsed.partner ? [{ name: parsed.partner }] : []),
+      ...(parsed.companion ? [{ name: parsed.companion }] : []),
+      ...Array.from(new Set(parsed.cards.map((card) => card.name))).map((name) => ({ name })),
+    ];
+    setStatus("validating");
+    setMessage(t("import.validating", { count: allCardNames.length }));
+    setMissingNames([]);
+    const requestId = ++previewRequest.current;
+    try {
+      const foundCards = await fetchInBatches(allCardNames);
+      if (requestId !== previewRequest.current) return;
+      setMissingNames(getUnmatchedImportedNames(
+        allCardNames.map(({ name }) => name),
+        buildScryfallNameIndex(foundCards)
+      ));
+      setPreviewCards(foundCards);
+      setPreview(parsed);
+      setStatus("idle");
+      setMessage("");
+    } catch (err) {
+      if (requestId !== previewRequest.current) return;
+      setStatus("error");
+      setMessage(err instanceof Error ? err.message : t("import.importFailed"));
+    }
   };
 
   const handleClose = () => {
+    previewRequest.current++;
     setOpen(false);
     setTimeout(() => {
       setText("");
@@ -189,6 +188,7 @@ export function ImportDialog({
       setMessage("");
       setMissingNames([]);
       setPreview(null);
+      setPreviewCards(null);
       setActiveTab("text");
     }, 200);
   };
@@ -275,8 +275,11 @@ export function ImportDialog({
                 placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n...`}
                 value={text}
                 onChange={(e) => {
+                  previewRequest.current++;
                   setText(e.target.value);
                   setPreview(null);
+                  setPreviewCards(null);
+                  setMissingNames([]);
                   setStatus("idle");
                   setMessage("");
                 }}
@@ -334,7 +337,7 @@ export function ImportDialog({
                 {status !== "done" && status !== "warning" && (
                   <button
                     type="button"
-                    onClick={preview ? handleImport : handlePreview}
+                    onClick={preview ? handleImport : () => void handlePreview()}
                     disabled={!text.trim() || status === "validating"}
                     className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
