@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Label card destinations in pasted-list previews
+
+- Each card row in a pasted-list preview now displays its destination zone before import (#1069). English and French labels are active, with key parity maintained in dormant catalogs. Parsing, quantities and persisted zones are unchanged.
+- Observed a focused Red/Green UI test plus French and locale-parity coverage. VPS typecheck, lint, 3,178 unit tests and production build passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`. Docker E2E was not run for this slice.
+
 ### 2026-10-20: Show duplicates before pasted-list import
 
 - Pasted-list previews now flag repeated card lines and commanders repeated in the main deck before confirmation (#1067). Both import paths share canonical Scryfall-name matching; the preview does not change quantities or remove cards automatically.
