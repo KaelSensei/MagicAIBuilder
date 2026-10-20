@@ -21,6 +21,31 @@ afterEach(() => {
 });
 
 describe("AcquisitionPlanPanel", () => {
+  it("shows how many copies each deck needs in an acquisition line", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response({
+      deckCount: 2,
+      decks: [{ id: "a", name: "Artifacts" }, { id: "b", name: "Spells" }],
+      items: [{
+        scryfallId: "ring", name: "Sol Ring", requiredQuantity: 3,
+        ownedQuantity: 1, acquireQuantity: 2, price: 2,
+        decks: [
+          { id: "a", name: "Artifacts", quantity: 2 },
+          { id: "b", name: "Spells", quantity: 1 },
+        ],
+      }],
+    })));
+    const user = userEvent.setup();
+
+    renderWithIntl(<AcquisitionPlanPanel />);
+    await user.click(screen.getByRole("button", { name: "Acquisition plan" }));
+    const line = await screen.findByRole("listitem");
+
+    expect(within(line).getByRole("link", { name: "Artifacts" })).toBeInTheDocument();
+    expect(within(line).getByText("2 copies")).toBeInTheDocument();
+    expect(within(line).getByRole("link", { name: "Spells" })).toBeInTheDocument();
+    expect(within(line).getByText("1 copy")).toBeInTheDocument();
+  });
+
   it("offers retry when a stalled acquisition plan request times out", async () => {
     const timeoutController = new AbortController();
     const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
