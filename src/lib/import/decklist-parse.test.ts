@@ -84,6 +84,22 @@ describe("parsePlainTextDecklist", () => {
     expect(cards[1]).toMatchObject({ name: "Sol Ring", isCommander: false });
   });
 
+  it("imports the second card in a counted Commander (2) section as partner", () => {
+    const cards = parsePlainTextDecklist([
+      "Commander (2)",
+      "1 Thrasios, Triton Hero",
+      "1 Tymna the Weaver",
+      "Mainboard",
+      "1 Sol Ring",
+    ].join("\n"));
+
+    expect(cards).toEqual([
+      { name: "Thrasios, Triton Hero", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Tymna the Weaver", quantity: 1, isCommander: false, isPartner: true, zone: "main" },
+      { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
   it("leaves the commander section when a Deck or Sideboard header follows", () => {
     const cards = parsePlainTextDecklist("# Commander\n# Deck\n1 Sol Ring");
     expect(cards[0].isCommander).toBe(false);

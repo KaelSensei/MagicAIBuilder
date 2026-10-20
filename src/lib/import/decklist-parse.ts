@@ -118,18 +118,20 @@ function parseDecklistCard(line: string, section: DecklistSection): UrlImportCar
 export function parsePlainTextDecklist(text: string): UrlImportCard[] {
   const cards: UrlImportCard[] = [];
   let section: DecklistSection = "main";
+  let countedPartner = false;
 
   for (const rawLine of text.split(/\r\n|\r|\n/).slice(0, 500)) {
     const line = rawLine.trim();
     if (!line) continue;
     const isComment = line.startsWith("//") || line.startsWith("#");
-    const heading = (isComment ? line.replace(/^[/#]+/, "").trim() : line)
+    const headingWithCount = (isComment ? line.replace(/^[/#]+/, "").trim() : line)
       .toLowerCase()
-      .replace(/:$/, "")
-      .replace(/\s{0,4}\(\d{1,3}\)$/, "");
+      .replace(/:$/, "");
+    const heading = headingWithCount.replace(/\s{0,4}\(\d{1,3}\)$/, "");
     const nextSection = headingSection(heading);
     if (nextSection) {
       section = nextSection;
+      countedPartner = nextSection === "commander" && /^commander\s{0,4}\(2\)$/.test(headingWithCount);
       continue;
     }
     if (isComment) continue;
@@ -137,7 +139,12 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
     const card = parseDecklistCard(line, section);
     if (!card) continue;
     cards.push(card);
-    if (section === "commander" || section === "partner") section = "main";
+    if (section === "commander" && countedPartner) {
+      section = "partner";
+      countedPartner = false;
+    } else if (section === "commander" || section === "partner") {
+      section = "main";
+    }
   }
 
   return cards;
