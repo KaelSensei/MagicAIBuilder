@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Show duplicates before pasted-list import
+
+- Pasted-list previews now flag repeated card lines and commanders repeated in the main deck before confirmation (#1067). Both import paths share canonical Scryfall-name matching; the preview does not change quantities or remove cards automatically.
+- Observed two focused Red/Green UI cycles. VPS typecheck, lint, 3,176 unit tests and production build passed; CI, SonarCloud, Vercel and the retried performance/accessibility audit passed before merge into `dev`. Docker E2E was not run for this slice.
+
 ### 2026-10-20: Validate pasted card names before import
 
 - Pasted-list previews now check card names with Scryfall and show unresolved names before confirmation (#1065). Confirming reuses the validated cards without another lookup; closing or editing invalidates stale results. Duplicate decisions and exact-printing choices remain open.
