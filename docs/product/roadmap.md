@@ -400,6 +400,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - The acquisition plan now shows a known-price subtotal for each missing printing and marks unpriced printings on their own rows.
 - Each missing printing in the acquisition plan now links to the player's contributing decks, so the player can inspect where it is needed.
 - Acquisition-plan rows now show the required copy count beside each contributing deck, making shared demand understandable without changing the aggregate purchase quantity (#1054).
+- Missing-printing rows now also show already-owned copies, clarifying how much remains to acquire without changing ownership or the plan calculation (#1056).
 
 ### Remaining scope
 
