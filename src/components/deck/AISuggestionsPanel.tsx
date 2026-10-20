@@ -445,6 +445,9 @@ export function AISuggestionsPanel({
                                   )}
                                 </span>
                               </div>
+                              <p className="text-[10px] text-[var(--text-secondary)]">
+                                {t("meta.evidenceType", { type: t("meta.evidence.ai") })}
+                              </p>
                               <p className="text-[11px] text-[var(--text-secondary)] leading-tight">
                                 {s.reason}
                               </p>
