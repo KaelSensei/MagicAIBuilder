@@ -1,8 +1,13 @@
 # MagicAIBuilder
 
-![Banner](assets/banner.png)
+![A Commander deck taking shape around legendary multicolor cards](assets/readme-commander-hero.png)
 
-> Build, analyze, test, and improve Magic: The Gathering decks with reliable card data and focused AI assistance.
+> Build the deck you mean. Understand why it works. Test it before game night.
+
+MagicAIBuilder is a Commander-first deckbuilding companion. Start with a commander
+or an idea, shape a legal list with reliable card data, and make informed changes
+with clear analysis and focused AI suggestions. Playtest the result, then share,
+print, or export it when it is ready.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
@@ -20,9 +25,11 @@
 
 ## Features
 
+Follow a deck from the first card to a list you can actually play:
+
 ### Build and organize
 
-- Search the complete Scryfall catalog with syntax, set, color, commander, partner, and companion filters.
+- Search Scryfall card data with syntax, set, color, commander, partner, and companion filters.
 - Edit decks in list or grid view with drag and drop, categorized zones, quantities, notes, tags, snapshots, and keyboard shortcuts.
 - Choose a preferred printing before adding a card or replace its artwork later.
 - Track owned cards, missing-card costs, and shopping lists; import from text or popular deck-building services.
@@ -32,7 +39,7 @@
 - Evaluate Commander brackets across ramp, draw, removal, tutors, win speed, and mana value.
 - Detect Game Changers, color-identity violations, mana-source gaps, turn-one probabilities, and format-specific statistical weaknesses.
 - Compare a commander against EDHRec recommendations and recent tournament results.
-- Request card and cut suggestions from Anthropic Claude or OpenAI, with budget and archetype constraints.
+- Request card and cut suggestions from Anthropic Claude or OpenAI, with budget and archetype constraints; deterministic rules remain separate from AI advice.
 
 ### Playtest and share
 
