@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Validate pasted card names before import
+
+- Pasted-list previews now check card names with Scryfall and show unresolved names before confirmation (#1065). Confirming reuses the validated cards without another lookup; closing or editing invalidates stale results. Duplicate decisions and exact-printing choices remain open.
+- Observed focused Red/Green tests for missing names, late responses and stale warnings. VPS typecheck, lint, 3,174 unit tests and production build passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`. Docker E2E was not run for this slice.
+
 ### 2026-10-20: Preview pasted decklists before import
 
 - Show parsed commander, zone copy counts and card rows before requesting Scryfall data or changing the deck (#1063). Confirmation starts the existing import; editing the pasted text invalidates a stale preview. Scryfall-unresolved names remain a post-confirmation warning.
