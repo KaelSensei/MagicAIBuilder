@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Show owned copies in acquisition planning
+
+- Show the number of copies already owned beside each missing printing, so the remaining purchase quantity has context (#1056). Ownership, prices and the read-only plan calculation are unchanged.
+- Observed a focused Red/Green component test. VPS typecheck, lint, 3,168 unit tests, production build and 72 Docker E2E scenarios passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`.
+
 ### 2026-10-20: Show per-deck acquisition demand
 
 - Display the number of copies required by each contributing deck in acquisition-plan rows while preserving the aggregate missing quantity and deck links (#1054).
