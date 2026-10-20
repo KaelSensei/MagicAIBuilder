@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Make meta recommendation actions usable without hover
+
+- Keep the EDHREC card-add button visible without hovering, enlarge its touch target to 40 px and show a keyboard focus outline (#1058). Recommendation data and add behavior are unchanged.
+- Observed a focused Red/Green UI test. VPS typecheck, lint, 3,169 unit tests, production build and 72 Docker E2E scenarios passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`.
+
 ### 2026-10-20: Show owned copies in acquisition planning
 
 - Show the number of copies already owned beside each missing printing, so the remaining purchase quantity has context (#1056). Ownership, prices and the read-only plan calculation are unchanged.
