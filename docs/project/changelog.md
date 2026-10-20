@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Preview pasted decklists before import
+
+- Show parsed commander, zone copy counts and card rows before requesting Scryfall data or changing the deck (#1063). Confirmation starts the existing import; editing the pasted text invalidates a stale preview. Scryfall-unresolved names remain a post-confirmation warning.
+- Observed a focused Red/Green UI test. VPS typecheck, lint, 3,171 unit tests and production build passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`. Docker E2E was not run for this slice.
+
 ### 2026-10-20: Make meta recommendation actions usable without hover
 
 - Keep the EDHREC card-add button visible without hovering, enlarge its touch target to 40 px and show a keyboard focus outline (#1058). Recommendation data and add behavior are unchanged.
