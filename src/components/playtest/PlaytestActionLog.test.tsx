@@ -4,6 +4,39 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { PlaytestActionLog } from "./PlaytestActionLog";
 
 describe("PlaytestActionLog", () => {
+  it("filters visible actions by phase without changing the complete log", () => {
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
+      { id: 1, turn: 1, phase: "Draw", description: "Drew a card" },
+      { id: 2, turn: 1, phase: "Main1", description: "Cast a spell" },
+    ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Draw" }));
+    expect(screen.getByText("Drew a card")).toBeInTheDocument();
+    expect(screen.queryByText("Cast a spell")).not.toBeInTheDocument();
+  });
+
+  it("resets the phase when changing turns and keeps copied data complete", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
+      { id: 1, turn: 1, phase: "Draw", description: "First draw" },
+      { id: 2, turn: 1, phase: "Main1", description: "First spell" },
+      { id: 3, turn: 2, phase: "Main1", description: "Second spell" },
+      { id: 4, turn: 2, phase: "Draw", description: "Second draw" },
+    ]} onAdd={vi.fn()} onEdit={vi.fn()} onRemove={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Turn 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Draw" }));
+    expect(screen.queryByText("First spell")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Turn 2" }));
+    expect(screen.getByText("Second spell")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All phases" })).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy log" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringContaining("First draw")));
+  });
+
   it("filters visible actions by turn and can show the full log again", () => {
     renderWithIntl(<PlaytestActionLog deckName="Test" entries={[
       { id: 1, turn: 1, phase: "Draw", description: "First turn draw" },
