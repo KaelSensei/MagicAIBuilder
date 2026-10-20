@@ -13,6 +13,25 @@ export interface ImportPreview {
   readonly ignoredNames: readonly string[];
 }
 
+export function getDuplicateImportedNames(
+  cards: readonly { readonly name: string }[],
+  foundByName: ReadonlyMap<string, ScryfallCard>
+): string[] {
+  const entryCounts = new Map<string, { name: string; count: number }>();
+  for (const card of cards) {
+    const key = normalizeImportedName(card.name);
+    const duplicateKey = normalizeImportedName(foundByName.get(key)?.name ?? card.name);
+    const previous = entryCounts.get(duplicateKey);
+    entryCounts.set(duplicateKey, {
+      name: previous?.name ?? card.name,
+      count: (previous?.count ?? 0) + 1,
+    });
+  }
+  return [...entryCounts.values()]
+    .filter(({ count }) => count > 1)
+    .map(({ name }) => name);
+}
+
 /**
  * Build a confirmation summary without modifying the active deck.
  *
@@ -25,7 +44,6 @@ export function buildImportPreview(
   foundCards: readonly ScryfallCard[]
 ): ImportPreview {
   const zoneCounts = { main: 0, sideboard: 0, maybeboard: 0 };
-  const entryCounts = new Map<string, { name: string; count: number }>();
   const foundByName = buildScryfallNameIndex(foundCards);
   const ignoredNames = new Map<string, string>();
   for (const name of result.ignored) {
@@ -43,17 +61,7 @@ export function buildImportPreview(
     totalQuantity += card.quantity;
     if (card.isCommander) commanderNames.push(card.name);
     if (card.isPartner) partnerNames.push(card.name);
-    const duplicateKey = normalizeImportedName(foundByName.get(key)?.name ?? card.name);
-    const previous = entryCounts.get(duplicateKey);
-    entryCounts.set(duplicateKey, {
-      name: previous?.name ?? card.name,
-      count: (previous?.count ?? 0) + 1,
-    });
   }
-
-  const duplicateNames = [...entryCounts.values()]
-    .filter(({ count }) => count > 1)
-    .map(({ name }) => name);
 
   return {
     name: result.name,
@@ -62,7 +70,7 @@ export function buildImportPreview(
     partnerNames,
     zoneCounts,
     totalQuantity,
-    duplicateNames,
+    duplicateNames: getDuplicateImportedNames(result.cards, foundByName),
     ignoredNames: [...ignoredNames.values()],
   };
 }

@@ -104,6 +104,39 @@ it("shows unresolved names before confirmation without changing the deck", async
   expect(addCard).not.toHaveBeenCalled();
 });
 
+it("shows duplicate card decisions before confirming a pasted list", async () => {
+  fetchInBatches.mockResolvedValueOnce([{ name: "Sol Ring" }]);
+  render(
+    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
+      <ImportDialog open onOpenChange={vi.fn()} />
+    </NextIntlClientProvider>
+  );
+
+  fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
+    target: { value: "1 Sol Ring\n1 sol ring" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Preview decklist" }));
+
+  expect(await screen.findByText("Duplicate decisions: Sol Ring")).toBeInTheDocument();
+  expect(addCard).not.toHaveBeenCalled();
+});
+
+it("flags a commander repeated in the pasted main deck", async () => {
+  fetchInBatches.mockResolvedValueOnce([{ name: "Atraxa, Praetors' Voice" }]);
+  render(
+    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
+      <ImportDialog open onOpenChange={vi.fn()} />
+    </NextIntlClientProvider>
+  );
+
+  fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
+    target: { value: "Commander\n1 Atraxa, Praetors' Voice\nDeck\n1 Atraxa, Praetors' Voice" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Preview decklist" }));
+
+  expect(await screen.findByText("Duplicate decisions: Atraxa, Praetors' Voice")).toBeInTheDocument();
+});
+
 it("ignores a validation result that arrives after the dialog closes", async () => {
   let finishValidation: ((cards: { name: string }[]) => void) | undefined;
   fetchInBatches.mockReturnValueOnce(new Promise((resolve) => {
