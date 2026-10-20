@@ -9,6 +9,36 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Make meta recommendation actions usable without hover
+
+- Keep the EDHREC card-add button visible without hovering, enlarge its touch target to 40 px and show a keyboard focus outline (#1058). Recommendation data and add behavior are unchanged.
+- Observed a focused Red/Green UI test. VPS typecheck, lint, 3,169 unit tests, production build and 72 Docker E2E scenarios passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`.
+
+### 2026-10-20: Show owned copies in acquisition planning
+
+- Show the number of copies already owned beside each missing printing, so the remaining purchase quantity has context (#1056). Ownership, prices and the read-only plan calculation are unchanged.
+- Observed a focused Red/Green component test. VPS typecheck, lint, 3,168 unit tests, production build and 72 Docker E2E scenarios passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`.
+
+### 2026-10-20: Show per-deck acquisition demand
+
+- Display the number of copies required by each contributing deck in acquisition-plan rows while preserving the aggregate missing quantity and deck links (#1054).
+- Align the Docker Playwright image with the already-updated 1.64.1 package. Observed a focused Red/Green UI test and the failing/passing toolchain guard; VPS typecheck, lint, 3,168 unit tests, build and 72 Docker E2E scenarios passed. CI, SonarCloud, Vercel and the performance/accessibility audit passed before merge into `dev`.
+
+### 2026-10-20: Label AI suggestion provenance
+
+- Show the AI provenance of each generated card rationale in English and French, distinct from Scryfall card verification (#1052). The broader meta-source separation remains open.
+- Observed bilingual Red/Green component tests. VPS typecheck, lint, 3,167 unit tests, production build and 72 Docker E2E scenarios passed; CI, SonarCloud, Vercel and the performance/accessibility audit passed before merge into `dev`.
+
+### 2026-10-20: Filter playtest actions by phase
+
+- Filter the visible playtest action log by phase, optionally within one turn. Changing turns clears the phase choice; copying and downloading still include the full session (#1050).
+- Observed a focused Red before implementation. VPS typecheck, lint, 3,165 unit tests, production build and 72 Docker E2E scenarios passed. CI, SonarCloud, Vercel and the retried performance/accessibility audit passed before merge into `dev`.
+
+### 2026-10-19: Focus the playtest log on one turn
+
+- Filter visible action entries and turn evidence by a selected turn, with an accessible way to return to the full log (#1045). Copy and downloads continue to include the complete session.
+- Two focused Red/Green cycles and a full-export regression test passed. VPS typecheck, lint, 3,163 unit tests, production build on retry and 72 Docker E2E checks passed. The first build attempt failed in Next.js Google Fonts loading; the retry completed successfully.
+
 ### 2026-10-19: Cancel playtest action edits
 
 - Press Escape to leave an action-log edit without saving its draft (#1043). Enter and blur continue to save.

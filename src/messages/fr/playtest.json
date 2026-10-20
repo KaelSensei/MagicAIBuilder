@@ -73,6 +73,7 @@
   },
   "log": {
     "title": "Journal des actions",
+    "allPhases": "Toutes les phases",
     "placeholder": "Noter une action manuelle, comme le mana produit",
     "add": "Ajouter l’action",
     "empty": "Les actions apparaîtront ici pendant la partie.",

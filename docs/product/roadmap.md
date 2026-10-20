@@ -323,6 +323,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 - [x] Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
 - [x] Make card zoom intentional in "View all cards" contexts, not a global hover effect.
 - [x] Explain the empty EDHREC missing-card filter when all popular cards are already in the deck; removing the filter restores the list.
+- [x] Keep EDHREC recommendation add actions visible without hover, with a 40 px touch target and keyboard focus outline (#1058).
 - [ ] Preserve the established dark/light design language while improving hierarchy, spacing and responsive behavior.
 - [ ] Add visual regression coverage for the Deck Editor, banner, warning panel and card hover states.
 
@@ -399,6 +400,8 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - The printing selector now puts exact owned editions first, shows combined regular and foil quantities, and offers an optional owned-only filter with an empty state (#978); choosing an edition remains an explicit action.
 - The acquisition plan now shows a known-price subtotal for each missing printing and marks unpriced printings on their own rows.
 - Each missing printing in the acquisition plan now links to the player's contributing decks, so the player can inspect where it is needed.
+- Acquisition-plan rows now show the required copy count beside each contributing deck, making shared demand understandable without changing the aggregate purchase quantity (#1054).
+- Missing-printing rows now also show already-owned copies, clarifying how much remains to acquire without changing ownership or the plan calculation (#1056).
 
 ### Remaining scope
 
@@ -447,6 +450,8 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
 - [x] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
   - [x] Let players cancel an action-log edit with Escape without saving its draft (#1043).
+  - [x] Filter visible actions and turn evidence by turn without truncating copied or downloaded logs (#1045).
+  - [x] Filter visible actions by phase within the selected turn while keeping full-session exports (#1050).
 - [x] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
   - [x] Let players copy the human-readable action log directly, with success and clipboard-error feedback (#1040).
 - [x] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
@@ -519,6 +524,7 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - Meta snapshots over time.
 - Commander Spellbook combo data.
 - Recommendation source and freshness disclosure.
+- Each AI card suggestion now labels its generated rationale as AI-suggested, separately from any Scryfall verification (#1052).
 - EDHREC recommendation rows disclose validated per-card sample counts when the source provides them.
 - EDHREC feed contract checks reject malformed card lists so a source change does not overwrite reliable cached recommendations with a false empty result.
 - EDHREC popular-card recommendations now rank distinct cards by observed inclusion across source categories before applying the top-20 limit; category order no longer hides more widely played cards.

@@ -84,6 +84,19 @@ describe("TournamentDeckRow", () => {
 });
 
 describe("MetaPanel", () => {
+  it("keeps the recommendation add action visible and touch-friendly without hover", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
+        <MetaPanel commanderName="Atraxa" deckCardNames={new Set<string>()} onAddCard={vi.fn()} />
+      </NextIntlClientProvider>
+    );
+    fireEvent.click(screen.getByRole("button", { name: /meta analysis/i }));
+
+    const add = screen.getByRole("button", { name: "Add Sol Ring" });
+    expect(add).not.toHaveClass("opacity-0");
+    expect(add).toHaveClass("h-10", "w-10");
+  });
+
   it("explains when all popular cards are in the deck and restores the list when unfiltered", () => {
     render(
       <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
