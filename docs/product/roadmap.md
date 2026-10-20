@@ -1,10 +1,7 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-15
+> **Updated:** 2026-10-20
 
-> **Latest quality delivery:** #955 and #956 restore working VPS/CI Sonar analysis and a green Quality Gate, with zero bugs and 65 code smells still open. Google failure feedback and description-save completion have separate Red/Green regressions. All validations ran on the VPS. The remaining maintainability backlog is tracked in [Sonar status](../engineering/sonar-status.md); QA promotion remains pending.
-
-> **Latest reliability delivery:** #953 awaits deck activation before import, fork and AI wizard follow-up actions, and awaits URL import additions and existing-card quantity saves before completion. Validated on the VPS; integrated into `dev`, awaiting QA promotion. This does not close the broader save-recovery or Sonar initiatives.
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -76,6 +73,21 @@ Sources reviewed: [Moxfield public feature guide](https://github.com/moxfield/mo
 
 Priority is expressed as **Now**, **Next** and **Later**. A priority is not a promise of a release date.
 
+### Backlog snapshot - 2026-10-20
+
+This is a planning count of unchecked top-level roadmap scopes on `dev`, not a count of missing atomic features. Recently shipped slices may sit inside a still-open broader scope; do not close that scope without its full acceptance evidence.
+
+| Scope | Open now | After adding I-13 |
+| --- | ---: | ---: |
+| User-visible product outcomes | 23 | 26 |
+| Engineering and validation enablers | 15 | 17 |
+| Conditional or deliberately parked decisions | 11 | 11 |
+| **Total tracked scopes** | **49** | **54** |
+
+I-07's tracked playtest scope is shipped. The largest active gaps remain the deck editor (I-01), collection-to-acquisition flow (I-06), and explainable recommendation evidence (I-09). I-13 adds a visual redesign, not a claim that today's UI is unfinished or that existing functionality must be rewritten.
+
+**Iteration estimate:** approximately 30-50 small PR-sized iterations for the active Now/Next outcomes **including** I-13, with overlap between visual and functional work. The 11 conditional or parked scopes are excluded. This is an estimate, not a fixed number of turns or a delivery deadline; refine it after a visual audit and each accepted slice.
+
 ---
 
 ## Portfolio View
@@ -111,15 +123,18 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 9. **I-09 Meta and evidence**
    Combine EDHREC trends, tournament context and deck-specific reasoning without pretending incomplete data is certainty.
 
+10. **I-13 Product visual redesign**
+    Establish a distinct, polished visual language and improve the deck library, editor and discovery without sacrificing density, clarity or accessibility.
+
 ### Later
 
-10. **I-10 Interoperability and integrations**
+11. **I-10 Interoperability and integrations**
     Make MagicAIBuilder a good starting point and a good destination for deck data.
 
-11. **I-11 Localization and regional experience**
+12. **I-11 Localization and regional experience**
     Expand beyond English and French only when translations and prices are genuinely supported.
 
-12. **I-12 Local AI**
+13. **I-12 Local AI**
     Explore local inference only after the cloud copilot has a measurable product fit.
 
 ---
@@ -658,6 +673,33 @@ A locale is activated only when its navigation, warnings, dates, prices and card
 ### Definition of done
 
 A local model is only promoted if it matches the required quality for a clearly defined workflow at an acceptable cost and latency.
+
+---
+
+## I-13: Product Visual Redesign
+
+**Status:** Next. Discovery and specification only; no UI implementation is claimed by this roadmap update.
+
+**User outcome:** a player can find, build, understand and share a Commander deck in an interface that feels coherent, distinctive and calm even when card data is dense.
+
+### Inspiration and boundaries
+
+- Take inspiration from Moxfield's efficient deck workflow and presentation, and from [EDHREC's October 2026 redesign](https://edhrec.com/articles/changelog-edhrec-redesign): visible card context, legible evidence, purposeful filters, configurable views and responsive layouts.
+- Do not copy either product's layout, artwork, branding or interaction details. Keep MagicAIBuilder's explainable AI, legality, playtest and ownership workflows recognizable.
+- Keep source attribution and statistical uncertainty readable. A prettier recommendation must not look more certain than its data supports.
+- Treat narrow web widths as part of responsive quality; a native mobile application is not in scope.
+
+### Delivery slices
+
+- [ ] Audit the current dark/light surfaces and agree a visual direction, typography, spacing, color, elevation, motion and component tokens in a reusable design reference before implementation.
+- [ ] Refine navigation and the deck library so search, deck state, commander identity and next actions are immediately scannable.
+- [ ] Refine the deck editor's dense workspace: card views, commander context, actions, warnings and analytics, without hiding existing workflows or introducing layout jumps.
+- [ ] Refine public decks, discovery and recommendations around card imagery, source-aware evidence, clear filters and consistent detail panels.
+- [ ] Validate the redesigned journeys at narrow and wide web widths, with keyboard and screen-reader access, light/dark contrast, visual regression coverage and measured loading/interaction performance. Run code validation on the VPS.
+
+### Definition of done
+
+The deck-library-to-editor-to-share journey is visually coherent and remains at least as usable as before; accessibility, responsive, performance and regression checks pass, and each redesigned slice has QA acceptance evidence before promotion.
 
 ---
 
