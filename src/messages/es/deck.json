@@ -177,6 +177,7 @@
     "cancel": "Cancel",
     "import": "Import",
     "previewDecklist": "Preview decklist",
+    "previewZone": { "main": "Main", "sideboard": "Sideboard", "maybeboard": "Maybeboard" },
     "url": {
       "intro": "Paste a deck URL to import. Supported: {sources}.",
       "placeholder": "https://www.moxfield.com/decks/… or moxfield publicId (e.g. AbCdEfGhIj)",

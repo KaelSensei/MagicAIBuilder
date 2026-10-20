@@ -305,7 +305,12 @@ export function ImportDialog({
                   )}
                   <ul className="mt-2 max-h-32 overflow-y-auto text-[var(--text-secondary)]">
                     {preview.cards.map((card, index) => (
-                      <li key={`${index}-${card.name}`}>{card.quantity} × {card.name}</li>
+                      <li key={`${index}-${card.name}`} className="flex items-baseline justify-between gap-3">
+                        <span className="min-w-0 truncate" title={card.name}>{card.quantity} × {card.name}</span>
+                        <span className="shrink-0 text-xs text-[var(--text-secondary)]">
+                          {t(`import.previewZone.${card.zone ?? "main"}`)}
+                        </span>
+                      </li>
                     ))}
                   </ul>
                 </div>
