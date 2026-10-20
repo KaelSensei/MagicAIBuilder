@@ -399,6 +399,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - The printing selector now puts exact owned editions first, shows combined regular and foil quantities, and offers an optional owned-only filter with an empty state (#978); choosing an edition remains an explicit action.
 - The acquisition plan now shows a known-price subtotal for each missing printing and marks unpriced printings on their own rows.
 - Each missing printing in the acquisition plan now links to the player's contributing decks, so the player can inspect where it is needed.
+- Acquisition-plan rows now show the required copy count beside each contributing deck, making shared demand understandable without changing the aggregate purchase quantity (#1054).
 
 ### Remaining scope
 

@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Show per-deck acquisition demand
+
+- Display the number of copies required by each contributing deck in acquisition-plan rows while preserving the aggregate missing quantity and deck links (#1054).
+- Align the Docker Playwright image with the already-updated 1.64.1 package. Observed a focused Red/Green UI test and the failing/passing toolchain guard; VPS typecheck, lint, 3,168 unit tests, build and 72 Docker E2E scenarios passed. CI, SonarCloud, Vercel and the performance/accessibility audit passed before merge into `dev`.
+
 ### 2026-10-20: Label AI suggestion provenance
 
 - Show the AI provenance of each generated card rationale in English and French, distinct from Scryfall card verification (#1052). The broader meta-source separation remains open.
