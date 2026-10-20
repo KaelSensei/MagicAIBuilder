@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-10-19                             |
+| Last Updated  | 2026-10-20                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3,144 across 288 files, validated on the VPS on 2026-10-18                                                                                 |
+| Unit tests          | 3,144 across 288 files, validated on the VPS on 2026-10-18                                                                                  |
 | E2E tests           | 66 passing (`@external` / `@perf` excluded), full Docker gate on the VPS, validated on 2026-10-10                                           |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
@@ -30,6 +30,8 @@
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
 ## Latest product delivery
+
+- 2026-10-20: #1052 labels each generated AI card rationale separately from Scryfall verification in English and French. Bilingual Red/Green; VPS typecheck, lint, 3,167 unit tests, build and all 72 Docker E2E checks passed. CI, SonarCloud, Vercel and the performance/accessibility audit passed. Integrated into `dev`; broader I-09 source separation and QA promotion remain open.
 - 2026-10-20: #1050 adds a phase filter to the playtest action log, optionally within one turn. Switching turns clears the phase choice; stored actions and exports remain complete. Focused Red/Green; VPS typecheck, lint, 3,165 unit tests, build and all 72 Docker E2E scenarios passed. CI, SonarCloud, Vercel and the retried performance/accessibility audit passed. Integrated into `dev`; QA promotion is pending.
 - 2026-10-19: #1045 adds a turn selector to the playtest action log. It filters visible actions and evidence, not the stored session or exports. Two observed Red/Green cycles plus a full-export regression; VPS typecheck, lint, 3,163 unit tests, build on retry and all 72 Docker E2E checks passed. QA approved; promoted through `staging` to `main` in #1046 and #1047.
 - 2026-10-19: #1043 lets players cancel an action-log edit with Escape without saving its draft. Observed focused Red/Green; VPS typecheck, lint, 3,160 unit tests and production build passed. QA promotion remains pending.

@@ -521,6 +521,7 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - Meta snapshots over time.
 - Commander Spellbook combo data.
 - Recommendation source and freshness disclosure.
+- Each AI card suggestion now labels its generated rationale as AI-suggested, separately from any Scryfall verification (#1052).
 - EDHREC recommendation rows disclose validated per-card sample counts when the source provides them.
 - EDHREC feed contract checks reject malformed card lists so a source change does not overwrite reliable cached recommendations with a false empty result.
 - EDHREC popular-card recommendations now rank distinct cards by observed inclusion across source categories before applying the top-20 limit; category order no longer hides more widely played cards.
