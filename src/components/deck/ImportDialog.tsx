@@ -44,6 +44,14 @@ function getStatusTextClass(status: ImportStatus): string {
   return "text-[var(--text-secondary)]";
 }
 
+function countPreviewZones(cards: ReturnType<typeof parseTextDecklist>["cards"]) {
+  const counts = { main: 0, sideboard: 0, maybeboard: 0 };
+  for (const card of cards) {
+    counts[card.zone ?? "main"] += card.quantity;
+  }
+  return counts;
+}
+
 export function ImportDialog({
   children,
   open: controlledOpen,
@@ -56,6 +64,7 @@ export function ImportDialog({
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [message, setMessage] = useState("");
   const [missingNames, setMissingNames] = useState<string[]>([]);
+  const [preview, setPreview] = useState<ReturnType<typeof parseTextDecklist> | null>(null);
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -114,7 +123,7 @@ export function ImportDialog({
   }
 
   const handleImport = async () => {
-    if (!text.trim()) return;
+    if (!preview) return;
     if (!activeDeckId) {
       setStatus("error");
       setMessage(t("import.noDeckSelected"));
@@ -126,7 +135,7 @@ export function ImportDialog({
     setMissingNames([]);
 
     try {
-      const parsed = parseTextDecklist(text);
+      const parsed = preview;
       // Deduplicate card names before sending to Scryfall batch (user may list same card twice)
       const allCardNames = [
         ...(parsed.commander ? [{ name: parsed.commander }] : []),
@@ -160,6 +169,18 @@ export function ImportDialog({
     }
   };
 
+  const handlePreview = () => {
+    const parsed = parseTextDecklist(text);
+    if (!parsed.commander && !parsed.partner && !parsed.companion && parsed.cards.length === 0) {
+      setStatus("error");
+      setMessage(t("import.noCardsFound"));
+      return;
+    }
+    setPreview(parsed);
+    setStatus("idle");
+    setMessage("");
+  };
+
   const handleClose = () => {
     setOpen(false);
     setTimeout(() => {
@@ -167,6 +188,7 @@ export function ImportDialog({
       setStatus("idle");
       setMessage("");
       setMissingNames([]);
+      setPreview(null);
       setActiveTab("text");
     }, 200);
   };
@@ -252,9 +274,27 @@ export function ImportDialog({
                 className="w-full h-48 bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-none focus:outline-none focus:border-[var(--accent)] font-mono"
                 placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n...`}
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setPreview(null);
+                  setStatus("idle");
+                  setMessage("");
+                }}
                 disabled={status === "validating"}
               />
+
+              {preview && (
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-3 text-sm text-[var(--text-primary)]">
+                  <p className="font-semibold">{t("import.url.previewReady")}</p>
+                  {preview.commander && <p>{t("import.url.commanders", { names: preview.commander })}</p>}
+                  <p>{t("import.url.zones", countPreviewZones(preview.cards))}</p>
+                  <ul className="mt-2 max-h-32 overflow-y-auto text-[var(--text-secondary)]">
+                    {preview.cards.map((card, index) => (
+                      <li key={`${index}-${card.name}`}>{card.quantity} × {card.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Status message */}
               {message && (
@@ -294,14 +334,14 @@ export function ImportDialog({
                 {status !== "done" && status !== "warning" && (
                   <button
                     type="button"
-                    onClick={handleImport}
+                    onClick={preview ? handleImport : handlePreview}
                     disabled={!text.trim() || status === "validating"}
                     className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {status === "validating" && (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     )}
-                    {t("import.import")}
+                    {preview ? t("import.url.confirmImport") : t("import.previewDecklist")}
                   </button>
                 )}
               </div>
