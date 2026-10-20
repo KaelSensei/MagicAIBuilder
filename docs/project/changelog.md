@@ -9,6 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-20: Filter playtest actions by phase
+
+- Filter the visible playtest action log by phase, optionally within one turn. Changing turns clears the phase choice; copying and downloading still include the full session (#1050).
+- Observed a focused Red before implementation. VPS typecheck, lint, 3,165 unit tests, production build and 72 Docker E2E scenarios passed. CI, SonarCloud, Vercel and the retried performance/accessibility audit passed before merge into `dev`.
+
+### 2026-10-19: Focus the playtest log on one turn
+
+- Filter visible action entries and turn evidence by a selected turn, with an accessible way to return to the full log (#1045). Copy and downloads continue to include the complete session.
+- Two focused Red/Green cycles and a full-export regression test passed. VPS typecheck, lint, 3,163 unit tests, production build on retry and 72 Docker E2E checks passed. The first build attempt failed in Next.js Google Fonts loading; the retry completed successfully.
+
 ### 2026-10-19: Cancel playtest action edits
 
 - Press Escape to leave an action-log edit without saving its draft (#1043). Enter and blur continue to save.

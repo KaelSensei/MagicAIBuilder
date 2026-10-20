@@ -447,6 +447,8 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Keep the solitaire limitation explicit: recorded results are self-reported and are not tournament win rates.
 - [x] Record a chronological, editable action log for zone moves, draws, casts, mana production, counters and life changes.
   - [x] Let players cancel an action-log edit with Escape without saving its draft (#1043).
+  - [x] Filter visible actions and turn evidence by turn without truncating copied or downloaded logs (#1045).
+  - [x] Filter visible actions by phase within the selected turn while keeping full-session exports (#1050).
 - [x] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
   - [x] Let players copy the human-readable action log directly, with success and clipboard-error feedback (#1040).
 - [x] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
