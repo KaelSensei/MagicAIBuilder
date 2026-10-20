@@ -34,6 +34,7 @@ type PlanState =
 /** Read-only, on-demand view of copies still needed across the player's decks. */
 export function AcquisitionPlanPanel() {
   const t = useTranslations("collection.acquisitionPlan");
+  const usage = useTranslations("collection.usage");
   const actions = useTranslations("collection.actions");
   const format = useFormatter();
   const [open, setOpen] = useState(false);
@@ -177,6 +178,7 @@ export function AcquisitionPlanPanel() {
                             <Link href={`/builder/${deck.id}`} className="hover:text-[var(--accent-text)] hover:underline focus-visible:underline">
                               {deck.name}
                             </Link>
+                            <span className="ml-1">{usage("copies", { count: deck.quantity })}</span>
                           </span>
                         ))}
                       </p>
