@@ -29,9 +29,13 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
   const [manaAmount, setManaAmount] = useState("1");
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
   const [selectedTurn, setSelectedTurn] = useState<number | null>(null);
+  const [selectedPhase, setSelectedPhase] = useState<PlaytestActionLogEntry["phase"] | null>(null);
   const turns = [...new Set(entries.map((entry) => entry.turn))].sort((first, second) => first - second);
   const activeTurn = selectedTurn !== null && turns.includes(selectedTurn) ? selectedTurn : null;
-  const visibleEntries = activeTurn === null ? entries : entries.filter((entry) => entry.turn === activeTurn);
+  const turnEntries = activeTurn === null ? entries : entries.filter((entry) => entry.turn === activeTurn);
+  const phases = [...new Set(turnEntries.map((entry) => entry.phase))];
+  const activePhase = selectedPhase !== null && phases.includes(selectedPhase) ? selectedPhase : null;
+  const visibleEntries = activePhase === null ? turnEntries : turnEntries.filter((entry) => entry.phase === activePhase);
   const summaries = useMemo(() => summarizeActionLog(entries), [entries]);
   const visibleSummaries = summaries.filter((summary) =>
     (activeTurn === null || summary.turn === activeTurn) && summary.draws + summary.manaProduced + summary.cardsSeen > 0
@@ -136,12 +140,24 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
       )}
       {turns.length > 1 && (
         <div role="group" aria-label={t("title")} className="mb-3 flex flex-wrap gap-1">
-          <button type="button" aria-pressed={activeTurn === null} onClick={() => setSelectedTurn(null)} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
+          <button type="button" aria-pressed={activeTurn === null} onClick={() => { setSelectedTurn(null); setSelectedPhase(null); }} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
             {t("title")}
           </button>
           {turns.map((turn) => (
-            <button key={turn} type="button" aria-pressed={activeTurn === turn} onClick={() => setSelectedTurn(turn)} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
+            <button key={turn} type="button" aria-pressed={activeTurn === turn} onClick={() => { setSelectedTurn(turn); setSelectedPhase(null); }} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
               {t("turn", { turn })}
+            </button>
+          ))}
+        </div>
+      )}
+      {phases.length > 1 && (
+        <div role="group" aria-label={t("allPhases")} className="mb-3 flex flex-wrap gap-1">
+          <button type="button" aria-pressed={activePhase === null} onClick={() => setSelectedPhase(null)} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
+            {t("allPhases")}
+          </button>
+          {phases.map((phase) => (
+            <button key={phase} type="button" aria-pressed={activePhase === phase} onClick={() => setSelectedPhase(phase)} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
+              {phaseLabel(phase)}
             </button>
           ))}
         </div>
