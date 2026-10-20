@@ -64,6 +64,14 @@ describe("parseTextDecklist", () => {
     ]);
   });
 
+  it("returns to the main deck after a Main Deck heading", () => {
+    const result = parseTextDecklist("Sideboard\n1 Negate\nMain Deck\n1 Sol Ring");
+    expect(result.cards).toEqual([
+      { name: "Negate", quantity: 1, zone: "sideboard" },
+      { name: "Sol Ring", quantity: 1 },
+    ]);
+  });
+
   it("preserves considering quantity and zone", () => {
     const result = parseTextDecklist("Deck\n1 Sol Ring\nConsidering\n2 Counterspell");
     expect(result.cards).toEqual([
