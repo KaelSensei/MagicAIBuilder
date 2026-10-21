@@ -48,6 +48,23 @@ it("previews a pasted list before adding cards", async () => {
   expect(addCard).not.toHaveBeenCalled();
 });
 
+it("shows both commanders in a pasted-list preview", async () => {
+  fetchInBatches.mockResolvedValueOnce([]);
+  render(
+    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
+      <ImportDialog open onOpenChange={vi.fn()} />
+    </NextIntlClientProvider>
+  );
+
+  fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
+    target: { value: "Commander\n1 Jaheira, Friend of the Forest\n1 Clan Crafter" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Preview decklist" }));
+
+  expect(await screen.findByText("Commanders: Jaheira, Friend of the Forest, Clan Crafter")).toBeInTheDocument();
+  expect(addCard).not.toHaveBeenCalled();
+});
+
 it("labels each preview row with its destination zone", async () => {
   fetchInBatches.mockResolvedValueOnce([]);
   render(
