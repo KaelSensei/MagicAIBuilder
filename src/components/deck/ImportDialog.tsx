@@ -298,7 +298,11 @@ export function ImportDialog({
               {preview && (
                 <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-3 text-sm text-[var(--text-primary)]">
                   <p className="font-semibold">{t("import.url.previewReady")}</p>
-                  {preview.commander && <p>{t("import.url.commanders", { names: preview.commander })}</p>}
+                  {(preview.commander || preview.partner) && (
+                    <p>{t("import.url.commanders", {
+                      names: [preview.commander, preview.partner].filter(Boolean).join(", "),
+                    })}</p>
+                  )}
                   <p>{t("import.url.zones", countPreviewZones(preview.cards))}</p>
                   {duplicateNames.length > 0 && (
                     <p className="text-amber-300">{t("import.url.duplicates", { names: duplicateNames.join(", ") })}</p>
