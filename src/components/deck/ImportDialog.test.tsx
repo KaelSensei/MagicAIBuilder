@@ -105,7 +105,7 @@ it("discards a stale preview when the pasted list changes", async () => {
 });
 
 it("reuses preview validation when the player confirms the import", async () => {
-  fetchInBatches.mockResolvedValueOnce([]);
+  fetchInBatches.mockResolvedValueOnce([{ name: "Sol Ring" }]);
   render(
     <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
       <ImportDialog open onOpenChange={vi.fn()} />
@@ -120,8 +120,9 @@ it("reuses preview validation when the player confirms the import", async () => 
   expect(fetchInBatches).toHaveBeenCalledWith([{ name: "Sol Ring" }]);
 
   fireEvent.click(screen.getByRole("button", { name: "Import this preview" }));
-  await waitFor(() => expect(screen.getByText("Successfully imported 0 cards.")).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByText(/Successfully imported/)).toBeInTheDocument());
   expect(fetchInBatches).toHaveBeenCalledOnce();
+  expect(addCard).toHaveBeenCalledOnce();
 });
 
 it("shows unresolved names before confirmation without changing the deck", async () => {
@@ -139,6 +140,24 @@ it("shows unresolved names before confirmation without changing the deck", async
 
   expect(await screen.findByText("Definitely Not A Card")).toBeInTheDocument();
   expect(screen.getByRole("alert")).toHaveTextContent("Cards not found in Scryfall (1):");
+  expect(addCard).not.toHaveBeenCalled();
+});
+
+it("does not confirm a pasted list when no card resolves", async () => {
+  fetchInBatches.mockResolvedValueOnce([]);
+  render(
+    <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
+      <ImportDialog open onOpenChange={vi.fn()} />
+    </NextIntlClientProvider>
+  );
+
+  fireEvent.change(screen.getByPlaceholderText(/Atraxa, Praetors' Voice/), {
+    target: { value: "1 Definitely Not A Card" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Preview decklist" }));
+
+  expect(await screen.findByText("Definitely Not A Card")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Import this preview" })).toBeDisabled();
   expect(addCard).not.toHaveBeenCalled();
 });
 

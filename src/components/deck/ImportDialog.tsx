@@ -134,7 +134,7 @@ export function ImportDialog({
   }
 
   const handleImport = async () => {
-    if (!preview || !previewCards) return;
+    if (!preview || !previewCards?.length) return;
     if (!activeDeckId) {
       setStatus("error");
       setMessage(t("import.noDeckSelected"));
@@ -355,7 +355,7 @@ export function ImportDialog({
                   <button
                     type="button"
                     onClick={preview ? handleImport : () => void handlePreview()}
-                    disabled={!text.trim() || status === "validating"}
+                    disabled={!text.trim() || status === "validating" || (preview !== null && previewCards?.length === 0)}
                     className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {status === "validating" && (
