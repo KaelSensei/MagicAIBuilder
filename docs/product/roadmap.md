@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-20
+> **Updated:** 2026-10-21
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -589,6 +589,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - The URL import preview now discloses Scryfall-unresolved card names before confirmation, alongside names ignored by the source; front-face names of double-faced cards still resolve.
 - Pasted plain-text imports now disclose unresolved names after import instead of implying complete success; resolved cards remain in the deck (#1023).
 - Pasted lists show commander, zone copy counts and card rows before any deck mutation (#1063). The preview now checks names with Scryfall and discloses unresolved cards before confirmation (#1065); editing or closing the dialog invalidates the validation result.
+- When no pasted card resolves, the preview keeps the missing-name warning visible but disables confirmation instead of reporting a successful zero-card import (#1074). Partially resolved lists remain importable.
 - Pasted-list previews now disclose repeated card lines and commanders repeated in the main deck before confirmation (#1067), using the same canonical-name duplicate check as URL imports. The player can edit the pasted list; no automatic duplicate removal changes quantities.
 - Each pasted-list preview row now labels its destination as Main, Sideboard or Maybeboard before confirmation (#1069). English and French labels are active; this is a visibility improvement, not a change to zone persistence or external round-trip fidelity.
 - Missing-name warnings in the URL import preview are grouped across equivalent case, whitespace and apostrophe spellings, preserving the first spelling without merging imported rows or quantities (#848).
@@ -604,6 +605,7 @@ A recommendation is never presented as universal truth: the user can see where i
   - [x] Include a trailing Zone column in simple and full deck CSV exports, preserving main, sideboard and maybeboard values without changing existing column positions (#840). CSV reimport and command-zone rows remain separate scope.
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
 - [x] Validate pasted-list names before confirmation and show unresolved cards in its preview (#1065).
+- [x] Prevent confirming a pasted-list preview when none of its cards resolves (#1074).
 - [x] Show duplicate decisions in pasted-list previews using the URL preview's matching policy (#1067).
 - [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
 - [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
