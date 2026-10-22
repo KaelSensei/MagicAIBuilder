@@ -105,6 +105,14 @@ describe("parsePlainTextDecklist", () => {
     expect(cards[0].isCommander).toBe(false);
   });
 
+  it("treats a 99 heading as the main deck rather than a card", () => {
+    const cards = parsePlainTextDecklist("Sideboard\n1 Negate\n// 99\n1 Sol Ring");
+    expect(cards).toEqual([
+      { name: "Negate", quantity: 1, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
   it("preserves partner and secondary zones across text section headers", () => {
     const cards = parsePlainTextDecklist([
       "# Commander",
