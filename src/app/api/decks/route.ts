@@ -38,7 +38,7 @@ const createDeckSchema = z.object({
   partnerId: z.string().nullable().optional(),
   companionId: z.string().nullable().optional(),
   pairingType: z
-    .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select"])
+    .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son"])
     .optional()
     .default("none"),
   isAIGenerated: z.boolean().optional().default(false),
