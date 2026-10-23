@@ -113,6 +113,12 @@ describe("parseTextDecklist", () => {
     expect(result.cards[0].name).toBe("Lightning Bolt");
   });
 
+  it("accepts uppercase quantity markers without changing roles or zones", () => {
+    const result = parseTextDecklist("Commander\n1X Atraxa, Praetors' Voice\nSideboard\n2X Negate");
+    expect(result.commander).toBe("Atraxa, Praetors' Voice");
+    expect(result.cards).toEqual([{ name: "Negate", quantity: 2, zone: "sideboard" }]);
+  });
+
   it("strips a standalone uppercase set code but keeps normal parenthetical text", () => {
     const result = parseTextDecklist("1 Sol Ring (C21)\n1 Test Card (custom)");
     expect(result.cards.map((card) => card.name)).toEqual([
