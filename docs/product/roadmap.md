@@ -589,6 +589,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - Versioned read-only external API under /api/v1.
 - The URL import preview now discloses Scryfall-unresolved card names before confirmation, alongside names ignored by the source; front-face names of double-faced cards still resolve.
 - Pasted plain-text imports now disclose unresolved names after import instead of implying complete success; resolved cards remain in the deck (#1023).
+- Pasted decklists accept uppercase `X` quantity markers without changing card names, commander roles or secondary zones (#1080).
 - Pasted lists show commander, zone copy counts and card rows before any deck mutation (#1063). The preview now checks names with Scryfall and discloses unresolved cards before confirmation (#1065); editing or closing the dialog invalidates the validation result.
 - Pasted-list previews show both the commander and parsed partner or Background before confirmation, matching what the import will set (#1076).
 - When no pasted card resolves, the preview keeps the missing-name warning visible but disables confirmation instead of reporting a successful zero-card import (#1074). Partially resolved lists remain importable.
