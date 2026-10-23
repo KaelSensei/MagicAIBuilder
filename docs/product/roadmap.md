@@ -152,6 +152,7 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 
 - Search by name, set, color and advanced filters.
 - Main deck, commander, companion, sideboard and considering zones.
+- `Partner—Father & son` commanders are recognized, paired only with the same variant, searchable in the second-command slot and preserved by deck APIs (#1084); other new partner variants remain separate scope.
 - List and grid presentations.
 - Categories, quantities, notes, tags and bulk actions.
 - Card printing selection and card hover previews.
