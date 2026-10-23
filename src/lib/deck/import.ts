@@ -87,7 +87,7 @@ function processImportLine(line: string, state: ParseState): void {
   }
   if (isComment) return;
 
-  const match = /^(\d+)x?\s+(\S.*)$/.exec(line);
+  const match = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
   const rawName = match
     ? match[2].replace(SET_CODE_PATTERN, "").replace(SET_ONLY_PATTERN, "").trim()
     : line.replace(SET_CODE_PATTERN, "").replace(SET_ONLY_PATTERN, "").trim();
