@@ -136,6 +136,15 @@ describe("parsePlainTextDecklist", () => {
     ]);
   });
 
+  it("returns to the main zone after a Main Deck heading", () => {
+    const cards = parsePlainTextDecklist("Sideboard\n1 Negate\nMain Deck\n1 Sol Ring");
+
+    expect(cards.map(({ name, zone }) => ({ name, zone }))).toEqual([
+      { name: "Negate", zone: "sideboard" },
+      { name: "Sol Ring", zone: "main" },
+    ]);
+  });
+
   it("recognizes section headings with counts in downloaded decklists", () => {
     const cards = parsePlainTextDecklist([
       "Commander (1)",

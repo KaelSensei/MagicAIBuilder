@@ -96,6 +96,7 @@ function headingSection(heading: string): DecklistSection | undefined {
     case "deck":
     case "99":
     case "main":
+    case "main deck":
     case "mainboard": return "main";
     default: return undefined;
   }
