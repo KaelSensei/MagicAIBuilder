@@ -206,6 +206,17 @@ describe("POST /api/decks", () => {
     );
   });
 
+  it("creates a deck with Father & son pairing", async () => {
+    authed();
+
+    const response = await POST(createRequest({ name: "Family", pairingType: "father_son" }));
+
+    expect(response.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ pairingType: "father_son" }) })
+    );
+  });
+
   /**
    * The name is rendered on the public deck page and in the shared view, so a
    * tag surviving here is stored XSS. It is stripped before the row is written,
