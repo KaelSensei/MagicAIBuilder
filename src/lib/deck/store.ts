@@ -4,7 +4,7 @@ import { create } from "zustand";
 import type { Deck, DeckCard, DeckZone, CardCategory } from "./types";
 import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
-import { detectPairingType, supportsPartner } from "./pairing";
+import { canPairWith, detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import * as deckApi from "@/lib/db/deck-api";
 import { useToastStore } from "@/hooks/useToast";
@@ -882,6 +882,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     // e.g. Jaheira has "Choose a Background" → pairingType should be "background"
     const currentPairingType = decks[activeDeckId]?.pairingType ?? "none";
     const partnerPairingType = card ? detectPairingType(card) : "none";
+    if (card && currentPairingType === "father_son" &&
+        !canPairWith(currentPairingType, partnerPairingType)) {
+      useToastStore.getState().add("warning", "A Father & son commander needs another Father & son partner.");
+      return;
+    }
     const effectivePairingType =
       currentPairingType === "none" && partnerPairingType !== "none"
         ? partnerPairingType
