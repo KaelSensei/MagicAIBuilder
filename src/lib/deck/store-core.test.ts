@@ -799,6 +799,18 @@ describe("useDeckStore — addCard", () => {
     expect(useDeckStore.getState().decks["deck-1"].cards[0].name).toBe("Lightning Bolt");
   });
 
+  it("removes a failed addition and lets the player retry", async () => {
+    vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("offline"));
+    const card = makeScryfallCard();
+
+    await useDeckStore.getState().addCard(card);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(0);
+    expect(toastAdd).toHaveBeenCalledWith("error", "Could not add card. Please retry.");
+    await useDeckStore.getState().addCard(card);
+    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(1);
+  });
+
   it("updates the card id to the DB-saved id after API call", async () => {
     const card = makeScryfallCard();
     await useDeckStore.getState().addCard(card);
