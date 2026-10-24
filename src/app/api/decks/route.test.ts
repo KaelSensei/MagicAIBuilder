@@ -176,6 +176,15 @@ describe("POST /api/decks", () => {
     );
   });
 
+  it("rejects creating a deck with the same commander and partner card", async () => {
+    authed();
+
+    const response = await POST(createRequest({ name: "Duplicate pair", commanderId: "card-1", partnerId: "card-1" }));
+
+    expect(response.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it("creates the deck against the session's user id", async () => {
     authed();
 

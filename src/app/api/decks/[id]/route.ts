@@ -81,6 +81,14 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    if (parsed.data.commanderId !== undefined || parsed.data.partnerId !== undefined) {
+      const commanderId = parsed.data.commanderId !== undefined ? parsed.data.commanderId : existing.commanderId;
+      const partnerId = parsed.data.partnerId !== undefined ? parsed.data.partnerId : existing.partnerId;
+      if (commanderId && commanderId === partnerId) {
+        return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
+      }
+    }
+
     const updated = await prisma.deck.update({
       where: { id },
       data: buildDeckPatchData(parsed.data),
