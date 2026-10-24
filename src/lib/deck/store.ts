@@ -1153,6 +1153,17 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "addCard", err);
+      if (get().decks[activeDeckId]) {
+        set((state) => ({
+          decks: {
+            ...state.decks,
+            [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
+              withoutCard(cards, deckCard.id)
+            ),
+          },
+        }));
+        useToastStore.getState().add("error", "Could not add card. Please retry.");
+      }
     } finally {
       set({ isSyncing: false });
     }
