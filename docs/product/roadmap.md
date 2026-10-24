@@ -280,6 +280,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 ### Already shipped
 
 - Commander color identity and format legality.
+- The editor rejects a generic Partner replacement for an existing Father & son pair without changing the saved partner (#1086).
 - Banlist and Game Changers detection.
 - Bracket scoring across six dimensions.
 - Mana curve, color distribution and format-specific statistics.
@@ -298,6 +299,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - [x] Add source and freshness labels to external recommendations.
 - [x] Let the player compare analysis before and after a proposed change.
 - [ ] Keep warning calculations deterministic and independent from AI output.
+- [ ] Validate commander and partner compatibility at the deck API boundary, including imported and direct-write pairs.
 
 ### Definition of done
 
