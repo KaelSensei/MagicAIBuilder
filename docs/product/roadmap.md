@@ -302,6 +302,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - [x] Add source and freshness labels to external recommendations.
 - [x] Let the player compare analysis before and after a proposed change.
 - [ ] Keep warning calculations deterministic and independent from AI output.
+  - [x] Keep named banned-card, color-identity and Game Changer warnings in a stable order when deck cards are reordered (#1092). Broader deterministic inputs and AI independence remain open.
 - [ ] Validate commander and partner mechanics at the deck API boundary, including imported pairs and the same Oracle card across different printings.
 
 ### Definition of done
