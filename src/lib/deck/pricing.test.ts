@@ -168,6 +168,17 @@ describe("getPriceBreakdown", () => {
 
 // ─── Budget reduction suggestions ──────────────────────────────────────────
 describe("suggestBudgetReductions", () => {
+  it("selects the same equal-price card regardless of deck order", () => {
+    const alpha = makeCard("a", "Alpha", 10);
+    const beta = makeCard("b", "Beta", 10);
+
+    const first = suggestBudgetReductions([beta, alpha], 17);
+    const reversed = suggestBudgetReductions([alpha, beta], 17);
+
+    expect(first.map((suggestion) => suggestion.cardToReplace.id)).toEqual(["a"]);
+    expect(reversed.map((suggestion) => suggestion.cardToReplace.id)).toEqual(["a"]);
+  });
+
   it("suggests replacing expensive cards with cheaper ones", () => {
     const cards = [
       makeCard("c1", "Expensive", 50),

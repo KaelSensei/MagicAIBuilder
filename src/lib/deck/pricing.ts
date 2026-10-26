@@ -128,7 +128,11 @@ export function suggestBudgetReductions(
   const suggestions: BudgetSuggestion[] = [];
 
   // Sort cards by price descending (most expensive first)
-  const sorted = getCardsSortedByPrice(cards, "desc");
+  const sorted = cards
+    .filter((card) => card.price !== null && card.price > 0)
+    .sort((a, b) =>
+      (b.price ?? 0) - (a.price ?? 0) || a.id.localeCompare(b.id)
+    );
 
   for (const card of sorted) {
     if (!card.price || card.price === 0) continue;

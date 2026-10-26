@@ -713,6 +713,23 @@ describe("useDeckStore — setBudget", () => {
     seedDeck();
   });
 
+  it("keeps syncing after a rejected save until the other budget save finishes", async () => {
+    const savedDeck = await deckApi.createDeck("Test Deck");
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    (deckApi.updateDeck as Mock)
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockReturnValueOnce(pending.promise);
+
+    const first = useDeckStore.getState().setBudget(100);
+    const second = useDeckStore.getState().setBudget(200);
+    await first;
+
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve(savedDeck);
+    await second;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("updates budget optimistically", async () => {
     await useDeckStore.getState().setBudget(500);
     expect(useDeckStore.getState().decks["deck-1"].budget).toBe(500);
