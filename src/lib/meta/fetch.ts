@@ -200,6 +200,8 @@ async function loadArchetypeOptions(): Promise<ReadonlyMap<string, number>> {
     headers: { Accept: "text/html" },
   });
   const options = parseArchetypeOptions(decodeLatin1(await res.arrayBuffer()));
+  if (options.size === 0)
+    throw new Error("Invalid MTGTop8 response: EDH archetypes missing");
   archetypeCache = { options, expiresAt: Date.now() + ARCHETYPE_CACHE_TTL_MS };
   return options;
 }

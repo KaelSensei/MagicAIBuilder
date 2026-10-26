@@ -270,6 +270,7 @@ export interface DeckStore {
 }
 
 let latestDeckListRequest = 0;
+const latestRenameRequests = new Map<string, symbol>();
 
 export const useDeckStore = create<DeckStore>()((set, get) => ({
   decks: {},
@@ -628,6 +629,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   renameDeck: async (id: string, name: string) => {
     const previousDeck = get().decks[id];
     if (!previousDeck) return;
+    const request = Symbol();
+    latestRenameRequests.set(id, request);
     // Optimistic update
     set((state) => ({
       decks: {
@@ -642,7 +645,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       logger.error("Unexpected error", "renameDeck", err);
       set((state) => {
         const currentDeck = state.decks[id];
-        if (currentDeck?.name !== name) return state;
+        if (
+          latestRenameRequests.get(id) !== request ||
+          currentDeck?.name !== name
+        ) return state;
         return {
           decks: {
             ...state.decks,

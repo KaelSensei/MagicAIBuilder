@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { render } from "@testing-library/react";
 import { MoxfieldProfileImport } from "./MoxfieldProfileImport";
 
@@ -126,6 +126,55 @@ describe("MoxfieldProfileImport", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not load Moxfield decks.");
     expect(screen.queryByRole("button", { name: "Import Old deck" })).not.toBeInTheDocument();
+  });
+
+  it("ignores an older profile response after a newer profile load fails", async () => {
+    window.localStorage.setItem(
+      "magic-ai-builder:moxfield-profiles",
+      JSON.stringify(["first", "second"])
+    );
+    const user = userEvent.setup();
+    let resolveFirst: ((response: Response) => void) | undefined;
+    const firstResponse = new Promise<Response>((resolve) => {
+      resolveFirst = resolve;
+    });
+    vi.spyOn(globalThis, "fetch")
+      .mockReturnValueOnce(firstResponse)
+      .mockResolvedValueOnce(new Response("{}", { status: 500 }));
+
+    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    await user.click(screen.getByRole("button", { name: "@first" }));
+    await user.click(screen.getByRole("button", { name: "@second" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not load Moxfield decks."
+    );
+
+    await act(async () => {
+      resolveFirst?.(
+        new Response(
+          JSON.stringify({
+            decks: [
+              {
+                id: "stale-deck",
+                name: "Stale deck",
+                format: "commander",
+                lastUpdatedAt: null,
+              },
+            ],
+            total: 1,
+            hasMore: false,
+          }),
+          { status: 200 }
+        )
+      );
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Could not load Moxfield decks."
+    );
+    expect(
+      screen.queryByRole("button", { name: "Import Stale deck" })
+    ).not.toBeInTheDocument();
   });
 
   it("removes a saved profile without loading it", async () => {
