@@ -35,7 +35,7 @@ const createDeckSchema = z.object({
   budget: z.number().positive().nullable().optional(),
   commanderId: z.string().nullable().optional(),
   commanderName: z.string().max(200).nullable().optional(),
-  partnerId: z.string().nullable().optional(),
+  partnerId: z.string().refine((id) => id.trim().length > 0).nullable().optional(),
   companionId: z.string().nullable().optional(),
   pairingType: z
     .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son"])

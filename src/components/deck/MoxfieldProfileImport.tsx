@@ -72,6 +72,12 @@ export function MoxfieldProfileImport({
       const normalized = profile.trim().replace(/^@/, "");
       if (!normalized) return;
       setUsername(normalized);
+      if (requestedPage === 1) {
+        setDecks([]);
+        setPageNumber(1);
+        setTotal(0);
+        setHasMore(false);
+      }
       setStatus("loading");
       setError(null);
       try {

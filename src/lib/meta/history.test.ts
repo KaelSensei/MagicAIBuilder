@@ -14,6 +14,19 @@ function snapshot(day: string, cards: Record<string, number>): MetaSnapshotInput
   };
 }
 
+function top20(cards: Record<string, number>): Record<string, number> {
+  const lowest = Math.min(...Object.values(cards));
+  return {
+    ...Object.fromEntries(
+      Array.from({ length: 20 - Object.keys(cards).length }, (_, index) => [
+        `Filler ${index}`,
+        lowest,
+      ])
+    ),
+    ...cards,
+  };
+}
+
 function shiftFor(shifts: readonly MetaShift[], name: string): MetaShift {
   const found = shifts.find((s) => s.name === name);
   if (!found) throw new Error(`no shift reported for "${name}"`);
@@ -41,10 +54,14 @@ describe("computeMetaShifts", () => {
       cards: [
         { name: "A", inclusion: 0.9 },
         { name: "A", inclusion: 0.1 },
+        ...Array.from({ length: 19 }, (_, index) => ({
+          name: `Filler ${index}`,
+          inclusion: 0.9,
+        })),
       ],
     };
     const report = computeMetaShifts([
-      snapshot("2026-08-01", { A: 0.8, B: 0.95 }), current,
+      snapshot("2026-08-01", top20({ A: 0.8, B: 0.95 })), current,
     ], 60);
 
     const gone = shiftFor(report?.shifts ?? [], "B");
@@ -105,11 +122,41 @@ describe("computeMetaShifts", () => {
 
   // ─── The truncation rule ────────────────────────────────────────────────────
 
+  it("does not infer a rise from a baseline shorter than the top 20", () => {
+    const currentCards = Object.fromEntries(
+      Array.from({ length: 20 }, (_, index) => [`Card ${index}`, 0.8])
+    );
+    const report = computeMetaShifts(
+      [snapshot("2026-08-01", { Existing: 0.4 }), snapshot("2026-08-22", currentCards)],
+      60
+    );
+
+    expect(shiftFor(report?.shifts ?? [], "Card 0")).toMatchObject({
+      kind: "entered",
+      deltaAtLeast: 0,
+    });
+  });
+
+  it("does not infer a fall from a current list shorter than the top 20", () => {
+    const report = computeMetaShifts(
+      [
+        snapshot("2026-08-01", top20({ Gone: 0.8 })),
+        snapshot("2026-08-22", { Existing: 0.4 }),
+      ],
+      60
+    );
+
+    expect(shiftFor(report?.shifts ?? [], "Gone")).toMatchObject({
+      kind: "left",
+      deltaAtMost: 0,
+    });
+  });
+
   it("never reports a vanished card as a fall to zero", () => {
     const report = computeMetaShifts(
       [
-        snapshot("2026-08-01", { "Cyclonic Rift": 0.78, "Sol Ring": 0.6 }),
-        snapshot("2026-08-22", { "Sol Ring": 0.61 }),
+        snapshot("2026-08-01", top20({ "Cyclonic Rift": 0.78, "Sol Ring": 0.6 })),
+        snapshot("2026-08-22", top20({ "Sol Ring": 0.61 })),
       ],
       60
     );
@@ -125,7 +172,7 @@ describe("computeMetaShifts", () => {
   it("bounds a newcomer's rise by the baseline cut-off rather than inventing one", () => {
     const report = computeMetaShifts(
       [
-        snapshot("2026-08-01", { "Sol Ring": 0.6, "Swords to Plowshares": 0.45 }),
+        snapshot("2026-08-01", top20({ "Sol Ring": 0.6, "Swords to Plowshares": 0.45 })),
         snapshot("2026-08-22", { "Sol Ring": 0.6, "The One Ring": 0.52 }),
       ],
       60
@@ -141,7 +188,7 @@ describe("computeMetaShifts", () => {
   it("clamps a bound to zero when the card entered below the old cut-off", () => {
     const report = computeMetaShifts(
       [
-        snapshot("2026-08-01", { "Sol Ring": 0.6, "Mana Crypt": 0.5 }),
+        snapshot("2026-08-01", top20({ "Sol Ring": 0.6, "Mana Crypt": 0.5 })),
         snapshot("2026-08-22", { "Sol Ring": 0.6, "Dockside Extortionist": 0.3 }),
       ],
       60
@@ -157,15 +204,19 @@ describe("computeMetaShifts", () => {
   it("ranks by magnitude, mixing measured deltas and bounds", () => {
     const report = computeMetaShifts(
       [
-        snapshot("2026-08-01", { A: 0.5, B: 0.5, C: 0.5 }),
-        snapshot("2026-08-22", { A: 0.52, B: 0.9, D: 0.8 }),
+        snapshot("2026-08-01", top20({ A: 0.5, B: 0.5, C: 0.5 })),
+        snapshot("2026-08-22", top20({ A: 0.52, B: 0.9, D: 0.8 })),
       ],
       60
     );
     // B rose by an exact 0.40 and D entered above the old 0.50 cut-off, so its
     // rise is at least 0.30. C last — it dropped out, but from 0.50, already
     // under the new 0.52 cut-off, so nothing can be claimed about its fall.
-    expect((report?.shifts ?? []).map((s) => s.name)).toEqual(["B", "D", "A", "C"]);
+    expect(
+      (report?.shifts ?? [])
+        .filter((s) => ["A", "B", "C", "D"].includes(s.name))
+        .map((s) => s.name)
+    ).toEqual(["B", "D", "A", "C"]);
     expect(shiftFor(report?.shifts ?? [], "C")).toMatchObject({
       kind: "left",
       deltaAtMost: 0,

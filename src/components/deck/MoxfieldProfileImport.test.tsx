@@ -104,6 +104,30 @@ describe("MoxfieldProfileImport", () => {
     expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   });
 
+  it("clears the previous profile's decks when loading another profile fails", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        decks: [{ id: "old-deck", name: "Old deck", format: "commander", lastUpdatedAt: null }],
+        total: 1,
+        hasMore: false,
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("{}", { status: 500 }));
+
+    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    const username = screen.getByLabelText("Moxfield username");
+    await user.type(username, "first");
+    await user.click(screen.getByRole("button", { name: "Load decks" }));
+    expect(await screen.findByRole("button", { name: "Import Old deck" })).toBeInTheDocument();
+
+    await user.clear(username);
+    await user.type(username, "second");
+    await user.click(screen.getByRole("button", { name: "Load decks" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not load Moxfield decks.");
+    expect(screen.queryByRole("button", { name: "Import Old deck" })).not.toBeInTheDocument();
+  });
+
   it("removes a saved profile without loading it", async () => {
     window.localStorage.setItem(
       "magic-ai-builder:moxfield-profiles",
