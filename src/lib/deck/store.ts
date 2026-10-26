@@ -163,6 +163,7 @@ interface PendingCategoryWrite {
 const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
 let pendingManualBracketWrites = 0;
+let pendingBudgetWrites = 0;
 let pendingBulkRemovals = 0;
 let pendingCardAdditionsAndRemovals = 0;
 
@@ -1952,6 +1953,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       },
     }));
 
+    pendingBudgetWrites += 1;
     set({ isSyncing: true });
     try {
       await deckApi.updateDeck(activeDeckId, { budget });
@@ -1973,7 +1975,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .add("error", "Could not save deck budget. Please retry.");
       }
     } finally {
-      set({ isSyncing: false });
+      pendingBudgetWrites -= 1;
+      set({ isSyncing: pendingBudgetWrites > 0 });
     }
   },
 
