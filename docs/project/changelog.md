@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-26: Stabilize deck and meta boundaries
+
+- Older failed deck renames no longer roll back a newer rename with the same title; superseded Moxfield profile responses no longer replace a newer request's state (#1100).
+- Deck price summaries choose the same card ID for equal highest or lowest prices regardless of card order. MTGTop8 forms without EDH archetypes now fail explicitly instead of silently using a different search (#1100).
+- Focused Red/Green tests, VPS typecheck, lint, 3,217 unit tests, production build, Sonar scan, 66 browser E2E and 8 authenticated E2E passed. PR CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`.
+
 ### 2026-10-20: Label card destinations in pasted-list previews
 
 - Each card row in a pasted-list preview now displays its destination zone before import (#1069). English and French labels are active, with key parity maintained in dormant catalogs. Parsing, quantities and persisted zones are unchanged.
