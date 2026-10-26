@@ -185,6 +185,15 @@ describe("POST /api/decks", () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
+  it("rejects a whitespace-only partner id without creating a deck", async () => {
+    authed();
+
+    const response = await POST(createRequest({ name: "Invalid pair", commanderId: "card-1", partnerId: "   " }));
+
+    expect(response.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it("creates the deck against the session's user id", async () => {
     authed();
 
