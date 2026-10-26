@@ -86,6 +86,8 @@ This is a planning count of unchecked top-level roadmap scopes on `dev`, not a c
 
 **2026-10-26 count:** 55 top-level scopes remain unchecked, plus one nested mobile-action scope. Shipped slices inside open scopes do not reduce this count until their full acceptance criteria are met. The 30-50 small-PR estimate for active Now/Next work remains directional; parked and externally blocked work is not included.
 
+The four narrow fixes in #1100 improve save ownership, profile loading, price summaries and meta-source validation. Their parent scopes remain open, so the count and directional iteration estimate are unchanged.
+
 I-07's tracked playtest scope is shipped. The largest active gaps remain the deck editor (I-01), collection-to-acquisition flow (I-06), and explainable recommendation evidence (I-09). I-13 adds a visual redesign, not a claim that today's UI is unfinished or that existing functionality must be rewritten.
 
 **Iteration estimate:** approximately 30-50 small PR-sized iterations for the active Now/Next outcomes **including** I-13, with overlap between visual and functional work. The 11 conditional or parked scopes are excluded. This is an estimate, not a fixed number of turns or a delivery deadline; refine it after a visual audit and each accepted slice.
@@ -160,6 +162,7 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 - Card printing selection and card hover previews.
 - Explicit keyboard-accessible moves from the main deck to Sideboard or Considering, and between secondary zones.
 - Snapshots, undo, import/export and color identity validation.
+- Superseded failed renames no longer roll back a newer rename, including when both requested the same title (#1100).
 - Bracket, Game Changers, banlist and deck warnings.
 
 ### Remaining scope
@@ -296,6 +299,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - Turn-one playability odds.
 - Combo detection through Commander Spellbook.
 - Budget, missing-card and deck-size warnings.
+- Equal-price most-expensive and cheapest card summaries now resolve ties by card ID, independent of deck order (#1100).
 - Explanations and next actions for legality warnings.
 
 ### Remaining scope
@@ -331,6 +335,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 - [x] Time out stalled acquisition-plan loading after 15 seconds and expose its existing localized retry action without losing close/filter cancellation (#995).
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
   - [x] Clear decks from the previous Moxfield profile before loading another one, so a failed reload cannot leave an old deck importable (#1098). Broader profile loading ownership remains open.
+  - [x] Ignore superseded Moxfield profile responses after a newer load fails, rather than restoring stale import choices (#1100). Broader profile loading ownership remains open.
   - [x] End the indefinite My Decks skeleton for signed-out visitors after session resolution (#1011). Profile latency and other loading ownership remain open.
   - [x] Show an accessible, responsive editor-shaped skeleton while the initial deck data loads (#1009). Profile latency and other loading ownership remain open.
   - [x] Treat temporary public-deck API, network and invalid-response failures as retryable rather than a false 404; bound the fetch to 15 seconds (#993). Authentication latency and broader loading ownership remain open.
@@ -561,6 +566,7 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - Meta trend comparisons now withhold reports when either endpoint snapshot is empty, rather than treating missing source data as a rise from zero or fall to zero. Non-empty snapshot bounds remain unchanged; broader trend disclosure work remains open.
 - Meta trend cutoffs now use the same retained first entry per card name as measured shifts, so discarded duplicate values cannot distort entry and exit bounds.
 - Stored EDHREC snapshots with inclusion outside the valid fraction range are excluded from trend history instead of producing impossible shifts (#1096).
+- MTGTop8 forms missing EDH archetypes now fail explicitly rather than silently falling back to a card-search contract (#1100).
 
 ### Remaining scope
 
