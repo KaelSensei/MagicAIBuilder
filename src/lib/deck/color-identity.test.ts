@@ -68,6 +68,23 @@ describe("getColorIdentityViolations", () => {
     expect(v[0]?.cardId).toBe("bad");
   });
 
+  it("orders main violations by name then ID regardless of deck card order", () => {
+    const cards = [
+      makeDeckCard({ id: "z", name: "Bolt", colorIdentity: ["R"] }),
+      makeDeckCard({ id: "b", name: "Abrade", colorIdentity: ["R"] }),
+      makeDeckCard({ id: "a", name: "Abrade", colorIdentity: ["R"] }),
+      makeDeckCard({ id: "side", name: "Aardvark", colorIdentity: ["R"], zone: "sideboard" }),
+    ];
+    const expected = [
+      { cardId: "a", cardName: "Abrade" },
+      { cardId: "b", cardName: "Abrade" },
+      { cardId: "z", cardName: "Bolt" },
+    ];
+
+    expect(getColorIdentityViolations(makeDeck({ cards }))).toEqual(expected);
+    expect(getColorIdentityViolations(makeDeck({ cards: [...cards].reverse() }))).toEqual(expected);
+  });
+
   it("includes partner identity in allowed colors", () => {
     const deck = makeDeck({
       partner: makeDeckCard({

@@ -188,6 +188,47 @@ describe("addCard quantity save completion", () => {
   });
 });
 
+describe("addCard and removeCard sync overlap", () => {
+  it.each(["addition", "removal"])("stays syncing when %s finishes first", async (first) => {
+    vi.clearAllMocks();
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    const pendingAddition = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
+    const pendingRemoval = Promise.withResolvers<void>();
+    vi.mocked(deckApi.addCard).mockReturnValueOnce(pendingAddition.promise);
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pendingRemoval.promise);
+
+    const addition = useDeckStore.getState().addCard(makeScryfallCard());
+    const removal = useDeckStore.getState().removeCard("card-1");
+    await vi.waitFor(() => expect(deckApi.addCard).toHaveBeenCalledOnce());
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+
+    const finishAddition = async () => {
+      pendingAddition.resolve({
+        ...makeDeckCard({ id: "saved-db-id", name: "Lightning Bolt" }),
+        deckId: "deck-1",
+        scryfallId: "scryfall-id-1",
+        isCommander: false,
+        isPartner: false,
+      });
+      await addition;
+    };
+    const finishRemoval = async () => {
+      pendingRemoval.resolve();
+      await removal;
+    };
+    if (first === "addition") {
+      await finishAddition();
+      expect(useDeckStore.getState().isSyncing).toBe(true);
+      await finishRemoval();
+    } else {
+      await finishRemoval();
+      expect(useDeckStore.getState().isSyncing).toBe(true);
+      await finishAddition();
+    }
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+});
+
 describe("useDeckStore — bulkRemoveCards recovery", () => {
   beforeEach(() => {
     vi.clearAllMocks();

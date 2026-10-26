@@ -290,10 +290,9 @@ describe("fetchTournamentData", () => {
     __resetArchetypeCache();
   });
 
-  it("returns empty decks when the search form cannot be fetched", async () => {
+  it("rejects when the search form cannot be fetched", async () => {
     vi.spyOn(http, "httpGet").mockRejectedValueOnce(new Error("network down"));
-    const result = await fetchTournamentData("atraxa praetors voice");
-    expect(result.decks).toEqual([]);
+    await expect(fetchTournamentData("atraxa praetors voice")).rejects.toThrow("network down");
   });
 
   it("searches the commander's archetype and returns the five most recent decks with context", async () => {
@@ -337,7 +336,7 @@ describe("fetchTournamentData", () => {
     const spy = vi
       .spyOn(http, "httpGet")
       .mockResolvedValueOnce(latin1Response(FORM_HTML))
-      .mockResolvedValue(latin1Response(""));
+      .mockImplementation(async () => latin1Response("<table></table>"));
 
     await fetchTournamentData("atraxa praetors voice");
     await fetchTournamentData("atraxa praetors voice");
@@ -355,12 +354,19 @@ describe("fetchTournamentData", () => {
     expect(result.decks[0].player).toBe("Roméo");
   });
 
-  it("returns empty decks when the search itself fails", async () => {
+  it("rejects when the search itself fails", async () => {
     vi.spyOn(http, "httpGet")
       .mockResolvedValueOnce(latin1Response(FORM_HTML))
       .mockRejectedValueOnce(new Error("HTTP 503"));
-    const result = await fetchTournamentData("atraxa praetors voice");
-    expect(result.decks).toEqual([]);
+    await expect(fetchTournamentData("atraxa praetors voice")).rejects.toThrow("HTTP 503");
+  });
+
+  it("rejects changed tournament rows rather than reporting an empty feed", async () => {
+    vi.spyOn(http, "httpGet")
+      .mockResolvedValueOnce(latin1Response(FORM_HTML))
+      .mockResolvedValueOnce(latin1Response(ROW(1, "Atraxa").replace("class=hover_tr", "class=changed_row")));
+
+    await expect(fetchTournamentData("atraxa praetors voice")).rejects.toThrow("Invalid MTGTop8 response");
   });
 });
 

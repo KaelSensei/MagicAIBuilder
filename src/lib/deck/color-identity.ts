@@ -20,7 +20,11 @@ export function getColorIdentityViolations(deck: Deck): readonly ColorIdentityVi
     if (!violates) continue;
     violations.push({ cardId: c.id, cardName: c.name });
   }
-  return violations;
+  return violations.sort((a, b) => {
+    if (a.cardName !== b.cardName) return a.cardName < b.cardName ? -1 : 1;
+    if (a.cardId !== b.cardId) return a.cardId < b.cardId ? -1 : 1;
+    return 0;
+  });
 }
 
 export function isCardOutsideColorIdentity(

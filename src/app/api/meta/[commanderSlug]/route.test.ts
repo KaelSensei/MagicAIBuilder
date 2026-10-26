@@ -4,12 +4,14 @@ const {
   mockFindUnique,
   mockUpsert,
   mockFetchEdhrecData,
+  mockFetchTournamentData,
   mockRecordSnapshot,
   mockCheckRateLimit,
 } = vi.hoisted(() => ({
   mockFindUnique: vi.fn(),
   mockUpsert: vi.fn(),
   mockFetchEdhrecData: vi.fn(),
+  mockFetchTournamentData: vi.fn(),
   mockRecordSnapshot: vi.fn(),
   mockCheckRateLimit: vi.fn(),
 }));
@@ -25,7 +27,7 @@ vi.mock("@/lib/db/prisma", () => ({
 
 vi.mock("@/lib/meta/fetch", () => ({
   fetchEdhrecData: mockFetchEdhrecData,
-  fetchTournamentData: vi.fn(),
+  fetchTournamentData: mockFetchTournamentData,
 }));
 
 vi.mock("@/lib/meta/snapshots", () => ({
@@ -110,5 +112,23 @@ describe("GET /api/meta/:commanderSlug", () => {
         observedAt: "2026-08-20T10:30:00.000Z",
       },
     });
+  });
+
+  it("serves stale tournament decks without overwriting them when parsing fails", async () => {
+    mockFindUnique.mockResolvedValue({
+      data: { decks: [{ name: "Known deck", url: "https://www.mtgtop8.com/event?e=1&d=1&f=EDH", source: "mtgtop8" }] },
+      cachedAt: new Date("2026-08-20T10:30:00.000Z"),
+      expiresAt: new Date("2026-08-21T10:30:00.000Z"),
+    });
+    mockFetchTournamentData.mockRejectedValue(new Error("Invalid MTGTop8 response"));
+
+    const response = await GET(new Request("http://localhost/api/meta/atraxa?source=tournament"), params());
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      decks: [{ name: "Known deck" }],
+      _meta: { cached: true, stale: true },
+    });
+    expect(mockUpsert).not.toHaveBeenCalled();
   });
 });
