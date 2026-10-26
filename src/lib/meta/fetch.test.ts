@@ -295,6 +295,15 @@ describe("fetchTournamentData", () => {
     await expect(fetchTournamentData("atraxa praetors voice")).rejects.toThrow("network down");
   });
 
+  it("rejects a search form without EDH archetypes instead of using a card search", async () => {
+    const spy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      latin1Response(FORM_HTML.replace("name=archetype_sel[EDH]", "name=archetype_sel[VI]"))
+    ).mockRejectedValue(new Error("Unexpected network request"));
+
+    await expect(fetchTournamentData("atraxa praetors voice")).rejects.toThrow("Invalid MTGTop8 response");
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
   it("searches the commander's archetype and returns the five most recent decks with context", async () => {
     const rows = [1, 2, 3, 4, 5, 6].map((i) => ROW(i, `Deck ${i}`)).join("");
     const spy = vi

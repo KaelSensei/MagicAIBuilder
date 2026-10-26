@@ -639,6 +639,17 @@ describe("useDeckStore — renameDeck", () => {
     expect(useDeckStore.getState().decks["deck-1"].name).toBe("Latest Name");
   });
 
+  it("preserves a newer successful rename to the same name when an older save fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderRename = useDeckStore.getState().renameDeck("deck-1", "Shared Name");
+    await useDeckStore.getState().renameDeck("deck-1", "Shared Name");
+    pending.reject(new Error("offline"));
+    await olderRename;
+
+    expect(useDeckStore.getState().decks["deck-1"].name).toBe("Shared Name");
+  });
+
   it("does not recreate a deleted deck or warn when its rename fails late", async () => {
     const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
     vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);

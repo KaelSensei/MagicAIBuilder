@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type {
   MoxfieldUserDeckPage,
   MoxfieldUserDeckSummary,
@@ -53,6 +53,7 @@ export function MoxfieldProfileImport({
   const [profiles, setProfiles] = useState<string[]>(readSavedProfiles);
   const [decks, setDecks] = useState<readonly MoxfieldUserDeckSummary[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
+  const latestRequestId = useRef(0);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -71,6 +72,7 @@ export function MoxfieldProfileImport({
     async (profile: string, requestedPage: number) => {
       const normalized = profile.trim().replace(/^@/, "");
       if (!normalized) return;
+      const requestId = ++latestRequestId.current;
       setUsername(normalized);
       if (requestedPage === 1) {
         setDecks([]);
@@ -90,6 +92,7 @@ export function MoxfieldProfileImport({
           }),
         });
         const data: unknown = await response.json();
+        if (requestId !== latestRequestId.current) return;
         if (!response.ok || !isDeckPage(data))
           throw new Error("Could not load Moxfield decks.");
         setDecks(data.decks);
@@ -98,6 +101,7 @@ export function MoxfieldProfileImport({
         setHasMore(data.hasMore);
         setStatus("idle");
       } catch (cause) {
+        if (requestId !== latestRequestId.current) return;
         setStatus("error");
         setError(
           cause instanceof Error
