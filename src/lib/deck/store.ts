@@ -164,6 +164,7 @@ const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
 let pendingManualBracketWrites = 0;
 let pendingBulkRemovals = 0;
+let pendingCardAdditionsAndRemovals = 0;
 
 export interface DeckStore {
   // State
@@ -1107,6 +1108,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       },
     }));
 
+    pendingCardAdditionsAndRemovals += 1;
     set({ isSyncing: true });
     try {
       const saved = await deckApi.addCard(activeDeckId, {
@@ -1165,7 +1167,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         useToastStore.getState().add("error", "Could not add card. Please retry.");
       }
     } finally {
-      set({ isSyncing: false });
+      pendingCardAdditionsAndRemovals -= 1;
+      set({ isSyncing: pendingCardAdditionsAndRemovals > 0 });
     }
   },
 
@@ -1276,6 +1279,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       undoStack: [...state.undoStack, removalAction],
     }));
 
+    pendingCardAdditionsAndRemovals += 1;
     set({ isSyncing: true });
     try {
       await deckApi.removeCard(activeDeckId, cardId);
@@ -1311,7 +1315,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         .getState()
         .add("error", "Could not remove card. Please retry.");
     } finally {
-      set({ isSyncing: false });
+      pendingCardAdditionsAndRemovals -= 1;
+      set({ isSyncing: pendingCardAdditionsAndRemovals > 0 });
     }
   },
 
