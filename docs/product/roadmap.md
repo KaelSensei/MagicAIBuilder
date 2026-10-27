@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-21
+> **Updated:** 2026-10-27
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -89,6 +89,8 @@ This is a planning count of unchecked top-level roadmap scopes on `dev`, not a c
 The four narrow fixes in #1100 improve save ownership, profile loading, price summaries and meta-source validation. Their parent scopes remain open, so the count and directional iteration estimate are unchanged.
 
 The four focused fixes in #1104 strengthen card-copy limits, failed maybeboard saves, commander acquisition and trend baselines. These also leave their parent scopes open; the 55-scope count and 30-50 active-iteration estimate remain directional rather than four fewer completed initiatives.
+
+Four further slices in #1106 preserve simple split-card names in text imports, round collection acquisition CSV totals, keep Moxfield profile pagination bound to the loaded profile, and order duplicate warnings deterministically. I-10, I-06, I-04 and I-03 remain open until their broader acceptance criteria are met; the planning count and iteration estimate are unchanged.
 
 I-07's tracked playtest scope is shipped. The largest active gaps remain the deck editor (I-01), collection-to-acquisition flow (I-06), and explainable recommendation evidence (I-09). I-13 adds a visual redesign, not a claim that today's UI is unfinished or that existing functionality must be rewritten.
 

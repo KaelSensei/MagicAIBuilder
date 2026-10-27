@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-27: Refine imports, acquisition exports and deck feedback
+
+- Text decklists retain simple split-card names such as `Fire // Ice` without treating a multiword card's `// Foil` annotation as part of its name (#1106).
+- Collection acquisition CSV line totals round to cents; Moxfield profile pagination stays with the loaded profile when the editable username changes; duplicate deck warnings have stable name order (#1106).
+- Focused Red/Green tests, VPS typecheck, lint, 3,227 unit tests, production build, Sonar analysis and the full Docker E2E gate passed. CI, SonarCloud, Vercel and the performance/accessibility audit passed before merge into `dev`.
+
 ### 2026-10-27: Harden deck validation and roadmap workflows
 
 - Adding a fifth non-basic copy in a four-copy format is rejected before the deck is changed. Failed maybeboard additions roll back without removing an existing main-deck card of the same printing (#1104).
