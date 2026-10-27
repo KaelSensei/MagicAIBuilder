@@ -41,6 +41,7 @@ vi.mock("@/hooks/useToast", () => ({
 }));
 
 import { useDeckStore } from "@/lib/deck/store";
+import * as deckApi from "@/lib/db/deck-api";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -155,6 +156,33 @@ describe("Deck store — maybeboard actions", () => {
   // ── addToMaybeboard ────────────────────────────────────────────────────────
 
   describe("addToMaybeboard", () => {
+    it("removes the optimistic card after a failed save so it can be retried", async () => {
+      vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("offline"));
+      const card = makeScryfallCard();
+
+      await useDeckStore.getState().addToMaybeboard(card);
+
+      expect(useDeckStore.getState().decks["deck-1"].maybeboard).toHaveLength(0);
+      await useDeckStore.getState().addToMaybeboard(card);
+      expect(useDeckStore.getState().decks["deck-1"].maybeboard).toHaveLength(1);
+      expect(deckApi.addCard).toHaveBeenCalledTimes(2);
+    });
+
+    it("keeps a main-deck card when adding the same printing to maybeboard fails", async () => {
+      const card = makeScryfallCard();
+      const mainCard = makeDeckCard(card.id, card.name);
+      useDeckStore.setState({
+        decks: { "deck-1": { ...seedDeck(), cards: [mainCard] } },
+      });
+      vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("offline"));
+
+      await useDeckStore.getState().addToMaybeboard(card);
+
+      const deck = useDeckStore.getState().decks["deck-1"];
+      expect(deck.cards).toEqual([expect.objectContaining({ id: mainCard.id, zone: "main" })]);
+      expect(deck.maybeboard).toHaveLength(0);
+    });
+
     it("adds a card to maybeboard, not to main deck", async () => {
       const card = makeScryfallCard();
       await useDeckStore.getState().addToMaybeboard(card);
