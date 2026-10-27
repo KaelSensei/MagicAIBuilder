@@ -41,8 +41,10 @@ function stripSlashOrPipeCommentSuffix(name: string): string {
       return name.slice(0, i).trimEnd();
     }
     if (j + 1 < name.length && name[j] === "/" && name[j + 1] === "/") {
-      if (/^[A-Z][a-z]+$/.test(name.slice(0, i).trim()) && /^[A-Z][a-z]+$/.test(name.slice(j + 2).trim())) {
-        return name;
+      const nextSlash = name.indexOf("//", j + 2);
+      const secondHalf = name.slice(j + 2, nextSlash < 0 ? undefined : nextSlash).trim();
+      if (/^[A-Z][a-z]+$/.test(name.slice(0, i).trim()) && /^[A-Z][a-z]+$/.test(secondHalf)) {
+        return nextSlash < 0 ? name : name.slice(0, nextSlash).trimEnd();
       }
       return name.slice(0, i).trimEnd();
     }

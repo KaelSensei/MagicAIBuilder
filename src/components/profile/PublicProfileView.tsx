@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { User, Layers } from "lucide-react";
+import { useState } from "react";
 import type { PlayerBadge } from "@/lib/social/follow";
 import { FollowButton } from "@/components/community/FollowButton";
 import { PlayerBadges } from "@/components/community/PlayerBadges";
@@ -50,6 +51,7 @@ const BRACKET_COLORS: Record<number, string> = {
 };
 
 export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps) {
+  const [failedImage, setFailedImage] = useState<string | null>(null);
   const t = useTranslations("profile");
   const format = useFormatter();
   const displayName = profile.name ?? profile.username;
@@ -62,15 +64,20 @@ export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps
     <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 flex flex-col gap-8">
       {/* Profile header */}
       <div className="flex items-center gap-4">
-        {profile.image ? (
+        {profile.image && profile.image !== failedImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={profile.image}
             alt={displayName}
+            onError={() => setFailedImage(profile.image)}
             className="w-16 h-16 rounded-full border-2 border-[var(--border)] object-cover"
           />
         ) : (
-          <div className="w-16 h-16 rounded-full border-2 border-[var(--border)] bg-[var(--surface)] flex items-center justify-center">
+          <div
+            role="img"
+            aria-label={displayName}
+            className="w-16 h-16 rounded-full border-2 border-[var(--border)] bg-[var(--surface)] flex items-center justify-center"
+          >
             <User className="w-8 h-8 text-[var(--text-secondary)]" />
           </div>
         )}

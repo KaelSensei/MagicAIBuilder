@@ -106,8 +106,10 @@ function checkColorIdentityViolations(deck: Deck, errors: string[]): void {
 function checkGameChangers(allCards: DeckCard[], warnings: string[]): void {
   const gcCards = allCards.filter((c) => c.isGameChanger);
   if (gcCards.length === 0) return;
-  warnings.push(`${gcCards.length} Game Changer(s) detected: ${gcCards.map((c) => c.name).join(", ")}`);
-  if (gcCards.length > 3) {
+  const count = gcCards.reduce((total, card) => total + card.quantity, 0);
+  const names = gcCards.map((card) => card.name).sort((a, b) => a.localeCompare(b));
+  warnings.push(`${count} Game Changer(s) detected: ${names.join(", ")}`);
+  if (count > 3) {
     warnings.push("More than 3 Game Changers — deck is Bracket 4 minimum");
   }
 }

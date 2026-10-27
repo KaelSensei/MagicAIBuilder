@@ -182,6 +182,11 @@ describe("parsePlainTextDecklist", () => {
     expect(cards.map((c) => c.name)).toEqual(["Sol Ring", "Counterspell"]);
   });
 
+  it("keeps both halves of a split card while stripping a trailing comment", () => {
+    const cards = parsePlainTextDecklist("1 Fire // Ice // foil\n1 Sol Ring // Foil");
+    expect(cards.map((card) => card.name)).toEqual(["Fire // Ice", "Sol Ring"]);
+  });
+
   it("clamps an absurd quantity instead of trusting it", () => {
     const cards = parsePlainTextDecklist("999 Sol Ring\n0 Counterspell");
     expect(cards[0].quantity).toBe(99);

@@ -181,6 +181,18 @@ describe("validateDeck", () => {
     expect(result.warnings.some((w) => w.includes("Bracket 4"))).toBe(true);
   });
 
+  it("reports Game Changer names deterministically while counting actual quantities", () => {
+    const zeta = makeCard({ id: "zeta", name: "Zeta", isGameChanger: true, quantity: 3 });
+    const alpha = makeCard({ id: "alpha", name: "Alpha", isGameChanger: true, quantity: 1 });
+    const commander = makeCommander([]);
+
+    for (const cards of [[zeta, alpha], [alpha, zeta]]) {
+      const warnings = validateDeck(makeDeck({ commander, cards })).warnings;
+      expect(warnings).toContain("4 Game Changer(s) detected: Alpha, Zeta");
+      expect(warnings).toContain("More than 3 Game Changers — deck is Bracket 4 minimum");
+    }
+  });
+
   it("reports singleton violations for duplicate non-basic cards", () => {
     const card1 = makeCard({ id: "c1", name: "Sol Ring" });
     const card2 = makeCard({ id: "c2", name: "Sol Ring" });
