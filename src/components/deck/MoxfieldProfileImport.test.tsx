@@ -104,6 +104,36 @@ describe("MoxfieldProfileImport", () => {
     expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   });
 
+  it("loads the next page for the displayed profile after the input changes", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          decks: [{ id: "deck-1", name: "Atraxa", format: "commander", lastUpdatedAt: null }],
+          total: 21,
+          hasMore: true,
+        }),
+        { status: 200 }
+      )
+    );
+
+    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    await user.type(screen.getByLabelText("Moxfield username"), "totoro");
+    await user.click(screen.getByRole("button", { name: "Load decks" }));
+    expect(await screen.findByText("1–1 of 21 decks")).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("Moxfield username"));
+    await user.type(screen.getByLabelText("Moxfield username"), "luna");
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/import/moxfield-user",
+      expect.objectContaining({
+        body: JSON.stringify({ username: "totoro", pageNumber: 2 }),
+      })
+    );
+  });
+
   it("clears the previous profile's decks when loading another profile fails", async () => {
     const user = userEvent.setup();
     vi.spyOn(globalThis, "fetch")

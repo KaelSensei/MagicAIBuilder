@@ -50,6 +50,7 @@ export function MoxfieldProfileImport({
   onDeckSelected,
 }: MoxfieldProfileImportProps) {
   const [username, setUsername] = useState("");
+  const [activeProfile, setActiveProfile] = useState("");
   const [profiles, setProfiles] = useState<string[]>(readSavedProfiles);
   const [decks, setDecks] = useState<readonly MoxfieldUserDeckSummary[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
@@ -75,6 +76,7 @@ export function MoxfieldProfileImport({
       const requestId = ++latestRequestId.current;
       setUsername(normalized);
       if (requestedPage === 1) {
+        setActiveProfile(normalized);
         setDecks([]);
         setPageNumber(1);
         setTotal(0);
@@ -133,11 +135,11 @@ export function MoxfieldProfileImport({
   const firstResult = (pageNumber - 1) * MOXFIELD_PAGE_SIZE + 1;
   const lastResult = firstResult + decks.length - 1;
   const loadPreviousPage = useCallback(() => {
-    void loadDecks(username, pageNumber - 1);
-  }, [loadDecks, pageNumber, username]);
+    void loadDecks(activeProfile, pageNumber - 1);
+  }, [activeProfile, loadDecks, pageNumber]);
   const loadNextPage = useCallback(() => {
-    void loadDecks(username, pageNumber + 1);
-  }, [loadDecks, pageNumber, username]);
+    void loadDecks(activeProfile, pageNumber + 1);
+  }, [activeProfile, loadDecks, pageNumber]);
 
   return (
     <section className="flex flex-col gap-3 rounded border border-[var(--border)] p-3">

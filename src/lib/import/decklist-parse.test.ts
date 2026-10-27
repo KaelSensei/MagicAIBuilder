@@ -100,6 +100,18 @@ describe("parsePlainTextDecklist", () => {
     ]);
   });
 
+  it("preserves the full name of a split card in a plain-text decklist", () => {
+    expect(parsePlainTextDecklist("1 Fire // Ice")).toEqual([
+      { name: "Fire // Ice", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
+  it("still strips an uppercase annotation after a multiword card name", () => {
+    expect(parsePlainTextDecklist("1 Sol Ring // Foil")).toEqual([
+      { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
   it("leaves the commander section when a Deck or Sideboard header follows", () => {
     const cards = parsePlainTextDecklist("# Commander\n# Deck\n1 Sol Ring");
     expect(cards[0].isCommander).toBe(false);

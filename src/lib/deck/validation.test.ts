@@ -201,6 +201,18 @@ describe("validateDeck", () => {
     expect(validateDeck(deck).errors).toContain("Duplicate cards (singleton violation): Sol Ring");
   });
 
+  it("lists duplicate card names in a stable order after deck rows are reordered", () => {
+    const cards = [
+      makeCard({ id: "z", name: "Zeta", quantity: 2 }),
+      makeCard({ id: "a", name: "Alpha", quantity: 2 }),
+    ];
+    const deck = makeDeck({ commander: makeCommander([]), cards });
+
+    expect(validateDeck(deck).errors).toContain(
+      "Duplicate cards (singleton violation): Alpha, Zeta"
+    );
+  });
+
   it("reports too many cards (over 100)", () => {
     const cards = Array.from({ length: 5 }, (_, i) =>
       makeCard({ id: `c-${i}`, name: `Card ${i}`, quantity: 25 })

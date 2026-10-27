@@ -121,7 +121,8 @@ function checkSingleton(allCards: DeckCard[], maxCopies: number, errors: string[
   }
   const duplicates = Object.entries(nameCounts)
     .filter(([, count]) => count > maxCopies)
-    .map(([name]) => name);
+    .map(([name]) => name)
+    .toSorted();
   if (duplicates.length > 0) {
     const ruleLabel = maxCopies === 1 ? "singleton violation" : `max ${maxCopies} copies`;
     errors.push(`Duplicate cards (${ruleLabel}): ${duplicates.join(", ")}`);
