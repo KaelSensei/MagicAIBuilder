@@ -88,6 +88,8 @@ This is a planning count of unchecked top-level roadmap scopes on `dev`, not a c
 
 The four narrow fixes in #1100 improve save ownership, profile loading, price summaries and meta-source validation. Their parent scopes remain open, so the count and directional iteration estimate are unchanged.
 
+The four focused fixes in #1104 strengthen card-copy limits, failed maybeboard saves, commander acquisition and trend baselines. These also leave their parent scopes open; the 55-scope count and 30-50 active-iteration estimate remain directional rather than four fewer completed initiatives.
+
 I-07's tracked playtest scope is shipped. The largest active gaps remain the deck editor (I-01), collection-to-acquisition flow (I-06), and explainable recommendation evidence (I-09). I-13 adds a visual redesign, not a claim that today's UI is unfinished or that existing functionality must be rewritten.
 
 **Iteration estimate:** approximately 30-50 small PR-sized iterations for the active Now/Next outcomes **including** I-13, with overlap between visual and functional work. The 11 conditional or parked scopes are excluded. This is an estimate, not a fixed number of turns or a delivery deadline; refine it after a visual audit and each accepted slice.
@@ -163,6 +165,7 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 - Explicit keyboard-accessible moves from the main deck to Sideboard or Considering, and between secondary zones.
 - Snapshots, undo, import/export and color identity validation.
 - Superseded failed renames no longer roll back a newer rename, including when both requested the same title (#1100).
+- Failed maybeboard additions now remove their optimistic card while preserving any existing main-deck copy of the same printing (#1104).
 - Bracket, Game Changers, banlist and deck warnings.
 
 ### Remaining scope
@@ -300,6 +303,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - Combo detection through Commander Spellbook.
 - Budget, missing-card and deck-size warnings.
 - Equal-price most-expensive and cheapest card summaries now resolve ties by card ID, independent of deck order (#1100).
+- Pre-add validation now enforces each format's non-basic copy limit, including the fifth-copy boundary in four-copy formats (#1104).
 - Explanations and next actions for legality warnings.
 
 ### Remaining scope
@@ -437,6 +441,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Each missing printing in the acquisition plan now links to the player's contributing decks, so the player can inspect where it is needed.
 - Acquisition-plan rows now show the required copy count beside each contributing deck, making shared demand understandable without changing the aggregate purchase quantity (#1054).
 - Missing-printing rows now also show already-owned copies, clarifying how much remains to acquire without changing ownership or the plan calculation (#1056).
+- Commander-slot cards are included in the cross-deck acquisition plan even when their stored zone is not main; sideboard cards remain excluded (#1104).
 
 ### Remaining scope
 
@@ -566,6 +571,7 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - Meta trend comparisons now withhold reports when either endpoint snapshot is empty, rather than treating missing source data as a rise from zero or fall to zero. Non-empty snapshot bounds remain unchanged; broader trend disclosure work remains open.
 - Meta trend cutoffs now use the same retained first entry per card name as measured shifts, so discarded duplicate values cannot distort entry and exit bounds.
 - Stored EDHREC snapshots with inclusion outside the valid fraction range are excluded from trend history instead of producing impossible shifts (#1096).
+- Empty historical snapshots no longer suppress an otherwise valid trend with a later non-empty baseline; an empty current snapshot still withholds the trend (#1104).
 - MTGTop8 forms missing EDH archetypes now fail explicitly rather than silently falling back to a card-search contract (#1100).
 
 ### Remaining scope
