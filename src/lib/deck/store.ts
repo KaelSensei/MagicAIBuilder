@@ -2083,6 +2083,20 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "addToMaybeboard", err);
+      set((state) => {
+        const currentDeck = state.decks[activeDeckId];
+        if (!currentDeck) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
+              cards.filter((current) =>
+                current.id !== deckCard.id || current.zone !== "maybeboard"
+              )
+            ),
+          },
+        };
+      });
     }
   },
 

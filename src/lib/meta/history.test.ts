@@ -239,6 +239,22 @@ describe("computeMetaShifts", () => {
     expect(report?.spanDays).toBe(23);
   });
 
+  it("uses the oldest non-empty baseline when an earlier snapshot has no evidence", () => {
+    const report = computeMetaShifts(
+      [
+        snapshot("2026-08-01", {}),
+        snapshot("2026-08-10", { A: 0.5 }),
+        snapshot("2026-08-22", { A: 0.7 }),
+      ],
+      30
+    );
+
+    expect(report?.baselineCapturedOn.toISOString()).toBe("2026-08-10T00:00:00.000Z");
+    const rise = shiftFor(report?.shifts ?? [], "A");
+    expect(rise.kind).toBe("rose");
+    expect(rise.kind === "rose" && rise.delta).toBeCloseTo(0.2, 10);
+  });
+
   it("does not depend on the order it is handed", () => {
     const chronological = [
       snapshot("2026-08-01", { A: 0.5 }),

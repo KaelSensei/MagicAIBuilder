@@ -189,13 +189,14 @@ function diffSnapshots(
  * Compare the newest snapshot against the oldest one inside `windowDays`.
  *
  * Returns `null` when there is nothing to compare — fewer than two snapshots,
- * only one distinct day inside the window, or an empty comparison endpoint.
- * An empty list has no measured cut-off and cannot establish a trend bound.
+ * only one distinct day inside the window, an empty current snapshot, or no
+ * non-empty baseline. An empty list has no measured cut-off and cannot
+ * establish a trend bound.
  * A one-snapshot commander is the
  * normal state of a freshly recorded commander, not an error: history accrues
  * from ordinary traffic, so the first visit can only ever establish a baseline.
  *
- * The baseline is the *oldest* snapshot still inside the window rather than the
+ * The baseline is the *oldest non-empty* snapshot still inside the window rather than the
  * immediately preceding one, so the report answers "what moved over this
  * period" and not "what moved since the last visit" — a commander looked at
  * twice in one week would otherwise report a two-day window as if it were the
@@ -217,14 +218,14 @@ export function computeMetaShifts(
   if (!current) return null;
   const earliestAllowed = current.capturedOn.getTime() - windowDays * MS_PER_DAY;
   const baseline = ordered.find(
-    (snapshot) => snapshot.capturedOn.getTime() >= earliestAllowed
+    (snapshot) => snapshot.capturedOn.getTime() >= earliestAllowed && snapshot.cards.length > 0
   );
 
   if (!baseline || baseline.capturedOn.getTime() >= current.capturedOn.getTime()) {
     return null;
   }
 
-  if (baseline.cards.length === 0 || current.cards.length === 0) return null;
+  if (current.cards.length === 0) return null;
 
   const shifts = diffSnapshots(baseline, current).toSorted(
     (a, b) => shiftMagnitude(b) - shiftMagnitude(a) || a.name.localeCompare(b.name)

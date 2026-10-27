@@ -190,6 +190,34 @@ describe("getMissingCollectionCards", () => {
 });
 
 describe("buildAcquisitionPlan", () => {
+  it("includes a missing commander outside the main deck zone", () => {
+    const plan = buildAcquisitionPlan(
+      [{
+        id: "deck-a",
+        name: "Commanders",
+        cards: [],
+        commander: makeCard({
+          id: "commander-row",
+          scryfallId: "commander-printing",
+          name: "Atraxa",
+          zone: "sideboard",
+          price: 12,
+        }),
+        partner: null,
+      }],
+      {}
+    );
+
+    expect(plan).toEqual([
+      expect.objectContaining({
+        scryfallId: "commander-printing",
+        requiredQuantity: 1,
+        acquireQuantity: 1,
+        decks: [{ id: "deck-a", name: "Commanders", quantity: 1 }],
+      }),
+    ]);
+  });
+
   it("aggregates requirements across decks before subtracting owned copies", () => {
     const plan = buildAcquisitionPlan(
       [

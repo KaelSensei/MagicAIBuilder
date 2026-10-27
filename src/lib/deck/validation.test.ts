@@ -259,6 +259,14 @@ describe("validateCardForDeck — multi-format", () => {
     expect(result.canAdd).toBe(true);
   });
 
+  it("rejects a fifth non-basic copy in Standard", () => {
+    const existing = makeCard({ id: "orig", name: "Lightning Bolt", quantity: 4 });
+    const deck = makeDeck({ format: "standard", cards: [existing] });
+    const duplicate = makeCard({ id: "fifth", name: "Lightning Bolt" });
+
+    expect(validateCardForDeck(duplicate, deck).canAdd).toBe(false);
+  });
+
   it("skips color identity check in Standard", () => {
     const deck = makeDeck({ format: "standard" });
     const card = makeCard({ colorIdentity: ["R", "G", "B", "W", "U"] });
