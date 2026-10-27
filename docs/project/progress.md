@@ -13,7 +13,7 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3,227 across 291 files, validated on the VPS on 2026-10-27                                                                                  |
+| Unit tests          | 3,232 across 291 files, validated on the VPS on 2026-10-27                                                                                  |
 | E2E tests           | 66 browser and 8 authenticated/setup scenarios passing in the full Docker gate on the VPS on 2026-10-27                                     |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
@@ -31,6 +31,7 @@
 
 ### Latest delivery
 
+- 2026-10-27: #1108 hardens four I-03/I-04/I-06/I-10 boundaries: safe collection quantities, stable quantity-aware Game Changer warnings, split-card names before trailing comments and failed public-profile avatars. Focused Red/Green cycles, 3,232 VPS unit tests, typecheck, lint, build, Sonar, Docker E2E and PR checks passed. The parent initiatives remain open; the directional estimate is still 30-50 small PR-sized iterations for active Now/Next work, excluding 11 conditional or parked scopes.
 - 2026-10-27: #1106 delivers four focused I-03/I-04/I-06/I-10 slices: stable duplicate-warning order, loaded-profile Moxfield pagination, cent-rounded acquisition CSV totals and simple split-card text imports. Red/Green tests, 3,227 VPS unit tests, typecheck, lint, build, Sonar, Docker E2E and PR checks passed. The four parent initiatives remain open; approximately 30-50 small PR-sized iterations remain for active Now/Next work, excluding 11 conditional or parked scopes.
 
 ## Latest product delivery

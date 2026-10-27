@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-27: Harden collection and deck feedback boundaries
+
+- Collection API parsing rejects negative and fractional owned quantities instead of letting them distort acquisition calculations (#1108).
+- Game Changer warnings list names in a stable order, count actual copies and apply the Bracket 4 warning to that count. Text imports preserve `Fire // Ice` before a trailing comment; public profiles replace failed avatar images with an accessible neutral icon (#1108).
+- Focused Red/Green cycles, VPS typecheck, lint, 3,232 unit tests, production build, Sonar analysis, 66 browser E2E and 8 authenticated/setup E2E passed. CI, SonarCloud, Vercel and the performance/accessibility audit passed before merge into `dev`.
+
 ### 2026-10-27: Refine imports, acquisition exports and deck feedback
 
 - Text decklists retain simple split-card names such as `Fire // Ice` without treating a multiword card's `// Foil` annotation as part of its name (#1106).
