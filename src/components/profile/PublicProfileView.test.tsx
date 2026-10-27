@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 
 vi.mock("@/i18n/navigation", () => ({
@@ -44,5 +44,23 @@ describe("PublicProfileView — member-since date", () => {
     });
 
     expect(screen.getByText(/août 2026/)).toBeInTheDocument();
+  });
+});
+
+describe("PublicProfileView avatar", () => {
+  it("shows an accessible neutral fallback when the avatar image fails", () => {
+    renderWithIntl(
+      <PublicProfileView
+        profile={{ ...makeProfile(), image: "https://example.test/broken-avatar.png" }}
+        canFollow={false}
+      />,
+      { locale: "en" },
+    );
+
+    const avatar = screen.getByRole("img", { name: "Totoro" });
+    fireEvent.error(avatar);
+
+    expect(screen.getByRole("img", { name: "Totoro" })).not.toBeInstanceOf(HTMLImageElement);
+    expect(screen.queryByRole("img", { name: "Totoro" })).not.toHaveAttribute("src");
   });
 });
