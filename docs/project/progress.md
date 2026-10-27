@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-10-26                             |
+| Last Updated  | 2026-10-27                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -13,8 +13,8 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3,217 across 291 files, validated on the VPS on 2026-10-26                                                                                  |
-| E2E tests           | 66 browser and 8 authenticated scenarios passing in the full Docker gate on the VPS on 2026-10-26                                           |
+| Unit tests          | 3,222 across 291 files, validated on the VPS on 2026-10-27                                                                                  |
+| E2E tests           | 66 browser and 8 authenticated/setup scenarios passing in the full Docker gate on the VPS on 2026-10-27                                     |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
 | Source files        | 327 (`.ts`/`.tsx`, excluding tests)                                                                                                         |

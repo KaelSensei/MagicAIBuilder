@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-27: Harden deck validation and roadmap workflows
+
+- Adding a fifth non-basic copy in a four-copy format is rejected before the deck is changed. Failed maybeboard additions roll back without removing an existing main-deck card of the same printing (#1104).
+- The cross-deck acquisition plan includes commander-slot cards even when their stored zone is not main. Meta trends skip empty historical baselines while still withholding trends when the latest snapshot is empty (#1104).
+- Focused Red/Green tests, VPS typecheck, lint, 3,222 unit tests, production build, Sonar analysis, 66 browser E2E and 8 authenticated/setup E2E passed. CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`.
+
 ### 2026-10-26: Stabilize deck and meta boundaries
 
 - Older failed deck renames no longer roll back a newer rename with the same title; superseded Moxfield profile responses no longer replace a newer request's state (#1100).
