@@ -91,11 +91,14 @@ export function DeckComparisonPanel({
             {slot === "first" ? t("firstDeck") : t("secondDeck")}
             <select
               value={value}
-              onChange={(event) =>
-                slot === "first"
-                  ? setLeftId(event.target.value)
-                  : setRightId(event.target.value)
-              }
+              onChange={(event) => {
+                setComparison(null);
+                if (slot === "first") {
+                  setLeftId(event.target.value);
+                } else {
+                  setRightId(event.target.value);
+                }
+              }}
               className="min-w-44 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)]"
             >
               {decks.map((deck) => (

@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckComparisonPanel } from "./DeckComparisonPanel";
 
@@ -7,6 +7,28 @@ const { mockFetchDeck } = vi.hoisted(() => ({ mockFetchDeck: vi.fn() }));
 vi.mock("@/lib/db/deck-api", () => ({ fetchDeck: mockFetchDeck }));
 
 describe("DeckComparisonPanel", () => {
+  beforeEach(() => mockFetchDeck.mockReset());
+
+  it("hides a comparison when a selected deck changes", async () => {
+    mockFetchDeck.mockResolvedValue({ cards: [] });
+    renderWithIntl(
+      <DeckComparisonPanel
+        decks={[
+          { id: "deck-a", name: "Control" },
+          { id: "deck-b", name: "Midrange" },
+          { id: "deck-c", name: "Combo" },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Compare decks" }));
+    expect(await screen.findByText("0 shared cards")).toBeDefined();
+    fireEvent.change(screen.getByLabelText("Second deck"), {
+      target: { value: "deck-c" },
+    });
+    expect(screen.queryByText("0 shared cards")).toBeNull();
+  });
+
   it("loads both selected decks and shows their differences", async () => {
     mockFetchDeck
       .mockResolvedValueOnce({
