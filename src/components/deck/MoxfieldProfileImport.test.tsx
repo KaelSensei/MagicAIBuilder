@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { render } from "@testing-library/react";
 import { MoxfieldProfileImport } from "./MoxfieldProfileImport";
 
@@ -102,6 +102,109 @@ describe("MoxfieldProfileImport", () => {
     );
     expect(screen.getByRole("button", { name: "Previous page" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  });
+
+  it("loads the next page for the displayed profile after the input changes", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          decks: [{ id: "deck-1", name: "Atraxa", format: "commander", lastUpdatedAt: null }],
+          total: 21,
+          hasMore: true,
+        }),
+        { status: 200 }
+      )
+    );
+
+    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    await user.type(screen.getByLabelText("Moxfield username"), "totoro");
+    await user.click(screen.getByRole("button", { name: "Load decks" }));
+    expect(await screen.findByText("1–1 of 21 decks")).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("Moxfield username"));
+    await user.type(screen.getByLabelText("Moxfield username"), "luna");
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/import/moxfield-user",
+      expect.objectContaining({
+        body: JSON.stringify({ username: "totoro", pageNumber: 2 }),
+      })
+    );
+  });
+
+  it("clears the previous profile's decks when loading another profile fails", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        decks: [{ id: "old-deck", name: "Old deck", format: "commander", lastUpdatedAt: null }],
+        total: 1,
+        hasMore: false,
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("{}", { status: 500 }));
+
+    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    const username = screen.getByLabelText("Moxfield username");
+    await user.type(username, "first");
+    await user.click(screen.getByRole("button", { name: "Load decks" }));
+    expect(await screen.findByRole("button", { name: "Import Old deck" })).toBeInTheDocument();
+
+    await user.clear(username);
+    await user.type(username, "second");
+    await user.click(screen.getByRole("button", { name: "Load decks" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not load Moxfield decks.");
+    expect(screen.queryByRole("button", { name: "Import Old deck" })).not.toBeInTheDocument();
+  });
+
+  it("ignores an older profile response after a newer profile load fails", async () => {
+    window.localStorage.setItem(
+      "magic-ai-builder:moxfield-profiles",
+      JSON.stringify(["first", "second"])
+    );
+    const user = userEvent.setup();
+    let resolveFirst: ((response: Response) => void) | undefined;
+    const firstResponse = new Promise<Response>((resolve) => {
+      resolveFirst = resolve;
+    });
+    vi.spyOn(globalThis, "fetch")
+      .mockReturnValueOnce(firstResponse)
+      .mockResolvedValueOnce(new Response("{}", { status: 500 }));
+
+    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    await user.click(screen.getByRole("button", { name: "@first" }));
+    await user.click(screen.getByRole("button", { name: "@second" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not load Moxfield decks."
+    );
+
+    await act(async () => {
+      resolveFirst?.(
+        new Response(
+          JSON.stringify({
+            decks: [
+              {
+                id: "stale-deck",
+                name: "Stale deck",
+                format: "commander",
+                lastUpdatedAt: null,
+              },
+            ],
+            total: 1,
+            hasMore: false,
+          }),
+          { status: 200 }
+        )
+      );
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Could not load Moxfield decks."
+    );
+    expect(
+      screen.queryByRole("button", { name: "Import Stale deck" })
+    ).not.toBeInTheDocument();
   });
 
   it("removes a saved profile without loading it", async () => {

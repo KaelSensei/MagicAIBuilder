@@ -427,7 +427,7 @@ describe("useDeckStore — moveToDeck error path", () => {
 // ── addToMaybeboard error path ────────────────────────────────────────────────
 
 describe("useDeckStore — addToMaybeboard error path", () => {
-  it("keeps optimistic state when API throws", async () => {
+  it("rolls back the optimistic card when API throws", async () => {
     vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("api error"));
 
     const scryfallCard = {
@@ -458,9 +458,9 @@ describe("useDeckStore — addToMaybeboard error path", () => {
 
     await useDeckStore.getState().addToMaybeboard(scryfallCard);
 
-    // Card was added optimistically even though API failed
     const state = useDeckStore.getState().decks["deck-1"];
-    expect(state.maybeboard).toHaveLength(1);
+    expect(state.maybeboard).toHaveLength(0);
+    expect(state.cards).toHaveLength(0);
   });
 });
 

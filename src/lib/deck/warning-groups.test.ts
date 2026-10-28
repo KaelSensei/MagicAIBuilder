@@ -43,4 +43,10 @@ describe("groupDeckWarnings", () => {
 
     expect(groupDeckWarnings([warning]).strategy).toEqual([warning]);
   });
+
+  it("classifies failed companion deck-building conditions as legality", () => {
+    const warning = "Companion needs even mana values on nonland cards; 2 card(s) have odd mana value";
+
+    expect(groupDeckWarnings([warning]).legality).toEqual([warning]);
+  });
 });

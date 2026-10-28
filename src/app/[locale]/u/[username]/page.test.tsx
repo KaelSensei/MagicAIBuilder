@@ -37,6 +37,19 @@ it("bounds the profile request to 15 seconds", async () => {
   );
 });
 
+it("encodes reserved characters in the username before requesting the profile", async () => {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 404 }));
+  vi.stubGlobal("fetch", fetchMock);
+
+  await expect(
+    UserProfilePage({ params: Promise.resolve({ locale: "en", username: "a#b" }) })
+  ).rejects.toThrow("NOT_FOUND");
+  expect(fetchMock).toHaveBeenCalledWith(
+    expect.stringContaining("/api/users/a%23b"),
+    expect.any(Object)
+  );
+});
+
 it("keeps an unavailable profile from producing a not-found metadata title", async () => {
   vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
 

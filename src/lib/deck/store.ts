@@ -4,7 +4,7 @@ import { create } from "zustand";
 import type { Deck, DeckCard, DeckZone, CardCategory } from "./types";
 import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
-import { detectPairingType, supportsPartner } from "./pairing";
+import { canPairWith, detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import * as deckApi from "@/lib/db/deck-api";
 import { useToastStore } from "@/hooks/useToast";
@@ -163,7 +163,9 @@ interface PendingCategoryWrite {
 const pendingCategoryWrites = new Map<string, PendingCategoryWrite>();
 
 let pendingManualBracketWrites = 0;
+let pendingBudgetWrites = 0;
 let pendingBulkRemovals = 0;
+let pendingCardAdditionsAndRemovals = 0;
 
 export interface DeckStore {
   // State
@@ -268,6 +270,7 @@ export interface DeckStore {
 }
 
 let latestDeckListRequest = 0;
+const latestRenameRequests = new Map<string, symbol>();
 
 export const useDeckStore = create<DeckStore>()((set, get) => ({
   decks: {},
@@ -626,6 +629,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   renameDeck: async (id: string, name: string) => {
     const previousDeck = get().decks[id];
     if (!previousDeck) return;
+    const request = Symbol();
+    latestRenameRequests.set(id, request);
     // Optimistic update
     set((state) => ({
       decks: {
@@ -640,7 +645,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       logger.error("Unexpected error", "renameDeck", err);
       set((state) => {
         const currentDeck = state.decks[id];
-        if (currentDeck?.name !== name) return state;
+        if (
+          latestRenameRequests.get(id) !== request ||
+          currentDeck?.name !== name
+        ) return state;
         return {
           decks: {
             ...state.decks,
@@ -882,6 +890,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     // e.g. Jaheira has "Choose a Background" → pairingType should be "background"
     const currentPairingType = decks[activeDeckId]?.pairingType ?? "none";
     const partnerPairingType = card ? detectPairingType(card) : "none";
+    if (card && currentPairingType === "father_son" &&
+        !canPairWith(currentPairingType, partnerPairingType)) {
+      useToastStore.getState().add("warning", "A Father & son commander needs another Father & son partner.");
+      return;
+    }
     const effectivePairingType =
       currentPairingType === "none" && partnerPairingType !== "none"
         ? partnerPairingType
@@ -1102,6 +1115,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       },
     }));
 
+    pendingCardAdditionsAndRemovals += 1;
     set({ isSyncing: true });
     try {
       const saved = await deckApi.addCard(activeDeckId, {
@@ -1148,8 +1162,20 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "addCard", err);
+      if (get().decks[activeDeckId]) {
+        set((state) => ({
+          decks: {
+            ...state.decks,
+            [activeDeckId]: updateDeckCards(state.decks[activeDeckId], (cards) =>
+              withoutCard(cards, deckCard.id)
+            ),
+          },
+        }));
+        useToastStore.getState().add("error", "Could not add card. Please retry.");
+      }
     } finally {
-      set({ isSyncing: false });
+      pendingCardAdditionsAndRemovals -= 1;
+      set({ isSyncing: pendingCardAdditionsAndRemovals > 0 });
     }
   },
 
@@ -1260,6 +1286,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       undoStack: [...state.undoStack, removalAction],
     }));
 
+    pendingCardAdditionsAndRemovals += 1;
     set({ isSyncing: true });
     try {
       await deckApi.removeCard(activeDeckId, cardId);
@@ -1295,7 +1322,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         .getState()
         .add("error", "Could not remove card. Please retry.");
     } finally {
-      set({ isSyncing: false });
+      pendingCardAdditionsAndRemovals -= 1;
+      set({ isSyncing: pendingCardAdditionsAndRemovals > 0 });
     }
   },
 
@@ -1931,6 +1959,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       },
     }));
 
+    pendingBudgetWrites += 1;
     set({ isSyncing: true });
     try {
       await deckApi.updateDeck(activeDeckId, { budget });
@@ -1952,7 +1981,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .add("error", "Could not save deck budget. Please retry.");
       }
     } finally {
-      set({ isSyncing: false });
+      pendingBudgetWrites -= 1;
+      set({ isSyncing: pendingBudgetWrites > 0 });
     }
   },
 
@@ -2053,6 +2083,20 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
     } catch (err) {
       logger.error("Unexpected error", "addToMaybeboard", err);
+      set((state) => {
+        const currentDeck = state.decks[activeDeckId];
+        if (!currentDeck) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [activeDeckId]: updateDeckCards(currentDeck, (cards) =>
+              cards.filter((current) =>
+                current.id !== deckCard.id || current.zone !== "maybeboard"
+              )
+            ),
+          },
+        };
+      });
     }
   },
 

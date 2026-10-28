@@ -79,6 +79,10 @@ describe("patchDeckSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts Father & son pairing updates", () => {
+    expect(patchDeckSchema.safeParse({ pairingType: "father_son" }).success).toBe(true);
+  });
+
   it("rejects invalid pairingType", () => {
     const result = patchDeckSchema.safeParse({ pairingType: "alliance" });
     expect(result.success).toBe(false);

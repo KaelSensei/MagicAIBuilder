@@ -64,6 +64,14 @@ describe("parseTextDecklist", () => {
     ]);
   });
 
+  it("returns to the main deck after a Main Deck heading", () => {
+    const result = parseTextDecklist("Sideboard\n1 Negate\nMain Deck\n1 Sol Ring");
+    expect(result.cards).toEqual([
+      { name: "Negate", quantity: 1, zone: "sideboard" },
+      { name: "Sol Ring", quantity: 1 },
+    ]);
+  });
+
   it("preserves considering quantity and zone", () => {
     const result = parseTextDecklist("Deck\n1 Sol Ring\nConsidering\n2 Counterspell");
     expect(result.cards).toEqual([
@@ -103,6 +111,12 @@ describe("parseTextDecklist", () => {
   it("strips set code from card name", () => {
     const result = parseTextDecklist("1 Lightning Bolt (M11) 150");
     expect(result.cards[0].name).toBe("Lightning Bolt");
+  });
+
+  it("accepts uppercase quantity markers without changing roles or zones", () => {
+    const result = parseTextDecklist("Commander\n1X Atraxa, Praetors' Voice\nSideboard\n2X Negate");
+    expect(result.commander).toBe("Atraxa, Praetors' Voice");
+    expect(result.cards).toEqual([{ name: "Negate", quantity: 2, zone: "sideboard" }]);
   });
 
   it("strips a standalone uppercase set code but keeps normal parenthetical text", () => {

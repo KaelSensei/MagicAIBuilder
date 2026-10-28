@@ -105,8 +105,8 @@ const DECK_LINK_RE = /href=(event\?e=\d+&d=\d+&f=EDH)>([^<]+)</;
  * Parses the result rows of a POST /search response.
  *
  * Cells are positional: checkbox, deck, player, format, event, stars,
- * placement, date. A row with a different shape is skipped rather than
- * guessed at.
+ * placement, date. A changed row or unrecognizable page is rejected rather
+ * than mistaken for a valid empty feed.
  *
  * @param html - the search response body, already decoded
  * @returns decks in page order
@@ -116,9 +116,9 @@ export function parseSearchResults(html: string): TournamentDeck[] {
   let row: RegExpExecArray | null;
   while ((row = ROW_RE.exec(html)) !== null) {
     const cells = [...row[1].matchAll(CELL_RE)].map((c) => c[1]);
-    if (cells.length < 8) continue;
+    if (cells.length < 8) throw new Error("Invalid MTGTop8 response: result row malformed");
     const link = DECK_LINK_RE.exec(cells[1]);
-    if (!link) continue;
+    if (!link) throw new Error("Invalid MTGTop8 response: deck link malformed");
     decks.push({
       name: link[2].trim(),
       player: cellText(cells[2]) || undefined,
@@ -130,6 +130,9 @@ export function parseSearchResults(html: string): TournamentDeck[] {
       url: `https://www.mtgtop8.com/${link[1]}`,
       source: "mtgtop8",
     });
+  }
+  if (decks.length === 0 && !/<table\b[^>]*>\s*<\/table>/i.test(html)) {
+    throw new Error("Invalid MTGTop8 response: no recognizable results");
   }
   return decks;
 }

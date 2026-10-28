@@ -38,7 +38,7 @@ const storedDataSchema = z.object({
       name: z.string().min(1),
       // No `.finite()`: Zod 4 deprecated it because `z.number()` already
       // rejects `NaN` and both infinities on its own.
-      inclusion: z.number(),
+      inclusion: z.number().min(0).max(1),
     })
   ),
 });

@@ -303,11 +303,13 @@ export function buildAcquisitionPlan(
       string,
       { card: AcquisitionPlanCard; quantity: number }
     >();
-    for (const card of [deck.commander, deck.partner, ...deck.cards]) {
-      if (
-        card?.zone !== "main" ||
-        card.typeLine.toLowerCase().includes("basic land")
-      )
+    const cards = [
+      deck.commander,
+      deck.partner,
+      ...deck.cards.filter((card) => card.zone === "main"),
+    ];
+    for (const card of cards) {
+      if (card === null || card.typeLine.toLowerCase().includes("basic land"))
         continue;
       const scryfallId = card.scryfallId ?? card.id;
       const current = perDeck.get(scryfallId);
@@ -321,6 +323,7 @@ export function buildAcquisitionPlan(
       const current = requirements.get(scryfallId);
       if (current) {
         current.requiredQuantity += requirement.quantity;
+        current.price ??= requirement.card.price;
         current.decks.push({
           id: deck.id,
           name: deck.name,

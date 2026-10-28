@@ -100,6 +100,14 @@ describe("parseCollectionCard", () => {
     expect(parseCollectionCard(payload({ quantity: 0 }))?.quantity).toBe(0);
   });
 
+  it("rejects a negative owned quantity", () => {
+    expect(parseCollectionCard(payload({ quantity: -1 }))).toBeNull();
+  });
+
+  it("rejects a fractional owned quantity", () => {
+    expect(parseCollectionCard(payload({ quantity: 1.5 }))).toBeNull();
+  });
+
   it("degrades optional fields instead of rejecting the row", () => {
     const card = parseCollectionCard(payload({ condition: "MINT", price: "1.50", imageUri: null }));
     expect(card).not.toBeNull();
