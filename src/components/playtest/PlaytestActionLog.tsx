@@ -100,7 +100,7 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
           </div>
         )}
       </div>
-      {copyStatus === "copied" && <p role="status" className="mb-2 text-xs text-emerald-300">{t("copied")}</p>}
+      {copyStatus === "copied" && <output className="mb-2 block text-xs text-emerald-300">{t("copied")}</output>}
       {copyStatus === "error" && <p role="alert" className="mb-2 text-xs text-amber-300">{t("copyFailed")}</p>}
       <div className="mb-3 flex gap-2">
         <input
@@ -139,7 +139,8 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
         </div>
       )}
       {turns.length > 1 && (
-        <div role="group" aria-label={t("title")} className="mb-3 flex flex-wrap gap-1">
+        <fieldset className="mb-3 flex min-w-0 flex-wrap gap-1 border-0 p-0">
+          <legend className="sr-only">{t("title")}</legend>
           <button type="button" aria-pressed={activeTurn === null} onClick={() => { setSelectedTurn(null); setSelectedPhase(null); }} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
             {t("title")}
           </button>
@@ -148,10 +149,11 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
               {t("turn", { turn })}
             </button>
           ))}
-        </div>
+        </fieldset>
       )}
       {phases.length > 1 && (
-        <div role="group" aria-label={t("allPhases")} className="mb-3 flex flex-wrap gap-1">
+        <fieldset className="mb-3 flex min-w-0 flex-wrap gap-1 border-0 p-0">
+          <legend className="sr-only">{t("allPhases")}</legend>
           <button type="button" aria-pressed={activePhase === null} onClick={() => setSelectedPhase(null)} className="rounded-md border border-white/15 px-2 py-1 text-xs text-white/70 aria-pressed:border-purple-400/60 aria-pressed:text-white">
             {t("allPhases")}
           </button>
@@ -160,7 +162,7 @@ export function PlaytestActionLog({ entries, deckName, onAdd, onRecordMana, onEd
               {phaseLabel(phase)}
             </button>
           ))}
-        </div>
+        </fieldset>
       )}
       {entries.length === 0 ? (
         <p className="text-xs text-white/35">{t("empty")}</p>

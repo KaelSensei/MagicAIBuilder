@@ -63,10 +63,10 @@
   font-family: var(--font-cinzel), 'Cinzel', serif;
 }
 .landing-nav-links a:hover { color: var(--gold); }
-.nav-cta {
+.landing-nav-links a.nav-cta {
   background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-  color: #fff !important; padding: 0.55rem 1.4rem; border-radius: 4px;
-  font-weight: 700 !important;
+  color: #fff; padding: 0.55rem 1.4rem; border-radius: 4px;
+  font-weight: 700;
 }
 
 /* --- Hero --- */
@@ -85,14 +85,13 @@
 }
 .mana-float {
   position: absolute; font-size: 1.5rem; opacity: 0.06;
-  animation: float linear infinite; pointer-events: none; user-select: none;
+  pointer-events: none; user-select: none;
 }
 .hero-mana-pips {
   display: flex; gap: 0.75rem; margin-bottom: 1.8rem;
-  opacity: 0; animation: fadeUp 0.8s 0.1s ease forwards;
+  opacity: 1;
 }
 .hero-mana-pips span {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: default;
 }
 .hero-mana-pips span:hover {
@@ -103,13 +102,11 @@
   font-family: var(--font-cinzel), 'Cinzel', serif;
   font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase;
   color: var(--gold); margin-bottom: 1.5rem;
-  opacity: 0; animation: fadeUp 0.8s 0.2s ease forwards;
 }
 .landing-hero h1 {
   font-family: var(--font-cinzel-deco), 'Cinzel Decorative', serif;
   font-size: clamp(2.8rem, 7vw, 6rem); font-weight: 900;
   line-height: 1.05; letter-spacing: -0.01em; max-width: 900px;
-  opacity: 0; animation: fadeUp 0.8s 0.4s ease forwards;
 }
 .hero-line1 {
   display: block;
@@ -125,18 +122,15 @@
 .hero-sub {
   margin-top: 2rem; font-size: 1.2rem; color: var(--muted);
   max-width: 560px; line-height: 1.7; font-weight: 300;
-  opacity: 0; animation: fadeUp 0.8s 0.6s ease forwards;
 }
 .hero-sub strong { color: var(--text); font-weight: 500; }
 .hero-actions {
   margin-top: 3rem; display: flex; gap: 1rem;
   flex-wrap: wrap; justify-content: center;
-  opacity: 0; animation: fadeUp 0.8s 0.8s ease forwards;
 }
 .hero-note {
   margin-top: 1rem; font-size: 0.75rem; color: var(--muted);
   letter-spacing: 0.05em;
-  opacity: 0; animation: fadeUp 0.8s 1s ease forwards;
 }
 
 /* --- Buttons --- */
@@ -146,7 +140,6 @@
   font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase;
   padding: 1rem 2.5rem; border: none; border-radius: 4px;
   cursor: pointer; text-decoration: none; display: inline-block;
-  transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 24px rgba(124,92,252,0.45);
 }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(124,92,252,0.65); }
@@ -186,7 +179,7 @@
 .pain-item {
   background: var(--card-bg); border: 1px solid var(--border);
   border-radius: 8px; padding: 1.5rem; position: relative;
-  overflow: hidden; transition: border-color 0.2s, transform 0.2s;
+  overflow: hidden;
 }
 .pain-item:hover { border-color: rgba(124,92,252,0.5); transform: translateY(-3px); }
 .pain-item::before {
@@ -247,14 +240,14 @@
 }
 .ai-cursor {
   display: inline-block; width: 2px; height: 14px;
-  background: #00e5ff; animation: blink 1s infinite; vertical-align: middle;
+  background: #00e5ff; vertical-align: middle;
 }
 .card-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin-bottom: 1rem; }
 .mtg-card-mini {
   aspect-ratio: 2/3; border-radius: 4px;
   border: 1px solid rgba(255,255,255,0.1);
   background: linear-gradient(135deg, #1a1030, #0d2035);
-  transition: transform 0.15s; cursor: pointer;
+  cursor: pointer;
 }
 .mtg-card-mini:hover { transform: scale(1.08) translateY(-3px); z-index: 2; }
 .mtg-card-mini.card-b  { background: linear-gradient(135deg, #100d1a, #1a1530); }
@@ -374,7 +367,7 @@
 .pricing-card {
   background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
   padding: 2.5rem 2rem; text-align: left; position: relative;
-  overflow: hidden; transition: transform 0.2s;
+  overflow: hidden;
 }
 .pricing-card:hover { transform: translateY(-4px); }
 .pricing-card.featured { border-color: var(--gold-dark); background: linear-gradient(135deg, rgba(124,92,252,0.06), var(--card-bg)); }
@@ -451,7 +444,7 @@
 }
 
 /* --- Scroll reveal --- */
-.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.reveal { opacity: 1; transform: none; }
 .reveal.visible { opacity: 1; transform: translateY(0); }
 
 /* --- Responsive --- */
@@ -467,11 +460,22 @@
 }
 
 /* --- Reduced motion --- */
+@media (prefers-reduced-motion: no-preference) {
+  .mana-float { animation: float linear infinite; }
+  .hero-mana-pips { opacity: 0; animation: fadeUp 0.8s 0.1s ease forwards; }
+  .hero-eyebrow { opacity: 0; animation: fadeUp 0.8s 0.2s ease forwards; }
+  .landing-hero h1 { opacity: 0; animation: fadeUp 0.8s 0.4s ease forwards; }
+  .hero-sub { opacity: 0; animation: fadeUp 0.8s 0.6s ease forwards; }
+  .hero-actions { opacity: 0; animation: fadeUp 0.8s 0.8s ease forwards; }
+  .hero-note { opacity: 0; animation: fadeUp 0.8s 1s ease forwards; }
+  .ai-cursor { animation: blink 1s infinite; }
+  .hero-mana-pips span { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .btn-primary { transition: transform 0.2s, box-shadow 0.2s; }
+  .pain-item { transition: border-color 0.2s, transform 0.2s; }
+  .mtg-card-mini { transition: transform 0.15s; }
+  .pricing-card { transition: transform 0.2s; }
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .hero-eyebrow, .landing-hero h1, .hero-sub, .hero-actions, .hero-note {
-    animation: none !important;
-    opacity: 1;
-  }
-  .mana-float { animation: none !important; display: none; }
-  .reveal { transition: none; opacity: 1; transform: none; }
+  .mana-float { display: none; }
 }
