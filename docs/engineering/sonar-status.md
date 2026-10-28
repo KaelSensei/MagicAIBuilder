@@ -1,5 +1,9 @@
 # Sonar Quality Status
 
+## Current Follow-Up (2026-10-28)
+
+The public main-branch measure showed 20 code smells and 182 minutes of remediation effort before this batch. PR #1119 refactors the 20 flagged locations without suppressing rules or adding exclusions. VPS typecheck, lint, 3,238 unit tests and build passed; PR CI, SonarCloud, accessibility audit and Vercel checks passed, and the PR analysis reported zero open issues. The fix is integrated into dev, but the public main-branch counter remains a release measure until QA validates promotion through staging to main. Do not report the main counter as zero before a fresh main analysis confirms it.
+
 Measured on 2026-10-10 after #955 and #956. This is a dated snapshot, not a claim that every issue or every security risk has been eliminated.
 
 ## Verified Baseline
