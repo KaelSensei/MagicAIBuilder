@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowLeftRight, Loader2 } from "lucide-react";
 import { fetchDeck } from "@/lib/db/deck-api";
@@ -42,9 +42,11 @@ export function DeckComparisonPanel({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const requestId = useRef(0);
 
   async function handleCompare(): Promise<void> {
     if (!leftId || !rightId || leftId === rightId) return;
+    const currentRequestId = ++requestId.current;
     setIsLoading(true);
     setHasError(false);
     try {
@@ -52,15 +54,17 @@ export function DeckComparisonPanel({
         loadDeck(leftId),
         loadDeck(rightId),
       ]);
+      if (currentRequestId !== requestId.current) return;
       setComparison({
         cards: compareDeckCards(left.cards, right.cards),
         profile: compareDeckProfiles(left.cards, right.cards),
       });
     } catch {
+      if (currentRequestId !== requestId.current) return;
       setHasError(true);
       setComparison(null);
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestId.current) setIsLoading(false);
     }
   }
 
@@ -92,7 +96,10 @@ export function DeckComparisonPanel({
             <select
               value={value}
               onChange={(event) => {
+                requestId.current++;
                 setComparison(null);
+                setHasError(false);
+                setIsLoading(false);
                 if (slot === "first") {
                   setLeftId(event.target.value);
                 } else {

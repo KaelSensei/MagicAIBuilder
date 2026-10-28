@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckComparisonPanel } from "./DeckComparisonPanel";
@@ -26,6 +26,36 @@ describe("DeckComparisonPanel", () => {
     fireEvent.change(screen.getByLabelText("Second deck"), {
       target: { value: "deck-c" },
     });
+    expect(screen.queryByText("0 shared cards")).toBeNull();
+  });
+
+  it("ignores a comparison response after the selected deck changes", async () => {
+    let resolvePending: ((value: { cards: [] }) => void) | undefined;
+    mockFetchDeck
+      .mockResolvedValueOnce({ cards: [] })
+      .mockImplementationOnce(
+        () =>
+          new Promise<{ cards: [] }>((resolve) => {
+            resolvePending = resolve;
+          })
+      );
+    renderWithIntl(
+      <DeckComparisonPanel
+        decks={[
+          { id: "deck-a", name: "Control" },
+          { id: "deck-b", name: "Midrange" },
+          { id: "deck-c", name: "Combo" },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Compare decks" }));
+    await waitFor(() => expect(mockFetchDeck).toHaveBeenCalledTimes(2));
+    fireEvent.change(screen.getByLabelText("Second deck"), {
+      target: { value: "deck-c" },
+    });
+    await act(async () => resolvePending?.({ cards: [] }));
+
     expect(screen.queryByText("0 shared cards")).toBeNull();
   });
 
