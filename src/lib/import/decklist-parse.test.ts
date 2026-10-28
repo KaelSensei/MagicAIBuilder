@@ -212,6 +212,10 @@ describe("parsePlainTextDecklist", () => {
 });
 
 describe("extractCardsFromHtml", () => {
+  it("deduplicates names that differ only in case across HTML fragments", () => {
+    const html = "<div>1 Sol Ring</div><span>1 SOL RING</span>";
+    expect(extractCardsFromHtml(html).map((card) => card.name)).toEqual(["Sol Ring"]);
+  });
   it("pulls quantity/name pairs out of markup", () => {
     const html = "<div>1 Sol Ring</div><div>2 Lightning Bolt</div>";
     expect(extractCardsFromHtml(html).map((c) => c.name)).toEqual([
