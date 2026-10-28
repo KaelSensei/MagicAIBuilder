@@ -66,6 +66,17 @@ function importedCardNames(parsed: ParsedImport): { name: string }[] {
   ];
 }
 
+function getTextImportDuplicateNames(preview: ParsedImport | null, previewCards: ScryfallCard[] | null): string[] {
+  if (!preview || !previewCards) return [];
+
+  return getDuplicateImportedNames([
+    ...(preview.commander ? [{ name: preview.commander }] : []),
+    ...(preview.partner ? [{ name: preview.partner }] : []),
+    ...(preview.companion ? [{ name: preview.companion }] : []),
+    ...preview.cards,
+  ], buildScryfallNameIndex(previewCards));
+}
+
 async function addParsedCards(
   parsed: ParsedImport,
   foundCards: ScryfallCard[],
@@ -224,14 +235,7 @@ export function ImportDialog({
   const setPartner = useDeckStore((s) => s.setPartner);
   const setCompanion = useDeckStore((s) => s.setCompanion);
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
-  const duplicateNames = preview && previewCards
-    ? getDuplicateImportedNames([
-        ...(preview.commander ? [{ name: preview.commander }] : []),
-        ...(preview.partner ? [{ name: preview.partner }] : []),
-        ...(preview.companion ? [{ name: preview.companion }] : []),
-        ...preview.cards,
-      ], buildScryfallNameIndex(previewCards))
-    : [];
+  const duplicateNames = getTextImportDuplicateNames(preview, previewCards);
 
   const handleImport = async () => {
     if (!preview || !previewCards?.length) return;
