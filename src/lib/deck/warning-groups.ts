@@ -12,6 +12,7 @@ const LEGALITY_MARKERS = [
   "not legal",
   "cannot be",
   "companion requirement",
+  "companion needs",
 ];
 
 const STRATEGY_MARKERS = [

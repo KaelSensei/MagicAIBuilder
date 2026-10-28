@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { AISuggestionResult } from "@/hooks/useAISuggestions";
 import { ARCHETYPES } from "@/lib/ai/archetypes";
@@ -35,13 +35,7 @@ import {
   type SuggestionPriorityFilter,
 } from "@/lib/ai/suggestion-review";
 
-const BUDGET_OPTIONS: Array<{ label: string; value: number | null }> = [
-  { label: "No limit", value: null },
-  { label: "< $1", value: 1 },
-  { label: "< $5", value: 5 },
-  { label: "< $10", value: 10 },
-  { label: "< $25", value: 25 },
-];
+const BUDGET_OPTIONS: readonly (number | null)[] = [null, 1, 5, 10, 25];
 
 interface AISuggestionsPanelProps {
   readonly result: AISuggestionResult | null;
@@ -98,6 +92,7 @@ export function AISuggestionsPanel({
   onAskQuestion,
 }: AISuggestionsPanelProps) {
   const t = useTranslations("deck");
+  const format = useFormatter();
   const [expanded, setExpanded] = useState(true);
   const [addedCards, setAddedCards] = useState<Set<string>>(new Set());
   const [removedCards, setRemovedCards] = useState<Set<string>>(new Set());
@@ -257,10 +252,10 @@ export function AISuggestionsPanel({
                     {t("ai.budgetPerCard")}
                   </p>
                   <div className="flex gap-1 flex-wrap">
-                    {BUDGET_OPTIONS.map(({ label, value }) => (
+                    {BUDGET_OPTIONS.map((value) => (
                       <button
                         type="button"
-                        key={label}
+                        key={value ?? "no-limit"}
                         onClick={() => onBudgetPerCardChange(value)}
                         className={cn(
                           "text-[10px] px-2 py-0.5 rounded-full border transition-colors",
@@ -269,7 +264,9 @@ export function AISuggestionsPanel({
                             : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                         )}
                       >
-                        {label}
+                        {value === null
+                          ? t("ai.noLimit")
+                          : `< ${format.number(value, { style: "currency", currency: "USD" })}`}
                       </button>
                     ))}
                   </div>
