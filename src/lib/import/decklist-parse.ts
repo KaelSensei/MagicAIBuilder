@@ -173,8 +173,9 @@ export function extractCardsFromHtml(html: string): UrlImportCard[] {
   // Deduplicate by name
   const seen = new Set<string>();
   return cards.filter((c) => {
-    if (seen.has(c.name)) return false;
-    seen.add(c.name);
+    const key = c.name.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
     return true;
   });
 }
