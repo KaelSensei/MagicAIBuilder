@@ -225,6 +225,17 @@ describe("validateDeck", () => {
     );
   });
 
+  it("sorts duplicate names alphabetically across letter case", () => {
+    const deck = makeDeck({ cards: [
+      makeCard({ id: "z", name: "Zeta", quantity: 2 }),
+      makeCard({ id: "a", name: "alpha", quantity: 2 }),
+    ] });
+
+    expect(validateDeck(deck).errors).toContain(
+      "Duplicate cards (singleton violation): alpha, Zeta"
+    );
+  });
+
   it("reports too many cards (over 100)", () => {
     const cards = Array.from({ length: 5 }, (_, i) =>
       makeCard({ id: `c-${i}`, name: `Card ${i}`, quantity: 25 })
