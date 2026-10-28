@@ -29,6 +29,16 @@ function isCollectorSuffixChar(c: string): boolean {
   return isEcmaWhitespaceChar(c) || /^\d$/.test(c);
 }
 
+function splitCardCommentStart(name: string, firstSlash: number): number | null {
+  const nextSlash = name.indexOf("//", firstSlash + 2);
+  const firstHalf = name.slice(0, firstSlash).trim();
+  const secondHalf = name.slice(firstSlash + 2, nextSlash < 0 ? undefined : nextSlash).trim();
+  if (/^[A-Z][a-z]+$/.test(firstHalf) && /^[A-Z][a-z]+$/.test(secondHalf)) {
+    return nextSlash < 0 ? null : nextSlash;
+  }
+  return firstSlash;
+}
+
 /**
  * Drop a suffix starting at the leftmost “optional whitespace + `//` or `|`”.
  * Replaces legacy `.replace(/\s*(\/\/|\|).*$/, "")` with linear-time scanning.
@@ -41,12 +51,8 @@ function stripSlashOrPipeCommentSuffix(name: string): string {
       return name.slice(0, i).trimEnd();
     }
     if (j + 1 < name.length && name[j] === "/" && name[j + 1] === "/") {
-      const nextSlash = name.indexOf("//", j + 2);
-      const secondHalf = name.slice(j + 2, nextSlash < 0 ? undefined : nextSlash).trim();
-      if (/^[A-Z][a-z]+$/.test(name.slice(0, i).trim()) && /^[A-Z][a-z]+$/.test(secondHalf)) {
-        return nextSlash < 0 ? name : name.slice(0, nextSlash).trimEnd();
-      }
-      return name.slice(0, i).trimEnd();
+      const commentStart = splitCardCommentStart(name, j);
+      return commentStart === null ? name : name.slice(0, commentStart).trimEnd();
     }
   }
   return name;
@@ -122,6 +128,12 @@ function parseDecklistCard(line: string, section: DecklistSection): UrlImportCar
   };
 }
 
+function sectionAfterCard(section: DecklistSection, countedPartner: boolean): DecklistSection {
+  if (section === "commander" && countedPartner) return "partner";
+  if (section === "commander" || section === "partner") return "main";
+  return section;
+}
+
 export function parsePlainTextDecklist(text: string): UrlImportCard[] {
   const cards: UrlImportCard[] = [];
   let section: DecklistSection = "main";
@@ -146,12 +158,8 @@ export function parsePlainTextDecklist(text: string): UrlImportCard[] {
     const card = parseDecklistCard(line, section);
     if (!card) continue;
     cards.push(card);
-    if (section === "commander" && countedPartner) {
-      section = "partner";
-      countedPartner = false;
-    } else if (section === "commander" || section === "partner") {
-      section = "main";
-    }
+    section = sectionAfterCard(section, countedPartner);
+    countedPartner = false;
   }
 
   return cards;

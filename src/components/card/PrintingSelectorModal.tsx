@@ -155,9 +155,9 @@ export function PrintingSelectorModal({
                 </button>
                 <div className="min-h-0 flex-1 overflow-y-auto grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 content-start gap-4">
                   {ownedOnly && visiblePrintings.length === 0 && (
-                    <p className="col-span-full py-10 text-center text-sm text-(--text-secondary)" role="status">
+                    <output className="col-span-full py-10 text-center text-sm text-(--text-secondary)">
                       {t("noOwnedPrintings")}
-                    </p>
+                    </output>
                   )}
                   {visiblePrintings.map((printing) => (
                     <div key={printing.id} className="flex flex-col gap-1.5">

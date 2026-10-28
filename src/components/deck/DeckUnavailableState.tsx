@@ -26,9 +26,9 @@ export function DeckUnavailableState({
 
   if (isLoading) {
     return (
-      <div role="status" aria-busy="true" className="flex w-full flex-col self-stretch text-[var(--text-secondary)]">
+      <div className="flex w-full flex-col self-stretch text-[var(--text-secondary)]">
         <div className="flex h-11 items-center gap-4 border-b border-[var(--border)] px-4">
-          <span className="text-sm">{t("loading")}</span>
+          <output aria-busy="true" className="text-sm">{t("loading")}</output>
           <div aria-hidden="true" className="h-2 w-20 rounded bg-[var(--surface)]" />
         </div>
         <div aria-hidden="true" className="grid flex-1 grid-cols-1 motion-safe:animate-pulse lg:grid-cols-[15rem_minmax(0,1fr)_16rem]">
