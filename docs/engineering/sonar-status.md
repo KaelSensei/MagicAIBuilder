@@ -2,7 +2,9 @@
 
 ## Current Follow-Up (2026-10-28)
 
-The public main-branch measure showed 20 code smells and 182 minutes of remediation effort before this batch. PR #1119 refactors the 20 flagged locations without suppressing rules or adding exclusions. VPS typecheck, lint, 3,238 unit tests and build passed; PR CI, SonarCloud, accessibility audit and Vercel checks passed, and the PR analysis reported zero open issues. The fix is integrated into dev, but the public main-branch counter remains a release measure until QA validates promotion through staging to main. Do not report the main counter as zero before a fresh main analysis confirms it.
+The public main-branch measure showed 20 code smells and 182 minutes of remediation effort before this batch. PR #1119 refactored the flagged locations without suppressing rules or adding exclusions. After QA-approved promotion through staging, the main analysis reduced the measure to one code smell and 18 minutes, with the Quality Gate still green. That remaining S3776 finding was in the import dialog.
+
+PR #1123 separates import preview, feedback and actions from the dialog controller. On the VPS, 11 focused tests passed before and after the behavior-preserving refactor; TypeScript, lint, 3,241 unit tests and the production build passed. PR CI, SonarCloud, the accessibility audit and Vercel passed, with zero open PR issues. QA approved the complementary fix, but do not report the main-branch count as zero until a fresh main analysis confirms it.
 
 Measured on 2026-10-10 after #955 and #956. This is a dated snapshot, not a claim that every issue or every security risk has been eliminated.
 
