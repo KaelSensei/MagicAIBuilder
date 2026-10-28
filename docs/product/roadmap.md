@@ -77,12 +77,12 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 
 This is a planning count of unchecked top-level roadmap scopes on `dev`, not a count of missing atomic features. Recently shipped slices may sit inside a still-open broader scope; do not close that scope without its full acceptance evidence.
 
-| Scope | Open now | After adding I-13 |
-| --- | ---: | ---: |
-| User-visible product outcomes | 23 | 26 |
-| Engineering and validation enablers | 15 | 17 |
-| Conditional or deliberately parked decisions | 11 | 11 |
-| **Total tracked scopes** | **49** | **54** |
+| Scope                                        | Open now | After adding I-13 |
+| -------------------------------------------- | -------: | ----------------: |
+| User-visible product outcomes                |       23 |                26 |
+| Engineering and validation enablers          |       15 |                17 |
+| Conditional or deliberately parked decisions |       11 |                11 |
+| **Total tracked scopes**                     |   **49** |            **54** |
 
 **2026-10-26 count:** 55 top-level scopes remain unchecked, plus one nested mobile-action scope. Shipped slices inside open scopes do not reduce this count until their full acceptance criteria are met. The 30-50 small-PR estimate for active Now/Next work remains directional; parked and externally blocked work is not included.
 
@@ -282,7 +282,8 @@ A user can move a card between every legal zone, reload the page, change its pri
 - [x] Diff a proposed change against the current deck before applying it.
 - [x] Support "why is this card here?" and "what is the weakest card?" questions.
 - [x] Add a deterministic post-generation validator; the LLM never decides legality.
-- [ ] Build a small golden evaluation set for valid cards, useful explanations and regression checks.
+- [x] Build a small golden evaluation set for valid cards, useful explanations and regression checks.
+- [ ] Expand the golden set from deterministic structural and evidence contracts to provider-backed qualitative evaluations only when a stable review rubric exists.
 
 ### Definition of done
 
