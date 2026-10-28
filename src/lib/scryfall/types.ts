@@ -11,7 +11,7 @@ export interface ScryfallCardFace {
 }
 export const DFC_LAYOUTS: ReadonlySet<string> = new Set(["modal_dfc","transform","reversible_card","double_faced_token"]);
 export interface ScryfallCard {
-  id: string; name: string; layout?: string; mana_cost?: string; cmc: number;
+  id: string; oracle_id?: string; name: string; layout?: string; mana_cost?: string; cmc: number;
   type_line: string; oracle_text?: string; colors?: string[]; color_identity: string[];
   power?: string; toughness?: string;
   image_uris?: ScryfallImageUris; card_faces?: ScryfallCardFace[];
