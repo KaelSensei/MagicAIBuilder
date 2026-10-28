@@ -63,6 +63,26 @@ function assertBracket(result: ReturnType<typeof scoreBracket>) {
 }
 
 describe("scoreBracket", () => {
+  it("keeps named warnings stable when card order changes", () => {
+    const deck = makeDeck();
+    const first = makeStats({
+      bannedCards: ["Zed", "Alpha"],
+      colorIdentityViolations: ["Zed", "Alpha"],
+      gameChangersCount: 2,
+      gameChangersList: ["Zed", "Alpha"],
+    });
+    const reordered = makeStats({
+      bannedCards: ["Alpha", "Zed"],
+      colorIdentityViolations: ["Alpha", "Zed"],
+      gameChangersCount: 2,
+      gameChangersList: ["Alpha", "Zed"],
+    });
+
+    expect(assertBracket(scoreBracket(deck, first)).warnings).toEqual(
+      assertBracket(scoreBracket(deck, reordered)).warnings
+    );
+  });
+
   it("returns null for non-Commander formats", () => {
     const deck = makeDeck({ format: "standard" });
     const stats = makeStats();

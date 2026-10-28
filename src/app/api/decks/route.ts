@@ -35,10 +35,10 @@ const createDeckSchema = z.object({
   budget: z.number().positive().nullable().optional(),
   commanderId: z.string().nullable().optional(),
   commanderName: z.string().max(200).nullable().optional(),
-  partnerId: z.string().nullable().optional(),
+  partnerId: z.string().refine((id) => id.trim().length > 0).nullable().optional(),
   companionId: z.string().nullable().optional(),
   pairingType: z
-    .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select"])
+    .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son"])
     .optional()
     .default("none"),
   isAIGenerated: z.boolean().optional().default(false),
@@ -142,6 +142,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid input", details: parsed.error.issues.map((i) => i.message) }, { status: 400 });
     }
     const { name: rawName, format, targetBracket, budget, commanderId, commanderName, partnerId, companionId, pairingType, isAIGenerated } = parsed.data;
+    if (commanderId && commanderId === partnerId) {
+      return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
+    }
     // Bounded quantifier prevents ReDoS on HTML tag stripping
     const sanitizedName = rawName.replaceAll(/<[^>]{0,200}>/g, "").trim();
     if (!sanitizedName) {

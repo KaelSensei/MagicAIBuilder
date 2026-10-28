@@ -176,6 +176,8 @@
     "close": "Fermer",
     "cancel": "Annuler",
     "import": "Importer",
+    "previewDecklist": "Prévisualiser la liste",
+    "previewZone": { "main": "Principal", "sideboard": "Réserve", "maybeboard": "À considérer" },
     "url": {
       "intro": "Collez l’URL d’un deck à importer. Sources prises en charge : {sources}.",
       "placeholder": "https://www.moxfield.com/decks/… ou publicId moxfield (ex. AbCdEfGhIj)",

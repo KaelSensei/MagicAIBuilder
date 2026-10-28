@@ -61,7 +61,8 @@ export type CommanderPairingType =
   | "friends_forever"
   | "background"
   | "doctor"
-  | "character_select";
+  | "character_select"
+  | "father_son";
 export interface Deck {
   id: string;
   name: string;

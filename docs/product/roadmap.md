@@ -1,10 +1,7 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-15
+> **Updated:** 2026-10-28
 
-> **Latest quality delivery:** #955 and #956 restore working VPS/CI Sonar analysis and a green Quality Gate, with zero bugs and 65 code smells still open. Google failure feedback and description-save completion have separate Red/Green regressions. All validations ran on the VPS. The remaining maintainability backlog is tracked in [Sonar status](../engineering/sonar-status.md); QA promotion remains pending.
-
-> **Latest reliability delivery:** #953 awaits deck activation before import, fork and AI wizard follow-up actions, and awaits URL import additions and existing-card quantity saves before completion. Validated on the VPS; integrated into `dev`, awaiting QA promotion. This does not close the broader save-recovery or Sonar initiatives.
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
@@ -76,6 +73,33 @@ Sources reviewed: [Moxfield public feature guide](https://github.com/moxfield/mo
 
 Priority is expressed as **Now**, **Next** and **Later**. A priority is not a promise of a release date.
 
+### Backlog snapshot - 2026-10-20
+
+This is a planning count of unchecked top-level roadmap scopes on `dev`, not a count of missing atomic features. Recently shipped slices may sit inside a still-open broader scope; do not close that scope without its full acceptance evidence.
+
+| Scope | Open now | After adding I-13 |
+| --- | ---: | ---: |
+| User-visible product outcomes | 23 | 26 |
+| Engineering and validation enablers | 15 | 17 |
+| Conditional or deliberately parked decisions | 11 | 11 |
+| **Total tracked scopes** | **49** | **54** |
+
+**2026-10-26 count:** 55 top-level scopes remain unchecked, plus one nested mobile-action scope. Shipped slices inside open scopes do not reduce this count until their full acceptance criteria are met. The 30-50 small-PR estimate for active Now/Next work remains directional; parked and externally blocked work is not included.
+
+The four narrow fixes in #1100 improve save ownership, profile loading, price summaries and meta-source validation. Their parent scopes remain open, so the count and directional iteration estimate are unchanged.
+
+The four focused fixes in #1104 strengthen card-copy limits, failed maybeboard saves, commander acquisition and trend baselines. These also leave their parent scopes open; the 55-scope count and 30-50 active-iteration estimate remain directional rather than four fewer completed initiatives.
+
+Four further slices in #1106 preserve simple split-card names in text imports, round collection acquisition CSV totals, keep Moxfield profile pagination bound to the loaded profile, and order duplicate warnings deterministically. I-10, I-06, I-04 and I-03 remain open until their broader acceptance criteria are met; the planning count and iteration estimate are unchanged.
+
+The #1108 batch rejects invalid collection quantities, makes Game Changer warnings stable and quantity-aware, preserves split-card names before trailing text comments, and recovers from failed public-profile avatars. These are focused improvements within I-06, I-03, I-10 and I-04, not completion of their full acceptance criteria. As of 2026-10-27, 55 top-level scopes plus one nested mobile-action scope remain unchecked, and the active Now/Next estimate remains approximately 30-50 small PR-sized iterations.
+
+The five #1110 slices classify failed companion rules as legality warnings (I-03), localize USD budget caps without converting prices (I-11), retain known acquisition prices across decks (I-06), encode reserved public-profile usernames (I-04), and deduplicate HTML-imported names regardless of case (I-10). The same PR fixes a Sonar reliability finding in duplicate-name sorting. As of 2026-10-28, these refinements still leave 55 top-level scopes plus one nested mobile-action scope open; approximately 30-50 small PR-sized iterations remain for active Now/Next outcomes, excluding 11 parked or conditional scopes.
+
+I-07's tracked playtest scope is shipped. The largest active gaps remain the deck editor (I-01), collection-to-acquisition flow (I-06), and explainable recommendation evidence (I-09). I-13 adds a visual redesign, not a claim that today's UI is unfinished or that existing functionality must be rewritten.
+
+**Iteration estimate:** approximately 30-50 small PR-sized iterations for the active Now/Next outcomes **including** I-13, with overlap between visual and functional work. The 11 conditional or parked scopes are excluded. This is an estimate, not a fixed number of turns or a delivery deadline; refine it after a visual audit and each accepted slice.
+
 ---
 
 ## Portfolio View
@@ -111,15 +135,18 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 9. **I-09 Meta and evidence**
    Combine EDHREC trends, tournament context and deck-specific reasoning without pretending incomplete data is certainty.
 
+10. **I-13 Product visual redesign**
+    Establish a distinct, polished visual language and improve the deck library, editor and discovery without sacrificing density, clarity or accessibility.
+
 ### Later
 
-10. **I-10 Interoperability and integrations**
+11. **I-10 Interoperability and integrations**
     Make MagicAIBuilder a good starting point and a good destination for deck data.
 
-11. **I-11 Localization and regional experience**
+12. **I-11 Localization and regional experience**
     Expand beyond English and French only when translations and prices are genuinely supported.
 
-12. **I-12 Local AI**
+13. **I-12 Local AI**
     Explore local inference only after the cloud copilot has a measurable product fit.
 
 ---
@@ -137,11 +164,14 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 
 - Search by name, set, color and advanced filters.
 - Main deck, commander, companion, sideboard and considering zones.
+- `Partner—Father & son` commanders are recognized, paired only with the same variant, searchable in the second-command slot and preserved by deck APIs (#1084); other new partner variants remain separate scope.
 - List and grid presentations.
 - Categories, quantities, notes, tags and bulk actions.
 - Card printing selection and card hover previews.
 - Explicit keyboard-accessible moves from the main deck to Sideboard or Considering, and between secondary zones.
 - Snapshots, undo, import/export and color identity validation.
+- Superseded failed renames no longer roll back a newer rename, including when both requested the same title (#1100).
+- Failed maybeboard additions now remove their optimistic card while preserving any existing main-deck copy of the same printing (#1104).
 - Bracket, Game Changers, banlist and deck warnings.
 
 ### Remaining scope
@@ -151,6 +181,9 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
 - [x] Restore the previous card printing and notify the player when its save fails.
 - [ ] Complete cross-zone drag and drop with clear drop targets and no layout jump.
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
+  - [x] Keep the save indicator active until overlapping budget writes finish, even if one fails (#1096). Other concurrent writes remain open.
+  - [x] Keep save activity visible while an addition and a removal overlap, regardless of completion order (#1094). Other concurrent mutations remain open.
+  - [x] Roll back a rejected searched-card addition and show retry feedback without recreating a deleted deck (#1090). Broader overlapping mutation ownership remains open.
   - [x] Suppress failed zone-move feedback after the card itself has been removed, without changing recovery for cards still in the deck (#1027). Broader concurrent mutation ownership remains open.
   - [x] Suppress failed zone-move feedback after its deck has been removed, without changing recovery for existing decks (#1025). Broader concurrent mutation ownership remains open.
   - [x] Ignore bulk removal identifiers absent from the active deck; entirely stale selections preserve the deck and save activity without requests (#943). Cross-batch ownership remains open.
@@ -181,6 +214,7 @@ Priority is expressed as **Now**, **Next** and **Later**. A priority is not a pr
   - [x] Serialize card-note saves and restore the last confirmed note after a failed latest edit (#872).
   - [x] Recover individual failed bulk zone moves without rolling back successfully saved cards (#871). Broader mutation recovery remains open.
 - [ ] Add Docker-backed E2E coverage for add, move, reload and recovery flows.
+  - [x] Verify a rejected searched-card addition disappears, remains absent after reload, and can be retried successfully in Docker-backed Playwright (#1090). Other recovery variants remain open.
   - [x] Verify a rejected Sideboard-to-Considering move retains its card and saved zone after reload in Docker-backed Playwright (#1029). Other add-flow and recovery E2E remain open.
   - [x] Verify a searched card is added to Main, persisted through the API and still present after reload in Docker-backed Playwright (#1031). Other add/recovery variants remain open.
 - [ ] Add keyboard and mobile alternatives for every drag action.
@@ -264,6 +298,8 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 ### Already shipped
 
 - Commander color identity and format legality.
+- The editor rejects a generic Partner replacement for an existing Father & son pair without changing the saved partner (#1086).
+- Deck create and update APIs reject the exact same card ID in commander and partner slots (#1088).
 - Banlist and Game Changers detection.
 - Bracket scoring across six dimensions.
 - Mana curve, color distribution and format-specific statistics.
@@ -272,6 +308,8 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - Turn-one playability odds.
 - Combo detection through Commander Spellbook.
 - Budget, missing-card and deck-size warnings.
+- Equal-price most-expensive and cheapest card summaries now resolve ties by card ID, independent of deck order (#1100).
+- Pre-add validation now enforces each format's non-basic copy limit, including the fifth-copy boundary in four-copy formats (#1104).
 - Explanations and next actions for legality warnings.
 
 ### Remaining scope
@@ -282,6 +320,11 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - [x] Add source and freshness labels to external recommendations.
 - [x] Let the player compare analysis before and after a proposed change.
 - [ ] Keep warning calculations deterministic and independent from AI output.
+  - [x] Break equal-price budget recommendation ties by card ID, independent of deck order (#1096). Other feedback calculations remain open.
+  - [x] Order color-identity violation details by card name and ID regardless of deck order (#1094). Broader deterministic inputs remain open.
+  - [x] Keep named banned-card, color-identity and Game Changer warnings in a stable order when deck cards are reordered (#1092). Broader deterministic inputs and AI independence remain open.
+- [ ] Validate commander and partner mechanics at the deck API boundary, including imported pairs and the same Oracle card across different printings.
+  - [x] Reject whitespace-only partner IDs before creating a deck (#1098). Cross-printing Oracle identity validation remains open.
 
 ### Definition of done
 
@@ -301,6 +344,8 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 - [x] Bound collection loading to 15 seconds and show a localized retry rather than an endless spinner or a false empty state; retain cached cards after failed refreshes (#1013).
 - [x] Time out stalled acquisition-plan loading after 15 seconds and expose its existing localized retry action without losing close/filter cancellation (#995).
 - [ ] Fix profile and deck loading states so no request appears to hang indefinitely.
+  - [x] Clear decks from the previous Moxfield profile before loading another one, so a failed reload cannot leave an old deck importable (#1098). Broader profile loading ownership remains open.
+  - [x] Ignore superseded Moxfield profile responses after a newer load fails, rather than restoring stale import choices (#1100). Broader profile loading ownership remains open.
   - [x] End the indefinite My Decks skeleton for signed-out visitors after session resolution (#1011). Profile latency and other loading ownership remain open.
   - [x] Show an accessible, responsive editor-shaped skeleton while the initial deck data loads (#1009). Profile latency and other loading ownership remain open.
   - [x] Treat temporary public-deck API, network and invalid-response failures as retryable rather than a false 404; bound the fetch to 15 seconds (#993). Authentication latency and broader loading ownership remain open.
@@ -402,6 +447,7 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - Each missing printing in the acquisition plan now links to the player's contributing decks, so the player can inspect where it is needed.
 - Acquisition-plan rows now show the required copy count beside each contributing deck, making shared demand understandable without changing the aggregate purchase quantity (#1054).
 - Missing-printing rows now also show already-owned copies, clarifying how much remains to acquire without changing ownership or the plan calculation (#1056).
+- Commander-slot cards are included in the cross-deck acquisition plan even when their stored zone is not main; sideboard cards remain excluded (#1104).
 
 ### Remaining scope
 
@@ -530,13 +576,18 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - EDHREC popular-card recommendations now rank distinct cards by observed inclusion across source categories before applying the top-20 limit; category order no longer hides more widely played cards.
 - Meta trend comparisons now withhold reports when either endpoint snapshot is empty, rather than treating missing source data as a rise from zero or fall to zero. Non-empty snapshot bounds remain unchanged; broader trend disclosure work remains open.
 - Meta trend cutoffs now use the same retained first entry per card name as measured shifts, so discarded duplicate values cannot distort entry and exit bounds.
+- Stored EDHREC snapshots with inclusion outside the valid fraction range are excluded from trend history instead of producing impossible shifts (#1096).
+- Empty historical snapshots no longer suppress an otherwise valid trend with a later non-empty baseline; an empty current snapshot still withholds the trend (#1104).
+- MTGTop8 forms missing EDH archetypes now fail explicitly rather than silently falling back to a card-search contract (#1100).
 
 ### Remaining scope
 
 - [ ] Complete source, timestamp and sample-window disclosure across every external recommendation surface; EDHREC sample counts are shown where available, but the source does not provide a trustworthy sampling date range.
 - [ ] Separate "popular", "high synergy", "tournament observed" and "AI suggested".
 - [ ] Add source-health telemetry and contract tests for every scraper or external feed; EDHREC card-list shape now has focused regression coverage.
+  - [x] Reject malformed MTGTop8 search results so a false empty feed cannot overwrite a valid tournament cache (#1094). Other source-health coverage remains open.
 - [ ] Add trend views that respect EDHREC top-20 truncation bounds.
+  - [x] Avoid inferring a rise or fall bound from a snapshot with fewer than 20 distinct cards (#1098). Broader trend-view disclosure remains open.
 - [ ] Revisit richer tournament statistics only with a source that publishes match-level data.
 
 ### Blocked
@@ -563,6 +614,8 @@ A recommendation is never presented as universal truth: the user can see where i
 - Plain-text exports mark every card-note line with an explicit comment prefix, so multiline notes and reserved section names cannot introduce cards or change zones during reimport. Notes remain readable in the export; note rehydration remains separate scope.
 - Text URL imports recognize partner and Main, Sideboard and Considering headers when the source provides them.
 - Downloaded text lists also recognize colon-terminated section headings, including counted and commented headings, without losing commander, partner or secondary zones (#844).
+- Downloaded text lists recognize `Main Deck` after a secondary-zone heading, returning following cards to the playable main deck (#1082).
+- Downloaded text lists treat a bare or commented `99` heading as the main deck, so cards after a Sideboard section return to the correct zone (#1078).
 - Downloaded text lists accept uppercase X quantity markers alongside lowercase x without losing command or secondary zones (#867).
 - Downloaded text lists accept lowercase and mixed-case trailing edition codes without including them in card names (#869); exact-printing restoration remains open.
 - Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, ManaBox, MTGGoldfish, EDHREC and plain text.
@@ -572,7 +625,13 @@ A recommendation is never presented as universal truth: the user can see where i
 - The Moxfield text exporter now retains companion, Sideboard and Considering headings instead of flattening zones. Our text parser round trip preserves roles and quantities; live Moxfield comment-header compatibility remains unverified, so external fidelity is still open.
 - Versioned read-only external API under /api/v1.
 - The URL import preview now discloses Scryfall-unresolved card names before confirmation, alongside names ignored by the source; front-face names of double-faced cards still resolve.
-- Pasted plain-text imports now disclose unresolved names after import instead of implying complete success; resolved cards remain in the deck (#1023). Pre-import preview for pasted text remains separate scope.
+- Pasted plain-text imports now disclose unresolved names after import instead of implying complete success; resolved cards remain in the deck (#1023).
+- Pasted decklists accept uppercase `X` quantity markers without changing card names, commander roles or secondary zones (#1080).
+- Pasted lists show commander, zone copy counts and card rows before any deck mutation (#1063). The preview now checks names with Scryfall and discloses unresolved cards before confirmation (#1065); editing or closing the dialog invalidates the validation result.
+- Pasted-list previews show both the commander and parsed partner or Background before confirmation, matching what the import will set (#1076).
+- When no pasted card resolves, the preview keeps the missing-name warning visible but disables confirmation instead of reporting a successful zero-card import (#1074). Partially resolved lists remain importable.
+- Pasted-list previews now disclose repeated card lines and commanders repeated in the main deck before confirmation (#1067), using the same canonical-name duplicate check as URL imports. The player can edit the pasted list; no automatic duplicate removal changes quantities.
+- Each pasted-list preview row now labels its destination as Main, Sideboard or Maybeboard before confirmation (#1069). English and French labels are active; this is a visibility improvement, not a change to zone persistence or external round-trip fidelity.
 - Missing-name warnings in the URL import preview are grouped across equivalent case, whitespace and apostrophe spellings, preserving the first spelling without merging imported rows or quantities (#848).
 - Import duplicate warnings also recognize front-face and full names resolving to the same canonical Scryfall name (#865), preserving first imported spelling, rows, quantities and zones.
 - Pasted decklists preserve Unicode names, accept commented or colon-terminated section headings, and recognize uppercase set codes without collector numbers. Scryfall lookup also handles copied smart apostrophes.
@@ -585,6 +644,10 @@ A recommendation is never presented as universal truth: the user can see where i
   - [x] Retain printing-specific Scryfall IDs and application categories in simple and full deck CSV exports (#842). Missing printing IDs remain blank; CSV reimport and external category mapping remain open.
   - [x] Include a trailing Zone column in simple and full deck CSV exports, preserving main, sideboard and maybeboard values without changing existing column positions (#840). CSV reimport and command-zone rows remain separate scope.
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
+- [x] Show both parsed commanders in a pasted-list preview when a partner or Background is present (#1076).
+- [x] Validate pasted-list names before confirmation and show unresolved cards in its preview (#1065).
+- [x] Prevent confirming a pasted-list preview when none of its cards resolves (#1074).
+- [x] Show duplicate decisions in pasted-list previews using the URL preview's matching policy (#1067).
 - [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
 - [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
 - [x] Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
@@ -653,6 +716,33 @@ A locale is activated only when its navigation, warnings, dates, prices and card
 ### Definition of done
 
 A local model is only promoted if it matches the required quality for a clearly defined workflow at an acceptable cost and latency.
+
+---
+
+## I-13: Product Visual Redesign
+
+**Status:** Next. Discovery and specification only; no UI implementation is claimed by this roadmap update.
+
+**User outcome:** a player can find, build, understand and share a Commander deck in an interface that feels coherent, distinctive and calm even when card data is dense.
+
+### Inspiration and boundaries
+
+- Take inspiration from Moxfield's efficient deck workflow and presentation, and from [EDHREC's October 2026 redesign](https://edhrec.com/articles/changelog-edhrec-redesign): visible card context, legible evidence, purposeful filters, configurable views and responsive layouts.
+- Do not copy either product's layout, artwork, branding or interaction details. Keep MagicAIBuilder's explainable AI, legality, playtest and ownership workflows recognizable.
+- Keep source attribution and statistical uncertainty readable. A prettier recommendation must not look more certain than its data supports.
+- Treat narrow web widths as part of responsive quality; a native mobile application is not in scope.
+
+### Delivery slices
+
+- [ ] Audit the current dark/light surfaces and agree a visual direction, typography, spacing, color, elevation, motion and component tokens in a reusable design reference before implementation.
+- [ ] Refine navigation and the deck library so search, deck state, commander identity and next actions are immediately scannable.
+- [ ] Refine the deck editor's dense workspace: card views, commander context, actions, warnings and analytics, without hiding existing workflows or introducing layout jumps.
+- [ ] Refine public decks, discovery and recommendations around card imagery, source-aware evidence, clear filters and consistent detail panels.
+- [ ] Validate the redesigned journeys at narrow and wide web widths, with keyboard and screen-reader access, light/dark contrast, visual regression coverage and measured loading/interaction performance. Run code validation on the VPS.
+
+### Definition of done
+
+The deck-library-to-editor-to-share journey is visually coherent and remains at least as usable as before; accessibility, responsive, performance and regression checks pass, and each redesigned slice has QA acceptance evidence before promotion.
 
 ---
 

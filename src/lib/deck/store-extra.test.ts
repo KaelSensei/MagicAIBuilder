@@ -564,6 +564,27 @@ describe("useDeckStore — clearCommander", () => {
 describe("useDeckStore — setPartner", () => {
   beforeEach(() => seedDeck());
 
+  it("keeps a Father & son pair unchanged when given a generic Partner", async () => {
+    const previousPartner = makeDeckCard({ id: "family-partner", name: "Family Partner" });
+    seedDeck(makeActiveDeck({
+      commander: makeDeckCard({ id: "family-commander", name: "Family Commander" }),
+      partner: previousPartner,
+      pairingType: "father_son",
+    }));
+    vi.mocked(deckApi.updateDeck).mockClear();
+    vi.mocked(deckApi.addCard).mockClear();
+    toastAdd.mockClear();
+
+    await useDeckStore.getState().setPartner(makeScryfallCard({
+      name: "Generic Partner", keywords: ["Partner"], oracle_text: "Partner",
+    }));
+
+    expect(useDeckStore.getState().decks["deck-1"].partner).toEqual(previousPartner);
+    expect(deckApi.updateDeck).not.toHaveBeenCalled();
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+    expect(toastAdd).toHaveBeenCalledWith("warning", expect.stringContaining("Father & son"));
+  });
+
   it("sets partner on the active deck", async () => {
     const card = makeScryfallCard({ name: "Tana, the Bloodsower", keywords: ["Partner"] });
     await useDeckStore.getState().setPartner(card);

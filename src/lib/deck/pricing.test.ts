@@ -112,6 +112,22 @@ describe("calculateDeckPrice", () => {
     expect(pricing.cheapestCard?.price).toBe(1);
   });
 
+  it("selects the same most expensive card when equal-price cards are reordered", () => {
+    const alpha = makeCard("a", "Alpha", 10);
+    const beta = makeCard("b", "Beta", 10);
+
+    expect(calculateDeckPrice([beta, alpha]).mostExpensiveCard?.id).toBe("a");
+    expect(calculateDeckPrice([alpha, beta]).mostExpensiveCard?.id).toBe("a");
+  });
+
+  it("selects the same cheapest card when equal-price cards are reordered", () => {
+    const alpha = makeCard("a", "Alpha", 1);
+    const beta = makeCard("b", "Beta", 1);
+
+    expect(calculateDeckPrice([beta, alpha]).cheapestCard?.id).toBe("a");
+    expect(calculateDeckPrice([alpha, beta]).cheapestCard?.id).toBe("a");
+  });
+
   it("handles all cards with no price", () => {
     const cards = [
       makeCard("c1", "Card 1", null),
@@ -168,6 +184,17 @@ describe("getPriceBreakdown", () => {
 
 // ─── Budget reduction suggestions ──────────────────────────────────────────
 describe("suggestBudgetReductions", () => {
+  it("selects the same equal-price card regardless of deck order", () => {
+    const alpha = makeCard("a", "Alpha", 10);
+    const beta = makeCard("b", "Beta", 10);
+
+    const first = suggestBudgetReductions([beta, alpha], 17);
+    const reversed = suggestBudgetReductions([alpha, beta], 17);
+
+    expect(first.map((suggestion) => suggestion.cardToReplace.id)).toEqual(["a"]);
+    expect(reversed.map((suggestion) => suggestion.cardToReplace.id)).toEqual(["a"]);
+  });
+
   it("suggests replacing expensive cards with cheaper ones", () => {
     const cards = [
       makeCard("c1", "Expensive", 50),

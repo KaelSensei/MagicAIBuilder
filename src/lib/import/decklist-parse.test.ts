@@ -84,9 +84,45 @@ describe("parsePlainTextDecklist", () => {
     expect(cards[1]).toMatchObject({ name: "Sol Ring", isCommander: false });
   });
 
+  it("imports the second card in a counted Commander (2) section as partner", () => {
+    const cards = parsePlainTextDecklist([
+      "Commander (2)",
+      "1 Thrasios, Triton Hero",
+      "1 Tymna the Weaver",
+      "Mainboard",
+      "1 Sol Ring",
+    ].join("\n"));
+
+    expect(cards).toEqual([
+      { name: "Thrasios, Triton Hero", quantity: 1, isCommander: true, isPartner: false, zone: "main" },
+      { name: "Tymna the Weaver", quantity: 1, isCommander: false, isPartner: true, zone: "main" },
+      { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
+  it("preserves the full name of a split card in a plain-text decklist", () => {
+    expect(parsePlainTextDecklist("1 Fire // Ice")).toEqual([
+      { name: "Fire // Ice", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
+  it("still strips an uppercase annotation after a multiword card name", () => {
+    expect(parsePlainTextDecklist("1 Sol Ring // Foil")).toEqual([
+      { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
   it("leaves the commander section when a Deck or Sideboard header follows", () => {
     const cards = parsePlainTextDecklist("# Commander\n# Deck\n1 Sol Ring");
     expect(cards[0].isCommander).toBe(false);
+  });
+
+  it("treats a 99 heading as the main deck rather than a card", () => {
+    const cards = parsePlainTextDecklist("Sideboard\n1 Negate\n// 99\n1 Sol Ring");
+    expect(cards).toEqual([
+      { name: "Negate", quantity: 1, isCommander: false, isPartner: false, zone: "sideboard" },
+      { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
   });
 
   it("preserves partner and secondary zones across text section headers", () => {
@@ -109,6 +145,15 @@ describe("parsePlainTextDecklist", () => {
       { name: "Negate", quantity: 2, isCommander: false, isPartner: false, zone: "sideboard" },
       { name: "Ponder", quantity: 1, isCommander: false, isPartner: false, zone: "maybeboard" },
       { name: "Sol Ring", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
+  it("returns to the main zone after a Main Deck heading", () => {
+    const cards = parsePlainTextDecklist("Sideboard\n1 Negate\nMain Deck\n1 Sol Ring");
+
+    expect(cards.map(({ name, zone }) => ({ name, zone }))).toEqual([
+      { name: "Negate", zone: "sideboard" },
+      { name: "Sol Ring", zone: "main" },
     ]);
   });
 
@@ -137,6 +182,11 @@ describe("parsePlainTextDecklist", () => {
     expect(cards.map((c) => c.name)).toEqual(["Sol Ring", "Counterspell"]);
   });
 
+  it("keeps both halves of a split card while stripping a trailing comment", () => {
+    const cards = parsePlainTextDecklist("1 Fire // Ice // foil\n1 Sol Ring // Foil");
+    expect(cards.map((card) => card.name)).toEqual(["Fire // Ice", "Sol Ring"]);
+  });
+
   it("clamps an absurd quantity instead of trusting it", () => {
     const cards = parsePlainTextDecklist("999 Sol Ring\n0 Counterspell");
     expect(cards[0].quantity).toBe(99);
@@ -162,6 +212,10 @@ describe("parsePlainTextDecklist", () => {
 });
 
 describe("extractCardsFromHtml", () => {
+  it("deduplicates names that differ only in case across HTML fragments", () => {
+    const html = "<div>1 Sol Ring</div><span>1 SOL RING</span>";
+    expect(extractCardsFromHtml(html).map((card) => card.name)).toEqual(["Sol Ring"]);
+  });
   it("pulls quantity/name pairs out of markup", () => {
     const html = "<div>1 Sol Ring</div><div>2 Lightning Bolt</div>";
     expect(extractCardsFromHtml(html).map((c) => c.name)).toEqual([

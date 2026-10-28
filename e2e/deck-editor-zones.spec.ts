@@ -159,4 +159,52 @@ test.describe("Deck Editor zones", () => {
       await request.delete(`/api/decks/${deckId}`);
     }
   });
+
+  test("recovers from a failed searched-card addition and allows retry", async ({ page, request }) => {
+    const deckId = await createDeckWithZones(request);
+
+    try {
+      await suppressOnboarding(page);
+      await page.goto(`/builder/${deckId}`);
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+
+      await page.getByTestId("search-input").fill("Grizzly Bears");
+      await page.getByAltText(/^Grizzly Bears$/i).first().click();
+      await expect(page.getByText("Loading printings…")).not.toBeVisible({ timeout: 30_000 });
+
+      await page.route(`**/api/decks/${deckId}/cards`, async (route) => {
+        if (route.request().method() === "POST") {
+          await route.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+          return;
+        }
+        await route.continue();
+      });
+      const rejectedAdd = page.waitForResponse(
+        (response) => response.request().method() === "POST" &&
+          response.url().endsWith(`/api/decks/${deckId}/cards`)
+      );
+      await page.getByRole("button", { name: /Grizzly Bears —/i }).first().click();
+      expect((await rejectedAdd).status()).toBe(503);
+      await expect(page.getByText("Could not add card. Please retry.")).toBeVisible();
+      await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toHaveCount(0);
+
+      await page.reload();
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toHaveCount(0);
+
+      await page.unroute(`**/api/decks/${deckId}/cards`);
+      await page.getByTestId("search-input").fill("Grizzly Bears");
+      await page.getByAltText(/^Grizzly Bears$/i).first().click();
+      await expect(page.getByText("Loading printings…")).not.toBeVisible({ timeout: 30_000 });
+      const retriedAdd = page.waitForResponse(
+        (response) => response.request().method() === "POST" &&
+          response.url().endsWith(`/api/decks/${deckId}/cards`)
+      );
+      await page.getByRole("button", { name: /Grizzly Bears —/i }).first().click();
+      expect((await retriedAdd).ok()).toBe(true);
+      await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toBeVisible();
+    } finally {
+      await request.delete(`/api/decks/${deckId}`);
+    }
+  });
 });

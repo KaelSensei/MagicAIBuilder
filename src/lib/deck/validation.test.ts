@@ -181,6 +181,18 @@ describe("validateDeck", () => {
     expect(result.warnings.some((w) => w.includes("Bracket 4"))).toBe(true);
   });
 
+  it("reports Game Changer names deterministically while counting actual quantities", () => {
+    const zeta = makeCard({ id: "zeta", name: "Zeta", isGameChanger: true, quantity: 3 });
+    const alpha = makeCard({ id: "alpha", name: "Alpha", isGameChanger: true, quantity: 1 });
+    const commander = makeCommander([]);
+
+    for (const cards of [[zeta, alpha], [alpha, zeta]]) {
+      const warnings = validateDeck(makeDeck({ commander, cards })).warnings;
+      expect(warnings).toContain("4 Game Changer(s) detected: Alpha, Zeta");
+      expect(warnings).toContain("More than 3 Game Changers — deck is Bracket 4 minimum");
+    }
+  });
+
   it("reports singleton violations for duplicate non-basic cards", () => {
     const card1 = makeCard({ id: "c1", name: "Sol Ring" });
     const card2 = makeCard({ id: "c2", name: "Sol Ring" });
@@ -199,6 +211,29 @@ describe("validateDeck", () => {
     });
 
     expect(validateDeck(deck).errors).toContain("Duplicate cards (singleton violation): Sol Ring");
+  });
+
+  it("lists duplicate card names in a stable order after deck rows are reordered", () => {
+    const cards = [
+      makeCard({ id: "z", name: "Zeta", quantity: 2 }),
+      makeCard({ id: "a", name: "Alpha", quantity: 2 }),
+    ];
+    const deck = makeDeck({ commander: makeCommander([]), cards });
+
+    expect(validateDeck(deck).errors).toContain(
+      "Duplicate cards (singleton violation): Alpha, Zeta"
+    );
+  });
+
+  it("sorts duplicate names alphabetically across letter case", () => {
+    const deck = makeDeck({ commander: makeCommander([]), cards: [
+      makeCard({ id: "z", name: "Zeta", quantity: 2 }),
+      makeCard({ id: "a", name: "alpha", quantity: 2 }),
+    ] });
+
+    expect(validateDeck(deck).errors).toContain(
+      "Duplicate cards (singleton violation): alpha, Zeta"
+    );
   });
 
   it("reports too many cards (over 100)", () => {
@@ -257,6 +292,14 @@ describe("validateCardForDeck — multi-format", () => {
     const duplicate = makeCard({ id: "dup", name: "Lightning Bolt" });
     const result = validateCardForDeck(duplicate, deck);
     expect(result.canAdd).toBe(true);
+  });
+
+  it("rejects a fifth non-basic copy in Standard", () => {
+    const existing = makeCard({ id: "orig", name: "Lightning Bolt", quantity: 4 });
+    const deck = makeDeck({ format: "standard", cards: [existing] });
+    const duplicate = makeCard({ id: "fifth", name: "Lightning Bolt" });
+
+    expect(validateCardForDeck(duplicate, deck).canAdd).toBe(false);
   });
 
   it("skips color identity check in Standard", () => {

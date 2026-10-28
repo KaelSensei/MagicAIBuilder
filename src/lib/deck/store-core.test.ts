@@ -188,6 +188,47 @@ describe("addCard quantity save completion", () => {
   });
 });
 
+describe("addCard and removeCard sync overlap", () => {
+  it.each(["addition", "removal"])("stays syncing when %s finishes first", async (first) => {
+    vi.clearAllMocks();
+    seedDeck(makeActiveDeck({ cards: [makeDeckCard()] }));
+    const pendingAddition = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.addCard>>>();
+    const pendingRemoval = Promise.withResolvers<void>();
+    vi.mocked(deckApi.addCard).mockReturnValueOnce(pendingAddition.promise);
+    vi.mocked(deckApi.removeCard).mockReturnValueOnce(pendingRemoval.promise);
+
+    const addition = useDeckStore.getState().addCard(makeScryfallCard());
+    const removal = useDeckStore.getState().removeCard("card-1");
+    await vi.waitFor(() => expect(deckApi.addCard).toHaveBeenCalledOnce());
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+
+    const finishAddition = async () => {
+      pendingAddition.resolve({
+        ...makeDeckCard({ id: "saved-db-id", name: "Lightning Bolt" }),
+        deckId: "deck-1",
+        scryfallId: "scryfall-id-1",
+        isCommander: false,
+        isPartner: false,
+      });
+      await addition;
+    };
+    const finishRemoval = async () => {
+      pendingRemoval.resolve();
+      await removal;
+    };
+    if (first === "addition") {
+      await finishAddition();
+      expect(useDeckStore.getState().isSyncing).toBe(true);
+      await finishRemoval();
+    } else {
+      await finishRemoval();
+      expect(useDeckStore.getState().isSyncing).toBe(true);
+      await finishAddition();
+    }
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+});
+
 describe("useDeckStore — bulkRemoveCards recovery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -598,6 +639,17 @@ describe("useDeckStore — renameDeck", () => {
     expect(useDeckStore.getState().decks["deck-1"].name).toBe("Latest Name");
   });
 
+  it("preserves a newer successful rename to the same name when an older save fails", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    const olderRename = useDeckStore.getState().renameDeck("deck-1", "Shared Name");
+    await useDeckStore.getState().renameDeck("deck-1", "Shared Name");
+    pending.reject(new Error("offline"));
+    await olderRename;
+
+    expect(useDeckStore.getState().decks["deck-1"].name).toBe("Shared Name");
+  });
+
   it("does not recreate a deleted deck or warn when its rename fails late", async () => {
     const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
     vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
@@ -670,6 +722,23 @@ describe("useDeckStore — setBudget", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     seedDeck();
+  });
+
+  it("keeps syncing after a rejected save until the other budget save finishes", async () => {
+    const savedDeck = await deckApi.createDeck("Test Deck");
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    (deckApi.updateDeck as Mock)
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockReturnValueOnce(pending.promise);
+
+    const first = useDeckStore.getState().setBudget(100);
+    const second = useDeckStore.getState().setBudget(200);
+    await first;
+
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    pending.resolve(savedDeck);
+    await second;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
   it("updates budget optimistically", async () => {
@@ -797,6 +866,18 @@ describe("useDeckStore — addCard", () => {
     await useDeckStore.getState().addCard(card);
     expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(1);
     expect(useDeckStore.getState().decks["deck-1"].cards[0].name).toBe("Lightning Bolt");
+  });
+
+  it("removes a failed addition and lets the player retry", async () => {
+    vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("offline"));
+    const card = makeScryfallCard();
+
+    await useDeckStore.getState().addCard(card);
+
+    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(0);
+    expect(toastAdd).toHaveBeenCalledWith("error", "Could not add card. Please retry.");
+    await useDeckStore.getState().addCard(card);
+    expect(useDeckStore.getState().decks["deck-1"].cards).toHaveLength(1);
   });
 
   it("updates the card id to the DB-saved id after API call", async () => {

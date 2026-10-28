@@ -8,7 +8,8 @@ function csvText(value: string): string {
 export function formatAcquisitionCsv(items: readonly ShoppingListItem[]): string {
   const header = "Name,Quantity,Price (USD),Total (USD),Scryfall ID";
   const rows = items.map((item) => {
-    const lineTotal = item.price === null ? "" : item.price * item.quantity;
+    const lineTotal =
+      item.price === null ? "" : Math.round(item.price * item.quantity * 100) / 100;
     return `${csvText(item.name)},${item.quantity},${item.price ?? ""},${lineTotal},${csvText(item.scryfallId)}`;
   });
   return [header, ...rows].join("\n");
