@@ -104,6 +104,99 @@ async function addParsedCards(
   return added;
 }
 
+function TextImportPreview({ preview, duplicateNames }: {
+  readonly preview: ParsedImport;
+  readonly duplicateNames: readonly string[];
+}) {
+  const t = useTranslations("deck");
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-3 text-sm text-[var(--text-primary)]">
+      <p className="font-semibold">{t("import.url.previewReady")}</p>
+      {(preview.commander || preview.partner) && (
+        <p>{t("import.url.commanders", {
+          names: [preview.commander, preview.partner].filter(Boolean).join(", "),
+        })}</p>
+      )}
+      <p>{t("import.url.zones", countPreviewZones(preview.cards))}</p>
+      {duplicateNames.length > 0 && (
+        <p className="text-amber-300">{t("import.url.duplicates", { names: duplicateNames.join(", ") })}</p>
+      )}
+      <ul className="mt-2 max-h-32 overflow-y-auto text-[var(--text-secondary)]">
+        {preview.cards.map((card, index) => (
+          <li key={`${index}-${card.name}`} className="flex items-baseline justify-between gap-3">
+            <span className="min-w-0 truncate" title={card.name}>{card.quantity} × {card.name}</span>
+            <span className="shrink-0 text-xs text-[var(--text-secondary)]">
+              {t(`import.previewZone.${card.zone ?? "main"}`)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function TextImportFeedback({ status, message, missingNames }: {
+  readonly status: ImportStatus;
+  readonly message: string;
+  readonly missingNames: readonly string[];
+}) {
+  const t = useTranslations("deck");
+  return (
+    <>
+      {message && (
+        <div className={`flex items-center gap-2 text-sm ${getStatusTextClass(status)}`}>
+          {status === "validating" && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
+          {status === "done" && <CheckCircle2 className="w-4 h-4 shrink-0" />}
+          {(status === "error" || status === "warning") && <AlertCircle className="w-4 h-4 shrink-0" />}
+          {message}
+        </div>
+      )}
+      {missingNames.length > 0 && (
+        <div role="alert" className="text-sm text-amber-400">
+          <p>{t("import.url.notFound", { count: missingNames.length })}</p>
+          <ul className="max-h-24 overflow-y-auto list-disc list-inside break-words">
+            {missingNames.map((name) => <li key={name}>{name}</li>)}
+          </ul>
+        </div>
+      )}
+    </>
+  );
+}
+
+function TextImportActions({ status, text, preview, previewCards, onClose, onPreview, onImport }: {
+  readonly status: ImportStatus;
+  readonly text: string;
+  readonly preview: ParsedImport | null;
+  readonly previewCards: readonly ScryfallCard[] | null;
+  readonly onClose: () => void;
+  readonly onPreview: () => void;
+  readonly onImport: () => void;
+}) {
+  const t = useTranslations("deck");
+  return (
+    <div className="flex items-center justify-end gap-2">
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors"
+      >
+        {status === "done" || status === "warning" ? t("import.close") : t("import.cancel")}
+      </button>
+      {status !== "done" && status !== "warning" && (
+        <button
+          type="button"
+          onClick={preview ? onImport : onPreview}
+          disabled={!text.trim() || status === "validating" || (preview !== null && previewCards?.length === 0)}
+          className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {status === "validating" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {preview ? t("import.url.confirmImport") : t("import.previewDecklist")}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function ImportDialog({
   children,
   open: controlledOpen,
@@ -297,80 +390,17 @@ export function ImportDialog({
                 disabled={status === "validating"}
               />
 
-              {preview && (
-                <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-3 text-sm text-[var(--text-primary)]">
-                  <p className="font-semibold">{t("import.url.previewReady")}</p>
-                  {(preview.commander || preview.partner) && (
-                    <p>{t("import.url.commanders", {
-                      names: [preview.commander, preview.partner].filter(Boolean).join(", "),
-                    })}</p>
-                  )}
-                  <p>{t("import.url.zones", countPreviewZones(preview.cards))}</p>
-                  {duplicateNames.length > 0 && (
-                    <p className="text-amber-300">{t("import.url.duplicates", { names: duplicateNames.join(", ") })}</p>
-                  )}
-                  <ul className="mt-2 max-h-32 overflow-y-auto text-[var(--text-secondary)]">
-                    {preview.cards.map((card, index) => (
-                      <li key={`${index}-${card.name}`} className="flex items-baseline justify-between gap-3">
-                        <span className="min-w-0 truncate" title={card.name}>{card.quantity} × {card.name}</span>
-                        <span className="shrink-0 text-xs text-[var(--text-secondary)]">
-                          {t(`import.previewZone.${card.zone ?? "main"}`)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Status message */}
-              {message && (
-                <div
-                  className={`flex items-center gap-2 text-sm ${getStatusTextClass(status)}`}
-                >
-                  {status === "validating" && (
-                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                  )}
-                  {status === "done" && (
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  )}
-                  {(status === "error" || status === "warning") && (
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                  )}
-                  {message}
-                </div>
-              )}
-              {missingNames.length > 0 && (
-                <div role="alert" className="text-sm text-amber-400">
-                  <p>{t("import.url.notFound", { count: missingNames.length })}</p>
-                  <ul className="max-h-24 overflow-y-auto list-disc list-inside break-words">
-                    {missingNames.map((name) => <li key={name}>{name}</li>)}
-                  </ul>
-                </div>
-              )}
-
-              {/* Actions — plain text only */}
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors"
-                >
-                  {status === "done" || status === "warning" ? t("import.close") : t("import.cancel")}
-                </button>
-                {status !== "done" && status !== "warning" && (
-                  <button
-                    type="button"
-                    onClick={preview ? handleImport : () => void handlePreview()}
-                    disabled={!text.trim() || status === "validating" || (preview !== null && previewCards?.length === 0)}
-                    className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    {status === "validating" && (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    )}
-                    {preview ? t("import.url.confirmImport") : t("import.previewDecklist")}
-                  </button>
-                )}
-              </div>
+              {preview && <TextImportPreview preview={preview} duplicateNames={duplicateNames} />}
+              <TextImportFeedback status={status} message={message} missingNames={missingNames} />
+              <TextImportActions
+                status={status}
+                text={text}
+                preview={preview}
+                previewCards={previewCards}
+                onClose={handleClose}
+                onPreview={() => void handlePreview()}
+                onImport={() => void handleImport()}
+              />
             </>
           )}
         </Dialog.Content>
