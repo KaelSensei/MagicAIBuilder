@@ -200,6 +200,8 @@ async function loadArchetypeOptions(): Promise<ReadonlyMap<string, number>> {
     headers: { Accept: "text/html" },
   });
   const options = parseArchetypeOptions(decodeLatin1(await res.arrayBuffer()));
+  if (options.size === 0)
+    throw new Error("Invalid MTGTop8 response: EDH archetypes missing");
   archetypeCache = { options, expiresAt: Date.now() + ARCHETYPE_CACHE_TTL_MS };
   return options;
 }
@@ -209,28 +211,24 @@ async function loadArchetypeOptions(): Promise<ReadonlyMap<string, number>> {
  *
  * Searches MTGTop8 by commander archetype (decks *led* by the commander) and
  * falls back to a card-content search for a commander the site has not
- * classified. Any failure yields an empty list: the meta panel treats the
- * tournament feed as best-effort and the route serves stale cache when it can.
+ * classified. Failures propagate so the route can serve stale cache without
+ * replacing a previously good feed.
  *
  * @param commanderName - display name, or the slug's words as the meta route passes them
  */
 export async function fetchTournamentData(
   commanderName: string
 ): Promise<TournamentData> {
-  try {
-    const options = await loadArchetypeOptions();
-    const archetypeId = findArchetypeId(options, commanderName);
-    const res = await httpGet(MTGTOP8_SEARCH_URL, {
-      method: "POST",
-      headers: {
-        Accept: "text/html",
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: buildSearchBody({ archetypeId, commanderName }).toString(),
-    });
-    const decks = parseSearchResults(decodeLatin1(await res.arrayBuffer()));
-    return { decks: decks.slice(0, MAX_TOURNAMENT_DECKS) };
-  } catch {
-    return { decks: [] };
-  }
+  const options = await loadArchetypeOptions();
+  const archetypeId = findArchetypeId(options, commanderName);
+  const res = await httpGet(MTGTOP8_SEARCH_URL, {
+    method: "POST",
+    headers: {
+      Accept: "text/html",
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: buildSearchBody({ archetypeId, commanderName }).toString(),
+  });
+  const decks = parseSearchResults(decodeLatin1(await res.arrayBuffer()));
+  return { decks: decks.slice(0, MAX_TOURNAMENT_DECKS) };
 }

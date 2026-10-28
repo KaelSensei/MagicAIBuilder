@@ -206,9 +206,11 @@ export function buildPartnerSearchQuery(
 
   switch (pairingType) {
     case "partner":
-      return `is:commander o:"Partner" -o:"Partner with" -o:"Character select"${namePart}${colorPart}`;
+      return `is:commander o:"Partner" -o:"Partner with" -o:"Character select" -o:"Father & son"${namePart}${colorPart}`;
     case "character_select":
       return `is:commander o:"Character select"${namePart}`;
+    case "father_son":
+      return `is:commander o:"Father & son"${namePart}${colorPart}`;
     case "friends_forever":
       return `is:commander o:"Friends forever"${namePart}${colorPart}`;
     case "partner_with":

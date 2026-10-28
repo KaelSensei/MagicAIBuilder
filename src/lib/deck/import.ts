@@ -73,7 +73,7 @@ function assignImportCard(state: ParseState, name: string, quantity: number): vo
 function processImportLine(line: string, state: ParseState): void {
   const isComment = line.startsWith("//") || line.startsWith("#");
   const heading = isComment ? line.replace(/^[/#]+/, "").trim() : line;
-  const header = /^(commander|partner|companion|deck|main|mainboard|99|sideboard|maybeboard|considering)(?:\s*\(\d+\))?:?$/i.exec(heading);
+  const header = /^(commander|partner|companion|deck|main|main deck|mainboard|99|sideboard|maybeboard|considering)(?:\s*\(\d+\))?:?$/i.exec(heading);
   if (header) {
     const section = header[1].toLowerCase();
     if (section === "commander" || section === "partner" || section === "companion" || section === "sideboard") {
@@ -87,7 +87,7 @@ function processImportLine(line: string, state: ParseState): void {
   }
   if (isComment) return;
 
-  const match = /^(\d+)x?\s+(\S.*)$/.exec(line);
+  const match = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
   const rawName = match
     ? match[2].replace(SET_CODE_PATTERN, "").replace(SET_ONLY_PATTERN, "").trim()
     : line.replace(SET_CODE_PATTERN, "").replace(SET_ONLY_PATTERN, "").trim();

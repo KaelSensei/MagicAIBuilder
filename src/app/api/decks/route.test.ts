@@ -176,6 +176,24 @@ describe("POST /api/decks", () => {
     );
   });
 
+  it("rejects creating a deck with the same commander and partner card", async () => {
+    authed();
+
+    const response = await POST(createRequest({ name: "Duplicate pair", commanderId: "card-1", partnerId: "card-1" }));
+
+    expect(response.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a whitespace-only partner id without creating a deck", async () => {
+    authed();
+
+    const response = await POST(createRequest({ name: "Invalid pair", commanderId: "card-1", partnerId: "   " }));
+
+    expect(response.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it("creates the deck against the session's user id", async () => {
     authed();
 
@@ -203,6 +221,17 @@ describe("POST /api/decks", () => {
           isAIGenerated: false,
         }),
       })
+    );
+  });
+
+  it("creates a deck with Father & son pairing", async () => {
+    authed();
+
+    const response = await POST(createRequest({ name: "Family", pairingType: "father_son" }));
+
+    expect(response.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ pairingType: "father_son" }) })
     );
   });
 

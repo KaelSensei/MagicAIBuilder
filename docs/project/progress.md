@@ -5,7 +5,7 @@
 | Field         | Value                                  |
 | ------------- | -------------------------------------- |
 | Current Phase | Phase 15 — Internationalization (i18n) |
-| Last Updated  | 2026-10-20                             |
+| Last Updated  | 2026-10-28                             |
 | Status        | 🚀 Active Development                  |
 | Main Branch   | `main`                                 |
 
@@ -13,8 +13,8 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3,144 across 288 files, validated on the VPS on 2026-10-18                                                                                  |
-| E2E tests           | 66 passing (`@external` / `@perf` excluded), full Docker gate on the VPS, validated on 2026-10-10                                           |
+| Unit tests          | 3,238 across 292 files, validated on the VPS on 2026-10-28                                                                                  |
+| E2E tests           | 66 browser and 8 authenticated/setup scenarios passing in the full Docker gate on the VPS on 2026-10-28                                     |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
 | SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
 | Source files        | 327 (`.ts`/`.tsx`, excluding tests)                                                                                                         |
@@ -29,8 +29,17 @@
 
 > The earlier metrics table in this file was years out of date (it read "~38 components" and "111 tests"). Regenerate these figures rather than editing them by hand.
 
+### Latest delivery
+
+- 2026-10-28: #1110 delivers five focused I-03/I-04/I-06/I-10/I-11 refinements: companion legality grouping, locale-aware USD budget labels, known acquisition prices across decks, encoded public-profile usernames and case-insensitive HTML import deduplication. It also resolves a Sonar duplicate-name sorting finding. Focused Red/Green cycles, 3,238 VPS unit tests, typecheck, lint, build, Sonar, Docker E2E and PR checks passed. The broader initiatives remain open; approximately 30-50 small PR-sized iterations remain for active Now/Next work, excluding 11 conditional or parked scopes.
+- 2026-10-27: #1108 hardens four I-03/I-04/I-06/I-10 boundaries: safe collection quantities, stable quantity-aware Game Changer warnings, split-card names before trailing comments and failed public-profile avatars. Focused Red/Green cycles, 3,232 VPS unit tests, typecheck, lint, build, Sonar, Docker E2E and PR checks passed. The parent initiatives remain open; the directional estimate is still 30-50 small PR-sized iterations for active Now/Next work, excluding 11 conditional or parked scopes.
+- 2026-10-27: #1106 delivers four focused I-03/I-04/I-06/I-10 slices: stable duplicate-warning order, loaded-profile Moxfield pagination, cent-rounded acquisition CSV totals and simple split-card text imports. Red/Green tests, 3,227 VPS unit tests, typecheck, lint, build, Sonar, Docker E2E and PR checks passed. The four parent initiatives remain open; approximately 30-50 small PR-sized iterations remain for active Now/Next work, excluding 11 conditional or parked scopes.
+
 ## Latest product delivery
 
+- 2026-10-20: #1069 labels each pasted-list preview card with its destination zone before confirmation. English/French and locale-parity tests pass; VPS typecheck, lint, 3,178 unit tests and build passed, along with CI, SonarCloud, Vercel and the performance/accessibility audit. Docker E2E, exact-printing fidelity and QA promotion remain open.
+- 2026-10-20: #1067 shows canonical-name duplicate decisions in pasted-list previews, including commander/main-deck repeats, without mutating the deck. Two focused Red/Green cycles; VPS typecheck, lint, 3,176 unit tests and build passed. CI, SonarCloud, Vercel and the retried performance/accessibility audit passed. Docker E2E, exact-printing fidelity and QA promotion remain open.
+- 2026-10-20: #1065 checks pasted card names during preview and warns about unresolved names before deck mutation. Confirmation reuses the validated cards; text edits and dialog closure discard stale validation. Focused Red/Green; VPS typecheck, lint, 3,174 unit tests and build passed, as did CI, SonarCloud, Vercel and performance/accessibility checks. Docker E2E and QA promotion remain open; duplicate warnings followed in #1067, while exact-printing choices remain open.
 - 2026-10-20: #1058 makes EDHREC recommendation add actions visible without hover, with a 40 px touch target and keyboard focus outline. Focused Red/Green; VPS typecheck, lint, 3,169 unit tests, build and 72 Docker E2E scenarios passed. CI, SonarCloud, Vercel and performance/accessibility checks passed. Integrated into `dev`; broader responsive polish and QA promotion remain open.
 - 2026-10-20: #1056 displays already-owned copies on each missing-printing row in the collection acquisition plan. Focused Red/Green; VPS typecheck, lint, 3,168 unit tests, production build and 72 Docker E2E scenarios passed. CI, SonarCloud, Vercel and performance/accessibility checks passed. Integrated into `dev`; QA promotion and persistent acquire state remain open.
 - 2026-10-20: #1054 shows each contributing deck's required copies in the collection acquisition plan, without changing ownership or aggregate purchase calculations. Focused Red/Green; VPS typecheck, lint, 3,168 unit tests, build and 72 Docker E2E scenarios passed. CI, SonarCloud, Vercel and the performance/accessibility audit passed. The Playwright Docker image now matches the 1.64.1 package. Integrated into `dev`; QA promotion and persistent acquire state remain open.

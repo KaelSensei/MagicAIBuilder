@@ -2,7 +2,7 @@
 import { forEachSequential } from "@/lib/async/sequential";
 // Import deck from plain text or URL — Radix Dialog
 // Supports both trigger-based (children) and controlled (open/onOpenChange) usage
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -10,6 +10,7 @@ import { parseTextDecklist } from "@/lib/deck/import";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { useDeckStore } from "@/lib/deck/store";
 import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
+import { getDuplicateImportedNames } from "@/lib/import/import-preview";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import {
   buildScryfallNameIndex,
@@ -44,6 +45,14 @@ function getStatusTextClass(status: ImportStatus): string {
   return "text-[var(--text-secondary)]";
 }
 
+function countPreviewZones(cards: ReturnType<typeof parseTextDecklist>["cards"]) {
+  const counts = { main: 0, sideboard: 0, maybeboard: 0 };
+  for (const card of cards) {
+    counts[card.zone ?? "main"] += card.quantity;
+  }
+  return counts;
+}
+
 export function ImportDialog({
   children,
   open: controlledOpen,
@@ -56,6 +65,9 @@ export function ImportDialog({
   const [status, setStatus] = useState<ImportStatus>("idle");
   const [message, setMessage] = useState("");
   const [missingNames, setMissingNames] = useState<string[]>([]);
+  const [preview, setPreview] = useState<ReturnType<typeof parseTextDecklist> | null>(null);
+  const [previewCards, setPreviewCards] = useState<ScryfallCard[] | null>(null);
+  const previewRequest = useRef(0);
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -68,6 +80,14 @@ export function ImportDialog({
   const setPartner = useDeckStore((s) => s.setPartner);
   const setCompanion = useDeckStore((s) => s.setCompanion);
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
+  const duplicateNames = preview && previewCards
+    ? getDuplicateImportedNames([
+        ...(preview.commander ? [{ name: preview.commander }] : []),
+        ...(preview.partner ? [{ name: preview.partner }] : []),
+        ...(preview.companion ? [{ name: preview.companion }] : []),
+        ...preview.cards,
+      ], buildScryfallNameIndex(previewCards))
+    : [];
 
   /** Add all found cards to the active deck; returns count of added cards */
   async function addParsedCards(
@@ -114,7 +134,7 @@ export function ImportDialog({
   }
 
   const handleImport = async () => {
-    if (!text.trim()) return;
+    if (!preview || !previewCards?.length) return;
     if (!activeDeckId) {
       setStatus("error");
       setMessage(t("import.noDeckSelected"));
@@ -123,36 +143,9 @@ export function ImportDialog({
 
     setStatus("validating");
     setMessage(t("import.parsing"));
-    setMissingNames([]);
-
     try {
-      const parsed = parseTextDecklist(text);
-      // Deduplicate card names before sending to Scryfall batch (user may list same card twice)
-      const allCardNames = [
-        ...(parsed.commander ? [{ name: parsed.commander }] : []),
-        ...(parsed.partner ? [{ name: parsed.partner }] : []),
-        ...(parsed.companion ? [{ name: parsed.companion }] : []),
-        ...Array.from(new Set(parsed.cards.map((c) => c.name))).map((name) => ({
-          name,
-        })),
-      ];
-
-      if (allCardNames.length === 0) {
-        setStatus("error");
-        setMessage(t("import.noCardsFound"));
-        return;
-      }
-
-      setMessage(t("import.validating", { count: allCardNames.length }));
-      const foundCards = await fetchInBatches(allCardNames);
-      const added = await addParsedCards(parsed, foundCards);
-      const missing = getUnmatchedImportedNames(
-        allCardNames.map(({ name }) => name),
-        buildScryfallNameIndex(foundCards)
-      );
-
-      setMissingNames(missing);
-      setStatus(missing.length > 0 ? "warning" : "done");
+      const added = await addParsedCards(preview, previewCards);
+      setStatus(missingNames.length > 0 ? "warning" : "done");
       setMessage(t("import.importSuccess", { count: added }));
     } catch (err) {
       setStatus("error");
@@ -160,13 +153,51 @@ export function ImportDialog({
     }
   };
 
+  const handlePreview = async () => {
+    const parsed = parseTextDecklist(text);
+    if (!parsed.commander && !parsed.partner && !parsed.companion && parsed.cards.length === 0) {
+      setStatus("error");
+      setMessage(t("import.noCardsFound"));
+      return;
+    }
+    const allCardNames = [
+      ...(parsed.commander ? [{ name: parsed.commander }] : []),
+      ...(parsed.partner ? [{ name: parsed.partner }] : []),
+      ...(parsed.companion ? [{ name: parsed.companion }] : []),
+      ...Array.from(new Set(parsed.cards.map((card) => card.name))).map((name) => ({ name })),
+    ];
+    setStatus("validating");
+    setMessage(t("import.validating", { count: allCardNames.length }));
+    setMissingNames([]);
+    const requestId = ++previewRequest.current;
+    try {
+      const foundCards = await fetchInBatches(allCardNames);
+      if (requestId !== previewRequest.current) return;
+      setMissingNames(getUnmatchedImportedNames(
+        allCardNames.map(({ name }) => name),
+        buildScryfallNameIndex(foundCards)
+      ));
+      setPreviewCards(foundCards);
+      setPreview(parsed);
+      setStatus("idle");
+      setMessage("");
+    } catch (err) {
+      if (requestId !== previewRequest.current) return;
+      setStatus("error");
+      setMessage(err instanceof Error ? err.message : t("import.importFailed"));
+    }
+  };
+
   const handleClose = () => {
+    previewRequest.current++;
     setOpen(false);
     setTimeout(() => {
       setText("");
       setStatus("idle");
       setMessage("");
       setMissingNames([]);
+      setPreview(null);
+      setPreviewCards(null);
       setActiveTab("text");
     }, 200);
   };
@@ -252,9 +283,42 @@ export function ImportDialog({
                 className="w-full h-48 bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-none focus:outline-none focus:border-[var(--accent)] font-mono"
                 placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n...`}
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => {
+                  previewRequest.current++;
+                  setText(e.target.value);
+                  setPreview(null);
+                  setPreviewCards(null);
+                  setMissingNames([]);
+                  setStatus("idle");
+                  setMessage("");
+                }}
                 disabled={status === "validating"}
               />
+
+              {preview && (
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-3 text-sm text-[var(--text-primary)]">
+                  <p className="font-semibold">{t("import.url.previewReady")}</p>
+                  {(preview.commander || preview.partner) && (
+                    <p>{t("import.url.commanders", {
+                      names: [preview.commander, preview.partner].filter(Boolean).join(", "),
+                    })}</p>
+                  )}
+                  <p>{t("import.url.zones", countPreviewZones(preview.cards))}</p>
+                  {duplicateNames.length > 0 && (
+                    <p className="text-amber-300">{t("import.url.duplicates", { names: duplicateNames.join(", ") })}</p>
+                  )}
+                  <ul className="mt-2 max-h-32 overflow-y-auto text-[var(--text-secondary)]">
+                    {preview.cards.map((card, index) => (
+                      <li key={`${index}-${card.name}`} className="flex items-baseline justify-between gap-3">
+                        <span className="min-w-0 truncate" title={card.name}>{card.quantity} × {card.name}</span>
+                        <span className="shrink-0 text-xs text-[var(--text-secondary)]">
+                          {t(`import.previewZone.${card.zone ?? "main"}`)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Status message */}
               {message && (
@@ -294,14 +358,14 @@ export function ImportDialog({
                 {status !== "done" && status !== "warning" && (
                   <button
                     type="button"
-                    onClick={handleImport}
-                    disabled={!text.trim() || status === "validating"}
+                    onClick={preview ? handleImport : () => void handlePreview()}
+                    disabled={!text.trim() || status === "validating" || (preview !== null && previewCards?.length === 0)}
                     className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {status === "validating" && (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     )}
-                    {t("import.import")}
+                    {preview ? t("import.url.confirmImport") : t("import.previewDecklist")}
                   </button>
                 )}
               </div>

@@ -91,14 +91,18 @@ function countTwoCardInfiniteCombos(combos: SpellbookVariant[]): number {
   return combos.filter((c) => c.isInfinite && c.cards.length === 2).length;
 }
 
+function warningCardNames(names: readonly string[]): string {
+  return [...names].sort((left, right) => left.localeCompare(right, "en")).join(", ");
+}
+
 /** Helper: generate ban/legality warnings */
 function getBanWarnings(stats: DeckStats): string[] {
   const warnings: string[] = [];
   if (stats.bannedCards.length > 0) {
-    warnings.push(`Banned cards in deck: ${stats.bannedCards.join(", ")}`);
+    warnings.push(`Banned cards in deck: ${warningCardNames(stats.bannedCards)}`);
   }
   if (stats.colorIdentityViolations.length > 0) {
-    warnings.push(`Color identity violations: ${stats.colorIdentityViolations.join(", ")}`);
+    warnings.push(`Color identity violations: ${warningCardNames(stats.colorIdentityViolations)}`);
   }
   return warnings;
 }
@@ -121,7 +125,7 @@ function getGameChangersWarnings(gameChangersCount: number, gameChangersList: re
   if (gameChangersCount > 3) {
     warnings.push(`${gameChangersCount} Game Changers detected — deck is Bracket 4 minimum`);
   } else if (gameChangersCount > 0) {
-    warnings.push(`${gameChangersCount} Game Changer(s): ${gameChangersList.join(", ")}`);
+    warnings.push(`${gameChangersCount} Game Changer(s): ${warningCardNames(gameChangersList)}`);
   }
   return warnings;
 }

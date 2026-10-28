@@ -13,8 +13,9 @@
  * it as a fall from 78% to zero would invent a collapse out of a ranking change.
  * So an appearance and a disappearance are their own variants, carrying a
  * **bound** rather than a delta: a card that entered rose by *at least*
- * `current - cutoff(baseline)`, because its unseen baseline sat below that
- * cut-off. The bound is real arithmetic, not a guess, and it is what ranks
+ * `current - cutoff(baseline)` when the baseline fills the top 20. A shorter
+ * list has no exclusion cut-off, so its missing-card bound is zero. The bound
+ * is real arithmetic, not a guess, and it is what ranks
  * those variants against the exactly-measured ones.
  */
 
@@ -22,6 +23,9 @@ import type { MetaCard } from "./fetch";
 
 /** Inclusion points below which a movement is noise rather than a shift. */
 const STEADY_BAND = 0.01;
+
+/** Only a full top-20 list establishes an exclusion cut-off. */
+const META_TOP_LIMIT = 20;
 
 export interface MetaSnapshotInput {
   /** UTC midnight of the day the snapshot was captured. */
@@ -143,8 +147,8 @@ function diffSnapshots(
 ): MetaShift[] {
   const before = byInclusion(baseline.cards);
   const after = byInclusion(current.cards);
-  const baselineCutoff = cutoff(before);
-  const currentCutoff = cutoff(after);
+  const baselineCutoff = before.size === META_TOP_LIMIT ? cutoff(before) : null;
+  const currentCutoff = after.size === META_TOP_LIMIT ? cutoff(after) : null;
   const shifts: MetaShift[] = [];
 
   for (const [name, currentInclusion] of after) {
@@ -154,7 +158,7 @@ function diffSnapshots(
         kind: "entered",
         name,
         current: currentInclusion,
-        deltaAtLeast: Math.max(0, currentInclusion - baselineCutoff),
+        deltaAtLeast: baselineCutoff === null ? 0 : Math.max(0, currentInclusion - baselineCutoff),
       });
       continue;
     }
@@ -174,7 +178,7 @@ function diffSnapshots(
       kind: "left",
       name,
       baseline: baselineInclusion,
-      deltaAtMost: Math.min(0, currentCutoff - baselineInclusion),
+      deltaAtMost: currentCutoff === null ? 0 : Math.min(0, currentCutoff - baselineInclusion),
     });
   }
 
@@ -185,13 +189,14 @@ function diffSnapshots(
  * Compare the newest snapshot against the oldest one inside `windowDays`.
  *
  * Returns `null` when there is nothing to compare — fewer than two snapshots,
- * only one distinct day inside the window, or an empty comparison endpoint.
- * An empty list has no measured cut-off and cannot establish a trend bound.
+ * only one distinct day inside the window, an empty current snapshot, or no
+ * non-empty baseline. An empty list has no measured cut-off and cannot
+ * establish a trend bound.
  * A one-snapshot commander is the
  * normal state of a freshly recorded commander, not an error: history accrues
  * from ordinary traffic, so the first visit can only ever establish a baseline.
  *
- * The baseline is the *oldest* snapshot still inside the window rather than the
+ * The baseline is the *oldest non-empty* snapshot still inside the window rather than the
  * immediately preceding one, so the report answers "what moved over this
  * period" and not "what moved since the last visit" — a commander looked at
  * twice in one week would otherwise report a two-day window as if it were the
@@ -213,14 +218,14 @@ export function computeMetaShifts(
   if (!current) return null;
   const earliestAllowed = current.capturedOn.getTime() - windowDays * MS_PER_DAY;
   const baseline = ordered.find(
-    (snapshot) => snapshot.capturedOn.getTime() >= earliestAllowed
+    (snapshot) => snapshot.capturedOn.getTime() >= earliestAllowed && snapshot.cards.length > 0
   );
 
   if (!baseline || baseline.capturedOn.getTime() >= current.capturedOn.getTime()) {
     return null;
   }
 
-  if (baseline.cards.length === 0 || current.cards.length === 0) return null;
+  if (current.cards.length === 0) return null;
 
   const shifts = diffSnapshots(baseline, current).toSorted(
     (a, b) => shiftMagnitude(b) - shiftMagnitude(a) || a.name.localeCompare(b.name)

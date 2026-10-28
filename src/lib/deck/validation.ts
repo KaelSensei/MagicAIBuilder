@@ -31,17 +31,22 @@ function checkCardColorIdentity(card: DeckCard, deck: Deck): string | null {
   return `${card.name} has colors outside your commander's identity (${violations.join(", ")})`;
 }
 
-/** Check singleton violation */
-function checkCardSingleton(card: DeckCard, deck: Deck): string | null {
+/** Check the format's non-basic card copy limit before adding a card. */
+function checkCardCopyLimit(card: DeckCard, deck: Deck, maxCopies: number): string | null {
   if (card.typeLine.toLowerCase().includes("basic land")) return null;
   const allCards = [
     ...deck.cards,
     ...(deck.commander ? [deck.commander] : []),
     ...(deck.partner ? [deck.partner] : []),
   ];
-  return allCards.some((c) => c.name === card.name)
+  const existingCopies = allCards.reduce(
+    (count, existing) => count + (existing.name === card.name ? existing.quantity : 0),
+    0
+  );
+  if (existingCopies + card.quantity <= maxCopies) return null;
+  return maxCopies === 1
     ? `${card.name} is already in the deck (singleton rule)`
-    : null;
+    : `${card.name} exceeds the ${maxCopies}-copy limit`;
 }
 
 /** Validate whether a card can be added to a deck */
@@ -65,10 +70,8 @@ export function validateCardForDeck(
     }
   }
 
-  if (config.isSingleton) {
-    const singletonError = checkCardSingleton(card, deck);
-    if (singletonError) errors.push(singletonError);
-  }
+  const copyLimitError = checkCardCopyLimit(card, deck, config.maxCopiesPerCard);
+  if (copyLimitError) errors.push(copyLimitError);
 
   return {
     canAdd: errors.length === 0,
@@ -103,8 +106,10 @@ function checkColorIdentityViolations(deck: Deck, errors: string[]): void {
 function checkGameChangers(allCards: DeckCard[], warnings: string[]): void {
   const gcCards = allCards.filter((c) => c.isGameChanger);
   if (gcCards.length === 0) return;
-  warnings.push(`${gcCards.length} Game Changer(s) detected: ${gcCards.map((c) => c.name).join(", ")}`);
-  if (gcCards.length > 3) {
+  const count = gcCards.reduce((total, card) => total + card.quantity, 0);
+  const names = gcCards.map((card) => card.name).sort((a, b) => a.localeCompare(b));
+  warnings.push(`${count} Game Changer(s) detected: ${names.join(", ")}`);
+  if (count > 3) {
     warnings.push("More than 3 Game Changers — deck is Bracket 4 minimum");
   }
 }
@@ -118,7 +123,8 @@ function checkSingleton(allCards: DeckCard[], maxCopies: number, errors: string[
   }
   const duplicates = Object.entries(nameCounts)
     .filter(([, count]) => count > maxCopies)
-    .map(([name]) => name);
+    .map(([name]) => name)
+    .toSorted((left, right) => left.localeCompare(right));
   if (duplicates.length > 0) {
     const ruleLabel = maxCopies === 1 ? "singleton violation" : `max ${maxCopies} copies`;
     errors.push(`Duplicate cards (${ruleLabel}): ${duplicates.join(", ")}`);

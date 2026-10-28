@@ -56,7 +56,7 @@ export function parseCollectionCard(v: unknown): CollectionCard | null {
   if (typeof id !== "string") return null;
   if (typeof scryfallId !== "string") return null;
   if (typeof name !== "string") return null;
-  if (typeof quantity !== "number") return null;
+  if (typeof quantity !== "number" || !Number.isSafeInteger(quantity) || quantity < 0) return null;
   if (typeof foil !== "boolean") return null;
   if (typeof createdAt !== "string") return null;
 

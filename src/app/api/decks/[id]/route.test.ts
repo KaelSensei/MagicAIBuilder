@@ -119,6 +119,38 @@ describe("GET /api/decks/[id]", () => {
 describe("PATCH /api/decks/[id]", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it("rejects assigning the commander as its own partner", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: null });
+    mockUpdate.mockResolvedValueOnce({ id: "deck-1", commanderId: "card-1", partnerId: "card-1", cards: [] });
+
+    const response = await PATCH(patchRequest({ partnerId: "card-1" }), params());
+
+    expect(response.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects assigning the partner as its own commander", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: "card-2" });
+
+    const response = await PATCH(patchRequest({ commanderId: "card-2" }), params());
+
+    expect(response.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("still renames a legacy deck with an existing duplicate pair", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: "card-1" });
+    mockUpdate.mockResolvedValueOnce({ id: "deck-1", name: "Renamed", cards: [] });
+
+    const response = await PATCH(patchRequest({ name: "Renamed" }), params());
+
+    expect(response.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: { name: "Renamed" } }));
+  });
+
   it("updates only the fields the body carries", async () => {
     signedInAs(OWNER);
     mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER });

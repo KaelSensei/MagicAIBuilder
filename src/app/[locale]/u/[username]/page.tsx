@@ -23,7 +23,7 @@ async function fetchProfile(username: string) {
   try {
     const cookieHeader = (await headers()).get("cookie");
     const res = await fetch(
-      `${resolveAppBaseUrl()}/api/users/${username}`,
+      `${resolveAppBaseUrl()}/api/users/${encodeURIComponent(username)}`,
       { ...buildViewerScopedRequestInit(cookieHeader), signal: AbortSignal.timeout(15_000) }
     );
     if (res.status === 404) return null;
