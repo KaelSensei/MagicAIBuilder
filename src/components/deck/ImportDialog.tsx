@@ -53,6 +53,57 @@ function countPreviewZones(cards: ReturnType<typeof parseTextDecklist>["cards"])
   return counts;
 }
 
+type ParsedImport = ReturnType<typeof parseTextDecklist>;
+type ImportActions = Pick<ReturnType<typeof useDeckStore.getState>,
+  "addCard" | "setCommander" | "setPartner" | "setCompanion">;
+
+function importedCardNames(parsed: ParsedImport): { name: string }[] {
+  return [
+    ...(parsed.commander ? [{ name: parsed.commander }] : []),
+    ...(parsed.partner ? [{ name: parsed.partner }] : []),
+    ...(parsed.companion ? [{ name: parsed.companion }] : []),
+    ...Array.from(new Set(parsed.cards.map((card) => card.name))).map((name) => ({ name })),
+  ];
+}
+
+async function addParsedCards(
+  parsed: ParsedImport,
+  foundCards: ScryfallCard[],
+  actions: ImportActions
+): Promise<number> {
+  const byName = buildScryfallNameIndex(foundCards);
+  let added = 0;
+
+  if (parsed.commander) {
+    const commander = byName.get(normalizeImportedName(parsed.commander));
+    if (commander) {
+      await actions.setCommander(commander);
+      added++;
+    }
+  }
+  if (parsed.partner) {
+    const partner = byName.get(normalizeImportedName(parsed.partner));
+    if (partner) {
+      await actions.setPartner(partner);
+      added++;
+    }
+  }
+  if (parsed.companion) {
+    const companion = byName.get(normalizeImportedName(parsed.companion));
+    if (companion) {
+      await actions.setCompanion(companion);
+      added++;
+    }
+  }
+  await forEachSequential(parsed.cards, async ({ name, quantity, zone }) => {
+    const card = byName.get(normalizeImportedName(name));
+    if (!card) return;
+    await actions.addCard(card, quantity, zone ?? "main");
+    added++;
+  });
+  return added;
+}
+
 export function ImportDialog({
   children,
   open: controlledOpen,
@@ -89,50 +140,6 @@ export function ImportDialog({
       ], buildScryfallNameIndex(previewCards))
     : [];
 
-  /** Add all found cards to the active deck; returns count of added cards */
-  async function addParsedCards(
-    parsed: ReturnType<typeof parseTextDecklist>,
-    foundCards: ScryfallCard[]
-  ): Promise<number> {
-    const byName = buildScryfallNameIndex(foundCards);
-    let added = 0;
-
-    // Set commander first and await — it updates pairingType which partner needs
-    if (parsed.commander) {
-      const cmd = byName.get(normalizeImportedName(parsed.commander));
-      if (cmd) {
-        await setCommander(cmd);
-        added++;
-      }
-    }
-
-    // Set partner after commander is persisted
-    if (parsed.partner) {
-      const prt = byName.get(normalizeImportedName(parsed.partner));
-      if (prt) {
-        await setPartner(prt);
-        added++;
-      }
-    }
-
-    if (parsed.companion) {
-      const companion = byName.get(normalizeImportedName(parsed.companion));
-      if (companion) {
-        await setCompanion(companion);
-        added++;
-      }
-    }
-
-    await forEachSequential(parsed.cards, async ({ name, quantity, zone }) => {
-      const card = byName.get(normalizeImportedName(name));
-      if (!card) return;
-      // Pass quantity directly — addCard handles basics with quantity > 1 in a single call
-      await addCard(card, quantity, zone ?? "main");
-      added++;
-    });
-    return added;
-  }
-
   const handleImport = async () => {
     if (!preview || !previewCards?.length) return;
     if (!activeDeckId) {
@@ -144,7 +151,7 @@ export function ImportDialog({
     setStatus("validating");
     setMessage(t("import.parsing"));
     try {
-      const added = await addParsedCards(preview, previewCards);
+      const added = await addParsedCards(preview, previewCards, { addCard, setCommander, setPartner, setCompanion });
       setStatus(missingNames.length > 0 ? "warning" : "done");
       setMessage(t("import.importSuccess", { count: added }));
     } catch (err) {
@@ -160,12 +167,7 @@ export function ImportDialog({
       setMessage(t("import.noCardsFound"));
       return;
     }
-    const allCardNames = [
-      ...(parsed.commander ? [{ name: parsed.commander }] : []),
-      ...(parsed.partner ? [{ name: parsed.partner }] : []),
-      ...(parsed.companion ? [{ name: parsed.companion }] : []),
-      ...Array.from(new Set(parsed.cards.map((card) => card.name))).map((name) => ({ name })),
-    ];
+    const allCardNames = importedCardNames(parsed);
     setStatus("validating");
     setMessage(t("import.validating", { count: allCardNames.length }));
     setMissingNames([]);
