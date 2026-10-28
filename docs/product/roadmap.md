@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-27
+> **Updated:** 2026-10-28
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -93,6 +93,8 @@ The four focused fixes in #1104 strengthen card-copy limits, failed maybeboard s
 Four further slices in #1106 preserve simple split-card names in text imports, round collection acquisition CSV totals, keep Moxfield profile pagination bound to the loaded profile, and order duplicate warnings deterministically. I-10, I-06, I-04 and I-03 remain open until their broader acceptance criteria are met; the planning count and iteration estimate are unchanged.
 
 The #1108 batch rejects invalid collection quantities, makes Game Changer warnings stable and quantity-aware, preserves split-card names before trailing text comments, and recovers from failed public-profile avatars. These are focused improvements within I-06, I-03, I-10 and I-04, not completion of their full acceptance criteria. As of 2026-10-27, 55 top-level scopes plus one nested mobile-action scope remain unchecked, and the active Now/Next estimate remains approximately 30-50 small PR-sized iterations.
+
+The five #1110 slices classify failed companion rules as legality warnings (I-03), localize USD budget caps without converting prices (I-11), retain known acquisition prices across decks (I-06), encode reserved public-profile usernames (I-04), and deduplicate HTML-imported names regardless of case (I-10). The same PR fixes a Sonar reliability finding in duplicate-name sorting. As of 2026-10-28, these refinements still leave 55 top-level scopes plus one nested mobile-action scope open; approximately 30-50 small PR-sized iterations remain for active Now/Next outcomes, excluding 11 parked or conditional scopes.
 
 I-07's tracked playtest scope is shipped. The largest active gaps remain the deck editor (I-01), collection-to-acquisition flow (I-06), and explainable recommendation evidence (I-09). I-13 adds a visual redesign, not a claim that today's UI is unfinished or that existing functionality must be rewritten.
 

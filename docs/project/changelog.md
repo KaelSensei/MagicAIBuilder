@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-28: Refine five deckbuilding boundaries
+
+- Companion deck-building failures now appear as legality warnings, and AI per-card budget choices format their USD amounts for the active locale without implying conversion (#1110).
+- Acquisition plans retain a known printing price when an earlier deck lacks one. Public-profile requests encode reserved username characters, and HTML card imports deduplicate names case-insensitively (#1110).
+- Duplicate-card warning names use locale-aware sorting, resolving a Sonar reliability finding. Five behavior tests were observed red before their fixes; 3,238 VPS unit tests, typecheck, lint, build, Sonar, 66 browser E2E, 8 authenticated/setup E2E and PR checks passed (#1110).
+
 ### 2026-10-27: Harden collection and deck feedback boundaries
 
 - Collection API parsing rejects negative and fractional owned quantities instead of letting them distort acquisition calculations (#1108).
