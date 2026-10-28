@@ -16,6 +16,13 @@ const responseSchema = z.object({
   })),
 });
 
+const planSchema = z.object({
+  items: z.array(z.object({
+    scryfallId: z.string(),
+    acquireQuantity: z.number().int().positive(),
+  })),
+});
+
 type UsageState =
   | { readonly status: "loading" }
   | { readonly status: "error" }
@@ -30,15 +37,18 @@ interface PrintingDeckUsageProps {
 /** On-demand links to the player's decks using this exact card printing. */
 export function PrintingDeckUsage({ scryfallId, cardName, compact = false }: PrintingDeckUsageProps) {
   const t = useTranslations("collection.usage");
+  const acquisition = useTranslations("collection.acquisitionPlan");
   const common = useTranslations("common.actions");
   const [open, setOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<UsageState>({ status: "loading" });
+  const [acquireQuantity, setAcquireQuantity] = useState(0);
 
   useEffect(() => {
     if (!open) return;
     const controller = new AbortController();
     setState({ status: "loading" });
+    setAcquireQuantity(0);
 
     async function load() {
       try {
@@ -56,6 +66,20 @@ export function PrintingDeckUsage({ scryfallId, cardName, compact = false }: Pri
     }
 
     void load();
+    async function loadPlan() {
+      try {
+        const response = await fetch("/api/collection/acquisition-plan", { signal: controller.signal });
+        if (!response.ok) return;
+        const parsed = planSchema.safeParse(await response.json());
+        if (!parsed.success || controller.signal.aborted) return;
+        const item = parsed.data.items.find((entry) => entry.scryfallId === scryfallId);
+        setAcquireQuantity(item?.acquireQuantity ?? 0);
+      } catch {
+        // Deck usage remains available when the optional acquisition plan fails.
+      }
+    }
+
+    void loadPlan();
     return () => controller.abort();
   }, [open, scryfallId, attempt]);
 
@@ -101,6 +125,11 @@ export function PrintingDeckUsage({ scryfallId, cardName, compact = false }: Pri
           )}
           {state.status === "ready" && state.usages.length === 0 && (
             <p className="text-sm text-[var(--text-secondary)]">{t("empty")}</p>
+          )}
+          {acquireQuantity > 0 && (
+            <p className="mt-2 text-sm text-[var(--accent-text)]">
+              {acquisition("toAcquire", { count: acquireQuantity })}
+            </p>
           )}
           {state.status === "ready" && state.usages.length > 0 && (
             <ul className="divide-y divide-[var(--border)]">
