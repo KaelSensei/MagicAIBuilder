@@ -226,7 +226,7 @@ describe("validateDeck", () => {
   });
 
   it("sorts duplicate names alphabetically across letter case", () => {
-    const deck = makeDeck({ cards: [
+    const deck = makeDeck({ commander: makeCommander([]), cards: [
       makeCard({ id: "z", name: "Zeta", quantity: 2 }),
       makeCard({ id: "a", name: "alpha", quantity: 2 }),
     ] });
