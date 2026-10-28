@@ -16,6 +16,20 @@ vi.mock("@/i18n/navigation", () => ({
 afterEach(() => vi.unstubAllGlobals());
 
 describe("PrintingDeckUsage", () => {
+  it("shows missing copies for the exact printing in the acquisition plan", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((url: string) => Promise.resolve(
+      new Response(JSON.stringify(url.includes("acquisition-plan")
+        ? { items: [{ scryfallId: "printing-a", acquireQuantity: 2 }] }
+        : { usages: [] }), { status: 200 })
+    )));
+    const user = userEvent.setup();
+
+    renderWithIntl(<PrintingDeckUsage scryfallId="printing-a" cardName="Sol Ring" />);
+    await user.click(screen.getByRole("button", { name: "Decks using Sol Ring" }));
+
+    expect(await screen.findByText("2 to acquire")).toBeInTheDocument();
+  });
+
   it("loads exact-printing usage on demand and links to the player's decks", async () => {
     const fetchUsage = vi.fn().mockResolvedValue(new Response(JSON.stringify({ usages: [
       { deckId: "deck-a", deckName: "Artifacts", quantity: 1, zone: "main" },
