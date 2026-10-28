@@ -13,10 +13,10 @@
 
 | Metric              | Value                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests          | 3,238 across 292 files, validated on the VPS on 2026-10-28                                                                                  |
+| Unit tests          | 3,241 across 292 files, validated by CI on 2026-10-28                                                                                        |
 | E2E tests           | 66 browser and 8 authenticated/setup scenarios passing in the full Docker gate on the VPS on 2026-10-28                                     |
 | Coverage            | **50.52% statements**, 85.83% branches, 87.5% functions — see the note below, the denominator changed                                       |
-| SonarCloud          | Quality Gate OK, zero bugs, 65 code smells; VPS and CI analysis restored on 2026-10-10. See [Sonar status](../engineering/sonar-status.md). |
+| SonarCloud          | Quality Gate OK, zero bugs, 20 code smells on main before the #1119 promotion; see [Sonar status](../engineering/sonar-status.md). |
 | Source files        | 327 (`.ts`/`.tsx`, excluding tests)                                                                                                         |
 | Components          | 145 — every `.tsx` under `src/` excluding tests, pages included (the label undercounts what it measures; `src/components` alone is 123)     |
 | API routes          | 46                                                                                                                                          |
@@ -31,6 +31,7 @@
 
 ### Latest delivery
 
+- 2026-10-28: #1117 keeps deck comparisons tied to the selected pair even when an earlier request finishes late; #1118 displays exact-printing copies still needed in the cross-deck acquisition plan. Their focused Red/Green tests, VPS TypeScript and lint passed. #1119 resolves the 20 known code-smell locations with behavior-preserving refactors; VPS TypeScript, lint, 3,238 unit tests and build passed, followed by green PR checks and zero new Sonar issues. All three are integrated into dev; QA promotion to staging and main is separate. The larger I-08/I-06/I-05 scopes and the directional 30-50 active-iteration estimate remain open.
 - 2026-10-28: #1110 delivers five focused I-03/I-04/I-06/I-10/I-11 refinements: companion legality grouping, locale-aware USD budget labels, known acquisition prices across decks, encoded public-profile usernames and case-insensitive HTML import deduplication. It also resolves a Sonar duplicate-name sorting finding. Focused Red/Green cycles, 3,238 VPS unit tests, typecheck, lint, build, Sonar, Docker E2E and PR checks passed. The broader initiatives remain open; approximately 30-50 small PR-sized iterations remain for active Now/Next work, excluding 11 conditional or parked scopes.
 - 2026-10-27: #1108 hardens four I-03/I-04/I-06/I-10 boundaries: safe collection quantities, stable quantity-aware Game Changer warnings, split-card names before trailing comments and failed public-profile avatars. Focused Red/Green cycles, 3,232 VPS unit tests, typecheck, lint, build, Sonar, Docker E2E and PR checks passed. The parent initiatives remain open; the directional estimate is still 30-50 small PR-sized iterations for active Now/Next work, excluding 11 conditional or parked scopes.
 - 2026-10-27: #1106 delivers four focused I-03/I-04/I-06/I-10 slices: stable duplicate-warning order, loaded-profile Moxfield pagination, cent-rounded acquisition CSV totals and simple split-card text imports. Red/Green tests, 3,227 VPS unit tests, typecheck, lint, build, Sonar, Docker E2E and PR checks passed. The four parent initiatives remain open; approximately 30-50 small PR-sized iterations remain for active Now/Next work, excluding 11 conditional or parked scopes.

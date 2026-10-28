@@ -1,5 +1,5 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckComparisonPanel } from "./DeckComparisonPanel";
 
@@ -7,6 +7,58 @@ const { mockFetchDeck } = vi.hoisted(() => ({ mockFetchDeck: vi.fn() }));
 vi.mock("@/lib/db/deck-api", () => ({ fetchDeck: mockFetchDeck }));
 
 describe("DeckComparisonPanel", () => {
+  beforeEach(() => mockFetchDeck.mockReset());
+
+  it("hides a comparison when a selected deck changes", async () => {
+    mockFetchDeck.mockResolvedValue({ cards: [] });
+    renderWithIntl(
+      <DeckComparisonPanel
+        decks={[
+          { id: "deck-a", name: "Control" },
+          { id: "deck-b", name: "Midrange" },
+          { id: "deck-c", name: "Combo" },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Compare decks" }));
+    expect(await screen.findByText("0 shared cards")).toBeDefined();
+    fireEvent.change(screen.getByLabelText("Second deck"), {
+      target: { value: "deck-c" },
+    });
+    expect(screen.queryByText("0 shared cards")).toBeNull();
+  });
+
+  it("ignores a comparison response after the selected deck changes", async () => {
+    let resolvePending: ((value: { cards: [] }) => void) | undefined;
+    mockFetchDeck
+      .mockResolvedValueOnce({ cards: [] })
+      .mockImplementationOnce(
+        () =>
+          new Promise<{ cards: [] }>((resolve) => {
+            resolvePending = resolve;
+          })
+      );
+    renderWithIntl(
+      <DeckComparisonPanel
+        decks={[
+          { id: "deck-a", name: "Control" },
+          { id: "deck-b", name: "Midrange" },
+          { id: "deck-c", name: "Combo" },
+        ]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Compare decks" }));
+    await waitFor(() => expect(mockFetchDeck).toHaveBeenCalledTimes(2));
+    fireEvent.change(screen.getByLabelText("Second deck"), {
+      target: { value: "deck-c" },
+    });
+    await act(async () => resolvePending?.({ cards: [] }));
+
+    expect(screen.queryByText("0 shared cards")).toBeNull();
+  });
+
   it("loads both selected decks and shows their differences", async () => {
     mockFetchDeck
       .mockResolvedValueOnce({
@@ -66,7 +118,7 @@ describe("DeckComparisonPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Compare decks" }));
 
     await waitFor(() => expect(mockFetchDeck).toHaveBeenCalledTimes(2));
-    expect(screen.getByText("Counterspell")).toBeDefined();
+    expect(await screen.findByText("Counterspell")).toBeDefined();
     expect(screen.getByText("Swords to Plowshares")).toBeDefined();
     expect(screen.getByText("1 shared card")).toBeDefined();
     expect(screen.getByText("Average mana value")).toBeDefined();

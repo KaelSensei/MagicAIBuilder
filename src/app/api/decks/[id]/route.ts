@@ -52,6 +52,16 @@ function buildDeckPatchData(fields: PatchDeckInput) {
   return data;
 }
 
+function hasDuplicatePairing(
+  fields: PatchDeckInput,
+  existing: { commanderId: string | null; partnerId: string | null }
+): boolean {
+  if (fields.commanderId === undefined && fields.partnerId === undefined) return false;
+  const commanderId = fields.commanderId !== undefined ? fields.commanderId : existing.commanderId;
+  const partnerId = fields.partnerId !== undefined ? fields.partnerId : existing.partnerId;
+  return Boolean(commanderId && commanderId === partnerId);
+}
+
 // PATCH /api/decks/[id] — update deck metadata (must own it)
 export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
@@ -81,12 +91,8 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    if (parsed.data.commanderId !== undefined || parsed.data.partnerId !== undefined) {
-      const commanderId = parsed.data.commanderId !== undefined ? parsed.data.commanderId : existing.commanderId;
-      const partnerId = parsed.data.partnerId !== undefined ? parsed.data.partnerId : existing.partnerId;
-      if (commanderId && commanderId === partnerId) {
-        return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
-      }
+    if (hasDuplicatePairing(parsed.data, existing)) {
+      return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
     }
 
     const updated = await prisma.deck.update({

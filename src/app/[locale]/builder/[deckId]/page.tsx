@@ -235,6 +235,48 @@ const DEFAULT_FILTERS: Filters = {
   interactionType: null,
 };
 
+interface UnavailableBuilderPageProps {
+  readonly deckId: string;
+  readonly isSyncing: boolean;
+  readonly isDeckIncomplete: boolean;
+  readonly activeDeckOpenError: ReturnType<typeof useDeckStore.getState>["deckOpenError"];
+  readonly loadError: ReturnType<typeof useDeckStore.getState>["loadError"];
+  readonly setActiveDeck: ReturnType<typeof useDeckStore.getState>["setActiveDeck"];
+  readonly loadDecks: ReturnType<typeof useDeckStore.getState>["loadDecks"];
+}
+
+function UnavailableBuilderPage({
+  deckId,
+  isSyncing,
+  isDeckIncomplete,
+  activeDeckOpenError,
+  loadError,
+  setActiveDeck,
+  loadDecks,
+}: UnavailableBuilderPageProps) {
+  const retry = () => {
+    if (activeDeckOpenError) {
+      void setActiveDeck(deckId);
+    } else {
+      void loadDecks().then(() => setActiveDeck(deckId));
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <div className="flex-1 flex items-center justify-center">
+        <DeckUnavailableState
+          isLoading={isSyncing || (isDeckIncomplete && !activeDeckOpenError && !loadError)}
+          loadError={activeDeckOpenError?.reason ?? loadError}
+          errorSource={activeDeckOpenError ? "deck" : "list"}
+          onRetry={retry}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function BuilderPage() {
   const t = useTranslations("builder");
   const params = useParams();
@@ -629,23 +671,15 @@ export default function BuilderPage() {
 
   if (!deck || isDeckIncomplete) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <DeckUnavailableState
-            isLoading={isSyncing || (isDeckIncomplete && !activeDeckOpenError && !loadError)}
-            loadError={activeDeckOpenError?.reason ?? loadError}
-            errorSource={activeDeckOpenError ? "deck" : "list"}
-            onRetry={() => {
-              if (activeDeckOpenError) {
-                void setActiveDeck(deckId);
-              } else {
-                void loadDecks().then(() => setActiveDeck(deckId));
-              }
-            }}
-          />
-        </div>
-      </div>
+      <UnavailableBuilderPage
+        deckId={deckId}
+        isSyncing={isSyncing}
+        isDeckIncomplete={isDeckIncomplete}
+        activeDeckOpenError={activeDeckOpenError}
+        loadError={loadError}
+        setActiveDeck={setActiveDeck}
+        loadDecks={loadDecks}
+      />
     );
   }
 
