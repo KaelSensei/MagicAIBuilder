@@ -190,6 +190,28 @@ describe("getMissingCollectionCards", () => {
 });
 
 describe("buildAcquisitionPlan", () => {
+  it("uses a known printing price when an earlier deck has no price", () => {
+    const plan = buildAcquisitionPlan(
+      [
+        {
+          id: "deck-a", name: "Unknown",
+          cards: [makeCard({ scryfallId: "ring", price: null })],
+          commander: null, partner: null,
+        },
+        {
+          id: "deck-b", name: "Priced",
+          cards: [makeCard({ scryfallId: "ring", price: 4 })],
+          commander: null, partner: null,
+        },
+      ],
+      {}
+    );
+
+    expect(plan).toEqual([
+      expect.objectContaining({ scryfallId: "ring", price: 4, acquireQuantity: 2 }),
+    ]);
+  });
+
   it("includes a missing commander outside the main deck zone", () => {
     const plan = buildAcquisitionPlan(
       [{

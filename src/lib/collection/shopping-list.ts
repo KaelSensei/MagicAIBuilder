@@ -323,6 +323,7 @@ export function buildAcquisitionPlan(
       const current = requirements.get(scryfallId);
       if (current) {
         current.requiredQuantity += requirement.quantity;
+        current.price ??= requirement.card.price;
         current.decks.push({
           id: deck.id,
           name: deck.name,
