@@ -13,7 +13,7 @@ export const patchDeckSchema = z.object({
   partnerId: z.string().nullable().optional(),
   companionId: z.string().nullable().optional(),
   pairingType: z
-    .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select"])
+    .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son"])
     .optional(),
   isAIGenerated: z.boolean().optional(),
   description: z.string().max(2000).nullable().optional(),

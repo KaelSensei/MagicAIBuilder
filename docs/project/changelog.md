@@ -9,6 +9,56 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-10-28: Refine five deckbuilding boundaries
+
+- Companion deck-building failures now appear as legality warnings, and AI per-card budget choices format their USD amounts for the active locale without implying conversion (#1110).
+- Acquisition plans retain a known printing price when an earlier deck lacks one. Public-profile requests encode reserved username characters, and HTML card imports deduplicate names case-insensitively (#1110).
+- Duplicate-card warning names use locale-aware sorting, resolving a Sonar reliability finding. Five behavior tests were observed red before their fixes; 3,238 VPS unit tests, typecheck, lint, build, Sonar, 66 browser E2E, 8 authenticated/setup E2E and PR checks passed (#1110).
+
+### 2026-10-27: Harden collection and deck feedback boundaries
+
+- Collection API parsing rejects negative and fractional owned quantities instead of letting them distort acquisition calculations (#1108).
+- Game Changer warnings list names in a stable order, count actual copies and apply the Bracket 4 warning to that count. Text imports preserve `Fire // Ice` before a trailing comment; public profiles replace failed avatar images with an accessible neutral icon (#1108).
+- Focused Red/Green cycles, VPS typecheck, lint, 3,232 unit tests, production build, Sonar analysis, 66 browser E2E and 8 authenticated/setup E2E passed. CI, SonarCloud, Vercel and the performance/accessibility audit passed before merge into `dev`.
+
+### 2026-10-27: Refine imports, acquisition exports and deck feedback
+
+- Text decklists retain simple split-card names such as `Fire // Ice` without treating a multiword card's `// Foil` annotation as part of its name (#1106).
+- Collection acquisition CSV line totals round to cents; Moxfield profile pagination stays with the loaded profile when the editable username changes; duplicate deck warnings have stable name order (#1106).
+- Focused Red/Green tests, VPS typecheck, lint, 3,227 unit tests, production build, Sonar analysis and the full Docker E2E gate passed. CI, SonarCloud, Vercel and the performance/accessibility audit passed before merge into `dev`.
+
+### 2026-10-27: Harden deck validation and roadmap workflows
+
+- Adding a fifth non-basic copy in a four-copy format is rejected before the deck is changed. Failed maybeboard additions roll back without removing an existing main-deck card of the same printing (#1104).
+- The cross-deck acquisition plan includes commander-slot cards even when their stored zone is not main. Meta trends skip empty historical baselines while still withholding trends when the latest snapshot is empty (#1104).
+- Focused Red/Green tests, VPS typecheck, lint, 3,222 unit tests, production build, Sonar analysis, 66 browser E2E and 8 authenticated/setup E2E passed. CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`.
+
+### 2026-10-26: Stabilize deck and meta boundaries
+
+- Older failed deck renames no longer roll back a newer rename with the same title; superseded Moxfield profile responses no longer replace a newer request's state (#1100).
+- Deck price summaries choose the same card ID for equal highest or lowest prices regardless of card order. MTGTop8 forms without EDH archetypes now fail explicitly instead of silently using a different search (#1100).
+- Focused Red/Green tests, VPS typecheck, lint, 3,217 unit tests, production build, Sonar scan, 66 browser E2E and 8 authenticated E2E passed. PR CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`.
+
+### 2026-10-20: Label card destinations in pasted-list previews
+
+- Each card row in a pasted-list preview now displays its destination zone before import (#1069). English and French labels are active, with key parity maintained in dormant catalogs. Parsing, quantities and persisted zones are unchanged.
+- Observed a focused Red/Green UI test plus French and locale-parity coverage. VPS typecheck, lint, 3,178 unit tests and production build passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`. Docker E2E was not run for this slice.
+
+### 2026-10-20: Show duplicates before pasted-list import
+
+- Pasted-list previews now flag repeated card lines and commanders repeated in the main deck before confirmation (#1067). Both import paths share canonical Scryfall-name matching; the preview does not change quantities or remove cards automatically.
+- Observed two focused Red/Green UI cycles. VPS typecheck, lint, 3,176 unit tests and production build passed; CI, SonarCloud, Vercel and the retried performance/accessibility audit passed before merge into `dev`. Docker E2E was not run for this slice.
+
+### 2026-10-20: Validate pasted card names before import
+
+- Pasted-list previews now check card names with Scryfall and show unresolved names before confirmation (#1065). Confirming reuses the validated cards without another lookup; closing or editing invalidates stale results. Duplicate decisions and exact-printing choices remain open.
+- Observed focused Red/Green tests for missing names, late responses and stale warnings. VPS typecheck, lint, 3,174 unit tests and production build passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`. Docker E2E was not run for this slice.
+
+### 2026-10-20: Preview pasted decklists before import
+
+- Show parsed commander, zone copy counts and card rows before requesting Scryfall data or changing the deck (#1063). Confirmation starts the existing import; editing the pasted text invalidates a stale preview. Scryfall-unresolved names remain a post-confirmation warning.
+- Observed a focused Red/Green UI test. VPS typecheck, lint, 3,171 unit tests and production build passed; CI, SonarCloud, Vercel and performance/accessibility checks passed before merge into `dev`. Docker E2E was not run for this slice.
+
 ### 2026-10-20: Make meta recommendation actions usable without hover
 
 - Keep the EDHREC card-add button visible without hovering, enlarge its touch target to 40 px and show a keyboard focus outline (#1058). Recommendation data and add behavior are unchanged.

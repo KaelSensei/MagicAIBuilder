@@ -49,12 +49,20 @@ export function calculateDeckPrice(cards: readonly DeckCard[]): DeckPricing {
       cardsWithPrice += 1;
 
       // Track most expensive
-      if (!mostExpensive || (card.price ?? 0) > (mostExpensive.price ?? 0)) {
+      if (
+        !mostExpensive ||
+        price > (mostExpensive.price ?? 0) ||
+        (price === mostExpensive.price && card.id < mostExpensive.id)
+      ) {
         mostExpensive = card;
       }
 
       // Track cheapest (non-zero)
-      if (!cheapest || (card.price ?? Infinity) < (cheapest.price ?? Infinity)) {
+      if (
+        !cheapest ||
+        price < (cheapest.price ?? Infinity) ||
+        (price === cheapest.price && card.id < cheapest.id)
+      ) {
         cheapest = card;
       }
     }
@@ -128,7 +136,11 @@ export function suggestBudgetReductions(
   const suggestions: BudgetSuggestion[] = [];
 
   // Sort cards by price descending (most expensive first)
-  const sorted = getCardsSortedByPrice(cards, "desc");
+  const sorted = cards
+    .filter((card) => card.price !== null && card.price > 0)
+    .sort((a, b) =>
+      (b.price ?? 0) - (a.price ?? 0) || a.id.localeCompare(b.id)
+    );
 
   for (const card of sorted) {
     if (!card.price || card.price === 0) continue;

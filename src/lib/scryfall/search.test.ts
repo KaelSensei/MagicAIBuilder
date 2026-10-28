@@ -275,6 +275,9 @@ describe("buildPartnerSearchQuery", () => {
     expect(q).toContain('-o:"Partner with"');
     expect(q).toContain("is:commander");
   });
+  it("generic Partner search excludes Father & son pairs", () => {
+    expect(buildPartnerSearchQuery("partner", "")).toContain('-o:"Father & son"');
+  });
   it("background type searches for Background enchantments (not commanders)", () => {
     const q = buildPartnerSearchQuery("background", "agent", { colors: ["G"] });
     expect(q).toContain("t:background");
@@ -288,6 +291,9 @@ describe("buildPartnerSearchQuery", () => {
   });
   it("character_select type", () => {
     expect(buildPartnerSearchQuery("character_select", "")).toContain('o:"Character select"');
+  });
+  it("Father & son type searches only the matching partner variant", () => {
+    expect(buildPartnerSearchQuery("father_son", "")).toContain('o:"Father & son"');
   });
   it("partner_with type", () => {
     expect(buildPartnerSearchQuery("partner_with", "")).toContain('o:"Partner with"');

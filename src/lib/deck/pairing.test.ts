@@ -45,6 +45,11 @@ describe("detectPairingType", () => {
     expect(detectPairingType(card)).toBe("character_select");
   });
 
+  it("detects Father & son before generic Partner", () => {
+    const card = makeCard({ keywords: ["Partner"], oracle_text: "Partner—Father & son" });
+    expect(detectPairingType(card)).toBe("father_son");
+  });
+
   it("detects background via oracle text", () => {
     const card = makeCard({ oracle_text: "choose a background" });
     expect(detectPairingType(card)).toBe("background");
@@ -96,6 +101,11 @@ describe("canPairWith", () => {
     expect(canPairWith("character_select", "character_select")).toBe(true);
   });
 
+  it("Father & son pairs only with the same variant", () => {
+    expect(canPairWith("father_son", "father_son")).toBe(true);
+    expect(canPairWith("father_son", "partner")).toBe(false);
+  });
+
   it("background pairs with none", () => {
     expect(canPairWith("background", "none")).toBe(true);
   });
@@ -141,6 +151,10 @@ describe("partnerSlotLabel", () => {
 
   it("returns Character Select Partner for character_select type", () => {
     expect(partnerSlotLabel("character_select")).toBe("Character Select Partner");
+  });
+
+  it("labels the Father & son partner slot", () => {
+    expect(partnerSlotLabel("father_son")).toBe("Father & Son Partner");
   });
 
   it("falls through to default for none", () => {

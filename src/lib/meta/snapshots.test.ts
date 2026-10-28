@@ -133,4 +133,13 @@ describe("readSnapshotHistory", () => {
 
     await expect(readSnapshotHistory("atraxa", 30, NOW)).resolves.toEqual([]);
   });
+
+  it.each([-0.1, 1.1])("rejects an inclusion outside the fraction range (%s)", async (inclusion) => {
+    mockFindMany.mockResolvedValue([{
+      capturedOn: new Date("2026-08-22T00:00:00.000Z"),
+      data: { cards: [{ name: "Sol Ring", inclusion }] },
+    }]);
+
+    await expect(readSnapshotHistory("atraxa", 30, NOW)).resolves.toEqual([]);
+  });
 });
