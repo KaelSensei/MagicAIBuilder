@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { readJsonBody } from "@/lib/api/json-body";
+import { sharesOracleIdentity } from "@/lib/deck/commander-pairing";
 
 /** Max decks per page for the listing endpoint */
 const MAX_PAGE_SIZE = 50;
@@ -143,6 +144,9 @@ export async function POST(request: Request) {
     }
     const { name: rawName, format, targetBracket, budget, commanderId, commanderName, partnerId, companionId, pairingType, isAIGenerated } = parsed.data;
     if (commanderId && commanderId === partnerId) {
+      return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
+    }
+    if (commanderId && partnerId && await sharesOracleIdentity(commanderId, partnerId)) {
       return NextResponse.json({ error: "Commander and partner must be different cards" }, { status: 400 });
     }
     // Bounded quantifier prevents ReDoS on HTML tag stripping

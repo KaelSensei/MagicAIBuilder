@@ -21,6 +21,9 @@ vi.mock("@/lib/db/prisma", () => ({
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
 vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
 
+const { mockGetCardCollection } = vi.hoisted(() => ({ mockGetCardCollection: vi.fn() }));
+vi.mock("@/lib/scryfall/client", () => ({ getCardCollection: mockGetCardCollection }));
+
 import { GET, POST } from "./route";
 
 const OWNER = "user-1";
@@ -171,9 +174,26 @@ describe("GET /api/decks", () => {
 describe("POST /api/decks", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetCardCollection.mockResolvedValue({ data: [], not_found: [] });
     mockCreate.mockImplementation(({ data }: { data: Record<string, unknown> }) =>
       Promise.resolve({ id: "deck-1", ...data, cards: [] })
     );
+  });
+
+  it("rejects different printings of the same Oracle card as commander and partner", async () => {
+    authed();
+    mockGetCardCollection.mockResolvedValueOnce({
+      data: [
+        { id: "printing-1", oracle_id: "oracle-1" },
+        { id: "printing-2", oracle_id: "oracle-1" },
+      ],
+      not_found: [],
+    });
+
+    const response = await POST(createRequest({ name: "Duplicate Oracle pair", commanderId: "printing-1", partnerId: "printing-2" }));
+
+    expect(response.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it("rejects creating a deck with the same commander and partner card", async () => {
