@@ -118,7 +118,7 @@ describe("DeckComparisonPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Compare decks" }));
 
     await waitFor(() => expect(mockFetchDeck).toHaveBeenCalledTimes(2));
-    expect(screen.getByText("Counterspell")).toBeDefined();
+    expect(await screen.findByText("Counterspell")).toBeDefined();
     expect(screen.getByText("Swords to Plowshares")).toBeDefined();
     expect(screen.getByText("1 shared card")).toBeDefined();
     expect(screen.getByText("Average mana value")).toBeDefined();
