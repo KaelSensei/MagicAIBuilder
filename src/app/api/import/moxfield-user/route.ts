@@ -21,6 +21,27 @@ const bodySchema = z.object({
 
 /** POST /api/import/moxfield-user — list public decks for a Moxfield username. */
 export async function POST(request: Request) {
+  const startedAt = performance.now();
+  let status = 500;
+  try {
+    const response = await importMoxfieldUserDecks(request);
+    status = response.status;
+    return response;
+  } finally {
+    logger.info("Moxfield profile import completed", "POST /api/import/moxfield-user", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
+  }
+}
+
+/**
+ * Rate-limits, validates and forwards a Moxfield profile deck-list request.
+ *
+ * @param request Incoming request with a `{ username, pageNumber }` JSON body.
+ * @returns The deck page, or a JSON error with the matching status.
+ */
+async function importMoxfieldUserDecks(request: Request): Promise<NextResponse> {
   const rl = checkRateLimit(`import:${getClientIp(request)}`, RATE_LIMIT, RATE_WINDOW);
   if (!rl.allowed) {
     const retryAfter = Math.ceil(rl.retryAfterMs / 1000);
