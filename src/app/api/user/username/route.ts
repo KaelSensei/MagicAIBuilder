@@ -17,6 +17,27 @@ const usernameSchema = z.object({
 
 // PATCH /api/user/username — claim or update username
 export async function PATCH(request: Request) {
+  const startedAt = performance.now();
+  let status = 500;
+  try {
+    const response = await updateUsername(request);
+    status = response.status;
+    return response;
+  } finally {
+    logger.info("Username update completed", "PATCH /api/user/username", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
+  }
+}
+
+/**
+ * Validates and stores a unique, lowercase username for the signed-in user.
+ *
+ * @param request Incoming request with a `{ username }` JSON body.
+ * @returns The updated user, or a JSON error with the matching status.
+ */
+async function updateUsername(request: Request): Promise<NextResponse> {
   try {
     const result = await requireAuth();
     if (result.error) return result.error;
