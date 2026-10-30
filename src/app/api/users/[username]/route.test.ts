@@ -27,6 +27,7 @@ vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
 // ─── Import after mocks ──────────────────────────────────────────────────────
 
 import { GET } from "./route";
+import { logger } from "@/lib/logger";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -149,5 +150,38 @@ describe("GET /api/users/[username]", () => {
   it("400s on a malformed username", async () => {
     expect((await GET(request(), params("bad name!"))).status).toBe(400);
     expect(mockUserFindFirst).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/users/[username] request timing", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue(null);
+    mockFollowCount.mockResolvedValue(0);
+    mockFollowFindUnique.mockResolvedValue(null);
+    mockRatingFindMany.mockResolvedValue([]);
+  });
+
+  it.each([
+    ["a found profile", "kael", () => mockUserFindFirst.mockResolvedValueOnce(profile()), 200],
+    ["a missing profile", "ghost", () => mockUserFindFirst.mockResolvedValueOnce(null), 404],
+    ["an invalid username", "bad name!", () => undefined, 400],
+    ["a database failure", "kael", () => mockUserFindFirst.mockRejectedValueOnce(new Error("db down")), 500],
+  ])("logs status and duration once for %s", async (_label, username, arrange, expected) => {
+    const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    arrange();
+
+    const response = await GET(request(), params(username));
+
+    expect(response.status).toBe(expected);
+    const timingCalls = info.mock.calls.filter(([message]) => message === "Public profile request completed");
+    expect(timingCalls).toHaveLength(1);
+    expect(timingCalls[0]).toEqual([
+      "Public profile request completed",
+      "GET /api/users/:username",
+      { status: expected, durationMs: expect.any(Number) },
+    ]);
+    info.mockRestore();
   });
 });
