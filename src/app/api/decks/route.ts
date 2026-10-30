@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { readJsonBody } from "@/lib/api/json-body";
 import { sharesOracleIdentity } from "@/lib/deck/commander-pairing";
+import { deckCardIdSchema } from "@/lib/validation/deck";
 
 /** Max decks per page for the listing endpoint */
 const MAX_PAGE_SIZE = 50;
@@ -34,9 +35,9 @@ const createDeckSchema = z.object({
   format: z.enum(ALL_FORMATS).optional().default("commander"),
   targetBracket: z.number().int().min(1).max(5).optional().default(3),
   budget: z.number().positive().nullable().optional(),
-  commanderId: z.string().nullable().optional(),
+  commanderId: deckCardIdSchema.nullable().optional(),
   commanderName: z.string().max(200).nullable().optional(),
-  partnerId: z.string().refine((id) => id.trim().length > 0).nullable().optional(),
+  partnerId: deckCardIdSchema.nullable().optional(),
   companionId: z.string().nullable().optional(),
   pairingType: z
     .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son"])

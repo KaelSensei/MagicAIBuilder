@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { patchDeckSchema, createDeckSchema } from "./deck";
+import { patchDeckSchema, createDeckSchema, deckCardIdSchema } from "./deck";
 
 describe("createDeckSchema", () => {
   it("accepts valid name", () => {
@@ -152,5 +152,26 @@ describe("patchDeckSchema", () => {
       const result = patchDeckSchema.safeParse({ pairingType });
       expect(result.success).toBe(true);
     }
+  });
+});
+
+describe("patchDeckSchema commander and partner ids", () => {
+  it.each(["commanderId", "partnerId"])("rejects a whitespace-only %s", (field) => {
+    expect(patchDeckSchema.safeParse({ [field]: " \t " }).success).toBe(false);
+  });
+
+  it.each(["commanderId", "partnerId"])("still accepts null to clear %s", (field) => {
+    expect(patchDeckSchema.safeParse({ [field]: null }).success).toBe(true);
+  });
+
+  it("accepts a real card id", () => {
+    expect(patchDeckSchema.safeParse({ commanderId: "card-1", partnerId: "card-2" }).success).toBe(true);
+  });
+});
+
+describe("deckCardIdSchema", () => {
+  it("rejects an empty string and accepts a padded id", () => {
+    expect(deckCardIdSchema.safeParse("").success).toBe(false);
+    expect(deckCardIdSchema.safeParse(" card-1 ").success).toBe(true);
   });
 });

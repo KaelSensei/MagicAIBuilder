@@ -214,6 +214,15 @@ describe("POST /api/decks", () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
+  it("rejects a whitespace-only commander id without creating a deck", async () => {
+    authed();
+
+    const response = await POST(createRequest({ name: "Blank commander", commanderId: "  " }));
+
+    expect(response.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it("creates the deck against the session's user id", async () => {
     authed();
 
