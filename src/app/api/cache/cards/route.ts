@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
     const age = Date.now() - new Date(cached.cachedAt).getTime();
     if (age > CACHE_TTL_MS) {
-      // Stale ? delete and report miss
+      // Stale — delete and report miss
       await prisma.cardCache.delete({ where: { scryfallId } });
       return NextResponse.json({ hit: false });
     }
