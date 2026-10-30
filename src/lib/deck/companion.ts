@@ -1,6 +1,7 @@
 // Ikoria-style Companion: detection, human-readable rules, and deck checks
 import type { Deck, DeckCard } from "./types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { PIP_COLORS } from "./mana-alignment";
 
 /** Banned specifically as companion in Commander (deck may still run the card). */
 export const LUTRI_SPELLCHASER_NAME = "Lutri, the Spellchaser";
@@ -241,7 +242,8 @@ export function getCompanionDeckWarnings(deck: Deck): readonly string[] {
       ...deck.commander.colorIdentity,
       ...(deck.partner?.colorIdentity ?? []),
     ]);
-    const bad = comp.colorIdentity.filter((c) => !allowed.has(c));
+    // Canonical WUBRG order, deduplicated, so the warning does not depend on card data order.
+    const bad = PIP_COLORS.filter((c) => comp.colorIdentity.includes(c) && !allowed.has(c));
     if (bad.length > 0) {
       out.push(
         `Companion color identity (${bad.join(", ")}) is outside commander identity`

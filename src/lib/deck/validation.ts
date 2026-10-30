@@ -2,6 +2,7 @@
 import type { DeckCard, Deck } from "./types";
 import { getCompanionDeckWarnings } from "./companion";
 import { getFormatConfig } from "./formats";
+import { PIP_COLORS } from "./mana-alignment";
 
 export interface ValidationResult {
   valid: boolean;
@@ -26,7 +27,8 @@ function checkCardColorIdentity(card: DeckCard, deck: Deck): string | null {
     ...deck.commander.colorIdentity,
     ...(deck.partner?.colorIdentity ?? []),
   ]);
-  const violations = card.colorIdentity.filter((c) => !identitySet.has(c));
+  // Canonical WUBRG order, deduplicated, independent of the card data order.
+  const violations = PIP_COLORS.filter((c) => card.colorIdentity.includes(c) && !identitySet.has(c));
   if (violations.length === 0) return null;
   return `${card.name} has colors outside your commander's identity (${violations.join(", ")})`;
 }
