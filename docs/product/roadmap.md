@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-28
+> **Updated:** 2026-10-30
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -327,7 +327,8 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
   - [x] Order color-identity violation details by card name and ID regardless of deck order (#1094). Broader deterministic inputs remain open.
   - [x] Keep named banned-card, color-identity and Game Changer warnings in a stable order when deck cards are reordered (#1092). Broader deterministic inputs and AI independence remain open.
 - [ ] Validate commander and partner mechanics at the deck API boundary, including imported pairs and the same Oracle card across different printings.
-  - [x] Reject whitespace-only partner IDs before creating a deck (#1098). Cross-printing Oracle identity validation remains open.
+  - [x] Reject whitespace-only partner IDs before creating a deck (#1098).
+  - [x] Reject a commander and partner that are different printings of the same Oracle card on deck create and update (`sharesOracleIdentity`, #1131). Imported pairs outside these two APIs remain to be verified.
 
 ### Definition of done
 
@@ -398,13 +399,18 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 ### Remaining scope
 
 - [ ] Add UptimeRobot or an equivalent monitor for /api/health.
+  - `/api/health` is documented for uptime monitors and `docs/engineering/dx-ci-overview.md` lists UptimeRobot, but no configured monitor is recorded. `docs/engineering/infrastructure.md` still points to an "Observability ? Level 1" roadmap section that no longer exists.
 - [ ] Run Playwright E2E in Docker as the authoritative integration environment.
+  - The `.husky/pre-push` gate (`scripts/e2e-pre-push.sh`) runs the full suite in Docker and takes its verdict from the container exit code. No GitHub workflow runs Playwright yet, although the script and `docs/engineering/quality-gate.md` say CI has its own E2E job.
 - [ ] Keep the gate order explicit: typecheck, lint, unit tests, E2E policy, SonarCloud.
 - [ ] Require SonarCloud open issues to be zero before PR creation or merge.
+  - The checklist in `docs/engineering/quality-gate.md` requires zero open issues; nothing enforces it automatically yet.
 - [ ] Record the E2E Docker strategy and required environment variables.
+  - The strategy is documented in the "E2E gate" section of `docs/engineering/quality-gate.md`. The environment variables set in `docker-compose.e2e.yml` (`DATABASE_URL`, `NEXT_PUBLIC_APP_URL`, `AUTH_SECRET`, plus the Postgres service settings) are not yet listed there.
 - [ ] Upgrade Prisma only after the local Node toolchain is at least 22.12.
 - [ ] Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
   - `GET /api/decks` status and duration shipped in #1034. Profile and Scryfall paths remain open; do not close this item yet.
+  - Profile mutation latency on `/api/user/profile` is recorded (#1132). Profile reads and other Scryfall paths remain open.
   - External card search and server-side search-cache outcomes shipped in #1036. Browser search diagnostics are not centralized; profile and other Scryfall paths remain open.
 
 ### Blocked or conditional work
