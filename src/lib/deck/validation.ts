@@ -82,6 +82,17 @@ export function validateCardForDeck(
   };
 }
 
+/**
+ * List distinct card names in a stable, case-insensitive alphabetical order.
+ * @param cards - Deck rows to name; several rows may share a name.
+ * @returns Unique card names, independent of deck row order.
+ */
+export function sortedUniqueCardNames(cards: readonly DeckCard[]): string[] {
+  return [...new Set(cards.map((card) => card.name))].toSorted(
+    (left, right) => left.localeCompare(right, "en", { sensitivity: "base" }) || left.localeCompare(right)
+  );
+}
+
 function checkCardCount(allCards: DeckCard[], deckSize: number, errors: string[], warnings: string[]): void {
   const total = allCards.reduce((sum, c) => sum + c.quantity, 0);
   if (total === deckSize) return;
@@ -99,7 +110,7 @@ function checkColorIdentityViolations(deck: Deck, errors: string[]): void {
     c.colorIdentity.some((color) => !identitySet.has(color))
   );
   if (violations.length > 0) {
-    errors.push(`Color identity violations: ${violations.map((c) => c.name).join(", ")}`);
+    errors.push(`Color identity violations: ${sortedUniqueCardNames(violations).join(", ")}`);
   }
 }
 
@@ -107,7 +118,7 @@ function checkGameChangers(allCards: DeckCard[], warnings: string[]): void {
   const gcCards = allCards.filter((c) => c.isGameChanger);
   if (gcCards.length === 0) return;
   const count = gcCards.reduce((total, card) => total + card.quantity, 0);
-  const names = gcCards.map((card) => card.name).sort((a, b) => a.localeCompare(b));
+  const names = sortedUniqueCardNames(gcCards);
   warnings.push(`${count} Game Changer(s) detected: ${names.join(", ")}`);
   if (count > 3) {
     warnings.push("More than 3 Game Changers — deck is Bracket 4 minimum");
@@ -151,7 +162,7 @@ export function validateDeck(deck: Deck): ValidationResult {
 
   const bannedCards = allCards.filter((c) => c.isBanned);
   if (bannedCards.length > 0) {
-    errors.push(`Banned cards in deck: ${bannedCards.map((c) => c.name).join(", ")}`);
+    errors.push(`Banned cards in deck: ${sortedUniqueCardNames(bannedCards).join(", ")}`);
   }
 
   if (config.hasColorIdentity) {
