@@ -137,11 +137,13 @@ export function validateCompanionCondition(
     case "max_cmc": {
       const violators = allCards.filter((c) => c.cmc > companion.value);
       if (violators.length > 0) {
-        const sample = violators
-          .slice(0, 3)
-          .map((c) => c.name)
-          .join(", ");
-        const suffix = violators.length > 3 ? ", …" : "";
+        // Unique, alphabetical names keep the sample independent of deck row order.
+        const names = [...new Set(violators.map((c) => c.name))].toSorted(
+          (left, right) =>
+            left.localeCompare(right, "en", { sensitivity: "base" }) || left.localeCompare(right)
+        );
+        const sample = names.slice(0, 3).join(", ");
+        const suffix = names.length > 3 ? ", …" : "";
         return {
           valid: false,
           reason: `Companion needs mana value ≤ ${companion.value} on each card; check: ${sample}${suffix}`,
