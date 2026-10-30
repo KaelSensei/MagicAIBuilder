@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useMetaAnalysis } from "./useMetaAnalysis";
+import { useMetaAnalysis, META_FETCH_TIMEOUT_MS } from "./useMetaAnalysis";
 
 describe("useMetaAnalysis", () => {
   beforeEach(() => {
@@ -40,10 +40,12 @@ describe("useMetaAnalysis", () => {
     expect(result.current.edhrec).toEqual(payload);
     expect(result.current.errorEdhrec).toBeNull();
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/meta/")
+      expect.stringContaining("/api/meta/"),
+      expect.anything()
     );
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.stringMatching(/source=edhrec(?!.*refresh)/)
+      expect.stringMatching(/source=edhrec(?!.*refresh)/),
+      expect.anything()
     );
   });
 
@@ -56,7 +58,8 @@ describe("useMetaAnalysis", () => {
       await result.current.fetchSource("tournament", true);
     });
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("refresh=true")
+      expect.stringContaining("refresh=true"),
+      expect.anything()
     );
   });
 
@@ -110,5 +113,32 @@ describe("useMetaAnalysis", () => {
     await waitFor(() => {
       expect(vi.mocked(globalThis.fetch).mock.calls.length).toBeGreaterThanOrEqual(2);
     });
+  });
+
+  it("bounds each meta request with a 30 second timeout signal", async () => {
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+    const { result } = renderHook(() => useMetaAnalysis("Atraxa"));
+    await act(async () => {
+      await result.current.fetchSource("tournament");
+    });
+    expect(META_FETCH_TIMEOUT_MS).toBe(30_000);
+    expect(timeoutSpy).toHaveBeenCalledWith(META_FETCH_TIMEOUT_MS);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("source=tournament"),
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+  });
+
+  it("ends loading with an error when the request times out", async () => {
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(
+      new DOMException("The operation timed out.", "TimeoutError")
+    );
+    const { result } = renderHook(() => useMetaAnalysis("Atraxa"));
+    await act(async () => {
+      await result.current.fetchSource("edhrec");
+    });
+    expect(result.current.isLoadingEdhrec).toBe(false);
+    expect(result.current.errorEdhrec).not.toBeNull();
+    expect(result.current.edhrec).toBeNull();
   });
 });
