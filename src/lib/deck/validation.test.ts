@@ -449,3 +449,13 @@ describe("validateDeck ? deterministic named errors", () => {
     expect(result.warnings).toContain("2 Game Changer(s) detected: Rhystic Study");
   });
 });
+
+describe("validateCardForDeck color identity order", () => {
+  it("names off-identity colors in WUBRG order regardless of card data order", () => {
+    const deck = makeDeck({ commander: makeCommander(["W"]) });
+    const card = makeCard({ name: "Kitchen Finks", colorIdentity: ["G", "R", "U"] });
+    expect(validateCardForDeck(card, deck).reason).toBe(
+      "Kitchen Finks has colors outside your commander's identity (U, R, G)"
+    );
+  });
+});

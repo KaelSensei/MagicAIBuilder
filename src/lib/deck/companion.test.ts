@@ -391,6 +391,17 @@ describe("getCompanionDeckWarnings", () => {
     };
   }
 
+  it("lists off-identity companion colors in WUBRG order without duplicates", () => {
+    const deck: Deck = {
+      ...baseDeck(),
+      commander: dcard({ id: "cmd", name: "Mono White", colorIdentity: ["W"] }),
+      companion: dcard({ id: "comp", name: "Odd Companion", colorIdentity: ["G", "B", "G", "W"] }),
+    };
+    expect(getCompanionDeckWarnings(deck)).toContain(
+      "Companion color identity (B, G) is outside commander identity"
+    );
+  });
+
   it("flags Lutri", () => {
     const deck = baseDeck();
     deck.companion = dcard({
