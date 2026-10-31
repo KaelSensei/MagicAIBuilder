@@ -43,6 +43,9 @@ const IDLE: MetaShiftsState = {
   error: null,
 };
 
+/** Longest wait for meta history, matching the other 15 s loading deadlines. */
+export const META_SHIFTS_TIMEOUT_MS = 15_000;
+
 export function useMetaShifts(commanderName: string | null) {
   const [state, setState] = useState<MetaShiftsState>(IDLE);
   const requestVersion = useRef(0);
@@ -62,7 +65,8 @@ export function useMetaShifts(commanderName: string | null) {
 
     try {
       const res = await fetch(
-        `/api/meta/${encodeURIComponent(slug)}/history?days=${SHIFT_WINDOW_DAYS}`
+        `/api/meta/${encodeURIComponent(slug)}/history?days=${SHIFT_WINDOW_DAYS}`,
+        { signal: AbortSignal.timeout(META_SHIFTS_TIMEOUT_MS) }
       );
       const data = (await res.json()) as HistoryApiResponse;
       if (version !== requestVersion.current) return;

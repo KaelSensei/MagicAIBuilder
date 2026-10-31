@@ -170,6 +170,32 @@ describe("PATCH /api/user/profile", () => {
     expect(body.name).toBe("New Name");
   });
 
+  it("records profile update latency without profile details", async () => {
+    const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    try {
+      authed();
+      mockUserUpdate.mockResolvedValueOnce({ ...USER_FIXTURE, name: "New Name" });
+
+      const response = await PATCH(
+        new Request("http://localhost:3000/api/user/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "New Name" }),
+        })
+      );
+
+      expect(response.status).toBe(200);
+      expect(info).toHaveBeenCalledWith(
+        "Profile request completed",
+        "PATCH /api/user/profile",
+        expect.objectContaining({ status: 200, durationMs: expect.any(Number) })
+      );
+      expect(JSON.stringify(info.mock.calls)).not.toContain(USER_FIXTURE.email);
+    } finally {
+      info.mockRestore();
+    }
+  });
+
   it("updates user image to a URL", async () => {
     authed();
 
@@ -271,6 +297,26 @@ describe("DELETE /api/user/profile", () => {
     expect(mockUserDelete).toHaveBeenCalledWith({
       where: { id: "user-1" },
     });
+  });
+
+  it("records profile deletion latency without account details", async () => {
+    const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    try {
+      authed();
+      mockUserDelete.mockResolvedValueOnce({ id: "user-1" });
+
+      const response = await DELETE();
+
+      expect(response.status).toBe(200);
+      expect(info).toHaveBeenCalledWith(
+        "Profile request completed",
+        "DELETE /api/user/profile",
+        expect.objectContaining({ status: 200, durationMs: expect.any(Number) })
+      );
+      expect(JSON.stringify(info.mock.calls)).not.toContain(USER_FIXTURE.email);
+    } finally {
+      info.mockRestore();
+    }
   });
 
   it("returns 401 when not authenticated", async () => {

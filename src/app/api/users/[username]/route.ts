@@ -100,11 +100,30 @@ async function loadCommunityStats(
   };
 }
 
+
+/**
+ * Records the outcome and latency of a public-profile request.
+ *
+ * @param status HTTP status returned to the caller.
+ * @param startedAt `performance.now()` value captured when the request began.
+ * @returns Nothing; writes one structured info log line.
+ */
+function logPublicProfileRequest(status: number, startedAt: number): void {
+  logger.info("Public profile request completed", "GET /api/users/:username", {
+    status,
+    durationMs: Math.round(performance.now() - startedAt),
+  });
+}
+
 // GET /api/users/[username] — public profile (no auth required)
 export async function GET(_req: Request, { params }: Params) {
+  const startedAt = performance.now();
+  let status = 500;
   const { username } = await params;
 
   if (!username || username.length > 50 || !/^[a-zA-Z0-9_-]+$/.test(username)) {
+    status = 400;
+    logPublicProfileRequest(status, startedAt);
     return NextResponse.json({ error: "Invalid username" }, { status: 400 });
   }
 
@@ -143,6 +162,7 @@ export async function GET(_req: Request, { params }: Params) {
     });
 
     if (!user) {
+      status = 404;
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
@@ -153,6 +173,7 @@ export async function GET(_req: Request, { params }: Params) {
       session?.user?.id ?? null
     );
 
+    status = 200;
     return NextResponse.json({ ...user, ...stats });
   } catch (error) {
     logger.error(
@@ -161,5 +182,7 @@ export async function GET(_req: Request, { params }: Params) {
       { username: String(username).slice(0, 50) }
     );
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
+  } finally {
+    if (status !== 400) logPublicProfileRequest(status, startedAt);
   }
 }

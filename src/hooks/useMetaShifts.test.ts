@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useMetaShifts, SHIFT_WINDOW_DAYS } from "./useMetaShifts";
+import { useMetaShifts, SHIFT_WINDOW_DAYS, META_SHIFTS_TIMEOUT_MS } from "./useMetaShifts";
 
 /**
  * The distinction this hook exists to preserve is between **no history yet**
@@ -117,7 +117,8 @@ describe("useMetaShifts", () => {
     // The apostrophe is stripped by commanderToSlug, not encoded — the slug is
     // built before the URL, so a punctuation change would show up here.
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      `/api/meta/atraxa-praetors-voice/history?days=${SHIFT_WINDOW_DAYS}`
+      `/api/meta/atraxa-praetors-voice/history?days=${SHIFT_WINDOW_DAYS}`,
+      expect.anything()
     );
   });
 
@@ -260,5 +261,33 @@ describe("useMetaShifts", () => {
 
     expect(result.current.error).toBeNull();
     expect(result.current.report).toEqual(REPORT);
+  });
+
+  it("bounds the history request with a 15 second timeout signal", async () => {
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce(jsonResponse({ report: REPORT, snapshotCount: 2 }));
+    const { result } = renderHook(() => useMetaShifts("Atraxa"));
+    await act(async () => {
+      await result.current.fetchShifts();
+    });
+    expect(META_SHIFTS_TIMEOUT_MS).toBe(15_000);
+    expect(timeoutSpy).toHaveBeenCalledWith(META_SHIFTS_TIMEOUT_MS);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/history?days="),
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+  });
+
+  it("ends loading with an error when the history request times out", async () => {
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(
+      new DOMException("The operation timed out.", "TimeoutError")
+    );
+    const { result } = renderHook(() => useMetaShifts("Atraxa"));
+    await act(async () => {
+      await result.current.fetchShifts();
+    });
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.error).not.toBeNull();
+    expect(result.current.report).toBeNull();
   });
 });

@@ -51,18 +51,27 @@ const updateProfileSchema = z.object({
 
 /** PATCH /api/user/profile — Update current user's profile */
 export async function PATCH(request: Request) {
+  const startedAt = performance.now();
+  let status = 500;
   try {
     const result = await requireAuth();
-    if (result.error) return result.error;
+    if (result.error) {
+      status = result.error.status;
+      return result.error;
+    }
 
     const jsonBody = await readJsonBody(request);
 
-    if (!jsonBody.ok) return jsonBody.response;
+    if (!jsonBody.ok) {
+      status = jsonBody.response.status;
+      return jsonBody.response;
+    }
 
     const body = jsonBody.value;
     const parsed = updateProfileSchema.safeParse(body);
 
     if (!parsed.success) {
+      status = 400;
       return NextResponse.json(
         { error: "Invalid input", details: parsed.error.issues.map((i) => i.message) },
         { status: 400 }
@@ -81,26 +90,43 @@ export async function PATCH(request: Request) {
       },
     });
 
+    status = 200;
     return NextResponse.json(user);
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "PATCH /api/user/profile");
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+  } finally {
+    logger.info("Profile request completed", "PATCH /api/user/profile", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
   }
 }
 
 /** DELETE /api/user/profile — Delete current user's account and all data */
 export async function DELETE() {
+  const startedAt = performance.now();
+  let status = 500;
   try {
     const result = await requireAuth();
-    if (result.error) return result.error;
+    if (result.error) {
+      status = result.error.status;
+      return result.error;
+    }
 
     await prisma.user.delete({
       where: { id: result.session.user.id },
     });
 
+    status = 200;
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "DELETE /api/user/profile");
     return NextResponse.json({ error: "Failed to delete account" }, { status: 500 });
+  } finally {
+    logger.info("Profile request completed", "DELETE /api/user/profile", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
   }
 }
