@@ -61,6 +61,9 @@ function parseVariant(raw: SpellbookApiVariant): SpellbookVariant {
   };
 }
 
+/** Longest wait for one card's combo lookup; a stalled request counts as no combos. */
+export const COMBO_FETCH_TIMEOUT_MS = 15_000;
+
 /** Fetch combos for a single card name, with 1h cache */
 export async function fetchCombosForCard(
   cardName: string
@@ -75,6 +78,7 @@ export async function fetchCombosForCard(
     const url = `/api/combos?cards=${encodeURIComponent(cardName)}&format=json`;
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(COMBO_FETCH_TIMEOUT_MS),
     });
 
     if (!response.ok) {

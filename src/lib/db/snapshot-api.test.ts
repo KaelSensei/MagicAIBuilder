@@ -4,6 +4,7 @@ import {
   createSnapshot,
   deleteSnapshot,
   restoreSnapshot,
+  SNAPSHOT_LIST_TIMEOUT_MS,
 } from "./snapshot-api";
 
 function mockFetch(data: unknown, ok = true, status = 200) {
@@ -35,7 +36,35 @@ describe("listSnapshots", () => {
     mockFetch([]);
     await listSnapshots("deck-abc");
     const fetchMock = vi.mocked(global.fetch);
-    expect(fetchMock).toHaveBeenCalledWith("/api/decks/deck-abc/snapshots");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/decks/deck-abc/snapshots",
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+  });
+
+  it("encodes the deck id in the URL", async () => {
+    mockFetch([]);
+    await listSnapshots("deck/1?x");
+    expect(vi.mocked(global.fetch)).toHaveBeenCalledWith(
+      "/api/decks/deck%2F1%3Fx/snapshots",
+      expect.anything()
+    );
+  });
+
+  it("bounds the request with a 15 second timeout signal", async () => {
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+    mockFetch([]);
+    await listSnapshots("deck-1");
+    expect(SNAPSHOT_LIST_TIMEOUT_MS).toBe(15_000);
+    expect(timeoutSpy).toHaveBeenCalledWith(SNAPSHOT_LIST_TIMEOUT_MS);
+  });
+
+  it("rejects when the request is aborted by its deadline", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new DOMException("The operation timed out.", "TimeoutError"))
+    );
+    await expect(listSnapshots("deck-1")).rejects.toThrow("timed out");
   });
 
   it("throws when response is not ok", async () => {

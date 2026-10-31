@@ -4,6 +4,7 @@ import {
   validateDeck,
   checkColorIdentity,
   detectGameChanger,
+  sortedUniqueCardNames,
 } from "@/lib/deck/validation";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 
@@ -400,5 +401,61 @@ describe("detectGameChanger", () => {
 
   it("does not flag regular spells", () => {
     expect(detectGameChanger("Lightning Bolt deals 3 damage to any target.")).toBe(false);
+  });
+});
+
+describe("sortedUniqueCardNames", () => {
+  it("deduplicates names and sorts them case-insensitively", () => {
+    const cards = [
+      makeCard({ id: "a", name: "sol Ring" }),
+      makeCard({ id: "b", name: "Arcane Signet" }),
+      makeCard({ id: "c", name: "sol Ring" }),
+      makeCard({ id: "d", name: "Brainstorm" }),
+    ];
+    expect(sortedUniqueCardNames(cards)).toEqual(["Arcane Signet", "Brainstorm", "sol Ring"]);
+  });
+});
+
+describe("validateDeck ? deterministic named errors", () => {
+  const banned = [
+    makeCard({ id: "b1", name: "Primeval Titan", isBanned: true, colorIdentity: ["G"] }),
+    makeCard({ id: "b2", name: "Griselbrand", isBanned: true, colorIdentity: ["B"] }),
+  ];
+
+  it("lists banned and color-identity cards in the same order when rows are reordered", () => {
+    const commander = makeCommander(["W", "U"]);
+    const forward = validateDeck(makeDeck({ commander, cards: [...banned] }));
+    const reversed = validateDeck(makeDeck({ commander, cards: [...banned].reverse() }));
+    expect(forward.errors).toEqual(reversed.errors);
+    expect(forward.errors).toContain("Banned cards in deck: Griselbrand, Primeval Titan");
+    expect(forward.errors).toContain("Color identity violations: Griselbrand, Primeval Titan");
+  });
+
+  it("names a banned card once when several printings share its name", () => {
+    const printings = [
+      makeCard({ id: "p1", name: "Griselbrand", isBanned: true, colorIdentity: [] }),
+      makeCard({ id: "p2", name: "Griselbrand", isBanned: true, colorIdentity: [] }),
+    ];
+    const result = validateDeck(makeDeck({ cards: printings }));
+    expect(result.errors).toContain("Banned cards in deck: Griselbrand");
+  });
+
+  it("names a Game Changer once while counting every copy", () => {
+    const rows = [
+      makeCard({ id: "g1", name: "Rhystic Study", isGameChanger: true, colorIdentity: [] }),
+      makeCard({ id: "g2", name: "Rhystic Study", isGameChanger: true, colorIdentity: [] }),
+    ];
+    const result = validateDeck(makeDeck({ cards: rows }));
+    expect(result.warnings).toContain("2 Game Changer(s) detected: Rhystic Study");
+  });
+});
+
+describe("validateCardForDeck color identity order", () => {
+  it("names off-identity colors in WUBRG order regardless of card data order", () => {
+    const deck = makeDeck({ commander: makeCommander(["W"]) });
+    const card = makeCard({ name: "Kitchen Finks", colorIdentity: ["G", "R", "U"] });
+    expect(validateCardForDeck(card, deck).reason).toBe(
+      "Kitchen Finks has colors outside your commander's identity (U, R, G)"
+    );
   });
 });

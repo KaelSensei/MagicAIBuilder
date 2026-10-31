@@ -18,6 +18,9 @@ interface RulingCacheEntry {
 const SCRYFALL_BASE = "https://api.scryfall.com";
 const RULINGS_CACHE_KEY = "magic-ai-builder:rulings:v1";
 
+/** Longest wait for Scryfall rulings before falling back to the offline cache. */
+export const RULINGS_TIMEOUT_MS = 15_000;
+
 /** Maximum recently viewed cards retained for offline rulings access. */
 const MAX_CACHED_CARDS = 50;
 
@@ -101,7 +104,10 @@ function writeCache(cardId: string, rulings: readonly CardRuling[]): void {
 async function fetchRulings(cardId: string): Promise<readonly CardRuling[]> {
   const response = await fetch(
     `${SCRYFALL_BASE}/cards/${encodeURIComponent(cardId)}/rulings`,
-    { headers: { Accept: "application/json" } }
+    {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(RULINGS_TIMEOUT_MS),
+    }
   );
   if (!response.ok) {
     throw new Error(`Scryfall rulings request failed: ${response.status}`);

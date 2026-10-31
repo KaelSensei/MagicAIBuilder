@@ -28,6 +28,12 @@ export interface MetaState {
   errorTournament: string | null;
 }
 
+/**
+ * Longest wait for one meta source. Longer than the 15 s deck deadlines because
+ * an uncached request makes the server fetch EDHREC or tournament data first.
+ */
+export const META_FETCH_TIMEOUT_MS = 30_000;
+
 export function useMetaAnalysis(commanderName: string | null) {
   const [state, setState] = useState<MetaState>({
     edhrec: null,
@@ -52,7 +58,7 @@ export function useMetaAnalysis(commanderName: string | null) {
 
       try {
         const url = `/api/meta/${encodeURIComponent(slug)}?source=${source}${refresh ? "&refresh=true" : ""}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: AbortSignal.timeout(META_FETCH_TIMEOUT_MS) });
         const data = (await res.json()) as MetaApiResponse;
 
         if (!res.ok || data.error) {
