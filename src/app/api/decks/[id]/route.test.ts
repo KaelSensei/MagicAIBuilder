@@ -19,6 +19,9 @@ vi.mock("@/lib/db/prisma", () => ({
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: vi.fn() }));
 vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
 
+const { mockGetCardCollection } = vi.hoisted(() => ({ mockGetCardCollection: vi.fn() }));
+vi.mock("@/lib/scryfall/client", () => ({ getCardCollection: mockGetCardCollection }));
+
 import { DELETE, GET, PATCH } from "./route";
 
 const OWNER = "user-1";
@@ -117,7 +120,91 @@ describe("GET /api/decks/[id]", () => {
 });
 
 describe("PATCH /api/decks/[id]", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetCardCollection.mockResolvedValue({ data: [], not_found: [] });
+  });
+
+  it("rejects assigning the commander as its own partner", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: null });
+    mockUpdate.mockResolvedValueOnce({ id: "deck-1", commanderId: "card-1", partnerId: "card-1", cards: [] });
+
+    const response = await PATCH(patchRequest({ partnerId: "card-1" }), params());
+
+    expect(response.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects assigning the partner as its own commander", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: "card-2" });
+
+    const response = await PATCH(patchRequest({ commanderId: "card-2" }), params());
+
+    expect(response.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a partner printing with the commander's Oracle identity", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "printing-1", partnerId: null });
+    mockGetCardCollection.mockResolvedValueOnce({
+      data: [
+        { id: "printing-1", oracle_id: "oracle-1" },
+        { id: "printing-2", oracle_id: "oracle-1" },
+      ],
+      not_found: [],
+    });
+
+    const response = await PATCH(patchRequest({ partnerId: "printing-2" }), params());
+
+    expect(response.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("still renames a legacy deck with an existing duplicate pair", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: "card-1" });
+    mockUpdate.mockResolvedValueOnce({ id: "deck-1", name: "Renamed", cards: [] });
+
+    const response = await PATCH(patchRequest({ name: "Renamed" }), params());
+
+    expect(response.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: { name: "Renamed" } }));
+  });
+
+  it("rejects assigning the commander as its own partner", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: null });
+    mockUpdate.mockResolvedValueOnce({ id: "deck-1", commanderId: "card-1", partnerId: "card-1", cards: [] });
+
+    const response = await PATCH(patchRequest({ partnerId: "card-1" }), params());
+
+    expect(response.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects assigning the partner as its own commander", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: "card-2" });
+
+    const response = await PATCH(patchRequest({ commanderId: "card-2" }), params());
+
+    expect(response.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("still renames a legacy deck with an existing duplicate pair", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({ id: "deck-1", userId: OWNER, commanderId: "card-1", partnerId: "card-1" });
+    mockUpdate.mockResolvedValueOnce({ id: "deck-1", name: "Renamed", cards: [] });
+
+    const response = await PATCH(patchRequest({ name: "Renamed" }), params());
+
+    expect(response.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: { name: "Renamed" } }));
+  });
 
   it("rejects assigning the commander as its own partner", async () => {
     signedInAs(OWNER);

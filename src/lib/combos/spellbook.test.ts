@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fetchCombosForDeck, fetchCombosForCard, clearSpellbookCache } from "@/lib/combos/spellbook";
+import {
+  fetchCombosForDeck,
+  fetchCombosForCard,
+  clearSpellbookCache,
+  COMBO_FETCH_TIMEOUT_MS,
+} from "@/lib/combos/spellbook";
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -154,5 +159,33 @@ describe("fetchCombosForDeck", () => {
     const result = await fetchCombosForDeck(["Card A", "Card B"]);
     // Combo should NOT be returned since Card C is missing
     expect(result).toHaveLength(0);
+  });
+});
+
+describe("fetchCombosForCard timeout", () => {
+  beforeEach(() => {
+    clearSpellbookCache();
+    mockFetch.mockReset();
+  });
+
+  it("bounds each combo lookup with a 15 second timeout signal", async () => {
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+    mockFetch.mockResolvedValue({ ok: true, json: async () => makeVariantResponse([]) });
+
+    await fetchCombosForCard("Sol Ring");
+
+    expect(COMBO_FETCH_TIMEOUT_MS).toBe(15_000);
+    expect(timeoutSpy).toHaveBeenCalledWith(COMBO_FETCH_TIMEOUT_MS);
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("cards=Sol%20Ring"),
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+    timeoutSpy.mockRestore();
+  });
+
+  it("resolves to no combos when the lookup times out", async () => {
+    mockFetch.mockRejectedValue(new DOMException("The operation timed out.", "TimeoutError"));
+
+    await expect(fetchCombosForCard("Thassa's Oracle")).resolves.toEqual([]);
   });
 });

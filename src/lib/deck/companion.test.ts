@@ -9,6 +9,7 @@ import {
   isBannedCompanionInCommander,
   isScryfallCompanionCard,
   validateCompanionCondition,
+  type CompanionCondition,
 } from "@/lib/deck/companion";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -311,6 +312,30 @@ describe("validateCompanionCondition", () => {
     expect(result.valid).toBe(false);
     expect(result.reason).toContain("…");
   });
+
+  it("samples max_cmc violators alphabetically regardless of deck order", () => {
+    const deckCards = [
+      dcard({ id: "a", name: "Zetalpa", cmc: 8 }),
+      dcard({ id: "b", name: "craterhoof Behemoth", cmc: 8 }),
+      dcard({ id: "c", name: "Avenger of Zendikar", cmc: 7 }),
+      dcard({ id: "d", name: "Blightsteel Colossus", cmc: 12 }),
+    ];
+    const rule = { type: "max_cmc", value: 2 } satisfies CompanionCondition;
+    const forward = validateCompanionCondition(rule, deckCards, null, null);
+    const reversed = validateCompanionCondition(rule, [...deckCards].reverse(), null, null);
+    expect(forward.reason).toBe(reversed.reason);
+    expect(forward.reason).toContain(
+      "check: Avenger of Zendikar, Blightsteel Colossus, craterhoof Behemoth, …"
+    );
+  });
+
+  it("names a max_cmc violator once across printings without a truncation marker", () => {
+    const deckCards = ["p1", "p2", "p3", "p4"].map((id) =>
+      dcard({ id, name: "Craterhoof Behemoth", cmc: 8 })
+    );
+    const result = validateCompanionCondition({ type: "max_cmc", value: 2 }, deckCards, null, null);
+    expect(result.reason).toMatch(/check: Craterhoof Behemoth$/);
+  });
 });
 
 describe("describeCompanionCondition", () => {
@@ -365,6 +390,17 @@ describe("getCompanionDeckWarnings", () => {
       updatedAt: new Date(),
     };
   }
+
+  it("lists off-identity companion colors in WUBRG order without duplicates", () => {
+    const deck: Deck = {
+      ...baseDeck(),
+      commander: dcard({ id: "cmd", name: "Mono White", colorIdentity: ["W"] }),
+      companion: dcard({ id: "comp", name: "Odd Companion", colorIdentity: ["G", "B", "G", "W"] }),
+    };
+    expect(getCompanionDeckWarnings(deck)).toContain(
+      "Companion color identity (B, G) is outside commander identity"
+    );
+  });
 
   it("flags Lutri", () => {
     const deck = baseDeck();

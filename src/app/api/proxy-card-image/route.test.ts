@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { GET } from "./route";
+import { logger } from "@/lib/logger";
 
 const VALID_URL =
   "https://cards.scryfall.io/normal/front/a/b/abc123.jpg";
@@ -94,5 +95,34 @@ describe("GET /api/proxy-card-image", () => {
 
     const res = await GET(makeReq(`url=${encodeURIComponent(VALID_URL)}`));
     expect(res.status).toBe(502);
+  });
+});
+
+describe("GET /api/proxy-card-image request timing", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it.each([
+    ["a proxied image", () => vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      headers: new Headers({ "content-type": "image/jpeg" }),
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(4)),
+    })), `url=${encodeURIComponent(VALID_URL)}`, 200],
+    ["a missing url", () => undefined, "", 400],
+    ["a disallowed host", () => undefined, `url=${encodeURIComponent("https://evil.com/x.jpg")}`, 403],
+    ["an upstream failure", () => vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline"))), `url=${encodeURIComponent(VALID_URL)}`, 502],
+  ])("logs status and duration once for %s", async (_label, arrange, search, expected) => {
+    const info = vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    arrange();
+
+    const res = await GET(makeReq(search));
+
+    expect(res.status).toBe(expected);
+    const calls = info.mock.calls.filter(([message]) => message === "Card image proxy request completed");
+    expect(calls).toEqual([
+      ["Card image proxy request completed", "GET /api/proxy-card-image", { status: expected, durationMs: expect.any(Number) }],
+    ]);
   });
 });

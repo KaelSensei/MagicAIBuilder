@@ -177,7 +177,11 @@
     "cancel": "Annuler",
     "import": "Importer",
     "previewDecklist": "Prévisualiser la liste",
-    "previewZone": { "main": "Principal", "sideboard": "Réserve", "maybeboard": "À considérer" },
+    "previewZone": {
+      "main": "Principal",
+      "sideboard": "Réserve",
+      "maybeboard": "À considérer"
+    },
     "url": {
       "intro": "Collez l’URL d’un deck à importer. Sources prises en charge : {sources}.",
       "placeholder": "https://www.moxfield.com/decks/… ou publicId moxfield (ex. AbCdEfGhIj)",
@@ -412,6 +416,7 @@
     "commanderDecksTitle": "Decks {commander}",
     "commanderDecksSubtitle": "Decks publics menés par ce commandant, classés par votes de la communauté.",
     "noDecks": "Aucun deck public pour ce commandant pour l'instant.",
+    "commanderDecksLoading": "Chargement des decks du commandant...",
     "deckCount": "{count, plural, one {# deck} other {# decks}}",
     "cards": "{count} cartes",
     "ratedBy": "{count, plural, one {# note} other {# notes}}",

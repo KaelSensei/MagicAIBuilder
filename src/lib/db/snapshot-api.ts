@@ -12,8 +12,19 @@ export interface SnapshotFull extends SnapshotMeta {
   cardList: unknown[];
 }
 
+/** Longest wait for the snapshot list, matching the other deck loading deadlines. */
+export const SNAPSHOT_LIST_TIMEOUT_MS = 15_000;
+
+/**
+ * Load a deck's snapshot list, aborting after {@link SNAPSHOT_LIST_TIMEOUT_MS}
+ * (including body reading) so the history panel can show its error state.
+ * @param deckId - Deck whose snapshots are listed.
+ * @returns Snapshot metadata, newest first as returned by the API.
+ */
 export async function listSnapshots(deckId: string): Promise<SnapshotMeta[]> {
-  const res = await fetch(`/api/decks/${deckId}/snapshots`);
+  const res = await fetch(`/api/decks/${encodeURIComponent(deckId)}/snapshots`, {
+    signal: AbortSignal.timeout(SNAPSHOT_LIST_TIMEOUT_MS),
+  });
   if (!res.ok) throw new Error("Failed to fetch snapshots");
   return res.json();
 }

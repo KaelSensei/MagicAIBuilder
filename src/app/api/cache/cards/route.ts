@@ -15,14 +15,17 @@ const SCRYFALL_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0
 
 // GET /api/cache/cards?id=<scryfallId> — lookup cached card
 export async function GET(request: Request) {
+  const startedAt = performance.now();
+  let hit = false;
+  let failed = false;
   const { searchParams } = new URL(request.url);
   const scryfallId = searchParams.get("id");
 
-  if (!scryfallId || !SCRYFALL_UUID_REGEX.test(scryfallId)) {
-    return NextResponse.json({ hit: false });
-  }
-
   try {
+    if (!scryfallId || !SCRYFALL_UUID_REGEX.test(scryfallId)) {
+      return NextResponse.json({ hit: false });
+    }
+
     const cached = await prisma.cardCache.findUnique({
       where: { scryfallId },
     });
@@ -38,10 +41,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ hit: false });
     }
 
+    hit = true;
     return NextResponse.json({ hit: true, data: cached.data });
   } catch (error) {
+    failed = true;
     logger.error(error instanceof Error ? error.message : "unknown", "GET /api/cache/cards", { id: String(scryfallId).slice(0, 50) });
     return NextResponse.json({ hit: false });
+  } finally {
+    logger.info("Card cache lookup completed", "GET /api/cache/cards", {
+      hit,
+      failed,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
   }
 }
 
