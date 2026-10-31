@@ -177,7 +177,11 @@
     "cancel": "Cancel",
     "import": "Import",
     "previewDecklist": "Preview decklist",
-    "previewZone": { "main": "Main", "sideboard": "Sideboard", "maybeboard": "Maybeboard" },
+    "previewZone": {
+      "main": "Main",
+      "sideboard": "Sideboard",
+      "maybeboard": "Maybeboard"
+    },
     "url": {
       "intro": "Paste a deck URL to import. Supported: {sources}.",
       "placeholder": "https://www.moxfield.com/decks/… or moxfield publicId (e.g. AbCdEfGhIj)",
@@ -594,6 +598,7 @@
     "commanderDecksTitle": "{commander} decks",
     "commanderDecksSubtitle": "Public decks led by this commander, ranked by community votes.",
     "noDecks": "No public decks for this commander yet.",
+    "commanderDecksLoading": "Loading commander decks...",
     "deckCount": "{count, plural, one {# deck} other {# decks}}",
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",

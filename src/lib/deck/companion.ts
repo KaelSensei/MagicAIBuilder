@@ -1,6 +1,7 @@
 // Ikoria-style Companion: detection, human-readable rules, and deck checks
 import type { Deck, DeckCard } from "./types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { PIP_COLORS } from "./mana-alignment";
 
 /** Banned specifically as companion in Commander (deck may still run the card). */
 export const LUTRI_SPELLCHASER_NAME = "Lutri, the Spellchaser";
@@ -137,11 +138,13 @@ export function validateCompanionCondition(
     case "max_cmc": {
       const violators = allCards.filter((c) => c.cmc > companion.value);
       if (violators.length > 0) {
-        const sample = violators
-          .slice(0, 3)
-          .map((c) => c.name)
-          .join(", ");
-        const suffix = violators.length > 3 ? ", …" : "";
+        // Unique, alphabetical names keep the sample independent of deck row order.
+        const names = [...new Set(violators.map((c) => c.name))].toSorted(
+          (left, right) =>
+            left.localeCompare(right, "en", { sensitivity: "base" }) || left.localeCompare(right)
+        );
+        const sample = names.slice(0, 3).join(", ");
+        const suffix = names.length > 3 ? ", …" : "";
         return {
           valid: false,
           reason: `Companion needs mana value ≤ ${companion.value} on each card; check: ${sample}${suffix}`,
@@ -239,7 +242,8 @@ export function getCompanionDeckWarnings(deck: Deck): readonly string[] {
       ...deck.commander.colorIdentity,
       ...(deck.partner?.colorIdentity ?? []),
     ]);
-    const bad = comp.colorIdentity.filter((c) => !allowed.has(c));
+    // Canonical WUBRG order, deduplicated, so the warning does not depend on card data order.
+    const bad = PIP_COLORS.filter((c) => comp.colorIdentity.includes(c) && !allowed.has(c));
     if (bad.length > 0) {
       out.push(
         `Companion color identity (${bad.join(", ")}) is outside commander identity`

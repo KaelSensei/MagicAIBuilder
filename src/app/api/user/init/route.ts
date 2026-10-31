@@ -11,6 +11,26 @@ import { logger } from "@/lib/logger";
  * @returns JSON with { onboardingDone, collection }
  */
 export async function GET() {
+  const startedAt = performance.now();
+  let status = 500;
+  try {
+    const response = await loadUserInit();
+    status = response.status;
+    return response;
+  } finally {
+    logger.info("User init request completed", "GET /api/user/init", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
+  }
+}
+
+/**
+ * Loads onboarding status and the collection for the signed-in user.
+ *
+ * @returns The bootstrap payload, or a JSON error with the matching status.
+ */
+async function loadUserInit(): Promise<NextResponse> {
   try {
     const result = await requireAuth();
     if (result.error) return result.error;

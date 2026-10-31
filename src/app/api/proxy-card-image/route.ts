@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 const ALLOWED_HOST = "cards.scryfall.io";
 const MAX_PARAM_LEN = 700;
@@ -32,6 +33,27 @@ function isAllowedScryfallImageUrl(raw: string): boolean {
  * and build data URLs for print/PDF (browser `fetch` to the CDN is blocked by CORS).
  */
 export async function GET(request: Request) {
+  const startedAt = performance.now();
+  let status = 500;
+  try {
+    const response = await proxyCardImage(request);
+    status = response.status;
+    return response;
+  } finally {
+    logger.info("Card image proxy request completed", "GET /api/proxy-card-image", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
+  }
+}
+
+/**
+ * Validates the requested Scryfall image URL and streams the upstream image back.
+ *
+ * @param request Incoming proxy request carrying the `url` query parameter.
+ * @returns The image response, or a JSON error with the matching status.
+ */
+async function proxyCardImage(request: Request): Promise<NextResponse> {
   const urlParam = new URL(request.url).searchParams.get("url");
   if (!urlParam || urlParam.length > MAX_PARAM_LEN) {
     return NextResponse.json({ error: "Invalid or missing url" }, { status: 400 });
