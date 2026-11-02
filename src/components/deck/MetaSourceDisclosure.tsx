@@ -52,18 +52,25 @@ export function MetaSourceDisclosure({
   });
 
   return (
-    <p
-      className={
-        stale
-          ? "text-[10px] text-amber-400"
-          : "text-[10px] text-[var(--text-secondary)]"
-      }
-    >
-      {t(stale ? "meta.staleSourceDisclosure" : "meta.sourceDisclosure", {
-        source: label,
-        date,
-      })}{" "}
-      <RecommendationProvenance kind={evidenceKind} />
-    </p>
+    <div className="space-y-0.5">
+      <p
+        className={
+          stale
+            ? "text-[10px] text-amber-400"
+            : "text-[10px] text-[var(--text-secondary)]"
+        }
+      >
+        {t(stale ? "meta.staleSourceDisclosure" : "meta.sourceDisclosure", {
+          source: label,
+          date,
+        })}{" "}
+        <RecommendationProvenance kind={evidenceKind} />
+      </p>
+      {source === "edhrec" && (
+        <p className="text-[10px] text-[var(--text-secondary)]">
+          {t("meta.edhrecSampleWindowUnavailable")}
+        </p>
+      )}
+    </div>
   );
 }
