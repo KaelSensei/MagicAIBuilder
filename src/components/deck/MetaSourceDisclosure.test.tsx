@@ -33,6 +33,14 @@ describe("MetaSourceDisclosure", () => {
     expect(screen.getByText(/observed.*aug 29, 2026/i)).toBeInTheDocument();
   });
 
+  it("discloses when EDHREC does not publish a trustworthy sample window", () => {
+    renderDisclosure("edhrec", "2026-08-29T10:30:00.000Z");
+
+    expect(
+      screen.getByText(/sample window unavailable from edhrec/i)
+    ).toBeInTheDocument();
+  });
+
   it("warns when the displayed observation is stale", () => {
     renderDisclosure("tournament", "2026-08-20T10:30:00.000Z", true);
 
