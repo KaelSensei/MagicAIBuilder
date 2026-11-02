@@ -9,6 +9,9 @@ import { RatingHistogramBars } from "./RatingHistogramBars";
 import { ReviewForm } from "./ReviewForm";
 import { ReviewList, type ReviewWithAuthor } from "./ReviewList";
 
+/** Maximum time a public ratings aggregate may keep the panel waiting. */
+const RATINGS_LOAD_TIMEOUT_MS = 15_000;
+
 export interface DeckRatingsResponse {
   readonly average: number;
   readonly count: number;
@@ -56,7 +59,9 @@ export function DeckRatingPanel({ deckId, isOwner, isSignedIn }: DeckRatingPanel
   const load = useCallback(async () => {
     setLoadFailed(false);
     try {
-      const res = await fetch(endpoint);
+      const res = await fetch(endpoint, {
+        signal: AbortSignal.timeout(RATINGS_LOAD_TIMEOUT_MS),
+      });
       if (!res.ok) {
         setLoadFailed(true);
         return;
