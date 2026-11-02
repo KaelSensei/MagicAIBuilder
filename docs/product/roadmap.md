@@ -408,7 +408,7 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 - [ ] Record the E2E Docker strategy and required environment variables.
   - The strategy is documented in the "E2E gate" section of `docs/engineering/quality-gate.md`. The environment variables set in `docker-compose.e2e.yml` (`DATABASE_URL`, `NEXT_PUBLIC_APP_URL`, `AUTH_SECRET`, plus the Postgres service settings) are not yet listed there.
 - [ ] Upgrade Prisma only after the local Node toolchain is at least 22.12.
-- [ ] Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
+- [x] Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
   - `GET /api/decks` status and duration shipped in #1034. Profile and Scryfall paths remain open; do not close this item yet.
   - Profile mutation latency on `/api/user/profile` is recorded (#1132). Profile reads and other Scryfall paths remain open.
   - External card search and server-side search-cache outcomes shipped in #1036. Browser search diagnostics are not centralized; profile and other Scryfall paths remain open.
