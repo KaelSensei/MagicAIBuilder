@@ -6,7 +6,9 @@ import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
 import { canPairWith, detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { getCardById } from "@/lib/scryfall/client";
 import * as deckApi from "@/lib/db/deck-api";
+import { useCollectionStore } from "@/lib/collection/store";
 import { useToastStore } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import {
@@ -94,6 +96,33 @@ function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
     seen.add(card.id);
     return true;
   });
+}
+
+/**
+ * Uses an owned printing of the requested card when the local collection can
+ * identify one. The collection itself is read-only during deck construction.
+ */
+async function getOwnedPrinting(
+  card: Pick<ScryfallCard, "id" | "name">
+): Promise<ScryfallCard | null> {
+  const { collectionCards, collectionCardsFoil } = useCollectionStore.getState();
+  const ownedCards = [
+    ...Object.values(collectionCards),
+    ...Object.values(collectionCardsFoil),
+  ];
+  const ownedPrinting = ownedCards.find(
+    (owned) =>
+      owned.name === card.name &&
+      owned.quantity > 0 &&
+      owned.scryfallId !== card.id
+  );
+  if (!ownedPrinting) return null;
+
+  try {
+    return await getCardById(ownedPrinting.scryfallId);
+  } catch {
+    return null;
+  }
 }
 
 function syncDeckCards(deck: Deck, cards: readonly DeckCard[]): Deck {
@@ -1084,7 +1113,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       return;
     }
 
-    const deckCard = makeDeckCard(card);
+    const ownedPrinting = await getOwnedPrinting(card);
+    const selectedCard = ownedPrinting ?? card;
+    const deckCard = makeDeckCard(selectedCard);
     // If a specific quantity is provided (e.g. bulk import of basics), apply it directly
     if (quantity && quantity > 1) {
       deckCard.quantity = quantity;
@@ -1092,8 +1123,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     // Apply target zone (sideboard / maybeboard / main)
     deckCard.zone = zone;
     deckCard.isMaybeboard = zone === "maybeboard";
-    deckCard.isGameChanger = gameChangerNames.has(card.name);
-    deckCard.isBanned = bannedNames.has(card.name);
+    deckCard.isGameChanger = gameChangerNames.has(selectedCard.name);
+    deckCard.isBanned = bannedNames.has(selectedCard.name);
 
     // Warn user when adding a Game Changer card
     if (deckCard.isGameChanger) {
@@ -1101,7 +1132,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const existingGCCount =
         currentCards.filter((c) => c.isGameChanger).length +
         (commander?.isGameChanger ? 1 : 0);
-      notifyGameChangerAdded(card.name, existingGCCount + 1);
+      notifyGameChangerAdded(selectedCard.name, existingGCCount + 1);
     }
 
     // Optimistic update
@@ -1119,7 +1150,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     try {
       const saved = await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
+        scryfallId: selectedCard.id,
         name: deckCard.name,
         manaCost: deckCard.manaCost,
         cmc: deckCard.cmc,
@@ -1146,7 +1177,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           [activeDeckId]: {
             ...state.decks[activeDeckId],
             ...updateDeckCards(state.decks[activeDeckId], (cards) =>
-              cards.map((c) => (c.id === card.id ? { ...c, id: saved.id } : c))
+              cards.map((c) => (c.id === deckCard.id ? { ...c, id: saved.id } : c))
             ),
           },
         },
@@ -1194,8 +1225,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await get().updateCardQuantity(exists.id, 1);
       return;
     }
+    const ownedPrinting = card.scryfallId
+      ? await getOwnedPrinting({ id: card.scryfallId, name: card.name })
+      : null;
     const enriched = {
-      ...card,
+      ...(ownedPrinting ? makeDeckCard(ownedPrinting) : card),
+      category: card.category,
+      quantity: card.quantity,
+      zone: card.zone,
       isGameChanger: gameChangerNames.has(card.name),
       isBanned: bannedNames.has(card.name),
       isMaybeboard: card.zone === "maybeboard",
@@ -1215,22 +1252,22 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     try {
       const saved = await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
-        name: card.name,
-        manaCost: card.manaCost,
-        cmc: card.cmc,
-        typeLine: card.typeLine,
-        oracleText: card.oracleText,
-        power: card.power ?? null,
-        toughness: card.toughness ?? null,
-        colorIdentity: card.colorIdentity,
+        scryfallId: enriched.scryfallId ?? enriched.id,
+        name: enriched.name,
+        manaCost: enriched.manaCost,
+        cmc: enriched.cmc,
+        typeLine: enriched.typeLine,
+        oracleText: enriched.oracleText,
+        power: enriched.power ?? null,
+        toughness: enriched.toughness ?? null,
+        colorIdentity: enriched.colorIdentity,
         isGameChanger: enriched.isGameChanger,
         isBanned: enriched.isBanned,
-        price: card.price,
-        imageUri: card.imageUri,
-        artCropUri: card.artCropUri,
-        category: card.category,
-        quantity: card.quantity,
+        price: enriched.price,
+        imageUri: enriched.imageUri,
+        artCropUri: enriched.artCropUri,
+        category: enriched.category,
+        quantity: enriched.quantity,
         isCommander: false,
         isPartner: false,
         zone: enriched.zone,
@@ -1241,7 +1278,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           [activeDeckId]: {
             ...state.decks[activeDeckId],
             ...updateDeckCards(state.decks[activeDeckId], (cards) =>
-              cards.map((c) => (c.id === card.id ? { ...c, id: saved.id } : c))
+              cards.map((c) => (c.id === enriched.id ? { ...c, id: saved.id } : c))
             ),
           },
         },
