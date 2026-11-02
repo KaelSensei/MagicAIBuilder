@@ -92,6 +92,7 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
   const addCard = useDeckStore((s) => s.addCard);
   const setCommander = useDeckStore((s) => s.setCommander);
   const setPartner = useDeckStore((s) => s.setPartner);
+  const setCompanion = useDeckStore((s) => s.setCompanion);
   const activeDeckId = useDeckStore((s) => s.activeDeckId);
 
   async function addUrlCards(
@@ -106,7 +107,8 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       (c) => c.isCommander && !c.isPartner
     );
     const partners = importedCards.filter((c) => c.isPartner);
-    const rest = importedCards.filter((c) => !c.isCommander && !c.isPartner);
+    const companions = importedCards.filter((c) => c.isCompanion);
+    const rest = importedCards.filter((c) => !c.isCommander && !c.isPartner && !c.isCompanion);
 
     await forEachSequential(commanders, async (c) => {
       const card = byName.get(normalizeImportedName(c.name));
@@ -120,6 +122,14 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       const card = byName.get(normalizeImportedName(c.name));
       if (card) {
         await setPartner(card);
+        added++;
+      } else ignoredNames.push(c.name);
+    });
+
+    await forEachSequential(companions, async (c) => {
+      const card = byName.get(normalizeImportedName(c.name));
+      if (card) {
+        await setCompanion(card);
         added++;
       } else ignoredNames.push(c.name);
     });

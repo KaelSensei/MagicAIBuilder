@@ -117,6 +117,18 @@ describe("parsePlainTextDecklist", () => {
     expect(cards[0].isCommander).toBe(false);
   });
 
+  it("preserves a companion section as a companion role", () => {
+    const cards = parsePlainTextDecklist("Companion\n1 Keruga, the Macrosage\nDeck\n1 Sol Ring");
+
+    expect(cards[0]).toMatchObject({
+      name: "Keruga, the Macrosage",
+      isCompanion: true,
+      zone: "main",
+    });
+    expect(cards[1]).toMatchObject({ name: "Sol Ring" });
+    expect(cards[1].isCompanion).toBeFalsy();
+  });
+
   it("treats a 99 heading as the main deck rather than a card", () => {
     const cards = parsePlainTextDecklist("Sideboard\n1 Negate\n// 99\n1 Sol Ring");
     expect(cards).toEqual([

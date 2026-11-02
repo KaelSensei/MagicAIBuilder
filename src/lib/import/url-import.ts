@@ -27,6 +27,7 @@ export interface UrlImportCard {
   readonly quantity: number;
   readonly isCommander: boolean;
   readonly isPartner: boolean;
+  readonly isCompanion?: boolean;
   readonly zone: "main" | "sideboard" | "maybeboard";
 }
 
