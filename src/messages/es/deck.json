@@ -673,7 +673,8 @@
     "warningGroups": {
       "legality": "Errores de legalidad",
       "strategy": "Sugerencias estratégicas",
-      "advice": "Consejos opcionales"
+      "advice": "Consejos opcionales",
+      "optional": "Consejos opcionales del mazo"
     }
   },
   "buyList": {

@@ -673,7 +673,8 @@
     "warningGroups": {
       "legality": "Erros de legalidade",
       "strategy": "Sugestões estratégicas",
-      "advice": "Conselhos opcionais"
+      "advice": "Conselhos opcionais",
+      "optional": "Conselhos opcionais do deck"
     }
   },
   "buyList": {

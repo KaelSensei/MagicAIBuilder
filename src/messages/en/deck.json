@@ -367,7 +367,8 @@
     "warningGroups": {
       "legality": "Legality errors",
       "strategy": "Strategic suggestions",
-      "advice": "Optional advice"
+      "advice": "Optional advice",
+      "optional": "Optional deck advice"
     }
   },
   "budget": {
