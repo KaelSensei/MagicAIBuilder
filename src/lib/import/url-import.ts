@@ -68,8 +68,8 @@ const SOURCE_PATTERNS: Array<{
   },
   {
     source: "mtgdecks",
-    re: /^https?:\/\/(?:www\.)?mtgdecks\.net\/[^/]+\/([^/?#]+)/,
-    extract: (m) => m[1],
+    re: /^https?:\/\/(?:www\.)?mtgdecks\.net\/([^/?#]+)\/([^/?#]+)/,
+    extract: (m) => m[2],
   },
   {
     source: "aetherhub",
@@ -336,9 +336,28 @@ async function importMtgTop8(deckId: string): Promise<UrlImportResult> {
 // ─── MTGDecks ─────────────────────────────────────────────────────────────────
 // mtgdecks.net provides a text export at /[format]/[slug]/txt
 
-async function importMtgDecks(slug: string): Promise<UrlImportResult> {
+/**
+ * Returns the public MTGDecks format and slug path used by its text endpoint.
+ *
+ * @param url - A detected public MTGDecks deck URL.
+ * @returns The format and deck slug separated by a slash.
+ */
+function mtgDecksPath(url: string): string {
+  const candidate = /^https?:\/\//.test(url) ? url : `https://${url}`;
+  const pathParts = new URL(candidate).pathname.split("/").filter(Boolean);
+  const format = pathParts[0];
+  const slug = pathParts[1];
+
+  if (!format || !slug) {
+    throw new Error("MTGDecks URL is missing its format or deck identifier.");
+  }
+
+  return `${format}/${slug}`;
+}
+
+async function importMtgDecks(deckPath: string, slug: string): Promise<UrlImportResult> {
   const res = await httpGet(
-    `https://mtgdecks.net/Commander/${slug}/txt`,
+    `https://mtgdecks.net/${deckPath}/txt`,
     { headers: { Accept: "text/plain, text/html" } }
   );
   const text = await res.text();
@@ -443,7 +462,7 @@ export async function importFromUrl(url: string): Promise<UrlImportResult> {
     case "archidekt":  return importArchidekt(id);
     case "tappedout":  return importTappedOut(id);
     case "mtgtop8":    return importMtgTop8(id);
-    case "mtgdecks":   return importMtgDecks(id);
+    case "mtgdecks":   return importMtgDecks(mtgDecksPath(url.trim()), id);
     case "aetherhub":  return importAetherHub(id);
     case "edhrec":     return importEdhrec(id);
   }
