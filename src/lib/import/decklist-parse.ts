@@ -109,12 +109,13 @@ function stripTrailingFoilMarker(name: string): string {
   return trimmed.endsWith("*F*") ? trimmed.slice(0, -3).trimEnd() : trimmed;
 }
 
-type DecklistSection = "main" | "sideboard" | "maybeboard" | "commander" | "partner";
+type DecklistSection = "main" | "sideboard" | "maybeboard" | "commander" | "partner" | "companion";
 
 function headingSection(heading: string): DecklistSection | undefined {
   switch (heading) {
     case "commander": return "commander";
     case "partner": return "partner";
+    case "companion": return "companion";
     case "sideboard": return "sideboard";
     case "considering":
     case "maybeboard": return "maybeboard";
@@ -140,13 +141,14 @@ function parseDecklistCard(line: string, section: DecklistSection): UrlImportCar
     quantity,
     isCommander: section === "commander",
     isPartner: section === "partner",
+    isCompanion: section === "companion" || undefined,
     zone: section === "sideboard" || section === "maybeboard" ? section : "main",
   };
 }
 
 function sectionAfterCard(section: DecklistSection, countedPartner: boolean): DecklistSection {
   if (section === "commander" && countedPartner) return "partner";
-  if (section === "commander" || section === "partner") return "main";
+  if (section === "commander" || section === "partner" || section === "companion") return "main";
   return section;
 }
 
