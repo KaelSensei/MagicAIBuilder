@@ -117,9 +117,9 @@ describe("AcquisitionPlanPanel", () => {
       reader.readAsText(blob);
     });
     expect(csv.split("\n")).toEqual([
-      "Name,Quantity,Price (USD),Total (USD),Scryfall ID",
-      '"Sol Ring",1,2,2,"ring-a"',
-      '"Sol Ring",2,,,"ring-b"',
+      "Name,Quantity,Price (USD),Total (USD),Scryfall ID,Deck allocations",
+      '"Sol Ring",1,2,2,"ring-a","Artifacts (3)"',
+      '"Sol Ring",2,,,"ring-b","Artifacts (2)"',
     ]);
     expect(click).toHaveBeenCalledOnce();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:acquisition-plan");

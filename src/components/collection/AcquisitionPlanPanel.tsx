@@ -91,6 +91,10 @@ export function AcquisitionPlanPanel() {
       name: item.name,
       quantity: item.acquireQuantity,
       price: item.price,
+      deckAllocations: item.decks.map((deck) => ({
+        name: deck.name,
+        quantity: deck.quantity,
+      })),
     })));
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
     const link = document.createElement("a");
