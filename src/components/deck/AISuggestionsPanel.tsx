@@ -340,6 +340,7 @@ export function AISuggestionsPanel({
               {onAskQuestion && (
                 <DeckQuestionControls
                   cardNames={currentCardNames}
+                  cards={currentCards}
                   disabled={isLoading || disabled}
                   onAsk={onAskQuestion}
                 />
