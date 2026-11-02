@@ -103,6 +103,12 @@ function stripTrailingSetCodeSuffix(name: string): string {
   return name.slice(0, beforeParen);
 }
 
+/** CardNexus marks foil printings with a terminal `*F*`; finish is not part of a deck card name. */
+function stripTrailingFoilMarker(name: string): string {
+  const trimmed = name.trimEnd();
+  return trimmed.endsWith("*F*") ? trimmed.slice(0, -3).trimEnd() : trimmed;
+}
+
 type DecklistSection = "main" | "sideboard" | "maybeboard" | "commander" | "partner";
 
 function headingSection(heading: string): DecklistSection | undefined {
@@ -125,7 +131,9 @@ function parseDecklistCard(line: string, section: DecklistSection): UrlImportCar
   const match = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
   if (!match) return null;
   const quantity = Math.min(Math.max(1, Number.parseInt(match[1], 10)), 99);
-  const name = stripTrailingSetCodeSuffix(stripSlashOrPipeCommentSuffix(match[2])).trim();
+  const name = stripTrailingSetCodeSuffix(
+    stripTrailingFoilMarker(stripSlashOrPipeCommentSuffix(match[2]))
+  ).trim();
   if (!name) return null;
   return {
     name,

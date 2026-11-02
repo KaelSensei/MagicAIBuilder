@@ -188,6 +188,12 @@ describe("parsePlainTextDecklist", () => {
     ]);
   });
 
+  it("accepts CardNexus foil markers without treating them as part of the card name", () => {
+    expect(parsePlainTextDecklist("4x Lightning Bolt (M10) 146 *F*")).toEqual([
+      { name: "Lightning Bolt", quantity: 4, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
   it("keeps both halves of a split card while stripping a trailing comment", () => {
     const cards = parsePlainTextDecklist("1 Fire // Ice // foil\n1 Sol Ring // Foil");
     expect(cards.map((card) => card.name)).toEqual(["Fire // Ice", "Sol Ring"]);
