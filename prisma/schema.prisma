@@ -10,38 +10,38 @@ datasource db {
 // ─── NextAuth Models ────────────────────────────────────────────────
 
 model User {
-  id                      String                  @id @default(cuid())
-  name                    String?
-  username                String?                 @unique // public profile slug (e.g. /u/kael)
-  onboardingDone          Boolean                 @default(false) // true after first-run wizard completed or skipped
-  email                   String                  @unique
-  emailVerified           DateTime?
-  image                   String?
-  password                String? // hashed password for credentials provider (null for OAuth-only users)
-  accounts                Account[]
-  sessions                Session[]
-  decks                   Deck[]
-  deckFolders             DeckFolder[]
-  collection              CollectionCard[]
-  favorites               CardFavorite[]
-  favoriteLists           FavoriteList[]
-  ratings                 DeckRating[]
-  votes                   DeckVote[]
-  playtests               PlaytestSession[]
-  comments                DeckComment[]
-  deckReports             DeckReport[]            @relation("DeckReportReporter")
-  moderatedReports        DeckReport[]            @relation("DeckReportModerator")
-  publicDeckFolders       PublicDeckFolder[]
-  savedPublicDecks        SavedPublicDeck[]
-  cardPackages            CardPackage[]
-  acquisitionIntents      AcquisitionIntent[]
-  isModerator             Boolean                 @default(false)
-  following               UserFollow[]            @relation("Following")
-  followers               UserFollow[]            @relation("Followers")
-  apiKeys                 ApiKey[]
+  id                String             @id @default(cuid())
+  name              String?
+  username          String?            @unique // public profile slug (e.g. /u/kael)
+  onboardingDone    Boolean            @default(false) // true after first-run wizard completed or skipped
+  email             String             @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String? // hashed password for credentials provider (null for OAuth-only users)
+  accounts          Account[]
+  sessions          Session[]
+  decks             Deck[]
+  deckFolders       DeckFolder[]
+  collection        CollectionCard[]
+  favorites         CardFavorite[]
+  favoriteLists     FavoriteList[]
+  ratings           DeckRating[]
+  votes             DeckVote[]
+  playtests         PlaytestSession[]
+  comments          DeckComment[]
+  deckReports       DeckReport[]       @relation("DeckReportReporter")
+  moderatedReports  DeckReport[]       @relation("DeckReportModerator")
+  publicDeckFolders PublicDeckFolder[]
+  savedPublicDecks  SavedPublicDeck[]
+  cardPackages      CardPackage[]
+  acquisitionIntents AcquisitionIntent[]
+  isModerator       Boolean            @default(false)
+  following         UserFollow[]       @relation("Following")
+  followers         UserFollow[]       @relation("Followers")
+  apiKeys           ApiKey[]
   notificationPreferences NotificationPreference?
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 /// A private, reversible plan for how a missing printing will be acquired.
@@ -113,32 +113,32 @@ model VerificationToken {
 
 /// A Commander (or Brawl) deck with its metadata
 model Deck {
-  id                 String              @id @default(cuid())
+  id                 String            @id @default(cuid())
   name               String
-  description        String?             @default("")
-  tags               String[]            @default([])
-  format             String              @default("commander")
-  targetBracket      Int                 @default(3)
+  description        String?           @default("")
+  tags               String[]          @default([])
+  format             String            @default("commander")
+  targetBracket      Int               @default(3)
   budget             Float?
   commanderId        String?
   commanderName      String? // denormalised from the isCommander DeckCard; lets community discovery match a commander slug in SQL
   partnerId          String?
   companionId        String?
-  pairingType        String              @default("none")
+  pairingType        String            @default("none")
   manualBracket      Int? // null = use calculated score, 1-4 = manual override
-  shareToken         String?             @unique
-  shareEnabled       Boolean             @default(false)
-  isPublic           Boolean             @default(false) // visible on public profile page
-  seekingFeedback    Boolean             @default(false)
+  shareToken         String?           @unique
+  shareEnabled       Boolean           @default(false)
+  isPublic           Boolean           @default(false) // visible on public profile page
+  seekingFeedback    Boolean           @default(false)
   feedbackQuestion   String?
-  isAIGenerated      Boolean             @default(false)
+  isAIGenerated      Boolean           @default(false)
   forkedFromDeckId   String?
   forkedFromDeckName String?
   forkedFromUserName String?
   userId             String?
-  user               User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
   folderId           String?
-  folder             DeckFolder?         @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  folder             DeckFolder?       @relation(fields: [folderId], references: [id], onDelete: SetNull)
   cards              DeckCard[]
   snapshots          DeckSnapshot[]
   ratings            DeckRating[]
@@ -148,8 +148,8 @@ model Deck {
   reports            DeckReport[]
   acquisitionIntents AcquisitionIntent[]
   savedBy            SavedPublicDeck[]
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   @@index([userId])
   @@index([folderId])
