@@ -2,6 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import type { MetaEvidenceKind } from "@/lib/meta/evidence-label";
+import { RecommendationProvenance } from "./RecommendationProvenance";
 
 type MetaDisclosureSource = "edhrec" | "tournament";
 
@@ -39,7 +40,8 @@ export function MetaSourceDisclosure({
   if (Number.isNaN(observedDate.getTime())) {
     return (
       <p className="text-[10px] text-[var(--text-secondary)]">
-        {t("meta.sourceDisclosureUnavailable", { source: label })} {t("meta.evidenceType", { type: t(`meta.evidence.${evidenceKind}`) })}
+        {t("meta.sourceDisclosureUnavailable", { source: label })}{" "}
+        <RecommendationProvenance kind={evidenceKind} />
       </p>
     );
   }
@@ -60,7 +62,8 @@ export function MetaSourceDisclosure({
       {t(stale ? "meta.staleSourceDisclosure" : "meta.sourceDisclosure", {
         source: label,
         date,
-      })} {t("meta.evidenceType", { type: t(`meta.evidence.${evidenceKind}`) })}
+      })}{" "}
+      <RecommendationProvenance kind={evidenceKind} />
     </p>
   );
 }
