@@ -23,6 +23,7 @@ import { AIDeckBriefFields } from "./AIDeckBriefFields";
 import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
 import { RecommendationProvenance } from "./RecommendationProvenance";
 import { SuggestionAlternatives } from "./SuggestionAlternatives";
+import { ExternalRecommendationFreshness } from "./ExternalRecommendationFreshness";
 import { DeckQuestionControls } from "./DeckQuestionControls";
 import type { DeckQuestion } from "@/lib/ai/deck-question";
 import type { DeckCard } from "@/lib/deck/types";
@@ -68,6 +69,12 @@ const PRIORITY_COLORS = {
   medium: "text-amber-400",
   low: "text-[var(--text-secondary)]",
 };
+
+function providerLabel(provider: AISuggestionResult["provider"]): string {
+  if (provider === "openai") return "OpenAI";
+  if (provider === "anthropic") return "Anthropic";
+  return "MagicAIBuilder demo";
+}
 
 export function AISuggestionsPanel({
   result,
@@ -304,20 +311,29 @@ export function AISuggestionsPanel({
                   )}
                 </button>
                 {analysedAt && !isLoading && (
-                  <p className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)] justify-center">
-                    <Clock className="w-2.5 h-2.5" />
-                    {t("ai.analysedAgo", {
-                      time: (() => {
-                        const secs = Math.floor(
-                          (Date.now() - analysedAt.getTime()) / 1000
-                        );
-                        if (secs < 60) return t("ai.timeJustNow");
-                        return t("ai.timeMinAgo", {
-                          mins: Math.floor(secs / 60),
-                        });
-                      })(),
-                    })}
-                  </p>
+                  <>
+                    <p className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)] justify-center">
+                      <Clock className="w-2.5 h-2.5" />
+                      {t("ai.analysedAgo", {
+                        time: (() => {
+                          const secs = Math.floor(
+                            (Date.now() - analysedAt.getTime()) / 1000
+                          );
+                          if (secs < 60) return t("ai.timeJustNow");
+                          return t("ai.timeMinAgo", {
+                            mins: Math.floor(secs / 60),
+                          });
+                        })(),
+                      })}
+                    </p>
+                    {result && (
+                      <ExternalRecommendationFreshness
+                        source={providerLabel(result.provider)}
+                        observedAt={analysedAt}
+                        sampleSize={currentCardNames.length}
+                      />
+                    )}
+                  </>
                 )}
               </div>
 
