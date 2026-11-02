@@ -355,9 +355,11 @@ function importAetherHub(url: string): UrlImportResult {
   const main = parsePlainTextDecklist(params.get("m") ?? "");
   const sideboardText = params.get("sb") ?? "";
   const isCommander = params.get("t") === "cmd";
-  const sideboard = parsePlainTextDecklist(
-    sideboardText ? `${isCommander ? "Commander" : "Sideboard"}\n${sideboardText}` : ""
-  );
+  const sideboardHeader = isCommander ? "Commander" : "Sideboard";
+  const sideboardPayload = sideboardText
+    ? `${sideboardHeader}\n${sideboardText}`
+    : "";
+  const sideboard = parsePlainTextDecklist(sideboardPayload);
 
   if (main.length === 0 && sideboard.length === 0) {
     throw new Error("AetherHub URL does not contain any cards");
