@@ -133,6 +133,22 @@ describe("importFromUrl", () => {
     ]));
   });
 
+  it("keeps a regular AetherHub sideboard and discloses its format", async () => {
+    const result = await importFromUrl(
+      "https://aetherhub.com/Deck/Builder?m=1%20Sol%20Ring&sb=2%20Negate"
+    );
+
+    expect(result.formatWarning).toContain("not marked as Commander");
+    expect(result.cards).toContainEqual(
+      expect.objectContaining({ name: "Negate", quantity: 2, zone: "sideboard" })
+    );
+  });
+
+  it("rejects an AetherHub URL without cards", async () => {
+    await expect(importFromUrl("https://aetherhub.com/Deck/Builder?m=")).rejects
+      .toThrow("does not contain any cards");
+  });
+
   it("throws when URL is not recognised", async () => {
     await expect(importFromUrl("https://example.com/deck/1")).rejects.toThrow(
       "URL not recognised"
