@@ -297,7 +297,11 @@
       "cardLabel": "Card to explain",
       "chooseCard": "Choose a card",
       "whyCard": "Why is this card here?",
-      "weakestCard": "Find weakest card"
+      "weakestCard": "Find weakest card",
+      "weakestResult": "Local assessment: {card}",
+      "criterionBanned": "This card is banned in the selected format.",
+      "criterionUnclassified": "No assigned deck role was found for this card.",
+      "criterionAboveCurve": "Its mana value is at least two above this deck's average."
     },
     "title": "AI Suggestions",
     "archetype": "Archetype",

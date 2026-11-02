@@ -434,7 +434,11 @@
       "cardLabel": "Carte à expliquer",
       "chooseCard": "Choisir une carte",
       "whyCard": "Pourquoi cette carte ?",
-      "weakestCard": "Trouver la carte la plus faible"
+      "weakestCard": "Trouver la carte la plus faible",
+      "weakestResult": "Analyse locale : {card}",
+      "criterionBanned": "Cette carte est interdite dans le format sélectionné.",
+      "criterionUnclassified": "Aucun rôle de deck n'est attribué à cette carte.",
+      "criterionAboveCurve": "Sa valeur de mana dépasse d'au moins deux la moyenne du deck."
     },
     "archetype": "Archétype",
     "detected": "(détecté : {archetype})",
