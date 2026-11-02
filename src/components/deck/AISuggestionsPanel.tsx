@@ -21,6 +21,7 @@ import type { Archetype } from "@/lib/ai/archetypes";
 import type { DeckBrief } from "@/lib/ai/deck-brief";
 import { AIDeckBriefFields } from "./AIDeckBriefFields";
 import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
+import { RecommendationProvenance } from "./RecommendationProvenance";
 import { SuggestionAlternatives } from "./SuggestionAlternatives";
 import { DeckQuestionControls } from "./DeckQuestionControls";
 import type { DeckQuestion } from "@/lib/ai/deck-question";
@@ -442,9 +443,7 @@ export function AISuggestionsPanel({
                                   )}
                                 </span>
                               </div>
-                              <p className="text-[10px] text-[var(--text-secondary)]">
-                                {t("meta.evidenceType", { type: t("meta.evidence.ai") })}
-                              </p>
+                              <RecommendationProvenance kind="ai" />
                               <p className="text-[11px] text-[var(--text-secondary)] leading-tight">
                                 {s.reason}
                               </p>
