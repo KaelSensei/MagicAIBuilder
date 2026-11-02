@@ -26,6 +26,7 @@
     "complete": "All cards needed for these decks are in your collection.",
     "summary": "{count} to acquire across {decks} decks · Known-price subtotal: {cost}",
     "unpriced": "Price unavailable for {count, plural, one {# copy} other {# copies}}",
+    "requiredAcrossDecks": "{count, plural, one {# copy} other {# copies}} required across {decks, plural, one {# deck} other {# decks}}",
     "toAcquire": "{count} to acquire"
   },
   "loading": "Loading collection…",

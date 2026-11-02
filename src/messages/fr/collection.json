@@ -26,6 +26,7 @@
     "complete": "Toutes les cartes nécessaires pour ces decks sont dans votre collection.",
     "summary": "{count} à acquérir pour {decks} decks · Sous-total des prix connus : {cost}",
     "unpriced": "Prix indisponible pour {count, plural, one {# exemplaire} other {# exemplaires}}",
+    "requiredAcrossDecks": "{count, plural, one {# exemplaire} other {# exemplaires}} requis pour {decks, plural, one {# deck} other {# decks}}",
     "toAcquire": "{count} à acquérir"
   },
   "loading": "Chargement de la collection…",
