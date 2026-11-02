@@ -168,16 +168,11 @@ describe("ShoppingListModal", () => {
     expect(writeText.mock.calls[0]?.[0]).not.toContain("Sol Ring");
   });
 
-  it("restores deferred printings for the same owner and deck after reopening", async () => {
-    const { unmount } = renderWithIntl(
-      <ShoppingListModal deck={deck} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
-    unmount();
-
+  it("starts in the reversible buy-now state before a saved intent is loaded", () => {
     renderWithIntl(<ShoppingListModal deck={deck} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />);
-    expect(await screen.findByRole("button", { name: "Buy now: Sol Ring" })).toBeInTheDocument();
-    expect(screen.getByText("No cards planned for now")).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: "Proxy now: Sol Ring" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Buy later: Sol Ring" })).toBeInTheDocument();
   });
 
   it("keeps deferred printings separate across decks and owners", async () => {
