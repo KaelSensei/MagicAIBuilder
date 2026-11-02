@@ -85,6 +85,33 @@ export interface MetaShiftReport {
   readonly shifts: readonly MetaShift[];
 }
 
+/** How confidently the view can describe one top-20 movement. */
+export type MetaTrendCertainty = "exact" | "at-least" | "at-most";
+
+/** A trend row suitable for rendering without inventing an unobserved value. */
+export interface MetaTrendViewRow {
+  readonly name: string;
+  readonly certainty: MetaTrendCertainty;
+  /** Absolute movement in inclusion points, exact or bounded by `certainty`. */
+  readonly magnitude: number;
+}
+
+/**
+ * A rendering model for EDHREC trend data.
+ *
+ * The source publishes only a top-20 list. Entries and exits therefore cannot
+ * report exact movement: the card was present below the unobserved cut-off, not
+ * necessarily absent. Consumers render `certainty` alongside `magnitude`.
+ */
+export interface MetaTrendView {
+  readonly sourceLimit: number;
+  readonly uncertainty: string;
+  readonly rows: readonly MetaTrendViewRow[];
+}
+
+const TOP_TWENTY_UNCERTAINTY =
+  "EDHREC only publishes the top 20 cards; entries and exits are bounds, not exact changes.";
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
@@ -124,6 +151,37 @@ export function shiftMagnitude(shift: MetaShift): number {
       return exhaustive;
     }
   }
+}
+
+/**
+ * Builds an uncertainty-aware rendering model from a measured meta report.
+ *
+ * @param report - the comparison returned by {@link computeMetaShifts}
+ * @returns rows that distinguish exact measurements from top-20 bounds, or null without evidence
+ */
+export function buildMetaTrendView(
+  report: Pick<MetaShiftReport, "shifts"> | null
+): MetaTrendView | null {
+  if (!report) return null;
+
+  const rows = report.shifts.map((shift): MetaTrendViewRow => {
+    switch (shift.kind) {
+      case "rose":
+      case "fell":
+      case "steady":
+        return { name: shift.name, certainty: "exact", magnitude: Math.abs(shift.delta) };
+      case "entered":
+        return { name: shift.name, certainty: "at-least", magnitude: shift.deltaAtLeast };
+      case "left":
+        return { name: shift.name, certainty: "at-most", magnitude: Math.abs(shift.deltaAtMost) };
+      default: {
+        const exhaustive: never = shift;
+        return exhaustive;
+      }
+    }
+  });
+
+  return { sourceLimit: META_TOP_LIMIT, uncertainty: TOP_TWENTY_UNCERTAINTY, rows };
 }
 
 function measuredKind(delta: number): MeasuredShiftKind {

@@ -78,6 +78,7 @@ import type { DeckQuestion } from "@/lib/ai/deck-question";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 import { MetaPanel } from "@/components/deck/MetaPanel";
+import { MetaTrendsView } from "@/components/deck/MetaTrendsView";
 import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { DeckSaveIndicator } from "@/components/deck/DeckSaveIndicator";
@@ -1116,6 +1117,8 @@ export default function BuilderPage() {
               deckCardNames={new Set(deck.cards.map((c) => c.name))}
               onAddCard={handleAIAddCard}
             />
+
+            <MetaTrendsView commanderName={deck.commander?.name ?? null} />
 
             <CollectionStatsPanel deck={deck} />
 
