@@ -26,6 +26,12 @@ export interface MetaState {
   isLoadingTournament: boolean;
   errorEdhrec: string | null;
   errorTournament: string | null;
+  sourceHealth: Record<"edhrec" | "tournament", MetaSourceHealth>;
+}
+
+export interface MetaSourceHealth {
+  readonly status: "idle" | "available" | "unavailable";
+  readonly attempts: number;
 }
 
 /**
@@ -42,6 +48,10 @@ export function useMetaAnalysis(commanderName: string | null) {
     isLoadingTournament: false,
     errorEdhrec: null,
     errorTournament: null,
+    sourceHealth: {
+      edhrec: { status: "idle", attempts: 0 },
+      tournament: { status: "idle", attempts: 0 },
+    },
   });
 
   const fetchSource = useCallback(
@@ -54,6 +64,13 @@ export function useMetaAnalysis(commanderName: string | null) {
         ...prev,
         [isEdhrec ? "isLoadingEdhrec" : "isLoadingTournament"]: true,
         [isEdhrec ? "errorEdhrec" : "errorTournament"]: null,
+        sourceHealth: {
+          ...prev.sourceHealth,
+          [source]: {
+            status: prev.sourceHealth[source].status,
+            attempts: prev.sourceHealth[source].attempts + 1,
+          },
+        },
       }));
 
       try {
@@ -69,6 +86,10 @@ export function useMetaAnalysis(commanderName: string | null) {
           ...prev,
           [isEdhrec ? "edhrec" : "tournament"]: data,
           [isEdhrec ? "isLoadingEdhrec" : "isLoadingTournament"]: false,
+          sourceHealth: {
+            ...prev.sourceHealth,
+            [source]: { ...prev.sourceHealth[source], status: "available" },
+          },
         }));
       } catch (err) {
         setState((prev) => ({
@@ -76,6 +97,10 @@ export function useMetaAnalysis(commanderName: string | null) {
           [isEdhrec ? "isLoadingEdhrec" : "isLoadingTournament"]: false,
           [isEdhrec ? "errorEdhrec" : "errorTournament"]:
             err instanceof Error ? err.message : "Failed to load meta",
+          sourceHealth: {
+            ...prev.sourceHealth,
+            [source]: { ...prev.sourceHealth[source], status: "unavailable" },
+          },
         }));
       }
     },
