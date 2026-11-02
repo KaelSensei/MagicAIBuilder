@@ -182,6 +182,12 @@ describe("parsePlainTextDecklist", () => {
     expect(cards.map((c) => c.name)).toEqual(["Sol Ring", "Counterspell"]);
   });
 
+  it("strips a ManaBox set suffix whose collector number has a letter variant", () => {
+    expect(parsePlainTextDecklist("1 Wastes (OGW) 184a")).toEqual([
+      { name: "Wastes", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
   it("keeps both halves of a split card while stripping a trailing comment", () => {
     const cards = parsePlainTextDecklist("1 Fire // Ice // foil\n1 Sol Ring // Foil");
     expect(cards.map((card) => card.name)).toEqual(["Fire // Ice", "Sol Ring"]);
