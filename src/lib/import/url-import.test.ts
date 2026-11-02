@@ -448,6 +448,22 @@ describe("importFromUrl", () => {
     expect(result.cards.length).toBeGreaterThanOrEqual(2);
   });
 
+  it("MTGDecks: preserves the deck format when loading its text export", async () => {
+    const request = vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response("4 Lightning Bolt\n", { status: 200 })
+    );
+
+    const result = await importFromUrl("https://mtgdecks.net/Modern/burn-list");
+
+    expect(result.cards).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: "Lightning Bolt", quantity: 4 }),
+    ]));
+    expect(request).toHaveBeenCalledWith(
+      "https://mtgdecks.net/Modern/burn-list/txt",
+      { headers: { Accept: "text/plain, text/html" } }
+    );
+  });
+
   it("MTGDecks: throws when txt has no cards", async () => {
     vi.spyOn(http, "httpGet").mockResolvedValueOnce(
       new Response("# header only\n", { status: 200 })
