@@ -25,8 +25,21 @@ function isSetCodeChar(c: string): boolean {
   return /^[a-z0-9]$/i.test(c);
 }
 
-function isCollectorSuffixChar(c: string): boolean {
-  return isEcmaWhitespaceChar(c) || /^\d$/.test(c);
+function trailingCollectorNumberStart(name: string): number | null {
+  let index = name.length;
+  while (index > 0 && isEcmaWhitespaceChar(name[index - 1] ?? "")) {
+    index--;
+  }
+
+  while (index > 0 && /^[a-z]$/i.test(name[index - 1] ?? "")) {
+    index--;
+  }
+
+  const numberEnd = index;
+  while (index > 0 && /^\d$/.test(name[index - 1] ?? "")) {
+    index--;
+  }
+  return index === numberEnd ? null : index;
 }
 
 function splitCardCommentStart(name: string, firstSlash: number): number | null {
@@ -63,14 +76,9 @@ function stripSlashOrPipeCommentSuffix(name: string): string {
  * Mirrors `.replace(/\s*\([A-Z0-9]{2,6}\)[\s\d]*$/, "")`.
  */
 function stripTrailingSetCodeSuffix(name: string): string {
-  let i = name.length;
-  while (i > 0) {
-    const ch = name[i - 1] ?? "";
-    if (isCollectorSuffixChar(ch)) {
-      i--;
-      continue;
-    }
-    break;
+  let i = trailingCollectorNumberStart(name) ?? name.length;
+  while (i > 0 && isEcmaWhitespaceChar(name[i - 1] ?? "")) {
+    i--;
   }
   if (i === 0 || name[i - 1] !== ")") return name;
 
