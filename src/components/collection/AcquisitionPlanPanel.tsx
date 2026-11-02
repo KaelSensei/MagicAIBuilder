@@ -177,6 +177,14 @@ export function AcquisitionPlanPanel() {
                           {quickAdd("owned", { count: item.ownedQuantity })}
                         </p>
                       )}
+                      {item.decks.length > 1 && (
+                        <p className="text-xs text-[var(--text-secondary)]">
+                          {t("requiredAcrossDecks", {
+                            count: item.requiredQuantity,
+                            decks: item.decks.length,
+                          })}
+                        </p>
+                      )}
                       <p className="text-xs text-[var(--text-secondary)]">
                         {item.decks.map((deck, index) => (
                           <span key={deck.id}>
