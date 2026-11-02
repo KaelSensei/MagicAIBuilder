@@ -94,6 +94,13 @@ export function exportMTGO(deck: Deck): string {
   const allCards: { name: string; qty: number; isSideboard?: boolean }[] = [];
   if (deck.commander) allCards.push({ name: deck.commander.name, qty: 1 });
   if (deck.partner) allCards.push({ name: deck.partner.name, qty: 1 });
+  const companion = deck.companion;
+  const companionIsInSideboard = deck.cards.some(
+    (card) => card.zone === "sideboard" && card.name === companion?.name,
+  );
+  if (companion && !companionIsInSideboard) {
+    allCards.push({ name: companion.name, qty: 1, isSideboard: true });
+  }
   for (const card of deck.cards) {
     if (card.zone === "maybeboard") continue;
     allCards.push({ name: card.name, qty: card.quantity, isSideboard: card.zone === "sideboard" });

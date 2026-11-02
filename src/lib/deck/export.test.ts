@@ -215,6 +215,21 @@ describe("exportArena", () => {
 });
 
 describe("exportMTGO", () => {
+  it("preserves the companion alongside sideboard cards", () => {
+    const deck = makeDeck({
+      companion: makeCard("Lurrus of the Dream-Den"),
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 3, { zone: "sideboard" }),
+      ],
+    });
+
+    const xml = exportMTGO(deck);
+
+    expect(xml).toContain('Quantity="1" Sideboard="true" Name="Lurrus of the Dream-Den"');
+    expect(xml).toContain('Quantity="3" Sideboard="true" Name="Negate"');
+  });
+
   it("keeps sideboard quantities separate from the playable deck", () => {
     const deck = makeDeck({
       cards: [
