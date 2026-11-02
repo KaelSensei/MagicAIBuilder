@@ -76,7 +76,21 @@ vi.mock("@/hooks/useToast", () => ({
   useToastStore: { getState: () => ({ add: toastAdd }) },
 }));
 
+const collectionState = vi.hoisted(() => ({
+  collectionCards: {} as Record<string, { name: string; quantity: number; scryfallId: string }>,
+  collectionCardsFoil: {} as Record<string, { name: string; quantity: number; scryfallId: string }>,
+}));
+
+vi.mock("@/lib/collection/store", () => ({
+  useCollectionStore: { getState: () => collectionState },
+}));
+
+vi.mock("@/lib/scryfall/client", () => ({
+  getCardById: vi.fn(),
+}));
+
 import * as deckApi from "@/lib/db/deck-api";
+import * as scryfallClient from "@/lib/scryfall/client";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -232,6 +246,8 @@ describe("addCard and removeCard sync overlap", () => {
 describe("useDeckStore — bulkRemoveCards recovery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  collectionState.collectionCards = {};
+  collectionState.collectionCardsFoil = {};
     seedDeck();
   });
   it("keeps bulk removal activity after a manual bracket save finishes", async () => {
@@ -856,6 +872,45 @@ describe("useDeckStore — setManualBracket", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — addCard", () => {
+  it("prefers an owned printing with the same name without changing the collection", async () => {
+    const searchedCard = makeScryfallCard({ id: "searched-printing", name: "Lightning Bolt" });
+    const ownedPrinting = makeScryfallCard({ id: "owned-printing", name: "Lightning Bolt" });
+    collectionState.collectionCards = {
+      "owned-printing": { name: "Lightning Bolt", quantity: 1, scryfallId: "owned-printing" },
+    };
+    vi.mocked(scryfallClient.getCardById).mockResolvedValueOnce(ownedPrinting);
+    seedDeck();
+
+    await useDeckStore.getState().addCard(searchedCard);
+
+    expect(scryfallClient.getCardById).toHaveBeenCalledWith("owned-printing");
+    expect(deckApi.addCard).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ scryfallId: "owned-printing" })
+    );
+    expect(collectionState.collectionCards["owned-printing"]?.quantity).toBe(1);
+  });
+
+  it("prefers an owned printing when an imported deck card is added", async () => {
+    const ownedPrinting = makeScryfallCard({ id: "owned-printing", name: "Lightning Bolt" });
+    collectionState.collectionCards = {
+      "owned-printing": { name: "Lightning Bolt", quantity: 1, scryfallId: "owned-printing" },
+    };
+    vi.mocked(scryfallClient.getCardById).mockResolvedValueOnce(ownedPrinting);
+    seedDeck();
+
+    await useDeckStore.getState().addDeckCard(
+      makeDeckCard({ id: "imported-printing", scryfallId: "imported-printing", name: "Lightning Bolt" })
+    );
+
+    expect(scryfallClient.getCardById).toHaveBeenCalledWith("owned-printing");
+    expect(deckApi.addCard).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ scryfallId: "owned-printing" })
+    );
+    expect(collectionState.collectionCards["owned-printing"]?.quantity).toBe(1);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     seedDeck();
