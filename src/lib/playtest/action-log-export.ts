@@ -6,6 +6,8 @@ export interface PlaytestTurnSummary {
   readonly draws: number;
   readonly manaProduced: number;
   readonly cardsSeen: number;
+  readonly lifeDelta: number;
+  readonly countersChanged: number;
 }
 
 export interface ActionLogTextFormat {
@@ -39,6 +41,8 @@ export function summarizeActionLog(
       let draws = 0;
       let manaProduced = 0;
       let cardsSeen = 0;
+      let lifeDelta = 0;
+      let countersChanged = 0;
       for (const entry of turnEntries) {
         if (entry.kind === "draw") {
           draws += 1;
@@ -47,9 +51,21 @@ export function summarizeActionLog(
           cardsSeen += 1;
         } else if (entry.kind === "mana") {
           manaProduced += entry.amount ?? 0;
+        } else if (entry.kind === "life") {
+          lifeDelta += entry.lifeDelta ?? 0;
+        } else if (entry.kind === "counter") {
+          countersChanged += entry.counterDelta ?? 0;
         }
       }
-      return { turn, entries: turnEntries, draws, manaProduced, cardsSeen };
+      return {
+        turn,
+        entries: turnEntries,
+        draws,
+        manaProduced,
+        cardsSeen,
+        lifeDelta,
+        countersChanged,
+      };
     });
 }
 
@@ -78,7 +94,7 @@ export function exportActionLogJson(
   entries: readonly PlaytestActionLogEntry[]
 ): string {
   return JSON.stringify(
-    { version: 2, deckName, turns: summarizeActionLog(entries) },
+    { version: 3, deckName, turns: summarizeActionLog(entries) },
     null,
     2
   );

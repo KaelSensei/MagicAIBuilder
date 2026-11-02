@@ -70,8 +70,10 @@ export interface PlaytestActionLogEntry {
   readonly turn: number;
   readonly phase: Phase;
   readonly description: string;
-  readonly kind?: "draw" | "cardSeen" | "mana";
+  readonly kind?: "draw" | "cardSeen" | "mana" | "life" | "counter";
   readonly amount?: number;
+  readonly lifeDelta?: number;
+  readonly counterDelta?: number;
 }
 
 /**
@@ -277,7 +279,7 @@ export function applyDamage(
     lifeTotal: newLife,
     lifeHistory: newHistory,
     isGameOver: newLife <= 0,
-  }, `Lost ${amount} life: ${description}`);
+  }, `Lost ${amount} life: ${description}`, { kind: "life", lifeDelta: -amount });
 }
 
 export function applyHeal(
@@ -297,7 +299,7 @@ export function applyHeal(
   return pushHistory(state, {
     lifeTotal: newLife,
     lifeHistory: newHistory,
-  }, `Gained ${amount} life`);
+  }, `Gained ${amount} life`, { kind: "life", lifeDelta: amount });
 }
 
 // ─── Tap / untap ──────────────────────────────────────────────────────────
@@ -525,11 +527,17 @@ export function applyEditActionLogEntry(
   const exists = state.actionLog.some((entry) => entry.id === entryId);
   if (!exists || normalized === "") return state;
   return pushHistory(state, {
-    actionLog: state.actionLog.map((entry) =>
-      entry.id === entryId
-        ? { ...entry, description: normalized, kind: undefined, amount: undefined }
-        : entry
-    ),
+    actionLog: state.actionLog.map((entry) => {
+      if (entry.id !== entryId) return entry;
+      return {
+        ...entry,
+        description: normalized,
+        kind: undefined,
+        amount: undefined,
+        lifeDelta: undefined,
+        counterDelta: undefined,
+      };
+    }),
   });
 }
 
@@ -560,7 +568,8 @@ export function applyAddCounter(
   return pushHistory(
     state,
     { battlefield: updated },
-    `${amount >= 0 ? "Added" : "Removed"} a counter ${amount >= 0 ? "to" : "from"} ${permanent.name}`
+    `${amount >= 0 ? "Added" : "Removed"} a counter ${amount >= 0 ? "to" : "from"} ${permanent.name}`,
+    { kind: "counter", counterDelta: amount }
   );
 }
 
@@ -588,7 +597,12 @@ function pushHistory(
   state: PlaytestEngine,
   updates: PlaytestEnginePatch,
   actionDescription?: string,
-  evidence?: Partial<Pick<PlaytestActionLogEntry, "kind" | "amount" | "turn" | "phase">>
+  evidence?: Partial<
+    Pick<
+      PlaytestActionLogEntry,
+      "kind" | "amount" | "lifeDelta" | "counterDelta" | "turn" | "phase"
+    >
+  >
 ): PlaytestEngine {
   const actionLog = actionDescription
     ? [
@@ -600,6 +614,8 @@ function pushHistory(
           description: actionDescription,
           ...(evidence?.kind ? { kind: evidence.kind } : {}),
           ...(evidence?.amount ? { amount: evidence.amount } : {}),
+          ...(evidence?.lifeDelta !== undefined ? { lifeDelta: evidence.lifeDelta } : {}),
+          ...(evidence?.counterDelta !== undefined ? { counterDelta: evidence.counterDelta } : {}),
         },
       ]
     : updates.actionLog;
