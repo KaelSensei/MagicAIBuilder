@@ -1,9 +1,10 @@
 "use client";
 // Displays the total deck price with a missing-price warning
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { DollarSign, AlertCircle } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { useDeckPrice } from "@/hooks/useDeckPrice";
+import { formatUsdPrice } from "@/i18n/number-format";
 
 interface DeckPriceDisplayProps {
   readonly className?: string;
@@ -15,7 +16,7 @@ interface DeckPriceDisplayProps {
  */
 export function DeckPriceDisplay({ className }: DeckPriceDisplayProps) {
   const t = useTranslations("deck");
-  const format = useFormatter();
+  const locale = useLocale();
   const { totalPrice, missingPriceCount, hasCards } = useDeckPrice();
 
   if (!hasCards) return null;
@@ -39,7 +40,7 @@ export function DeckPriceDisplay({ className }: DeckPriceDisplayProps) {
           </span>
         </div>
         <span className="text-sm font-semibold text-emerald-400">
-          {format.number(totalPrice, { style: "currency", currency: "USD" })}
+          {formatUsdPrice(locale, totalPrice)}
         </span>
       </div>
 
