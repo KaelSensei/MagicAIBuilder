@@ -4,8 +4,16 @@ const localizedNumberFormatters = {
 } satisfies Record<"en" | "fr", Intl.NumberFormat>;
 
 const usdPriceFormatters = {
-  en: new Intl.NumberFormat("en", { style: "currency", currency: "USD" }),
-  fr: new Intl.NumberFormat("fr", { style: "currency", currency: "USD" }),
+  en: new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: "USD",
+    currencyDisplay: "code",
+  }),
+  fr: new Intl.NumberFormat("fr", {
+    style: "currency",
+    currency: "USD",
+    currencyDisplay: "code",
+  }),
 } satisfies Record<"en" | "fr", Intl.NumberFormat>;
 
 const localizedDateFormatters = {

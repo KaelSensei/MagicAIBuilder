@@ -4,6 +4,7 @@ import {
   formatLocalizedDate,
   formatLocalizedNumber,
   formatManaSymbols,
+  formatUsdPrice,
 } from "./number-format";
 import enBuilder from "@/messages/en/builder.json";
 import frBuilder from "@/messages/fr/builder.json";
@@ -41,6 +42,13 @@ describe("locale formatting contract", () => {
     const manaCost = "{W}{U}{B}{R}{G}";
 
     expect(formatManaSymbols(manaCost)).toBe(manaCost);
+  });
+
+  it.each([
+    ["en", "USD\u00a01,234.50"],
+    ["fr", "1\u202f234,50\u00a0USD"],
+  ])("labels Scryfall prices as USD in %s", (locale, expected) => {
+    expect(formatUsdPrice(locale, 1234.5)).toBe(expected);
   });
 
   it("keeps mana symbols accessible with a localized label in English and French", () => {
