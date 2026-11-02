@@ -7,6 +7,7 @@
  *   - TappedOut  : tappedout.net/mtg-decks/[slug]
  *   - MTGTop8    : mtgtop8.com/event?e=[id]&d=[id]
  *   - MTGDecks   : mtgdecks.net/Commander/[slug]
+ *   - AetherHub  : aetherhub.com/Deck/Builder?m=...&sb=...&t=cmd
  *   - EDHRec     : edhrec.com/commanders/[slug] (average deck)
  *
  * All external calls happen server-side (called from /api/import/url).
@@ -18,6 +19,7 @@ export type ImportSource =
   | "tappedout"
   | "mtgtop8"
   | "mtgdecks"
+  | "aetherhub"
   | "edhrec";
 
 export interface UrlImportCard {
@@ -68,6 +70,11 @@ const SOURCE_PATTERNS: Array<{
     source: "mtgdecks",
     re: /^https?:\/\/(?:www\.)?mtgdecks\.net\/[^/]+\/([^/?#]+)/,
     extract: (m) => m[1],
+  },
+  {
+    source: "aetherhub",
+    re: /^https?:\/\/(?:www\.)?aetherhub\.com\/Deck\/Builder\?[^#]+/i,
+    extract: (m) => m[0],
   },
   {
     source: "edhrec",
@@ -342,6 +349,29 @@ async function importMtgDecks(slug: string): Promise<UrlImportResult> {
   return { name: `MTGDecks: ${slug}`, source: "mtgdecks", cards, ignored: [] };
 }
 
+/** Import AetherHub's documented URL payload without scraping a public page. */
+function importAetherHub(url: string): UrlImportResult {
+  const params = new URL(url).searchParams;
+  const main = parsePlainTextDecklist(params.get("m") ?? "");
+  const sideboardText = params.get("sb") ?? "";
+  const isCommander = params.get("t") === "cmd";
+  const sideboard = parsePlainTextDecklist(
+    sideboardText ? `${isCommander ? "Commander" : "Sideboard"}\n${sideboardText}` : ""
+  );
+
+  if (main.length === 0 && sideboard.length === 0) {
+    throw new Error("AetherHub URL does not contain any cards");
+  }
+
+  return {
+    name: "AetherHub deck",
+    source: "aetherhub",
+    cards: [...main, ...sideboard],
+    ignored: [],
+    ...(isCommander ? {} : { formatWarning: "This AetherHub deck is not marked as Commander." }),
+  };
+}
+
 // ─── EDHRec ───────────────────────────────────────────────────────────────────
 // EDHRec average deck JSON: /json_to_card.json?commanders=[slug]
 
@@ -401,7 +431,7 @@ export async function importFromUrl(url: string): Promise<UrlImportResult> {
   const detected = detectSource(url.trim());
   if (!detected) {
     throw new Error(
-      "URL not recognised. Supported sources: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, EDHRec."
+      "URL not recognised. Supported sources: Moxfield, Archidekt, TappedOut, MTGTop8, MTGDecks, AetherHub, EDHRec."
     );
   }
 
@@ -412,6 +442,7 @@ export async function importFromUrl(url: string): Promise<UrlImportResult> {
     case "tappedout":  return importTappedOut(id);
     case "mtgtop8":    return importMtgTop8(id);
     case "mtgdecks":   return importMtgDecks(id);
+    case "aetherhub":  return importAetherHub(id);
     case "edhrec":     return importEdhrec(id);
   }
 }
