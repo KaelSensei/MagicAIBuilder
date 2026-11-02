@@ -35,6 +35,7 @@ describe("MetaTrendsView", () => {
     );
 
     expect(screen.getByText("EDHREC top 20")).toBeInTheDocument();
+    expect(screen.getByText("Oct 1, 2026 – Nov 1, 2026")).toBeInTheDocument();
     expect(
       screen.getByText(/Below the list before.*fall is an upper bound/)
     ).toBeInTheDocument();

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { AlertCircle, Loader2, TrendingUp } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useMetaShifts } from "@/hooks/useMetaShifts";
 import { buildMetaTrendView, type MetaTrendViewRow } from "@/lib/meta/history";
 
@@ -45,12 +45,18 @@ function MetaTrendRow({ row }: { readonly row: MetaTrendViewRow }) {
  */
 export function MetaTrendsView({ commanderName }: { readonly commanderName: string | null }) {
   const t = useTranslations("deck");
+  const format = useFormatter();
   const { report, isLoading, error, fetchShifts } = useMetaShifts(commanderName);
   const view = useMemo(() => buildMetaTrendView(report), [report]);
   const rows = useMemo(
     () => (view?.rows ?? []).filter((row) => row.magnitude > 0).slice(0, MAX_TRENDS_SHOWN),
     [view]
   );
+  const captureWindow = useMemo(() => {
+    if (!report) return null;
+    const options = { dateStyle: "medium" } satisfies Intl.DateTimeFormatOptions;
+    return `${format.dateTime(new Date(report.baselineCapturedOn), options)} – ${format.dateTime(new Date(report.currentCapturedOn), options)}`;
+  }, [format, report]);
 
   useEffect(() => {
     if (commanderName) void fetchShifts();
@@ -79,6 +85,12 @@ export function MetaTrendsView({ commanderName }: { readonly commanderName: stri
       <p className="text-[10px] leading-relaxed text-[var(--text-secondary)]">
         {t("meta.shifts.enteredHint")} {t("meta.shifts.leftHint")}
       </p>
+
+      {captureWindow && (
+        <p className="text-[10px] tabular-nums text-[var(--text-secondary)]">
+          {captureWindow}
+        </p>
+      )}
 
       {isLoading && <Loader2 className="h-4 w-4 animate-spin text-[var(--accent-text)]" />}
 
