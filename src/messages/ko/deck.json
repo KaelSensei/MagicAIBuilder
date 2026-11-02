@@ -673,7 +673,8 @@
     "warningGroups": {
       "legality": "합법성 오류",
       "strategy": "전략 제안",
-      "advice": "선택적 조언"
+      "advice": "선택적 조언",
+      "optional": "선택적 덱 조언"
     }
   },
   "buyList": {

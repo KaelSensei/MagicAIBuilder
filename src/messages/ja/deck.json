@@ -673,7 +673,8 @@
     "warningGroups": {
       "legality": "適正エラー",
       "strategy": "戦略的な提案",
-      "advice": "任意のアドバイス"
+      "advice": "任意のアドバイス",
+      "optional": "任意のデッキアドバイス"
     }
   },
   "buyList": {

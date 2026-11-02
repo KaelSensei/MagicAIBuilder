@@ -673,7 +673,8 @@
     "warningGroups": {
       "legality": "合法性错误",
       "strategy": "策略建议",
-      "advice": "可选建议"
+      "advice": "可选建议",
+      "optional": "可选套牌建议"
     }
   },
   "buyList": {
