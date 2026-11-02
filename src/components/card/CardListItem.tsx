@@ -1,12 +1,13 @@
 "use client";
 import { motion } from "framer-motion";
 import { useFormatter, useTranslations } from "next-intl";
-import { X, AlertTriangle, Zap, Bookmark, RefreshCw, Layers } from "lucide-react";
+import { X, AlertTriangle, Zap, Bookmark, RefreshCw, Layers, CircleHelp } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/components/ui/utils";
 import type { DeckCard } from "@/lib/deck/types";
 import { CardTooltip } from "@/components/card/CardTooltip";
 import { useLocalizedDeckName } from "@/components/card/LocalizedDeckTextContext";
+import { getCardRoleExplanation } from "@/lib/deck/card-role-explanation";
 interface CardListItemProps {
   readonly card: DeckCard;
   readonly onRemove?: (id: string) => void;
@@ -68,6 +69,50 @@ function DfcBadge({ isFlexibleLand }: { readonly isFlexibleLand: boolean }) {
     </span>
   );
 }
+
+function CardRoleExplanation({ card }: { readonly card: DeckCard }) {
+  const t = useTranslations("card");
+  const tBuilder = useTranslations("builder");
+  const [isOpen, setIsOpen] = useState(false);
+  const explanation = getCardRoleExplanation(card);
+  let description: string;
+
+  switch (explanation.kind) {
+    case "commander":
+      description = t("roleExplanation.commander");
+      break;
+    case "companion":
+      description = t("roleExplanation.companion");
+      break;
+    case "category":
+      description = t("roleExplanation.category", {
+        category: tBuilder(`categories.${explanation.category}`),
+      });
+      break;
+  }
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        type="button"
+        aria-label={t("roleExplanation.label")}
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+        className="flex h-5 w-5 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+      >
+        <CircleHelp className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
+      {isOpen && (
+        <div
+          role="note"
+          className="absolute right-0 top-full z-30 mt-1 w-56 rounded-md border border-[var(--border)] bg-[var(--surface)] p-2 text-xs leading-5 text-[var(--text-secondary)] shadow-xl"
+        >
+          {description}
+        </div>
+      )}
+    </div>
+  );
+}
 export function CardListItem({
   card,
   onRemove,
@@ -112,6 +157,7 @@ export function CardListItem({
         <span className="text-xs text-[var(--text-secondary)] shrink-0">
           {card.cmc > 0 ? card.cmc : "—"}
         </span>
+        <CardRoleExplanation card={card} />
         {card.price !== null && (
           <span
             className="shrink-0 text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-600/20 text-emerald-400 leading-none"
