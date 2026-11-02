@@ -6,6 +6,11 @@ import { MetaPanel, TournamentDeckRow } from "./MetaPanel";
 import type { TournamentDeck } from "@/lib/meta/fetch";
 import deckMessages from "@/messages/en/deck.json";
 
+const metaAnalysisMocks = vi.hoisted(() => ({
+  fetchSource: vi.fn(),
+  errorEdhrec: null as string | null,
+}));
+
 vi.mock("@/hooks/useMetaAnalysis", () => ({
   useMetaAnalysis: () => ({
     edhrec: {
@@ -18,9 +23,10 @@ vi.mock("@/hooks/useMetaAnalysis", () => ({
     },
     isLoadingEdhrec: false,
     isLoadingTournament: false,
-    errorEdhrec: null,
+    errorEdhrec: metaAnalysisMocks.errorEdhrec,
     errorTournament: null,
     fetchAll: vi.fn(),
+    fetchSource: metaAnalysisMocks.fetchSource,
   }),
 }));
 
@@ -139,5 +145,24 @@ describe("MetaPanel", () => {
       screen.getByText(/source: mtgtop8 \/ mtgdecks.*aug 28, 2026/i)
     ).toBeInTheDocument();
     expect(screen.getByText("80 / 100 decks")).toBeInTheDocument();
+  });
+
+  it("retries only the failed EDHREC source", () => {
+    metaAnalysisMocks.errorEdhrec = "EDHREC is temporarily unavailable";
+    render(
+      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
+        <MetaPanel commanderName="Atraxa" deckCardNames={new Set<string>()} onAddCard={vi.fn()} />
+      </NextIntlClientProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /meta analysis/i }));
+    const error = screen.getByText("EDHREC is temporarily unavailable");
+    const retry = error.parentElement?.querySelector("button");
+    expect(retry).not.toBeNull();
+
+    fireEvent.click(retry!);
+
+    expect(metaAnalysisMocks.fetchSource).toHaveBeenCalledWith("edhrec");
+    metaAnalysisMocks.errorEdhrec = null;
   });
 });

@@ -277,6 +277,7 @@ export function MetaPanel({
     errorEdhrec,
     errorTournament,
     fetchAll,
+    fetchSource,
   } = useMetaAnalysis(commanderName);
 
   const {
@@ -445,7 +446,14 @@ export function MetaPanel({
                     {errorEdhrec && (
                       <div className="flex items-center gap-1.5 text-red-400 text-xs">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errorEdhrec}
+                        <span className="min-w-0 flex-1">{errorEdhrec}</span>
+                        <button
+                          type="button"
+                          onClick={() => void fetchSource("edhrec")}
+                          className="shrink-0 text-[10px] font-medium text-[var(--accent-text)] hover:underline"
+                        >
+                          {t("meta.refresh")}
+                        </button>
                       </div>
                     )}
 
@@ -562,7 +570,14 @@ export function MetaPanel({
                     {errorTournament && (
                       <div className="flex items-center gap-1.5 text-red-400 text-xs">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errorTournament}
+                        <span className="min-w-0 flex-1">{errorTournament}</span>
+                        <button
+                          type="button"
+                          onClick={() => void fetchSource("tournament")}
+                          className="shrink-0 text-[10px] font-medium text-[var(--accent-text)] hover:underline"
+                        >
+                          {t("meta.refresh")}
+                        </button>
                       </div>
                     )}
 
