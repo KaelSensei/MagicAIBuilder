@@ -2,8 +2,15 @@ import { describe, it, expect } from "vitest";
 import { parseTextDecklist, exportToText } from "./import";
 import type { DeckCard } from "./types";
 import { PLAIN_TEXT_IMPORT_V1 } from "./fixtures/plain-text-v1";
+import { MOXFIELD_IMPORT_V1 } from "./fixtures/moxfield-v1";
 
 describe("parseTextDecklist", () => {
+  it("keeps the moxfield/v1 import contract", () => {
+    expect(parseTextDecklist(MOXFIELD_IMPORT_V1.input)).toMatchObject(
+      MOXFIELD_IMPORT_V1.expected
+    );
+  });
+
   it("keeps the plain-text/v1 import contract", () => {
     expect(parseTextDecklist(PLAIN_TEXT_IMPORT_V1.input)).toMatchObject(
       PLAIN_TEXT_IMPORT_V1.expected
