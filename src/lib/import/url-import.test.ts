@@ -69,6 +69,11 @@ describe("detectSource", () => {
       .toEqual({ source: "mtgdecks", id: "atraxa-superfriends" });
   });
 
+  it("detects an AetherHub deck-builder URL", () => {
+    expect(detectSource("https://aetherhub.com/Deck/Builder?m=1%20Sol%20Ring&t=cmd"))
+      .toMatchObject({ source: "aetherhub" });
+  });
+
   // ─── EDHRec ──────────────────────────────────────────────────────────────────
   it("detects edhrec commander URL", () => {
     expect(detectSource("https://edhrec.com/commanders/atraxa-praetors-voice"))
@@ -114,6 +119,18 @@ describe("importFromUrl", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("imports AetherHub commander and main-deck cards from its URL payload", async () => {
+    const result = await importFromUrl(
+      "https://aetherhub.com/Deck/Builder?m=1%20Sol%20Ring&sb=1%20Atraxa%2C%20Praetors%27%20Voice&t=cmd"
+    );
+
+    expect(result.source).toBe("aetherhub");
+    expect(result.cards).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: "Sol Ring", zone: "main" }),
+      expect.objectContaining({ name: "Atraxa, Praetors' Voice", isCommander: true }),
+    ]));
   });
 
   it("throws when URL is not recognised", async () => {
