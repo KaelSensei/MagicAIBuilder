@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import { JsonLd, softwareApplicationJsonLd } from "@/components/JsonLd";
 import { LandingPage } from "@/components/landing/LandingPage";
-import { alternatesFor } from "@/lib/seo/alternates";
+import {
+  alternatesFor,
+  isSupportedLocale,
+  localePath,
+  siteUrl,
+} from "@/lib/seo/alternates";
+import { routing } from "@/i18n/routing";
 
 type Props = Readonly<{
   params: Promise<{ locale: string }>;
@@ -17,6 +24,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { alternates: alternatesFor(locale, "/") };
 }
 
-export default function HomePage() {
-  return <LandingPage />;
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params;
+  const servedLocale = isSupportedLocale(locale)
+    ? locale
+    : routing.defaultLocale;
+  const canonicalUrl = `${siteUrl()}${localePath(servedLocale, "/")}`;
+
+  return (
+    <>
+      <JsonLd data={{ ...softwareApplicationJsonLd, url: canonicalUrl }} />
+      <LandingPage />
+    </>
+  );
 }
