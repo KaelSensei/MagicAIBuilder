@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight, Download, RefreshCw } from "lucide-react";
 import { z } from "zod";
 import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
 import { Link } from "@/i18n/navigation";
+import { formatUsdPrice } from "@/i18n/number-format";
 
 const planSchema = z.object({
   deckCount: z.number().int().nonnegative(),
@@ -37,7 +38,7 @@ export function AcquisitionPlanPanel() {
   const usage = useTranslations("collection.usage");
   const quickAdd = useTranslations("collection.quickAdd");
   const actions = useTranslations("collection.actions");
-  const format = useFormatter();
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedDeckId, setSelectedDeckId] = useState("");
@@ -166,7 +167,7 @@ export function AcquisitionPlanPanel() {
           {state.status === "ready" && items.length > 0 && (
             <>
               <p className="mb-3 text-sm font-medium text-[var(--text-primary)]">
-                {t("summary", { count: missingCount, decks: state.plan.deckCount, cost: format.number(knownCost, { style: "currency", currency: "USD" }) })}
+                {t("summary", { count: missingCount, decks: state.plan.deckCount, cost: formatUsdPrice(locale, knownCost) })}
               </p>
               {unpricedCount > 0 && items.length > 1 && (
                 <p className="mb-3 text-xs text-[var(--text-secondary)]">{t("unpriced", { count: unpricedCount })}</p>
@@ -206,7 +207,7 @@ export function AcquisitionPlanPanel() {
                       <p className="text-xs text-[var(--text-secondary)]">
                         {item.price === null
                           ? t("unpriced", { count: item.acquireQuantity })
-                          : format.number(item.price * item.acquireQuantity, { style: "currency", currency: "USD" })}
+                          : formatUsdPrice(locale, item.price * item.acquireQuantity)}
                       </p>
                     </div>
                   </li>
