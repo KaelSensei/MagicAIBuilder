@@ -69,7 +69,7 @@ describe("CardTooltip", () => {
     await hover();
     const img = screen.getByRole("img", { name: "Sol Ring" });
     expect(img).toHaveAttribute("src", "https://img/en.jpg");
-    expect(screen.getByText("$1.50")).toBeInTheDocument();
+    expect(screen.getByText(/USD\s*1\.50/)).toBeInTheDocument();
   });
 
   it("shows the translated printing's image for a French viewer", async () => {
@@ -85,5 +85,12 @@ describe("CardTooltip", () => {
         "https://img/fr.jpg"
       )
     );
+  });
+
+  it("labels the displayed French price as USD instead of implying euros", async () => {
+    renderTooltip("fr", false);
+    await hover();
+
+    expect(screen.getByText(/1,50\s*USD/)).toBeInTheDocument();
   });
 });
