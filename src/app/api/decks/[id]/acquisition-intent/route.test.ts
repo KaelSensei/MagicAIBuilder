@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireDeckOwner, upsertIntent, deleteIntent } = vi.hoisted(() => ({
+const { requireDeckOwner, findManyIntent, upsertIntent, deleteIntent } = vi.hoisted(() => ({
   requireDeckOwner: vi.fn(),
+  findManyIntent: vi.fn(),
   upsertIntent: vi.fn(),
   deleteIntent: vi.fn(),
 }));
@@ -9,11 +10,15 @@ const { requireDeckOwner, upsertIntent, deleteIntent } = vi.hoisted(() => ({
 vi.mock("@/lib/auth/helpers", () => ({ requireDeckOwner }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    acquisitionIntent: { upsert: upsertIntent, delete: deleteIntent },
+    acquisitionIntent: {
+      findMany: findManyIntent,
+      upsert: upsertIntent,
+      delete: deleteIntent,
+    },
   },
 }));
 
-import { PUT } from "./route";
+import { GET, PUT } from "./route";
 
 const request = (body: unknown) =>
   new Request("http://localhost/api/decks/deck-1/acquisition-intent", {
@@ -27,6 +32,7 @@ const params = { params: Promise.resolve({ id: "deck-1" }) };
 beforeEach(() => {
   vi.clearAllMocks();
   requireDeckOwner.mockResolvedValue({ userId: "user-1", deck: { id: "deck-1", userId: "user-1" } });
+  findManyIntent.mockResolvedValue([]);
   upsertIntent.mockResolvedValue({ mode: "proxy_now" });
   deleteIntent.mockResolvedValue({});
 });
@@ -57,5 +63,16 @@ describe("PUT /api/decks/[id]/acquisition-intent", () => {
     expect(response.status).toBe(400);
     expect(upsertIntent).not.toHaveBeenCalled();
     expect(deleteIntent).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/decks/[id]/acquisition-intent", () => {
+  it("returns a server error when ownership lookup fails", async () => {
+    requireDeckOwner.mockRejectedValue(new Error("database unavailable"));
+
+    const response = await GET(new Request("http://localhost/api/decks/deck-1/acquisition-intent"), params);
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: "Failed to load acquisition intents" });
   });
 });

@@ -1,4 +1,27 @@
 {
+  "notifications": {
+    "title": "Notification preferences",
+    "intro": "Choose which community events can notify you as they become available.",
+    "loading": "Loading your preferences…",
+    "error": "Your notification preferences could not be saved.",
+    "retry": "Retry",
+    "replies": {
+      "label": "Replies",
+      "description": "When someone replies to one of your comments."
+    },
+    "mentions": {
+      "label": "Mentions",
+      "description": "When someone mentions you in a community discussion."
+    },
+    "follows": {
+      "label": "New followers",
+      "description": "When another player follows your public profile."
+    },
+    "watchedDecks": {
+      "label": "Watched decks",
+      "description": "When a public deck you watch changes."
+    }
+  },
   "apiKeys": {
     "title": "API keys",
     "intro": "Keys let a program read your decks through the MagicAIBuilder API. Each key belongs to you alone and can be revoked at any time.",
