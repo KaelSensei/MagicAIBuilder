@@ -755,6 +755,21 @@ describe("useDeckStore — setBudget", () => {
     seedDeck();
   });
 
+  it("keeps the save indicator visible while a rename remains pending", async () => {
+    const pendingRename = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pendingRename.promise);
+
+    const rename = useDeckStore.getState().renameDeck("deck-1", "Renamed Deck");
+    await useDeckStore.getState().setBudget(100);
+
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+
+    pendingRename.resolve(await deckApi.createDeck("Test Deck"));
+    await rename;
+
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("keeps syncing after a rejected save until the other budget save finishes", async () => {
     const savedDeck = await deckApi.createDeck("Test Deck");
     const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();

@@ -2022,7 +2022,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } finally {
       pendingBudgetWrites -= 1;
-      set({ isSyncing: pendingBudgetWrites > 0 });
+      set({
+        isSyncing: pendingBudgetWrites > 0 || pendingRenameWrites > 0,
+      });
     }
   },
 
