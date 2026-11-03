@@ -15,11 +15,11 @@ interface RouteContext {
 
 /** List the saved acquisition intentions for one private deck. */
 export async function GET(_request: Request, context: RouteContext) {
-  const { id: deckId } = await context.params;
-  const ownership = await requireDeckOwner(deckId);
-  if (ownership.error) return ownership.error;
-
   try {
+    const { id: deckId } = await context.params;
+    const ownership = await requireDeckOwner(deckId);
+    if (ownership.error) return ownership.error;
+
     const intents = await prisma.acquisitionIntent.findMany({
       where: { userId: ownership.userId, deckId },
       select: { scryfallId: true, mode: true },
