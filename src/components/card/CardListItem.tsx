@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { X, AlertTriangle, Zap, Bookmark, RefreshCw, Layers, CircleHelp } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/components/ui/utils";
@@ -8,6 +8,7 @@ import type { DeckCard } from "@/lib/deck/types";
 import { CardTooltip } from "@/components/card/CardTooltip";
 import { useLocalizedDeckName } from "@/components/card/LocalizedDeckTextContext";
 import { getCardRoleExplanation } from "@/lib/deck/card-role-explanation";
+import { formatUsdPrice } from "@/i18n/number-format";
 interface CardListItemProps {
   readonly card: DeckCard;
   readonly onRemove?: (id: string) => void;
@@ -122,7 +123,7 @@ export function CardListItem({
   showNotes: _showNotes,
 }: CardListItemProps) {
   const t = useTranslations("card");
-  const format = useFormatter();
+  const locale = useLocale();
   const tBuilder = useTranslations("builder");
   const [isFlipped, setIsFlipped] = useState(false);
   const isDfc = Boolean(card.cardFaces);
@@ -162,13 +163,10 @@ export function CardListItem({
           <span
             className="shrink-0 text-[10px] font-medium px-1 py-0.5 rounded bg-emerald-600/20 text-emerald-400 leading-none"
             title={t("priceLabel", {
-              price: format.number(card.price, {
-                style: "currency",
-                currency: "USD",
-              }),
+              price: formatUsdPrice(locale, card.price),
             })}
           >
-            {format.number(card.price, { style: "currency", currency: "USD" })}
+            {formatUsdPrice(locale, card.price)}
           </span>
         )}
         {card.isGameChanger && (
