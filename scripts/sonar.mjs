@@ -46,7 +46,7 @@ runPnpm(["test:coverage"]);
 
 console.log("Running SonarCloud analysis...");
 runPnpm(
-  ["dlx", "sonarqube-scanner@4.4.0", "sonar-scanner", "-Dsonar.host.url=https://sonarcloud.io"],
+  ["--package=sonarqube-scanner@4.4.0", "dlx", "sonar-scanner", "-Dsonar.host.url=https://sonarcloud.io"],
   { ...process.env, SONAR_TOKEN: sonarToken }
 );
 
