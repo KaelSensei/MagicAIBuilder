@@ -18,7 +18,7 @@ const solRing: DeckCard = {
   colorIdentity: [],
   isGameChanger: false,
   isBanned: false,
-  price: null,
+  price: 1.5,
   imageUri: "",
   artCropUri: "",
   category: "ramp",
@@ -35,5 +35,11 @@ describe("CardListItem role explanation", () => {
     expect(screen.getByRole("note")).toHaveTextContent(
       "Its assigned role in this deck is Ramp."
     );
+  });
+
+  it("labels its Scryfall price as USD for a French player", () => {
+    renderWithIntl(<CardListItem card={solRing} />, { locale: "fr" });
+
+    expect(screen.getByText(/1,50\s*USD/)).toBeInTheDocument();
   });
 });
