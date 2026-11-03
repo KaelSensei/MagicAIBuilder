@@ -2,7 +2,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { act, screen } from "@testing-library/react";
 import { render } from "@testing-library/react";
-import { MoxfieldProfileImport } from "./MoxfieldProfileImport";
+import {
+  MOXFIELD_PROFILE_TIMEOUT_MS,
+  MoxfieldProfileImport,
+} from "./MoxfieldProfileImport";
 
 describe("MoxfieldProfileImport", () => {
   beforeEach(() => {
@@ -156,6 +159,34 @@ describe("MoxfieldProfileImport", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not load Moxfield decks.");
     expect(screen.queryByRole("button", { name: "Import Old deck" })).not.toBeInTheDocument();
+  });
+
+  it("shows retry feedback when a profile request reaches its deadline", async () => {
+    const user = userEvent.setup();
+    const controller = new AbortController();
+    const timeout = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockReturnValue(controller.signal);
+    vi.spyOn(globalThis, "fetch").mockImplementation((_input, init) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          reject(new DOMException("The operation was aborted.", "AbortError"));
+        });
+      })
+    );
+
+    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    await user.type(screen.getByLabelText("Moxfield username"), "totoro");
+    await user.click(screen.getByRole("button", { name: "Load decks" }));
+
+    expect(timeout).toHaveBeenCalledWith(MOXFIELD_PROFILE_TIMEOUT_MS);
+    await act(async () => {
+      controller.abort();
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not load Moxfield decks."
+    );
   });
 
   it("ignores an older profile response after a newer profile load fails", async () => {
