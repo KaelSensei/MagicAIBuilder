@@ -666,6 +666,21 @@ describe("useDeckStore — renameDeck", () => {
     expect(useDeckStore.getState().decks["deck-1"].name).toBe("Shared Name");
   });
 
+  it("keeps the save indicator visible until overlapping renames finish", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+
+    const firstRename = useDeckStore.getState().renameDeck("deck-1", "First Name");
+    await useDeckStore.getState().renameDeck("deck-1", "Second Name");
+
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+
+    pending.resolve(await deckApi.createDeck("Test Deck"));
+    await firstRename;
+
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("does not recreate a deleted deck or warn when its rename fails late", async () => {
     const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
     vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);

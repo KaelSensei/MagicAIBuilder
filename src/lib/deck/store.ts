@@ -195,6 +195,7 @@ let pendingManualBracketWrites = 0;
 let pendingBudgetWrites = 0;
 let pendingBulkRemovals = 0;
 let pendingCardAdditionsAndRemovals = 0;
+let pendingRenameWrites = 0;
 
 export interface DeckStore {
   // State
@@ -660,6 +661,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!previousDeck) return;
     const request = Symbol();
     latestRenameRequests.set(id, request);
+    pendingRenameWrites += 1;
     // Optimistic update
     set((state) => ({
       decks: {
@@ -691,7 +693,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .add("error", "Could not rename deck. Please retry.");
       }
     } finally {
-      set({ isSyncing: false });
+      pendingRenameWrites -= 1;
+      if (pendingRenameWrites === 0) set({ isSyncing: false });
     }
   },
 
