@@ -82,8 +82,26 @@ describe("AcquisitionPlanPanel", () => {
 
     const [priced, unpriced] = await screen.findAllByRole("listitem");
     expect(within(priced).getByText("2 to acquire")).toBeInTheDocument();
-    expect(within(priced).getByText("$5.00")).toBeInTheDocument();
+    expect(within(priced).getByText("USD 5.00")).toBeInTheDocument();
     expect(within(unpriced).getByText("Price unavailable for 1 copy")).toBeInTheDocument();
+  });
+
+  it("labels French acquisition prices as USD without implying a converted local quote", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response({
+      deckCount: 1,
+      decks: [{ id: "a", name: "Artifacts" }],
+      items: [{
+        scryfallId: "ring", name: "Sol Ring", requiredQuantity: 1,
+        ownedQuantity: 0, acquireQuantity: 1, price: 5,
+        decks: [{ id: "a", name: "Artifacts", quantity: 1 }],
+      }],
+    })));
+    const user = userEvent.setup();
+
+    renderWithIntl(<AcquisitionPlanPanel />, { locale: "fr" });
+    await user.click(screen.getByRole("button", { name: "Plan d’acquisition" }));
+
+    expect(await screen.findByText("5,00 USD")).toBeInTheDocument();
   });
 
   it("exports only missing copies with their printing IDs and known prices", async () => {
