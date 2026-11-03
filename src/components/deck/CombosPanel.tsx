@@ -1,6 +1,6 @@
 "use client";
 // Commander Spellbook combo detection panel
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
 import type { SpellbookVariant } from "@/lib/combos/spellbook";
 import { Zap, Loader2 } from "lucide-react";
@@ -10,6 +10,7 @@ interface CombosPanelProps {
   readonly isLoading?: boolean;
   readonly isEnabled?: boolean; // False when deck < 10 cards
   readonly className?: string;
+  readonly observedAt?: Date;
 }
 
 function ComboCard({ combo }: { readonly combo: SpellbookVariant }) {
@@ -60,8 +61,13 @@ export function CombosPanel({
   isLoading,
   isEnabled = true,
   className,
+  observedAt,
 }: CombosPanelProps) {
   const t = useTranslations("deck");
+  const format = useFormatter();
+  const observedDate = observedAt
+    ? format.dateTime(observedAt, { dateStyle: "medium", timeZone: "UTC" })
+    : null;
 
   return (
     <div
@@ -88,6 +94,18 @@ export function CombosPanel({
         <p className="text-xs text-[var(--text-secondary)] italic">
           {t("combos.minCards")}
         </p>
+      )}
+
+      {isEnabled && !isLoading && observedDate && (
+        <a
+          href="https://commanderspellbook.com/"
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Commander Spellbook results observed ${observedDate}`}
+          className="block text-[10px] text-[var(--text-secondary)] underline-offset-2 hover:underline"
+        >
+          Commander Spellbook
+        </a>
       )}
 
       {isEnabled && isLoading && (
