@@ -34,6 +34,20 @@ do NOT know about outer ones.
 - API route handlers and server actions stay thin: parse with Zod → call a use case → shape the
   response.
 
+## Backend-owned business logic
+
+- The backend is the exclusive owner of all business logic and state transitions. Validation,
+  eligibility, calculations, normalization, authorization, persistence, and orchestration belong
+  in server-side use cases and infrastructure behind route handlers or server actions.
+- Client components are deliberately dumb and stateless: they render server-provided view data,
+  collect user intent, display scan results, and serve visual assets. They must not reproduce,
+  infer, or become a source of truth for domain rules.
+- Never rely on client-side checks for correctness or security. The backend must validate every
+  command and return the canonical result the UI displays.
+- Keep client-only state ephemeral and presentational (for example open panels, focus, sorting
+  controls, or animation state). If a state change has business meaning, send an explicit command
+  to the backend and refresh from its response.
+
 ## Hexagonal ports and adapters
 
 - When the domain needs external I/O, define a **port** (interface) in the domain / use-case
