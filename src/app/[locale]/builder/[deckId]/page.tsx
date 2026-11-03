@@ -344,7 +344,7 @@ export default function BuilderPage() {
   }, [banLoaded, bannedNames, setBannedNames]);
 
   const { stats } = useDeck();
-  const { data: combos, isLoading: combosLoading } = useCombos(deck);
+  const { data: combos, isLoading: combosLoading, dataUpdatedAt: combosUpdatedAt } = useCombos(deck);
   const bracketScore = useBracketScore(deck, combos);
   const {
     result: aiResult,
@@ -1110,6 +1110,7 @@ export default function BuilderPage() {
               combos={combos}
               isLoading={combosLoading}
               isEnabled={(deck?.cards.length ?? 0) >= 10}
+              observedAt={combosUpdatedAt ? new Date(combosUpdatedAt) : undefined}
             />
 
             <MetaPanel
