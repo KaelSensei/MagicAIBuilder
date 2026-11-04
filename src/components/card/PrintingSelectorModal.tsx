@@ -1,7 +1,7 @@
 "use client";
 // Modal to select a card printing — shows oracle text alongside all printings
 import { useEffect, useMemo, useState } from "react";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { CardRulingsPanel } from "@/components/card/CardRulingsPanel";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { CollectionCard } from "@/lib/collection/types";
+import { formatUsdPrice } from "@/i18n/number-format";
 
 
 interface PrintingSelectorModalProps {
@@ -37,8 +38,8 @@ export function PrintingSelectorModal({
 }: PrintingSelectorModalProps) {
   const t = useTranslations("card");
   const tOwnership = useTranslations("collection.ownership");
-  const format = useFormatter();
-  const { data, isLoading } = useCardPrintings(card.name, toScryfallLang(useLocale()));
+  const locale = useLocale();
+  const { data, isLoading } = useCardPrintings(card.name, toScryfallLang(locale));
   const [previewedPrintingId, setPreviewedPrintingId] = useState(card.id);
   const [ownedOnly, setOwnedOnly] = useState(false);
   const collectionCards = useCollectionStore((state) => state.collectionCards);
@@ -128,10 +129,7 @@ export function PrintingSelectorModal({
 
           {card.prices?.usd && (
             <p className="text-xs text-(--accent) mt-auto pt-2 border-t border-(--border)">
-              {format.number(Number.parseFloat(card.prices.usd), {
-                style: "currency",
-                currency: "USD",
-              })}
+              {formatUsdPrice(locale, Number.parseFloat(card.prices.usd))}
             </p>
           )}
         </div>
