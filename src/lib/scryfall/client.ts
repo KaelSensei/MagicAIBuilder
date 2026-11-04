@@ -205,15 +205,25 @@ export async function getCardById(id: string): Promise<ScryfallCard> {
     // Cache lookup failure is non-fatal — fall through to Scryfall
   }
 
-  const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/${id}`);
-  const card = await handleResponse<ScryfallCard>(response);
+  const startedAt = performance.now();
+  let status: number | null = null;
+  try {
+    const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/${id}`);
+    status = response.status;
+    const card = await handleResponse<ScryfallCard>(response);
 
-  // Store in DB cache (fire-and-forget)
-  storeCardCache(id, card).catch(() => {
-    /* non-fatal */
-  });
+    // Store in DB cache (fire-and-forget)
+    storeCardCache(id, card).catch(() => {
+      /* non-fatal */
+    });
 
-  return card;
+    return card;
+  } finally {
+    logger.info("Scryfall card lookup completed", "Scryfall card lookup", {
+      status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
+  }
 }
 
 /** Autocomplete partial card name */
