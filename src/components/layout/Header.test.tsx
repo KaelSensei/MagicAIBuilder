@@ -5,12 +5,19 @@ import React from "react";
 import { NextIntlClientProvider } from "next-intl";
 import enCommon from "@/messages/en/common.json";
 
-let createDeckImpl: (name: string) => Promise<string> = async (_name: string) => "deck-0";
+let createDeckImpl: (name: string) => Promise<string> = async (_name: string) =>
+  "deck-0";
 let setActiveDeckImpl: (id: string) => void = (_id: string) => {};
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
-    React.createElement("a", { href, ...props }, children),
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => React.createElement("a", { href, ...props }, children),
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
   usePathname: () => "/",
 }));
@@ -28,11 +35,17 @@ vi.mock("@/components/layout/LocaleSwitcher", () => ({
 }));
 
 vi.mock("@/components/deck/ImportDialog", () => ({
-  ImportDialog: ({ children }: { children?: React.ReactNode }) => React.createElement(React.Fragment, null, children),
+  ImportDialog: ({ children }: { children?: React.ReactNode }) =>
+    React.createElement(React.Fragment, null, children),
 }));
 
 vi.mock("@/lib/deck/store", () => ({
-  useDeckStore: (selector: (s: { createDeck: (name: string) => Promise<string>; setActiveDeck: (id: string) => void }) => unknown) =>
+  useDeckStore: (
+    selector: (s: {
+      createDeck: (name: string) => Promise<string>;
+      setActiveDeck: (id: string) => void;
+    }) => unknown
+  ) =>
     selector({
       createDeck: (name: string) => createDeckImpl(name),
       setActiveDeck: (id: string) => setActiveDeckImpl(id),
@@ -48,6 +61,16 @@ function renderWithIntl(ui: React.ReactElement) {
 }
 
 describe("Header", () => {
+  it("groups desktop destinations in a named primary navigation landmark", async () => {
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header));
+
+    expect(
+      screen.getByRole("navigation", { name: "My Decks" })
+    ).toHaveTextContent("Collection");
+  });
+
   it("creates a deck and activates it when clicking Import on home", async () => {
     const createDeck = vi.fn(async (_name: string) => "deck-123");
     const setActiveDeck = vi.fn((_id: string) => {});
