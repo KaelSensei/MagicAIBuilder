@@ -155,7 +155,7 @@ export function ColorIdentityBanner({
       <button
         type="button"
         onClick={onRemove}
-        className="absolute top-1 right-1 opacity-0 group-hover/banner:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
+        className="absolute top-1 right-1 opacity-0 group-hover/banner:opacity-100 focus-visible:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg"
         title={t("actions.removeNamed", { name })}
       >
         ×

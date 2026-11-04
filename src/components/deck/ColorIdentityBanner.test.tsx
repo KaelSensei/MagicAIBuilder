@@ -54,6 +54,12 @@ describe("ColorIdentityBanner", () => {
     expect(onRemove).toHaveBeenCalledOnce();
   });
 
+  it("reveals the remove control when keyboard focus reaches it", () => {
+    renderWithIntl(<ColorIdentityBanner name="Atraxa" colorIdentity={["W"]} onRemove={vi.fn()} />);
+
+    expect(screen.getByTitle("Remove Atraxa")).toHaveClass("focus-visible:opacity-100");
+  });
+
   /**
    * `getDisplayColorIdentity` normalises before rendering, and none of that was
    * covered — the identity arrives from deck data and from imports, so it is
