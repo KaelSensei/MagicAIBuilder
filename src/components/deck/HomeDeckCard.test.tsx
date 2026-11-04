@@ -1,15 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
+import { render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import enDeck from "@/messages/en/deck.json";
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
-    React.createElement("a", { href, ...props }, children),
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => React.createElement("a", { href, ...props }, children),
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
   usePathname: () => "/",
 }));
 
-import { getDeckPresentationManaColors } from "./HomeDeckCard";
+import { getDeckPresentationManaColors, HomeDeckCard } from "./HomeDeckCard";
 
 function makeCard(
   id: string,
@@ -92,5 +101,28 @@ describe("getDeckPresentationManaColors", () => {
     });
 
     expect(getDeckPresentationManaColors(deck)).toEqual(["C"]);
+  });
+});
+
+describe("HomeDeckCard", () => {
+  it("separates deck identity from its at-a-glance status", () => {
+    const deck = makeDeck({
+      commander: makeCard("cmd", "Atraxa", ["W", "U", "B", "G"]),
+    });
+
+    render(
+      <NextIntlClientProvider locale="en" messages={{ deck: enDeck }}>
+        <HomeDeckCard
+          deck={deck}
+          onDelete={vi.fn()}
+          onDuplicate={vi.fn()}
+          deletingId={null}
+          duplicatingId={null}
+        />
+      </NextIntlClientProvider>
+    );
+
+    expect(screen.getByTestId("deck-identity")).toHaveTextContent("Test Deck");
+    expect(screen.getByTestId("deck-status")).toHaveTextContent("0 cards");
   });
 });

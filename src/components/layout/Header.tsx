@@ -63,11 +63,11 @@ export function Header({ deckId }: HeaderProps = {}) {
   }, [createDeck, isCreatingImportDeck, setActiveDeck]);
 
   return (
-    <header className="h-14 border-b border-[var(--border)] bg-[var(--surface)] flex items-center px-4 md:px-6 gap-3 md:gap-6 shrink-0">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 shadow-sm md:gap-6 md:px-6">
       {/* Logo */}
       <Link
         href="/"
-        className="flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors"
+        className="flex items-center gap-2 rounded-md text-[var(--text-primary)] transition-colors hover:text-[var(--accent-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
       >
         <Layers className="w-5 h-5 text-[var(--accent-text)]" />
         <span className="font-semibold text-base hidden sm:inline">
@@ -76,23 +76,26 @@ export function Header({ deckId }: HeaderProps = {}) {
       </Link>
 
       {/* Nav — hidden on mobile */}
-      <nav className="hidden md:flex items-center gap-4 ml-4">
+      <nav
+        aria-label={t("nav.myDecks")}
+        className="ml-2 hidden items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--background)]/50 p-1 md:flex"
+      >
         <Link
           href="/decks"
-          className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           {t("nav.myDecks")}
         </Link>
         <Link
           href="/collection"
-          className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           <Package className="w-3.5 h-3.5" />
           {t("nav.collection")}
         </Link>
         <Link
           href="/rules/game-changers"
-          className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           <Shield className="w-3.5 h-3.5" />
           {t("nav.rules")}
@@ -189,7 +192,10 @@ export function Header({ deckId }: HeaderProps = {}) {
       {/* Mobile menu overlay */}
       {menuOpen && (
         <div className="absolute top-14 left-0 right-0 z-50 md:hidden bg-[var(--surface)] border-b border-[var(--border)] shadow-lg">
-          <nav className="flex flex-col p-4 gap-3">
+          <nav
+            aria-label={t("nav.myDecks")}
+            className="flex flex-col gap-3 p-4"
+          >
             <Link
               href="/decks"
               onClick={() => setMenuOpen(false)}
