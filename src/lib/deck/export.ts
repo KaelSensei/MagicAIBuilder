@@ -135,6 +135,26 @@ function archidektCategoryTag(category: string): string {
 }
 
 /**
+ * Appends a counted Archidekt section without emitting an empty zone.
+ * @param lines Export lines being built.
+ * @param heading Archidekt section heading.
+ * @param cards Cards belonging to the section.
+ * @returns Nothing.
+ */
+function appendArchidektSection(
+  lines: string[],
+  heading: string,
+  cards: readonly DeckCard[]
+): void {
+  if (cards.length === 0) return;
+  const count = cards.reduce((sum, card) => sum + card.quantity, 0);
+  lines.push("", `${heading} (${count})`);
+  for (const card of cards) {
+    lines.push(`${card.quantity}x ${card.name} ${archidektCategoryTag(card.category)}`);
+  }
+}
+
+/**
  * Archidekt format — sections with card counts, each card tagged with its
  * category in Archidekt's bracket syntax so the categorisation survives the
  * round trip. `{top}` pins the commander's category as premier, which is what
@@ -155,6 +175,16 @@ export function exportArchidekt(deck: Deck): string {
   for (const card of mainCards) {
     lines.push(`${card.quantity}x ${card.name} ${archidektCategoryTag(card.category)}`);
   }
+  appendArchidektSection(
+    lines,
+    "Sideboard",
+    deck.cards.filter((card) => card.zone === "sideboard")
+  );
+  appendArchidektSection(
+    lines,
+    "Considering",
+    deck.cards.filter((card) => card.zone === "maybeboard")
+  );
   return lines.join("\n");
 }
 

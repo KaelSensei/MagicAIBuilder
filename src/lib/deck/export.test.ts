@@ -297,7 +297,7 @@ describe("exportTappedOut", () => {
 });
 
 describe("exportArchidekt", () => {
-  it("does not count or export secondary zones as mainboard cards", () => {
+  it("preserves secondary zones and their categories in the text export", () => {
     const deck = makeDeck({
       cards: [
         makeCard("Sol Ring"),
@@ -308,7 +308,7 @@ describe("exportArchidekt", () => {
     });
 
     expect(exportArchidekt(deck)).toBe(
-      "Mainboard (6)\n1x Sol Ring [Other]\n5x Forest [Other]",
+      "Mainboard (6)\n1x Sol Ring [Other]\n5x Forest [Other]\n\nSideboard (2)\n2x Negate [Other]\n\nConsidering (3)\n3x Counterspell [Other]",
     );
   });
 
