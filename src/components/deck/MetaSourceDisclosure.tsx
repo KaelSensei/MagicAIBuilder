@@ -11,6 +11,10 @@ interface MetaSourceDisclosureProps {
   readonly observedAt: string;
   readonly stale?: boolean;
   readonly kind?: MetaEvidenceKind;
+  readonly health?: {
+    readonly status: "idle" | "available" | "unavailable";
+    readonly attempts: number;
+  };
 }
 
 function sourceLabel(source: MetaDisclosureSource): string {
@@ -30,6 +34,7 @@ export function MetaSourceDisclosure({
   observedAt,
   stale = false,
   kind,
+  health,
 }: MetaSourceDisclosureProps) {
   const t = useTranslations("deck");
   const format = useFormatter();
@@ -69,6 +74,11 @@ export function MetaSourceDisclosure({
       {source === "edhrec" && (
         <p className="text-[10px] text-[var(--text-secondary)]">
           {t("meta.edhrecSampleWindowUnavailable")}
+        </p>
+      )}
+      {health?.status === "unavailable" && (
+        <p className="text-[10px] text-amber-400">
+          {t("meta.sourceHealthUnavailable", { attempts: health.attempts })}
         </p>
       )}
     </div>

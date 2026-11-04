@@ -526,6 +526,7 @@
     "sourceDisclosure": "Source : {source} · Observé le {date}",
     "staleSourceDisclosure": "Source : {source} · Dernière observation le {date} · obsolète",
     "sourceDisclosureUnavailable": "Source : {source} · Heure d’observation indisponible",
+    "sourceHealthUnavailable": "État de la source : indisponible après {attempts, plural, one {# tentative} other {# tentatives}}",
     "edhrecSampleWindowUnavailable": "Fenêtre d’échantillonnage indisponible depuis EDHREC",
     "communityDecks": "Voir les decks de la communauté pour ce commandant",
     "viewOnEdhrec": "Voir ce commandant sur EDHRec",

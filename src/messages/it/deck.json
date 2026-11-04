@@ -390,6 +390,7 @@
     "sourceDisclosure": "Source: {source} · Observed {date}",
     "staleSourceDisclosure": "Source: {source} · Last observed {date} · stale",
     "sourceDisclosureUnavailable": "Source: {source} · Observation time unavailable",
+    "sourceHealthUnavailable": "Source health: unavailable after {attempts, plural, one {# attempt} other {# attempts}}",
     "edhrecSampleWindowUnavailable": "Sample window unavailable from EDHREC",
     "popularEdhrec": "Popular (EDHRec)",
     "sampleSize": "{included} / {total} mazzi",
