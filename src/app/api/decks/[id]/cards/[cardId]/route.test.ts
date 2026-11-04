@@ -57,4 +57,20 @@ describe("PATCH /api/decks/[id]/cards/[cardId]", () => {
       },
     });
   });
+
+  it("persists a valid card quantity", async () => {
+    const request = new Request("http://localhost/api/decks/deck-1/cards/card-1", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantity: 3 }),
+    });
+
+    const response = await PATCH(request, params);
+
+    expect(response.status).toBe(200);
+    expect(mocks.updateCard).toHaveBeenCalledWith({
+      where: { id: "card-1" },
+      data: { quantity: 3 },
+    });
+  });
 });
