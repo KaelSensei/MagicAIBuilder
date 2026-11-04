@@ -32,6 +32,7 @@ export async function GET(request: Request, { params }: Params) {
         tags: true,
         format: true,
         commanderName: true,
+        pairingType: true,
         targetBracket: true,
         budget: true,
         isPublic: true,

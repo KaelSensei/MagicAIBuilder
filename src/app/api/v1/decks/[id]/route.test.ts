@@ -32,6 +32,7 @@ function deckRow() {
     tags: ["planeswalkers"],
     format: "commander",
     commanderName: "Atraxa, Praetors' Voice",
+    pairingType: "background",
     targetBracket: 3,
     budget: 250.5,
     isPublic: false,
@@ -96,6 +97,14 @@ describe("GET /api/v1/decks/:id", () => {
     expect(body.data.cards[0].name).toBe("Sol Ring");
     expect(body.data.createdAt).toBe("2026-08-01T10:00:00.000Z");
     expect(body.data.updatedAt).toBe("2026-08-20T10:00:00.000Z");
+  });
+
+  it("preserves the commander pairing type for interoperable deck exports", async () => {
+    await GET(request, params());
+
+    expect(mockFindFirst.mock.calls[0][0].select).toMatchObject({
+      pairingType: true,
+    });
   });
 
   it("gives a missing deck and someone else's deck the same 404", async () => {
