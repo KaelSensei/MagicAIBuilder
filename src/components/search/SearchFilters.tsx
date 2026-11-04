@@ -371,7 +371,7 @@ export function SearchFilters({
       {/* ── Price ── */}
       <div className="flex gap-2 items-center">
         <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide w-10 shrink-0">
-          {tf("price")}
+          {tf("price")} (USD)
         </p>
         <NumInput
           value={filters.priceMin}
