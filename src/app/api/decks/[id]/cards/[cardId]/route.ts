@@ -70,6 +70,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const data: Record<string, unknown> = {};
     if (parsed.data.category !== undefined) data.category = parsed.data.category;
     if (parsed.data.zone !== undefined) data.zone = parsed.data.zone;
+    if (parsed.data.quantity !== undefined) data.quantity = parsed.data.quantity;
     if (parsed.data.scryfallId !== undefined) data.scryfallId = parsed.data.scryfallId;
     if (parsed.data.imageUri !== undefined) data.imageUri = parsed.data.imageUri;
     if (parsed.data.artCropUri !== undefined) data.artCropUri = parsed.data.artCropUri;
