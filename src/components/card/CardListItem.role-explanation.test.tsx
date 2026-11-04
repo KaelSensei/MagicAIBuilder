@@ -42,4 +42,22 @@ describe("CardListItem role explanation", () => {
 
     expect(screen.getByText(/1,50\s*USD/)).toBeInTheDocument();
   });
+
+  it("keeps the double-faced card turn-over action visible on keyboard focus", () => {
+    renderWithIntl(
+      <CardListItem
+        card={{
+          ...solRing,
+          cardFaces: [
+            { name: "Front Face", manaCost: "{1}", typeLine: "Artifact", oracleText: "", imageUri: "", artCropUri: "" },
+            { name: "Back Face", manaCost: "{2}", typeLine: "Artifact", oracleText: "", imageUri: "", artCropUri: "" },
+          ],
+        }}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /back face/i })).toHaveClass(
+      "focus-visible:opacity-100"
+    );
+  });
 });
