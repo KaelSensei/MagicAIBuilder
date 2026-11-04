@@ -24,8 +24,25 @@ describe("DeckZoneTab", () => {
     );
 
     const tab = screen.getByRole("button", { name: "Sideboard (2)" });
+    expect(tab).toHaveAttribute("aria-pressed", "false");
     expect(tab).toHaveClass("after:outline-[var(--accent)]");
     expect(tab).toHaveClass("after:outline-offset-[-2px]");
     expect(tab).not.toHaveClass("ring-2", "border-[var(--accent)]");
+  });
+
+  it("exposes the active zone as the current workspace", () => {
+    renderWithIntl(
+      <DeckZoneTab
+        zone="main"
+        label="Main deck"
+        count={99}
+        isActive
+        onSelect={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Main deck (99)" })
+    ).toHaveAttribute("aria-pressed", "true");
   });
 });

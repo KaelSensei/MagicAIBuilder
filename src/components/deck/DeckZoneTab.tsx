@@ -33,13 +33,16 @@ export function DeckZoneTab({
       ref={setNodeRef}
       type="button"
       onClick={() => onSelect(zone)}
+      aria-pressed={isActive}
       className={cn(
-        "relative flex items-center gap-1 px-2.5 py-1 text-xs font-medium border-b-2 transition-colors -mb-[7px] pb-[5px]",
+        "relative flex min-h-8 items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
         "after:pointer-events-none after:absolute after:inset-0 after:rounded-sm after:outline after:outline-2 after:outline-offset-[-2px] after:transition-opacity",
-        isOver ? "after:outline-[var(--accent)] after:opacity-100" : "after:opacity-0",
+        isOver
+          ? "after:outline-[var(--accent)] after:opacity-100"
+          : "after:opacity-0",
         isActive
-          ? "border-[var(--accent)] text-[var(--text-primary)]"
-          : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          ? "bg-[var(--accent)]/10 text-[var(--text-primary)]"
+          : "border-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
       )}
       aria-label={`${label} (${count})`}
     >
