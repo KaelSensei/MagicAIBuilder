@@ -25,6 +25,10 @@ vi.mock("@/hooks/useMetaAnalysis", () => ({
     isLoadingTournament: false,
     errorEdhrec: metaAnalysisMocks.errorEdhrec,
     errorTournament: null,
+    sourceHealth: {
+      edhrec: { status: "available", attempts: 1 },
+      tournament: { status: "available", attempts: 1 },
+    },
     fetchAll: vi.fn(),
     fetchSource: metaAnalysisMocks.fetchSource,
   }),

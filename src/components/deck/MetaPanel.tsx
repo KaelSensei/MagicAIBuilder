@@ -276,6 +276,7 @@ export function MetaPanel({
     isLoadingTournament,
     errorEdhrec,
     errorTournament,
+    sourceHealth,
     fetchAll,
     fetchSource,
   } = useMetaAnalysis(commanderName);
@@ -432,6 +433,7 @@ export function MetaPanel({
                         source="edhrec"
                         observedAt={edhrecObservedAt}
                         stale={staleEdhrec}
+                        health={sourceHealth.edhrec}
                       />
                     )}
 
@@ -556,6 +558,7 @@ export function MetaPanel({
                         source="tournament"
                         observedAt={tournamentObservedAt}
                         stale={tournament?._meta?.stale}
+                        health={sourceHealth.tournament}
                       />
                     )}
 
