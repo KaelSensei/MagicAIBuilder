@@ -249,8 +249,13 @@ describe("getCardByNameFuzzy", () => {
 });
 
 describe("getCardById", () => {
+  beforeEach(() => {
+    vi.mocked(logger.info).mockClear();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
+    __resetRateLimiter();
   });
 
   it("returns cached card without fetching", async () => {
@@ -276,6 +281,24 @@ describe("getCardById", () => {
     const result = await getCardById("fresh-card");
     expect(result.id).toBe("fresh-card");
     expect(fetchMock).toHaveBeenCalled();
+  });
+
+  it("records a failed external lookup without logging the card identifier", async () => {
+    vi.mocked(lookupCardCache).mockResolvedValueOnce(null);
+    mockFetchError(503, "Unavailable");
+
+    await expect(getCardById("private-card-id")).rejects.toThrow(
+      "Scryfall API error 503"
+    );
+
+    expect(logger.info).toHaveBeenCalledWith(
+      "Scryfall card lookup completed",
+      "Scryfall card lookup",
+      expect.objectContaining({ status: 503, durationMs: expect.any(Number) })
+    );
+    expect(JSON.stringify(vi.mocked(logger.info).mock.calls)).not.toContain(
+      "private-card-id"
+    );
   });
 });
 
