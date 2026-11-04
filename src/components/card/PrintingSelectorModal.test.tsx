@@ -40,9 +40,13 @@ const FRENCH_PRINTING = makeCard({
   printed_text: "Foudre inflige 3 blessures à n'importe quelle cible.",
 });
 
-function renderModal(card: ScryfallCard, onSelect = () => {}) {
+function renderModal(
+  card: ScryfallCard,
+  onSelect = () => {},
+  locale = "en"
+) {
   return render(
-    <NextIntlClientProvider locale="en" messages={{ card: cardMessages, collection: { ownership: { ownedCount: "Owned (×{count})" } } }}>
+    <NextIntlClientProvider locale={locale} messages={{ card: cardMessages, collection: { ownership: { ownedCount: "Owned (×{count})" } } }}>
       <PrintingSelectorModal card={card} onSelect={onSelect} onClose={() => {}} />
     </NextIntlClientProvider>
   );
@@ -75,6 +79,12 @@ describe("PrintingSelectorModal", () => {
     expect(
       screen.getByText("Lightning Bolt deals 3 damage to any target.")
     ).toBeDefined();
+  });
+
+  it("labels a French printing price as USD without converting it", () => {
+    renderModal(makeCard({ prices: { usd: "12.50" } }), () => {}, "fr");
+
+    expect(screen.getByText(/12,50\s+USD/u)).toBeDefined();
   });
 
   it("shows the printed text when the previewed printing is localised", () => {
