@@ -743,6 +743,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   updateDeckDescription: async (deckId: string, description: string) => {
+    const previousDeck = get().decks[deckId];
+    if (!previousDeck) return;
     // Optimistic update
     set((state) => ({
       decks: {
@@ -759,6 +761,21 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateDeck(deckId, { description });
     } catch (err) {
       logger.error("Unexpected error", "updateDeckDescription", err);
+      set((state) => {
+        const currentDeck = state.decks[deckId];
+        if (!currentDeck || currentDeck.description !== description) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [deckId]: { ...currentDeck, description: previousDeck.description },
+          },
+        };
+      });
+      if (get().decks[deckId]) {
+        useToastStore
+          .getState()
+          .add("error", "Could not save deck description. Please retry.");
+      }
     } finally {
       set({ isSyncing: false });
     }
