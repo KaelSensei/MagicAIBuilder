@@ -19,6 +19,10 @@
   },
   "dropToMove": "Drop here to move to {label}",
   "noCardsYet": "No cards yet",
+  "tags": {
+    "add": "Add tag",
+    "placeholder": "tag name…"
+  },
   "searchCommander": "Search for a commander above",
   "searchPartner": "Search for a {partnerLabel}",
   "zones": {
