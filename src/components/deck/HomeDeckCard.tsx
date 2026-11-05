@@ -25,15 +25,6 @@ const BRACKET_COLORS: Record<number, string> = {
   4: "text-red-400 bg-red-500/15 border-red-500/30",
 };
 
-const HOME_DECK_MANA_LABELS: Record<HomeDeckManaColor, string> = {
-  W: "White",
-  U: "Blue",
-  B: "Black",
-  R: "Red",
-  G: "Green",
-  C: "Colorless",
-};
-
 /**
  * Check whether a raw deck color identity symbol is supported for home-card display.
  *
@@ -81,16 +72,6 @@ function getDeckManaSymbolUrl(color: HomeDeckManaColor): string {
   return `https://svgs.scryfall.io/card-symbols/${color}.svg`;
 }
 
-/**
- * Build accessible text for a deck-card mana symbol.
- *
- * @param color Supported mana color symbol.
- * @returns Human-readable alt text.
- */
-function getDeckManaSymbolAlt(color: HomeDeckManaColor): string {
-  return `${HOME_DECK_MANA_LABELS[color]} mana symbol`;
-}
-
 export function HomeDeckCard({
   deck,
   onDelete,
@@ -105,6 +86,7 @@ export function HomeDeckCard({
   const isManual = Boolean(deck.manualBracket);
   const manaColors = useMemo(() => getDeckPresentationManaColors(deck), [deck]);
   const t = useTranslations("deck");
+  const tBuilder = useTranslations("builder");
   const format = useFormatter();
 
   return (
@@ -225,7 +207,9 @@ export function HomeDeckCard({
                   <Image
                     key={`${deck.id}-${color}`}
                     src={getDeckManaSymbolUrl(color)}
-                    alt={getDeckManaSymbolAlt(color)}
+                    alt={tBuilder("manaSymbolAlt", {
+                      color: tBuilder(`manaColors.${color}`),
+                    })}
                     width={18}
                     height={18}
                     unoptimized
