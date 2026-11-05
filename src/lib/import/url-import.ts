@@ -125,6 +125,7 @@ interface MoxfieldDeck {
   boards?: {
     commanders?: MoxfieldBoard;
     mainboard?: MoxfieldBoard;
+    companions?: MoxfieldBoard;
     sideboard?: MoxfieldBoard;
     maybeboard?: MoxfieldBoard;
   };
@@ -157,6 +158,7 @@ async function importMoxfield(id: string): Promise<UrlImportResult> {
 
   const sideEntries = Object.values(data.boards?.sideboard?.cards ?? {});
   const maybeEntries = Object.values(data.boards?.maybeboard?.cards ?? {});
+  const companionEntries = Object.values(data.boards?.companions?.cards ?? {});
 
   for (const [index, entry] of commanderEntries.entries()) {
     cards.push({
@@ -173,6 +175,16 @@ async function importMoxfield(id: string): Promise<UrlImportResult> {
       quantity: entry.quantity,
       isCommander: false,
       isPartner: false,
+      zone: "main",
+    });
+  }
+  for (const entry of companionEntries) {
+    cards.push({
+      name: entry.card.name,
+      quantity: entry.quantity,
+      isCommander: false,
+      isPartner: false,
+      isCompanion: true,
       zone: "main",
     });
   }

@@ -208,6 +208,33 @@ describe("importFromUrl", () => {
     ]);
   });
 
+  it("Moxfield: preserves companion board cards as companions", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "Mox Companion",
+          format: "commander",
+          boards: {
+            commanders: { cards: { c: { quantity: 1, card: { name: "Alela, Artful Provocateur" } } } },
+            companions: { cards: { l: { quantity: 1, card: { name: "Lurrus of the Dream-Den" } } } },
+          },
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://moxfield.com/decks/companion-id");
+
+    expect(result.cards).toContainEqual({
+      name: "Lurrus of the Dream-Den",
+      quantity: 1,
+      isCommander: false,
+      isPartner: false,
+      isCompanion: true,
+      zone: "main",
+    });
+  });
+
   it("sets formatWarning for non-commander Moxfield format", async () => {
     vi.spyOn(http, "httpGet").mockResolvedValueOnce(
       new Response(
