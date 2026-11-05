@@ -7,6 +7,9 @@ import { logger } from "@/lib/logger";
 import { isRecord, parseCollectionCard } from "./parse";
 import { updateCollectionQuantity } from "./quantity-update";
 
+/** Newest `loadCollection` call. An older response must not replace it. */
+let collectionLoadVersion = 0;
+
 export interface CollectionStore {
   // State
   collectionCards: Record<string, CollectionCard>; // keyed by scryfallId (non-foil)
@@ -71,11 +74,13 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
   },
 
   loadCollection: async () => {
+    const version = ++collectionLoadVersion;
     set({ isLoading: true, loadError: false });
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15_000);
     try {
       const res = await fetch("/api/collection", { signal: controller.signal });
+      if (version !== collectionLoadVersion) return;
       if (!res.ok) throw new Error("Failed to load collection");
       const cards: CollectionCard[] = await res.json();
 
@@ -95,13 +100,15 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
         }
       }
 
+      if (version !== collectionLoadVersion) return;
       set({ collectionCards, collectionCardsFoil });
     } catch (err) {
+      if (version !== collectionLoadVersion) return;
       logger.error("Unexpected error", "loadCollection", err);
       set({ loadError: true });
     } finally {
       clearTimeout(timeoutId);
-      set({ isLoading: false });
+      if (version === collectionLoadVersion) set({ isLoading: false });
     }
   },
 
