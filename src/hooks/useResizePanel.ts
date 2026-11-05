@@ -47,9 +47,8 @@ export function useResizePanel({
       isDragging.current = false;
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
-      if (storageKey) {
-        localStorage.setItem(storageKey, String(startWidth.current));
-      }
+      // The effect below already stored the live width. Writing
+      // startWidth here would put the pre-drag size back.
     };
 
     globalThis.addEventListener("mousemove", handleMouseMove);
