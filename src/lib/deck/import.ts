@@ -34,7 +34,7 @@ function clampQuantity(n: number): number {
 /** Strip trailing set code + collector number: "Card Name (SET) 123" or "... 123p" or "... 123★" */
 // Bounded quantifiers prevent ReDoS: set codes ≤6 chars, collector numbers ≤6 digits
 const SET_CODE_PATTERN = /\s{1,5}\([A-Z0-9]{1,6}\)\s{1,5}\d{1,6}[a-z*★]{0,3}\s*$/i;
-const SET_ONLY_PATTERN = /\s{1,5}\([A-Z0-9]{2,6}\)$/;
+const SET_ONLY_PATTERN = /\s{1,5}\((?:[A-Z0-9]{2,6}|[a-z0-9]*\d[a-z0-9]{0,5})\)$/;
 
 type ParseState = {
   commander: string | null;
