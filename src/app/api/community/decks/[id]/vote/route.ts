@@ -120,6 +120,11 @@ export async function DELETE(_req: Request, { params }: Params) {
     if (authResult.error) return authResult.error;
     const userId = authResult.session.user.id;
 
+    const deck = await findVisibleDeck(id, userId);
+    if (!deck) {
+      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
+
     // deleteMany keeps this idempotent when no vote exists.
     await prisma.deckVote.deleteMany({ where: { userId, deckId: id } });
 
