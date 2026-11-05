@@ -8,7 +8,7 @@ vi.mock("@/components/landing/LandingPage", () => ({
 
 import HomePage from "./page";
 
-it("renders canonical French SoftwareApplication structured data on the public home", async () => {
+it("renders canonical French structured data without unverified pricing or AI claims", async () => {
   const home = await HomePage({ params: Promise.resolve({ locale: "fr" }) });
   const { container } = render(home);
 
@@ -20,10 +20,8 @@ it("renders canonical French SoftwareApplication structured data on the public h
     "@type": "SoftwareApplication",
     name: "MagicAIBuilder",
     url: `${siteUrl()}/fr`,
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-    },
+    description:
+      "Commander deckbuilding for card search, collection tracking, goldfish playtesting, and sharing.",
   });
+  expect(JSON.parse(structuredData?.textContent ?? "")).not.toHaveProperty("offers");
 });
