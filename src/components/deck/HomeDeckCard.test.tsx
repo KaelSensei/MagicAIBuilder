@@ -4,6 +4,9 @@ import { render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import enDeck from "@/messages/en/deck.json";
+import enBuilder from "@/messages/en/builder.json";
+import frDeck from "@/messages/fr/deck.json";
+import frBuilder from "@/messages/fr/builder.json";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({
@@ -111,7 +114,7 @@ describe("HomeDeckCard", () => {
     });
 
     render(
-      <NextIntlClientProvider locale="en" messages={{ deck: enDeck }}>
+      <NextIntlClientProvider locale="en" messages={{ deck: enDeck, builder: enBuilder }} timeZone="UTC">
         <HomeDeckCard
           deck={deck}
           onDelete={vi.fn()}
@@ -124,5 +127,17 @@ describe("HomeDeckCard", () => {
 
     expect(screen.getByTestId("deck-identity")).toHaveTextContent("Test Deck");
     expect(screen.getByTestId("deck-status")).toHaveTextContent("0 cards");
+  });
+
+  it("uses French accessible labels for its mana symbols", () => {
+    const deck = makeDeck({ commander: makeCard("cmd", "Atraxa", ["G"]) });
+
+    render(
+      <NextIntlClientProvider locale="fr" messages={{ deck: frDeck, builder: frBuilder }} timeZone="UTC">
+        <HomeDeckCard deck={deck} onDelete={vi.fn()} onDuplicate={vi.fn()} deletingId={null} duplicatingId={null} />
+      </NextIntlClientProvider>
+    );
+
+    expect(screen.getByRole("img", { name: "Symbole de mana Vert" })).toBeDefined();
   });
 });
