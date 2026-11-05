@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import { restoredDeckCards } from "@/lib/deck/snapshot-restore";
 
 type Params = { params: Promise<{ id: string; snapshotId: string }> };
 
@@ -19,37 +20,14 @@ export async function POST(_req: Request, { params }: Params) {
       return NextResponse.json({ error: "Snapshot not found" }, { status: 404 });
     }
 
-    // cardList is the serialized array of DeckCard rows
-    const cardList = snapshot.cardList as Array<Record<string, unknown>>;
+    // Validate before deleting. A malformed list must not wipe the live deck.
+    const cards = restoredDeckCards(id, snapshot.cardList);
 
-    // Replace all deck cards in a transaction
     await prisma.$transaction(async (tx) => {
-      // Delete current cards
       await tx.deckCard.deleteMany({ where: { deckId: id } });
 
-      // Re-create from snapshot (strip DB-generated id so Prisma assigns new ones)
-      if (cardList.length > 0) {
-        await tx.deckCard.createMany({
-          data: cardList.map((c) => ({
-            deckId: id,
-            scryfallId: c.scryfallId as string,
-            name: c.name as string,
-            manaCost: (c.manaCost as string) ?? "",
-            cmc: (c.cmc as number) ?? 0,
-            typeLine: (c.typeLine as string) ?? "",
-            oracleText: (c.oracleText as string) ?? "",
-            colorIdentity: (c.colorIdentity as string[]) ?? [],
-            isGameChanger: (c.isGameChanger as boolean) ?? false,
-            isBanned: (c.isBanned as boolean) ?? false,
-            price: (c.price as number | null) ?? null,
-            imageUri: (c.imageUri as string) ?? "",
-            artCropUri: (c.artCropUri as string) ?? "",
-            category: (c.category as string) ?? "other",
-            quantity: (c.quantity as number) ?? 1,
-            isCommander: (c.isCommander as boolean) ?? false,
-            isPartner: (c.isPartner as boolean) ?? false,
-          })),
-        });
+      if (cards.length > 0) {
+        await tx.deckCard.createMany({ data: [...cards] });
       }
     });
 
