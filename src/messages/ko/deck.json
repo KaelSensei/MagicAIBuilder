@@ -392,6 +392,7 @@
     "sourceDisclosureUnavailable": "Source: {source} · Observation time unavailable",
     "sourceHealthUnavailable": "Source health: unavailable after {attempts, plural, one {# attempt} other {# attempts}}",
     "edhrecSampleWindowUnavailable": "Sample window unavailable from EDHREC",
+    "tournamentEvidenceWindow": "Tournament evidence: {start} – {end}",
     "popularEdhrec": "Popular (EDHRec)",
     "sampleSize": "{included} / {total} 덱",
     "notInDeck": "Not in deck",

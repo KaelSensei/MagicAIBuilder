@@ -18,7 +18,20 @@ vi.mock("@/hooks/useMetaAnalysis", () => ({
       _meta: { cached: false, observedAt: "2026-08-29T10:30:00.000Z" },
     },
     tournament: {
-      decks: [],
+      decks: [
+        {
+          name: "Atraxa spring list",
+          url: "https://www.mtgtop8.com/event?e=1",
+          source: "mtgtop8",
+          date: "2024-05-05",
+        },
+        {
+          name: "Atraxa summer list",
+          url: "https://www.mtgtop8.com/event?e=2",
+          source: "mtgtop8",
+          date: "2024-06-10",
+        },
+      ],
       _meta: { cached: false, observedAt: "2026-08-28T10:30:00.000Z" },
     },
     isLoadingEdhrec: false,
@@ -149,6 +162,20 @@ describe("MetaPanel", () => {
       screen.getByText(/source: mtgtop8 \/ mtgdecks.*aug 28, 2026/i)
     ).toBeInTheDocument();
     expect(screen.getByText("80 / 100 decks")).toBeInTheDocument();
+  });
+
+  it("discloses the covered tournament evidence window", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
+        <MetaPanel commanderName="Atraxa" deckCardNames={new Set<string>()} onAddCard={vi.fn()} />
+      </NextIntlClientProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /meta analysis/i }));
+
+    expect(
+      screen.getByText("Tournament evidence: May 5, 2024 – Jun 10, 2024")
+    ).toBeInTheDocument();
   });
 
   it("retries only the failed EDHREC source", () => {

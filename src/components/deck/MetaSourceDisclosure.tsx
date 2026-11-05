@@ -11,6 +11,10 @@ interface MetaSourceDisclosureProps {
   readonly observedAt: string;
   readonly stale?: boolean;
   readonly kind?: MetaEvidenceKind;
+  readonly evidenceWindow?: {
+    readonly start: string;
+    readonly end: string;
+  };
   readonly health?: {
     readonly status: "idle" | "available" | "unavailable";
     readonly attempts: number;
@@ -34,6 +38,7 @@ export function MetaSourceDisclosure({
   observedAt,
   stale = false,
   kind,
+  evidenceWindow,
   health,
 }: MetaSourceDisclosureProps) {
   const t = useTranslations("deck");
@@ -55,6 +60,12 @@ export function MetaSourceDisclosure({
     dateStyle: "medium",
     timeZone: "UTC",
   });
+  const evidenceStart = evidenceWindow
+    ? format.dateTime(new Date(evidenceWindow.start), { dateStyle: "medium", timeZone: "UTC" })
+    : null;
+  const evidenceEnd = evidenceWindow
+    ? format.dateTime(new Date(evidenceWindow.end), { dateStyle: "medium", timeZone: "UTC" })
+    : null;
 
   return (
     <div className="space-y-0.5">
@@ -74,6 +85,14 @@ export function MetaSourceDisclosure({
       {source === "edhrec" && (
         <p className="text-[10px] text-[var(--text-secondary)]">
           {t("meta.edhrecSampleWindowUnavailable")}
+        </p>
+      )}
+      {source === "tournament" && evidenceStart && evidenceEnd && (
+        <p className="text-[10px] text-[var(--text-secondary)]">
+          {t("meta.tournamentEvidenceWindow", {
+            start: evidenceStart,
+            end: evidenceEnd,
+          })}
         </p>
       )}
       {health?.status === "unavailable" && (

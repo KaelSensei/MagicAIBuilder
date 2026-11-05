@@ -528,6 +528,7 @@
     "sourceDisclosureUnavailable": "Source : {source} · Heure d’observation indisponible",
     "sourceHealthUnavailable": "État de la source : indisponible après {attempts, plural, one {# tentative} other {# tentatives}}",
     "edhrecSampleWindowUnavailable": "Fenêtre d’échantillonnage indisponible depuis EDHREC",
+    "tournamentEvidenceWindow": "Preuves de tournoi : {start} – {end}",
     "communityDecks": "Voir les decks de la communauté pour ce commandant",
     "viewOnEdhrec": "Voir ce commandant sur EDHRec",
     "popularEdhrec": "Populaires (EDHRec)",
