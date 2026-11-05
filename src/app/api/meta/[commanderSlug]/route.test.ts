@@ -74,7 +74,7 @@ describe("GET /api/meta/:commanderSlug", () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
-      _meta: { cached: false, observedAt: OBSERVED_AT },
+      _meta: { source: "edhrec", cached: false, observedAt: OBSERVED_AT },
     });
   });
 
@@ -89,6 +89,7 @@ describe("GET /api/meta/:commanderSlug", () => {
 
     await expect(response.json()).resolves.toMatchObject({
       _meta: {
+        source: "edhrec",
         cached: true,
         observedAt: "2026-08-29T10:30:00.000Z",
       },
@@ -107,6 +108,7 @@ describe("GET /api/meta/:commanderSlug", () => {
 
     await expect(response.json()).resolves.toMatchObject({
       _meta: {
+        source: "edhrec",
         cached: true,
         stale: true,
         observedAt: "2026-08-20T10:30:00.000Z",
@@ -127,7 +129,7 @@ describe("GET /api/meta/:commanderSlug", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       decks: [{ name: "Known deck" }],
-      _meta: { cached: true, stale: true },
+      _meta: { source: "tournament", cached: true, stale: true },
     });
     expect(mockUpsert).not.toHaveBeenCalled();
   });
