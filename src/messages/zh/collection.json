@@ -1,5 +1,14 @@
 {
   "title": "My Collection",
+  "deckPanel": {
+    "title": "Deck collection",
+    "signIn": "Sign in to track your collection",
+    "progress": "{owned} owned · {proxy} proxy · {missing} missing",
+    "missingCost": "Missing cards cost",
+    "complete": "Deck complete — you own all cards!",
+    "shoppingList": "Shopping list ({count, plural, one {# card} other {# cards}})",
+    "markAllOwned": "Mark all owned"
+  },
   "usage": {
     "trigger": "Decks",
     "title": "Decks using {name}",
