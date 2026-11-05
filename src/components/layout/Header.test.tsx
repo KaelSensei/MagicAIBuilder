@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import React from "react";
 import { NextIntlClientProvider } from "next-intl";
 import enCommon from "@/messages/en/common.json";
+import frCommon from "@/messages/fr/common.json";
 
 let createDeckImpl: (name: string) => Promise<string> = async (_name: string) =>
   "deck-0";
@@ -52,9 +53,11 @@ vi.mock("@/lib/deck/store", () => ({
     }),
 }));
 
-function renderWithIntl(ui: React.ReactElement) {
+function renderWithIntl(ui: React.ReactElement, locale = "en") {
+  const messages = locale === "fr" ? frCommon : enCommon;
+
   return render(
-    <NextIntlClientProvider locale="en" messages={{ common: enCommon }}>
+    <NextIntlClientProvider locale={locale} timeZone="UTC" messages={{ common: messages }}>
       {ui}
     </NextIntlClientProvider>
   );
@@ -84,5 +87,17 @@ describe("Header", () => {
 
     await waitFor(() => expect(createDeck).toHaveBeenCalledTimes(1));
     expect(setActiveDeck).toHaveBeenCalledWith("deck-123");
+  });
+
+  it("uses the active locale for the imported deck name", async () => {
+    const createDeck = vi.fn(async (_name: string) => "deck-123");
+    createDeckImpl = (name: string) => createDeck(name);
+
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header), "fr");
+    await userEvent.click(screen.getByRole("button", { name: /importer/i }));
+
+    expect(createDeck).toHaveBeenCalledWith(expect.stringMatching(/^Deck importé — /));
   });
 });
