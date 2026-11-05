@@ -30,8 +30,7 @@ export async function GET(_req: Request, { params }: Params) {
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
-      "GET /api/share/:token",
-      { token: String(token).slice(0, 20) }
+      "GET /api/share/:token"
     );
     return NextResponse.json(
       { error: "Failed to fetch shared deck" },

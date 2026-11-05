@@ -4,8 +4,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // vi.mock() is hoisted to the top of the file by Vitest, so factory variables
 // must be created with vi.hoisted() to ensure they're initialized in time.
 
-const { mockDeckFindUnique } = vi.hoisted(() => ({
+const { mockDeckFindUnique, mockLoggerError } = vi.hoisted(() => ({
   mockDeckFindUnique: vi.fn(),
+  mockLoggerError: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -13,6 +14,12 @@ vi.mock("@/lib/db/prisma", () => ({
     deck: {
       findUnique: mockDeckFindUnique,
     },
+  },
+}));
+
+vi.mock("@/lib/logger", () => ({
+  logger: {
+    error: mockLoggerError,
   },
 }));
 
@@ -185,5 +192,17 @@ describe("GET /api/share/[token]", () => {
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.error).toBeTruthy();
+  });
+
+  it("does not log a bearer share token when the database lookup fails", async () => {
+    const token = "abc123XYZABC";
+    mockDeckFindUnique.mockRejectedValueOnce(new Error("DB connection lost"));
+
+    await GET(makeRequest(token), makeParams(token));
+
+    expect(mockLoggerError).toHaveBeenCalledWith(
+      "DB connection lost",
+      "GET /api/share/:token"
+    );
   });
 });
