@@ -89,6 +89,19 @@ describe("MainZoneContent", () => {
     expect(screen.getByRole("button", { name: /drag to reorder/i })).toHaveAttribute("tabindex", "0");
   });
 
+  it("reveals the reorder handle when a keyboard user focuses it", () => {
+    renderWithIntl(
+      <MainZoneContent
+        {...baseProps}
+        viewMode="list"
+        cardGroups={[group("artifact", [card("c1", "Sol Ring")])]}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /drag to reorder/i }))
+      .toHaveClass("focus-visible:opacity-100");
+  });
+
   describe("grid view", () => {
     it("changes a card category without switching to list view", () => {
       const onChangeCategory = vi.fn();
