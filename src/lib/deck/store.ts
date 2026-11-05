@@ -99,6 +99,24 @@ function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
 }
 
 /**
+ * Checks whether two name sets have identical membership.
+ *
+ * @param current - Values already held in store state.
+ * @param next - Values supplied by the latest enrichment query.
+ * @returns Whether no store-visible value changed.
+ */
+function setsContainSameValues(
+  current: ReadonlySet<string>,
+  next: ReadonlySet<string>
+): boolean {
+  if (current.size !== next.size) return false;
+  for (const value of current) {
+    if (!next.has(value)) return false;
+  }
+  return true;
+}
+
+/**
  * Uses an owned printing of the requested card when the local collection can
  * identify one. The collection itself is read-only during deck construction.
  */
@@ -325,8 +343,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     };
   })(),
 
-  setGameChangerNames: (names) => set({ gameChangerNames: names }),
-  setBannedNames: (names) => set({ bannedNames: names }),
+  setGameChangerNames: (names) => set((state) =>
+    setsContainSameValues(state.gameChangerNames, names)
+      ? state
+      : { gameChangerNames: names }
+  ),
+  setBannedNames: (names) => set((state) =>
+    setsContainSameValues(state.bannedNames, names)
+      ? state
+      : { bannedNames: names }
+  ),
   setSearchViewMode: (mode) => set({ searchViewMode: mode }),
   setDeckViewMode: (mode) => set({ deckViewMode: mode }),
   setDeckGridCols: (cols) => set({ deckGridCols: cols }),
@@ -601,6 +627,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   createDeck: async (name: string, opts?: { isAIGenerated?: boolean }) => {
+    if (isGuestDeckId(get().activeDeckId ?? "")) {
+      await get().setActiveDeck(GUEST_DECK_ID);
+      return GUEST_DECK_ID;
+    }
+
     set({ isSyncing: true });
     try {
       const apiDeck = await deckApi.createDeck(name, {

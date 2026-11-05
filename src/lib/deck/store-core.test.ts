@@ -90,6 +90,7 @@ vi.mock("@/lib/scryfall/client", () => ({
 }));
 
 import * as deckApi from "@/lib/db/deck-api";
+import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -392,6 +393,17 @@ describe("useDeckStore — setGameChangerNames / setBannedNames", () => {
     expect(useDeckStore.getState().gameChangerNames.has("New Card")).toBe(true);
   });
 
+  it("does not publish another update when synchronized game changer names are unchanged", () => {
+    const listener = vi.fn();
+    const unsubscribe = useDeckStore.subscribe(listener);
+
+    useDeckStore.getState().setGameChangerNames(new Set(["Rhystic Study"]));
+    useDeckStore.getState().setGameChangerNames(new Set(["Rhystic Study"]));
+
+    unsubscribe();
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
   it("setBannedNames stores the provided set", () => {
     const names = new Set(["Emrakul, the Aeons Torn"]);
     useDeckStore.getState().setBannedNames(names);
@@ -403,6 +415,17 @@ describe("useDeckStore — setGameChangerNames / setBannedNames", () => {
     useDeckStore.getState().setBannedNames(new Set(["Card B"]));
     expect(useDeckStore.getState().bannedNames.has("Card A")).toBe(false);
     expect(useDeckStore.getState().bannedNames.has("Card B")).toBe(true);
+  });
+
+  it("does not publish another update when synchronized banned names are unchanged", () => {
+    const listener = vi.fn();
+    const unsubscribe = useDeckStore.subscribe(listener);
+
+    useDeckStore.getState().setBannedNames(new Set(["Flash"]));
+    useDeckStore.getState().setBannedNames(new Set(["Flash"]));
+
+    unsubscribe();
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -571,6 +594,16 @@ describe("useDeckStore — createDeck", () => {
   it("calls the API with the deck name", async () => {
     await useDeckStore.getState().createDeck("My New Deck");
     expect(deckApi.createDeck).toHaveBeenCalledWith("My New Deck", { isAIGenerated: undefined });
+  });
+
+  it("reuses the local guest deck instead of creating an authenticated deck", async () => {
+    useDeckStore.setState({ activeDeckId: GUEST_DECK_ID });
+
+    const id = await useDeckStore.getState().createDeck("New Deck");
+
+    expect(id).toBe(GUEST_DECK_ID);
+    expect(deckApi.createDeck).not.toHaveBeenCalled();
+    expect(useDeckStore.getState().decks[GUEST_DECK_ID]).toBeDefined();
   });
 
   it("sets isSyncing to false after completion", async () => {
