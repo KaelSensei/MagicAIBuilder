@@ -35,6 +35,17 @@ import { shiftMagnitude, type MetaShift } from "@/lib/meta/history";
 /** Movements shown in the panel; the report itself is not truncated. */
 const MAX_SHIFTS_SHOWN = 8;
 
+function tournamentEvidenceWindow(
+  decks: readonly TournamentDeck[]
+): { readonly start: string; readonly end: string } | null {
+  const datedEvents = decks
+    .flatMap((deck) => (deck.date && /^\d{4}-\d{2}-\d{2}$/.test(deck.date) ? [deck.date] : []))
+    .sort();
+  const start = datedEvents[0];
+  const end = datedEvents.at(-1);
+  return start && end ? { start, end } : null;
+}
+
 interface MetaPanelProps {
   readonly commanderName: string | null;
   readonly deckCardNames: ReadonlySet<string>;
@@ -312,11 +323,12 @@ export function MetaPanel({
     resetShifts();
   }, [commanderName, resetShifts]);
 
-  const edhrecCards = (edhrec?.cards ?? []) as MetaCard[];
+  const edhrecCards = edhrec?.cards ?? [];
   const filteredCards = showOnlyMissing
     ? edhrecCards.filter((c) => !deckCardNames.has(c.name))
     : edhrecCards;
-  const tournamentDecks = (tournament?.decks ?? []) as TournamentDeck[];
+  const tournamentDecks = tournament?.decks ?? [];
+  const tournamentWindow = tournamentEvidenceWindow(tournamentDecks);
 
   // `steady` is dropped: a card holding its inclusion within a point is the
   // normal state of most of the list, and printing twenty of them would bury
@@ -559,6 +571,7 @@ export function MetaPanel({
                         observedAt={tournamentObservedAt}
                         stale={tournament?._meta?.stale}
                         health={sourceHealth.tournament}
+                        evidenceWindow={tournamentWindow ?? undefined}
                       />
                     )}
 
