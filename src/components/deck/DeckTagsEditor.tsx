@@ -97,7 +97,7 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
                   setShowInput(false);
                 }
               }}
-              placeholder="tag name…"
+              placeholder={t("tags.placeholder")}
               maxLength={50}
               className="bg-[var(--surface)] border border-[var(--accent)] rounded-full px-2 py-0.5 text-[10px] text-[var(--text-primary)] outline-none w-24"
             />
@@ -124,7 +124,7 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
             className="inline-flex items-center gap-0.5 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors px-1.5 py-0.5 rounded-full border border-dashed border-[var(--border)] hover:border-[var(--accent)]"
           >
             <Plus className="w-2.5 h-2.5" />
-            {tags.length === 0 ? "Add tag" : ""}
+            {tags.length === 0 ? t("tags.add") : ""}
           </button>
         )}
 
