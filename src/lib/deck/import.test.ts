@@ -141,6 +141,12 @@ describe("parseTextDecklist", () => {
     ]);
   });
 
+  it("strips a standalone lowercase set code", () => {
+    const result = parseTextDecklist("1 Sol Ring (c21)");
+
+    expect(result.cards[0]?.name).toBe("Sol Ring");
+  });
+
   it("strips HTML tags from card name", () => {
     const result = parseTextDecklist("1 <b>Sol Ring</b>");
     expect(result.cards[0].name).toBe("Sol Ring");
