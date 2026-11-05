@@ -28,9 +28,9 @@ import {
 } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 import { isDeckStub } from "@/lib/deck/store-factories";
+import { computeDeckStats } from "@/lib/deck/stats";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
-import { useDeck } from "@/hooks/useDeck";
 import { useBracketScore } from "@/hooks/useBracketScore";
 import { useCardSearch } from "@/hooks/useCardSearch";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -285,17 +285,14 @@ export default function BuilderPage() {
   const deckId = params.deckId as string;
   const { data: sessionData } = useSession();
 
-  // Ensure this deck is active
-  const {
-    setActiveDeck,
-    addCard,
-    removeCard,
-    setCommander,
-    setPartner,
-    setCompanion,
-    updateCardCategory,
-    moveCardToZone,
-  } = useDeck();
+  const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
+  const addCard = useDeckStore((s) => s.addCard);
+  const removeCard = useDeckStore((s) => s.removeCard);
+  const setCommander = useDeckStore((s) => s.setCommander);
+  const setPartner = useDeckStore((s) => s.setPartner);
+  const setCompanion = useDeckStore((s) => s.setCompanion);
+  const updateCardCategory = useDeckStore((s) => s.updateCardCategory);
+  const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
   const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
@@ -343,7 +340,10 @@ export default function BuilderPage() {
     if (banLoaded) setBannedNames(bannedNames);
   }, [banLoaded, bannedNames, setBannedNames]);
 
-  const { stats } = useDeck();
+  const stats = useMemo(() => {
+    if (!deck) return null;
+    return computeDeckStats(deck);
+  }, [deck]);
   const { data: combos, isLoading: combosLoading, dataUpdatedAt: combosUpdatedAt } = useCombos(deck);
   const bracketScore = useBracketScore(deck, combos);
   const {
