@@ -189,6 +189,7 @@ describe("DELETE /api/community/decks/[id]/vote", () => {
 
   it("clears only the caller's own vote", async () => {
     signedInAs("voter-1");
+    mockDeckFindUnique.mockResolvedValue(PUBLIC_DECK);
 
     await DELETE(new Request("http://localhost"), params());
 
@@ -199,10 +200,26 @@ describe("DELETE /api/community/decks/[id]/vote", () => {
 
   it("is idempotent when no vote exists", async () => {
     signedInAs("voter-1");
+    mockDeckFindUnique.mockResolvedValue(PUBLIC_DECK);
     mockVoteDeleteMany.mockResolvedValue({ count: 0 });
 
     const response = await DELETE(new Request("http://localhost"), params());
 
     expect(response.status).toBe(200);
+  });
+
+  it("does not reveal the tally of a deck the caller cannot see", async () => {
+    signedInAs("voter-1");
+    mockDeckFindUnique.mockResolvedValue(PRIVATE_DECK);
+    mockVoteFindMany.mockResolvedValue([
+      { userId: "owner-1", deckId: "deck-1", value: 1 },
+      { userId: "someone", deckId: "deck-1", value: 1 },
+    ]);
+
+    const response = await DELETE(new Request("http://localhost"), params());
+
+    expect(response.status).toBe(404);
+    expect(mockVoteDeleteMany).not.toHaveBeenCalled();
+    expect(mockVoteFindMany).not.toHaveBeenCalled();
   });
 });
