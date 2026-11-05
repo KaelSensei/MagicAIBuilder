@@ -303,6 +303,15 @@ export interface DeckStore {
 
   // Force save (sync) — triggers a full DB refresh for the active deck
   forceSave: () => Promise<void>;
+  /**
+   * Replace the open deck with the database copy.
+   *
+   * Used after a server-side rewrite (snapshot restore, package apply). The
+   * deck listing must not be used for this: it keeps an already hydrated deck.
+   *
+   * @returns Resolves when the open deck matches the database, or the refresh failed.
+   */
+  reloadActiveDeck: () => Promise<void>;
 
   // Deck settings
   setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
@@ -552,6 +561,32 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       useToastStore.getState().add("success", "✓ Deck saved");
     } catch (err) {
       logger.error("Unexpected error", "forceSave", err);
+      if (!get().decks[activeDeckId]) return;
+      useToastStore
+        .getState()
+        .add("error", "Could not refresh deck. Please retry.");
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
+  reloadActiveDeck: async () => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    set({ isSyncing: true });
+    try {
+      const apiDeck = await deckApi.fetchDeck(activeDeckId);
+      if (!get().decks[activeDeckId]) return;
+      const fullDeck = apiDeckToStoreDeck(apiDeck);
+      set((state) => ({
+        decks: { ...state.decks, [activeDeckId]: fullDeck },
+        // The previous undo entries name cards that the server just replaced.
+        undoStack: state.undoStack.filter(
+          (action) => action.deckId !== activeDeckId
+        ),
+      }));
+    } catch (err) {
+      logger.error("Unexpected error", "reloadActiveDeck", err);
       if (!get().decks[activeDeckId]) return;
       useToastStore
         .getState()

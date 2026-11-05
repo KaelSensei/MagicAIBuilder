@@ -304,6 +304,7 @@ export default function BuilderPage() {
   const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
+  const reloadActiveDeck = useDeckStore((s) => s.reloadActiveDeck);
   const loadError = useDeckStore((s) => s.loadError);
   const deckOpenError = useDeckStore((s) => s.deckOpenError);
   const isSyncing = useDeckStore((s) => s.isSyncing);
@@ -589,14 +590,13 @@ export default function BuilderPage() {
   );
 
   const handleSnapshotRestore = useCallback(() => {
-    // Reload all decks from DB so the builder reflects the restored state
-    void loadDecks();
-  }, [loadDecks]);
+    // The listing keeps an already open deck, so it cannot show the restore.
+    void reloadActiveDeck();
+  }, [reloadActiveDeck]);
 
   const handlePackageApplied = useCallback(async () => {
-    await loadDecks();
-    await setActiveDeck(deckId);
-  }, [deckId, loadDecks, setActiveDeck]);
+    await reloadActiveDeck();
+  }, [reloadActiveDeck]);
 
   const handleAIAddCard = useCallback(
     (cardName: string) => {
