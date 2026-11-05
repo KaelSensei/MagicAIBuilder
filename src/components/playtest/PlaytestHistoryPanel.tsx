@@ -98,7 +98,9 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
           value={
             summary.averageWinTurns === 0
               ? "—"
-              : summary.averageWinTurns.toFixed(1)
+              : format.number(summary.averageWinTurns, {
+                  maximumFractionDigits: 1,
+                })
           }
         />
       </div>

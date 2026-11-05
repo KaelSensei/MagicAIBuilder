@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 
 import { PlaytestHistoryPanel } from "./PlaytestHistoryPanel";
 import playtestMessages from "@/messages/en/playtest.json";
+import frenchPlaytestMessages from "@/messages/fr/playtest.json";
 import type { PlaytestHistory } from "@/hooks/usePlaytestHistory";
 import type { PlaytestSession } from "@/lib/playtest/analytics";
 import type { SessionSummary } from "@/lib/playtest/session-input";
@@ -30,13 +31,17 @@ function makeSummary(overrides: Partial<SessionSummary> = {}): SessionSummary {
 
 function renderPanel(
   summary: SessionSummary | null,
-  sessions: readonly PlaytestSession[] = []
+  sessions: readonly PlaytestSession[] = [],
+  locale: "en" | "fr" = "en"
 ) {
   historyResult.current = {
     data: summary === null ? null : { sessions, summary },
   };
   render(
-    <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={{ playtest: locale === "en" ? playtestMessages : frenchPlaytestMessages }}
+    >
       <PlaytestHistoryPanel deckId="deck-1" />
     </NextIntlClientProvider>
   );
@@ -77,6 +82,12 @@ describe("PlaytestHistoryPanel", () => {
     expect(
       screen.getByText(/self-reported solitaire results, not tournament win rates/i)
     ).toBeDefined();
+  });
+
+  it("formats the average winning turn with the active locale", () => {
+    renderPanel(makeSummary(), [], "fr");
+
+    expect(screen.getByText("7,5")).toBeDefined();
   });
 
   it("dashes the win-turn figure when the deck has never won", () => {
