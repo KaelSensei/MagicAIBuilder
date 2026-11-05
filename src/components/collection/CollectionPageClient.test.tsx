@@ -63,3 +63,31 @@ it("keeps cached cards visible with a refresh warning", async () => {
   expect(screen.getByText("Sol Ring")).toBeInTheDocument();
   expect(screen.queryByText("empty.title")).not.toBeInTheDocument();
 });
+
+it("keeps focused list-row actions visible for keyboard users", async () => {
+  useCollectionStore.setState({
+    collectionCards: {
+      "printing-1": {
+        id: "owned-1",
+        scryfallId: "printing-1",
+        name: "Sol Ring",
+        quantity: 1,
+        foil: false,
+        condition: "NM",
+        acquiredAt: null,
+        price: 1,
+        imageUri: "",
+        createdAt: new Date("2024-01-01"),
+      },
+    },
+  });
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+
+  render(<CollectionPageClient />);
+
+  const changeArt = await screen.findByRole("button", { name: "actions.changeArtFor" });
+  const remove = screen.getByRole("button", { name: "actions.removeFromCollection" });
+
+  expect(changeArt).toHaveClass("focus-visible:opacity-100");
+  expect(remove).toHaveClass("focus-visible:opacity-100");
+});
