@@ -27,10 +27,7 @@ describe("date localization", () => {
   it("formats every rendered date through next-intl, not the platform API", () => {
     const offenders = walk("src/components")
       .filter((file) => !file.includes(".test."))
-      .filter((file) => BANNED.test(readFileSync(file, "utf8")))
-      // The imported-deck name is persisted data, not rendered UI, so it is
-      // not a localization decision the formatter should own.
-      .filter((file) => !file.endsWith("Header.tsx"));
+      .filter((file) => BANNED.test(readFileSync(file, "utf8")));
 
     expect(offenders).toEqual([]);
   });

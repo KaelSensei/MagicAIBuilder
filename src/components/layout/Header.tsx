@@ -1,7 +1,7 @@
 "use client";
 // App header with nav — responsive with hamburger menu on mobile
 import { useCallback, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   Layers,
@@ -27,6 +27,7 @@ interface HeaderProps {
 
 export function Header({ deckId }: HeaderProps = {}) {
   const t = useTranslations("common");
+  const format = useFormatter();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -53,14 +54,14 @@ export function Header({ deckId }: HeaderProps = {}) {
     setIsCreatingImportDeck(true);
     try {
       const id = await createDeck(
-        `Imported Deck — ${new Date().toLocaleString()}`
+        t("nav.importedDeck", { date: format.dateTime(new Date()) })
       );
       await setActiveDeck(id);
       setImportOpen(true);
     } finally {
       setIsCreatingImportDeck(false);
     }
-  }, [createDeck, isCreatingImportDeck, setActiveDeck]);
+  }, [createDeck, format, isCreatingImportDeck, setActiveDeck, t]);
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 shadow-sm md:gap-6 md:px-6">
