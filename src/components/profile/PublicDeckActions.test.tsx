@@ -4,6 +4,7 @@ import { PublicDeckActions } from "./PublicDeckActions";
 
 const push = vi.fn();
 const forkPublicDeck = vi.fn();
+const fetchMock = vi.fn();
 
 vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/db/deck-api", () => ({
@@ -14,6 +15,9 @@ describe("PublicDeckActions", () => {
   beforeEach(() => {
     push.mockReset();
     forkPublicDeck.mockReset();
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
     Object.defineProperty(navigator, "share", {
       configurable: true,
       value: undefined,
@@ -45,6 +49,35 @@ describe("PublicDeckActions", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Fork deck" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/builder/new-deck"));
+  });
+
+  it("saves a public deck to the signed-in player's unfiled library", async () => {
+    render(
+      <PublicDeckActions deckId="source" deckName="Original" isSignedIn />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Save deck" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/community/decks/source/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderId: null }),
+      })
+    );
+    expect(screen.getByRole("button", { name: "Saved deck" })).toBeDefined();
+  });
+
+  it("keeps the deck unsaved when the server rejects the request", async () => {
+    fetchMock.mockResolvedValue({ ok: false });
+    render(
+      <PublicDeckActions deckId="source" deckName="Original" isSignedIn />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Save deck" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Unable to save deck");
+    expect(screen.getByRole("button", { name: "Save deck" })).toBeEnabled();
   });
 
   it("uses native sharing when available", async () => {
