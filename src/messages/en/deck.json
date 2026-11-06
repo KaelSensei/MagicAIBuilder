@@ -425,7 +425,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "Filter by deck or commander",
+    "filterEmpty": "No decks match that filter."
   },
   "ai": {
     "title": "AI Suggestions",
@@ -610,7 +612,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count, plural, one {# card} other {# cards}}",
     "openShare": "Share deck",
-    "forkThisDeck": "Fork this deck"
+    "forkThisDeck": "Fork this deck",
+    "filterAll": "All"
   },
   "ratings": {
     "title": "Community Rating",

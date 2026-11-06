@@ -474,7 +474,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "このデッキをフォーク"
+    "forkThisDeck": "このデッキをフォーク",
+    "filterAll": "すべて"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -610,7 +611,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "デッキまたは統率者で絞り込む",
+    "filterEmpty": "一致するデッキがありません。"
   },
   "companion": {
     "title": "Companion",
