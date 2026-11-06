@@ -6,6 +6,14 @@
  */
 import type { DeckCard } from "@/lib/deck/types";
 
+export type {
+  AcquisitionDeckRequirement,
+  AcquisitionPlanCard,
+  AcquisitionPlanDeck,
+  AcquisitionPlanItem,
+} from "./acquisition-plan";
+export { buildAcquisitionPlan } from "./acquisition-plan";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ShoppingListItem {
@@ -14,35 +22,6 @@ export interface ShoppingListItem {
   readonly quantity: number;
   readonly price: number | null;
 }
-
-export interface AcquisitionDeckRequirement {
-  readonly id: string;
-  readonly name: string;
-  readonly quantity: number;
-}
-
-export interface AcquisitionPlanItem {
-  readonly scryfallId: string;
-  readonly name: string;
-  readonly requiredQuantity: number;
-  readonly ownedQuantity: number;
-  readonly acquireQuantity: number;
-  readonly price: number | null;
-  readonly decks: readonly AcquisitionDeckRequirement[];
-}
-
-export interface AcquisitionPlanDeck {
-  readonly id: string;
-  readonly name: string;
-  readonly cards: readonly AcquisitionPlanCard[];
-  readonly commander: AcquisitionPlanCard | null;
-  readonly partner: AcquisitionPlanCard | null;
-}
-
-export type AcquisitionPlanCard = Pick<
-  DeckCard,
-  "id" | "scryfallId" | "name" | "quantity" | "price" | "typeLine"
-> & { readonly zone: string };
 
 export type DeckCardStatus = "owned" | "proxy" | "missing";
 
@@ -281,97 +260,6 @@ export function getMissingCollectionCards(
     missingById.delete(scryfallId);
   }
   return missingCards;
-}
-
-/** Aggregate simultaneous deck requirements without changing collection ownership. */
-export function buildAcquisitionPlan(
-  decks: readonly AcquisitionPlanDeck[],
-  ownedQuantities: Readonly<Record<string, number>>
-): AcquisitionPlanItem[] {
-  const requirements = new Map<
-    string,
-    {
-      name: string;
-      requiredQuantity: number;
-      price: number | null;
-      decks: AcquisitionDeckRequirement[];
-    }
-  >();
-
-  for (const deck of decks) {
-    const perDeck = new Map<
-      string,
-      { card: AcquisitionPlanCard; quantity: number }
-    >();
-    const cards = [
-      deck.commander,
-      deck.partner,
-      ...deck.cards.filter((card) => card.zone === "main"),
-    ];
-    for (const card of cards) {
-      if (card === null || card.typeLine.toLowerCase().includes("basic land"))
-        continue;
-      const scryfallId = card.scryfallId ?? card.id;
-      const current = perDeck.get(scryfallId);
-      perDeck.set(scryfallId, {
-        card,
-        quantity: (current?.quantity ?? 0) + card.quantity,
-      });
-    }
-
-    for (const [scryfallId, requirement] of perDeck) {
-      const current = requirements.get(scryfallId);
-      if (current) {
-        current.requiredQuantity += requirement.quantity;
-        current.price ??= requirement.card.price;
-        current.decks.push({
-          id: deck.id,
-          name: deck.name,
-          quantity: requirement.quantity,
-        });
-      } else {
-        requirements.set(scryfallId, {
-          name: requirement.card.name,
-          requiredQuantity: requirement.quantity,
-          price: requirement.card.price,
-          decks: [
-            { id: deck.id, name: deck.name, quantity: requirement.quantity },
-          ],
-        });
-      }
-    }
-  }
-
-  const plan: AcquisitionPlanItem[] = [];
-  for (const [scryfallId, requirement] of requirements) {
-    const ownedQuantity = Math.max(0, ownedQuantities[scryfallId] ?? 0);
-    const acquireQuantity = Math.max(
-      0,
-      requirement.requiredQuantity - ownedQuantity
-    );
-    if (acquireQuantity === 0) continue;
-    plan.push({
-      scryfallId,
-      name: requirement.name,
-      requiredQuantity: requirement.requiredQuantity,
-      ownedQuantity,
-      acquireQuantity,
-      price: requirement.price,
-      decks: requirement.decks,
-    });
-  }
-
-  plan.sort((a, b) => {
-    if (a.price === null && b.price === null)
-      return a.name.localeCompare(b.name);
-    if (a.price === null) return 1;
-    if (b.price === null) return -1;
-    return (
-      b.price * b.acquireQuantity - a.price * a.acquireQuantity ||
-      a.name.localeCompare(b.name)
-    );
-  });
-  return plan;
 }
 
 // ─── Collection stats ─────────────────────────────────────────────────────────

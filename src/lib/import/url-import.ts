@@ -131,6 +131,66 @@ interface MoxfieldDeck {
   };
 }
 
+/**
+ * Prefers a Moxfield board, then a legacy top-level map.
+ *
+ * @param board - nested board, when the payload has one
+ * @param fallback - legacy map used when the board is empty
+ * @returns the card entries to import
+ */
+function moxfieldEntries(
+  board: MoxfieldBoard | undefined,
+  fallback?: Record<string, MoxfieldCard>
+): readonly MoxfieldCard[] {
+  const fromBoard = Object.values(board?.cards ?? {});
+  if (fromBoard.length > 0) return fromBoard;
+  return Object.values(fallback ?? {});
+}
+
+interface MoxfieldAppendOptions {
+  readonly commandZone?: boolean;
+  readonly companion?: boolean;
+}
+
+/**
+ * Appends one Moxfield board onto the import list.
+ *
+ * @param cards - import list being built
+ * @param entries - cards on the board
+ * @param zone - deck zone those cards belong to
+ * @param options - command-zone ordering or companion flag
+ */
+function appendMoxfieldCards(
+  cards: UrlImportCard[],
+  entries: readonly MoxfieldCard[],
+  zone: UrlImportCard["zone"],
+  options?: MoxfieldAppendOptions
+): void {
+  for (const [index, entry] of entries.entries()) {
+    const imported: UrlImportCard = {
+      name: entry.card.name,
+      quantity: entry.quantity,
+      isCommander: options?.commandZone === true && index === 0,
+      isPartner: options?.commandZone === true && index === 1,
+      zone,
+    };
+    cards.push(options?.companion === true ? { ...imported, isCompanion: true } : imported);
+  }
+}
+
+/**
+ * Warning shown when a Moxfield deck is not a Commander-like format.
+ *
+ * @param format - format string from Moxfield, if any
+ * @returns the warning, or undefined when the format is acceptable or absent
+ */
+function moxfieldFormatWarning(format: string | undefined): string | undefined {
+  if (!format) return undefined;
+  const normalized = format.toLowerCase();
+  if (normalized === "commander" || normalized === "edh" || normalized === "duel") return undefined;
+  return `This deck uses format "${format}" — it may not follow Commander rules.`;
+}
+
 async function importMoxfield(id: string): Promise<UrlImportResult> {
   const res = await httpGet(
     `https://api2.moxfield.com/v3/decks/all/${id}`,
@@ -145,74 +205,21 @@ async function importMoxfield(id: string): Promise<UrlImportResult> {
   );
   const data = parseJson<MoxfieldDeck>(await res.json());
   const cards: UrlImportCard[] = [];
+  appendMoxfieldCards(cards, moxfieldEntries(data.boards?.commanders, data.commanders), "main", {
+    commandZone: true,
+  });
+  appendMoxfieldCards(cards, moxfieldEntries(data.boards?.mainboard, data.mainboard), "main");
+  appendMoxfieldCards(cards, moxfieldEntries(data.boards?.companions), "main", { companion: true });
+  appendMoxfieldCards(cards, moxfieldEntries(data.boards?.sideboard), "sideboard");
+  appendMoxfieldCards(cards, moxfieldEntries(data.boards?.maybeboard), "maybeboard");
 
-  const commanderEntries =
-    Object.values(data.boards?.commanders?.cards ?? {}).length > 0
-      ? Object.values(data.boards?.commanders?.cards ?? {})
-      : Object.values(data.commanders ?? {});
-
-  const mainEntries =
-    Object.values(data.boards?.mainboard?.cards ?? {}).length > 0
-      ? Object.values(data.boards?.mainboard?.cards ?? {})
-      : Object.values(data.mainboard ?? {});
-
-  const sideEntries = Object.values(data.boards?.sideboard?.cards ?? {});
-  const maybeEntries = Object.values(data.boards?.maybeboard?.cards ?? {});
-  const companionEntries = Object.values(data.boards?.companions?.cards ?? {});
-
-  for (const [index, entry] of commanderEntries.entries()) {
-    cards.push({
-      name: entry.card.name,
-      quantity: entry.quantity,
-      isCommander: index === 0,
-      isPartner: index === 1,
-      zone: "main",
-    });
-  }
-  for (const entry of mainEntries) {
-    cards.push({
-      name: entry.card.name,
-      quantity: entry.quantity,
-      isCommander: false,
-      isPartner: false,
-      zone: "main",
-    });
-  }
-  for (const entry of companionEntries) {
-    cards.push({
-      name: entry.card.name,
-      quantity: entry.quantity,
-      isCommander: false,
-      isPartner: false,
-      isCompanion: true,
-      zone: "main",
-    });
-  }
-  for (const entry of sideEntries) {
-    cards.push({
-      name: entry.card.name,
-      quantity: entry.quantity,
-      isCommander: false,
-      isPartner: false,
-      zone: "sideboard",
-    });
-  }
-  for (const entry of maybeEntries) {
-    cards.push({
-      name: entry.card.name,
-      quantity: entry.quantity,
-      isCommander: false,
-      isPartner: false,
-      zone: "maybeboard",
-    });
-  }
-
-  const formatWarning =
-    data.format && !["commander", "edh", "duel"].includes(data.format.toLowerCase())
-      ? `This deck uses format "${data.format}" — it may not follow Commander rules.`
-      : undefined;
-
-  return { name: data.name, source: "moxfield", cards, ignored: [], formatWarning };
+  return {
+    name: data.name,
+    source: "moxfield",
+    cards,
+    ignored: [],
+    formatWarning: moxfieldFormatWarning(data.format),
+  };
 }
 
 // ─── Archidekt ────────────────────────────────────────────────────────────────
