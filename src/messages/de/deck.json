@@ -78,6 +78,9 @@
     "loadFailedDescription": "Der Server hat die Anfrage abgelehnt, diese Liste ist möglicherweise unvollständig. Deine Decks sind nicht verloren — versuche es gleich noch einmal.",
     "loadFailedSubtitle": "Deckliste nicht verfügbar",
     "retry": "Erneut versuchen",
+    "sessionTimeoutTitle": "Die Sitzung hat zu lange gedauert",
+    "sessionTimeoutDescription": "Die Kontoprüfung wurde nicht fertig. Deine gespeicherten Decks sind unverändert. Versuche es erneut.",
+    "profileLoadFailed": "Das Profil konnte nicht aktualisiert werden. Gespeicherte Decks bleiben verfügbar.",
     "createFailed": "Deck konnte nicht erstellt werden — {reason}",
     "folders": {
       "all": "All decks",

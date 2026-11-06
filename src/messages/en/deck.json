@@ -78,6 +78,9 @@
     "loadFailedDescription": "The server rejected the request, so this list may be incomplete. Your decks are not lost — try again in a moment.",
     "loadFailedSubtitle": "Deck list unavailable",
     "retry": "Retry",
+    "sessionTimeoutTitle": "Your session took too long",
+    "sessionTimeoutDescription": "The account check did not finish. Your saved decks are unchanged. Try again.",
+    "profileLoadFailed": "Your profile could not be refreshed. Saved decks stay available.",
     "createFailed": "Could not create the deck — {reason}",
     "folders": {
       "all": "All decks",

@@ -78,6 +78,9 @@
     "loadFailedDescription": "O servidor rejeitou a requisição, então esta lista pode estar incompleta. Seus decks não foram perdidos — tente novamente em instantes.",
     "loadFailedSubtitle": "Lista de decks indisponível",
     "retry": "Tentar novamente",
+    "sessionTimeoutTitle": "A sessão demorou demais",
+    "sessionTimeoutDescription": "A verificação da conta não terminou. Os decks salvos não mudaram. Tente novamente.",
+    "profileLoadFailed": "O perfil não pôde ser atualizado. Os decks salvos continuam disponíveis.",
     "createFailed": "Não foi possível criar o deck — {reason}",
     "folders": {
       "all": "All decks",

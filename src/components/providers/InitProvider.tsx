@@ -5,7 +5,7 @@
  * in one request with parallel DB queries. Replaces separate
  * CollectionProvider + useOnboarding fetch.
  */
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { fetchUserInit } from "@/lib/auth/user-init";
@@ -15,11 +15,14 @@ interface InitContextValue {
   readonly onboardingDone: boolean | null;
   /** Whether the bootstrap request is idle, pending, ready, or failed. */
   readonly initializationStatus: "idle" | "loading" | "ready" | "error";
+  /** Ask for the bootstrap payload again after a timeout or a failed response. */
+  readonly retryInitialization: () => void;
 }
 
 const InitContext = createContext<InitContextValue>({
   onboardingDone: null,
   initializationStatus: "idle",
+  retryInitialization: () => undefined,
 });
 
 /** Read pre-fetched onboarding status from InitProvider */
@@ -34,6 +37,10 @@ export function InitProvider({ children }: { readonly children: React.ReactNode 
   const [initializationStatus, setInitializationStatus] = useState<
     InitContextValue["initializationStatus"]
   >("idle");
+  const [attempt, setAttempt] = useState(0);
+  const retryInitialization = useCallback(() => {
+    setAttempt((current) => current + 1);
+  }, []);
 
   useEffect(() => {
     if (status !== "authenticated") {
@@ -55,20 +62,18 @@ export function InitProvider({ children }: { readonly children: React.ReactNode 
         setInitializationStatus("ready");
       })
       .catch(() => {
-        if (isCurrent) {
-          setOnboardingDone(null);
-          setInitializationStatus("error");
-        }
+        if (!isCurrent) return;
+        setInitializationStatus("error");
       });
 
     return () => {
       isCurrent = false;
     };
-  }, [hydrateCollection, session?.user?.id, status]);
+  }, [attempt, hydrateCollection, session?.user?.id, status]);
 
   const contextValue = useMemo(
-    () => ({ onboardingDone, initializationStatus }),
-    [initializationStatus, onboardingDone]
+    () => ({ onboardingDone, initializationStatus, retryInitialization }),
+    [initializationStatus, onboardingDone, retryInitialization]
   );
 
   return <InitContext.Provider value={contextValue}>{children}</InitContext.Provider>;

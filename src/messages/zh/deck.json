@@ -78,6 +78,9 @@
     "loadFailedDescription": "服务器拒绝了该请求，此列表可能不完整。你的套牌并未丢失 — 请稍后重试。",
     "loadFailedSubtitle": "套牌列表不可用",
     "retry": "重试",
+    "sessionTimeoutTitle": "会话检查耗时过长",
+    "sessionTimeoutDescription": "账户检查没有完成。已保存的套牌没有变化。请重试。",
+    "profileLoadFailed": "无法刷新个人资料。已保存的套牌仍然可用。",
     "createFailed": "无法创建套牌 — {reason}",
     "folders": {
       "all": "All decks",

@@ -42,13 +42,6 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
     [computePos]
   );
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (pos) setPos(computePos(e));
-    },
-    [pos, computePos]
-  );
-
   const handleMouseLeave = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     setPos(null);
@@ -58,7 +51,6 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
   const trigger = isValidElement(child)
     ? cloneElement(child as React.ReactElement<React.HTMLAttributes<HTMLElement>>, {
         onMouseEnter: handleMouseEnter,
-        onMouseMove: handleMouseMove,
         onMouseLeave: handleMouseLeave,
       })
     : child;
@@ -69,8 +61,8 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
       {pos &&
         createPortal(
           <div
-            className="fixed z-9999 pointer-events-none rounded-lg overflow-hidden shadow-2xl border border-(--border)"
-            style={{ left: pos.x, top: pos.y }}
+            className="pointer-events-none fixed z-9999 overflow-hidden rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--lumen-shadow-lg)]"
+            style={{ left: pos.x, top: pos.y, width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT }}
           >
             <Image
               src={localized?.imageUri ?? card.imageUri}

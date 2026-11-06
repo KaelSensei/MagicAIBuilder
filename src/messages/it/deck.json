@@ -78,6 +78,9 @@
     "loadFailedDescription": "Il server ha rifiutato la richiesta, quindi questo elenco potrebbe essere incompleto. I tuoi mazzi non sono persi: riprova tra un momento.",
     "loadFailedSubtitle": "Elenco dei mazzi non disponibile",
     "retry": "Riprova",
+    "sessionTimeoutTitle": "La sessione ha impiegato troppo tempo",
+    "sessionTimeoutDescription": "Il controllo dell'account non è terminato. I mazzi salvati non sono cambiati. Riprova.",
+    "profileLoadFailed": "Il profilo non è stato aggiornato. I mazzi salvati restano disponibili.",
     "createFailed": "Impossibile creare il mazzo — {reason}",
     "folders": {
       "all": "All decks",

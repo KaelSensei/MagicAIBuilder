@@ -78,6 +78,9 @@
     "loadFailedDescription": "El servidor rechazó la solicitud, por lo que esta lista puede estar incompleta. Tus mazos no se han perdido: inténtalo de nuevo en un momento.",
     "loadFailedSubtitle": "Lista de mazos no disponible",
     "retry": "Reintentar",
+    "sessionTimeoutTitle": "La sesión tardó demasiado",
+    "sessionTimeoutDescription": "La comprobación de la cuenta no terminó. Tus mazos guardados no cambiaron. Inténtalo de nuevo.",
+    "profileLoadFailed": "No se pudo actualizar tu perfil. Los mazos guardados siguen disponibles.",
     "createFailed": "No se pudo crear el mazo — {reason}",
     "folders": {
       "all": "All decks",
