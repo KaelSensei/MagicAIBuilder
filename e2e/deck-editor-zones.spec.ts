@@ -1,6 +1,10 @@
 import { test, expect } from "@playwright/test";
-import type { APIRequestContext } from "@playwright/test";
+import type { APIRequestContext, Page } from "@playwright/test";
 import { suppressOnboarding } from "./helpers";
+
+async function useListView(page: Page): Promise<void> {
+  await page.getByTitle("List view").nth(1).click();
+}
 
 const MAIN_CARD_ID = "00000000-0000-4000-8000-000000000101";
 const SIDEBOARD_CARD_ID = "00000000-0000-4000-8000-000000000102";
@@ -45,6 +49,7 @@ test.describe("Deck Editor zones", () => {
       await suppressOnboarding(page);
       await page.goto(`/builder/${deckId}`);
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await useListView(page);
 
       const sideboardTab = page.getByRole("button", { name: /^Sideboard\b/ });
       await expect(sideboardTab).toHaveText(/1/);
@@ -69,6 +74,7 @@ test.describe("Deck Editor zones", () => {
 
       await page.reload();
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await useListView(page);
       await page.getByRole("button", { name: /^Considering\b/ }).click();
       await expect(sideboardCard).toBeVisible();
     } finally {
@@ -83,6 +89,7 @@ test.describe("Deck Editor zones", () => {
       await suppressOnboarding(page);
       await page.goto(`/builder/${deckId}`);
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await useListView(page);
 
       const sideboardTab = page.getByRole("button", { name: /^Sideboard\b/ });
       await sideboardTab.click();
@@ -116,6 +123,7 @@ test.describe("Deck Editor zones", () => {
 
       await page.reload();
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await useListView(page);
       await sideboardTab.click();
       await expect(sideboardCard).toBeVisible();
     } finally {
@@ -130,6 +138,7 @@ test.describe("Deck Editor zones", () => {
       await suppressOnboarding(page);
       await page.goto(`/builder/${deckId}`);
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await useListView(page);
 
       await page.getByTestId("search-input").fill("Grizzly Bears");
       await page.getByAltText(/^Grizzly Bears$/i).first().click();
@@ -154,6 +163,7 @@ test.describe("Deck Editor zones", () => {
 
       await page.reload();
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await useListView(page);
       await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toBeVisible();
     } finally {
       await request.delete(`/api/decks/${deckId}`);
@@ -167,6 +177,7 @@ test.describe("Deck Editor zones", () => {
       await suppressOnboarding(page);
       await page.goto(`/builder/${deckId}`);
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await useListView(page);
 
       await page.getByTestId("search-input").fill("Grizzly Bears");
       await page.getByAltText(/^Grizzly Bears$/i).first().click();
@@ -190,6 +201,7 @@ test.describe("Deck Editor zones", () => {
 
       await page.reload();
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await useListView(page);
       await expect(page.locator("span").getByText("Grizzly Bears", { exact: true })).toHaveCount(0);
 
       await page.unroute(`**/api/decks/${deckId}/cards`);
