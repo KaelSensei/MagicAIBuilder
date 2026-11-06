@@ -1,270 +1,36 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 import type { Deck, DeckStats, BracketScore } from "@/lib/deck/types";
-import type { StreamEvent } from "@/app/api/ai/suggest/route";
 import { detectArchetypes } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
-import type { DeckBrief } from "@/lib/ai/deck-brief";
-import type { SuggestionEvidence } from "@/lib/ai/suggestion-evidence";
-import type { DeckQuestion } from "@/lib/ai/deck-question";
+import { deckCategoryCounts, hashDeckState, buildSuggestPayload } from "@/lib/ai/suggest-payload";
+import { processStream } from "@/lib/ai/suggestion-stream";
+import type { AIAnalysisOptions, AISuggestionResult } from "@/lib/ai/suggestion-types";
+
 export type { Archetype } from "@/lib/ai/archetypes";
+export type {
+  AIAnalysisOptions,
+  AISuggestionResult,
+  CardAlternative,
+  CardRemoval,
+  CardSuggestion,
+} from "@/lib/ai/suggestion-types";
 
-export interface CardSuggestion {
-  name: string;
-  reason: string;
-  category: string;
-  priority: "high" | "medium" | "low";
-  evidence?: SuggestionEvidence;
-  alternatives?: CardAlternative[];
-}
-
-export interface CardAlternative {
-  name: string;
-  reason: string;
-  dimension: "budget" | "power" | "playstyle";
-  evidence?: SuggestionEvidence;
-}
-
-export interface CardRemoval {
-  name: string;
-  reason: string;
-}
-
-export interface AISuggestionResult {
-  suggestions: CardSuggestion[];
-  removals: CardRemoval[];
-  analysis: string;
-  provider: "anthropic" | "openai" | "mock";
-}
-
-function hashDeckState(
-  deck: Deck,
-  stats: DeckStats,
-  bracket: number,
-  options?: AIAnalysisOptions
-): string {
-  const cardNames = deck.cards
-    .map((c) => c.name)
-    .sort((a, b) => a.localeCompare(b))
-    .join(",");
-  const commander = deck.commander?.name ?? "";
-  const partner = deck.partner?.name ?? "";
-  const brief = options?.brief;
-  const question = options?.question;
-  const questionKey =
-    question?.type === "why-card"
-      ? `${question.type}:${question.cardName}`
-      : (question?.type ?? "");
-  return `${commander}|${partner}|${bracket}|${deck.targetBracket}|${deck.budget ?? ""}|${options?.budgetPerCard ?? ""}|${options?.archetypeOverride ?? ""}|${brief?.theme ?? ""}|${brief?.playPattern ?? ""}|${brief?.dislikes ?? ""}|${questionKey}|${cardNames}`;
-}
-
-function buildSuggestPayload(
-  deck: Deck,
-  stats: DeckStats,
-  bracketScore: BracketScore | null,
-  bracket: number,
-  options?: {
-    readonly archetypeOverride?: Archetype | null;
-    readonly budgetPerCard?: number | null;
-    readonly brief?: DeckBrief;
-    readonly question?: DeckQuestion;
-  }
-) {
-  const { archetypeOverride, budgetPerCard, brief, question } = options ?? {};
-  const cardNames = deck.cards.map((c) => c.name);
-  const categories = {
-    ramp: stats.ramp,
-    draw: stats.draw,
-    removal: stats.removal,
-    boardWipe: stats.boardWipes,
-    creatures: stats.creatures,
-    lands: stats.lands,
-  };
-  const detectedThemes = stats.themes?.map((t) => t.name);
-
-  const archetype =
-    archetypeOverride ??
-    detectArchetypes({
-      cardNames,
-      categories,
-      detectedThemes,
-    })[0];
-
-  // Build card price map for budget filtering (server-side)
-  const cardPrices: Record<string, number | null> = {};
-  for (const card of deck.cards) {
-    cardPrices[card.name] = card.price ?? null;
-  }
-
-  return {
-    deckId: deck.id,
-    commanderName: deck.commander?.name ?? null,
-    partnerName: deck.partner?.name ?? null,
-    colorIdentity: [
-      ...(deck.commander?.colorIdentity ?? []),
-      ...(deck.partner?.colorIdentity ?? []),
-    ].filter((v, i, a) => a.indexOf(v) === i),
-    cardNames,
-    categories,
-    avgCmc: stats.avgCmc,
-    bracket,
-    bracketDimensions: bracketScore?.dimensions,
-    bracketWarnings: bracketScore?.warnings,
-    targetBracket: deck.targetBracket,
-    budget: deck.budget,
-    gameChangersCount: stats.gameChangersCount,
-    gameChangersList: stats.gameChangersList,
-    detectedThemes,
-    archetype,
-    budgetPerCard: budgetPerCard ?? null,
-    cardPrices,
-    brief,
-    question,
-  };
-}
-
-type StreamAcc = {
-  suggestions: CardSuggestion[];
-  removals: CardRemoval[];
-  analysis: string;
-  provider: AISuggestionResult["provider"];
-};
-
-function applyStreamEvent(event: StreamEvent, acc: StreamAcc): boolean {
-  switch (event.type) {
-    case "analysis":
-      acc.analysis = event.content;
-      acc.provider = event.provider;
-      return true;
-    case "suggestion":
-      acc.suggestions.push(event.data);
-      return true;
-    case "removal":
-      acc.removals.push(event.data);
-      return true;
-    case "done":
-      return false;
-    case "error":
-      throw new Error(event.message);
-    default: {
-      const _exhaustive: never = event;
-      return _exhaustive;
-    }
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isStreamEvent(value: unknown): value is StreamEvent {
-  if (!isRecord(value) || typeof value.type !== "string") return false;
-  switch (value.type) {
-    case "analysis": {
-      const p = value.provider;
-      return (
-        typeof value.content === "string" &&
-        (p === "anthropic" || p === "openai" || p === "mock")
-      );
-    }
-    case "suggestion": {
-      const d = value.data;
-      if (!isRecord(d)) return false;
-      const priority = d.priority;
-      return (
-        typeof d.name === "string" &&
-        typeof d.reason === "string" &&
-        typeof d.category === "string" &&
-        (priority === "high" || priority === "medium" || priority === "low")
-      );
-    }
-    case "removal": {
-      const d = value.data;
-      return (
-        isRecord(d) &&
-        typeof d.name === "string" &&
-        typeof d.reason === "string"
-      );
-    }
-    case "done":
-      return true;
-    case "error":
-      return typeof value.message === "string";
-    default:
-      return false;
-  }
-}
-
-function parseNdjsonLineToEvent(line: string): StreamEvent | undefined {
-  const trimmed = line.trim();
-  if (!trimmed) return undefined;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(trimmed);
-  } catch {
-    return undefined;
-  }
-  if (!isStreamEvent(parsed)) return undefined;
-  return parsed;
-}
-
-function applyNdjsonLine(
-  line: string,
-  acc: StreamAcc,
-  onUpdate: (acc: StreamAcc) => void
-): void {
-  const event = parseNdjsonLineToEvent(line);
-  if (event === undefined) return;
-  if (applyStreamEvent(event, acc)) {
-    onUpdate(acc);
-  }
-}
-
-/** Reads a NDJSON stream and applies each event to the accumulator, calling onUpdate after each change. */
-async function processStream(
-  reader: ReadableStreamDefaultReader<Uint8Array>,
-  onUpdate: (acc: StreamAcc) => void
-): Promise<StreamAcc> {
-  const decoder = new TextDecoder();
-  const acc: StreamAcc = {
-    suggestions: [],
-    removals: [],
-    analysis: "",
-    provider: "mock",
-  };
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      applyNdjsonLine(line, acc, onUpdate);
-    }
-  }
-  return acc;
-}
-
-export interface AIAnalysisOptions {
-  archetypeOverride?: Archetype | null;
-  budgetPerCard?: number | null;
-  brief?: DeckBrief;
-  question?: DeckQuestion;
-}
-
+/**
+ * Runs one assistant analysis and keeps the latest streamed result.
+ *
+ * An unchanged deck reuses the previous answer unless an archetype override
+ * forces a new request.
+ *
+ * @returns the suggestion state and the actions that change it
+ */
 export function useAISuggestions() {
   const [result, setResult] = useState<AISuggestionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [detectedArchetype, setDetectedArchetype] = useState<Archetype | null>(
-    null
-  );
+  const [detectedArchetype, setDetectedArchetype] = useState<Archetype | null>(null);
   const [analysedAt, setAnalysedAt] = useState<Date | null>(null);
-  const [ignoredSuggestions, setIgnoredSuggestions] = useState<Set<string>>(
-    new Set()
-  );
+  const [ignoredSuggestions, setIgnoredSuggestions] = useState<Set<string>>(new Set());
 
   const lastHash = useRef<string | null>(null);
   const lastResult = useRef<AISuggestionResult | null>(null);
@@ -287,29 +53,16 @@ export function useAISuggestions() {
       const bracket = bracketScore?.overall ?? deck.targetBracket;
       const hash = hashDeckState(deck, stats, bracket, options);
 
-      if (
-        hash === lastHash.current &&
-        lastResult.current &&
-        !options?.archetypeOverride
-      ) {
+      if (hash === lastHash.current && lastResult.current && !options?.archetypeOverride) {
         setResult(lastResult.current);
         return;
       }
 
-      // Detect archetype client-side for display
-      const cardNames = deck.cards.map((c) => c.name);
-      const categories = {
-        ramp: stats.ramp,
-        draw: stats.draw,
-        removal: stats.removal,
-        boardWipe: stats.boardWipes,
-        creatures: stats.creatures,
-        lands: stats.lands,
-      };
+      const cardNames = deck.cards.map((card) => card.name);
       const auto = detectArchetypes({
         cardNames,
-        categories,
-        detectedThemes: stats.themes?.map((t) => t.name),
+        categories: deckCategoryCounts(stats),
+        detectedThemes: stats.themes?.map((theme) => theme.name),
       });
       setDetectedArchetype(options?.archetypeOverride ?? auto[0] ?? null);
 
@@ -323,13 +76,7 @@ export function useAISuggestions() {
       });
 
       try {
-        const payload = buildSuggestPayload(
-          deck,
-          stats,
-          bracketScore,
-          bracket,
-          options
-        );
+        const payload = buildSuggestPayload(deck, stats, bracketScore, bracket, options);
         const response = await fetch("/api/ai/suggest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -337,21 +84,17 @@ export function useAISuggestions() {
           signal: AbortSignal.timeout(60000),
         });
 
-        if (!response.ok)
-          throw new Error(`AI request failed (${response.status})`);
+        if (!response.ok) throw new Error(`AI request failed (${response.status})`);
         if (!response.body) throw new Error("No response body");
 
-        const acc = await processStream(
-          response.body.getReader(),
-          (current) => {
-            setResult({
-              suggestions: [...current.suggestions],
-              removals: [...current.removals],
-              analysis: current.analysis,
-              provider: current.provider,
-            });
-          }
-        );
+        const acc = await processStream(response.body.getReader(), (current) => {
+          setResult({
+            suggestions: [...current.suggestions],
+            removals: [...current.removals],
+            analysis: current.analysis,
+            provider: current.provider,
+          });
+        });
         lastHash.current = hash;
         lastResult.current = {
           suggestions: acc.suggestions,
