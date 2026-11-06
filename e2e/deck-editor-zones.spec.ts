@@ -131,6 +131,37 @@ test.describe("Deck Editor zones", () => {
     }
   });
 
+  test("keeps a main card out of the sideboard after a rejected move and reload", async ({ page, request }) => {
+    const deckId = await createDeckWithZones(request);
+
+    try {
+      await suppressOnboarding(page);
+      await page.goto(`/builder/${deckId}`);
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      const mainCard = page.locator("span").getByText("Zone Main Card", { exact: true });
+      await expect(mainCard).toBeVisible();
+
+      await page.route(`**/api/decks/${deckId}/cards/*`, async (route) => {
+        if (route.request().method() === "PATCH") {
+          await route.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+          return;
+        }
+        await route.continue();
+      });
+      await page.getByTitle("Move to Sideboard").click();
+      await expect(page.getByText("Could not move card. Try again.")).toBeVisible();
+      await expect(mainCard).toBeVisible();
+
+      await page.reload();
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await expect(mainCard).toBeVisible();
+      await page.getByRole("button", { name: /^Sideboard\b/ }).click();
+      await expect(mainCard).toHaveCount(0);
+    } finally {
+      await request.delete(`/api/decks/${deckId}`);
+    }
+  });
+
   test("keeps a searched card in the main deck after reload", async ({ page, request }) => {
     const deckId = await createDeckWithZones(request);
 
