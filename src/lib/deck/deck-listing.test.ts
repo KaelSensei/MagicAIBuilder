@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { getStoredDecksViewMode, storeDecksViewMode, sortDecks } from "./deck-listing";
+import { filterDecksByQuery, getStoredDecksViewMode, storeDecksViewMode, sortDecks } from "./deck-listing";
 import type { Deck } from "./types";
 
 const localStorageMock = (() => {
@@ -64,6 +64,22 @@ describe("deck listing preferences", () => {
   it("ignores invalid stored value", () => {
     localStorage.setItem("mab-decks-view-mode", "table");
     expect(getStoredDecksViewMode()).toBeNull();
+  });
+});
+
+describe("filterDecksByQuery", () => {
+  const decks = [
+    { id: "a", name: "Direction B", commander: { name: "Atraxa, Grand Unifier" }, partner: null },
+    { id: "b", name: "Lands", commander: null, partner: null },
+  ] as const;
+
+  it("returns every deck when the query is blank", () => {
+    expect(filterDecksByQuery(decks, "  ")).toEqual(decks);
+  });
+
+  it("matches a deck name or a commander name", () => {
+    expect(filterDecksByQuery(decks, "atraxa").map((deck) => deck.id)).toEqual(["a"]);
+    expect(filterDecksByQuery(decks, "lands").map((deck) => deck.id)).toEqual(["b"]);
   });
 });
 

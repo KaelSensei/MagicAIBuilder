@@ -66,6 +66,8 @@
   },
   "home": {
     "title": "My Decks",
+    "searchPlaceholder": "Pesquisar decks ou comandantes",
+    "searchEmpty": "Nenhum deck corresponde a essa pesquisa.",
     "loading": "Loading...",
     "empty": "No decks yet - create your first deck!",
     "deckCount": "{count, plural, one {1 deck} other {{count} decks}}",

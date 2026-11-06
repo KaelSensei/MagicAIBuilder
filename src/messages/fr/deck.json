@@ -66,6 +66,8 @@
   },
   "home": {
     "title": "Mes Decks",
+    "searchPlaceholder": "Rechercher un deck ou un commandant",
+    "searchEmpty": "Aucun deck ne correspond à cette recherche.",
     "loading": "Chargement...",
     "empty": "Aucun deck — créez votre premier deck !",
     "deckCount": "{count, plural, one {1 deck} other {{count} decks}}",

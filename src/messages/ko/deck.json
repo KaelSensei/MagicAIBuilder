@@ -66,6 +66,8 @@
   },
   "home": {
     "title": "My Decks",
+    "searchPlaceholder": "덱 또는 커맨더 검색",
+    "searchEmpty": "검색과 일치하는 덱이 없습니다.",
     "loading": "Loading...",
     "empty": "No decks yet - create your first deck!",
     "deckCount": "{count, plural, one {1 deck} other {{count} decks}}",

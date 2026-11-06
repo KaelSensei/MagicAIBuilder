@@ -66,6 +66,8 @@
   },
   "home": {
     "title": "My Decks",
+    "searchPlaceholder": "搜索套牌或指挥官",
+    "searchEmpty": "没有符合该搜索的套牌。",
     "loading": "Loading...",
     "empty": "No decks yet - create your first deck!",
     "deckCount": "{count, plural, one {1 deck} other {{count} decks}}",

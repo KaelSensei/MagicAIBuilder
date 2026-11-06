@@ -66,6 +66,8 @@
   },
   "home": {
     "title": "My Decks",
+    "searchPlaceholder": "Cerca mazzi o comandanti",
+    "searchEmpty": "Nessun mazzo corrisponde a questa ricerca.",
     "loading": "Loading...",
     "empty": "No decks yet - create your first deck!",
     "deckCount": "{count, plural, one {1 deck} other {{count} decks}}",
