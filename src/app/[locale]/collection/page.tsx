@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function CollectionPage() {
   return (
-    <div className="flex flex-col h-screen bg-[var(--bg)] text-[var(--text-primary)]">
+    <div className="flex h-screen flex-col bg-[var(--background)] text-[var(--text-primary)]">
       <Header />
       <CollectionPageClient />
     </div>

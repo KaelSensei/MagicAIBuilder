@@ -7,6 +7,9 @@ import { z } from "zod";
 import { formatAcquisitionCsv } from "@/lib/collection/acquisition-csv";
 import { Link } from "@/i18n/navigation";
 import { formatUsdPrice } from "@/i18n/number-format";
+import { cardSurfaceClassName } from "@/components/ui/Card";
+import { fieldShellClassName } from "@/components/ui/Input";
+import { cn } from "@/components/ui/utils";
 
 const planSchema = z.object({
   deckCount: z.number().int().nonnegative(),
@@ -106,13 +109,13 @@ export function AcquisitionPlanPanel() {
   };
 
   return (
-    <section className="mb-6 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+    <section className={cn(cardSurfaceClassName, "overflow-hidden")}>
       <button
         type="button"
         aria-expanded={open}
         aria-controls="collection-acquisition-plan"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]"
       >
         {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         {t("title")}
@@ -149,7 +152,7 @@ export function AcquisitionPlanPanel() {
               <select
                 value={selectedDeckId}
                 onChange={(event) => setSelectedDeckId(event.target.value)}
-                className="min-w-36 rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[var(--text-primary)]"
+                className={cn(fieldShellClassName, "min-w-36 px-3 py-1.5 text-xs")}
               >
                 <option value="">{t("allDecks")}</option>
                 {deckOptions.map((deck) => <option key={deck.id} value={deck.id}>{deck.name}</option>)}
