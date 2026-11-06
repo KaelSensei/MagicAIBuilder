@@ -477,7 +477,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "Criar fork deste deck"
+    "forkThisDeck": "Criar fork deste deck",
+    "filterAll": "Tudo"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -613,7 +614,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "Filtrar por deck ou comandante",
+    "filterEmpty": "Nenhum deck corresponde a esse filtro."
   },
   "companion": {
     "title": "Companion",

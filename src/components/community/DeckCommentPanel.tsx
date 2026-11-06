@@ -118,7 +118,7 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
   };
 
   return (
-    <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
+    <section className="flex flex-col gap-4 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--lumen-shadow-sm)]">
       <header className="flex flex-wrap items-center gap-3">
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">{t("title")}</h2>
         {data && (

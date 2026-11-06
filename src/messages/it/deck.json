@@ -477,7 +477,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "Forka questo deck"
+    "forkThisDeck": "Forka questo deck",
+    "filterAll": "Tutti"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -613,7 +614,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "Filtra per mazzo o comandante",
+    "filterEmpty": "Nessun mazzo corrisponde a questo filtro."
   },
   "companion": {
     "title": "Companion",

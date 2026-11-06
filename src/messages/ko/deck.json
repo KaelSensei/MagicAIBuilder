@@ -477,7 +477,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "이 덱 포크하기"
+    "forkThisDeck": "이 덱 포크하기",
+    "filterAll": "전체"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -613,7 +614,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "덱 또는 커맨더로 필터",
+    "filterEmpty": "필터와 일치하는 덱이 없습니다."
   },
   "companion": {
     "title": "Companion",

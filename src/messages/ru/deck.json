@@ -477,7 +477,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "Создать форк этой колоды"
+    "forkThisDeck": "Создать форк этой колоды",
+    "filterAll": "Все"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -613,7 +614,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "Фильтр по колоде или командиру",
+    "filterEmpty": "Нет колод, подходящих под этот фильтр."
   },
   "companion": {
     "title": "Companion",
