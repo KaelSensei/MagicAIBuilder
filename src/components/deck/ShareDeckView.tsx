@@ -19,6 +19,9 @@ import { motion } from "framer-motion";
 import { ManaCurve } from "./ManaCurve";
 import { ColorDistribution } from "./ColorDistribution";
 import { cn } from "@/components/ui/utils";
+import { cardSurfaceClassName } from "@/components/ui/Card";
+import { filterCardsByCategory } from "@/lib/deck/deck-preview";
+import { CategoryFilter, DeckCardStrip } from "./DeckPreviewChrome";
 import type { CardCategory } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import { logger } from "@/lib/logger";
@@ -147,6 +150,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
   const { setActiveDeck } = useDeckStore();
   const [importing, setImporting] = useState(false);
   const [imported, setImported] = useState(false);
+  const [category, setCategory] = useState("all");
 
   const commander = deck.cards.find((c) => c.isCommander && !c.isPartner);
   const partner = deck.cards.find((c) => c.isPartner);
@@ -168,6 +172,10 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
     return groups;
   }, [mainCards]);
 
+  const visibleMainCards = useMemo(
+    () => filterCardsByCategory(mainCards, category),
+    [category, mainCards]
+  );
   const orderedCategories = CATEGORY_ORDER.filter(
     (cat) =>
       cat !== "commander" && cat !== "companion" && cardsByCategory[cat]?.length
@@ -301,7 +309,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
               onClick={handleImport}
               disabled={importing || imported}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all shrink-0",
+                "flex shrink-0 items-center gap-2 rounded-[var(--lumen-radius-pill)] px-4 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2",
                 imported
                   ? "bg-green-500/20 text-green-400 border border-green-500/40 cursor-default"
                   : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white disabled:opacity-60 disabled:cursor-not-allowed"
@@ -345,7 +353,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                 <Users className="w-3.5 h-3.5" />
                 {t("share.commandZone")}
               </h2>
-              <div className="space-y-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2">
+              <div className={cn(cardSurfaceClassName, "space-y-0.5 p-2")}>
                 {commander && <CardRow card={commander} />}
                 {partner && <CardRow card={partner} />}
                 {companion && <CardRow card={companion} />}
@@ -354,7 +362,25 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           )}
 
           {/* Cards by category */}
-          {orderedCategories.map((cat) => {
+          <CategoryFilter
+            options={orderedCategories.map((cat) => ({
+              id: cat,
+              label: CATEGORY_LABELS[cat],
+              count: (cardsByCategory[cat] ?? []).reduce((sum, card) => sum + card.quantity, 0),
+            }))}
+            value={category}
+            allLabel={t("share.filterAll")}
+            onChange={setCategory}
+          />
+          <DeckCardStrip
+            cards={visibleMainCards.map((card) => ({
+              id: card.id,
+              name: card.name,
+              category: card.category,
+              imageUri: card.imageUri,
+            }))}
+          />
+          {orderedCategories.filter((cat) => category === "all" || cat === category).map((cat) => {
             const cards = cardsByCategory[cat] ?? [];
             const total = cards.reduce((sum, c) => sum + c.quantity, 0);
             return (
@@ -365,7 +391,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
                     ({total})
                   </span>
                 </h2>
-                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 space-y-0.5">
+                <div className={cn(cardSurfaceClassName, "space-y-0.5 p-2")}>
                   {cards.map((card) => (
                     <CardRow key={card.id} card={card} />
                   ))}
@@ -383,7 +409,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           transition={{ delay: 0.1 }}
         >
           {/* Quick stats */}
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div className={cn(cardSurfaceClassName, "p-4")}>
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <BarChart2 className="w-3.5 h-3.5" />
               {t("share.statsTitle")}
@@ -435,7 +461,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           </div>
 
           {/* Mana Curve */}
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div className={cn(cardSurfaceClassName, "p-4")}>
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
               {t("share.manaCurve")}
             </h3>
@@ -443,7 +469,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
           </div>
 
           {/* Color Distribution */}
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div className={cn(cardSurfaceClassName, "p-4")}>
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
               {t("share.colorDistribution")}
             </h3>
@@ -497,7 +523,7 @@ function ShareUrlCopy() {
   };
 
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+    <div className={cn(cardSurfaceClassName, "p-4")}>
       <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
         {t("share.shareThisDeck")}
       </h3>

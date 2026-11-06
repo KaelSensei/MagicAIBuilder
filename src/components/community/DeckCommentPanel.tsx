@@ -1,6 +1,6 @@
 "use client";
 // Threaded comment stream on a public deck page.
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowDownUp } from "lucide-react";
 import type { DeckCommentThread } from "@/lib/community/comments";
@@ -35,25 +35,36 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
   const [newestFirst, setNewestFirst] = useState(true);
 
   const endpoint = `/api/community/decks/${encodeURIComponent(deckId)}/comments`;
+  /** Latest read. An older response must not replace a newer deck's stream. */
+  const loadGeneration = useRef(0);
 
   /**
    * Reads the stream. A failure has to be *visible*: every part of the body
    * is gated on `data`, so silently ignoring a non-OK response or a thrown
    * fetch left the panel showing its header and nothing else — a broken read
    * looked exactly like a deck nobody had commented on, and never recovered.
+   *
+   * A newer load (another deck, or a retry) invalidates this one. Applying
+   * the late body would put the previous deck's comments on the current page.
    */
   const load = useCallback(async () => {
+    const generation = loadGeneration.current + 1;
+    loadGeneration.current = generation;
     setLoadFailed(false);
     try {
       const res = await fetch(endpoint, {
         signal: AbortSignal.timeout(COMMENT_STREAM_TIMEOUT_MS),
       });
+      if (generation !== loadGeneration.current) return;
       if (!res.ok) {
         setLoadFailed(true);
         return;
       }
-      setData(await res.json());
+      const payload = await res.json();
+      if (generation !== loadGeneration.current) return;
+      setData(payload);
     } catch {
+      if (generation !== loadGeneration.current) return;
       setLoadFailed(true);
     }
   }, [endpoint]);
@@ -107,7 +118,7 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
   };
 
   return (
-    <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
+    <section className="flex flex-col gap-4 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--lumen-shadow-sm)]">
       <header className="flex flex-wrap items-center gap-3">
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">{t("title")}</h2>
         {data && (

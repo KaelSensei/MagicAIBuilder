@@ -4,7 +4,7 @@ import { useThemeStore, useTheme } from "./useTheme";
 
 describe("useThemeStore", () => {
   beforeEach(() => {
-    useThemeStore.setState({ theme: "dark" });
+    useThemeStore.setState({ theme: "dark", preference: "dark" });
   });
 
   it("defaults to dark theme", () => {
@@ -32,16 +32,45 @@ describe("useThemeStore", () => {
   });
 
   it("sets theme explicitly to dark", () => {
-    useThemeStore.setState({ theme: "light" });
+    useThemeStore.setState({ theme: "light", preference: "light" });
     const { result } = renderHook(() => useThemeStore());
     act(() => { result.current.setTheme("dark"); });
     expect(result.current.theme).toBe("dark");
+    expect(result.current.preference).toBe("dark");
+  });
+
+  it("pins an explicit choice when the theme is set", () => {
+    const { result } = renderHook(() => useThemeStore());
+    act(() => { result.current.setTheme("light"); });
+    expect(result.current.preference).toBe("light");
+  });
+
+  it("resolves system to the operating system preference", () => {
+    const { result } = renderHook(() => useThemeStore());
+    act(() => { result.current.setPreference("system", false); });
+    expect(result.current.preference).toBe("system");
+    expect(result.current.theme).toBe("light");
+  });
+
+  it("resolves system dark when the operating system is dark", () => {
+    const { result } = renderHook(() => useThemeStore());
+    act(() => { result.current.setPreference("system", true); });
+    expect(result.current.theme).toBe("dark");
+    expect(result.current.preference).toBe("system");
+  });
+
+  it("leaves system when toggled, so the next click is an explicit choice", () => {
+    const { result } = renderHook(() => useThemeStore());
+    act(() => { result.current.setPreference("system", false); });
+    act(() => { result.current.toggleTheme(); });
+    expect(result.current.theme).toBe("dark");
+    expect(result.current.preference).toBe("dark");
   });
 });
 
 describe("useTheme", () => {
   beforeEach(() => {
-    useThemeStore.setState({ theme: "dark" });
+    useThemeStore.setState({ theme: "dark", preference: "dark" });
   });
 
   it("returns the current theme", () => {
@@ -57,5 +86,10 @@ describe("useTheme", () => {
   it("exposes setTheme", () => {
     const { result } = renderHook(() => useTheme());
     expect(typeof result.current.setTheme).toBe("function");
+  });
+
+  it("exposes setPreference", () => {
+    const { result } = renderHook(() => useTheme());
+    expect(typeof result.current.setPreference).toBe("function");
   });
 });

@@ -142,6 +142,35 @@ describe("useMetaAnalysis", () => {
     expect(result.current.edhrec).toBeNull();
   });
 
+  it("ignores a stale source response after a newer request succeeds", async () => {
+    let resolveFirst: (value: Response) => void = () => {};
+    const first = new Promise<Response>((resolve) => {
+      resolveFirst = resolve;
+    });
+    const newer = { cards: [{ name: "New" }] };
+    vi.mocked(globalThis.fetch)
+      .mockImplementationOnce(() => first)
+      .mockResolvedValueOnce(new Response(JSON.stringify(newer), { status: 200 }));
+
+    const { result } = renderHook(() => useMetaAnalysis("Atraxa"));
+    let firstFetch: Promise<void> = Promise.resolve();
+    act(() => {
+      firstFetch = result.current.fetchSource("edhrec");
+    });
+    await act(async () => {
+      await result.current.fetchSource("edhrec");
+    });
+    expect(result.current.edhrec).toEqual(newer);
+
+    await act(async () => {
+      resolveFirst(new Response(JSON.stringify({ cards: [{ name: "Old" }] }), { status: 200 }));
+      await firstFetch;
+    });
+
+    expect(result.current.edhrec).toEqual(newer);
+    expect(result.current.isLoadingEdhrec).toBe(false);
+  });
+
   it("records source health after a failed request", async () => {
     vi.mocked(globalThis.fetch).mockRejectedValueOnce(new Error("offline"));
     const { result } = renderHook(() => useMetaAnalysis("Atraxa"));

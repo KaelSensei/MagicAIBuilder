@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { CopyPlus, Printer, Share2 } from "lucide-react";
+import { Bookmark, CopyPlus, Printer, Share2 } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { forkPublicDeck } from "@/lib/db/deck-api";
 
@@ -27,6 +27,9 @@ export function PublicDeckActions({
 }: PublicDeckActionsProps) {
   const router = useRouter();
   const [forking, setForking] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [shared, setShared] = useState(false);
 
   const handleFork = useCallback(async () => {
@@ -39,6 +42,25 @@ export function PublicDeckActions({
       setForking(false);
     }
   }, [deckId, forking, isSignedIn, router]);
+
+  const handleSave = useCallback(async () => {
+    if (!isSignedIn || saving || saved) return;
+    setSaving(true);
+    setSaveError(false);
+    try {
+      const response = await fetch("/api/community/decks/" + deckId + "/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderId: null }),
+      });
+      if (response.ok) setSaved(true);
+      else setSaveError(true);
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
+  }, [deckId, isSignedIn, saved, saving]);
 
   const handleShare = useCallback(async () => {
     const shareData = { title: deckName, url: window.location.href };
@@ -62,6 +84,21 @@ export function PublicDeckActions({
         </span>
       )}
       {!forkedFrom && <span className="mr-auto" />}
+      <button
+        type="button"
+        onClick={() => void handleSave()}
+        disabled={!isSignedIn || saving || saved}
+        aria-label={saved ? "Saved deck" : saving ? "Saving deck" : "Save deck"}
+        className="flex items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <Bookmark className="h-3.5 w-3.5" fill={saved ? "currentColor" : "none"} />
+        {saved ? "Saved" : saving ? "Saving…" : "Save"}
+      </button>
+      {saveError && (
+        <p role="alert" className="text-xs text-red-400">
+          Unable to save deck
+        </p>
+      )}
       <button
         type="button"
         onClick={() => void handleFork()}

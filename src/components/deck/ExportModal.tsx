@@ -17,7 +17,10 @@ import {
   copyToClipboard,
   downloadFile,
 } from "@/lib/deck/export";
+import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { textAreaShellClassName } from "@/components/ui/Input";
+import { cn } from "@/components/ui/utils";
 
 interface ExportModalProps {
   readonly deck: Deck;
@@ -127,7 +130,7 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
           <textarea
             readOnly
             value={previewText}
-            className="w-full h-36 text-xs bg-[var(--background)] border border-[var(--border)] rounded-lg p-2 text-[var(--text-secondary)] font-mono resize-none focus:outline-none"
+            className={cn(textAreaShellClassName, "h-36 resize-none font-mono text-xs text-[var(--text-secondary)]")}
           />
         </div>
 
@@ -135,10 +138,12 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
         <div className="px-5 py-4 space-y-2">
           {copyFormats.map((format) => (
             <div key={format} className="flex items-center gap-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => handleCopy(format)}
-                className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--surface-hover)] transition-all text-sm text-[var(--text-primary)]"
+                className="flex-1 justify-start"
               >
                 {copied === format ? (
                   <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
@@ -148,28 +153,31 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
                 {copied === format
                   ? t("export.copied")
                   : t("export.copyFor", { format: FORMAT_LABELS[format] })}
-              </button>
+              </Button>
               {/* Every format downloads — MTGO as .dek XML, the rest as .txt */}
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                size="sm"
                 onClick={() => handleDownload(format)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors"
                 title={t("export.downloadFormat", {
                   format: FORMAT_LABELS[format],
                 })}
               >
                 <Download className="w-3.5 h-3.5" />
                 {format === "mtgo" ? ".dek" : ".txt"}
-              </button>
+              </Button>
             </div>
           ))}
           {/* Proxy export */}
           <div className="pt-2 border-t border-[var(--border)]">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => setShowProxy(true)}
               disabled={totalDeckCards === 0}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--surface-hover)] transition-all text-sm text-[var(--text-primary)] disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full justify-start"
               title={
                 totalDeckCards === 0
                   ? t("export.addCardsForProxy")
@@ -178,7 +186,7 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
             >
               <Printer className="w-3.5 h-3.5 text-[var(--text-secondary)] shrink-0" />
               {t("export.proxySheets")}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>

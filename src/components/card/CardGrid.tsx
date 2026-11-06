@@ -12,6 +12,8 @@ import { isMdfcWithLandBack } from "@/lib/deck/categories";
 import type { CardFace } from "@/lib/deck/types";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
 import { QuickAddCollectionButton } from "@/components/collection/QuickAddCollectionButton";
+import { SearchZoneMenu } from "@/components/card/SearchZoneMenu";
+import type { DeckZone } from "@/lib/deck/types";
 
 interface CardGridProps {
   readonly cards: readonly ScryfallCard[];
@@ -20,6 +22,7 @@ interface CardGridProps {
   readonly emptyMessage?: string;
   readonly draggable?: boolean;
   readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
+  readonly onAddToZone?: (card: ScryfallCard, zone: DeckZone) => void;
   readonly maybeboardNames?: Set<string>;
 }
 
@@ -68,6 +71,7 @@ export function CardGrid({
   emptyMessage,
   draggable = false,
   onAddToMaybeboard: _onAddToMaybeboard,
+  onAddToZone,
   maybeboardNames: _maybeboardNames,
 }: CardGridProps) {
   const t = useTranslations("card");
@@ -127,6 +131,11 @@ export function CardGrid({
               card={card}
               className="absolute bottom-6 right-1 z-10 opacity-0 group-hover/gridcard:opacity-100 transition-opacity"
             />
+            {onAddToZone && (
+              <div className="absolute inset-x-1 bottom-1 z-20">
+                <SearchZoneMenu card={card} onAddToZone={onAddToZone} />
+              </div>
+            )}
           </motion.div>
         );
       })}

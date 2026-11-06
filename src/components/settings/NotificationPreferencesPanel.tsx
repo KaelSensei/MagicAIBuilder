@@ -73,7 +73,7 @@ export function NotificationPreferencesPanel() {
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto p-6">
-      <section className="space-y-5 rounded-lg border border-[var(--border)] p-5">
+      <section className="space-y-5 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--lumen-shadow-sm)]">
         <header className="space-y-1">
           <h1 className="flex items-center gap-2 text-xl font-semibold text-[var(--text-primary)]">
             <Bell className="h-5 w-5 text-[var(--accent-text)]" aria-hidden="true" />
@@ -90,7 +90,7 @@ export function NotificationPreferencesPanel() {
         ) : (
           <div className="space-y-3">
             {PREFERENCE_KEYS.map((key) => (
-              <label key={key} className="flex items-start gap-3 rounded-md border border-[var(--border)] p-3">
+              <label key={key} className="flex items-start gap-3 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] p-3">
                 <input
                   type="checkbox"
                   checked={preferences?.[key] ?? false}

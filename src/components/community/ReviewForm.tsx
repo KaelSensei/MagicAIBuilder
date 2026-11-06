@@ -4,6 +4,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { StarRating } from "./StarRating";
+import { Button } from "@/components/ui/Button";
+import { Input, textAreaShellClassName } from "@/components/ui/Input";
 
 const TITLE_MAX_LENGTH = 100;
 const BODY_MAX_LENGTH = 1000;
@@ -25,7 +27,7 @@ export function ReviewForm({ initialRating, saving, onCancel, onSubmit }: Review
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-lg border border-[var(--border)] p-3"
+      className="flex flex-col gap-3 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--lumen-shadow-sm)]"
       onSubmit={(event) => {
         event.preventDefault();
         if (canSubmit) onSubmit({ rating, title: title.trim(), body: body.trim() });
@@ -35,13 +37,12 @@ export function ReviewForm({ initialRating, saving, onCancel, onSubmit }: Review
 
       <label className="flex flex-col gap-1 text-xs text-[var(--text-secondary)]">
         {t("reviewTitleLabel")}
-        <input
+        <Input
           type="text"
           value={title}
           maxLength={TITLE_MAX_LENGTH}
           onChange={(event) => setTitle(event.target.value)}
           placeholder={t("reviewTitlePlaceholder")}
-          className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-sm text-[var(--text-primary)]"
         />
       </label>
 
@@ -53,25 +54,17 @@ export function ReviewForm({ initialRating, saving, onCancel, onSubmit }: Review
           maxLength={BODY_MAX_LENGTH}
           onChange={(event) => setBody(event.target.value)}
           placeholder={t("reviewBodyPlaceholder")}
-          className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-sm text-[var(--text-primary)] resize-y"
+          className={textAreaShellClassName}
         />
       </label>
 
       <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="text-sm px-3 py-1.5 rounded-lg border border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent-text)] font-medium disabled:opacity-50 hover:bg-[var(--accent)]/20"
-        >
+        <Button type="submit" variant="primary" size="sm" disabled={!canSubmit}>
           {saving ? t("submitting") : t("submitReview")}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="text-sm px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-        >
+        </Button>
+        <Button type="button" variant="secondary" size="sm" onClick={onCancel}>
           {t("cancel")}
-        </button>
+        </Button>
       </div>
     </form>
   );

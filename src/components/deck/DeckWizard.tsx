@@ -166,7 +166,7 @@ function StepBudget({
   value,
   onChange,
 }: {
-  readonly value: Budget;
+  readonly value: Budget | "unset";
   readonly onChange: (v: Budget) => void;
 }) {
   const t = useTranslations("deck.wizard");
@@ -1024,7 +1024,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                     {/* Step body */}
                     {step === 1 && (
                       <StepBudget
-                        value={budget === "unset" ? 50 : budget}
+                        value={budget}
                         onChange={(v) => setBudget(v)}
                       />
                     )}

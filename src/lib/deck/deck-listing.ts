@@ -27,6 +27,35 @@ export function storeDecksViewMode(mode: DecksViewMode): void {
   }
 }
 
+/** Fields the library search can match without loading the rest of a deck. */
+interface DeckQueryTarget {
+  readonly name: string;
+  readonly commander: { readonly name: string } | null;
+  readonly partner: { readonly name: string } | null;
+}
+
+/**
+ * Filters a loaded deck library by deck, commander, or partner name.
+ *
+ * @param decks - decks already on the library page
+ * @param query - the visitor's search text
+ * @returns decks whose name or commander identity contains the query
+ */
+export function filterDecksByQuery<T extends DeckQueryTarget>(
+  decks: readonly T[],
+  query: string
+): readonly T[] {
+  const needle = query.trim().toLowerCase();
+  if (needle.length === 0) return decks;
+
+  return decks.filter((deck) => {
+    const name = deck.name.toLowerCase();
+    const commander = deck.commander?.name.toLowerCase() ?? "";
+    const partner = deck.partner?.name.toLowerCase() ?? "";
+    return name.includes(needle) || commander.includes(needle) || partner.includes(needle);
+  });
+}
+
 export type DecksSortKey = "updatedAt" | "name" | "bracket";
 export type DecksSortDir = "asc" | "desc";
 

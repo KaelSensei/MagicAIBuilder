@@ -158,6 +158,52 @@ describe("DeckCommentPanel", () => {
     );
   });
 
+  it("keeps the newer deck's comments when an older request resolves last", async () => {
+    let resolveOlder: (value: { ok: boolean; json: () => Promise<unknown> }) => void = () => {};
+    const older = new Promise<{ ok: boolean; json: () => Promise<unknown> }>((resolve) => {
+      resolveOlder = resolve;
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        if (url.includes("deck-older")) return older;
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              comments: [thread({ id: "new", body: "Newer deck comment." })],
+              count: 1,
+            }),
+        });
+      })
+    );
+
+    const { rerender } = renderWithIntl(
+      <DeckCommentPanel deckId="deck-older" isOwner={false} isSignedIn={false} />
+    );
+    rerender(
+      <NextIntlClientProvider locale="en" messages={{ deck: enDeck, common: enCommon }}>
+        <DeckCommentPanel deckId="deck-newer" isOwner={false} isSignedIn={false} />
+      </NextIntlClientProvider>
+    );
+
+    expect(await screen.findByText("Newer deck comment.")).toBeInTheDocument();
+
+    await act(async () => {
+      resolveOlder({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            comments: [thread({ id: "old", body: "Stale deck comment." })],
+            count: 1,
+          }),
+      });
+    });
+
+    expect(screen.getByText("Newer deck comment.")).toBeInTheDocument();
+    expect(screen.queryByText("Stale deck comment.")).not.toBeInTheDocument();
+  });
+
   it("flips the top-level order with the sort toggle", async () => {
     // The API serves newest first; the toggle only reverses the top level.
     stubStream([

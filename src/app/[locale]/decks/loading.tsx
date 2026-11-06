@@ -1,11 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { PublicPageLoading } from "@/components/profile/PublicPageLoading";
+import { LibraryRouteSkeleton } from "@/components/layout/RouteSkeleton";
 
-/** Route fallback that preserves deck-workspace context during navigation. */
+/** Route fallback that preserves deck-library context during navigation. */
 export default function Loading() {
   const t = useTranslations("deck");
-
-  return <PublicPageLoading label={t("home.loading")} variant="decks" />;
+  return <LibraryRouteSkeleton label={t("home.loading")} />;
 }

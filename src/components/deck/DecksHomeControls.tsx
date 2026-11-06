@@ -1,7 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Sparkles } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { fieldShellClassName } from "@/components/ui/Input";
+import { cn } from "@/components/ui/utils";
 import type {
   DecksSortDir,
   DecksSortKey,
@@ -36,15 +39,16 @@ export function DecksHomeControls({
   return (
     <div className="flex items-center gap-2">
       <div className="hidden items-center gap-2 sm:flex">
-        <div className="inline-flex overflow-hidden rounded-lg border border-[var(--border)]">
+        <div className="inline-flex gap-1 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-1">
           <button
             type="button"
             onClick={() => onSetViewMode("grid")}
-            className={`px-3 py-2 text-sm font-medium transition-colors ${
+            className={cn(
+              "rounded-[var(--lumen-radius-pill)] px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
               viewMode === "grid"
                 ? "bg-[var(--accent)] text-white"
-                : "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
-            }`}
+                : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            )}
             aria-pressed={viewMode === "grid"}
           >
             {t("controls.grid")}
@@ -52,11 +56,12 @@ export function DecksHomeControls({
           <button
             type="button"
             onClick={() => onSetViewMode("list")}
-            className={`px-3 py-2 text-sm font-medium transition-colors ${
+            className={cn(
+              "rounded-[var(--lumen-radius-pill)] px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
               viewMode === "list"
                 ? "bg-[var(--accent)] text-white"
-                : "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
-            }`}
+                : "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            )}
             aria-pressed={viewMode === "list"}
           >
             {t("controls.list")}
@@ -75,7 +80,7 @@ export function DecksHomeControls({
               }
             }
           }}
-          className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+          className={cn(fieldShellClassName, "px-3 py-2")}
           aria-label={t("controls.sortDecks")}
         >
           <option value="updatedAt:desc">
@@ -91,31 +96,19 @@ export function DecksHomeControls({
         </select>
       </div>
 
-      <button
-        type="button"
-        onClick={onOpenWizard}
-        className="flex items-center gap-2 rounded-lg border border-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-text)] transition-colors hover:bg-[var(--accent)]/10"
-      >
+      <Button type="button" variant="secondary" size="sm" onClick={onOpenWizard}>
         <Sparkles className="h-4 w-4" />
         {t("controls.buildWithAI")}
-      </button>
+      </Button>
 
-      <button
-        type="button"
-        onClick={onNewDeck}
-        disabled={disableNewDeck}
-        className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <Button type="button" variant="primary" size="sm" onClick={onNewDeck} disabled={disableNewDeck}>
         {isCreating ? (
-          // keep icon local to avoid extra props; lucide import is cheap
           <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         ) : (
-          <span className="inline-flex h-4 w-4 items-center justify-center">
-            +
-          </span>
+          <Plus className="h-4 w-4" />
         )}
         {t("controls.newDeck")}
-      </button>
+      </Button>
     </div>
   );
 }

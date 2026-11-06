@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { MAX_COMMENT_LENGTH } from "@/lib/community/comments";
+import { Button } from "@/components/ui/Button";
+import { textAreaShellClassName } from "@/components/ui/Input";
 
 interface CommentFormProps {
   readonly initialValue?: string;
@@ -43,26 +45,17 @@ export function CommentForm({
         maxLength={MAX_COMMENT_LENGTH}
         rows={3}
         disabled={saving}
-        className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-y focus:outline-none focus:border-[var(--accent)]"
+        className={textAreaShellClassName}
       />
       <div className="flex items-center gap-2 self-end">
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={saving}
-            className="text-sm px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-50"
-          >
+          <Button type="button" variant="secondary" size="sm" onClick={onCancel} disabled={saving}>
             {t("cancel")}
-          </button>
+          </Button>
         )}
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="text-sm px-3 py-1.5 rounded-lg border border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent-text)] font-medium disabled:opacity-50 hover:bg-[var(--accent)]/20"
-        >
+        <Button type="submit" variant="primary" size="sm" disabled={!canSubmit}>
           {saving ? t("posting") : submitLabel}
-        </button>
+        </Button>
       </div>
     </form>
   );

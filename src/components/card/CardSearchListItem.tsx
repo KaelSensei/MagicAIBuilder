@@ -5,7 +5,9 @@ import { Plus } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { DraggableCard } from "./DraggableCard";
+import { SearchZoneMenu } from "./SearchZoneMenu";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
+import type { DeckZone } from "@/lib/deck/types";
 
 interface CardSearchListItemProps {
   readonly card: ScryfallCard;
@@ -13,6 +15,7 @@ interface CardSearchListItemProps {
   readonly draggable?: boolean;
   readonly className?: string;
   readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
+  readonly onAddToZone?: (card: ScryfallCard, zone: DeckZone) => void;
   readonly isInMaybeboard?: boolean;
 }
 
@@ -55,32 +58,39 @@ export function CardSearchListItem({
   card,
   onClick,
   onAddToMaybeboard,
+  onAddToZone,
   isInMaybeboard = false,
   draggable = false,
   className,
 }: CardSearchListItemProps) {
+  const row = (
+    <ListItemContent
+      card={card}
+      onClick={onClick}
+      onAddToMaybeboard={onAddToMaybeboard}
+      isInMaybeboard={isInMaybeboard}
+    />
+  );
+  const menu = onAddToZone ? (
+    <div className="w-36 shrink-0 px-2">
+      <SearchZoneMenu card={card} onAddToZone={onAddToZone} />
+    </div>
+  ) : null;
+
   if (draggable) {
     return (
-      <div className={className}>
-        <DraggableCard card={card}>
-          <ListItemContent
-            card={card}
-            onClick={onClick}
-            onAddToMaybeboard={onAddToMaybeboard}
-            isInMaybeboard={isInMaybeboard}
-          />
-        </DraggableCard>
+      <div className={cn("flex items-center", className)}>
+        <div className="min-w-0 flex-1">
+          <DraggableCard card={card}>{row}</DraggableCard>
+        </div>
+        {menu}
       </div>
     );
   }
   return (
-    <div className={className}>
-      <ListItemContent
-        card={card}
-        onClick={onClick}
-        onAddToMaybeboard={onAddToMaybeboard}
-        isInMaybeboard={isInMaybeboard}
-      />
+    <div className={cn("flex items-center", className)}>
+      <div className="min-w-0 flex-1">{row}</div>
+      {menu}
     </div>
   );
 }

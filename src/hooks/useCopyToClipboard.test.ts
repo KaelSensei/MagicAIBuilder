@@ -76,6 +76,35 @@ describe("useCopyToClipboard", () => {
     expect(result.current[0]).toBe(true);
   });
 
+  it("keeps the copied flag until 2s after the latest copy", async () => {
+    vi.mocked(navigator.clipboard.writeText).mockResolvedValue(undefined);
+    const { result } = renderHook(() => useCopyToClipboard());
+
+    await act(async () => {
+      await result.current[1]("first");
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+
+    await act(async () => {
+      await result.current[1]("second");
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+
+    expect(result.current[0]).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(result.current[0]).toBe(false);
+  });
+
   it("silently ignores clipboard errors", async () => {
     vi.mocked(navigator.clipboard.writeText).mockRejectedValueOnce(
       new Error("Not allowed")

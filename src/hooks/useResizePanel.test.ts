@@ -1,6 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useResizePanel } from "./useResizePanel";
+import { readStoredPanelWidth, useResizePanel } from "./useResizePanel";
+
+describe("readStoredPanelWidth", () => {
+  const bounds = { minWidth: 200, maxWidth: 600, fallback: 300 };
+
+  it("falls back when the stored value is not a number", () => {
+    expect(readStoredPanelWidth("wide", bounds)).toBe(300);
+    expect(readStoredPanelWidth("NaN", bounds)).toBe(300);
+    expect(Number.isNaN(readStoredPanelWidth("wide", bounds))).toBe(false);
+  });
+
+  it("clamps a numeric stored value", () => {
+    expect(readStoredPanelWidth("50", bounds)).toBe(200);
+    expect(readStoredPanelWidth("900", bounds)).toBe(600);
+    expect(readStoredPanelWidth("400", bounds)).toBe(400);
+  });
+});
 
 describe("useResizePanel", () => {
   beforeEach(() => {
@@ -40,6 +56,14 @@ describe("useResizePanel", () => {
       useResizePanel({ initialWidth: 300, minWidth: 200, maxWidth: 600, storageKey: "panel-width" })
     );
     expect(result.current.width).toBe(600);
+  });
+
+  it("uses initialWidth when the stored value is not numeric", () => {
+    localStorage.setItem("panel-width", "wide");
+    const { result } = renderHook(() =>
+      useResizePanel({ initialWidth: 300, minWidth: 200, maxWidth: 600, storageKey: "panel-width" })
+    );
+    expect(result.current.width).toBe(300);
   });
 
   it("uses initialWidth when no stored value", () => {
