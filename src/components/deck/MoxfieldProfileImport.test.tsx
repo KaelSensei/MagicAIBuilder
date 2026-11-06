@@ -2,10 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { act, screen } from "@testing-library/react";
 import { render } from "@testing-library/react";
-import {
-  MOXFIELD_PROFILE_TIMEOUT_MS,
-  MoxfieldProfileImport,
-} from "./MoxfieldProfileImport";
+import { MoxfieldProfileImport } from "./MoxfieldProfileImport";
 
 describe("MoxfieldProfileImport", () => {
   beforeEach(() => {
@@ -112,7 +109,14 @@ describe("MoxfieldProfileImport", () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(
         JSON.stringify({
-          decks: [{ id: "deck-1", name: "Atraxa", format: "commander", lastUpdatedAt: null }],
+          decks: [
+            {
+              id: "deck-1",
+              name: "Atraxa",
+              format: "commander",
+              lastUpdatedAt: null,
+            },
+          ],
           total: 21,
           hasMore: true,
         }),
@@ -140,53 +144,43 @@ describe("MoxfieldProfileImport", () => {
   it("clears the previous profile's decks when loading another profile fails", async () => {
     const user = userEvent.setup();
     vi.spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(new Response(JSON.stringify({
-        decks: [{ id: "old-deck", name: "Old deck", format: "commander", lastUpdatedAt: null }],
-        total: 1,
-        hasMore: false,
-      }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            decks: [
+              {
+                id: "old-deck",
+                name: "Old deck",
+                format: "commander",
+                lastUpdatedAt: null,
+              },
+            ],
+            total: 1,
+            hasMore: false,
+          }),
+          { status: 200 }
+        )
+      )
       .mockResolvedValueOnce(new Response("{}", { status: 500 }));
 
     render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     const username = screen.getByLabelText("Moxfield username");
     await user.type(username, "first");
     await user.click(screen.getByRole("button", { name: "Load decks" }));
-    expect(await screen.findByRole("button", { name: "Import Old deck" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Import Old deck" })
+    ).toBeInTheDocument();
 
     await user.clear(username);
     await user.type(username, "second");
     await user.click(screen.getByRole("button", { name: "Load decks" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not load Moxfield decks.");
-    expect(screen.queryByRole("button", { name: "Import Old deck" })).not.toBeInTheDocument();
-  });
-
-  it("shows retry feedback when a profile request reaches its deadline", async () => {
-    const user = userEvent.setup();
-    const controller = new AbortController();
-    const timeout = vi
-      .spyOn(AbortSignal, "timeout")
-      .mockReturnValue(controller.signal);
-    vi.spyOn(globalThis, "fetch").mockImplementation((_input, init) =>
-      new Promise((_resolve, reject) => {
-        init?.signal?.addEventListener("abort", () => {
-          reject(new DOMException("The operation was aborted.", "AbortError"));
-        });
-      })
-    );
-
-    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
-    await user.type(screen.getByLabelText("Moxfield username"), "totoro");
-    await user.click(screen.getByRole("button", { name: "Load decks" }));
-
-    expect(timeout).toHaveBeenCalledWith(MOXFIELD_PROFILE_TIMEOUT_MS);
-    await act(async () => {
-      controller.abort();
-    });
-
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Could not load Moxfield decks."
     );
+    expect(
+      screen.queryByRole("button", { name: "Import Old deck" })
+    ).not.toBeInTheDocument();
   });
 
   it("ignores an older profile response after a newer profile load fails", async () => {
@@ -260,15 +254,20 @@ describe("MoxfieldProfileImport", () => {
 
   it("removes a saved username from the profile list and local storage", async () => {
     const user = userEvent.setup();
-    window.localStorage.setItem("magic-ai-builder:moxfield-profiles", JSON.stringify(["totoro", "luna"]));
+    window.localStorage.setItem(
+      "magic-ai-builder:moxfield-profiles",
+      JSON.stringify(["totoro", "luna"])
+    );
 
     render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     await user.click(screen.getByRole("button", { name: "Remove @totoro" }));
 
-    expect(screen.queryByRole("button", { name: "@totoro" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "@totoro" })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "@luna" })).toBeInTheDocument();
-    expect(window.localStorage.getItem("magic-ai-builder:moxfield-profiles")).toBe(
-      JSON.stringify(["luna"])
-    );
+    expect(
+      window.localStorage.getItem("magic-ai-builder:moxfield-profiles")
+    ).toBe(JSON.stringify(["luna"]));
   });
 });

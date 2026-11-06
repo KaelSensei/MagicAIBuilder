@@ -57,6 +57,7 @@ export function MoxfieldProfileImport({
   const [decks, setDecks] = useState<readonly MoxfieldUserDeckSummary[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
   const latestRequestId = useRef(0);
+  const lastAttempt = useRef({ profile: "", pageNumber: 1 });
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -76,6 +77,7 @@ export function MoxfieldProfileImport({
       const normalized = profile.trim().replace(/^@/, "");
       if (!normalized) return;
       const requestId = ++latestRequestId.current;
+      lastAttempt.current = { profile: normalized, pageNumber: requestedPage };
       setUsername(normalized);
       if (requestedPage === 1) {
         setActiveProfile(normalized);
@@ -143,6 +145,10 @@ export function MoxfieldProfileImport({
   const loadNextPage = useCallback(() => {
     void loadDecks(activeProfile, pageNumber + 1);
   }, [activeProfile, loadDecks, pageNumber]);
+  const retryLastAttempt = useCallback(() => {
+    const attempt = lastAttempt.current;
+    void loadDecks(attempt.profile, attempt.pageNumber);
+  }, [loadDecks]);
 
   return (
     <section className="flex flex-col gap-3 rounded border border-[var(--border)] p-3">
@@ -188,9 +194,17 @@ export function MoxfieldProfileImport({
         onRemove={removeProfile}
       />
       {error && (
-        <p role="alert" className="text-xs text-red-400">
-          {error}
-        </p>
+        <div className="flex items-center gap-2 text-xs text-red-400">
+          <p role="alert">{error}</p>
+          <button
+            type="button"
+            onClick={retryLastAttempt}
+            disabled={status === "loading"}
+            className="underline disabled:opacity-50"
+          >
+            Retry
+          </button>
+        </div>
       )}
       <MoxfieldDeckResults
         decks={decks}
