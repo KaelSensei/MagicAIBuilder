@@ -7,6 +7,13 @@ import type { CardGroup } from "@/lib/deck/sort";
 
 vi.mock("@dnd-kit/core", () => ({
   useDroppable: () => ({ setNodeRef: vi.fn(), isOver: false }),
+  useDraggable: () => ({
+    attributes: { role: "button", tabIndex: 0 },
+    listeners: {},
+    setNodeRef: vi.fn(),
+    transform: null,
+    isDragging: false,
+  }),
 }));
 
 vi.mock("@dnd-kit/sortable", () => ({

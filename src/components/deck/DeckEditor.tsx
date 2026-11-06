@@ -13,6 +13,7 @@ import { DeckZoneTab } from "@/components/deck/DeckZoneTab";
 import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
 import { cn } from "@/components/ui/utils";
 import { getColorIdentityViolations } from "@/lib/deck/color-identity";
+import { ACTIVE_SURFACE_ID } from "@/lib/deck/drop-targets";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { sortCards, groupCards } from "@/lib/deck/sort";
 import { useDeckStore } from "@/lib/deck/store";
@@ -108,7 +109,8 @@ export function DeckEditor({
 
   // Top-level droppable — catches any search card dropped anywhere on the deck panel
   const { setNodeRef: setDeckPanelRef } = useDroppable({
-    id: `deck-panel-${activeZone}`,
+    id: ACTIVE_SURFACE_ID,
+    data: { zone: activeZone },
   });
 
   // Every row this editor renders, across zones — one batch for the whole deck
@@ -116,10 +118,7 @@ export function DeckEditor({
 
   return (
     <LocalizedDeckTextProvider names={cardNames}>
-    <div
-      ref={setDeckPanelRef}
-      className={cn("flex flex-col h-full", className)}
-    >
+    <div className={cn("flex flex-col h-full", className)}>
       {/* Commander zone — art crop banner */}
       <div className="p-2 border-b border-[var(--border)]">
         {deck.commander ? (
@@ -266,7 +265,7 @@ export function DeckEditor({
       {activeZone === "main" && <SortGroupToolbar />}
 
       {/* Zone content — uses parent DndContext from BuilderPage (main zone only) */}
-      <div className="flex-1 overflow-y-auto p-3">
+      <div ref={setDeckPanelRef} className="flex-1 overflow-y-auto p-3 md:p-4">
         {activeZone === "main" && (
           <MainZoneContent
             deck={deck}

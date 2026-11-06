@@ -10,6 +10,7 @@
  */
 
 import { useDroppable } from "@dnd-kit/core";
+import { zoneBodyId } from "@/lib/deck/drop-targets";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
@@ -27,13 +28,13 @@ function DroppableZone({
   readonly zone: "sideboard" | "maybeboard";
   readonly children: React.ReactNode;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `deck-zone-${zone}` });
+  const { setNodeRef, isOver } = useDroppable({ id: zoneBodyId(zone) });
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "min-h-24 rounded transition-colors",
-        isOver && "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40"
+        "min-h-24 rounded outline outline-2 outline-offset-[-2px] transition-colors",
+        isOver ? "bg-[var(--accent)]/10 outline-[var(--accent)]" : "outline-transparent"
       )}
     >
       {children}

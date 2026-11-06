@@ -50,6 +50,7 @@
     "removeCompanion": "Retirer le compagnon",
     "removeCard": "Retirer {name}",
     "dragToReorder": "Glisser pour réorganiser",
+    "dragToZone": "Glisser {name} vers une autre zone",
     "changeCategoryFor": "Changer la catégorie de {name}",
     "backToDecks": "Retour à mes decks",
     "rename": "Cliquer pour renommer",

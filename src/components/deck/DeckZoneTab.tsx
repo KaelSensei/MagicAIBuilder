@@ -2,6 +2,7 @@
 
 import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/components/ui/utils";
+import { zoneTabId } from "@/lib/deck/drop-targets";
 
 export type DeckZoneTabId = "main" | "sideboard" | "maybeboard";
 
@@ -26,7 +27,7 @@ export function DeckZoneTab({
   isActive,
   onSelect,
 }: DeckZoneTabProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: `deck-panel-${zone}` });
+  const { setNodeRef, isOver } = useDroppable({ id: zoneTabId(zone) });
 
   return (
     <button
