@@ -13,6 +13,7 @@ import { DeckZoneTab } from "@/components/deck/DeckZoneTab";
 import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
 import { cn } from "@/components/ui/utils";
 import { getColorIdentityViolations } from "@/lib/deck/color-identity";
+import { cardsFromZoneSource } from "@/lib/deck/zone-source";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { sortCards, groupCards } from "@/lib/deck/sort";
 import { useDeckStore } from "@/lib/deck/store";
@@ -71,13 +72,7 @@ export function DeckEditor({
   };
 
   // Deduplicate cards by id (guard against import bugs creating duplicate rows)
-  const uniqueCards = useMemo(
-    () =>
-      deck.cards.filter(
-        (card, index, arr) => arr.findIndex((c) => c.id === card.id) === index
-      ),
-    [deck.cards]
-  );
+  const uniqueCards = useMemo(() => cardsFromZoneSource(deck), [deck]);
 
   // Cards split by zone
   const mainCards = uniqueCards.filter((c) => c.zone === "main");

@@ -72,7 +72,7 @@ export interface Deck {
   companion: DeckCard | null;
   pairingType: CommanderPairingType;
   cards: DeckCard[];
-  /** Compatibility mirror of cards whose persisted zone is "maybeboard". */
+  /** Derived mirror of cards whose persisted zone is "maybeboard". */
   maybeboard: DeckCard[];
   format: DeckFormat;
   /** Total card count (including commander/partner/companion). Set from _count on listing, derived from cards on full load. */
