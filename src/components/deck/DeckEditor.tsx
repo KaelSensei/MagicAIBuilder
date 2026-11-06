@@ -141,7 +141,7 @@ export function DeckEditor({
             )}
             {/* Partner placeholder when slot is open but not filled */}
             {!hasPartner && supportsPartner(deck.pairingType) && (
-              <div className="flex-1 rounded-lg border border-dashed border-[var(--border)] h-[82px] flex items-center justify-center px-2">
+              <div className="flex h-[82px] flex-1 items-center justify-center rounded-[var(--lumen-radius-lg)] border border-dashed border-[var(--border)] px-2">
                 <span className="text-[10px] text-[var(--text-secondary)] italic text-center leading-tight">
                   {t("searchPartner", {
                     partnerLabel: partnerSlotLabel(deck.pairingType),
@@ -151,7 +151,7 @@ export function DeckEditor({
             )}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-[var(--border)] h-[82px] flex items-center justify-center">
+          <div className="flex h-[82px] items-center justify-center rounded-[var(--lumen-radius-lg)] border border-dashed border-[var(--border)]">
             <p className="text-xs text-[var(--text-secondary)] italic">
               {t("searchCommander")}
             </p>
@@ -162,7 +162,7 @@ export function DeckEditor({
       <CompanionZone deck={deck} deckViewMode={viewMode} />
 
       {/* Zone tabs: Main / Sideboard / Considering */}
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-2.5">
+      <div className="flex min-h-12 items-center justify-between gap-2 overflow-x-auto border-b border-[var(--border)] px-3 py-2 md:px-4">
         <div className="flex items-center gap-0">
           {(
             [
