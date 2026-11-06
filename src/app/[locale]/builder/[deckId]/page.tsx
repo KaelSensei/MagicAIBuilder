@@ -10,9 +10,12 @@ import {
   KeyboardSensor,
   MeasuringStrategy,
   PointerSensor,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import type { CollisionDetection } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import {
   Search,
@@ -92,12 +95,9 @@ import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
 import { GuestDeckNotice } from "@/components/builder/GuestDeckNotice";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
+import { explicitDropZone, preferSmallerDropTarget, searchDropZone } from "@/lib/deck/drop-targets";
 
 type SearchMode = "name" | "set" | "color";
-
-function isDeckZone(value: string): value is DeckZone {
-  return value === "main" || value === "sideboard" || value === "maybeboard";
-}
 
 /** Message key for a search mode tab, resolved by the caller's `t`. */
 function searchModeKey(mode: SearchMode): string {
@@ -186,27 +186,14 @@ function handleSearchResultCardClick(
   handlers.setPrintingCard(card);
 }
 
-/** Determine drop zone from drop target ID */
-function getDropZoneFromId(overId: string, defaultZone: DeckZone): DeckZone {
-  if (overId === "deck-zone-sideboard") return "sideboard";
-  if (overId === "deck-zone-maybeboard") return "maybeboard";
-  if (overId.startsWith("deck-panel-")) {
-    const zone = overId.slice("deck-panel-".length);
-    return isDeckZone(zone) ? zone : defaultZone;
-  }
-  return defaultZone;
-}
-
-function getExplicitDropZone(overId: string): DeckZone | null {
-  if (overId === "deck-zone-sideboard" || overId === "deck-zone-maybeboard") {
-    return getDropZoneFromId(overId, "main");
-  }
-  if (overId.startsWith("deck-panel-")) {
-    const zone = overId.slice("deck-panel-".length);
-    return isDeckZone(zone) ? zone : null;
-  }
-  return null;
-}
+const collisionDetection: CollisionDetection = (args) => {
+  const pointerHits = pointerWithin(args);
+  const hits = pointerHits.length > 0 ? pointerHits : rectIntersection(args);
+  return preferSmallerDropTarget(hits, (id) => {
+    const rect = args.droppableRects.get(id);
+    return rect ? rect.width * rect.height : Number.POSITIVE_INFINITY;
+  });
+};
 
 /** Get category name from drop target ID if it's a category drop */
 function getCategoryFromDropId(overId: string): string | null {
@@ -616,10 +603,17 @@ export default function BuilderPage() {
 
   const dropSearchCard = useCallback(
     (searchCard: ScryfallCard, overId: string) => {
-      const zone = getDropZoneFromId(overId, activeZone);
+      const zone = searchDropZone(overId, activeZone);
       void addCard(searchCard, undefined, zone);
     },
     [addCard, activeZone]
+  );
+
+  const handleAddToZone = useCallback(
+    (searchCard: ScryfallCard, zone: DeckZone) => {
+      void addCard(searchCard, undefined, zone);
+    },
+    [addCard]
   );
 
   const moveIntraDeck = useCallback(
@@ -663,7 +657,7 @@ export default function BuilderPage() {
       if (cardId) {
         const sourceCategory = active.data.current?.sourceCategory as
           string | undefined;
-        const targetZone = getExplicitDropZone(overId);
+        const targetZone = explicitDropZone(overId);
         if (targetZone) {
           void moveCardToZone(cardId, targetZone);
           return;
@@ -706,9 +700,10 @@ export default function BuilderPage() {
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+      measuring={{ droppable: { strategy: MeasuringStrategy.BeforeDragging } }}
     >
       <div className="flex h-screen flex-col overflow-hidden">
         <Header deckId={deckId} />
@@ -991,6 +986,7 @@ export default function BuilderPage() {
                 totalCards={searchData?.total_cards}
                 onCardClick={handleCardClick}
                 onAddToMaybeboard={addToMaybeboard}
+                onAddToZone={handleAddToZone}
                 draggable={true}
               />
             </div>

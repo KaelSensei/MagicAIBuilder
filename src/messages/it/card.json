@@ -35,6 +35,11 @@
   },
   "noText": "No text",
   "addNamedToDeck": "Add {name} to deck",
+  "addToZone": "Aggiungi {name} a",
+  "chooseZone": "Scegli zona",
+  "zoneMain": "Principale",
+  "zoneSideboard": "Sideboard",
+  "zoneConsidering": "In considerazione",
   "priceLabel": "Price: ${price}",
   "previewOf": "Preview of {name}",
   "roleExplanation": {
