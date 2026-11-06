@@ -28,12 +28,12 @@ export async function GET(request: Request) {
     });
 
     if (!response.ok) {
-      return NextResponse.json({ count: 0, results: [] });
+      return NextResponse.json({ error: "Spellbook request failed" }, { status: 502 });
     }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch {
-    return NextResponse.json({ count: 0, results: [] });
+    return NextResponse.json({ error: "Spellbook request failed" }, { status: 502 });
   }
 }

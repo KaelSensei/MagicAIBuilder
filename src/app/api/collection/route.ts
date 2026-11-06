@@ -5,6 +5,24 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
 
+/** Prisma's error code for a unique-constraint violation. */
+const UNIQUE_CONSTRAINT = "P2002";
+
+/**
+ * True when a write lost a race to a concurrent insert of the same printing.
+ *
+ * @param error - rejection from a Prisma write
+ * @returns whether the error is a unique-constraint violation
+ */
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === UNIQUE_CONSTRAINT
+  );
+}
+
 const addCardSchema = z.object({
   scryfallId: z.string().min(1),
   name: z.string().min(1),
@@ -52,23 +70,42 @@ export async function POST(request: Request) {
       );
     }
 
-    const { scryfallId, name, quantity, foil, condition, acquiredAt, price, imageUri } =
-      parsed.data;
-    const userId = result.session.user.id;
+    const saved = await saveCollectionCard(result.session.user.id, parsed.data);
+    if (saved.created) return NextResponse.json(saved.card, { status: 201 });
+    return NextResponse.json(saved.card);
+  } catch (error) {
+    logger.error(error instanceof Error ? error.message : "unknown", "POST /api/collection");
+    return NextResponse.json({ error: "Failed to add card to collection" }, { status: 500 });
+  }
+}
 
-    // Upsert: if the same card+foil+user variant already exists, increment quantity
-    const existing = await prisma.collectionCard.findUnique({
-      where: { scryfallId_foil_userId: { scryfallId, foil, userId } },
+type AddCardInput = z.infer<typeof addCardSchema>;
+
+/**
+ * Inserts a collection row, or increments quantity when that printing already exists.
+ *
+ * The create path handles a unique-constraint race: two requests can both miss
+ * `findUnique` and both insert. The loser increments the row the winner wrote
+ * instead of failing the request.
+ *
+ * @param userId - owner of the collection
+ * @param input - validated card payload
+ * @returns the stored row and whether this call created it
+ */
+async function saveCollectionCard(userId: string, input: AddCardInput) {
+  const { scryfallId, name, quantity, foil, condition, acquiredAt, price, imageUri } = input;
+  const where = { scryfallId_foil_userId: { scryfallId, foil, userId } };
+  const existing = await prisma.collectionCard.findUnique({ where });
+
+  if (existing) {
+    const card = await prisma.collectionCard.update({
+      where: { id: existing.id },
+      data: { quantity: existing.quantity + quantity },
     });
+    return { card, created: false };
+  }
 
-    if (existing) {
-      const updated = await prisma.collectionCard.update({
-        where: { id: existing.id },
-        data: { quantity: existing.quantity + quantity },
-      });
-      return NextResponse.json(updated);
-    }
-
+  try {
     const card = await prisma.collectionCard.create({
       data: {
         scryfallId,
@@ -82,9 +119,13 @@ export async function POST(request: Request) {
         userId,
       },
     });
-    return NextResponse.json(card, { status: 201 });
+    return { card, created: true };
   } catch (error) {
-    logger.error(error instanceof Error ? error.message : "unknown", "POST /api/collection");
-    return NextResponse.json({ error: "Failed to add card to collection" }, { status: 500 });
+    if (!isUniqueConstraintError(error)) throw error;
+    const card = await prisma.collectionCard.update({
+      where,
+      data: { quantity: { increment: quantity } },
+    });
+    return { card, created: false };
   }
 }
