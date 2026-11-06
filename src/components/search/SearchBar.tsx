@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Search, X, Loader2 } from "lucide-react";
+import { fieldShellClassName } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
 import { useUIStore } from "@/lib/ui/store";
 
@@ -72,7 +73,8 @@ export function SearchBar({
   return (
     <div
       className={cn(
-        "relative flex items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] focus-within:border-[var(--accent)] transition-colors",
+        fieldShellClassName,
+        "relative flex items-center focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]",
         className
       )}
     >

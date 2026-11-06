@@ -11,7 +11,7 @@ export function Sidebar({ className }: SidebarProps) {
   const t = useTranslations("common");
 
   return (
-    <aside className={cn("w-[220px] shrink-0 border-r border-[var(--border)] bg-[var(--surface)] p-4", className)}>
+    <aside className={cn("w-[240px] shrink-0 border-r border-[var(--border)] bg-[var(--surface)] p-5", className)}>
       <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wide mb-3">
         {t("sidebar.navigation")}
       </p>

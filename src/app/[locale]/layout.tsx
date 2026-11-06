@@ -8,6 +8,7 @@ import { Geist, Geist_Mono, Cinzel, Cinzel_Decorative, Inter } from "next/font/g
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "@/styles/globals.css";
 import { routing } from "@/i18n/routing";
+import { themeBootScript } from "@/lib/theme/preference";
 import { Providers } from "./providers";
 
 const geistSans = Geist({
@@ -86,17 +87,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                const stored = JSON.parse(localStorage.getItem('magic-ai-builder-theme') || '{}');
-                const theme = stored.state?.theme || 'dark';
-                document.documentElement.setAttribute('data-theme', theme);
-              } catch(_e) { /* default theme applied */ }
-            `,
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${cinzelDeco.variable} ${inter.variable} antialiased min-h-screen bg-[var(--background)] text-[var(--text-primary)]`}

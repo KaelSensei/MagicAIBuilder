@@ -92,7 +92,7 @@ export function HomeDeckCard({
   return (
     <Link
       href={`/builder/${deck.id}`}
-      className="group relative block h-full min-h-44 overflow-hidden rounded-xl border border-[var(--border)] shadow-sm transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+      className="group relative block h-full min-h-48 overflow-hidden rounded-[var(--lumen-radius-xl)] border border-[var(--border)] shadow-[var(--lumen-shadow-sm)] transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[var(--lumen-shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
       style={
         hasArt
           ? {
