@@ -76,7 +76,22 @@ vi.mock("@/hooks/useToast", () => ({
   useToastStore: { getState: () => ({ add: toastAdd }) },
 }));
 
+const collectionState = vi.hoisted(() => ({
+  collectionCards: {} as Record<string, { name: string; quantity: number; scryfallId: string }>,
+  collectionCardsFoil: {} as Record<string, { name: string; quantity: number; scryfallId: string }>,
+}));
+
+vi.mock("@/lib/collection/store", () => ({
+  useCollectionStore: { getState: () => collectionState },
+}));
+
+vi.mock("@/lib/scryfall/client", () => ({
+  getCardById: vi.fn(),
+}));
+
 import * as deckApi from "@/lib/db/deck-api";
+import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
+import * as scryfallClient from "@/lib/scryfall/client";
 import type { Deck, DeckCard, CardCategory } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
@@ -232,6 +247,8 @@ describe("addCard and removeCard sync overlap", () => {
 describe("useDeckStore — bulkRemoveCards recovery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  collectionState.collectionCards = {};
+  collectionState.collectionCardsFoil = {};
     seedDeck();
   });
   it("keeps bulk removal activity after a manual bracket save finishes", async () => {
@@ -376,6 +393,17 @@ describe("useDeckStore — setGameChangerNames / setBannedNames", () => {
     expect(useDeckStore.getState().gameChangerNames.has("New Card")).toBe(true);
   });
 
+  it("does not publish another update when synchronized game changer names are unchanged", () => {
+    const listener = vi.fn();
+    const unsubscribe = useDeckStore.subscribe(listener);
+
+    useDeckStore.getState().setGameChangerNames(new Set(["Rhystic Study"]));
+    useDeckStore.getState().setGameChangerNames(new Set(["Rhystic Study"]));
+
+    unsubscribe();
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
   it("setBannedNames stores the provided set", () => {
     const names = new Set(["Emrakul, the Aeons Torn"]);
     useDeckStore.getState().setBannedNames(names);
@@ -387,6 +415,17 @@ describe("useDeckStore — setGameChangerNames / setBannedNames", () => {
     useDeckStore.getState().setBannedNames(new Set(["Card B"]));
     expect(useDeckStore.getState().bannedNames.has("Card A")).toBe(false);
     expect(useDeckStore.getState().bannedNames.has("Card B")).toBe(true);
+  });
+
+  it("does not publish another update when synchronized banned names are unchanged", () => {
+    const listener = vi.fn();
+    const unsubscribe = useDeckStore.subscribe(listener);
+
+    useDeckStore.getState().setBannedNames(new Set(["Flash"]));
+    useDeckStore.getState().setBannedNames(new Set(["Flash"]));
+
+    unsubscribe();
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -557,6 +596,16 @@ describe("useDeckStore — createDeck", () => {
     expect(deckApi.createDeck).toHaveBeenCalledWith("My New Deck", { isAIGenerated: undefined });
   });
 
+  it("reuses the local guest deck instead of creating an authenticated deck", async () => {
+    useDeckStore.setState({ activeDeckId: GUEST_DECK_ID });
+
+    const id = await useDeckStore.getState().createDeck("New Deck");
+
+    expect(id).toBe(GUEST_DECK_ID);
+    expect(deckApi.createDeck).not.toHaveBeenCalled();
+    expect(useDeckStore.getState().decks[GUEST_DECK_ID]).toBeDefined();
+  });
+
   it("sets isSyncing to false after completion", async () => {
     await useDeckStore.getState().createDeck("Test");
     expect(useDeckStore.getState().isSyncing).toBe(false);
@@ -650,6 +699,21 @@ describe("useDeckStore — renameDeck", () => {
     expect(useDeckStore.getState().decks["deck-1"].name).toBe("Shared Name");
   });
 
+  it("keeps the save indicator visible until overlapping renames finish", async () => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+
+    const firstRename = useDeckStore.getState().renameDeck("deck-1", "First Name");
+    await useDeckStore.getState().renameDeck("deck-1", "Second Name");
+
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+
+    pending.resolve(await deckApi.createDeck("Test Deck"));
+    await firstRename;
+
+    expect(useDeckStore.getState().isSyncing).toBe(false);
+  });
+
   it("does not recreate a deleted deck or warn when its rename fails late", async () => {
     const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
     vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
@@ -722,6 +786,21 @@ describe("useDeckStore — setBudget", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     seedDeck();
+  });
+
+  it("keeps the save indicator visible while a rename remains pending", async () => {
+    const pendingRename = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pendingRename.promise);
+
+    const rename = useDeckStore.getState().renameDeck("deck-1", "Renamed Deck");
+    await useDeckStore.getState().setBudget(100);
+
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+
+    pendingRename.resolve(await deckApi.createDeck("Test Deck"));
+    await rename;
+
+    expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 
   it("keeps syncing after a rejected save until the other budget save finishes", async () => {
@@ -856,6 +935,45 @@ describe("useDeckStore — setManualBracket", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — addCard", () => {
+  it("prefers an owned printing with the same name without changing the collection", async () => {
+    const searchedCard = makeScryfallCard({ id: "searched-printing", name: "Lightning Bolt" });
+    const ownedPrinting = makeScryfallCard({ id: "owned-printing", name: "Lightning Bolt" });
+    collectionState.collectionCards = {
+      "owned-printing": { name: "Lightning Bolt", quantity: 1, scryfallId: "owned-printing" },
+    };
+    vi.mocked(scryfallClient.getCardById).mockResolvedValueOnce(ownedPrinting);
+    seedDeck();
+
+    await useDeckStore.getState().addCard(searchedCard);
+
+    expect(scryfallClient.getCardById).toHaveBeenCalledWith("owned-printing");
+    expect(deckApi.addCard).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ scryfallId: "owned-printing" })
+    );
+    expect(collectionState.collectionCards["owned-printing"]?.quantity).toBe(1);
+  });
+
+  it("prefers an owned printing when an imported deck card is added", async () => {
+    const ownedPrinting = makeScryfallCard({ id: "owned-printing", name: "Lightning Bolt" });
+    collectionState.collectionCards = {
+      "owned-printing": { name: "Lightning Bolt", quantity: 1, scryfallId: "owned-printing" },
+    };
+    vi.mocked(scryfallClient.getCardById).mockResolvedValueOnce(ownedPrinting);
+    seedDeck();
+
+    await useDeckStore.getState().addDeckCard(
+      makeDeckCard({ id: "imported-printing", scryfallId: "imported-printing", name: "Lightning Bolt" })
+    );
+
+    expect(scryfallClient.getCardById).toHaveBeenCalledWith("owned-printing");
+    expect(deckApi.addCard).toHaveBeenCalledWith(
+      "deck-1",
+      expect.objectContaining({ scryfallId: "owned-printing" })
+    );
+    expect(collectionState.collectionCards["owned-printing"]?.quantity).toBe(1);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     seedDeck();

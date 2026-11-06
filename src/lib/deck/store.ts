@@ -6,7 +6,9 @@ import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
 import { canPairWith, detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+import { getCardById } from "@/lib/scryfall/client";
 import * as deckApi from "@/lib/db/deck-api";
+import { useCollectionStore } from "@/lib/collection/store";
 import { useToastStore } from "@/hooks/useToast";
 import { logger } from "@/lib/logger";
 import {
@@ -96,6 +98,51 @@ function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
   });
 }
 
+/**
+ * Checks whether two name sets have identical membership.
+ *
+ * @param current - Values already held in store state.
+ * @param next - Values supplied by the latest enrichment query.
+ * @returns Whether no store-visible value changed.
+ */
+function setsContainSameValues(
+  current: ReadonlySet<string>,
+  next: ReadonlySet<string>
+): boolean {
+  if (current.size !== next.size) return false;
+  for (const value of current) {
+    if (!next.has(value)) return false;
+  }
+  return true;
+}
+
+/**
+ * Uses an owned printing of the requested card when the local collection can
+ * identify one. The collection itself is read-only during deck construction.
+ */
+async function getOwnedPrinting(
+  card: Pick<ScryfallCard, "id" | "name">
+): Promise<ScryfallCard | null> {
+  const { collectionCards, collectionCardsFoil } = useCollectionStore.getState();
+  const ownedCards = [
+    ...Object.values(collectionCards),
+    ...Object.values(collectionCardsFoil),
+  ];
+  const ownedPrinting = ownedCards.find(
+    (owned) =>
+      owned.name === card.name &&
+      owned.quantity > 0 &&
+      owned.scryfallId !== card.id
+  );
+  if (!ownedPrinting) return null;
+
+  try {
+    return await getCardById(ownedPrinting.scryfallId);
+  } catch {
+    return null;
+  }
+}
+
 function syncDeckCards(deck: Deck, cards: readonly DeckCard[]): Deck {
   const uniqueCards = cards
     .filter(
@@ -166,6 +213,7 @@ let pendingManualBracketWrites = 0;
 let pendingBudgetWrites = 0;
 let pendingBulkRemovals = 0;
 let pendingCardAdditionsAndRemovals = 0;
+let pendingRenameWrites = 0;
 
 export interface DeckStore {
   // State
@@ -255,6 +303,15 @@ export interface DeckStore {
 
   // Force save (sync) — triggers a full DB refresh for the active deck
   forceSave: () => Promise<void>;
+  /**
+   * Replace the open deck with the database copy.
+   *
+   * Used after a server-side rewrite (snapshot restore, package apply). The
+   * deck listing must not be used for this: it keeps an already hydrated deck.
+   *
+   * @returns Resolves when the open deck matches the database, or the refresh failed.
+   */
+  reloadActiveDeck: () => Promise<void>;
 
   // Deck settings
   setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
@@ -295,8 +352,16 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     };
   })(),
 
-  setGameChangerNames: (names) => set({ gameChangerNames: names }),
-  setBannedNames: (names) => set({ bannedNames: names }),
+  setGameChangerNames: (names) => set((state) =>
+    setsContainSameValues(state.gameChangerNames, names)
+      ? state
+      : { gameChangerNames: names }
+  ),
+  setBannedNames: (names) => set((state) =>
+    setsContainSameValues(state.bannedNames, names)
+      ? state
+      : { bannedNames: names }
+  ),
   setSearchViewMode: (mode) => set({ searchViewMode: mode }),
   setDeckViewMode: (mode) => set({ deckViewMode: mode }),
   setDeckGridCols: (cols) => set({ deckGridCols: cols }),
@@ -505,6 +570,32 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
+  reloadActiveDeck: async () => {
+    const { activeDeckId } = get();
+    if (!activeDeckId) return;
+    set({ isSyncing: true });
+    try {
+      const apiDeck = await deckApi.fetchDeck(activeDeckId);
+      if (!get().decks[activeDeckId]) return;
+      const fullDeck = apiDeckToStoreDeck(apiDeck);
+      set((state) => ({
+        decks: { ...state.decks, [activeDeckId]: fullDeck },
+        // The previous undo entries name cards that the server just replaced.
+        undoStack: state.undoStack.filter(
+          (action) => action.deckId !== activeDeckId
+        ),
+      }));
+    } catch (err) {
+      logger.error("Unexpected error", "reloadActiveDeck", err);
+      if (!get().decks[activeDeckId]) return;
+      useToastStore
+        .getState()
+        .add("error", "Could not refresh deck. Please retry.");
+    } finally {
+      set({ isSyncing: false });
+    }
+  },
+
   // Load deck listing from the DB (lightweight: only commander/partner/companion + card count)
   loadDecks: async () => {
     const requestId = ++latestDeckListRequest;
@@ -571,6 +662,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   createDeck: async (name: string, opts?: { isAIGenerated?: boolean }) => {
+    if (isGuestDeckId(get().activeDeckId ?? "")) {
+      await get().setActiveDeck(GUEST_DECK_ID);
+      return GUEST_DECK_ID;
+    }
+
     set({ isSyncing: true });
     try {
       const apiDeck = await deckApi.createDeck(name, {
@@ -631,6 +727,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!previousDeck) return;
     const request = Symbol();
     latestRenameRequests.set(id, request);
+    pendingRenameWrites += 1;
     // Optimistic update
     set((state) => ({
       decks: {
@@ -662,7 +759,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .add("error", "Could not rename deck. Please retry.");
       }
     } finally {
-      set({ isSyncing: false });
+      pendingRenameWrites -= 1;
+      if (pendingRenameWrites === 0) set({ isSyncing: false });
     }
   },
 
@@ -711,6 +809,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   updateDeckDescription: async (deckId: string, description: string) => {
+    const previousDeck = get().decks[deckId];
+    if (!previousDeck) return;
     // Optimistic update
     set((state) => ({
       decks: {
@@ -727,6 +827,21 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await deckApi.updateDeck(deckId, { description });
     } catch (err) {
       logger.error("Unexpected error", "updateDeckDescription", err);
+      set((state) => {
+        const currentDeck = state.decks[deckId];
+        if (!currentDeck || currentDeck.description !== description) return state;
+        return {
+          decks: {
+            ...state.decks,
+            [deckId]: { ...currentDeck, description: previousDeck.description },
+          },
+        };
+      });
+      if (get().decks[deckId]) {
+        useToastStore
+          .getState()
+          .add("error", "Could not save deck description. Please retry.");
+      }
     } finally {
       set({ isSyncing: false });
     }
@@ -1084,7 +1199,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       return;
     }
 
-    const deckCard = makeDeckCard(card);
+    const ownedPrinting = await getOwnedPrinting(card);
+    const selectedCard = ownedPrinting ?? card;
+    const deckCard = makeDeckCard(selectedCard);
     // If a specific quantity is provided (e.g. bulk import of basics), apply it directly
     if (quantity && quantity > 1) {
       deckCard.quantity = quantity;
@@ -1092,8 +1209,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     // Apply target zone (sideboard / maybeboard / main)
     deckCard.zone = zone;
     deckCard.isMaybeboard = zone === "maybeboard";
-    deckCard.isGameChanger = gameChangerNames.has(card.name);
-    deckCard.isBanned = bannedNames.has(card.name);
+    deckCard.isGameChanger = gameChangerNames.has(selectedCard.name);
+    deckCard.isBanned = bannedNames.has(selectedCard.name);
 
     // Warn user when adding a Game Changer card
     if (deckCard.isGameChanger) {
@@ -1101,7 +1218,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       const existingGCCount =
         currentCards.filter((c) => c.isGameChanger).length +
         (commander?.isGameChanger ? 1 : 0);
-      notifyGameChangerAdded(card.name, existingGCCount + 1);
+      notifyGameChangerAdded(selectedCard.name, existingGCCount + 1);
     }
 
     // Optimistic update
@@ -1119,7 +1236,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     try {
       const saved = await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
+        scryfallId: selectedCard.id,
         name: deckCard.name,
         manaCost: deckCard.manaCost,
         cmc: deckCard.cmc,
@@ -1146,7 +1263,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           [activeDeckId]: {
             ...state.decks[activeDeckId],
             ...updateDeckCards(state.decks[activeDeckId], (cards) =>
-              cards.map((c) => (c.id === card.id ? { ...c, id: saved.id } : c))
+              cards.map((c) => (c.id === deckCard.id ? { ...c, id: saved.id } : c))
             ),
           },
         },
@@ -1194,8 +1311,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       await get().updateCardQuantity(exists.id, 1);
       return;
     }
+    const ownedPrinting = card.scryfallId
+      ? await getOwnedPrinting({ id: card.scryfallId, name: card.name })
+      : null;
     const enriched = {
-      ...card,
+      ...(ownedPrinting ? makeDeckCard(ownedPrinting) : card),
+      category: card.category,
+      quantity: card.quantity,
+      zone: card.zone,
       isGameChanger: gameChangerNames.has(card.name),
       isBanned: bannedNames.has(card.name),
       isMaybeboard: card.zone === "maybeboard",
@@ -1215,22 +1338,22 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set({ isSyncing: true });
     try {
       const saved = await deckApi.addCard(activeDeckId, {
-        scryfallId: card.id,
-        name: card.name,
-        manaCost: card.manaCost,
-        cmc: card.cmc,
-        typeLine: card.typeLine,
-        oracleText: card.oracleText,
-        power: card.power ?? null,
-        toughness: card.toughness ?? null,
-        colorIdentity: card.colorIdentity,
+        scryfallId: enriched.scryfallId ?? enriched.id,
+        name: enriched.name,
+        manaCost: enriched.manaCost,
+        cmc: enriched.cmc,
+        typeLine: enriched.typeLine,
+        oracleText: enriched.oracleText,
+        power: enriched.power ?? null,
+        toughness: enriched.toughness ?? null,
+        colorIdentity: enriched.colorIdentity,
         isGameChanger: enriched.isGameChanger,
         isBanned: enriched.isBanned,
-        price: card.price,
-        imageUri: card.imageUri,
-        artCropUri: card.artCropUri,
-        category: card.category,
-        quantity: card.quantity,
+        price: enriched.price,
+        imageUri: enriched.imageUri,
+        artCropUri: enriched.artCropUri,
+        category: enriched.category,
+        quantity: enriched.quantity,
         isCommander: false,
         isPartner: false,
         zone: enriched.zone,
@@ -1241,7 +1364,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           [activeDeckId]: {
             ...state.decks[activeDeckId],
             ...updateDeckCards(state.decks[activeDeckId], (cards) =>
-              cards.map((c) => (c.id === card.id ? { ...c, id: saved.id } : c))
+              cards.map((c) => (c.id === enriched.id ? { ...c, id: saved.id } : c))
             ),
           },
         },
@@ -1982,7 +2105,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } finally {
       pendingBudgetWrites -= 1;
-      set({ isSyncing: pendingBudgetWrites > 0 });
+      set({
+        isSyncing: pendingBudgetWrites > 0 || pendingRenameWrites > 0,
+      });
     }
   },
 

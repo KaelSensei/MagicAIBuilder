@@ -5,7 +5,8 @@
     "collection": "Collection",
     "rules": "Règles",
     "newDeck": "Nouveau Deck",
-    "import": "Importer"
+    "import": "Importer",
+    "importedDeck": "Deck importé — {date}"
   },
   "theme": {
     "toggle": "Changer le thème",

@@ -94,6 +94,13 @@ export function exportMTGO(deck: Deck): string {
   const allCards: { name: string; qty: number; isSideboard?: boolean }[] = [];
   if (deck.commander) allCards.push({ name: deck.commander.name, qty: 1 });
   if (deck.partner) allCards.push({ name: deck.partner.name, qty: 1 });
+  const companion = deck.companion;
+  const companionIsInSideboard = deck.cards.some(
+    (card) => card.zone === "sideboard" && card.name === companion?.name,
+  );
+  if (companion && !companionIsInSideboard) {
+    allCards.push({ name: companion.name, qty: 1, isSideboard: true });
+  }
   for (const card of deck.cards) {
     if (card.zone === "maybeboard") continue;
     allCards.push({ name: card.name, qty: card.quantity, isSideboard: card.zone === "sideboard" });
@@ -128,6 +135,26 @@ function archidektCategoryTag(category: string): string {
 }
 
 /**
+ * Appends a counted Archidekt section without emitting an empty zone.
+ * @param lines Export lines being built.
+ * @param heading Archidekt section heading.
+ * @param cards Cards belonging to the section.
+ * @returns Nothing.
+ */
+function appendArchidektSection(
+  lines: string[],
+  heading: string,
+  cards: readonly DeckCard[]
+): void {
+  if (cards.length === 0) return;
+  const count = cards.reduce((sum, card) => sum + card.quantity, 0);
+  lines.push("", `${heading} (${count})`);
+  for (const card of cards) {
+    lines.push(`${card.quantity}x ${card.name} ${archidektCategoryTag(card.category)}`);
+  }
+}
+
+/**
  * Archidekt format — sections with card counts, each card tagged with its
  * category in Archidekt's bracket syntax so the categorisation survives the
  * round trip. `{top}` pins the commander's category as premier, which is what
@@ -148,6 +175,16 @@ export function exportArchidekt(deck: Deck): string {
   for (const card of mainCards) {
     lines.push(`${card.quantity}x ${card.name} ${archidektCategoryTag(card.category)}`);
   }
+  appendArchidektSection(
+    lines,
+    "Sideboard",
+    deck.cards.filter((card) => card.zone === "sideboard")
+  );
+  appendArchidektSection(
+    lines,
+    "Considering",
+    deck.cards.filter((card) => card.zone === "maybeboard")
+  );
   return lines.join("\n");
 }
 

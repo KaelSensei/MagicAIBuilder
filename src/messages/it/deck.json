@@ -297,7 +297,11 @@
       "cardLabel": "Card to explain",
       "chooseCard": "Choose a card",
       "whyCard": "Why is this card here?",
-      "weakestCard": "Find weakest card"
+      "weakestCard": "Find weakest card",
+      "weakestResult": "Local assessment: {card}",
+      "criterionBanned": "This card is banned in the selected format.",
+      "criterionUnclassified": "No assigned deck role was found for this card.",
+      "criterionAboveCurve": "Its mana value is at least two above this deck's average."
     },
     "title": "AI Suggestions",
     "archetype": "Archetype",
@@ -386,6 +390,9 @@
     "sourceDisclosure": "Source: {source} · Observed {date}",
     "staleSourceDisclosure": "Source: {source} · Last observed {date} · stale",
     "sourceDisclosureUnavailable": "Source: {source} · Observation time unavailable",
+    "sourceHealthUnavailable": "Source health: unavailable after {attempts, plural, one {# attempt} other {# attempts}}",
+    "edhrecSampleWindowUnavailable": "Sample window unavailable from EDHREC",
+    "tournamentEvidenceWindow": "Tournament evidence: {start} – {end}",
     "popularEdhrec": "Popular (EDHRec)",
     "sampleSize": "{included} / {total} mazzi",
     "notInDeck": "Not in deck",
@@ -673,18 +680,22 @@
     "warningGroups": {
       "legality": "Errori di legalità",
       "strategy": "Suggerimenti strategici",
-      "advice": "Consigli facoltativi"
+      "advice": "Consigli facoltativi",
+      "optional": "Consigli facoltativi per il mazzo"
     }
   },
   "buyList": {
     "buyLater": "Più tardi",
+    "proxyNow": "Proxy ora",
     "buyNow": "Compra ora",
     "buyLaterNamed": "Compra più tardi: {name}",
+    "proxyNowNamed": "Proxy ora: {name}",
     "buyNowNamed": "Compra ora: {name}",
     "copyBuyNow": "Copia la lista da comprare ora",
     "exportBuyNowCsv": "Esporta CSV da comprare ora",
     "nothingPlanned": "Nessuna carta da comprare ora",
     "sessionOnly": "Salvato in questo browser per questo mazzo. La collezione non cambia.",
+    "intentSaved": "Salvato privatamente per questo mazzo sui dispositivi connessi. La collezione non cambia.",
     "deferredCount": "{count} carte per più tardi",
     "knownSubtotal": "Subtotale noto",
     "priceUnavailable": "Prezzo non disponibile",

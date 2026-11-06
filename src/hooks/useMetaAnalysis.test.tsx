@@ -141,4 +141,17 @@ describe("useMetaAnalysis", () => {
     expect(result.current.errorEdhrec).not.toBeNull();
     expect(result.current.edhrec).toBeNull();
   });
+
+  it("records source health after a failed request", async () => {
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(new Error("offline"));
+    const { result } = renderHook(() => useMetaAnalysis("Atraxa"));
+
+    await act(async () => {
+      await result.current.fetchSource("edhrec");
+    });
+
+    expect(result.current.sourceHealth.edhrec).toEqual(
+      expect.objectContaining({ status: "unavailable", attempts: 1 })
+    );
+  });
 });

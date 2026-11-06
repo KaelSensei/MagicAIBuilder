@@ -70,6 +70,7 @@ export type AddCardInput = z.infer<typeof addCardSchema>;
 export const patchCardSchema = z.object({
   category: z.enum(VALID_CATEGORIES).optional(),
   zone: z.enum(VALID_ZONES).optional(),
+  quantity: z.number().int().min(1).max(99).optional(),
   scryfallId: z.string().regex(SCRYFALL_UUID_REGEX, "Invalid Scryfall ID").optional(),
   imageUri: z.url().max(500).optional(),
   artCropUri: z.url().max(500).optional(),

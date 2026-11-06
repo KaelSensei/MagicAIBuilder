@@ -215,6 +215,21 @@ describe("exportArena", () => {
 });
 
 describe("exportMTGO", () => {
+  it("preserves the companion alongside sideboard cards", () => {
+    const deck = makeDeck({
+      companion: makeCard("Lurrus of the Dream-Den"),
+      cards: [
+        makeCard("Sol Ring"),
+        makeCard("Negate", 3, { zone: "sideboard" }),
+      ],
+    });
+
+    const xml = exportMTGO(deck);
+
+    expect(xml).toContain('Quantity="1" Sideboard="true" Name="Lurrus of the Dream-Den"');
+    expect(xml).toContain('Quantity="3" Sideboard="true" Name="Negate"');
+  });
+
   it("keeps sideboard quantities separate from the playable deck", () => {
     const deck = makeDeck({
       cards: [
@@ -282,7 +297,7 @@ describe("exportTappedOut", () => {
 });
 
 describe("exportArchidekt", () => {
-  it("does not count or export secondary zones as mainboard cards", () => {
+  it("preserves secondary zones and their categories in the text export", () => {
     const deck = makeDeck({
       cards: [
         makeCard("Sol Ring"),
@@ -293,7 +308,7 @@ describe("exportArchidekt", () => {
     });
 
     expect(exportArchidekt(deck)).toBe(
-      "Mainboard (6)\n1x Sol Ring [Other]\n5x Forest [Other]",
+      "Mainboard (6)\n1x Sol Ring [Other]\n5x Forest [Other]\n\nSideboard (2)\n2x Negate [Other]\n\nConsidering (3)\n3x Counterspell [Other]",
     );
   });
 

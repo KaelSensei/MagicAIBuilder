@@ -8,7 +8,8 @@ import deckMessages from "@/messages/en/deck.json";
 function renderDisclosure(
   source: "edhrec" | "tournament",
   observedAt: string,
-  stale = false
+  stale = false,
+  health?: { readonly status: "available" | "unavailable"; readonly attempts: number }
 ) {
   render(
     <NextIntlClientProvider
@@ -20,6 +21,7 @@ function renderDisclosure(
         source={source}
         observedAt={observedAt}
         stale={stale}
+        health={health}
       />
     </NextIntlClientProvider>
   );
@@ -33,6 +35,14 @@ describe("MetaSourceDisclosure", () => {
     expect(screen.getByText(/observed.*aug 29, 2026/i)).toBeInTheDocument();
   });
 
+  it("discloses when EDHREC does not publish a trustworthy sample window", () => {
+    renderDisclosure("edhrec", "2026-08-29T10:30:00.000Z");
+
+    expect(
+      screen.getByText(/sample window unavailable from edhrec/i)
+    ).toBeInTheDocument();
+  });
+
   it("warns when the displayed observation is stale", () => {
     renderDisclosure("tournament", "2026-08-20T10:30:00.000Z", true);
 
@@ -40,6 +50,17 @@ describe("MetaSourceDisclosure", () => {
       screen.getByText(/source: mtgtop8 \/ mtgdecks/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/last observed.*stale/i)).toBeInTheDocument();
+  });
+
+  it("discloses an unavailable source after failed requests", () => {
+    renderDisclosure("tournament", "2026-08-20T10:30:00.000Z", false, {
+      status: "unavailable",
+      attempts: 2,
+    });
+
+    expect(
+      screen.getByText(/source health: unavailable after 2 attempts/i)
+    ).toBeInTheDocument();
   });
 
   it("keeps the source visible when the observation timestamp is invalid", () => {

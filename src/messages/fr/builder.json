@@ -19,6 +19,10 @@
   },
   "dropToMove": "Déposez ici pour déplacer vers {label}",
   "noCardsYet": "Aucune carte pour le moment",
+  "tags": {
+    "add": "Ajouter une étiquette",
+    "placeholder": "nom de l'étiquette…"
+  },
   "searchCommander": "Recherchez un commandant ci-dessus",
   "searchPartner": "Recherchez un {partnerLabel}",
   "zones": {

@@ -68,7 +68,7 @@ export function MaybeboardPanel({
                 </span>
 
                 {/* Actions — visible on hover */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0">
                   <button
                     type="button"
                     onClick={() => onMoveToDecks(card.id)}

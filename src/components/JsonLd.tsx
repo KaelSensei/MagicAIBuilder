@@ -30,11 +30,6 @@ export const softwareApplicationJsonLd = {
   applicationCategory: "GameApplication",
   operatingSystem: "Web",
   description:
-    "Free MTG Commander deck builder with live bracket scoring, AI suggestions, Game Changers detection, and combo finder.",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
+    "Commander deckbuilding for card search, collection tracking, goldfish playtesting, and sharing.",
   url: "https://magicaibuilder.com",
 };

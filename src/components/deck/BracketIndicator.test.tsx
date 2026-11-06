@@ -48,4 +48,23 @@ describe("BracketIndicator warnings", () => {
 
     expect(screen.getByText(/deck has only 90\/100 cards/i)).toBeDefined();
   });
+
+  it("announces legality failures separately from optional strategy advice", () => {
+    renderWithIntl(
+      <BracketIndicator
+        score={{
+          ...score,
+          warnings: [
+            "Color identity violations: Lightning Bolt",
+            "Low ramp count (4) - recommend 8-12",
+          ],
+        }}
+      />
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/color identity violations/i);
+    expect(screen.getByRole("region", { name: /optional deck advice/i })).toHaveTextContent(
+      /low ramp count/i
+    );
+  });
 });

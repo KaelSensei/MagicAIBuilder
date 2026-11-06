@@ -368,6 +368,21 @@ describe("applyRollDie", () => {
 });
 
 describe("editable action log", () => {
+  it("records life and counter changes as structured evidence", () => {
+    const damaged = applyDamage(makeState(), 3);
+    expect(damaged.actionLog.at(-1)).toMatchObject({ kind: "life", lifeDelta: -3 });
+
+    const healed = applyHeal(damaged, 2);
+    expect(healed.actionLog.at(-1)).toMatchObject({ kind: "life", lifeDelta: 2 });
+
+    const permanent = makeCard("permanent");
+    const withPermanent = makeState({
+      battlefield: [{ ...permanent, tapped: false, counters: 0 }],
+    });
+    const withCounter = applyAddCounter(withPermanent, permanent.id, 2);
+    expect(withCounter.actionLog.at(-1)).toMatchObject({ kind: "counter", counterDelta: 2 });
+  });
+
   it("records only valid mana amounts and clears evidence after free-text editing", () => {
     const state = makeState();
     expect(applyRecordMana(state, 0)).toBe(state);

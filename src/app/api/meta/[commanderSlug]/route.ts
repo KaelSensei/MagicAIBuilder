@@ -44,6 +44,7 @@ async function readFreshMetaCache(
       return NextResponse.json({
         ...(cached.data as Record<string, unknown>),
         _meta: {
+          source,
           cached: true,
           cachedAt: cached.cachedAt.toISOString(),
           observedAt: cached.cachedAt.toISOString(),
@@ -109,6 +110,7 @@ async function tryStaleMetaResponse(
       return NextResponse.json({
         ...(stale.data as Record<string, unknown>),
         _meta: {
+          source,
           cached: true,
           stale: true,
           cachedAt: stale.cachedAt.toISOString(),
@@ -164,7 +166,7 @@ export async function GET(request: Request, { params }: Params) {
     }
     return NextResponse.json({
       ...data,
-      _meta: { cached: false, observedAt: observedAt.toISOString() },
+      _meta: { source, cached: false, observedAt: observedAt.toISOString() },
     });
   } catch (error) {
     const message =

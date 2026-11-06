@@ -1,5 +1,5 @@
 // Public read-only deck view — accessible without authentication
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ShareDeckView } from "@/components/deck/ShareDeckView";
 import type { ApiSharedDeck } from "@/lib/deck/share-types";
@@ -51,6 +51,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: `${deck.name} — MagicAIBuilder`,
     description,
+    robots: {
+      index: false,
+      follow: false,
+      noarchive: true,
+    },
     openGraph: {
       title: deck.name,
       description,

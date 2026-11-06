@@ -297,7 +297,11 @@
       "cardLabel": "Card to explain",
       "chooseCard": "Choose a card",
       "whyCard": "Why is this card here?",
-      "weakestCard": "Find weakest card"
+      "weakestCard": "Find weakest card",
+      "weakestResult": "Local assessment: {card}",
+      "criterionBanned": "This card is banned in the selected format.",
+      "criterionUnclassified": "No assigned deck role was found for this card.",
+      "criterionAboveCurve": "Its mana value is at least two above this deck's average."
     },
     "title": "AI Suggestions",
     "archetype": "Archetype",
@@ -386,6 +390,9 @@
     "sourceDisclosure": "Source: {source} · Observed {date}",
     "staleSourceDisclosure": "Source: {source} · Last observed {date} · stale",
     "sourceDisclosureUnavailable": "Source: {source} · Observation time unavailable",
+    "sourceHealthUnavailable": "Source health: unavailable after {attempts, plural, one {# attempt} other {# attempts}}",
+    "edhrecSampleWindowUnavailable": "Sample window unavailable from EDHREC",
+    "tournamentEvidenceWindow": "Tournament evidence: {start} – {end}",
     "popularEdhrec": "Popular (EDHRec)",
     "sampleSize": "{included} / {total} Decks",
     "notInDeck": "Not in deck",
@@ -673,18 +680,22 @@
     "warningGroups": {
       "legality": "Legalitätsfehler",
       "strategy": "Strategische Vorschläge",
-      "advice": "Optionale Hinweise"
+      "advice": "Optionale Hinweise",
+      "optional": "Optionale Deckhinweise"
     }
   },
   "buyList": {
     "buyLater": "Später",
+    "proxyNow": "Jetzt Proxy",
     "buyNow": "Jetzt kaufen",
     "buyLaterNamed": "Später kaufen: {name}",
+    "proxyNowNamed": "Jetzt Proxy: {name}",
     "buyNowNamed": "Jetzt kaufen: {name}",
     "copyBuyNow": "Jetzt-kaufen-Liste kopieren",
     "exportBuyNowCsv": "Jetzt-kaufen-CSV exportieren",
     "nothingPlanned": "Derzeit keine Karten zum Kauf geplant",
     "sessionOnly": "Für dieses Deck in diesem Browser gespeichert. Deine Sammlung bleibt unverändert.",
+    "intentSaved": "Privat für dieses Deck auf deinen angemeldeten Geräten gespeichert. Deine Sammlung bleibt unverändert.",
     "deferredCount": "{count} Karten für später",
     "knownSubtotal": "Bekannte Zwischensumme",
     "priceUnavailable": "Preis nicht verfügbar",

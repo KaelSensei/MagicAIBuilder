@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import enDeck from "@/messages/en/deck.json";
 import enCommon from "@/messages/en/common.json";
@@ -59,6 +59,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.clearAllMocks();
   vi.unstubAllGlobals();
 });
@@ -199,6 +200,29 @@ describe("DeckCommentPanel", () => {
    * on, with no way to retry.
    */
   describe("when the stream cannot be read", () => {
+    it("stops waiting for a stalled request and offers a retry", async () => {
+      vi.useFakeTimers();
+      vi.spyOn(AbortSignal, "timeout").mockImplementation((milliseconds) => {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), milliseconds);
+        return controller.signal;
+      });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockImplementation((_url: string, init?: RequestInit) => {
+          return new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(new DOMException("", "AbortError")));
+          });
+        })
+      );
+
+      renderWithIntl(<DeckCommentPanel deckId="deck-1" isOwner={false} isSignedIn={false} />);
+      await act(async () => vi.advanceTimersByTimeAsync(15_000));
+
+      expect(screen.getByText(/comments could not be loaded/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    });
+
     it("says so instead of looking like an empty stream, when the API errors", async () => {
       vi.stubGlobal(
         "fetch",

@@ -35,6 +35,17 @@ import { shiftMagnitude, type MetaShift } from "@/lib/meta/history";
 /** Movements shown in the panel; the report itself is not truncated. */
 const MAX_SHIFTS_SHOWN = 8;
 
+function tournamentEvidenceWindow(
+  decks: readonly TournamentDeck[]
+): { readonly start: string; readonly end: string } | null {
+  const datedEvents = decks
+    .flatMap((deck) => (deck.date && /^\d{4}-\d{2}-\d{2}$/.test(deck.date) ? [deck.date] : []))
+    .sort();
+  const start = datedEvents[0];
+  const end = datedEvents.at(-1);
+  return start && end ? { start, end } : null;
+}
+
 interface MetaPanelProps {
   readonly commanderName: string | null;
   readonly deckCardNames: ReadonlySet<string>;
@@ -276,7 +287,9 @@ export function MetaPanel({
     isLoadingTournament,
     errorEdhrec,
     errorTournament,
+    sourceHealth,
     fetchAll,
+    fetchSource,
   } = useMetaAnalysis(commanderName);
 
   const {
@@ -310,11 +323,12 @@ export function MetaPanel({
     resetShifts();
   }, [commanderName, resetShifts]);
 
-  const edhrecCards = (edhrec?.cards ?? []) as MetaCard[];
+  const edhrecCards = edhrec?.cards ?? [];
   const filteredCards = showOnlyMissing
     ? edhrecCards.filter((c) => !deckCardNames.has(c.name))
     : edhrecCards;
-  const tournamentDecks = (tournament?.decks ?? []) as TournamentDeck[];
+  const tournamentDecks = tournament?.decks ?? [];
+  const tournamentWindow = tournamentEvidenceWindow(tournamentDecks);
 
   // `steady` is dropped: a card holding its inclusion within a point is the
   // normal state of most of the list, and printing twenty of them would bury
@@ -431,6 +445,7 @@ export function MetaPanel({
                         source="edhrec"
                         observedAt={edhrecObservedAt}
                         stale={staleEdhrec}
+                        health={sourceHealth.edhrec}
                       />
                     )}
 
@@ -445,7 +460,14 @@ export function MetaPanel({
                     {errorEdhrec && (
                       <div className="flex items-center gap-1.5 text-red-400 text-xs">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errorEdhrec}
+                        <span className="min-w-0 flex-1">{errorEdhrec}</span>
+                        <button
+                          type="button"
+                          onClick={() => void fetchSource("edhrec")}
+                          className="shrink-0 text-[10px] font-medium text-[var(--accent-text)] hover:underline"
+                        >
+                          {t("meta.refresh")}
+                        </button>
                       </div>
                     )}
 
@@ -548,6 +570,8 @@ export function MetaPanel({
                         source="tournament"
                         observedAt={tournamentObservedAt}
                         stale={tournament?._meta?.stale}
+                        health={sourceHealth.tournament}
+                        evidenceWindow={tournamentWindow ?? undefined}
                       />
                     )}
 
@@ -562,7 +586,14 @@ export function MetaPanel({
                     {errorTournament && (
                       <div className="flex items-center gap-1.5 text-red-400 text-xs">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errorTournament}
+                        <span className="min-w-0 flex-1">{errorTournament}</span>
+                        <button
+                          type="button"
+                          onClick={() => void fetchSource("tournament")}
+                          className="shrink-0 text-[10px] font-medium text-[var(--accent-text)] hover:underline"
+                        >
+                          {t("meta.refresh")}
+                        </button>
                       </div>
                     )}
 

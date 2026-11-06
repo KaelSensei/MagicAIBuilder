@@ -89,7 +89,7 @@ export function CollectionStatsPanel({
         )}
       >
         <Package className="w-3.5 h-3.5 inline mr-1.5" />
-        Sign in to track your collection
+        {t("deckPanel.signIn")}
       </div>
     );
   }
@@ -118,7 +118,7 @@ export function CollectionStatsPanel({
         >
           <Package className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
           <span className="text-sm font-medium text-[var(--text-primary)] flex-1 text-left">
-            Collection
+            {t("deckPanel.title")}
           </span>
           <span className="text-xs text-[var(--text-secondary)]">
             {quantitySummary.ownedQuantity}/{quantitySummary.totalQuantity}
@@ -139,7 +139,11 @@ export function CollectionStatsPanel({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-[var(--text-secondary)]">
-                      {quantitySummary.ownedQuantity} owned · {quantitySummary.proxyQuantity} proxy · {quantitySummary.missingQuantity} missing
+                      {t("deckPanel.progress", {
+                        owned: quantitySummary.ownedQuantity,
+                        proxy: quantitySummary.proxyQuantity,
+                        missing: quantitySummary.missingQuantity,
+                      })}
                     </span>
                     <span
                       className={cn(
@@ -170,7 +174,7 @@ export function CollectionStatsPanel({
                       <span className="text-[var(--text-secondary)]">
                         {quantitySummary.unpricedQuantity > 0
                           ? deckT("buyList.knownSubtotal")
-                          : "Missing cards cost"}
+                          : t("deckPanel.missingCost")}
                       </span>
                       <span className="font-medium text-[var(--text-primary)]">
                         {quantitySummary.unpricedQuantity === quantitySummary.missingQuantity
@@ -193,7 +197,7 @@ export function CollectionStatsPanel({
                 {pct === 100 && (
                   <div className="flex items-center gap-1.5 text-green-400 text-xs">
                     <Check className="w-3.5 h-3.5" />
-                    Deck complete — you own all cards!
+                    {t("deckPanel.complete")}
                   </div>
                 )}
 
@@ -205,7 +209,7 @@ export function CollectionStatsPanel({
                     className="w-full flex items-center justify-center gap-2 py-1.5 rounded-lg border border-[var(--accent)]/50 text-[var(--accent-text)] text-xs font-medium hover:bg-[var(--accent)]/10 transition-colors"
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
-                    Shopping List ({quantitySummary.missingQuantity} cards)
+                    {t("deckPanel.shoppingList", { count: quantitySummary.missingQuantity })}
                   </button>
                 )}
 
@@ -219,7 +223,7 @@ export function CollectionStatsPanel({
                       className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-green-500/50 text-green-400 text-xs font-medium hover:bg-green-500/10 transition-colors disabled:opacity-50"
                     >
                       <CheckCheck className="w-3.5 h-3.5" />
-                      Mark all owned
+                      {t("deckPanel.markAllOwned")}
                     </button>
                   )}
                   <Link

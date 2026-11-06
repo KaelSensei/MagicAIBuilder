@@ -1,5 +1,14 @@
 {
   "title": "Ma Collection",
+  "deckPanel": {
+    "title": "Collection du deck",
+    "signIn": "Connectez-vous pour suivre votre collection",
+    "progress": "{owned} possédée · {proxy} proxy · {missing} manquante",
+    "missingCost": "Coût des cartes manquantes",
+    "complete": "Deck complet — vous possédez toutes les cartes !",
+    "shoppingList": "Liste d’achats ({count, plural, one {# carte} other {# cartes}})",
+    "markAllOwned": "Tout marquer comme possédé"
+  },
   "usage": {
     "trigger": "Decks",
     "title": "Decks utilisant {name}",
@@ -26,6 +35,7 @@
     "complete": "Toutes les cartes nécessaires pour ces decks sont dans votre collection.",
     "summary": "{count} à acquérir pour {decks} decks · Sous-total des prix connus : {cost}",
     "unpriced": "Prix indisponible pour {count, plural, one {# exemplaire} other {# exemplaires}}",
+    "requiredAcrossDecks": "{count, plural, one {# exemplaire} other {# exemplaires}} requis pour {decks, plural, one {# deck} other {# decks}}",
     "toAcquire": "{count} à acquérir"
   },
   "loading": "Chargement de la collection…",

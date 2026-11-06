@@ -68,6 +68,28 @@ afterEach(() => {
 });
 
 describe("CollectionStatsPanel", () => {
+  it("renders collection progress and actions in French", () => {
+    useCollectionStore.setState({ collectionCards: {}, collectionCardsFoil: {} });
+
+    renderWithIntl(<CollectionStatsPanel deck={deck} />, { locale: "fr" });
+    fireEvent.click(screen.getByRole("button", { name: "Collection du deck 0/1" }));
+
+    expect(screen.getByRole("button", { name: "Collection du deck 0/1" })).toBeInTheDocument();
+    expect(screen.getByText("0 possédée · 0 proxy · 1 manquante")).toBeInTheDocument();
+    expect(screen.getByText("Coût des cartes manquantes")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Liste d’achats (1 carte)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tout marquer comme possédé" })).toBeInTheDocument();
+  });
+
+  it("uses the French plural shopping-list label for multiple missing cards", () => {
+    useCollectionStore.setState({ collectionCards: {}, collectionCardsFoil: {} });
+
+    renderWithIntl(<CollectionStatsPanel deck={{ ...deck, cards: [{ ...card, quantity: 2 }] }} />, { locale: "fr" });
+    fireEvent.click(screen.getByRole("button", { name: "Collection du deck 0/2" }));
+
+    expect(screen.getByRole("button", { name: "Liste d’achats (2 cartes)" })).toBeInTheDocument();
+  });
+
   it("sends owners to collection management instead of resetting shared inventory", () => {
     const removeFromCollection = vi.fn();
     const updateQuantity = vi.fn();
@@ -168,16 +190,11 @@ describe("ShoppingListModal", () => {
     expect(writeText.mock.calls[0]?.[0]).not.toContain("Sol Ring");
   });
 
-  it("restores deferred printings for the same owner and deck after reopening", async () => {
-    const { unmount } = renderWithIntl(
-      <ShoppingListModal deck={deck} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Buy later: Sol Ring" }));
-    unmount();
-
+  it("starts in the reversible buy-now state before a saved intent is loaded", () => {
     renderWithIntl(<ShoppingListModal deck={deck} ownedQuantities={{}} ownerId="owner" onClose={vi.fn()} />);
-    expect(await screen.findByRole("button", { name: "Buy now: Sol Ring" })).toBeInTheDocument();
-    expect(screen.getByText("No cards planned for now")).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: "Proxy now: Sol Ring" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Buy later: Sol Ring" })).toBeInTheDocument();
   });
 
   it("keeps deferred printings separate across decks and owners", async () => {

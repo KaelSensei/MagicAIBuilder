@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import enDeck from "@/messages/en/deck.json";
@@ -55,6 +55,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -66,7 +67,10 @@ describe("DeckRatingPanel", () => {
     renderWithIntl(<DeckRatingPanel {...defaultProps} />);
 
     expect(await screen.findByText(/12 ratings/i)).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledWith("/api/community/decks/deck-1/ratings");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/community/decks/deck-1/ratings",
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
   });
 
   it("invites the first rating when there are none", async () => {
@@ -207,6 +211,29 @@ describe("DeckRatingPanel", () => {
    * deck with no ratings, and with no way back.
    */
   describe("when the aggregate cannot be read", () => {
+    it("stops waiting for a stalled request and offers a retry", async () => {
+      vi.useFakeTimers();
+      vi.spyOn(AbortSignal, "timeout").mockImplementation((milliseconds) => {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), milliseconds);
+        return controller.signal;
+      });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockImplementation((_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(new DOMException("", "AbortError")));
+          })
+        )
+      );
+
+      renderWithIntl(<DeckRatingPanel {...defaultProps} />);
+      await act(async () => vi.advanceTimersByTimeAsync(15_000));
+
+      expect(screen.getByText(/ratings could not be loaded/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    });
+
     it("says so instead of sitting on an empty panel, when the API errors", async () => {
       vi.stubGlobal(
         "fetch",

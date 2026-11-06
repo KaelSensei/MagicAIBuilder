@@ -67,4 +67,15 @@ describe("MaybeboardPanel", () => {
     renderPanel([makeCard()]);
     expect(screen.getByText("Sol Ring")).toBeDefined();
   });
+
+  it("keeps row actions visible while a keyboard user focuses them", () => {
+    renderPanel([makeCard()]);
+
+    const moveToDeck = screen.getByRole("button", { name: "Deck" });
+    const actions = moveToDeck.parentElement;
+
+    if (!actions) throw new Error("Expected the move action to have an action group");
+
+    expect(actions).toHaveClass("group-focus-within:opacity-100");
+  });
 });

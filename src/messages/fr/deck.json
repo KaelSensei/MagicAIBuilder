@@ -318,13 +318,16 @@
   },
   "buyList": {
     "buyLater": "Plus tard",
+    "proxyNow": "Proxy maintenant",
     "buyNow": "Acheter maintenant",
     "buyLaterNamed": "Acheter plus tard : {name}",
+    "proxyNowNamed": "Proxy maintenant : {name}",
     "buyNowNamed": "Acheter maintenant : {name}",
     "copyBuyNow": "Copier les achats immédiats",
     "exportBuyNowCsv": "Exporter les achats immédiats en CSV",
     "nothingPlanned": "Aucun achat prévu maintenant",
     "sessionOnly": "Plan enregistré dans ce navigateur pour ce deck. Votre collection ne change pas.",
+    "intentSaved": "Enregistré en privé pour ce deck sur vos appareils connectés. Votre collection ne change pas.",
     "deferredCount": "{count, plural, one {# carte pour plus tard} other {# cartes pour plus tard}}",
     "knownSubtotal": "Sous-total connu",
     "priceUnavailable": "Prix indisponible",
@@ -367,7 +370,8 @@
     "warningGroups": {
       "legality": "Erreurs de légalité",
       "strategy": "Suggestions stratégiques",
-      "advice": "Conseils optionnels"
+      "advice": "Conseils optionnels",
+      "optional": "Conseils facultatifs pour le deck"
     }
   },
   "budget": {
@@ -430,7 +434,11 @@
       "cardLabel": "Carte à expliquer",
       "chooseCard": "Choisir une carte",
       "whyCard": "Pourquoi cette carte ?",
-      "weakestCard": "Trouver la carte la plus faible"
+      "weakestCard": "Trouver la carte la plus faible",
+      "weakestResult": "Analyse locale : {card}",
+      "criterionBanned": "Cette carte est interdite dans le format sélectionné.",
+      "criterionUnclassified": "Aucun rôle de deck n'est attribué à cette carte.",
+      "criterionAboveCurve": "Sa valeur de mana dépasse d'au moins deux la moyenne du deck."
     },
     "archetype": "Archétype",
     "detected": "(détecté : {archetype})",
@@ -518,6 +526,9 @@
     "sourceDisclosure": "Source : {source} · Observé le {date}",
     "staleSourceDisclosure": "Source : {source} · Dernière observation le {date} · obsolète",
     "sourceDisclosureUnavailable": "Source : {source} · Heure d’observation indisponible",
+    "sourceHealthUnavailable": "État de la source : indisponible après {attempts, plural, one {# tentative} other {# tentatives}}",
+    "edhrecSampleWindowUnavailable": "Fenêtre d’échantillonnage indisponible depuis EDHREC",
+    "tournamentEvidenceWindow": "Preuves de tournoi : {start} – {end}",
     "communityDecks": "Voir les decks de la communauté pour ce commandant",
     "viewOnEdhrec": "Voir ce commandant sur EDHRec",
     "popularEdhrec": "Populaires (EDHRec)",

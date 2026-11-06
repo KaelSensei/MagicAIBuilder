@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { scoreBracket } from "@/lib/deck/bracket";
 import type { Deck, DeckCard, DeckStats } from "@/lib/deck/types";
 
@@ -63,6 +63,29 @@ function assertBracket(result: ReturnType<typeof scoreBracket>) {
 }
 
 describe("scoreBracket", () => {
+  it("derives warnings from deck data, not AI provenance or network activity", () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() => {
+      throw new Error("Bracket warnings must not request external AI output");
+    });
+    const stats = makeStats({
+      bannedCards: ["Griselbrand"],
+      colorIdentityViolations: ["Lightning Bolt"],
+      gameChangersCount: 1,
+      gameChangersList: ["Sol Ring"],
+      ramp: 3,
+    });
+
+    try {
+      const playerCreated = assertBracket(scoreBracket(makeDeck({ isAIGenerated: false }), stats));
+      const aiGenerated = assertBracket(scoreBracket(makeDeck({ isAIGenerated: true }), stats));
+
+      expect(aiGenerated.warnings).toEqual(playerCreated.warnings);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it("keeps named warnings stable when card order changes", () => {
     const deck = makeDeck();
     const first = makeStats({

@@ -1,16 +1,28 @@
 import type { ShoppingListItem } from "./shopping-list";
 
+interface DeckAllocation {
+  readonly name: string;
+  readonly quantity: number;
+}
+
+interface AcquisitionCsvItem extends ShoppingListItem {
+  readonly deckAllocations?: readonly DeckAllocation[];
+}
+
 function csvText(value: string): string {
   return `"${value.replaceAll('"', '""')}"`;
 }
 
 /** Export acquisition quantities with the exact printing ID used by the deck. */
-export function formatAcquisitionCsv(items: readonly ShoppingListItem[]): string {
-  const header = "Name,Quantity,Price (USD),Total (USD),Scryfall ID";
+export function formatAcquisitionCsv(items: readonly AcquisitionCsvItem[]): string {
+  const header = "Name,Quantity,Price (USD),Total (USD),Scryfall ID,Deck allocations";
   const rows = items.map((item) => {
     const lineTotal =
       item.price === null ? "" : Math.round(item.price * item.quantity * 100) / 100;
-    return `${csvText(item.name)},${item.quantity},${item.price ?? ""},${lineTotal},${csvText(item.scryfallId)}`;
+    const allocations = (item.deckAllocations ?? [])
+      .map((deck) => `${deck.name} (${deck.quantity})`)
+      .join("; ");
+    return `${csvText(item.name)},${item.quantity},${item.price ?? ""},${lineTotal},${csvText(item.scryfallId)},${csvText(allocations)}`;
   });
   return [header, ...rows].join("\n");
 }

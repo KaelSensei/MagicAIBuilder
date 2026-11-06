@@ -36,5 +36,11 @@
   },
   "addNamedToDeck": "Add {name} to deck",
   "priceLabel": "Price: ${price}",
-  "previewOf": "Preview of {name}"
+  "previewOf": "Preview of {name}",
+  "roleExplanation": {
+    "label": "Why this card is in the deck",
+    "commander": "This card is your deck's commander.",
+    "companion": "This card is your deck's companion.",
+    "category": "Its assigned role in this deck is {category}."
+  }
 }

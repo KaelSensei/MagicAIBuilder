@@ -25,15 +25,6 @@ const BRACKET_COLORS: Record<number, string> = {
   4: "text-red-400 bg-red-500/15 border-red-500/30",
 };
 
-const HOME_DECK_MANA_LABELS: Record<HomeDeckManaColor, string> = {
-  W: "White",
-  U: "Blue",
-  B: "Black",
-  R: "Red",
-  G: "Green",
-  C: "Colorless",
-};
-
 /**
  * Check whether a raw deck color identity symbol is supported for home-card display.
  *
@@ -81,16 +72,6 @@ function getDeckManaSymbolUrl(color: HomeDeckManaColor): string {
   return `https://svgs.scryfall.io/card-symbols/${color}.svg`;
 }
 
-/**
- * Build accessible text for a deck-card mana symbol.
- *
- * @param color Supported mana color symbol.
- * @returns Human-readable alt text.
- */
-function getDeckManaSymbolAlt(color: HomeDeckManaColor): string {
-  return `${HOME_DECK_MANA_LABELS[color]} mana symbol`;
-}
-
 export function HomeDeckCard({
   deck,
   onDelete,
@@ -105,12 +86,13 @@ export function HomeDeckCard({
   const isManual = Boolean(deck.manualBracket);
   const manaColors = useMemo(() => getDeckPresentationManaColors(deck), [deck]);
   const t = useTranslations("deck");
+  const tBuilder = useTranslations("builder");
   const format = useFormatter();
 
   return (
     <Link
       href={`/builder/${deck.id}`}
-      className="group relative block h-full min-h-40 overflow-hidden rounded-xl border border-[var(--border)] transition-all hover:border-[var(--accent)]"
+      className="group relative block h-full min-h-44 overflow-hidden rounded-xl border border-[var(--border)] shadow-sm transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
       style={
         hasArt
           ? {
@@ -158,41 +140,50 @@ export function HomeDeckCard({
           </button>
         </div>
 
-        <div className="mb-3 flex items-start justify-between pr-14">
-          <h3 className={`truncate pr-2 font-semibold ${textPrimary}`}>
-            {deck.name}
-          </h3>
-          <div className="flex shrink-0 items-center gap-1.5">
-            {deck.isAIGenerated && (
-              <span className="shrink-0 rounded-full border border-purple-500/30 bg-purple-500/20 px-1.5 py-0.5 text-xs text-purple-400">
-                AI
-              </span>
-            )}
-            <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
-                hasArt
-                  ? "bg-black/40 text-white/70"
-                  : "bg-[var(--border)] text-[var(--text-secondary)]"
-              }`}
+        <div data-testid="deck-identity" className="space-y-2 pr-14">
+          <div className="flex items-start justify-between">
+            <h3
+              className={`truncate pr-2 text-base font-semibold ${textPrimary}`}
             >
-              {deck.format}
-            </span>
+              {deck.name}
+            </h3>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {deck.isAIGenerated && (
+                <span className="shrink-0 rounded-full border border-purple-500/30 bg-purple-500/20 px-1.5 py-0.5 text-xs text-purple-400">
+                  AI
+                </span>
+              )}
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
+                  hasArt
+                    ? "bg-black/40 text-white/70"
+                    : "bg-[var(--border)] text-[var(--text-secondary)]"
+                }`}
+              >
+                {deck.format}
+              </span>
+            </div>
           </div>
+
+          <p className={`truncate text-sm ${textMuted}`}>
+            {deck.commander
+              ? t("card.commander", { name: deck.commander.name })
+              : t("card.noCommander")}
+          </p>
         </div>
 
-        <p className={`truncate text-sm ${textMuted}`}>
-          {deck.commander
-            ? t("card.commander", { name: deck.commander.name })
-            : t("card.noCommander")}
-        </p>
-        <p className={`mt-1 text-xs ${textMuted}`}>
-          {t("card.cardCount", { count: deck.cardCount })}
-        </p>
-
-        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
-          <div className={`flex items-center gap-1 text-xs ${textMuted}`}>
-            <Clock className="h-3 w-3" />
-            <span>{format.dateTime(new Date(deck.updatedAt))}</span>
+        <div
+          data-testid="deck-status"
+          className={`mt-auto flex items-end justify-between gap-3 border-t pt-3 text-xs ${
+            hasArt ? "border-white/15" : "border-[var(--border)]"
+          }`}
+        >
+          <div className={`space-y-1 ${textMuted}`}>
+            <p>{t("card.cardCount", { count: deck.cardCount })}</p>
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>{format.dateTime(new Date(deck.updatedAt))}</span>
+            </div>
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -216,7 +207,9 @@ export function HomeDeckCard({
                   <Image
                     key={`${deck.id}-${color}`}
                     src={getDeckManaSymbolUrl(color)}
-                    alt={getDeckManaSymbolAlt(color)}
+                    alt={tBuilder("manaSymbolAlt", {
+                      color: tBuilder(`manaColors.${color}`),
+                    })}
                     width={18}
                     height={18}
                     unoptimized

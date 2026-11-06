@@ -1,4 +1,27 @@
 {
+  "notifications": {
+    "title": "Préférences de notification",
+    "intro": "Choisissez les événements communautaires qui pourront vous notifier lorsqu’ils seront disponibles.",
+    "loading": "Chargement de vos préférences…",
+    "error": "Vos préférences de notification n’ont pas pu être enregistrées.",
+    "retry": "Réessayer",
+    "replies": {
+      "label": "Réponses",
+      "description": "Lorsqu’une personne répond à l’un de vos commentaires."
+    },
+    "mentions": {
+      "label": "Mentions",
+      "description": "Lorsqu’une personne vous mentionne dans une discussion communautaire."
+    },
+    "follows": {
+      "label": "Nouveaux abonnés",
+      "description": "Lorsqu’un autre joueur suit votre profil public."
+    },
+    "watchedDecks": {
+      "label": "Decks surveillés",
+      "description": "Lorsqu’un deck public que vous suivez change."
+    }
+  },
   "apiKeys": {
     "title": "Clés d'API",
     "intro": "Les clés permettent à un programme de lire vos decks via l'API MagicAIBuilder. Chaque clé n'appartient qu'à vous et peut être révoquée à tout moment.",

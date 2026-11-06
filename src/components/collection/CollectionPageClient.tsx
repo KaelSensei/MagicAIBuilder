@@ -485,7 +485,7 @@ function CollectionListRow({
           onClick={() => {
             onOpenPrintings(card);
           }}
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           title={t("actions.changeArt")}
           aria-label={t("actions.changeArtFor", { name: card.name })}
         >
@@ -515,7 +515,7 @@ function CollectionListRow({
       <button
         type="button"
         onClick={() => onRemove(card.id)}
-        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
+        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400"
         aria-label={t("actions.removeFromCollection")}
       >
         <Trash2 className="w-3.5 h-3.5" />

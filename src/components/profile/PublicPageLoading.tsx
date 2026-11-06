@@ -1,6 +1,6 @@
 interface PublicPageLoadingProps {
   readonly label: string;
-  readonly variant: "deck" | "profile";
+  readonly variant: "deck" | "decks" | "profile";
 }
 
 /** Shared visual fallback for the two public, viewer-aware pages. */
@@ -17,9 +17,11 @@ export function PublicPageLoading({ label, variant }: PublicPageLoadingProps) {
         <output aria-busy="true" className="sr-only">{label}</output>
         <div aria-hidden="true" className="motion-safe:animate-pulse">
           <div className={variant === "deck" ? "mb-8 flex flex-col gap-4 sm:flex-row" : "mb-8 flex items-center gap-4"}>
-            <div className={variant === "deck"
-              ? "h-28 w-full rounded-xl bg-[var(--surface)] sm:h-24 sm:w-40"
-              : "h-16 w-16 shrink-0 rounded-full bg-[var(--surface)]"} />
+            {variant !== "decks" && (
+              <div className={variant === "deck"
+                ? "h-28 w-full rounded-xl bg-[var(--surface)] sm:h-24 sm:w-40"
+                : "h-16 w-16 shrink-0 rounded-full bg-[var(--surface)]"} />
+            )}
             <div className="flex-1 space-y-3">
               <div className={variant === "deck"
                 ? "h-7 w-64 max-w-full rounded bg-[var(--surface)]"
@@ -42,7 +44,7 @@ export function PublicPageLoading({ label, variant }: PublicPageLoadingProps) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[0, 1, 2].map((slot) => (
                 <div key={slot} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-                  <div className="h-24 bg-[var(--border)]/50" />
+                  {variant === "profile" && <div className="h-24 bg-[var(--border)]/50" />}
                   <div className="space-y-3 p-3">
                     <div className="h-4 w-3/4 rounded bg-[var(--border)]" />
                     <div className="h-3 w-1/2 rounded bg-[var(--border)]" />

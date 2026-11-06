@@ -45,6 +45,7 @@ describe("AcquisitionPlanPanel", () => {
     expect(within(line).getByRole("link", { name: "Spells" })).toBeInTheDocument();
     expect(within(line).getByText("1 copy")).toBeInTheDocument();
     expect(within(line).getByText("You own 1 copy")).toBeInTheDocument();
+    expect(within(line).getByText("3 copies required across 2 decks")).toBeInTheDocument();
   });
 
   it("offers retry when a stalled acquisition plan request times out", async () => {
@@ -81,8 +82,26 @@ describe("AcquisitionPlanPanel", () => {
 
     const [priced, unpriced] = await screen.findAllByRole("listitem");
     expect(within(priced).getByText("2 to acquire")).toBeInTheDocument();
-    expect(within(priced).getByText("$5.00")).toBeInTheDocument();
+    expect(within(priced).getByText("USD 5.00")).toBeInTheDocument();
     expect(within(unpriced).getByText("Price unavailable for 1 copy")).toBeInTheDocument();
+  });
+
+  it("labels French acquisition prices as USD without implying a converted local quote", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response({
+      deckCount: 1,
+      decks: [{ id: "a", name: "Artifacts" }],
+      items: [{
+        scryfallId: "ring", name: "Sol Ring", requiredQuantity: 1,
+        ownedQuantity: 0, acquireQuantity: 1, price: 5,
+        decks: [{ id: "a", name: "Artifacts", quantity: 1 }],
+      }],
+    })));
+    const user = userEvent.setup();
+
+    renderWithIntl(<AcquisitionPlanPanel />, { locale: "fr" });
+    await user.click(screen.getByRole("button", { name: "Plan d’acquisition" }));
+
+    expect(await screen.findByText("5,00 USD")).toBeInTheDocument();
   });
 
   it("exports only missing copies with their printing IDs and known prices", async () => {
@@ -116,9 +135,9 @@ describe("AcquisitionPlanPanel", () => {
       reader.readAsText(blob);
     });
     expect(csv.split("\n")).toEqual([
-      "Name,Quantity,Price (USD),Total (USD),Scryfall ID",
-      '"Sol Ring",1,2,2,"ring-a"',
-      '"Sol Ring",2,,,"ring-b"',
+      "Name,Quantity,Price (USD),Total (USD),Scryfall ID,Deck allocations",
+      '"Sol Ring",1,2,2,"ring-a","Artifacts (3)"',
+      '"Sol Ring",2,,,"ring-b","Artifacts (2)"',
     ]);
     expect(click).toHaveBeenCalledOnce();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:acquisition-plan");

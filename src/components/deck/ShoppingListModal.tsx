@@ -35,23 +35,35 @@ function downloadFile(content: string, filename: string, mime: string): void {
 export function ShoppingListModal({
   deck,
   ownedQuantities,
-  ownerId,
+  ownerId: _ownerId,
   onClose,
 }: ShoppingListModalProps) {
   const t = useTranslations("deck");
   const format = useFormatter();
   const [copied, copy] = useCopyToClipboard();
-  const [deferredIds, setDeferredIds] = useState<ReadonlySet<string>>(() => new Set());
-  const storageKey = `shopping-deferred:v1:${encodeURIComponent(ownerId)}:${encodeURIComponent(deck.id)}`;
+  const [intentById, setIntentById] = useState<Readonly<Record<string, "proxy_now" | "buy_later">>>({});
 
   useEffect(() => {
-    try {
-      const saved: unknown = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
-      setDeferredIds(new Set(Array.isArray(saved) ? saved.slice(0, 500).filter((id): id is string => typeof id === "string") : []));
-    } catch {
-      setDeferredIds(new Set());
-    }
-  }, [storageKey]);
+    let active = true;
+    void fetch(`/api/decks/${encodeURIComponent(deck.id)}/acquisition-intent`)
+      .then(async (response) => response.ok ? response.json() : { intents: [] })
+      .then((payload: unknown) => {
+        if (!active || typeof payload !== "object" || payload === null) return;
+        const intents = "intents" in payload ? payload.intents : [];
+        if (!Array.isArray(intents)) return;
+        const next: Record<string, "proxy_now" | "buy_later"> = {};
+        for (const entry of intents) {
+          if (
+            typeof entry === "object" && entry !== null &&
+            "scryfallId" in entry && typeof entry.scryfallId === "string" &&
+            "mode" in entry && (entry.mode === "proxy_now" || entry.mode === "buy_later")
+          ) next[entry.scryfallId] = entry.mode;
+        }
+        setIntentById(next);
+      })
+      .catch(() => { if (active) setIntentById({}); });
+    return () => { active = false; };
+  }, [deck.id]);
 
   // USD, like every other price surface — see BudgetOptimizationModal.
   const money = (value: number) =>
@@ -69,21 +81,26 @@ export function ShoppingListModal({
   );
 
   const buyNowItems = useMemo(
-    () => items.filter((item) => !deferredIds.has(item.scryfallId)),
-    [items, deferredIds]
+    () => items.filter((item) => intentById[item.scryfallId] === undefined),
+    [items, intentById]
   );
   const deferredCount = items.length - buyNowItems.length;
 
-  const toggleDeferred = (scryfallId: string) => {
-    const next = new Set(deferredIds);
-    if (next.has(scryfallId)) next.delete(scryfallId);
-    else next.add(scryfallId);
-    setDeferredIds(next);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify([...next]));
-    } catch {
-      // The in-memory choice still works when browser storage is unavailable.
-    }
+  const setIntent = (scryfallId: string, mode: "proxy_now" | "buy_later" | "buy_now") => {
+    const previous = intentById;
+    setIntentById((current) => {
+      const next = { ...current };
+      if (mode === "buy_now") delete next[scryfallId];
+      else next[scryfallId] = mode;
+      return next;
+    });
+    void fetch(`/api/decks/${encodeURIComponent(deck.id)}/acquisition-intent`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ scryfallId, mode }),
+    }).then((response) => {
+      if (!response.ok) setIntentById(previous);
+    }).catch(() => setIntentById(previous));
   };
 
   const { totalCost, unpricedQuantity, pricedQuantity } = useMemo(() => {
@@ -147,7 +164,7 @@ export function ShoppingListModal({
           </Dialog.Description>
           {items.length > 0 && (
             <p className="px-5 pt-3 text-[11px] text-[var(--text-secondary)]">
-              {t("buyList.sessionOnly")}
+              {t("buyList.intentSaved")}
             </p>
           )}
 
@@ -164,8 +181,8 @@ export function ShoppingListModal({
                     key={item.scryfallId}
                     item={item}
                     money={money}
-                    deferred={deferredIds.has(item.scryfallId)}
-                    onToggleDeferred={() => toggleDeferred(item.scryfallId)}
+                    intent={intentById[item.scryfallId]}
+                    onSetIntent={(mode) => setIntent(item.scryfallId, mode)}
                   />
                 ))}
               </div>
@@ -227,19 +244,19 @@ export function ShoppingListModal({
 function ShoppingRow({
   item,
   money,
-  deferred,
-  onToggleDeferred,
+  intent,
+  onSetIntent,
 }: {
   readonly item: ShoppingListItem;
   readonly money: (value: number) => string;
-  readonly deferred: boolean;
-  readonly onToggleDeferred: () => void;
+  readonly intent: "proxy_now" | "buy_later" | undefined;
+  readonly onSetIntent: (mode: "proxy_now" | "buy_later" | "buy_now") => void;
 }) {
   const t = useTranslations("deck");
   const lineTotal = item.price === null ? null : item.price * item.quantity;
 
   return (
-    <div className={`flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] transition-colors ${deferred ? "opacity-60" : ""}`}>
+    <div className={`flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[var(--surface-hover)] transition-colors ${intent ? "opacity-60" : ""}`}>
       <span className="text-xs text-[var(--text-secondary)] w-5 text-center shrink-0">
         {item.quantity}×
       </span>
@@ -256,12 +273,21 @@ function ShoppingRow({
       ) : null}
       <button
         type="button"
-        onClick={onToggleDeferred}
-        aria-pressed={deferred}
-        aria-label={t(deferred ? "buyList.buyNowNamed" : "buyList.buyLaterNamed", { name: item.name })}
+        onClick={() => onSetIntent(intent === "proxy_now" ? "buy_now" : "proxy_now")}
+        aria-pressed={intent === "proxy_now"}
+        aria-label={t(intent === "proxy_now" ? "buyList.buyNowNamed" : "buyList.proxyNowNamed", { name: item.name })}
         className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
       >
-        {t(deferred ? "buyList.buyNow" : "buyList.buyLater")}
+        {t(intent === "proxy_now" ? "buyList.buyNow" : "buyList.proxyNow")}
+      </button>
+      <button
+        type="button"
+        onClick={() => onSetIntent(intent === "buy_later" ? "buy_now" : "buy_later")}
+        aria-pressed={intent === "buy_later"}
+        aria-label={t(intent === "buy_later" ? "buyList.buyNowNamed" : "buyList.buyLaterNamed", { name: item.name })}
+        className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+      >
+        {t(intent === "buy_later" ? "buyList.buyNow" : "buyList.buyLater")}
       </button>
     </div>
   );

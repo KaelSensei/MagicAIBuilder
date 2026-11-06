@@ -297,7 +297,11 @@
       "cardLabel": "Card to explain",
       "chooseCard": "Choose a card",
       "whyCard": "Why is this card here?",
-      "weakestCard": "Find weakest card"
+      "weakestCard": "Find weakest card",
+      "weakestResult": "Local assessment: {card}",
+      "criterionBanned": "This card is banned in the selected format.",
+      "criterionUnclassified": "No assigned deck role was found for this card.",
+      "criterionAboveCurve": "Its mana value is at least two above this deck's average."
     },
     "title": "AI Suggestions",
     "archetype": "Archetype",
@@ -386,6 +390,9 @@
     "sourceDisclosure": "Source: {source} · Observed {date}",
     "staleSourceDisclosure": "Source: {source} · Last observed {date} · stale",
     "sourceDisclosureUnavailable": "Source: {source} · Observation time unavailable",
+    "sourceHealthUnavailable": "Source health: unavailable after {attempts, plural, one {# attempt} other {# attempts}}",
+    "edhrecSampleWindowUnavailable": "Sample window unavailable from EDHREC",
+    "tournamentEvidenceWindow": "Tournament evidence: {start} – {end}",
     "popularEdhrec": "Popular (EDHRec)",
     "sampleSize": "{included} / {total} 덱",
     "notInDeck": "Not in deck",
@@ -673,18 +680,22 @@
     "warningGroups": {
       "legality": "합법성 오류",
       "strategy": "전략 제안",
-      "advice": "선택적 조언"
+      "advice": "선택적 조언",
+      "optional": "선택적 덱 조언"
     }
   },
   "buyList": {
     "buyLater": "나중에 구매",
+    "proxyNow": "지금 프록시",
     "buyNow": "지금 구매",
     "buyLaterNamed": "나중에 구매: {name}",
+    "proxyNowNamed": "지금 프록시: {name}",
     "buyNowNamed": "지금 구매: {name}",
     "copyBuyNow": "지금 구매할 목록 복사",
     "exportBuyNowCsv": "지금 구매할 CSV 내보내기",
     "nothingPlanned": "지금 구매할 카드가 없습니다",
     "sessionOnly": "이 덱의 계획은 이 브라우저에 저장됩니다. 컬렉션은 변경되지 않습니다.",
+    "intentSaved": "이 덱에 대해 로그인한 기기에서 비공개로 저장됩니다. 컬렉션은 변경되지 않습니다.",
     "deferredCount": "나중에 구매할 카드 {count}장",
     "knownSubtotal": "확인된 가격 소계",
     "priceUnavailable": "가격 정보 없음",

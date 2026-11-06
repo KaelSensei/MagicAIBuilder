@@ -122,14 +122,12 @@ describe("useDeckStore — updateDeckDescription", () => {
     expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", { description: "" });
   });
 
-  it("does not crash when API fails (optimistic value remains)", async () => {
+  it("restores the saved description when the API rejects the edit", async () => {
     (deckApi.updateDeck as Mock).mockRejectedValue(new Error("network error"));
-    // Should not throw
     await expect(
       useDeckStore.getState().updateDeckDescription("deck-1", "some description")
     ).resolves.toBeUndefined();
-    // Optimistic value is kept (no rollback implemented)
-    expect(useDeckStore.getState().decks["deck-1"].description).toBe("some description");
+    expect(useDeckStore.getState().decks["deck-1"].description).toBe("");
   });
 });
 
