@@ -55,6 +55,7 @@
     "removeCompanion": "Remove companion",
     "removeCard": "Remove {name}",
     "dragToReorder": "Drag to reorder",
+    "dragToZone": "将 {name} 拖到另一个区域",
     "changeCategoryFor": "Change category for {name}",
     "backToDecks": "Back to my decks",
     "rename": "Click to rename",

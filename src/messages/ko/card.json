@@ -35,6 +35,11 @@
   },
   "noText": "No text",
   "addNamedToDeck": "Add {name} to deck",
+  "addToZone": "{name} 추가 위치",
+  "chooseZone": "존 선택",
+  "zoneMain": "메인",
+  "zoneSideboard": "사이드보드",
+  "zoneConsidering": "고려 중",
   "priceLabel": "Price: ${price}",
   "previewOf": "Preview of {name}",
   "roleExplanation": {

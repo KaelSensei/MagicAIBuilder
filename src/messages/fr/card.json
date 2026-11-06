@@ -35,6 +35,11 @@
     "remove": "Retirer des favoris"
   },
   "addNamedToDeck": "Ajouter {name} au deck",
+  "addToZone": "Ajouter {name} à",
+  "chooseZone": "Choisir une zone",
+  "zoneMain": "Principal",
+  "zoneSideboard": "Réserve",
+  "zoneConsidering": "À considérer",
   "priceLabel": "Prix : {price} $",
   "previewOf": "Aperçu de {name}",
   "roleExplanation": {

@@ -35,6 +35,11 @@
   },
   "noText": "No text",
   "addNamedToDeck": "Add {name} to deck",
+  "addToZone": "将 {name} 添加到",
+  "chooseZone": "选择区域",
+  "zoneMain": "主牌组",
+  "zoneSideboard": "备牌",
+  "zoneConsidering": "考虑中",
   "priceLabel": "Price: ${price}",
   "previewOf": "Preview of {name}",
   "roleExplanation": {

@@ -50,6 +50,7 @@
     "removeCompanion": "Remove companion",
     "removeCard": "Remove {name}",
     "dragToReorder": "Drag to reorder",
+    "dragToZone": "Drag {name} to another zone",
     "changeCategoryFor": "Change category for {name}",
     "backToDecks": "Back to my decks",
     "rename": "Click to rename",
