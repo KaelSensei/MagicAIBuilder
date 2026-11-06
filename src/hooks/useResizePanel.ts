@@ -8,6 +8,39 @@ interface UseResizePanelOptions {
   storageKey?: string;
 }
 
+interface StoredWidthBounds {
+  readonly minWidth: number;
+  readonly maxWidth: number;
+  readonly fallback: number;
+}
+
+/**
+ * Reads a persisted panel width, ignoring values that are not integers.
+ *
+ * `parseInt` of a corrupt entry is `NaN`, and `Math.min`/`Math.max` propagate
+ * that into a panel with no width. A bad entry falls back to the default and
+ * is clamped only when the number is real.
+ *
+ * @param stored - raw localStorage value, or null when the key is absent
+ * @param bounds - inclusive limits and the width to use when parsing fails
+ * @returns a finite width inside the bounds
+ */
+export function readStoredPanelWidth(
+  stored: string | null,
+  bounds: StoredWidthBounds
+): number {
+  if (stored === null || stored.length === 0) return bounds.fallback;
+  const parsed = Number.parseInt(stored, 10);
+  if (!Number.isFinite(parsed)) return bounds.fallback;
+  return Math.max(bounds.minWidth, Math.min(bounds.maxWidth, parsed));
+}
+
+/**
+ * Tracks a resizable panel width, persisted when a storage key is given.
+ *
+ * @param options - starting width, limits, and optional localStorage key
+ * @returns the width plus pointer and keyboard handlers
+ */
 export function useResizePanel({
   initialWidth,
   minWidth = 200,
@@ -15,11 +48,12 @@ export function useResizePanel({
   storageKey,
 }: UseResizePanelOptions) {
   const [width, setWidth] = useState(() => {
-    if (storageKey && globalThis.window !== undefined) {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) return Math.max(minWidth, Math.min(maxWidth, Number.parseInt(stored, 10)));
-    }
-    return initialWidth;
+    if (!storageKey || globalThis.window === undefined) return initialWidth;
+    return readStoredPanelWidth(localStorage.getItem(storageKey), {
+      minWidth,
+      maxWidth,
+      fallback: initialWidth,
+    });
   });
 
   const isDragging = useRef(false);

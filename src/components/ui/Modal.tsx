@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cardSurfaceClassName } from "@/components/ui/Card";
 import { cn } from "@/components/ui/utils";
 
 interface ModalProps {
@@ -50,7 +51,8 @@ export function Modal({
         >
           <motion.div
             className={cn(
-              "bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl w-full mx-4",
+              cardSurfaceClassName,
+              "mx-4 w-full shadow-[var(--lumen-shadow-lg)]",
               maxWidth,
               className
             )}

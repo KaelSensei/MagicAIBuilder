@@ -92,7 +92,7 @@ export function HomeDeckCard({
   return (
     <Link
       href={`/builder/${deck.id}`}
-      className="group relative block h-full min-h-44 overflow-hidden rounded-xl border border-[var(--border)] shadow-sm transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+      className="group relative block h-full min-h-48 overflow-hidden rounded-[var(--lumen-radius-xl)] border border-[var(--border)] shadow-[var(--lumen-shadow-sm)] transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[var(--lumen-shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
       style={
         hasArt
           ? {
@@ -116,7 +116,7 @@ export function HomeDeckCard({
             type="button"
             onClick={(e) => onDuplicate(e, deck.id)}
             disabled={duplicatingId === deck.id}
-            className="rounded p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-[var(--accent)]/20 hover:text-[var(--accent-text)] group-hover:opacity-100 disabled:opacity-60"
+            className="rounded-[var(--lumen-radius-pill)] p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-[var(--accent)]/20 hover:text-[var(--accent-text)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group-hover:opacity-100 group-focus-within:opacity-100 disabled:opacity-60"
             aria-label={t("card.duplicate", { name: deck.name })}
           >
             {duplicatingId === deck.id ? (
@@ -129,7 +129,7 @@ export function HomeDeckCard({
             type="button"
             onClick={(e) => onDelete(e, deck.id)}
             disabled={deletingId === deck.id}
-            className="rounded p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100 disabled:opacity-60"
+            className="rounded-[var(--lumen-radius-pill)] p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-red-500/20 hover:text-red-400 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] group-hover:opacity-100 group-focus-within:opacity-100 disabled:opacity-60"
             aria-label={t("card.delete", { name: deck.name })}
           >
             {deletingId === deck.id ? (

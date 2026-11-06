@@ -35,6 +35,11 @@
   },
   "noText": "No text",
   "addNamedToDeck": "Add {name} to deck",
+  "addToZone": "{name} の追加先",
+  "chooseZone": "ゾーンを選択",
+  "zoneMain": "メイン",
+  "zoneSideboard": "サイドボード",
+  "zoneConsidering": "検討中",
   "priceLabel": "Price: ${price}",
   "previewOf": "Preview of {name}",
   "roleExplanation": {

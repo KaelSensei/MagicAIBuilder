@@ -2,6 +2,7 @@
 
 import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/components/ui/utils";
+import { zoneTabId } from "@/lib/deck/drop-targets";
 
 export type DeckZoneTabId = "main" | "sideboard" | "maybeboard";
 
@@ -26,7 +27,7 @@ export function DeckZoneTab({
   isActive,
   onSelect,
 }: DeckZoneTabProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: `deck-panel-${zone}` });
+  const { setNodeRef, isOver } = useDroppable({ id: zoneTabId(zone) });
 
   return (
     <button
@@ -35,14 +36,14 @@ export function DeckZoneTab({
       onClick={() => onSelect(zone)}
       aria-pressed={isActive}
       className={cn(
-        "relative flex min-h-8 items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
-        "after:pointer-events-none after:absolute after:inset-0 after:rounded-sm after:outline after:outline-2 after:outline-offset-[-2px] after:transition-opacity",
+        "relative flex min-h-9 items-center gap-1.5 rounded-[var(--lumen-radius-pill)] px-3 py-1.5 text-xs font-medium transition-colors",
+        "after:pointer-events-none after:absolute after:inset-0 after:rounded-[var(--lumen-radius-pill)] after:outline after:outline-2 after:outline-offset-[-2px] after:transition-opacity",
         isOver
           ? "after:outline-[var(--accent)] after:opacity-100"
           : "after:opacity-0",
         isActive
-          ? "bg-[var(--accent)]/10 text-[var(--text-primary)]"
-          : "border-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+          ? "bg-[var(--accent-soft)] text-[var(--text-primary)]"
+          : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
       )}
       aria-label={`${label} (${count})`}
     >

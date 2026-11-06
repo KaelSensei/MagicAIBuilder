@@ -20,6 +20,9 @@ import { useCollectionStore } from "@/lib/collection/store";
 import { AddToCollectionDialog } from "./AddToCollectionDialog";
 import { formatCollectionText } from "@/lib/collection/shopping-list";
 import { formatCollectionPrintingCsv } from "@/lib/collection/printing-csv";
+import { Button } from "@/components/ui/Button";
+import { cardSurfaceClassName } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
 import type { CollectionCard } from "@/lib/collection/types";
 import { CardImage } from "@/components/card/CardImage";
@@ -34,17 +37,13 @@ import { PrintingDeckUsage } from "@/components/collection/PrintingDeckUsage";
 function CollectionLoadNotice({ onRetry }: { readonly onRetry: () => Promise<void> }) {
   const t = useTranslations("collection");
   return (
-    <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-[var(--text-primary)]">
+    <div role="alert" className={cn(cardSurfaceClassName, "flex flex-wrap items-center gap-3 border-amber-500/30 p-4 text-sm")}>
       <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400" aria-hidden="true" />
       <span>{t("loadFailed")}</span>
-      <button
-        type="button"
-        onClick={() => void onRetry()}
-        className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 font-medium hover:border-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-      >
+      <Button type="button" variant="secondary" size="sm" onClick={() => void onRetry()}>
         <RefreshCw className="h-4 w-4" aria-hidden="true" />
         {t("retry")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -167,7 +166,7 @@ export function CollectionPageClient() {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto p-6">
+    <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
       {loadError && (
         <div className="mx-auto mb-6 max-w-6xl">
           <CollectionLoadNotice onRetry={loadCollection} />
@@ -185,21 +184,22 @@ export function CollectionPageClient() {
         />
       )}
       {/* Header */}
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Package className="w-6 h-6 text-[var(--accent-text)]" />
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+            <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
               {t("title")}
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-2">
             {allCards.length > 0 && (
               <>
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="sm"
                   onClick={handleCopyText}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
                   title={t("actions.copyText")}
                 >
                   {copied ? (
@@ -208,16 +208,17 @@ export function CollectionPageClient() {
                     <Copy className="w-3.5 h-3.5" />
                   )}
                   {copied ? t("actions.copied") : t("actions.copy")}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="sm"
                   onClick={handleExportCsv}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
                   title={t("actions.exportCsv")}
                 >
                   <Download className="w-3.5 h-3.5" />
                   {t("actions.csv")}
-                </button>
+                </Button>
               </>
             )}
             <AddToCollectionDialog />
@@ -225,7 +226,7 @@ export function CollectionPageClient() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard
             label={t("stats.uniqueCards")}
             value={allCards.length.toString()}
@@ -244,44 +245,49 @@ export function CollectionPageClient() {
           />
         </div>
 
-        <AcquisitionPlanPanel />
-
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <div>
         {/* Search + view toggle */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
-            <input
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+            <Input
               type="text"
               placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm bg-[var(--surface)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] outline-none focus:border-[var(--accent)] placeholder:text-[var(--text-secondary)]"
+              className="w-full pl-10"
             />
           </div>
-          <div className="flex items-center gap-1 ml-auto">
+          <div className="ml-auto flex items-center gap-1 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-1">
             <button
               type="button"
               onClick={() => setViewMode("grid")}
+              aria-pressed={viewMode === "grid"}
               className={cn(
-                "p-2 rounded transition-colors",
+                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
                 viewMode === "grid"
-                  ? "text-[var(--accent-text)]"
+                  ? "bg-[var(--accent)] text-white"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
               title={t("viewMode.gridView")}
+              aria-label={t("viewMode.gridView")}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
               type="button"
               onClick={() => setViewMode("list")}
+              aria-pressed={viewMode === "list"}
               className={cn(
-                "p-2 rounded transition-colors",
+                "rounded-[var(--lumen-radius-pill)] p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
                 viewMode === "list"
-                  ? "text-[var(--accent-text)]"
+                  ? "bg-[var(--accent)] text-white"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
               title={t("viewMode.listView")}
+              aria-label={t("viewMode.listView")}
             >
               <List className="w-4 h-4" />
             </button>
@@ -316,26 +322,31 @@ export function CollectionPageClient() {
           </div>
         )}
         {filtered.length > 0 && viewMode !== "grid" && (
-          <div className="space-y-1">
-            <div className="grid grid-cols-[1fr_120px_80px_80px_100px_40px] gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)] uppercase tracking-wide border-b border-[var(--border)]">
-              <span>{t("listHeaders.card")}</span>
-              <span>{t("listHeaders.qty")}</span>
-              <span>{t("listHeaders.foil")}</span>
-              <span>{t("listHeaders.condition")}</span>
-              <span>{t("listHeaders.value")}</span>
-              <span />
+          <div className={cn(cardSurfaceClassName, "overflow-x-auto")}>
+            <div className="min-w-[40rem] space-y-1">
+              <div className="grid grid-cols-[1fr_120px_80px_80px_100px_40px] gap-2 border-b border-[var(--border)] px-3 py-2 text-xs tracking-wide text-[var(--text-secondary)] uppercase">
+                <span>{t("listHeaders.card")}</span>
+                <span>{t("listHeaders.qty")}</span>
+                <span>{t("listHeaders.foil")}</span>
+                <span>{t("listHeaders.condition")}</span>
+                <span>{t("listHeaders.value")}</span>
+                <span />
+              </div>
+              {filtered.map((card) => (
+                <CollectionListRow
+                  key={card.id}
+                  card={card}
+                  onRemove={removeFromCollection}
+                  onQuantityChange={updateQuantity}
+                  onOpenPrintings={openPrintingsModal}
+                />
+              ))}
             </div>
-            {filtered.map((card) => (
-              <CollectionListRow
-                key={card.id}
-                card={card}
-                onRemove={removeFromCollection}
-                onQuantityChange={updateQuantity}
-                onOpenPrintings={openPrintingsModal}
-              />
-            ))}
           </div>
         )}
+        </div>
+        <AcquisitionPlanPanel />
+        </div>
       </div>
     </main>
   );
@@ -353,7 +364,7 @@ function StatCard({
   readonly highlight?: boolean;
 }) {
   return (
-    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4">
+    <div className={cn(cardSurfaceClassName, "p-4")}>
       <p className="text-xs text-[var(--text-secondary)] mb-1">{label}</p>
       <p
         className={cn(
@@ -384,6 +395,7 @@ function CollectionGridCard({
     [card.id, onQuantityChange]
   );
   return (
+    <div>
     <div className="relative group/card">
       {card.imageUri ? (
         <CardImage
@@ -392,24 +404,24 @@ function CollectionGridCard({
           className="w-full"
         />
       ) : (
-        <div className="aspect-[488/680] bg-[var(--surface)] border border-[var(--border)] rounded-lg flex items-center justify-center">
+        <div className="flex aspect-[488/680] items-center justify-center rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)]">
           <p className="text-xs text-center text-[var(--text-secondary)] px-1">
             {card.name}
           </p>
         </div>
       )}
       {/* Quantity badge */}
-      <div className="absolute top-1 right-1 bg-[var(--accent)] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
+      <div className="absolute top-1 right-1 flex h-5 min-w-5 items-center justify-center rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-1 text-xs font-bold text-white shadow-[var(--lumen-shadow-sm)]">
         {card.quantity}
       </div>
       {/* Foil badge */}
       {card.foil && (
-        <div className="absolute top-1 left-1 bg-purple-500 text-white text-[10px] rounded px-1 shadow-lg">
+        <div className="absolute top-1 left-1 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-1.5 text-[10px] text-white shadow-[var(--lumen-shadow-sm)]">
           {t("foilBadge")}
         </div>
       )}
       {/* Hover overlay */}
-      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/card:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2 p-2">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-[var(--lumen-radius-lg)] bg-black/60 p-2 opacity-0 transition-opacity group-hover/card:opacity-100 focus-within:opacity-100">
         <p className="text-white text-xs text-center font-medium leading-tight">
           {card.name}
         </p>
@@ -443,6 +455,8 @@ function CollectionGridCard({
           {t("actions.remove")}
         </button>
       </div>
+    </div>
+    <p className="mt-2 truncate text-xs font-medium text-[var(--text-primary)]">{card.name}</p>
     </div>
   );
 }

@@ -1,12 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Star } from "lucide-react";
+import { Search, Star } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import { VoteButtons } from "./VoteButtons";
 import type { CommanderDeckSummary } from "@/lib/community/discovery-types";
+import { filterDiscoveryDecks } from "@/lib/community/discovery-filter";
+import { cardSurfaceClassName } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { cn } from "@/components/ui/utils";
 import { PublicDeckComparison } from "./PublicDeckComparison";
 
 interface CommanderDecksViewProps {
@@ -29,7 +34,7 @@ function DeckRow({
     deck.author?.name ?? deck.author?.username ?? t("anonymous");
 
   return (
-    <li className="flex items-center gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+    <li className={cn(cardSurfaceClassName, "flex items-center gap-4 p-3")}>
       <VoteButtons
         deckId={deck.id}
         score={deck.score}
@@ -44,14 +49,14 @@ function DeckRow({
         alt={deck.commander.name}
         width={64}
         height={46}
-        className="rounded object-cover w-16 h-[46px] shrink-0"
+        className="h-16 w-16 shrink-0 rounded-[var(--lumen-radius-md)] object-cover"
         unoptimized
       />
 
       <div className="min-w-0 flex-1">
         <Link
           href={`/deck/${deck.id}`}
-          className="font-medium text-[var(--text-primary)] hover:text-purple-400 transition-colors truncate block"
+          className="block truncate font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--accent-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           {deck.name}
         </Link>
@@ -96,6 +101,11 @@ export function CommanderDecksView({
   canVote,
 }: CommanderDecksViewProps) {
   const t = useTranslations("deck.community");
+  const [query, setQuery] = useState("");
+  const visibleDecks = useMemo(
+    () => filterDiscoveryDecks(decks, query),
+    [decks, query]
+  );
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
@@ -114,17 +124,34 @@ export function CommanderDecksView({
       </header>
 
       {decks.length === 0 ? (
-        <p className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6 text-center text-sm text-[var(--text-secondary)]">
+        <p className={cn(cardSurfaceClassName, "p-6 text-center text-sm text-[var(--text-secondary)]")}>
           {t("noDecks")}
         </p>
       ) : (
         <>
-          <PublicDeckComparison decks={decks} />
-          <ul className="space-y-2">
-            {decks.map((deck) => (
-              <DeckRow key={deck.id} deck={deck} canVote={canVote} />
-            ))}
-          </ul>
+          <div className="relative mb-4">
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+            <Input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("filterPlaceholder")}
+              aria-label={t("filterPlaceholder")}
+              className="w-full pl-10"
+            />
+          </div>
+          <PublicDeckComparison decks={visibleDecks} />
+          {visibleDecks.length === 0 ? (
+            <p className={cn(cardSurfaceClassName, "p-6 text-center text-sm text-[var(--text-secondary)]")}>
+              {t("filterEmpty")}
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {visibleDecks.map((deck) => (
+                <DeckRow key={deck.id} deck={deck} canVote={canVote} />
+              ))}
+            </ul>
+          )}
         </>
       )}
     </main>

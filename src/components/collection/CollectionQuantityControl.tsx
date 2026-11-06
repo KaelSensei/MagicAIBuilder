@@ -46,7 +46,7 @@ export function CollectionQuantityControl({
         aria-label={t("decrease", { name: cardName })}
         disabled={quantity === 0}
         onClick={() => onQuantityChange(quantity - 1)}
-        className="flex h-7 w-7 items-center justify-center rounded border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-7 w-7 items-center justify-center rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-40"
       >
         −
       </button>
@@ -62,13 +62,13 @@ export function CollectionQuantityControl({
         onKeyDown={(event) => {
           if (event.key === "Enter") event.currentTarget.blur();
         }}
-        className="h-7 w-12 rounded border border-[var(--border)] bg-[var(--surface)] px-1 text-center text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+        className="h-7 w-12 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] px-1 text-center text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
       />
       <button
         type="button"
         aria-label={t("increase", { name: cardName })}
         onClick={() => onQuantityChange(quantity + 1)}
-        className="flex h-7 w-7 items-center justify-center rounded border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]"
+        className="flex h-7 w-7 items-center justify-center rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
       >
         +
       </button>

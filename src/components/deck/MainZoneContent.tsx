@@ -14,11 +14,12 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Bookmark, ChevronDown, ChevronRight, GripVertical, Layers } from "lucide-react";
+import { ChevronDown, ChevronRight, GripVertical, Layers } from "lucide-react";
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { CardImage } from "@/components/card/CardImage";
 import { CardListItem } from "@/components/card/CardListItem";
+import { GridZoneCard } from "@/components/deck/GridZoneCard";
 import { gridColsClass } from "@/components/deck/grid-cols";
 import { cn } from "@/components/ui/utils";
 import { isCompanionOutsideColorIdentity } from "@/lib/deck/color-identity";
@@ -196,10 +197,11 @@ function GenericGroup({
 }
 
 function getDropZoneClass(isOver: boolean, isEmpty: boolean): string {
-  if (isOver) return "bg-[var(--accent)]/10 ring-1 ring-[var(--accent)]/40";
-  if (isEmpty)
-    return "min-h-[32px] border border-dashed border-[var(--border)] rounded opacity-40";
-  return "min-h-[8px]";
+  return cn(
+    "rounded outline outline-2 outline-offset-[-2px]",
+    isEmpty ? "min-h-8 border border-dashed border-[var(--border)]" : "min-h-2",
+    isOver ? "bg-[var(--accent)]/10 outline-[var(--accent)]" : "outline-transparent"
+  );
 }
 
 
@@ -268,8 +270,13 @@ function DroppableCategory({
               />
             ))}
           </SortableContext>
-          {cards.length === 0 && isOver && (
-            <div className="py-2 text-center text-xs text-[var(--accent-text)]">
+          {cards.length === 0 && (
+            <div
+              className={cn(
+                "py-2 text-center text-xs",
+                isOver ? "text-[var(--accent-text)]" : "invisible"
+              )}
+            >
               {t("dropToMove", { label })}
             </div>
           )}
@@ -318,7 +325,6 @@ export function MainZoneContent({
   onChangeCategory,
 }: MainZoneContentProps) {
   const t = useTranslations("builder");
-  const tCard = useTranslations("card");
   if (viewMode === "grid") {
     return (
       <div className={gridColsClass(gridCols)}>
@@ -422,79 +428,16 @@ export function MainZoneContent({
             );
           })()}
         {mainCards.map((card) => (
-          <div key={card.id} className="relative group/card">
-            <CardImage
-              imageUri={card.imageUri}
-              largeUri={card.imageUri}
-              name={card.name}
-              manaCost={card.manaCost}
-              cmc={card.cmc}
-              showOverlay={!card.cardFaces}
-              zoomOnHover={false}
-              className={cn(
-                "w-full cursor-pointer transition-opacity",
-                violationCardIds.has(card.id) &&
-                  "ring-2 ring-red-500/70 opacity-70 hover:opacity-100"
-              )}
-              onClick={() => onCardClick?.(card)}
-              cardFaces={card.cardFaces}
-              isFlexibleLand={card.isFlexibleLand}
-            />
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveToMaybeboard?.(card.id);
-              }}
-              className={cn("absolute left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-amber-500/90 focus-visible:bg-amber-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10", onChangeCategory ? "bottom-10" : "bottom-1")}
-              aria-label={t("zoneMoveTargets.toMaybeboard")}
-              title={t("zoneMoveTargets.toMaybeboard")}
-            >
-              <Bookmark className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onMoveToSideboard?.(card.id);
-              }}
-              className={cn("absolute right-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-black/75 hover:bg-sky-500/90 focus-visible:bg-sky-500/90 text-white rounded-full w-6 h-6 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center shadow-lg z-10", onChangeCategory ? "bottom-10" : "bottom-1")}
-              aria-label={tCard("moveNamedToSideboard", { name: card.name })}
-              title={t("zoneMoveTargets.toSideboard")}
-            >
-              <Layers className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemoveCard(card.id);
-              }}
-              className="absolute top-1 left-1 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity bg-red-600/80 hover:bg-red-600 text-white rounded-full w-5 h-5 [@media(hover:none)]:w-8 [@media(hover:none)]:h-8 flex items-center justify-center text-xs shadow-lg z-10"
-              aria-label={t("actions.removeCard", { name: card.name })}
-            >
-              ×
-            </button>
-            {onChangeCategory && (
-              <select
-                aria-label={t("actions.changeCategoryFor", { name: card.name })}
-                value={card.category}
-                onChange={(event) => {
-                  const category = CARD_CATEGORIES.find(
-                    (candidate) => candidate === event.currentTarget.value
-                  );
-                  if (category) onChangeCategory(card.id, category);
-                }}
-                className="mt-1 h-8 w-full min-w-0 rounded border border-[var(--border)] bg-[var(--surface)] px-1 text-xs text-[var(--text-secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-              >
-                {CARD_CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {t(`categories.${category}`)}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+          <GridZoneCard
+            key={card.id}
+            card={card}
+            isViolation={violationCardIds.has(card.id)}
+            onRemoveCard={onRemoveCard}
+            onCardClick={onCardClick}
+            onMoveToMaybeboard={onMoveToMaybeboard}
+            onMoveToSideboard={onMoveToSideboard}
+            onChangeCategory={onChangeCategory}
+          />
         ))}
         {!deck.commander && mainCards.length === 0 && (
           <div className="col-span-4 flex items-center justify-center h-32 text-[var(--text-secondary)] text-sm">

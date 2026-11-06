@@ -29,7 +29,12 @@ const MIN_RATIO = 4.5;
 const WHITE = "#ffffff";
 
 /** Surfaces text is painted on, in both themes. */
-const SURFACE_TOKENS = ["--background", "--surface", "--surface-hover"] as const;
+const SURFACE_TOKENS = [
+  "--background",
+  "--surface",
+  "--surface-elevated",
+  "--surface-hover",
+] as const;
 
 /** Relative luminance of a `#rrggbb` colour, per WCAG 2.1. */
 function relativeLuminance(hex: string): number {
@@ -107,6 +112,11 @@ describe.each(THEMES)("$name theme tokens", ({ selector }) => {
     ).toBeGreaterThanOrEqual(MIN_RATIO);
   });
 
+  it("paints buttons with the Lumen violet", () => {
+    expect(colour("--accent")).toBe("#7c3aed");
+    expect(colour("--accent-hover")).toBe("#6d28d9");
+  });
+
   it.each(SURFACE_TOKENS)("keeps --text-secondary readable on %s", (surfaceToken) => {
     const foreground = colour("--text-secondary");
     const background = colour(surfaceToken);
@@ -116,5 +126,12 @@ describe.each(THEMES)("$name theme tokens", ({ selector }) => {
       ratio,
       `--text-secondary (${foreground}) on ${surfaceToken} (${background}) is ${ratio.toFixed(2)}:1`
     ).toBeGreaterThanOrEqual(MIN_RATIO);
+  });
+
+  it("lifts cards above the canvas", () => {
+    const background = relativeLuminance(colour("--background"));
+    const surface = relativeLuminance(colour("--surface"));
+
+    expect(surface).toBeGreaterThan(background);
   });
 });

@@ -66,6 +66,8 @@
   },
   "home": {
     "title": "My Decks",
+    "searchPlaceholder": "Search decks or commanders",
+    "searchEmpty": "No decks match that search.",
     "loading": "Loading...",
     "empty": "No decks yet - create your first deck!",
     "deckCount": "{count, plural, one {1 deck} other {{count} decks}}",
@@ -78,6 +80,9 @@
     "loadFailedDescription": "The server rejected the request, so this list may be incomplete. Your decks are not lost — try again in a moment.",
     "loadFailedSubtitle": "Deck list unavailable",
     "retry": "Retry",
+    "sessionTimeoutTitle": "Your session took too long",
+    "sessionTimeoutDescription": "The account check did not finish. Your saved decks are unchanged. Try again.",
+    "profileLoadFailed": "Your profile could not be refreshed. Saved decks stay available.",
     "createFailed": "Could not create the deck — {reason}",
     "folders": {
       "all": "All decks",
@@ -425,7 +430,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "Filter by deck or commander",
+    "filterEmpty": "No decks match that filter."
   },
   "ai": {
     "title": "AI Suggestions",
@@ -610,7 +617,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count, plural, one {# card} other {# cards}}",
     "openShare": "Share deck",
-    "forkThisDeck": "Fork this deck"
+    "forkThisDeck": "Fork this deck",
+    "filterAll": "All"
   },
   "ratings": {
     "title": "Community Rating",

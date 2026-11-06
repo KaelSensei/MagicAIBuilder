@@ -5,6 +5,8 @@
  */
 import { FORMAT_OPTIONS } from "@/lib/deck/formats";
 import type { DeckFormat } from "@/lib/deck/formats";
+import { fieldShellClassName } from "@/components/ui/Input";
+import { cn } from "@/components/ui/utils";
 
 interface FormatSelectorProps {
   readonly value: DeckFormat;
@@ -12,12 +14,25 @@ interface FormatSelectorProps {
   readonly className?: string;
 }
 
+/**
+ * Checks whether a select value is a supported deck format.
+ *
+ * @param value - raw option value
+ * @returns true when the value is one of `FORMAT_OPTIONS`
+ */
+function isDeckFormat(value: string): value is DeckFormat {
+  return FORMAT_OPTIONS.some((option) => option.value === value);
+}
+
 export function FormatSelector({ value, onChange, className }: FormatSelectorProps) {
   return (
     <select
       value={value}
-      onChange={(e) => onChange(e.target.value as DeckFormat)}
-      className={`bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] ${className ?? ""}`}
+      onChange={(event) => {
+        const next = event.target.value;
+        if (isDeckFormat(next)) onChange(next);
+      }}
+      className={cn(fieldShellClassName, "bg-[var(--surface)] px-3 py-2", className)}
     >
       {FORMAT_OPTIONS.map((opt) => (
         <option key={opt.value} value={opt.value}>

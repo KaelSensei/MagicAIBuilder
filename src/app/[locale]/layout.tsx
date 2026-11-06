@@ -4,10 +4,11 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
-import { Geist, Geist_Mono, Cinzel, Cinzel_Decorative, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "@/styles/globals.css";
 import { routing } from "@/i18n/routing";
+import { themeBootScript } from "@/lib/theme/preference";
 import { Providers } from "./providers";
 
 const geistSans = Geist({
@@ -18,18 +19,6 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-cinzel",
-});
-
-const cinzelDeco = Cinzel_Decorative({
-  subsets: ["latin"],
-  weight: ["700", "900"],
-  variable: "--font-cinzel-deco",
 });
 
 const inter = Inter({
@@ -86,20 +75,10 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                const stored = JSON.parse(localStorage.getItem('magic-ai-builder-theme') || '{}');
-                const theme = stored.state?.theme || 'dark';
-                document.documentElement.setAttribute('data-theme', theme);
-              } catch(_e) { /* default theme applied */ }
-            `,
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${cinzelDeco.variable} ${inter.variable} antialiased min-h-screen bg-[var(--background)] text-[var(--text-primary)]`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased min-h-screen bg-[var(--background)] text-[var(--text-primary)]`}
       >
         {/* `locale` is passed explicitly rather than left to be inferred from
             the request context. next-intl can infer it, but only while that

@@ -23,7 +23,7 @@ export function Providers({ children }: { readonly children: React.ReactNode }) 
   );
 
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false}>
       <QueryClientProvider client={queryClient}>
         <ThemeSync />
         <InitProvider>

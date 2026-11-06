@@ -11,7 +11,10 @@
   "theme": {
     "toggle": "Toggle theme",
     "switchToLight": "Switch to light theme",
-    "switchToDark": "Switch to dark theme"
+    "switchToDark": "Switch to dark theme",
+    "useLight": "Use light theme",
+    "useDark": "Use dark theme",
+    "useSystem": "Use system theme"
   },
   "menu": {
     "open": "Open menu"

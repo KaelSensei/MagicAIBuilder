@@ -21,6 +21,7 @@ import {
   isDeckStub,
   makeDeckCard,
 } from "./store-factories";
+import { cardsFromZoneSource, deckFromZoneCards } from "./zone-source";
 import {
   createGuestDeck,
   GUEST_DECK_ID,
@@ -34,7 +35,8 @@ import {
 // ---------------------------------------------------------------------------
 export type DeckAction =
   | { type: "ADD_CARD"; deckId: string; card: DeckCard }
-  | { type: "REMOVE_CARD"; deckId: string; card: DeckCard };
+  | { type: "REMOVE_CARD"; deckId: string; card: DeckCard }
+  | { type: "MOVE_ZONE"; deckId: string; cardId: string; from: DeckZone; to: DeckZone };
 
 function withoutCard(cards: DeckCard[], cardId: string): DeckCard[] {
   return cards.filter((card) => card.id !== cardId);
@@ -90,12 +92,7 @@ function notifyGameChangerAdded(cardName: string, newTotal: number): void {
 }
 
 function uniqueDeckCards(deck: Pick<Deck, "cards" | "maybeboard">): DeckCard[] {
-  const seen = new Set<string>();
-  return [...deck.cards, ...deck.maybeboard].filter((card) => {
-    if (seen.has(card.id)) return false;
-    seen.add(card.id);
-    return true;
-  });
+  return cardsFromZoneSource(deck);
 }
 
 /**
@@ -144,17 +141,7 @@ async function getOwnedPrinting(
 }
 
 function syncDeckCards(deck: Deck, cards: readonly DeckCard[]): Deck {
-  const uniqueCards = cards
-    .filter(
-      (card, index, all) =>
-        all.findIndex((candidate) => candidate.id === card.id) === index
-    )
-    .map((card) => ({ ...card, isMaybeboard: card.zone === "maybeboard" }));
-  return {
-    ...deck,
-    cards: uniqueCards,
-    maybeboard: uniqueCards.filter((card) => card.zone === "maybeboard"),
-  };
+  return deckFromZoneCards(deck, cards);
 }
 
 function updateDeckCards(
@@ -214,6 +201,28 @@ let pendingBudgetWrites = 0;
 let pendingBulkRemovals = 0;
 let pendingCardAdditionsAndRemovals = 0;
 let pendingRenameWrites = 0;
+
+/**
+ * Reports whether any deck write is still in flight.
+ *
+ * Every save path shares this count so one finished request cannot hide
+ * another request that is still running.
+ *
+ * @returns True while at least one mutation has not settled
+ */
+function hasPendingSaves(): boolean {
+  return (
+    pendingQuantityWrites.size > 0 ||
+    pendingZoneWrites.size > 0 ||
+    pendingNotesWrites.size > 0 ||
+    pendingCategoryWrites.size > 0 ||
+    pendingManualBracketWrites > 0 ||
+    pendingBudgetWrites > 0 ||
+    pendingBulkRemovals > 0 ||
+    pendingCardAdditionsAndRemovals > 0 ||
+    pendingRenameWrites > 0
+  );
+}
 
 export interface DeckStore {
   // State
@@ -297,7 +306,11 @@ export interface DeckStore {
     printing: import("@/lib/scryfall/types").ScryfallCard
   ) => Promise<void>;
   updateCardNotes: (cardId: string, notes: string | null) => Promise<void>;
-  moveCardToZone: (cardId: string, zone: DeckZone) => Promise<void>;
+  moveCardToZone: (
+    cardId: string,
+    zone: DeckZone,
+    options?: { readonly recordUndo?: boolean }
+  ) => Promise<void>;
   bulkMoveToZone: (cardIds: readonly string[], zone: DeckZone) => Promise<void>;
   bulkRemoveCards: (cardIds: readonly string[]) => Promise<void>;
 
@@ -339,7 +352,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   gameChangerNames: new Set<string>(),
   bannedNames: new Set<string>(),
   searchViewMode: "grid",
-  deckViewMode: "list",
+  deckViewMode: "grid",
   deckGridCols: 6,
 
   // Sort & group — initialised from localStorage for persistence
@@ -405,6 +418,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     set((s) => ({ undoStack: s.undoStack.slice(0, -1) }));
 
     const undoAddition = async () => {
+      if (last.type !== "ADD_CARD") return;
       // Undo add → remove card (skip recording in undo stack)
       const activeDeckId = last.deckId;
       if (!activeDeckId) return;
@@ -463,6 +477,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       return true;
     };
     const undoRemoval = async () => {
+      if (last.type !== "REMOVE_CARD") return;
       // Undo remove → re-add card
       const activeDeckId = last.deckId;
       if (!activeDeckId) return;
@@ -539,9 +554,40 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
       return true;
     };
-    const applied = last.type === "ADD_CARD"
-      ? await undoAddition()
-      : await undoRemoval();
+    const undoZoneMove = async () => {
+      if (last.type !== "MOVE_ZONE") return;
+      const activeDeckId = last.deckId;
+      const deck = get().decks[activeDeckId];
+      if (!deck) return;
+      const card = uniqueDeckCards(deck).find((candidate) => candidate.id === last.cardId);
+      if (!card) return;
+      if (card.zone === last.from) return true;
+      await get().moveCardToZone(last.cardId, last.from, { recordUndo: false });
+      const updated = get().decks[activeDeckId];
+      if (!updated) return;
+      const restored = uniqueDeckCards(updated).find((candidate) => candidate.id === last.cardId);
+      if (restored?.zone !== last.from) {
+        set((state) => ({ undoStack: [...state.undoStack, last] }));
+        return;
+      }
+      return true;
+    };
+    let applied: true | undefined;
+    switch (last.type) {
+      case "ADD_CARD":
+        applied = await undoAddition();
+        break;
+      case "REMOVE_CARD":
+        applied = await undoRemoval();
+        break;
+      case "MOVE_ZONE":
+        applied = await undoZoneMove();
+        break;
+      default: {
+        const _exhaustive: never = last;
+        return _exhaustive;
+      }
+    }
     if (!applied) return;
     if (!get().decks[last.deckId]) return;
     useToastStore.getState().add("info", "↩ Undo applied");
@@ -566,7 +612,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         .getState()
         .add("error", "Could not refresh deck. Please retry.");
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -592,7 +638,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         .getState()
         .add("error", "Could not refresh deck. Please retry.");
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -629,7 +675,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         loadError: err instanceof Error ? err.message : "Failed to load decks",
       });
     } finally {
-      if (requestId === latestDeckListRequest) set({ isSyncing: false });
+      if (requestId === latestDeckListRequest) set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -682,7 +728,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }));
       return apiDeck.id;
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -700,7 +746,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         };
       });
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -718,7 +764,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         .add("success", `Deck duplicated: "${copy.name}"`);
       return copy.id;
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -760,7 +806,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } finally {
       pendingRenameWrites -= 1;
-      if (pendingRenameWrites === 0) set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -843,7 +889,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .add("error", "Could not save deck description. Please retry.");
       }
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -866,7 +912,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "addTag", err);
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -887,7 +933,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "removeTag", err);
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -961,7 +1007,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "setCommander", err);
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -991,7 +1037,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "clearCommander", err);
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -1059,7 +1105,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "setPartner", err);
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -1093,7 +1139,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .getState()
           .add("error", "Could not remove companion — try again");
       } finally {
-        set({ isSyncing: false });
+        set({ isSyncing: hasPendingSaves() });
       }
       return;
     }
@@ -1168,7 +1214,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         .getState()
         .add("error", "Could not save companion — try again");
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -1292,7 +1338,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } finally {
       pendingCardAdditionsAndRemovals -= 1;
-      set({ isSyncing: pendingCardAdditionsAndRemovals > 0 });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -1372,7 +1418,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } catch (err) {
       logger.error("Unexpected error", "addDeckCard", err);
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -1446,7 +1492,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         .add("error", "Could not remove card. Please retry.");
     } finally {
       pendingCardAdditionsAndRemovals -= 1;
-      set({ isSyncing: pendingCardAdditionsAndRemovals > 0 });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -1503,13 +1549,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       } finally {
         if (pending.tail === write) {
           pendingCategoryWrites.delete(key);
-          set({
-            isSyncing:
-              pendingCategoryWrites.size > 0 ||
-              pendingNotesWrites.size > 0 ||
-              pendingZoneWrites.size > 0 ||
-              pendingQuantityWrites.size > 0,
-          });
+          set({ isSyncing: hasPendingSaves() });
         }
       }
     });
@@ -1598,12 +1638,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           nextWrite.confirmedQuantity = write.confirmedQuantity;
         if (nextWrite === write) {
           pendingQuantityWrites.delete(writeKey);
-          set({
-            isSyncing:
-              pendingQuantityWrites.size > 0 ||
-              pendingNotesWrites.size > 0 ||
-              pendingZoneWrites.size > 0,
-          });
+          set({ isSyncing: hasPendingSaves() });
         }
       }
     })();
@@ -1738,7 +1773,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         .getState()
         .add("error", "Could not save card printing — try again");
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -1793,12 +1828,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       } finally {
         if (pending.tail === write) {
           pendingNotesWrites.delete(key);
-          set({
-            isSyncing:
-              pendingNotesWrites.size > 0 ||
-              pendingZoneWrites.size > 0 ||
-              pendingQuantityWrites.size > 0,
-          });
+          set({ isSyncing: hasPendingSaves() });
         }
       }
     });
@@ -1806,26 +1836,23 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     await write;
   },
 
-  moveCardToZone: async (cardId: string, zone: DeckZone) => {
+  moveCardToZone: async (cardId, zone, options) => {
+    const recordUndo = options?.recordUndo !== false;
     const { activeDeckId } = get();
     if (!activeDeckId) return;
 
     const deck = get().decks[activeDeckId];
-    const currentCard = deck
-      ? uniqueDeckCards(deck).find((card) => card.id === cardId)
-      : undefined;
-    const isLegacyMaybeboardCard = Boolean(
-      deck?.maybeboard.some((card) => card.id === cardId) &&
-      !deck.cards.some(
-        (card) => card.id === cardId && card.zone === "maybeboard"
-      )
-    );
-    if (!currentCard || (currentCard.zone === zone && !isLegacyMaybeboardCard))
-      return;
+    if (!deck) return;
+    const stored = deck.cards.find((card) => card.id === cardId);
+    const mirror = stored ? undefined : deck.maybeboard.find((card) => card.id === cardId);
+    if (!stored && !mirror) return;
+    const currentZone = stored?.zone ?? "maybeboard";
+    const persistedZone = stored?.zone ?? mirror?.zone ?? "main";
+    if (currentZone === zone && persistedZone === zone) return;
 
     const key = `${activeDeckId}:${cardId}`;
     const pending = pendingZoneWrites.get(key) ?? {
-      confirmedZone: currentCard.zone,
+      confirmedZone: persistedZone,
       tail: Promise.resolve(),
     };
     pendingZoneWrites.set(key, pending);
@@ -1847,6 +1874,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       try {
         await deckApi.updateCardZone(activeDeckId, cardId, zone);
         pending.confirmedZone = zone;
+        if (recordUndo && persistedZone !== zone) {
+          set((state) => ({
+            undoStack: [
+              ...state.undoStack,
+              { type: "MOVE_ZONE", deckId: activeDeckId, cardId, from: persistedZone, to: zone },
+            ],
+          }));
+        }
       } catch (err) {
         logger.error("Unexpected error", "moveCardToZone", err);
         const deckAtFailure = get().decks[activeDeckId];
@@ -1878,12 +1913,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       } finally {
         if (pending.tail === write) {
           pendingZoneWrites.delete(key);
-          set({
-            isSyncing:
-              pendingZoneWrites.size > 0 ||
-              pendingNotesWrites.size > 0 ||
-              pendingQuantityWrites.size > 0,
-          });
+          set({ isSyncing: hasPendingSaves() });
         }
       }
     });
@@ -1962,9 +1992,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .add("error", "Could not remove card. Please retry.");
       }
       pendingBulkRemovals -= 1;
-      set({
-        isSyncing: pendingBulkRemovals > 0 || pendingManualBracketWrites > 0,
-      });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -2010,7 +2038,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           .add("error", "Could not save target bracket. Please retry.");
       }
     } finally {
-      set({ isSyncing: false });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -2058,9 +2086,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } finally {
       pendingManualBracketWrites -= 1;
-      set({
-        isSyncing: pendingManualBracketWrites > 0 || pendingBulkRemovals > 0,
-      });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -2105,9 +2131,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } finally {
       pendingBudgetWrites -= 1;
-      set({
-        isSyncing: pendingBudgetWrites > 0 || pendingRenameWrites > 0,
-      });
+      set({ isSyncing: hasPendingSaves() });
     }
   },
 
@@ -2153,8 +2177,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       uniqueDeckCards(deck).find(
         (c) =>
           c.name === card.name &&
-          (c.zone === "maybeboard" ||
-            deck.maybeboard.some((maybe) => maybe.id === c.id))
+          c.zone === "maybeboard"
       );
     if (exists) return;
 
@@ -2263,21 +2286,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const card = uniqueDeckCards(deck).find(
-      (c) =>
-        c.id === cardId &&
-        (c.zone === "maybeboard" ||
-          deck.maybeboard.some((maybe) => maybe.id === c.id))
+    const cards = uniqueDeckCards(deck);
+    const card = cards.find(
+      (candidate) => candidate.id === cardId && candidate.zone === "maybeboard"
     );
     if (!card) return;
 
-    // Don't move if the deck already has a card with the same name
-    const maybeboardIds = new Set(deck.maybeboard.map((maybe) => maybe.id));
-    const alreadyInDeck = uniqueDeckCards(deck).some(
-      (c) =>
-        c.name === card.name &&
-        c.zone !== "maybeboard" &&
-        !maybeboardIds.has(c.id)
+    const alreadyInDeck = cards.some(
+      (candidate) => candidate.name === card.name && candidate.zone !== "maybeboard"
     );
     if (alreadyInDeck) return;
 

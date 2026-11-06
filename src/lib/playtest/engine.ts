@@ -325,91 +325,152 @@ export function applyUntapAll(state: PlaytestEngine): PlaytestEngine {
 }
 
 // ─── Move to zone ─────────────────────────────────────────────────────────
+
+/**
+ * Pulls one card out of a zone list.
+ *
+ * @param cards - zone contents
+ * @param cardId - card to remove
+ * @returns the card and the list without it, or null when it is absent
+ */
+function takeCard<T extends { readonly id: string }>(
+  cards: readonly T[],
+  cardId: string
+): { readonly card: T; readonly rest: readonly T[] } | null {
+  const cardIndex = cards.findIndex((entry) => entry.id === cardId);
+  if (cardIndex === -1) return null;
+  const card = cards[cardIndex];
+  if (card === undefined) return null;
+  return { card, rest: cards.filter((_, index) => index !== cardIndex) };
+}
+
+/**
+ * Removes a card from one playtest zone.
+ *
+ * @param state - current engine state
+ * @param zone - zone the card leaves
+ * @param cardId - card to remove
+ * @returns the card and a patch of that zone, or null when it is absent
+ */
+function takeFromZone(
+  state: PlaytestEngine,
+  zone: CardZone,
+  cardId: string
+): { readonly card: DeckCard | BattlefieldCard; readonly updates: PlaytestEnginePatch } | null {
+  switch (zone) {
+    case "hand": {
+      const taken = takeCard(state.hand, cardId);
+      return taken ? { card: taken.card, updates: { hand: taken.rest } } : null;
+    }
+    case "library": {
+      const taken = takeCard(state.library, cardId);
+      return taken ? { card: taken.card, updates: { library: taken.rest } } : null;
+    }
+    case "battlefield": {
+      const taken = takeCard(state.battlefield, cardId);
+      return taken ? { card: taken.card, updates: { battlefield: taken.rest } } : null;
+    }
+    case "graveyard": {
+      const taken = takeCard(state.graveyard, cardId);
+      return taken ? { card: taken.card, updates: { graveyard: taken.rest } } : null;
+    }
+    case "exile": {
+      const taken = takeCard(state.exile, cardId);
+      return taken ? { card: taken.card, updates: { exile: taken.rest } } : null;
+    }
+    default: {
+      const _exhaustive: never = zone;
+      return _exhaustive;
+    }
+  }
+}
+
+/**
+ * True when a playtest-only copy is leaving the battlefield, where it ceases to exist.
+ *
+ * @param card - card being moved
+ * @param destination - zone it would enter
+ * @returns whether the copy should be removed instead of moved
+ */
+function isSessionCopyLeavingPlay(
+  card: DeckCard | BattlefieldCard,
+  destination: CardZone
+): boolean {
+  return "isSessionCopy" in card && card.isSessionCopy === true && destination !== "battlefield";
+}
+
+/**
+ * Appends a card to a destination zone on the patch.
+ *
+ * The destination is read from the original state, matching a move that
+ * replaces the source list and then appends to the destination list.
+ *
+ * @param state - state before the move
+ * @param updates - patch already holding the source-zone removal
+ * @param zone - zone the card enters
+ * @param card - card to append
+ */
+function placeInZone(
+  state: PlaytestEngine,
+  updates: PlaytestEnginePatch,
+  zone: CardZone,
+  card: DeckCard | BattlefieldCard
+): void {
+  switch (zone) {
+    case "hand":
+      updates.hand = [...state.hand, toDeckCard(card)];
+      return;
+    case "library":
+      updates.library = [...state.library, toDeckCard(card)];
+      return;
+    case "battlefield":
+      updates.battlefield = [...state.battlefield, toBattlefieldCard(card)];
+      return;
+    case "graveyard":
+      updates.graveyard = [...state.graveyard, toDeckCard(card)];
+      return;
+    case "exile":
+      updates.exile = [...state.exile, toDeckCard(card)];
+      return;
+    default: {
+      const _exhaustive: never = zone;
+      updates.hand = _exhaustive;
+    }
+  }
+}
+
+/**
+ * Moves one card between playtest zones.
+ *
+ * A session copy that leaves the battlefield is removed instead of relocated.
+ * A card taken from the library is recorded as seen.
+ *
+ * @param state - current engine state
+ * @param cardId - card to move
+ * @param from - zone the card leaves
+ * @param to - zone the card enters
+ * @returns the next engine state
+ */
 export function applyMoveToZone(
   state: PlaytestEngine,
   cardId: string,
   from: CardZone,
   to: CardZone
 ): PlaytestEngine {
-  const updates: PlaytestEnginePatch = {};
-  let card: DeckCard | BattlefieldCard;
+  const removed = takeFromZone(state, from, cardId);
+  if (!removed) return state;
 
-  switch (from) {
-    case "hand": {
-      const zone = state.hand;
-      const cardIndex = zone.findIndex((c) => c.id === cardId);
-      if (cardIndex === -1) return state;
-      card = zone[cardIndex];
-      updates.hand = zone.filter((_, i) => i !== cardIndex);
-      break;
-    }
-    case "library": {
-      const zone = state.library;
-      const cardIndex = zone.findIndex((c) => c.id === cardId);
-      if (cardIndex === -1) return state;
-      card = zone[cardIndex];
-      updates.library = zone.filter((_, i) => i !== cardIndex);
-      break;
-    }
-    case "battlefield": {
-      const zone = state.battlefield;
-      const cardIndex = zone.findIndex((c) => c.id === cardId);
-      if (cardIndex === -1) return state;
-      card = zone[cardIndex];
-      updates.battlefield = zone.filter((_, i) => i !== cardIndex);
-      break;
-    }
-    case "graveyard": {
-      const zone = state.graveyard;
-      const cardIndex = zone.findIndex((c) => c.id === cardId);
-      if (cardIndex === -1) return state;
-      card = zone[cardIndex];
-      updates.graveyard = zone.filter((_, i) => i !== cardIndex);
-      break;
-    }
-    case "exile": {
-      const zone = state.exile;
-      const cardIndex = zone.findIndex((c) => c.id === cardId);
-      if (cardIndex === -1) return state;
-      card = zone[cardIndex];
-      updates.exile = zone.filter((_, i) => i !== cardIndex);
-      break;
-    }
-    default: {
-      const _exhaustive: never = from;
-      return _exhaustive;
-    }
-  }
-
-  // Copies only exist on the battlefield and cease to exist when they leave it.
-  if ("isSessionCopy" in card && card.isSessionCopy === true && to !== "battlefield") {
+  const { card, updates } = removed;
+  if (isSessionCopyLeavingPlay(card, to)) {
     return pushHistory(state, updates, `Removed ${card.name} from the battlefield`);
   }
 
-  switch (to) {
-    case "hand":
-      updates.hand = [...state.hand, toDeckCard(card)];
-      break;
-    case "library":
-      updates.library = [...state.library, toDeckCard(card)];
-      break;
-    case "battlefield":
-      updates.battlefield = [...state.battlefield, toBattlefieldCard(card)];
-      break;
-    case "graveyard":
-      updates.graveyard = [...state.graveyard, toDeckCard(card)];
-      break;
-    case "exile":
-      updates.exile = [...state.exile, toDeckCard(card)];
-      break;
-    default: {
-      const _exhaustive: never = to;
-      return _exhaustive;
-    }
+  placeInZone(state, updates, to, card);
+  const description = `Moved ${card.name} from ${from} to ${to}`;
+  if (from === "library") {
+    return pushHistory(state, updates, description, { kind: "cardSeen" });
   }
-
-  return pushHistory(state, updates, `Moved ${card.name} from ${from} to ${to}`,
-    from === "library" ? { kind: "cardSeen" } : undefined);
+  return pushHistory(state, updates, description);
 }
 
 // ─── Card copies ─────────────────────────────────────────────────────────

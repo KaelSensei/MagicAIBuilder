@@ -4,10 +4,14 @@ import { createEmptyDeck } from "./store-factories";
 
 const mocks = vi.hoisted(() => ({
   updateCardZone: vi.fn(),
+  updateDeck: vi.fn(),
   addToast: vi.fn(),
 }));
 
-vi.mock("@/lib/db/deck-api", () => ({ updateCardZone: mocks.updateCardZone }));
+vi.mock("@/lib/db/deck-api", () => ({
+  updateCardZone: mocks.updateCardZone,
+  updateDeck: mocks.updateDeck,
+}));
 vi.mock("@/hooks/useToast", () => ({
   useToastStore: { getState: () => ({ add: mocks.addToast }) },
 }));
@@ -42,6 +46,7 @@ function seedDeck(): DeckCard {
     decks: { "deck-1": deck },
     activeDeckId: "deck-1",
     isSyncing: false,
+    undoStack: [],
   });
   return card;
 }
@@ -171,5 +176,70 @@ describe("deck zone save recovery", () => {
     const deck = useDeckStore.getState().decks["deck-1"];
     expect(deck.cards[0].zone).toBe("maybeboard");
     expect(deck.maybeboard).toHaveLength(1);
+  });
+
+  it("writes a legacy considering card onto the persisted zone", async () => {
+    const deck = useDeckStore.getState().decks["deck-1"];
+    const source = deck.cards[0];
+    const legacy = source
+      ? { ...source, id: "legacy-1", name: "Ponder", zone: source.zone }
+      : source;
+    if (!legacy) throw new Error("seed card missing");
+    useDeckStore.setState({
+      decks: { "deck-1": { ...deck, maybeboard: [legacy] } },
+    });
+    mocks.updateCardZone.mockResolvedValue(undefined);
+
+    await useDeckStore.getState().moveCardToZone("legacy-1", "maybeboard");
+
+    const saved = useDeckStore.getState().decks["deck-1"];
+    expect(saved.cards.find((entry) => entry.id === "legacy-1")?.zone).toBe("maybeboard");
+    expect(saved.maybeboard.map((entry) => entry.id)).toEqual(["legacy-1"]);
+    expect(mocks.updateCardZone).toHaveBeenCalledWith("deck-1", "legacy-1", "maybeboard");
+  });
+
+  it("undoes a zone move back to the previous persisted zone", async () => {
+    mocks.updateCardZone.mockResolvedValue(undefined);
+    await useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    mocks.updateCardZone.mockClear();
+
+    await useDeckStore.getState().undo();
+
+    expect(useDeckStore.getState().decks["deck-1"].cards[0]?.zone).toBe("main");
+    expect(useDeckStore.getState().decks["deck-1"].maybeboard).toHaveLength(0);
+    expect(mocks.updateCardZone).toHaveBeenCalledWith("deck-1", "card-1", "main");
+  });
+
+  it("keeps the undo action when reversing a zone move fails", async () => {
+    mocks.updateCardZone
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    await useDeckStore.getState().undo();
+
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.cards[0]?.zone).toBe("sideboard");
+    expect(useDeckStore.getState().undoStack).toEqual([
+      expect.objectContaining({ type: "MOVE_ZONE", cardId: "card-1", from: "main", to: "sideboard" }),
+    ]);
+  });
+
+  it("keeps the save indicator active while a budget write overlaps a finished zone move", async () => {
+    let finishBudget = () => {};
+    const budgetSave = new Promise<void>((resolve) => {
+      finishBudget = resolve;
+    });
+    mocks.updateDeck.mockReturnValueOnce(budgetSave);
+    mocks.updateCardZone.mockResolvedValue(undefined);
+
+    const budget = useDeckStore.getState().setBudget(20);
+    const move = useDeckStore.getState().moveCardToZone("card-1", "sideboard");
+    await move;
+
+    expect(useDeckStore.getState().isSyncing).toBe(true);
+    finishBudget();
+    await budget;
+    expect(useDeckStore.getState().isSyncing).toBe(false);
   });
 });

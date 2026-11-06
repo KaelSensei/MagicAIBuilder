@@ -66,6 +66,8 @@
   },
   "home": {
     "title": "My Decks",
+    "searchPlaceholder": "Искать колоды или командиров",
+    "searchEmpty": "Нет колод, подходящих под этот поиск.",
     "loading": "Loading...",
     "empty": "No decks yet - create your first deck!",
     "deckCount": "{count, plural, one {1 deck} other {{count} decks}}",
@@ -78,6 +80,9 @@
     "loadFailedDescription": "Сервер отклонил запрос, поэтому список может быть неполным. Ваши колоды не потеряны — повторите попытку через мгновение.",
     "loadFailedSubtitle": "Список колод недоступен",
     "retry": "Повторить",
+    "sessionTimeoutTitle": "Сессия проверялась слишком долго",
+    "sessionTimeoutDescription": "Проверка аккаунта не завершилась. Сохранённые колоды не изменились. Попробуйте снова.",
+    "profileLoadFailed": "Профиль не удалось обновить. Сохранённые колоды остаются доступны.",
     "createFailed": "Не удалось создать колоду — {reason}",
     "folders": {
       "all": "All decks",
@@ -474,7 +479,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "Создать форк этой колоды"
+    "forkThisDeck": "Создать форк этой колоды",
+    "filterAll": "Все"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -610,7 +616,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "Фильтр по колоде или командиру",
+    "filterEmpty": "Нет колод, подходящих под этот фильтр."
   },
   "companion": {
     "title": "Companion",

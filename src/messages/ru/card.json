@@ -35,6 +35,11 @@
   },
   "noText": "No text",
   "addNamedToDeck": "Add {name} to deck",
+  "addToZone": "Добавить {name} в",
+  "chooseZone": "Выбрать зону",
+  "zoneMain": "Основная",
+  "zoneSideboard": "Сайдборд",
+  "zoneConsidering": "На рассмотрении",
   "priceLabel": "Price: ${price}",
   "previewOf": "Preview of {name}",
   "roleExplanation": {

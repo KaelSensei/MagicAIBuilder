@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isRecord, parseCondition, parseCollectionCard } from "./parse";
+import { indexCollectionCards, isRecord, parseCondition, parseCollectionCard } from "./parse";
 
 /**
  * A rejection here is silent — the caller drops the row. So the risk is not a
@@ -119,5 +119,22 @@ describe("parseCollectionCard", () => {
 
   it("rejects an array, which is an object but carries none of the fields", () => {
     expect(parseCollectionCard([])).toBeNull();
+  });
+});
+
+describe("indexCollectionCards", () => {
+  it("splits foil and non-foil rows and drops a malformed one", () => {
+    const indexed = indexCollectionCards([
+      payload({ scryfallId: "normal-1" }),
+      payload({ id: "foil-row", scryfallId: "foil-1", foil: true }),
+      payload({ foil: "yes" }),
+      "not-a-card",
+    ]);
+
+    expect(indexed.collectionCards["normal-1"]?.foil).toBe(false);
+    expect(indexed.collectionCards["normal-1"]?.createdAt).toBeInstanceOf(Date);
+    expect(indexed.collectionCardsFoil["foil-1"]?.foil).toBe(true);
+    expect(indexed.collectionCards["foil-1"]).toBeUndefined();
+    expect(Object.keys(indexed.collectionCards)).toEqual(["normal-1"]);
   });
 });

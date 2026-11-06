@@ -5,6 +5,7 @@ import { Loader2, AlertCircle, LayoutGrid, List } from "lucide-react";
 import { CardGrid } from "@/components/card/CardGrid";
 import { CardSearchListItem } from "@/components/card/CardSearchListItem";
 import { useDeckStore } from "@/lib/deck/store";
+import type { DeckZone } from "@/lib/deck/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface SearchResultsProps {
@@ -15,6 +16,7 @@ interface SearchResultsProps {
   readonly onCardClick?: (card: ScryfallCard) => void;
   readonly draggable?: boolean;
   readonly onAddToMaybeboard?: (card: ScryfallCard) => void;
+  readonly onAddToZone?: (card: ScryfallCard, zone: DeckZone) => void;
 }
 
 export function SearchResults({
@@ -24,6 +26,7 @@ export function SearchResults({
   totalCards,
   onCardClick,
   onAddToMaybeboard,
+  onAddToZone,
   draggable = false,
 }: SearchResultsProps) {
   const t = useTranslations("search");
@@ -106,6 +109,7 @@ export function SearchResults({
           cards={cards}
           onCardClick={onCardClick}
           onAddToMaybeboard={onAddToMaybeboard}
+          onAddToZone={onAddToZone}
           maybeboardNames={maybeboardNames}
           draggable={draggable}
         />
@@ -117,6 +121,7 @@ export function SearchResults({
               card={card}
               onClick={onCardClick}
               onAddToMaybeboard={onAddToMaybeboard}
+              onAddToZone={onAddToZone}
               isInMaybeboard={maybeboardNames.has(card.name)}
               draggable={draggable}
             />

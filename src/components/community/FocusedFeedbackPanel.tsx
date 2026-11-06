@@ -58,9 +58,9 @@ export function FocusedFeedbackPanel({
   };
 
   return (
-    <section className="rounded-xl border border-sky-400/25 bg-sky-400/[0.07] p-4">
+    <section className="rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--accent-soft)] p-4 shadow-[var(--lumen-shadow-sm)]">
       <div className="flex items-start gap-3">
-        <MessageCircleQuestion className="mt-0.5 h-5 w-5 shrink-0 text-sky-400" />
+        <MessageCircleQuestion className="mt-0.5 h-5 w-5 shrink-0 text-[var(--accent-text)]" />
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">{labels.title}</h2>
           {isOwner ? (
@@ -79,7 +79,7 @@ export function FocusedFeedbackPanel({
                 placeholder={labels.placeholder}
                 maxLength={240}
                 rows={2}
-                className="w-full resize-y rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-sky-400"
+                className="w-full resize-y rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
               />
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-[var(--text-secondary)]">
@@ -89,7 +89,7 @@ export function FocusedFeedbackPanel({
                   type="button"
                   onClick={() => void save()}
                   disabled={!canSave}
-                  className="rounded-md bg-sky-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-400 disabled:opacity-60"
+                  className="rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-60"
                 >
                   {saving ? labels.saving : labels.save}
                 </button>

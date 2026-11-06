@@ -9,9 +9,12 @@
     "importedDeck": "Imported Deck — {date}"
   },
   "theme": {
-    "toggle": "Toggle theme",
-    "switchToLight": "Switch to light theme",
-    "switchToDark": "Switch to dark theme"
+    "toggle": "Theme wechseln",
+    "switchToLight": "Helles Theme verwenden",
+    "switchToDark": "Dunkles Theme verwenden",
+    "useLight": "Helles Theme verwenden",
+    "useDark": "Dunkles Theme verwenden",
+    "useSystem": "Systemtheme verwenden"
   },
   "menu": {
     "open": "Open menu"
