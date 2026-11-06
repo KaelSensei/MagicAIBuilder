@@ -23,6 +23,8 @@ import {
   normalizeImportedName,
 } from "@/lib/scryfall/name-index";
 import { MoxfieldProfileImport } from "@/components/deck/MoxfieldProfileImport";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 const SOURCE_LABELS: Record<string, string> = {
   moxfield: "Moxfield",
@@ -230,28 +232,31 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
       {/* URL input */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
-          <input
+          <Link2 className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+          <Input
             type="text"
             placeholder={t("import.url.placeholder")}
+            aria-label={t("import.url.placeholder")}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleImport()}
             disabled={status === "loading"}
-            className="w-full pl-9 pr-4 py-2 rounded border border-[var(--border)] bg-[var(--background)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+            className="w-full pl-10"
           />
         </div>
-        <button
+        <Button
           type="button"
+          variant="primary"
+          size="sm"
           onClick={handleImport}
           disabled={!url.trim() || status === "loading" || status === "preview"}
-          className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
+          className="shrink-0"
         >
           {status === "loading" && (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           )}
           {t("import.import")}
-        </button>
+        </Button>
       </div>
 
       {/* Source badge */}
@@ -290,8 +295,8 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
               : t("import.url.noDuplicates")}
           </p>
           <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={() => { setPreview(null); setPendingResult(null); setPendingCards([]); setStatus("idle"); setMessage(""); }} className="px-3 py-1.5 rounded border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">{t("import.url.cancelPreview")}</button>
-            <button type="button" onClick={confirmImport} className="px-3 py-1.5 rounded bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]">{t("import.url.confirmImport")}</button>
+            <Button type="button" variant="secondary" size="sm" onClick={() => { setPreview(null); setPendingResult(null); setPendingCards([]); setStatus("idle"); setMessage(""); }}>{t("import.url.cancelPreview")}</Button>
+            <Button type="button" variant="primary" size="sm" onClick={confirmImport}>{t("import.url.confirmImport")}</Button>
           </div>
         </div>
       )}

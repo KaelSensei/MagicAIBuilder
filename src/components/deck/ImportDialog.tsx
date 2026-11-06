@@ -10,6 +10,9 @@ import { parseTextDecklist } from "@/lib/deck/import";
 import { fetchInBatches } from "@/lib/deck/batch-fetch";
 import { useDeckStore } from "@/lib/deck/store";
 import { ImportFromUrlTab } from "@/components/deck/ImportFromUrlTab";
+import { Button } from "@/components/ui/Button";
+import { textAreaShellClassName } from "@/components/ui/Input";
+import { cn } from "@/components/ui/utils";
 import { getDuplicateImportedNames } from "@/lib/import/import-preview";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import {
@@ -186,23 +189,20 @@ function TextImportActions({ status, text, preview, previewCards, onClose, onPre
   const t = useTranslations("deck");
   return (
     <div className="flex items-center justify-end gap-2">
-      <button
-        type="button"
-        onClick={onClose}
-        className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors"
-      >
+      <Button type="button" variant="secondary" size="sm" onClick={onClose}>
         {status === "done" || status === "warning" ? t("import.close") : t("import.cancel")}
-      </button>
+      </Button>
       {status !== "done" && status !== "warning" && (
-        <button
+        <Button
           type="button"
+          variant="primary"
+          size="sm"
           onClick={preview ? onImport : onPreview}
           disabled={!text.trim() || status === "validating" || (preview !== null && previewCards?.length === 0)}
-          className="px-4 py-2 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {status === "validating" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
           {preview ? t("import.url.confirmImport") : t("import.previewDecklist")}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -310,7 +310,7 @@ export function ImportDialog({
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[480px] max-w-[90vw] bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-2xl p-6 flex flex-col gap-4">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex w-[480px] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--lumen-shadow-lg)]">
           {/* Header */}
           <div className="flex items-center justify-between">
             <Dialog.Title className="text-base font-semibold text-[var(--text-primary)]">
@@ -327,26 +327,28 @@ export function ImportDialog({
           </div>
 
           {/* Tab switcher */}
-          <div className="flex gap-1 p-1 rounded-lg bg-[var(--background)] border border-[var(--border)] w-fit">
+          <div className="flex w-fit gap-1 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-1">
             <button
               type="button"
               onClick={() => setActiveTab("text")}
-              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+              className={cn(
+                "rounded-[var(--lumen-radius-pill)] px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
                 activeTab === "text"
                   ? "bg-[var(--accent)] text-white"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
+              )}
             >
               {t("import.tabText")}
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("url")}
-              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+              className={cn(
+                "rounded-[var(--lumen-radius-pill)] px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
                 activeTab === "url"
                   ? "bg-[var(--accent)] text-white"
                   : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
+              )}
             >
               {t("import.tabUrl")}
             </button>
@@ -357,13 +359,9 @@ export function ImportDialog({
             <>
               <ImportFromUrlTab onSuccess={() => setOpen(false)} />
               <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] transition-colors"
-                >
+                <Button type="button" variant="secondary" size="sm" onClick={handleClose}>
                   {t("import.close")}
-                </button>
+                </Button>
               </div>
             </>
           )}
@@ -379,7 +377,7 @@ export function ImportDialog({
                   parsePlainTextDecklist matches the English section headers,
                   so a localised example would show input the parser rejects. */}
               <textarea
-                className="w-full h-48 bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] resize-none focus:outline-none focus:border-[var(--accent)] font-mono"
+                className={cn(textAreaShellClassName, "h-48 resize-none font-mono")}
                 placeholder={`Commander\n1 Atraxa, Praetors' Voice\n\nDeck\n1 Sol Ring\n1 Arcane Signet\n...`}
                 value={text}
                 onChange={(e) => {
