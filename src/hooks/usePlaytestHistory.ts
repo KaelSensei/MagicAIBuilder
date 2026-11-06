@@ -14,16 +14,21 @@ export interface PlaytestHistory {
  *
  * The route answers 404 for a deck the caller does not own — including one that
  * simply is not theirs — so a miss is a normal outcome here rather than an
- * error worth retrying or surfacing.
+ * error worth retrying or surfacing. Any other failure, including a 500, is a
+ * real error and must not look like an empty history.
  *
  * @param deckId - deck to read history for, or null to skip the query
+ * @returns the react-query result for that deck's history
  */
 export function usePlaytestHistory(deckId: string | null) {
   return useQuery({
     queryKey: ["playtest", "history", deckId],
     queryFn: async (): Promise<PlaytestHistory | null> => {
       const response = await fetch(`/api/decks/${deckId}/playtest-sessions`);
-      if (!response.ok) return null;
+      if (response.status === 404) return null;
+      if (!response.ok) {
+        throw new Error(`Playtest history failed (${response.status})`);
+      }
       return response.json();
     },
     enabled: !!deckId,

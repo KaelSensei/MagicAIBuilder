@@ -505,6 +505,29 @@ describe("Collection store — loadCollection", () => {
     expect(collectionCards["scryfall-1"]?.createdAt).toBeInstanceOf(Date);
   });
 
+  it("drops a malformed row instead of storing it unparsed", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          id: "card-1",
+          scryfallId: "scryfall-1",
+          name: "Sol Ring",
+          quantity: 1,
+          foil: false,
+          createdAt: "2024-01-01T00:00:00.000Z",
+        },
+        { id: "broken", name: "No printing id", quantity: "1", foil: false },
+      ],
+    }));
+
+    await useCollectionStore.getState().loadCollection();
+
+    const { collectionCards } = useCollectionStore.getState();
+    expect(Object.keys(collectionCards)).toEqual(["scryfall-1"]);
+    expect(collectionCards["scryfall-1"]?.createdAt).toBeInstanceOf(Date);
+  });
+
   it("populates collectionCardsFoil for foil cards", async () => {
     const card = {
       id: "foil-1",

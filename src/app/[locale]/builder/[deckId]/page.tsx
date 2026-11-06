@@ -29,6 +29,7 @@ import {
 import { useDeckStore } from "@/lib/deck/store";
 import { isDeckStub } from "@/lib/deck/store-factories";
 import { computeDeckStats } from "@/lib/deck/stats";
+import { addNamedCardToZone } from "@/lib/deck/ai-add-card";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
 import { useBracketScore } from "@/hooks/useBracketScore";
@@ -600,14 +601,17 @@ export default function BuilderPage() {
 
   const handleAIAddCard = useCallback(
     (cardName: string) => {
-      // Search for the card by name and add it
-      // We use getCardByName from Scryfall client
       void import("@/lib/scryfall/client")
-        .then(({ getCardByName }) => getCardByName(cardName))
-        .then((card) => addCard(card))
+        .then(({ getCardByName }) =>
+          addNamedCardToZone(cardName, activeZone, {
+            lookup: getCardByName,
+            addCard,
+            onLookupError: (name) => logger.warn("Could not find card", "builder", name),
+          })
+        )
         .catch(() => logger.warn("Could not find card", "builder", cardName));
     },
-    [addCard]
+    [addCard, activeZone]
   );
 
   const dropSearchCard = useCallback(

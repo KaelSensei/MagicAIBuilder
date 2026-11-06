@@ -73,3 +73,29 @@ export function parseCollectionCard(v: unknown): CollectionCard | null {
     createdAt: new Date(createdAt),
   };
 }
+
+/** Foil and non-foil maps keyed by Scryfall id. */
+export interface IndexedCollectionCards {
+  readonly collectionCards: Record<string, CollectionCard>;
+  readonly collectionCardsFoil: Record<string, CollectionCard>;
+}
+
+/**
+ * Indexes trusted collection rows, dropping anything `parseCollectionCard` rejects.
+ *
+ * @param rawCards - API list, or any unknown values at the trust boundary
+ * @returns foil and non-foil maps; invalid rows are absent
+ */
+export function indexCollectionCards(rawCards: readonly unknown[]): IndexedCollectionCards {
+  const collectionCards: Record<string, CollectionCard> = {};
+  const collectionCardsFoil: Record<string, CollectionCard> = {};
+
+  for (const raw of rawCards) {
+    const parsed = parseCollectionCard(raw);
+    if (!parsed) continue;
+    if (parsed.foil) collectionCardsFoil[parsed.scryfallId] = parsed;
+    else collectionCards[parsed.scryfallId] = parsed;
+  }
+
+  return { collectionCards, collectionCardsFoil };
+}

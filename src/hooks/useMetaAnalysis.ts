@@ -3,9 +3,11 @@
  * useMetaAnalysis — fetches EDHRec + tournament meta for a given commander.
  * Lazy: only fetches when commanderName is provided and the hook is triggered.
  */
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { commanderToSlug } from "@/lib/meta/fetch";
 import type { EdhrecData, TournamentData } from "@/lib/meta/fetch";
+
+type MetaSource = "edhrec" | "tournament";
 
 interface MetaApiResponse extends Partial<EdhrecData>, Partial<TournamentData> {
   _meta?: {
@@ -18,10 +20,8 @@ interface MetaApiResponse extends Partial<EdhrecData>, Partial<TournamentData> {
 }
 
 export interface MetaState {
-  edhrec:
-    (EdhrecData & { _meta?: NonNullable<MetaApiResponse["_meta"]> }) | null;
-  tournament:
-    (TournamentData & { _meta?: NonNullable<MetaApiResponse["_meta"]> }) | null;
+  edhrec: MetaApiResponse | null;
+  tournament: MetaApiResponse | null;
   isLoadingEdhrec: boolean;
   isLoadingTournament: boolean;
   errorEdhrec: string | null;
@@ -40,68 +40,165 @@ export interface MetaSourceHealth {
  */
 export const META_FETCH_TIMEOUT_MS = 30_000;
 
-export function useMetaAnalysis(commanderName: string | null) {
-  const [state, setState] = useState<MetaState>({
-    edhrec: null,
-    tournament: null,
-    isLoadingEdhrec: false,
-    isLoadingTournament: false,
-    errorEdhrec: null,
-    errorTournament: null,
-    sourceHealth: {
-      edhrec: { status: "idle", attempts: 0 },
-      tournament: { status: "idle", attempts: 0 },
+const INITIAL_STATE: MetaState = {
+  edhrec: null,
+  tournament: null,
+  isLoadingEdhrec: false,
+  isLoadingTournament: false,
+  errorEdhrec: null,
+  errorTournament: null,
+  sourceHealth: {
+    edhrec: { status: "idle", attempts: 0 },
+    tournament: { status: "idle", attempts: 0 },
+  },
+};
+
+/**
+ * Accepts a JSON object as a meta payload.
+ *
+ * @param value - parsed response body
+ * @returns whether the body is a non-array object
+ */
+function isMetaApiResponse(value: unknown): value is MetaApiResponse {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Error text for a meta response, or null when the payload can be shown.
+ *
+ * @param payload - parsed body
+ * @param status - HTTP status
+ * @returns the message to surface, or null on success
+ */
+function metaErrorMessage(payload: MetaApiResponse, status: number): string | null {
+  if (typeof payload.error === "string" && payload.error.length > 0) return payload.error;
+  if (status < 200 || status >= 300) return `HTTP ${status}`;
+  return null;
+}
+
+/**
+ * Message stored when a fetch throws.
+ *
+ * @param error - rejection reason
+ * @returns a short failure string
+ */
+function thrownMetaMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Failed to load meta";
+}
+
+/**
+ * Copies source health with a new status for one source.
+ *
+ * @param prev - current meta state
+ * @param source - source to update
+ * @param status - next health status
+ * @returns the next health map
+ */
+function healthWithStatus(
+  prev: MetaState,
+  source: MetaSource,
+  status: MetaSourceHealth["status"]
+): MetaState["sourceHealth"] {
+  return {
+    ...prev.sourceHealth,
+    [source]: { ...prev.sourceHealth[source], status },
+  };
+}
+
+/**
+ * Marks one source as loading and counts the attempt.
+ *
+ * @param prev - current meta state
+ * @param source - source that just started
+ * @returns the next state
+ */
+function beginSourceLoad(prev: MetaState, source: MetaSource): MetaState {
+  const sourceHealth = {
+    ...prev.sourceHealth,
+    [source]: {
+      status: prev.sourceHealth[source].status,
+      attempts: prev.sourceHealth[source].attempts + 1,
     },
-  });
+  };
+  if (source === "edhrec") {
+    return { ...prev, isLoadingEdhrec: true, errorEdhrec: null, sourceHealth };
+  }
+  return { ...prev, isLoadingTournament: true, errorTournament: null, sourceHealth };
+}
+
+/**
+ * Stores a successful payload for one source.
+ *
+ * @param prev - current meta state
+ * @param source - source that answered
+ * @param payload - response body
+ * @returns the next state
+ */
+function finishSourceLoad(
+  prev: MetaState,
+  source: MetaSource,
+  payload: MetaApiResponse
+): MetaState {
+  const sourceHealth = healthWithStatus(prev, source, "available");
+  if (source === "edhrec") {
+    return { ...prev, edhrec: payload, isLoadingEdhrec: false, sourceHealth };
+  }
+  return { ...prev, tournament: payload, isLoadingTournament: false, sourceHealth };
+}
+
+/**
+ * Records a failed source without touching the other one.
+ *
+ * @param prev - current meta state
+ * @param source - source that failed
+ * @param message - error shown to the panel
+ * @returns the next state
+ */
+function failSourceLoad(prev: MetaState, source: MetaSource, message: string): MetaState {
+  const sourceHealth = healthWithStatus(prev, source, "unavailable");
+  if (source === "edhrec") {
+    return { ...prev, isLoadingEdhrec: false, errorEdhrec: message, sourceHealth };
+  }
+  return { ...prev, isLoadingTournament: false, errorTournament: message, sourceHealth };
+}
+
+/**
+ * Loads EDHREC and tournament meta for one commander, on demand.
+ *
+ * Overlapping requests for the same source keep only the latest response.
+ * An older reply cannot replace a newer commander or a newer refresh.
+ *
+ * @param commanderName - commander to analyse, or null to no-op fetches
+ * @returns the source state plus `fetchAll` and `fetchSource`
+ */
+export function useMetaAnalysis(commanderName: string | null) {
+  const [state, setState] = useState<MetaState>(INITIAL_STATE);
+  const requestIds = useRef<Record<MetaSource, number>>({ edhrec: 0, tournament: 0 });
 
   const fetchSource = useCallback(
-    async (source: "edhrec" | "tournament", refresh = false) => {
+    async (source: MetaSource, refresh = false) => {
       if (!commanderName) return;
+      const requestId = requestIds.current[source] + 1;
+      requestIds.current[source] = requestId;
       const slug = commanderToSlug(commanderName);
-      const isEdhrec = source === "edhrec";
+      const stillCurrent = () => requestIds.current[source] === requestId;
 
-      setState((prev) => ({
-        ...prev,
-        [isEdhrec ? "isLoadingEdhrec" : "isLoadingTournament"]: true,
-        [isEdhrec ? "errorEdhrec" : "errorTournament"]: null,
-        sourceHealth: {
-          ...prev.sourceHealth,
-          [source]: {
-            status: prev.sourceHealth[source].status,
-            attempts: prev.sourceHealth[source].attempts + 1,
-          },
-        },
-      }));
+      setState((prev) => beginSourceLoad(prev, source));
 
       try {
         const url = `/api/meta/${encodeURIComponent(slug)}?source=${source}${refresh ? "&refresh=true" : ""}`;
         const res = await fetch(url, { signal: AbortSignal.timeout(META_FETCH_TIMEOUT_MS) });
-        const data = (await res.json()) as MetaApiResponse;
+        const parsed: unknown = await res.json();
+        if (!stillCurrent()) return;
 
-        if (!res.ok || data.error) {
-          throw new Error(data.error ?? `HTTP ${res.status}`);
-        }
+        const payload = isMetaApiResponse(parsed) ? parsed : {};
+        const message = metaErrorMessage(payload, res.status);
+        if (message !== null) throw new Error(message);
 
-        setState((prev) => ({
-          ...prev,
-          [isEdhrec ? "edhrec" : "tournament"]: data,
-          [isEdhrec ? "isLoadingEdhrec" : "isLoadingTournament"]: false,
-          sourceHealth: {
-            ...prev.sourceHealth,
-            [source]: { ...prev.sourceHealth[source], status: "available" },
-          },
-        }));
+        setState((prev) => finishSourceLoad(prev, source, payload));
       } catch (err) {
-        setState((prev) => ({
-          ...prev,
-          [isEdhrec ? "isLoadingEdhrec" : "isLoadingTournament"]: false,
-          [isEdhrec ? "errorEdhrec" : "errorTournament"]:
-            err instanceof Error ? err.message : "Failed to load meta",
-          sourceHealth: {
-            ...prev.sourceHealth,
-            [source]: { ...prev.sourceHealth[source], status: "unavailable" },
-          },
-        }));
+        if (!stillCurrent()) return;
+        setState((prev) => failSourceLoad(prev, source, thrownMetaMessage(err)));
       }
     },
     [commanderName]

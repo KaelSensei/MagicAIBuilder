@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { forEachSequential } from "@/lib/async/sequential";
 import type { CollectionCard, AddToCollectionInput, CardCondition } from "./types";
 import { logger } from "@/lib/logger";
-import { isRecord, parseCollectionCard } from "./parse";
+import { indexCollectionCards, isRecord, parseCollectionCard } from "./parse";
 import { updateCollectionQuantity } from "./quantity-update";
 
 /** Newest `loadCollection` call. An older response must not replace it. */
@@ -57,20 +57,7 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
   },
 
   hydrateCollection: (rawCards: readonly unknown[]) => {
-    const collectionCards: Record<string, CollectionCard> = {};
-    const collectionCardsFoil: Record<string, CollectionCard> = {};
-
-    for (const raw of rawCards) {
-      const parsed = parseCollectionCard(raw);
-      if (!parsed) continue;
-      if (parsed.foil) {
-        collectionCardsFoil[parsed.scryfallId] = parsed;
-      } else {
-        collectionCards[parsed.scryfallId] = parsed;
-      }
-    }
-
-    set({ collectionCards, collectionCardsFoil, isLoading: false, loadError: false });
+    set({ ...indexCollectionCards(rawCards), isLoading: false, loadError: false });
   },
 
   loadCollection: async () => {
@@ -82,26 +69,11 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
       const res = await fetch("/api/collection", { signal: controller.signal });
       if (version !== collectionLoadVersion) return;
       if (!res.ok) throw new Error("Failed to load collection");
-      const cards: CollectionCard[] = await res.json();
-
-      const collectionCards: Record<string, CollectionCard> = {};
-      const collectionCardsFoil: Record<string, CollectionCard> = {};
-
-      for (const card of cards) {
-        const hydrated: CollectionCard = {
-          ...card,
-          createdAt: new Date(card.createdAt),
-          acquiredAt: card.acquiredAt ? new Date(card.acquiredAt) : null,
-        };
-        if (hydrated.foil) {
-          collectionCardsFoil[hydrated.scryfallId] = hydrated;
-        } else {
-          collectionCards[hydrated.scryfallId] = hydrated;
-        }
-      }
+      const payload: unknown = await res.json();
+      if (!Array.isArray(payload)) throw new Error("Invalid collection payload");
 
       if (version !== collectionLoadVersion) return;
-      set({ collectionCards, collectionCardsFoil });
+      set(indexCollectionCards(payload));
     } catch (err) {
       if (version !== collectionLoadVersion) return;
       logger.error("Unexpected error", "loadCollection", err);
