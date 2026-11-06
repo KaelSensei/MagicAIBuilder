@@ -706,12 +706,12 @@ export default function BuilderPage() {
       onDragEnd={handleDragEnd}
       measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
     >
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex h-screen flex-col overflow-hidden">
         <Header deckId={deckId} />
         {deckId === GUEST_DECK_ID && <GuestDeckNotice />}
 
         {/* Deck title bar */}
-        <div className="border-b border-[var(--border)] bg-[var(--surface)] px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3">
+        <div className="mx-3 mt-3 flex items-center gap-2 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-[var(--lumen-shadow-sm)] md:mx-4 md:gap-3 md:px-4">
           {/* Icon-only, so it needs its own accessible name: a screen reader
               announced this as "link" with no name at all. It also left the
               e2e suite unable to target it — `a[href$="/decks"]` matches the
@@ -780,7 +780,7 @@ export default function BuilderPage() {
               <button
                 type="button"
                 onClick={handleDuplicate}
-                className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+                className="flex items-center gap-1.5 rounded-full border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:text-[var(--text-primary)] md:px-3"
                 title={t("actions.duplicate")}
               >
                 <Copy className="w-3 h-3" />
@@ -791,7 +791,7 @@ export default function BuilderPage() {
             <BulkEditModal deck={deck}>
               <button
                 type="button"
-                className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+                className="flex items-center gap-1.5 rounded-full border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:text-[var(--text-primary)] md:px-3"
                 title={t("actions.bulkEdit")}
               >
                 <FileText className="w-3 h-3" />
@@ -802,7 +802,7 @@ export default function BuilderPage() {
             <button
               type="button"
               onClick={() => setShowPlaytest(true)}
-              className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-purple-500 text-[var(--text-secondary)] hover:text-purple-400 transition-all"
+              className="flex items-center gap-1.5 rounded-full border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:text-[var(--accent-text)] md:px-3"
               title={t("actions.playtest")}
             >
               <Dices className="w-3 h-3" />
@@ -812,7 +812,7 @@ export default function BuilderPage() {
             <button
               type="button"
               onClick={() => setShowExport(true)}
-              className="flex items-center gap-1.5 text-xs px-1.5 md:px-2.5 py-1 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+              className="flex items-center gap-1.5 rounded-full border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:text-[var(--text-primary)] md:px-3"
               title={t("actions.export")}
             >
               <Download className="w-3 h-3" />
@@ -834,22 +834,23 @@ export default function BuilderPage() {
         </div>
 
         {/* 3-panel layout — desktop: side-by-side, mobile: tabbed */}
-        <div className="flex flex-1 overflow-hidden relative">
+        <div className="relative flex flex-1 gap-3 overflow-hidden p-3 max-lg:gap-0 max-lg:p-0">
           {/* Panel 1: Search (resizable on desktop, full-width on mobile) */}
           <motion.div
             style={{ width: searchPanelWidth, minWidth: 220, maxWidth: 520 }}
             className={cn(
-              "shrink-0 border-r border-[var(--border)] flex flex-col bg-[var(--surface)] relative",
-              "max-lg:absolute max-lg:inset-0 max-lg:w-full max-lg:z-20 max-lg:border-r-0",
+              "relative flex shrink-0 flex-col overflow-hidden bg-[var(--surface)]",
+              "lg:rounded-[var(--lumen-radius-xl)] lg:border lg:border-[var(--border)] lg:shadow-[var(--lumen-shadow-md)]",
+              "max-lg:absolute max-lg:inset-0 max-lg:z-20 max-lg:w-full",
               mobilePanel !== "search" && "max-lg:hidden"
             )}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="p-3 border-b border-[var(--border)] space-y-2">
+            <div className="space-y-3 border-b border-[var(--border)] p-4">
               {/* Search mode tabs */}
-              <div className="flex gap-1 p-0.5 bg-[var(--background)] rounded-lg">
+              <div className="flex gap-1 rounded-[var(--lumen-radius-pill)] bg-[var(--background)] p-1">
                 {(["name", "set", "color"] as const).map((mode) => (
                   <button
                     type="button"
@@ -861,9 +862,9 @@ export default function BuilderPage() {
                       setColorFilter([]);
                     }}
                     className={cn(
-                      "flex-1 text-xs py-1.5 rounded-md font-medium transition-all capitalize",
+                      "flex-1 rounded-[var(--lumen-radius-pill)] py-2 text-xs font-medium capitalize transition-all",
                       searchMode === mode
-                        ? "bg-[var(--surface)] text-[var(--text-primary)] shadow-sm"
+                        ? "bg-[var(--surface)] text-[var(--text-primary)] shadow-[var(--lumen-shadow-sm)]"
                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                     )}
                   >
@@ -1011,8 +1012,9 @@ export default function BuilderPage() {
           {/* Panel 2: Deck Editor (flex-1) */}
           <motion.div
             className={cn(
-              "flex-1 border-r border-[var(--border)] flex flex-col overflow-hidden",
-              "max-lg:absolute max-lg:inset-0 max-lg:border-r-0",
+              "flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--surface)]",
+              "lg:rounded-[var(--lumen-radius-xl)] lg:border lg:border-[var(--border)] lg:shadow-[var(--lumen-shadow-md)]",
+              "max-lg:absolute max-lg:inset-0",
               mobilePanel !== "deck" && "max-lg:hidden"
             )}
             initial={{ opacity: 0 }}
@@ -1046,7 +1048,8 @@ export default function BuilderPage() {
           {/* Panel 3: Stats (280px on desktop, full-width on mobile) */}
           <motion.div
             className={cn(
-              "w-[280px] shrink-0 flex flex-col bg-[var(--surface)] overflow-y-auto p-3 gap-3",
+              "flex w-[280px] shrink-0 flex-col gap-4 overflow-y-auto bg-[var(--surface)] p-4",
+              "lg:rounded-[var(--lumen-radius-xl)] lg:border lg:border-[var(--border)] lg:shadow-[var(--lumen-shadow-md)]",
               "max-lg:absolute max-lg:inset-0 max-lg:w-full",
               mobilePanel !== "stats" && "max-lg:hidden"
             )}
@@ -1132,7 +1135,7 @@ export default function BuilderPage() {
           </motion.div>
 
           {/* Mobile bottom tab bar */}
-          <div className="lg:hidden absolute bottom-0 left-0 right-0 z-30 border-t border-[var(--border)] bg-[var(--surface)] flex">
+          <div className="absolute right-0 bottom-0 left-0 z-30 flex border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-md lg:hidden">
             {[
               { id: "search" as const, icon: Search, label: "Search" },
               { id: "deck" as const, icon: LayoutGrid, label: "Deck" },
@@ -1143,9 +1146,9 @@ export default function BuilderPage() {
                 key={tab.id}
                 onClick={() => setMobilePanel(tab.id)}
                 className={cn(
-                  "flex-1 flex flex-col items-center gap-0.5 py-2 text-xs transition-colors",
+                  "flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs transition-colors",
                   mobilePanel === tab.id
-                    ? "text-[var(--accent-text)] border-t-2 border-[var(--accent)] -mt-px"
+                    ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
                     : "text-[var(--text-secondary)]"
                 )}
               >

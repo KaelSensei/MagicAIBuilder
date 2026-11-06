@@ -9,27 +9,19 @@ import { cn } from "@/components/ui/utils";
 
 const TOAST_STYLES: Record<
   ToastType,
-  { bg: string; border: string; icon: React.ReactNode }
+  { icon: React.ReactNode }
 > = {
   success: {
-    bg: "bg-green-950",
-    border: "border-green-700",
-    icon: <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />,
+    icon: <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />,
   },
   error: {
-    bg: "bg-red-950",
-    border: "border-red-700",
-    icon: <XCircle className="w-4 h-4 text-red-400 shrink-0" />,
+    icon: <XCircle className="h-4 w-4 shrink-0 text-red-600" />,
   },
   warning: {
-    bg: "bg-amber-950",
-    border: "border-amber-700",
-    icon: <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />,
+    icon: <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />,
   },
   info: {
-    bg: "bg-blue-950",
-    border: "border-blue-700",
-    icon: <Info className="w-4 h-4 text-blue-400 shrink-0" />,
+    icon: <Info className="h-4 w-4 shrink-0 text-violet-600" />,
   },
 };
 
@@ -49,9 +41,7 @@ export function ToastContainer() {
             <motion.div
               key={toast.id}
               className={cn(
-                "pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg min-w-[240px] max-w-[360px]",
-                style.bg,
-                style.border
+                "pointer-events-auto flex min-w-[240px] max-w-[360px] items-center gap-3 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--text-primary)] shadow-[var(--lumen-shadow-md)]",
               )}
               initial={{ opacity: 0, x: 48, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -59,13 +49,13 @@ export function ToastContainer() {
               transition={{ duration: 0.2 }}
             >
               {style.icon}
-              <span className="flex-1 text-sm text-white leading-tight">
+              <span className="flex-1 text-sm leading-tight text-[var(--text-primary)]">
                 {toast.message}
               </span>
               <button
                 type="button"
                 onClick={() => remove(toast.id)}
-                className="p-0.5 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                className="rounded p-0.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
                 aria-label={t("actions.dismiss")}
               >
                 <X className="w-3.5 h-3.5" />
