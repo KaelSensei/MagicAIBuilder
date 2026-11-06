@@ -11,22 +11,14 @@ const DISCLAIMER_TAGS = {
   ),
 };
 
-/** Simple footer with brand + links */
+/** Legal attribution for the public landing page. */
 export function LandingFooter() {
   const t = useTranslations("landing");
 
   return (
     <footer className="landing-footer">
-      <div className="landing-logo" style={{ fontSize: "0.9rem" }}>
-        MagicAIBuilder
-      </div>
-      <div style={{ display: "flex", gap: "2rem" }}>
-        <Link href="#">{t("footer.privacy")}</Link>
-        <Link href="#">{t("footer.terms")}</Link>
-        <Link href="#">{t("footer.contact")}</Link>
-        <Link href="#">{t("footer.discord")}</Link>
-      </div>
-      <div>{t("footer.copyright")}</div>
+      <Link href="#top" className="landing-logo">MagicAIBuilder</Link>
+      <p>{t("footer.copyright")}</p>
       <div className="landing-disclaimer">
         {t.rich("footer.disclaimer", DISCLAIMER_TAGS)}
       </div>

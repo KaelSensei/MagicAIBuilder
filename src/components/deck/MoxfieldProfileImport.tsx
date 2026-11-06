@@ -13,6 +13,8 @@ import {
 const STORAGE_KEY = "magic-ai-builder:moxfield-profiles";
 /** Number of Moxfield deck summaries requested per page. */
 const MOXFIELD_PAGE_SIZE = 20;
+/** Maximum time to wait for a Moxfield profile page before offering retry feedback. */
+export const MOXFIELD_PROFILE_TIMEOUT_MS = 15_000;
 
 interface MoxfieldProfileImportProps {
   readonly onDeckSelected: (url: string) => void;
@@ -88,6 +90,7 @@ export function MoxfieldProfileImport({
         const response = await fetch("/api/import/moxfield-user", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(MOXFIELD_PROFILE_TIMEOUT_MS),
           body: JSON.stringify({
             username: normalized,
             pageNumber: requestedPage,

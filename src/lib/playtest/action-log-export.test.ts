@@ -10,19 +10,27 @@ const entries = [
 describe("action log exports", () => {
   it("summarizes entries chronologically by turn", () => {
     expect(summarizeActionLog(entries)).toEqual([
-      { turn: 1, entries: entries.slice(0, 2), draws: 0, manaProduced: 0, cardsSeen: 0 },
-      { turn: 2, entries: entries.slice(2), draws: 0, manaProduced: 0, cardsSeen: 0 },
+      { turn: 1, entries: entries.slice(0, 2), draws: 0, manaProduced: 0, cardsSeen: 0, lifeDelta: 0, countersChanged: 0 },
+      { turn: 2, entries: entries.slice(2), draws: 0, manaProduced: 0, cardsSeen: 0, lifeDelta: 0, countersChanged: 0 },
     ]);
   });
 
-  it("counts only structured draw, mana and library events", () => {
+  it("counts structured turn evidence without inferring it from free text", () => {
     expect(summarizeActionLog([
       { id: 1, turn: 2, phase: "Draw", description: "Drew a card", kind: "draw" },
       { id: 2, turn: 2, phase: "Main1", description: "Produced two blue mana", kind: "mana", amount: 2 },
       { id: 3, turn: 2, phase: "Main1", description: "Revealed a card", kind: "cardSeen" },
-      { id: 4, turn: 2, phase: "Main1", description: "Drew a card manually" },
+      { id: 4, turn: 2, phase: "Combat", description: "Lost three life", kind: "life", lifeDelta: -3 },
+      { id: 5, turn: 2, phase: "Main2", description: "Added two counters", kind: "counter", counterDelta: 2 },
+      { id: 6, turn: 2, phase: "Main1", description: "Drew a card manually" },
     ])).toEqual([{
-      turn: 2, entries: expect.any(Array), draws: 1, manaProduced: 2, cardsSeen: 2,
+      turn: 2,
+      entries: expect.any(Array),
+      draws: 1,
+      manaProduced: 2,
+      cardsSeen: 2,
+      lifeDelta: -3,
+      countersChanged: 2,
     }]);
   });
 
@@ -34,7 +42,7 @@ describe("action log exports", () => {
 
   it("exports a versioned structured payload", () => {
     expect(JSON.parse(exportActionLogJson("Forest Test", entries))).toEqual({
-      version: 2,
+      version: 3,
       deckName: "Forest Test",
       turns: summarizeActionLog(entries),
     });

@@ -9,6 +9,7 @@ import { ColorIdentityBanner } from "@/components/deck/ColorIdentityBanner";
 import { CompanionZone } from "@/components/deck/CompanionZone";
 import { MainZoneContent } from "@/components/deck/MainZoneContent";
 import { SecondaryZoneContent } from "@/components/deck/SecondaryZoneContent";
+import { DeckZoneTab } from "@/components/deck/DeckZoneTab";
 import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
 import { cn } from "@/components/ui/utils";
 import { getColorIdentityViolations } from "@/lib/deck/color-identity";
@@ -185,27 +186,14 @@ export function DeckEditor({
               },
             ] as const
           ).map(({ zone, label, count }) => (
-            <button
-              type="button"
+            <DeckZoneTab
               key={zone}
-              onClick={() => setActiveZone(zone)}
-              className={cn(
-                "flex items-center gap-1 px-2.5 py-1 text-xs font-medium border-b-2 transition-colors -mb-[7px] pb-[5px]",
-                activeZone === zone
-                  ? "border-[var(--accent)] text-[var(--text-primary)]"
-                  : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              )}
-            >
-              {label}
-              <span
-                className={cn(
-                  "text-[10px] tabular-nums",
-                  activeZone === zone ? "text-[var(--accent-text)]" : "opacity-60"
-                )}
-              >
-                {count}
-              </span>
-            </button>
+              zone={zone}
+              label={label}
+              count={count}
+              isActive={activeZone === zone}
+              onSelect={setActiveZone}
+            />
           ))}
         </div>
 

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  buildMetaTrendView,
   computeMetaShifts,
   shiftMagnitude,
   toCaptureDay,
@@ -307,5 +308,35 @@ describe("shiftMagnitude", () => {
     expect(
       shiftMagnitude({ kind: "left", name: "C", baseline: 0.6, deltaAtMost: -0.25 })
     ).toBe(0.25);
+  });
+});
+
+describe("buildMetaTrendView", () => {
+  it("marks top-20 entries and exits as bounds instead of exact changes", () => {
+    const report = computeMetaShifts(
+      [
+        snapshot("2026-08-01", top20({ "Cyclonic Rift": 0.78, "Sol Ring": 0.6 })),
+        snapshot("2026-08-22", top20({ "Sol Ring": 0.61, "The One Ring": 0.72 })),
+      ],
+      60
+    );
+
+    const view = buildMetaTrendView(report);
+
+    expect(view).toMatchObject({
+      sourceLimit: 20,
+      uncertainty: "EDHREC only publishes the top 20 cards; entries and exits are bounds, not exact changes.",
+    });
+    expect(view?.rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "The One Ring", certainty: "at-least" }),
+        expect.objectContaining({ name: "Cyclonic Rift", certainty: "at-most" }),
+        expect.objectContaining({ name: "Sol Ring", certainty: "exact" }),
+      ])
+    );
+  });
+
+  it("withholds a view when the underlying comparison has insufficient evidence", () => {
+    expect(buildMetaTrendView(null)).toBeNull();
   });
 });

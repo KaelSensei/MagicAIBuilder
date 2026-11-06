@@ -5,6 +5,26 @@ import { PLAIN_TEXT_IMPORT_V1 } from "./fixtures/plain-text-v1";
 import { MOXFIELD_IMPORT_V1 } from "./fixtures/moxfield-v1";
 
 describe("parseTextDecklist", () => {
+  it("removes Archidekt category tags before resolving pasted card names", () => {
+    const result = parseTextDecklist(`Commander (1)
+1x Atraxa, Praetors' Voice [Commander{top}]
+
+Mainboard (1)
+1x Sol Ring [Ramp]
+
+Sideboard (2)
+2x Negate [Removal]`);
+
+    expect(result).toMatchObject({
+      commander: "Atraxa, Praetors' Voice",
+      cards: [
+        { name: "Sol Ring", quantity: 1 },
+        { name: "Negate", quantity: 2, zone: "sideboard" },
+      ],
+      errors: [],
+    });
+  });
+
   it("keeps the moxfield/v1 import contract", () => {
     expect(parseTextDecklist(MOXFIELD_IMPORT_V1.input)).toMatchObject(
       MOXFIELD_IMPORT_V1.expected
@@ -139,6 +159,12 @@ describe("parseTextDecklist", () => {
       "Sol Ring",
       "Test Card (custom)",
     ]);
+  });
+
+  it("strips a standalone lowercase set code", () => {
+    const result = parseTextDecklist("1 Sol Ring (c21)");
+
+    expect(result.cards[0]?.name).toBe("Sol Ring");
   });
 
   it("strips HTML tags from card name", () => {

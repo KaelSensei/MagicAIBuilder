@@ -4,24 +4,23 @@ import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 
-/** Fixed glassmorphism navbar with brand links */
+/** Landing navigation for the public Commander guide. */
 export function LandingNavbar() {
   const t = useTranslations("landing");
   const { status } = useSession();
   const isLoggedIn = status === "authenticated";
 
   return (
-    <nav className="landing-nav">
-      <div className="landing-logo">
+    <nav className="landing-nav" aria-label={t("navbar.ariaLabel")}>
+      <Link href="#top" className="landing-logo">
         MagicAIBuilder
-      </div>
+      </Link>
       <ul className="landing-nav-links">
-        <li><Link href="#product">{t("navbar.features")}</Link></li>
-        <li><Link href="#how">{t("navbar.howItWorks")}</Link></li>
+        <li><Link href="#capabilities">{t("navbar.capabilities")}</Link></li>
         {isLoggedIn ? (
           <li><Link href="/decks" className="nav-cta">{t("navbar.myDecks")}</Link></li>
         ) : (
-          <li><Link href="/auth/signin" className="nav-cta">{t("navbar.getStarted")}</Link></li>
+          <li><Link href="/builder/guest" className="nav-cta">{t("navbar.guestDeck")}</Link></li>
         )}
       </ul>
     </nav>

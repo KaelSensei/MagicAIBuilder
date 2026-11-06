@@ -25,8 +25,21 @@ function isSetCodeChar(c: string): boolean {
   return /^[a-z0-9]$/i.test(c);
 }
 
-function isCollectorSuffixChar(c: string): boolean {
-  return isEcmaWhitespaceChar(c) || /^\d$/.test(c);
+function trailingCollectorNumberStart(name: string): number | null {
+  let index = name.length;
+  while (index > 0 && isEcmaWhitespaceChar(name[index - 1] ?? "")) {
+    index--;
+  }
+
+  while (index > 0 && /^[a-z]$/i.test(name[index - 1] ?? "")) {
+    index--;
+  }
+
+  const numberEnd = index;
+  while (index > 0 && /^\d$/.test(name[index - 1] ?? "")) {
+    index--;
+  }
+  return index === numberEnd ? null : index;
 }
 
 function splitCardCommentStart(name: string, firstSlash: number): number | null {
@@ -63,14 +76,9 @@ function stripSlashOrPipeCommentSuffix(name: string): string {
  * Mirrors `.replace(/\s*\([A-Z0-9]{2,6}\)[\s\d]*$/, "")`.
  */
 function stripTrailingSetCodeSuffix(name: string): string {
-  let i = name.length;
-  while (i > 0) {
-    const ch = name[i - 1] ?? "";
-    if (isCollectorSuffixChar(ch)) {
-      i--;
-      continue;
-    }
-    break;
+  let i = trailingCollectorNumberStart(name) ?? name.length;
+  while (i > 0 && isEcmaWhitespaceChar(name[i - 1] ?? "")) {
+    i--;
   }
   if (i === 0 || name[i - 1] !== ")") return name;
 
@@ -95,12 +103,19 @@ function stripTrailingSetCodeSuffix(name: string): string {
   return name.slice(0, beforeParen);
 }
 
-type DecklistSection = "main" | "sideboard" | "maybeboard" | "commander" | "partner";
+/** CardNexus marks foil printings with a terminal `*F*`; finish is not part of a deck card name. */
+function stripTrailingFoilMarker(name: string): string {
+  const trimmed = name.trimEnd();
+  return trimmed.endsWith("*F*") ? trimmed.slice(0, -3).trimEnd() : trimmed;
+}
+
+type DecklistSection = "main" | "sideboard" | "maybeboard" | "commander" | "partner" | "companion";
 
 function headingSection(heading: string): DecklistSection | undefined {
   switch (heading) {
     case "commander": return "commander";
     case "partner": return "partner";
+    case "companion": return "companion";
     case "sideboard": return "sideboard";
     case "considering":
     case "maybeboard": return "maybeboard";
@@ -117,20 +132,23 @@ function parseDecklistCard(line: string, section: DecklistSection): UrlImportCar
   const match = /^(\d+)[xX]?\s+(\S.*)$/.exec(line);
   if (!match) return null;
   const quantity = Math.min(Math.max(1, Number.parseInt(match[1], 10)), 99);
-  const name = stripTrailingSetCodeSuffix(stripSlashOrPipeCommentSuffix(match[2])).trim();
+  const name = stripTrailingSetCodeSuffix(
+    stripTrailingFoilMarker(stripSlashOrPipeCommentSuffix(match[2]))
+  ).trim();
   if (!name) return null;
   return {
     name,
     quantity,
     isCommander: section === "commander",
     isPartner: section === "partner",
+    isCompanion: section === "companion" || undefined,
     zone: section === "sideboard" || section === "maybeboard" ? section : "main",
   };
 }
 
 function sectionAfterCard(section: DecklistSection, countedPartner: boolean): DecklistSection {
   if (section === "commander" && countedPartner) return "partner";
-  if (section === "commander" || section === "partner") return "main";
+  if (section === "commander" || section === "partner" || section === "companion") return "main";
   return section;
 }
 

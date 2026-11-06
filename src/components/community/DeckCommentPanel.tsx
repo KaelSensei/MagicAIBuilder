@@ -7,6 +7,9 @@ import type { DeckCommentThread } from "@/lib/community/comments";
 import { CommentForm } from "./CommentForm";
 import { CommentThreadItem, type CommentActions } from "./CommentThreadItem";
 
+/** Maximum time a public comment stream may keep the panel waiting. */
+const COMMENT_STREAM_TIMEOUT_MS = 15_000;
+
 export interface DeckCommentsResponse {
   readonly comments: readonly DeckCommentThread[];
   readonly count: number;
@@ -42,7 +45,9 @@ export function DeckCommentPanel({ deckId, isOwner, isSignedIn }: DeckCommentPan
   const load = useCallback(async () => {
     setLoadFailed(false);
     try {
-      const res = await fetch(endpoint);
+      const res = await fetch(endpoint, {
+        signal: AbortSignal.timeout(COMMENT_STREAM_TIMEOUT_MS),
+      });
       if (!res.ok) {
         setLoadFailed(true);
         return;

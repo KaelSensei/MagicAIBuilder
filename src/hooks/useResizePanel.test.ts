@@ -241,8 +241,7 @@ describe("useResizePanel", () => {
       globalThis.dispatchEvent(new MouseEvent("mouseup"));
     });
 
-    // localStorage is updated by the width-change effect
-    expect(localStorage.getItem("resize-test")).toBeTruthy();
+    expect(localStorage.getItem("resize-test")).toBe("350");
   });
 
   it("mousemove does nothing when not dragging", () => {

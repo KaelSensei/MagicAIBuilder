@@ -2,6 +2,51 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { CollectionCard } from "@/lib/collection/types";
 
+interface CollectionListResponse {
+  readonly ok: boolean;
+  readonly json: () => Promise<readonly CollectionWireCard[]>;
+}
+
+interface CollectionWireCard {
+  readonly id: string;
+  readonly scryfallId: string;
+  readonly name: string;
+  readonly quantity: number;
+  readonly foil: boolean;
+  readonly condition: CollectionCard["condition"];
+  readonly acquiredAt: string | null;
+  readonly price: number | null;
+  readonly imageUri: string;
+  readonly createdAt: string;
+}
+
+function wireCard(overrides: Partial<CollectionWireCard> = {}): CollectionWireCard {
+  return {
+    id: "card-1",
+    scryfallId: "scryfall-1",
+    name: "Sol Ring",
+    quantity: 1,
+    foil: false,
+    condition: "NM",
+    acquiredAt: null,
+    price: 1.5,
+    imageUri: "",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function deferredList(): {
+  readonly promise: Promise<CollectionListResponse>;
+  readonly resolve: (response: CollectionListResponse) => void;
+} {
+  let resolveResponse: (response: CollectionListResponse) => void = () => {};
+  const promise = new Promise<CollectionListResponse>((resolve) => {
+    resolveResponse = resolve;
+  });
+  return { promise, resolve: resolveResponse };
+}
+
 function makeCollectionCard(overrides: Partial<CollectionCard> = {}): CollectionCard {
   return {
     id: "card-1",
@@ -106,6 +151,39 @@ describe("Collection store — loadCollection", () => {
 
     expect(useCollectionStore.getState().isLoading).toBe(false);
     expect(useCollectionStore.getState().loadError).toBe(true);
+  });
+
+  it("keeps the newer collection when an older load resolves last", async () => {
+    const older = deferredList();
+    const newer = deferredList();
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementationOnce(() => older.promise)
+        .mockImplementationOnce(() => newer.promise)
+    );
+
+    const olderLoad = useCollectionStore.getState().loadCollection();
+    const newerLoad = useCollectionStore.getState().loadCollection();
+
+    newer.resolve({
+      ok: true,
+      json: () => Promise.resolve([wireCard({ id: "new", scryfallId: "new-id", name: "Newer" })]),
+    });
+    await newerLoad;
+
+    older.resolve({
+      ok: true,
+      json: () => Promise.resolve([wireCard({ id: "old", scryfallId: "old-id", name: "Older" })]),
+    });
+    await olderLoad;
+
+    const state = useCollectionStore.getState();
+    expect(state.collectionCards["new-id"]?.name).toBe("Newer");
+    expect(state.collectionCards["old-id"]).toBeUndefined();
+    expect(state.isLoading).toBe(false);
+    expect(state.loadError).toBe(false);
   });
 });
 

@@ -28,9 +28,9 @@ import {
 } from "lucide-react";
 import { useDeckStore } from "@/lib/deck/store";
 import { isDeckStub } from "@/lib/deck/store-factories";
+import { computeDeckStats } from "@/lib/deck/stats";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
-import { useDeck } from "@/hooks/useDeck";
 import { useBracketScore } from "@/hooks/useBracketScore";
 import { useCardSearch } from "@/hooks/useCardSearch";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -78,6 +78,7 @@ import type { DeckQuestion } from "@/lib/ai/deck-question";
 import { useResizePanel } from "@/hooks/useResizePanel";
 import { PlaytestModal } from "@/components/playtest/PlaytestModal";
 import { MetaPanel } from "@/components/deck/MetaPanel";
+import { MetaTrendsView } from "@/components/deck/MetaTrendsView";
 import { CollectionStatsPanel } from "@/components/deck/CollectionStatsPanel";
 import { DeckVisibilityToggle } from "@/components/deck/DeckVisibilityToggle";
 import { DeckSaveIndicator } from "@/components/deck/DeckSaveIndicator";
@@ -284,17 +285,14 @@ export default function BuilderPage() {
   const deckId = params.deckId as string;
   const { data: sessionData } = useSession();
 
-  // Ensure this deck is active
-  const {
-    setActiveDeck,
-    addCard,
-    removeCard,
-    setCommander,
-    setPartner,
-    setCompanion,
-    updateCardCategory,
-    moveCardToZone,
-  } = useDeck();
+  const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
+  const addCard = useDeckStore((s) => s.addCard);
+  const removeCard = useDeckStore((s) => s.removeCard);
+  const setCommander = useDeckStore((s) => s.setCommander);
+  const setPartner = useDeckStore((s) => s.setPartner);
+  const setCompanion = useDeckStore((s) => s.setCompanion);
+  const updateCardCategory = useDeckStore((s) => s.updateCardCategory);
+  const moveCardToZone = useDeckStore((s) => s.moveCardToZone);
   const renameDeck = useDeckStore((s) => s.renameDeck);
   const duplicateDeck = useDeckStore((s) => s.duplicateDeck);
   const swapCardPrinting = useDeckStore((s) => s.swapCardPrinting);
@@ -306,6 +304,7 @@ export default function BuilderPage() {
   const setManualBracket = useDeckStore((s) => s.setManualBracket);
   const decks = useDeckStore((s) => s.decks);
   const loadDecks = useDeckStore((s) => s.loadDecks);
+  const reloadActiveDeck = useDeckStore((s) => s.reloadActiveDeck);
   const loadError = useDeckStore((s) => s.loadError);
   const deckOpenError = useDeckStore((s) => s.deckOpenError);
   const isSyncing = useDeckStore((s) => s.isSyncing);
@@ -342,8 +341,11 @@ export default function BuilderPage() {
     if (banLoaded) setBannedNames(bannedNames);
   }, [banLoaded, bannedNames, setBannedNames]);
 
-  const { stats } = useDeck();
-  const { data: combos, isLoading: combosLoading } = useCombos(deck);
+  const stats = useMemo(() => {
+    if (!deck) return null;
+    return computeDeckStats(deck);
+  }, [deck]);
+  const { data: combos, isLoading: combosLoading, dataUpdatedAt: combosUpdatedAt } = useCombos(deck);
   const bracketScore = useBracketScore(deck, combos);
   const {
     result: aiResult,
@@ -588,14 +590,13 @@ export default function BuilderPage() {
   );
 
   const handleSnapshotRestore = useCallback(() => {
-    // Reload all decks from DB so the builder reflects the restored state
-    void loadDecks();
-  }, [loadDecks]);
+    // The listing keeps an already open deck, so it cannot show the restore.
+    void reloadActiveDeck();
+  }, [reloadActiveDeck]);
 
   const handlePackageApplied = useCallback(async () => {
-    await loadDecks();
-    await setActiveDeck(deckId);
-  }, [deckId, loadDecks, setActiveDeck]);
+    await reloadActiveDeck();
+  }, [reloadActiveDeck]);
 
   const handleAIAddCard = useCallback(
     (cardName: string) => {
@@ -1109,6 +1110,7 @@ export default function BuilderPage() {
               combos={combos}
               isLoading={combosLoading}
               isEnabled={(deck?.cards.length ?? 0) >= 10}
+              observedAt={combosUpdatedAt ? new Date(combosUpdatedAt) : undefined}
             />
 
             <MetaPanel
@@ -1116,6 +1118,8 @@ export default function BuilderPage() {
               deckCardNames={new Set(deck.cards.map((c) => c.name))}
               onAddCard={handleAIAddCard}
             />
+
+            <MetaTrendsView commanderName={deck.commander?.name ?? null} />
 
             <CollectionStatsPanel deck={deck} />
 

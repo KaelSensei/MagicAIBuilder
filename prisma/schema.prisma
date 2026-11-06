@@ -34,12 +34,43 @@ model User {
   publicDeckFolders PublicDeckFolder[]
   savedPublicDecks  SavedPublicDeck[]
   cardPackages      CardPackage[]
+  acquisitionIntents AcquisitionIntent[]
   isModerator       Boolean            @default(false)
   following         UserFollow[]       @relation("Following")
   followers         UserFollow[]       @relation("Followers")
   apiKeys           ApiKey[]
+  notificationPreferences NotificationPreference?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+}
+
+/// A private, reversible plan for how a missing printing will be acquired.
+model AcquisitionIntent {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deckId     String
+  deck       Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  scryfallId String
+  mode       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, deckId, scryfallId])
+  @@index([userId, deckId])
+}
+
+/// Event-level opt-in controls for future in-app or delivery notifications.
+model NotificationPreference {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replies      Boolean  @default(true)
+  mentions     Boolean  @default(true)
+  follows      Boolean  @default(true)
+  watchedDecks Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Account {
@@ -115,6 +146,7 @@ model Deck {
   playtests          PlaytestSession[]
   comments           DeckComment[]
   reports            DeckReport[]
+  acquisitionIntents AcquisitionIntent[]
   savedBy            SavedPublicDeck[]
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt

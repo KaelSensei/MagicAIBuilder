@@ -69,6 +69,11 @@ describe("detectSource", () => {
       .toEqual({ source: "mtgdecks", id: "atraxa-superfriends" });
   });
 
+  it("detects an AetherHub deck-builder URL", () => {
+    expect(detectSource("https://aetherhub.com/Deck/Builder?m=1%20Sol%20Ring&t=cmd"))
+      .toMatchObject({ source: "aetherhub" });
+  });
+
   // ─── EDHRec ──────────────────────────────────────────────────────────────────
   it("detects edhrec commander URL", () => {
     expect(detectSource("https://edhrec.com/commanders/atraxa-praetors-voice"))
@@ -114,6 +119,34 @@ describe("importFromUrl", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("imports AetherHub commander and main-deck cards from its URL payload", async () => {
+    const result = await importFromUrl(
+      "https://aetherhub.com/Deck/Builder?m=1%20Sol%20Ring&sb=1%20Atraxa%2C%20Praetors%27%20Voice&t=cmd"
+    );
+
+    expect(result.source).toBe("aetherhub");
+    expect(result.cards).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: "Sol Ring", zone: "main" }),
+      expect.objectContaining({ name: "Atraxa, Praetors' Voice", isCommander: true }),
+    ]));
+  });
+
+  it("keeps a regular AetherHub sideboard and discloses its format", async () => {
+    const result = await importFromUrl(
+      "https://aetherhub.com/Deck/Builder?m=1%20Sol%20Ring&sb=2%20Negate"
+    );
+
+    expect(result.formatWarning).toContain("not marked as Commander");
+    expect(result.cards).toContainEqual(
+      expect.objectContaining({ name: "Negate", quantity: 2, zone: "sideboard" })
+    );
+  });
+
+  it("rejects an AetherHub URL without cards", async () => {
+    await expect(importFromUrl("https://aetherhub.com/Deck/Builder?m=")).rejects
+      .toThrow("does not contain any cards");
   });
 
   it("throws when URL is not recognised", async () => {
@@ -173,6 +206,33 @@ describe("importFromUrl", () => {
       { name: "Delver of Secrets", quantity: 1, isCommander: false, isPartner: false, zone: "sideboard" },
       { name: "Ponder", quantity: 1, isCommander: false, isPartner: false, zone: "maybeboard" },
     ]);
+  });
+
+  it("Moxfield: preserves companion board cards as companions", async () => {
+    vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          name: "Mox Companion",
+          format: "commander",
+          boards: {
+            commanders: { cards: { c: { quantity: 1, card: { name: "Alela, Artful Provocateur" } } } },
+            companions: { cards: { l: { quantity: 1, card: { name: "Lurrus of the Dream-Den" } } } },
+          },
+        }),
+        { status: 200 }
+      )
+    );
+
+    const result = await importFromUrl("https://moxfield.com/decks/companion-id");
+
+    expect(result.cards).toContainEqual({
+      name: "Lurrus of the Dream-Den",
+      quantity: 1,
+      isCommander: false,
+      isPartner: false,
+      isCompanion: true,
+      zone: "main",
+    });
   });
 
   it("sets formatWarning for non-commander Moxfield format", async () => {
@@ -413,6 +473,22 @@ describe("importFromUrl", () => {
     expect(result.source).toBe("mtgdecks");
     expect(result.name).toContain("sea-monster");
     expect(result.cards.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("MTGDecks: preserves the deck format when loading its text export", async () => {
+    const request = vi.spyOn(http, "httpGet").mockResolvedValueOnce(
+      new Response("4 Lightning Bolt\n", { status: 200 })
+    );
+
+    const result = await importFromUrl("https://mtgdecks.net/Modern/burn-list");
+
+    expect(result.cards).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: "Lightning Bolt", quantity: 4 }),
+    ]));
+    expect(request).toHaveBeenCalledWith(
+      "https://mtgdecks.net/Modern/burn-list/txt",
+      { headers: { Accept: "text/plain, text/html" } }
+    );
   });
 
   it("MTGDecks: throws when txt has no cards", async () => {

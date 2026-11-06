@@ -318,13 +318,16 @@
   },
   "buyList": {
     "buyLater": "Later",
+    "proxyNow": "Proxy now",
     "buyNow": "Buy now",
     "buyLaterNamed": "Buy later: {name}",
+    "proxyNowNamed": "Proxy now: {name}",
     "buyNowNamed": "Buy now: {name}",
     "copyBuyNow": "Copy buy-now list",
     "exportBuyNowCsv": "Export buy-now CSV",
     "nothingPlanned": "No cards planned for now",
     "sessionOnly": "Saved in this browser for this deck. Your collection is unchanged.",
+    "intentSaved": "Saved privately for this deck across your signed-in devices. Your collection is unchanged.",
     "deferredCount": "{count, plural, one {# card for later} other {# cards for later}}",
     "knownSubtotal": "Known subtotal",
     "priceUnavailable": "Price unavailable",
@@ -367,7 +370,8 @@
     "warningGroups": {
       "legality": "Legality errors",
       "strategy": "Strategic suggestions",
-      "advice": "Optional advice"
+      "advice": "Optional advice",
+      "optional": "Optional deck advice"
     }
   },
   "budget": {
@@ -430,7 +434,11 @@
       "cardLabel": "Card to explain",
       "chooseCard": "Choose a card",
       "whyCard": "Why is this card here?",
-      "weakestCard": "Find weakest card"
+      "weakestCard": "Find weakest card",
+      "weakestResult": "Local assessment: {card}",
+      "criterionBanned": "This card is banned in the selected format.",
+      "criterionUnclassified": "No assigned deck role was found for this card.",
+      "criterionAboveCurve": "Its mana value is at least two above this deck's average."
     },
     "archetype": "Archetype",
     "detected": "(detected: {archetype})",
@@ -518,6 +526,9 @@
     "sourceDisclosure": "Source: {source} · Observed {date}",
     "staleSourceDisclosure": "Source: {source} · Last observed {date} · stale",
     "sourceDisclosureUnavailable": "Source: {source} · Observation time unavailable",
+    "sourceHealthUnavailable": "Source health: unavailable after {attempts, plural, one {# attempt} other {# attempts}}",
+    "edhrecSampleWindowUnavailable": "Sample window unavailable from EDHREC",
+    "tournamentEvidenceWindow": "Tournament evidence: {start} – {end}",
     "communityDecks": "Browse community decks for this commander",
     "viewOnEdhrec": "View this commander on EDHRec",
     "popularEdhrec": "Popular (EDHRec)",

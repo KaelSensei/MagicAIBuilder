@@ -105,6 +105,12 @@ export function buildOpenApiDocument(serverUrl: string) {
             name: { type: "string" },
             format: { type: "string" },
             commanderName: { type: ["string", "null"] },
+            pairingType: {
+              type: "string",
+              enum: ["none", "partner", "background", "doctor"],
+              description:
+                "How the commander and partner relate, when the deck has a partner.",
+            },
             targetBracket: { type: "integer", minimum: 1, maximum: 5 },
             isPublic: { type: "boolean" },
             cardCount: { type: "integer", minimum: 0 },

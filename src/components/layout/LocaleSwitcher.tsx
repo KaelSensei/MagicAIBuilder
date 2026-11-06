@@ -7,6 +7,17 @@ import type { SupportedLocale } from "@/i18n/routing";
 import { Globe } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const LOCALE_MENU_ID = "locale-switcher-menu";
+
+/**
+ * Checks whether an event target is a DOM node.
+ * @param target Event target to inspect.
+ * @returns Whether the target is a DOM node.
+ */
+function isNode(target: EventTarget | null): target is Node {
+  return target instanceof Node;
+}
+
 /** Locale switcher dropdown — shows current locale and a popover with all supported locales */
 export function LocaleSwitcher() {
   const locale = useLocale();
@@ -27,7 +38,7 @@ export function LocaleSwitcher() {
   useEffect(() => {
     if (!open) return;
     const handlePointer = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (ref.current && isNode(e.target) && !ref.current.contains(e.target)) {
         setOpen(false);
       }
     };
@@ -49,6 +60,9 @@ export function LocaleSwitcher() {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1.5 p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm"
         aria-label={t("locale.switchLocale")}
+        aria-controls={LOCALE_MENU_ID}
+        aria-expanded={open}
+        aria-haspopup="menu"
         title={t("locale.switchLocale")}
       >
         <Globe className="w-4 h-4" />
@@ -56,12 +70,19 @@ export function LocaleSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg py-1">
+        <div
+          id={LOCALE_MENU_ID}
+          role="menu"
+          aria-label={t("locale.switchLocale")}
+          className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg py-1"
+        >
           {SUPPORTED_LOCALES.map((loc) => (
             <button
               type="button"
               key={loc}
               onClick={() => handleSwitch(loc)}
+              role="menuitemradio"
+              aria-checked={loc === locale}
               className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
                 loc === locale
                   ? "text-[var(--accent-text)] font-medium bg-[var(--accent)]/10"

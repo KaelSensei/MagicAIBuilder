@@ -117,6 +117,18 @@ describe("parsePlainTextDecklist", () => {
     expect(cards[0].isCommander).toBe(false);
   });
 
+  it("preserves a companion section as a companion role", () => {
+    const cards = parsePlainTextDecklist("Companion\n1 Keruga, the Macrosage\nDeck\n1 Sol Ring");
+
+    expect(cards[0]).toMatchObject({
+      name: "Keruga, the Macrosage",
+      isCompanion: true,
+      zone: "main",
+    });
+    expect(cards[1]).toMatchObject({ name: "Sol Ring" });
+    expect(cards[1].isCompanion).toBeFalsy();
+  });
+
   it("treats a 99 heading as the main deck rather than a card", () => {
     const cards = parsePlainTextDecklist("Sideboard\n1 Negate\n// 99\n1 Sol Ring");
     expect(cards).toEqual([
@@ -180,6 +192,18 @@ describe("parsePlainTextDecklist", () => {
   it("strips a trailing set code and a // or | comment from the name", () => {
     const cards = parsePlainTextDecklist("1 Sol Ring (C21) 263\n1 Counterspell // draw engine");
     expect(cards.map((c) => c.name)).toEqual(["Sol Ring", "Counterspell"]);
+  });
+
+  it("strips a ManaBox set suffix whose collector number has a letter variant", () => {
+    expect(parsePlainTextDecklist("1 Wastes (OGW) 184a")).toEqual([
+      { name: "Wastes", quantity: 1, isCommander: false, isPartner: false, zone: "main" },
+    ]);
+  });
+
+  it("accepts CardNexus foil markers without treating them as part of the card name", () => {
+    expect(parsePlainTextDecklist("4x Lightning Bolt (M10) 146 *F*")).toEqual([
+      { name: "Lightning Bolt", quantity: 4, isCommander: false, isPartner: false, zone: "main" },
+    ]);
   });
 
   it("keeps both halves of a split card while stripping a trailing comment", () => {
