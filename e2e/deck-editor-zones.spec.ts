@@ -170,6 +170,33 @@ test.describe("Deck Editor zones", () => {
     }
   });
 
+  test("persists a main-deck move to the sideboard after reload", async ({ page, request }) => {
+    const deckId = await createDeckWithZones(request);
+
+    try {
+      await suppressOnboarding(page);
+      await page.goto(`/builder/${deckId}`);
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+
+      const mainCard = page.locator("span").getByText("Zone Main Card", { exact: true });
+      await expect(mainCard).toBeVisible();
+      const zoneUpdate = page.waitForResponse(
+        (response) =>
+          response.request().method() === "PATCH" &&
+          response.url().includes(`/api/decks/${deckId}/cards/`)
+      );
+      await page.getByTitle("Move to Sideboard").click();
+      expect((await zoneUpdate).ok()).toBe(true);
+
+      await page.reload();
+      await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await page.getByRole("button", { name: /^Sideboard\b/ }).click();
+      await expect(mainCard).toBeVisible();
+    } finally {
+      await request.delete(`/api/decks/${deckId}`);
+    }
+  });
+
   test("recovers from a failed searched-card addition and allows retry", async ({ page, request }) => {
     const deckId = await createDeckWithZones(request);
 
