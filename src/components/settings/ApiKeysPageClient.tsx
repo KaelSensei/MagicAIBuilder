@@ -232,7 +232,7 @@ export function ApiKeysPageClient() {
 
       <form
         onSubmit={submit}
-        className="space-y-3 rounded-lg border border-[var(--border)] p-4"
+        className="space-y-3 rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--lumen-shadow-sm)]"
       >
         <div className="space-y-1">
           <label
@@ -247,7 +247,7 @@ export function ApiKeysPageClient() {
             onChange={(e) => setName(e.target.value)}
             maxLength={100}
             placeholder={t("apiKeys.namePlaceholder")}
-            className="w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-primary)]"
+            className="w-full rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--text-primary)] shadow-[var(--lumen-shadow-sm)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
           />
         </div>
 
@@ -281,7 +281,7 @@ export function ApiKeysPageClient() {
             id="api-key-expiry"
             value={expiresInDays}
             onChange={(e) => setExpiresInDays(Number(e.target.value))}
-            className="rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-primary)]"
+            className="rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-[var(--text-primary)] shadow-[var(--lumen-shadow-sm)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
           >
             {EXPIRY_CHOICES.map((days) => (
               <option key={days} value={days}>
@@ -296,7 +296,7 @@ export function ApiKeysPageClient() {
         <button
           type="submit"
           disabled={!canSubmit}
-          className="flex items-center gap-1.5 rounded bg-[var(--accent)] px-3 py-2 text-sm text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-4 py-2.5 text-sm text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50"
         >
           {isSubmitting ? (
             <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />

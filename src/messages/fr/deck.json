@@ -80,6 +80,9 @@
     "loadFailedDescription": "Le serveur a rejeté la requête, cette liste peut donc être incomplète. Vos decks ne sont pas perdus — réessayez dans un instant.",
     "loadFailedSubtitle": "Liste de decks indisponible",
     "retry": "Réessayer",
+    "sessionTimeoutTitle": "La session a pris trop de temps",
+    "sessionTimeoutDescription": "La vérification du compte ne s'est pas terminée. Vos decks enregistrés sont inchangés. Réessayez.",
+    "profileLoadFailed": "Le profil n'a pas pu être actualisé. Les decks enregistrés restent disponibles.",
     "createFailed": "Impossible de créer le deck — {reason}",
     "folders": {
       "all": "Tous les decks",
@@ -427,7 +430,9 @@
     "cards": "{count} cartes",
     "ratedBy": "{count, plural, one {# note} other {# notes}}",
     "unrated": "Pas encore noté",
-    "anonymous": "Anonyme"
+    "anonymous": "Anonyme",
+    "filterPlaceholder": "Filtrer par deck ou commandant",
+    "filterEmpty": "Aucun deck ne correspond à ce filtre."
   },
   "ai": {
     "title": "Suggestions IA",
@@ -612,7 +617,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count, plural, one {# carte} other {# cartes}}",
     "openShare": "Partager le deck",
-    "forkThisDeck": "Créer une branche de ce deck"
+    "forkThisDeck": "Créer une branche de ce deck",
+    "filterAll": "Tout"
   },
   "banlist": {
     "deckWarnings": "Avertissements du deck",

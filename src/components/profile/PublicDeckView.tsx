@@ -1,12 +1,11 @@
 "use client";
 // Public read-only deck page — accessible without auth for public decks
+import Image from "next/image";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { User, ExternalLink, Layers, Link2, Check } from "lucide-react";
-import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
-import type { CardCategory } from "@/lib/deck/types";
-import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
+import { User, ExternalLink, Link2, Check } from "lucide-react";
+import type { PublicDeck } from "@/lib/deck/public-deck";
 import { DeckRatingPanel } from "@/components/community/DeckRatingPanel";
 import { DeckCommentPanel } from "@/components/community/DeckCommentPanel";
 import { PublicDeckPrimer } from "./PublicDeckPrimer";
@@ -14,6 +13,9 @@ import { PublicDeckActions } from "./PublicDeckActions";
 import { FocusedFeedbackPanel } from "@/components/community/FocusedFeedbackPanel";
 import { DeckReportButton } from "@/components/community/DeckReportButton";
 import { SavePublicDeckButton } from "@/components/community/SavePublicDeckButton";
+import { cardSurfaceClassName } from "@/components/ui/Card";
+import { cn } from "@/components/ui/utils";
+import { PublicDeckCards } from "./PublicDeckCards";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
@@ -42,36 +44,14 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
   const nonCommanderCards = deck.cards.filter(
     (c) => !c.isCommander && !c.isPartner
   );
-
-  // Group by category
-  const grouped = CATEGORY_ORDER.reduce<Record<string, PublicCard[]>>(
-    (acc, cat) => {
-      const cards = nonCommanderCards.filter((c) => c.category === cat);
-      if (cards.length > 0) acc[cat] = cards;
-      return acc;
-    },
-    {}
-  );
-
   const authorName = deck.user?.name ?? deck.user?.username ?? "Unknown";
   const authorUsername = deck.user?.username;
   const totalCards = deck.cards.reduce((s, c) => s + c.quantity, 0);
 
   return (
-    <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 flex flex-col gap-6">
-      {/* Deck header */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Commander art */}
-        {commander?.artCropUri && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={commander.artCropUri}
-            alt={commander.name}
-            className="w-full sm:w-40 h-28 sm:h-24 rounded-xl object-cover border border-[var(--border)] shrink-0"
-          />
-        )}
-
-        <div className="flex-1 min-w-0">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8">
+      <div className={cn(cardSurfaceClassName, "flex flex-col gap-4 p-5 md:flex-row md:p-6")}>
+        <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <h1 className="text-2xl font-bold text-[var(--text-primary)]">
               {deck.name}
@@ -166,6 +146,16 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
             )}
           </div>
         </div>
+        {commander?.imageUri ? (
+          <Image
+            src={commander.imageUri}
+            alt={commander.name}
+            width={160}
+            height={223}
+            unoptimized
+            className="h-auto w-28 shrink-0 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] shadow-[var(--lumen-shadow-sm)] md:w-36"
+          />
+        ) : null}
       </div>
 
       {deck.description?.trim() && (
@@ -225,40 +215,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
         isSignedIn={isSignedIn}
       />
 
-      {/* Card list */}
-      <div className="flex flex-col gap-4">
-        {Object.entries(grouped).map(([cat, cards]) => (
-          <section key={cat}>
-            <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 flex items-center gap-2">
-              <Layers className="w-3 h-3" />
-              {CATEGORY_LABELS[cat as CardCategory] ?? cat}
-              <span className="text-[var(--text-secondary)] font-normal normal-case tracking-normal">
-                ({cards.reduce((s, c) => s + c.quantity, 0)})
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-              {cards.map((card) => (
-                <div
-                  key={card.id}
-                  className="flex items-center gap-2 px-2 py-1 rounded hover:bg-[var(--surface)] transition-colors"
-                >
-                  {card.quantity > 1 && (
-                    <span className="text-xs font-medium text-[var(--accent-text)] w-4 shrink-0">
-                      {card.quantity}×
-                    </span>
-                  )}
-                  <span className="text-sm text-[var(--text-primary)] truncate">
-                    {card.name}
-                  </span>
-                  {card.isGameChanger && (
-                    <span className="text-xs text-amber-400 shrink-0">⚡</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      <PublicDeckCards cards={nonCommanderCards} />
     </main>
   );
 }

@@ -80,6 +80,9 @@
     "loadFailedDescription": "服务器拒绝了该请求，此列表可能不完整。你的套牌并未丢失 — 请稍后重试。",
     "loadFailedSubtitle": "套牌列表不可用",
     "retry": "重试",
+    "sessionTimeoutTitle": "会话检查耗时过长",
+    "sessionTimeoutDescription": "账户检查没有完成。已保存的套牌没有变化。请重试。",
+    "profileLoadFailed": "无法刷新个人资料。已保存的套牌仍然可用。",
     "createFailed": "无法创建套牌 — {reason}",
     "folders": {
       "all": "All decks",
@@ -476,7 +479,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "Fork 此套牌"
+    "forkThisDeck": "Fork 此套牌",
+    "filterAll": "全部"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -612,7 +616,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "按套牌或指挥官筛选",
+    "filterEmpty": "没有符合该筛选的套牌。"
   },
   "companion": {
     "title": "Companion",

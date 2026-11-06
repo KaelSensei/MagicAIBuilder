@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useInitContext } from "@/components/providers/InitProvider";
+import { useBoundedSession } from "@/hooks/useBoundedSession";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { AlertTriangle, Layers, Loader2, Plus, RefreshCw, Search } from "lucide-react";
@@ -18,6 +19,7 @@ import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
 import { DeckComparisonPanel } from "@/components/deck/DeckComparisonPanel";
 import { DeckFolderControls } from "@/components/deck/DeckFolderControls";
 import { DeckListRefreshNotice } from "@/components/deck/DeckListRefreshNotice";
+import { LibraryCardSkeleton } from "@/components/layout/RouteSkeleton";
 import { Input } from "@/components/ui/Input";
 import {
   filterDecksByQuery,
@@ -31,23 +33,10 @@ import {
 
 const SKELETON_KEYS = ["sk-1", "sk-2", "sk-3"] as const;
 
-function DeckCardSkeleton() {
-  return (
-    <div className="animate-pulse rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
-      <div className="mb-3 flex items-start justify-between">
-        <div className="h-4 w-2/3 rounded bg-[var(--border)]" />
-        <div className="ml-2 h-4 w-16 rounded bg-[var(--border)]" />
-      </div>
-      <div className="mt-2 h-3 w-1/2 rounded bg-[var(--border)]" />
-      <div className="mt-2 h-3 w-1/3 rounded bg-[var(--border)]" />
-      <div className="mt-3 h-3 w-1/4 rounded bg-[var(--border)]" />
-    </div>
-  );
-}
-
 export default function DecksPage() {
   const t = useTranslations("deck");
-  const { status: sessionStatus } = useSession();
+  const { status: sessionStatus, timedOut, retry: retrySession } = useBoundedSession();
+  const { initializationStatus, retryInitialization } = useInitContext();
   const router = useRouter();
   const {
     decks,
@@ -61,9 +50,6 @@ export default function DecksPage() {
   // Fine-grained selector: `add` is stable, so it can sit in a useCallback dep.
   const addToast = useToastStore((state) => state.add);
   const [isLoading, setIsLoading] = useState(true);
-  const showLoading =
-    sessionStatus === "loading" ||
-    (sessionStatus === "authenticated" && isLoading);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -74,6 +60,11 @@ export default function DecksPage() {
   const [folderFilter, setFolderFilter] = useState("all");
   const [query, setQuery] = useState("");
   const deckList = Object.values(decks);
+  const showLoading =
+    deckList.length === 0 &&
+    !timedOut &&
+    (sessionStatus === "loading" || (sessionStatus === "authenticated" && isLoading));
+  const sessionBlocked = timedOut && deckList.length === 0;
   // A failed listing must not read as an empty account.
   const hasLoadFailed = loadError !== null && deckList.length === 0;
   const sortedDeckList = useMemo(() => {
@@ -216,6 +207,39 @@ export default function DecksPage() {
           />
         </div>
 
+        {sessionBlocked && (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <AlertTriangle className="mb-4 h-12 w-12 text-red-400 opacity-80" />
+            <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
+              {t("home.sessionTimeoutTitle")}
+            </h2>
+            <p className="mb-6 max-w-md text-sm text-[var(--text-secondary)]">
+              {t("home.sessionTimeoutDescription")}
+            </p>
+            <button
+              type="button"
+              onClick={retrySession}
+              className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
+            >
+              <RefreshCw className="h-4 w-4" />
+              {t("home.retry")}
+            </button>
+          </div>
+        )}
+
+        {!sessionBlocked && initializationStatus === "error" && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-[var(--lumen-radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text-primary)]">
+            <p>{t("home.profileLoadFailed")}</p>
+            <button
+              type="button"
+              onClick={retryInitialization}
+              className="shrink-0 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] px-3 py-2"
+            >
+              {t("home.retry")}
+            </button>
+          </div>
+        )}
+
         {!showLoading && loadError !== null && deckList.length > 0 && (
           <DeckListRefreshNotice onRetry={handleRetryLoad} />
         )}
@@ -235,7 +259,7 @@ export default function DecksPage() {
         {showLoading && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {SKELETON_KEYS.map((key) => (
-              <DeckCardSkeleton key={key} />
+              <LibraryCardSkeleton key={key} />
             ))}
           </div>
         )}
@@ -267,7 +291,7 @@ export default function DecksPage() {
           </motion.div>
         )}
 
-        {!showLoading && !hasLoadFailed && deckList.length === 0 && (
+        {!showLoading && !hasLoadFailed && !sessionBlocked && deckList.length === 0 && (
           <motion.div
             className="flex flex-col items-center justify-center py-24 text-center"
             initial={{ opacity: 0, y: 20 }}

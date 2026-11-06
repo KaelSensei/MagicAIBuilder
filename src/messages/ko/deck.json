@@ -80,6 +80,9 @@
     "loadFailedDescription": "서버가 요청을 거부하여 이 목록이 불완전할 수 있습니다. 덱은 사라지지 않았습니다 — 잠시 후 다시 시도하세요.",
     "loadFailedSubtitle": "덱 목록을 사용할 수 없음",
     "retry": "다시 시도",
+    "sessionTimeoutTitle": "세션 확인이 너무 오래 걸렸습니다",
+    "sessionTimeoutDescription": "계정 확인이 끝나지 않았습니다. 저장된 덱은 그대로입니다. 다시 시도하세요.",
+    "profileLoadFailed": "프로필을 새로고침하지 못했습니다. 저장된 덱은 계속 사용할 수 있습니다.",
     "createFailed": "덱을 만들지 못했습니다 — {reason}",
     "folders": {
       "all": "All decks",
@@ -476,7 +479,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "이 덱 포크하기"
+    "forkThisDeck": "이 덱 포크하기",
+    "filterAll": "전체"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -612,7 +616,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "덱 또는 커맨더로 필터",
+    "filterEmpty": "필터와 일치하는 덱이 없습니다."
   },
   "companion": {
     "title": "Companion",

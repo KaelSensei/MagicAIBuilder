@@ -732,7 +732,10 @@ describe("useDeckStore failed removal recovery", () => {
 
     expect(useDeckStore.getState().decks["deck-1"].cards.map((card) => card.id)).toEqual(["card-2", "card-3"]);
     expect(useDeckStore.getState().undoStack).toHaveLength(1);
-    expect(useDeckStore.getState().undoStack[0].card.id).toBe("card-1");
+    const undoAction = useDeckStore.getState().undoStack[0];
+    expect(undoAction?.type).toBe("REMOVE_CARD");
+    if (undoAction?.type !== "REMOVE_CARD") return;
+    expect(undoAction.card.id).toBe("card-1");
   });
 
   it("restores a rejected removal without leaving a false undo entry", async () => {
