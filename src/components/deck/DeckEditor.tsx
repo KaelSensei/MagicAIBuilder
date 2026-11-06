@@ -14,6 +14,7 @@ import { SortGroupToolbar } from "@/components/deck/SortGroupToolbar";
 import { cn } from "@/components/ui/utils";
 import { getColorIdentityViolations } from "@/lib/deck/color-identity";
 import { ACTIVE_SURFACE_ID } from "@/lib/deck/drop-targets";
+import { cardsFromZoneSource } from "@/lib/deck/zone-source";
 import { supportsPartner, partnerSlotLabel } from "@/lib/deck/pairing";
 import { sortCards, groupCards } from "@/lib/deck/sort";
 import { useDeckStore } from "@/lib/deck/store";
@@ -72,13 +73,7 @@ export function DeckEditor({
   };
 
   // Deduplicate cards by id (guard against import bugs creating duplicate rows)
-  const uniqueCards = useMemo(
-    () =>
-      deck.cards.filter(
-        (card, index, arr) => arr.findIndex((c) => c.id === card.id) === index
-      ),
-    [deck.cards]
-  );
+  const uniqueCards = useMemo(() => cardsFromZoneSource(deck), [deck]);
 
   // Cards split by zone
   const mainCards = uniqueCards.filter((c) => c.zone === "main");
@@ -140,7 +135,7 @@ export function DeckEditor({
             )}
             {/* Partner placeholder when slot is open but not filled */}
             {!hasPartner && supportsPartner(deck.pairingType) && (
-              <div className="flex-1 rounded-lg border border-dashed border-[var(--border)] h-[82px] flex items-center justify-center px-2">
+              <div className="flex h-[82px] flex-1 items-center justify-center rounded-[var(--lumen-radius-lg)] border border-dashed border-[var(--border)] px-2">
                 <span className="text-[10px] text-[var(--text-secondary)] italic text-center leading-tight">
                   {t("searchPartner", {
                     partnerLabel: partnerSlotLabel(deck.pairingType),
@@ -150,7 +145,7 @@ export function DeckEditor({
             )}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-[var(--border)] h-[82px] flex items-center justify-center">
+          <div className="flex h-[82px] items-center justify-center rounded-[var(--lumen-radius-lg)] border border-dashed border-[var(--border)]">
             <p className="text-xs text-[var(--text-secondary)] italic">
               {t("searchCommander")}
             </p>
@@ -161,7 +156,7 @@ export function DeckEditor({
       <CompanionZone deck={deck} deckViewMode={viewMode} />
 
       {/* Zone tabs: Main / Sideboard / Considering */}
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-2.5">
+      <div className="flex min-h-12 items-center justify-between gap-2 overflow-x-auto border-b border-[var(--border)] px-3 py-2 md:px-4">
         <div className="flex items-center gap-0">
           {(
             [

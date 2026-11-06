@@ -78,6 +78,9 @@
     "loadFailedDescription": "Der Server hat die Anfrage abgelehnt, diese Liste ist möglicherweise unvollständig. Deine Decks sind nicht verloren — versuche es gleich noch einmal.",
     "loadFailedSubtitle": "Deckliste nicht verfügbar",
     "retry": "Erneut versuchen",
+    "sessionTimeoutTitle": "Die Sitzung hat zu lange gedauert",
+    "sessionTimeoutDescription": "Die Kontoprüfung wurde nicht fertig. Deine gespeicherten Decks sind unverändert. Versuche es erneut.",
+    "profileLoadFailed": "Das Profil konnte nicht aktualisiert werden. Gespeicherte Decks bleiben verfügbar.",
     "createFailed": "Deck konnte nicht erstellt werden — {reason}",
     "folders": {
       "all": "All decks",
@@ -474,7 +477,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "Dieses Deck forken"
+    "forkThisDeck": "Dieses Deck forken",
+    "filterAll": "Alle"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -610,7 +614,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "Nach Deck oder Commander filtern",
+    "filterEmpty": "Keine Decks passen zu diesem Filter."
   },
   "companion": {
     "title": "Companion",

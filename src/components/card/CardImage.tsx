@@ -1,8 +1,9 @@
 "use client";
 // Card image component with hover zoom and optional info overlay
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
 import { cn } from "@/components/ui/utils";
 import type { CardFace } from "@/lib/deck/types";
@@ -61,6 +62,12 @@ export function CardImage({
   const [isHovered, setIsHovered] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [zoomPos, setZoomPos] = useState<{ readonly x: number; readonly y: number } | null>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  /** Large printing used by the hover preview. Matches the Image width below. */
+  const zoomWidth = 336;
+  /** Large printing used by the hover preview. Matches the Image height below. */
+  const zoomHeight = 468;
 
   React.useEffect(() => {
     if (!zoomOnHover) return;
@@ -73,6 +80,18 @@ export function CardImage({
     return () => clearTimeout(timer);
   }, [isHovered, zoomOnHover]);
 
+  useEffect(() => {
+    const anchor = anchorRef.current;
+    if (!showZoom || !anchor) {
+      setZoomPos(null);
+      return;
+    }
+    const rect = anchor.getBoundingClientRect();
+    const x = Math.min(rect.right + 8, globalThis.innerWidth - zoomWidth - 8);
+    const y = Math.min(Math.max(rect.top, 8), globalThis.innerHeight - zoomHeight - 8);
+    setZoomPos({ x, y });
+  }, [showZoom, zoomHeight, zoomWidth]);
+
   if (cardFaces) {
     return (
       <CardFlip frontFace={cardFaces[0]} backFace={cardFaces[1]} isFlexibleLand={isFlexibleLand} className={className} onClick={onClick} />
@@ -83,6 +102,7 @@ export function CardImage({
 
   return (
     <div
+      ref={anchorRef}
       role="img"
       aria-label={name}
       className={cn("relative inline-block w-full", className)}
@@ -94,7 +114,6 @@ export function CardImage({
     >
       <motion.div
         className="card-image-wrapper cursor-pointer rounded-[4.75%] overflow-hidden w-full"
-        whileHover={zoomOnHover ? { scale: 1.03 } : undefined}
         transition={{ duration: 0.15 }}
         onClick={onClick}
         role={onClick ? "button" : undefined}
@@ -148,25 +167,21 @@ export function CardImage({
       </motion.div>
 
       {/* Zoom panel */}
-      <AnimatePresence>
-        {showZoom && largeUri && !showOverlay && (
-          <motion.div
-            className="absolute z-50 left-full ml-2 top-0 rounded-lg overflow-hidden shadow-2xl pointer-events-none"
-            initial={{ opacity: 0, scale: 0.9, x: -10 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Image
-              src={largeUri}
-              alt={`${name} (large)`}
-              width={336}
-              height={468}
-              unoptimized
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showZoom && zoomPos && largeUri && !showOverlay && createPortal(
+        <div
+          className="pointer-events-none fixed z-50 overflow-hidden rounded-[var(--lumen-radius-lg)] shadow-[var(--lumen-shadow-lg)]"
+          style={{ left: zoomPos.x, top: zoomPos.y, width: zoomWidth, height: zoomHeight }}
+        >
+          <Image
+            src={largeUri}
+            alt={`${name} (large)`}
+            width={zoomWidth}
+            height={zoomHeight}
+            unoptimized
+          />
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

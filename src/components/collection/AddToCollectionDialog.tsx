@@ -8,6 +8,9 @@ import type { CardCondition } from "@/lib/collection/types";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { searchCards } from "@/lib/scryfall/client";
 import { getCardImageUri } from "@/lib/scryfall/images";
+import { Button } from "@/components/ui/Button";
+import { cardSurfaceClassName } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
 
 const CONDITIONS: readonly CardCondition[] = ["NM", "LP", "MP", "HP", "DMG"];
@@ -91,31 +94,28 @@ export function AddToCollectionDialog() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-sm bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-3 py-1.5 rounded transition-colors"
-      >
+      <Button type="button" variant="primary" size="sm" onClick={() => setOpen(true)}>
         <Plus className="w-3.5 h-3.5" />
         {t("trigger")}
-      </button>
+      </Button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
+          <div className={cn(cardSurfaceClassName, "mx-4 w-full max-w-md p-6 shadow-[var(--lumen-shadow-lg)]")}>
             <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
               {t("title")}
             </h2>
 
             {/* Card search */}
             <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
-              <input
+              <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+              <Input
                 type="text"
                 placeholder={t("searchPlaceholder")}
+                aria-label={t("searchPlaceholder")}
                 value={query}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] outline-none focus:border-[var(--accent)] placeholder:text-[var(--text-secondary)]"
+                className="w-full pl-10"
               />
               {isSearching && (
                 <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-[var(--text-secondary)]" />
@@ -164,7 +164,7 @@ export function AddToCollectionDialog() {
                     <button
                       type="button"
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="w-7 h-7 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center"
+                      className="flex h-7 w-7 items-center justify-center rounded-[var(--lumen-radius-pill)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                     >
                       −
                     </button>
@@ -174,7 +174,7 @@ export function AddToCollectionDialog() {
                     <button
                       type="button"
                       onClick={() => setQuantity((q) => q + 1)}
-                      className="w-7 h-7 rounded border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center"
+                      className="flex h-7 w-7 items-center justify-center rounded-[var(--lumen-radius-pill)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                     >
                       +
                     </button>
@@ -193,7 +193,7 @@ export function AddToCollectionDialog() {
                         key={c}
                         onClick={() => setCondition(c)}
                         className={cn(
-                          "px-2 py-1 text-xs rounded border transition-colors",
+                          "rounded-[var(--lumen-radius-pill)] border px-2 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
                           condition === c
                             ? "border-[var(--accent)] text-[var(--accent-text)] bg-[var(--accent)]/10"
                             : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
@@ -214,10 +214,10 @@ export function AddToCollectionDialog() {
                     type="button"
                     onClick={() => setFoil((f) => !f)}
                     className={cn(
-                      "px-3 py-1 text-xs rounded border transition-colors",
+                      "rounded-[var(--lumen-radius-pill)] border px-3 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
                       foil
-                        ? "border-purple-500 text-purple-400 bg-purple-500/10"
-                        : "border-[var(--border)] text-[var(--text-secondary)] hover:border-purple-500/50"
+                        ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                        : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]"
                     )}
                   >
                     ✨ {foil ? t("foil") : t("nonFoil")}
@@ -228,23 +228,16 @@ export function AddToCollectionDialog() {
 
             {/* Actions */}
             <div className="flex items-center gap-2 justify-end">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={handleClose}>
                 {t("cancel")}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="primary"
+                size="sm"
                 onClick={handleAdd}
                 disabled={!selected || isSyncing || added}
-                className={cn(
-                  "flex items-center gap-1.5 px-4 py-2 text-sm rounded transition-colors",
-                  added
-                    ? "bg-green-600 text-white"
-                    : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                )}
+                className={added ? "bg-green-600 hover:bg-green-600" : undefined}
               >
                 {added && (
                   <>
@@ -264,7 +257,7 @@ export function AddToCollectionDialog() {
                     {t("submit")}
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

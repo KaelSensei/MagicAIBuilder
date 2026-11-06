@@ -78,6 +78,9 @@
     "loadFailedDescription": "Il server ha rifiutato la richiesta, quindi questo elenco potrebbe essere incompleto. I tuoi mazzi non sono persi: riprova tra un momento.",
     "loadFailedSubtitle": "Elenco dei mazzi non disponibile",
     "retry": "Riprova",
+    "sessionTimeoutTitle": "La sessione ha impiegato troppo tempo",
+    "sessionTimeoutDescription": "Il controllo dell'account non è terminato. I mazzi salvati non sono cambiati. Riprova.",
+    "profileLoadFailed": "Il profilo non è stato aggiornato. I mazzi salvati restano disponibili.",
     "createFailed": "Impossibile creare il mazzo — {reason}",
     "folders": {
       "all": "All decks",
@@ -474,7 +477,8 @@
     "gameChangerCount": "{count, plural, one {1 Game Changer} other {{count} Game Changers}}",
     "cardCountLabel": "{count} cards",
     "openShare": "Share deck",
-    "forkThisDeck": "Forka questo deck"
+    "forkThisDeck": "Forka questo deck",
+    "filterAll": "Tutti"
   },
   "banlist": {
     "deckWarnings": "Deck warnings",
@@ -610,7 +614,9 @@
     "cards": "{count} cards",
     "ratedBy": "{count, plural, one {# rating} other {# ratings}}",
     "unrated": "Not rated yet",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "filterPlaceholder": "Filtra per mazzo o comandante",
+    "filterEmpty": "Nessun mazzo corrisponde a questo filtro."
   },
   "companion": {
     "title": "Companion",
