@@ -339,7 +339,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   gameChangerNames: new Set<string>(),
   bannedNames: new Set<string>(),
   searchViewMode: "grid",
-  deckViewMode: "list",
+  deckViewMode: "grid",
   deckGridCols: 6,
 
   // Sort & group — initialised from localStorage for persistence

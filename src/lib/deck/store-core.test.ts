@@ -448,6 +448,10 @@ describe("useDeckStore — setSearchViewMode / setDeckViewMode", () => {
     expect(useDeckStore.getState().searchViewMode).toBe("grid");
   });
 
+  it("starts deck editing in grid view", () => {
+    expect(useDeckStore.getInitialState().deckViewMode).toBe("grid");
+  });
+
   it("setDeckViewMode switches to grid", () => {
     useDeckStore.getState().setDeckViewMode("grid");
     expect(useDeckStore.getState().deckViewMode).toBe("grid");
