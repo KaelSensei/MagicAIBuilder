@@ -66,6 +66,8 @@
   },
   "home": {
     "title": "My Decks",
+    "searchPlaceholder": "Decks oder Commander suchen",
+    "searchEmpty": "Keine Decks passen zu dieser Suche.",
     "loading": "Loading...",
     "empty": "No decks yet - create your first deck!",
     "deckCount": "{count, plural, one {1 deck} other {{count} decks}}",

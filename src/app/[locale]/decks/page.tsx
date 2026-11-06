@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { AlertTriangle, Layers, Loader2, Plus, RefreshCw } from "lucide-react";
+import { AlertTriangle, Layers, Loader2, Plus, RefreshCw, Search } from "lucide-react";
 import { DeckWizard } from "@/components/deck/DeckWizard";
 import { HomeDeckCard } from "@/components/deck/HomeDeckCard";
 import { Footer } from "@/components/layout/Footer";
@@ -18,7 +18,9 @@ import { DecksHomeControls } from "@/components/deck/DecksHomeControls";
 import { DeckComparisonPanel } from "@/components/deck/DeckComparisonPanel";
 import { DeckFolderControls } from "@/components/deck/DeckFolderControls";
 import { DeckListRefreshNotice } from "@/components/deck/DeckListRefreshNotice";
+import { Input } from "@/components/ui/Input";
 import {
+  filterDecksByQuery,
   getStoredDecksViewMode,
   sortDecks,
   storeDecksViewMode,
@@ -70,16 +72,17 @@ export default function DecksPage() {
   const [sortKey, setSortKey] = useState<DecksSortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<DecksSortDir>("desc");
   const [folderFilter, setFolderFilter] = useState("all");
+  const [query, setQuery] = useState("");
   const deckList = Object.values(decks);
   // A failed listing must not read as an empty account.
   const hasLoadFailed = loadError !== null && deckList.length === 0;
   const sortedDeckList = useMemo(() => {
-    const filtered =
+    const folderFiltered =
       folderFilter === "all"
         ? deckList
         : deckList.filter((deck) => (deck.folderId ?? "") === folderFilter);
-    return sortDecks(filtered, sortKey, sortDir);
-  }, [deckList, folderFilter, sortKey, sortDir]);
+    return sortDecks(filterDecksByQuery(folderFiltered, query), sortKey, sortDir);
+  }, [deckList, folderFilter, query, sortKey, sortDir]);
 
   useEffect(() => {
     if (sessionStatus !== "authenticated") return;
@@ -170,7 +173,7 @@ export default function DecksPage() {
       <Header />
 
       <main className="mx-auto flex-1 w-full max-w-5xl px-6 py-10">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-[var(--text-primary)]">
               {t("home.title")}
@@ -187,6 +190,19 @@ export default function DecksPage() {
                 t("home.deckCount", { count: deckList.length })}
             </p>
           </div>
+          {deckList.length > 0 && (
+            <div className="relative w-full lg:max-w-sm">
+              <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+              <Input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t("home.searchPlaceholder")}
+                aria-label={t("home.searchPlaceholder")}
+                className="w-full pl-10"
+              />
+            </div>
+          )}
           <DecksHomeControls
             viewMode={viewMode}
             sortKey={sortKey}
@@ -243,7 +259,7 @@ export default function DecksPage() {
             <button
               type="button"
               onClick={handleRetryLoad}
-              className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
+              className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
             >
               <RefreshCw className="h-4 w-4" />
               {t("home.retry")}
@@ -268,7 +284,7 @@ export default function DecksPage() {
               type="button"
               onClick={handleNewDeck}
               disabled={isCreating}
-              className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex items-center gap-2 rounded-[var(--lumen-radius-pill)] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-[var(--lumen-shadow-sm)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isCreating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -280,7 +296,13 @@ export default function DecksPage() {
           </motion.div>
         )}
 
-        {!showLoading && deckList.length > 0 && (
+        {!showLoading && deckList.length > 0 && sortedDeckList.length === 0 && (
+          <p className="rounded-[var(--lumen-radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 text-center text-sm text-[var(--text-secondary)] shadow-[var(--lumen-shadow-sm)]">
+            {t("home.searchEmpty")}
+          </p>
+        )}
+
+        {!showLoading && sortedDeckList.length > 0 && (
           <>
             {viewMode === "list" ? (
               <motion.div
@@ -326,7 +348,7 @@ export default function DecksPage() {
                 <motion.button
                   onClick={handleNewDeck}
                   disabled={isCreating}
-                  className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex h-40 flex-col items-center justify-center gap-2 rounded-[var(--lumen-radius-xl)] border border-dashed border-[var(--border)] bg-transparent p-5 text-[var(--text-secondary)] transition-all hover:border-[var(--accent)] hover:bg-[var(--surface)] hover:text-[var(--accent-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
                   variants={{
                     hidden: { opacity: 0, y: 16 },
                     show: { opacity: 1, y: 0 },
