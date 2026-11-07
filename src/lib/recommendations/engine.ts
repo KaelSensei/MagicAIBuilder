@@ -118,7 +118,10 @@ export function findMissingMetaCards(
   }
 
   // Sort by meta percentage descending
-  return missing.sort((a, b) => b.metaPercentage - a.metaPercentage);
+  return missing.sort(
+    (a, b) =>
+      b.metaPercentage - a.metaPercentage || a.scryfallId.localeCompare(b.scryfallId)
+  );
 }
 
 // ─── Cross-deck budget savings ────────────────────────────────────────────
