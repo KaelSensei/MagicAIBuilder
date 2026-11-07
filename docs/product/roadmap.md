@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-10-30
+> **Updated:** 2026-11-07
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -19,6 +19,7 @@ It should not try to beat every competitor at their strongest specialty:
 - **EDHREC** is the benchmark for aggregate Commander data and statistical recommendations.
 - **ManaBox** is the benchmark for mobile collection management, scanning and marketplace pricing.
 - **Commander Spellbook** is the benchmark for structured Commander combo discovery.
+- **ManaTap, Farseek and MTG Master** are the benchmark for conversational generation. They shipped it during 2026 with free entry tiers, so the presence of AI is no longer an edge; validated, explainable output is.
 
 Our opportunity is the workflow between those products:
 
@@ -40,23 +41,64 @@ Our opportunity is the workflow between those products:
 - Do not expand formats, languages or integrations faster than their tests and data contracts can support.
 - Do not add a new external service unless it solves a user-visible problem and has an exit path.
 
-### Competitive functional benchmark — 2026-09-19
+### Competitive functional benchmark — 2026-11-07
 
-The comparison below tracks user workflows rather than trying to match feature counts. It is based on the current public product and help surfaces of Moxfield, Archidekt and TappedOut.
+The comparison below tracks user workflows rather than trying to match feature counts. This revision supersedes the 2026-09-19 benchmark, which covered only Moxfield, Archidekt and TappedOut and assumed no competitor shipped LLM-based deckbuilding. That assumption is no longer true, so the benchmark now separates three groups: the deck-workflow incumbents, the data and ownership specialists, and the AI-native builders that appeared during 2026.
 
-| Competitor strength                                                                                                               | MagicAIBuilder today                                                                                                                                            | Product response                                                                                 |
-| --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Moxfield: fast editing, detailed primers, deck history, tokens, social notifications and rich sandbox controls                    | Editing, snapshots, required-token checklists, a guided primer template, comments and playtesting exist; rich published primers and notification inboxes do not | Complete public deck guides and add relevant notifications without copying a generic social feed |
-| Archidekt: visual organization, folders, deck comparison, reusable card packages, deck-help requests and exportable playtest logs | Owned-deck folders and comparison now exist; packages, public comparison, help requests and downloadable logs remain incomplete                                 | Prioritize reusable packages, public comparison and evidence-rich playtest logs                  |
-| TappedOut: acquireboard, inventory usage map, wishlist checkout, deck folders and explicit feedback-seeking workflows             | Collection reconciliation and shopping lists exist; cross-deck card usage, acquire state and structured help requests do not                                    | Connect collection, decks and acquisition planning, then add a focused request-for-feedback flow |
+#### Deck-workflow incumbents
+
+| Competitor strength                                                                                                                                                                                    | MagicAIBuilder today                                                                                                                                            | Product response                                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Moxfield: fast editing, detailed primers, deck history, tokens, social notifications, rich sandbox controls and the largest fork/comment community                                                     | Editing, snapshots, required-token checklists, a guided primer template, comments and playtesting exist; rich published primers and notification inboxes do not | Complete public deck guides and add relevant notifications without copying a generic social feed                         |
+| Archidekt: visual organization, folders, deck comparison, reusable card packages, deck-help requests, a playtester interaction simulator and a multi-vendor price breakdown by category and price band | Owned-deck folders, comparison, packages and a goldfish engine with an editable action log exist; multi-vendor price breakdown does not                         | Keep playtest evidence as the differentiator rather than simulator depth, and treat multi-vendor pricing as part of I-06 |
+| TappedOut: acquireboard, inventory usage map, wishlist checkout, deck folders and explicit feedback-seeking workflows                                                                                  | Collection reconciliation, shopping lists, cross-deck acquisition planning and "seeking feedback" exist; persistent acquire state does not                      | Finish explicit acquire state, then connect it to regional sellers                                                       |
+
+#### Data and ownership specialists
+
+| Competitor strength                                                                                                                                                                    | MagicAIBuilder today                                                                                                                                   | Product response                                                                                           |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| EDHREC: aggregate Commander data, the October 2026 redesign, bracket and timeframe filters, tag clouds, and **Lift** replacing Synergy as a statistically grounded co-occurrence ratio | EDHREC popular-card recommendations, snapshots, trend bounds and source/freshness disclosure exist; our vocabulary still assumes the Synergy model     | Adopt Lift semantics explicitly rather than relabelling it, and keep our own evidence separate from theirs |
+| ManaBox: camera scanning, offline card search, collection-aware scanning, and first-class proxy and signed-card tracking                                                               | Collection tracking, proxy PDF export and a browser-local buy-now/buy-later choice exist; printing-level ownership and synchronized proxy state do not | Finish printing-level ownership before considering any scanning or mobile parity                           |
+| Commander Spellbook: structured combo discovery, with per-deck and per-card combo endpoints added in v0.84.0 (2026-10-20)                                                              | Combo detection through Commander Spellbook exists                                                                                                     | Re-check our integration against the current endpoints and keep combo lookups cached per card list         |
+
+#### AI-native builders — the gap closed during 2026
+
+The March 2026 landscape review concluded that no production tool offered LLM-based Commander deckbuilding. Several now do, and they are free or cheap at the entry tier:
+
+| Competitor                                                                                                 | What it ships                                                                                                                                                                                                                                                 | What it does not do                                                                             |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **ManaTap** (manatap.ai)                                                                                   | Collection-aware AI chat, an iterative "AI Workshop", a Deck Checker scoring legality, curve, ramp, draw, removal, threats and synergy, deterministic legality and colour-identity validation, budget swaps, deck compare, price tracking, mulligan simulator | Playtest-session evidence, printing-level acquisition planning, source-and-freshness disclosure |
+| **Farseek** (farseek.ai)                                                                                   | A Claude-backed assistant that reads the whole decklist and argues why a card fits, live Scryfall lookups before each recommendation, bracket and persistent budget constraints, imports from Moxfield, Archidekt, ManaBox and text                           | Does not state any deterministic legality validation; no ownership or playtest loop             |
+| **MTG Master** (mtgmaster.app)                                                                             | Bracket-aware and collection-aware 100-card generation enforcing legal commander, colour identity and singleton, with mana, draw, interaction and win-condition targets                                                                                       | Explainability per card, evidence history, acquisition planning                                 |
+| **ManaForge** (manaforge.tools)                                                                            | Build-from-collection generation, commander-swap suggestions, automatic re-validation of saved decks against live ban lists, Arena wildcard awareness                                                                                                         | Commander bracket analysis, scanning, playtest evidence                                         |
+| Long tail: mtg-agents.com, aidecktutor.com, onemoredeck.com, counterdeck.com, edhgen.ai, krakenthemeta.com | Free generation from a prompt; some add live metagame web search                                                                                                                                                                                              | Durable deck state, ownership, evidence and rules depth                                         |
+
+**What this changes for us.** "AI-powered" is no longer a differentiator; it is table stakes with a free tier. Three claims still are, and each is already an initiative rather than a new bet:
+
+1. **The LLM never decides legality** (I-02). A deterministic post-generation validator, bracket scoring and banlist checks run outside the model. Competitors either validate deterministically without explaining, or explain without validating.
+2. **Evidence a player produced themselves** (I-07, I-09). Snapshot comparison, recorded playtest sessions and source-and-freshness labels mean a recommendation can be traced to data the player can inspect, not only to a model's confidence.
+3. **Printing-level ownership and acquisition** (I-06). The cross-deck acquisition plan with known-price subtotals and unpriced-copy disclosure is deeper than a budget-swap suggestion.
+
+Accordingly, the positioning emphasis moves from "AI builds your deck" to "AI you can check" — explainable, validated and testable. Nothing in the initiative order changes because of this; the ordering already favours trust and evidence over generation volume.
+
+#### External data contracts to absorb
+
+These are confirmed upstream changes, not product wishes. They affect shipped integrations and belong to I-05, I-09 and I-10.
+
+- **EDHREC replaced Synergy with Lift** (card pages earlier in 2026, then `/commanders`, `/combos` and `/tags` on 2026-10-01). Lift is a ratio centred on 1 — inclusion in context divided by inclusion at large — not a percentage centred on 0. Any surface that treats a synergy number as a percentage, or ranks by it, needs rechecking.
+- **Moxfield has no public API and now answers programmatic requests behind Cloudflare**, with authentication headers required on its internal endpoints. Third-party tools have been moving to text and CSV paste as the supported path. Our URL import must be treated as a brittle path with an explicit fallback, not as a stable contract.
+- **Scryfall tightened its request policy and moved bulk data to gzipped JSONL** (reported deadline 2026-07-20), with bulk files carrying prices and refreshing twice a day. Our client already sends `User-Agent` and `Accept` and serialises requests behind a 100 ms mutex, which honours the 10 req/s sustained ceiling but not a stricter per-endpoint search limit. Confirm the current figures against Scryfall's own documentation — it blocks automated fetching, so this needs a human read — before changing the limiter.
+- **Commander Brackets remain in beta**, and the Game Changers list has not moved since 2026-02-09 at 53 cards, with WotC explicitly slowing bracket-level changes. Our bracket scoring is stable for now; keep the list versioned so a resumed cadence is a data update rather than a code change.
 
 #### Deliberate non-goals from the benchmark
 
 - Do not build a draft simulator, cube platform, venue directory or full card-trading marketplace in the current roadmap.
 - Do not add paid deck promotion, deck-cycling mechanics or engagement loops that rank visibility by spend.
 - Do not duplicate Scryfall's card database or pursue every format before the Commander workflow is excellent.
+- Do not follow the AI-native builders into a tournament manager, a custom-card creator, MTG Arena wildcard optimization or camera scanning; each is a separate product with its own data and support cost.
+- Do not compete on generation volume or free-tier generosity. A wrong deck produced instantly is the failure mode this product exists to avoid.
 
-Sources reviewed: [Moxfield public feature guide](https://github.com/moxfield/moxfield-public/wiki/Features), [Archidekt product navigation and updates](https://archidekt.com/news), [TappedOut deck help](https://tappedout.net/help-desk/decks/) and [TappedOut inventory and wishlist help](https://tappedout.net/help-desk/ownership/). Product behavior must be revalidated before implementation because competitor capabilities can change.
+Sources reviewed: [Moxfield public feature guide](https://github.com/moxfield/moxfield-public/wiki/Features), [Archidekt development updates](https://archidekt.com/news), [TappedOut deck help](https://tappedout.net/help-desk/decks/), [TappedOut inventory and wishlist help](https://tappedout.net/help-desk/ownership/), [EDHREC redesign changelog](https://edhrec.com/articles/changelog-edhrec-redesign), [EDHREC performance and filter changelog](https://edhrec.com/articles/changelog-big-performance-upgrades), [EDHREC Lift changelog](https://edhrec.com/articles/changelog-replacing-synergy-with-lift-on-edhrecs-card-pages), [Commander Spellbook releases](https://github.com/SpaceCowMedia/commander-spellbook-site/releases/tag/v0.84.0), [ManaTap](https://www.manatap.ai/), [Farseek](https://farseek.ai/), [MTG Master](https://mtgmaster.app/ai-commander-deck-builder), [ManaForge comparison post](https://manaforge.tools/en/blog/manaforge-vs-moxfield-vs-archidekt) and [Commander Brackets reference](https://mtg.wiki/page/Commander_Brackets). Product behavior must be revalidated before implementation because competitor capabilities can change. Competitor marketing copy is a claim, not evidence: treat each row as a hypothesis to confirm before it justifies scope.
 
 ---
 
@@ -99,6 +141,8 @@ The five #1110 slices classify failed companion rules as legality warnings (I-03
 The #1117 and #1118 slices prevent stale deck-comparison results after a selection change and show exact-printing acquisition needs beside collection deck usage. #1119 reduced the main-branch Sonar measure from 20 code smells to one; #1123 addresses the remaining import-dialog complexity, pending main-branch reanalysis. These are focused improvements within I-08, I-06 and I-05, not evidence that their broader acceptance criteria are complete. The planning estimate remains approximately 30-50 small PR-sized iterations for active Now/Next work, excluding 11 conditional or parked scopes.
 
 I-07's tracked playtest scope is shipped. The largest active gaps remain the deck editor (I-01), collection-to-acquisition flow (I-06), and explainable recommendation evidence (I-09). I-13 adds a visual redesign, not a claim that today's UI is unfinished or that existing functionality must be rewritten.
+
+**2026-11-07 competitive revision:** the refreshed benchmark adds eight open scopes — Lift semantics and a Commander Spellbook endpoint re-check (I-09), Moxfield import brittleness (I-10), Scryfall policy confirmation (I-05), vendor-level cost breakdown and explicit proxy state (I-06), a visible validator verdict (I-02) and dated Game Changers data (I-03). These are responses to confirmed upstream and competitor changes, not new product bets, so they raise the tracked open count rather than reducing it. Three of them protect integrations that already ship — I-09's Lift work, I-10's Moxfield fallback and I-05's Scryfall confirmation — and should be scheduled before new surface area.
 
 **Iteration estimate:** approximately 30-50 small PR-sized iterations for the active Now/Next outcomes **including** I-13, with overlap between visual and functional work. The 11 conditional or parked scopes are excluded. This is an estimate, not a fixed number of turns or a delivery deadline; refine it after a visual audit and each accepted slice.
 
@@ -284,6 +328,7 @@ A user can move a card between every legal zone, reload the page, change its pri
 - [x] Add a deterministic post-generation validator; the LLM never decides legality.
 - [x] Build a small golden evaluation set for valid cards, useful explanations and regression checks.
 - [ ] Expand the golden set from deterministic structural and evidence contracts to provider-backed qualitative evaluations only when a stable review rubric exists.
+- [ ] Keep the deterministic validator's verdict visible in the copilot's output instead of only applying it silently. Competing assistants either validate without explaining or explain without validating; the difference is only a differentiator if the player can see which claims were checked against card data and which are the model's reasoning.
 
 ### Definition of done
 
@@ -329,6 +374,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - [ ] Validate commander and partner mechanics at the deck API boundary, including imported pairs and the same Oracle card across different printings.
   - [x] Reject whitespace-only partner IDs before creating a deck (#1098).
   - [x] Reject a commander and partner that are different printings of the same Oracle card on deck create and update (`sharesOracleIdentity`, #1131). Imported pairs outside these two APIs remain to be verified.
+- [ ] Version the Game Changers list and bracket rules as dated data rather than code. The list has held at 53 cards since 2026-02-09 and Wizards still labels the brackets beta, so a resumed update cadence should be a data change with an effective date, not a release.
 
 ### Definition of done
 
@@ -408,6 +454,7 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 - [ ] Record the E2E Docker strategy and required environment variables.
   - The strategy is documented in the "E2E gate" section of `docs/engineering/quality-gate.md`. The environment variables set in `docker-compose.e2e.yml` (`DATABASE_URL`, `NEXT_PUBLIC_APP_URL`, `AUTH_SECRET`, plus the Postgres service settings) are not yet listed there.
 - [ ] Upgrade Prisma only after the local Node toolchain is at least 22.12.
+- [ ] Confirm Scryfall's current per-endpoint request limits and bulk-data format against Scryfall's own documentation, then align the client limiter. `src/lib/scryfall/client.ts` sends `User-Agent` and `Accept` and serialises calls behind a 100 ms mutex, which honours a 10 req/s sustained ceiling but not a stricter per-endpoint search limit; bulk files are reported to have moved to gzipped JSONL on 2026-07-20. Scryfall blocks automated fetching, so a human must read the policy before the limiter changes.
 - [x] Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
   - `GET /api/decks` status and duration shipped in #1034. Profile and Scryfall paths remain open; do not close this item yet.
   - Profile mutation latency on `/api/user/profile` is recorded (#1132). Profile reads and other Scryfall paths remain open.
@@ -469,6 +516,8 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - [ ] Extend exact-printing usage beyond private decks to saved lists or acquisition plans; deck usage is now visible from the collection.
 - [ ] Add explicit, persistent acquire state; the read-only cross-deck plan is now visible in the collection UI.
 - [ ] Export or deep-link the acquisition plan to supported regional sellers while preserving printing, condition and finish choices.
+- [ ] Break deck and acquisition cost down by vendor, category and price band instead of a single subtotal, once a region-aware provider is selected. Archidekt already offers this breakdown from its deck price overlay.
+- [ ] Track proxies as explicit card state rather than only a PDF export and a browser-local buy-later choice. ManaBox treats proxy and signed copies as first-class collection data, and the synchronized proxy workflow above depends on the same model.
 
 ### Definition of done
 
@@ -598,6 +647,8 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - [ ] Add trend views that respect EDHREC top-20 truncation bounds.
   - [x] Avoid inferring a rise or fall bound from a snapshot with fewer than 20 distinct cards (#1098). Broader trend-view disclosure remains open.
 - [ ] Revisit richer tournament statistics only with a source that publishes match-level data.
+- [ ] Adopt EDHREC's Lift semantics explicitly wherever a co-occurrence number is shown or ranked. Lift is a ratio centred on 1 — inclusion in context divided by inclusion at large — and replaced Synergy on `/commanders`, `/combos` and `/tags` on 2026-10-01. Label it as Lift with its definition available on demand; do not relabel it as a synergy percentage or sort it as one.
+- [ ] Re-check the Commander Spellbook integration against the per-deck and per-card combo endpoints added in v0.84.0 (2026-10-20), and cache identical card-list lookups so a much-viewed public deck cannot repeatedly hit the service.
 
 ### Blocked
 
@@ -665,6 +716,7 @@ A recommendation is never presented as universal truth: the user can see where i
   - Import parsing and preview are more resilient, but exact printing and category round trips remain open; preserving a localized name does not guarantee that Scryfall resolves that language.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.
+- [ ] Treat the Moxfield URL import as a brittle path rather than a stable contract. Moxfield has no public API, now answers programmatic requests behind Cloudflare, and requires authentication headers on its internal endpoints; other tools have moved to paste and CSV as the supported route. Detect the blocked case explicitly and tell the player to paste the list instead of reporting a generic import failure.
 
 ### Definition of done
 
@@ -737,6 +789,7 @@ A local model is only promoted if it matches the required quality for a clearly 
 ### Inspiration and boundaries
 
 - Take inspiration from Moxfield's efficient deck workflow and presentation, and from [EDHREC's October 2026 redesign](https://edhrec.com/articles/changelog-edhrec-redesign): visible card context, legible evidence, purposeful filters, configurable views and responsive layouts.
+- EDHREC's November 2026 changelog adds distribution bar charts above its bracket filter, a tag cloud carrying deck counts, and bracket filters across its top-card pages. Dense filter state can be made legible; take that principle, not the layout.
 - Do not copy either product's layout, artwork, branding or interaction details. Keep MagicAIBuilder's explainable AI, legality, playtest and ownership workflows recognizable.
 - Keep source attribution and statistical uncertainty readable. A prettier recommendation must not look more certain than its data supports.
 - Treat narrow web widths as part of responsive quality; a native mobile application is not in scope.
