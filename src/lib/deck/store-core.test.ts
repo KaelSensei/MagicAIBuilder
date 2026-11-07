@@ -939,6 +939,11 @@ describe("useDeckStore — setManualBracket", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("useDeckStore — addCard", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    seedDeck();
+  });
+
   it("prefers an owned printing with the same name without changing the collection", async () => {
     const searchedCard = makeScryfallCard({ id: "searched-printing", name: "Lightning Bolt" });
     const ownedPrinting = makeScryfallCard({ id: "owned-printing", name: "Lightning Bolt" });
@@ -976,11 +981,6 @@ describe("useDeckStore — addCard", () => {
       expect.objectContaining({ scryfallId: "owned-printing" })
     );
     expect(collectionState.collectionCards["owned-printing"]?.quantity).toBe(1);
-  });
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    seedDeck();
   });
 
   it("adds a new card to the deck", async () => {
