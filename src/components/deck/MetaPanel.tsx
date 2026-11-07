@@ -40,7 +40,7 @@ function tournamentEvidenceWindow(
 ): { readonly start: string; readonly end: string } | null {
   const datedEvents = decks
     .flatMap((deck) => (deck.date && /^\d{4}-\d{2}-\d{2}$/.test(deck.date) ? [deck.date] : []))
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
   const start = datedEvents[0];
   const end = datedEvents.at(-1);
   return start && end ? { start, end } : null;
