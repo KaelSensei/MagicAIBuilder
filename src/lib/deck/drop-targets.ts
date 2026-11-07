@@ -3,7 +3,7 @@ import type { DeckZone } from "./types";
 /** Droppable id of the editor surface. It follows the active zone for new cards. */
 export const ACTIVE_SURFACE_ID = "deck-active-surface";
 
-const DECK_ZONES: readonly DeckZone[] = ["main", "sideboard", "maybeboard"];
+const DECK_ZONES: readonly string[] = ["main", "sideboard", "maybeboard"] satisfies readonly DeckZone[];
 const ZONE_TAB_PREFIX = "deck-zone-tab-";
 const ZONE_BODY_PREFIX = "deck-zone-";
 
@@ -14,7 +14,7 @@ const ZONE_BODY_PREFIX = "deck-zone-";
  * @returns True when the value is main, sideboard, or maybeboard
  */
 export function isDeckZone(value: string): value is DeckZone {
-  return DECK_ZONES.some((zone) => zone === value);
+  return DECK_ZONES.includes(value);
 }
 
 /**

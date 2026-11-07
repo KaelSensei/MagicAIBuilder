@@ -69,6 +69,16 @@ export function PublicDeckActions({
     setShared(true);
   }, [deckName]);
 
+  let saveLabel = "Save";
+  let saveAccessibleLabel = "Save deck";
+  if (saved) {
+    saveLabel = "Saved";
+    saveAccessibleLabel = "Saved deck";
+  } else if (saving) {
+    saveLabel = "Saving…";
+    saveAccessibleLabel = "Saving deck";
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       {forkedFrom && (
@@ -88,11 +98,11 @@ export function PublicDeckActions({
         type="button"
         onClick={() => void handleSave()}
         disabled={!isSignedIn || saving || saved}
-        aria-label={saved ? "Saved deck" : saving ? "Saving deck" : "Save deck"}
+        aria-label={saveAccessibleLabel}
         className="flex items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-40"
       >
         <Bookmark className="h-3.5 w-3.5" fill={saved ? "currentColor" : "none"} />
-        {saved ? "Saved" : saving ? "Saving…" : "Save"}
+        {saveLabel}
       </button>
       {saveError && (
         <p role="alert" className="text-xs text-red-400">

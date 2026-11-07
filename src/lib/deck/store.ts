@@ -875,7 +875,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       logger.error("Unexpected error", "updateDeckDescription", err);
       set((state) => {
         const currentDeck = state.decks[deckId];
-        if (!currentDeck || currentDeck.description !== description) return state;
+        if (currentDeck?.description !== description) return state;
         return {
           decks: {
             ...state.decks,

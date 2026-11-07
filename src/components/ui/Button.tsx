@@ -45,7 +45,7 @@ export function Button({
   size,
   type = "button",
   ...props
-}: ButtonProps) {
+}: Readonly<ButtonProps>) {
   return (
     <button
       type={type}

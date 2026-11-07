@@ -5,6 +5,18 @@ import { PLAIN_TEXT_IMPORT_V1 } from "./fixtures/plain-text-v1";
 import { MOXFIELD_IMPORT_V1 } from "./fixtures/moxfield-v1";
 
 describe("parseTextDecklist", () => {
+  it("preserves names while trimming spaced category suffixes and ignores unknown tags", () => {
+    const spaces = " ".repeat(4096);
+    const result = parseTextDecklist(`1 Sol Ring${spaces}[Ramp]   \n1 Card [Unknown]\n1 Card[Ramp]\n1 Island${spaces}!`);
+
+    expect(result.cards).toEqual([
+      { name: "Sol Ring", quantity: 1 },
+      { name: "Card [Unknown]", quantity: 1 },
+      { name: "Card[Ramp]", quantity: 1 },
+      { name: `Island${spaces}!`.slice(0, 200), quantity: 1 },
+    ]);
+  });
+
   it("removes Archidekt category tags before resolving pasted card names", () => {
     const result = parseTextDecklist(`Commander (1)
 1x Atraxa, Praetors' Voice [Commander{top}]

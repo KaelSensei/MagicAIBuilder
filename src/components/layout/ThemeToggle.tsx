@@ -66,8 +66,7 @@ export function ThemeToggle() {
   );
 
   return (
-    <div
-      role="group"
+    <fieldset
       aria-label={t("theme.toggle")}
       className="flex items-center gap-0.5 rounded-[var(--lumen-radius-pill)] border border-[var(--border)] bg-[var(--background)] p-0.5"
     >
@@ -93,6 +92,6 @@ export function ThemeToggle() {
           </button>
         );
       })}
-    </div>
+    </fieldset>
   );
 }
