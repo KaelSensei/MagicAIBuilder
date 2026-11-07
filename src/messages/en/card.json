@@ -8,6 +8,8 @@
   "banned": "Banned",
   "moveNamedToMaybeboard": "Move {name} to Considering",
   "moveNamedToSideboard": "Move {name} to Sideboard",
+  "addNamedToMaybeboard": "Add {name} to Considering",
+  "namedInMaybeboard": "{name} is already in Considering",
   "removeNamed": "Remove {name}",
   "noText": "No text",
   "noCardsFound": "No cards found",

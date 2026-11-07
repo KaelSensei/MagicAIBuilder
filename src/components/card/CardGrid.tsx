@@ -12,6 +12,7 @@ import { isMdfcWithLandBack } from "@/lib/deck/categories";
 import type { CardFace } from "@/lib/deck/types";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
 import { QuickAddCollectionButton } from "@/components/collection/QuickAddCollectionButton";
+import { AddToConsideringButton } from "./AddToConsideringButton";
 
 interface CardGridProps {
   readonly cards: readonly ScryfallCard[];
@@ -67,8 +68,8 @@ export function CardGrid({
   className,
   emptyMessage,
   draggable = false,
-  onAddToMaybeboard: _onAddToMaybeboard,
-  maybeboardNames: _maybeboardNames,
+  onAddToMaybeboard,
+  maybeboardNames,
 }: CardGridProps) {
   const t = useTranslations("card");
 
@@ -123,6 +124,14 @@ export function CardGrid({
               compact
               className="absolute bottom-6 left-1 z-10"
             />
+            {onAddToMaybeboard && (
+              <AddToConsideringButton
+                card={card}
+                isInMaybeboard={maybeboardNames?.has(card.name) ?? false}
+                onAdd={onAddToMaybeboard}
+                className="absolute right-1 top-1 z-10"
+              />
+            )}
             <QuickAddCollectionButton
               card={card}
               className="absolute bottom-6 right-1 z-10 opacity-0 group-hover/gridcard:opacity-100 transition-opacity"
