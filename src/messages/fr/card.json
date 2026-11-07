@@ -8,6 +8,8 @@
   "banned": "Bannie",
   "moveNamedToMaybeboard": "Déplacer {name} vers À l'étude",
   "moveNamedToSideboard": "Déplacer {name} vers la réserve",
+  "addNamedToMaybeboard": "Ajouter {name} à l'étude",
+  "namedInMaybeboard": "{name} est déjà à l'étude",
   "removeNamed": "Retirer {name}",
   "noText": "Aucun texte",
   "noCardsFound": "Aucune carte trouvée",

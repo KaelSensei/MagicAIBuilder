@@ -6,6 +6,7 @@ import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { DraggableCard } from "./DraggableCard";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
+import { AddToConsideringButton } from "./AddToConsideringButton";
 
 interface CardSearchListItemProps {
   readonly card: ScryfallCard;
@@ -19,8 +20,8 @@ interface CardSearchListItemProps {
 function ListItemContent({
   card,
   onClick,
-  onAddToMaybeboard: _onAddToMaybeboard,
-  isInMaybeboard: _isInMaybeboard,
+  onAddToMaybeboard,
+  isInMaybeboard = false,
 }: {
   readonly card: ScryfallCard;
   readonly onClick?: (card: ScryfallCard) => void;
@@ -28,6 +29,7 @@ function ListItemContent({
   readonly isInMaybeboard?: boolean;
 }) {
   return (
+    <div className="flex items-center gap-1">
     <motion.button
       type="button"
       className={cn(
@@ -48,6 +50,14 @@ function ListItemContent({
       {/* Add to deck */}
       <Plus className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 shrink-0 transition-opacity" />
     </motion.button>
+      {onAddToMaybeboard && (
+        <AddToConsideringButton
+          card={card}
+          isInMaybeboard={isInMaybeboard}
+          onAdd={onAddToMaybeboard}
+        />
+      )}
+    </div>
   );
 }
 
