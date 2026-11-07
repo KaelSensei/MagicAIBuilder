@@ -224,6 +224,7 @@ test.describe("Deck Editor zones", () => {
 
       await page.reload();
       await page.getByRole("link", { name: "Back to my decks" }).waitFor({ state: "visible" });
+      await useListView(page);
       await page.getByRole("button", { name: /^Sideboard\b/ }).click();
       await expect(mainCard).toBeVisible();
     } finally {
