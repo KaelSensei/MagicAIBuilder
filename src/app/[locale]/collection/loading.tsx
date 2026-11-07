@@ -8,9 +8,9 @@ export default function Loading() {
 
   return (
     <main className="min-h-screen bg-[var(--bg)] p-6 text-[var(--text-primary)]">
-      <div role="status" aria-busy="true" className="sr-only">
+      <output aria-busy="true" className="sr-only">
         {t("loading")}
-      </div>
+      </output>
       <div aria-hidden="true" className="mx-auto max-w-6xl motion-safe:animate-pulse">
         <div className="mb-6 h-8 w-48 rounded bg-[var(--surface)]" />
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">

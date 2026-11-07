@@ -17,7 +17,7 @@ test("retries a failed individual deck load without showing an incomplete editor
     });
 
     await page.goto(`/builder/${deckId}`);
-    const deckCard = page.locator("span").getByText("Fixture Card 0", { exact: true });
+    const deckCard = page.getByRole("button", { name: "Remove Fixture Card 0", exact: true });
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(deckCard).toHaveCount(0);
 

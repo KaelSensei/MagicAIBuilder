@@ -43,7 +43,7 @@ export function restoredDeckCards(
   cardList: unknown
 ): readonly RestoredDeckCard[] {
   if (!Array.isArray(cardList)) {
-    throw new Error("Snapshot card list is not an array");
+    throw new TypeError("Snapshot card list is not an array");
   }
   return cardList.map((entry) => restoredDeckCard(deckId, entry));
 }

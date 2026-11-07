@@ -103,6 +103,8 @@ test.describe("Deck editor visual stability", () => {
       await openEditor(page, deckId);
       const row = page.locator("span").getByText("Visual Spell", { exact: true });
       await expect(row).toBeVisible();
+      // Measure the settled row, not its entrance translation.
+      await expect(row.locator("..")).toHaveCSS("transform", "none");
       const before = await row.boundingBox();
 
       await row.hover();

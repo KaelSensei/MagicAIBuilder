@@ -35,7 +35,7 @@ function clampQuantity(n: number): number {
 // Bounded quantifiers prevent ReDoS: set codes ≤6 chars, collector numbers ≤6 digits
 const SET_CODE_PATTERN = /\s{1,5}\([A-Z0-9]{1,6}\)\s{1,5}\d{1,6}[a-z*★]{0,3}\s*$/i;
 const SET_ONLY_PATTERN = /\s{1,5}\((?:[A-Z0-9]{2,6}|[a-z0-9]*\d[a-z0-9]{0,5})\)$/;
-const ARCHIDEKT_CATEGORY_TAG_PATTERN = /\s+\[(?:commander|companion|creature|instant|sorcery|artifact|enchantment|planeswalker|land|ramp|draw|removal|boardwipe|wincondition|protection|other)(?:\{top\})?\]\s*$/i;
+const ARCHIDEKT_CATEGORY_TAG_PATTERN = /\s\[(?:commander|companion|creature|instant|sorcery|artifact|enchantment|planeswalker|land|ramp|draw|removal|boardwipe|wincondition|protection|other)(?:\{top\})?\]$/i;
 
 type ParseState = {
   commander: string | null;
@@ -93,6 +93,7 @@ function processImportLine(line: string, state: ParseState): void {
   const rawName = cardName
     .replace(SET_CODE_PATTERN, "")
     .replace(SET_ONLY_PATTERN, "")
+    .trimEnd()
     .replace(ARCHIDEKT_CATEGORY_TAG_PATTERN, "")
     .trim();
   const quantity = match ? clampQuantity(Number.parseInt(match[1], 10)) : 1;
