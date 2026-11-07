@@ -26,8 +26,8 @@ export function PhaseTracker({
     <div className="bg-[var(--surface)] rounded-xl p-4 space-y-3">
       {/* Turn badge */}
       <div className="flex items-center justify-between">
-        <h3 className="text-white font-bold text-lg">{t("turn", { turn })}</h3>
-        <span className="text-xs text-white/40 bg-white/10 px-2 py-1 rounded">
+        <h3 className="text-[var(--text-primary)] font-bold text-lg">{t("turn", { turn })}</h3>
+        <span className="text-xs text-[var(--text-secondary)] bg-[var(--surface-hover)] px-2 py-1 rounded">
           {phaseLabel(phase)}
         </span>
       </div>
@@ -43,7 +43,7 @@ export function PhaseTracker({
               "px-2 py-1 rounded text-xs font-medium transition-colors",
               p === phase
                 ? "bg-blue-600 text-white"
-                : "bg-white/10 text-white/50"
+                : "bg-[var(--surface-hover)] text-[var(--text-secondary)]"
             )}
           >
             {phaseLabel(p)}

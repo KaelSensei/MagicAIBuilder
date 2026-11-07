@@ -25,7 +25,7 @@ function TrendIcon({ direction }: { readonly direction: TrendDirection }) {
   if (direction === "declining")
     return <TrendingDown className="w-3.5 h-3.5 text-red-400" />;
   if (direction === "steady")
-    return <Minus className="w-3.5 h-3.5 text-white/40" />;
+    return <Minus className="w-3.5 h-3.5 text-[var(--text-secondary)]" />;
   return null;
 }
 
@@ -38,8 +38,8 @@ function Figure({
 }) {
   return (
     <div className="text-center">
-      <p className="text-lg font-semibold text-white">{value}</p>
-      <p className="text-[10px] uppercase tracking-wide text-white/40">
+      <p className="text-lg font-semibold text-[var(--text-primary)]">{value}</p>
+      <p className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">
         {label}
       </p>
     </div>
@@ -76,12 +76,12 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
       : value;
 
   return (
-    <div className="w-full max-w-md rounded-lg border border-white/10 bg-white/5 p-4">
+    <div className="w-full max-w-md rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs uppercase tracking-wide text-white/40">
+        <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">
           {t("history.title")}
         </p>
-        <span className="flex items-center gap-1 text-[11px] text-white/60">
+        <span className="flex items-center gap-1 text-[11px] text-[var(--text-secondary)]">
           <TrendIcon direction={direction} />
           {t(`history.trend.${direction}`)}
         </span>
@@ -104,19 +104,19 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
           }
         />
       </div>
-      <p className="mb-3 text-[10px] leading-relaxed text-white/40">
+      <p className="mb-3 text-[10px] leading-relaxed text-[var(--text-secondary)]">
         {t("history.methodology")}
       </p>
 
-      <div className="border-t border-white/10 pt-2">
-        <p className="text-[10px] uppercase tracking-wide text-white/40 mb-1">
+      <div className="border-t border-[var(--border)] pt-2">
+        <p className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)] mb-1">
           {t("history.byMulligans")}
         </p>
         <ul className="space-y-0.5">
           {rows.map((row) => (
             <li
               key={row.mulligans}
-              className="flex justify-between text-[11px] text-white/60"
+              className="flex justify-between text-[11px] text-[var(--text-secondary)]"
             >
               <span>
                 {t("history.mulliganLabel", { count: row.mulligans })}
@@ -135,15 +135,15 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
       {/* Only once a run has said who it was against; otherwise there is
           nothing here but an empty heading. */}
       {matchups.length > 0 && (
-        <div className="border-t border-white/10 pt-2 mt-2">
-          <p className="text-[10px] uppercase tracking-wide text-white/40 mb-1">
+        <div className="border-t border-[var(--border)] pt-2 mt-2">
+          <p className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)] mb-1">
             {t("history.byOpponent")}
           </p>
           <ul className="space-y-0.5">
             {matchups.map((row) => (
               <li
                 key={row.difficulty}
-                className="flex justify-between text-[11px] text-white/60"
+                className="flex justify-between text-[11px] text-[var(--text-secondary)]"
               >
                 <span>{difficultyLabel(row.difficulty)}</span>
                 <span>
@@ -160,16 +160,16 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
       )}
 
       {recentSessions.length > 0 && (
-        <div className="border-t border-white/10 pt-2 mt-2">
-          <p className="text-[10px] uppercase tracking-wide text-white/40 mb-1">
+        <div className="border-t border-[var(--border)] pt-2 mt-2">
+          <p className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)] mb-1">
             {t("history.title")}
           </p>
           <ul className="space-y-1">
             {recentSessions.map((session) => (
-              <li key={session.id} className="text-[11px] text-white/60">
+              <li key={session.id} className="text-[11px] text-[var(--text-secondary)]">
                 <div className="flex items-center justify-between gap-2">
                   <span
-                    className={{ win: "text-green-400", loss: "text-red-400", draw: "text-white/70" }[session.result] ?? "text-white/70"}
+                    className={{ win: "text-green-400", loss: "text-red-400", draw: "text-[var(--text-secondary)]" }[session.result] ?? "text-[var(--text-secondary)]"}
                   >
                     {t(`result.${session.result}`)}
                   </span>
@@ -186,7 +186,7 @@ export function PlaytestHistoryPanel({ deckId }: PlaytestHistoryPanelProps) {
                   </span>
                 </div>
                 {session.notes && (
-                  <p className="mt-0.5 break-words text-white/45">
+                  <p className="mt-0.5 break-words text-[var(--text-secondary)]">
                     {session.notes}
                   </p>
                 )}

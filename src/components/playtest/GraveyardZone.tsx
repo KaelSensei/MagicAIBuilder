@@ -32,16 +32,16 @@ function ZoneList({ cards, zone, onRestore }: ZoneListProps) {
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
-        className="w-full flex items-center justify-between py-1.5 px-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+        className="w-full flex items-center justify-between py-1.5 px-2 bg-[var(--surface-hover)] hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
         aria-label={label}
       >
-        <span className="text-sm font-medium text-white/70">
+        <span className="text-sm font-medium text-[var(--text-secondary)]">
           {label}: {t("cardCount", { count: cards.length })}
         </span>
         {isOpen ? (
-          <ChevronUp size={14} className="text-white/40" />
+          <ChevronUp size={14} className="text-[var(--text-secondary)]" />
         ) : (
-          <ChevronDown size={14} className="text-white/40" />
+          <ChevronDown size={14} className="text-[var(--text-secondary)]" />
         )}
       </button>
 
@@ -49,16 +49,16 @@ function ZoneList({ cards, zone, onRestore }: ZoneListProps) {
       {isOpen && (
         <div className="space-y-1 max-h-48 overflow-y-auto pl-2">
           {cards.length === 0 ? (
-            <p className="text-xs text-white/30 py-2">
+            <p className="text-xs text-[var(--text-secondary)] py-2">
               {zone === "graveyard" ? t("graveyardEmpty") : t("exileEmpty")}
             </p>
           ) : (
             [...cards].reverse().map((card) => (
               <div
                 key={card.id}
-                className="flex items-center justify-between gap-2 py-1.5 px-2 bg-white/5 rounded"
+                className="flex items-center justify-between gap-2 py-1.5 px-2 bg-[var(--surface-hover)] rounded"
               >
-                <span className="text-xs text-white truncate">{localize(card).name}</span>
+                <span className="text-xs text-[var(--text-primary)] truncate">{localize(card).name}</span>
                 <div className="flex gap-1 flex-shrink-0">
                   <button
                     type="button"

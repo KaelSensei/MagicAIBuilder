@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Copy, Plus, RotateCcw } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
+import { PlaytestCardImage } from "@/components/playtest/PlaytestCardImage";
 import type { BattlefieldCard } from "@/lib/playtest/engine";
 import { useLocalizeDeckCard } from "@/components/card/LocalizedDeckTextContext";
 import type { TokenLibraryEntry } from "@/lib/deck/token-library";
@@ -36,7 +36,7 @@ export function BattlefieldZone({
   return (
     <div className="bg-[var(--surface)] rounded-xl p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-white font-semibold text-sm">
+        <h3 className="text-[var(--text-primary)] font-semibold text-sm">
           {t("title", { count: battlefield.length })}
         </h3>
         {selectedToken && (
@@ -45,7 +45,7 @@ export function BattlefieldZone({
               value={selectedTokenIndex}
               onChange={(event) => setSelectedTokenIndex(Number(event.target.value))}
               aria-label={t("tokenChoice")}
-              className="rounded-md border border-white/15 bg-black/30 px-2 py-1 text-xs text-white/80"
+              className="rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-xs text-[var(--text-primary)]"
             >
               {requiredTokens.map((token, index) => (
                 <option key={`${token.kind}-${token.name}-${token.power ?? ""}`} value={index}>
@@ -65,7 +65,7 @@ export function BattlefieldZone({
         )}
       </div>
       {battlefield.length === 0 ? (
-        <p className="py-8 text-center text-sm text-white/30">{t("empty")}</p>
+        <p className="py-8 text-center text-sm text-[var(--text-secondary)]">{t("empty")}</p>
       ) : (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {battlefield.map((card) => {
@@ -76,24 +76,22 @@ export function BattlefieldZone({
             data-testid={`battlefield-card-${card.id}`}
             data-tapped={card.tapped ? "true" : "false"}
             className={cn(
-              "relative bg-white/5 rounded-lg overflow-hidden border border-white/10 transition-all",
+              "relative bg-[var(--surface-hover)] rounded-lg overflow-hidden border border-[var(--border)] transition-all",
               card.tapped && "opacity-70 rotate-6"
             )}
           >
             {/* Card image */}
-            <div className="relative aspect-[3/4] overflow-hidden">
-              <Image
+            <div className="relative aspect-[63/88] overflow-hidden">
+              <PlaytestCardImage
                 src={view.imageUri || CARD_BACK_URL}
                 alt={view.name}
-                fill
-                className="object-cover"
-                unoptimized
+                className="h-full"
               />
             </div>
 
             {/* Card info */}
             <div className="p-2 space-y-2">
-              <p className="text-xs text-white font-medium truncate">
+              <p className="text-xs text-[var(--text-primary)] font-medium truncate">
                 {view.name}
               </p>
 
@@ -110,7 +108,7 @@ export function BattlefieldZone({
                   type="button"
                   onClick={() => onTap(card.id)}
                   aria-label={card.tapped ? t("untap") : t("tap")}
-                  className="flex items-center gap-0.5 px-1.5 py-1 bg-white/10 hover:bg-white/20 rounded text-[10px] text-white/70 transition-colors"
+                  className="flex items-center gap-0.5 px-1.5 py-1 bg-[var(--surface-hover)] hover:bg-[var(--surface-hover)] rounded text-[10px] text-[var(--text-secondary)] transition-colors"
                 >
                   <RotateCcw size={10} />
                   {card.tapped ? t("untap") : t("tap")}
@@ -135,7 +133,7 @@ export function BattlefieldZone({
                   type="button"
                   onClick={() => onCreateCopy(card.id)}
                   aria-label={t("copy")}
-                  className="flex items-center gap-0.5 px-1.5 py-1 bg-white/10 hover:bg-white/20 rounded text-[10px] text-white/70 transition-colors"
+                  className="flex items-center gap-0.5 px-1.5 py-1 bg-[var(--surface-hover)] hover:bg-[var(--surface-hover)] rounded text-[10px] text-[var(--text-secondary)] transition-colors"
                 >
                   <Copy size={10} aria-hidden="true" />
                   {t("copy")}
