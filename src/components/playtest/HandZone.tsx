@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Eye, EyeOff, Plus } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import { CARD_BACK_URL } from "@/lib/scryfall/images";
+import { PlaytestCardImage } from "@/components/playtest/PlaytestCardImage";
 import type { DeckCard } from "@/lib/deck/types";
 import { useLocalizeDeckCard } from "@/components/card/LocalizedDeckTextContext";
 
@@ -47,10 +47,10 @@ export function HandZone({
     <div className="bg-[var(--surface)] rounded-xl p-4 space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-white font-semibold text-sm">
+        <h3 className="text-[var(--text-primary)] font-semibold text-sm">
           {t("count", { count: hand.length })}
         </h3>
-        <div className="flex items-center gap-2 text-xs text-white/50">
+        <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
           <span>{t("deckCount", { count: libraryCount })}</span>
           {isEmpty && (
             <span className="text-orange-400">{t("emptyDeck")}</span>
@@ -67,7 +67,7 @@ export function HandZone({
           className={cn(
             "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-colors",
             isEmpty
-              ? "bg-white/5 text-white/20 cursor-not-allowed"
+              ? "bg-[var(--surface-hover)] text-[var(--text-secondary)] cursor-not-allowed"
               : "bg-blue-600/20 hover:bg-blue-600/40 text-blue-300"
           )}
         >
@@ -77,10 +77,10 @@ export function HandZone({
         <button
           type="button"
           onClick={() => setShowCards((v) => !v)}
-          className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs text-white/70 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 bg-[var(--surface-hover)] hover:bg-[var(--surface-hover)] rounded-lg text-xs text-[var(--text-secondary)] transition-colors"
         >
           {showCards ? <EyeOff size={14} /> : <Eye size={14} />}
-          {t("showCards")}
+          {t(showCards ? "hideCards" : "showCards")}
         </button>
       </div>
 
@@ -97,28 +97,22 @@ export function HandZone({
                 className="relative w-14 rounded-md overflow-hidden hover:scale-105 transition-transform"
                 aria-label={showCards ? view.name : t("cardBack")}
               >
-                <Image
-                  src={
-                    showCards ? view.imageUri || CARD_BACK_URL : CARD_BACK_URL
-                  }
+                <PlaytestCardImage
+                  src={showCards ? view.imageUri || CARD_BACK_URL : CARD_BACK_URL}
                   alt={showCards ? view.name : t("cardBack")}
-                  width={56}
-                  height={78}
-                  className="w-full object-cover"
-                  unoptimized
                 />
                 {showCards && <span className="sr-only">{view.name}</span>}
               </button>
               {showCards && (
-                <p className="text-[9px] text-white/60 text-center truncate max-w-14 mt-0.5">
+                <p className="text-[9px] text-[var(--text-secondary)] text-center truncate max-w-14 mt-0.5">
                   {view.name}
                 </p>
               )}
 
               {/* Context menu */}
               {contextMenu?.cardId === card.id && (
-                <div className="absolute bottom-full left-0 mb-1 bg-[var(--surface)] border border-white/20 rounded-lg shadow-xl z-10 min-w-[140px] overflow-hidden">
-                  <p className="px-3 py-1.5 text-xs font-semibold text-white/60 border-b border-white/10 truncate">
+                <div className="absolute bottom-full left-0 mb-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-xl z-10 min-w-[140px] overflow-hidden">
+                  <p className="px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] border-b border-[var(--border)] truncate">
                     {view.name}
                   </p>
                   <button
@@ -127,7 +121,7 @@ export function HandZone({
                       onMoveCard(card.id, "battlefield");
                       setContextMenu(null);
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-white hover:bg-white/10 transition-colors"
+                    className="w-full text-left px-3 py-2 text-xs text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
                   >
                     → {t("toBattlefield")}
                   </button>
@@ -137,7 +131,7 @@ export function HandZone({
                       onMoveCard(card.id, "graveyard");
                       setContextMenu(null);
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-white hover:bg-white/10 transition-colors"
+                    className="w-full text-left px-3 py-2 text-xs text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
                   >
                     → {t("toGraveyard")}
                   </button>

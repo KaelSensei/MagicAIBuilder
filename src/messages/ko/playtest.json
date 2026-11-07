@@ -41,6 +41,7 @@
     "emptyDeck": "Deck empty",
     "draw": "Draw card",
     "showCards": "Show cards",
+    "hideCards": "Hide cards",
     "cardBack": "Card back",
     "toBattlefield": "To battlefield",
     "toGraveyard": "To graveyard"
