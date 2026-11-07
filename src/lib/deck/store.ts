@@ -342,6 +342,52 @@ export interface DeckStore {
 let latestDeckListRequest = 0;
 const latestRenameRequests = new Map<string, symbol>();
 
+/** A partner save that may still need to be undone. */
+interface FailedPartnerSave {
+  readonly activeDeckId: string;
+  readonly partnerMetadataSaved: boolean;
+  readonly attemptedPartnerId: string | null;
+  readonly previousPartner: DeckCard | null;
+  readonly previousPairingType: Deck["pairingType"];
+}
+
+/**
+ * Restores the previous partner when the deck record was not saved and this
+ * attempt is still the partner on screen.
+ *
+ * A later partner choice is left alone. Once the deck update has resolved, the
+ * optimistic partner matches the saved record and stays for the next reload.
+ *
+ * @param setDeckState - Store update used only when a rollback is required
+ * @param state - Store snapshot taken when the save failed
+ * @param save - The attempt that just failed
+ * @returns Nothing. Updates the store and shows an error when the partner is restored.
+ */
+function restorePartnerAfterFailedSave(
+  setDeckState: (partial: Pick<DeckStore, "decks">) => void,
+  state: DeckStore,
+  save: FailedPartnerSave,
+): void {
+  if (save.partnerMetadataSaved) return;
+  const currentDeck = state.decks[save.activeDeckId];
+  const currentPartnerId = currentDeck?.partner?.id ?? null;
+  if (!currentDeck || currentPartnerId !== save.attemptedPartnerId) return;
+  setDeckState({
+    decks: {
+      ...state.decks,
+      [save.activeDeckId]: {
+        ...currentDeck,
+        partner: save.previousPartner,
+        pairingType: save.previousPairingType,
+        updatedAt: new Date(),
+      },
+    },
+  });
+  useToastStore
+    .getState()
+    .add("error", "Could not save partner — try again");
+}
+
 export const useDeckStore = create<DeckStore>()((set, get) => ({
   decks: {},
   activeDeckId: null,
@@ -1107,37 +1153,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } catch (err) {
       logger.error("Unexpected error", "setPartner", err);
-      // The deck record is already saved once updateDeck resolves. Rolling it
-      // back here would disagree with the next reload. A later partner choice
-      // also wins: only the attempt still on screen is restored.
-      if (!partnerMetadataSaved) {
-        const attemptedPartnerId = deckCard?.id ?? null;
-        const stateBeforeRollback = get();
-        set((state) => {
-          const currentDeck = state.decks[activeDeckId];
-          const currentPartnerId = currentDeck?.partner?.id ?? null;
-          if (!currentDeck || currentPartnerId !== attemptedPartnerId) {
-            return state;
-          }
-          return {
-            decks: {
-              ...state.decks,
-              [activeDeckId]: {
-                ...currentDeck,
-                partner: previousPartner,
-                pairingType: previousPairingType,
-                updatedAt: new Date(),
-              },
-            },
-          };
-        });
-        // An unchanged state object means a later edit already replaced this attempt.
-        if (get() !== stateBeforeRollback) {
-          useToastStore
-            .getState()
-            .add("error", "Could not save partner — try again");
-        }
-      }
+      restorePartnerAfterFailedSave(set, get(), {
+        activeDeckId,
+        partnerMetadataSaved,
+        attemptedPartnerId: deckCard?.id ?? null,
+        previousPartner,
+        previousPairingType,
+      });
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
