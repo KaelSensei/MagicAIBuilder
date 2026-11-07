@@ -1044,22 +1044,24 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   setPartner: async (card: ScryfallCard | null) => {
     const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
+    const previousPartner = decks[activeDeckId]?.partner ?? null;
+    const previousPairingType = decks[activeDeckId]?.pairingType ?? "none";
+    let partnerMetadataSaved = false;
     const deckCard = card ? makeDeckCard(card) : null;
     if (deckCard) deckCard.category = "commander";
 
     // If commander has no pairing type but partner does, derive pairingType from partner
     // e.g. Jaheira has "Choose a Background" → pairingType should be "background"
-    const currentPairingType = decks[activeDeckId]?.pairingType ?? "none";
     const partnerPairingType = card ? detectPairingType(card) : "none";
-    if (card && currentPairingType === "father_son" &&
-        !canPairWith(currentPairingType, partnerPairingType)) {
+    if (card && previousPairingType === "father_son" &&
+        !canPairWith(previousPairingType, partnerPairingType)) {
       useToastStore.getState().add("warning", "A Father & son commander needs another Father & son partner.");
       return;
     }
     const effectivePairingType =
-      currentPairingType === "none" && partnerPairingType !== "none"
+      previousPairingType === "none" && partnerPairingType !== "none"
         ? partnerPairingType
-        : currentPairingType;
+        : previousPairingType;
 
     // Optimistic update
     set((state) => ({
@@ -1080,6 +1082,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         partnerId: card?.id ?? null,
         pairingType: effectivePairingType,
       });
+      partnerMetadataSaved = true;
       if (card && deckCard) {
         await deckApi.addCard(activeDeckId, {
           scryfallId: card.id,
@@ -1104,6 +1107,37 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } catch (err) {
       logger.error("Unexpected error", "setPartner", err);
+      // The deck record is already saved once updateDeck resolves. Rolling it
+      // back here would disagree with the next reload. A later partner choice
+      // also wins: only the attempt still on screen is restored.
+      if (!partnerMetadataSaved) {
+        const attemptedPartnerId = deckCard?.id ?? null;
+        const stateBeforeRollback = get();
+        set((state) => {
+          const currentDeck = state.decks[activeDeckId];
+          const currentPartnerId = currentDeck?.partner?.id ?? null;
+          if (!currentDeck || currentPartnerId !== attemptedPartnerId) {
+            return state;
+          }
+          return {
+            decks: {
+              ...state.decks,
+              [activeDeckId]: {
+                ...currentDeck,
+                partner: previousPartner,
+                pairingType: previousPairingType,
+                updatedAt: new Date(),
+              },
+            },
+          };
+        });
+        // An unchanged state object means a later edit already replaced this attempt.
+        if (get() !== stateBeforeRollback) {
+          useToastStore
+            .getState()
+            .add("error", "Could not save partner — try again");
+        }
+      }
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
