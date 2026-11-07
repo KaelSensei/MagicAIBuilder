@@ -36,9 +36,8 @@ function makeCard(overrides: Partial<ScryfallCard> = {}): ScryfallCard {
 }
 
 describe("CARD_BACK_URL", () => {
-  it("is a non-empty string pointing to Scryfall", () => {
-    expect(typeof CARD_BACK_URL).toBe("string");
-    expect(CARD_BACK_URL).toContain("scryfall.io");
+  it("uses the bundled card back so hidden cards do not depend on the network", () => {
+    expect(CARD_BACK_URL).toBe("/images/card-back.svg");
   });
 });
 

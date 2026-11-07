@@ -1,8 +1,23 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
+import { createElement } from "react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { HandZone } from "./HandZone";
 import type { DeckCard } from "@/lib/deck/types";
+
+vi.mock("next/image", () => ({
+  default: ({
+    alt,
+    src,
+    className,
+    onError,
+  }: {
+    readonly alt: string;
+    readonly src: string;
+    readonly className?: string;
+    readonly onError?: () => void;
+  }) => createElement("img", { alt, src, className, onError }),
+}));
 
 function makeCard(id: string, name = "Test Card"): DeckCard {
   return {
@@ -43,10 +58,47 @@ describe("HandZone", () => {
     expect(screen.getByRole("button", { name: /show cards/i })).toBeDefined();
   });
 
-  it("shows card names when toggle is enabled", () => {
+  it("keeps hidden cards on a local back with stable card geometry", () => {
+    renderWithIntl(<HandZone {...defaultProps} />);
+
+    const hiddenCard = screen.getAllByRole("img", { name: /card back/i })[0];
+    expect(hiddenCard).toHaveAttribute("src", "/images/card-back.svg");
+    expect(hiddenCard).toHaveClass("aspect-[63/88]");
+    expect(screen.queryByText("Lightning Bolt")).not.toBeInTheDocument();
+  });
+
+  it("falls back locally without collapsing when a revealed image fails", () => {
+    const brokenCard = makeCard("broken", "Broken Image");
+    renderWithIntl(
+      <HandZone {...defaultProps} hand={[{ ...brokenCard, imageUri: "https://invalid.example/card.jpg" }]} />
+    );
+    fireEvent.click(screen.getByRole("button", { name: /show cards/i }));
+
+    const image = screen.getByRole("img", { name: "Broken Image" });
+    fireEvent.error(image);
+
+    expect(image).toHaveAttribute("src", "/images/card-back.svg");
+    expect(image).toHaveClass("aspect-[63/88]");
+  });
+
+  it("reveals card names and changes the toggle to a hide action", () => {
     renderWithIntl(<HandZone {...defaultProps} />);
     const toggle = screen.getByRole("button", { name: /show cards/i });
     fireEvent.click(toggle);
+
+    expect(screen.getAllByText("Lightning Bolt").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /hide cards/i })).toBeDefined();
+  });
+
+  it("uses French labels without changing hide and reveal semantics", () => {
+    renderWithIntl(<HandZone {...defaultProps} />, { locale: "fr" });
+
+    const reveal = screen.getByRole("button", { name: "Voir les cartes" });
+    expect(screen.getAllByRole("img", { name: "Dos de carte" })).toHaveLength(2);
+
+    fireEvent.click(reveal);
+
+    expect(screen.getByRole("button", { name: "Cacher les cartes" })).toBeDefined();
     expect(screen.getAllByText("Lightning Bolt").length).toBeGreaterThan(0);
   });
 

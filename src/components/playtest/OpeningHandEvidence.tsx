@@ -41,7 +41,7 @@ export function OpeningHandEvidence({ hand }: OpeningHandEvidenceProps) {
 
   return (
     <div
-      className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+      className="rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-2"
       aria-live="polite"
     >
       <div className="flex items-start gap-2">
@@ -50,7 +50,7 @@ export function OpeningHandEvidence({ hand }: OpeningHandEvidenceProps) {
           aria-hidden="true"
         />
         <div className="min-w-0">
-          <p className="text-xs font-medium text-white/80">
+          <p className="text-xs font-medium text-[var(--text-primary)]">
             {t("landCount", { count: evidence.landCount })}
           </p>
           <p className={`text-xs ${statusClassName(evidence.isDead ? "land-light" : evidence.landStatus)}`}>
