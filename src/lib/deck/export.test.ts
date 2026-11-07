@@ -297,6 +297,17 @@ describe("exportTappedOut", () => {
 });
 
 describe("exportArchidekt", () => {
+  it("preserves a companion in its own tagged section", () => {
+    const deck = makeDeck({
+      companion: makeCard("Jegantha, the Wellspring", 1, { category: "companion" }),
+      cards: [makeCard("Sol Ring")],
+    });
+
+    expect(exportArchidekt(deck)).toContain(
+      "Companion (1)\n1x Jegantha, the Wellspring [Companion]",
+    );
+  });
+
   it("preserves secondary zones and their categories in the text export", () => {
     const deck = makeDeck({
       cards: [

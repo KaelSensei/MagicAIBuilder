@@ -169,6 +169,13 @@ export function exportArchidekt(deck: Deck): string {
     if (deck.partner) lines.push(`1x ${deck.partner.name} [Commander{top}]`);
     lines.push("");
   }
+  if (deck.companion) {
+    lines.push(
+      "Companion (1)",
+      `1x ${deck.companion.name} [Companion]`,
+      "",
+    );
+  }
   const mainCards = deck.cards.filter((card) => card.zone === "main");
   const mainCount = mainCards.reduce((s, c) => s + c.quantity, 0);
   lines.push(`Mainboard (${mainCount})`);
