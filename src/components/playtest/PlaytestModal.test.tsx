@@ -98,6 +98,39 @@ describe("PlaytestModal", () => {
     ).toBeDefined();
   });
 
+  it.each(["light", "dark"])(
+    "uses theme tokens for readable panels in the %s theme",
+    (theme) => {
+      document.documentElement.dataset.theme = theme;
+      renderModal();
+
+      const dialog = screen.getByRole("dialog", { name: /playtest/i });
+      const title = screen.getByRole("heading", { name: /kenrith goodstuff/i });
+
+      expect(dialog).toHaveClass("bg-[var(--background)]");
+      expect(dialog).toHaveClass("text-[var(--text-primary)]");
+      expect(title).toHaveClass("text-[var(--text-primary)]");
+
+      delete document.documentElement.dataset.theme;
+    }
+  );
+
+  it("stacks header feedback controls until there is desktop room", () => {
+    renderModal();
+    start();
+
+    expect(screen.getByTestId("playtest-header")).toHaveClass(
+      "flex-col",
+      "lg:flex-row"
+    );
+    expect(screen.getByTestId("playtest-result-bar")).toHaveClass(
+      "flex-col",
+      "sm:flex-row"
+    );
+    expect(screen.getByLabelText("Playtest note")).toHaveClass("w-full");
+    expect(screen.getByLabelText("Change to try")).toHaveClass("w-full");
+  });
+
   it("deals seven cards and starts on turn 1", () => {
     renderModal();
     start();

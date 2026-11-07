@@ -41,6 +41,7 @@
     "emptyDeck": "Deck vide",
     "draw": "Piocher une carte",
     "showCards": "Voir les cartes",
+    "hideCards": "Cacher les cartes",
     "cardBack": "Dos de carte",
     "toBattlefield": "Vers le champ de bataille",
     "toGraveyard": "Vers le cimetière"

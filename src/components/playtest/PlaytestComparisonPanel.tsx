@@ -73,26 +73,26 @@ export function PlaytestComparisonPanel({
 
   return (
     <section
-      className="mt-3 border-t border-white/10 pt-3"
+      className="mt-3 border-t border-[var(--border)] pt-3"
       aria-labelledby="playtest-comparison"
     >
       <div className="mb-2 flex items-center gap-2">
         <GitCompareArrows className="h-3.5 w-3.5 text-sky-300" />
         <h3
           id="playtest-comparison"
-          className="text-[10px] uppercase tracking-wide text-white/50"
+          className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)]"
         >
           {t("title")}
         </h3>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <label className="text-[10px] text-white/50">
+        <label className="text-[10px] text-[var(--text-secondary)]">
           {t("before")}
           <select
             aria-label={t("before")}
             value={beforeId}
             onChange={(event) => setBeforeId(event.target.value)}
-            className="mt-1 w-full rounded border border-white/10 bg-black/30 px-2 py-1.5 text-xs text-white"
+            className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs text-[var(--text-primary)]"
           >
             <option value="">{t("choose")}</option>
             {cohorts.map((cohort) => (
@@ -102,13 +102,13 @@ export function PlaytestComparisonPanel({
             ))}
           </select>
         </label>
-        <label className="text-[10px] text-white/50">
+        <label className="text-[10px] text-[var(--text-secondary)]">
           {t("after")}
           <select
             aria-label={t("after")}
             value={afterId}
             onChange={(event) => setAfterId(event.target.value)}
-            className="mt-1 w-full rounded border border-white/10 bg-black/30 px-2 py-1.5 text-xs text-white"
+            className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs text-[var(--text-primary)]"
           >
             <option value="">{t("choose")}</option>
             {cohorts.map((cohort) => (
@@ -124,7 +124,7 @@ export function PlaytestComparisonPanel({
       )}
       {comparison?.hasComparableData && (
         <>
-        <p className="mt-2 text-center text-[10px] text-white/45">
+        <p className="mt-2 text-center text-[10px] text-[var(--text-secondary)]">
           {t("sampleSize", {
             before: comparison.beforeSessions,
             after: comparison.afterSessions,
@@ -134,36 +134,36 @@ export function PlaytestComparisonPanel({
           comparison.afterSessions < MIN_CONFIDENT_COHORT_SIZE) && (
           <p className="mt-1 text-center text-[10px] text-amber-300/80">{t("earlySignal")}</p>
         )}
-        <div className="mt-2 grid grid-cols-3 gap-2 rounded-md bg-black/20 p-2 text-center">
+        <div className="mt-2 grid grid-cols-3 gap-2 rounded-md bg-[var(--background)] p-2 text-center">
           <div>
-            <strong className="block text-sm text-white">
+            <strong className="block text-sm text-[var(--text-primary)]">
               {t("winRateValue", { delta: comparison.winRateDelta })}
             </strong>
-            <span className="text-[9px] text-white/40">{t("winRate")}</span>
+            <span className="text-[9px] text-[var(--text-secondary)]">{t("winRate")}</span>
           </div>
           <div>
-            <strong className="block text-sm text-white">
+            <strong className="block text-sm text-[var(--text-primary)]">
               {t("speedValue", {
                 delta: Math.abs(comparison.winSpeedDelta),
                 direction: comparison.winSpeedDelta >= 0 ? "faster" : "slower",
               })}
             </strong>
-            <span className="text-[9px] text-white/40">{t("speed")}</span>
+            <span className="text-[9px] text-[var(--text-secondary)]">{t("speed")}</span>
           </div>
           <div>
-            <strong className="block text-sm text-white">
+            <strong className="block text-sm text-[var(--text-primary)]">
               {t("mulliganValue", {
                 delta: Math.abs(comparison.averageMulligansDelta),
                 direction:
                   comparison.averageMulligansDelta <= 0 ? "fewer" : "more",
               })}
             </strong>
-            <span className="text-[9px] text-white/40">{t("mulligans")}</span>
+            <span className="text-[9px] text-[var(--text-secondary)]">{t("mulligans")}</span>
           </div>
         </div>
         </>
       )}
-      <p className="mt-2 text-[10px] leading-relaxed text-white/35">
+      <p className="mt-2 text-[10px] leading-relaxed text-[var(--text-secondary)]">
         {t("methodology")}
       </p>
     </section>

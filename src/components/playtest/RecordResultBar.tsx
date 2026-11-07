@@ -102,16 +102,23 @@ export function RecordResultBar({
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs text-white/50">{t("recordResult")}</span>
+    <div
+      data-testid="playtest-result-bar"
+      className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center"
+    >
+      <span className="text-xs text-[var(--text-secondary)]">{t("recordResult")}</span>
       <label className="sr-only" htmlFor="playtest-difficulty">
         {t("difficultyLabel")}
       </label>
       <select
         id="playtest-difficulty"
         value={difficulty}
-        onChange={(event) => setDifficulty(event.target.value as SessionDifficulty | "")}
-        className="rounded bg-white/10 px-2 py-1 text-xs text-white [&>option]:bg-neutral-900"
+        onChange={(event) => {
+          const selectedDifficulty =
+            SESSION_DIFFICULTIES.find((value) => value === event.target.value) ?? "";
+          setDifficulty(selectedDifficulty);
+        }}
+        className="w-full rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--text-primary)] sm:w-auto"
       >
         <option value="">{t("difficultyUnset")}</option>
         {SESSION_DIFFICULTIES.map((value) => (
@@ -130,7 +137,7 @@ export function RecordResultBar({
         onChange={(event) => setNotes(event.target.value)}
         maxLength={MAX_SESSION_NOTES_LENGTH}
         placeholder={t("notesPlaceholder")}
-        className="min-w-48 flex-1 rounded bg-white/10 px-2 py-1 text-xs text-white placeholder:text-white/35"
+        className="w-full min-w-0 flex-1 rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] sm:min-w-48"
       />
       <label className="sr-only" htmlFor="playtest-proposed-change">
         {t("proposedChangeLabel")}
@@ -142,7 +149,7 @@ export function RecordResultBar({
         onChange={(event) => setProposedChange(event.target.value)}
         maxLength={MAX_PROPOSED_CHANGE_LENGTH}
         placeholder={t("proposedChangePlaceholder")}
-        className="min-w-48 flex-1 rounded bg-white/10 px-2 py-1 text-xs text-white placeholder:text-white/35"
+        className="w-full min-w-0 flex-1 rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] sm:min-w-48"
       />
       {SESSION_RESULTS.map((result) => (
         <button
@@ -150,7 +157,7 @@ export function RecordResultBar({
           type="button"
           disabled={pending !== null}
           onClick={() => record(result)}
-          className="px-2.5 py-1 rounded text-xs font-medium bg-white/10 text-white hover:bg-white/20 disabled:opacity-40 transition-colors"
+          className="px-2.5 py-1 rounded text-xs font-medium bg-[var(--surface-hover)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] disabled:opacity-40 transition-colors"
         >
           {pending === result ? t("recording") : t(`result.${result}`)}
         </button>
@@ -158,7 +165,7 @@ export function RecordResultBar({
       <button
         type="button"
         onClick={onRecorded}
-        className="px-2.5 py-1 rounded text-xs text-white/50 hover:text-white transition-colors"
+        className="px-2.5 py-1 rounded text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
       >
         {t("skipRecording")}
       </button>

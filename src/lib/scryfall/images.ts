@@ -49,5 +49,4 @@ export function buildScryfallImageUrl(
 }
 
 /** Placeholder card back image */
-export const CARD_BACK_URL =
-  "https://cards.scryfall.io/normal/back/0/0/0aeebaf5-8c7d-4636-9e82-8c27447861f7.jpg";
+export const CARD_BACK_URL = "/images/card-back.svg";

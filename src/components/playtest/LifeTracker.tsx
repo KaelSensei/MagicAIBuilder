@@ -50,7 +50,7 @@ export function LifeTracker({
         <div
           className={cn(
             "font-black tabular-nums leading-none",
-            isGameOver ? "text-red-400 text-6xl" : "text-white text-7xl"
+            isGameOver ? "text-red-400 text-6xl" : "text-[var(--text-primary)] text-7xl"
           )}
         >
           {lifeTotal}
@@ -60,7 +60,7 @@ export function LifeTracker({
             {t("gameOver")}
           </p>
         )}
-        <div className="flex items-center justify-center gap-1 mt-1 text-white/40 text-xs">
+        <div className="flex items-center justify-center gap-1 mt-1 text-[var(--text-secondary)] text-xs">
           <Heart size={12} />
           <span>{t("life.total")}</span>
         </div>
@@ -96,12 +96,12 @@ export function LifeTracker({
           onChange={(e) => setCustomInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCustomSubmit()}
           placeholder={t("life.customPlaceholder")}
-          className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+          className="flex-1 bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--border)]"
         />
         <button
           type="button"
           onClick={handleCustomSubmit}
-          className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm text-white transition-colors"
+          className="px-3 py-2 bg-[var(--surface-hover)] hover:bg-[var(--surface-hover)] rounded-lg text-sm text-[var(--text-primary)] transition-colors"
         >
           {t("life.apply")}
         </button>
@@ -112,7 +112,7 @@ export function LifeTracker({
         <button
           type="button"
           onClick={onUndo}
-          className="w-full py-1.5 rounded-lg text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+          className="w-full py-1.5 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
         >
           ↩ {t("life.undo")}
         </button>
@@ -121,15 +121,15 @@ export function LifeTracker({
       {/* Life history */}
       {lifeHistory.length > 0 && (
         <div className="space-y-1 max-h-36 overflow-y-auto">
-          <p className="text-xs font-semibold text-white/50 uppercase">
+          <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase">
             {t("life.history")}
           </p>
           {[...lifeHistory].reverse().map((entry) => (
             <div
               key={`${entry.timestamp}-${entry.turn}-${entry.phase}-${entry.delta}`}
-              className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white/5"
+              className="flex items-center justify-between text-xs py-1 px-2 rounded bg-[var(--surface-hover)]"
             >
-              <span className="text-white/60">
+              <span className="text-[var(--text-secondary)]">
                 T{entry.turn} {formatPhase(entry.phase)}
               </span>
               <span

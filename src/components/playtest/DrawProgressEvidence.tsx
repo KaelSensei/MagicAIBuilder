@@ -16,7 +16,7 @@ interface DrawProgressEvidenceProps {
 function statusClassName(status: DrawProgressStatus): string {
   switch (status) {
     case "natural":
-      return "text-white/60";
+      return "text-[var(--text-secondary)]";
     case "drawing-extra":
       return "text-sky-300";
     case "library-empty":
@@ -51,7 +51,7 @@ export function DrawProgressEvidence({ engine }: DrawProgressEvidenceProps) {
 
   return (
     <div
-      className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+      className="rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-2"
       aria-live="polite"
     >
       <div className="flex items-start gap-2">
@@ -60,7 +60,7 @@ export function DrawProgressEvidence({ engine }: DrawProgressEvidenceProps) {
           aria-hidden="true"
         />
         <div className="min-w-0">
-          <p className="text-xs font-medium text-white/80">
+          <p className="text-xs font-medium text-[var(--text-primary)]">
             {t("cardsSeen", { count: evidence.cardsSeen })}
           </p>
           <p className={`text-xs ${statusClassName(evidence.status)}`}>
