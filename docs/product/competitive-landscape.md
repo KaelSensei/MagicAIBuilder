@@ -169,20 +169,39 @@ YouTube, podcasts, Discord and Reddit remain distribution channels. The March 20
 
 ---
 
-## 8. Implications For The Roadmap
+## 8. Online Play: Adjacent, Out Of Scope
 
-The November 2026 additions are I-14 through I-21 in [`roadmap.md`](./roadmap.md):
+Online play stays a non-goal. These products are recorded so the boundary is explicit, and so a French audience overlap is not mistaken for a competing deckbuilder. Read on 8 November 2026 without signing in.
 
-| Initiative                              | Job                                                                              | Priority | Why it is separate                                                                                                    |
-| --------------------------------------- | -------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
-| I-14 Verifiable natural-language search | English or French description to a visible, editable Scryfall query              | Next     | DeckCheck Smart Search and Farseek. This is search, not another deck generator                                        |
-| I-15 Rule 0 sheets and pod profiles     | Shared intentions, combos, extra turns, resource denial, proxies and house rules | Next     | CommanderSalt, DeckCheck DTI and EDHREC salt describe the table. They do not guarantee a balanced game                |
-| I-16 Decks from a collection            | Rank lists and commanders by coverage, free copies and missing cost              | Next     | SuperBrew and Mana For Cards Discover. Depends on I-06. This is not reconciliation of a deck the player already chose |
-| I-17 Precon path and tiered upgrades    | Dated official list, diff from the box, reversible budget bundles                | Next     | EDHREC precon upgrades, DeckCheck and Farseek. This is not a copy of I-02                                             |
-| I-18 Per-deck new-card radar            | On-demand legal candidates for one deck, with a sourced explanation and a diff   | Later    | DeckCheck reports and EDHREC set pages. Notifications wait until the on-demand flow is validated                      |
-| I-19 Offline game-night viewing         | A chosen deck, primer and tokens, readable with no network                       | Next     | ManaBox offline search. Read-only. A multi-device offline editor waits                                                |
-| I-20 Collaborative review               | An invitee proposes a patch. The owner accepts or rejects it                     | Later    | Archidekt collaborators. Live co-editing waits                                                                        |
-| I-21 Probability bench                  | Seeded multi-turn hand samples compared across snapshots                         | Later    | Deckstats and Archidekt odds. I-07 logs and manual comparisons stay as they are                                       |
+**MainTable** ([maintable.app](https://maintable.app)) is a free, ad-free browser table for Magic, launched in French with an English interface, and promoted through sponsored French Instagram and Threads posts. Its core is online play: Commander tables for three to eight players, duels, matchmaking, spectators, judges, voice through Discord and the Treachery variant. Players apply the rules themselves; an optional automated mode built on the Forge engine is labeled alpha ([rules guide](https://www.maintable.app/fr/mtg/pages/guide/rules/), [features](https://maintable.app/fr/mtg/pages/guide/features/)).
+
+- **Overlap with MagicAIBuilder:** a deckbuilder with legality checks, a declared bracket plus an estimate from mass land denial, extra turns and tutors, a Game Changer search filter, curve and indicative EUR budget, co-occurrence card recommendations, solo testing, collection import, public decks, and — since Beta 2.20.0 on 2 November 2026 — owner-approved suggestions on public decks, the same job as I-20 ([versions](https://www.maintable.app/fr/pages/versions/)).
+- **No overlap:** no AI, no explanation of card choices, no Rule 0 sheet, no bracket-based matchmaking, no cross-deck purchase planning.
+- **Publisher and size:** WIZCARD EI, a French sole proprietorship that also runs a card shop, with a sister collection site, TCGEM ([terms](https://maintable.app/fr/pages/legal/terms/), [TCGEM](https://www.tcgem.app/)). Alpha 1.0.0 shipped on 8 October 2026 and Beta 2.0.0 on 1 November. On 8 November it showed 45 ranked players, a 17-member Discord and three public decks. No revenue model is stated.
+- **Interoperability:** it imports pasted Moxfield, Archidekt, Cockatrice, MTGTop8, Magic-Ville and plain-text lists, and exports to the same formats. It has no public API. Our existing Moxfield and text exports should paste into it; that was not verified, because it needs an account.
+- **Legal posture:** it presents itself as fan content under the [Wizards Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy) and uses Scryfall images. Wizards has acted against rules-implementing clients before, so its longevity is uncertain.
+
+**Playgroup Live** lets a host set a bracket on a lobby and reported 26,212 games in October 2026 ([page](https://playgroup.gg/commander-en-ligne), updated 7 September 2026). **TableCommander** is a free virtual tabletop launched in January 2026 ([about](https://tablecommander.com/about)). **SpellTable**, owned by Wizards, remains the webcam reference; it was not re-verified in this pass.
+
+**What follows for the roadmap:** nothing new to build. I-20 gains a second shipped reference next to Archidekt. A dedicated MainTable export is not worth adding while it has no API and few users; check once, with an account, that a pasted Moxfield export imports cleanly. A partnership through `/api/v1` is worth revisiting only if it grows.
+
+---
+
+## 9. Implications For The Roadmap
+
+The November 2026 additions are I-14 through I-21 and I-28 in [`roadmap.md`](./roadmap.md):
+
+| Initiative                              | Job                                                                                      | Priority | Why it is separate                                                                                                         |
+| --------------------------------------- | ---------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| I-14 Verifiable natural-language search | English or French description to a visible, editable Scryfall query                      | Next     | DeckCheck Smart Search and Farseek. This is search, not another deck generator                                             |
+| I-15 Rule 0 sheets and pod profiles     | Shared intentions, combos, extra turns, resource denial, proxies and house rules         | Next     | CommanderSalt, DeckCheck DTI and EDHREC salt describe the table. They do not guarantee a balanced game                     |
+| I-16 Decks from a collection            | Rank lists and commanders by coverage, free copies and missing cost                      | Next     | SuperBrew and Mana For Cards Discover. Depends on I-06. This is not reconciliation of a deck the player already chose      |
+| I-17 Precon path and tiered upgrades    | Dated official list, diff from the box, reversible budget bundles                        | Next     | EDHREC precon upgrades, DeckCheck and Farseek. This is not a copy of I-02                                                  |
+| I-18 Per-deck new-card radar            | On-demand legal candidates for one deck, with a sourced explanation and a diff           | Later    | DeckCheck reports and EDHREC set pages. Notifications wait until the on-demand flow is validated                           |
+| I-19 Offline game-night viewing         | A chosen deck, primer and tokens, readable with no network                               | Next     | ManaBox offline search. Read-only. A multi-device offline editor waits                                                     |
+| I-20 Collaborative review               | An invitee proposes a patch. The owner accepts or rejects it                             | Later    | Archidekt collaborators, and MainTable's owner-approved suggestions since 2 November 2026. Live co-editing waits           |
+| I-21 Probability bench                  | Seeded multi-turn hand samples compared across snapshots                                 | Later    | Deckstats and Archidekt odds. I-07 logs and manual comparisons stay as they are                                            |
+| I-28 Deckbuilding guide by bracket      | Sourced guidance for each of the five brackets, and a check of the open deck against one | Next     | Wizards publishes rules without guidance; EDHREC and the press publish guidance without evidence labels; nothing in French |
 
 Open work on the editor, production safety and collection ownership stays ahead of this expansion. Start I-14 and I-15, test demand for I-16 and I-17, and specify the I-19 cache alongside them.
 
