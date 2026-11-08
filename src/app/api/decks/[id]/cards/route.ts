@@ -5,8 +5,26 @@ import { addCardSchema } from "@/lib/validation/card";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
+import { duplicatesOtherCommandSlot } from "@/lib/deck/commander-pairing";
 
 type Params = { params: Promise<{ id: string }> };
+
+/**
+ * A command-zone card must not repeat the Oracle card held by the opposite
+ * slot: the partner is compared with the commander, the commander with the partner.
+ */
+async function duplicatesCommandPairing(
+  deckId: string,
+  card: { readonly scryfallId: string; readonly isCommander: boolean; readonly isPartner: boolean }
+): Promise<boolean> {
+  if (!card.isCommander) return false;
+  const slots = await prisma.deck.findUnique({
+    where: { id: deckId },
+    select: { commanderId: true, partnerId: true },
+  });
+  const otherSlotId = card.isPartner ? slots?.commanderId : slots?.partnerId;
+  return duplicatesOtherCommandSlot(card.scryfallId, otherSlotId ?? null);
+}
 
 // POST /api/decks/[id]/cards — add a card to a deck
 export async function POST(request: Request, { params }: Params) {
@@ -49,6 +67,13 @@ export async function POST(request: Request, { params }: Params) {
       isPartner,
       zone,
     } = parsed.data;
+
+    if (await duplicatesCommandPairing(deckId, { scryfallId, isCommander, isPartner })) {
+      return NextResponse.json(
+        { error: "Commander and partner must be different cards" },
+        { status: 400 }
+      );
+    }
 
     const card = await prisma.deckCard.create({
       data: {
