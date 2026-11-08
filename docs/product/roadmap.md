@@ -209,6 +209,8 @@ The November competitive pass did not open a new initiative for work the roadmap
 
 # Initiatives
 
+Detailed functional specs live in [`docs/product/specs/`](specs/README.md): one per initiative, each with a dated market sweep, the current state of the code, and delivery slices with their dependencies.
+
 ## I-01: Deck Editor Workflow
 
 **Outcome:** a player can build, reorganize and refine a deck without losing cards, context or intent.
@@ -311,6 +313,8 @@ A user can move a card between every legal zone, reload the page, change its pri
 ---
 
 ## I-02: AI Deck Copilot
+
+**Spec:** [`specs/i02-checkable-ai-copilot.md`](specs/i02-checkable-ai-copilot.md)
 
 **Outcome:** a player can describe what they want and receive a legal, budget-aware and explainable plan.
 
@@ -796,6 +800,8 @@ A local model is only promoted if it matches the required quality for a clearly 
 
 ## I-13: Product Visual Redesign
 
+**Spec:** [`specs/i13-visual-direction.md`](specs/i13-visual-direction.md)
+
 **Outcome:** a player can find, build, understand and share a Commander deck in an interface that feels coherent, distinctive and calm even when card data is dense.
 
 **Status:** In progress
@@ -837,6 +843,8 @@ The deck-library-to-editor-to-share journey is visually coherent and remains at 
 
 ## I-14: Verifiable Natural-Language Search
 
+**Spec:** [`specs/i14-verifiable-natural-language-search.md`](specs/i14-verifiable-natural-language-search.md)
+
 **Outcome:** a player can describe a card function in English or French, read the Scryfall query that search will run, edit it, and get the cards that query returns.
 
 **Status:** Next
@@ -862,6 +870,8 @@ For a fixed description and deck context, the player sees one Scryfall query, ca
 
 ## I-15: Rule 0 Sheets And Pod Profiles
 
+**Spec:** [`specs/i15-rule-zero-sheets-and-pod-profiles.md`](specs/i15-rule-zero-sheets-and-pod-profiles.md)
+
 **Outcome:** a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
 
 **Status:** Next
@@ -885,6 +895,8 @@ Four players can compare consented profiles and see house preferences distinguis
 ---
 
 ## I-16: Decks Buildable From A Collection
+
+**Spec:** [`specs/i16-decks-buildable-from-a-collection.md`](specs/i16-decks-buildable-from-a-collection.md)
 
 **Outcome:** a player can start from owned cards and see which commanders or lists those cards can build, including free copies and the cost of what is missing.
 
@@ -911,6 +923,8 @@ A collection produces a ranked, sourced view of buildable lists that shows free 
 
 ## I-17: Precon Path And Tiered Upgrades
 
+**Spec:** [`specs/i17-precon-path-and-tiered-upgrades.md`](specs/i17-precon-path-and-tiered-upgrades.md)
+
 **Outcome:** a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
 
 **Status:** Next
@@ -934,6 +948,8 @@ A player can open a dated precon, preview a budget bundle, apply it to a working
 ---
 
 ## I-18: Per-Deck Radar Of New Cards
+
+**Spec:** [`specs/i18-per-deck-radar-of-new-cards.md`](specs/i18-per-deck-radar-of-new-cards.md)
 
 **Outcome:** a player can ask which newly released, legal cards matter for one deck, read a sourced reason, and adopt a card only from a visible diff.
 
@@ -959,6 +975,8 @@ A player can request a sourced, legal shortlist for one deck and accept or ignor
 
 ## I-19: Offline Game-Night Viewing
 
+**Spec:** [`specs/i19-offline-game-night-viewing.md`](specs/i19-offline-game-night-viewing.md)
+
 **Outcome:** a player can choose one deck and read that deck, its primer and its tokens without a network.
 
 **Status:** Next
@@ -983,6 +1001,8 @@ After an explicit download, the chosen deck, primer and tokens remain readable o
 
 ## I-20: Collaborative Review
 
+**Spec:** [`specs/i20-collaborative-review.md`](specs/i20-collaborative-review.md)
+
 **Outcome:** an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck.
 
 **Status:** Later
@@ -1006,6 +1026,8 @@ A collaborator can propose a change, the owner can accept or reject it, and the 
 ---
 
 ## I-21: Reproducible Probability Bench
+
+**Spec:** [`specs/i21-reproducible-probability-bench.md`](specs/i21-reproducible-probability-bench.md)
 
 **Outcome:** a player can compare thousands of simulated hands between two deck snapshots under an explicit mulligan policy, and can rerun the same comparison.
 
