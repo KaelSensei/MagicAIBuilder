@@ -608,6 +608,125 @@ describe("useDeckStore — setPartner", () => {
     expect(deckApi.updateDeck).toHaveBeenCalledWith("deck-1", expect.objectContaining({ partnerId: "tana-id" }));
   });
 
+  it("restores the previous partner when saving the replacement fails", async () => {
+    const previousPartner = makeDeckCard({
+      id: "previous-partner",
+      name: "Tana, the Bloodsower",
+      category: "commander",
+    });
+    seedDeck(makeActiveDeck({
+      partner: previousPartner,
+      pairingType: "partner",
+    }));
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("Save failed"));
+    vi.mocked(deckApi.addCard).mockClear();
+    toastAdd.mockClear();
+
+    await useDeckStore.getState().setPartner(makeScryfallCard({
+      id: "replacement-partner",
+      name: "Tymna the Weaver",
+      keywords: ["Partner"],
+    }));
+
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.partner).toEqual(previousPartner);
+    expect(deck.pairingType).toBe("partner");
+    expect(toastAdd).toHaveBeenCalledWith(
+      "error",
+      expect.stringContaining("partner")
+    );
+    expect(deckApi.addCard).not.toHaveBeenCalled();
+  });
+
+  it("restores the previous partner when clearing it fails", async () => {
+    const previousPartner = makeDeckCard({
+      id: "previous-partner",
+      name: "Tana, the Bloodsower",
+      category: "commander",
+    });
+    seedDeck(makeActiveDeck({
+      partner: previousPartner,
+      pairingType: "partner",
+    }));
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("Save failed"));
+    toastAdd.mockClear();
+
+    await useDeckStore.getState().setPartner(null);
+
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.partner).toEqual(previousPartner);
+    expect(deck.pairingType).toBe("partner");
+    expect(toastAdd).toHaveBeenCalledWith(
+      "error",
+      expect.stringContaining("partner")
+    );
+  });
+
+  it("keeps the saved partner when only the card row fails", async () => {
+    const previousPartner = makeDeckCard({
+      id: "previous-partner",
+      name: "Tana, the Bloodsower",
+      category: "commander",
+    });
+    seedDeck(makeActiveDeck({
+      partner: previousPartner,
+      pairingType: "partner",
+    }));
+    vi.mocked(deckApi.addCard).mockRejectedValueOnce(new Error("Save failed"));
+    toastAdd.mockClear();
+
+    await useDeckStore.getState().setPartner(makeScryfallCard({
+      id: "replacement-partner",
+      name: "Tymna the Weaver",
+      keywords: ["Partner"],
+    }));
+
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.partner?.id).toBe("replacement-partner");
+    expect(deck.partner?.name).toBe("Tymna the Weaver");
+    expect(deck.pairingType).toBe("partner");
+    expect(toastAdd).not.toHaveBeenCalledWith(
+      "error",
+      expect.stringContaining("partner")
+    );
+  });
+
+  it("does not roll back a newer partner when an older save fails", async () => {
+    const previousPartner = makeDeckCard({
+      id: "previous-partner",
+      name: "Tana, the Bloodsower",
+      category: "commander",
+    });
+    seedDeck(makeActiveDeck({
+      partner: previousPartner,
+      pairingType: "partner",
+    }));
+    const failedUpdate = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(failedUpdate.promise);
+    toastAdd.mockClear();
+
+    const failedSave = useDeckStore.getState().setPartner(makeScryfallCard({
+      id: "replacement-partner",
+      name: "Tymna the Weaver",
+      keywords: ["Partner"],
+    }));
+    await useDeckStore.getState().setPartner(makeScryfallCard({
+      id: "newer-partner",
+      name: "Thrasios, Triton Hero",
+      keywords: ["Partner"],
+    }));
+    failedUpdate.reject(new Error("Save failed"));
+    await failedSave;
+
+    const deck = useDeckStore.getState().decks["deck-1"];
+    expect(deck.partner?.id).toBe("newer-partner");
+    expect(deck.partner?.name).toBe("Thrasios, Triton Hero");
+    expect(toastAdd).not.toHaveBeenCalledWith(
+      "error",
+      expect.stringContaining("partner")
+    );
+  });
+
   it("does nothing when no active deck", async () => {
     useDeckStore.setState({ activeDeckId: null });
     vi.mocked(deckApi.updateDeck).mockClear();

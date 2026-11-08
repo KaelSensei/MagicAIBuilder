@@ -342,6 +342,52 @@ export interface DeckStore {
 let latestDeckListRequest = 0;
 const latestRenameRequests = new Map<string, symbol>();
 
+/** A partner save that may still need to be undone. */
+interface FailedPartnerSave {
+  readonly activeDeckId: string;
+  readonly partnerMetadataSaved: boolean;
+  readonly attemptedPartnerId: string | null;
+  readonly previousPartner: DeckCard | null;
+  readonly previousPairingType: Deck["pairingType"];
+}
+
+/**
+ * Restores the previous partner when the deck record was not saved and this
+ * attempt is still the partner on screen.
+ *
+ * A later partner choice is left alone. Once the deck update has resolved, the
+ * optimistic partner matches the saved record and stays for the next reload.
+ *
+ * @param setDeckState - Store update used only when a rollback is required
+ * @param state - Store snapshot taken when the save failed
+ * @param save - The attempt that just failed
+ * @returns Nothing. Updates the store and shows an error when the partner is restored.
+ */
+function restorePartnerAfterFailedSave(
+  setDeckState: (partial: Pick<DeckStore, "decks">) => void,
+  state: DeckStore,
+  save: FailedPartnerSave,
+): void {
+  if (save.partnerMetadataSaved) return;
+  const currentDeck = state.decks[save.activeDeckId];
+  const currentPartnerId = currentDeck?.partner?.id ?? null;
+  if (!currentDeck || currentPartnerId !== save.attemptedPartnerId) return;
+  setDeckState({
+    decks: {
+      ...state.decks,
+      [save.activeDeckId]: {
+        ...currentDeck,
+        partner: save.previousPartner,
+        pairingType: save.previousPairingType,
+        updatedAt: new Date(),
+      },
+    },
+  });
+  useToastStore
+    .getState()
+    .add("error", "Could not save partner — try again");
+}
+
 export const useDeckStore = create<DeckStore>()((set, get) => ({
   decks: {},
   activeDeckId: null,
@@ -1044,22 +1090,24 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   setPartner: async (card: ScryfallCard | null) => {
     const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
+    const previousPartner = decks[activeDeckId]?.partner ?? null;
+    const previousPairingType = decks[activeDeckId]?.pairingType ?? "none";
+    let partnerMetadataSaved = false;
     const deckCard = card ? makeDeckCard(card) : null;
     if (deckCard) deckCard.category = "commander";
 
     // If commander has no pairing type but partner does, derive pairingType from partner
     // e.g. Jaheira has "Choose a Background" → pairingType should be "background"
-    const currentPairingType = decks[activeDeckId]?.pairingType ?? "none";
     const partnerPairingType = card ? detectPairingType(card) : "none";
-    if (card && currentPairingType === "father_son" &&
-        !canPairWith(currentPairingType, partnerPairingType)) {
+    if (card && previousPairingType === "father_son" &&
+        !canPairWith(previousPairingType, partnerPairingType)) {
       useToastStore.getState().add("warning", "A Father & son commander needs another Father & son partner.");
       return;
     }
     const effectivePairingType =
-      currentPairingType === "none" && partnerPairingType !== "none"
+      previousPairingType === "none" && partnerPairingType !== "none"
         ? partnerPairingType
-        : currentPairingType;
+        : previousPairingType;
 
     // Optimistic update
     set((state) => ({
@@ -1080,6 +1128,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         partnerId: card?.id ?? null,
         pairingType: effectivePairingType,
       });
+      partnerMetadataSaved = true;
       if (card && deckCard) {
         await deckApi.addCard(activeDeckId, {
           scryfallId: card.id,
@@ -1104,6 +1153,13 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       }
     } catch (err) {
       logger.error("Unexpected error", "setPartner", err);
+      restorePartnerAfterFailedSave(set, get(), {
+        activeDeckId,
+        partnerMetadataSaved,
+        attemptedPartnerId: deckCard?.id ?? null,
+        previousPartner,
+        previousPairingType,
+      });
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
