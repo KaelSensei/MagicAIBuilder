@@ -20,6 +20,7 @@ It should not try to beat every competitor at their strongest specialty:
 - **ManaBox** is the benchmark for mobile collection management, scanning and offline search.
 - **DeckCheck** and **Farseek** already sell conversational Commander assistance. A language model is not an empty market.
 - **Commander Spellbook** is the benchmark for structured Commander combo discovery.
+- **ManaTap, Farseek and MTG Master** are the benchmark for conversational generation. They shipped it during 2026 with free entry tiers, so the presence of AI is no longer an edge; validated, explainable output is.
 
 Our opportunity is the workflow between those products:
 
@@ -68,6 +69,8 @@ The comparison tracks workflows rather than feature counts. Prices, sources and 
 - Do not start collaboration with live co-editing. I-20 is a patch the owner accepts or rejects.
 - Do not add an AI opponent or a full Magic rules engine under I-21.
 - Do not calculate a local Lift score from the top-20 EDHREC feed.
+- Do not follow the AI-native builders into a tournament manager, a custom-card creator, MTG Arena wildcard optimization or camera scanning. Each is a separate product with its own data and support cost.
+- Do not compete on generation volume or free-tier generosity. A wrong deck produced instantly is the failure mode this product exists to avoid.
 
 Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
@@ -112,6 +115,8 @@ The five #1110 slices classify failed companion rules as legality warnings (I-03
 The #1117 and #1118 slices prevent stale deck-comparison results after a selection change and show exact-printing acquisition needs beside collection deck usage. #1119 reduced the main-branch Sonar measure from 20 code smells to one; #1123 addresses the remaining import-dialog complexity, pending main-branch reanalysis. These are focused improvements within I-08, I-06 and I-05, not evidence that their broader acceptance criteria are complete. The planning estimate remains approximately 30-50 small PR-sized iterations for active Now/Next work, excluding 11 conditional or parked scopes.
 
 I-07's tracked playtest scope is shipped. The largest active gaps remain the deck editor (I-01), collection-to-acquisition flow (I-06), and explainable recommendation evidence (I-09). I-13 adds a visual redesign, not a claim that today's UI is unfinished or that existing functionality must be rewritten.
+
+**2026-11-07 competitive revision:** the refreshed benchmark adds eight open scopes — Lift semantics and a Commander Spellbook endpoint re-check (I-09), Moxfield import brittleness (I-10), Scryfall policy confirmation (I-05), vendor-level cost breakdown and explicit proxy state (I-06), a visible validator verdict (I-02) and dated Game Changers data (I-03). These are responses to confirmed upstream and competitor changes, not new product bets, so they raise the tracked open count rather than reducing it. Three of them protect integrations that already ship — I-09's Lift work, I-10's Moxfield fallback and I-05's Scryfall confirmation — and should be scheduled before new surface area.
 
 **Iteration estimate:** approximately 30-50 small PR-sized iterations for the active Now/Next outcomes **including** I-13, with overlap between visual and functional work. The 11 conditional or parked scopes are excluded. This is an estimate, not a fixed number of turns or a delivery deadline; refine it after a visual audit and each accepted slice.
 
@@ -334,6 +339,7 @@ A user can move a card between every legal zone, reload the page, change its pri
 - [x] Add a deterministic post-generation validator; the LLM never decides legality.
 - [x] Build a small golden evaluation set for valid cards, useful explanations and regression checks.
 - [ ] Expand the golden set from deterministic structural and evidence contracts to provider-backed qualitative evaluations only when a stable review rubric exists.
+- [ ] Keep the deterministic validator's verdict visible in the copilot's output instead of only applying it silently. Competing assistants either validate without explaining or explain without validating; the difference is only a differentiator if the player can see which claims were checked against card data and which are the model's reasoning.
 
 ### Definition of done
 
@@ -379,6 +385,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - [ ] Validate commander and partner mechanics at the deck API boundary, including imported pairs and the same Oracle card across different printings.
   - [x] Reject whitespace-only partner IDs before creating a deck (#1098).
   - [x] Reject a commander and partner that are different printings of the same Oracle card on deck create and update (`sharesOracleIdentity`, #1131). Imported pairs outside these two APIs remain to be verified.
+- [ ] Version the Game Changers list and bracket rules as dated data rather than code. The list has held at 53 cards since 2026-02-09 and Wizards still labels the brackets beta, so a resumed update cadence should be a data change with an effective date, not a release.
 
 ### Definition of done
 
@@ -461,6 +468,7 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 - [ ] Record the E2E Docker strategy and required environment variables.
   - The strategy is documented in the "E2E gate" section of `docs/engineering/quality-gate.md`. The environment variables set in `docker-compose.e2e.yml` (`DATABASE_URL`, `NEXT_PUBLIC_APP_URL`, `AUTH_SECRET`, plus the Postgres service settings) are not yet listed there.
 - [ ] Upgrade Prisma only after the local Node toolchain is at least 22.12.
+- [ ] Confirm Scryfall's current per-endpoint request limits and bulk-data format against Scryfall's own documentation, then align the client limiter. `src/lib/scryfall/client.ts` sends `User-Agent` and `Accept` and serialises calls behind a 100 ms mutex, which honours a 10 req/s sustained ceiling but not a stricter per-endpoint search limit; bulk files are reported to have moved to gzipped JSONL on 2026-07-20. Scryfall blocks automated fetching, so a human must read the policy before the limiter changes.
 - [x] Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
   - `GET /api/decks` status and duration shipped in #1034. Profile and Scryfall paths remain open; do not close this item yet.
   - Profile mutation latency on `/api/user/profile` is recorded (#1132). Profile reads and other Scryfall paths remain open.
@@ -522,6 +530,8 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 - [ ] Extend exact-printing usage beyond private decks to saved lists or acquisition plans; deck usage is now visible from the collection.
 - [ ] Add explicit, persistent acquire state; the read-only cross-deck plan is now visible in the collection UI.
 - [ ] Export or deep-link the acquisition plan to supported regional sellers while preserving printing, condition and finish choices.
+- [ ] Break deck and acquisition cost down by vendor, category and price band instead of a single subtotal, once a region-aware provider is selected. Archidekt already offers this breakdown from its deck price overlay.
+- [ ] Track proxies as explicit card state rather than only a PDF export and a browser-local buy-later choice. ManaBox treats proxy and signed copies as first-class collection data, and the synchronized proxy workflow above depends on the same model.
 
 ### Definition of done
 
@@ -651,6 +661,8 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - [ ] Add trend views that respect EDHREC top-20 truncation bounds.
   - [x] Avoid inferring a rise or fall bound from a snapshot with fewer than 20 distinct cards (#1098). Broader trend-view disclosure remains open.
 - [ ] Revisit richer tournament statistics only with a source that publishes match-level data.
+- [ ] Adopt EDHREC's Lift semantics explicitly wherever a co-occurrence number is shown or ranked. Lift is a ratio centred on 1 — inclusion in context divided by inclusion at large — and replaced Synergy on `/commanders`, `/combos` and `/tags` on 2026-10-01. Label it as Lift with its definition available on demand; do not relabel it as a synergy percentage or sort it as one.
+- [ ] Re-check the Commander Spellbook integration against the per-deck and per-card combo endpoints added in v0.84.0 (2026-10-20), and cache identical card-list lookups so a much-viewed public deck cannot repeatedly hit the service.
 
 ### Blocked
 
@@ -718,6 +730,7 @@ A recommendation is never presented as universal truth: the user can see where i
   - Import parsing and preview are more resilient, but exact printing and category round trips remain open; preserving a localized name does not guarantee that Scryfall resolves that language.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.
+- [ ] Treat the Moxfield URL import as a brittle path rather than a stable contract. Moxfield has no public API, now answers programmatic requests behind Cloudflare, and requires authentication headers on its internal endpoints; other tools have moved to paste and CSV as the supported route. Detect the blocked case explicitly and tell the player to paste the list instead of reporting a generic import failure.
 
 ### Definition of done
 

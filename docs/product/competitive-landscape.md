@@ -119,6 +119,10 @@ Farseek sells Commander chat with the 99, the budget and the bracket in context,
 
 CommanderSalt explains bracket, power, salt and synergies for an imported list. A May 2026 thread treats the report as entertaining and detailed, and warns that it can overrate decks and assign a poor bracket. It is not a matchmaking authority. Sources: [CommanderSalt](https://www.commandersalt.com/), [May 2026 thread](https://www.reddit.com/r/EDH/comments/1toxzcy/how_reliable_is_commandersalt/).
 
+ManaTap, MTG Master and ManaForge complete the same wave, all checked on 8 November 2026. ManaTap sells collection-aware chat, an iterative workshop and a deck checker scoring legality, curve, ramp, draw, removal, threats and synergy, with a free tier and a paid tier around $12.99 a month. MTG Master generates bracket-aware and collection-aware 100-card lists and states that it enforces a legal commander, color identity and singleton. ManaForge generates from a paper or Arena collection, suggests commander swaps, re-validates saved decks against live ban lists and reads Arena wildcard counts; its entry paid tier is around EUR 9.99 a month. None of the three publishes a playtest-evidence loop or printing-level acquisition planning.
+
+EDHREC ships no AI product. “EDHREChat” circulates as a reference but was an April Fools page published on 1 April 2023 and taken offline on 4 April 2023. Treat EDHREC as a statistical source, not a generative competitor.
+
 17lands remains the reference for data-driven Limited, not for Commander. Commander Spellbook remains the combo reference and is open source. Generic chat assistants can discuss Magic and still lack a live, legality-checked card contract. Those three points from the March note still hold. The claim that no production tool offered intent-based Commander building does not.
 
 ---
@@ -156,6 +160,8 @@ Archidekt collaborators are the reference for a second person working on a list.
 ## 7. Card Data, Tournaments And Distribution
 
 Scryfall's API remains the card, image, rulings, legality and set source. Honor the published rate limit, cache aggressively, and use bulk data. Commander Spellbook remains the combo source. EDHREC's statistical feeds remain useful only with source, freshness and sample disclosure. The Goldfish import stays blocked while the Cloudflare challenge has no supported access path. MTGTop8 standings still do not yield a match win rate. Those constraints are unchanged from the engineering roadmap.
+
+Two upstream contracts moved during 2026 and affect shipped integrations. Scryfall now serves bulk data as gzipped JSONL, with a reported cutover on 20 July 2026, refreshed twice a day and carrying prices; its per-endpoint limits are tighter than the sustained ceiling, with card search reported at 2 requests a second. Confirm both figures against Scryfall's own documentation before changing any limiter: the site blocks automated fetching, so this needs a human read. Commander Spellbook v0.84.0, released on 20 October 2026, added per-deck and per-card combo endpoints worth re-checking our integration against.
 
 Tournament and marketplace tools (MTGTop8, MTGDecks, Melee.gg, Start.gg, TCGPlayer, Card Kingdom, Cardmarket) remain context and price sources. This pass did not re-audit their features. Regional price providers stay in I-06 and are chosen explicitly.
 
