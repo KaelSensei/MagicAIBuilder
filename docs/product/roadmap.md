@@ -122,6 +122,8 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 
 **2026-11-08:** `main` supports a narrower status correction than the October snapshot. #1263 made the persisted card zone the only source of truth, #1264 finished stable cross-zone drop targets plus the remaining keyboard and touch zone actions, and #1259 with #1265–#1269 shipped Lumen foundations on the landing page, collection, public decks, forms and deck library. #1270 added editor flow and visual-stability coverage, and #1271 bounded a stalled editor session. #1272 and #1273 promoted that set to `main` on 2026-11-06. Three I-01 scopes are checked below. I-01 stays in progress because concurrent recovery and the broader E2E scope are open. I-13 moves from discovery-only to in progress, and its five delivery slices stay open. I-14 through I-21 record the November competitive gaps. The 2026-10-28 count of 55 unchecked top-level scopes was not recounted. The 30–50 iteration estimate still refers to the pre-existing Now and Next work, including the open I-13 validation, and does not include I-14 through I-21.
 
+**2026-11-08, I-28:** a dated research sweep across official Wizards texts, EDHREC, the strategy press, creators, forums, cEDH resources, card data, game logs and mana-base math produced [a sourced guide to building for each bracket](guides/commander-deckbuilding-by-bracket.md). I-28 publishes it in the product. The sweep also found that the deck wizard shows players wrong bracket names and limits in English and French, that the copilot prompt gives bracket 2 one Game Changer instead of zero, and that the bracket model stops at 4. Correcting that copy and prompt is I-28's first slice. I-28 adds eight open scopes and is not included in the 30–50 iteration estimate.
+
 ---
 
 ## Portfolio View
@@ -175,27 +177,30 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 15. **I-19 Offline game-night viewing**
     Let a player download one deck, its primer and its tokens for read-only use without a network.
 
+16. **I-28 Commander deckbuilding guide by bracket**
+    Teach how to build for each of the five official brackets from sourced, labeled evidence, and check the open deck against the chosen bracket. The first slice corrects bracket names players already see.
+
 ### Later
 
-16. **I-10 Interoperability and integrations**
+17. **I-10 Interoperability and integrations**
     Make MagicAIBuilder a good starting point and a good destination for deck data.
 
-17. **I-11 Localization and regional experience**
+18. **I-11 Localization and regional experience**
     Expand beyond English and French only when translations and prices are genuinely supported.
 
-18. **I-12 Local AI**
+19. **I-12 Local AI**
     Explore local inference only after the cloud copilot has a measurable product fit. Offline reading is I-19.
 
-19. **I-18 Per-deck radar of new cards**
+20. **I-18 Per-deck radar of new cards**
     On demand, explain newly legal cards for one deck and show a diff before any change.
 
-20. **I-20 Collaborative review**
+21. **I-20 Collaborative review**
     Let an invited reviewer propose a patch that the owner accepts or rejects. Live co-editing stays out of this slice.
 
-21. **I-21 Reproducible probability bench**
+22. **I-21 Reproducible probability bench**
     Compare simulated hands across snapshots with a visible seed, sample size and mulligan policy.
 
-Open work on I-01, I-05 and I-06 stays ahead of I-14 through I-21. Among the new initiatives, start with I-14 and I-15, validate demand for I-16 and I-17, and specify the I-19 cache in parallel. Keep I-18 on demand until that flow is validated. Take up I-20 and I-21 only if players use the earlier slices. Impact and effort below are planning labels: medium means several small PRs, large means a cross-cutting project. They are not delivery dates.
+Open work on I-01, I-05 and I-06 stays ahead of I-14 through I-21. I-28's first slice is a copy correction and can ship at any time; its guide page should land before I-15, whose Rule 0 sheet reuses the same bracket vocabulary. Among the new initiatives, start with I-14 and I-15, validate demand for I-16 and I-17, and specify the I-19 cache in parallel. Keep I-18 on demand until that flow is validated. Take up I-20 and I-21 only if players use the earlier slices. Impact and effort below are planning labels: medium means several small PRs, large means a cross-cutting project. They are not delivery dates.
 
 ### Reviewed on 2026-11-08 and left in place
 
@@ -1053,6 +1058,41 @@ Deckstats hand analysis and Archidekt odds are the references. I-07 still owns r
 ### Definition of done
 
 Two snapshots can be compared from a recorded seed and sample size, and a rerun with the same inputs reproduces the reported intervals.
+
+---
+
+## I-28: Commander Deckbuilding Guide By Bracket
+
+**Spec:** [`specs/i28-commander-deckbuilding-guide-by-bracket.md`](specs/i28-commander-deckbuilding-guide-by-bracket.md)
+**Content:** [`guides/commander-deckbuilding-by-bracket.md`](guides/commander-deckbuilding-by-bracket.md)
+
+**Outcome:** a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
+
+**Status:** Next
+**Priority:** Next
+**Impact / effort:** High / medium
+
+Wizards publishes the rules but no deckbuilding guidance. EDHREC, CoolStuffInc and Card Kingdom publish guidance without evidence labels, and data sites publish numbers without explanation. No French step-by-step guide was found. I-27 explains a rule when a warning fires and explicitly leaves strategy out; this initiative owns the strategy, labeled as official, measured or community advice.
+
+### Scope
+
+- [ ] Correct the bracket names and descriptions players see in the deck wizard, and the bracket rules given to the copilot: bracket 2 is Core with zero Game Changers, bracket 3 Upgraded, bracket 4 Optimized, and cEDH is bracket 5. Use the official French names with the "bracket" alias.
+- [ ] Extend the bracket definitions to bracket 5 and to the official restrictions on mass land denial, extra turns and two-card combos, and remove the tutor restriction Wizards dropped on 2025-10-21.
+- [ ] Publish a static, indexable guide page with one section per bracket, from the researched document, with every claim labeled Official, Data or Community and linked to a dated source.
+- [ ] Render the guide's official rules from the same definitions the bracket analysis uses, so the two cannot disagree.
+- [ ] Link the bracket badge and the wizard's bracket step to the matching section without losing deck state.
+- [ ] Check the open deck against a chosen bracket, separating official limits it breaks from composition ranges it falls outside, without calling the model or blocking a save.
+- [ ] Ship reviewed English and French content; hide sections not reviewed in a locale.
+- [ ] Show the rules state the guide reflects, and open a review whenever Wizards changes brackets, Game Changers or the banned list.
+
+### Engineering enablers
+
+- A test fails when a guide claim has no label or no dated source.
+- A test fails when the guide's official rules diverge from the bracket definitions.
+
+### Definition of done
+
+A player can open the section for their target bracket from the deck, read sourced guidance in English or French, and see which official limits and composition ranges their list meets, with the guide and the bracket analysis stating the same rules.
 
 ---
 
