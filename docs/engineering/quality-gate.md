@@ -134,6 +134,28 @@ Both are opt-out, not silent: `PLAYWRIGHT_GREP_INVERT=""` runs everything. Contr
 
 `Dockerfile.playwright` pins the Playwright image tag and pnpm. Playwright resolves browser binaries by a version-stamped path, so an image tag that drifts from `@playwright/test` makes every browser test fail to launch; unpinned pnpm resolves to whatever is latest, and pnpm 11 dropped `pnpm.overrides`, failing the frozen install outright. `src/lib/toolchain.test.ts` fails the unit suite if either pin diverges.
 
+### E2E environment
+
+`docker-compose.e2e.yml` runs as its own Compose project (`magicaibuilder-e2e`), so it never replaces the development `db` container. The `db` service starts Postgres 16 on a throwaway `pgdata_e2e` volume, removed by the `down -v` cleanup after every run. The `e2e` service waits for a TCP-level `pg_isready`, applies `prisma migrate deploy`, then runs Playwright once for the `chromium` project and once for `authenticated`, failing on the first non-zero exit.
+
+Every value below is a local test fixture, not a secret. No variable has to be exported on the host: the two `PLAYWRIGHT_*` controls are the only ones read from the host shell, and both have defaults.
+
+| Variable                 | Service | Value                                                      | Purpose                                                                                                             |
+| ------------------------ | ------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `POSTGRES_DB`            | `db`    | `magicaibuilder`                                           | Database created on the fresh volume.                                                                               |
+| `POSTGRES_USER`          | `db`    | `magic`                                                    | Owner role used by the app and the health check.                                                                    |
+| `POSTGRES_PASSWORD`      | `db`    | `magic_dev_only`                                           | Fixture password for that role; never reused outside the e2e stack.                                                 |
+| `DATABASE_URL`           | `e2e`   | `postgresql://magic:magic_dev_only@db:5432/magicaibuilder` | Prisma connection for migrations and the app under test, addressed by the `db` service name.                        |
+| `NEXT_PUBLIC_APP_URL`    | `e2e`   | `http://localhost:3000`                                    | Public base URL of the `next dev` server Playwright drives.                                                         |
+| `AUTH_SECRET`            | `e2e`   | `playwright-test-secret`                                   | NextAuth signing secret; a fixed fixture because sessions are bypassed in test mode.                                |
+| `GOOGLE_CLIENT_ID`       | `e2e`   | `playwright`                                               | Placeholder so the Google provider initialises; never contacted.                                                    |
+| `GOOGLE_CLIENT_SECRET`   | `e2e`   | `playwright`                                               | Placeholder paired with the client ID.                                                                              |
+| `PLAYWRIGHT_TEST`        | `e2e`   | `1`                                                        | Enables the auth bypass. `requireAuth` keeps it dead when `NODE_ENV` is `production`.                               |
+| `PLAYWRIGHT_SPEC`        | `e2e`   | host value, default empty                                  | Narrows the run to one spec file. Empty means the full suite; the pre-push gate always forces it empty.             |
+| `PLAYWRIGHT_GREP_INVERT` | `e2e`   | host value, default `@external\|@perf`                     | Tags excluded from the blocking run (see _Tests excluded from the blocking run_). Set it to `""` to run everything. |
+
+`src/lib/toolchain.test.ts` fails the unit suite when the Compose file sets a variable this table does not list, so a new variable cannot ship undocumented.
+
 ## Review protocol
 
 1. Read the code and the diff.
