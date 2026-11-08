@@ -12,7 +12,7 @@ Every spec follows the same shape, matching the house format already used by [`c
 
 The **Delivery slices** table is the part that matters for automation: each slice is independently reviewable, and the dependency column says which ones cannot start yet. Three scheduled agents pick work from this roadmap every day — the dependency edges are what stop them colliding.
 
-## Index
+## Committed work
 
 | Spec                                                                            | Initiative | Status | The one-line reason it exists                                                                         |
 | ------------------------------------------------------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------------------- |
@@ -26,6 +26,32 @@ The **Delivery slices** table is the part that matters for automation: each slic
 | [Offline game-night viewing](i19-offline-game-night-viewing.md)                 | I-19       | Next   | Competitors ship offline card databases; the one deck you are about to play is the honest slice       |
 | [Collaborative review](i20-collaborative-review.md)                             | I-20       | Later  | Archidekt gives collaborators direct write access; propose-and-accept exists nowhere                  |
 | [Reproducible probability bench](i21-reproducible-probability-bench.md)         | I-21       | Later  | Five tools simulate thousands of hands; none publishes a seed or an interval                          |
+
+## 2027 horizon
+
+Six initiatives extending the pipeline into 2027, each from a verified gap in the same sweep. They are hypotheses with a stated basis, not commitments: a 2027 initiative is promoted to Next only once its open questions are answered and its dependency has shipped. Their specs are deliberately less detailed than the ones above — committing to interface details eighteen months early produces precision that ages rather than guides.
+
+| Spec                                                                              | Initiative | The gap it answers                                                                         |
+| --------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------ |
+| [Verification as a public surface](i22-verification-as-a-public-surface.md)       | I-22       | Six products generate decks; none publishes a verification contract                        |
+| [The pod's own surface](i23-the-pods-own-surface.md)                              | I-23       | Three Discord bots answer bracket questions; none carries a pod's declared agreement       |
+| [Decks a screen reader can play from](i24-decks-a-screen-reader-can-play-from.md) | I-24       | Blind players adapt cards with NFC tags; no deckbuilder emits output shaped to be heard    |
+| [A third locale, chosen on evidence](i25-a-third-locale.md)                       | I-25       | Every AI deckbuilder found is English-only; nine catalogues sit dormant here               |
+| [Collections arriving from elsewhere](i26-collections-arriving-from-elsewhere.md) | I-26       | Scanning is a non-goal, so import is the only honest way a collection gets populated       |
+| [Learning while building](i27-learning-while-building.md)                         | I-27       | Tools assume the vocabulary; teaching lives in video. Nobody explains a rule when it fires |
+
+### What the sweep ruled out for 2027
+
+Recorded so the next pass does not re-derive them:
+
+- **Tournament win rates stay blocked.** EDHTop16, the most promising candidate, publishes commander meta share and entry counts — **no win rates, no match-level results, no public API**. MagicMeta and LucidPuzzle derive their tiers from it. The roadmap's existing block stands.
+- **Card scanning** stays a non-goal: ManaBox owns it, it is a native-camera capability, and I-06 defers it behind printing-level ownership regardless.
+- **A table companion** — life totals, commander damage, timers — is already served by Discord bots and the official app, and is a different product.
+- **Marketplace and checkout** remain excluded. I-06 hands off to sellers; it does not become one.
+
+### Why six
+
+Beyond these, the sweep stopped producing gaps this product is positioned to fill. Further initiatives would be invention, which fills a roadmap without filling a pipeline. Extending 2027 further is the job of another dated sweep, not a longer list.
 
 ## What the sweep concluded
 

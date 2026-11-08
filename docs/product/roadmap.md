@@ -1056,6 +1056,185 @@ Two snapshots can be compared from a recorded seed and sample size, and a rerun 
 
 ---
 
+# 2027 Horizon
+
+The initiatives above carry the work already committed. The six below extend the pipeline into 2027. Each comes from a **verified gap** in the 2026-11-08 market sweep, not from a brainstorm, and each names the evidence that produced it.
+
+Read them as hypotheses with a stated basis, not as commitments. A 2027 initiative is promoted to Next only when its spec's open questions are answered and its dependency has shipped.
+
+**Why six and not twenty.** Beyond these, the sweep stopped producing gaps the product is positioned to fill. Adding further initiatives would mean inventing them, which fills a roadmap without filling a pipeline. The honest way to extend 2027 further is another dated sweep, not a longer list.
+
+---
+
+## I-22: Verification As A Public Surface
+
+**Spec:** [`specs/i22-verification-as-a-public-surface.md`](specs/i22-verification-as-a-public-surface.md)
+
+**Outcome:** another tool, a Discord bot or a tournament organiser can submit a decklist and receive the same deterministic verdict a player sees in the product, with its rules and its data dates.
+
+**Status:** Later
+**Priority:** Later — 2027
+**Impact / effort:** High / medium
+**Depends on:** I-02's claim typing. Do not expose a verdict whose provenance is not yet modelled internally.
+
+The sweep found six products generating decks and none publishing what was checked. The product's validator is its differentiator, and a differentiator nobody can call is a feature; a differentiator other tools depend on is a position. A read-only `/api/v1` already exists, so the surface is an extension rather than a new system.
+
+### Scope
+
+- [ ] Accept a decklist and a format, and return the deterministic verdict: legality, colour identity, singleton, banlist, Game Changers, bracket inputs.
+- [ ] Return the rule and the data date behind every judgement, never a bare boolean.
+- [ ] Version the contract, and keep an older version answering while a newer one exists.
+- [ ] Rate-limit and authenticate per consumer, with a documented quota.
+- [ ] Publish no recommendation through this surface. Verification only.
+
+### Definition of done
+
+A third party submits a list and receives a versioned, dated, rule-level verdict that matches what the product shows its own players for the same list.
+
+---
+
+## I-23: The Pod's Own Surface
+
+**Spec:** [`specs/i23-the-pods-own-surface.md`](specs/i23-the-pods-own-surface.md)
+
+**Outcome:** a playgroup can ask for a deck's bracket, Game Changers and Rule 0 sheet inside the Discord server where it already argues about them, without anyone opening a browser.
+
+**Status:** Later
+**Priority:** Later — 2027
+**Impact / effort:** Medium / medium
+**Depends on:** I-15 pod sheets, and I-22 if the surface is built on the public contract rather than a private one.
+
+Otterly MTG, Mana Grove's `/bracket` command and several Commander companion bots already live in these servers, which is the evidence the demand is real. None of them carries a pod's declared Rule 0 agreement — that is I-15's artifact, and Discord is where the conversation it supports actually happens.
+
+### Scope
+
+- [ ] A command returning a deck's bracket and Game Changers with their data dates.
+- [ ] A command rendering a consented Rule 0 sheet; never an unconsented one.
+- [ ] Explicit, revocable linking between a Discord account and a product account.
+- [ ] No deck mutation from the bot. Read and report only.
+- [ ] State the same uncertainty the product states. A bot reply is not permitted to sound more certain than the web surface.
+
+### Definition of done
+
+A pod reads a consented sheet and a dated bracket in its own server, and nothing the bot can do changes a deck.
+
+---
+
+## I-24: Decks A Screen Reader Can Play From
+
+**Spec:** [`specs/i24-decks-a-screen-reader-can-play-from.md`](specs/i24-decks-a-screen-reader-can-play-from.md)
+
+**Outcome:** a blind or low-vision player can read a complete deck — names, costs, full Oracle text, zones and tokens — through assistive technology, and take that reading to a table.
+
+**Status:** Later
+**Priority:** Later — 2027
+**Impact / effort:** Medium / medium
+
+Blind players reach Magic today through community work: NFC tags on sleeves read by a phone, and a fan-made screen-reader mod for Arena. Braille failed because it thickens cards and marked cards are a disqualification risk. No deckbuilding site in the sweep publishes an assistive-technology-first output. The product already generates text exports and proxy PDFs, so the distance is short and the position is uncontested.
+
+### Scope
+
+- [ ] An export shaped for screen readers: structured headings per zone, full Oracle text, costs spelled out rather than symbol-only.
+- [ ] Mana symbols carry text alternatives everywhere, including in the deck view.
+- [ ] Make the deck view operable end to end by keyboard and screen reader, and assert it in tests rather than claiming it.
+- [ ] Do not ship an audio player or a reader of our own. Serve the assistive technology the player already uses.
+- [ ] Involve at least one assistive-technology user before calling any slice done.
+
+### Definition of done
+
+A deck's complete contents are reachable by screen reader and by keyboard, and an export exists that an assistive-technology user can read away from the site.
+
+---
+
+## I-25: A Third Locale, Chosen On Evidence
+
+**Spec:** [`specs/i25-a-third-locale.md`](specs/i25-a-third-locale.md)
+
+**Outcome:** a third language is activated with its navigation, warnings, dates, prices and card surfaces translated and tested as one experience.
+
+**Status:** Later
+**Priority:** Later — 2027
+**Impact / effort:** Medium / medium
+**Depends on:** I-11's activation rule, which already forbids routing a dormant catalogue.
+
+Nine catalogues are dormant. Every AI deckbuilder found in the sweep is English-only, which makes a non-English market the least contested expansion available — but the choice must come from evidence rather than from catalogue convenience. Scryfall already supplies localised card data for the candidates.
+
+### Scope
+
+- [ ] Choose the locale from stated evidence: player population, Scryfall card-data coverage, and whether prices in that market are representable without implying a quote.
+- [ ] Complete and human-review the catalogue before routing it.
+- [ ] Test dates, numbers, pluralisation, mana symbols and card text together, as I-11 requires.
+- [ ] State what is not localised — card data Scryfall does not carry in that language — rather than falling back silently.
+
+### Definition of done
+
+One additional locale is routed, reviewed and covered end to end, and the surfaces it cannot localise say so.
+
+---
+
+## I-26: Collections Arriving From Elsewhere
+
+**Spec:** [`specs/i26-collections-arriving-from-elsewhere.md`](specs/i26-collections-arriving-from-elsewhere.md)
+
+**Outcome:** a player can bring a collection out of the app that already holds it, at printing level, without retyping it.
+
+**Status:** Later
+**Priority:** Later — 2027
+**Impact / effort:** High / medium
+**Depends on:** I-06 printing-level ownership. Importing at Oracle level would discard exactly the information that makes I-16 and I-06 trustworthy.
+
+Collections already live in ManaBox, Moxfield, Deckbox and in spreadsheets, and ManaBox is the scanner most paper players use. The sweep found collection-to-deck ranking in five products; the precondition for all of it is getting the collection in. The product's own non-goals exclude building a scanner, which makes import the only honest path to a populated collection.
+
+### Scope
+
+- [ ] Import from the CSV exports of the major collection apps, mapping to printing identity.
+- [ ] Preview before writing: matched rows, unmatched rows, and duplicates, with the same disclosure discipline the deck import preview already uses.
+- [ ] Never silently merge. An ambiguous printing is reported, not guessed.
+- [ ] Record the source and date of an import, so a collection's provenance is readable later.
+- [ ] Support re-import as reconciliation rather than duplication.
+
+### Definition of done
+
+A collection exported from another app lands at printing level with its unmatched rows disclosed, and a second import reconciles instead of duplicating.
+
+---
+
+## I-27: Learning While Building
+
+**Spec:** [`specs/i27-learning-while-building.md`](specs/i27-learning-while-building.md)
+
+**Outcome:** a new Commander player can understand _why_ the product flags something, in the moment, without leaving the deck.
+
+**Status:** Later
+**Priority:** Later — 2027
+**Impact / effort:** Medium / medium
+
+The beginner audience is the largest in Commander and the one the category serves worst: tier lists and optimisers assume the vocabulary. The repository already carries `mtg-rules` and `mtg-learn` skills and a comprehensive rules reference, and I-03 already explains warnings. This initiative connects assets the project already owns rather than acquiring new ones.
+
+### Scope
+
+- [ ] Attach a short, sourced explanation to each warning class — colour identity, singleton, bracket inputs, companion rules — reachable in one action from the warning.
+- [ ] Link to the comprehensive rules reference where a rule is quoted, with its rules version.
+- [ ] Keep explanations deterministic and authored. Do not generate rules text with the model.
+- [ ] Never block or gate a build behind a lesson.
+
+### Definition of done
+
+Every warning class the product raises can be explained in place, from an authored, sourced note, without leaving the deck.
+
+---
+
+### What the sweep ruled out for 2027
+
+Recording these saves the next pass from re-deriving them:
+
+- **Tournament win rates remain blocked.** EDHTop16, the most promising candidate found, publishes commander meta share and entry counts but **no win rates, no match-level results and no public API**. MagicMeta and LucidPuzzle derive their tiers from it. The roadmap's existing block stands, and the reason is now recorded.
+- **Card scanning** stays a non-goal: ManaBox owns it, it is a native-camera capability, and I-06's own scope defers it behind printing-level ownership.
+- **A table companion** — life totals, commander damage, turn timers — is served by Discord bots and the official app, and is a different product from a deckbuilder. I-19 covers the only table need the product should meet.
+- **Marketplace, cart and checkout** remain excluded by the existing non-goals. I-06 hands off to sellers; it does not become one.
+
+---
+
 # Completed Foundation
 
 These capabilities are not future bets. They are part of the product baseline:
