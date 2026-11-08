@@ -85,14 +85,23 @@ export function validateCardForDeck(
 }
 
 /**
+ * Deduplicate names and order them case-insensitively, with a case-sensitive tiebreak.
+ * @param names - Card names; several printings of one card may repeat a name.
+ * @returns Each name once, independent of input order.
+ */
+export function sortedUniqueNames(names: Iterable<string>): string[] {
+  return [...new Set(names)].toSorted(
+    (left, right) => left.localeCompare(right, "en", { sensitivity: "base" }) || left.localeCompare(right)
+  );
+}
+
+/**
  * List distinct card names in a stable, case-insensitive alphabetical order.
  * @param cards - Deck rows to name; several rows may share a name.
  * @returns Unique card names, independent of deck row order.
  */
 export function sortedUniqueCardNames(cards: readonly DeckCard[]): string[] {
-  return [...new Set(cards.map((card) => card.name))].toSorted(
-    (left, right) => left.localeCompare(right, "en", { sensitivity: "base" }) || left.localeCompare(right)
-  );
+  return sortedUniqueNames(cards.map((card) => card.name));
 }
 
 function checkCardCount(allCards: DeckCard[], deckSize: number, errors: string[], warnings: string[]): void {

@@ -3,6 +3,7 @@ import type { Deck, DeckStats, BracketScore } from "./types";
 import type { SpellbookVariant } from "@/lib/combos/spellbook";
 import { getCompanionDeckWarnings } from "./companion";
 import { getFormatConfig } from "./formats";
+import { sortedUniqueNames } from "./validation";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -92,7 +93,7 @@ function countTwoCardInfiniteCombos(combos: SpellbookVariant[]): number {
 }
 
 function warningCardNames(names: readonly string[]): string {
-  return [...names].sort((left, right) => left.localeCompare(right, "en")).join(", ");
+  return sortedUniqueNames(names).join(", ");
 }
 
 /** Helper: generate ban/legality warnings */
