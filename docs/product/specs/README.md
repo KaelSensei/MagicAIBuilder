@@ -1,0 +1,42 @@
+# Functional specs
+
+One spec per roadmap initiative. The [roadmap](../roadmap.md) says _what_ an initiative must achieve and _why_; a spec here says what it does in detail, what the market already does, what the code looks like today, and how the work splits into slices an agent or a developer can pick up without making a product decision.
+
+Written on 2026-11-08 from a market sweep of the whole category, not only the named incumbents, and from the code as it stood on `dev` that day.
+
+## How to read one
+
+Every spec follows the same shape, matching the house format already used by [`commander-power-meter.md`](../commander-power-meter.md):
+
+**Overview** · **What the market does** (sourced, dated) · **Current state in this codebase** (verified paths) · **Functional requirements** (numbered, testable) · **Data and API** · **Non-goals** · **Testing strategy** · **Delivery slices** (with dependencies) · **Open questions**
+
+The **Delivery slices** table is the part that matters for automation: each slice is independently reviewable, and the dependency column says which ones cannot start yet. Three scheduled agents pick work from this roadmap every day — the dependency edges are what stop them colliding.
+
+## Index
+
+| Spec                                                                            | Initiative | Status | The one-line reason it exists                                                                         |
+| ------------------------------------------------------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------------------- |
+| [Checkable AI copilot](i02-checkable-ai-copilot.md)                             | I-02       | Now    | Competitors validate **or** explain; doing both visibly is the cheapest differentiator on the roadmap |
+| [Visual direction](i13-visual-direction.md)                                     | I-13       | Next   | The audit, the measured failures, and the register chosen over the fantasy one                        |
+| [Verifiable natural-language search](i14-verifiable-natural-language-search.md) | I-14       | Next   | Showing the query is already table stakes; deck context and French are not                            |
+| [Rule 0 sheets and pod profiles](i15-rule-zero-sheets-and-pod-profiles.md)      | I-15       | Next   | Everyone classifies a deck; nobody records what four people agreed                                    |
+| [Decks buildable from a collection](i16-decks-buildable-from-a-collection.md)   | I-16       | Next   | Four products rank by coverage; none excludes copies already committed elsewhere                      |
+| [Precon path and tiered upgrades](i17-precon-path-and-tiered-upgrades.md)       | I-17       | Next   | The market publishes upgrade articles; none is a reversible operation on your list                    |
+| [Per-deck radar of new cards](i18-per-deck-radar-of-new-cards.md)               | I-18       | Later  | Spoiler coverage is universal and entirely set-centric; the per-deck join is open                     |
+| [Offline game-night viewing](i19-offline-game-night-viewing.md)                 | I-19       | Next   | Competitors ship offline card databases; the one deck you are about to play is the honest slice       |
+| [Collaborative review](i20-collaborative-review.md)                             | I-20       | Later  | Archidekt gives collaborators direct write access; propose-and-accept exists nowhere                  |
+| [Reproducible probability bench](i21-reproducible-probability-bench.md)         | I-21       | Later  | Five tools simulate thousands of hands; none publishes a seed or an interval                          |
+
+## What the sweep concluded
+
+Three findings shaped every spec above.
+
+**Generation is commoditised; verification is not.** Six products sell conversational Commander building, several free. One of them documents that its own results vary between runs. What no competitor publishes is which claims were checked against card data and which are model reasoning.
+
+**The collection-to-deck direction is crowded; the ownership detail is not.** SuperBrew, DeckFinder, ManaBuilder, MTG Agents and ManaForge all rank decks by collection coverage. None states that a copy already committed to another of your decks is excluded, and none separates Oracle identity (for legality) from printing identity (for price).
+
+**Reproducibility is absent across the whole category.** Hand simulators, bracket calculators and AI builders all return a number without a seed, an interval or a sample size. For a product positioning itself on checkable output, that is the widest opening found in the sweep.
+
+## Discipline
+
+A spec is a plan, not a record. It does not mark anything shipped — the roadmap's `Status` and its scope checkboxes remain the only source of truth for what exists. Competitor rows are claims read from public pages on a stated date, not evidence; revalidate before a row justifies implementation.
