@@ -106,6 +106,23 @@ describe("scoreBracket", () => {
     );
   });
 
+  it("names a card once when the deck holds several printings of it", () => {
+    const stats = makeStats({
+      bannedCards: ["Mana Crypt", "Griselbrand", "Mana Crypt"],
+      colorIdentityViolations: ["Lightning Bolt", "Lightning Bolt"],
+      gameChangersCount: 2,
+      gameChangersList: ["Sol Ring", "Sol Ring"],
+    });
+
+    expect(assertBracket(scoreBracket(makeDeck(), stats)).warnings).toEqual(
+      expect.arrayContaining([
+        "Banned cards in deck: Griselbrand, Mana Crypt",
+        "Color identity violations: Lightning Bolt",
+        "2 Game Changer(s): Sol Ring",
+      ])
+    );
+  });
+
   it("returns null for non-Commander formats", () => {
     const deck = makeDeck({ format: "standard" });
     const stats = makeStats();
