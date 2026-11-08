@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-07
+> **Updated:** 2026-11-08
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -15,90 +15,64 @@ MagicAIBuilder is an **AI-first Commander deckbuilding companion**.
 It should not try to beat every competitor at their strongest specialty:
 
 - **Moxfield** is the benchmark for a fast deck workflow, sharing and deck presentation.
-- **Archidekt** is the benchmark for a visual editor, custom organization and playtesting.
-- **EDHREC** is the benchmark for aggregate Commander data and statistical recommendations.
-- **ManaBox** is the benchmark for mobile collection management, scanning and marketplace pricing.
+- **Archidekt** is the benchmark for a visual editor, custom organization, playtesting and collaboration.
+- **EDHREC** is the benchmark for aggregate Commander data. Its October–November 2026 redesign made that data easier to filter and explain. It is still a statistical reference, not a personal editor with versioning and playtesting.
+- **ManaBox** is the benchmark for mobile collection management, scanning and offline search.
+- **DeckCheck** and **Farseek** already sell conversational Commander assistance. A language model is not an empty market.
 - **Commander Spellbook** is the benchmark for structured Commander combo discovery.
 - **ManaTap, Farseek and MTG Master** are the benchmark for conversational generation. They shipped it during 2026 with free entry tiers, so the presence of AI is no longer an edge; validated, explainable output is.
 
 Our opportunity is the workflow between those products:
 
 1. The player states an intention, budget and desired power level.
-2. MagicAIBuilder turns it into a legal and coherent deck proposal.
-3. Every important choice is explained with card data and Commander rules.
-4. The player tests the deck, sees what is weak, and iterates.
-5. The final list is easy to own, print, share and export.
+2. MagicAIBuilder turns it into a legal and coherent deck proposal, or into a Scryfall query the player can read before it runs.
+3. Every important choice is explained with card data, sample limits and Commander rules.
+4. The player tests the deck with evidence that can be reproduced, sees what is weak, and iterates.
+5. The final list is easy to own, print, share, export and buy, with prices labeled as estimates.
 
 **Positioning sentence:**
 
 > Build the deck you mean, understand why it works, test it before game night.
 
+The defensible loop is intention, a legal list, traceable explanations, reproducible tests and an informed purchase. Trust and continuity of that loop matter more than adding another chatbot. Detail is in [`competitive-landscape.md`](./competitive-landscape.md).
+
 ### Strategic boundaries
 
 - Do not become a generic card database; Scryfall already owns that job.
 - Do not copy EDHREC's popularity rankings as if popularity were advice.
+- Do not treat inclusion or Lift as a win rate. Lift needs its reference denominator. The top-20 feed is not enough to calculate one.
 - Do not call an LLM for deterministic legality, color identity, quantities or bracket rules.
+- Do not hide a generated Scryfall query. Natural-language search shows the query, then runs that query.
 - Do not expand formats, languages or integrations faster than their tests and data contracts can support.
 - Do not add a new external service unless it solves a user-visible problem and has an exit path.
 
-### Competitive functional benchmark — 2026-11-07
+### Competitive functional benchmark — 2026-11-08
 
-The comparison below tracks user workflows rather than trying to match feature counts. This revision supersedes the 2026-09-19 benchmark, which covered only Moxfield, Archidekt and TappedOut and assumed no competitor shipped LLM-based deckbuilding. That assumption is no longer true, so the benchmark now separates three groups: the deck-workflow incumbents, the data and ownership specialists, and the AI-native builders that appeared during 2026.
+The comparison tracks workflows rather than feature counts. Prices, sources and the EDHREC redesign notes live in [`competitive-landscape.md`](./competitive-landscape.md). Two older conclusions are retired. Packages, public comparison, published primers and downloadable playtest logs, which the 2026-09-19 pass still listed as missing, are checked under I-07 and I-08. Conversational Commander building, which the March 2026 landscape called an empty market, is sold by DeckCheck and Farseek.
 
-#### Deck-workflow incumbents
-
-| Competitor strength                                                                                                                                                                                    | MagicAIBuilder today                                                                                                                                            | Product response                                                                                                         |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Moxfield: fast editing, detailed primers, deck history, tokens, social notifications, rich sandbox controls and the largest fork/comment community                                                     | Editing, snapshots, required-token checklists, a guided primer template, comments and playtesting exist; rich published primers and notification inboxes do not | Complete public deck guides and add relevant notifications without copying a generic social feed                         |
-| Archidekt: visual organization, folders, deck comparison, reusable card packages, deck-help requests, a playtester interaction simulator and a multi-vendor price breakdown by category and price band | Owned-deck folders, comparison, packages and a goldfish engine with an editable action log exist; multi-vendor price breakdown does not                         | Keep playtest evidence as the differentiator rather than simulator depth, and treat multi-vendor pricing as part of I-06 |
-| TappedOut: acquireboard, inventory usage map, wishlist checkout, deck folders and explicit feedback-seeking workflows                                                                                  | Collection reconciliation, shopping lists, cross-deck acquisition planning and "seeking feedback" exist; persistent acquire state does not                      | Finish explicit acquire state, then connect it to regional sellers                                                       |
-
-#### Data and ownership specialists
-
-| Competitor strength                                                                                                                                                                    | MagicAIBuilder today                                                                                                                                   | Product response                                                                                           |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| EDHREC: aggregate Commander data, the October 2026 redesign, bracket and timeframe filters, tag clouds, and **Lift** replacing Synergy as a statistically grounded co-occurrence ratio | EDHREC popular-card recommendations, snapshots, trend bounds and source/freshness disclosure exist; our vocabulary still assumes the Synergy model     | Adopt Lift semantics explicitly rather than relabelling it, and keep our own evidence separate from theirs |
-| ManaBox: camera scanning, offline card search, collection-aware scanning, and first-class proxy and signed-card tracking                                                               | Collection tracking, proxy PDF export and a browser-local buy-now/buy-later choice exist; printing-level ownership and synchronized proxy state do not | Finish printing-level ownership before considering any scanning or mobile parity                           |
-| Commander Spellbook: structured combo discovery, with per-deck and per-card combo endpoints added in v0.84.0 (2026-10-20)                                                              | Combo detection through Commander Spellbook exists                                                                                                     | Re-check our integration against the current endpoints and keep combo lookups cached per card list         |
-
-#### AI-native builders — the gap closed during 2026
-
-The March 2026 landscape review concluded that no production tool offered LLM-based Commander deckbuilding. Several now do, and they are free or cheap at the entry tier:
-
-| Competitor                                                                                                 | What it ships                                                                                                                                                                                                                                                 | What it does not do                                                                             |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **ManaTap** (manatap.ai)                                                                                   | Collection-aware AI chat, an iterative "AI Workshop", a Deck Checker scoring legality, curve, ramp, draw, removal, threats and synergy, deterministic legality and colour-identity validation, budget swaps, deck compare, price tracking, mulligan simulator | Playtest-session evidence, printing-level acquisition planning, source-and-freshness disclosure |
-| **Farseek** (farseek.ai)                                                                                   | A Claude-backed assistant that reads the whole decklist and argues why a card fits, live Scryfall lookups before each recommendation, bracket and persistent budget constraints, imports from Moxfield, Archidekt, ManaBox and text                           | Does not state any deterministic legality validation; no ownership or playtest loop             |
-| **MTG Master** (mtgmaster.app)                                                                             | Bracket-aware and collection-aware 100-card generation enforcing legal commander, colour identity and singleton, with mana, draw, interaction and win-condition targets                                                                                       | Explainability per card, evidence history, acquisition planning                                 |
-| **ManaForge** (manaforge.tools)                                                                            | Build-from-collection generation, commander-swap suggestions, automatic re-validation of saved decks against live ban lists, Arena wildcard awareness                                                                                                         | Commander bracket analysis, scanning, playtest evidence                                         |
-| Long tail: mtg-agents.com, aidecktutor.com, onemoredeck.com, counterdeck.com, edhgen.ai, krakenthemeta.com | Free generation from a prompt; some add live metagame web search                                                                                                                                                                                              | Durable deck state, ownership, evidence and rules depth                                         |
-
-**What this changes for us.** "AI-powered" is no longer a differentiator; it is table stakes with a free tier. Three claims still are, and each is already an initiative rather than a new bet:
-
-1. **The LLM never decides legality** (I-02). A deterministic post-generation validator, bracket scoring and banlist checks run outside the model. Competitors either validate deterministically without explaining, or explain without validating.
-2. **Evidence a player produced themselves** (I-07, I-09). Snapshot comparison, recorded playtest sessions and source-and-freshness labels mean a recommendation can be traced to data the player can inspect, not only to a model's confidence.
-3. **Printing-level ownership and acquisition** (I-06). The cross-deck acquisition plan with known-price subtotals and unpriced-copy disclosure is deeper than a budget-swap suggestion.
-
-Accordingly, the positioning emphasis moves from "AI builds your deck" to "AI you can check" — explainable, validated and testable. Nothing in the initiative order changes because of this; the ordering already favours trust and evidence over generation volume.
-
-#### External data contracts to absorb
-
-These are confirmed upstream changes, not product wishes. They affect shipped integrations and belong to I-05, I-09 and I-10.
-
-- **EDHREC replaced Synergy with Lift** (card pages earlier in 2026, then `/commanders`, `/combos` and `/tags` on 2026-10-01). Lift is a ratio centred on 1 — inclusion in context divided by inclusion at large — not a percentage centred on 0. Any surface that treats a synergy number as a percentage, or ranks by it, needs rechecking.
-- **Moxfield has no public API and now answers programmatic requests behind Cloudflare**, with authentication headers required on its internal endpoints. Third-party tools have been moving to text and CSV paste as the supported path. Our URL import must be treated as a brittle path with an explicit fallback, not as a stable contract.
-- **Scryfall tightened its request policy and moved bulk data to gzipped JSONL** (reported deadline 2026-07-20), with bulk files carrying prices and refreshing twice a day. Our client already sends `User-Agent` and `Accept` and serialises requests behind a 100 ms mutex, which honours the 10 req/s sustained ceiling but not a stricter per-endpoint search limit. Confirm the current figures against Scryfall's own documentation — it blocks automated fetching, so this needs a human read — before changing the limiter.
-- **Commander Brackets remain in beta**, and the Game Changers list has not moved since 2026-02-09 at 53 cards, with WotC explicitly slowing bracket-level changes. Our bracket scoring is stable for now; keep the list versioned so a resumed cadence is a data update rather than a code change.
+| Competitor strength                                                                     | MagicAIBuilder today                                                                                                                        | Product response                                                             |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Moxfield: Scryfall syntax, primers, history, tokens, sandbox and presentation           | Syntax filters, primers, snapshots, tokens and playtesting exist. A plain-language description does not yet become a visible Scryfall query | I-14. The search runs the query the player sees. It does not generate a deck |
+| Archidekt: visual organization, packages, comparison, collaborators and playtesting     | Packages, comparison, forks and playtest logs exist. A reviewer cannot yet propose a patch the owner accepts                                | I-20, later. Comments and "seeking feedback" stay in I-08                    |
+| EDHREC: inclusion, Lift, precon upgrades, combos and salt in the redesigned UI          | Popular-card rows and source labels exist. Lift is not yet separated from inclusion, and there is no dated precon path                      | Extend I-09. Add I-17. Keep Lumen's own visual system                        |
+| DeckCheck and Farseek: conversational advice and stock-aware or natural-language search | The copilot explains constrained suggestions. Search is still syntax-first, and new-set relevance is not reviewed per deck                  | I-14 next. I-18 later, and only on demand at first                           |
+| ManaBox and Mana For Cards: collection-first discovery and offline reading              | Ownership and acquisition plans reconcile a deck the player already chose. There is no offline reader                                       | I-16 after the I-06 ownership model. I-19 for a voluntary read-only cache    |
+| Deckstats and Archidekt: multi-turn hand odds                                           | Goldfish logs and snapshot comparisons exist. They are not a seeded sample of thousands of hands                                            | I-21, later. Leave I-07's logs and manual comparisons in place               |
+| TappedOut: inventory, wishlist and a request for feedback                               | Cross-deck acquisition and "seeking feedback" exist. A synchronized acquire state and regional seller handoff remain open                   | Stay inside I-06 and I-08. Do not open a second feedback initiative          |
 
 #### Deliberate non-goals from the benchmark
 
 - Do not build a draft simulator, cube platform, venue directory or full card-trading marketplace in the current roadmap.
 - Do not add paid deck promotion, deck-cycling mechanics or engagement loops that rank visibility by spend.
 - Do not duplicate Scryfall's card database or pursue every format before the Commander workflow is excellent.
-- Do not follow the AI-native builders into a tournament manager, a custom-card creator, MTG Arena wildcard optimization or camera scanning; each is a separate product with its own data and support cost.
+- Do not start offline support with a multi-device editor. I-19 is a read-only cache of one chosen deck.
+- Do not start collaboration with live co-editing. I-20 is a patch the owner accepts or rejects.
+- Do not add an AI opponent or a full Magic rules engine under I-21.
+- Do not calculate a local Lift score from the top-20 EDHREC feed.
+- Do not follow the AI-native builders into a tournament manager, a custom-card creator, MTG Arena wildcard optimization or camera scanning. Each is a separate product with its own data and support cost.
 - Do not compete on generation volume or free-tier generosity. A wrong deck produced instantly is the failure mode this product exists to avoid.
 
-Sources reviewed: [Moxfield public feature guide](https://github.com/moxfield/moxfield-public/wiki/Features), [Archidekt development updates](https://archidekt.com/news), [TappedOut deck help](https://tappedout.net/help-desk/decks/), [TappedOut inventory and wishlist help](https://tappedout.net/help-desk/ownership/), [EDHREC redesign changelog](https://edhrec.com/articles/changelog-edhrec-redesign), [EDHREC performance and filter changelog](https://edhrec.com/articles/changelog-big-performance-upgrades), [EDHREC Lift changelog](https://edhrec.com/articles/changelog-replacing-synergy-with-lift-on-edhrecs-card-pages), [Commander Spellbook releases](https://github.com/SpaceCowMedia/commander-spellbook-site/releases/tag/v0.84.0), [ManaTap](https://www.manatap.ai/), [Farseek](https://farseek.ai/), [MTG Master](https://mtgmaster.app/ai-commander-deck-builder), [ManaForge comparison post](https://manaforge.tools/en/blog/manaforge-vs-moxfield-vs-archidekt) and [Commander Brackets reference](https://mtg.wiki/page/Commander_Brackets). Product behavior must be revalidated before implementation because competitor capabilities can change. Competitor marketing copy is a claim, not evidence: treat each row as a hypothesis to confirm before it justifies scope.
+Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
 ---
 
@@ -146,6 +120,8 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 
 **Iteration estimate:** approximately 30-50 small PR-sized iterations for the active Now/Next outcomes **including** I-13, with overlap between visual and functional work. The 11 conditional or parked scopes are excluded. This is an estimate, not a fixed number of turns or a delivery deadline; refine it after a visual audit and each accepted slice.
 
+**2026-11-08:** `main` supports a narrower status correction than the October snapshot. #1263 made the persisted card zone the only source of truth, #1264 finished stable cross-zone drop targets plus the remaining keyboard and touch zone actions, and #1259 with #1265–#1269 shipped Lumen foundations on the landing page, collection, public decks, forms and deck library. #1270 added editor flow and visual-stability coverage, and #1271 bounded a stalled editor session. #1272 and #1273 promoted that set to `main` on 2026-11-06. Three I-01 scopes are checked below. I-01 stays in progress because concurrent recovery and the broader E2E scope are open. I-13 moves from discovery-only to in progress, and its five delivery slices stay open. I-14 through I-21 record the November competitive gaps. The 2026-10-28 count of 55 unchecked top-level scopes was not recounted. The 30–50 iteration estimate still refers to the pre-existing Now and Next work, including the open I-13 validation, and does not include I-14 through I-21.
+
 ---
 
 ## Portfolio View
@@ -153,7 +129,7 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 ### Now
 
 1. **I-01 Deck Editor workflow**
-   Finish zone persistence and make editing feel stable, fast and predictable.
+   Zone persistence and cross-zone targets shipped on 2026-11-06. Finish concurrent save recovery so editing stays predictable.
 
 2. **I-02 AI deck copilot**
    Turn the existing AI suggestions into a constrained, explainable deckbuilding conversation.
@@ -170,7 +146,7 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 ### Next
 
 6. **I-06 Collection and purchase planning**
-   Connect deck decisions to owned printings, prices and a realistic acquisition plan.
+   Connect deck decisions to owned printings, prices and a realistic acquisition plan. This stays ahead of collection-first discovery.
 
 7. **I-07 Playtest and iteration**
    Turn goldfishing into useful evidence for improving a deck version.
@@ -179,21 +155,55 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
    Make public decks useful as learning material, not just static lists.
 
 9. **I-09 Meta and evidence**
-   Combine EDHREC trends, tournament context and deck-specific reasoning without pretending incomplete data is certainty.
+   Combine EDHREC trends, tournament context and deck-specific reasoning without pretending incomplete data is certainty. Keep inclusion, Lift and AI advice distinct.
 
 10. **I-13 Product visual redesign**
-    Establish a distinct, polished visual language and improve the deck library, editor and discovery without sacrificing density, clarity or accessibility.
+    Continue Lumen. Foundations and several surfaces shipped on 2026-11-06. The validation matrix is still open.
+
+11. **I-14 Verifiable natural-language search**
+    Turn an English or French description into a visible, editable Scryfall query, then search with that query.
+
+12. **I-15 Rule 0 sheets and pod profiles**
+    Let a pod share intentions and house rules. The sheet does not claim to balance the game.
+
+13. **I-16 Decks buildable from a collection**
+    Rank lists and commanders by owned coverage. Depends on I-06. Validate demand before a large build.
+
+14. **I-17 Precon path and tiered upgrades**
+    Start from a dated official precon and apply reversible budget bundles. This is a different job from I-02.
+
+15. **I-19 Offline game-night viewing**
+    Let a player download one deck, its primer and its tokens for read-only use without a network.
 
 ### Later
 
-11. **I-10 Interoperability and integrations**
+16. **I-10 Interoperability and integrations**
     Make MagicAIBuilder a good starting point and a good destination for deck data.
 
-12. **I-11 Localization and regional experience**
+17. **I-11 Localization and regional experience**
     Expand beyond English and French only when translations and prices are genuinely supported.
 
-13. **I-12 Local AI**
-    Explore local inference only after the cloud copilot has a measurable product fit.
+18. **I-12 Local AI**
+    Explore local inference only after the cloud copilot has a measurable product fit. Offline reading is I-19.
+
+19. **I-18 Per-deck radar of new cards**
+    On demand, explain newly legal cards for one deck and show a diff before any change.
+
+20. **I-20 Collaborative review**
+    Let an invited reviewer propose a patch that the owner accepts or rejects. Live co-editing stays out of this slice.
+
+21. **I-21 Reproducible probability bench**
+    Compare simulated hands across snapshots with a visible seed, sample size and mulligan policy.
+
+Open work on I-01, I-05 and I-06 stays ahead of I-14 through I-21. Among the new initiatives, start with I-14 and I-15, validate demand for I-16 and I-17, and specify the I-19 cache in parallel. Keep I-18 on demand until that flow is validated. Take up I-20 and I-21 only if players use the earlier slices. Impact and effort below are planning labels: medium means several small PRs, large means a cross-cutting project. They are not delivery dates.
+
+### Reviewed on 2026-11-08 and left in place
+
+The November competitive pass did not open a new initiative for work the roadmap already tracks:
+
+- Packages, private and public folders, Markdown primers, attributed forks, public comparison, tokens, playtest logs, snapshots, copilot questions and suggestion diffs are already checked.
+- Scanning, regional prices, synchronized buy-later, social notifications, a conditional following feed, import and export fidelity, further locales and local AI stay in I-06, I-08, I-10, I-11 and I-12.
+- Inclusion versus Lift versus AI advice, tooltip and tablet behavior, and export fixtures were merged into I-09, I-13 and I-10. A local Lift score stays out of scope until a source exposes the reference denominator.
 
 ---
 
@@ -222,10 +232,10 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 
 ### Remaining scope
 
-- [ ] Persist main, sideboard and maybeboard zones as the single database source of truth.
+- [x] Persist main, sideboard and maybeboard zones as the single database source of truth. The saved card zone wins over the legacy maybeboard mirror, and that mirror is derived from the zone (#1263, promoted to `main` in #1273).
 - [x] Preserve zone and quantity when changing a card printing.
 - [x] Restore the previous card printing and notify the player when its save fails.
-- [ ] Complete cross-zone drag and drop with clear drop targets and no layout jump.
+- [x] Complete cross-zone drag and drop with clear drop targets and no layout jump. Zone targets stay mounted and do not resize, and the smallest target under the pointer wins (#1264, promoted to `main` in #1273).
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
   - [x] Keep the save indicator active until overlapping budget writes finish, even if one fails (#1096). Other concurrent writes remain open.
   - [x] Keep save activity visible while an addition and a removal overlap, regardless of completion order (#1094). Other concurrent mutations remain open.
@@ -263,7 +273,8 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
   - [x] Verify a rejected searched-card addition disappears, remains absent after reload, and can be retried successfully in Docker-backed Playwright (#1090). Other recovery variants remain open.
   - [x] Verify a rejected Sideboard-to-Considering move retains its card and saved zone after reload in Docker-backed Playwright (#1029). Other add-flow and recovery E2E remain open.
   - [x] Verify a searched card is added to Main, persisted through the API and still present after reload in Docker-backed Playwright (#1031). Other add/recovery variants remain open.
-- [ ] Add keyboard and mobile alternatives for every drag action.
+  - [x] Verify a Considering card survives reload, a Main-to-Considering move persists, and a rejected move restores the card (#1270). Pointer-drag coverage and further zone combinations remain open.
+- [x] Add keyboard and mobile alternatives for every drag action.
   - [x] Provide card-specific Main → Sideboard/Considering controls in grid and list views (#970).
   - [x] Enable keyboard sorting for categorized deck cards using the reorder handle and standard vertical controls (#997).
   - [x] Change a categorized card from a touch-friendly menu in the grouped list, without drag and drop (#999).
@@ -271,7 +282,7 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
   - [x] Keep Main-grid moves to Sideboard and Considering, plus card removal, visible and reachable on touch devices (#1003).
   - [x] Change Main-card categories directly in grid view with an accessible touch-friendly selector (#1005).
   - [x] Keep category editing available when the Main list is grouped by mana value or color (#1007).
-  - [ ] Complete mobile alternatives for the remaining drag-only actions.
+  - [x] Complete mobile alternatives for the remaining drag-only actions. Search results have a keyboard and touch zone menu, and grid cards keep move, remove and category actions without dragging (#1264, promoted to `main` in #1273).
 - [x] Add a compact activity indicator instead of blocking the whole editor during saves.
   - [x] Preserve shared activity between bulk removal and manual bracket saves regardless of which action finishes first (#947). Other action combinations and mutation ownership remain open.
   - [x] Retain save activity until all overlapping bulk removal batches finish (#945). Cross-action activity tracking and overlapping recovery ownership remain open.
@@ -409,11 +420,13 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
   - [x] Bound individual server deck fetches to 15 seconds, keeping the deadline through JSON reading and leaving guest loading local (#909). Broader UI retry and profile latency work remain open.
   - [x] Abort stalled deck-list requests after 15 seconds so the existing error and retry state can appear.
   - [x] Keep the user initialization eight-second deadline active through response-body loading and JSON validation, not only until headers arrive. Database latency and broader profile loading work remain open.
+  - [x] Stop a stalled session from leaving the deck library on a skeleton, and keep the last profile when a refresh fails (#1271, promoted to `main` in #1273). Broader profile loading ownership remains open.
 - [ ] Use route-level skeletons and cached session/profile data where safe.
   - [x] Show a localized, accessible route-level loading skeleton for public profiles (#987). Cached profile data and other route loading states remain open.
   - [x] Show a localized, accessible route-level loading skeleton for public decks, sharing the visual fallback with public profiles (#991). Cached data and other route loading states remain open.
 - [ ] Remove React refresh loops, hover jitter, layout shifts and unstable card previews.
   - [x] Ignore superseded meta-history responses and invalidate pending results on reset, preventing old trend data or errors from resurfacing.
+  - [x] Pin the card preview so hover does not move the editor layout, and keep the commander banner box stable while warnings open and close (#1270, #1271). Broader hover and refresh-loop work remains open. The EDHREC follow-up lesson on tooltips and tablet layout is tracked under I-13.
 - [x] Make warning panels collapsible and dismissible, with accessible close controls.
 - [x] Keep the color identity banner subtle: official mana symbols, restrained background and stable dimensions.
 - [x] Make card zoom intentional in "View all cards" contexts, not a global hover effect.
@@ -421,6 +434,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 - [x] Keep EDHREC recommendation add actions visible without hover, with a 40 px touch target and keyboard focus outline (#1058).
 - [ ] Preserve the established dark/light design language while improving hierarchy, spacing and responsive behavior.
 - [ ] Add visual regression coverage for the Deck Editor, banner, warning panel and card hover states.
+  - [x] Keep the commander banner box stable while warnings open and close, and open a fixed card preview without moving the card row (#1270). Screenshot coverage of the warning panel and hover states remains open.
 
 ### Definition of done
 
@@ -641,7 +655,7 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 ### Remaining scope
 
 - [ ] Complete source, timestamp and sample-window disclosure across every external recommendation surface; EDHREC sample counts are shown where available, but the source does not provide a trustworthy sampling date range.
-- [ ] Separate "popular", "high synergy", "tournament observed" and "AI suggested".
+- [ ] Separate "popular" (inclusion), "contextual association" (EDHREC Lift: inclusion in this context divided by inclusion in the reference set of potential decks), "tournament observed" and "AI suggested". Lift is centered on 1. It is not a win rate and it is not a causal claim. Show the cohort and denominator when the source provides them, and say when they are missing. Do not calculate a local Lift figure from the top-20 feed: that figure needs the reference denominator, a compatible source and an access contract first. See the 8 November 2026 notes in [`competitive-landscape.md`](./competitive-landscape.md).
 - [ ] Add source-health telemetry and contract tests for every scraper or external feed; EDHREC card-list shape now has focused regression coverage.
   - [x] Reject malformed MTGTop8 search results so a false empty feed cannot overwrite a valid tournament cache (#1094). Other source-health coverage remains open.
 - [ ] Add trend views that respect EDHREC top-20 truncation bounds.
@@ -711,7 +725,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
 - [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
 - [x] Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
-- [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats.
+- [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats. EDHREC's October and November 2026 fixes for clipboard-to-Archidekt commander assignment and the Archidekt export link are a reminder to keep these fixtures current. They do not add a new integration.
   - [x] Preserve commander, quantities and secondary zones in downloaded plain-text lists using CR, CRLF or LF line endings (#836).
   - Import parsing and preview are more resilient, but exact printing and category round trips remain open; preserving a localized name does not guarantee that Scryfall resolves that language.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
@@ -782,29 +796,241 @@ A local model is only promoted if it matches the required quality for a clearly 
 
 ## I-13: Product Visual Redesign
 
-**Status:** Next. Discovery and specification only; no UI implementation is claimed by this roadmap update.
+**Outcome:** a player can find, build, understand and share a Commander deck in an interface that feels coherent, distinctive and calm even when card data is dense.
 
-**User outcome:** a player can find, build, understand and share a Commander deck in an interface that feels coherent, distinctive and calm even when card data is dense.
+**Status:** In progress
+**Priority:** Next
+
+Lumen foundations and several surfaces shipped and were promoted to `main` on 2026-11-06 (#1272, #1273). That promotion is not acceptance of the definition of done. The five delivery slices below stay open.
+
+### Already shipped
+
+- Lumen light and dark foundations: shared tokens, radii, soft shadows, an explicit theme choice, and a header that can follow the system (#1259).
+- The landing page uses the shared Lumen type, accent, pills and raised cards in both themes (#1265).
+- The collection page uses the shared field, button and card primitives, with the acquisition plan beside the card list on wide screens (#1266).
+- Public decks and discovery show card imagery, category chips and a name filter on the loaded list, with restyled detail panels (#1267). Source-aware recommendation evidence is unchanged.
+- Import, export, collection, review, comment and settings forms use the shared field and button primitives (#1268).
+- Deck library controls use Lumen pills and fields, deck actions stay available to the keyboard, and the loaded list filters by deck or commander name (#1269).
+
+No separate design-reference document was added with these slices. Screenshot regression, tablet layout and the full accessibility and performance matrix remain open.
 
 ### Inspiration and boundaries
 
-- Take inspiration from Moxfield's efficient deck workflow and presentation, and from [EDHREC's October 2026 redesign](https://edhrec.com/articles/changelog-edhrec-redesign): visible card context, legible evidence, purposeful filters, configurable views and responsive layouts.
-- EDHREC's November 2026 changelog adds distribution bar charts above its bracket filter, a tag cloud carrying deck counts, and bracket filters across its top-card pages. Dense filter state can be made legible; take that principle, not the layout.
+- Take inspiration from Moxfield's efficient deck workflow and presentation, and from EDHREC's October–November 2026 redesign and follow-up: visible card context, legible evidence, purposeful filters, configurable views, tooltips that leave the art usable, image loading that keeps already seen images, and layouts that hold up on tablet widths. Sources: [redesign](https://edhrec.com/articles/changelog-edhrec-redesign), [follow-up](https://edhrec.com/articles/changelog-redesign-follow-up), [performance](https://edhrec.com/articles/changelog-big-performance-upgrades).
 - Do not copy either product's layout, artwork, branding or interaction details. Keep MagicAIBuilder's explainable AI, legality, playtest and ownership workflows recognizable.
 - Keep source attribution and statistical uncertainty readable. A prettier recommendation must not look more certain than its data supports.
-- Treat narrow web widths as part of responsive quality; a native mobile application is not in scope.
+- Treat narrow and tablet web widths as part of responsive quality. A native mobile application is not in scope.
 
 ### Delivery slices
 
-- [ ] Audit the current dark/light surfaces and agree a visual direction, typography, spacing, color, elevation, motion and component tokens in a reusable design reference before implementation.
-- [ ] Refine navigation and the deck library so search, deck state, commander identity and next actions are immediately scannable.
+- [ ] Audit the current dark/light surfaces and agree a visual direction, typography, spacing, color, elevation, motion and component tokens in a reusable design reference. Lumen tokens are implemented (#1259); the written reference and the audit it records are still open.
+- [ ] Refine navigation and the deck library so search, deck state, commander identity and next actions are immediately scannable. Library controls, keyboard-visible actions and a loaded-list name filter shipped in #1269. Commander identity and next-action hierarchy remain open.
 - [ ] Refine the deck editor's dense workspace: card views, commander context, actions, warnings and analytics, without hiding existing workflows or introducing layout jumps.
-- [ ] Refine public decks, discovery and recommendations around card imagery, source-aware evidence, clear filters and consistent detail panels.
-- [ ] Validate the redesigned journeys at narrow and wide web widths, with keyboard and screen-reader access, light/dark contrast, visual regression coverage and measured loading/interaction performance. Run code validation on the VPS.
+- [ ] Refine public decks, discovery and recommendations around card imagery, source-aware evidence, clear filters and consistent detail panels. Imagery, category chips, a name filter and restyled panels shipped in #1267. Source-aware evidence and recommendation filters remain open.
+- [ ] Validate the redesigned journeys at narrow, tablet and wide web widths, with keyboard and screen-reader access, light/dark contrast, visual regression coverage and measured loading/interaction performance. Include tooltips that do not cover the card, and image loading that keeps already seen images available. Run code validation on the VPS. #1270 covers banner and preview stability in the editor and does not close this slice.
 
 ### Definition of done
 
 The deck-library-to-editor-to-share journey is visually coherent and remains at least as usable as before; accessibility, responsive, performance and regression checks pass, and each redesigned slice has QA acceptance evidence before promotion.
+
+---
+
+## I-14: Verifiable Natural-Language Search
+
+**Outcome:** a player can describe a card function in English or French, read the Scryfall query that search will run, edit it, and get the cards that query returns.
+
+**Status:** Next
+**Priority:** Next
+**Impact / effort:** High / medium
+
+This is search, not a new deck generator. DeckCheck Smart Search and Farseek are the references. I-02 still owns constrained deck plans.
+
+### Scope
+
+- [ ] Translate an English or French description into one Scryfall query the player can read before any search runs.
+- [ ] Let the player edit that query, and run the edited text.
+- [ ] Return only cards the executed Scryfall query produces. Invent no card names.
+- [ ] Preserve the active format, color-identity and legality context on the generated query and on the edited query.
+- [ ] Cover both languages with regression tests, and offer an explicit return to syntax-only search.
+- [ ] Leave the current deck unchanged. This flow does not add or cut cards.
+
+### Definition of done
+
+For a fixed description and deck context, the player sees one Scryfall query, can change it, and receives only cards that query returns, with the legality context unchanged.
+
+---
+
+## I-15: Rule 0 Sheets And Pod Profiles
+
+**Outcome:** a playgroup can share intentions and house rules before a game, and can tell those preferences apart from official rules.
+
+**Status:** Next
+**Priority:** Next
+**Impact / effort:** High / medium
+
+CommanderSalt, DeckCheck DTI and EDHREC salt are the references for describing how a deck feels. None of them is a matchmaking authority.
+
+### Scope
+
+- [ ] Record intentions, combos, extra turns, resource denial, proxies and house rules on a per-deck or per-pod sheet.
+- [ ] Keep the profile private by default, and share it only with an explicit consent action.
+- [ ] Compare up to four decks on the same sheet.
+- [ ] Keep preference and salt-style scores separate from official rules, bracket and ban data.
+- [ ] State on the sheet that it does not guarantee a balanced game.
+
+### Definition of done
+
+Four players can compare consented profiles and see house preferences distinguished from official rules.
+
+---
+
+## I-16: Decks Buildable From A Collection
+
+**Outcome:** a player can start from owned cards and see which commanders or lists those cards can build, including free copies and the cost of what is missing.
+
+**Status:** Next
+**Priority:** Next
+**Impact / effort:** High / medium to large
+**Depends on:** I-06 printing-level ownership. Do not rank lists against oracle identity alone while cost still depends on the printing.
+
+MTGGoldfish SuperBrew and Mana For Cards Discover are the references. This initiative ranks candidates from the collection. I-06 still reconciles a deck the player has already chosen. Validate demand before a large build.
+
+### Scope
+
+- [ ] Rank candidate lists or commanders by how much of the collection they cover.
+- [ ] Use Oracle identity for color identity and legality, and printing identity for price.
+- [ ] Offer a free-cards mode that treats copies already allocated to other decks as unavailable.
+- [ ] Show where each candidate list came from, and mark unknown prices on their own.
+- [ ] Leave collection ownership and the open deck unchanged while ranking.
+
+### Definition of done
+
+A collection produces a ranked, sourced view of buildable lists that shows free copies and unknown prices, without changing ownership.
+
+---
+
+## I-17: Precon Path And Tiered Upgrades
+
+**Outcome:** a player can open a dated official precon, see the diff from that list, and apply a reversible budget bundle on a separate working copy.
+
+**Status:** Next
+**Priority:** Next
+**Impact / effort:** High / medium
+
+EDHREC precon upgrades, DeckCheck and Farseek are the references. Generic budget suggestions stay in I-02.
+
+### Scope
+
+- [ ] Keep a versioned catalog of official precon lists, each with a dated source.
+- [ ] Show the diff from the sealed list, and keep the commander until the player changes it.
+- [ ] Offer editorial swap bundles by budget band, separate from I-02 suggestions.
+- [ ] Apply each bundle to a distinct working copy, and make the bundle reversible.
+- [ ] Label every price as an estimate, not a guaranteed quote.
+
+### Definition of done
+
+A player can open a dated precon, preview a budget bundle, apply it to a working copy, and reverse it without altering the source list.
+
+---
+
+## I-18: Per-Deck Radar Of New Cards
+
+**Outcome:** a player can ask which newly released, legal cards matter for one deck, read a sourced reason, and adopt a card only from a visible diff.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** High / medium to large
+
+DeckCheck Deckhand reports and EDHREC set pages are the references. The first slice is on demand. I-08 already owns social notifications, and this radar does not add them until the on-demand flow has been validated.
+
+### Scope
+
+- [ ] On request, filter a dated set corpus to cards that are legal in that deck.
+- [ ] Explain each candidate from a named source, one deck at a time.
+- [ ] Show a diff before a card is added. Never change the deck automatically.
+- [ ] Deduplicate candidates and cap the compute spent on one request.
+- [ ] Add notifications only as a later opt-in, after the on-demand flow is validated.
+
+### Definition of done
+
+A player can request a sourced, legal shortlist for one deck and accept or ignore each card from a visible diff.
+
+---
+
+## I-19: Offline Game-Night Viewing
+
+**Outcome:** a player can choose one deck and read that deck, its primer and its tokens without a network.
+
+**Status:** Next
+**Priority:** Next
+**Impact / effort:** High / large
+
+ManaBox offline search is the reference. This slice is a voluntary read-only cache. A multi-device offline editor is out of scope. Local inference stays in I-12.
+
+### Scope
+
+- [ ] Let the player download one deck, including its primer and required tokens.
+- [ ] Open that download read-only while offline.
+- [ ] Show the date of the cached copy.
+- [ ] Purge the private cache on sign-out, so one account's deck is not left for the next account on the device.
+- [ ] Cover airplane-mode reading in tests.
+
+### Definition of done
+
+After an explicit download, the chosen deck, primer and tokens remain readable offline and are removed from the device when that account signs out.
+
+---
+
+## I-20: Collaborative Review
+
+**Outcome:** an owner can invite someone to propose a deck patch, then accept or reject that patch without handing over the deck.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Medium / large
+
+Archidekt collaborators are the reference. Comments, "seeking feedback" and forks stay in I-08. Live co-editing is a later product, not this initiative.
+
+### Scope
+
+- [ ] Invite a collaborator with a revocable role that can propose a patch and cannot publish it.
+- [ ] Let the owner accept or reject the patch, and keep an attribution log.
+- [ ] Preserve version history so a patch does not silently overwrite the deck.
+- [ ] Keep the owner's private collection inaccessible to the collaborator.
+- [ ] Leave real-time co-editing out of this initiative.
+
+### Definition of done
+
+A collaborator can propose a change, the owner can accept or reject it, and the deck history shows who proposed what.
+
+---
+
+## I-21: Reproducible Probability Bench
+
+**Outcome:** a player can compare thousands of simulated hands between two deck snapshots under an explicit mulligan policy, and can rerun the same comparison.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** High / large
+
+Deckstats hand analysis and Archidekt odds are the references. I-07 still owns recorded goldfish logs and manual snapshot comparisons. This bench does not replace them.
+
+### Scope
+
+- [ ] Simulate a visible sample of hands for two snapshots and report color availability and land drops on turns 2 through 5.
+- [ ] Apply an explicit mulligan policy, and show the seed, sample size, intervals and assumptions.
+- [ ] Include a statistical comparison of the two samples.
+- [ ] Stay short of an AI opponent and a full Magic rules engine.
+- [ ] Leave I-07's action logs and player-authored snapshot comparisons unchanged.
+
+### Engineering enablers
+
+- The same seed and sample size reproduce the reported intervals.
+- Tests cover the statistical summary, not only a single shuffled hand.
+
+### Definition of done
+
+Two snapshots can be compared from a recorded seed and sample size, and a rerun with the same inputs reproduces the reported intervals.
 
 ---
 

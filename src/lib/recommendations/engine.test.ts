@@ -70,6 +70,20 @@ describe("findMissingMetaCards", () => {
     const missing = findMissingMetaCards(userDecks, metaCards);
     expect(missing[0].metaPercentage).toBe(90);
   });
+
+  it("orders equal meta percentages by Scryfall ID regardless of source order", () => {
+    const userDecks = [makeDeck("d1", [])];
+    const metaCards = [
+      { scryfallId: "z-card", name: "First Source Card", metaPercentage: 75 },
+      { scryfallId: "a-card", name: "Second Source Card", metaPercentage: 75 },
+    ];
+
+    const forward = findMissingMetaCards(userDecks, metaCards);
+    const reversed = findMissingMetaCards(userDecks, [...metaCards].reverse());
+
+    expect(forward.map((card) => card.scryfallId)).toEqual(["a-card", "z-card"]);
+    expect(reversed).toEqual(forward);
+  });
 });
 
 // ─── Cross-deck budget savings ────────────────────────────────────────────
