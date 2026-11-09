@@ -26,6 +26,7 @@ import { PlaytestActionLog } from "@/components/playtest/PlaytestActionLog";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
 import { analyzeEngineDrawProgress } from "@/lib/playtest/draw-progress-evidence";
 import { buildTokenLibrary } from "@/lib/deck/token-library";
+import { hasComputedKeepRules } from "@/lib/playtest/keep-rules";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
@@ -146,6 +147,16 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     [engine]
   );
 
+  // The guide's keep rules model Commander decks only; other formats keep the
+  // land-balance hint.
+  const keepRules = useMemo(
+    () =>
+      engine !== null && hasComputedKeepRules(deck.format)
+        ? { mulligan: engine, bracket: deck.targetBracket }
+        : undefined,
+    [engine, deck.format, deck.targetBracket]
+  );
+
   const requiredTokens = useMemo(
     () => buildTokenLibrary([deck.commander, deck.partner, ...deck.cards].filter((card) => card !== null)),
     [deck.commander, deck.partner, deck.cards]
@@ -215,7 +226,9 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
               <aside>
                 <fieldset disabled={choosingBottom} className={BOARD_GROUP_CLASS}>
                   {engine.turn > 1 && <DrawProgressEvidence engine={engine} />}
-                  {canMulligan && <OpeningHandEvidence hand={engine.hand} />}
+                  {(canMulligan || (keepRules !== undefined && choosingBottom)) && (
+                    <OpeningHandEvidence hand={engine.hand} keepRules={keepRules} />
+                  )}
                   <PhaseTracker
                     turn={engine.turn}
                     phase={engine.phase}

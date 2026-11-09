@@ -220,6 +220,34 @@ describe("PlaytestModal", () => {
     expect(screen.getByRole("button", { name: /next phase/i })).toBeEnabled();
   });
 
+  // The guide's keep rules model Commander decks; other formats keep the land hint.
+  it("gives a Commander hand the guide's keep advice instead of the land-only hint", () => {
+    renderModal();
+    start();
+
+    expect(screen.getByText(/\(mana value 2 or less\)$/)).toBeDefined();
+    expect(screen.getByText(/goldfish model/)).toBeDefined();
+    expect(screen.queryByText(/^(Balanced start|Land-light|Land-heavy)/)).toBeNull();
+  });
+
+  it("keeps the land-balance hint for a Modern hand", () => {
+    renderModal(makeDeck("modern"));
+    start();
+
+    expect(screen.getByText(/lands? in opening hand/)).toBeDefined();
+    expect(screen.queryByText(/goldfish model/)).toBeNull();
+  });
+
+  it("shows what to bottom during a Commander bottom choice", () => {
+    renderModal();
+    start();
+
+    fireEvent.click(screen.getByRole("button", { name: /mulligan/i }));
+    fireEvent.click(screen.getByRole("button", { name: /mulligan/i }));
+
+    expect(screen.getByText(/^What to bottom:/)).toBeDefined();
+  });
+
   it("stops offering a mulligan once a turn has passed", () => {
     renderModal();
     start();
