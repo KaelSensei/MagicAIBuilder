@@ -9,6 +9,27 @@ vi.mock("next-intl/server", () => import("@/test/server-intl"));
 vi.mock("@/lib/auth/config", () => ({ auth: async () => null }));
 vi.mock("@/components/layout/Header", () => ({ Header: () => null }));
 vi.mock("@/components/profile/PublicDeckView", () => ({ PublicDeckView: () => null }));
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl");
+  const catalogs = {
+    en: (await import("@/messages/en/deck.json")).default,
+    fr: (await import("@/messages/fr/deck.json")).default,
+  };
+  return {
+    getTranslations: async ({
+      locale,
+      namespace,
+    }: {
+      locale: "en" | "fr";
+      namespace: "deck.socialImage";
+    }) =>
+      createTranslator({
+        locale,
+        messages: { deck: catalogs[locale] },
+        namespace,
+      }),
+  };
+});
 
 import PublicDeckPage, { generateMetadata } from "./page";
 
@@ -150,32 +171,83 @@ it("keeps a missing deck as not found", async () => {
   ).rejects.toThrow("NOT_FOUND");
 });
 
-// Scryfall retires the art_crop JPEG on 2027-01-01; decks saved before then
-// still store it, and a link preview must not point at a dead image.
-it("previews the commander with Scryfall's WebP art", async () => {
-  fetchPublicDeck.mockResolvedValue({
-    name: "Superfriends",
-    targetBracket: 3,
-    format: "commander",
-    user: { name: "Totoro", username: "totoro" },
-    cards: [
-      {
-        name: "Atraxa",
-        isCommander: true,
-        isPartner: false,
-        artCropUri:
-          "https://cards.scryfall.io/art_crop/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.jpg?1599707796",
-      },
-    ],
-  });
+const PUBLIC_DECK = {
+  id: "deck-1",
+  name: "Atraxa Superfriends",
+  description: null,
+  format: "commander",
+  targetBracket: 3,
+  isAIGenerated: false,
+  isOwner: false,
+  cards: [
+    {
+      id: "c1",
+      name: "Atraxa, Praetors' Voice",
+      manaCost: "{G}{W}{U}{B}",
+      cmc: 4,
+      typeLine: "Legendary Creature",
+      imageUri: "https://cards.scryfall.io/normal/atraxa.jpg",
+      artCropUri: "https://cards.scryfall.io/art_crop/atraxa.jpg",
+      category: "commander",
+      quantity: 1,
+      isCommander: true,
+      isPartner: false,
+      isGameChanger: false,
+    },
+  ],
+  user: { id: "u1", name: "Kael", username: "kael", image: null },
+  createdAt: "2026-11-01T10:00:00.000Z",
+  updatedAt: "2026-11-09T10:00:00.000Z",
+};
+
+/** The image URL carries `updatedAt` so a chat app re-fetches it after an edit. */
+const DECK_IMAGE_URL = `/og/deck/deck-1?v=${Date.parse("2026-11-09T10:00:00.000Z")}`;
+
+it("points Open Graph and Twitter at the deck image built from stored data", async () => {
+  fetchPublicDeck.mockResolvedValue(PUBLIC_DECK);
 
   const metadata = await generateMetadata({
     params: Promise.resolve({ locale: "en", id: "deck-1" }),
   });
 
+  // Not the commander's art crop: Scryfall's art crop cuts the artist credit,
+  // and a crop alone says nothing about the deck.
+  const image = {
+    url: DECK_IMAGE_URL,
+    width: 1200,
+    height: 630,
+    alt: "Preview of the deck Atraxa Superfriends by Kael",
+  };
+  expect(metadata.openGraph?.images).toEqual([image]);
+  expect(metadata.twitter).toEqual({
+    card: "summary_large_image",
+    title: "Atraxa Superfriends by Kael",
+    description: "Commander: Atraxa, Praetors' Voice · Bracket 3",
+    images: [image],
+  });
+});
+
+it("describes the deck image in the page's language", async () => {
+  fetchPublicDeck.mockResolvedValue(PUBLIC_DECK);
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", id: "deck-1" }),
+  });
+
   expect(metadata.openGraph?.images).toEqual([
-    {
-      url: "https://cards.scryfall.io/art/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.webp?1599707796",
-    },
+    expect.objectContaining({
+      alt: "Aperçu du deck Atraxa Superfriends par Kael",
+    }),
   ]);
+});
+
+it("sets no deck image for a deck the viewer cannot see", async () => {
+  fetchPublicDeck.mockResolvedValue(null);
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "en", id: "private-deck" }),
+  });
+
+  expect(metadata.openGraph).toBeUndefined();
+  expect(metadata.twitter).toBeUndefined();
 });

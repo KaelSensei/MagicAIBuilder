@@ -21,7 +21,7 @@ vi.mock("next-intl/middleware", () => ({
   },
 }));
 
-import middleware from "./middleware";
+import middleware, { config } from "./middleware";
 import { sanitizeCallbackUrl } from "@/lib/auth/callback-url";
 
 /**
@@ -68,5 +68,44 @@ describe("middleware for a signed-out visitor", () => {
 
     expect(callbackUrl).toBe("/fr/collection?view=list");
     expect(sanitizeCallbackUrl(callbackUrl)).toBe("/fr/collection?view=list");
+  });
+});
+
+/**
+ * Which paths the middleware runs on.
+ *
+ * The deck image at `/og/deck/{id}` is fetched by link-preview crawlers, which
+ * never carry a session. Run through the middleware, it would be redirected to
+ * sign-in; and next-intl, which serves English without a prefix, would rewrite
+ * it to `/en/og/...`, a path no route answers. So it is kept out of the matcher,
+ * like `/api`.
+ *
+ * Next compiles each matcher with path-to-regexp. These patterns hold no named
+ * parameter, so the same string read as a regular expression matches the same
+ * paths.
+ *
+ * @param pathname Request pathname.
+ * @returns Whether the matcher sends that path through the middleware.
+ */
+function runsMiddleware(pathname: string): boolean {
+  return config.matcher.some((pattern) =>
+    new RegExp(`^${pattern}$`).test(pathname)
+  );
+}
+
+describe("middleware matcher", () => {
+  it("leaves the deck image to signed-out crawlers", () => {
+    expect(runsMiddleware("/og/deck/deck-1")).toBe(false);
+  });
+
+  it("still runs on pages, including ones that merely start with og", () => {
+    expect(runsMiddleware("/deck/deck-1")).toBe(true);
+    expect(runsMiddleware("/fr/deck/deck-1")).toBe(true);
+    expect(runsMiddleware("/ogre")).toBe(true);
+  });
+
+  it("still skips the API and static files", () => {
+    expect(runsMiddleware("/api/deck/deck-1")).toBe(false);
+    expect(runsMiddleware("/og-image.svg")).toBe(false);
   });
 });
