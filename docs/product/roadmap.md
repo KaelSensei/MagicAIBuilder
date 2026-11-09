@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-09
+> **Updated:** 2026-11-09 (evening)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -69,6 +69,17 @@ A dated research pass on the same day tested each goal. Traffic figures below ar
 - [I-36](#i-36-creator-and-embed-toolkit) gives creators embeds, view counts and a deck link worth posting (goals 1 and 3).
 - [I-37](#i-37-editor-depth-against-moxfield-and-archidekt) closes the editor gaps against Moxfield and Archidekt, cheapest visible wins first (goal 1).
 
+A further pass on the same evening looked at what a paying, growing product needs around the deckbuilder, at the physical cards on the table, and at the chat rooms where pods meet. It added I-38 to I-46, in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table):
+
+- [I-38](#i-38-trust-safety-and-user-rights) builds the legal and safety floor a public platform and a paid tier need: reporting, statements of reasons, blocking, legal pages, deletion and export (goal 2).
+- [I-39](#i-39-first-run-activation-and-product-measurement) stops the first run losing players and measures activation and retention in our own database, which is the evidence I-30 needs before a price (goal 2).
+- [I-40](#i-40-installable-app-phone-first-use-and-card-scanning) makes the site installable and tests it at phone size, and puts camera scanning behind a benchmark and the owner's decision (goal 1).
+- [I-41](#i-41-store-commander-nights-and-organiser-tools) gives stores pods by declared and estimated bracket, with a store plan as an I-30 candidate (goals 1 and 2).
+- [I-42](#i-42-commander-variants-duel-commander-cedh-pauper-commander-and-others) makes formats choosable and ships Duel Commander, with dated banned lists (goal 1).
+- [I-43](#i-43-physical-collection-storage-places-deck-boxes-and-pull-lists) says where each physical copy is, with pull and put-back lists (goals 1 and 2).
+- [I-44](#i-44-trade-lists-within-the-pod-and-nearby-players) and [I-45](#i-45-selling-spare-cards-collection-value-buylists-and-seller-exports) turn the collection into trade lists and seller files, with no money through the product (goals 2 and 4).
+- [I-46](#i-46-discord-and-chat-integrations-for-pods-and-creators) makes deck links unfurl well in Discord and other chat apps, then brings deterministic deck commands to Discord without reading the conversation (goal 1).
+
 ### Strategic boundaries
 
 - Do not become a generic card database; Scryfall already owns that job.
@@ -107,6 +118,8 @@ The comparison tracks workflows rather than feature counts. Prices, sources and 
 - Do not compete on generation volume or free-tier generosity. A wrong deck produced instantly is the failure mode this product exists to avoid.
 
 [I-33](#i-33-the-marketplace-ladder-decision-record) records the owner's 2026-11-09 ambition to run a recognised marketplace and names the stage that would reverse the marketplace non-goal above, which stays in force pending the owner's decision.
+
+Three of the initiatives added on the evening of 2026-11-09 touch this list without changing it. [I-40](#i-40-installable-app-phone-first-use-and-card-scanning) asks the owner whether camera scanning may leave it, under measured conditions; until the owner decides, the scanning non-goal stands. [I-41](#i-41-store-commander-nights-and-organiser-tools) builds neither a tournament manager nor a venue directory. [I-44](#i-44-trade-lists-within-the-pod-and-nearby-players) and [I-45](#i-45-selling-spare-cards-collection-value-buylists-and-seller-exports) stay below the marketplace line: the product never handles a sale, money or a shipment.
 
 Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
@@ -177,6 +190,33 @@ A research pass on the owner's goals added eight initiatives, I-30 to I-37, summ
 - Whether to move I-20 earlier. Player demand argues for it; its priority is unchanged here.
 - Whether scripted opponent interaction in the playtest, which is not an AI opponent, is in scope (I-07).
 - Where to stop on the marketplace ladder (I-33).
+
+**2026-11-09 (evening), merges, audits and I-38 to I-46:** these PRs reached `dev` on 2026-11-09 after the I-30 to I-37 pass was written. #1303 had merged before #1308 and is recorded above.
+
+- #1303 gives stage-aware keep advice for Commander opening hands (I-07, checked above).
+- #1305 reports an AI reply cut off at the token cap as a typed truncation instead of a JSON parse error, and raises the suggestion cap from 2,048 to 4,096 tokens (I-02). Recording usage per call is still I-30 slice 1, so the I-02 scope stays open.
+- #1306 records merges #1111 to #1302 in the changelog and progress files and recounts the progress metrics (I-05).
+- #1307 deals every copy of each main-deck row, stops dealing Sideboard and Considering rows, and starts the commander in a new command zone. I-07's "deal the deck that was built" scope is checked.
+- #1308 adds I-30 to I-37, their specs and section 10 of the competitive landscape.
+- #1297 restores the previous commander, partner and pairing when a commander save fails (I-01). The parent recovery scope stays open.
+- #1304 stops the Moxfield import sending headers that impersonate moxfield.com, reports a 403, a 429 or an HTML page as a typed refusal, and tells the player to paste the list in the Plain Text tab. I-10's brittle-path scope is checked; the owner's decision on the supported route stays open.
+- #1309 leaves Ctrl/Cmd+Z to the text field being typed in (I-04). The off switch for single-character shortcuts stays open.
+- #1312 serves public decks from `GET /api/deck/[id]` through an explicit field allowlist; the owner's view is unchanged. I-08's public-fields scope is checked. The rate limit (I-05) and the share-link route stay open.
+- #1313 serves `/rules/*` to signed-out visitors from one public-path list, marks an empty commander listing `noindex`, and answers a slug no commander name can produce with a 404. I-28's rules-page scope is checked; I-34 slices 1 and 2 stay open.
+- #1314 makes bulk edit save only the changed lines, in one transaction through `PATCH /api/decks/[id]/cards`. I-01's bulk-edit scope is checked; the full syntax with printings is I-37's.
+
+Audits run on 2026-11-09 found eight defects. Each is an unchecked scope item in its initiative, with its file paths: a deleted account that comes back on the next request (I-05, I-38); the share-link route returning the whole deck row (I-08, I-38); account deletion that also deletes other players' replies and the reports the user filed (I-38); an undisclosed 1% Sentry Session Replay and undisclosed AI providers (I-38, I-39); a guest deck lost at sign-up, an onboarding dialog on public pages with two wrong lines, a raw `AI request failed (401)` and invented templates (I-39); Duel Commander lists landing in Commander decks with no format picker (I-42); a `camera=()` policy and a missing `'wasm-unsafe-eval'` that block scanning (I-40); and `/api/combos` as an open proxy to Commander Spellbook (I-09). Fixes for the first, the second and the last are in flight, none merged. The I-46 spec adds two preview findings, recorded under I-46: a deck link previews in Discord only as a small thumbnail with no artist credit, which Scryfall requires, and every other page unfurls with no image, because the default `/og-image.svg` is an SVG and Discord does not render SVG.
+
+A further research pass on the owner's goals added I-38 to I-46, in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table). I-38, I-39, I-42's slices 1 to 6 and I-46's slices 1 to 3 are Next; the others are Later with cheap early slices. None is in the 30–50 iteration estimate. Eight further questions wait for the owner:
+
+- Does camera scanning leave the non-goal list, under the benchmark, the Scryfall answer and the thresholds of I-40 requirement 6? Three texts say no today: the [2027 sweep](specs/README.md#what-the-sweep-ruled-out-for-2027) says "Card scanning stays a non-goal", the [benchmark non-goals](#deliberate-non-goals-from-the-benchmark) exclude camera scanning, and [I-26](#i-26-collections-arriving-from-elsewhere) calls import "the only honest path". This pass changes none of them; I-40's slices 8 to 12 wait for the answer.
+- Should trades between players allow chat (I-44)? It would reverse I-38's non-goal "Private messages, groups or chat", and moderation would then cover private text.
+- Should I-43's deck-box path (slices 1 to 5) move to Next? It needs neither I-26 nor I-30.
+- Is the first mulligan free in Duel Commander? I-42 assumes not; ask the Duel Commander Rules Committee before I-42 slice 3 ships.
+- Who moderates, and how fast (I-38)? A response time belongs in the terms only if it can be kept in holiday weeks.
+- Does a paid web plan that posts into Discord through webhooks count as a "paid feature" of the app under Discord's Developer Policy (I-46)? This goes to the lawyer and, in writing, to Discord developer support.
+- Should I-23 merge into I-46? The I-46 spec recommends keeping I-23 for account linking, consent and `/pod`.
+- Who supports the Discord bot when it is down (I-46, raised in I-23)? The spec proposes a maintenance notice and a hidden install link when errors exceed 5% of commands for seven days, and leaves a support server to the owner.
 
 ---
 
@@ -249,40 +289,69 @@ A research pass on the owner's goals added eight initiatives, I-30 to I-37, summ
 21. **I-37 Editor depth against Moxfield and Archidekt**
     Close the editor gaps players compare between sites: views, sticky groups, tags, text bulk edit, history and a mobile toolbar, measured against latency and stability budgets.
 
+22. **I-38 Trust, safety and user rights**
+    Build the legal and safety floor: notice and action, statements of reasons, appeals, blocking, legal pages, a deletion that holds and a full export. It gates public growth and I-30's paid tier. Nothing in it is paid.
+
+23. **I-39 First run, activation and product measurement**
+    Keep a guest's work at sign-up, replace the onboarding modal with an inline first-run panel, and count activation and retention in our own database with no third-party script.
+
+24. **I-42 Commander variants**
+    Next for slices 1 to 6: a format picker, legality computed on the server from dated lists, and Duel Commander at 20 life with its banned-as-commander list. Later for Pauper Commander, Oathbreaker, the Brawl split, cEDH link-outs and Canadian Highlander.
+
+25. **I-46 Discord and chat integrations**
+    Next for link previews (slices 1 to 3), which need no bot: full tags, a PNG default image, the artist's credit, oEmbed and a Discord component embed. Later for webhook feeds and the Discord app.
+
 ### Later
 
-22. **I-10 Interoperability and integrations**
+26. **I-10 Interoperability and integrations**
     Make MagicAIBuilder a good starting point and a good destination for deck data.
 
-23. **I-11 Localization and regional experience**
+27. **I-11 Localization and regional experience**
     Expand beyond English and French only when translations and prices are genuinely supported.
 
-24. **I-12 Local AI**
+28. **I-12 Local AI**
     Explore local inference only after the cloud copilot has a measurable product fit. Offline reading is I-19.
 
-25. **I-18 Per-deck radar of new cards**
+29. **I-18 Per-deck radar of new cards**
     On demand, explain newly legal cards for one deck and show a diff before any change.
 
-26. **I-20 Collaborative review**
+30. **I-20 Collaborative review**
     Let an invited reviewer propose a patch that the owner accepts or rejects. Live co-editing stays out of this slice.
 
-27. **I-21 Reproducible probability bench**
+31. **I-21 Reproducible probability bench**
     Compare simulated hands across snapshots with a visible seed, sample size and mulligan policy.
 
-28. **I-35 Pod game log and casual results**
+32. **I-35 Pod game log and casual results**
     Log a real game after it ends, tied to the deck version played and the brackets declared and computed, with honest personal statistics and opt-in aggregates.
 
-29. **I-36 Creator and embed toolkit**
+33. **I-36 Creator and embed toolkit**
     Give creators deck embeds, link previews that show the deck, video in primers and a public read API, with no tracking and no paid reach.
+
+34. **I-40 Installable app, phone-first use and card scanning**
+    Later, with a no-regret first part: a manifest, icons, safe areas, install help and phone-sized E2E and Lighthouse runs (slices 1 to 5). Scanning waits for a benchmark, Scryfall's written answer and the owner's decision.
+
+35. **I-41 Store Commander nights and organiser tools**
+    Later, with a cheap early part: the pod-pairing policy and an account-free pod planner (slices 1 and 2), which need no schema and store no personal data.
+
+36. **I-43 Physical collection: storage places, deck boxes and pull lists**
+    Later. The deck-box path (slices 1 to 5) needs no collection import and can be promoted on its own; that is an owner question.
+
+37. **I-44 Trade lists within the pod and nearby players**
+    Later, with a cheap early part: private have and want lists, share links, the balance view and the friends audience (slices 1 to 7), which need no I-38 work.
+
+38. **I-45 Selling spare cards**
+    Later, with a no-regret first part: the deck-aware spare list and seller files for Card Kingdom and Cardmarket's tools (slices 0 to 3), which need no price, contract or legal answer.
 
 ### Parked
 
-30. **I-33 The marketplace ladder**
+39. **I-33 The marketplace ladder**
     A decision record, not a build plan. It names the stage that would reverse the marketplace non-goal and the evidence each step up needs. The owner decides; nothing is built for a marketplace.
 
 Open work on I-01, I-05 and I-06 stays ahead of I-14 through I-21. I-28's first slice, a copy correction, shipped in #1300; its guide page should land before I-15, whose Rule 0 sheet reuses the same bracket vocabulary. Among the new initiatives, start with I-14 and I-15, validate demand for I-16 and I-17, and specify the I-19 cache in parallel. Keep I-18 on demand until that flow is validated. Take up I-20 and I-21 only if players use the earlier slices.
 
 I-30 to I-37 fit around that order. I-30's slice 0, the written legal answers and the owner's pricing decision, needs no code and can start now. Its slices 1 to 5 (metering, a monthly quota, a model per task, a free-plan entitlement layer and the AI-use disclosure page) ship whatever the legal answer and close I-05's quota gap, so they can start now as production-safety work; no billing code starts before slice 0's answers are committed. I-37's slices 1 to 9 are cheap visual and ergonomic wins with no schema change; run them alongside I-13 so the editor is restyled once. Its change history and finish model (slices 10 and 12) come before its bulk edit, tags and clipboard. I-32's slices 0 to 3 need no commercial relationship and can start; affiliate links wait for the seller's approval and the lawyer. I-31's card classification (slice 2) needs nothing else and can start; the rest depends on I-21 slices 1, 3, 5 and 6, which therefore move ahead of I-21's Later priority. I-34's slices 1 to 7 need no deck index and can start, slice 1 first because it removes today's thin-page exposure; slices 9 to 12 wait for I-29. I-35 and I-36 stay Later. I-33's slices 0, 1 and 4 are owner and outreach work, and nothing for a marketplace is built.
+
+I-38 to I-46 fit around the same order. I-38's slice 2 goes first, because a deleted account comes back today; slices 1 to 5 and 12 ship whatever counsel says, and its lawyer questions join I-30's slice 0. I-38 gates public growth and I-30's billing: a paid plan needs terms, a privacy policy and a deletion that cancels first. I-39's slices 1 to 4 need no schema and can start now; its event store (slices 10 to 12) waits for the lawyer questions, and slice 13 is the evidence I-30 waits for. I-42's slices 1 and 2 make the nine existing formats reachable and their banned flags current; slice 3, Duel Commander, waits for the committee's answer on the mulligan. I-46's slice 1 ships alone and fixes what every chat app shows today; slice 2 waits for I-36's deck image, and the Discord app waits for I-38's privacy policy. Among the Later initiatives, the cheap early parts can start without a product decision: I-40 slices 1 to 5, I-41 slices 1 and 2, I-43 slices 1 to 5 if the owner promotes them, I-44 slices 1 to 7 and I-45 slices 0 to 3. Scheduled agents must not pick I-38's slices 13 and 14, I-40's slices 8 to 12, I-41's slices 3 and later, I-43's slices 13 and 14, I-44's slice 12 or later, I-45's slices 11 to 13, or I-46's slice 15 before the decisions, answers or owner actions each spec names.
 
 Impact and effort below are planning labels: medium means several small PRs, large means a cross-cutting project. They are not delivery dates.
 
@@ -328,6 +397,7 @@ Detailed functional specs live in [`docs/product/specs/`](specs/README.md): one 
 - [x] Restore the previous card printing and notify the player when its save fails.
 - [x] Complete cross-zone drag and drop with clear drop targets and no layout jump. Zone targets stay mounted and do not resize, and the smallest target under the pointer wins (#1264, promoted to `main` in #1273).
 - [ ] Keep optimistic updates, undo and failed-save recovery consistent.
+  - [x] Restore the previous commander, partner and pairing type, with an error, when a commander save or clear fails; keep a newer choice, a partner picked meanwhile, and a commander whose deck record was saved (#1297). Other concurrent writes remain open.
   - [x] Keep the save indicator active until overlapping budget writes finish, even if one fails (#1096). Other concurrent writes remain open.
   - [x] Keep save activity visible while an addition and a removal overlap, regardless of completion order (#1094). Other concurrent mutations remain open.
   - [x] Roll back a rejected searched-card addition and show retry feedback without recreating a deleted deck (#1090). Broader overlapping mutation ownership remains open.
@@ -387,7 +457,7 @@ Detailed functional specs live in [`docs/product/specs/`](specs/README.md): one 
 - [x] Honor Oracle-text multiple-copy exceptions in packages using canonical Scryfall data, never stored author metadata (#854). The existing policy ceiling of 99 copies remains unchanged.
 - [x] Limit canonically restricted package cards to one copy, including existing deck quantities; a single restricted card remains allowed (#859).
 - [x] Add a required-token and emblem summary derived from the current deck, with export support.
-- [ ] Make bulk edit apply only what changed. Saving in `src/components/deck/BulkEditModal.tsx` calls `removeAllCards`, clears the commander, partner and companion, then re-adds every line by name, one request per card, and `exportToText` (`src/lib/deck/import.ts`) writes only `quantity name`. Every save therefore resets printings to Scryfall's default, re-derives categories and drops notes, unchanged lines included. The requests are not one transaction, so a failure after the delete leaves a partial deck. A fix is in flight (`fix/bulk-edit-applies-only-changes`, not merged). The full diff-and-apply bulk edit, with printing, finish and tags in the line syntax, is [I-37](#i-37-editor-depth-against-moxfield-and-archidekt) slice 16.
+- [x] Make bulk edit apply only what changed. Saving in `src/components/deck/BulkEditModal.tsx` called `removeAllCards`, cleared the commander, partner and companion, then re-added every line by name, one request per card, and `exportToText` (`src/lib/deck/import.ts`) writes only `quantity name`. Every save therefore reset printings to Scryfall's default, re-derived categories and dropped notes, unchanged lines included. The requests were not one transaction, so a failure after the delete left a partial deck. Shipped in #1314: the save compares the text with the deck line by line (`src/lib/deck/bulk-edit.ts`), unchanged lines keep their rows, printings, categories and notes, and the change set is applied in one transaction by `PATCH /api/decks/[id]/cards`, which answers 409 on a stale row and writes nothing. A printing typed in the text is still not applied. The full diff-and-apply bulk edit, with printing, finish and tags in the line syntax, is [I-37](#i-37-editor-depth-against-moxfield-and-archidekt) slice 16.
 
 **2026-11-09:** the editor-depth gaps found against Moxfield and Archidekt are tracked in [I-37](#i-37-editor-depth-against-moxfield-and-archidekt), not here. They include Stacks, Table and Text views, collapsible and sticky categories, global and Oracle tags, text bulk edit with printing and foil, a cross-deck clipboard, an automatic per-change history, multi-select category assignment and a mobile editing toolbar. I-01 keeps zone integrity, recovery and their E2E coverage. `DeckCard` has no foil, finish or language field (`prisma/schema.prisma`), so a faithful bulk edit or import of those attributes needs a model change first.
 
@@ -438,7 +508,8 @@ A user can move a card between every legal zone, reload the page, change its pri
 - [ ] Keep the deterministic validator's verdict visible in the copilot's output instead of only applying it silently. Competing assistants either validate without explaining or explain without validating; the difference is only a differentiator if the player can see which claims were checked against card data and which are the model's reasoning.
 - [ ] Check a generated deck against card data on the server before it reaches the player: every card exists, sits inside the commander's colour identity, is legal in Commander, and the Game Changer count fits the chosen bracket. Repair a failing card from a legal candidate pool rather than rejecting the whole build, and show each correction. Until this ships, do not label generated decks as verified.
 - [ ] Record `stop_reason` and output token usage per AI route, and stop treating a truncated response as a parse failure. Whether the default suggestion task is cut off at its 2,048-token cap is an estimate to verify.
-  - Verified on `dev` on 2026-11-09: `src/app/api/ai/suggest/route.ts` passes the reply text to `JSON.parse` without reading `stop_reason`, and `src/app/api/ai/build/route.ts` does the same after stripping code fences. A fix that reports a reply cut off at the token cap instead of parsing it is in flight (`fix/ai-truncated-model-output`, not merged). Recording usage per call is [I-30](#i-30-business-model-and-the-paid-tier) slice 1.
+  - Verified on `dev` on 2026-11-09: `src/app/api/ai/suggest/route.ts` passed the reply text to `JSON.parse` without reading `stop_reason`, and `src/app/api/ai/build/route.ts` did the same after stripping code fences. Recording usage per call is [I-30](#i-30-business-model-and-the-paid-tier) slice 1.
+  - [x] Report a reply cut off at the token cap as a typed truncation (`ModelOutputTruncatedError` in `src/lib/ai/model-reply.ts`) for Anthropic `stop_reason: "max_tokens"` and OpenAI `finish_reason: "length"`, logged once with the model and cap; the client gets the route's existing error event. The suggestion cap rises from 2,048 to 4,096 tokens (#1305). Token usage per call remains open.
 - [ ] Publish a page that says where the product uses a language model and where it does not, and label each AI surface in the product. Every deterministic surface (legality, colour identity, bracket rules, search syntax, playtest) must stay usable with the copilot switched off.
 
 ### Findings from the 2026-11-09 pass
@@ -557,6 +628,7 @@ A player can answer three questions from the editor: "What is invalid?", "Why is
 - [x] Explain the empty EDHREC missing-card filter when all popular cards are already in the deck; removing the filter restores the list.
 - [x] Keep EDHREC recommendation add actions visible without hover, with a 40 px touch target and keyboard focus outline (#1058).
 - [ ] Make keyboard shortcuts safe while typing and for assistive technology. `src/hooks/useKeyboardShortcuts.ts` handles Ctrl/Cmd shortcuts before it checks whether the focus is in a text field, so Ctrl+Z in a card note undoes the last deck change instead of the typing. `/` and `?` stay silent in text fields, but no setting turns them off or remaps them, which WCAG 2.1.4 (Level A) requires of single-character shortcuts that work outside a focused control. [I-37](#i-37-editor-depth-against-moxfield-and-archidekt) slice 3 adds the shortcut registry, the off switch and native undo in text fields.
+  - [x] Leave Ctrl/Cmd+Z to a focused text field, so a card note or the search bar keeps its own undo; checkboxes and other non-text controls keep deck undo (#1309). The off switch and remapping for `/` and `?`, and the shortcut registry, remain open.
 - [ ] Preserve the established dark/light design language while improving hierarchy, spacing and responsive behavior.
   - Players now spot and reject interfaces that look AI-made, and they defend shallow access to filters and sorts. I-13 records this as a design constraint from EDHREC's October 2026 redesign backlash.
 - [ ] Add visual regression coverage for the Deck Editor, banner, warning panel and card hover states.
@@ -591,8 +663,10 @@ The editor remains visually stable while the user searches, hovers, moves cards,
   - [x] Queue concurrent pre-push gates behind a machine-wide lock, and clear root-owned reports left by a killed run through a container (#1302). Every clone and worktree on the machine shares one `magicaibuilder-e2e` compose project, so two pushes at once replaced each other's containers and both were blocked with no failing test. The script tests run the real script against a fake `docker`. A CI E2E job remains open.
 - [ ] Give scheduled agent runs and manual pushes enough room on the VPS. They share one machine with about 7.6 GiB of RAM and 4 vCPUs. On 2026-11-09 they collided twice on the pre-push gate, and background tasks were killed for memory pressure. Decide between scheduling agents outside working sessions, capping concurrent builds and E2E runs, or a larger machine.
 - [ ] Meter AI usage per user and enforce a monthly quota before any public launch or paid tier. Today the only AI limits are per minute (5 builds and 10 suggestions per user per 60 seconds) in an in-memory store that is per instance, and no token metering exists. The theoretical worst case for one account is three orders of magnitude above a few-euro plan (I-02). [I-30](#i-30-business-model-and-the-paid-tier) slices 1 and 2 specify the metering and the quota.
-- [ ] Rate-limit the public read route `GET /api/deck/[id]`. It serves any public deck to any caller with no key and no limit, and the middleware matcher skips `/api` (`src/middleware.ts`). The fields it returns are an I-08 item with a fix in flight; this item stays open until a limit is verified.
+- [ ] Rate-limit the public read route `GET /api/deck/[id]`. It serves any public deck to any caller with no key and no limit, and the middleware matcher skips `/api` (`src/middleware.ts`). #1312 limited the fields it returns (I-08); this item stays open until a limit is verified.
 - [ ] Keep `docs/project/changelog.md` and `docs/project/progress.md` current after each merge batch, as the project instructions require. Neither changed between 2026-10-28 and 2026-11-09 while 196 commits reached `dev`; a catch-up is in preparation.
+  - [x] Record merges #1111 to #1302 and recount the progress metrics (#1306). Later batches are recorded by their own `chore/docs` PRs.
+- [ ] End the session when an account is deleted. `DELETE /api/user/profile` (`src/app/api/user/profile/route.ts`) deletes the user but does not sign out, sessions are JWTs valid for 7 days (`src/lib/auth/edge-config.ts`), and on the next authenticated request `resolveAuthenticatedUser` (`src/lib/auth/helpers.ts`) misses the id and re-creates the user from the token's email, name and image. A deleted account therefore comes back, empty, from any device still signed in. A fix is in flight (`fix/deleted-account-stays-deleted`, not merged); [I-38](#i-38-trust-safety-and-user-rights) slice 2 owns the tombstone and the regression test.
 - [ ] Keep the gate order explicit: typecheck, lint, unit tests, E2E policy, SonarCloud.
 - [ ] Require SonarCloud open issues to be zero before PR creation or merge.
   - The checklist in `docs/engineering/quality-gate.md` requires zero open issues; nothing enforces it automatically yet.
@@ -610,7 +684,7 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 - **Prisma 7:** blocked locally by Node 22.11; revisit at Node 22.12+.
 - **Cloudflare R2:** only when avatars, deck media or generated artifacts need durable object storage.
 - **Advanced observability:** Datadog, Better Uptime, Grafana, OpenTelemetry and PagerDuty stay parked until usage justifies their operational cost.
-- **Analytics:** choose one privacy-conscious product analytics tool only after defining the product questions it must answer.
+- **Analytics:** choose one privacy-conscious product analytics tool only after defining the product questions it must answer. [I-39](#i-39-first-run-activation-and-product-measurement) writes those questions, measures them first-party, and lists the cookieless candidates for page analytics.
 
 ### Definition of done
 
@@ -710,7 +784,7 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
   - Follow-ups from #1301: a per-session "multiplayer game" choice, since the rule is set by format and a 1v1 Commander or Oathbreaker game should not get the free mulligan; and disabling the record-result bar while a bottom choice is pending, because a result recorded then counts the cards still to bottom as extra cards seen.
 - [x] Base opening-hand advice on the mulligan stage (first seven, free seven, six), the deck's cheap ramp and its land count, instead of fixed land thresholds (#1303).
   - Shipped in #1303: `keep-rules.ts` holds the guide's keep table as data, classes a hand by lands and ramp at mana value 2 or less, treats margins within 2% as judgment calls, and says when the guide has no computed rule. Commander only; other formats keep the land-balance hint.
-- [ ] Deal the deck that was built. The playtest dealt each deck row once whatever its quantity, shuffled the commander into the library, and dealt Sideboard and Considering rows. Measured on a 36-land Commander list: a 79-card library and hand with 19% lands, 59.8% of opening hands with 0–1 land, and the commander in the opening hand 8.7% of the time. With the fix in flight (`fix/playtest-library-quantities-and-command-zone`, not merged): 99 cards, 36.4% lands, 20.3% and 0%. The fix deals each copy, adds a command zone that the commander starts in (CR 903.6) and returns to (CR 903.9a), and stops counting a cast commander as a card seen. Sessions recorded before the fix were dealt from the wrong library, so a comparison that mixes sessions from before and after it compares two different libraries.
+- [x] Deal the deck that was built. The playtest dealt each deck row once whatever its quantity, shuffled the commander into the library, and dealt Sideboard and Considering rows. Measured on a 36-land Commander list: a 79-card library and hand with 19% lands, 59.8% of opening hands with 0–1 land, and the commander in the opening hand 8.7% of the time. Shipped in #1307: 99 cards, 36.4% lands, 20.3% and 0%. The fix deals each copy, adds a command zone that the commander starts in (CR 903.6) and returns to (CR 903.9a), and stops counting a cast commander as a card seen. Sessions recorded before the fix were dealt from the wrong library, so a comparison that mixes sessions from before and after it compares two different libraries.
 - [ ] Tie recorded sessions to the deck version played. `src/components/playtest/RecordResultBar.tsx` never sends a `snapshotId`, and `PlaytestComparisonPanel.tsx` skips sessions without one, so the in-product snapshot comparison checked above never receives a session recorded in the playtest; only sessions posted to the API with a snapshot reach it. A fix is in flight (`fix/playtest-sessions-tied-to-snapshot`, not merged). [I-35](#i-35-pod-game-log-and-casual-results) slice 2 needs the same card-list hash to freeze the version of a real game.
 - [ ] Add playtest hotkeys and a cheat sheet: draw, shuffle, next turn and moves to graveyard, exile and battlefield. Moxfield documents D, S, N, G, E and B, and Archidekt lists its keys with Shift+/. Today only the life tracker and the action log read the keyboard (`src/components/playtest`).
 - [ ] Select several battlefield cards at once and act on them together, as Archidekt does with drag and Ctrl-click.
@@ -765,11 +839,14 @@ A player can test two versions of a deck and see evidence that helps choose betw
 - [x] Apply a reviewed package diff without silently replacing existing cards.
 - [x] Apply only individually ready package rows, even when a blocked row shares the same printing identifier (#861).
 - [x] Reserve package copy capacity only for ready rows, so rejected rows do not prevent later valid additions within the existing limits (#863).
-- [ ] Return only public fields from `GET /api/deck/[id]`. For a public deck, `src/app/api/deck/[id]/route.ts` returns every `Deck` and `DeckCard` column except `shareToken` to any caller, signed in or not, including `folderId`, `budget`, `manualBracket`, `shareEnabled`, the owner's `userId` and each card's `notes`. A fix is in flight (`fix/public-deck-api-field-allowlist`, not merged); [I-36](#i-36-creator-and-embed-toolkit) slice 1 makes one public projection the rule for every public surface. The missing rate limit is an I-05 item.
+- [x] Return only public fields from `GET /api/deck/[id]`. For a public deck, `src/app/api/deck/[id]/route.ts` returned every `Deck` and `DeckCard` column except `shareToken` to any caller, signed in or not, including `folderId`, `budget`, `manualBracket`, `shareEnabled`, the owner's `userId` and each card's `notes`. Shipped in #1312: every viewer but the owner gets the fields of `PUBLIC_DECK_SELECT` (`src/lib/deck/public-deck-select.ts`), the visibility rule sits in the query, and the response types derive from the allowlist; the owner's view is unchanged. [I-36](#i-36-creator-and-embed-toolkit) slice 1 makes one public projection the rule for every public surface. The missing rate limit is an I-05 item.
+- [ ] Return only the fields the share view needs from `GET /api/share/[token]`. `src/app/api/share/[token]/route.ts` loads the deck with `include: { cards: true }` and strips only `shareToken`, so a link holder receives `userId`, `budget`, `manualBracket`, `folderId`, each card's `notes` and every column added later. A fix is in flight (`fix/share-link-field-allowlist`, not merged). [I-38](#i-38-trust-safety-and-user-rights) records the same defect.
 - [ ] Remove or bind the social image route. `src/app/api/og/route.tsx` renders a 1200×630 image from free-text `title`, `commander` and `colors` query parameters for any caller, and no page or test references it, so anyone can print arbitrary text under the product's name. [I-36](#i-36-creator-and-embed-toolkit) slice 2 replaces it with an image built only from stored deck data.
 - [ ] Decide the primer's length limit together with its template. The server caps `Deck.description`, which holds the primer, at 2,000 characters (`src/lib/validation/deck.ts`, mirrored by `maxLength` in `src/components/deck/DeckDescriptionEditor.tsx`). The six-section template's own headings and prompts use 382 of them in English and 463 in French. I-37's split primer editor and I-36's video sections assume longer primers.
 
 **2026-11-09:** MagicAIBuilder's social layer is evaluative: stars, votes, reviews, feedback questions and attributed forks. Moxfield's is broadcast: unique view counts, likes, a follow feed and embeddable decks, and TappedOut sells a blog widget. Creators value broadcast features, because a view count and an embed make a deck link worth posting. No embed route exists under `src/app` and the schema has no view counter. Embeds, public view counts, `[[Card]]` links in primers and video in primers are tracked in [I-36](#i-36-creator-and-embed-toolkit); notifications stay in this initiative. Archidekt's deck help requests (July 2026) add an expiry, a browse page and notifications to what "seeking feedback" does here.
+
+**2026-11-09 (evening):** the deck reports and moderation queue checked above stay shipped. [I-38](#i-38-trust-safety-and-user-rights) now owns moderation beyond decks: reports on comments, reviews, profiles, packages and share links, signed-out notices, hide and restore actions, statements of reasons, appeals and blocking. Today a moderator can only mark a deck report reviewed or dismissed.
 
 ### Definition of done
 
@@ -813,6 +890,7 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - [ ] Revisit richer tournament statistics only under terms that allow this product to show them. Match-level cEDH data exists at TopDeck.gg; its terms are the block (see below).
 - [ ] Adopt EDHREC's Lift semantics explicitly wherever a co-occurrence number is shown or ranked. Lift is a ratio centred on 1 — inclusion in context divided by inclusion at large — and replaced Synergy on `/commanders`, `/combos` and `/tags` on 2026-10-01. Label it as Lift with its definition available on demand; do not relabel it as a synergy percentage or sort it as one.
 - [ ] Re-check the Commander Spellbook integration against the per-deck and per-card combo endpoints added in v0.84.0 (2026-10-20), and cache identical card-list lookups so a much-viewed public deck cannot repeatedly hit the service. Show the prerequisites Spellbook lists with each combo, not only a card count: players' most-upvoted 2026 complaint about combo data is a "two-card" combo that needs a third card ([407 points, August 2026](https://www.reddit.com/r/EDH/comments/1vrt8ww/); [262 points, November 2025](https://www.reddit.com/r/EDH/comments/1oxuhqy/)).
+- [ ] Stop `/api/combos` acting as an open proxy to Commander Spellbook. `src/app/api/combos/route.ts` forwards any `cards` value to `backend.commanderspellbook.com` for any caller, with no cache and no rate limit, and `fetchCombosForDeck` in `src/lib/combos/spellbook.ts` calls it once per distinct card, about 100 lookups per deck view, cached only in the browser's memory. A fix is in flight (not merged).
 - [ ] Label data-sourced cuts apart from the copilot's AI cuts. EDHREC Recs scores adds and cuts for a pasted list (cut scores came back on 2026-10-22), and Archidekt shows EDHREC's recommended cuts in its editor since March 2026. Apply I-03's rules-aware check to data-sourced recommendations, so a popular card that cannot work with this commander is filtered or labelled.
 
 ### Blocked
@@ -881,8 +959,8 @@ A recommendation is never presented as universal truth: the user can see where i
   - Import parsing and preview are more resilient, but exact printing and category round trips remain open; preserving a localized name does not guarantee that Scryfall resolves that language.
 - [ ] Offer opt-in integrations only when authentication, rate limits and ownership are clear.
 - [ ] Prefer a stable public API over brittle scraping whenever a partner provides one.
-- [ ] Treat the Moxfield URL import as a brittle path rather than a stable contract. Moxfield has no public API, now answers programmatic requests behind Cloudflare, and requires authentication headers on its internal endpoints; other tools have moved to paste and CSV as the supported route. Detect the blocked case explicitly and tell the player to paste the list instead of reporting a generic import failure.
-  - In flight (`fix/moxfield-import-honest-headers`, not merged): the import stops sending `Origin` and `Referer` headers set to moxfield.com, reports a 403, a 429 or an HTML page as a typed refusal, does not retry a refusal, and points the player to paste import. Moxfield already broke third-party imports once in June 2026 by changing how deck data could be pulled ([EDHcheck, 2026-06-14](https://edhcheck.com/updates/light-mode-and-deck-builder/)).
+- [x] Treat the Moxfield URL import as a brittle path rather than a stable contract. Moxfield has no public API, now answers programmatic requests behind Cloudflare, and requires authentication headers on its internal endpoints; other tools have moved to paste and CSV as the supported route. Detect the blocked case explicitly and tell the player to paste the list instead of reporting a generic import failure.
+  - Shipped in #1304: `fetchMoxfieldJson` (`src/lib/import/moxfield-client.ts`) is the only code that calls Moxfield, and it sends no `Origin` or `Referer` set to moxfield.com. A 403, a 429 or an HTML page becomes a typed refusal (HTTP 422, `moxfield_refused`), logged once as a warning and never retried, and the URL tab and the profile panel tell the player to paste the list in the Plain Text tab; the profile panel hides Retry for a refusal. Moxfield already broke third-party imports once in June 2026 by changing how deck data could be pulled ([EDHcheck, 2026-06-14](https://edhcheck.com/updates/light-mode-and-deck-builder/)).
 - [ ] **Owner decision: the supported Moxfield route.** With honest headers, Moxfield answered both of the app's probes on 2026-11-09 with a Cloudflare block page (HTTP 403), so with the fix above Moxfield URL import fails for as long as Moxfield refuses honest requests. The options are to accept paste import as the supported Moxfield route, or to ask Moxfield for API access. No request has been sent to Moxfield. The source policy planned in [I-29](#i-29-cross-site-commander-deck-index) forbids headers that impersonate a source, so restoring the old headers is not an option.
 
 **2026-11-09:** deck embeds for other websites are tracked in [I-36](#i-36-creator-and-embed-toolkit). A "play this deck" link to an online table such as Playgroup.gg or TableCommander would be an export contract here. Neither exists today.
@@ -1237,7 +1315,7 @@ Wizards publishes the rules but no deckbuilding guidance. EDHREC, CoolStuffInc a
 - [x] Correct the bracket names and descriptions players see in the deck wizard, and the bracket rules given to the copilot: bracket 2 is Core with zero Game Changers, bracket 3 Upgraded, bracket 4 Optimized, and cEDH is bracket 5. Use the official French names with the "bracket" alias. Shipped in #1300: the wizard's picker shows the official English names, the French "Catégorie N — Nom (bracket N)" form, and each bracket's Game Changer limit and turn floor. The copilot prompt reads one set of bracket rules for brackets 1 to 5, and the build route's duplicate bracket table is gone. The dormant catalogs carry the English text, held equal to English by a test until a native review.
 - [ ] Extend the bracket definitions to bracket 5 and to the official restrictions on mass land denial, extra turns and two-card combos, and remove the tutor restriction Wizards dropped on 2025-10-21. Still open after #1300: `BRACKET_DEFINITIONS` (`src/lib/constants/brackets.ts`) names bracket 1 "Casual", sets `allowsTutors: false` for it and stops at bracket 4; the wizard's picker offers brackets 1 to 4; and `src/lib/deck/bracket.ts` still forces any two-card infinite to bracket 4, with the warning `deck.bracket.infiniteCombos` labelled "(RC rule)" in every locale.
 - [ ] Publish a static, indexable guide page with one section per bracket, from the researched document, with every claim labeled Official, Data or Community and linked to a dated source.
-- [ ] Make the rules pages reachable signed out. `/rules/game-changers` and `/rules/comprehensive` are in neither public-path list (`PUBLIC_PATH_PREFIXES` in `src/middleware.ts`, `PUBLIC_API_AND_PAGE_PATHS` in `src/lib/auth/edge-config.ts`), although the header and the landing page link to them, so visitors and crawlers are sent to sign-in. A fix is in flight (`fix/public-rules-pages-and-unknown-commanders`, not merged). [I-34](#i-34-commander-data-reports-and-indexable-data-pages) slice 2 adds their alternates and localized metadata, and keeps the verbatim Comprehensive Rules `noindex`.
+- [x] Make the rules pages reachable signed out. `/rules/game-changers` and `/rules/comprehensive` were in neither public-path list (`PUBLIC_PATH_PREFIXES` in `src/middleware.ts`, `PUBLIC_API_AND_PAGE_PATHS` in `src/lib/auth/edge-config.ts`), although the header and the landing page link to them, so visitors and crawlers were sent to sign-in. Shipped in #1313: the public page paths, `/rules` included, live once in `src/lib/auth/public-paths.ts`, which both the middleware and the `authorized` callback read. [I-34](#i-34-commander-data-reports-and-indexable-data-pages) slice 2 adds their alternates and localized metadata, and keeps the verbatim Comprehensive Rules `noindex`.
 - [ ] Render the guide's official rules from the same definitions the bracket analysis uses, so the two cannot disagree.
 - [ ] Link the bracket badge and the wizard's bracket step to the matching section without losing deck state.
 - [ ] Check the open deck against a chosen bracket, separating official limits it breaks from composition ranges it falls outside, without calling the model or blocking a save.
@@ -1262,7 +1340,7 @@ The initiatives above carry the work already committed. The six below extend the
 
 Read them as hypotheses with a stated basis, not as commitments. A 2027 initiative is promoted to Next only when its spec's open questions are answered and its dependency has shipped.
 
-**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon. I-30 to I-37, added the same day from a research pass on the owner's goals, are not part of this horizon: four of them are Next and one is Next in part, so they sit in their own section, [Business, Reference And Depth](#business-reference-and-depth), after the list of what the sweep ruled out.
+**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon. I-30 to I-37, added the same day from a research pass on the owner's goals, are not part of this horizon: four of them are Next and one is Next in part, so they sit in their own section, [Business, Reference And Depth](#business-reference-and-depth), after the list of what the sweep ruled out. I-38 to I-46, added that evening, follow in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table).
 
 **Why six and not twenty.** Beyond these, the sweep stopped producing gaps the product is positioned to fill. Adding further initiatives would mean inventing them, which fills a roadmap without filling a pipeline. The honest way to extend 2027 further is another dated sweep, not a longer list. The 2026-11-09 pass on the owner's goals was such a sweep, and it produced I-30 to I-37.
 
@@ -1320,6 +1398,8 @@ Otterly MTG, Mana Grove's `/bracket` command and several Commander companion bot
 ### Definition of done
 
 A pod reads a consented sheet and a dated bracket in its own server, and nothing the bot can do changes a deck.
+
+**2026-11-09 (evening):** [I-46](#i-46-discord-and-chat-integrations-for-pods-and-creators) builds the Discord app these commands would run in and answers the first scope item for public decks without account linking. I-23 keeps linking, consented sheets and `/pod`; whether to merge the two is an owner question in the status note.
 
 ---
 
@@ -1437,7 +1517,7 @@ Every warning class the product raises can be explained in place, from an author
 **Priority:** Later — 2027
 **Impact / effort:** High / large
 
-EDHREC's 10.5 million decks come from partnerships with Moxfield and Archidekt, not from crawling, and the three largest sources block or forbid automated collection. The index therefore starts from sources that allow it: Scryfall, MTGJSON precons, the cEDH Decklist Database, Commander Spellbook once its data license is confirmed, and MagicAIBuilder's own public decks. Every other site is reached by a link that copies nothing, and partnerships are the only route to scale. Before any partnership, it offers the search the incumbents lack: include and exclude cards with and/or, freshness, near-copies collapsed, declared against estimated bracket, and "decks like mine". The research also found that the shipped Moxfield import sends `Origin` and `Referer` headers set to `moxfield.com`. I-10 owns that code, and the [spec](specs/i29-cross-site-deck-index.md#open-questions) asks for a decision before the source policy is published.
+EDHREC's 10.5 million decks come from partnerships with Moxfield and Archidekt, not from crawling, and the three largest sources block or forbid automated collection. The index therefore starts from sources that allow it: Scryfall, MTGJSON precons, the cEDH Decklist Database, Commander Spellbook once its data license is confirmed, and MagicAIBuilder's own public decks. Every other site is reached by a link that copies nothing, and partnerships are the only route to scale. Before any partnership, it offers the search the incumbents lack: include and exclude cards with and/or, freshness, near-copies collapsed, declared against estimated bracket, and "decks like mine". The research also found that the shipped Moxfield import sends `Origin` and `Referer` headers set to `moxfield.com`. I-10 owns that code, and the [spec](specs/i29-cross-site-deck-index.md#open-questions) asks for a decision before the source policy is published. #1304 removed those headers on 2026-11-09, which settles the Moxfield half of that question; the EDHREC half is open.
 
 Two initiatives added on 2026-11-09 consume this index. [I-34](#i-34-commander-data-reports-and-indexable-data-pages) computes its data reports and indexable data pages from the indexed decks, under the same source labels, sample sizes and withholding thresholds. [I-36](#i-36-creator-and-embed-toolkit) exposes the index and its decks to creators and other tools through embeds and the public API. Until a partnership lands, the corpus is small. Any statistic computed from deck populations needs its sample size disclosed, and simulated statistics are the only ones not limited by corpus size.
 
@@ -1624,6 +1704,8 @@ On 2026-11-09 the owner named a marketplace "recognised like Cardmarket or TCGpl
 | 5     | Pilot marketplace: professional sellers, funds held by a licensed provider | A build spec after the owner's "go" | **Reversed** |
 | 6     | Open player-to-player marketplace with a delivery guarantee                | After a stage-5 review              | Reversed     |
 
+[I-44](#i-44-trade-lists-within-the-pod-and-nearby-players)'s trade lists and [I-45](#i-45-selling-spare-cards-collection-value-buylists-and-seller-exports)'s seller exports add no stage: they sit beside stages 1 to 4, and no money passes through the product.
+
 ### Scope
 
 - [ ] The owner confirms or edits the proposed gate thresholds and metric definitions as the first decision-log entry, before any measuring starts (slice 0).
@@ -1663,8 +1745,9 @@ The decision log holds dated gate reviews whose figures a second person can reco
 ### Scope
 
 - [ ] One index policy (`index`, `noindex` or absent) that page metadata and the sitemap both call; commander discovery pages below threshold and profiles with no public deck become `noindex` and leave the sitemap; sitemap entries gain `x-default`; a test keeps the two public-path lists equal (slice 1).
-  - Today `/commanders/[slug]/decks` answers HTTP 200 with its empty state, a canonical and no `noindex` for any slug, including one that names no card (`src/app/[locale]/commanders/[slug]/decks/page.tsx`), and the sitemap lists a commander as soon as one public deck names it. A fix is in flight (`fix/public-rules-pages-and-unknown-commanders`, not merged).
-- [ ] Make `/rules/game-changers` public with alternates and localized metadata, and `/rules/comprehensive` public but `noindex`, since it reproduces Wizards' text (slice 2). Both are missing from the public-path lists today; see I-28.
+  - Before #1313, `/commanders/[slug]/decks` answered HTTP 200 with its empty state, a canonical and no `noindex` for any slug, including one that names no card (`src/app/[locale]/commanders/[slug]/decks/page.tsx`). The sitemap still lists a commander as soon as one public deck names it.
+  - [x] An empty commander listing is `noindex` with no canonical or alternates, a slug no commander name can produce answers the 404 page without calling the API, a failed discovery request goes to the retryable error page, the sitemap drops such slugs, and the two public-path lists became one module, `src/lib/auth/public-paths.ts` (#1313). The shared index policy, `noindex` profiles with no public deck and `x-default` in the sitemap remain open.
+- [ ] Make `/rules/game-changers` public with alternates and localized metadata, and `/rules/comprehensive` public but `noindex`, since it reproduces Wizards' text (slice 2). #1313 made both public; their alternates, localized metadata and the Comprehensive Rules `noindex` remain open.
 - [ ] A versioned methods page with one anchor per metric, a citation line and a corpus section (slice 3).
 - [ ] A report framework with permanent URLs, dated errata, `Dataset` markup, and CSV and JSON downloads with checksums (slice 4).
 - [ ] "Commander Opening Hands", first edition, from the seeded simulation and reproducible from its seeds and commit, then five bracket pages with opening-hand norms linked to the I-28 guide (slices 5–6).
@@ -1784,7 +1867,7 @@ The owner wants an editor "more beautiful and more complete than Moxfield". Arch
 - [ ] Text and Table views, and main-deck multi-select with bulk category, zone and removal (slices 8–9).
 - [ ] A change record written in each mutation's transaction, automatic snapshots before restores and bulk edits, a history view, revert and redo (slices 10–11).
 - [ ] Finish, language, date added and Oracle identity on deck cards (slice 12). `DeckCard` has none of them today (`prisma/schema.prisma`), and I-06, I-10 and I-32 depend on them.
-- [ ] Custom categories, deck and global tags, card-panel controls, bulk edit as one diff-and-apply transaction, a cross-deck clipboard and Scryfall function tags (slices 13–18). The I-01 bulk-edit fix in flight stops the data loss first.
+- [ ] Custom categories, deck and global tags, card-panel controls, bulk edit as one diff-and-apply transaction, a cross-deck clipboard and Scryfall function tags (slices 13–18). The I-01 bulk-edit fix, #1314, stopped the data loss first.
 - [ ] Read-only Stacks and Text on public pages, the validation pass with a side-by-side review, and a split primer editor (slices 19–21).
 
 ### Engineering enablers
@@ -1802,12 +1885,364 @@ On the 100-card fixture, a player switches among five views, collapses groups, t
 
 ---
 
+# Trust, Growth And The Physical Table
+
+I-38 to I-46 were added on the evening of 2026-11-09, from dated research that each spec links, because its notes are not committed. They cover what a public, paying product owes its users (I-38), how a new player reaches a first deck and how that is counted (I-39), the phone and the store (I-40, I-41), the Commander variants (I-42), the physical cards a player stores, trades and sells (I-43 to I-45), and the chat rooms where pods and creators meet (I-46). I-38 and I-39 are Next, I-42 is Next for slices 1 to 6 and I-46 for slices 1 to 3, and the others are Later with cheap early slices named. The rules of the previous part hold: card data, fan content and evidence stay free, each initiative names its paid-tier candidate and leaves the decision to I-30, legal points are research and not legal advice, and none of them holds money, cards or shipments.
+
+---
+
+## I-38: Trust, Safety And User Rights
+
+**Spec:** [`specs/i38-trust-safety-and-user-rights.md`](specs/i38-trust-safety-and-user-rights.md)
+
+**Outcome:** a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+**Status:** Next — proposed 2026-11-09
+**Priority:** Next. A launch gate for I-30's paid tier (its slice 7 changes account deletion, and a paid plan needs terms and a privacy policy) and for any public growth
+**Impact / effort:** High / large
+**Depends on:** the owner's identity fields for the legal notice; counsel's written answers, added to I-30's slice 0, for the final wording of the terms and privacy policy and before the email sender and the retention job.
+
+MagicAIBuilder shows public decks, primers, comments, reviews, profiles, packages and share links at its users' request, so in EU terms it is an online platform ([DSA Art. 3](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022R2065)). As a micro enterprise it escapes most of the platform section, but every host owes points of contact, terms that describe moderation, a notice-and-action mechanism, a statement of reasons for each restriction and reports of threats to life to the police (Arts. 11–18). France adds the LCEN legal notice and Arcom as supervisor since May 2024, and the GDPR adds access, portability and erasure within a month. Today a public deck can be reported and a moderator can mark the report reviewed. Nothing else exists: no legal page, no export, no deletion button, no block and no statement of reasons. No deckbuilder read publishes a DSA contact, a notice form or a statement of reasons, and none documents a full account export. TappedOut sold the removal of comments from one's own decks in 2013; here every safety and rights control is free.
+
+### Scope
+
+- [ ] Slice 0, no code: counsel's written answers to the spec's lawyer questions, added to I-30's slice 0.
+- [ ] A legal notice and a DSA contact page in French and English, linked from every footer (slice 1).
+- [ ] End the session when an account is deleted, with a 7-day tombstone and a regression test that replays a still-valid JWT (slice 2, first). Today `DELETE /api/user/profile` (`src/app/api/user/profile/route.ts`) does not sign out, and `resolveAuthenticatedUser` (`src/lib/auth/helpers.ts`) re-creates the deleted user from the token's email on the next request. A fix is in flight (`fix/deleted-account-stays-deleted`, not merged); I-05 records the same defect.
+- [ ] Apply the deletion cascade of the spec's table 6.4 (slice 3). Today `DeckComment.parent` cascades (`prisma/schema.prisma`), so deleting an account deletes every reply other players wrote under its comments, and `DeckReport` cascades from its reporter, so the reports the user filed disappear with their decisions. Replies must survive under a cleared comment, forks must show a neutral label, and reports and decisions must stay, anonymised.
+- [ ] A full JSON export with a versioned schema and a guard test, then a Settings → Account page that downloads it and deletes the account after re-authentication (slices 4–5).
+- [ ] A privacy policy rendered from the retention constants and listing every processor, and terms with moderation rules and a minimum age, accepted and recorded at signup (slices 6–7). Today `src/instrumentation-client.ts` records Sentry Session Replay for 1% of all sessions and every session with an error, and prompts go to Anthropic with OpenAI as fallback (`src/app/api/ai/build/route.ts`, `src/app/api/ai/suggest/route.ts`); none of this is disclosed, because no privacy page exists. [I-39](#i-39-first-run-activation-and-product-measurement) slice 4 sets random-session replay to zero.
+- [ ] Return only the fields the share view needs from `GET /api/share/[token]`. `src/app/api/share/[token]/route.ts` returns the whole deck row minus the token, `userId`, `budget` and `manualBracket` included. A fix is in flight (`fix/share-link-field-allowlist`, not merged); I-08 records the same item.
+- [ ] A generic `Report` for every public item with a signed-out notice form and an acknowledgement, then hide, restore and posting restrictions filtered from every public surface (slices 8–9).
+- [ ] Statements of reasons to the author and the notifier, a police-referral action and appeals within six months (slices 10–11).
+- [ ] Block, a per-deck comment switch, and rate limits on comments and reviews (slice 12).
+- [ ] After slice 0: a transactional email sender with an exit path, a daily retention job with a dry run, and email copies of statements of reasons (slices 13–15).
+
+### Engineering enablers
+
+- A deletion test seeds a user with every relation and asserts each row of the cascade table; a request with the deleted user's valid JWT returns 401 and creates no user.
+- A guard test fails when a Prisma model with a `userId` is neither exported nor listed as excluded.
+- A hidden item is absent from the public deck page, the profile, community lists, the share link and `/api/v1`, and its author still sees it.
+- Each retention period lives in one constant that the job and the privacy policy both read.
+
+**Paid-tier angle:** none. Export, deletion, reporting, blocking, comment controls and appeals are free on every plan, and expiry or downgrade never limits them, extending I-30 requirement 1.2. Its value to I-30 is trust: a cheap subscription is easier to sell when leaving is easy and documented.
+
+### Definition of done
+
+A deleted account stays deleted on every device after its owner could download all of it, and other players' replies survive; every public item can be reported signed in or out, and every restriction reaches its author with a statement of reasons and a route to appeal; the legal notice, DSA contact, terms and privacy policy are public, versioned and name every processor.
+
+---
+
+## I-39: First Run, Activation And Product Measurement
+
+**Spec:** [`specs/i39-first-run-activation-and-measurement.md`](specs/i39-first-run-activation-and-measurement.md)
+
+**Outcome:** a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+**Status:** Next — proposed 2026-11-09
+**Priority:** Next
+**Impact / effort:** High / medium
+**Depends on:** I-38's privacy policy and the lawyer questions of slice 0 before the event store; I-17 slice 2 for official precon samples; I-30 slice 1 for AI usage; I-05's tool decision before any page analytics.
+
+I-30 needs evidence before a price, and today none of it can be counted: there is no event store, no activation definition and no retention view. The first run also loses players the product already won: a modal covers the landing page, and a guest who builds a deck and then signs up lands on an empty deck list. The readable references, EDHREC, Archidekt and ManaBox, let a visitor start without an account, and the [Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy) forbids requiring "email registration to access your Fan Content". The CNIL exempts audience measurement from consent only under strict conditions and names no product, and PostHog Cloud EU's own documentation asks for consent. So measurement stays first-party, written by the app's own routes, with an allowlist of seven events and an opt-out. No conversion, activation or retention figure for any MTG tool was found.
+
+### Scope
+
+- [ ] Stop the onboarding modal opening on public pages and correct its two wrong lines (slice 1). Today `OnboardingWizard` (`src/components/onboarding/OnboardingWizard.tsx`) mounts on every `[locale]` page through `src/app/[locale]/providers.tsx`, the landing and public deck pages included, and `src/messages/en/onboarding.json` points to a "New Deck" button the landing navbar lacks and to an AI wizard a guest cannot open.
+- [ ] Keep a guest's deck at sign-up (slices 2 and 6). Today `SignUpForm` (`src/components/auth/SignUpForm.tsx`) ignores `callbackUrl` and sends both sign-up routes to `/decks`, and nothing copies the guest deck from the browser into the account, so the new account starts empty. Slice 2 honours a same-origin `callbackUrl` and says honestly that the deck stays in the browser; slice 6 offers to save the guest deck and clears the local copy only after the server confirms.
+- [ ] Tell a guest that AI suggestions need an account (slice 2). Today `useAISuggestions` (`src/hooks/useAISuggestions.ts`) shows the raw `AI request failed (401)` in the guest builder.
+- [ ] Delete `GET /api/templates` or make it return real rows only (slice 3). Today `src/app/api/templates/route.ts` returns two hard-coded templates for any commander, with invented authors ("CommunityBuilder", "TopPlayer") and upvote counts.
+- [ ] Set Sentry's random-session replay to zero, keep error replays with explicit masking, and keep tokens, usernames and query strings out of URLs sent to third parties (slice 4). Today `src/instrumentation-client.ts` sets `replaysSessionSampleRate: 0.01`, and neither the replay nor the AI providers are disclosed; I-38 slice 6 discloses them.
+- [ ] An inline first-run panel and empty states that offer import and a sample deck, landing starts that work signed out, interim sample decks and a first-build checklist computed from the deck's state (slices 5, 7–9).
+- [ ] A first-party event store: seven allowlisted events, one activity row per account per day, guest counters with no identifier, an opt-out that deletes past rows, and a 25-month fold into cohort aggregates (slice 10).
+- [ ] Instrumentation, then an owner-only activation view with n and 95% intervals (slices 11–12).
+- [ ] I-30's evidence: 30-day active accounts, AI calls per active account, use of each paid candidate's free version, and one opt-in survey (slice 13).
+- [ ] An experiment protocol: a dated file per experiment, a sample size fixed in advance, and significance read only at the planned end (slice 14).
+
+### Engineering enablers
+
+- A schema test rejects any event property that is free text, an email-shaped value, a URL or an unknown key; no measurement row or log line holds an email, name, IP address, user agent, card list or URL.
+- No third-party analytics script, pixel or SDK loads, and `script-src` gains no host.
+- A config test asserts that `replaysSessionSampleRate` is 0 and that masking is explicit.
+- A denominator under 30 renders as a count, not a rate.
+
+**Paid-tier angle:** nothing here is paid. Its use to I-30 is evidence: it turns I-30's audience and cost assumptions into counts before a price is set. Interest in a future paid feature is asked through a labelled survey, never through a control for a feature that does not exist.
+
+### Definition of done
+
+A fresh visitor builds, checks, playtests and exports with no modal and no account and keeps the deck on signing up, and the owner reads weekly activation and retention, with n and intervals, from rows that hold nothing personal beyond an account id.
+
+---
+
+## I-40: Installable App, Phone-First Use And Card Scanning
+
+**Spec:** [`specs/i40-installable-app-and-card-scanning.md`](specs/i40-installable-app-and-card-scanning.md)
+
+**Outcome:** a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+**Status:** Later — proposed 2026-11-09
+**Priority:** Later, with a no-regret first part (installability and phone journeys, slices 1 to 5) that can ship now
+**Impact / effort:** Medium / medium for slices 1–5; large for scanning
+**Depends on:** nothing for slices 1–5. Scanning needs I-06 printing-level ownership, I-26 slice 3's staged commit, the benchmark and Scryfall's answer (slices 6–7), and the owner's go decision.
+
+Players build and check decks on their phones, at the table and at the store. Today the site has no manifest, no home-screen icon and no phone-sized test, and a security header blocks the camera on every page. Installing as a web app is cheap: Safari 26 opens every home-screen site as a web app, and Chrome needs a manifest but no service worker. Scanning is different. In our count of the 250 most recent US App Store reviews per app, 57 of ManaBox's 82 reviews at three stars or fewer mention scanning, and Dragon Shield and TCGplayer draw the same complaints: sleeved and foil cards, the wrong printing, slow confirmation. No published accuracy figure for a browser-based Magic scanner was found. Single scans are mostly free elsewhere; what is sold is quantity or bulk.
+
+### Scope
+
+- [ ] A manifest with PNG, maskable and apple-touch icons, theme colours from the Lumen tokens, `viewportFit: "cover"`, `appleWebApp` and localized shortcuts, reachable without a session and guarded by a test (slice 1).
+- [ ] Safe-area insets on the builder's bottom bar and the header, an in-app way back on journey screens, and external links that open outside the app window (slice 2).
+- [ ] An install help page in English and French, with no automatic prompt (slice 3).
+- [ ] Mobile WebKit and mobile Chromium Playwright projects running `@phone` journeys in the Docker gate, a Lighthouse mobile run, and a real-device checklist for staging (slices 4–5).
+- [ ] Allow the camera and WebAssembly on the scan route only (part of slice 9). Today `src/lib/security-headers.ts` sends `Permissions-Policy: camera=()` on every route, and `src/lib/security-headers.test.ts` asserts it, so `getUserMedia` fails; the production CSP has no `'wasm-unsafe-eval'`, so in-browser recognition would load in development and fail in production. Every other route keeps `camera=()`.
+- [ ] A recognition benchmark under `scripts/research/` on at least 300 photos of real cards, Scryfall's written answer on an index derived from its images, and the owner's recorded go or no-go (slices 6–7). No scanning code enters `src/` before all three.
+- [ ] After a go: an index built from Scryfall bulk data, a signed-in scan route that stages rows through I-26 with "camera scan" provenance and never picks a printing silently, then bulk mode and server help (slices 8–12).
+
+### Engineering enablers
+
+- Every icon the manifest names exists at its stated size, read from the PNG header.
+- The security-header test denies the camera on every route except the scan route.
+- On the scan route, request interception shows that no image leaves the device unless the player accepted server help for that batch.
+
+**Paid-tier angle:** installability, the phone journeys and single on-device scans stay free and unlimited; single scans cost the server nothing. Bulk mode and server help are I-30 candidates because they save time or cost money to run. Whether a paid tool fits the Fan Content Policy and Scryfall's no-paywall rule is I-30's legal question.
+
+### Definition of done
+
+The app installs on iOS and Android, and the phone journeys pass in mobile WebKit and Chromium on every push and on two real devices before promotion. For scanning, either the owner's go decision and a published benchmark exist, or scanning stays a recorded non-goal.
+
+---
+
+## I-41: Store Commander Nights And Organiser Tools
+
+**Spec:** [`specs/i41-store-commander-nights.md`](specs/i41-store-commander-nights.md)
+
+**Outcome:** an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+**Status:** Later — proposed 2026-11-09
+**Priority:** Later, with a cheap early part: the pairing policy and an account-free pod planner (slices 1 and 2) need no schema and store no personal data
+**Impact / effort:** Medium / medium
+**Depends on:** stores' demand, measured on the planner and asked of two stores, one French, before slice 3; I-15 for declarations and pod sheets; I-35 slice 6 for logging; I-36 slice 1 for public decks; I-38 slices 6 and 8; I-30 for the store plan.
+
+Wizards EventLink records who came and forms no pods: for Commander "no pairings or match results are required", and Player List Only events "do not generate pairings". Pod pairing was requested in 2021, and Wizards answered that each community defines a Commander event differently. Stores pair by hand, in WhatsApp, with a browser extension, or pay TopDeck.gg $12 a month for pods, check-in and a store page. DeckCheck checks store lists against a bracket for free but forms no pods. No tool found pairs a night's pods by declared and estimated bracket. MagicAIBuilder already holds the deck and a deterministic bracket estimate. EventLink deletes a guest's name after 24 hours, and this initiative applies the same rule. It builds neither a tournament manager nor a venue directory, and it owns the store pairing that I-15 leaves out.
+
+### Scope
+
+- [ ] `formPods`, a pure function with allowed pod sizes, a maximum bracket spread, dedicated brackets, play-together groups and a deterministic tie-break, tested against a brute-force optimum (slice 1).
+- [ ] An account-free pod planner that prints pods and sends no label over the network (slice 2).
+- [ ] Stores with owner and staff roles, a "not verified" label and `noindex` until verified; nights with a check-in window, capacity, house rules and a rotating QR token (slices 3–4).
+- [ ] Account check-in that freezes the deck version, the declared bracket and the estimate with its method, and guest check-in with a display name only, the GDPR Art. 13 notice and a purge 24 hours after the night (slices 5–6). `Deck.targetBracket` is never read as a declaration.
+- [ ] An organiser screen with rounds, manual moves, latecomers, a waiting list and a "talk before the game" prompt at a gap of two brackets, then a public night page through I-36's public projection; a night creates no share link (slices 7–8).
+- [ ] Consented I-15 sheets per pod, logging a game through I-35, and store verification with reports through I-38 (slices 9–11).
+- [ ] Store-private history and a pod-health report, then store-plan entitlements after I-30's decision (slices 12–13).
+
+### Engineering enablers
+
+- The same input gives the same pods, and total spread equals a brute-force optimum on fixtures of up to 12 entries.
+- Past the purge time no response holds a guest's name, and a guest request carrying an email is refused.
+- The public check-in endpoint is rate-limited per night and per network address across instances, not by today's per-instance memory store.
+
+**Paid-tier angle:** players never pay: check-in, pods, sheets, logging, the planner and a store page stay free. Candidates are store tools over the store's own nights: recurring templates, history across nights, a pod-health report, extra staff seats, branded posters and a CSV export without guest names. The spec estimates €8 to €12 a month, anchored on TopDeck.gg's $12, the only public comparable found; I-30 decides.
+
+### Definition of done
+
+At a night, every checked-in player sits in a pod of an allowed size within the night's bracket spread or waits with a stated reason, the public page shows declared brackets only, and no guest name survives 24 hours after the night ends.
+
+---
+
+## I-42: Commander Variants: Duel Commander, cEDH, Pauper Commander And Others
+
+**Spec:** [`specs/i42-commander-variants-duel-cedh-pauper.md`](specs/i42-commander-variants-duel-cedh-pauper.md)
+
+**Outcome:** a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
+
+**Status:** Next — proposed 2026-11-09
+**Priority:** Next for the format picker, legality and Duel Commander (slices 1 to 6); Later for the other variants
+**Impact / effort:** High / medium
+**Depends on:** the Duel Commander Rules Committee's answer on the mulligan before slice 3 ships; I-28 slice 2 for bracket 5 and the cEDH link-outs.
+
+The roadmap lists nine formats as a completed foundation, but no screen lets a player choose one, and Duel Commander data already reaches Commander decks. Duel Commander is a 1v1 variant at 20 life, with its own committee and a banned list of 80 cards in the deck and 27 as commander only, last updated 2026-07-27. MTGTop8's 20 latest Duel Commander events came from ten countries and online play, France included. Scryfall already encodes most variants, but it uses `restricted` for "banned as commander" in `duel` and for one copy in Vintage. The committee's former site, mtgdc.info, now announces AeonShift, and the committee says that site is no longer official, so a product must name the right source. No French-language deckbuilder found checks Duel Commander legality, and no competitor page read states the date of the list it applies.
+
+### Scope
+
+- [ ] A format picker at creation and in deck settings; switching re-validates and removes no card (slice 1). Today `src/components/deck/FormatSelector.tsx` is never rendered and `createDeck` sends no format, so every deck created in the app is a Commander deck. Duel Commander lists from the MTGTop8 meta panel (`src/lib/meta/mtgtop8.ts`, `src/components/deck/MetaPanel.tsx`) and Moxfield `duel` imports (`src/lib/import/url-import.ts`) land in those decks, with the multiplayer banned list, 40 life and the free mulligan.
+- [ ] Legality computed on the server from Scryfall at each deck load, with a per-format meaning for `restricted` and the fetch date shown; a client-sent `isBanned` is never trusted (slice 2).
+- [ ] A Duel Commander format: 100 cards, 20 life, no free mulligan, no bracket scoring or Game Changer toast, and banned-as-commander cards excluded from the commander picker (slice 3).
+- [ ] One commander cast from the command zone per game with two commanders, and imports and meta labels that offer a Duel Commander deck instead of adding its cards silently to a Commander deck (slices 4–5).
+- [ ] A source register that names duelcommander.org, and a scheduled drift check against Scryfall that marks a list "under review" on a mismatch (slice 6).
+- [ ] Later: a player-count choice in the playtest, which closes I-07's follow-up from #1301; the Brawl split; Oathbreaker; Pauper Commander; ban notices on saved decks; cEDH link-outs; Canadian Highlander; and Tiny Leaders, parked on demand (slices 7–14).
+
+### Engineering enablers
+
+- Golden legality fixtures per variant: Lumra as a Duel Commander commander is an error and is legal in the 99; Sol Ring is banned in Duel Commander and legal in Commander.
+- A table-driven test maps `restricted` for each format and fails when a new Scryfall key appears without a mapping.
+- The drift check runs on recorded fixtures in CI and against the live pages only on schedule.
+- Every format label and legality message exists in English and French, and no model decides or explains a verdict.
+
+**Paid-tier angle:** every verdict and its list date, the picker, variant life and mulligan, and banned-list pages stay free. Candidates are an automatic watch over a player's saved decks for bans and unbans, which joins I-18's candidate, and personal Duel Commander matchup statistics from the player's own I-35 logs, never from TopDeck.gg data.
+
+### Definition of done
+
+A player creates a Duel Commander deck, sees each verdict with its list and date, cannot put a banned-as-commander card in the command zone, and playtests at 20 life with no free mulligan; no Duel Commander list lands in a Commander deck unless the player chooses it.
+
+---
+
+## I-43: Physical Collection: Storage Places, Deck Boxes And Pull Lists
+
+**Spec:** [`specs/i43-physical-collection-storage-and-pull-lists.md`](specs/i43-physical-collection-storage-and-pull-lists.md)
+
+**Outcome:** a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
+
+**Status:** Later — proposed 2026-11-09
+**Priority:** Later. The deck-box path (slices 1 to 5) needs no collection import and can be promoted on its own; binders and boxes at scale wait for I-26 slice 3
+**Impact / effort:** Medium / medium
+**Depends on:** nothing for slices 1–5; I-26 slice 3 for places in a collection import; I-19 slices 3 and 4 for offline labels; I-30 for the two paid candidates.
+
+[I-16](#i-16-decks-buildable-from-a-collection) answers which deck a copy belongs to; nothing answers where the copy is. A player with twenty decks and a few binders finds a card from memory. EchoMTG shipped Locations on 2026-06-17, and Grimoria links a deck to its box; both flag drift between a deck and its box. Players on r/Moxfield ask for the binder a card sits in, an "In Use" mark and the cards they play most across decks; every software request scored under 10 points, so the evidence is many small requests. No product found builds a pull list ordered by place, a put-back list or a plan across several decks for one night. EchoMTG charges for nesting from $4 a month; here nesting stays free.
+
+### Scope
+
+- [ ] Schema for storage places, placements and moves, with one write module that keeps placed copies at or below the owned quantity under a row lock (slice 1).
+- [ ] Places that nest up to five levels, with sort orders, deletion that moves contents, and a computed Unplaced (slice 2).
+- [ ] Placing copies one row at a time or in bulk, quantity decreases and printing merges that keep placements consistent, and "Stored in" next to "Used in decks" (slice 3).
+- [ ] Deck-box pairing, the box state on the deck page, and "put this deck in its box" with a preview (slice 4).
+- [ ] A read-only pull list ordered by place, confirmed as moves with undo (slice 5).
+- [ ] The put-back list and dismantling, misplaced-card and contention warnings, and cards across decks with a "built decks only" acquisition scope (slices 6–8).
+- [ ] Deck-box labels with a QR code to a revocable `/b/<token>`, disallowed in robots and `noindex`; offline labels through I-19; a place column in the collection export and later its import (slices 9–12).
+- [ ] After I-30's decision: a game-night planner across several decks, and a move-history timeline (slices 13–14).
+
+### Engineering enablers
+
+- Two concurrent moves of a row's last Unplaced copy let exactly one through.
+- The pull list, put-back list, warnings and cross-deck view write nothing, asserted against the Prisma client.
+- `/b/<token>` reveals no deck name to anyone but the owner unless the owner turns on "label opens the shared deck".
+
+**Paid-tier angle:** places, nesting, pairing, single-deck pull and put-back lists, warnings, cross-deck views, labels and exports stay free. Candidates are the game-night planner, which settles contention between several decks for one night, and the move-history timeline; the moves themselves are stored and exported free for everyone. EchoMTG sells its move history on the $12 Pro plan.
+
+### Definition of done
+
+A player pairs a deck with its box, pulls the missing cards in place order, puts back what the deck no longer needs, and no placement ever exceeds the copies owned.
+
+---
+
+## I-44: Trade Lists Within The Pod And Nearby Players
+
+**Spec:** [`specs/i44-trade-lists-within-the-pod.md`](specs/i44-trade-lists-within-the-pod.md)
+
+**Outcome:** a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+**Status:** Later — proposed 2026-11-09
+**Priority:** Later, with a cheap early part: private lists, share links, the balance view and the friends audience (slices 1 to 7) need no I-38 work and collect no new personal data
+**Impact / effort:** Medium / large
+**Depends on:** I-15 pods for the pod audience; I-38's block, reports and legal pages before proposals and the wider audiences; I-41 check-in for the store audience; I-16 slice 4 for free copies; lawyer answers before slice 12.
+
+Commander players trade with the people they play with, and a deckbuilder already knows the two facts a trade needs: the cards each deck still lacks and the copies no deck uses. No product read builds wants from a deck's missing cards or haves from unused copies. Where a price was stated, lists and a value comparison are free (SuperSwap, Dragon Shield, EchoMTG up to $50 a trade); TappedOut charges $5 once to start a trade request. Nearby matching has a cold-start problem: SuperSwap's users in Rouen, the Paris region and a town of 50,000 found few or no players near them. Trade lists also lead towards a marketplace: CardNexus announced its marketplace in the same post as its trade lists. So the pod and friends come first and nearby players last, and the spec stays below the marketplace line.
+
+### Scope
+
+- [ ] Private have and want lists with three strictness levels, pasted and exported in the deck text format (slice 1). "Any printing" matches by English name until Oracle identity is stored: I-37 slice 12 for deck cards, I-06 for collection rows.
+- [ ] Fill a have list from the collection and a want list from the acquisition plan, with a preview (slice 2).
+- [ ] A share link and QR code with an allowlisted public page, `noindex` and a robots rule (slice 3), and a balance view in USD or EUR from Scryfall's dated prices, with no account needed and no conversion (slice 4).
+- [ ] "Compare with mine", a friends audience of mutual follows, and trade-first marks on the acquisition plan (slices 5–7).
+- [ ] A pod audience, then structured proposals between friends and pod members, with no free text, a 7-day expiry and a 30-day purge (slices 8–9).
+- [ ] Reports for lists and proposals and a free-copies mode, then, after the lawyer answers, an adult declaration with a city opt-in, a store audience and on-demand nearby matches behind a density gate (slices 10–14).
+- [ ] Confirmed-partner bands instead of ratings (slice 15), and a continuous match watch only after I-30's decision (slice 16).
+
+### Engineering enablers
+
+- A schema test fails when a trade model gains a text column another player can read.
+- No route returns another player's city outside a nearby match, and opting out deletes the row in the same transaction.
+- The balance module holds no exchange rate.
+- A list shared with one pod is unreachable from another pod, from a signed-out request and from `/api/v1`.
+
+**Paid-tier angle:** lists, sharing, the balance view, matching within friends, pods and stores, on-demand nearby matching, proposals, safety and blocking stay free. The one candidate is a continuous match watch with a digest, and the spec rates the evidence for it weak, because SuperSwap and EchoMTG alert for free. A paid plan never changes who sees a list, the order of matches or the limits.
+
+### Definition of done
+
+Two players in one pod see each other's matching cards, total both sides at the day's price, and agree a swap for their next game; no field another player can read holds typed text, and no asking price, payment or address is stored.
+
+---
+
+## I-45: Selling Spare Cards: Collection Value, Buylists And Seller Exports
+
+**Spec:** [`specs/i45-selling-spare-cards.md`](specs/i45-selling-spare-cards.md)
+
+**Outcome:** a player sees which owned copies no deck uses and their estimated value in a chosen market, with source and date, and exports them in a file that Card Kingdom or Cardmarket's tools accept; the sale happens on the buyer's site.
+
+**Status:** Later — proposed 2026-11-09
+**Priority:** Later, with a no-regret first part (slices 0 to 3) that may be pulled forward
+**Impact / effort:** Medium / medium
+**Depends on:** I-32 slices 2 and 3 for the market choice and dated prices (slice 4); I-16 slice 4 for one commitment index; I-06 for per-copy condition and the etched finish; Card Kingdom's written permission, I-30's legal gate and a feed contract for the paid candidates.
+
+Players own more copies than their decks use, and nothing in the product works in the selling direction: I-32 sends what a deck needs to a seller, not what the player could sell. Bulkwise (2026-09-20) prices a CSV and exports a Card Kingdom sell file for free, and Archidekt exports to Card Kingdom's buylist; both start from a list the player already made. MagicAIBuilder knows which copies sit in which deck, so it never offers to sell a card the player is playing. Cardmarket documents no stock CSV upload and takes no new API applications, so its deliverable is a listing sheet. TCGplayer ended its buylist on 2024-07-17. Scryfall's prices are "dangerously stale after 24 hours" and not meant to "power a storefront or sales system", so no listing price is prefilled.
+
+### Scope
+
+- [ ] Spare copies, owned minus committed minus kept and never below zero, with the sideboard counted as committed by default and copies of another printing flagged as possibly in play (slice 0), and a spare view with keep marks and filters (slice 1).
+- [ ] A Card Kingdom sell CSV with an edition map, parts split at 500 lines or 5,000 cards, and a "kept, set again, unmapped" summary, after a person checks the fixture in Card Kingdom's tool (slice 2).
+- [ ] A Cardmarket listing sheet keyed by product ID and a generic CSV, with identifiers from server-side Scryfall data and never from the client-written `CardCache` (slice 3).
+- [ ] Free valuation per market and finish, dated, with unpriced copies apart, applied also to the collection's "Total Value", which today prices every copy, foils included, at `prices.usd` with no date (`src/components/collection/CollectionPageClient.tsx`) (slice 4).
+- [ ] Per-copy condition and the etched finish on collection rows (slice 5, an I-06 data change), an inventory report with its SHA-256, printable lists for shops without an upload, "remove sold copies" with confirmation, and export counts with no user column (slices 6–9).
+- [ ] Switch the spare count to I-16's commitment index once it ships (slice 10).
+- [ ] Paid candidates, each blocked on a decision: a buylist comparison against Card Kingdom's price list, value history and a snapshot archive on a licensed feed (slices 11–13).
+
+### Engineering enablers
+
+- The export and report routes make no outbound request, asserted with an HTTP mock.
+- A tampered `CardCache` entry never reaches a seller file.
+- No seller file contains a Scryfall price, and an EU-market view never shows a USD figure.
+- Exporting leaves `CollectionCard` unchanged.
+
+**Paid-tier angle:** the spare list, valuation, exports and the inventory report stay free, by Scryfall's paywall clause and the player's right to their own data. Candidates for I-30 are value history and a snapshot archive for insurance, on a licensed feed, and a buylist comparison that the spec recommends keeping free if Card Kingdom permits it. None ships before I-30's legal gate, and none sends "sell now" alerts.
+
+### Definition of done
+
+A player exports their spare copies, which never include a copy their decks use, as a Card Kingdom file and a Cardmarket listing sheet, each line valued in the chosen market with its date or listed as unpriced, and the product never handles the sale.
+
+---
+
+## I-46: Discord And Chat Integrations For Pods And Creators
+
+**Spec:** [`specs/i46-discord-and-chat-integrations.md`](specs/i46-discord-and-chat-integrations.md)
+
+**Outcome:** a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
+
+**Status:** Next — proposed 2026-11-09
+**Priority:** Next for link previews (slices 1 to 3, no bot); Later for webhook feeds and the Discord app (slices 4 to 15)
+**Impact / effort:** Medium / small for previews; medium for the app
+**Depends on:** I-36 slices 1 and 2 for the public projection and the deck image; I-38 slices 6 and 7 before the app's install link is public; I-28 slice 7 for estimated brackets; a rate limiter shared across instances (I-36 slice 11 or I-05).
+
+Playgroups, stores and creators organise Commander on Discord, and the reference sites grew partly because those communities asked for their links. Card lookup and combo search are already free in chat: Scryfall's bot, Commander Spellbook's bot and Otterly MTG, which reports "242+" servers and "28.2K+" users itself. No bot found compares a pod's decks side by side or shows a declared bracket beside an estimate with the date of its rules. A link that unfurls well needs no bot, stores no data and falls under no app policy, and today MagicAIBuilder's links unfurl poorly. A bot is a support surface: Discord's data rules apply from the first install, verification from 100 servers, and since 2024-10-07 an app that sells paid features must also sell them through Discord at no more than the web price, with Discord keeping 15% and later 30% ([Developer Policy](https://support-dev.discord.com/hc/en-us/articles/8563934450327-Discord-Developer-Policy)). So previews come first, and the app reads only the commands addressed to it. [I-23](#i-23-the-pods-own-surface) keeps account linking, consent and `/pod`.
+
+### Scope
+
+- [ ] A preview contract for every public page: full Open Graph and Twitter tags, `theme-color`, byte budgets, and a crawler path with no redirect and no cookie, under conformance tests (slice 1). Metadata must read the database directly: today `fetchPublicDeck` (`src/lib/deck/public-deck.ts`) calls the page's own API with a 15-second timeout, above Discord's 10-second budget for a whole preview.
+- [ ] Show deck previews large and credit the artist (slice 1). Today `src/app/[locale]/deck/[id]/page.tsx` sets `og:image` to the commander's Scryfall `artCropUri` with no `twitter:card`, so Discord shows only a small thumbnail, and `DeckCard` stores no artist, so the art crop reaches chat without the artist credit Scryfall requires.
+- [ ] Replace the SVG default image with a PNG (slice 1). `src/app/[locale]/layout.tsx` declares `/og-image.svg`, and Discord does not render SVG, so every page other than a deck or share page unfurls with no image.
+- [ ] Deck previews from I-36's `/og/deck/{id}` with dimensions, alt text and a version parameter, then an oEmbed author line and a Discord component embed with "Open deck" and "Playtest" buttons (slices 2–3).
+- [ ] A pure chat formatter from the public projection, then deck-update feeds by channel webhook on an explicit "Publish update", at most one post per deck an hour, with the webhook URL stored encrypted (slices 4–5).
+- [ ] The Discord app: a signed interactions endpoint with no Gateway connection and no `MESSAGE_CONTENT`, server settings, shared rate limits, then `/deck`, `/bracket-check`, `/combo`, `/lineup`, `/gamenight` and `/card` (slices 6–13).
+- [ ] Install and command counters for I-39, then verification and a public install link once I-38's privacy policy and terms exist (slices 14–15).
+
+### Engineering enablers
+
+- A conformance test parses each page type's server HTML with Discord's tag rules, checks the byte budgets with long Unicode names and the image size and type, and fails on SVG.
+- One deck gives the same reply bytes twice, legality and brackets equal the web page's, and a dependency test fails if the interactions route imports the AI client.
+- A schema test fails if any column holds a Discord user id, a username, message text or a webhook URL in clear.
+- Private, deleted, share-token and missing decks get identical replies.
+
+**Paid-tier angle:** previews, oEmbed, component embeds, every command, polls and one feed per deck stay free, and no paid feature lives inside the Discord app, because it would also have to be sold through Discord. The candidates are on the web: I-41's store plan posting night line-ups to the store's server, and I-36's creator analytics counting visits from chat. The spec rates the case weak to medium. Whether webhook delivery from a paid web plan counts as a paid feature of the app is a question for the lawyer and for Discord.
+
+### Definition of done
+
+A deck link pasted in Discord shows the commander art with its artist, the name, author, declared bracket and legality, and an "Open deck" button; every public page unfurls with a PNG image; a pod runs `/lineup` on four public decks and sees the bracket spread; and a creator's server gets one post per published update with no bot installed.
+
+---
+
 # Completed Foundation
 
 These capabilities are not future bets. They are part of the product baseline:
 
 - Scryfall search, filters, printing selection and localized card data.
-- Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage and Pauper rules.
+- Commander, Brawl, Oathbreaker, Standard, Pioneer, Modern, Legacy, Vintage and Pauper rules. **Correction 2026-11-09:** these exist as format data (`FORMAT_CONFIG`), but no screen lets a player choose a format, so every deck created in the app is a Commander deck; see [I-42](#i-42-commander-variants-duel-commander-cedh-pauper-commander-and-others).
 - Deck CRUD, snapshots, annotations, tags, import/export and sharing.
 - Commander pairing, Ikoria Companion, Sideboard and Considering zones.
 - Bracket scoring, Game Changers, banlists, mana alignment and deck statistics.

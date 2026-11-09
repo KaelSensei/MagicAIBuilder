@@ -9,6 +9,49 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-11-09: Bulk edit saves only what changed
+
+- Saving a bulk edit no longer rebuilds the deck. Lines whose quantity did not change keep their rows, printings, categories and notes; more copies go on a line's first row and fewer come off its last rows; new lines are looked up and added. The whole change set, command zone included, is applied in one transaction by the new `PATCH /api/decks/[id]/cards`, which answers 409 on a stale row and writes nothing. An unknown name blocks the save and is named, and invalid partner or companion lines are refused instead of dropped. The guest deck applies the same change set in the browser (#1314).
+- The two required Reds were observed before any production change, and each later behaviour had its own cycle. On the tip rebased onto `dev` at `61792c1`, typecheck, lint and 3,691 unit tests across 361 files passed, and the pre-push Docker E2E gate passed on push; Sonar was left to CI. Not checked in a browser or against a real Postgres. A printing typed in the text is still not applied; that is I-37's.
+
+### 2026-11-09: Public deck fields, public rules pages and commander pages out of the index
+
+- `GET /api/deck/[id]` serves every viewer but the owner through an explicit field allowlist (`PUBLIC_DECK_SELECT`), so the owner's budget, folder, manual bracket, sharing settings, user id and card notes no longer reach the public. The owner's view is unchanged, and the response types derive from the allowlist (#1312).
+- `/rules/game-changers` and `/rules/comprehensive` open for signed-out visitors, and the public page paths now live in one module that the middleware and the auth callback share. An empty commander listing is `noindex` with no canonical; a slug no commander name can produce answers the 404 page; a failed discovery request shows the retryable error page; the sitemap drops such slugs (#1313).
+- Each behaviour was observed red first. On tips rebased onto `dev` at `61792c1`, typecheck, lint and the unit suite passed (3,673 tests across 357 files for #1312, 3,677 across 358 for #1313), and the pre-push Docker E2E gate passed on push; Sonar was left to CI. Neither was checked in a running app. The rate limit on `GET /api/deck/[id]`, the share-link route and the rules pages' metadata remain open.
+
+### 2026-11-09: Native undo in text fields and a rolled-back commander save
+
+- Ctrl/Cmd+Z in a card note, the search bar or another text field is left to the field's own undo instead of undoing the last deck change. Checkboxes and other controls keep deck undo, and the other shortcuts are unchanged (#1309).
+- When saving a new commander or clearing it fails, the editor restores the previous commander, partner and pairing type and shows an error. A commander whose deck record was saved, a newer choice and a partner picked meanwhile are kept (#1297).
+- #1309: six Reds, then typecheck, lint, 3,645 unit tests across 350 files and the pre-push Docker E2E gate (74 + 8) passed; not verified in a real browser. #1297: four Red/Green cycles, then typecheck, lint, 3,515 unit tests across 345 files and the pre-push Docker E2E gate (74 + 8) passed. Sonar was left to CI for both. The off switch for single-character shortcuts remains open.
+
+### 2026-11-09: Stop impersonating moxfield.com and explain Moxfield refusals
+
+- The Moxfield deck and profile imports go through one client that sends the app's own User-Agent and no `Origin` or `Referer` set to moxfield.com. A 403, a 429 or an HTML page becomes a typed refusal (HTTP 422), logged once as a warning and never retried, and the player is told to paste the list in the Plain Text tab; the profile panel hides Retry for a refusal. `docs/product/import-moxfield.md` no longer advises browser-like headers (#1304).
+- A live probe on 2026-11-09 at 10:41 UTC, with honest headers, got HTTP 403 from both Moxfield endpoints, so Moxfield URL import now shows the paste instructions unless production gets another answer. Thirteen Reds were observed. Typecheck, lint, 3,530 unit tests across 350 files (on the previous base, with the 61 affected files rerun after the rebase), Prettier and the pre-push Docker E2E gate (74 + 8) passed; Sonar was left to CI. Whether to ask Moxfield for API access is the owner's decision.
+
+### 2026-11-09: Changelog catch-up and the I-30 to I-37 roadmap
+
+- The changelog records every PR merged from #1111 to #1302, and the progress file's metrics are recounted (#1306).
+- The roadmap gains I-30 to I-37 and their specs from a dated pass on the owner's goals: the business model and paid tier, Deck Lab, seller hand-off, the marketplace ladder, data reports, a pod game log, a creator toolkit and editor depth. The competitive landscape gains section 10 (#1308).
+- Documentation only. #1306: Prettier clean, every PR from #1111 to #1302 found in the new block by a script, and the pre-push Docker E2E gate passed on the retry (74 + 8) after the first push hit an out-of-memory kill. #1308: Prettier clean, 269 relative links and anchors checked with 0 problems, and the E2E gate script, run by hand because the worktree's husky hook was missing, passed (74 + 8).
+
+### 2026-11-09: Deal every copy and start the commander in the command zone
+
+- The playtest deals each main-deck row as many times as its quantity, stops dealing Sideboard and Considering rows, and starts the commander and partner in a new command zone in Commander, Brawl and Oathbreaker. A commander can be cast from the command zone and returned to it, and casting it no longer counts as a card seen. On a 36-land test list the dealt library grows from 79 to 99 cards, and opening hands with 0–1 land fall from 59.8% to 20.3% (#1307).
+- The Red reproduced the bug on `c4562a7`, and each later behaviour had its own Red. Typecheck, lint, 3,630 unit tests across 350 files, catalog key parity and the pre-push Docker E2E gate (74 + 8) passed; Sonar was left to CI. No E2E covers the command zone yet; commander tax and the Oathbreaker signature spell remain open.
+
+### 2026-11-09: Report AI replies cut off at the token cap
+
+- A model reply that stops at its output cap (Anthropic `max_tokens`, OpenAI `length`) is reported as a typed truncation with the provider, model and cap, logged once, instead of failing as a JSON parse error. The client still gets the route's existing error event. The suggestion cap rises from 2,048 to 4,096 tokens, and the routes no longer read the API key with a non-null assertion (#1305).
+- The first Red was observed before any production change. Typecheck, lint, 3,585 unit tests across 348 files (on `dev` at `b6056cb`) and the pre-push Docker E2E gate (74 + 8) on the rebased commit passed; Sonar was left to CI. Not run against the real providers. Per-call usage metering remains I-30's.
+
+### 2026-11-09: Stage-aware keep advice for Commander opening hands
+
+- The playtest's opening-hand panel gives keep advice from the opening-hands guide's tables: by mulligan stage, land count, cheap ramp and the deck's target bracket, with the margin and a judgment call within ±2%. Where the guide publishes no rule, the panel says so. Commander only; other formats keep the land-balance hint (#1303).
+- Each behaviour went through its own Red/Green cycle, and a test checks all 75 published cells against the guide. Typecheck, lint, 3,586 unit tests across 346 files (before the rebase onto `dev` at `49983a9`) and the pre-push Docker E2E gate (74 + 8) passed; Sonar was left to CI. Not checked in a browser.
+
 ### 2026-11-09: Queue concurrent E2E gates and clear root-owned reports
 
 - Two pre-push E2E gates started on the same machine no longer replace each other's containers: the second waits for a machine-wide lock and starts when the first exits. Report folders left behind as root by an interrupted run are cleared through a throwaway container instead of blocking every later push. `SKIP_E2E` and the CI bypass are unchanged (#1302).
