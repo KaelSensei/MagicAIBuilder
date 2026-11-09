@@ -1,14 +1,52 @@
 import { afterEach, expect, it, vi } from "vitest";
+import type { PublicCard, PublicDeck } from "@/lib/deck/public-deck";
 
 const fetchPublicDeck = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/deck/public-deck", () => ({ fetchPublicDeck }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); } }));
+vi.mock("next-intl/server", () => import("@/test/server-intl"));
 vi.mock("@/lib/auth/config", () => ({ auth: async () => null }));
 vi.mock("@/components/layout/Header", () => ({ Header: () => null }));
 vi.mock("@/components/profile/PublicDeckView", () => ({ PublicDeckView: () => null }));
 
 import PublicDeckPage, { generateMetadata } from "./page";
+
+const ATRAXA: PublicCard = {
+  id: "card-1",
+  name: "Atraxa, Praetors' Voice",
+  manaCost: "{G}{W}{U}{B}",
+  cmc: 4,
+  typeLine: "Legendary Creature — Phyrexian Angel Horror",
+  imageUri: "https://cards.example/atraxa.jpg",
+  artCropUri: "https://cards.example/atraxa-art.jpg",
+  category: "Commander",
+  quantity: 1,
+  isCommander: true,
+  isPartner: false,
+  isGameChanger: false,
+};
+
+const PUBLIC_DECK: PublicDeck = {
+  id: "deck-1",
+  name: "Superfriends",
+  description: null,
+  format: "commander",
+  targetBracket: 3,
+  isAIGenerated: false,
+  isOwner: false,
+  cards: [ATRAXA],
+  user: { id: "user-1", name: null, username: "kael", image: null },
+  createdAt: "2026-08-01T00:00:00Z",
+  updatedAt: "2026-08-01T00:00:00Z",
+};
+
+/** Every routed locale plus x-default, the same set on every locale's page. */
+const DECK_LANGUAGES = {
+  en: "/deck/deck-1",
+  fr: "/fr/deck/deck-1",
+  "x-default": "/deck/deck-1",
+};
 
 afterEach(() => fetchPublicDeck.mockReset());
 
@@ -20,6 +58,76 @@ it("does not label an unavailable public deck as missing in metadata", async () 
   });
 
   expect(metadata.title).toBe("Deck unavailable — MagicAIBuilder");
+});
+
+it("describes a public deck in English, canonical at its unprefixed URL", async () => {
+  fetchPublicDeck.mockResolvedValue(PUBLIC_DECK);
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "en", id: "deck-1" }),
+  });
+
+  expect(metadata.title).toBe("Superfriends by kael — MagicAIBuilder");
+  expect(metadata.description).toBe(
+    "Commander: Atraxa, Praetors' Voice · Bracket 3 · commander"
+  );
+  expect(metadata.openGraph).toMatchObject({
+    title: "Superfriends by kael",
+    description: "Commander: Atraxa, Praetors' Voice · Bracket 3",
+  });
+  expect(metadata.alternates).toEqual({
+    canonical: "/deck/deck-1",
+    languages: DECK_LANGUAGES,
+  });
+});
+
+it("describes a public deck in French under /fr, canonical at its own French URL", async () => {
+  fetchPublicDeck.mockResolvedValue(PUBLIC_DECK);
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", id: "deck-1" }),
+  });
+
+  expect(metadata.title).toBe("Superfriends par kael — MagicAIBuilder");
+  expect(metadata.description).toBe(
+    "Commandant : Atraxa, Praetors' Voice · Bracket 3 · commander"
+  );
+  expect(metadata.openGraph).toMatchObject({
+    title: "Superfriends par kael",
+    description: "Commandant : Atraxa, Praetors' Voice · Bracket 3",
+  });
+  expect(metadata.alternates).toEqual({
+    canonical: "/fr/deck/deck-1",
+    languages: DECK_LANGUAGES,
+  });
+});
+
+it("names a missing author and commander in the page's language", async () => {
+  fetchPublicDeck.mockResolvedValue({ ...PUBLIC_DECK, cards: [], user: null });
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", id: "deck-1" }),
+  });
+
+  expect(metadata.title).toBe("Superfriends par Inconnu — MagicAIBuilder");
+  expect(metadata.description).toBe(
+    "Commandant : Inconnu · Bracket 3 · commander"
+  );
+});
+
+it("titles a missing or unavailable deck in French under /fr", async () => {
+  fetchPublicDeck.mockResolvedValueOnce(null);
+  const missing = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", id: "missing" }),
+  });
+
+  fetchPublicDeck.mockRejectedValueOnce(new Error("PUBLIC_DECK_UNAVAILABLE"));
+  const unavailable = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", id: "deck-1" }),
+  });
+
+  expect(missing.title).toBe("Deck introuvable — MagicAIBuilder");
+  expect(unavailable.title).toBe("Deck indisponible — MagicAIBuilder");
 });
 
 it("passes a temporary deck failure to the retryable route error boundary", async () => {

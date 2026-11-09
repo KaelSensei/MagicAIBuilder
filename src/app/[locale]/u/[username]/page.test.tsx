@@ -2,11 +2,22 @@ import { afterEach, expect, it, vi } from "vitest";
 
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); } }));
+vi.mock("next-intl/server", () => import("@/test/server-intl"));
 vi.mock("@/lib/auth/config", () => ({ auth: async () => null }));
 vi.mock("@/components/layout/Header", () => ({ Header: () => null }));
 vi.mock("@/components/profile/PublicProfileView", () => ({ PublicProfileView: () => null }));
 
 import UserProfilePage, { generateMetadata } from "./page";
+
+/** The profile fields metadata reads. */
+const PROFILE = { id: "user-1", name: "Kael Sensei", username: "kael" };
+
+/** Every routed locale plus x-default, the same set on every locale's page. */
+const PROFILE_LANGUAGES = {
+  en: "/u/kael",
+  fr: "/fr/u/kael",
+  "x-default": "/u/kael",
+};
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -112,4 +123,51 @@ it("keeps an unavailable profile from producing a not-found metadata title", asy
   });
 
   expect(metadata.title).toBe("Profile unavailable — MagicAIBuilder");
+});
+
+it("describes a profile in English, canonical at its unprefixed URL", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(PROFILE)));
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "en", username: "kael" }),
+  });
+
+  expect(metadata).toEqual({
+    title: "Kael Sensei — MagicAIBuilder",
+    description: "Kael Sensei's public Commander decks on MagicAIBuilder.",
+    alternates: { canonical: "/u/kael", languages: PROFILE_LANGUAGES },
+  });
+});
+
+it("describes a profile in French under /fr, canonical at its own French URL", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(PROFILE)));
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", username: "kael" }),
+  });
+
+  expect(metadata).toEqual({
+    title: "Kael Sensei — MagicAIBuilder",
+    description:
+      "Les decks Commander publics de Kael Sensei sur MagicAIBuilder.",
+    alternates: { canonical: "/fr/u/kael", languages: PROFILE_LANGUAGES },
+  });
+});
+
+it("titles a missing or unavailable profile in French under /fr", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(new Response(null, { status: 404 }))
+  );
+  const missing = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", username: "nobody" }),
+  });
+
+  vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
+  const unavailable = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", username: "kael" }),
+  });
+
+  expect(missing.title).toBe("Profil introuvable — MagicAIBuilder");
+  expect(unavailable.title).toBe("Profil indisponible — MagicAIBuilder");
 });

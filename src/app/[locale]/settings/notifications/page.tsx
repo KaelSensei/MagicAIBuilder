@@ -1,11 +1,10 @@
 import { Header } from "@/components/layout/Header";
 import { NotificationPreferencesPanel } from "@/components/settings/NotificationPreferencesPanel";
+import { fixedPageMetadata } from "@/lib/seo/page-metadata";
 
-export const metadata = {
-  title: "Notification preferences — MagicAIBuilder",
-  description: "Choose which community events can notify you",
+export const generateMetadata = fixedPageMetadata("settings.notifications", {
   robots: { index: false, follow: false },
-};
+});
 
 /** Private controls for a signed-in player's community notification events. */
 export default function NotificationPreferencesPage() {

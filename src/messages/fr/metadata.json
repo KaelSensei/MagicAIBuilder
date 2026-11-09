@@ -1,0 +1,58 @@
+{
+  "site": {
+    "title": "MagicAIBuilder — Créateur de decks Commander",
+    "description": "Créez des decks Commander avec le scoring de bracket en direct, des suggestions par IA et l’intégration de Scryfall."
+  },
+  "deck": {
+    "title": "{name} par {author} — MagicAIBuilder",
+    "description": "Commandant : {commander} · Bracket {bracket} · {format}",
+    "socialTitle": "{name} par {author}",
+    "socialDescription": "Commandant : {commander} · Bracket {bracket}",
+    "unknownAuthor": "Inconnu",
+    "unknownCommander": "Inconnu",
+    "notFound": "Deck introuvable — MagicAIBuilder",
+    "unavailable": "Deck indisponible — MagicAIBuilder"
+  },
+  "commanderDecks": {
+    "title": "Decks {commander} — MagicAIBuilder",
+    "description": "Decks Commander publics menés par {commander}, classés par votes de la communauté.",
+    "notFound": "Commandant introuvable — MagicAIBuilder",
+    "unavailable": "Decks du commandant indisponibles — MagicAIBuilder"
+  },
+  "profile": {
+    "title": "{name} — MagicAIBuilder",
+    "description": "Les decks Commander publics de {name} sur MagicAIBuilder.",
+    "notFound": "Profil introuvable — MagicAIBuilder",
+    "unavailable": "Profil indisponible — MagicAIBuilder"
+  },
+  "share": {
+    "title": "{name} — MagicAIBuilder",
+    "description": "Commandant : {commander} · {cardCount, plural, one {# carte} other {# cartes}} · Bracket {bracket} · {format}",
+    "noCommander": "Aucun commandant",
+    "notFound": "Deck introuvable — MagicAIBuilder"
+  },
+  "rules": {
+    "gameChangers": {
+      "title": "Cartes à impact & Liste de ban — MagicAIBuilder",
+      "description": "Parcourez la liste complète des cartes à impact et des cartes bannies en Commander, page par page."
+    },
+    "comprehensive": {
+      "title": "Règles complètes — MagicAIBuilder",
+      "description": "Parcourez les règles complètes officielles de Magic: The Gathering, chapitre par chapitre, glossaire compris."
+    }
+  },
+  "collection": {
+    "title": "Ma Collection — MagicAIBuilder",
+    "description": "Gérez votre collection physique de cartes MTG"
+  },
+  "settings": {
+    "apiKeys": {
+      "title": "Clés d’API — MagicAIBuilder",
+      "description": "Créez et révoquez des clés pour l’API publique de MagicAIBuilder"
+    },
+    "notifications": {
+      "title": "Préférences de notification — MagicAIBuilder",
+      "description": "Choisissez quels événements de la communauté peuvent vous notifier"
+    }
+  }
+}

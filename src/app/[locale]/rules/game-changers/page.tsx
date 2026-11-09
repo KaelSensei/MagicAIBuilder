@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Header } from "@/components/layout/Header";
 import { GameChangersPageClient } from "@/components/rules/GameChangersPageClient";
+import { fixedPageMetadata } from "@/lib/seo/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Game Changers & Banlist — MagicAIBuilder",
-  description:
-    "Browse the full list of Commander Game Changers and banned cards, with pagination.",
-};
+export const generateMetadata = fixedPageMetadata("rules.gameChangers");
 
 export default function GameChangersPage() {
   return (

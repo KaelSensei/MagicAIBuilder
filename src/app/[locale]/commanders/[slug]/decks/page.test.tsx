@@ -9,6 +9,7 @@ vi.mock("next/navigation", () => ({
     throw new Error("NOT_FOUND");
   },
 }));
+vi.mock("next-intl/server", () => import("@/test/server-intl"));
 vi.mock("@/lib/auth/config", () => ({ auth: async () => null }));
 vi.mock("@/components/layout/Header", () => ({ Header: () => null }));
 vi.mock("@/i18n/navigation", () => ({
@@ -28,6 +29,24 @@ const NO_PUBLIC_DECK = {
   commanderName: null,
   total: 0,
   decks: [],
+};
+
+/**
+ * A commander with a public deck. Metadata reads only the name and whether
+ * the listing is empty, so the deck itself is reduced to its id.
+ */
+const ATRAXA_DECKS = {
+  slug: "atraxa-praetors-voice",
+  commanderName: "Atraxa, Praetors' Voice",
+  total: 1,
+  decks: [{ id: "deck-1" }],
+};
+
+/** Every routed locale plus x-default, the same set on every locale's page. */
+const ATRAXA_LANGUAGES = {
+  en: "/commanders/atraxa-praetors-voice/decks",
+  fr: "/fr/commanders/atraxa-praetors-voice/decks",
+  "x-default": "/commanders/atraxa-praetors-voice/decks",
 };
 
 afterEach(() => {
@@ -100,7 +119,65 @@ it("keeps an empty listing out of the index, with no canonical URL", async () =>
   expect(metadata.robots).toEqual({ index: false });
   expect(metadata.alternates).toBeUndefined();
   expect(metadata.title).toBe(
-    "nobody has this commander decks — MagicAIBuilder"
+    "Decks nobody has this commander — MagicAIBuilder"
+  );
+});
+
+it("describes a commander's listing in English, canonical at its unprefixed URL", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(Response.json(ATRAXA_DECKS))
+  );
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "en", slug: "atraxa-praetors-voice" }),
+  });
+
+  expect(metadata).toEqual({
+    title: "Atraxa, Praetors' Voice decks — MagicAIBuilder",
+    description:
+      "Public Commander decks led by Atraxa, Praetors' Voice, ranked by community votes.",
+    alternates: {
+      canonical: "/commanders/atraxa-praetors-voice/decks",
+      languages: ATRAXA_LANGUAGES,
+    },
+  });
+});
+
+it("describes a commander's listing in French under /fr, canonical at its own French URL", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(Response.json(ATRAXA_DECKS))
+  );
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", slug: "atraxa-praetors-voice" }),
+  });
+
+  expect(metadata).toEqual({
+    title: "Decks Atraxa, Praetors' Voice — MagicAIBuilder",
+    description:
+      "Decks Commander publics menés par Atraxa, Praetors' Voice, classés par votes de la communauté.",
+    alternates: {
+      canonical: "/fr/commanders/atraxa-praetors-voice/decks",
+      languages: ATRAXA_LANGUAGES,
+    },
+  });
+});
+
+it("titles an unknown or unavailable commander in French under /fr", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
+
+  const notFound = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", slug: "Not_A_Slug" }),
+  });
+  const unavailable = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", slug: "atraxa-praetors-voice" }),
+  });
+
+  expect(notFound.title).toBe("Commandant introuvable — MagicAIBuilder");
+  expect(unavailable.title).toBe(
+    "Decks du commandant indisponibles — MagicAIBuilder"
   );
 });
 

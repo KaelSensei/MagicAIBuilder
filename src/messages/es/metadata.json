@@ -1,0 +1,58 @@
+{
+  "site": {
+    "title": "MagicAIBuilder — Commander Deck Builder",
+    "description": "Build Commander decks with live bracket scoring, AI suggestions, and Scryfall integration."
+  },
+  "deck": {
+    "title": "{name} by {author} — MagicAIBuilder",
+    "description": "Commander: {commander} · Bracket {bracket} · {format}",
+    "socialTitle": "{name} by {author}",
+    "socialDescription": "Commander: {commander} · Bracket {bracket}",
+    "unknownAuthor": "Unknown",
+    "unknownCommander": "Unknown",
+    "notFound": "Deck not found — MagicAIBuilder",
+    "unavailable": "Deck unavailable — MagicAIBuilder"
+  },
+  "commanderDecks": {
+    "title": "{commander} decks — MagicAIBuilder",
+    "description": "Public Commander decks led by {commander}, ranked by community votes.",
+    "notFound": "Commander not found — MagicAIBuilder",
+    "unavailable": "Commander decks unavailable — MagicAIBuilder"
+  },
+  "profile": {
+    "title": "{name} — MagicAIBuilder",
+    "description": "{name}'s public Commander decks on MagicAIBuilder.",
+    "notFound": "Profile not found — MagicAIBuilder",
+    "unavailable": "Profile unavailable — MagicAIBuilder"
+  },
+  "share": {
+    "title": "{name} — MagicAIBuilder",
+    "description": "Commander: {commander} · {cardCount, plural, one {# card} other {# cards}} · Bracket {bracket} · {format}",
+    "noCommander": "No commander",
+    "notFound": "Deck not found — MagicAIBuilder"
+  },
+  "rules": {
+    "gameChangers": {
+      "title": "Game Changers & Banlist — MagicAIBuilder",
+      "description": "Browse the full list of Commander Game Changers and banned cards, with pagination."
+    },
+    "comprehensive": {
+      "title": "Comprehensive Rules — MagicAIBuilder",
+      "description": "Browse the official Magic: The Gathering Comprehensive Rules, chapter by chapter, including the full glossary."
+    }
+  },
+  "collection": {
+    "title": "My Collection — MagicAIBuilder",
+    "description": "Manage your physical MTG card collection"
+  },
+  "settings": {
+    "apiKeys": {
+      "title": "API Keys — MagicAIBuilder",
+      "description": "Create and revoke keys for the MagicAIBuilder public API"
+    },
+    "notifications": {
+      "title": "Notification preferences — MagicAIBuilder",
+      "description": "Choose which community events can notify you"
+    }
+  }
+}

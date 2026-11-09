@@ -3,9 +3,37 @@ import { afterEach, expect, it, vi } from "vitest";
 const fetchSharedDeck = vi.hoisted(() => vi.fn());
 
 vi.stubGlobal("fetch", fetchSharedDeck);
-vi.mock("@/components/deck/ShareDeckView", () => ({ ShareDeckView: () => null }));
+vi.mock("next-intl/server", () => import("@/test/server-intl"));
+vi.mock("@/components/deck/ShareDeckView", () => ({
+  ShareDeckView: () => null,
+}));
 
 import { generateMetadata } from "./page";
+
+/**
+ * A shared deck with partner commanders and one other card. Metadata reads
+ * only the fields below.
+ */
+const PARTNERS_DECK = {
+  name: "Partners in Crime",
+  targetBracket: 2,
+  format: "commander",
+  cards: [
+    {
+      name: "Thrasios, Triton Hero",
+      isCommander: true,
+      isPartner: false,
+      artCropUri: "",
+    },
+    {
+      name: "Tymna the Weaver",
+      isCommander: true,
+      isPartner: true,
+      artCropUri: "",
+    },
+    { name: "Sol Ring", isCommander: false, isPartner: false, artCropUri: "" },
+  ],
+};
 
 afterEach(() => fetchSharedDeck.mockReset());
 
@@ -23,7 +51,7 @@ it("tells crawlers not to retain or index a valid share link", async () => {
   );
 
   const metadata = await generateMetadata({
-    params: Promise.resolve({ token: "private-token" }),
+    params: Promise.resolve({ locale: "en", token: "private-token" }),
   });
 
   expect(metadata.robots).toEqual({
@@ -59,9 +87,60 @@ it("previews the commander with Scryfall's WebP art", async () => {
   );
 
   const metadata = await generateMetadata({
-    params: Promise.resolve({ token: "share-token" }),
+    params: Promise.resolve({ locale: "en", token: "share-token" }),
   });
 
   expect(metadata.openGraph?.images).toEqual([{ url: art, alt: "Atraxa" }]);
   expect(metadata.twitter?.images).toEqual([art]);
+});
+
+it("describes a shared deck in English", async () => {
+  fetchSharedDeck.mockResolvedValue(Response.json(PARTNERS_DECK));
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "en", token: "private-token" }),
+  });
+
+  expect(metadata.title).toBe("Partners in Crime — MagicAIBuilder");
+  expect(metadata.description).toBe(
+    "Commander: Thrasios, Triton Hero + Tymna the Weaver · 3 cards · Bracket 2 · commander"
+  );
+  // A capability URL: no canonical, no hreflang.
+  expect(metadata.alternates).toBeUndefined();
+});
+
+it("describes a shared deck in French under /fr", async () => {
+  fetchSharedDeck.mockResolvedValue(Response.json(PARTNERS_DECK));
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", token: "private-token" }),
+  });
+
+  expect(metadata.title).toBe("Partners in Crime — MagicAIBuilder");
+  expect(metadata.description).toBe(
+    "Commandant : Thrasios, Triton Hero + Tymna the Weaver · 3 cartes · Bracket 2 · commander"
+  );
+  expect(metadata.openGraph).toMatchObject({
+    description:
+      "Commandant : Thrasios, Triton Hero + Tymna the Weaver · 3 cartes · Bracket 2 · commander",
+  });
+});
+
+it("says in French when a shared deck has no commander or cannot be found", async () => {
+  fetchSharedDeck.mockResolvedValueOnce(
+    Response.json({ ...PARTNERS_DECK, cards: [] })
+  );
+  const empty = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", token: "private-token" }),
+  });
+
+  fetchSharedDeck.mockResolvedValueOnce(new Response(null, { status: 404 }));
+  const missing = await generateMetadata({
+    params: Promise.resolve({ locale: "fr", token: "revoked-token" }),
+  });
+
+  expect(empty.description).toBe(
+    "Commandant : Aucun commandant · 0 carte · Bracket 2 · commander"
+  );
+  expect(missing.title).toBe("Deck introuvable — MagicAIBuilder");
 });

@@ -137,12 +137,22 @@ export function isSupportedLocale(value: string): value is SupportedLocale {
 }
 
 /**
- * `buildAlternates` for a raw `[locale]` route param.
+ * The served locale a raw `[locale]` route param stands for.
  *
  * Pages receive the segment as a plain string. An unrecognised value falls back
  * to the default locale rather than throwing: the middleware has already
  * rejected anything unroutable, and a metadata helper is the wrong place to
  * turn a stray param into a 500.
+ *
+ * @param localeParam The `[locale]` segment as the route supplies it.
+ * @returns That locale when it is served, else the default locale.
+ */
+export function servedLocaleFor(localeParam: string): SupportedLocale {
+  return isSupportedLocale(localeParam) ? localeParam : routing.defaultLocale;
+}
+
+/**
+ * `buildAlternates` for a raw `[locale]` route param (see `servedLocaleFor`).
  *
  * @param localeParam The `[locale]` segment as the route supplies it.
  * @param path Locale-free path, starting with a slash.
@@ -151,8 +161,5 @@ export function alternatesFor(
   localeParam: string,
   path: string
 ): NonNullable<Metadata["alternates"]> {
-  return buildAlternates(
-    isSupportedLocale(localeParam) ? localeParam : routing.defaultLocale,
-    path
-  );
+  return buildAlternates(servedLocaleFor(localeParam), path);
 }
