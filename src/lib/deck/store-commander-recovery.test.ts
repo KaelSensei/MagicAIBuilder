@@ -7,12 +7,14 @@ import type { Deck, DeckCard } from "./types";
 const mocks = vi.hoisted(() => ({
   updateDeck: vi.fn(),
   addCard: vi.fn(),
+  removeCard: vi.fn(),
   addToast: vi.fn(),
 }));
 
 vi.mock("@/lib/db/deck-api", () => ({
   updateDeck: mocks.updateDeck,
   addCard: mocks.addCard,
+  removeCard: mocks.removeCard,
 }));
 vi.mock("@/hooks/useToast", () => ({
   useToastStore: { getState: () => ({ add: mocks.addToast }) },
@@ -113,6 +115,7 @@ describe("commander save recovery", () => {
     vi.clearAllMocks();
     mocks.updateDeck.mockResolvedValue({});
     mocks.addCard.mockResolvedValue({ id: "saved-row" });
+    mocks.removeCard.mockResolvedValue(undefined);
     seedPartnerPair();
   });
 
@@ -156,7 +159,7 @@ describe("commander save recovery", () => {
     olderSave.reject(new Error("Save failed"));
     await failedAttempt;
 
-    expect(commandZone().commander?.id).toBe("kenrith");
+    expect(commandZone().commander?.scryfallId).toBe("kenrith");
     expect(mocks.addToast).not.toHaveBeenCalledWith(
       "error",
       expect.stringContaining("commander"),
@@ -177,7 +180,7 @@ describe("commander save recovery", () => {
     await failedAttempt;
 
     expect(commandZone().commander).toEqual(THRASIOS);
-    expect(commandZone().partner?.id).toBe("ishai");
+    expect(commandZone().partner?.scryfallId).toBe("ishai");
     expect(mocks.addToast).toHaveBeenCalledWith(
       "error",
       expect.stringContaining("commander"),

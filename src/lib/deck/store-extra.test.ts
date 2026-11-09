@@ -719,7 +719,7 @@ describe("useDeckStore — setPartner", () => {
     await failedSave;
 
     const deck = useDeckStore.getState().decks["deck-1"];
-    expect(deck.partner?.id).toBe("newer-partner");
+    expect(deck.partner?.scryfallId).toBe("newer-partner");
     expect(deck.partner?.name).toBe("Thrasios, Triton Hero");
     expect(toastAdd).not.toHaveBeenCalledWith(
       "error",

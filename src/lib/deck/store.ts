@@ -31,6 +31,10 @@ import {
   type CommandZone,
 } from "./commander-save-recovery";
 import {
+  removeReplacedCommandRows,
+  withSavedCommandRow,
+} from "./command-zone-rows";
+import {
   createGuestDeck,
   GUEST_DECK_ID,
   isGuestDeckId,
@@ -1017,6 +1021,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const previous = commandZoneOf(decks[activeDeckId]);
     let commanderMetadataSaved = false;
     const deckCard = makeDeckCard(card);
+    deckCard.scryfallId = card.id;
     deckCard.category = "commander";
     deckCard.isGameChanger = gameChangerNames.has(card.name);
     deckCard.isBanned = bannedNames.has(card.name);
@@ -1060,10 +1065,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         // Denormalised so community discovery can match the slug in SQL
         commanderName: deckCard.name,
         pairingType,
+        // A partner the new commander cannot keep leaves the record too
+        ...(previous.partner && !attempted.partner ? { partnerId: null } : {}),
       });
       commanderMetadataSaved = true;
       // Persist the commander card record
-      await deckApi.addCard(activeDeckId, {
+      const saved = await deckApi.addCard(activeDeckId, {
         scryfallId: card.id,
         name: deckCard.name,
         manaCost: deckCard.manaCost,
@@ -1083,6 +1090,19 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         isCommander: true,
         isPartner: false,
       });
+      set((state) => ({
+        decks: withSavedCommandRow(state.decks, {
+          deckId: activeDeckId,
+          slot: "commander",
+          placedId: deckCard.id,
+          rowId: saved.id,
+        }),
+      }));
+      await removeReplacedCommandRows(
+        activeDeckId,
+        [previous.commander, previous.partner],
+        [attempted.commander, attempted.partner]
+      );
     } catch (err) {
       logger.error("Unexpected error", "setCommander", err);
       restoreCommanderAfterFailedSave(set, get(), {
@@ -1124,6 +1144,11 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         partnerId: null,
         pairingType: "none",
       });
+      await removeReplacedCommandRows(
+        activeDeckId,
+        [previous.commander, previous.partner],
+        []
+      );
     } catch (err) {
       logger.error("Unexpected error", "clearCommander", err);
       restoreCommanderAfterFailedSave(set, get(), {
@@ -1144,7 +1169,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const previousPairingType = decks[activeDeckId]?.pairingType ?? "none";
     let partnerMetadataSaved = false;
     const deckCard = card ? makeDeckCard(card) : null;
-    if (deckCard) deckCard.category = "commander";
+    if (card && deckCard) {
+      deckCard.scryfallId = card.id;
+      deckCard.category = "commander";
+    }
 
     // If commander has no pairing type but partner does, derive pairingType from partner
     // e.g. Jaheira has "Choose a Background" → pairingType should be "background"
@@ -1180,7 +1208,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       });
       partnerMetadataSaved = true;
       if (card && deckCard) {
-        await deckApi.addCard(activeDeckId, {
+        const saved = await deckApi.addCard(activeDeckId, {
           scryfallId: card.id,
           name: deckCard.name,
           manaCost: deckCard.manaCost,
@@ -1200,7 +1228,20 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
           isCommander: true,
           isPartner: true,
         });
+        set((state) => ({
+          decks: withSavedCommandRow(state.decks, {
+            deckId: activeDeckId,
+            slot: "partner",
+            placedId: deckCard.id,
+            rowId: saved.id,
+          }),
+        }));
       }
+      await removeReplacedCommandRows(
+        activeDeckId,
+        [previousPartner],
+        [deckCard]
+      );
     } catch (err) {
       logger.error("Unexpected error", "setPartner", err);
       restorePartnerAfterFailedSave(set, get(), {
