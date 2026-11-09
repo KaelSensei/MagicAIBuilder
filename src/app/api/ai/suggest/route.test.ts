@@ -13,7 +13,16 @@ vi.mock("@/lib/rate-limit", () => ({
   checkRateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
 }));
 
+import { logger } from "@/lib/logger";
 import { POST } from "./route";
+
+/** Reads every NDJSON event the route streamed. */
+async function streamedEvents(response: Response): Promise<unknown[]> {
+  return (await response.text())
+    .trim()
+    .split("\n")
+    .map((line): unknown => JSON.parse(line));
+}
 
 function suggestRequest(
   overrides: Readonly<Record<string, unknown>> = {}
@@ -64,6 +73,7 @@ describe("POST /api/ai/suggest", () => {
 
   afterEach(() => {
     delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.OPENAI_API_KEY;
     vi.unstubAllGlobals();
   });
 
@@ -173,6 +183,91 @@ describe("POST /api/ai/suggest", () => {
     const providerBody = JSON.parse(String(providerRequest?.body));
     expect(providerBody.messages[0].content).toContain(
       "PRIVATE USER-OWNED PLAYTEST EVIDENCE:\n  None recorded"
+    );
+  });
+
+  // 8 additions with 2-4 sentence rationale and 3 alternatives each, 4
+  // removals and an analysis need more than the 2,048 tokens once allowed.
+  it("gives the suggestion reply a 4,096-token output cap", async () => {
+    const providerFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ text: "{}" }] }),
+    });
+    vi.stubGlobal("fetch", providerFetch);
+
+    await (await POST(suggestRequest())).text();
+    const providerBody = JSON.parse(
+      String(providerFetch.mock.calls[0]?.[1]?.body)
+    );
+
+    expect(providerBody.max_tokens).toBe(4096);
+  });
+
+  it("reports an Anthropic reply cut off at the token cap as a truncation, not a JSON parse error", async () => {
+    const logError = vi.spyOn(logger, "error").mockImplementation(() => {});
+    const providerFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        stop_reason: "max_tokens",
+        content: [{ type: "text", text: '{"suggestions": [' }],
+      }),
+    });
+    vi.stubGlobal("fetch", providerFetch);
+
+    const events = await streamedEvents(await POST(suggestRequest()));
+    const providerBody = JSON.parse(
+      String(providerFetch.mock.calls[0]?.[1]?.body)
+    );
+
+    expect(events).toEqual([
+      { type: "error", message: "AI suggestion failed" },
+    ]);
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "ModelOutputTruncatedError",
+        provider: "anthropic",
+        model: providerBody.model,
+        maxTokens: providerBody.max_tokens,
+      }),
+      "POST /api/ai/suggest"
+    );
+  });
+
+  it("reports an OpenAI reply cut off at the token cap as a truncation, not a JSON parse error", async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    process.env.OPENAI_API_KEY = "test-key";
+    const logError = vi.spyOn(logger, "error").mockImplementation(() => {});
+    const providerFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            finish_reason: "length",
+            message: { role: "assistant", content: '{"suggestions": [' },
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", providerFetch);
+
+    const events = await streamedEvents(await POST(suggestRequest()));
+    const providerBody = JSON.parse(
+      String(providerFetch.mock.calls[0]?.[1]?.body)
+    );
+
+    expect(events).toEqual([
+      { type: "error", message: "AI suggestion failed" },
+    ]);
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "ModelOutputTruncatedError",
+        provider: "openai",
+        model: providerBody.model,
+        maxTokens: providerBody.max_tokens,
+      }),
+      "POST /api/ai/suggest"
     );
   });
 
