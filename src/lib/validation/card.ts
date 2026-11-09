@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { deckCardIdSchema, pairingTypeSchema } from "./deck";
 
 export const VALID_CATEGORIES = [
   "commander",
@@ -77,3 +78,37 @@ export const patchCardSchema = z.object({
 });
 
 export type PatchCardInput = z.infer<typeof patchCardSchema>;
+
+/** Most rows one bulk edit may touch: the text parser reads at most 500 lines. */
+export const MAX_BULK_CARD_CHANGES = 500;
+
+/** A deck row id as the database generates it. */
+const deckCardRowIdSchema = z.string().min(1).max(64);
+
+// Schema for PATCH /api/decks/[id]/cards — one bulk edit, applied atomically
+export const deckCardChangesSchema = z.object({
+  removeCardIds: z.array(deckCardRowIdSchema).max(MAX_BULK_CARD_CHANGES),
+  quantityChanges: z
+    .array(
+      z.object({
+        cardId: deckCardRowIdSchema,
+        quantity: z.number().int().min(1).max(99),
+      })
+    )
+    .max(MAX_BULK_CARD_CHANGES),
+  addCards: z.array(addCardSchema).max(MAX_BULK_CARD_CHANGES),
+  /** Command-zone slots whose rows are removed, whichever rows hold them. */
+  clearCommandSlots: z.array(z.enum(["commander", "partner", "companion"])).max(3).optional().default([]),
+  /** The deck's command-zone fields, present only when the edit changes them. */
+  commandZone: z
+    .object({
+      commanderId: deckCardIdSchema.nullable(),
+      commanderName: z.string().max(200).nullable(),
+      partnerId: deckCardIdSchema.nullable(),
+      companionId: deckCardIdSchema.nullable(),
+      pairingType: pairingTypeSchema,
+    })
+    .optional(),
+});
+
+export type DeckCardChangesInput = z.infer<typeof deckCardChangesSchema>;

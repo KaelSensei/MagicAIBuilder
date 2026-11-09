@@ -16,12 +16,15 @@ import {
   isScryfallCompanionCard,
 } from "@/lib/deck/companion";
 import {
+  addCardPayload,
   apiDeckToStoreDeck,
+  commandCardPayload,
   createEmptyDeck,
   isDeckStub,
   makeDeckCard,
 } from "./store-factories";
 import { cardsFromZoneSource, deckFromZoneCards } from "./zone-source";
+import type { BulkEdit } from "./bulk-edit";
 import {
   commandZoneOf,
   restoreCommanderAfterFailedSave,
@@ -278,7 +281,6 @@ export interface DeckStore {
   renameDeck: (id: string, name: string) => Promise<void>;
   setActiveDeck: (id: string) => Promise<void>;
   loadDecks: () => Promise<void>;
-  resetActiveDeckForBulkEdit: () => void;
 
   // Deck description & tags
   updateDeckDescription: (deckId: string, description: string) => Promise<void>;
@@ -330,6 +332,14 @@ export interface DeckStore {
    * @returns Resolves when the open deck matches the database, or the refresh failed.
    */
   reloadActiveDeck: () => Promise<void>;
+  /**
+   * Saves a bulk text edit of the open deck as one atomic server change.
+   *
+   * @param edit - the rows the edited text changes, and the cards it adds
+   * @returns Resolves once the open deck matches the saved deck.
+   * @throws When the server rejected the change; the deck is then unchanged.
+   */
+  applyBulkEdit: (edit: BulkEdit) => Promise<void>;
 
   // Deck settings
   setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
@@ -693,6 +703,47 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
   },
 
+  applyBulkEdit: async (edit) => {
+    const { activeDeckId, gameChangerNames, bannedNames } = get();
+    if (!activeDeckId) return;
+    const flagged = (card: ScryfallCard): DeckCard => ({
+      ...makeDeckCard(card),
+      isGameChanger: gameChangerNames.has(card.name),
+      isBanned: bannedNames.has(card.name),
+    });
+    const commandCards = edit.commandZone?.cards ?? [];
+    set({ isSyncing: true });
+    try {
+      // New lines take an owned printing when there is one, as a hand-added card does.
+      const additions = await Promise.all(
+        edit.additions.map(async (addition) => ({
+          ...addition,
+          card: (await getOwnedPrinting(addition.card)) ?? addition.card,
+        }))
+      );
+      const apiDeck = await deckApi.applyCardChanges(activeDeckId, {
+        removeCardIds: edit.removedCardIds,
+        quantityChanges: edit.quantityChanges,
+        addCards: [
+          ...commandCards.map(({ card, slot }) => commandCardPayload(flagged(card), slot)),
+          ...additions.map(({ card, quantity, zone }) =>
+            addCardPayload({ ...flagged(card), quantity, zone })
+          ),
+        ],
+        clearCommandSlots: edit.commandZone?.clearedSlots ?? [],
+        commandZone: edit.commandZone?.patch,
+      });
+      if (!get().decks[activeDeckId]) return;
+      set((state) => ({
+        decks: { ...state.decks, [activeDeckId]: apiDeckToStoreDeck(apiDeck) },
+        // Earlier entries name rows the edit may have removed or re-added.
+        undoStack: state.undoStack.filter((action) => action.deckId !== activeDeckId),
+      }));
+    } finally {
+      set({ isSyncing: hasPendingSaves() });
+    }
+  },
+
   // Load deck listing from the DB (lightweight: only commander/partner/companion + card count)
   loadDecks: async () => {
     const requestId = ++latestDeckListRequest;
@@ -728,34 +779,6 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } finally {
       if (requestId === latestDeckListRequest) set({ isSyncing: hasPendingSaves() });
     }
-  },
-
-  resetActiveDeckForBulkEdit: () => {
-    const { activeDeckId } = get();
-    if (!activeDeckId) return;
-    set((state) => {
-      const deck = state.decks[activeDeckId];
-      if (!deck) return state;
-      return {
-        decks: {
-          ...state.decks,
-          [activeDeckId]: {
-            ...deck,
-            commander: null,
-            partner: null,
-            companion: null,
-            pairingType: "none",
-            cards: [],
-            maybeboard: [],
-            cardCount: 0,
-            updatedAt: new Date(),
-          },
-        },
-        undoStack: state.undoStack.filter(
-          (action) => action.deckId !== activeDeckId
-        ),
-      };
-    });
   },
 
   createDeck: async (name: string, opts?: { isAIGenerated?: boolean }) => {

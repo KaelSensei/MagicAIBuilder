@@ -7,6 +7,7 @@
 //
 // @module deck/store-factories
 import type { Deck, DeckCard } from "./types";
+import type { CommandSlot } from "./bulk-edit";
 import type * as deckApi from "@/lib/db/deck-api";
 import { rebuildCardFaces } from "./store-card-faces";
 
@@ -186,4 +187,50 @@ export function isDeckStub(deck: Deck): boolean {
     (deck.companion ? 1 : 0);
 
   return loaded < deck.cardCount;
+}
+
+/**
+ * The API payload that saves a deck card as a new row outside the command zone.
+ *
+ * @param card - the card as the store would hold it
+ * @returns the row to create
+ */
+export function addCardPayload(card: DeckCard): deckApi.AddCardPayload {
+  return {
+    scryfallId: card.scryfallId ?? card.id,
+    name: card.name,
+    manaCost: card.manaCost,
+    cmc: card.cmc,
+    typeLine: card.typeLine,
+    oracleText: card.oracleText,
+    power: card.power ?? null,
+    toughness: card.toughness ?? null,
+    colorIdentity: card.colorIdentity,
+    isGameChanger: card.isGameChanger,
+    isBanned: card.isBanned,
+    price: card.price,
+    imageUri: card.imageUri,
+    artCropUri: card.artCropUri,
+    category: card.category,
+    quantity: card.quantity,
+    isCommander: false,
+    isPartner: false,
+    zone: card.zone,
+  };
+}
+
+/**
+ * The API payload that saves a card into a command-zone slot.
+ *
+ * @param card - the card as the store would hold it
+ * @param slot - the slot it fills
+ * @returns the row to create
+ */
+export function commandCardPayload(card: DeckCard, slot: CommandSlot): deckApi.AddCardPayload {
+  return {
+    ...addCardPayload({ ...card, quantity: 1, zone: "main" }),
+    category: slot === "companion" ? "companion" : "commander",
+    isCommander: slot !== "companion",
+    isPartner: slot === "partner",
+  };
 }

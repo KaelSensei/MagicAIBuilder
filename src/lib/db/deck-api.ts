@@ -6,6 +6,11 @@ import type {
   CardCategory,
   CommanderPairingType,
 } from "@/lib/deck/types";
+import {
+  COMMAND_SLOT_ROWS,
+  type CommandSlot,
+  type CommandZonePatch,
+} from "@/lib/deck/bulk-edit";
 import { logger } from "@/lib/logger";
 import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
 import {
@@ -286,36 +291,46 @@ export interface AddCardPayload {
   zone?: "main" | "sideboard" | "maybeboard"; // Target zone (defaults to "main")
 }
 
+/**
+ * The row the guest deck keeps for a card the server would have inserted.
+ *
+ * @param deckId - the guest deck id
+ * @param id - the row id to give it
+ * @param payload - the card as sent to the add-card route
+ * @returns the row, with the defaults the database would apply
+ */
+function guestRowFromPayload(deckId: string, id: string, payload: AddCardPayload): ApiDeckCard {
+  return {
+    id,
+    deckId,
+    scryfallId: payload.scryfallId,
+    name: payload.name,
+    manaCost: payload.manaCost ?? "",
+    cmc: payload.cmc ?? 0,
+    typeLine: payload.typeLine ?? "",
+    oracleText: payload.oracleText ?? "",
+    power: payload.power,
+    toughness: payload.toughness,
+    colorIdentity: payload.colorIdentity ?? [],
+    isGameChanger: payload.isGameChanger ?? false,
+    isBanned: payload.isBanned ?? false,
+    price: payload.price ?? null,
+    imageUri: payload.imageUri ?? "",
+    artCropUri: payload.artCropUri ?? "",
+    category: normalizeCardCategory(payload.category),
+    quantity: payload.quantity ?? 1,
+    notes: null,
+    isCommander: payload.isCommander ?? false,
+    isPartner: payload.isPartner ?? false,
+    zone: payload.zone ?? "main",
+  };
+}
+
 export async function addCard(
   deckId: string,
   payload: AddCardPayload
 ): Promise<ApiDeckCard> {
-  if (isGuestDeckId(deckId)) {
-    return {
-      id: payload.scryfallId,
-      deckId,
-      scryfallId: payload.scryfallId,
-      name: payload.name,
-      manaCost: payload.manaCost ?? "",
-      cmc: payload.cmc ?? 0,
-      typeLine: payload.typeLine ?? "",
-      oracleText: payload.oracleText ?? "",
-      power: payload.power,
-      toughness: payload.toughness,
-      colorIdentity: payload.colorIdentity ?? [],
-      isGameChanger: payload.isGameChanger ?? false,
-      isBanned: payload.isBanned ?? false,
-      price: payload.price ?? null,
-      imageUri: payload.imageUri ?? "",
-      artCropUri: payload.artCropUri ?? "",
-      category: normalizeCardCategory(payload.category),
-      quantity: payload.quantity ?? 1,
-      notes: null,
-      isCommander: payload.isCommander ?? false,
-      isPartner: payload.isPartner ?? false,
-      zone: payload.zone ?? "main",
-    };
-  }
+  if (isGuestDeckId(deckId)) return guestRowFromPayload(deckId, payload.scryfallId, payload);
   const res = await fetch(`/api/decks/${deckId}/cards`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -387,6 +402,93 @@ export async function updateCardMaybeboard(
   isMaybeboard: boolean
 ): Promise<ApiDeckCard> {
   return updateCardZone(deckId, cardId, isMaybeboard ? "maybeboard" : "main");
+}
+
+/** Row changes the server applies to a deck in one transaction. */
+export interface DeckCardChanges {
+  readonly removeCardIds: readonly string[];
+  readonly quantityChanges: readonly { readonly cardId: string; readonly quantity: number }[];
+  readonly addCards: readonly AddCardPayload[];
+  /** Command-zone slots whose rows are removed, whichever rows hold them. */
+  readonly clearCommandSlots?: readonly CommandSlot[];
+  /** The deck's command-zone fields, sent only when the edit changes them. */
+  readonly commandZone?: CommandZonePatch;
+}
+
+/**
+ * Applies a change set to the guest deck the way the server applies it to rows.
+ *
+ * New rows get ids from their printing, role and zone: the guest deck has no
+ * database to hand them out, and one printing can sit in two zones.
+ *
+ * @param deckId - the guest deck id
+ * @param changes - rows to remove, resize and add
+ * @returns the guest deck with the changes applied
+ */
+function applyGuestCardChanges(deckId: string, changes: DeckCardChanges): ApiDeck {
+  const deck = getGuestApiDeck();
+  const removed = new Set(changes.removeCardIds);
+  const clearedRoles = (changes.clearCommandSlots ?? []).map((slot) => COMMAND_SLOT_ROWS[slot]);
+  const quantities = new Map(changes.quantityChanges.map((change) => [change.cardId, change.quantity]));
+  const kept = deck.cards
+    .filter((card) => !removed.has(card.id))
+    .filter((card) => !clearedRoles.some((role) => holdsRole(card, role)))
+    .map((card) => ({ ...card, quantity: quantities.get(card.id) ?? card.quantity }));
+  const added = changes.addCards.map((payload) =>
+    guestRowFromPayload(deckId, guestRowId(payload), payload)
+  );
+  return { ...deck, ...changes.commandZone, cards: [...kept, ...added] };
+}
+
+/**
+ * Whether a row carries every flag of a command-zone role.
+ *
+ * @param card - a guest deck row
+ * @param role - the flags that mark the slot
+ * @returns true when the row fills that slot
+ */
+function holdsRole(card: ApiDeckCard, role: (typeof COMMAND_SLOT_ROWS)[CommandSlot]): boolean {
+  return (
+    (role.isCommander === undefined || role.isCommander === card.isCommander) &&
+    (role.isPartner === undefined || role.isPartner === card.isPartner) &&
+    (role.category === undefined || role.category === card.category)
+  );
+}
+
+/**
+ * A guest row id that two rows of one change set cannot share.
+ *
+ * @param payload - the card being added
+ * @returns its printing, its role in the deck and its zone
+ */
+function guestRowId(payload: AddCardPayload): string {
+  let role = "card";
+  if (payload.isCommander) role = payload.isPartner ? "partner" : "commander";
+  else if (payload.category === "companion") role = "companion";
+  return `${payload.scryfallId}:${role}:${payload.zone ?? "main"}`;
+}
+
+/**
+ * Applies a set of row changes to a deck atomically: either every change is
+ * saved or none is.
+ *
+ * @param deckId - deck to change
+ * @param changes - rows to remove, resize and add, and the command zone
+ * @returns the deck with all its cards, as saved
+ * @throws When the server refused the change set; the deck is then unchanged
+ */
+export async function applyCardChanges(
+  deckId: string,
+  changes: DeckCardChanges
+): Promise<ApiDeck> {
+  if (isGuestDeckId(deckId)) return applyGuestCardChanges(deckId, changes);
+  const res = await fetch(`/api/decks/${deckId}/cards`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(changes),
+  });
+  if (!res.ok) await handleApiError(res, "applyCardChanges");
+  return res.json();
 }
 
 export async function removeAllCards(deckId: string): Promise<void> {
