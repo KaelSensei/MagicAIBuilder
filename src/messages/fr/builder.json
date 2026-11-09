@@ -94,6 +94,40 @@
         "B": "noir",
         "R": "rouge",
         "G": "vert"
+      },
+      "keep": {
+        "cheapRamp": "{count, plural, =0 {Aucune accélération bon marché} one {# accélération bon marché} other {# accélérations bon marché}} (valeur de mana 2 ou moins)",
+        "verdict": {
+          "keep": "À garder",
+          "mulligan": "Mulligan",
+          "judgment": "Décision serrée",
+          "noRule": "Pas de règle calculée"
+        },
+        "stage": {
+          "firstSeven": "première main de sept",
+          "freeSeven": "main de sept gratuite",
+          "six": "six cartes",
+          "five": "cinq cartes",
+          "fourOrFewer": "quatre cartes ou moins"
+        },
+        "bracketReason": "Bracket {bracket}, {stage} : {margin} par rapport à {against, select, freshSeven {une nouvelle main de sept} other {un mulligan à six}}.",
+        "judgmentNote": "À ±2 % près, la qualité des cartes, les couleurs et la table décident.",
+        "everyShell": {
+          "zeroLands": "Aucun terrain : mulligan, dans tous les decks modélisés par le guide.",
+          "oneLandShortOfRamp": "Un seul terrain : mulligan, sauf avec deux accélérations bon marché.",
+          "oneLandTwoRamp": "Un terrain et deux accélérations bon marché : à garder dans tous les decks modélisés par le guide.",
+          "twoLandsNoRamp": "Deux terrains sans accélération bon marché : mulligan de la première main, dans tous les decks modélisés par le guide.",
+          "twoLandsOneRamp": "Deux terrains et une accélération bon marché : à garder dans tous les decks modélisés par le guide, sauf en cEDH.",
+          "twoLandsOneRampAgainstSix": "Face à un mulligan à six, deux terrains et une accélération bon marché : à garder dans tous les decks modélisés par le guide.",
+          "twoLandsTwoRamp": "Deux terrains et deux accélérations bon marché : à garder."
+        },
+        "genericNote": "Conseil générique pour la {stage} : aucun chiffre de bracket ne couvre cette main.",
+        "noRule": {
+          "smallerHand": "Le guide ne publie de tables que pour les mains de sept cartes ; à {stage}, jugez la main sur ses cartes.",
+          "uncoveredHand": "Aucune règle du guide ne couvre cette main pour la {stage} ; jugez-la sur ses cartes."
+        },
+        "bottomTip": "Que mettre au-dessous : le modèle du guide garde trois terrains en allant à six (deux ou trois à cinq, selon les accélérations bon marché), les terrains non engagés d’abord, puis les artefacts de mana, les accélérations de valeur de mana 2 ou moins, les cartes clés et la pioche de valeur de mana 3 ou moins.",
+        "source": "D’après le modèle « goldfish » du guide des mains de départ : mana seulement, sans adversaires ni couleurs."
       }
     }
   },

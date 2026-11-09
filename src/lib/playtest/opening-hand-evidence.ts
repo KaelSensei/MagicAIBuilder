@@ -27,10 +27,20 @@ const LAND_LIGHT_MAX = 1;
 const LAND_HEAVY_MIN = 5;
 
 /**
- * Classifies the land balance of an opening hand.
+ * Whether a card counts as a land in an opening hand.
  *
  * Double-faced cards with a land face count as lands because their type line
  * contains `Land`, even when the deck category was customized by the player.
+ *
+ * @param card - a card in hand
+ * @returns true for lands and land-faced cards
+ */
+export function isOpeningHandLand(card: DeckCard): boolean {
+  return card.typeLine.includes("Land");
+}
+
+/**
+ * Classifies the land balance of an opening hand.
  *
  * @param hand - cards currently held before play begins
  * @returns the number of lands and an actionable balance verdict
@@ -40,7 +50,7 @@ export function analyzeOpeningHandLands(
 ): OpeningHandLandEvidence {
   let landCount = 0;
   for (const card of hand) {
-    if (card.typeLine.includes("Land")) landCount += 1;
+    if (isOpeningHandLand(card)) landCount += 1;
   }
 
   if (landCount <= LAND_LIGHT_MAX) return { landCount, status: "land-light" };
@@ -93,7 +103,7 @@ export function analyzeOpeningHand(hand: readonly DeckCard[]): OpeningHandEviden
   const affordableSpells: DeckCard[] = [];
 
   for (const card of hand) {
-    if (card.typeLine.includes("Land")) {
+    if (isOpeningHandLand(card)) {
       for (const color of colorsProducedBy(card)) availableColors.add(color);
     } else if (card.cmc <= landEvidence.landCount) {
       affordableSpells.push(card);
