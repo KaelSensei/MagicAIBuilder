@@ -65,9 +65,16 @@
     "sortByField": "Sort by {label} {hint}",
     "groupByField": "Group {label}"
   },
+  "actionLabels": {
+    "duplicate": "Duplicate",
+    "bulkEdit": "Bulk Edit",
+    "playtest": "Playtest",
+    "export": "Export"
+  },
   "badges": {
     "cmd": "CMD",
-    "comp": "COMP"
+    "comp": "COMP",
+    "ai": "AI"
   },
   "manaColors": {
     "W": "White",
@@ -145,7 +152,17 @@
     "title": "Deck not found",
     "back": "Back to My Decks"
   },
+  "mobileTabs": {
+    "search": "Search",
+    "deck": "Deck",
+    "stats": "Stats"
+  },
   "searchFilterPlaceholder": "Filter by name (optional)…",
+  "filtersToggle": {
+    "show": "Show filters",
+    "hide": "Hide filters"
+  },
+  "colorSearchHint": "Select colors to browse cards",
   "searchModes": {
     "name": "Name",
     "set": "By Set",

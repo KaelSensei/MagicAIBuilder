@@ -18,9 +18,6 @@ import {
 import type { CollisionDetection } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import {
-  Search,
-  LayoutGrid,
-  BarChart3,
   ArrowLeft,
   Check,
   Copy,
@@ -96,6 +93,11 @@ import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
 import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
+import { BuilderColorSearchPicker } from "@/components/builder/BuilderColorSearchPicker";
+import {
+  BuilderMobileTabBar,
+  type BuilderMobilePanel,
+} from "@/components/builder/BuilderMobileTabBar";
 import { GuestDeckNotice } from "@/components/builder/GuestDeckNotice";
 import { GUEST_DECK_ID } from "@/lib/deck/guest-deck";
 import { explicitDropZone, preferSmallerDropTarget, searchDropZone } from "@/lib/deck/drop-targets";
@@ -354,9 +356,7 @@ export default function BuilderPage() {
   const [activeZone, setActiveZone] = useState<DeckZone>("main");
 
   // Mobile panel state — which panel is visible on small screens
-  const [mobilePanel, setMobilePanel] = useState<"search" | "deck" | "stats">(
-    "deck"
-  );
+  const [mobilePanel, setMobilePanel] = useState<BuilderMobilePanel>("deck");
 
   // Search state
   const [searchText, setSearchText] = useState("");
@@ -764,7 +764,7 @@ export default function BuilderPage() {
           )}
           {deck.isAIGenerated && (
             <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
-              ✨ AI
+              ✨ {t("badges.ai")}
             </span>
           )}
           <span className="text-xs text-[var(--text-secondary)]">
@@ -786,7 +786,9 @@ export default function BuilderPage() {
                 title={t("actions.duplicate")}
               >
                 <Copy className="w-3 h-3" />
-                <span className="hidden sm:inline">Duplicate</span>
+                <span className="hidden sm:inline">
+                  {t("actionLabels.duplicate")}
+                </span>
               </button>
             )}
             {/* Bulk edit — edit deck as plain text */}
@@ -797,7 +799,9 @@ export default function BuilderPage() {
                 title={t("actions.bulkEdit")}
               >
                 <FileText className="w-3 h-3" />
-                <span className="hidden sm:inline">Bulk Edit</span>
+                <span className="hidden sm:inline">
+                  {t("actionLabels.bulkEdit")}
+                </span>
               </button>
             </BulkEditModal>
             {/* Playtest deck */}
@@ -808,7 +812,9 @@ export default function BuilderPage() {
               title={t("actions.playtest")}
             >
               <Dices className="w-3 h-3" />
-              <span className="hidden sm:inline">Playtest</span>
+              <span className="hidden sm:inline">
+                {t("actionLabels.playtest")}
+              </span>
             </button>
             {/* Export deck */}
             <button
@@ -818,7 +824,9 @@ export default function BuilderPage() {
               title={t("actions.export")}
             >
               <Download className="w-3 h-3" />
-              <span className="hidden sm:inline">Export</span>
+              <span className="hidden sm:inline">
+                {t("actionLabels.export")}
+              </span>
             </button>
             {/* Shortcut list — reachable without "?", which a player can turn off */}
             <KeyboardShortcutsTrigger
@@ -896,7 +904,11 @@ export default function BuilderPage() {
                       onClick={() => setShowFilters((f) => !f)}
                       className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                     >
-                      {showFilters ? "Hide filters" : "Show filters"}
+                      {t(
+                        showFilters
+                          ? "filtersToggle.hide"
+                          : "filtersToggle.show"
+                      )}
                     </button>
                     <div className="ml-auto">
                       <BuilderNameSearchModeBar
@@ -946,42 +958,11 @@ export default function BuilderPage() {
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}
                   />
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { code: "W", label: "White" },
-                      { code: "U", label: "Blue" },
-                      { code: "B", label: "Black" },
-                      { code: "R", label: "Red" },
-                      { code: "G", label: "Green" },
-                      { code: "C", label: "Colorless" },
-                    ].map((c) => (
-                      <button
-                        type="button"
-                        key={c.code}
-                        onClick={() => toggleColorFilter(c.code)}
-                        className={cn(
-                          "w-9 h-9 rounded-full transition-all border-2 p-0.5",
-                          colorFilter.includes(c.code)
-                            ? "border-[var(--accent)] scale-110"
-                            : "border-transparent opacity-50 hover:opacity-100"
-                        )}
-                        title={c.label}
-                      >
-                        {/* Official Scryfall mana symbol SVGs — SVG external URL, next/image not applicable */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`https://svgs.scryfall.io/card-symbols/${c.code}.svg`}
-                          alt={c.label}
-                          className="w-full h-full"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  {colorFilter.length === 0 && !searchText && (
-                    <p className="text-xs text-[var(--text-secondary)] italic">
-                      Select colors to browse cards
-                    </p>
-                  )}
+                  <BuilderColorSearchPicker
+                    selected={colorFilter}
+                    hasNameFilter={searchText !== ""}
+                    onToggle={toggleColorFilter}
+                  />
                 </div>
               )}
             </div>
@@ -1143,28 +1124,10 @@ export default function BuilderPage() {
           </motion.div>
 
           {/* Mobile bottom tab bar */}
-          <div className="absolute right-0 bottom-0 left-0 z-30 flex border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-md lg:hidden">
-            {[
-              { id: "search" as const, icon: Search, label: "Search" },
-              { id: "deck" as const, icon: LayoutGrid, label: "Deck" },
-              { id: "stats" as const, icon: BarChart3, label: "Stats" },
-            ].map((tab) => (
-              <button
-                type="button"
-                key={tab.id}
-                onClick={() => setMobilePanel(tab.id)}
-                className={cn(
-                  "flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs transition-colors",
-                  mobilePanel === tab.id
-                    ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
-                    : "text-[var(--text-secondary)]"
-                )}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <BuilderMobileTabBar
+            activePanel={mobilePanel}
+            onSelect={setMobilePanel}
+          />
         </div>
       </div>
 
