@@ -6,19 +6,25 @@ import type { DeckCard } from "@/lib/deck/types";
 import type { CardZone } from "@/lib/playtest/engine";
 import { useLocalizeDeckCard } from "@/components/card/LocalizedDeckTextContext";
 
+/** No commanders: the default for formats without a command zone. */
+const NO_COMMANDERS: ReadonlySet<string> = new Set();
+
 interface GraveyardZoneProps {
   readonly graveyard: readonly DeckCard[];
   readonly exile: readonly DeckCard[];
   readonly onRestore: (cardId: string, from: CardZone, to: CardZone) => void;
+  /** Cards that may return to the command zone (CR 903.9a). */
+  readonly commanderIds?: ReadonlySet<string>;
 }
 
 interface ZoneListProps {
   readonly cards: readonly DeckCard[];
   readonly zone: "graveyard" | "exile";
   readonly onRestore: (cardId: string, from: CardZone, to: CardZone) => void;
+  readonly commanderIds: ReadonlySet<string>;
 }
 
-function ZoneList({ cards, zone, onRestore }: ZoneListProps) {
+function ZoneList({ cards, zone, onRestore, commanderIds }: ZoneListProps) {
   const t = useTranslations("playtest.graveyard");
   const localize = useLocalizeDeckCard();
   const [isOpen, setIsOpen] = useState(false);
@@ -74,6 +80,16 @@ function ZoneList({ cards, zone, onRestore }: ZoneListProps) {
                   >
                     → {t("play")}
                   </button>
+                  {commanderIds.has(card.id) && (
+                    <button
+                      type="button"
+                      onClick={() => onRestore(card.id, zone, "command")}
+                      aria-label={t("returnToCommandZone", { name: localize(card).name })}
+                      className="px-2 py-0.5 text-[10px] bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 rounded transition-colors whitespace-nowrap"
+                    >
+                      → {t("toCommandZone")}
+                    </button>
+                  )}
                 </div>
               </div>
             ))
@@ -88,11 +104,12 @@ export function GraveyardZone({
   graveyard,
   exile,
   onRestore,
+  commanderIds = NO_COMMANDERS,
 }: GraveyardZoneProps) {
   return (
     <div className="bg-[var(--surface)] rounded-xl p-4 space-y-3">
-      <ZoneList cards={graveyard} zone="graveyard" onRestore={onRestore} />
-      <ZoneList cards={exile} zone="exile" onRestore={onRestore} />
+      <ZoneList cards={graveyard} zone="graveyard" onRestore={onRestore} commanderIds={commanderIds} />
+      <ZoneList cards={exile} zone="exile" onRestore={onRestore} commanderIds={commanderIds} />
     </div>
   );
 }

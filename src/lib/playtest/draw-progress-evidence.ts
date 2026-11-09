@@ -53,8 +53,28 @@ export function analyzeDrawProgress(
 }
 
 /**
+ * Counts the deck's cards that have left the library.
+ *
+ * Commanders are left out wherever they are: they start in the command zone
+ * (CR 903.6), so casting one is not a card drawn.
+ *
+ * @param engine - current in-memory playtest state
+ * @returns cards in hand, on the battlefield, in the graveyard or in exile
+ */
+function countCardsOutsideLibrary(engine: PlaytestEngine): number {
+  const commanderIds = new Set(engine.commanderIds);
+  let count = 0;
+  for (const zone of [engine.hand, engine.battlefield, engine.graveyard, engine.exile]) {
+    for (const card of zone) {
+      if (!commanderIds.has(card.id)) count += 1;
+    }
+  }
+  return count;
+}
+
+/**
  * Reads draw-progression evidence from a playtest state, so every view counts
- * the kept hand under the same mulligan rule.
+ * the kept hand under the same mulligan rule and the cards seen the same way.
  *
  * @param engine - current in-memory playtest state
  * @returns cards seen, extra cards seen, and the strongest relevant verdict
@@ -66,11 +86,7 @@ export function analyzeEngineDrawProgress(
     turn: engine.turn,
     mulliganCount: engine.mulliganCount,
     firstMulliganFree: engine.firstMulliganFree,
-    cardsOutsideLibrary:
-      engine.hand.length +
-      engine.battlefield.length +
-      engine.graveyard.length +
-      engine.exile.length,
+    cardsOutsideLibrary: countCardsOutsideLibrary(engine),
     libraryCount: engine.library.length,
   });
 }

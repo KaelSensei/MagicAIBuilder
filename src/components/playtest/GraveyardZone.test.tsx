@@ -56,6 +56,26 @@ describe("GraveyardZone", () => {
     expect(onRestore).toHaveBeenCalledWith(expect.any(String), "graveyard", "hand");
   });
 
+  // CR 903.9a: a commander in the graveyard or exile may go back to the command zone.
+  it("offers the command zone only for a commander", () => {
+    const onRestore = vi.fn();
+    renderWithIntl(
+      <GraveyardZone
+        graveyard={[makeCard("g1", "Dead Creature"), makeCard("cmd", "Kenrith")]}
+        exile={[]}
+        onRestore={onRestore}
+        commanderIds={new Set(["cmd"])}
+      />
+    );
+    fireEvent.click(screen.getByRole("button", { name: /graveyard/i }));
+
+    const returns = screen.getAllByRole("button", { name: /command zone/i });
+    expect(returns).toHaveLength(1);
+    fireEvent.click(returns[0]);
+
+    expect(onRestore).toHaveBeenCalledWith("cmd", "graveyard", "command");
+  });
+
   it("shows empty graveyard message when graveyard is empty", () => {
     renderWithIntl(<GraveyardZone {...defaultProps} graveyard={[]} />);
     const expandBtn = screen.getByRole("button", { name: /graveyard/i });

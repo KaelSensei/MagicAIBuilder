@@ -57,19 +57,17 @@ describe("usePlaytestStore", () => {
     usePlaytestStore.setState({ engine: null, isActive: false, setup: null });
   });
 
-  it("startPlaytest builds engine from commander + main deck", () => {
+  it("startPlaytest deals the main deck and keeps the commander out of it", () => {
     const deck = makeDeck();
     usePlaytestStore.getState().startPlaytest(deck);
     const { engine, isActive } = usePlaytestStore.getState();
     expect(isActive).toBe(true);
     expect(engine).not.toBeNull();
     expect(engine?.hand.length).toBe(7);
-    expect(engine?.library.length).toBe(
-      deck.cards.length + 1 - 7
-    );
+    expect(engine?.library.length).toBe(deck.cards.length - 7);
   });
 
-  it("startPlaytest includes partner in library pool", () => {
+  it("startPlaytest starts the partner in the command zone beside the commander", () => {
     const deck = makeDeck({
       commander: makeCard("c1", "Lord"),
       cardCount: 20,
@@ -80,8 +78,9 @@ describe("usePlaytestStore", () => {
     };
     usePlaytestStore.getState().startPlaytest(withPartner);
     const { engine } = usePlaytestStore.getState();
-    // commander + partner + 20 main = 22 cards; opening hand 7 → library 15
-    expect(engine?.library.length).toBe(15);
+    // 20 main-deck cards; opening hand 7 → library 13
+    expect(engine?.library.length).toBe(13);
+    expect(engine?.commandZone.map((card) => card.name)).toEqual(["Lord", "Partner"]);
   });
 
   it("stopPlaytest clears state", () => {
@@ -156,7 +155,7 @@ describe("usePlaytestStore", () => {
   // dragged battlefield state (tapped/counters) back into the library.
   it("resetPlaytest restores the full original deck, not the current zones", () => {
     const deck = makeDeck({ cardCount: 30 });
-    const total = deck.cards.length + 1; // + commander
+    const total = deck.cards.length; // the commander is in the command zone
 
     usePlaytestStore.getState().startPlaytest(deck);
     const cardId = usePlaytestStore.getState().engine?.hand[0]?.id;
@@ -239,7 +238,7 @@ describe("usePlaytestStore", () => {
     usePlaytestStore.getState().resetPlaytest();
     const reset = usePlaytestStore.getState().engine;
     expect((reset?.hand.length ?? 0) + (reset?.library.length ?? 0))
-      .toBe(deck.cards.length + 1);
+      .toBe(deck.cards.length);
   });
 
   it("adds a required token to the active session only", () => {
@@ -298,5 +297,108 @@ describe("usePlaytestStore", () => {
     const modernDeck = { ...makeDeck({ commander: null }), format: "modern" as const };
     usePlaytestStore.getState().startPlaytest(modernDeck);
     expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(20);
+  });
+});
+
+/** Names of the cards in a zone, in order. */
+function namesIn(cards: readonly DeckCard[] = []): readonly string[] {
+  return cards.map((card) => card.name);
+}
+
+/** A 100-card Commander deck: Kenrith, 15 Forests in one row, and 84 singletons. */
+function makeForestDeck(): Deck {
+  const singletons = makeDeck({ cardCount: 84 }).cards;
+  return {
+    ...makeDeck(),
+    cards: [{ ...makeCard("forest", "Forest"), quantity: 15 }, ...singletons],
+  };
+}
+
+describe("dealing a Commander deck", () => {
+  beforeEach(() => {
+    usePlaytestStore.setState({ engine: null, isActive: false, setup: null });
+  });
+
+  it("deals every copy into the 99 and starts the commander in the command zone", () => {
+    usePlaytestStore.getState().startPlaytest(makeForestDeck());
+    const engine = usePlaytestStore.getState().engine;
+    const dealt = [...(engine?.hand ?? []), ...(engine?.library ?? [])];
+
+    expect({
+      dealt: dealt.length,
+      forests: dealt.filter((card) => card.name === "Forest").length,
+      commanderDealt: dealt.some((card) => card.name === "Kenrith"),
+      commandZone: namesIn(engine?.commandZone),
+    }).toEqual({ dealt: 99, forests: 15, commanderDealt: false, commandZone: ["Kenrith"] });
+  });
+
+  it("deals each copy as its own card, so tapping one Forest leaves its twin alone", () => {
+    const forestsOnly = { ...makeDeck(), cards: [{ ...makeCard("forest", "Forest"), quantity: 10 }] };
+    usePlaytestStore.getState().startPlaytest(forestsOnly);
+    const [first, second] = usePlaytestStore.getState().engine?.hand ?? [];
+    if (!first || !second) throw new Error("expected two Forests in the opening hand");
+
+    const store = usePlaytestStore.getState();
+    store.moveToZone(first.id, "hand", "battlefield");
+    store.moveToZone(second.id, "hand", "battlefield");
+    store.tap(first.id);
+
+    const engine = usePlaytestStore.getState().engine;
+    expect(engine?.battlefield.map((card) => card.tapped)).toEqual([true, false]);
+    const ids = [...(engine?.hand ?? []), ...(engine?.library ?? []), ...(engine?.battlefield ?? [])]
+      .map((card) => card.id);
+    expect(new Set(ids).size).toBe(10);
+  });
+
+  it("deals only the main deck, not the sideboard or the cards being considered", () => {
+    const mainDeck = makeDeck({ cardCount: 20 });
+    const deck: Deck = {
+      ...mainDeck,
+      cards: [
+        ...mainDeck.cards,
+        { ...makeCard("sb", "Negate"), quantity: 2, zone: "sideboard" },
+        { ...makeCard("mb", "Maybe Card"), zone: "maybeboard", isMaybeboard: true },
+      ],
+    };
+    usePlaytestStore.getState().startPlaytest(deck);
+    const engine = usePlaytestStore.getState().engine;
+    const dealt = namesIn([...(engine?.hand ?? []), ...(engine?.library ?? [])]);
+
+    expect(dealt).toHaveLength(20);
+    expect(dealt).not.toContain("Negate");
+    expect(dealt).not.toContain("Maybe Card");
+  });
+
+  it("leaves formats without a command zone as they were", () => {
+    const modernDeck: Deck = { ...makeDeck({ cardCount: 59 }), format: "modern" };
+    usePlaytestStore.getState().startPlaytest(modernDeck);
+    const engine = usePlaytestStore.getState().engine;
+    const dealt = namesIn([...(engine?.hand ?? []), ...(engine?.library ?? [])]);
+
+    expect(dealt).toHaveLength(60);
+    expect(dealt).toContain("Kenrith");
+    expect(engine?.commandZone).toEqual([]);
+  });
+
+  it("restarts with the commander back in the command zone after it was cast", () => {
+    usePlaytestStore.getState().startPlaytest(makeForestDeck());
+    usePlaytestStore.getState().moveToZone("cmd", "command", "battlefield");
+    expect(usePlaytestStore.getState().engine?.commandZone).toEqual([]);
+
+    usePlaytestStore.getState().resetPlaytest();
+    const engine = usePlaytestStore.getState().engine;
+
+    expect(namesIn(engine?.commandZone)).toEqual(["Kenrith"]);
+    expect(engine?.battlefield).toEqual([]);
+    expect((engine?.hand.length ?? 0) + (engine?.library.length ?? 0)).toBe(99);
+  });
+
+  // Brawl's commander and Oathbreaker's oathbreaker both live in the commander slot.
+  it.each(["brawl", "oathbreaker"] as const)("starts the %s commander slot in the command zone", (format) => {
+    usePlaytestStore.getState().startPlaytest({ ...makeDeck({ cardCount: 59 }), format });
+    const engine = usePlaytestStore.getState().engine;
+
+    expect((engine?.hand.length ?? 0) + (engine?.library.length ?? 0)).toBe(59);
+    expect(namesIn(engine?.commandZone)).toEqual(["Kenrith"]);
   });
 });

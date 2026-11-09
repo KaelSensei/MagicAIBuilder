@@ -28,8 +28,8 @@ export const PHASES = [
 
 export type Phase = (typeof PHASES)[number];
 
-/** Library / hand / battlefield / GY / exile zone id (playtest engine). */
-export type CardZone = "hand" | "library" | "battlefield" | "graveyard" | "exile";
+/** Library / hand / battlefield / GY / exile / command zone id (playtest engine). */
+export type CardZone = "hand" | "library" | "battlefield" | "graveyard" | "exile" | "command";
 
 export interface PlaytestTokenSpec {
   readonly name: string;
@@ -110,6 +110,10 @@ export interface PlaytestEngine {
   readonly battlefield: readonly BattlefieldCard[];
   readonly graveyard: readonly DeckCard[];
   readonly exile: readonly DeckCard[];
+  /** Commanders waiting to be cast; they start here, never in the library (CR 903.6). */
+  readonly commandZone: readonly DeckCard[];
+  /** Ids of this game's commanders, the only cards the command zone accepts. */
+  readonly commanderIds: readonly string[];
   readonly diceRolls: readonly DiceRoll[];
   readonly actionLog: readonly PlaytestActionLogEntry[];
   readonly nextActionId: number;
@@ -126,6 +130,9 @@ type PlaytestEnginePatch = {
 // ─── Initial State ────────────────────────────────────────────────────────
 /**
  * Create a fresh playtest state: shuffle deck, draw 7 cards.
+ *
+ * `deckCards` holds one entry per physical library card. The commanders go in
+ * `overrides.commandZone`, never in `deckCards`; they become `commanderIds`.
  */
 export function createPlaytestState(
   deckCards: readonly DeckCard[],
@@ -154,6 +161,9 @@ export function createPlaytestState(
     battlefield: [],
     graveyard: [],
     exile: [],
+    commandZone: [],
+    // The cards dealt into the command zone are the game's commanders.
+    commanderIds: (overrides.commandZone ?? []).map((card) => card.id),
     diceRolls: [],
     actionLog: [],
     nextActionId: 1,
@@ -257,6 +267,9 @@ function describeMulligan(cardsToBottom: number): string {
  * In a multiplayer game and in Brawl the first mulligan does not count
  * (CR 103.5c): it deals a fresh seven with nothing to bottom.
  *
+ * A commander in the hand goes to the command zone instead of the library
+ * (CR 903.9b); the command zone itself is never shuffled in.
+ *
  * @param state - current game state
  * @returns the state with a new seven and, unless the mulligan was free, a
  * pending bottom choice
@@ -266,7 +279,8 @@ export function applyMulligan(state: PlaytestEngine): PlaytestEngine {
   if (state.mulliganCount >= maxMulligans(state)) return state;
 
   const mulliganCount = state.mulliganCount + 1;
-  const shuffled = shuffleCards([...state.hand, ...state.library]);
+  const { commanders, rest } = setAsideCommanders(state.hand, state.commanderIds);
+  const shuffled = shuffleCards([...rest, ...state.library]);
   const cardsToBottom = mulliganBottomCount({
     mulliganCount,
     firstMulliganFree: state.firstMulliganFree,
@@ -277,7 +291,28 @@ export function applyMulligan(state: PlaytestEngine): PlaytestEngine {
     cardsToBottom,
     hand: shuffled.slice(0, OPENING_HAND_SIZE),
     library: shuffled.slice(OPENING_HAND_SIZE),
+    ...(commanders.length > 0 ? { commandZone: [...state.commandZone, ...commanders] } : {}),
   }, describeMulligan(cardsToBottom));
+}
+
+/**
+ * Splits the game's commanders out of a list of cards, in one pass.
+ *
+ * @param cards - cards about to be shuffled into the library
+ * @param commanderIds - ids of the game's commanders
+ * @returns the commanders and the remaining cards, each in their original order
+ */
+function setAsideCommanders(
+  cards: readonly DeckCard[],
+  commanderIds: readonly string[]
+): { readonly commanders: readonly DeckCard[]; readonly rest: readonly DeckCard[] } {
+  const ids = new Set(commanderIds);
+  const commanders: DeckCard[] = [];
+  const rest: DeckCard[] = [];
+  for (const card of cards) {
+    (ids.has(card.id) ? commanders : rest).push(card);
+  }
+  return { commanders, rest };
 }
 
 /**
@@ -514,6 +549,10 @@ function takeFromZone(
       const taken = takeCard(state.exile, cardId);
       return taken ? { card: taken.card, updates: { exile: taken.rest } } : null;
     }
+    case "command": {
+      const taken = takeCard(state.commandZone, cardId);
+      return taken ? { card: taken.card, updates: { commandZone: taken.rest } } : null;
+    }
     default: {
       const _exhaustive: never = zone;
       return _exhaustive;
@@ -568,6 +607,9 @@ function placeInZone(
     case "exile":
       updates.exile = [...state.exile, toDeckCard(card)];
       return;
+    case "command":
+      updates.commandZone = [...state.commandZone, toDeckCard(card)];
+      return;
     default: {
       const _exhaustive: never = zone;
       updates.hand = _exhaustive;
@@ -576,10 +618,25 @@ function placeInZone(
 }
 
 /**
+ * Describes a move for the action log.
+ *
+ * @param name - name of the card moved
+ * @param from - zone the card left
+ * @param to - zone the card entered
+ * @returns the log line
+ */
+function describeMove(name: string, from: CardZone, to: CardZone): string {
+  if (from === "command" && to === "battlefield") return `Cast ${name} from the command zone`;
+  if (to === "command") return `Returned ${name} to the command zone`;
+  return `Moved ${name} from ${from} to ${to}`;
+}
+
+/**
  * Moves one card between playtest zones.
  *
  * A session copy that leaves the battlefield is removed instead of relocated.
- * A card taken from the library is recorded as seen.
+ * A card taken from the library is recorded as seen. Only a commander may
+ * enter the command zone (CR 903.9).
  *
  * @param state - current engine state
  * @param cardId - card to move
@@ -594,6 +651,7 @@ export function applyMoveToZone(
   to: CardZone
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
+  if (to === "command" && !state.commanderIds.includes(cardId)) return state;
   const removed = takeFromZone(state, from, cardId);
   if (!removed) return state;
 
@@ -603,7 +661,7 @@ export function applyMoveToZone(
   }
 
   placeInZone(state, updates, to, card);
-  const description = `Moved ${card.name} from ${from} to ${to}`;
+  const description = describeMove(card.name, from, to);
   if (from === "library") {
     return pushHistory(state, updates, description, { kind: "cardSeen" });
   }

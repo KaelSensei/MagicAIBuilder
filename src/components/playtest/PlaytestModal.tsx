@@ -17,6 +17,7 @@ import { LifeTracker } from "@/components/playtest/LifeTracker";
 import { HandZone } from "@/components/playtest/HandZone";
 import { BattlefieldZone } from "@/components/playtest/BattlefieldZone";
 import { GraveyardZone } from "@/components/playtest/GraveyardZone";
+import { CommandZone } from "@/components/playtest/CommandZone";
 import { RecordResultBar } from "@/components/playtest/RecordResultBar";
 import { PlaytestHistoryPanel } from "@/components/playtest/PlaytestHistoryPanel";
 import { DrawProgressEvidence } from "@/components/playtest/DrawProgressEvidence";
@@ -116,6 +117,18 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const handleRestore = useCallback(
     (cardId: string, from: CardZone, to: CardZone) => moveToZone(cardId, from, to),
     [moveToZone]
+  );
+
+  const handleCast = useCallback(
+    (cardId: string) => moveToZone(cardId, "command", "battlefield"),
+    [moveToZone]
+  );
+
+  // The engine's list is fixed for the game, so the set is rebuilt only on a new deal.
+  const commanderIdList = engine?.commanderIds;
+  const commanderIds = useMemo(
+    () => new Set(commanderIdList ?? []),
+    [commanderIdList]
   );
 
   // A counted mulligan is not finished until the player bottoms its cards
@@ -248,6 +261,9 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
               {/* Board */}
               <div className="space-y-4">
                 <fieldset disabled={choosingBottom} className={BOARD_GROUP_CLASS}>
+                  {commanderIds.size > 0 && (
+                    <CommandZone cards={engine.commandZone} onCast={handleCast} />
+                  )}
                   <DiceRoller rolls={engine.diceRolls} onRoll={rollDie} />
                   <BattlefieldZone
                     battlefield={engine.battlefield}
@@ -275,6 +291,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                     graveyard={engine.graveyard}
                     exile={engine.exile}
                     onRestore={handleRestore}
+                    commanderIds={commanderIds}
                   />
                   <PlaytestActionLog
                     deckName={deck.name}

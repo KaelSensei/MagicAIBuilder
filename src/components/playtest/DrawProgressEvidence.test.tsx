@@ -42,6 +42,8 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
     battlefield: [],
     graveyard: [],
     exile: [],
+    commandZone: [],
+    commanderIds: [],
     diceRolls: [],
     actionLog: [],
     nextActionId: 1,
@@ -93,6 +95,23 @@ describe("DrawProgressEvidence", () => {
       })
     );
 
+    expect(screen.getByText(/natural draws only/i)).toBeDefined();
+  });
+
+  // The commander starts in the command zone (CR 903.6); casting it draws nothing.
+  it("does not count a commander cast from the command zone as a card seen", () => {
+    const commander = { ...card(99), id: "cmd", name: "Kenrith" };
+    renderEvidence(
+      engine({
+        turn: 2,
+        hand: Array.from({ length: 8 }, (_, index) => card(index)),
+        library: Array.from({ length: 91 }, (_, index) => card(index + 8)),
+        battlefield: [{ ...commander, tapped: false, counters: 0 }],
+        commanderIds: ["cmd"],
+      })
+    );
+
+    expect(screen.getByText("8 cards seen")).toBeDefined();
     expect(screen.getByText(/natural draws only/i)).toBeDefined();
   });
 });

@@ -238,6 +238,70 @@ describe("applyMoveToZone", () => {
   });
 });
 
+// ─── Command zone ─────────────────────────────────────────────────────────────
+describe("command zone", () => {
+  /** A game whose commander, Kenrith, starts in the command zone. */
+  function withCommander(): PlaytestEngine {
+    const cards = Array.from({ length: 20 }, (_, i) => makeCard(`c${i}`));
+    return createPlaytestState(cards, { commandZone: [makeCard("cmd", "Kenrith")] });
+  }
+
+  it("casts the commander from the command zone onto the battlefield", () => {
+    const next = applyMoveToZone(withCommander(), "cmd", "command", "battlefield");
+
+    expect(next.commandZone).toEqual([]);
+    expect(next.battlefield.map((card) => card.name)).toEqual(["Kenrith"]);
+    expect(next.actionLog.at(-1)?.description).toBe("Cast Kenrith from the command zone");
+  });
+
+  it("returns the commander from the graveyard to the command zone (CR 903.9a)", () => {
+    const cast = applyMoveToZone(withCommander(), "cmd", "command", "battlefield");
+    const died = applyMoveToZone(cast, "cmd", "battlefield", "graveyard");
+
+    const next = applyMoveToZone(died, "cmd", "graveyard", "command");
+
+    expect(next.graveyard).toEqual([]);
+    expect(next.commandZone.map((card) => card.name)).toEqual(["Kenrith"]);
+    expect(next.actionLog.at(-1)?.description).toBe("Returned Kenrith to the command zone");
+  });
+
+  it("puts a cast commander back in the command zone on undo", () => {
+    const state = withCommander();
+    const cast = applyMoveToZone(state, "cmd", "command", "battlefield");
+
+    expect(applyUndo(cast).commandZone).toEqual(state.commandZone);
+  });
+
+  it("leaves the command zone alone when the player mulligans", () => {
+    const state = withCommander();
+    const next = applyMulligan(state);
+
+    expect(next.commandZone).toEqual(state.commandZone);
+    expect([...next.hand, ...next.library].map((card) => card.id)).not.toContain("cmd");
+    expect(next.hand.length + next.library.length).toBe(20);
+  });
+
+  // CR 903.9b: a commander that would be put into the library may go to the command zone instead.
+  it("returns a commander held in hand to the command zone when the player mulligans", () => {
+    const cast = applyMoveToZone(withCommander(), "cmd", "command", "battlefield");
+    const died = applyMoveToZone(cast, "cmd", "battlefield", "graveyard");
+    const inHand = applyMoveToZone(died, "cmd", "graveyard", "hand");
+
+    const next = applyMulligan(inHand);
+
+    expect(next.commandZone.map((card) => card.name)).toEqual(["Kenrith"]);
+    expect([...next.hand, ...next.library].map((card) => card.id)).not.toContain("cmd");
+    expect(next.hand.length + next.library.length).toBe(20);
+  });
+
+  it("keeps every card but a commander out of the command zone", () => {
+    const state = withCommander();
+    const handCardId = state.hand[0]?.id ?? "";
+
+    expect(applyMoveToZone(state, handCardId, "hand", "command")).toBe(state);
+  });
+});
+
 // ─── Counters ─────────────────────────────────────────────────────────────────
 describe("applyAddCounter", () => {
   it("increments counter on a permanent", () => {
