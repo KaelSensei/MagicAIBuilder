@@ -134,20 +134,27 @@ With 4 players building boards, someone will wipe eventually. Build with recover
 
 Before shuffling, Commander groups have a **pregame conversation** to set expectations. This is where the bracket system comes in.
 
-### The Bracket System (Official since 2024)
+### The Bracket System (beta since February 2025; rules as of October 21, 2025)
 
-| Bracket | Name       | Power Level | Game Changers | Feel                                           |
-| ------- | ---------- | ----------- | ------------- | ---------------------------------------------- |
-| 1       | Exhibition | Low         | 0             | Precons, jank, fun-first. Games go 10+ turns   |
-| 2       | Core       | Medium      | 0             | Upgraded precons, focused strategies. 6+ turns |
-| 3       | Upgraded   | Medium-High | Up to 3       | Optimized but still casual. 4+ turns           |
-| 4       | Optimized  | High        | Unlimited     | High power, fast mana, compact combos          |
+| Bracket | Name       | Game Changers | Mass land denial | Extra turns | Two-card combos    | Expect to play at least |
+| ------- | ---------- | ------------- | ---------------- | ----------- | ------------------ | ----------------------- |
+| 1       | Exhibition | 0             | None             | None        | None               | 9 turns                 |
+| 2       | Core       | 0             | None             | No chaining | None               | 8 turns                 |
+| 3       | Upgraded   | Up to 3       | None             | No chaining | None before turn 6 | 6 turns                 |
+| 4       | Optimized  | Unlimited     | Allowed          | Allowed     | Allowed            | 4 turns                 |
+| 5       | cEDH       | Unlimited     | Allowed          | Allowed     | Allowed            | Any turn                |
 
-**Game Changers** are specific cards designated by Wizards of the Coast that dramatically warp games. They include things like fast mana (Mana Crypt), free counterspells (Force of Will, Fierce Guardianship), powerful engines (Rhystic Study, Smothering Tithe), and efficient tutors (Demonic Tutor, Vampiric Tutor).
+- **Intent comes first.** The checklist is a floor: a deck that meets it but plays stronger should "bracket up". Bracket 1 is theme-first; Bracket 5 is built for the competitive metagame.
+- **The turn numbers are minimums**, not when games usually end.
+- **Tutors are no longer restricted** (since October 2025); the most efficient ones are Game Changers instead. Precons are no longer automatically Bracket 2.
+
+**Game Changers** are specific cards designated by Wizards of the Coast that dramatically warp games (53 cards as of February 9, 2026). They include fast mana (Mana Vault, Chrome Mox), free counterspells (Force of Will, Fierce Guardianship), powerful engines (Rhystic Study, Smothering Tithe), and efficient tutors (Demonic Tutor, Vampiric Tutor). Mana Crypt is not a Game Changer: it has been banned in Commander since September 2024.
+
+For how to build a deck for each bracket, with sources, see `docs/product/guides/commander-deckbuilding-by-bracket.md`.
 
 ### What to Say in a Pregame Conversation
 
-- "My deck is Bracket 2, it's an upgraded precon. I run a Meren aristocrats deck that wins through draining opponents with Blood Artist effects."
+- "My deck is Bracket 2 — Core. It's a Meren aristocrats deck that wins through draining opponents with Blood Artist effects."
 - "No infinite combos, no stax. My most powerful card is probably Grave Pact."
 - "I can win around turn 8-10 if unanswered."
 

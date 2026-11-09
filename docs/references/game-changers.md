@@ -1,12 +1,15 @@
 # Commander Game Changers List
 
-**Last updated:** February 9, 2026 (verified via Scryfall API March 2026)
+**Last updated:** February 9, 2026 (verified via Scryfall API March 2026; membership re-verified and version history corrected 2026-11-08 against the official announcements)
 **Total:** 53 cards
 
 Game Changers are cards that dramatically warp Commander games. They define bracket placement:
+
 - **Bracket 1–2:** 0 Game Changers allowed
 - **Bracket 3:** Up to 3 Game Changers allowed
-- **Bracket 4:** Unlimited
+- **Bracket 4–5:** Unlimited
+
+The Game Changer count is a floor, not a power reading: a deck with no Game Changers can still belong in a higher bracket. See [Building a Commander deck, bracket by bracket](../product/guides/commander-deckbuilding-by-bracket.md) for the full bracket rules and how to build for each.
 
 ---
 
@@ -17,11 +20,13 @@ Always use Scryfall for the authoritative current list:
 **Web:** [scryfall.com/search?q=is:gamechanger](https://scryfall.com/search?as=grid&order=color&q=is:gamechanger)
 
 **API (full list):**
+
 ```
 GET https://api.scryfall.com/cards/search?q=is:gamechanger&order=color
 ```
 
 **Per-card check:**
+
 ```
 GET https://api.scryfall.com/cards/named?exact={card_name}
 # Response includes: game_changer: true/false
@@ -30,6 +35,7 @@ GET https://api.scryfall.com/cards/named?exact={card_name}
 **Implementation:** Fetch and cache on app init (24h TTL). Count matching cards on every decklist change.
 
 Community mirrors (secondary, may lag):
+
 - [Moxfield Game Changers](https://moxfield.com/commanderbrackets/gamechangers)
 - [EDHREC Top Game Changers](https://edhrec.com/top/game-changers)
 - [PlayingMTG Game Changers](https://playingmtg.com/game-changers/)
@@ -42,97 +48,98 @@ Community mirrors (secondary, may lag):
 
 ### White (7)
 
-| Card | CMC | Price | Why |
-|------|-----|-------|-----|
-| Drannith Magistrate | 2 | $14 | Locks opponents out of casting from anywhere but hand — shuts commanders, cascades, flashback |
-| Enlightened Tutor | 1 | $43 | Efficient unrestricted artifact/enchantment tutor at instant speed |
-| Farewell | 6 | $6 | Modal exile board wipe hitting multiple permanent types; answers graveyard strategies simultaneously |
-| Humility | 4 | — | Removes all creature abilities from everything on the board, warps the entire game |
-| Serra's Sanctum | 0 | — | Generates obscene mana in enchantment-heavy decks; scales exponentially (Reserved List) |
-| Smothering Tithe | 4 | $65 | Generates massive treasure advantage passively; snowballs without immediate answer |
-| Teferi's Protection | 3 | $60 | Complete immunity for a full turn cycle; hard counters nearly every win attempt |
+| Card                | CMC | Price | Why                                                                                                  |
+| ------------------- | --- | ----- | ---------------------------------------------------------------------------------------------------- |
+| Drannith Magistrate | 2   | $14   | Locks opponents out of casting from anywhere but hand — shuts commanders, cascades, flashback        |
+| Enlightened Tutor   | 1   | $43   | Efficient unrestricted artifact/enchantment tutor at instant speed                                   |
+| Farewell            | 6   | $6    | Modal exile board wipe hitting multiple permanent types; answers graveyard strategies simultaneously |
+| Humility            | 4   | —     | Removes all creature abilities from everything on the board, warps the entire game                   |
+| Serra's Sanctum     | 0   | —     | Generates obscene mana in enchantment-heavy decks; scales exponentially (Reserved List)              |
+| Smothering Tithe    | 4   | $65   | Generates massive treasure advantage passively; snowballs without immediate answer                   |
+| Teferi's Protection | 3   | $60   | Complete immunity for a full turn cycle; hard counters nearly every win attempt                      |
 
 ### Blue (10)
 
-| Card | CMC | Price | Why |
-|------|-----|-------|-----|
-| Consecrated Sphinx | 6 | $43 | Draws 2 cards for every 1 each opponent draws; snowballs in multiplayer |
-| Cyclonic Rift | 2 | $55 | One-sided instant-speed bounce of all nonland permanents; wins games on the spot |
-| Fierce Guardianship | 3 | $75 | Free counterspell when you control your commander — asymmetric protection from turn 0 |
-| Force of Will | 5 | $100 | Free counterspell from turn 0; stops any single spell with no mana investment |
-| Gifts Ungiven | 4 | $5.50 | Finds any 4 cards and enables graveyard combos regardless of what opponent picks (unbanned Feb 2026) |
-| Intuition | 3 | — | Finds any 3 cards and guarantees graveyard access regardless of what opponent picks (Reserved List) |
-| Mystical Tutor | 1 | $20 | Efficient instant/sorcery tutor for 1 mana at instant speed |
-| Narset, Parter of Veils | 3 | $2 | Passive effect shuts down all opponents' extra card draw |
-| Rhystic Study | 3 | $70 | Persistent card draw pressure every time an opponent casts a spell |
-| Thassa's Oracle | 2 | $30 | Compact combo win condition (Thassa + Demonic Consultation / Tainted Pact) |
+| Card                    | CMC | Price | Why                                                                                                             |
+| ----------------------- | --- | ----- | --------------------------------------------------------------------------------------------------------------- |
+| Consecrated Sphinx      | 6   | $43   | Draws 2 cards for every 1 each opponent draws; snowballs in multiplayer                                         |
+| Cyclonic Rift           | 2   | $55   | One-sided instant-speed bounce of all nonland permanents; wins games on the spot                                |
+| Fierce Guardianship     | 3   | $75   | Free counterspell when you control your commander — asymmetric protection from turn 0                           |
+| Force of Will           | 5   | $100  | Free counterspell from turn 0; stops any single spell with no mana investment                                   |
+| Gifts Ungiven           | 4   | $5.50 | Finds any 4 cards and enables graveyard combos regardless of what opponent picks (unbanned and listed Apr 2025) |
+| Intuition               | 3   | —     | Finds any 3 cards and guarantees graveyard access regardless of what opponent picks (Reserved List)             |
+| Mystical Tutor          | 1   | $20   | Efficient instant/sorcery tutor for 1 mana at instant speed                                                     |
+| Narset, Parter of Veils | 3   | $2    | Passive effect shuts down all opponents' extra card draw                                                        |
+| Rhystic Study           | 3   | $70   | Persistent card draw pressure every time an opponent casts a spell                                              |
+| Thassa's Oracle         | 2   | $30   | Compact combo win condition (Thassa + Demonic Consultation / Tainted Pact)                                      |
 
 ### Black (10)
 
-| Card | CMC | Price | Why |
-|------|-----|-------|-----|
-| Ad Nauseam | 5 | $38 | Draws enormous cards at instant speed by paying life; often draws 20+ cards |
-| Bolas's Citadel | 6 | $15 | Play from top of library using life; typically wins the turn it resolves |
-| Braids, Cabal Minion | 4 | $0.70 | Forces every player to sacrifice a permanent each upkeep; asymmetric in stax shells |
-| Demonic Tutor | 2 | $75 | Finds any card for 2 mana with no downside |
-| Imperial Seal | 1 | $180 | Vampiric Tutor as a sorcery; any-card tutor for 1 mana |
-| Necropotence | 3 | $38 | Converts life to cards at an absurd rate; fully replaces your draw step |
-| Opposition Agent | 3 | $33 | Hijacks opponents' tutors and all searches during your turn |
-| Orcish Bowmasters | 2 | $55 | Punishes all card draw with damage + tokens; wrecks draw-heavy strategies |
-| Tergrid, God of Fright | 5 | $22 | Steals everything opponents sacrifice or discard; oppressive in discard/sacrifice pods |
-| Vampiric Tutor | 1 | $80 | Finds any card at instant speed for 1 mana |
+| Card                   | CMC | Price | Why                                                                                    |
+| ---------------------- | --- | ----- | -------------------------------------------------------------------------------------- |
+| Ad Nauseam             | 5   | $38   | Draws enormous cards at instant speed by paying life; often draws 20+ cards            |
+| Bolas's Citadel        | 6   | $15   | Play from top of library using life; typically wins the turn it resolves               |
+| Braids, Cabal Minion   | 4   | $0.70 | Forces every player to sacrifice a permanent each upkeep; asymmetric in stax shells    |
+| Demonic Tutor          | 2   | $75   | Finds any card for 2 mana with no downside                                             |
+| Imperial Seal          | 1   | $180  | Vampiric Tutor as a sorcery; any-card tutor for 1 mana                                 |
+| Necropotence           | 3   | $38   | Converts life to cards at an absurd rate; fully replaces your draw step                |
+| Opposition Agent       | 3   | $33   | Hijacks opponents' tutors and all searches during your turn                            |
+| Orcish Bowmasters      | 2   | $55   | Punishes all card draw with damage + tokens; wrecks draw-heavy strategies              |
+| Tergrid, God of Fright | 5   | $22   | Steals everything opponents sacrifice or discard; oppressive in discard/sacrifice pods |
+| Vampiric Tutor         | 1   | $80   | Finds any card at instant speed for 1 mana                                             |
 
 ### Red (3)
 
-| Card | CMC | Price | Why |
-|------|-----|-------|-----|
-| Gamble | 1 | $19 | 1-mana unrestricted tutor with random discard downside; mitigated by graveyard synergies |
-| Jeska's Will | 3 | $58 | Generates massive mana + impulse draw with your commander in play |
-| Underworld Breach | 2 | $16 | Enables graveyard combo loops for cheap; fuels storm and reanimator lines |
+| Card              | CMC | Price | Why                                                                                      |
+| ----------------- | --- | ----- | ---------------------------------------------------------------------------------------- |
+| Gamble            | 1   | $19   | 1-mana unrestricted tutor with random discard downside; mitigated by graveyard synergies |
+| Jeska's Will      | 3   | $58   | Generates massive mana + impulse draw with your commander in play                        |
+| Underworld Breach | 2   | $16   | Enables graveyard combo loops for cheap; fuels storm and reanimator lines                |
 
 ### Green (7)
 
-| Card | CMC | Price | Why |
-|------|-----|-------|-----|
-| Biorhythm | 8 | $35 | Sets each player's life total equal to their creature count; can instantly eliminate token-light players (unbanned Feb 2026) |
-| Crop Rotation | 1 | $4.50 | Instant-speed land tutor; finds Gaea's Cradle, Dark Depths, Urborg |
-| Gaea's Cradle | 0 | — | Scales mana with creature count; generates 5–15+ mana in creature-heavy decks (Reserved List) |
-| Natural Order | 4 | $35 | Sacrifice a green creature, tutor any green creature directly to the battlefield |
-| Seedborn Muse | 5 | $14 | Untaps all your permanents on each opponent's turn; effectively multiplies your mana |
-| Survival of the Fittest | 2 | — | Repeatable creature tutor that also fills the graveyard; enables reanimator and combo (Reserved List) |
-| Worldly Tutor | 1 | $33 | Efficient instant-speed creature tutor for 1 mana |
+| Card                    | CMC | Price | Why                                                                                                                          |
+| ----------------------- | --- | ----- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Biorhythm               | 8   | $35   | Sets each player's life total equal to their creature count; can instantly eliminate token-light players (unbanned Feb 2026) |
+| Crop Rotation           | 1   | $4.50 | Instant-speed land tutor; finds Gaea's Cradle, Dark Depths, Urborg                                                           |
+| Gaea's Cradle           | 0   | —     | Scales mana with creature count; generates 5–15+ mana in creature-heavy decks (Reserved List)                                |
+| Natural Order           | 4   | $35   | Sacrifice a green creature, tutor any green creature directly to the battlefield                                             |
+| Seedborn Muse           | 5   | $14   | Untaps all your permanents on each opponent's turn; effectively multiplies your mana                                         |
+| Survival of the Fittest | 2   | —     | Repeatable creature tutor that also fills the graveyard; enables reanimator and combo (Reserved List)                        |
+| Worldly Tutor           | 1   | $33   | Efficient instant-speed creature tutor for 1 mana                                                                            |
 
 ### Multicolor (4)
 
-| Card | Colors | CMC | Price | Why |
-|------|--------|-----|-------|-----|
-| Aura Shards | GW | 3 | $33 | Destroys an artifact or enchantment on every creature ETB; passively dismantles boards |
-| Coalition Victory | WUBRG | 8 | $6 | Instant win if you control one land and one creature of each basic land type and color |
-| Grand Arbiter Augustin IV | WU | 4 | $18 | Taxes opponents' spells while discounting yours; warps the cost structure of the game |
-| Notion Thief | UB | 4 | $3.50 | Steals all card draw from opponents at instant speed; flips wheels into one-sided draws |
+| Card                      | Colors | CMC | Price | Why                                                                                     |
+| ------------------------- | ------ | --- | ----- | --------------------------------------------------------------------------------------- |
+| Aura Shards               | GW     | 3   | $33   | Destroys an artifact or enchantment on every creature ETB; passively dismantles boards  |
+| Coalition Victory         | WUBRG  | 8   | $6    | Instant win if you control one land and one creature of each basic land type and color  |
+| Grand Arbiter Augustin IV | WU     | 4   | $18   | Taxes opponents' spells while discounting yours; warps the cost structure of the game   |
+| Notion Thief              | UB     | 4   | $3.50 | Steals all card draw from opponents at instant speed; flips wheels into one-sided draws |
 
 ### Colorless / Artifacts / Lands (12)
 
-| Card | CMC | Price | Why |
-|------|-----|-------|-----|
-| Ancient Tomb | 0 | $160 | Taps for 2 colorless mana; accelerates by a full turn at cost of 2 life |
-| Chrome Mox | 0 | $200 | Free mana turn 1 by exiling a colored card from hand |
-| Field of the Dead | 0 | $38 | Passively generates zombies whenever 7+ differently named lands are in play; hard to interact with |
-| Glacial Chasm | 0 | — | Prevents all damage to you; pairs with life-gain to stay indefinitely (Reserved List) |
-| Grim Monolith | 2 | — | Taps for 3 colorless; fast mana that accelerates first few turns significantly (Reserved List) |
-| Lion's Eye Diamond | 0 | — | Generates 3 mana of any color by discarding hand; enables storm and zero-land combo lines (Reserved List) |
-| Mana Vault | 1 | $140 | Taps for 3 colorless for 1 mana; fast mana staple |
-| Mishra's Workshop | 0 | — | Taps for 3 mana usable only for artifacts; broken in artifact-heavy lists (Reserved List) |
-| Mox Diamond | 0 | — | Free mana (discard a land); 0-mana artifact acceleration (Reserved List) |
-| Panoptic Mirror | 5 | $25 | Imprint an instant or sorcery; copy and cast it every upkeep for free (unbanned Feb 2026) |
-| The One Ring | 4 | $130 | Protection for a turn + card draw engine that scales; generates 3–6+ cards in a few turns |
-| The Tabernacle at Pendrell Vale | 0 | — | Each creature costs 1 mana to keep each upkeep; taxes creature-dependent strategies (Reserved List) |
+| Card                            | CMC | Price | Why                                                                                                       |
+| ------------------------------- | --- | ----- | --------------------------------------------------------------------------------------------------------- |
+| Ancient Tomb                    | 0   | $160  | Taps for 2 colorless mana; accelerates by a full turn at cost of 2 life                                   |
+| Chrome Mox                      | 0   | $200  | Free mana turn 1 by exiling a colored card from hand                                                      |
+| Field of the Dead               | 0   | $38   | Passively generates zombies whenever 7+ differently named lands are in play; hard to interact with        |
+| Glacial Chasm                   | 0   | —     | Prevents all damage to you; pairs with life-gain to stay indefinitely (Reserved List)                     |
+| Grim Monolith                   | 2   | —     | Taps for 3 colorless; fast mana that accelerates first few turns significantly (Reserved List)            |
+| Lion's Eye Diamond              | 0   | —     | Generates 3 mana of any color by discarding hand; enables storm and zero-land combo lines (Reserved List) |
+| Mana Vault                      | 1   | $140  | Taps for 3 colorless for 1 mana; fast mana staple                                                         |
+| Mishra's Workshop               | 0   | —     | Taps for 3 mana usable only for artifacts; broken in artifact-heavy lists (Reserved List)                 |
+| Mox Diamond                     | 0   | —     | Free mana (discard a land); 0-mana artifact acceleration (Reserved List)                                  |
+| Panoptic Mirror                 | 5   | $25   | Imprint an instant or sorcery; copy and cast it every upkeep for free (unbanned and listed Apr 2025)      |
+| The One Ring                    | 4   | $130  | Protection for a turn + card draw engine that scales; generates 3–6+ cards in a few turns                 |
+| The Tabernacle at Pendrell Vale | 0   | —     | Each creature costs 1 mana to keep each upkeep; taxes creature-dependent strategies (Reserved List)       |
 
 ---
 
 ## Game Changers Criteria
 
 From WotC, a card qualifies as a Game Changer if it:
+
 - Easily and dramatically warps Commander games
 - Allows a player to run away with resources
 - Shifts games in ways many players find unpleasant
@@ -144,39 +151,44 @@ From WotC, a card qualifies as a Game Changer if it:
 
 ## Version History
 
-### February 9, 2026 (+5 added)
-- **Farewell** added (modal exile board wipe)
-- **Biorhythm** added (unbanned from Commander banlist → moved to Game Changers)
-- **Gifts Ungiven** added (unbanned from Commander banlist → moved to Game Changers)
-- **Panoptic Mirror** added (unbanned from Commander banlist → moved to Game Changers)
-- **Fierce Guardianship** re-added (was removed in Oct 2025, back on the list)
-- Lutri, the Spellchaser unbanned from the Commander banlist (banned as companion only now)
+Sources: [Feb 11, 2025](https://magic.wizards.com/en/news/announcements/introducing-commander-brackets-beta) · [Apr 22, 2025](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-april-22-2025) · [Apr 22, 2025 bans](https://magic.wizards.com/en/news/announcements/commander-bans-and-restrictions-april-22-2025) · [Oct 21, 2025](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025) · [Feb 9, 2026](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-february-9-2026). The list went 40 → 61 → 51 → 53; 65 distinct cards have appeared on it, and no removed card has been re-added.
+
+### February 9, 2026 (+2 added → 53)
+
+- **Farewell** added ("clears that bar" despite its high mana value)
+- **Biorhythm** added (unbanned from the Commander banlist → moved to Game Changers)
+- Lutri, the Spellchaser unbanned from the Commander banlist, but still banned as a companion and **not** made a Game Changer — the only exception to the policy that unbanned cards join the list
 - New category introduced: "banned as companion"
 
-### October 21, 2025 (−11 removed)
-Philosophy shift: high-CMC cards and legendary creatures delisted. Focus moved to early-turn warps.
+### October 21, 2025 (−10 removed → 51)
 
-| Removed | Reason |
-|---------|--------|
-| Deflecting Swat | High-CMC, conditional |
-| Expropriate | High-CMC |
-| Fierce Guardianship | Removed, then re-added in Feb 2026 |
-| Food Chain | Combo enabler, not standalone warp |
-| Jin-Gitaxias, Core Augur | High-CMC legendary |
-| Kinnan, Bonder Prodigy | Legendary commander |
-| Sway of the Stars | High-CMC, niche (remains banned in Commander) |
-| Urza, Lord High Artificer | Legendary commander |
-| Vorinclex, Voice of Hunger | High-CMC legendary |
-| Winota, Joiner of Forces | Legendary commander |
-| Yuriko, the Tiger's Shadow | Legendary commander |
+Philosophy shift: high-mana-value cards and "legends that are strongest in the command zone" delisted. Focus moved to early-turn warps. The same update removed the tutor restriction from the bracket rules and decoupled precons from Bracket 2.
 
-### April 22, 2025 (+18 added, −2 removed)
-- +18 cards added (including several unbanned and moved to Game Changers)
-- Trouble in Pairs removed
-- Trinisphere removed
-- Tutor restriction removed from bracket calculations (tutors no longer limit bracket by count)
+| Removed                    | Official reason                                            |
+| -------------------------- | ---------------------------------------------------------- |
+| Deflecting Swat            | "A notch below the free countermagic"                      |
+| Expropriate                | High mana value                                            |
+| Food Chain                 | "The brackets already do a good job of restricting combos" |
+| Jin-Gitaxias, Core Augur   | High mana value                                            |
+| Kinnan, Bonder Prodigy     | Legend strongest in the command zone                       |
+| Sway of the Stars          | High mana value (unbanned 2025-04-22; legal in Commander)  |
+| Urza, Lord High Artificer  | Legend strongest in the command zone                       |
+| Vorinclex, Voice of Hunger | High mana value                                            |
+| Winota, Joiner of Forces   | Legend strongest in the command zone                       |
+| Yuriko, the Tiger's Shadow | Legend strongest in the command zone                       |
+
+Explicitly kept: Consecrated Sphinx ("right on the bubble"), Coalition Victory, Panoptic Mirror. Fierce Guardianship was never removed.
+
+### April 22, 2025 (+23 added, −2 removed → 61)
+
+- **+18 new:** Teferi's Protection, Humility, Narset, Parter of Veils, Intuition, Consecrated Sphinx, Necropotence, Orcish Bowmasters, Notion Thief, Deflecting Swat, Gamble, Worldly Tutor, Crop Rotation, Seedborn Muse, Natural Order, Food Chain, Aura Shards, Field of the Dead, Mishra's Workshop
+- **+5 unbanned and moved to Game Changers:** Braids, Cabal Minion; Coalition Victory; Gifts Ungiven; Panoptic Mirror; Sway of the Stars
+- Trouble in Pairs removed ("just slightly under the bar")
+- Trinisphere removed ("strongest at the highest power levels")
+- Intent declared "the most important part" of the bracket system
 
 ### February 11, 2025 (initial list)
+
 - First public release: 40 cards across 5W, 9U, 7B, 2R, 3G, 4 multi, 10 colorless
 
 ---
@@ -185,12 +197,12 @@ Philosophy shift: high-CMC cards and legendary creatures delisted. Focus moved t
 
 ```typescript
 // On app init — cache for 24h
-const GC_CACHE_KEY = 'game_changers_v1';
+const GC_CACHE_KEY = "game_changers_v1";
 const GC_CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
 
 async function fetchGameChangers(): Promise<Set<string>> {
   const res = await fetch(
-    'https://api.scryfall.com/cards/search?q=is:gamechanger&order=color'
+    "https://api.scryfall.com/cards/search?q=is:gamechanger&order=color"
   );
   const data = await res.json();
   return new Set(data.data.map((c: ScryfallCard) => c.name));
@@ -202,18 +214,21 @@ const BRACKET_GAME_CHANGER_LIMITS: Record<number, number> = {
   2: 0,
   3: 3,
   4: Infinity,
+  5: Infinity,
 };
 
 // Validation
 function checkBracket(deck: Card[], targetBracket: number): BracketViolation[] {
-  const gcCount = deck.filter(c => gameChangers.has(c.name)).length;
+  const gcCount = deck.filter((c) => gameChangers.has(c.name)).length;
   const limit = BRACKET_GAME_CHANGER_LIMITS[targetBracket];
   if (gcCount > limit) {
-    return [{
-      type: 'game_changer_limit',
-      message: `${gcCount} Game Changers exceed bracket ${targetBracket} limit (${limit})`,
-      cards: deck.filter(c => gameChangers.has(c.name)).map(c => c.name),
-    }];
+    return [
+      {
+        type: "game_changer_limit",
+        message: `${gcCount} Game Changers exceed bracket ${targetBracket} limit (${limit})`,
+        cards: deck.filter((c) => gameChangers.has(c.name)).map((c) => c.name),
+      },
+    ];
   }
   return [];
 }

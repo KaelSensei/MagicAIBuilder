@@ -14,18 +14,21 @@ The **Delivery slices** table is the part that matters for automation: each slic
 
 ## Committed work
 
-| Spec                                                                            | Initiative | Status | The one-line reason it exists                                                                         |
-| ------------------------------------------------------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| [Checkable AI copilot](i02-checkable-ai-copilot.md)                             | I-02       | Now    | Competitors validate **or** explain; doing both visibly is the cheapest differentiator on the roadmap |
-| [Visual direction](i13-visual-direction.md)                                     | I-13       | Next   | The audit, the measured failures, and the register chosen over the fantasy one                        |
-| [Verifiable natural-language search](i14-verifiable-natural-language-search.md) | I-14       | Next   | Showing the query is already table stakes; deck context and French are not                            |
-| [Rule 0 sheets and pod profiles](i15-rule-zero-sheets-and-pod-profiles.md)      | I-15       | Next   | Everyone classifies a deck; nobody records what four people agreed                                    |
-| [Decks buildable from a collection](i16-decks-buildable-from-a-collection.md)   | I-16       | Next   | Four products rank by coverage; none excludes copies already committed elsewhere                      |
-| [Precon path and tiered upgrades](i17-precon-path-and-tiered-upgrades.md)       | I-17       | Next   | The market publishes upgrade articles; none is a reversible operation on your list                    |
-| [Per-deck radar of new cards](i18-per-deck-radar-of-new-cards.md)               | I-18       | Later  | Spoiler coverage is universal and entirely set-centric; the per-deck join is open                     |
-| [Offline game-night viewing](i19-offline-game-night-viewing.md)                 | I-19       | Next   | Competitors ship offline card databases; the one deck you are about to play is the honest slice       |
-| [Collaborative review](i20-collaborative-review.md)                             | I-20       | Later  | Archidekt gives collaborators direct write access; propose-and-accept exists nowhere                  |
-| [Reproducible probability bench](i21-reproducible-probability-bench.md)         | I-21       | Later  | Five tools simulate thousands of hands; none publishes a seed or an interval                          |
+| Spec                                                                                      | Initiative | Status | The one-line reason it exists                                                                              |
+| ----------------------------------------------------------------------------------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------- |
+| [Checkable AI copilot](i02-checkable-ai-copilot.md)                                       | I-02       | Now    | Competitors validate **or** explain; doing both visibly is the cheapest differentiator on the roadmap      |
+| [Visual direction](i13-visual-direction.md)                                               | I-13       | Next   | The audit, the measured failures, and the register chosen over the fantasy one                             |
+| [Verifiable natural-language search](i14-verifiable-natural-language-search.md)           | I-14       | Next   | Showing the query is already table stakes; deck context and French are not                                 |
+| [Rule 0 sheets and pod profiles](i15-rule-zero-sheets-and-pod-profiles.md)                | I-15       | Next   | Everyone classifies a deck; nobody records what four people agreed                                         |
+| [Decks buildable from a collection](i16-decks-buildable-from-a-collection.md)             | I-16       | Next   | Four products rank by coverage; none excludes copies already committed elsewhere                           |
+| [Precon path and tiered upgrades](i17-precon-path-and-tiered-upgrades.md)                 | I-17       | Next   | The market publishes upgrade articles; none is a reversible operation on your list                         |
+| [Per-deck radar of new cards](i18-per-deck-radar-of-new-cards.md)                         | I-18       | Later  | Spoiler coverage is universal and entirely set-centric; the per-deck join is open                          |
+| [Offline game-night viewing](i19-offline-game-night-viewing.md)                           | I-19       | Next   | Competitors ship offline card databases; the one deck you are about to play is the honest slice            |
+| [Collaborative review](i20-collaborative-review.md)                                       | I-20       | Later  | Archidekt gives collaborators direct write access; propose-and-accept exists nowhere                       |
+| [Reproducible probability bench](i21-reproducible-probability-bench.md)                   | I-21       | Later  | Five tools simulate thousands of hands; none publishes a seed or an interval                               |
+| [Commander deckbuilding guide by bracket](i28-commander-deckbuilding-guide-by-bracket.md) | I-28       | Next   | Wizards publishes rules, sites publish advice or numbers; nobody labels the evidence, and nobody in French |
+
+I-28 was added after the sweep above, on the owner's request, from its own dated research. Its content lives in [`../guides/commander-deckbuilding-by-bracket.md`](../guides/commander-deckbuilding-by-bracket.md).
 
 ## 2027 horizon
 
