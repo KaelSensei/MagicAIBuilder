@@ -29,7 +29,16 @@ export function usePlaytestHistory(deckId: string | null) {
       if (!response.ok) {
         throw new Error(`Playtest history failed (${response.status})`);
       }
-      return response.json();
+      const history: PlaytestHistory = await response.json();
+      // JSON carries `createdAt` as an ISO string. Restore the Date the session
+      // type promises: the comparison panel orders deck versions by it.
+      return {
+        ...history,
+        sessions: history.sessions.map((session) => ({
+          ...session,
+          createdAt: new Date(session.createdAt),
+        })),
+      };
     },
     enabled: !!deckId,
     retry: false,
