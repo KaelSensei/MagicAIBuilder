@@ -5,18 +5,29 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { mockDeck } from "./mock-deck";
-import { validateGeneratedDeck } from "@/lib/ai/generated-deck-validation";
+import {
+  isAIDeckResponse,
+  validateGeneratedDeck,
+} from "@/lib/ai/generated-deck-validation";
 import { verifyGeneratedDeck } from "@/lib/ai/generated-deck-legality";
 import {
   createDeckPlan,
   describeBracket,
   formatDeckPlanForPrompt,
 } from "@/lib/ai/deck-plan";
+import type { AIProvider, ModelCall } from "@/lib/ai/model-reply";
 import {
-  readAnthropicReplyText,
-  readOpenAIReplyText,
-  type ModelCall,
-} from "@/lib/ai/model-reply";
+  callModelMetered,
+  chooseModelTarget,
+  replyParseFailed,
+  type ModelTarget,
+  type ReplyInterpretation,
+} from "@/lib/ai/metered-model";
+import {
+  recordPlaceholderAnswer,
+  type AiCallTicket,
+} from "@/lib/ai/usage/meter";
+import { reserveAiCallForRoute } from "@/lib/ai/usage/route-gate";
 import type {
   AIDeckResponse,
   Bracket,
@@ -48,17 +59,30 @@ const RATE_WINDOW = 60_000; // per 60 seconds per user
  */
 const BUILD_MAX_OUTPUT_TOKENS = 4096;
 
-const ANTHROPIC_BUILD_CALL: ModelCall = {
-  provider: "anthropic",
-  model: "claude-haiku-4-5",
-  maxTokens: BUILD_MAX_OUTPUT_TOKENS,
+const BUILD_CALLS: Readonly<Record<AIProvider, ModelCall>> = {
+  anthropic: {
+    provider: "anthropic",
+    model: "claude-haiku-4-5",
+    maxTokens: BUILD_MAX_OUTPUT_TOKENS,
+  },
+  openai: {
+    provider: "openai",
+    model: "gpt-4o-mini",
+    maxTokens: BUILD_MAX_OUTPUT_TOKENS,
+  },
 };
 
-const OPENAI_BUILD_CALL: ModelCall = {
-  provider: "openai",
-  model: "gpt-4o-mini",
-  maxTokens: BUILD_MAX_OUTPUT_TOKENS,
-};
+/**
+ * Where this request's decklist comes from: a metered model call holding a
+ * reserved build, or the placeholder when no provider key is set.
+ */
+type DeckOrigin =
+  | {
+      readonly kind: "model";
+      readonly target: ModelTarget;
+      readonly ticket: AiCallTicket;
+    }
+  | { readonly kind: "placeholder" };
 
 export type { BuildEvent, BuildRequest, BuildSource } from "./types";
 
@@ -129,67 +153,79 @@ STRICT RULES:
 }
 
 // ---------------------------------------------------------------------------
-// AI call: Anthropic
+// Model reply
 // ---------------------------------------------------------------------------
-async function callAnthropic(
-  prompt: string,
-  apiKey: string
-): Promise<AIDeckResponse> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: ANTHROPIC_BUILD_CALL.model,
-      max_tokens: ANTHROPIC_BUILD_CALL.maxTokens,
-      messages: [{ role: "user", content: prompt }],
-    }),
-    // Must stay under maxDuration so a slow provider surfaces as an error
-    // event rather than the platform truncating the stream.
-    signal: AbortSignal.timeout(45_000),
-  });
-
-  if (!response.ok) throw new Error(`Anthropic API error: ${response.status}`);
-  const text =
-    readAnthropicReplyText(await response.json(), ANTHROPIC_BUILD_CALL) ?? "{}";
+/**
+ * Reads a complete model reply as a decklist.
+ *
+ * @param text - the reply's text
+ * @returns the deck, or why it cannot be used: not JSON, or structurally
+ *   invalid
+ */
+function interpretDeckReply(text: string): ReplyInterpretation<AIDeckResponse> {
   // Strip markdown fences if the model wrapped output anyway
   const cleaned = text
     .replace(/^```(?:json)?\s*/i, "")
     .trimEnd()
     .replace(/```$/, "")
     .trim();
-  return JSON.parse(cleaned) as AIDeckResponse;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (error) {
+    return replyParseFailed(error);
+  }
+  const issues = validateGeneratedDeck(parsed);
+  if (issues.length > 0 || !isAIDeckResponse(parsed)) {
+    return {
+      ok: false,
+      outcome: "rejectedByValidator",
+      error: new Error(`Generated deck rejected: ${issues.join(" ")}`),
+    };
+  }
+  return { ok: true, value: parsed };
 }
 
-// ---------------------------------------------------------------------------
-// AI call: OpenAI
-// ---------------------------------------------------------------------------
-async function callOpenAI(
-  prompt: string,
-  apiKey: string
+/**
+ * Produces the decklist, from the model or from the placeholder.
+ *
+ * @param origin - the metered model call, or the placeholder
+ * @param body - the sanitized build request
+ * @param userId - the caller, recorded with a placeholder answer
+ * @param emit - sends a progress event
+ * @returns a structurally valid deck
+ */
+async function generateDeck(
+  origin: DeckOrigin,
+  body: BuildRequest,
+  userId: string,
+  emit: (event: BuildEvent) => void
 ): Promise<AIDeckResponse> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: OPENAI_BUILD_CALL.model,
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      max_tokens: OPENAI_BUILD_CALL.maxTokens,
-    }),
-    signal: AbortSignal.timeout(45_000),
-  });
-
-  if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
-  const text =
-    readOpenAIReplyText(await response.json(), OPENAI_BUILD_CALL) ?? "{}";
-  return JSON.parse(text) as AIDeckResponse;
+  switch (origin.kind) {
+    case "model":
+      emit({ type: "status", message: "Consulting the AI oracle…" });
+      return callModelMetered({
+        ticket: origin.ticket,
+        target: origin.target,
+        prompt: buildPrompt(body),
+        interpret: interpretDeckReply,
+      });
+    case "placeholder": {
+      // No provider key configured: fall back to a colour-correct
+      // placeholder list, and flag it on "done" so the UI can say so.
+      const deck = mockDeck(body);
+      await recordPlaceholderAnswer(userId, "build");
+      const issues = validateGeneratedDeck(deck);
+      if (issues.length > 0) {
+        throw new Error(`Generated deck rejected: ${issues.join(" ")}`);
+      }
+      return deck;
+    }
+    default: {
+      const unreachable: never = origin;
+      return unreachable;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -299,6 +335,21 @@ export async function POST(request: Request) {
     bracket: toBracket(parsed.data.bracket),
   };
 
+  // A model call needs a build from this month's allowance before the stream
+  // starts, so a refusal can still be an HTTP status.
+  const userId = auth.session.user.id;
+  const target = chooseModelTarget(BUILD_CALLS);
+  let origin: DeckOrigin = { kind: "placeholder" };
+  if (target) {
+    const gate = await reserveAiCallForRoute(
+      userId,
+      "build",
+      "POST /api/ai/build"
+    );
+    if (!gate.ok) return gate.response;
+    origin = { kind: "model", target, ticket: gate.ticket };
+  }
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
@@ -308,34 +359,8 @@ export async function POST(request: Request) {
 
       try {
         emit({ type: "status", message: "Thinking…" });
-
-        let deck: AIDeckResponse;
-        let source: BuildSource;
-
-        // The key that selects a provider is the one sent to it.
-        const anthropicKey = process.env.ANTHROPIC_API_KEY;
-        const openAIKey = process.env.OPENAI_API_KEY;
-        if (anthropicKey) {
-          emit({ type: "status", message: "Consulting the AI oracle…" });
-          deck = await callAnthropic(buildPrompt(body), anthropicKey);
-          source = "ai";
-        } else if (openAIKey) {
-          emit({ type: "status", message: "Consulting the AI oracle…" });
-          deck = await callOpenAI(buildPrompt(body), openAIKey);
-          source = "ai";
-        } else {
-          // No provider key configured: fall back to a colour-correct
-          // placeholder list, and flag it on "done" so the UI can say so.
-          deck = mockDeck(body);
-          source = "demo";
-        }
-
-        const validationIssues = validateGeneratedDeck(deck);
-        if (validationIssues.length > 0) {
-          throw new Error(
-            `Generated deck rejected: ${validationIssues.join(" ")}`
-          );
-        }
+        const deck = await generateDeck(origin, body, userId, emit);
+        const source: BuildSource = origin.kind === "model" ? "ai" : "demo";
 
         // Card data, not the model, decides what reaches the player: illegal
         // cards are repaired and every change rides on the "done" event.

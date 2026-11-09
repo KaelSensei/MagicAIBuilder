@@ -35,7 +35,13 @@ export function validateGeneratedDeck(value: unknown): readonly string[] {
   return issues;
 }
 
-function isAIDeckResponse(value: unknown): value is AIDeckResponse {
+/**
+ * Narrows untrusted provider output to the decklist shape.
+ *
+ * @param value - parsed provider output
+ * @returns true when the value has a commander, a partner field and typed cards
+ */
+export function isAIDeckResponse(value: unknown): value is AIDeckResponse {
   if (typeof value !== "object" || value === null) return false;
   if (!("commander" in value) || typeof value.commander !== "string") return false;
   if (!("partner" in value) || (value.partner !== null && typeof value.partner !== "string")) {

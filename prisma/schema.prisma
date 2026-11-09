@@ -40,6 +40,8 @@ model User {
   followers         UserFollow[]       @relation("Followers")
   apiKeys           ApiKey[]
   notificationPreferences NotificationPreference?
+  aiUsage           AiUsage[]
+  usageCounters     UsageCounter[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -572,4 +574,52 @@ model UserFollow {
 
   @@unique([followerId, followingId])
   @@index([followingId])
+}
+
+/// One metered model call, or one placeholder answer when no provider key is
+/// set: its tokens, how it ended and what it cost us (I-30 requirement 4.1).
+/// Personal data, deleted with the user; the month's total survives in
+/// `AiMonthlySpend`.
+model AiUsage {
+  id                     String   @id @default(cuid())
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  route                  String // "build" | "suggest"
+  provider               String // "anthropic" | "openai" | "placeholder"
+  model                  String
+  inputTokens            Int      @default(0)
+  outputTokens           Int      @default(0)
+  cacheReadTokens        Int      @default(0)
+  cacheWriteTokens       Int      @default(0)
+  stopReason             String?
+  outcome                String // "ok" | "truncated" | "refused" | "parseFailed" | "rejectedByValidator" | "providerError"
+  costMicroUsd           Int      @default(0)
+  priceTableVersion      String
+  countsAgainstAllowance Boolean
+  createdAt              DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+/// Calls one user made on one metered key ("ai.build", "ai.suggest") in one
+/// UTC month. Claiming a call is a single conditional
+/// `UPDATE … SET used = used + 1 WHERE used < limit`, so two instances cannot
+/// both take the last unit.
+model UsageCounter {
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key         String
+  /// First instant of the UTC month the count belongs to.
+  periodStart DateTime
+  used        Int      @default(0)
+
+  @@id([userId, key, periodStart])
+}
+
+/// What every metered model call cost in one UTC month, across all users.
+/// Read against the global spend ceiling before a call.
+model AiMonthlySpend {
+  /// First instant of the UTC month.
+  periodStart   DateTime @id
+  spentMicroUsd BigInt   @default(0)
 }
