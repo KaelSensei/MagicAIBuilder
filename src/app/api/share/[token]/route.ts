@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
+import { SHARED_DECK_SELECT } from "@/lib/deck/shared-deck-select";
+import type { ApiSharedDeck } from "@/lib/deck/share-types";
 
 type Params = { params: Promise<{ token: string }> };
 
-// GET /api/share/[token] — public read-only deck endpoint (no auth required)
+/**
+ * GET /api/share/[token] — read-only deck behind a share link, no auth required.
+ *
+ * The token opens the deck, public or private, while its owner keeps sharing
+ * enabled; an unknown or revoked token 404s. The deck is read through
+ * {@link SHARED_DECK_SELECT}, so the link holder receives what the share page
+ * renders and nothing else: never the token, the owner or owner-only columns.
+ */
 export async function GET(_req: Request, { params }: Params) {
   const { token } = await params;
 
@@ -15,18 +24,16 @@ export async function GET(_req: Request, { params }: Params) {
 
   try {
     const deck = await prisma.deck.findUnique({
-      where: { shareToken: token },
-      include: { cards: true },
+      where: { shareToken: token, shareEnabled: true },
+      select: SHARED_DECK_SELECT,
     });
 
-    if (!deck?.shareEnabled) {
+    if (!deck) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    // Strip shareToken before returning the public response
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring to omit shareToken from response
-    const { shareToken: _omitted, ...publicDeck } = deck;
-    return NextResponse.json(publicDeck);
+    const body: ApiSharedDeck = deck;
+    return NextResponse.json(body);
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
