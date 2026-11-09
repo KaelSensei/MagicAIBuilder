@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SUPPORTED_LOCALES, routing } from "@/i18n/routing";
+import { isCommanderSlug } from "@/lib/meta/fetch";
 import { localePath, siteUrl } from "./alternates";
 
 /**
@@ -110,9 +111,11 @@ export function buildSitemap(sources: SitemapSources): MetadataRoute.Sitemap {
  * Collapses decks to one entry per commander, keeping the most recent change.
  *
  * A commander page lists every public deck led by that commander, so its
- * freshness is the freshest deck on it.
+ * freshness is the freshest deck on it. A slug the commander page would answer
+ * with a 404 (see `isCommanderSlug`) is dropped.
  *
  * @param decks Public decks carrying a commander slug.
+ * @returns One page per usable commander slug.
  */
 export function collapseToCommanders(
   decks: readonly { readonly slug: string; readonly updatedAt: Date }[]
@@ -120,6 +123,10 @@ export function collapseToCommanders(
   const newest = new Map<string, Date>();
 
   for (const deck of decks) {
+    // A name with no ASCII letter or digit slugs to "" or to hyphens only,
+    // and the commander page answers both with a 404.
+    if (!isCommanderSlug(deck.slug)) continue;
+
     const seen = newest.get(deck.slug);
     if (seen === undefined || deck.updatedAt > seen)
       newest.set(deck.slug, deck.updatedAt);
