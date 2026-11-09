@@ -6,7 +6,11 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { mockDeck } from "./mock-deck";
 import { validateGeneratedDeck } from "@/lib/ai/generated-deck-validation";
-import { createDeckPlan, formatDeckPlanForPrompt } from "@/lib/ai/deck-plan";
+import {
+  createDeckPlan,
+  describeBracket,
+  formatDeckPlanForPrompt,
+} from "@/lib/ai/deck-plan";
 import type {
   AIDeckResponse,
   Bracket,
@@ -31,14 +35,6 @@ export type { BuildEvent, BuildRequest, BuildSource } from "./types";
 // ---------------------------------------------------------------------------
 // Prompt builder
 // ---------------------------------------------------------------------------
-const BRACKET_DESCRIPTIONS: Record<Bracket, string> = {
-  1: "Bracket 1 — Casual/precon level. No tutors, no combos, no game changers.",
-  2: "Bracket 2 — Low power. 0-1 game changers max, no infinite combos, budget-friendly.",
-  3: "Bracket 3 — Mid power. Up to 3 game changers, some strong synergies, no cEDH staples.",
-  4: "Bracket 4 — High power. Fast combos and strong staples, short of a tuned cEDH list.",
-  5: "Bracket 5 — cEDH. Any legal card, fully optimized for winning.",
-};
-
 const COLOR_NAMES: Record<string, string> = {
   W: "White",
   U: "Blue",
@@ -55,7 +51,7 @@ function buildPrompt(req: BuildRequest): string {
       : "Colorless";
   const colorSymbols = req.colors.filter((c) => c !== "C").join(""); // e.g. "UB" for Dimir
   const budgetStr = req.budget ? `$${req.budget} max per card` : "No limit";
-  const bracketDesc = BRACKET_DESCRIPTIONS[req.bracket];
+  const bracketDesc = describeBracket(req.bracket);
   const deckPlan = formatDeckPlanForPrompt(createDeckPlan(req));
 
   const commanderStr = req.commanderName

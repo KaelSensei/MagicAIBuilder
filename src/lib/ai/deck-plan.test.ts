@@ -24,7 +24,7 @@ describe("createDeckPlan", () => {
         "White, Blue color identity only",
         "Use Shorikai, Genesis Engine as commander",
         "$200 maximum per card",
-        "Bracket 3: up to 3 game changers and no cEDH optimization",
+        "Bracket 3 (Upgraded): strong synergy and high card quality",
       ])
     );
   });
