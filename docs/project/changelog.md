@@ -9,6 +9,205 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-11-09: Queue concurrent E2E gates and clear root-owned reports
+
+- Two pre-push E2E gates started on the same machine no longer replace each other's containers: the second waits for a machine-wide lock and starts when the first exits. Report folders left behind as root by an interrupted run are cleared through a throwaway container instead of blocking every later push. `SKIP_E2E` and the CI bypass are unchanged (#1302).
+- Both script tests were observed red against the unchanged script. Typecheck, lint, 3,540 unit tests across 348 files (on `dev` at `70c57f4`, before #1301), Prettier, a `bash -n` check and the pre-push Docker E2E gate (74 + 8) with the new script passed; Sonar was left to CI. The flaky `e2e/i18n-routing.spec.ts` onboarding race remains open.
+
+### 2026-11-09: Follow the London mulligan and the free multiplayer mulligan
+
+- Every playtest mulligan now draws a fresh seven, and the player chooses which cards go to the bottom, in order, as the London mulligan requires. In Commander, Brawl and Oathbreaker the first mulligan is free; in the 1v1 constructed formats the first mulligan already bottoms a card. Other board actions wait while that choice is pending, undo steps back through both stages, and the action log says what happened (#1301).
+- Each behavior went through its own Red/Green cycle. Typecheck, lint, 3,555 unit tests across 345 files (on a branch based on `dev` before #1300) and the pre-push Docker E2E gate (74 + 8, including the updated playtest spec) passed. Sonar was left to CI; the bottom-choice layout is covered by component tests and was not checked in a browser. A per-session multiplayer toggle and stage-aware opening-hand advice remain open.
+
+### 2026-11-09: Use the official bracket names and rules
+
+- The target-bracket picker shows the official names and limits: Exhibition, Core, Upgraded and Optimized in English, and "Catégorie N — Nom (bracket N)" in French. Core allows no Game Changers. The copilot prompt no longer forbids tutors at bracket 1 or allows a Game Changer at bracket 2, and it states each bracket's official rules and turn floor. The eight dormant catalogs carry the corrected English copy (#1300).
+- Each behavior went through its own Red/Green cycle, adding 23 tests. Typecheck, lint, 3,538 unit tests across 347 files, key parity and the pre-push Docker E2E gate (74 + 8) passed; Sonar was left to CI. The shared bracket constants, the bracket indicator's "Casual" label, the scorer's two-card-combo rule and a bracket 5 choice remain for the next slice.
+
+### 2026-11-09: Reject duplicate commander cards on card add
+
+- Adding a commander or partner card that reprints the Oracle card already in the other command slot is rejected with the existing "Commander and partner must be different cards" message before anything is written. Main, Sideboard and Considering additions are unaffected (#1295).
+- Three route tests were observed red before the change. Typecheck, lint, 3,515 unit tests across 345 files and the pre-push Docker E2E gate (74 + 8) passed; Sonar was left to CI.
+
+### 2026-11-09: Guides to brackets and opening hands, and a cross-site deck index proposal
+
+- A sourced guide to building a Commander deck for each bracket, with every claim labelled Official, Data or Community against 126 dated sources, plus the I-28 spec. It found the wrong bracket labels and copilot rules corrected in #1300 (#1296).
+- A companion guide to the free mulligan, keep decisions, mana curves and play style, backed by 74 dated sources and a seeded research simulator that no product code imports. It found the playtest mulligan error corrected in #1301 (#1298).
+- The I-29 proposal and spec for a cross-site Commander deck index: source policy first, index only what may be held, link out to everything else, and treat partnerships as the only route to EDHREC's scale (#1299).
+- Documentation and research scripts only. Each PR records typecheck, lint, the unit suite (3,510 tests for #1296; 3,515 for #1298 and #1299), Prettier, link checks and the pre-push Docker E2E gate passing; Sonar was not run on Markdown.
+
+### 2026-11-08: Name each warned card once and gate leftover automation fixes
+
+- Bracket warnings name a banned, off-identity or Game Changer card once even when the deck holds several printings, matching deck validation. The Game Changer count still counts copies (#1292).
+- Three fixes that the retired hourly roadmap automation had committed but never pushed were replayed unchanged and gated for the first time: the companion even-mana-value warning counts copies rather than rows (#1287), missing meta cards with equal scores keep a stable order (#1288), and a failed Moxfield profile page offers Retry (#1286).
+- #1292 was observed red; typecheck, lint, 3,510 unit tests across 344 files and the pre-push Docker E2E gate (74 + 8) passed on the third attempt, after an unrelated onboarding-dialog race in `e2e/i18n-routing.spec.ts` and a root-owned report folder. #1286-#1288 record a clean typecheck, lint and unit suite and a passing pre-push Docker Playwright run; Sonar was left to CI.
+
+### 2026-11-08: Record the Docker E2E environment
+
+- The quality gate documents all 11 variables the E2E Compose stack sets, and a toolchain test fails when one of them is missing from that table (#1285).
+- The guard was observed red, then checked by deleting a row. Typecheck, lint, 3,506 unit tests across 343 files and the pre-push Docker E2E gate passed; Sonar was left to CI.
+
+### 2026-11-08: Competitive analysis, initiative specs and the 2027 roadmap
+
+- The roadmap gains I-14 to I-21 (none in Now) from an 8 November competitive pass, and the competitive landscape is rewritten in English with current sources (#1289). A refreshed benchmark corrects the premise that no platform ships LLM-powered Commander deckbuilding; positioning moves from "AI builds your deck" to "AI you can check" (#1284).
+- Functional specs for ten initiatives, each with a dated market sweep and delivery slices with dependencies (#1293). Six sourced 2027 initiatives, I-22 to I-27, and four rejected directions with their reasons (#1294).
+- Documentation only. #1293 and #1294 record typecheck, lint and the unit suite (3,509 and 3,510 tests); #1284 lists Prettier, typecheck, lint and tests; #1289 ran no code gates. #1290 and #1291 promoted #1283 and #1289 through `staging` to `main`, citing Docker E2E (74 + 8) and a SonarCloud Quality Gate OK with zero code smells for #1283.
+
+### 2026-11-07: Roll back a failed partner save
+
+- When saving a new partner fails, the editor restores the previous partner and pairing type and shows an error. A partner whose deck save already succeeded, or a newer choice, is kept (#1283).
+- Three Red/Green cycles, plus a failed-clearing case covered by the same guard. Typecheck, lint, 3,505 unit tests across 343 files and build passed. The full Docker E2E gate passed (74 + 8) on the first commit; the follow-up commit that removed the Sonar complexity smell reported there was pushed with `SKIP_E2E=1`.
+
+### 2026-11-07: Restore playtest readability and the editor E2E gate
+
+- Playtest text and surfaces follow the theme again, feedback controls fit narrow screens, and a bundled card back stands in for missing images (#1275). Tournament evidence dates use an explicit comparator, resolving Sonar S2871 (#1276).
+- The remaining maintainability findings were resolved without suppressing rules, six duplicate API tests introduced during promotions were removed, and the editor E2E setup was repaired for the grid default (#1279).
+- #1275: 125 focused tests, typecheck, lint, build and all seven playtest E2E scenarios passed, but the editor E2E gate was red (71/74); the owner explicitly asked to merge, and the push used `SKIP_E2E=1`. #1279: 3,501 unit tests across 343 files, lint, typecheck, build and the full Docker E2E suite passed without bypasses or retries; Sonar processed the branch scan, whose results the organization cannot read (HTTP 403).
+- #1277 and #1278 promoted #1275 and #1276 under an owner-approved waiver for the known E2E failures and remaining smells. #1281 reconciled `staging` history (74 + 8 Playwright passed), then #1280 and #1282 promoted #1279 with 3,501 unit tests and 74 + 8 Playwright passing. #1282 used a regular merge, authorized because GitHub could not rebase the historical promotion commits; its Vercel preview failed.
+
+### 2026-11-06: Lumen light and dark redesign
+
+- A new visual language, Lumen, in light and dark: soft surfaces, generous corners, a violet accent and Inter, with a sun, moon and system control in the header. System is opt-in, so an existing explicit theme choice is kept (#1259).
+- The landing page (#1265), collection (#1266), public decks and commander discovery (#1267), forms and modals (#1268) and the deck library (#1269) moved onto Lumen. Public decks gain category chips, commander discovery a name filter and the deck library a search over loaded decks; the landing page no longer loads Cinzel.
+- Typecheck, lint and unit tests passed in each PR (3,440 tests across 329 files for #1259; 3,473 for #1269). Sonar was not run, and Docker E2E was skipped with `SKIP_E2E=1` because Docker was unavailable in that environment. #1259 records a manual check of the guest builder in both themes and at 390x844.
+
+### 2026-11-06: One card list for deck zones, cross-zone drag and stable loading
+
+- Main, Sideboard and Considering come from one card list in which each card's saved zone is the truth. Zone moves can be undone, and the save indicator stays on until every overlapping write finishes (#1263).
+- Zone tabs and categories are stable drop targets, grid cards have a keyboard-focusable drag handle, and search results have a zone menu that adds a card to Main, Sideboard or Considering without dragging (#1264).
+- A session request that never finishes shows a retry after eight seconds while loaded decks stay on screen, and a failed profile refresh keeps the last profile. Hover previews sit in a fixed box, and the large zoom can no longer widen the page (#1271).
+- The editor opens in grid view by default (#1256). Signed-in players can save a public deck (#1257).
+- #1263, #1264 and #1271 passed typecheck, lint and 3,478, 3,477 and 3,473 unit tests; Sonar was not run and Docker E2E was skipped with `SKIP_E2E=1`. #1256's commit records a focused red, store tests, typecheck and lint on the VPS; #1257 records no verification.
+
+### 2026-11-06: Fix audit regressions and simplify dense helpers
+
+- Audit fixes, each with a regression test: a second clipboard copy resets the confirmation timer; a non-numeric stored panel width falls back to the default; only the latest meta or comment request updates the screen; a playtest-history server error is reported; collection loading drops malformed rows and concurrent additions increment one row; a failed shopping toggle no longer undoes others; the wizard budget starts unselected; AI suggestions go to the active zone; a Commander Spellbook failure returns 502 instead of an empty list (#1260).
+- Behavior-preserving refactors split the dense playtest, acquisition, Moxfield import and store helpers (#1261) and move NDJSON streaming and payload building out of the AI suggestions hook (#1262).
+- Typecheck, lint and unit tests passed (3,439 for #1260; 3,471 for #1261 and #1262). Sonar was left to CI, and Docker E2E was skipped with `SKIP_E2E=1`.
+
+### 2026-11-06: Cover editor zone flows in E2E
+
+- New Playwright specs cover Main to Sideboard persistence after reload (#1258) and after a rejected move (#1274), plus Considering persistence, Main to Considering, a rejected move, banner geometry and a fixed hover preview (#1270).
+- #1258 passed 6 Docker Playwright tests. #1270's specs were not executed in that PR's environment (3,471 unit tests passed); the full gate passed with 74 browser tests from #1279 onward. #1274 records no run.
+- #1254 and #1255 promoted the accumulated `dev` changes to `staging` and `main` that morning; #1272 and #1273 promoted this day's batch in the evening.
+
+### 2026-11-05: Fix guest building, snapshot restores and stale reloads
+
+- A guest's New Deck stays in the browser instead of calling the signed-in API, so it no longer fails with 401, and the builder no longer re-renders in a loop (#1231).
+- Restoring a snapshot keeps each card's zone, notes, power and toughness, and the editor reloads the open deck after a restore or a package apply (#1250, #1252). An older collection reload no longer overwrites a newer one (#1247), and a resized panel keeps its width on the next visit (#1246).
+- Clearing a vote on a deck the caller cannot see now returns 404 without revealing the tally (#1251).
+- #1231 was observed red; 3,391 unit tests, typecheck, lint, build and Docker E2E (67 + 8, including a new guest route test) passed; Sonar was unavailable. #1246, #1247 and #1250-#1252 were observed red and passed typecheck, lint and 3,404-3,407 unit tests; Sonar was not run and Docker E2E was skipped with `SKIP_E2E=1`.
+
+### 2026-11-05: Keep share tokens out of logs and clear the production audit
+
+- Share-route errors no longer log the share token (#1234). A scoped override clears the production dependency advisories, and `pnpm audit --prod` reports zero (#1235).
+- Both were observed red. Typecheck, lint, 3,395 and 3,394 unit tests, build and Docker E2E (67 + 8) passed; Sonar was unavailable without a token.
+
+### 2026-11-05: Import fidelity and meta-source disclosure
+
+- Moxfield URL imports keep companions (#1238). Pasted text drops standalone lowercase set codes (#1244), and pasted Archidekt lists drop category tags such as `[Ramp]` before the name lookup (#1249).
+- Meta API responses name their source, EDHREC or tournament, for live and cached data (#1236), and dated tournament recommendations show the event window they cover (#1242).
+- #1236: 3,395 unit tests, build and Docker E2E (67 + 8) passed. #1238: 46 focused tests, lint and build passed; local Sonar failed and Docker E2E was not run. #1242 and #1244 passed typecheck, lint, the unit suite and build. #1242's Docker attempt failed in the runner without failed cases; #1244 relied on the preceding feature's run (67 browser tests passed, with an unrelated authenticated rename-focus failure). #1249 records the focused test, with full validation still in progress at merge.
+
+### 2026-11-05: Localization, keyboard access and an honest landing page
+
+- French players get a localized collection panel with correct plurals (#1232), deck tag controls (#1233), imported deck names and dates (#1237), home-deck mana labels for screen readers (#1243) and a locale-formatted average winning turn (#1245). The locale menu reports its open and selected state to assistive technology (#1253).
+- Collection list actions (#1239), Considering row actions (#1240) and the main-deck reorder handle (#1241) appear on keyboard focus.
+- The landing page replaces unsupported AI and pricing claims with an atlas of shipped Commander capabilities, and its structured data drops the price offer (#1248).
+- Focused red tests are recorded for all but #1243. Typecheck and lint passed throughout. Full unit suites passed for #1232 (3,393), #1233 (3,394), #1237 (3,396), #1240 (3,399), #1248 (3,405), #1239, #1243 and #1245; Docker E2E (67 + 8) passed for #1232, #1237, #1239, #1245 and #1248, while #1243's authenticated run hit the unrelated rename-focus failure. #1241 and #1253 record focused tests with the full suite still running. Sonar was unavailable without a token.
+
+### 2026-11-04: Clearer deck library and workspace
+
+- Primary navigation is a named, keyboard-visible group, and deck cards separate the deck's identity from its card count, update time, bracket and colors (#1217, #1218). The active zone keeps a pressed state with a fixed height that avoids layout movement (#1219).
+- Commander banner actions (#1222) and the double-faced card's Turn Over control (#1228) appear on keyboard focus.
+- All were observed red. #1217 passed typecheck, lint, the unit suite, build and Docker E2E (66 + 8). #1219 records the targeted test, typecheck and lint, with the full suite and build cut off before a verdict. #1222 passed the unit suite and build, and #1228 lists the same checks; Docker E2E was not rerun for these class-only changes.
+
+### 2026-11-04: Persist quantity edits and protect shared links
+
+- Quantity changes in the deck editor are saved instead of being dropped by the API (#1223). A failed description save restores the last saved text and offers retry (#1229).
+- Share pages tell search engines not to index, follow or archive them (#1220). API v1 deck exports include the pairing type (#1221), and Archidekt text exports keep Sideboard and Considering (#1226).
+- All were observed red. #1220, #1221, #1223 and #1226 passed typecheck, lint, the unit suite (3,385 tests for #1226), build and Docker E2E (66 + 8). #1229 lists the same checks with 66 Docker tests passing. Sonar was unavailable without a token.
+
+### 2026-11-04: USD labels, meta-source health and Scryfall latency
+
+- The printing selector (#1224) and card-search price bounds (#1230) label Scryfall prices as USD without converting them. Unavailable meta sources and their retry count appear beside the evidence disclosure (#1225). Uncached Scryfall card lookups record status and duration without card identifiers (#1227).
+- All were observed red. #1224 and #1225 (3,385 unit tests) passed typecheck, lint, the unit suite, build and Docker E2E (66 + 8); #1227 lists the same checks with Docker E2E (66 + 8) passing. #1230 passed its focused test, typecheck and lint; the full suite, build and E2E were not rerun for it.
+
+### 2026-11-03: Label prices as USD and choose notification events
+
+- Card tooltips (#1194), card list prices (#1196) and acquisition-plan prices (#1209) label Scryfall values as USD in every locale.
+- A new settings page lets players choose which replies, mentions, follows and watched-deck events notify them, in English and French (#1197).
+- All were observed red. #1194 passed typecheck, lint and the unit suite, but its build did not finish within the runner's window; #1196 its targeted test, typecheck and lint; #1209 3,368 unit tests, build and Docker E2E (66 + 8). #1197 lists typecheck, lint, tests and build; Docker E2E could not start because the Playwright image lacked Corepack.
+
+### 2026-11-03: Repair the E2E image and keep loading bounded
+
+- The Docker Playwright image bootstraps the pinned Corepack, so the E2E gate builds again after being blocked since #1188 (#1208).
+- Moxfield profile loads stop after 15 seconds and show the existing retry (#1199, #1200). The save indicator stays on through overlapping renames (#1203) and through a budget save that finishes during a rename (#1205). Acquisition-intent lookups return a controlled error, and notification-preference message keys are back at parity across catalogs (#1207).
+- Route loading fallbacks cover the collection (#1210), builder (#1212), saved decks (#1213), notification settings (#1214), API keys (#1215) and moderation reports (#1216). The combo panel names Commander Spellbook and the observation date (#1206), and the localized home page carries JSON-LD with no ratings, reviews or offers beyond the existing free one (#1211).
+- #1208: the image build passed through dependency installation and Prisma generation. #1203 and #1205 passed typecheck, lint, the unit suite and build, and #1206 lists the same checks, while E2E was still blocked. #1207: 3,367 unit tests and build. #1210 (3,370 unit tests) and #1211 passed Docker E2E (66 + 8); #1212's run was inconclusive. #1213 lists the unit suite and build; #1214-#1216 their focused tests, typecheck and lint. #1199 noted an unrelated `de/settings.json` parity failure, fixed in #1207. Sonar was unavailable without a token.
+
+### 2026-11-03: Tooling, dependencies and backend ownership
+
+- The Sonar launcher runs on Windows and Linux without putting the token on the command line (#1201, #1202). Production dependencies were bumped: `@sentry/nextjs` 10.78.0, `@tanstack/react-query` 5.105.0, `effect` 4.1.1 and `three` 0.187.0 (#1193). Backend ownership of business rules is documented (#1198).
+- #1201 records a syntax check, the missing-token guard and a full local analysis; #1202 was validated with sonar-scanner 4.4.0.
+
+### 2026-11-02: More import formats and companion fidelity
+
+- AetherHub deck-builder URLs import the main deck, sideboard and command zone (#1161). MTGDecks URL imports keep their format instead of requesting the Commander export (#1162). ManaBox collector-number suffixes (#1163) and CardNexus text exports with printing and foil markers (#1183) are understood.
+- Plain-text Companion sections keep the companion role (#1189), and MTGO exports put the companion in the sideboard (#1170). Contract fixtures protect Moxfield imports (#1158) and the plain-text round trip (#1176).
+- #1161: 42 focused URL-import tests. #1162: 45 focused tests, typecheck and lint, with the full suite, build and Sonar pending; a Deckstats export endpoint returned 403, so no Deckstats import was added. #1163's body lists no readable results. #1183: a red-to-green parser test, typecheck, lint and build. #1189: 3,356 unit tests and build. #1170: 34 focused tests, lint and build; its full run showed 3,322 passing and 2 failing pre-existing provenance tests. #1176: 74 contract tests, typecheck, lint and build. #1158 records no verification.
+
+### 2026-11-02: Show where recommendations come from
+
+- Recommendations carry a provenance badge, popular, high synergy, tournament-observed or AI (#1165), and AI recommendations show the provider, the analysis time and the size of the deck analyzed (#1173).
+- EDHREC and tournament sources retry independently (#1164) and report their health (#1184). A standalone EDHREC trend view discloses its top-20 limit (#1181) and its capture window (#1191), and a disclosure explains that EDHREC publishes no reliable sample window (#1186).
+- Focused tests passed for each, with typecheck and lint for #1164, #1165, #1173, #1181 and #1184. #1186: 19 focused tests, lint and build. #1191: 3,358 unit tests and build. Full suites or builds were still running when #1165, #1173 and #1181 were written.
+
+### 2026-11-02: Clearer deck feedback
+
+- Legality failures appear as a distinct blocking alert, separate from optional advice (#1168). Card lists explain each card's role (#1175). The weakest card is picked from deck data alone, with explicit criteria and no AI call (#1177). Two analyses can be compared before and after a deck change (#1174), and a contract proves warnings are the same whether or not a deck came from AI (#1182).
+- #1168: 3,316 unit tests across 297 files and build. #1175 and #1182 (22 tests): focused tests, typecheck and lint. #1177: 3 focused tests, the full suite and build. #1174: focused test and build, with 2 pre-existing failures in the full suite.
+
+### 2026-11-02: Collection, locale, editor and playtest improvements
+
+- Acquisition rows show the total copies needed across decks (#1166). Players can mark a printing Proxy now or Buy later, saved privately across devices (#1171). Adding a card prefers a printing the player owns (#1179), and acquisition CSVs keep each deck's allocation (#1185).
+- English and French number and USD formatting share one utility (#1167) that shows the USD code explicitly (#1190), with contracts for dates, numbers, plurals and mana notation (#1178).
+- Deck-zone tabs accept dropped cards without changing size (#1187). My Decks keeps a deck-list skeleton while navigating (#1172). Public-deck comments (#1188) and ratings (#1192) stop waiting after 15 seconds and offer retry. Per-event notification preferences are stored behind an authenticated API (#1180). The playtest log records life and counter changes, included in the version 3 JSON export (#1169).
+- #1166 (8 tests), #1171 (11), #1178 (11), #1179 (92) and #1180 (3) record focused tests, with full suites pending or showing the 2 pre-existing provenance failures. #1167: 5 focused tests and build; one timing-sensitive assertion failed in the full suite and passed when rechecked alone. #1185: 11 focused tests and build. #1172: build, with 3,322 passing alongside the same 2 pre-existing failures. #1169: 3,316 unit tests, build and Sonar. #1188, #1190 and #1192: 3,355-3,359 unit tests and build. #1187 lists its focused test, typecheck, lint, unit suite and build. Docker E2E could not start from #1188 onward because the Playwright image lacked Corepack, and those pushes skipped the hook after the other gates passed.
+- #1157 recorded the request-observability progress. #1159 and #1160 promoted the then-current `dev` to `staging` and `main` that morning; the `main` PR body is an unticked checklist.
+
+### 2026-10-31: Show loading skeletons for shared decks and commander deck lists
+
+- Share links (#1149) and commander deck lists (#1150) show an accessible, localized skeleton while loading instead of a blank page.
+- Both passed typecheck, lint, 3,301 unit tests across 295 files, a SonarCloud Quality Gate OK and Docker E2E (66 + 8). A plain-text v1 import fixture (#1151; focused tests, typecheck and lint) and an English/French locale-formatting contract (#1156; no verification recorded) were added. #1152-#1155 promoted QA-validated `dev` through `staging` to `main`; #1153 and #1155 resolved conflicts in favor of the validated versions.
+
+### 2026-10-30: Make deck warnings deterministic and reject blank commander IDs
+
+- Banned-card, color-identity and Game Changer messages name each card once in a stable order (#1133). The companion mana-value warning samples distinct names in order (#1134), and off-identity colors are listed in WUBRG order (#1142). The deck API rejects blank commander and partner IDs on create and update (#1135).
+- 3,247-3,272 unit tests, typecheck, lint and a SonarCloud Quality Gate OK with zero project code smells passed for each. Docker E2E (66 + 8) passed for #1134 and #1142, ran in the pre-push hook for #1135, and was not run for #1133.
+
+### 2026-10-30: Bound the remaining loading requests
+
+- Deck snapshot lists (#1136), combo lookups (#1137) and card rulings (#1138) stop after 15 seconds, meta analysis after 30 seconds (#1140) and meta history after 15 (#1141). Rulings fall back to the offline cache, and a stalled combo lookup counts as no combos so the rest of the analysis completes.
+- 3,247-3,268 unit tests, typecheck, lint and a SonarCloud Quality Gate OK passed for each. Docker E2E (66 + 8) passed for #1137, #1138, #1140 and #1141 and ran in the pre-push hook for #1136.
+
+### 2026-10-30: Record request latency on profile, cache, image and import routes
+
+- The public profile (#1143), card cache lookup (#1144), card image proxy (#1145), Moxfield profile import (#1146), user init (#1147) and username update (#1148) routes write one status-and-duration line per request, without usernames, URLs or other personal data.
+- 3,274-3,287 unit tests, typecheck, lint, a SonarCloud Quality Gate OK and Docker E2E (66 + 8) passed for each. #1139 reconciled the roadmap with shipped validation and gate evidence (documentation only).
+
+### 2026-10-29: Reject same-Oracle commander pairs and time profile changes
+
+- A commander and partner that are different printings of the same Oracle card are rejected on deck creation and update (#1131). Profile updates and deletions record status and duration without account details (#1132).
+- Both were observed red. #1131: 37 focused route tests, typecheck, lint, the full unit suite and build passed, and SonarCloud reported a Quality Gate OK with zero code smells. #1132: 3,245 unit tests across 292 files and build passed. E2E was not rerun for these server-side changes.
+
+### 2026-10-28: Clear stale comparisons, show exact-printing needs and close Sonar smells
+
+- A deck comparison clears when the selection changes, and late responses cannot bring stale results back (#1117). The collection's exact-printing usage dialog shows how many copies remain to acquire (#1118).
+- Behavior-preserving refactors resolved the 20 open Sonar code smells (#1119) and the remaining import-dialog complexity (#1123, #1127).
+- #1117: focused tests, typecheck and lint, with the full suite (3,239 tests) run before a follow-up. #1118: 3,239 unit tests across 292 files. #1119: 3,238 unit tests and build. #1123 and #1127: 3,241 unit tests and build. #1117 and #1118 did not run Sonar locally, and E2E was not rerun for the refactors. #1130 recorded the shipped deterministic AI golden evaluations (6 tests) in the roadmap.
+- #1111, #1120 and #1124 recorded the batch; #1113 reconciled `staging` ancestry; #1114 and #1116, #1121 and #1122, #1125 and #1126, and #1128 and #1129 promoted QA-approved content to `staging` and `main`.
+
 ### 2026-10-28: Refine five deckbuilding boundaries
 
 - Companion deck-building failures now appear as legality warnings, and AI per-card budget choices format their USD amounts for the active locale without implying conversion (#1110).
