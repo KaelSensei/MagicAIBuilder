@@ -267,6 +267,9 @@ function describeMulligan(cardsToBottom: number): string {
  * In a multiplayer game and in Brawl the first mulligan does not count
  * (CR 103.5c): it deals a fresh seven with nothing to bottom.
  *
+ * A commander in the hand goes to the command zone instead of the library
+ * (CR 903.9b); the command zone itself is never shuffled in.
+ *
  * @param state - current game state
  * @returns the state with a new seven and, unless the mulligan was free, a
  * pending bottom choice
@@ -276,7 +279,8 @@ export function applyMulligan(state: PlaytestEngine): PlaytestEngine {
   if (state.mulliganCount >= maxMulligans(state)) return state;
 
   const mulliganCount = state.mulliganCount + 1;
-  const shuffled = shuffleCards([...state.hand, ...state.library]);
+  const { commanders, rest } = setAsideCommanders(state.hand, state.commanderIds);
+  const shuffled = shuffleCards([...rest, ...state.library]);
   const cardsToBottom = mulliganBottomCount({
     mulliganCount,
     firstMulliganFree: state.firstMulliganFree,
@@ -287,7 +291,28 @@ export function applyMulligan(state: PlaytestEngine): PlaytestEngine {
     cardsToBottom,
     hand: shuffled.slice(0, OPENING_HAND_SIZE),
     library: shuffled.slice(OPENING_HAND_SIZE),
+    ...(commanders.length > 0 ? { commandZone: [...state.commandZone, ...commanders] } : {}),
   }, describeMulligan(cardsToBottom));
+}
+
+/**
+ * Splits the game's commanders out of a list of cards, in one pass.
+ *
+ * @param cards - cards about to be shuffled into the library
+ * @param commanderIds - ids of the game's commanders
+ * @returns the commanders and the remaining cards, each in their original order
+ */
+function setAsideCommanders(
+  cards: readonly DeckCard[],
+  commanderIds: readonly string[]
+): { readonly commanders: readonly DeckCard[]; readonly rest: readonly DeckCard[] } {
+  const ids = new Set(commanderIds);
+  const commanders: DeckCard[] = [];
+  const rest: DeckCard[] = [];
+  for (const card of cards) {
+    (ids.has(card.id) ? commanders : rest).push(card);
+  }
+  return { commanders, rest };
 }
 
 /**

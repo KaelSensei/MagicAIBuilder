@@ -272,6 +272,28 @@ describe("command zone", () => {
     expect(applyUndo(cast).commandZone).toEqual(state.commandZone);
   });
 
+  it("leaves the command zone alone when the player mulligans", () => {
+    const state = withCommander();
+    const next = applyMulligan(state);
+
+    expect(next.commandZone).toEqual(state.commandZone);
+    expect([...next.hand, ...next.library].map((card) => card.id)).not.toContain("cmd");
+    expect(next.hand.length + next.library.length).toBe(20);
+  });
+
+  // CR 903.9b: a commander that would be put into the library may go to the command zone instead.
+  it("returns a commander held in hand to the command zone when the player mulligans", () => {
+    const cast = applyMoveToZone(withCommander(), "cmd", "command", "battlefield");
+    const died = applyMoveToZone(cast, "cmd", "battlefield", "graveyard");
+    const inHand = applyMoveToZone(died, "cmd", "graveyard", "hand");
+
+    const next = applyMulligan(inHand);
+
+    expect(next.commandZone.map((card) => card.name)).toEqual(["Kenrith"]);
+    expect([...next.hand, ...next.library].map((card) => card.id)).not.toContain("cmd");
+    expect(next.hand.length + next.library.length).toBe(20);
+  });
+
   it("keeps every card but a commander out of the command zone", () => {
     const state = withCommander();
     const handCardId = state.hand[0]?.id ?? "";
