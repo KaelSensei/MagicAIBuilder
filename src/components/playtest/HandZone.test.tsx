@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createElement } from "react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { HandZone } from "./HandZone";
@@ -118,5 +119,84 @@ describe("HandZone", () => {
   it("shows deck empty message when library is 0", () => {
     renderWithIntl(<HandZone {...defaultProps} libraryCount={0} />);
     expect(screen.getByText(/deck empty/i)).toBeDefined();
+  });
+});
+
+// After a counted mulligan the player chooses the cards to bottom (CR 103.5).
+describe("HandZone bottom choice", () => {
+  const hand = [
+    makeCard("c1", "Lightning Bolt"),
+    makeCard("c2", "Counterspell"),
+    makeCard("c3", "Island"),
+  ];
+
+  function renderChoice(count: number, locale: "en" | "fr" = "en") {
+    const onConfirm = vi.fn();
+    const onUndo = vi.fn();
+    renderWithIntl(
+      <HandZone
+        hand={hand}
+        libraryCount={90}
+        onDrawCard={vi.fn()}
+        onMoveCard={vi.fn()}
+        bottomChoice={{ count, onConfirm, onUndo }}
+      />,
+      { locale }
+    );
+    return { onConfirm, onUndo };
+  }
+
+  it("lets the keyboard choose the cards and confirms them in the order chosen", async () => {
+    const user = userEvent.setup();
+    const { onConfirm } = renderChoice(2);
+
+    expect(
+      screen.getByText("Choose 2 cards to put on the bottom of your library, in the order they go.")
+    ).toBeDefined();
+    const confirm = screen.getByRole("button", { name: "Put 2 cards on the bottom" });
+    expect(confirm).toBeDisabled();
+
+    screen.getByRole("button", { name: "Counterspell" }).focus();
+    await user.keyboard(" ");
+    screen.getByRole("button", { name: "Lightning Bolt" }).focus();
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByRole("button", { name: "Counterspell" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Bottom order: Counterspell, Lightning Bolt")).toBeDefined();
+    await user.click(confirm);
+    expect(onConfirm).toHaveBeenCalledWith(["c2", "c1"]);
+  });
+
+  it("stops at the number to bottom and lets a choice be taken back", async () => {
+    const user = userEvent.setup();
+    renderChoice(1);
+
+    await user.click(screen.getByRole("button", { name: "Island" }));
+    expect(screen.getByRole("button", { name: "Counterspell" })).toBeDisabled();
+    expect(screen.getByText("1 of 1 chosen")).toBeDefined();
+
+    await user.click(screen.getByRole("button", { name: "Island" }));
+    expect(screen.getByRole("button", { name: "Island" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Counterspell" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Put 1 card on the bottom" })).toBeDisabled();
+  });
+
+  it("replaces the hand actions with the choice and keeps undo at hand", async () => {
+    const user = userEvent.setup();
+    const { onUndo } = renderChoice(1);
+
+    expect(screen.queryByRole("button", { name: /draw card/i })).toBeNull();
+    await user.click(screen.getByRole("button", { name: /undo last action/i }));
+    expect(onUndo).toHaveBeenCalledOnce();
+  });
+
+  it("asks in French, with the cards still revealed", () => {
+    renderChoice(1, "fr");
+
+    expect(
+      screen.getByText("Choisis 1 carte à mettre au-dessous de ta bibliothèque.")
+    ).toBeDefined();
+    expect(screen.getByRole("button", { name: "Mettre 1 carte au-dessous" })).toBeDisabled();
+    expect(screen.getByText("Lightning Bolt")).toBeDefined();
   });
 });

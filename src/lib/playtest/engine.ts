@@ -10,11 +10,11 @@ import { randomIntBelow } from "@/lib/crypto-random";
 /** Commander default; per-format totals live in FORMAT_CONFIG.startingLife. */
 export const STARTING_LIFE = 40;
 
-/** Opening hand size before any mulligan. */
+/** Opening hand size; every London mulligan draws this many again (CR 103.5). */
 export const OPENING_HAND_SIZE = 7;
 
-/** Mulliganing past this leaves no playable hand, so the action stops here. */
-export const MAX_MULLIGANS = 6;
+/** Smallest opening hand the playtest lets a player mulligan down to. */
+const MIN_KEPT_HAND_SIZE = 1;
 
 export const PHASES = [
   "Untap",
@@ -94,6 +94,10 @@ export interface PlaytestEngine {
 
   /** Mulligans taken for the opening hand. */
   readonly mulliganCount: number;
+  /** True when the first mulligan does not count toward cards bottomed (CR 103.5c). */
+  readonly firstMulliganFree: boolean;
+  /** Cards the player must still put on the bottom; 0 when no choice is pending. */
+  readonly cardsToBottom: number;
 
   // Life
   readonly lifeTotal: number;
@@ -138,6 +142,10 @@ export function createPlaytestState(
     turn: 1,
     phase: "Draw" as const,
     mulliganCount: 0,
+    // Commander default, like STARTING_LIFE; per-format values live in
+    // FORMAT_CONFIG.firstMulliganFree.
+    firstMulliganFree: true,
+    cardsToBottom: 0,
     lifeTotal: overrides.lifeTotal ?? STARTING_LIFE,
     lifeHistory: [],
     isGameOver: false,
@@ -166,6 +174,7 @@ function shuffleCards<T>(arr: T[]): T[] {
 
 // ─── Draw card ────────────────────────────────────────────────────────────
 export function applyDrawCard(state: PlaytestEngine): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   if (state.library.length === 0) return state;
 
   const [drawn, ...rest] = state.library;
@@ -177,32 +186,154 @@ export function applyDrawCard(state: PlaytestEngine): PlaytestEngine {
 
 // ─── Mulligan ─────────────────────────────────────────────────────────────
 /**
- * Take a London mulligan: shuffle hand and library back together, then keep
- * one card fewer for each mulligan taken.
+ * True while a mulligan waits for the player to choose the cards to bottom.
+ * Taking the mulligan is not finished until then (CR 103.5), so every other
+ * game action waits; only that choice and undo apply.
  *
- * London formally draws seven and bottoms N chosen cards. Goldfishing offers no
- * opponent and no choice to make, and keeping `7 - N` random cards is the same
- * distribution — so the bottoming step is collapsed rather than shown.
+ * @param state - current engine state
+ * @returns whether a bottom choice is pending
+ */
+export function isChoosingBottom(state: PlaytestEngine): boolean {
+  return state.cardsToBottom > 0;
+}
+
+/** The mulligan facts that decide how many cards go to the bottom. */
+export type MulliganTally = Pick<PlaytestEngine, "mulliganCount" | "firstMulliganFree">;
+
+/**
+ * Cards a London mulligan puts on the bottom: one per mulligan taken, except
+ * that a free first mulligan does not count (CR 103.5, 103.5c).
+ *
+ * @param tally - mulligans taken and whether the first one is free
+ * @returns how many cards go to the bottom, never below zero
+ */
+export function mulliganBottomCount(tally: MulliganTally): number {
+  const counted = tally.firstMulliganFree ? tally.mulliganCount - 1 : tally.mulliganCount;
+  return Math.max(0, counted);
+}
+
+/**
+ * Size of the opening hand once the mulligans taken are settled.
+ *
+ * @param tally - mulligans taken and whether the first one is free
+ * @returns seven minus the cards bottomed, never below zero
+ */
+export function keptOpeningHandSize(tally: MulliganTally): number {
+  return Math.max(0, OPENING_HAND_SIZE - mulliganBottomCount(tally));
+}
+
+/**
+ * The most mulligans the playtest allows: enough to keep at least one card.
+ * A free first mulligan does not count toward the mulligans a player may take
+ * either (CR 103.5c), so a multiplayer game allows one more than a duel.
+ *
+ * @param rule - whether the first mulligan is free
+ * @returns the mulligan limit
+ */
+export function maxMulligans(rule: Pick<PlaytestEngine, "firstMulliganFree">): number {
+  const countedMulligans = OPENING_HAND_SIZE - MIN_KEPT_HAND_SIZE;
+  return rule.firstMulliganFree ? countedMulligans + 1 : countedMulligans;
+}
+
+/**
+ * Describes a mulligan for the action log.
+ *
+ * @param cardsToBottom - cards the player must now put on the bottom
+ * @returns the log line
+ */
+function describeMulligan(cardsToBottom: number): string {
+  if (cardsToBottom === 0) return "Free mulligan: drew a new seven";
+  const cards = cardsToBottom === 1 ? "1 card" : `${cardsToBottom} cards`;
+  return `Mulligan: drew a new seven, ${cards} to put on the bottom`;
+}
+
+/**
+ * Takes a London mulligan (CR 103.5): the hand is shuffled back into the
+ * library and a new hand of seven is drawn. The player then chooses which
+ * cards to put on the bottom — one per mulligan taken — through
+ * `applyBottomCards`. The choice is the point of London: the player keeps the
+ * cards that fit the hand, so it is not the same as dealing `7 - N` at random.
+ *
+ * In a multiplayer game and in Brawl the first mulligan does not count
+ * (CR 103.5c): it deals a fresh seven with nothing to bottom.
  *
  * @param state - current game state
- * @returns the state with a fresh, smaller opening hand
+ * @returns the state with a new seven and, unless the mulligan was free, a
+ * pending bottom choice
  */
 export function applyMulligan(state: PlaytestEngine): PlaytestEngine {
-  if (state.mulliganCount >= MAX_MULLIGANS) return state;
+  if (isChoosingBottom(state)) return state;
+  if (state.mulliganCount >= maxMulligans(state)) return state;
 
   const mulliganCount = state.mulliganCount + 1;
   const shuffled = shuffleCards([...state.hand, ...state.library]);
-  const handSize = OPENING_HAND_SIZE - mulliganCount;
+  const cardsToBottom = mulliganBottomCount({
+    mulliganCount,
+    firstMulliganFree: state.firstMulliganFree,
+  });
 
   return pushHistory(state, {
     mulliganCount,
-    hand: shuffled.slice(0, handSize),
-    library: shuffled.slice(handSize),
-  }, `Mulliganed to ${handSize} cards`);
+    cardsToBottom,
+    hand: shuffled.slice(0, OPENING_HAND_SIZE),
+    library: shuffled.slice(OPENING_HAND_SIZE),
+  }, describeMulligan(cardsToBottom));
+}
+
+/**
+ * Resolves a bottom choice against the hand.
+ *
+ * @param hand - the hand the cards must come from
+ * @param cardIds - the chosen card ids, in the order chosen
+ * @param count - how many cards the pending choice needs
+ * @returns the chosen cards in order, or null unless they are exactly `count`
+ * distinct hand cards
+ */
+function pickBottomCards(
+  hand: readonly DeckCard[],
+  cardIds: readonly string[],
+  count: number
+): readonly DeckCard[] | null {
+  if (count === 0 || cardIds.length !== count) return null;
+  if (new Set(cardIds).size !== cardIds.length) return null;
+
+  const handById = new Map(hand.map((card) => [card.id, card]));
+  const chosen: DeckCard[] = [];
+  for (const id of cardIds) {
+    const card = handById.get(id);
+    if (card === undefined) return null;
+    chosen.push(card);
+  }
+  return chosen;
+}
+
+/**
+ * Completes a London mulligan: the chosen hand cards go to the bottom of the
+ * library in the order chosen, so the last one chosen ends up bottom-most.
+ *
+ * @param state - a state whose bottom choice is pending
+ * @param cardIds - exactly `cardsToBottom` distinct hand cards, in the order chosen
+ * @returns the state with the opening hand settled, or the same state when the
+ * choice is not valid
+ */
+export function applyBottomCards(
+  state: PlaytestEngine,
+  cardIds: readonly string[]
+): PlaytestEngine {
+  const chosen = pickBottomCards(state.hand, cardIds, state.cardsToBottom);
+  if (chosen === null) return state;
+
+  const chosenIds = new Set(cardIds);
+  return pushHistory(state, {
+    cardsToBottom: 0,
+    hand: state.hand.filter((card) => !chosenIds.has(card.id)),
+    library: [...state.library, ...chosen],
+  }, `Put ${chosen.map((card) => card.name).join(", ")} on the bottom of the library`);
 }
 
 // ─── Phase progression ────────────────────────────────────────────────────
 export function applyNextPhase(state: PlaytestEngine): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   const currentIndex = PHASES.indexOf(state.phase);
   const isLastPhase = currentIndex === PHASES.length - 1;
 
@@ -228,6 +359,7 @@ export function applyNextPhase(state: PlaytestEngine): PlaytestEngine {
 
 // ─── Next turn ────────────────────────────────────────────────────────────
 export function applyNextTurn(state: PlaytestEngine): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   // Untap all permanents
   const untappedBattlefield = state.battlefield.map((p) => ({
     ...p,
@@ -265,6 +397,7 @@ export function applyDamage(
   amount: number,
   description = "damage"
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   const newLife = state.lifeTotal - amount;
   const entry: LifeHistoryEntry = {
     turn: state.turn,
@@ -286,6 +419,7 @@ export function applyHeal(
   state: PlaytestEngine,
   amount: number
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   const newLife = state.lifeTotal + amount;
   const entry: LifeHistoryEntry = {
     turn: state.turn,
@@ -304,6 +438,7 @@ export function applyHeal(
 
 // ─── Tap / untap ──────────────────────────────────────────────────────────
 export function applyTap(state: PlaytestEngine, cardId: string): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   const exists = state.battlefield.some((c) => c.id === cardId);
   if (!exists) return state;
 
@@ -320,6 +455,7 @@ export function applyTap(state: PlaytestEngine, cardId: string): PlaytestEngine 
 }
 
 export function applyUntapAll(state: PlaytestEngine): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   const untapped = state.battlefield.map((p) => ({ ...p, tapped: false }));
   return pushHistory(state, { battlefield: untapped }, "Untapped all permanents");
 }
@@ -457,6 +593,7 @@ export function applyMoveToZone(
   from: CardZone,
   to: CardZone
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   const removed = takeFromZone(state, from, cardId);
   if (!removed) return state;
 
@@ -479,6 +616,7 @@ export function applyCreateCardCopy(
   cardId: string,
   copyId: string
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   if (state.battlefield.some((card) => card.id === copyId)) return state;
 
   const source = state.battlefield.find((card) => card.id === cardId);
@@ -513,6 +651,7 @@ export function applyCreateToken(
   token: PlaytestTokenSpec,
   tokenId: string
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   if (state.battlefield.some((card) => card.id === tokenId)) return state;
 
   const name = [token.power, token.name, token.kind === "token" ? "token" : null]
@@ -556,6 +695,7 @@ export function applyRollDie(
   sides: number,
   result: number
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   if (!Number.isInteger(sides) || sides < 2) return state;
   if (!Number.isInteger(result) || result < 1 || result > sides) return state;
 
@@ -569,12 +709,14 @@ export function applyAddActionLogEntry(
   state: PlaytestEngine,
   description: string
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   const normalized = description.trim();
   if (normalized === "") return state;
   return pushHistory(state, {}, normalized);
 }
 
 export function applyRecordMana(state: PlaytestEngine, amount: number): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   if (!Number.isInteger(amount) || amount < 1 || amount > 100) return state;
   return pushHistory(state, {}, `Produced ${amount} mana`, { kind: "mana", amount });
 }
@@ -584,6 +726,7 @@ export function applyEditActionLogEntry(
   entryId: number,
   description: string
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   const normalized = description.trim();
   const exists = state.actionLog.some((entry) => entry.id === entryId);
   if (!exists || normalized === "") return state;
@@ -606,6 +749,7 @@ export function applyRemoveActionLogEntry(
   state: PlaytestEngine,
   entryId: number
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   if (!state.actionLog.some((entry) => entry.id === entryId)) return state;
   return pushHistory(state, {
     actionLog: state.actionLog.filter((entry) => entry.id !== entryId),
@@ -618,6 +762,7 @@ export function applyAddCounter(
   cardId: string,
   amount: number
 ): PlaytestEngine {
+  if (isChoosingBottom(state)) return state;
   const permanent = state.battlefield.find((c) => c.id === cardId);
   if (!permanent) return state;
 

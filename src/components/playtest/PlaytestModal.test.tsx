@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PlaytestModal } from "./PlaytestModal";
@@ -187,14 +187,37 @@ describe("PlaytestModal", () => {
   });
 
   // The pre-store modal had a mulligan; wiring the engine in must not lose it.
-  it("mulligans down to six cards and reports the count", () => {
+  // It used to go down to six: in Commander the first mulligan is free (CR 103.5c).
+  it("takes a free first mulligan in Commander: a new seven, no bottom step", () => {
     renderModal();
+    start();
+
+    fireEvent.click(screen.getByRole("button", { name: /mulligan.*free: new seven/i }));
+
+    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(7);
+    expect(screen.getByText(/1 mulligan/)).toBeDefined();
+    expect(screen.queryByText(/to put on the bottom/)).toBeNull();
+    expect(
+      screen.getByRole("button", { name: /mulligan.*new seven, 1 to the bottom/i })
+    ).toBeEnabled();
+  });
+
+  it("asks a Modern player which card to bottom, holding the game until then", () => {
+    renderModal(makeDeck("modern"));
     start();
 
     fireEvent.click(screen.getByRole("button", { name: /mulligan/i }));
 
+    const choice = screen.getByRole("group", { name: /choose 1 card to put on the bottom/i });
+    expect(screen.getByRole("button", { name: /next phase/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /mulligan/i })).toBeDisabled();
+
+    fireEvent.click(within(choice).getAllByRole("button", { pressed: false })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Put 1 card on the bottom" }));
+
     expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
-    expect(screen.getByText(/1 mulligan/)).toBeDefined();
+    expect(screen.getByText(/Hand: 6 cards/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /next phase/i })).toBeEnabled();
   });
 
   it("stops offering a mulligan once a turn has passed", () => {

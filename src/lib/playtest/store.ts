@@ -22,6 +22,7 @@ import {
   applyUndo,
   applyAddCounter,
   applyMulligan,
+  applyBottomCards,
   applyCreateCardCopy,
   applyCreateToken,
   applyRollDie,
@@ -35,6 +36,7 @@ import {
 interface PlaytestSetup {
   readonly cards: readonly DeckCard[];
   readonly startingLife: number;
+  readonly firstMulliganFree: boolean;
 }
 
 /**
@@ -49,7 +51,21 @@ function buildSetup(deck: Deck): PlaytestSetup {
   if (deck.partner) cards.push(deck.partner);
   cards.push(...deck.cards);
 
-  return { cards, startingLife: getFormatConfig(deck.format).startingLife };
+  const { startingLife, firstMulliganFree } = getFormatConfig(deck.format);
+  return { cards, startingLife, firstMulliganFree };
+}
+
+/**
+ * Deals a fresh game from the retained setup.
+ *
+ * @param setup - the deck and the format's starting rules
+ * @returns a new engine with the format's life total and mulligan rule
+ */
+function dealFrom(setup: PlaytestSetup): PlaytestEngine {
+  return createPlaytestState(setup.cards, {
+    lifeTotal: setup.startingLife,
+    firstMulliganFree: setup.firstMulliganFree,
+  });
 }
 
 interface PlaytestStore {
@@ -64,6 +80,8 @@ interface PlaytestStore {
   stopPlaytest: () => void;
   drawCard: () => void;
   mulligan: () => void;
+  /** Settles a pending mulligan by bottoming these hand cards, in order. */
+  bottomCards: (cardIds: readonly string[]) => void;
   nextPhase: () => void;
   nextTurn: () => void;
   damage: (amount: number, description?: string) => void;
@@ -94,10 +112,7 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
 
   startPlaytest: (deck: Deck) => {
     const setup = buildSetup(deck);
-    const engine = createPlaytestState(setup.cards, {
-      lifeTotal: setup.startingLife,
-    });
-    set({ engine, isActive: true, setup });
+    set({ engine: dealFrom(setup), isActive: true, setup });
   },
 
   stopPlaytest: () => {
@@ -115,6 +130,13 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
     set((state) => {
       if (!state.engine) return state;
       return { engine: applyMulligan(state.engine) };
+    });
+  },
+
+  bottomCards: (cardIds) => {
+    set((state) => {
+      if (!state.engine) return state;
+      return { engine: applyBottomCards(state.engine, cardIds) };
     });
   },
 
@@ -246,11 +268,7 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
       // resurrect it from the retained setup.
       if (!state.setup || !state.engine) return state;
 
-      return {
-        engine: createPlaytestState(state.setup.cards, {
-          lifeTotal: state.setup.startingLife,
-        }),
-      };
+      return { engine: dealFrom(state.setup) };
     });
   },
 }));

@@ -857,8 +857,9 @@ Recording invalidates the `["playtest", "history", deckId]` query. Without it th
 | Export                                           | Role                                                                              |
 | ------------------------------------------------ | --------------------------------------------------------------------------------- |
 | `PlaytestEngine`                                 | Turn, phase, life + history, hand/library/battlefield/graveyard/exile, undo stack |
-| `createPlaytestState(cards, overrides)`          | Shuffles and deals; `overrides.lifeTotal` carries the format total                |
-| `applyMulligan`                                  | Reshuffles and keeps one card fewer, capped at `MAX_MULLIGANS`                    |
+| `createPlaytestState(cards, overrides)`          | Shuffles and deals; overrides carry the format's life total and mulligan rule     |
+| `applyMulligan`                                  | Reshuffles, draws seven, sets `cardsToBottom`; capped at `maxMulligans(rule)`     |
+| `applyBottomCards`                               | Puts the chosen hand cards on the library bottom, in the order chosen             |
 | `applyNextPhase` / `applyNextTurn`               | `PHASES` order; End rolls into the next turn and untaps                           |
 | `applyDamage` / `applyHeal`                      | Adjusts life and appends a `LifeHistoryEntry`                                     |
 | `applyTap` / `applyUntapAll` / `applyAddCounter` | Battlefield permanent state                                                       |
@@ -869,7 +870,7 @@ Shuffling uses `randomIntBelow` from `src/lib/crypto-random.ts`, not `Math.rando
 
 **`store.ts`** — `usePlaytestStore` exposes each `apply*` as an action and holds the deck as it was dealt (`setup`), so `resetPlaytest` re-deals the original deck. Rebuilding it from the live zones instead would carry battlefield state (tapped, counters) back into the library and lose the commander/partner distinction.
 
-**Mulligan model.** London formally draws seven and bottoms N chosen cards. Goldfishing has no opponent and no choice to make, so the engine keeps `7 - N` random cards — the same distribution, without a bottoming UI that would decide nothing.
+**Mulligan model.** London mulligan (CR 103.5): every mulligan shuffles the hand back and draws seven, then the player chooses which cards to put on the bottom, one per mulligan taken. The choice is the point: the player keeps the cards that fit the hand, so it is not the same as keeping `7 − N` at random. In a multiplayer game and in any Brawl game the first mulligan does not count (CR 103.5c); `FORMAT_CONFIG.firstMulliganFree` carries that per format (Commander, Brawl and Oathbreaker free; constructed duels not). While `cardsToBottom > 0` (`isChoosingBottom`) every action except `applyBottomCards` and `applyUndo` is a no-op, and the modal disables the rest of the board. `mulliganCount` still means mulligans taken; derive hand size with `keptOpeningHandSize`, never `7 − mulliganCount`.
 
 **`PlaytestModal`** subscribes with fine-grained selectors and clears the session on unmount: the store outlives the modal, so a stale game would otherwise reappear on reopen.
 

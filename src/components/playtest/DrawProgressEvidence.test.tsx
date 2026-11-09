@@ -32,6 +32,8 @@ function engine(overrides: Partial<PlaytestEngine>): PlaytestEngine {
     turn: 4,
     phase: "Draw",
     mulliganCount: 0,
+    firstMulliganFree: true,
+    cardsToBottom: 0,
     lifeTotal: 40,
     lifeHistory: [],
     isGameOver: false,
@@ -79,5 +81,18 @@ describe("DrawProgressEvidence", () => {
 
     expect(screen.getByText("13 cards seen")).toBeDefined();
     expect(screen.getByText(/3 extra cards seen/i)).toBeDefined();
+  });
+
+  // A free first mulligan (CR 103.5c) keeps seven, so it is not an extra card.
+  it("treats a free Commander mulligan as a kept seven", () => {
+    renderEvidence(
+      engine({
+        mulliganCount: 1,
+        firstMulliganFree: true,
+        hand: Array.from({ length: 10 }, (_, index) => card(index)),
+      })
+    );
+
+    expect(screen.getByText(/natural draws only/i)).toBeDefined();
   });
 });
