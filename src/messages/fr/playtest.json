@@ -71,7 +71,15 @@
     "exileEmpty": "L'exil est vide",
     "cardCount": "{count, plural, one {# carte} other {# cartes}}",
     "restoreToHand": "Remettre en main",
-    "play": "Jouer"
+    "play": "Jouer",
+    "toCommandZone": "Zone de commandement",
+    "returnToCommandZone": "Renvoyer {name} dans la zone de commandement"
+  },
+  "commandZone": {
+    "title": "Zone de commandement",
+    "cast": "Lancer",
+    "castCard": "Lancer {name}",
+    "empty": "Vide. Renvoyez votre commandant depuis le cimetière ou l'exil."
   },
   "dice": {
     "title": "Dés",

@@ -863,10 +863,12 @@ Recording invalidates the `["playtest", "history", deckId]` query. Without it th
 | `applyNextPhase` / `applyNextTurn`               | `PHASES` order; End rolls into the next turn and untaps                           |
 | `applyDamage` / `applyHeal`                      | Adjusts life and appends a `LifeHistoryEntry`                                     |
 | `applyTap` / `applyUntapAll` / `applyAddCounter` | Battlefield permanent state                                                       |
-| `applyMoveToZone`                                | Moves a card between any two `CardZone`s, exhaustively checked                    |
+| `applyMoveToZone`                                | Moves a card between `CardZone`s, exhaustively; only a commander enters `command` |
 | `applyUndo`                                      | Restores the previous state; `pushHistory` caps the stack at 10                   |
 
 Shuffling uses `randomIntBelow` from `src/lib/crypto-random.ts`, not `Math.random()`.
+
+**Dealing.** `buildSetup` in `store.ts` deals each main-deck row `quantity` times, so a row of fifteen Forests is fifteen cards. Zones find, tap and key cards by id, so the first copy keeps the row id and each further copy gets `<row id>#<n>`. Sideboard and maybeboard rows are not dealt. In a format with `hasCommander` (Commander, Brawl, Oathbreaker), the commander and partner start in `commandZone`, never in the library (CR 903.6). `commanderIds` records them: only those cards may return to the command zone (CR 903.9), and `analyzeEngineDrawProgress` leaves them out of the cards seen.
 
 **`store.ts`** — `usePlaytestStore` exposes each `apply*` as an action and holds the deck as it was dealt (`setup`), so `resetPlaytest` re-deals the original deck. Rebuilding it from the live zones instead would carry battlefield state (tapped, counters) back into the library and lose the commander/partner distinction.
 

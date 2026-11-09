@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PlaytestModal } from "./PlaytestModal";
@@ -269,6 +269,45 @@ describe("PlaytestModal", () => {
 
     expect(usePlaytestStore.getState().engine?.hand).toHaveLength(7);
     expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(0);
+  });
+
+  it("starts the commander in the command zone and casts it onto the battlefield", () => {
+    renderModal();
+    start();
+
+    expect(screen.getByRole("heading", { name: /command zone/i })).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Cast Card cmd" }));
+
+    const engine = usePlaytestStore.getState().engine;
+    expect(engine?.commandZone).toEqual([]);
+    expect(engine?.battlefield.map((card) => card.id)).toEqual(["cmd"]);
+  });
+
+  describe("recording a game", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    // Casting the commander takes it from the command zone, not from the library.
+    it("does not record a cast commander as a card seen", async () => {
+      const fetchSpy = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValue(new Response(JSON.stringify({}), { status: 201 }));
+      renderModal();
+      start();
+      fireEvent.click(screen.getByRole("button", { name: "Cast Card cmd" }));
+      fireEvent.click(screen.getByRole("button", { name: /next turn/i }));
+
+      fireEvent.click(screen.getByRole("button", { name: "Win" }));
+
+      const postedSession = () =>
+        fetchSpy.mock.calls.find(([, init]) => init?.method === "POST")?.[1]?.body;
+      await waitFor(() => expect(postedSession()).toBeDefined());
+      expect(JSON.parse(String(postedSession()))).toMatchObject({
+        cardsSeen: 8,
+        additionalCardsSeen: 0,
+      });
+    });
   });
 
   it("clears the session when closed, so it does not reappear later", () => {

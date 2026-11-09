@@ -8,7 +8,7 @@ import type { Deck, DeckCard } from "@/lib/deck/types";
 import { getFormatConfig } from "@/lib/deck/formats";
 import { randomAlphanumericId, randomIntBelow } from "@/lib/crypto-random";
 import type { TokenLibraryEntry } from "@/lib/deck/token-library";
-import type { PlaytestEngine } from "./engine";
+import type { CardZone, PlaytestEngine } from "./engine";
 import {
   createPlaytestState,
   applyDrawCard,
@@ -34,37 +34,66 @@ import {
 
 /** The deck as dealt at the start, so a reset does not depend on live zones. */
 interface PlaytestSetup {
+  /** One entry per physical card the engine shuffles into the library. */
   readonly cards: readonly DeckCard[];
+  /** Commanders, which start in the command zone instead (CR 903.6). */
+  readonly commandZone: readonly DeckCard[];
   readonly startingLife: number;
   readonly firstMulliganFree: boolean;
 }
 
 /**
- * Flattens a deck into the card pool the engine shuffles.
+ * Turns a deck row into the physical cards it stands for.
+ *
+ * Zones find, tap and key cards by id, so every copy needs its own: the first
+ * keeps the row's id and each further copy gets `<row id>#<copy number>`.
+ *
+ * @param card - a deck row holding `quantity` copies
+ * @returns one single-copy card per physical copy
+ */
+function physicalCopies(card: DeckCard): readonly DeckCard[] {
+  return Array.from({ length: card.quantity }, (_, index) => ({
+    ...card,
+    id: index === 0 ? card.id : `${card.id}#${index + 1}`,
+    quantity: 1,
+  }));
+}
+
+/**
+ * Splits a deck into the library the engine shuffles and the command zone.
+ *
+ * `deck.cards` also holds the sideboard and the cards being considered; only
+ * the main deck is dealt. A format without a command zone shuffles any
+ * commander slot into the library, as it always has.
  *
  * @param deck - the deck being playtested
- * @returns commander, partner and main-deck cards in one list
+ * @returns the library cards, the commanders and the format's starting rules
  */
 function buildSetup(deck: Deck): PlaytestSetup {
-  const cards: DeckCard[] = [];
-  if (deck.commander) cards.push(deck.commander);
-  if (deck.partner) cards.push(deck.partner);
-  cards.push(...deck.cards);
+  const { hasCommander, startingLife, firstMulliganFree } = getFormatConfig(deck.format);
+  const commanders = [deck.commander, deck.partner].filter(
+    (card): card is DeckCard => card !== null
+  );
+  const mainDeck = deck.cards
+    .filter((card) => card.zone === "main")
+    .flatMap(physicalCopies);
 
-  const { startingLife, firstMulliganFree } = getFormatConfig(deck.format);
-  return { cards, startingLife, firstMulliganFree };
+  return hasCommander
+    ? { cards: mainDeck, commandZone: commanders, startingLife, firstMulliganFree }
+    : { cards: [...commanders, ...mainDeck], commandZone: [], startingLife, firstMulliganFree };
 }
 
 /**
  * Deals a fresh game from the retained setup.
  *
  * @param setup - the deck and the format's starting rules
- * @returns a new engine with the format's life total and mulligan rule
+ * @returns a new engine with the format's life total, mulligan rule and command zone
  */
 function dealFrom(setup: PlaytestSetup): PlaytestEngine {
   return createPlaytestState(setup.cards, {
     lifeTotal: setup.startingLife,
     firstMulliganFree: setup.firstMulliganFree,
+    commandZone: setup.commandZone,
   });
 }
 
@@ -88,11 +117,7 @@ interface PlaytestStore {
   heal: (amount: number) => void;
   tap: (cardId: string) => void;
   untapAll: () => void;
-  moveToZone: (
-    cardId: string,
-    from: "hand" | "library" | "battlefield" | "graveyard" | "exile",
-    to: "hand" | "library" | "battlefield" | "graveyard" | "exile"
-  ) => void;
+  moveToZone: (cardId: string, from: CardZone, to: CardZone) => void;
   addCounter: (cardId: string, amount: number) => void;
   createCardCopy: (cardId: string) => void;
   createToken: (token: TokenLibraryEntry) => void;
