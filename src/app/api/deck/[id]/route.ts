@@ -2,11 +2,37 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
+import type { PublicDeck } from "@/lib/deck/public-deck";
+import {
+  PUBLIC_DECK_AUTHOR_SELECT,
+  PUBLIC_DECK_SELECT,
+} from "@/lib/deck/public-deck-select";
 
 type Params = { params: Promise<{ id: string }> };
 
-// GET /api/deck/[id] — public deck view (no auth required for public decks)
-// Returns deck if: isPublic=true OR requester is the owner
+/** The viewer's own deck, whole except for its share token. */
+function findOwnedDeck(id: string, ownerId: string) {
+  return prisma.deck.findUnique({
+    where: { id, userId: ownerId },
+    omit: { shareToken: true },
+    include: { cards: true, user: { select: PUBLIC_DECK_AUTHOR_SELECT } },
+  });
+}
+
+/** A public deck, read through the public allowlist only. */
+function findPublicDeck(id: string) {
+  return prisma.deck.findUnique({
+    where: { id, isPublic: true },
+    select: PUBLIC_DECK_SELECT,
+  });
+}
+
+/**
+ * GET /api/deck/[id] — public deck view, no auth required for a public deck.
+ *
+ * The owner gets their whole deck, public or private. Anyone else gets a
+ * public deck read through {@link PUBLIC_DECK_SELECT}, and a private deck 404s.
+ */
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params;
 
@@ -16,32 +42,22 @@ export async function GET(_req: Request, { params }: Params) {
 
   try {
     const session = await auth();
-    const currentUserId = session?.user?.id ?? null;
+    const viewerId = session?.user?.id ?? null;
 
-    const deck = await prisma.deck.findUnique({
-      where: { id },
-      include: {
-        cards: true,
-        user: {
-          select: { id: true, name: true, username: true, image: true },
-        },
-      },
-    });
+    // A signed-out viewer owns nothing, so never match a deck whose userId is null.
+    const ownedDeck =
+      viewerId === null ? null : await findOwnedDeck(id, viewerId);
+    if (ownedDeck) {
+      return NextResponse.json({ ...ownedDeck, isOwner: true });
+    }
 
-    if (!deck) {
+    const publicDeck = await findPublicDeck(id);
+    if (!publicDeck) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    // Allow access only if public OR owner
-    const isOwner = currentUserId !== null && deck.userId === currentUserId;
-    if (!deck.isPublic && !isOwner) {
-      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
-    }
-
-    // Strip shareToken before returning
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- omit shareToken from public response
-    const { shareToken: _omitted, ...publicDeck } = deck;
-    return NextResponse.json({ ...publicDeck, isOwner });
+    const body: PublicDeck = { ...publicDeck, isOwner: false };
+    return NextResponse.json(body);
   } catch (error) {
     logger.error(
       error instanceof Error ? error.message : "unknown",
