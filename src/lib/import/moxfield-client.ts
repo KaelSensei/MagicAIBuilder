@@ -11,32 +11,13 @@
  */
 
 import { HttpStatusError, httpGet } from "@/lib/http";
-
-/** Value of the API's `code` field when Moxfield refused the app. */
-export const MOXFIELD_REFUSED_CODE = "moxfield_refused";
-
-/** Player-facing explanation of a refusal, also the API's `error` text. */
-export const MOXFIELD_REFUSED_MESSAGE =
-  "Moxfield refused MagicAIBuilder's request. To import anyway, open the deck on moxfield.com, use its Export button to copy the decklist as text, and paste it in the Plain Text tab.";
+import { MoxfieldRefusedError } from "./moxfield-refusal";
 
 /**
  * Statuses by which Moxfield deliberately turns the app away: 403 (Cloudflare
  * block or challenge page) and 429 (rate limited). Neither is retried.
  */
 const REFUSAL_STATUSES: ReadonlySet<number> = new Set([403, 429]);
-
-/** Moxfield declined to serve the app; asking again will not change the answer. */
-export class MoxfieldRefusedError extends Error {
-  override readonly name = "MoxfieldRefusedError";
-  /** HTTP status of the refusal. */
-  readonly status: number;
-
-  /** @param status - HTTP status Moxfield answered with */
-  constructor(status: number) {
-    super(MOXFIELD_REFUSED_MESSAGE);
-    this.status = status;
-  }
-}
 
 /**
  * Sends one honest request, turning a refusal status into a typed error.

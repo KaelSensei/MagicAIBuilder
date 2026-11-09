@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { importFromUrl } from "@/lib/import/url-import";
 import { BOT_CHALLENGE_MESSAGE } from "@/lib/http";
-import { MOXFIELD_REFUSED_CODE, MoxfieldRefusedError } from "@/lib/import/moxfield-client";
+import { MOXFIELD_REFUSED_CODE, MoxfieldRefusedError } from "@/lib/import/moxfield-refusal";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 

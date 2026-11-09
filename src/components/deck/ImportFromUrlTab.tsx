@@ -18,6 +18,7 @@ import type { UrlImportCard, UrlImportResult } from "@/lib/import/url-import";
 import { detectSource } from "@/lib/import/url-import";
 import type { ImportPreview } from "@/lib/import/import-preview";
 import { buildImportPreview } from "@/lib/import/import-preview";
+import { isMoxfieldRefusal } from "@/lib/import/moxfield-refusal";
 import {
   buildScryfallNameIndex,
   normalizeImportedName,
@@ -168,6 +169,9 @@ export function ImportFromUrlTab({ onSuccess }: ImportFromUrlTabProps) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        if (isMoxfieldRefusal(data)) {
+          throw new Error(t("import.moxfieldRefused", { tab: t("import.tabText") }));
+        }
         throw new Error(
           (data as { error?: string }).error ?? `HTTP ${res.status}`
         );

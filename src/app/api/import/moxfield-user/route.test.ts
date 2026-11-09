@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchMoxfieldUserDecks } from "@/lib/import/moxfield-user";
-import { MOXFIELD_REFUSED_MESSAGE, MoxfieldRefusedError } from "@/lib/import/moxfield-client";
+import { MOXFIELD_REFUSED_MESSAGE, MoxfieldRefusedError } from "@/lib/import/moxfield-refusal";
 import { POST } from "./route";
 import { logger } from "@/lib/logger";
 

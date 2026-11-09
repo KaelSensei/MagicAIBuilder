@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MOXFIELD_REFUSED_MESSAGE } from "@/lib/import/moxfield-client";
+import { MOXFIELD_REFUSED_MESSAGE } from "@/lib/import/moxfield-refusal";
 import { logger } from "@/lib/logger";
 import { POST } from "./route";
 

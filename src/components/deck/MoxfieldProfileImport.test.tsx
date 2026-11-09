@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { act, screen } from "@testing-library/react";
-import { render } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { MoxfieldProfileImport } from "./MoxfieldProfileImport";
 
 describe("MoxfieldProfileImport", () => {
@@ -31,7 +31,7 @@ describe("MoxfieldProfileImport", () => {
       )
     );
 
-    render(<MoxfieldProfileImport onDeckSelected={onDeckSelected} />);
+    renderWithIntl(<MoxfieldProfileImport onDeckSelected={onDeckSelected} />);
     await user.type(screen.getByLabelText("Moxfield username"), "totoro");
     await user.click(screen.getByRole("button", { name: "Save profile" }));
     await user.click(screen.getByRole("button", { name: "Load decks" }));
@@ -85,7 +85,7 @@ describe("MoxfieldProfileImport", () => {
         )
       );
 
-    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    renderWithIntl(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     await user.type(screen.getByLabelText("Moxfield username"), "totoro");
     await user.click(screen.getByRole("button", { name: "Load decks" }));
 
@@ -124,7 +124,7 @@ describe("MoxfieldProfileImport", () => {
       )
     );
 
-    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    renderWithIntl(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     await user.type(screen.getByLabelText("Moxfield username"), "totoro");
     await user.click(screen.getByRole("button", { name: "Load decks" }));
     expect(await screen.findByText("1–1 of 21 decks")).toBeInTheDocument();
@@ -163,7 +163,7 @@ describe("MoxfieldProfileImport", () => {
       )
       .mockResolvedValueOnce(new Response("{}", { status: 500 }));
 
-    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    renderWithIntl(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     const username = screen.getByLabelText("Moxfield username");
     await user.type(username, "first");
     await user.click(screen.getByRole("button", { name: "Load decks" }));
@@ -197,7 +197,7 @@ describe("MoxfieldProfileImport", () => {
       .mockReturnValueOnce(firstResponse)
       .mockResolvedValueOnce(new Response("{}", { status: 500 }));
 
-    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    renderWithIntl(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     await user.click(screen.getByRole("button", { name: "@first" }));
     await user.click(screen.getByRole("button", { name: "@second" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -240,7 +240,7 @@ describe("MoxfieldProfileImport", () => {
     const user = userEvent.setup();
     const fetchMock = vi.spyOn(globalThis, "fetch");
 
-    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    renderWithIntl(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     await user.click(screen.getByRole("button", { name: "Remove @totoro" }));
 
     expect(
@@ -259,7 +259,7 @@ describe("MoxfieldProfileImport", () => {
       JSON.stringify(["totoro", "luna"])
     );
 
-    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    renderWithIntl(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     await user.click(screen.getByRole("button", { name: "Remove @totoro" }));
 
     expect(
