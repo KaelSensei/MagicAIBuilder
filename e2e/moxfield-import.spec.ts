@@ -62,14 +62,16 @@ test.describe("Moxfield import", () => {
 
     const url = "https://moxfield.com/decks/8wdob7tqoUujv-Ifp0S3cw";
 
-    // Retry a couple of times in case Moxfield transiently blocks or rate-limits.
+    // Retry a couple of times on a transient failure. A refusal (403, 429 or a
+    // challenge page, answered with code "moxfield_refused") ends the run at
+    // once: asking again only repeats a request Moxfield already turned down.
     let lastText = "";
     let res: Awaited<ReturnType<typeof request.post>> | null = null;
     for (const waitMs of [0, 1500, 4000, 8000]) {
       if (waitMs > 0) await new Promise((r) => setTimeout(r, waitMs));
       res = await request.post("/api/import/url", { data: { url } });
       lastText = await res.text();
-      if (res.ok()) break;
+      if (res.ok() || lastText.includes('"code":"moxfield_refused"')) break;
     }
 
     expect(res?.ok(), `import failed: ${lastText}`).toBe(true);
