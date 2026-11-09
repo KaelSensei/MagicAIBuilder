@@ -1,6 +1,7 @@
 # Spec: Reproducible Probability Bench (I-21)
 
 > **Initiative:** [I-21 in the roadmap](../roadmap.md) · **Status:** Later · **Researched:** 2026-11-08
+> **Reference model:** [`scripts/research/commander-opening-hands/`](../../../scripts/research/commander-opening-hands/README.md) — a seeded research simulator (not product code) used by the [opening-hands guide](../guides/commander-mulligans-curves-and-play-style.md).
 > **Owns:** seeded, comparable simulation between two snapshots. **Does not own:** recorded goldfish logs and player-authored comparisons, which stay in I-07.
 
 ## Overview
@@ -56,6 +57,8 @@ The disclosure habits this initiative needs are therefore already in the codebas
 3.1 The policy is chosen from a small, named set — for example "keep 2 to 5 lands", "London to 6 then keep" — never implicit.
 3.2 The policy is recorded with the run and shown with the result.
 3.3 Changing the policy invalidates the comparison between two existing runs; the UI says so rather than silently comparing across policies.
+3.4 Every policy applies the mulligan rules of the game being simulated. In multiplayer and Brawl games the first mulligan is free (CR 103.5c): a second seven, with nothing bottomed. A London mulligan draws seven and bottoms the chosen cards; it never deals `7 − N` random cards. **Computed** ([opening-hands guide](../guides/commander-mulligans-curves-and-play-style.md#what-the-free-mulligan-is-worth)): land-only rules such as "keep 2 to 5 lands" capture less than half of the free mulligan's value, because cheap ramp decides more keeps than land count does.
+3.5 The named set includes the per-bracket keep rules from that guide, built on lands, cheap ramp and the mulligan stage. Each carries the guide's caveat that it comes from a goldfish model.
 
 ### 4. Comparison between two snapshots
 
@@ -84,14 +87,14 @@ The disclosure habits this initiative needs are therefore already in the codebas
 
 ## Delivery slices
 
-| #   | Slice                                                                  | Depends on |
-| --- | ---------------------------------------------------------------------- | ---------- |
-| 1   | Seeded PRNG and shuffler, with the reproducibility test                | —          |
-| 2   | Single-snapshot simulation: keep rate, land drops, colour availability | 1          |
-| 3   | Intervals from sample size, and the assumptions panel                  | 2          |
-| 4   | Named mulligan policies, recorded with the run                         | 2          |
-| 5   | Two-snapshot comparison with the statistical verdict                   | 3, 4       |
-| 6   | Compute cap, progress and cancellation                                 | 2          |
+| #   | Slice                                                                                                                  | Depends on |
+| --- | ---------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 1   | Seeded PRNG and shuffler, with the reproducibility test                                                                | —          |
+| 2   | Single-snapshot simulation: keep rate, land drops, colour availability                                                 | 1          |
+| 3   | Intervals from sample size, and the assumptions panel                                                                  | 2          |
+| 4   | Named mulligan policies, recorded with the run, including the free multiplayer mulligan and the per-bracket keep rules | 2          |
+| 5   | Two-snapshot comparison with the statistical verdict                                                                   | 3, 4       |
+| 6   | Compute cap, progress and cancellation                                                                                 | 2          |
 
 Slice 1 alone is worth shipping: a committed seeded shuffler is reusable by I-07's goldfish engine and makes its existing evidence reproducible too.
 
