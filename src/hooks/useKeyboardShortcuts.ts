@@ -17,16 +17,61 @@ interface UseKeyboardShortcutsOptions {
   isInputFocused?: boolean;
 }
 
-/** Handle Ctrl/Cmd modifier shortcuts — returns true if the event was handled */
+/** Input types the browser edits as text, each keeping its own undo history. */
+const TEXT_ENTRY_INPUT_TYPES: ReadonlySet<string> = new Set([
+  "text",
+  "search",
+  "url",
+  "tel",
+  "email",
+  "password",
+  "number",
+]);
+
+/**
+ * Whether a key event comes from a field the player types text into.
+ * @param target - The keyboard event's target
+ * @returns True for a textarea, a text-entry input or editable content; false
+ *   for buttons, checkboxes and other controls that have no text to undo
+ */
+function isTextEntryTarget(target: EventTarget | null): boolean {
+  if (target instanceof HTMLTextAreaElement) return true;
+  if (target instanceof HTMLInputElement) return TEXT_ENTRY_INPUT_TYPES.has(target.type);
+  return target instanceof HTMLElement && target.isContentEditable;
+}
+
+/**
+ * Whether a key event comes from a form input or text field, where
+ * single-character shortcuts stay silent.
+ * @param target - The keyboard event's target
+ * @returns True for any input (checkboxes included), a textarea or editable content
+ */
+function isEditableTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLInputElement || isTextEntryTarget(target);
+}
+
+/**
+ * Handle Ctrl/Cmd modifier shortcuts.
+ * @param e - The keydown event
+ * @param modKey - Whether the platform's command modifier is held
+ * @param isTypingText - Whether the focus is in a text field, whose own undo
+ *   then handles Ctrl/Cmd+Z instead of the deck
+ * @param undo - Deck undo action
+ * @param forceSave - Deck save action
+ * @returns True if the event was handled here
+ */
 function handleModifierShortcut(
   e: KeyboardEvent,
   modKey: boolean,
+  isTypingText: boolean,
   undo: () => void,
   forceSave: () => void,
 ): boolean {
   if (!modKey) return false;
   switch (e.key) {
-    case "z": e.preventDefault(); undo(); return true;
+    case "z":
+      if (isTypingText) return false;
+      e.preventDefault(); undo(); return true;
     case "s": e.preventDefault(); forceSave(); return true;
     case "e": e.preventDefault(); useUIStore.getState().setShowExportModal(true); return true;
     case "i": e.preventDefault(); useUIStore.getState().setShowImportModal(true); return true;
@@ -109,12 +154,10 @@ export function useKeyboardShortcuts({
     (e: KeyboardEvent) => {
       const isMac = navigator.userAgent.toUpperCase().includes("MAC");
       const modKey = isMac ? e.metaKey : e.ctrlKey;
-      if (handleModifierShortcut(e, modKey, undo, forceSave)) return;
+      const isTypingText = isInputFocused || isTextEntryTarget(e.target);
+      if (handleModifierShortcut(e, modKey, isTypingText, undo, forceSave)) return;
 
-      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
-      const isEditable =
-        tag === "input" || tag === "textarea" || (e.target as HTMLElement)?.isContentEditable;
-      if (isEditable || isInputFocused) return;
+      if (isInputFocused || isEditableTarget(e.target)) return;
 
       handleSingleKeyShortcut(e, searchResults, onAddCard);
     },

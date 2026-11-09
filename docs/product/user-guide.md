@@ -466,6 +466,10 @@ Click **Export** in the deck builder to copy your deck in various formats.
 | Commander mode | Click the Crown button |
 | Rename deck    | Click the deck name    |
 
+Press **?** in the deck builder to list the keyboard shortcuts. Ctrl+Z (⌘Z on
+macOS) undoes the last deck change, except while you are typing in a text field
+such as a card note or the search bar: there it undoes your typing instead.
+
 ---
 
 ## Troubleshooting

@@ -43,6 +43,31 @@ function fireKey(key: string, options: Partial<KeyboardEventInit> = {}) {
   });
 }
 
+/** Fields attached to the document by a test, removed again after it. */
+const attachedFields: HTMLElement[] = [];
+
+/**
+ * Focus a real field and press a key inside it, as a player would. The event
+ * bubbles from the field to the window listener and stays cancelable, so the
+ * test can tell whether the hook took the key away from the field.
+ */
+function pressInside(field: HTMLElement, key: string, options: Partial<KeyboardEventInit> = {}) {
+  document.body.append(field);
+  attachedFields.push(field);
+  field.focus();
+  const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...options });
+  act(() => {
+    field.dispatchEvent(event);
+  });
+  return event;
+}
+
+function makeInput(type: string): HTMLInputElement {
+  const input = document.createElement("input");
+  input.type = type;
+  return input;
+}
+
 function resetUIStore() {
   act(() => {
     const s = useUIStore.getState();
@@ -105,6 +130,9 @@ afterEach(() => {
   // Unmount all hooks to remove event listeners
   let u: (() => void) | undefined;
   while ((u = unmounts.pop())) u();
+  let field: HTMLElement | undefined;
+  while ((field = attachedFields.pop())) field.remove();
+  vi.restoreAllMocks();
 });
 
 // ---------------------------------------------------------------------------
@@ -127,6 +155,18 @@ describe("useKeyboardShortcuts", () => {
     const before = useUIStore.getState().searchFocusSignal;
     fireKey("/");
     expect(useUIStore.getState().searchFocusSignal).toBe(before);
+  });
+
+  it.each([
+    ["a textarea", () => document.createElement("textarea")],
+    ["a text input", () => makeInput("text")],
+    ["a checkbox", () => makeInput("checkbox")],
+  ])("pressing '/' inside %s is left to the field", (_label, makeField) => {
+    mount();
+    const before = useUIStore.getState().searchFocusSignal;
+    const event = pressInside(makeField(), "/");
+    expect(useUIStore.getState().searchFocusSignal).toBe(before);
+    expect(event.defaultPrevented).toBe(false);
   });
 
   // -------------------------------------------------------------------------
@@ -246,14 +286,57 @@ describe("useKeyboardShortcuts", () => {
   });
 
   // -------------------------------------------------------------------------
-  // Modifier shortcuts — always active (even when input is focused)
+  // Ctrl/Cmd+Z — deck undo outside text fields, the field's own undo inside
   // -------------------------------------------------------------------------
-  it("Ctrl+Z calls undo() even when input is focused", () => {
-    mount({ isInputFocused: true });
-    fireKey("z", { ctrlKey: true });
-    expect(mockUndo).toHaveBeenCalledTimes(1);
+  describe("Ctrl/Cmd+Z", () => {
+    it("undoes the last deck change when pressed outside a text field", () => {
+      mount();
+      const event = pressInside(document.createElement("button"), "z", { ctrlKey: true });
+      expect(mockUndo).toHaveBeenCalledTimes(1);
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    it("leaves Ctrl+Z to a focused textarea so a card note keeps its own undo", () => {
+      mount();
+      const event = pressInside(document.createElement("textarea"), "z", { ctrlKey: true });
+      expect(mockUndo).not.toHaveBeenCalled();
+      expect(event.defaultPrevented).toBe(false);
+    });
+
+    it.each(["text", "search", "number"])("leaves Ctrl+Z to a focused %s input", (type) => {
+      mount();
+      const event = pressInside(makeInput(type), "z", { ctrlKey: true });
+      expect(mockUndo).not.toHaveBeenCalled();
+      expect(event.defaultPrevented).toBe(false);
+    });
+
+    it("leaves Cmd+Z to a focused textarea on macOS", () => {
+      vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0)"
+      );
+      mount();
+      const event = pressInside(document.createElement("textarea"), "z", { metaKey: true });
+      expect(mockUndo).not.toHaveBeenCalled();
+      expect(event.defaultPrevented).toBe(false);
+    });
+
+    it("leaves Ctrl+Z to the field when the editor reports a focused input", () => {
+      mount({ isInputFocused: true });
+      fireKey("z", { ctrlKey: true });
+      expect(mockUndo).not.toHaveBeenCalled();
+    });
+
+    it("still undoes the deck change from a focused checkbox, which has no text to undo", () => {
+      mount();
+      const event = pressInside(makeInput("checkbox"), "z", { ctrlKey: true });
+      expect(mockUndo).toHaveBeenCalledTimes(1);
+      expect(event.defaultPrevented).toBe(true);
+    });
   });
 
+  // -------------------------------------------------------------------------
+  // Other modifier shortcuts — active even when input is focused
+  // -------------------------------------------------------------------------
   it("Ctrl+S calls forceSave() even when input is focused", () => {
     mount({ isInputFocused: true });
     fireKey("s", { ctrlKey: true });
