@@ -10,7 +10,7 @@ import {
   COMMAND_SLOT_ROWS,
   type CommandSlot,
   type CommandZonePatch,
-} from "@/lib/deck/bulk-edit";
+} from "@/lib/deck/bulk-edit-command-zone";
 import { logger } from "@/lib/logger";
 import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
 import {

@@ -12,7 +12,7 @@ import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
 import { duplicatesOtherCommandSlot } from "@/lib/deck/commander-pairing";
-import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit";
+import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
 
 type Params = { params: Promise<{ id: string }> };
 

@@ -7,7 +7,7 @@
 //
 // @module deck/store-factories
 import type { Deck, DeckCard } from "./types";
-import type { CommandSlot } from "./bulk-edit";
+import type { CommandSlot } from "./bulk-edit-command-zone";
 import type * as deckApi from "@/lib/db/deck-api";
 import { rebuildCardFaces } from "./store-card-faces";
 
