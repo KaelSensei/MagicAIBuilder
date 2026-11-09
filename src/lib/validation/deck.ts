@@ -9,6 +9,11 @@ export const deckCardIdSchema = z
   .string()
   .refine((id) => id.trim().length > 0, { message: "Card ID must not be blank" });
 
+/** How the commander pairs with a second command-zone card. */
+export const pairingTypeSchema = z.enum([
+  "none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son",
+]);
+
 // Schema for PATCH /api/decks/[id]
 export const patchDeckSchema = z.object({
   name: z.string().min(1).max(200).optional(),
@@ -20,9 +25,7 @@ export const patchDeckSchema = z.object({
   commanderName: z.string().max(200).nullable().optional(),
   partnerId: deckCardIdSchema.nullable().optional(),
   companionId: z.string().nullable().optional(),
-  pairingType: z
-    .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son"])
-    .optional(),
+  pairingType: pairingTypeSchema.optional(),
   isAIGenerated: z.boolean().optional(),
   description: z.string().max(2000).nullable().optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
