@@ -336,7 +336,12 @@ export default function BuilderPage() {
     if (!deck) return null;
     return computeDeckStats(deck);
   }, [deck]);
-  const { data: combos, isLoading: combosLoading, dataUpdatedAt: combosUpdatedAt } = useCombos(deck);
+  const {
+    data: combos,
+    isLoading: combosLoading,
+    isError: combosUnavailable,
+    dataUpdatedAt: combosUpdatedAt,
+  } = useCombos(deck);
   const bracketScore = useBracketScore(deck, combos);
   const {
     result: aiResult,
@@ -1120,6 +1125,7 @@ export default function BuilderPage() {
             <CombosPanel
               combos={combos}
               isLoading={combosLoading}
+              isUnavailable={combosUnavailable}
               isEnabled={(deck?.cards.length ?? 0) >= 10}
               observedAt={combosUpdatedAt ? new Date(combosUpdatedAt) : undefined}
             />

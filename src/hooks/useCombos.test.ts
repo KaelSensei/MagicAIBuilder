@@ -95,7 +95,8 @@ describe("useCombos", () => {
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     const calledWith = vi.mocked(spellbook.fetchCombosForDeck).mock.calls[0][0];
-    expect(calledWith).toContain("Atraxa");
+    expect(calledWith.commanders).toEqual(["Atraxa"]);
+    expect(calledWith.main).not.toContain("Atraxa");
   });
 
   it("does not include non-main cards (considering/maybeboard) in card list", async () => {
@@ -117,6 +118,19 @@ describe("useCombos", () => {
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     const calledWith = vi.mocked(spellbook.fetchCombosForDeck).mock.calls[0][0];
-    expect(calledWith).not.toContain("Food Chain");
+    expect(calledWith.main).not.toContain("Food Chain");
+  });
+
+  it("reports a failed lookup as an error, not as a deck without combos", async () => {
+    vi.mocked(spellbook.fetchCombosForDeck).mockRejectedValueOnce(
+      new Error("Combo lookup failed with HTTP 502")
+    );
+
+    const { result } = renderHook(() => useCombos(makeDeck(10)), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.data).toBeUndefined();
   });
 });

@@ -227,7 +227,7 @@ describe("scoreBracket", () => {
     const deck = makeDeck();
     const stats = makeStats({ ramp: 2, draw: 2, avgCmc: 4.5, gameChangersCount: 0 });
     const combos = [
-      { id: "c1", cards: ["Chatterfang, Squirrel General", "Pitiless Plunderer"], isInfinite: true, effects: ["Infinite tokens"], uses: [], produces: [], description: "" },
+      { id: "c1", cards: ["Chatterfang, Squirrel General", "Pitiless Plunderer"], isInfinite: true, effects: ["Infinite tokens"], description: "", prerequisites: { otherPieces: [], conditions: [], manaNeeded: "" } },
     ];
     const result = assertBracket(scoreBracket(deck, stats, combos as import("@/lib/combos/spellbook").SpellbookVariant[]));
     expect(result.overall).toBe(4);
@@ -239,7 +239,7 @@ describe("scoreBracket", () => {
     const deck = makeDeck();
     const stats = makeStats({ ramp: 2, draw: 2, avgCmc: 4.5, gameChangersCount: 0 });
     const combos = [
-      { id: "c2", cards: ["A", "B", "C"], isInfinite: true, effects: ["Infinite mana"], uses: [], produces: [], description: "" },
+      { id: "c2", cards: ["A", "B", "C"], isInfinite: true, effects: ["Infinite mana"], description: "", prerequisites: { otherPieces: [], conditions: [], manaNeeded: "" } },
     ];
     const result = assertBracket(scoreBracket(deck, stats, combos as import("@/lib/combos/spellbook").SpellbookVariant[]));
     expect(result.twoCardInfiniteCombos).toBe(0);
@@ -250,7 +250,7 @@ describe("scoreBracket", () => {
     const deck = makeDeck();
     const stats = makeStats({ ramp: 2, draw: 2, avgCmc: 4.5, gameChangersCount: 0 });
     const combos = [
-      { id: "c3", cards: ["A", "B"], isInfinite: false, effects: ["Draw cards"], uses: [], produces: [], description: "" },
+      { id: "c3", cards: ["A", "B"], isInfinite: false, effects: ["Draw cards"], description: "", prerequisites: { otherPieces: [], conditions: [], manaNeeded: "" } },
     ];
     const result = assertBracket(scoreBracket(deck, stats, combos as import("@/lib/combos/spellbook").SpellbookVariant[]));
     expect(result.twoCardInfiniteCombos).toBe(0);

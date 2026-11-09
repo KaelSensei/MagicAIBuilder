@@ -224,7 +224,7 @@ interface DeckStore {
 | `useCardLookupByName(name)`    | `["scryfall", "card", "name", name]`        | 24h       |
 | `useGameChangers()`            | `["scryfall", "game-changers"]`             | 24h       |
 | `useBanlist()`                 | `["scryfall", "banlist"]`                   | 24h       |
-| `useCombos(commanderName)`     | `["combos", commanderName]`                 | 30 min    |
+| `useCombos(deck)`              | `["combos", "spellbook", cardListKey]`      | 1h        |
 
 ### Scryfall Rate Limiting
 
