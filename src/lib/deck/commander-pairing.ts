@@ -20,3 +20,20 @@ export async function sharesOracleIdentity(
 
   return Boolean(commanderOracleId && partnerOracleId && commanderOracleId === partnerOracleId);
 }
+
+/**
+ * Checks whether a card entering one command slot duplicates the card saved in
+ * the other slot, either as the same printing or as a reprint of its Oracle card.
+ *
+ * @param cardId - The printing identifier entering a command slot.
+ * @param otherSlotId - The printing identifier saved in the opposite slot, if any.
+ * @returns Whether the pairing would hold one Oracle card twice.
+ */
+export async function duplicatesOtherCommandSlot(
+  cardId: string,
+  otherSlotId: string | null
+): Promise<boolean> {
+  if (!otherSlotId) return false;
+  if (cardId === otherSlotId) return true;
+  return sharesOracleIdentity(cardId, otherSlotId);
+}
