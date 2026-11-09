@@ -229,10 +229,11 @@ The editor shows a **short rule summary** where the app encodes it (for example 
 
 The right panel shows:
 
-- **Bracket score** (1–4) based on your deck's power level
+- **Bracket score** (1–4) based on your deck's power level, named with the official bracket names (Exhibition, Core, Upgraded, Optimized). Bracket 5 (cEDH) differs from Bracket 4 only by the cEDH metagame, so the score never reaches it; set it as your target or as a manual override
 - **Game Changers** count (cards that push bracket to 3+)
 - **⚡ Game Changer badge** — any GC forces Bracket 3 minimum; >3 forces Bracket 4
-- **∞ 2-card combo badge** — if your deck contains an infinite combo with exactly 2 cards, Bracket 4 is forced automatically (RC rule), shown with a red ∞ icon
+- **∞ 2-card combo badge** — if your deck contains an infinite combo with exactly 2 cards, Bracket 3 is the minimum: Brackets 1–2 allow no two-card combos, and Bracket 3 allows none before turn 6. Shown with a red ∞ icon
+- **Tutors** do not change the bracket: Wizards removed the tutor restriction on 2025-10-21, and the most efficient tutors are Game Changers
 - **AI suggestions** for improvement
 - **Combo detection** via Commander Spellbook
 - **Mana curve**, color distribution, category breakdown

@@ -253,27 +253,29 @@ TanStack Query's deduplication prevents duplicate concurrent requests. `getCardB
 ```
 scoreBracket(deck, stats) → BracketScore
 
-1. Compute 6 dimensions (each scored 1–4):
+1. Compute 5 dimensions (each scored 1–4):
    - ramp:     ramp count + avg CMC inverse
    - draw:     draw piece count
    - removal:  removal + boardWipes × 1.5
-   - tutors:   non-land library searches
    - winSpeed: explicit win cons + fast win combos
    - avgCmc:   lower = higher bracket
+   Tutors are not a dimension: Wizards removed the tutor restriction on
+   2025-10-21 and relies on the Game Changers list to catch efficient tutors.
 
 2. overall = round(average(dimensions))
 
-3. 2-card infinite combo override (RC rule):
-   - If any combo from Spellbook has isInfinite=true AND cards.length===2 → overall = 4
-   - Counted as `twoCardInfiniteCombos` in BracketScore
+3. Official floor (minimumBracket, src/lib/deck/bracket-floor.ts), read from
+   BRACKET_DEFINITIONS (src/lib/constants/brackets.ts):
+   - the lowest bracket whose Game Changer limit admits the deck's count
+     (B1/B2 none, B3 up to 3, B4/B5 unlimited)
+   - and whose two-card combo rule admits the deck's two-card infinites
+     (B1/B2 none, B3 none before turn 6, B4/B5 unrestricted). A list cannot
+     show how early a combo comes up, so a two-card infinite sets B3, not B4.
+   - overall = max(overall, floor)
 
-4. Game Changers override (2025 bracket rules):
-   - B1/B2 → 0 GC allowed
-   - B3    → max 3 GC
-   - count > 3 → overall = max(overall, 4)
-   - count > 0 → overall = max(overall, 3)
-
-4. Clamp overall to [1, 4]
+4. Clamp overall to [1, 4]. Brackets 4 and 5 share one rule set; only the
+   cEDH metagame separates them, so the estimate never outputs 5. Players set
+   Bracket 5 as a target or a manual override.
 
 5. Generate human-readable warnings
 ```
