@@ -1,4 +1,4 @@
-import type { BuildRequest } from "@/app/api/ai/build/types";
+import type { Bracket, BuildRequest } from "@/app/api/ai/build/types";
 
 export interface DeckPlanRole {
   readonly role: string;
@@ -119,13 +119,78 @@ const STRATEGY_PLANS: Readonly<Record<string, StrategyPlan>> = {
   },
 };
 
-const BRACKET_CONSTRAINTS: Readonly<Record<number, string>> = {
-  1: "Bracket 1: theme-first, no tutors, combos, or game changers",
-  2: "Bracket 2: at most 1 game changer and no infinite combos",
-  3: "Bracket 3: up to 3 game changers and no cEDH optimization",
-  4: "Bracket 4: optimized high-power play short of cEDH",
-  5: "Bracket 5: fully optimized cEDH play",
+interface BracketBrief {
+  /** Official name and intent, e.g. "Bracket 2 (Core): unoptimized and straightforward". */
+  readonly heading: string;
+  /** One official rule per line, shown to the player and given to the model. */
+  readonly rules: readonly string[];
+}
+
+/**
+ * The official Commander brackets as the copilot must apply them: bracket text
+ * of 2025-10-21, Game Changers list of 2026-02-09. Tutors are restricted only
+ * through the Game Changers list since 2025-10-21.
+ *
+ * Source: docs/product/guides/commander-deckbuilding-by-bracket.md. Kept here,
+ * not derived from BRACKET_DEFINITIONS, until that constant covers bracket 5
+ * and drops its outdated tutor flag (I-28 slice 2).
+ */
+const BRACKET_BRIEFS: Readonly<Record<Bracket, BracketBrief>> = {
+  1: {
+    heading: "Bracket 1 (Exhibition): a goal, theme or idea over power",
+    rules: [
+      "No Game Changers, extra turns or two-card combos unless highly thematic",
+      "No mass land denial",
+      "Tutors are allowed unless they are Game Changers",
+      "Expect to play at least 9 turns before you win or lose",
+    ],
+  },
+  2: {
+    heading: "Bracket 2 (Core): unoptimized and straightforward",
+    rules: [
+      "No Game Changers",
+      "No two-card combos (game-ending, lockout or infinite)",
+      "No mass land denial or chained extra turns",
+      "Tutors are allowed unless they are Game Changers",
+      "Expect to play at least 8 turns before you win or lose",
+    ],
+  },
+  3: {
+    heading: "Bracket 3 (Upgraded): strong synergy and high card quality",
+    rules: [
+      "Up to 3 Game Changers",
+      "No two-card combos (game-ending, lockout or infinite) before turn 6",
+      "No mass land denial or chained extra turns",
+      "Expect to play at least 6 turns before you win or lose",
+    ],
+  },
+  4: {
+    heading:
+      "Bracket 4 (Optimized): lethal, consistent and fast, but not built for the cEDH metagame",
+    rules: [
+      "Unlimited Game Changers; only the banned list restricts cards",
+      "Expect to play at least 4 turns before you win or lose",
+    ],
+  },
+  5: {
+    heading:
+      "Bracket 5 (cEDH): built for the cEDH metagame, optimized for efficiency and consistency",
+    rules: [
+      "Unlimited Game Changers; only the banned list restricts cards",
+      "Games can end on any turn",
+    ],
+  },
 };
+
+/**
+ * Names a bracket the way the copilot prompt states the power level.
+ *
+ * @param bracket - target bracket of the build request
+ * @returns the official bracket name and intent, e.g. "Bracket 3 (Upgraded): …"
+ */
+export function describeBracket(bracket: Bracket): string {
+  return BRACKET_BRIEFS[bracket].heading;
+}
 
 function rolesFor(plan: StrategyPlan): readonly DeckPlanRole[] {
   const core = CORE_ROLES.map((role) => ({
@@ -148,6 +213,7 @@ export function createDeckPlan(request: BuildRequest): DeckPlan {
   const commanderConstraint = request.commanderName
     ? `Use ${request.commanderName} as commander`
     : `Choose a commander with exactly ${colors} color identity`;
+  const bracket = BRACKET_BRIEFS[request.bracket];
 
   return {
     gameplan: resolved.gameplan,
@@ -159,7 +225,8 @@ export function createDeckPlan(request: BuildRequest): DeckPlan {
       request.budget === null
         ? "Favor accessible cards; no price cap"
         : `$${request.budget} maximum per card`,
-      BRACKET_CONSTRAINTS[request.bracket] ?? BRACKET_CONSTRAINTS[2],
+      bracket.heading,
+      ...bracket.rules,
     ],
   };
 }
