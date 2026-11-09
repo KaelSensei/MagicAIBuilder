@@ -23,6 +23,11 @@ import {
 } from "./store-factories";
 import { cardsFromZoneSource, deckFromZoneCards } from "./zone-source";
 import {
+  commandZoneOf,
+  restoreCommanderAfterFailedSave,
+  type CommandZone,
+} from "./commander-save-recovery";
+import {
   createGuestDeck,
   GUEST_DECK_ID,
   isGuestDeckId,
@@ -984,8 +989,10 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   },
 
   setCommander: async (card: ScryfallCard) => {
-    const { activeDeckId, gameChangerNames, bannedNames } = get();
+    const { activeDeckId, decks, gameChangerNames, bannedNames } = get();
     if (!activeDeckId) return;
+    const previous = commandZoneOf(decks[activeDeckId]);
+    let commanderMetadataSaved = false;
     const deckCard = makeDeckCard(card);
     deckCard.category = "commander";
     deckCard.isGameChanger = gameChangerNames.has(card.name);
@@ -1001,6 +1008,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     }
 
     const pairingType = detectPairingType(card);
+    const attempted: CommandZone = {
+      commander: deckCard,
+      pairingType,
+      // Clear partner if new commander doesn't support pairing, or if partner is the same card
+      partner:
+        supportsPartner(pairingType) && previous.partner?.name !== deckCard.name
+          ? previous.partner
+          : null,
+    };
 
     // Optimistic update — also update pairingType and clear partner if new commander doesn't support it
     set((state) => ({
@@ -1008,14 +1024,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         ...state.decks,
         [activeDeckId]: {
           ...state.decks[activeDeckId],
-          commander: deckCard,
-          pairingType,
-          // Clear partner if new commander doesn't support pairing, or if partner is the same card
-          partner:
-            supportsPartner(pairingType) &&
-            state.decks[activeDeckId].partner?.name !== deckCard.name
-              ? state.decks[activeDeckId].partner
-              : null,
+          ...attempted,
           updatedAt: new Date(),
         },
       },
@@ -1029,6 +1038,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         commanderName: deckCard.name,
         pairingType,
       });
+      commanderMetadataSaved = true;
       // Persist the commander card record
       await deckApi.addCard(activeDeckId, {
         scryfallId: card.id,
@@ -1052,22 +1062,33 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       });
     } catch (err) {
       logger.error("Unexpected error", "setCommander", err);
+      restoreCommanderAfterFailedSave(set, get(), {
+        activeDeckId,
+        commanderMetadataSaved,
+        attempted,
+        previous,
+      });
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
   },
 
   clearCommander: async () => {
-    const { activeDeckId } = get();
+    const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
+    const previous = commandZoneOf(decks[activeDeckId]);
+    // Also clear partner — can't have partner without commander
+    const attempted: CommandZone = {
+      commander: null,
+      partner: null,
+      pairingType: "none",
+    };
     set((state) => ({
       decks: {
         ...state.decks,
         [activeDeckId]: {
           ...state.decks[activeDeckId],
-          commander: null,
-          partner: null, // Also clear partner — can't have partner without commander
-          pairingType: "none",
+          ...attempted,
           updatedAt: new Date(),
         },
       },
@@ -1082,6 +1103,12 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       });
     } catch (err) {
       logger.error("Unexpected error", "clearCommander", err);
+      restoreCommanderAfterFailedSave(set, get(), {
+        activeDeckId,
+        commanderMetadataSaved: false,
+        attempted,
+        previous,
+      });
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
