@@ -49,6 +49,7 @@ const BRACKET_COLORS: Record<number, string> = {
   2: "text-blue-400 border-blue-400/30 bg-blue-400/10",
   3: "text-amber-400 border-amber-400/30 bg-amber-400/10",
   4: "text-red-400 border-red-400/30 bg-red-400/10",
+  5: "text-fuchsia-400 border-fuchsia-400/30 bg-fuchsia-400/10",
 };
 
 export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps) {

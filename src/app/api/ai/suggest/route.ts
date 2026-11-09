@@ -59,7 +59,6 @@ interface BracketDimensions {
   ramp: number;
   draw: number;
   removal: number;
-  tutors: number;
   winSpeed: number;
   avgCmc: number;
 }

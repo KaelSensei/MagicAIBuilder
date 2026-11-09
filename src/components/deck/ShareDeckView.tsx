@@ -35,6 +35,7 @@ const BRACKET_COLORS: Record<number, string> = {
   2: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   3: "text-amber-400 bg-amber-400/10 border-amber-400/30",
   4: "text-red-400 bg-red-400/10 border-red-400/30",
+  5: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/30",
 };
 
 function computeManaCurve(cards: ApiCard[]): Record<number, number> {

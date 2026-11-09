@@ -2,7 +2,13 @@
 // Zustand deck store — manages all deck state (synced to DB via API routes)
 import { create } from "zustand";
 import type { StoreApi } from "zustand";
-import type { Deck, DeckCard, DeckZone, CardCategory } from "./types";
+import type {
+  BracketLevel,
+  Deck,
+  DeckCard,
+  DeckZone,
+  CardCategory,
+} from "./types";
 import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
 import { canPairWith, detectPairingType, supportsPartner } from "./pairing";
@@ -354,8 +360,8 @@ export interface DeckStore {
   applyBulkEdit: (edit: BulkEdit) => Promise<void>;
 
   // Deck settings
-  setTargetBracket: (bracket: 1 | 2 | 3 | 4) => Promise<void>;
-  setManualBracket: (bracket: 1 | 2 | 3 | 4 | null) => Promise<void>;
+  setTargetBracket: (bracket: BracketLevel) => Promise<void>;
+  setManualBracket: (bracket: BracketLevel | null) => Promise<void>;
   setBudget: (budget: number | null) => Promise<void>;
 
   // Game Changer / banlist enrichment

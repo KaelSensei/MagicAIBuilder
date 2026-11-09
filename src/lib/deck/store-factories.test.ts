@@ -275,3 +275,48 @@ describe("apiDeckToStoreDeck zones", () => {
     expect(deck.maybeboard.map((card) => card.id)).toEqual(["maybe-card"]);
   });
 });
+
+describe("apiDeckToStoreDeck brackets", () => {
+  /** A stored deck with no cards and the given raw bracket columns. */
+  function storedDeck(
+    targetBracket: number,
+    manualBracket: number | null
+  ): Deck {
+    return apiDeckToStoreDeck({
+      id: "deck-brackets",
+      name: "Bracket Deck",
+      format: "commander",
+      targetBracket,
+      manualBracket,
+      budget: null,
+      description: "",
+      tags: [],
+      shareToken: null,
+      shareEnabled: false,
+      isPublic: false,
+      isAIGenerated: false,
+      commanderId: null,
+      commanderName: null,
+      partnerId: null,
+      companionId: null,
+      companion: null,
+      pairingType: "none",
+      cards: [],
+      maybeboard: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+  }
+
+  it("keeps cEDH (Bracket 5) as a target and as a manual override", () => {
+    const deck = storedDeck(5, 5);
+    expect(deck.targetBracket).toBe(5);
+    expect(deck.manualBracket).toBe(5);
+  });
+
+  it("falls back to the default target and no override for values outside 1–5", () => {
+    const deck = storedDeck(6, 0);
+    expect(deck.targetBracket).toBe(3);
+    expect(deck.manualBracket).toBeNull();
+  });
+});

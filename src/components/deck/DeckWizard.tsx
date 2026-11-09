@@ -36,7 +36,7 @@ import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { categorizeCard } from "@/lib/deck/categories";
 import { getCardImageUri, getListedImageUri } from "@/lib/scryfall/images";
-import type { CardCategory, DeckCard } from "@/lib/deck/types";
+import type { BracketLevel, CardCategory, DeckCard } from "@/lib/deck/types";
 import { createDeckPlan } from "@/lib/ai/deck-plan";
 import type { BuildRequest, DeckCorrection } from "@/app/api/ai/build/types";
 import { GeneratedDeckCorrections } from "./GeneratedDeckCorrections";
@@ -294,14 +294,23 @@ const BRACKET_OPTIONS = [
     border: "border-red-500/40",
     bg: "bg-red-500/10",
   },
+  {
+    value: 5 as const,
+    labelKey: "bracket5",
+    subtitleKey: "bracket5Sub",
+    descriptionKey: "bracket5Desc",
+    color: "text-fuchsia-400",
+    border: "border-fuchsia-500/40",
+    bg: "bg-fuchsia-500/10",
+  },
 ] as const;
 
 function StepBracket({
   value,
   onChange,
 }: {
-  readonly value: 1 | 2 | 3 | 4 | null;
-  readonly onChange: (v: 1 | 2 | 3 | 4) => void;
+  readonly value: BracketLevel | null;
+  readonly onChange: (v: BracketLevel) => void;
 }) {
   const t = useTranslations("deck.wizard");
   return (
@@ -768,7 +777,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   const [strategy, setStrategy] = useState<string | null>(null);
 
   // Step 4 — Bracket (power level)
-  const [bracket, setBracket] = useState<1 | 2 | 3 | 4 | null>(null);
+  const [bracket, setBracket] = useState<BracketLevel | null>(null);
 
   // Step 5 — Commander
   const [commanderName, setCommanderName] = useState("");

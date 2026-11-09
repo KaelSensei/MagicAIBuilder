@@ -69,7 +69,9 @@ function bracketCopy(locale: string): Readonly<Record<string, string>> {
   const file = join(__dirname, "..", "..", "messages", locale, "deck.json");
   const { wizard } = WIZARD_CATALOG.parse(JSON.parse(readFileSync(file, "utf8")));
   return Object.fromEntries(
-    Object.entries(wizard).filter(([key]) => /^bracket[1-4](Sub|Desc)?$/.test(key))
+    Object.entries(wizard).filter(([key]) =>
+      /^bracket[1-5](Sub|Desc)?$/.test(key)
+    )
   );
 }
 
@@ -89,7 +91,9 @@ describe("DeckWizard bracket step", () => {
     expect(screen.getByRole("button", { name: /Bracket 4 — Optimized/ })).toHaveTextContent(
       "Unlimited Game Changers"
     );
-    expect(screen.queryByRole("button", { name: /— cEDH/ })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Bracket 5 — cEDH/ })
+    ).toHaveTextContent("Games can end on any turn");
   });
 
   it("names each French bracket as « Catégorie N — Nom (bracket N) » with its limits", async () => {
@@ -107,7 +111,9 @@ describe("DeckWizard bracket step", () => {
     expect(
       screen.getByRole("button", { name: /Catégorie 4 — Optimisé \(bracket 4\)/ })
     ).toHaveTextContent("Game Changers illimités");
-    expect(screen.queryByRole("button", { name: /— cEDH/ })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Catégorie 5 — cEDH \(bracket 5\)/ })
+    ).toHaveTextContent("La partie peut se terminer à n’importe quel tour");
   });
 });
 
