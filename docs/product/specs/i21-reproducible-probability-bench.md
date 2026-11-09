@@ -1,6 +1,6 @@
 # Spec: Reproducible Probability Bench (I-21)
 
-> **Initiative:** [I-21 in the roadmap](../roadmap.md) · **Status:** Later · **Researched:** 2026-11-08
+> **Initiative:** [I-21 in the roadmap](../roadmap.md) · **Status:** Later · **Researched:** 2026-11-08 · **Market section corrected:** 2026-11-09
 > **Reference model:** [`scripts/research/commander-opening-hands/`](../../../scripts/research/commander-opening-hands/README.md) — a seeded research simulator (not product code) used by the [opening-hands guide](../guides/commander-mulligans-curves-and-play-style.md).
 > **Owns:** seeded, comparable simulation between two snapshots. **Does not own:** recorded goldfish logs and player-authored comparisons, which stay in I-07.
 
@@ -12,21 +12,27 @@
 
 Hand-probability tools are abundant and technically competent.
 
-| Product                        | Method                                              | Reported output                                                         |
-| ------------------------------ | --------------------------------------------------- | ----------------------------------------------------------------------- |
-| **ManaTap** mulligan simulator | Thousands of iterations                             | Keep rates for 7, 6 and 5 cards                                         |
-| **ScrollVault** hand simulator | WebAssembly engine, ~50 000 hands in the background | Running statistics over generated hands                                 |
-| **MyDeckStats**                | Exact combinatorics **plus** Monte Carlo            | Opening-hand and mulligan odds, curve behaviour over thousands of games |
-| **KrakenTheMeta**              | Hypergeometric calculator                           | London mulligan opening-hand odds                                       |
-| **Deckstats**, **Archidekt**   | Multi-turn hand odds                                | Named as the references in the roadmap                                  |
+| Product                               | Method                                                                                                                                                                        | Reported output                                                                                                                                                                        |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ManaTap** mulligan simulator        | Thousands of iterations                                                                                                                                                       | Keep rates for 7, 6 and 5 cards                                                                                                                                                        |
+| **ScrollVault** hand simulator        | WebAssembly engine, ~50 000 hands in the background                                                                                                                           | Running statistics over generated hands                                                                                                                                                |
+| **MyDeckStats**                       | Exact combinatorics **plus** Monte Carlo                                                                                                                                      | Opening-hand and mulligan odds, curve behaviour over thousands of games                                                                                                                |
+| **KrakenTheMeta**                     | Hypergeometric calculator                                                                                                                                                     | London mulligan opening-hand odds                                                                                                                                                      |
+| **Deckstats**, **Archidekt**          | Multi-turn hand odds                                                                                                                                                          | Named as the references in the roadmap                                                                                                                                                 |
+| **EDHTuner** (added 2026-11-09)       | Paired solo games on the same shuffle seeds with and without a swap; land counts tested on identical shuffles; "typically a few thousand games per swap"; runs in the browser | A swap or land change is recommended only if it clears "both a statistical bar and a practical one"; the same deck always gives the same result; a shareable link replays the analysis |
+| **mtg-mcp-server** (added 2026-11-09) | Open-source MCP server, `simulate_opening_hands`, 100 to 100,000 iterations                                                                                                   | Keep rates, kept-hand land distribution, spendable mana per turn; options for the free mulligan and a `seed`                                                                           |
+| **DeckFlow** (added 2026-11-09)       | Monte Carlo on the player's list, London mulligan with the free first mulligan, joint check of mana and coloured pips                                                         | Per-card share of games castable on curve; iteration count not stated                                                                                                                  |
+| **Fetch** (added 2026-11-09)          | Hypergeometric, "calibrated on real decks"                                                                                                                                    | Per-spell cast rate compared with decks of the same bracket; sample sizes not published                                                                                                |
 
-**What none of them states.** Reading all five on 2026-11-08, none advertises:
+**Correction 2026-11-09.** The 2026-11-08 reading said none of the five tools above advertised a published seed, a two-snapshot comparison with a statistical verdict, or intervals. A wider sweep on 2026-11-09 found that two of the three exist elsewhere:
 
-1. **A published seed.** Rerun any of them and the numbers move. A player cannot quote a result and have a friend reproduce it.
-2. **A two-snapshot comparison with a statistical verdict.** They measure one list. Measuring whether version B is _distinguishably_ better than version A is the question a deckbuilder actually has.
-3. **Intervals.** A keep rate of 71 % from 1 000 hands and from 50 000 hands are different claims; none of them says which.
+1. **A seed.** EDHTuner is deterministic and replays an analysis from a shared link, and `mtg-mcp-server` takes a `seed`. A reproducible result is no longer unique to this initiative.
+2. **A comparison with a statistical bar.** EDHTuner compares a deck with and without a swap, or at several land counts, on identical shuffles, and applies a statistical and a practical bar. It compares variants of one list rather than two saved snapshots, and it does not publish the test it uses.
+3. **Intervals.** Still not found. No tool among about twenty checked displays a confidence interval with its sample size. A keep rate of 71 % from 1 000 hands and from 50 000 hands are different claims, and none of them says which.
 
-Those three are the initiative, and they align exactly with the product's "AI you can check" positioning: a number you can reproduce and whose uncertainty is stated.
+What remains this initiative's own is the stated uncertainty: an interval with its sample size, the seed shown beside it, and a **"not distinguishable at this sample size"** verdict with the sample that would be needed (requirement 4.3). No tool found shows all of these together. Every simulator found also uses a hand-written keep rule, such as a land range, a three-turn playability heuristic or "lowest-impact first". The keep rules in this repository's opening-hands guide were solved by backward induction instead; requirement 3.5 offers them as named policies.
+
+Sources, read 2026-11-09: [EDHTuner methodology](https://edhtuner.com/methodology), [EDHTuner FAQ](https://edhtuner.com/faq), [mtg-mcp-server on Glama](https://glama.ai/mcp/servers/Cladios34/mtg-mcp-server/tools/simulate_opening_hands), [DeckFlow mana base analyzer](https://www.deckflow.gg/manabase), [Fetch](https://www.fetch-mtg.com/analyse).
 
 ## Current state in this codebase
 
@@ -100,6 +106,6 @@ Slice 1 alone is worth shipping: a committed seeded shuffler is reusable by I-07
 
 ## Open questions
 
-- Where does the simulation run? The client keeps the server cheap and matches ScrollVault's WebAssembly approach; the server makes a result quotable by URL. A quotable seed argues for the server, which is the differentiator.
-- Which statistical test? A two-proportion comparison is enough for keep rates, but land-drop curves across four turns invite multiple-comparison error. Pick one and state it on screen rather than reporting four independent verdicts.
+- Where does the simulation run? The client keeps the server cheap and matches ScrollVault's WebAssembly approach; the server makes a result quotable by URL. A quotable seed argues for the server, which is the differentiator. **Measured 2026-11-09:** the repository's colourless research model runs about 40,000 to 65,000 ten-turn goldfish games per second on one core of the VPS under Node 22, so 100,000 games take about 2.5 seconds. Compute does not decide the question in either direction. EDHTuner runs entirely in the browser. For identical numbers across devices, use a seeded integer PRNG and keep engine-dependent `Math` functions out of the hot path.
+- Which statistical test? A two-proportion comparison is enough for keep rates, but land-drop curves across four turns invite multiple-comparison error. Pick one and state it on screen rather than reporting four independent verdicts. **Computed 2026-11-09:** with a normal approximation, the 95 % interval around a proportion near 50 % is ±3.1 points at 1 000 games and ±0.98 at 10 000. Detecting a one-point difference near 82 % between two independent samples needs about 23 000 games per arm, and one land moves "four lands by turn four" by about one point. Simulate both snapshots on the same shuffles (common random numbers), as EDHTuner does, to cut the sample needed.
 - Is "not distinguishable at this sample size" acceptable product copy, or will it read as the tool failing? It is the honest answer and the reason the feature exists — but it needs wording that reads as rigour rather than as an error.
