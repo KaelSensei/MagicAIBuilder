@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { ALL_GENERATED_DECK_CARDS } from "./fixtures/generated-deck-cards";
+import { checkGeneratedDeckLegality } from "./generated-deck-legality";
 import { validateGeneratedDeck } from "./generated-deck-validation";
 import { buildSuggestionEvidence } from "./suggestion-evidence";
-import type { AIDeckResponse } from "@/app/api/ai/build/types";
+import type { AIDeckResponse, DeckCorrection } from "@/app/api/ai/build/types";
+import { buildScryfallNameIndex } from "@/lib/scryfall/name-index";
 import type { ScryfallCard } from "@/lib/scryfall/types";
+
+const CARD_DATA = buildScryfallNameIndex(ALL_GENERATED_DECK_CARDS);
 
 const GENERATED_DECK_CASES: readonly {
   readonly label: string;
   readonly response: AIDeckResponse;
-  readonly expectedIssue: string | null;
+  readonly expectedCorrections: readonly DeckCorrection[];
 }[] = [
   {
     label: "a legal singleton list with grouped basics",
@@ -19,7 +24,7 @@ const GENERATED_DECK_CASES: readonly {
         { name: "Island", quantity: 97, category: "land" },
       ],
     },
-    expectedIssue: null,
+    expectedCorrections: [],
   },
   {
     label: "a partner repeated among the 98 deck cards",
@@ -31,16 +36,26 @@ const GENERATED_DECK_CASES: readonly {
         { name: "Island", quantity: 97, category: "land" },
       ],
     },
-    expectedIssue: "The partner Tymna the Weaver is duplicated in the card list.",
+    expectedCorrections: [
+      {
+        action: "removed",
+        name: "Tymna the Weaver",
+        quantity: 1,
+        reason: "commander_in_list",
+      },
+      { action: "added", name: "Plains", quantity: 1, reason: "fill_to_size" },
+    ],
   },
   {
     label: "a list short by one card",
     response: {
-      commander: "Atraxa, Praetors' Voice",
+      commander: "Talrand, Sky Summoner",
       partner: null,
       cards: [{ name: "Island", quantity: 98, category: "land" }],
     },
-    expectedIssue: "The generated deck contains 98 cards; expected 99.",
+    expectedCorrections: [
+      { action: "added", name: "Island", quantity: 1, reason: "fill_to_size" },
+    ],
   },
 ];
 
@@ -72,13 +87,14 @@ const RECOMMENDATION_CASES: readonly {
 
 describe("AI golden evaluation", () => {
   for (const sample of GENERATED_DECK_CASES) {
-    it(`validates ${sample.label}`, () => {
-      const issues = validateGeneratedDeck(sample.response);
-      if (sample.expectedIssue === null) {
-        expect(issues).toEqual([]);
-      } else {
-        expect(issues).toContain(sample.expectedIssue);
-      }
+    it(`checks ${sample.label} against card data`, () => {
+      expect(validateGeneratedDeck(sample.response)).toEqual([]);
+      expect(checkGeneratedDeckLegality(sample.response, CARD_DATA)).toEqual(
+        expect.objectContaining({
+          status: "accepted",
+          corrections: sample.expectedCorrections,
+        })
+      );
     });
   }
 

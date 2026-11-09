@@ -110,6 +110,14 @@ A second research pass and a read of `dev` on 2026-11-09 changed three things th
 5.3 A name Scryfall does not resolve is shown to the player, never dropped silently.
 5.4 Until 5.1 ships, no generated deck carries a "verified" label.
 
+**Interim repair policy (`fix/ai-build-legality-validator`).** The build route resolves every name in batched Scryfall collection requests and checks the list with `checkGeneratedDeckLegality` (`src/lib/ai/generated-deck-legality.ts`), reusing the editor's colour-identity, copy-limit and pairing rules. Until the legal candidate pool of slice 9 exists:
+
+- An unknown, banned, not-legal, off-identity or excess card, or the commander repeated in the list, is removed.
+- A short list is filled with basic lands of the command zone's colours (Wastes when colourless). A long list loses basic lands from its largest stack.
+- The build is rejected when the commander or partner is unknown, cannot be a commander, is not legal, or cannot pair, and when a long list has too few basic lands to trim.
+- Every change travels on the stream's `done` event, and the wizard lists it before it opens the deck.
+- The Game Changer count for the chosen bracket is not checked yet, so 5.1, and the "verified" label of 5.4, remain open.
+
 ### 6. Disclosure of AI use
 
 6.1 A public page states which surfaces call a language model (deck build, suggestions, card questions) and which do not (legality, colour identity, bracket rules, search syntax, playtest, statistics), and names the provider and model.

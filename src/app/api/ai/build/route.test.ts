@@ -16,7 +16,12 @@ vi.mock("@/lib/rate-limit", () => ({
   checkRateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
 }));
 
+import { ALL_GENERATED_DECK_CARDS } from "@/lib/ai/fixtures/generated-deck-cards";
 import { logger } from "@/lib/logger";
+import {
+  buildScryfallNameIndex,
+  normalizeImportedName,
+} from "@/lib/scryfall/name-index";
 import { POST } from "./route";
 
 function buildRequest(bracket: number): Request {
@@ -197,6 +202,145 @@ describe("POST /api/ai/build truncated reply", () => {
         provider: "openai",
         model: sent.model,
         maxTokens: sent.max_tokens,
+      }),
+      "POST /api/ai/build"
+    );
+  });
+});
+
+describe("POST /api/ai/build card-data check", () => {
+  const COLLECTION_REQUEST = z.object({
+    identifiers: z.array(z.object({ name: z.string() })),
+  });
+  const CARD_DATA = buildScryfallNameIndex(ALL_GENERATED_DECK_CARDS);
+
+  /**
+   * Answers the provider call with `reply` and Scryfall's collection endpoint
+   * with the fixture card data, as Scryfall does: found cards in `data`, the
+   * rest in `not_found`.
+   */
+  function stubProviderAndCardData(reply: unknown) {
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      if (String(input) === "https://api.scryfall.com/cards/collection") {
+        const { identifiers } = COLLECTION_REQUEST.parse(
+          JSON.parse(String(init?.body))
+        );
+        const found = identifiers.flatMap(({ name }) => {
+          const card = CARD_DATA.get(normalizeImportedName(name));
+          return card ? [card] : [];
+        });
+        const notFound = identifiers.filter(
+          ({ name }) => !CARD_DATA.has(normalizeImportedName(name))
+        );
+        return Response.json({
+          object: "list",
+          not_found: notFound,
+          data: found,
+        });
+      }
+      return Response.json({
+        stop_reason: "end_turn",
+        content: [{ type: "text", text: JSON.stringify(reply) }],
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  async function eventsFor(
+    reply: unknown
+  ): Promise<{ events: unknown[]; cardDataCalls: number }> {
+    const fetchMock = stubProviderAndCardData(reply);
+    const response = await POST(buildRequest(2));
+    const events = (await response.text())
+      .trim()
+      .split("\n")
+      .map((line): unknown => JSON.parse(line));
+    const cardDataCalls = fetchMock.mock.calls.filter(([input]) =>
+      String(input).startsWith("https://api.scryfall.com")
+    ).length;
+    return { events, cardDataCalls };
+  }
+
+  const STREAMED_CARD = z.object({ type: z.literal("card"), name: z.string() });
+
+  beforeEach(() => {
+    mocks.requireAuth.mockResolvedValue({
+      session: { user: { id: "user-1" } },
+      error: null,
+    });
+    process.env.ANTHROPIC_API_KEY = "test-key";
+  });
+
+  afterEach(() => {
+    delete process.env.ANTHROPIC_API_KEY;
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("never streams an off-identity or unknown card, and flags each removal on the done event", async () => {
+    const { events, cardDataCalls } = await eventsFor({
+      commander: "Talrand, Sky Summoner",
+      partner: null,
+      cards: [
+        { name: "Lightning Bolt", quantity: 1, category: "removal" },
+        { name: "Totally Real Card", quantity: 1, category: "draw" },
+        { name: "Counterspell", quantity: 1, category: "removal" },
+        { name: "Island", quantity: 96, category: "land" },
+      ],
+    });
+
+    const streamed = events.flatMap((event) => {
+      const card = STREAMED_CARD.safeParse(event);
+      return card.success ? [card.data.name] : [];
+    });
+    expect(streamed).toEqual(["Counterspell", "Island"]);
+    expect(events.at(-1)).toEqual({
+      type: "done",
+      totalCards: 99,
+      source: "ai",
+      corrections: [
+        {
+          action: "removed",
+          name: "Lightning Bolt",
+          quantity: 1,
+          reason: "outside_color_identity",
+        },
+        {
+          action: "removed",
+          name: "Totally Real Card",
+          quantity: 1,
+          reason: "unknown_card",
+        },
+        {
+          action: "added",
+          name: "Island",
+          quantity: 2,
+          reason: "fill_to_size",
+        },
+      ],
+    });
+    // One collection request resolves the whole list.
+    expect(cardDataCalls).toBe(1);
+  });
+
+  it("rejects a reply whose commander cannot lead a deck, before any card is streamed", async () => {
+    const logError = vi.spyOn(logger, "error").mockImplementation(() => {});
+
+    const { events } = await eventsFor({
+      commander: "Grizzly Bears",
+      partner: null,
+      cards: [{ name: "Forest", quantity: 99, category: "land" }],
+    });
+
+    expect(events).toEqual([
+      { type: "status", message: "Thinking…" },
+      { type: "status", message: "Consulting the AI oracle…" },
+      { type: "error", message: "AI deck build failed" },
+    ]);
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining("Grizzly Bears cannot be a commander"),
       }),
       "POST /api/ai/build"
     );
