@@ -5,10 +5,12 @@
  * server module just to name an event.
  */
 
+import type { BracketLevel } from "@/lib/constants/brackets";
+
 export type BuildColor = "W" | "U" | "B" | "R" | "G" | "C";
 
-/** Target power level. 1–4 are offered by the wizard; 5 (cEDH) is accepted by the API. */
-export type Bracket = 1 | 2 | 3 | 4 | 5;
+/** Target power level: one of the five official brackets, 5 being cEDH. */
+export type Bracket = BracketLevel;
 
 export interface BuildRequest {
   budget: number | null; // null = no limit
