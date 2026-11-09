@@ -28,13 +28,38 @@ if [[ -n "${CI:-}" ]]; then
   exit 0
 fi
 
+# Every clone and worktree on this machine shares one compose project
+# (`name: magicaibuilder-e2e`). Two pushes at once replaced each other's
+# containers mid-run on 2026-11-09 and both gates failed with no failing test.
+# A second run therefore waits for the first. The lock is held until this
+# script exits, so the diagnosis pass and `compose down` finish first too.
+acquire_e2e_lock() {
+  if ! command -v flock >/dev/null 2>&1; then
+    echo "ℹ  flock not found — running without the machine-wide e2e lock."
+    return 0
+  fi
+  exec 9>"${E2E_LOCK_FILE:-/tmp/magicaibuilder-e2e-pre-push.lock}"
+  if ! flock -n 9; then
+    echo "⏳ Another pre-push e2e run is in progress on this machine — waiting for it to finish..."
+    flock 9
+  fi
+}
+
 # The report directory is bind-mounted, so Playwright writes into whatever is
 # already there. It overwrites index.html but leaves older attachments in
 # data/, which means a reader browsing that folder can still open evidence from
 # a previous run. Clearing first is the difference between "the report is this
 # run" and "the report is mostly this run".
+#
+# The container writes as root. A run that is killed before it finishes leaves
+# root-owned traces the host user cannot delete, and `set -e` then blocked
+# every later push until someone ran `sudo chown`. Remove them through a
+# container instead.
 clear_report() {
-  rm -rf playwright-report test-results
+  if ! rm -rf playwright-report test-results 2>/dev/null; then
+    echo "ℹ  Removing root-owned report files left by an earlier run."
+    docker run --rm -v "$ROOT":/w alpine rm -rf /w/playwright-report /w/test-results
+  fi
   mkdir -p playwright-report test-results
 }
 
@@ -48,6 +73,7 @@ run_direct() {
 cleanup() {
   docker compose -f docker-compose.e2e.yml down -v >/dev/null 2>&1 || true
 }
+acquire_e2e_lock
 trap cleanup EXIT
 
 clear_report
