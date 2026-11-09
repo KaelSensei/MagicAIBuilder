@@ -65,7 +65,10 @@ import type {
 import type { DeckFormat } from "@/lib/deck/formats";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
-import { KeyboardShortcutsModal } from "@/components/layout/KeyboardShortcutsModal";
+import {
+  KeyboardShortcutsModal,
+  KeyboardShortcutsTrigger,
+} from "@/components/layout/KeyboardShortcutsModal";
 import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
@@ -817,6 +820,11 @@ export default function BuilderPage() {
               <Download className="w-3 h-3" />
               <span className="hidden sm:inline">Export</span>
             </button>
+            {/* Shortcut list — reachable without "?", which a player can turn off */}
+            <KeyboardShortcutsTrigger
+              className="rounded-full border border-[var(--border)] px-2.5 py-1.5 transition-all hover:border-[var(--accent)] md:px-3"
+              labelClassName="hidden sm:inline"
+            />
             {/* Visibility toggle — public / private */}
             {deckId !== GUEST_DECK_ID && (
               <DeckVisibilityToggle

@@ -466,9 +466,23 @@ Click **Export** in the deck builder to copy your deck in various formats.
 | Commander mode | Click the Crown button |
 | Rename deck    | Click the deck name    |
 
-Press **?** in the deck builder to list the keyboard shortcuts. Ctrl+Z (⌘Z on
-macOS) undoes the last deck change, except while you are typing in a text field
-such as a card note or the search bar: there it undoes your typing instead.
+Press **?** in the deck builder, or click **Shortcuts** in its toolbar, to list
+the keyboard shortcuts. Ctrl+Z (⌘Z on macOS) undoes the last deck change, except
+while you are typing in a text field such as a card note or the search bar:
+there it undoes your typing instead.
+
+### Single-key shortcuts
+
+**/** (focus the search bar), **?** (list the shortcuts), **Esc** (clear the
+search), the **↑**/**↓** arrow keys and **Enter** (add a search result) work
+without Ctrl or ⌘. They stay silent while a text field, a drop-down, a list or a
+menu has focus, and Enter still presses a focused button or opens a focused
+link. They also wait while an input method (IME) is composing text.
+
+If you use speech input or a screen reader, a stray key can move the focus or
+add a card. Turn these shortcuts off with the **Single-key shortcuts** switch in
+the shortcut list. This browser remembers the choice. Ctrl/⌘ shortcuts (undo,
+save, export, import) keep working, and Esc still closes dialogs.
 
 ---
 

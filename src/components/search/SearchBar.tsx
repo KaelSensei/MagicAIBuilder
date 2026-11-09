@@ -6,6 +6,7 @@ import { Search, X, Loader2 } from "lucide-react";
 import { fieldShellClassName } from "@/components/ui/Input";
 import { cn } from "@/components/ui/utils";
 import { useUIStore } from "@/lib/ui/store";
+import { useShortcutPreferencesStore } from "@/lib/ui/shortcut-preferences";
 
 interface SearchBarProps {
   readonly onSearch: (query: string) => void;
@@ -35,6 +36,10 @@ export function SearchBar({
   // Subscribe to focus / clear signals from UI store
   const searchFocusSignal = useUIStore((s) => s.searchFocusSignal);
   const searchClearSignal = useUIStore((s) => s.searchClearSignal);
+  // The "/" hint advertises a single-key shortcut, so it goes when they are off.
+  const singleKeyShortcutsEnabled = useShortcutPreferencesStore(
+    (s) => s.singleKeyShortcutsEnabled
+  );
 
   // Trigger focus when signal fires
   useEffect(() => {
@@ -97,7 +102,7 @@ export function SearchBar({
         data-testid="search-input"
       />
       {/* Keyboard hint badge — hidden when typing */}
-      {!value && showKeyboardHint && (
+      {!value && showKeyboardHint && singleKeyShortcutsEnabled && (
         <span className="pr-2 text-[10px] text-[var(--text-secondary)]/60 font-mono shrink-0 select-none">
           ⌨ /
         </span>
