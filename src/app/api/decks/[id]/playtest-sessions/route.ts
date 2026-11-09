@@ -9,8 +9,18 @@
  * read. Both verbs therefore require a session and scope every query to the
  * caller, so two players practising the same public deck never see each other's
  * results.
+ *
+ * Every recorded run is filed under a deck snapshot, so the before/after
+ * comparison can group runs by deck version. The server picks that snapshot
+ * from the deck as saved when the run is recorded, rather than trusting a card
+ * list from the client. The builder saves each edit as it is made and the
+ * fullscreen playtest blocks the builder during a run, so the saved deck is the
+ * deck that was played. The exceptions are an edit made in another tab during
+ * the run, or one whose save had not finished or failed; those runs are filed
+ * under the saved version.
  */
 
+import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db/prisma";
@@ -20,11 +30,19 @@ import type { PlaytestSession } from "@/lib/playtest/analytics";
 import { parseSessionInput, summarizeSessions } from "@/lib/playtest/session-input";
 import { readJsonBody } from "@/lib/api/json-body";
 import { compareSessionGroups } from "@/lib/playtest/comparison";
+import { findSnapshotOfVersion, snapshotContent } from "@/lib/deck/deck-version";
 
 type Params = { params: Promise<{ id: string }> };
 
 /** Rows are capped so one enthusiastic tester cannot make the panel unbounded. */
 const MAX_SESSIONS = 500;
+
+/**
+ * How many recent snapshots a recorded run is matched against. Each one is a
+ * full card list, so the read stays bounded however long the deck's history
+ * grows; a version older than this window gets a fresh snapshot.
+ */
+const VERSION_MATCH_WINDOW = 20;
 
 /**
  * Confirms the caller owns the deck.
@@ -39,7 +57,7 @@ const MAX_SESSIONS = 500;
 async function findOwnedDeck(deckId: string, userId: string) {
   const deck = await prisma.deck.findUnique({
     where: { id: deckId },
-    select: { id: true, userId: true },
+    select: { id: true, userId: true, commanderId: true },
   });
 
   if (deck?.userId !== userId) return null;
@@ -76,6 +94,57 @@ async function loadSessions(deckId: string, userId: string): Promise<PlaytestSes
     additionalCardsSeen: row.additionalCardsSeen ?? undefined,
     createdAt: row.createdAt,
   }));
+}
+
+/**
+ * Names a snapshot created to hold a recorded run's deck version.
+ *
+ * The name is stored, not translated, so it uses the app's untranslated
+ * "Playtest" label and a UTC timestamp that reads the same in every locale.
+ *
+ * @param recordedAt - When the run was recorded.
+ * @returns e.g. "Playtest · 2026-11-09 14:32 UTC".
+ */
+function playtestSnapshotName(recordedAt: Date): string {
+  const iso = recordedAt.toISOString();
+  return `Playtest · ${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
+}
+
+/**
+ * Finds the snapshot holding the deck as saved now, or creates one.
+ *
+ * Repeated runs on an unchanged deck therefore share one snapshot instead of
+ * adding a new one to the deck's history each time.
+ *
+ * @param tx - The recording transaction.
+ * @param deck - The owned deck.
+ * @param recordedAt - When the run is being recorded, for a new snapshot's name.
+ * @returns The id of the snapshot to file the run under.
+ */
+async function snapshotOfSavedDeck(
+  tx: Prisma.TransactionClient,
+  deck: { readonly id: string; readonly commanderId: string | null },
+  recordedAt: Date
+): Promise<string> {
+  const cards = await tx.deckCard.findMany({ where: { deckId: deck.id } });
+  const recent = await tx.deckSnapshot.findMany({
+    where: { deckId: deck.id },
+    orderBy: { createdAt: "desc" },
+    take: VERSION_MATCH_WINDOW,
+    select: { id: true, cardList: true },
+  });
+  const existing = findSnapshotOfVersion(deck.id, cards, recent);
+  if (existing) return existing;
+
+  const created = await tx.deckSnapshot.create({
+    data: {
+      deckId: deck.id,
+      name: playtestSnapshotName(recordedAt),
+      ...snapshotContent({ commanderId: deck.commanderId, cards }),
+    },
+    select: { id: true },
+  });
+  return created.id;
 }
 
 // GET /api/decks/[id]/playtest-sessions
@@ -158,9 +227,16 @@ export async function POST(request: Request, { params }: Params) {
       }
     }
 
-    // No upsert: every run is its own row, which is the whole point of a trend.
-    await prisma.playtestSession.create({
-      data: { ...parsed.value, deckId: id, userId },
+    // One transaction, so a snapshot created for a run is never left behind
+    // without it. An explicit snapshotId, validated above, is still honoured for
+    // older clients; the result bar no longer sends one.
+    const explicitSnapshotId = parsed.value.snapshotId;
+    await prisma.$transaction(async (tx) => {
+      const snapshotId = explicitSnapshotId ?? (await snapshotOfSavedDeck(tx, deck, new Date()));
+      // No upsert: every run is its own row, which is the whole point of a trend.
+      await tx.playtestSession.create({
+        data: { ...parsed.value, snapshotId, deckId: id, userId },
+      });
     });
 
     const sessions = await loadSessions(id, userId);

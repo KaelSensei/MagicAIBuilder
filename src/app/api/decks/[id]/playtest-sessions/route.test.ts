@@ -2,9 +2,20 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Mock Prisma ──────────────────────────────────────────────────────────────
 
-const { mockDeckFindUnique, mockSnapshotFindFirst, mockSessionFindMany, mockSessionCreate } = vi.hoisted(() => ({
+const {
+  mockDeckFindUnique,
+  mockDeckCardFindMany,
+  mockSnapshotFindFirst,
+  mockSnapshotFindMany,
+  mockSnapshotCreate,
+  mockSessionFindMany,
+  mockSessionCreate,
+} = vi.hoisted(() => ({
   mockDeckFindUnique: vi.fn(),
+  mockDeckCardFindMany: vi.fn(),
   mockSnapshotFindFirst: vi.fn(),
+  mockSnapshotFindMany: vi.fn(),
+  mockSnapshotCreate: vi.fn(),
   mockSessionFindMany: vi.fn(),
   mockSessionCreate: vi.fn(),
 }));
@@ -21,14 +32,23 @@ const { mockUserFindUnique } = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock("@/lib/db/prisma", () => {
+  const tables = {
     user: { findUnique: mockUserFindUnique },
     deck: { findUnique: mockDeckFindUnique },
-    deckSnapshot: { findFirst: mockSnapshotFindFirst },
+    deckCard: { findMany: mockDeckCardFindMany },
+    deckSnapshot: {
+      findFirst: mockSnapshotFindFirst,
+      findMany: mockSnapshotFindMany,
+      create: mockSnapshotCreate,
+    },
     playtestSession: { findMany: mockSessionFindMany, create: mockSessionCreate },
-  },
-}));
+  };
+  // Recording runs in an interactive transaction over the same tables.
+  return {
+    prisma: { ...tables, $transaction: (run: (tx: typeof tables) => unknown) => run(tables) },
+  };
+});
 
 // ─── Mock NextAuth auth() ─────────────────────────────────────────────────────
 
@@ -82,6 +102,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockSessionFindMany.mockResolvedValue([]);
   mockSnapshotFindFirst.mockResolvedValue(null);
+  mockDeckCardFindMany.mockResolvedValue([]);
+  mockSnapshotFindMany.mockResolvedValue([]);
+  mockSnapshotCreate.mockResolvedValue({ id: "snapshot-auto" });
 });
 
 describe("GET /api/decks/[id]/playtest-sessions", () => {

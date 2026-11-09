@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody, readRecord } from "@/lib/api/json-body";
+import { snapshotContent } from "@/lib/deck/deck-version";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -63,18 +64,8 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
-    // Build card list snapshot
-    const commanderCard = deck.cards.find((c) => c.isCommander);
-    const partnerCard = deck.cards.find((c) => c.isPartner);
-
     const snapshot = await prisma.deckSnapshot.create({
-      data: {
-        deckId: id,
-        name,
-        cardList: deck.cards as unknown as object[],
-        commander: commanderCard?.name ?? partnerCard?.name ?? deck.commanderId ?? null,
-        cardCount: deck.cards.length,
-      },
+      data: { deckId: id, name, ...snapshotContent(deck) },
     });
 
     return NextResponse.json(snapshot, { status: 201 });
