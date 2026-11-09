@@ -45,5 +45,7 @@ it("shows the translated bracket description in the French deck wizard", async (
   renderFrenchWizard();
   fireEvent.click(await openStrategyStep());
   fireEvent.click(screen.getByRole("button", { name: "Continuer" }));
-  expect(await screen.findByRole("button", { name: /Optimisé Synergies optimisées/ })).toBeInTheDocument();
+  expect(
+    await screen.findByRole("button", { name: /Amélioré \(bracket 3\) Synergies fortes/ })
+  ).toBeInTheDocument();
 });
