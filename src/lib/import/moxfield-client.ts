@@ -12,6 +12,9 @@
 
 import { HttpStatusError, httpGet } from "@/lib/http";
 
+/** Value of the API's `code` field when Moxfield refused the app. */
+export const MOXFIELD_REFUSED_CODE = "moxfield_refused";
+
 /** Player-facing explanation of a refusal, also the API's `error` text. */
 export const MOXFIELD_REFUSED_MESSAGE =
   "Moxfield refused MagicAIBuilder's request. To import anyway, open the deck on moxfield.com, use its Export button to copy the decklist as text, and paste it in the Plain Text tab.";
