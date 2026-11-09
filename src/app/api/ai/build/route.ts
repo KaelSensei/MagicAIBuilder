@@ -11,6 +11,11 @@ import {
   describeBracket,
   formatDeckPlanForPrompt,
 } from "@/lib/ai/deck-plan";
+import {
+  readAnthropicReplyText,
+  readOpenAIReplyText,
+  type ModelCall,
+} from "@/lib/ai/model-reply";
 import type {
   AIDeckResponse,
   Bracket,
@@ -29,6 +34,29 @@ export const maxDuration = 60;
 
 const RATE_LIMIT = 5; // max AI builds
 const RATE_WINDOW = 60_000; // per 60 seconds per user
+
+/**
+ * Output-token cap for one decklist reply.
+ *
+ * The prompt asks for a commander, a partner and a "cards" array whose
+ * quantities sum to 99, with basic lands grouped: about 70–95 entries of
+ * three fields (name, quantity, category), roughly 1,400–2,900 tokens of JSON
+ * depending on layout. 4,096 covers the top of that range. A reply that still
+ * reaches the cap is reported as truncated rather than parsed.
+ */
+const BUILD_MAX_OUTPUT_TOKENS = 4096;
+
+const ANTHROPIC_BUILD_CALL: ModelCall = {
+  provider: "anthropic",
+  model: "claude-haiku-4-5",
+  maxTokens: BUILD_MAX_OUTPUT_TOKENS,
+};
+
+const OPENAI_BUILD_CALL: ModelCall = {
+  provider: "openai",
+  model: "gpt-4o-mini",
+  maxTokens: BUILD_MAX_OUTPUT_TOKENS,
+};
 
 export type { BuildEvent, BuildRequest, BuildSource } from "./types";
 
@@ -101,17 +129,20 @@ STRICT RULES:
 // ---------------------------------------------------------------------------
 // AI call: Anthropic
 // ---------------------------------------------------------------------------
-async function callAnthropic(prompt: string): Promise<AIDeckResponse> {
+async function callAnthropic(
+  prompt: string,
+  apiKey: string
+): Promise<AIDeckResponse> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
+      "x-api-key": apiKey,
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      max_tokens: 4096,
+      model: ANTHROPIC_BUILD_CALL.model,
+      max_tokens: ANTHROPIC_BUILD_CALL.maxTokens,
       messages: [{ role: "user", content: prompt }],
     }),
     // Must stay under maxDuration so a slow provider surfaces as an error
@@ -120,8 +151,8 @@ async function callAnthropic(prompt: string): Promise<AIDeckResponse> {
   });
 
   if (!response.ok) throw new Error(`Anthropic API error: ${response.status}`);
-  const data = await response.json();
-  const text: string = data.content?.[0]?.text ?? "{}";
+  const text =
+    readAnthropicReplyText(await response.json(), ANTHROPIC_BUILD_CALL) ?? "{}";
   // Strip markdown fences if the model wrapped output anyway
   const cleaned = text
     .replace(/^```(?:json)?\s*/i, "")
@@ -134,25 +165,28 @@ async function callAnthropic(prompt: string): Promise<AIDeckResponse> {
 // ---------------------------------------------------------------------------
 // AI call: OpenAI
 // ---------------------------------------------------------------------------
-async function callOpenAI(prompt: string): Promise<AIDeckResponse> {
+async function callOpenAI(
+  prompt: string,
+  apiKey: string
+): Promise<AIDeckResponse> {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: OPENAI_BUILD_CALL.model,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
-      max_tokens: 4096,
+      max_tokens: OPENAI_BUILD_CALL.maxTokens,
     }),
     signal: AbortSignal.timeout(45_000),
   });
 
   if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
-  const data = await response.json();
-  const text: string = data.choices?.[0]?.message?.content ?? "{}";
+  const text =
+    readOpenAIReplyText(await response.json(), OPENAI_BUILD_CALL) ?? "{}";
   return JSON.parse(text) as AIDeckResponse;
 }
 
@@ -275,13 +309,16 @@ export async function POST(request: Request) {
         let deck: AIDeckResponse;
         let source: BuildSource;
 
-        if (process.env.ANTHROPIC_API_KEY) {
+        // The key that selects a provider is the one sent to it.
+        const anthropicKey = process.env.ANTHROPIC_API_KEY;
+        const openAIKey = process.env.OPENAI_API_KEY;
+        if (anthropicKey) {
           emit({ type: "status", message: "Consulting the AI oracle…" });
-          deck = await callAnthropic(buildPrompt(body));
+          deck = await callAnthropic(buildPrompt(body), anthropicKey);
           source = "ai";
-        } else if (process.env.OPENAI_API_KEY) {
+        } else if (openAIKey) {
           emit({ type: "status", message: "Consulting the AI oracle…" });
-          deck = await callOpenAI(buildPrompt(body));
+          deck = await callOpenAI(buildPrompt(body), openAIKey);
           source = "ai";
         } else {
           // No provider key configured: fall back to a colour-correct
@@ -301,8 +338,10 @@ export async function POST(request: Request) {
       } catch (error) {
         // The cause is logged; the client gets a fixed line so provider
         // errors (quota, model names, stack fragments) never reach the UI.
+        // The Error itself is logged so a typed failure such as a reply cut
+        // off at the token cap keeps its name and fields in the log line.
         logger.error(
-          error instanceof Error ? error.message : String(error),
+          error instanceof Error ? error : String(error),
           "POST /api/ai/build"
         );
         emit({ type: "error", message: "AI deck build failed" });

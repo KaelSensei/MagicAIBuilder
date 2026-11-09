@@ -6,6 +6,9 @@ const PROVIDER_BODY = z.object({
   messages: z.array(z.object({ content: z.string() })).min(1),
 });
 
+/** The model and output-token cap the route sent to the provider. */
+const SENT_CAP = z.object({ model: z.string(), max_tokens: z.number() });
+
 const mocks = vi.hoisted(() => ({ requireAuth: vi.fn() }));
 
 vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mocks.requireAuth }));
@@ -13,6 +16,7 @@ vi.mock("@/lib/rate-limit", () => ({
   checkRateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
 }));
 
+import { logger } from "@/lib/logger";
 import { POST } from "./route";
 
 function buildRequest(bracket: number): Request {
@@ -42,6 +46,25 @@ async function promptSentFor(bracket: number): Promise<string> {
 
   const body: unknown = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
   return PROVIDER_BODY.parse(body).messages.map(({ content }) => content).join("\n");
+}
+
+/**
+ * Posts a build request answered by `reply` and returns the streamed events
+ * with the model and output-token cap the route sent.
+ */
+async function buildAnsweredWith(
+  reply: unknown
+): Promise<{ events: unknown[]; sent: z.infer<typeof SENT_CAP> }> {
+  const fetchMock = vi.fn<typeof fetch>(async () => Response.json(reply));
+  vi.stubGlobal("fetch", fetchMock);
+
+  const response = await POST(buildRequest(2));
+  const events = (await response.text())
+    .trim()
+    .split("\n")
+    .map((line): unknown => JSON.parse(line));
+  const body: unknown = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+  return { events, sent: SENT_CAP.parse(body) };
 }
 
 describe("POST /api/ai/build prompt", () => {
@@ -101,5 +124,81 @@ describe("POST /api/ai/build prompt", () => {
 
     expect(prompt).toContain("No two-card combos (game-ending, lockout or infinite) before turn 6");
     expect(prompt).toContain("No mass land denial or chained extra turns");
+  });
+});
+
+describe("POST /api/ai/build truncated reply", () => {
+  beforeEach(() => {
+    mocks.requireAuth.mockResolvedValue({
+      session: { user: { id: "user-1" } },
+      error: null,
+    });
+    process.env.ANTHROPIC_API_KEY = "test-key";
+  });
+
+  afterEach(() => {
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("reports an Anthropic reply cut off at the token cap as a truncation, not a JSON parse error", async () => {
+    const logError = vi.spyOn(logger, "error").mockImplementation(() => {});
+
+    const { events, sent } = await buildAnsweredWith({
+      stop_reason: "max_tokens",
+      content: [{ type: "text", text: '{"commander": "Omnath", "cards": [' }],
+    });
+
+    expect(events).toEqual([
+      { type: "status", message: "Thinking…" },
+      { type: "status", message: "Consulting the AI oracle…" },
+      { type: "error", message: "AI deck build failed" },
+    ]);
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "ModelOutputTruncatedError",
+        provider: "anthropic",
+        model: sent.model,
+        maxTokens: sent.max_tokens,
+      }),
+      "POST /api/ai/build"
+    );
+  });
+
+  it("reports an OpenAI reply cut off at the token cap as a truncation, not a JSON parse error", async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    process.env.OPENAI_API_KEY = "test-key";
+    const logError = vi.spyOn(logger, "error").mockImplementation(() => {});
+
+    const { events, sent } = await buildAnsweredWith({
+      choices: [
+        {
+          finish_reason: "length",
+          message: {
+            role: "assistant",
+            content: '{"commander": "Omnath", "cards": [',
+          },
+        },
+      ],
+    });
+
+    expect(events).toEqual([
+      { type: "status", message: "Thinking…" },
+      { type: "status", message: "Consulting the AI oracle…" },
+      { type: "error", message: "AI deck build failed" },
+    ]);
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "ModelOutputTruncatedError",
+        provider: "openai",
+        model: sent.model,
+        maxTokens: sent.max_tokens,
+      }),
+      "POST /api/ai/build"
+    );
   });
 });
