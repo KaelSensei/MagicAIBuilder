@@ -124,6 +124,8 @@ I-07's tracked playtest scope is shipped. The largest active gaps remain the dec
 
 **2026-11-08, I-28:** a dated research sweep across official Wizards texts, EDHREC, the strategy press, creators, forums, cEDH resources, card data, game logs and mana-base math produced [a sourced guide to building for each bracket](guides/commander-deckbuilding-by-bracket.md). I-28 publishes it in the product. The sweep also found that the deck wizard shows players wrong bracket names and limits in English and French, that the copilot prompt gives bracket 2 one Game Changer instead of zero, and that the bracket model stops at 4. Correcting that copy and prompt is I-28's first slice. I-28 adds eight open scopes and is not included in the 30–50 iteration estimate.
 
+**2026-11-09, I-28, I-07 and I-21:** a second research pass covered mulligan practice, measured mana curves, play style and trends 2019–2026, and added the project's own opening-hand simulation. The results are in [a companion guide](guides/commander-mulligans-curves-and-play-style.md) and the simulator is in [`scripts/research/commander-opening-hands/`](../../scripts/research/commander-opening-hands/README.md). The main finding is that the free first mulligan in multiplayer (CR 103.5c) is worth a third to a half of what mulligans add, but only if the first seven is judged more strictly than the second. The pass also found that the playtest mulligan, listed as shipped under I-07, goes to six cards after the first mulligan and does not let the player choose what to bottom. It captures 37–47% of the value of correct mulligans. That adds two open scopes to I-07, one to I-21 and one to I-28. None of them changes an initiative's status.
+
 ---
 
 ## Portfolio View
@@ -557,7 +559,7 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 
 ### Already shipped
 
-- Opening hand, London mulligan and goldfishing.
+- Opening hand, London mulligan and goldfishing. **Correction 2026-11-09:** the mulligan does not yet follow the multiplayer rules. It draws one card fewer with no bottom choice, and gives no free first mulligan; see the open scopes below.
 - Turn phases, life tracking, undo, battlefield, graveyard and exile.
 - Session recording, result history, mulligan data and opponent-strength labels.
 - Player-authored evidence notes and explicit self-reported methodology.
@@ -582,6 +584,8 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [x] Summarize playtest logs into turn-by-turn draw, mana and cards-seen evidence, then export the human-readable log and structured data.
   - [x] Let players copy the human-readable action log directly, with success and clipboard-error feedback (#1040).
 - [x] Let players add required tokens, counters, dice and card copies during a goldfish session without mutating the decklist.
+- [ ] Follow the official mulligan in the playtest. The first mulligan is free in multiplayer and Brawl games (CR 103.5c) and not in duels, and a London mulligan draws seven and lets the player choose the cards to put on the bottom. See the [opening-hands guide](guides/commander-mulligans-curves-and-play-style.md#implications-for-magicaibuilder).
+- [ ] Base opening-hand advice on the mulligan stage (first seven, free seven, six), the deck's cheap ramp and its land count, instead of fixed land thresholds.
 
 ### Definition of done
 
@@ -1046,6 +1050,7 @@ Deckstats hand analysis and Archidekt odds are the references. I-07 still owns r
 
 - [ ] Simulate a visible sample of hands for two snapshots and report color availability and land drops on turns 2 through 5.
 - [ ] Apply an explicit mulligan policy, and show the seed, sample size, intervals and assumptions.
+- [ ] Model the multiplayer free mulligan and the London bottom choice in every policy, and offer the per-bracket keep rules of the [opening-hands guide](guides/commander-mulligans-curves-and-play-style.md) as named policies.
 - [ ] Include a statistical comparison of the two samples.
 - [ ] Stay short of an AI opponent and a full Magic rules engine.
 - [ ] Leave I-07's action logs and player-authored snapshot comparisons unchanged.
@@ -1064,7 +1069,7 @@ Two snapshots can be compared from a recorded seed and sample size, and a rerun 
 ## I-28: Commander Deckbuilding Guide By Bracket
 
 **Spec:** [`specs/i28-commander-deckbuilding-guide-by-bracket.md`](specs/i28-commander-deckbuilding-guide-by-bracket.md)
-**Content:** [`guides/commander-deckbuilding-by-bracket.md`](guides/commander-deckbuilding-by-bracket.md)
+**Content:** [`guides/commander-deckbuilding-by-bracket.md`](guides/commander-deckbuilding-by-bracket.md) and its companion [`guides/commander-mulligans-curves-and-play-style.md`](guides/commander-mulligans-curves-and-play-style.md)
 
 **Outcome:** a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
 
@@ -1082,6 +1087,7 @@ Wizards publishes the rules but no deckbuilding guidance. EDHREC, CoolStuffInc a
 - [ ] Render the guide's official rules from the same definitions the bracket analysis uses, so the two cannot disagree.
 - [ ] Link the bracket badge and the wizard's bracket step to the matching section without losing deck state.
 - [ ] Check the open deck against a chosen bracket, separating official limits it breaks from composition ranges it falls outside, without calling the model or blocking a save.
+- [ ] Teach opening hands per bracket and play style: the free mulligan, keep rules built on cheap ramp, and the land plateau for the deck's curve. Report the open deck's own keep profile under the multiplayer rules.
 - [ ] Ship reviewed English and French content; hide sections not reviewed in a locale.
 - [ ] Show the rules state the guide reflects, and open a review whenever Wizards changes brackets, Game Changers or the banned list.
 

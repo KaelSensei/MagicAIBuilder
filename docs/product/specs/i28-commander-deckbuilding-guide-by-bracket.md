@@ -1,7 +1,7 @@
 # Spec: Commander Deckbuilding Guide By Bracket (I-28)
 
 > **Initiative:** [I-28 in the roadmap](../roadmap.md) · **Status:** Next · **Researched:** 2026-11-08
-> **Content:** [Building a Commander deck, bracket by bracket](../guides/commander-deckbuilding-by-bracket.md) — the sourced guide this initiative publishes.
+> **Content:** [Building a Commander deck, bracket by bracket](../guides/commander-deckbuilding-by-bracket.md) — the sourced guide this initiative publishes — and its companion, [Opening hands, mana curves and play style in multiplayer Commander](../guides/commander-mulligans-curves-and-play-style.md) (researched 2026-11-09), with the project's own opening-hand simulation ([`scripts/research/commander-opening-hands/`](../../../scripts/research/commander-opening-hands/README.md)).
 > **Owns:** authored deckbuilding guidance per bracket, and the bracket vocabulary shown to players. **Does not own:** rules explanations at the moment a warning fires (I-27), the bracket score itself (I-03 and [`commander-power-meter.md`](../commander-power-meter.md)), pod agreements (I-15), precon bundles (I-17).
 
 ## Overview
@@ -39,6 +39,8 @@ Verified on `dev` on 2026-11-08:
 - **The AI copilot is grounded on wrong bracket rules.** `src/lib/ai/deck-plan.ts` tells the model that bracket 1 allows "no tutors" and bracket 2 "at most 1 game changer". The official limits are no tutor restriction since 2025-10-21 and zero Game Changers at bracket 2. Every generated deck plan inherits the error.
 - **Two-card combos force bracket 4.** `src/lib/deck/bracket.ts` sets any deck with a two-card infinite to bracket 4, labelled "(RC rule)". Officially, bracket 3 allows two-card combos that do not come up before turn 6, and the Rules Committee stopped managing the format on 2024-09-30. [`commander-power-meter.md`](../commander-power-meter.md) carries the same rule, and a fast-mana floor that still names the banned Mana Crypt.
 - **Benchmarks do not match measured decks.** `src/lib/constants/benchmarks.ts` holds one set of ranges, imported only by its own test. The scorer in `src/lib/deck/bracket.ts` has its own thresholds: a median bracket 2 deck's ramp count scores as bracket 4, and the "low land count (<33)" warning fires on the median cEDH deck. The guide's per-bracket composition table records the measured medians; aligning or replacing the thresholds is an open question below, not a silent edit.
+- **The playtest mulligan does not follow multiplayer rules** (verified 2026-11-09; owned by I-07, recorded here because I-28's research found it). `applyMulligan` in `src/lib/playtest/engine.ts` sends the first mulligan to six cards even in Commander. It also keeps `7 − N` random cards instead of drawing seven and bottoming N chosen ones, and `engine.test.ts` asserts that behaviour. Under CR 103.5c the first mulligan is free in multiplayer and Brawl games. The [companion](../guides/commander-mulligans-curves-and-play-style.md#what-the-free-mulligan-is-worth) computes that the engine captures 37–47% of the value of correct mulligans.
+- **Opening-hand advice ignores ramp and the mulligan stage.** `src/lib/playtest/opening-hand-evidence.ts` flags 0–1 lands as land-light and 5+ as land-heavy for every deck and every hand. The companion's keep tables show that a 2-land first seven without cheap ramp is a mulligan in every bracket, and that 1 land with two cheap ramp pieces is a keep.
 - **Reference docs corrected with this spec.** `docs/references/game-changers.md` (no bracket 5, a wrong February 2026 history, misdated unbans) and the bracket table in `.agents/skills/mtg-learn/references/commander-guide.md` (four brackets, pre-October 2025 turn numbers, Mana Crypt as a Game Changer) were corrected in the same change. `docs/rules/` holds the comprehensive rules of 2026-02-27.
 
 ## Functional requirements
@@ -69,6 +71,9 @@ Verified on `dev` on 2026-11-08:
 4.2 "Check my deck against bracket N" evaluates the open deck against that bracket's checklist and composition ranges. It separates **hard rules** (official limits the deck breaks) from **soft targets** (ranges the deck falls outside), and names the cards behind each finding.
 4.3 The check is deterministic and runs on the client's deck data; it does not call the copilot.
 4.4 The check never blocks saving or building. It reports; it does not gate.
+4.5 **Opening hands.** The check also reports the deck's own opening-hand profile under the multiplayer rules: a free second seven, then London mulligans. It covers the share of first sevens and second sevens that are keeps under the target bracket's keep rule, and the deck's count of cheap ramp (mana value 2 or less). It also places the deck's land count against the plateau for its curve. Every figure names its method (exact combinatorics over hand classes, or a seeded simulation sharing I-21's shuffler) and the [companion's limits](../guides/commander-mulligans-curves-and-play-style.md#limits).
+4.6 The keep rules shown to players come from the companion's computed tables, adjusted by play-style requirements the model cannot see (protection for voltron, a sac outlet for aristocrats, a key card in cEDH). "Coin flip" zones, within ±2% of the value of mulliganing, are shown as judgment calls, not rules.
+4.7 The primer template's "Mulligan guide" section can be pre-filled from 4.5: the deck's numbers and the bracket's keep rule, which the owner then edits.
 
 ### 5. Locales
 
@@ -87,6 +92,7 @@ GuideSection   id, bracket (1..5 | null for shared sections), slug, locale, revi
 GuideClaim     sectionId, label (official|data|community), consensus? (consensus|contested|single), sourceIds[]
 GuideSource    id, outlet, author?, title, publishedAt, url, accessNote?
 BracketRule    bracket, name, nameFr, maxGameChangers, massLandDenial, extraTurns, twoCardCombos, minTurns
+KeepRule       bracket, style? (midrange|aggro|bigMana|spellslinger|cedh), stage (firstSeven|freeSeven|six|five), lands, cheapRamp, minEarlyPlays?, verdict (keep|mulligan|judgment), marginPct, sourceRun (script, seed, sample size)
 ```
 
 `BracketRule` is the existing `BRACKET_DEFINITIONS` extended to bracket 5 and to the official restrictions. It is the single source for the guide, the wizard, the indicator and the check. Authored prose can live as MDX or JSON per locale; the source list stays structured so the label-to-source test can run.
@@ -107,21 +113,23 @@ BracketRule    bracket, name, nameFr, maxGameChangers, massLandDenial, extraTurn
 - **Locale gating:** an unreviewed French section is absent, not shown in English under a French URL.
 - **Deck check (solitary):** fixture decks for each bracket produce the expected hard-rule and soft-target findings, including a deck with zero Game Changers but a two-card combo, and a deck with four Game Changers at a bracket 3 target.
 - **Deck check (sociable):** from the builder, opening the bracket section and running the check leaves the deck unchanged and saved.
+- **Opening hands (solitary):** the keep-rule lookup returns a different verdict for the same hand as a first seven and as a second seven where the companion's tables say so (for example, three lands and no ramp in the Bracket 2 shell). A 1v1 Commander game gets no free seven. The deck's keep share computed from hand classes matches a seeded simulation within its interval.
 - **Labels:** the deck wizard shows the official bracket names in English and French; a snapshot of `deck.json` keys guards against regressions.
 - **Accessibility:** the guide page passes the existing Lighthouse and axe budgets, with headings in order and tables readable by screen readers.
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                                                                | Depends on |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| 1   | Correct the bracket names and descriptions in `deck.json` for English and French, and the bracket rules in the copilot prompt (`deck-plan.ts`); mark other locales                   | —          |
-| 2   | Extend `BRACKET_DEFINITIONS` to bracket 5 and the official restrictions; drop the outdated tutor rule; replace the "(RC rule)" two-card-combo override with the official turn-6 rule | —          |
-| 3   | Content model with the evidence-coverage and rule-consistency tests                                                                                                                  | 2          |
-| 4   | English guide page from the researched document, static and indexable                                                                                                                | 3          |
-| 5   | Links from the bracket badge and the wizard's bracket step to the matching section                                                                                                   | 4          |
-| 6   | French review, official French names with the "bracket" alias, and locale gating                                                                                                     | 4          |
-| 7   | "Check my deck against bracket N" with hard rules and soft targets                                                                                                                   | 2, 4       |
-| 8   | Freshness: rules-state banner and a review task on each Wizards announcement                                                                                                         | 4          |
+| #   | Slice                                                                                                                                                                                | Depends on                             |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| 1   | Correct the bracket names and descriptions in `deck.json` for English and French, and the bracket rules in the copilot prompt (`deck-plan.ts`); mark other locales                   | —                                      |
+| 2   | Extend `BRACKET_DEFINITIONS` to bracket 5 and the official restrictions; drop the outdated tutor rule; replace the "(RC rule)" two-card-combo override with the official turn-6 rule | —                                      |
+| 3   | Content model with the evidence-coverage and rule-consistency tests                                                                                                                  | 2                                      |
+| 4   | English guide page from the researched document, static and indexable                                                                                                                | 3                                      |
+| 5   | Links from the bracket badge and the wizard's bracket step to the matching section                                                                                                   | 4                                      |
+| 6   | French review, official French names with the "bracket" alias, and locale gating                                                                                                     | 4                                      |
+| 7   | "Check my deck against bracket N" with hard rules and soft targets                                                                                                                   | 2, 4                                   |
+| 8   | Freshness: rules-state banner and a review task on each Wizards announcement                                                                                                         | 4                                      |
+| 9   | Opening-hand section of the check (4.5–4.7): keep shares under the multiplayer rules, cheap ramp, land plateau, primer pre-fill                                                      | 7; I-21 slice 1 or exact combinatorics |
 
 Slice 1 corrects copy players already see and rules the copilot already applies; it ships alone and should go first. Slice 2 overlaps the bracket 5 item in `commander-power-meter.md`; whichever lands first owns it, and the other reuses it.
 
@@ -131,4 +139,6 @@ Slice 1 corrects copy players already see and rules the copilot already applies;
 - **Does scoring move to 1–5 at the same time?** The guide must cover bracket 5 regardless. Showing bracket 5 in the wizard before the score can output it may confuse players; the power-meter spec should decide the order.
 - **Per-bracket benchmarks.** The datasets suggest brackets 1–3 are built almost identically on paper, while bracket 4 and cEDH differ sharply. Should `BENCHMARKS` become per-bracket, or is one range plus speed signals more honest?
 - **Shared vocabulary with I-15 and I-27.** "Extra turns", "mass land denial" and "two-card combo" should have one definition, used by the guide, the Rule 0 sheet and the warning explanations.
+- **Goldfish keep rules as product copy.** The companion's rules come from a model with no opponents, no colours and a mana-spent metric. Its optimum keeps fewer first sevens (32–51%) than players do (64%). Should the product show the computed rule with its margin, or a softened rule? The research supports showing the margin and calling the ±2% zone a judgment call.
+- **Simulate the player's own list.** The tables use deck shells tuned to bracket medians. Running the same model on the open decklist is the step EDHREC and Moxfield do not take. Does it belong in slice 9 or in I-21?
 - **Reference decks.** Linking third-party decklists ages quickly. Should reference decks become I-17 catalogue entries for bracket 2 and dated snapshots for the others?
