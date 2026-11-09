@@ -9,7 +9,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     // Only include unit tests — E2E tests are run via Playwright separately
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "scripts/**/*.test.ts"],
     exclude: ["e2e/**", "node_modules/**", ".next/**"],
     /**
      * Coverage is measured over **all** of `src`.
