@@ -192,17 +192,9 @@ function moxfieldFormatWarning(format: string | undefined): string | undefined {
 }
 
 async function importMoxfield(id: string): Promise<UrlImportResult> {
-  const res = await httpGet(
-    `https://api2.moxfield.com/v3/decks/all/${id}`,
-    {
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
-        Origin: "https://moxfield.com",
-        Referer: "https://moxfield.com/",
-      },
-    }
-  );
+  const res = await httpGet(`https://api2.moxfield.com/v3/decks/all/${id}`, {
+    headers: { Accept: "application/json" },
+  });
   const data = parseJson<MoxfieldDeck>(await res.json());
   const cards: UrlImportCard[] = [];
   appendMoxfieldCards(cards, moxfieldEntries(data.boards?.commanders, data.commanders), "main", {

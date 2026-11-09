@@ -101,7 +101,7 @@ export async function fetchMoxfieldUserDecks(
   });
   const response = await httpGet(
     `https://api2.moxfield.com/v2/decks/search-sfw?${params.toString()}`,
-    { headers: { Accept: "application/json", Origin: "https://moxfield.com", Referer: "https://moxfield.com/" } }
+    { headers: { Accept: "application/json" } }
   );
   return parseMoxfieldUserDecks(parseJson<unknown>(await response.json()));
 }
