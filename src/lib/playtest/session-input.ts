@@ -12,7 +12,7 @@
  * @module playtest/session-input
  */
 
-import { OPENING_HAND_SIZE } from "./engine";
+import { maxMulligans } from "./engine";
 import {
   buildTrendData,
   calculateAverageTurns,
@@ -32,6 +32,12 @@ export type SessionResult = (typeof SESSION_RESULTS)[number];
 /** Opponent strength, when the player chooses to say. */
 export const SESSION_DIFFICULTIES = ["budget", "mid-range", "cedh"] as const;
 export type SessionDifficulty = (typeof SESSION_DIFFICULTIES)[number];
+
+/**
+ * Most mulligans any playtest can record: down to a one-card hand, plus the
+ * free first mulligan of a multiplayer game (CR 103.5c).
+ */
+const MAX_RECORDED_MULLIGANS = maxMulligans({ firstMulliganFree: true });
 
 /** Maximum persisted length for a player-authored playtest evidence note. */
 export const MAX_SESSION_NOTES_LENGTH = 500;
@@ -135,10 +141,10 @@ export function parseSessionInput(payload: unknown): ParseResult {
   }
 
   const mulligans = mulliganCount ?? 0;
-  // The London mulligan bottoms one card per mulligan; past a full hand there
-  // is nothing left to keep, so a larger count cannot have happened.
-  if (!isWholeNumberInRange(mulligans, 0, OPENING_HAND_SIZE)) {
-    return fail(`mulliganCount must be a whole number between 0 and ${OPENING_HAND_SIZE}`);
+  // The playtest stops mulligans at a one-card hand, so a larger count cannot
+  // have come from it.
+  if (!isWholeNumberInRange(mulligans, 0, MAX_RECORDED_MULLIGANS)) {
+    return fail(`mulliganCount must be a whole number between 0 and ${MAX_RECORDED_MULLIGANS}`);
   }
 
   if (difficulty !== undefined && !SESSION_DIFFICULTIES.includes(difficulty as SessionDifficulty)) {

@@ -6,7 +6,11 @@ import { X, RotateCcw, Layers } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Deck } from "@/lib/deck/types";
 import type { CardZone } from "@/lib/playtest/engine";
-import { MAX_MULLIGANS, OPENING_HAND_SIZE } from "@/lib/playtest/engine";
+import {
+  isChoosingBottom,
+  maxMulligans,
+  mulliganBottomCount,
+} from "@/lib/playtest/engine";
 import { usePlaytestStore } from "@/lib/playtest/store";
 import { PhaseTracker } from "@/components/playtest/PhaseTracker";
 import { LifeTracker } from "@/components/playtest/LifeTracker";
@@ -20,13 +24,16 @@ import { OpeningHandEvidence } from "@/components/playtest/OpeningHandEvidence";
 import { DiceRoller } from "@/components/playtest/DiceRoller";
 import { PlaytestActionLog } from "@/components/playtest/PlaytestActionLog";
 import { LocalizedDeckTextProvider } from "@/components/card/LocalizedDeckTextContext";
-import { analyzeDrawProgress } from "@/lib/playtest/draw-progress-evidence";
+import { analyzeEngineDrawProgress } from "@/lib/playtest/draw-progress-evidence";
 import { buildTokenLibrary } from "@/lib/deck/token-library";
 
 interface PlaytestModalProps {
   readonly deck: Deck;
   readonly onClose: () => void;
 }
+
+/** Fieldset reset: groups board controls so a pending choice can disable them at once. */
+const BOARD_GROUP_CLASS = "m-0 min-w-0 space-y-4 border-0 p-0";
 
 function PlaytestStartScreen({
   deckId,
@@ -65,6 +72,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   const stopPlaytest = usePlaytestStore((s) => s.stopPlaytest);
   const resetPlaytest = usePlaytestStore((s) => s.resetPlaytest);
   const mulligan = usePlaytestStore((s) => s.mulligan);
+  const bottomCards = usePlaytestStore((s) => s.bottomCards);
   const drawCard = usePlaytestStore((s) => s.drawCard);
   const nextPhase = usePlaytestStore((s) => s.nextPhase);
   const nextTurn = usePlaytestStore((s) => s.nextTurn);
@@ -109,11 +117,16 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     [moveToZone]
   );
 
+  // A counted mulligan is not finished until the player bottoms its cards
+  // (CR 103.5); until then the rest of the board is disabled.
+  const choosingBottom = engine !== null && isChoosingBottom(engine);
+
   // Mulliganing is only meaningful before the game is under way; once a turn has
   // passed or permanents exist, the opening hand is no longer in question.
   const canMulligan =
     engine !== null &&
-    engine.mulliganCount < MAX_MULLIGANS &&
+    !choosingBottom &&
+    engine.mulliganCount < maxMulligans(engine) &&
     engine.turn === 1 &&
     engine.battlefield.length === 0 &&
     engine.graveyard.length === 0 &&
@@ -128,19 +141,10 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     [deck.commander, deck.partner, deck.cards]
   );
 
-  const drawEvidence = useMemo(() => {
-    if (engine === null) return null;
-    return analyzeDrawProgress({
-      turn: engine.turn,
-      mulliganCount: engine.mulliganCount,
-      cardsOutsideLibrary:
-        engine.hand.length +
-        engine.battlefield.length +
-        engine.graveyard.length +
-        engine.exile.length,
-      libraryCount: engine.library.length,
-    });
-  }, [engine]);
+  const drawEvidence = useMemo(
+    () => (engine === null ? null : analyzeEngineDrawProgress(engine)),
+    [engine]
+  );
 
   const requiredTokens = useMemo(
     () => buildTokenLibrary([deck.commander, deck.partner, ...deck.cards].filter((card) => card !== null)),
@@ -208,55 +212,66 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="mx-auto max-w-7xl grid gap-4 lg:grid-cols-[20rem_1fr]">
               {/* Left rail: turn structure and life */}
-              <aside className="space-y-4">
-                {engine.turn > 1 && <DrawProgressEvidence engine={engine} />}
-                {canMulligan && <OpeningHandEvidence hand={engine.hand} />}
-                <PhaseTracker
-                  turn={engine.turn}
-                  phase={engine.phase}
-                  onNextPhase={nextPhase}
-                  onNextTurn={nextTurn}
-                />
-                <LifeTracker
-                  lifeTotal={engine.lifeTotal}
-                  lifeHistory={engine.lifeHistory}
-                  onDamage={damage}
-                  onHeal={heal}
-                  onUndo={undo}
-                />
+              <aside>
+                <fieldset disabled={choosingBottom} className={BOARD_GROUP_CLASS}>
+                  {engine.turn > 1 && <DrawProgressEvidence engine={engine} />}
+                  {canMulligan && <OpeningHandEvidence hand={engine.hand} />}
+                  <PhaseTracker
+                    turn={engine.turn}
+                    phase={engine.phase}
+                    onNextPhase={nextPhase}
+                    onNextTurn={nextTurn}
+                  />
+                  <LifeTracker
+                    lifeTotal={engine.lifeTotal}
+                    lifeHistory={engine.lifeHistory}
+                    onDamage={damage}
+                    onHeal={heal}
+                    onUndo={undo}
+                  />
+                </fieldset>
               </aside>
 
               {/* Board */}
               <div className="space-y-4">
-                <DiceRoller rolls={engine.diceRolls} onRoll={rollDie} />
-                <BattlefieldZone
-                  battlefield={engine.battlefield}
-                  onTap={tap}
-                  onAddCounter={addCounter}
-                  onCreateCopy={createCardCopy}
-                  requiredTokens={requiredTokens}
-                  onCreateToken={createToken}
-                  onRemove={handleRemoveFromBattlefield}
-                />
+                <fieldset disabled={choosingBottom} className={BOARD_GROUP_CLASS}>
+                  <DiceRoller rolls={engine.diceRolls} onRoll={rollDie} />
+                  <BattlefieldZone
+                    battlefield={engine.battlefield}
+                    onTap={tap}
+                    onAddCounter={addCounter}
+                    onCreateCopy={createCardCopy}
+                    requiredTokens={requiredTokens}
+                    onCreateToken={createToken}
+                    onRemove={handleRemoveFromBattlefield}
+                  />
+                </fieldset>
                 <HandZone
                   hand={engine.hand}
                   libraryCount={engine.library.length}
                   onDrawCard={drawCard}
                   onMoveCard={handleMoveFromHand}
+                  bottomChoice={
+                    choosingBottom
+                      ? { count: engine.cardsToBottom, onConfirm: bottomCards, onUndo: undo }
+                      : undefined
+                  }
                 />
-                <GraveyardZone
-                  graveyard={engine.graveyard}
-                  exile={engine.exile}
-                  onRestore={handleRestore}
-                />
-                <PlaytestActionLog
-                  deckName={deck.name}
-                  entries={engine.actionLog}
-                  onAdd={addLogEntry}
-                  onRecordMana={recordMana}
-                  onEdit={editLogEntry}
-                  onRemove={removeLogEntry}
-                />
+                <fieldset disabled={choosingBottom} className={BOARD_GROUP_CLASS}>
+                  <GraveyardZone
+                    graveyard={engine.graveyard}
+                    exile={engine.exile}
+                    onRestore={handleRestore}
+                  />
+                  <PlaytestActionLog
+                    deckName={deck.name}
+                    entries={engine.actionLog}
+                    onAdd={addLogEntry}
+                    onRecordMana={recordMana}
+                    onEdit={editLogEntry}
+                    onRemove={removeLogEntry}
+                  />
+                </fieldset>
 
                 {/* Session controls */}
                 <div className="flex items-center gap-3">
@@ -270,8 +285,11 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                     {t("mulligan")}
                     {canMulligan && (
                       <span className="text-xs opacity-60">
-                        {t("mulliganDown", {
-                          count: OPENING_HAND_SIZE - engine.mulliganCount - 1,
+                        {t("mulliganHint", {
+                          bottom: mulliganBottomCount({
+                            mulliganCount: engine.mulliganCount + 1,
+                            firstMulliganFree: engine.firstMulliganFree,
+                          }),
                         })}
                       </span>
                     )}

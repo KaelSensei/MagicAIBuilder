@@ -1,4 +1,4 @@
-import { OPENING_HAND_SIZE } from "./engine";
+import { keptOpeningHandSize, type PlaytestEngine } from "./engine";
 
 /** Draw-progression verdict for the current goldfish run. */
 export type DrawProgressStatus = "natural" | "drawing-extra" | "library-empty";
@@ -6,7 +6,10 @@ export type DrawProgressStatus = "natural" | "drawing-extra" | "library-empty";
 /** Inputs available from the in-memory playtest engine. */
 export interface DrawProgressInput {
   readonly turn: number;
+  /** Mulligans taken for the opening hand. */
   readonly mulliganCount: number;
+  /** Whether the format's first mulligan is free (CR 103.5c). */
+  readonly firstMulliganFree: boolean;
   readonly cardsOutsideLibrary: number;
   readonly libraryCount: number;
 }
@@ -27,12 +30,8 @@ export interface DrawProgressEvidence {
 export function analyzeDrawProgress(
   input: DrawProgressInput
 ): DrawProgressEvidence {
-  const keptOpeningHandSize = Math.max(
-    0,
-    OPENING_HAND_SIZE - input.mulliganCount
-  );
   const naturalDraws = Math.max(0, input.turn - 1);
-  const naturalCardsSeen = keptOpeningHandSize + naturalDraws;
+  const naturalCardsSeen = keptOpeningHandSize(input) + naturalDraws;
   const additionalCardsSeen = Math.max(
     0,
     input.cardsOutsideLibrary - naturalCardsSeen
@@ -51,4 +50,27 @@ export function analyzeDrawProgress(
     additionalCardsSeen,
     status: additionalCardsSeen > 0 ? "drawing-extra" : "natural",
   };
+}
+
+/**
+ * Reads draw-progression evidence from a playtest state, so every view counts
+ * the kept hand under the same mulligan rule.
+ *
+ * @param engine - current in-memory playtest state
+ * @returns cards seen, extra cards seen, and the strongest relevant verdict
+ */
+export function analyzeEngineDrawProgress(
+  engine: PlaytestEngine
+): DrawProgressEvidence {
+  return analyzeDrawProgress({
+    turn: engine.turn,
+    mulliganCount: engine.mulliganCount,
+    firstMulliganFree: engine.firstMulliganFree,
+    cardsOutsideLibrary:
+      engine.hand.length +
+      engine.battlefield.length +
+      engine.graveyard.length +
+      engine.exile.length,
+    libraryCount: engine.library.length,
+  });
 }

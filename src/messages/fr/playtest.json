@@ -12,7 +12,7 @@
   "libraryCount": "{count} dans la bibliothèque",
   "emptyLibrary": "Bibliothèque vide",
   "mulligan": "Mulligan",
-  "mulliganDown": "à {count}",
+  "mulliganHint": "{bottom, plural, =0 {gratuit : nouvelle main de sept} other {nouvelle main de sept, # au-dessous}}",
   "restart": "Recommencer",
   "gameOver": "Partie terminée",
   "phases": {
@@ -44,7 +44,13 @@
     "hideCards": "Cacher les cartes",
     "cardBack": "Dos de carte",
     "toBattlefield": "Vers le champ de bataille",
-    "toGraveyard": "Vers le cimetière"
+    "toGraveyard": "Vers le cimetière",
+    "bottom": {
+      "prompt": "{count, plural, one {Choisis # carte à mettre au-dessous de ta bibliothèque.} other {Choisis # cartes à mettre au-dessous de ta bibliothèque, dans l’ordre où elles y vont.}}",
+      "progress": "{chosen, plural, one {# carte choisie} other {# cartes choisies}} sur {count}",
+      "order": "Ordre au-dessous de la bibliothèque : {cards}",
+      "confirm": "{count, plural, one {Mettre # carte au-dessous} other {Mettre # cartes au-dessous}}"
+    }
   },
   "battlefield": {
     "title": "Champ de bataille ({count})",

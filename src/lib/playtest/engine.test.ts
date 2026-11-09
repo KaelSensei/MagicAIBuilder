@@ -12,6 +12,7 @@ import {
   applyUndo,
   applyAddCounter,
   applyMulligan,
+  applyBottomCards,
   applyCreateCardCopy,
   applyCreateToken,
   applyRollDie,
@@ -21,7 +22,7 @@ import {
   applyRemoveActionLogEntry,
   PHASES,
   STARTING_LIFE,
-  MAX_MULLIGANS,
+  maxMulligans,
 } from "./engine";
 import type { PlaytestEngine } from "./engine";
 import type { DeckCard } from "@/lib/deck/types";
@@ -436,19 +437,22 @@ describe("applyUndo", () => {
 });
 
 // ─── Mulligan ─────────────────────────────────────────────────────────────────
+const ids = (cards: readonly DeckCard[]) => cards.map((card) => card.id);
+
+/** A duel (Standard, Modern…): every mulligan counts. */
+const duelState = () => makeState({ firstMulliganFree: false });
+
+/** A multiplayer game (Commander, Brawl…): the first mulligan is free. */
+const multiplayerState = () => makeState({ firstMulliganFree: true });
+
+/** Settles a pending bottom choice by bottoming the first cards in hand. */
+function bottomFirstCards(state: PlaytestEngine): PlaytestEngine {
+  return applyBottomCards(state, ids(state.hand.slice(0, state.cardsToBottom)));
+}
+
 describe("applyMulligan", () => {
   it("counts the mulligan", () => {
     expect(applyMulligan(makeState()).mulliganCount).toBe(1);
-  });
-
-  it("draws one fewer card per mulligan (London)", () => {
-    let state = makeState();
-
-    state = applyMulligan(state);
-    expect(state.hand).toHaveLength(6);
-
-    state = applyMulligan(state);
-    expect(state.hand).toHaveLength(5);
   });
 
   it("returns every card to the deck, so the total never changes", () => {
@@ -458,14 +462,6 @@ describe("applyMulligan", () => {
     const after = applyMulligan(state);
 
     expect(after.hand.length + after.library.length).toBe(before);
-  });
-
-  it("stops at MAX_MULLIGANS, leaving a one-card hand", () => {
-    let state = makeState();
-    for (let i = 0; i < MAX_MULLIGANS + 3; i++) state = applyMulligan(state);
-
-    expect(state.mulliganCount).toBe(MAX_MULLIGANS);
-    expect(state.hand).toHaveLength(7 - MAX_MULLIGANS);
   });
 
   it("leaves life, turn and phase untouched", () => {
@@ -483,5 +479,167 @@ describe("applyMulligan", () => {
 
     expect(applyUndo(after).mulliganCount).toBe(0);
     expect(applyUndo(after).hand).toHaveLength(7);
+  });
+});
+
+// ─── Mulligan rules: CR 103.5 (London) and 103.5c (free first mulligan) ───────
+describe("applyMulligan in a multiplayer format", () => {
+  it("deals a free fresh seven on the first mulligan, with nothing to bottom", () => {
+    const after = applyMulligan(multiplayerState());
+
+    expect(after.mulliganCount).toBe(1);
+    expect(after.hand).toHaveLength(7);
+    expect(after.cardsToBottom).toBe(0);
+  });
+
+  it("counts the second mulligan: a new seven, then one card on the bottom", () => {
+    const after = applyMulligan(applyMulligan(multiplayerState()));
+
+    expect(after.mulliganCount).toBe(2);
+    expect(after.hand).toHaveLength(7);
+    expect(after.cardsToBottom).toBe(1);
+    expect(bottomFirstCards(after).hand).toHaveLength(6);
+  });
+
+  it("logs the free mulligan as a new seven, and the next one with its bottom count", () => {
+    const free = applyMulligan(multiplayerState());
+    const counted = applyMulligan(free);
+
+    expect(free.actionLog.at(-1)?.description).toBe("Free mulligan: drew a new seven");
+    expect(counted.actionLog.at(-1)?.description).toBe(
+      "Mulligan: drew a new seven, 1 card to put on the bottom"
+    );
+  });
+});
+
+describe("applyMulligan in a duel format", () => {
+  it("draws a new seven and asks for one card on the bottom after the first mulligan", () => {
+    const after = applyMulligan(duelState());
+
+    expect(after.hand).toHaveLength(7);
+    expect(after.cardsToBottom).toBe(1);
+  });
+
+  // This used to assert a random six-card hand: London draws seven every time
+  // and the player bottoms one card per mulligan (CR 103.5).
+  it("keeps one card fewer per mulligan once the chosen cards are bottomed", () => {
+    let state = bottomFirstCards(applyMulligan(duelState()));
+    expect(state.hand).toHaveLength(6);
+
+    state = applyMulligan(state);
+    expect(state.hand).toHaveLength(7);
+    expect(state.cardsToBottom).toBe(2);
+
+    state = bottomFirstCards(state);
+    expect(state.hand).toHaveLength(5);
+  });
+});
+
+// The playtest keeps a hand of at least one card; the free mulligan does not
+// count toward that limit either (CR 103.5c), so multiplayer goes one further.
+describe("mulligan limit", () => {
+  it.each([
+    ["a duel", duelState, 6],
+    ["a multiplayer game", multiplayerState, 7],
+  ])("stops %s at a one-card hand", (_, setUp, limit) => {
+    let state = setUp();
+    for (let i = 0; i < limit + 3; i++) state = bottomFirstCards(applyMulligan(state));
+
+    expect(maxMulligans(state)).toBe(limit);
+    expect(state.mulliganCount).toBe(limit);
+    expect(state.hand).toHaveLength(1);
+  });
+});
+
+describe("applyBottomCards", () => {
+  /** A duel's second mulligan: a new seven with two cards to bottom. */
+  const secondDuelMulligan = () =>
+    applyMulligan(bottomFirstCards(applyMulligan(duelState())));
+
+  it("puts the chosen cards on the bottom of the library in the order chosen", () => {
+    const secondMulligan = secondDuelMulligan();
+    const chosen = [secondMulligan.hand[4], secondMulligan.hand[1]];
+
+    const kept = applyBottomCards(secondMulligan, ids(chosen));
+
+    expect(kept.cardsToBottom).toBe(0);
+    expect(kept.hand).toHaveLength(5);
+    expect(ids(kept.hand)).not.toContain(chosen[0].id);
+    expect(ids(kept.library.slice(-2))).toEqual(ids(chosen));
+    expect(kept.hand.length + kept.library.length).toBe(100);
+  });
+
+  it.each([
+    ["nothing is pending", () => applyMulligan(multiplayerState()), (s: PlaytestEngine) => [s.hand[0].id]],
+    ["too few cards", secondDuelMulligan, (s: PlaytestEngine) => [s.hand[0].id]],
+    ["too many cards", secondDuelMulligan, (s: PlaytestEngine) => ids(s.hand.slice(0, 3))],
+    ["the same card twice", secondDuelMulligan, (s: PlaytestEngine) => [s.hand[0].id, s.hand[0].id]],
+    ["a card not in hand", secondDuelMulligan, (s: PlaytestEngine) => [s.hand[0].id, s.library[0].id]],
+  ])("changes nothing when the choice names %s", (_, setUp, choose) => {
+    const state = setUp();
+
+    expect(applyBottomCards(state, choose(state))).toBe(state);
+  });
+
+  it("logs which cards went to the bottom", () => {
+    const named = Array.from({ length: 20 }, (_, i) => makeCard(`n${i}`, `Card ${i}`));
+    const pendingSeven = applyMulligan(
+      createPlaytestState(named, { firstMulliganFree: false })
+    );
+    const chosen = pendingSeven.hand[2];
+
+    const kept = applyBottomCards(pendingSeven, [chosen.id]);
+
+    expect(kept.actionLog.at(-1)?.description).toBe(
+      `Put ${chosen.name} on the bottom of the library`
+    );
+  });
+
+  it("undoes back to the pending seven, then out of the mulligan", () => {
+    const pendingSeven = applyMulligan(duelState());
+    const kept = bottomFirstCards(pendingSeven);
+
+    const choiceUndone = applyUndo(kept);
+    expect(ids(choiceUndone.hand)).toEqual(ids(pendingSeven.hand));
+    expect(choiceUndone.cardsToBottom).toBe(1);
+
+    const mulliganUndone = applyUndo(choiceUndone);
+    expect(mulliganUndone.mulliganCount).toBe(0);
+    expect(mulliganUndone.cardsToBottom).toBe(0);
+    expect(mulliganUndone.hand).toHaveLength(7);
+  });
+});
+
+// Taking a mulligan is not finished until the cards are on the bottom (CR
+// 103.5), so nothing else happens in the game until the choice is made. Undo
+// stays available to take the mulligan back.
+describe("while a bottom choice is pending", () => {
+  const permanent = { ...makeCard("p1"), tapped: false, counters: 0 };
+  const pending = () =>
+    applyMulligan(makeState({ firstMulliganFree: false, battlefield: [permanent] }));
+  const soldier = { name: "Soldier", power: "1/1", colors: ["white"], kind: "token" } as const;
+
+  it.each([
+    ["drawing a card", applyDrawCard],
+    ["mulliganing again", applyMulligan],
+    ["advancing the phase", applyNextPhase],
+    ["starting the next turn", applyNextTurn],
+    ["taking damage", (s: PlaytestEngine) => applyDamage(s, 3)],
+    ["gaining life", (s: PlaytestEngine) => applyHeal(s, 3)],
+    ["tapping a permanent", (s: PlaytestEngine) => applyTap(s, "p1")],
+    ["untapping everything", applyUntapAll],
+    ["playing a card from hand", (s: PlaytestEngine) => applyMoveToZone(s, s.hand[0].id, "hand", "battlefield")],
+    ["adding a counter", (s: PlaytestEngine) => applyAddCounter(s, "p1", 1)],
+    ["copying a permanent", (s: PlaytestEngine) => applyCreateCardCopy(s, "p1", "copy-1")],
+    ["creating a token", (s: PlaytestEngine) => applyCreateToken(s, soldier, "token-1")],
+    ["rolling a die", (s: PlaytestEngine) => applyRollDie(s, 6, 3)],
+    ["recording mana", (s: PlaytestEngine) => applyRecordMana(s, 2)],
+    ["adding a log note", (s: PlaytestEngine) => applyAddActionLogEntry(s, "note")],
+    ["editing a log entry", (s: PlaytestEngine) => applyEditActionLogEntry(s, 1, "edited")],
+    ["removing a log entry", (s: PlaytestEngine) => applyRemoveActionLogEntry(s, 1)],
+  ])("ignores %s", (_, act) => {
+    const state = pending();
+
+    expect(act(state)).toBe(state);
   });
 });

@@ -42,6 +42,12 @@ export interface FormatConfig {
   /** Life total each player starts the game on */
   readonly startingLife: number;
   /**
+   * Whether the first mulligan is free: it does not count toward the cards put
+   * on the bottom (CR 103.5c). True for Brawl and for the formats played
+   * multiplayer by default; false for the constructed duel formats.
+   */
+  readonly firstMulliganFree: boolean;
+  /**
    * Whether format-specific deck statistics (curve, threat density,
    * interaction ratio) apply. False for Commander, which uses bracket scoring.
    */
@@ -68,6 +74,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 1,
     recommendedLands: [33, 38],
     startingLife: 40,
+    firstMulliganFree: true,
     hasFormatStats: false,
     avgCmcTarget: [2.8, 3.6],
     threatDensityTarget: [0.25, 0.45],
@@ -85,6 +92,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 1,
     recommendedLands: [22, 26],
     startingLife: 30,
+    firstMulliganFree: true,
     hasFormatStats: true,
     avgCmcTarget: [2.5, 3.4],
     threatDensityTarget: [0.3, 0.5],
@@ -102,6 +110,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 1,
     recommendedLands: [22, 26],
     startingLife: 20,
+    firstMulliganFree: true,
     hasFormatStats: true,
     avgCmcTarget: [2.2, 3.2],
     threatDensityTarget: [0.3, 0.5],
@@ -119,6 +128,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [2, 3.2],
     threatDensityTarget: [0.3, 0.55],
@@ -136,6 +146,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.9, 3],
     threatDensityTarget: [0.3, 0.55],
@@ -153,6 +164,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.7, 2.8],
     threatDensityTarget: [0.3, 0.55],
@@ -170,6 +182,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.4, 2.5],
     threatDensityTarget: [0.25, 0.5],
@@ -187,6 +200,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.3, 2.4],
     threatDensityTarget: [0.25, 0.5],
@@ -204,6 +218,7 @@ export const FORMAT_CONFIG: Readonly<Record<DeckFormat, FormatConfig>> = {
     maxCopiesPerCard: 4,
     recommendedLands: [22, 26],
     startingLife: 20,
+    firstMulliganFree: false,
     hasFormatStats: true,
     avgCmcTarget: [1.6, 2.6],
     threatDensityTarget: [0.3, 0.55],

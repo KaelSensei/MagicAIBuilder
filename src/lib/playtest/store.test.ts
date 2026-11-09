@@ -23,12 +23,14 @@ function makeCard(id: string, name = id): DeckCard {
   };
 }
 
-function makeDeck(opts: { cardCount?: number; commander?: DeckCard | null } = {}): Deck {
-  const { cardCount = 25, commander = makeCard("cmd", "Kenrith") } = opts;
+function makeDeck(
+  opts: { cardCount?: number; commander?: DeckCard | null; format?: Deck["format"] } = {}
+): Deck {
+  const { cardCount = 25, commander = makeCard("cmd", "Kenrith"), format = "commander" } = opts;
   return {
     id: "deck-1",
     name: "Test",
-    format: "commander",
+    format,
     commander,
     partner: null,
     companion: null,
@@ -169,15 +171,20 @@ describe("usePlaytestStore", () => {
     expect(eng?.mulliganCount).toBe(0);
   });
 
-  it("resetPlaytest clears a mulligan taken before it", () => {
-    usePlaytestStore.getState().startPlaytest(makeDeck());
+  it("resetPlaytest clears a mulligan taken before it, even mid-choice", () => {
+    usePlaytestStore.getState().startPlaytest(makeDeck({ format: "modern", commander: null }));
     usePlaytestStore.getState().mulligan();
-    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(1);
 
     usePlaytestStore.getState().resetPlaytest();
 
     expect(usePlaytestStore.getState().engine?.hand).toHaveLength(7);
     expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(0);
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(0);
+
+    // The reset deals under the same format rule.
+    usePlaytestStore.getState().mulligan();
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(1);
   });
 
   it("mulligan is a no-op when no engine exists", () => {
@@ -185,11 +192,33 @@ describe("usePlaytestStore", () => {
     expect(usePlaytestStore.getState().engine).toBeNull();
   });
 
-  it("mulligan shrinks the opening hand when active", () => {
+  it("bottomCards is a no-op when no engine exists", () => {
+    usePlaytestStore.getState().bottomCards(["c0"]);
+    expect(usePlaytestStore.getState().engine).toBeNull();
+  });
+
+  // This used to expect six cards: in Commander the first mulligan is free
+  // (CR 103.5c), a fresh seven with nothing to bottom.
+  it("gives a Commander player a free fresh seven on the first mulligan", () => {
     usePlaytestStore.getState().startPlaytest(makeDeck());
     usePlaytestStore.getState().mulligan();
-    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(7);
     expect(usePlaytestStore.getState().engine?.mulliganCount).toBe(1);
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(0);
+  });
+
+  it("asks a Modern player to bottom a card after the first mulligan, then keeps six", () => {
+    usePlaytestStore.getState().startPlaytest(makeDeck({ format: "modern", commander: null }));
+    usePlaytestStore.getState().mulligan();
+
+    const pending = usePlaytestStore.getState().engine;
+    expect(pending?.hand).toHaveLength(7);
+    expect(pending?.cardsToBottom).toBe(1);
+
+    usePlaytestStore.getState().bottomCards([pending?.hand[0]?.id ?? ""]);
+
+    expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+    expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(0);
   });
 
   it("creates an independent battlefield copy without changing the deck setup", () => {

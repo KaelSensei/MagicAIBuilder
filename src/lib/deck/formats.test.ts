@@ -69,6 +69,15 @@ describe("FORMAT_CONFIG", () => {
     // Oathbreaker has a commander-style deck but starts at 20, not 40.
     expect(FORMAT_CONFIG.oathbreaker.startingLife).toBe(20);
   });
+
+  // CR 103.5c: the first mulligan is free in a multiplayer game and in any
+  // Brawl game. Oathbreaker is played multiplayer by default; the constructed
+  // formats are duels.
+  it("makes the first playtest mulligan free in the multiplayer formats only", () => {
+    const free = ALL_FORMATS.filter((format) => FORMAT_CONFIG[format].firstMulliganFree);
+
+    expect(free).toEqual(["commander", "brawl", "oathbreaker"]);
+  });
 });
 
 describe("getFormatConfig", () => {
