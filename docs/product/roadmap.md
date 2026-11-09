@@ -1108,6 +1108,8 @@ The initiatives above carry the work already committed. The six below extend the
 
 Read them as hypotheses with a stated basis, not as commitments. A 2027 initiative is promoted to Next only when its spec's open questions are answered and its dependency has shipped.
 
+**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon.
+
 **Why six and not twenty.** Beyond these, the sweep stopped producing gaps the product is positioned to fill. Adding further initiatives would mean inventing them, which fills a roadmap without filling a pipeline. The honest way to extend 2027 further is another dated sweep, not a longer list.
 
 ---
@@ -1267,6 +1269,40 @@ The beginner audience is the largest in Commander and the one the category serve
 ### Definition of done
 
 Every warning class the product raises can be explained in place, from an authored, sourced note, without leaving the deck.
+
+---
+
+## I-29: Cross-Site Commander Deck Index
+
+**Spec:** [`specs/i29-cross-site-deck-index.md`](specs/i29-cross-site-deck-index.md)
+
+**Outcome:** from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
+
+**Status:** Later — proposed 2026-11-09
+**Priority:** Later — 2027
+**Impact / effort:** High / large
+
+EDHREC's 10.5 million decks come from partnerships with Moxfield and Archidekt, not from crawling, and the three largest sources block or forbid automated collection. The index therefore starts from sources that allow it: Scryfall, MTGJSON precons, the cEDH Decklist Database, Commander Spellbook once its data license is confirmed, and MagicAIBuilder's own public decks. Every other site is reached by a link that copies nothing, and partnerships are the only route to scale. Before any partnership, it offers the search the incumbents lack: include and exclude cards with and/or, freshness, near-copies collapsed, declared against estimated bracket, and "decks like mine". The research also found that the shipped Moxfield import sends `Origin` and `Referer` headers set to `moxfield.com`. I-10 owns that code, and the [spec](specs/i29-cross-site-deck-index.md#open-questions) asks for a decision before the source policy is published.
+
+### Scope
+
+- [ ] Publish a source policy before the first ingest. It forbids circumvention, accounts and headers impersonating a source; it respects robots.txt and text-and-data-mining opt-outs; it never indexes private decks or stores text written elsewhere; and it gives a takedown and opt-out path.
+- [ ] Build the card dictionary and dated prices from Scryfall bulk data, keyed by Oracle ID.
+- [ ] Search MagicAIBuilder's public decks by commander, color identity, cards included and excluded with and/or, bracket, budget and freshness, signed out.
+- [ ] Link out to Moxfield, Archidekt, EDHREC and the other researched sites from verified URL templates, without fetching or storing their content.
+- [ ] Add licensed sources (the cEDH Decklist Database, MTGJSON precons through I-17), each with its notice and a link back.
+- [ ] Collapse exact copies, precon copies and near-duplicates, and offer "decks like mine" with a diff against the cohort.
+- [ ] Publish statistics only from indexed decks, labeled by source, sample size and corpus version.
+- [ ] Open partner-fed sources (Moxfield; Space Cow Media for EDHREC, Archidekt and Commander Spellbook; TopDeck.gg) only under a signed agreement.
+
+### Engineering enablers
+
+- A test fails when an ingest run proceeds after a 403, a challenge or an opt-out signal.
+- Measure the card index at 1 million and 10 million synthetic decks before choosing between PostgreSQL GIN and a roaring-bitmap index.
+
+### Definition of done
+
+A player can search every deck MagicAIBuilder may lawfully hold, see where each one comes from, and reach the same search on every other site in one link. A public page states each source, what is stored, and how to remove it.
 
 ---
 

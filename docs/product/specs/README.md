@@ -34,14 +34,17 @@ I-28 was added after the sweep above, on the owner's request, from its own dated
 
 Six initiatives extending the pipeline into 2027, each from a verified gap in the same sweep. They are hypotheses with a stated basis, not commitments: a 2027 initiative is promoted to Next only once its open questions are answered and its dependency has shipped. Their specs are deliberately less detailed than the ones above — committing to interface details eighteen months early produces precision that ages rather than guides.
 
-| Spec                                                                              | Initiative | The gap it answers                                                                         |
-| --------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------ |
-| [Verification as a public surface](i22-verification-as-a-public-surface.md)       | I-22       | Six products generate decks; none publishes a verification contract                        |
-| [The pod's own surface](i23-the-pods-own-surface.md)                              | I-23       | Three Discord bots answer bracket questions; none carries a pod's declared agreement       |
-| [Decks a screen reader can play from](i24-decks-a-screen-reader-can-play-from.md) | I-24       | Blind players adapt cards with NFC tags; no deckbuilder emits output shaped to be heard    |
-| [A third locale, chosen on evidence](i25-a-third-locale.md)                       | I-25       | Every AI deckbuilder found is English-only; nine catalogues sit dormant here               |
-| [Collections arriving from elsewhere](i26-collections-arriving-from-elsewhere.md) | I-26       | Scanning is a non-goal, so import is the only honest way a collection gets populated       |
-| [Learning while building](i27-learning-while-building.md)                         | I-27       | Tools assume the vocabulary; teaching lives in video. Nobody explains a rule when it fires |
+| Spec                                                                              | Initiative | The gap it answers                                                                                                                 |
+| --------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [Verification as a public surface](i22-verification-as-a-public-surface.md)       | I-22       | Six products generate decks; none publishes a verification contract                                                                |
+| [The pod's own surface](i23-the-pods-own-surface.md)                              | I-23       | Three Discord bots answer bracket questions; none carries a pod's declared agreement                                               |
+| [Decks a screen reader can play from](i24-decks-a-screen-reader-can-play-from.md) | I-24       | Blind players adapt cards with NFC tags; no deckbuilder emits output shaped to be heard                                            |
+| [A third locale, chosen on evidence](i25-a-third-locale.md)                       | I-25       | Every AI deckbuilder found is English-only; nine catalogues sit dormant here                                                       |
+| [Collections arriving from elsewhere](i26-collections-arriving-from-elsewhere.md) | I-26       | Scanning is a non-goal, so import is the only honest way a collection gets populated                                               |
+| [Learning while building](i27-learning-while-building.md)                         | I-27       | Tools assume the vocabulary; teaching lives in video. Nobody explains a rule when it fires                                         |
+| [Cross-site Commander deck index](i29-cross-site-deck-index.md)                   | I-29       | EDHREC aggregates by partnership, and the big deck sites forbid crawling; no one offers card include/exclude search across sources |
+
+I-29 was added on 2026-11-09, after the sweep and at the owner's request, from its own dated research into source terms, EU and French law, and scale. Its research notes are not committed, so the spec links every external fact to its own source.
 
 ### What the sweep ruled out for 2027
 
