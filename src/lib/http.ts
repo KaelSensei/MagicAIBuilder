@@ -61,8 +61,30 @@ async function isBotChallenge(res: Response): Promise<boolean> {
 }
 
 /**
+ * A source answered with a non-success status.
+ *
+ * The message stays the player-facing text callers already match on; the
+ * status is there for a caller that must tell a refusal from a transient
+ * failure without parsing that text.
+ */
+export class HttpStatusError extends Error {
+  override readonly name = "HttpStatusError";
+  /** HTTP status the source answered with. */
+  readonly status: number;
+
+  /**
+   * @param status - HTTP status the source answered with
+   * @param message - player-facing explanation of that status
+   */
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/**
  * Fetch with a default 10-second timeout and MagicAIBuilder User-Agent.
- * Throws a user-friendly Error for 403 and 404.
+ * Throws a user-friendly HttpStatusError for any non-success status.
  */
 export async function httpGet(
   url: string,
@@ -79,11 +101,11 @@ export async function httpGet(
   });
 
   if (res.status === 403) {
-    if (await isBotChallenge(res)) throw new Error(BOT_CHALLENGE_MESSAGE);
-    throw new Error("Deck is private or access denied.");
+    if (await isBotChallenge(res)) throw new HttpStatusError(403, BOT_CHALLENGE_MESSAGE);
+    throw new HttpStatusError(403, "Deck is private or access denied.");
   }
-  if (res.status === 404) throw new Error("Deck not found or is private.");
-  if (!res.ok) throw new Error(`Source returned HTTP ${res.status}.`);
+  if (res.status === 404) throw new HttpStatusError(404, "Deck not found or is private.");
+  if (!res.ok) throw new HttpStatusError(res.status, `Source returned HTTP ${res.status}.`);
 
   return res;
 }
