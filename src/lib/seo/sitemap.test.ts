@@ -123,4 +123,17 @@ describe("collapseToCommanders", () => {
   it("returns nothing for no decks", () => {
     expect(collapseToCommanders([])).toEqual([]);
   });
+
+  it("drops a commander whose name leaves no usable slug", () => {
+    // `commanderName` accepts any string up to 200 characters. A name with no
+    // ASCII letter or digit slugs to "" (`/commanders//decks`) or to hyphens
+    // only (`/commanders/-/decks`), and the commander page 404s on both.
+    const collapsed = collapseToCommanders([
+      { slug: "", updatedAt: AUGUST },
+      { slug: "-", updatedAt: AUGUST },
+      { slug: "atraxa", updatedAt: AUGUST },
+    ]);
+
+    expect(collapsed.map((commander) => commander.slug)).toEqual(["atraxa"]);
+  });
 });

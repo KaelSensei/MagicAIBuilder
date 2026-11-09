@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as http from "@/lib/http";
-import { commanderToSlug, fetchEdhrecData, fetchTournamentData, __resetArchetypeCache } from "./fetch";
+import {
+  commanderToSlug,
+  isCommanderSlug,
+  fetchEdhrecData,
+  fetchTournamentData,
+  __resetArchetypeCache,
+} from "./fetch";
 
 // ─── commanderToSlug ──────────────────────────────────────────────────────────
 describe("commanderToSlug", () => {
@@ -30,6 +36,32 @@ describe("commanderToSlug", () => {
 
   it("strips special chars Edgar example", () =>
     expect(commanderToSlug("Edgar, Charmed Groom")).toBe("edgar-charmed-groom"));
+});
+
+// ─── isCommanderSlug ──────────────────────────────────────────────────────────
+// The commander page 404s on any slug this rejects, so it must accept
+// everything commanderToSlug makes from a real name.
+describe("isCommanderSlug", () => {
+  it("accepts every slug commanderToSlug makes from a name with a letter or digit", () => {
+    const names = [
+      "Atraxa, Praetors' Voice",
+      "The Ur-Dragon",
+      "  Sol Ring  ",
+      "Sliver Overlord 2",
+      "Lim-Dûl the Necromancer",
+      "Esika, Queen of Myrr // The Prismatic Bridge",
+    ];
+
+    for (const name of names) {
+      expect(isCommanderSlug(commanderToSlug(name))).toBe(true);
+    }
+  });
+
+  it("rejects what commanderToSlug never makes", () => {
+    for (const slug of ["", "-", "---", "Atraxa", "not_a_slug", "a?b", "a b"]) {
+      expect(isCommanderSlug(slug)).toBe(false);
+    }
+  });
 });
 
 // ─── fetchEdhrecData ──────────────────────────────────────────────────────────

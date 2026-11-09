@@ -3,47 +3,12 @@ import NextAuth from "next-auth";
 import { NextResponse, type NextRequest } from "next/server";
 import type { NextAuthRequest } from "next-auth";
 import { edgeAuthConfig } from "@/lib/auth/edge-config";
+import { isPublicPagePath, stripLocalePrefix } from "@/lib/auth/public-paths";
 import { routing, SUPPORTED_LOCALES } from "@/i18n/routing";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
 const { auth } = NextAuth(edgeAuthConfig);
-
-const LOCALE_PREFIX_PATTERN = new RegExp(
-  `^/(${SUPPORTED_LOCALES.join("|")})(?:/|$)`
-);
-
-const PUBLIC_PATH_PREFIXES: readonly string[] = [
-  "/auth/signin",
-  "/auth/signup",
-  "/share",
-  "/deck", // public deck pages — /api/deck/[id] still 404s private decks
-  "/u", // public profile pages
-  "/commanders", // public deck discovery by commander
-];
-
-const PUBLIC_EXACT_PATHS = new Set(["/builder/guest"]);
-
-/**
- * Removes a supported locale prefix from a pathname.
- *
- * @param pathname URL pathname to normalize.
- * @returns Pathname without a locale prefix.
- */
-function stripLocalePrefix(pathname: string): string {
-  return pathname.replace(LOCALE_PREFIX_PATTERN, "/");
-}
-
-/**
- * Checks whether a pathname matches a route prefix exactly or as a child path.
- *
- * @param pathname Normalized pathname to test.
- * @param prefix Public route prefix.
- * @returns True when the pathname is equal to or nested under the prefix.
- */
-function matchesPathPrefix(pathname: string, prefix: string): boolean {
-  return pathname === prefix || pathname.startsWith(`${prefix}/`);
-}
 
 /**
  * Determines whether a page can be accessed without an authenticated session.
@@ -52,15 +17,7 @@ function matchesPathPrefix(pathname: string, prefix: string): boolean {
  * @returns True when the page is public.
  */
 function isPublicPage(pathname: string): boolean {
-  const normalizedPathname = stripLocalePrefix(pathname);
-
-  return (
-    normalizedPathname === "/" ||
-    PUBLIC_EXACT_PATHS.has(normalizedPathname) ||
-    PUBLIC_PATH_PREFIXES.some((prefix) =>
-      matchesPathPrefix(normalizedPathname, prefix)
-    )
-  );
+  return isPublicPagePath(stripLocalePrefix(pathname));
 }
 
 /**

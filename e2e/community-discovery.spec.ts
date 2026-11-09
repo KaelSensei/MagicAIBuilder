@@ -50,7 +50,12 @@ test.describe("Commander deck discovery — anonymous viewer", () => {
     expect((await response.json()).decks).toEqual([]);
   });
 
-  test("the page renders its empty state for a commander with no public decks", async ({
+  /**
+   * The builder's "Community decks" link reaches this for any commander being
+   * built, so it is an empty state, not a 404. It is thin content, though, so
+   * it carries noindex and no canonical URL.
+   */
+  test("the page renders its empty state for a commander with no public decks, kept out of the index", async ({
     page,
   }) => {
     await suppressOnboarding(page);
@@ -60,6 +65,8 @@ test.describe("Commander deck discovery — anonymous viewer", () => {
       page.getByRole("heading", { name: /nobody has this commander decks/i })
     ).toBeVisible();
     await expect(page.getByText(/no public decks for this commander yet/i)).toBeVisible();
+    await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toBeAttached();
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
   });
 
   test("finds a public deck by its commander slug, apostrophes and all", async ({

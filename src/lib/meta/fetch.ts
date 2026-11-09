@@ -51,6 +51,26 @@ export function commanderToSlug(name: string): string {
     .replaceAll(/\s+/g, "-"); // spaces → hyphens
 }
 
+/**
+ * Lowercase letters, digits and hyphens, with at least one letter or digit.
+ * Linear: the leading `-*` and the `[a-z0-9]` that ends it never overlap.
+ */
+const COMMANDER_SLUG_PATTERN = /^-*[a-z0-9][a-z0-9-]*$/;
+
+/**
+ * Whether `commanderToSlug` could have produced this slug from a name with at
+ * least one letter or digit in it.
+ *
+ * `commanderToSlug` only ever emits lowercase letters, digits and hyphens. A
+ * slug with anything else, or with only hyphens, names no commander.
+ *
+ * @param slug A commander slug, as a route receives it.
+ * @returns True when the slug can name a commander.
+ */
+export function isCommanderSlug(slug: string): boolean {
+  return COMMANDER_SLUG_PATTERN.test(slug);
+}
+
 interface EdhrecCardView {
   name: string;
   num_decks?: number;
