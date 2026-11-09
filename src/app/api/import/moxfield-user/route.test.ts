@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchMoxfieldUserDecks } from "@/lib/import/moxfield-user";
+import { MOXFIELD_REFUSED_MESSAGE, MoxfieldRefusedError } from "@/lib/import/moxfield-refusal";
 import { POST } from "./route";
 import { logger } from "@/lib/logger";
 
@@ -60,6 +61,52 @@ describe("POST /api/import/moxfield-user", () => {
     expect(blocked.headers.get("Retry-After")).toBe("60");
     expect(fetchMoxfieldUserDecks).toHaveBeenCalledTimes(10);
     expect((await POST(request("203.0.113.43"))).status).toBe(200);
+  });
+});
+
+describe("POST /api/import/moxfield-user when Moxfield refuses", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("tells the client it was a refusal, with the paste-import way out", async () => {
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+    vi.mocked(fetchMoxfieldUserDecks).mockRejectedValue(new MoxfieldRefusedError(403));
+    const request = new Request("http://localhost/api/import/moxfield-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-real-ip": "198.51.100.200" },
+      body: JSON.stringify({ username: "totoro" }),
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toEqual({
+      error: MOXFIELD_REFUSED_MESSAGE,
+      code: "moxfield_refused",
+    });
+  });
+
+  it("logs the refusal as a warning, not as a server error", async () => {
+    const error = vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    const warn = vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.mocked(fetchMoxfieldUserDecks).mockRejectedValue(new MoxfieldRefusedError(429));
+    const request = new Request("http://localhost/api/import/moxfield-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-real-ip": "198.51.100.201" },
+      body: JSON.stringify({ username: "totoro" }),
+    });
+
+    await POST(request);
+
+    expect(warn).toHaveBeenCalledWith(
+      "Moxfield refused the profile listing",
+      "POST /api/import/moxfield-user",
+      { status: 429 }
+    );
+    expect(error).not.toHaveBeenCalled();
   });
 });
 

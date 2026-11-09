@@ -1,4 +1,4 @@
-import { httpGet, parseJson } from "@/lib/http";
+import { fetchMoxfieldJson } from "./moxfield-client";
 
 export interface MoxfieldUserDeckSummary {
   readonly id: string;
@@ -88,6 +88,7 @@ export function parseMoxfieldUserDecks(data: unknown): MoxfieldUserDeckPage {
  * @param pageNumber Zero-based Moxfield page number.
  * @param pageSize Number of summaries requested.
  * @returns Normalized public deck summaries.
+ * @throws MoxfieldRefusedError when Moxfield refuses the app.
  */
 export async function fetchMoxfieldUserDecks(
   username: string,
@@ -99,9 +100,7 @@ export async function fetchMoxfieldUserDecks(
     pageNumber: String(pageNumber),
     pageSize: String(pageSize),
   });
-  const response = await httpGet(
-    `https://api2.moxfield.com/v2/decks/search-sfw?${params.toString()}`,
-    { headers: { Accept: "application/json", Origin: "https://moxfield.com", Referer: "https://moxfield.com/" } }
+  return parseMoxfieldUserDecks(
+    await fetchMoxfieldJson(`https://api2.moxfield.com/v2/decks/search-sfw?${params.toString()}`)
   );
-  return parseMoxfieldUserDecks(parseJson<unknown>(await response.json()));
 }

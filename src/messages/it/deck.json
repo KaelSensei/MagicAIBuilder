@@ -182,6 +182,7 @@
     "cancel": "Cancel",
     "import": "Import",
     "previewDecklist": "Preview decklist",
+    "moxfieldRefused": "Moxfield refused MagicAIBuilder's request, so this deck can't be fetched from here. To import it anyway, open the deck on moxfield.com, use Export to copy the list as text, then paste it in the {tab} tab.",
     "previewZone": {
       "main": "Main",
       "sideboard": "Sideboard",

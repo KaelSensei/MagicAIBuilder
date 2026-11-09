@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { importFromUrl } from "@/lib/import/url-import";
 import { BOT_CHALLENGE_MESSAGE } from "@/lib/http";
+import { MOXFIELD_REFUSED_CODE, MoxfieldRefusedError } from "@/lib/import/moxfield-refusal";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
@@ -47,6 +48,15 @@ export async function POST(request: Request) {
     const result = await importFromUrl(parsed.data.url);
     return NextResponse.json(result);
   } catch (err) {
+    if (err instanceof MoxfieldRefusedError) {
+      // A deliberate refusal, not a fault here: logged so the owner can see
+      // how often it happens, and never retried by another route.
+      logger.warn("Moxfield refused the import", "POST /api/import/url", { status: err.status });
+      return NextResponse.json(
+        { error: err.message, code: MOXFIELD_REFUSED_CODE },
+        { status: 422 }
+      );
+    }
     const message = err instanceof Error ? err.message : "Import failed.";
     const isUserError =
       message.includes("not found") ||

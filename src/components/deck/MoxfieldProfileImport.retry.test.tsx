@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { act, render, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import {
   MOXFIELD_PROFILE_TIMEOUT_MS,
   MoxfieldProfileImport,
@@ -52,7 +53,7 @@ describe("MoxfieldProfileImport retry", () => {
         )
       );
 
-    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    renderWithIntl(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     await user.type(screen.getByLabelText("Moxfield username"), "totoro");
     await user.click(screen.getByRole("button", { name: "Load decks" }));
     expect(await screen.findByText("1–1 of 21 decks")).toBeInTheDocument();
@@ -87,7 +88,7 @@ describe("MoxfieldProfileImport retry", () => {
         })
     );
 
-    render(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
+    renderWithIntl(<MoxfieldProfileImport onDeckSelected={vi.fn()} />);
     await user.type(screen.getByLabelText("Moxfield username"), "totoro");
     await user.click(screen.getByRole("button", { name: "Load decks" }));
 

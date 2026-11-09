@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { isMoxfieldRefusal } from "@/lib/import/moxfield-refusal";
 import type {
   MoxfieldUserDeckPage,
   MoxfieldUserDeckSummary,
@@ -15,6 +17,15 @@ const STORAGE_KEY = "magic-ai-builder:moxfield-profiles";
 const MOXFIELD_PAGE_SIZE = 20;
 /** Maximum time to wait for a Moxfield profile page before offering retry feedback. */
 export const MOXFIELD_PROFILE_TIMEOUT_MS = 15_000;
+
+/**
+ * Why a profile page failed to load. A Moxfield refusal is not retryable:
+ * asking again only repeats the request Moxfield already turned down.
+ */
+interface ProfileLoadError {
+  readonly message: string;
+  readonly retryable: boolean;
+}
 
 interface MoxfieldProfileImportProps {
   readonly onDeckSelected: (url: string) => void;
@@ -51,6 +62,7 @@ function isDeckPage(value: unknown): value is MoxfieldUserDeckPage {
 export function MoxfieldProfileImport({
   onDeckSelected,
 }: MoxfieldProfileImportProps) {
+  const t = useTranslations("deck");
   const [username, setUsername] = useState("");
   const [activeProfile, setActiveProfile] = useState("");
   const [profiles, setProfiles] = useState<string[]>(readSavedProfiles);
@@ -61,7 +73,7 @@ export function MoxfieldProfileImport({
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ProfileLoadError | null>(null);
 
   const saveProfile = () => {
     const normalized = username.trim().replace(/^@/, "");
@@ -100,6 +112,14 @@ export function MoxfieldProfileImport({
         });
         const data: unknown = await response.json();
         if (requestId !== latestRequestId.current) return;
+        if (isMoxfieldRefusal(data)) {
+          setStatus("error");
+          setError({
+            message: t("import.moxfieldRefused", { tab: t("import.tabText") }),
+            retryable: false,
+          });
+          return;
+        }
         if (!response.ok || !isDeckPage(data))
           throw new Error("Could not load Moxfield decks.");
         setDecks(data.decks);
@@ -110,14 +130,16 @@ export function MoxfieldProfileImport({
       } catch (cause) {
         if (requestId !== latestRequestId.current) return;
         setStatus("error");
-        setError(
-          cause instanceof Error
-            ? cause.message
-            : "Could not load Moxfield decks."
-        );
+        setError({
+          message:
+            cause instanceof Error
+              ? cause.message
+              : "Could not load Moxfield decks.",
+          retryable: true,
+        });
       }
     },
-    []
+    [t]
   );
 
   const loadFirstPage = useCallback(
@@ -195,15 +217,17 @@ export function MoxfieldProfileImport({
       />
       {error && (
         <div className="flex items-center gap-2 text-xs text-red-400">
-          <p role="alert">{error}</p>
-          <button
-            type="button"
-            onClick={retryLastAttempt}
-            disabled={status === "loading"}
-            className="underline disabled:opacity-50"
-          >
-            Retry
-          </button>
+          <p role="alert">{error.message}</p>
+          {error.retryable && (
+            <button
+              type="button"
+              onClick={retryLastAttempt}
+              disabled={status === "loading"}
+              className="underline disabled:opacity-50"
+            >
+              Retry
+            </button>
+          )}
         </div>
       )}
       <MoxfieldDeckResults

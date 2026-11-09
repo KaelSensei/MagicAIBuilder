@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { fetchMoxfieldUserDecks } from "@/lib/import/moxfield-user";
+import { MOXFIELD_REFUSED_CODE, MoxfieldRefusedError } from "@/lib/import/moxfield-refusal";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -71,6 +72,17 @@ async function importMoxfieldUserDecks(request: Request): Promise<NextResponse> 
       await fetchMoxfieldUserDecks(parsed.data.username, parsed.data.pageNumber)
     );
   } catch (cause) {
+    if (cause instanceof MoxfieldRefusedError) {
+      // A deliberate refusal, not a fault here: logged, answered once, and
+      // never retried by another route.
+      logger.warn("Moxfield refused the profile listing", "POST /api/import/moxfield-user", {
+        status: cause.status,
+      });
+      return NextResponse.json(
+        { error: cause.message, code: MOXFIELD_REFUSED_CODE },
+        { status: 422 }
+      );
+    }
     logger.error(
       cause instanceof Error ? cause.message : "Moxfield profile import failed",
       "POST /api/import/moxfield-user"
