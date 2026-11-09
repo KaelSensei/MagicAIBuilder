@@ -33,14 +33,20 @@ const deck: PublicDeck = {
   format: "commander",
   targetBracket: 2,
   isAIGenerated: false,
+  seekingFeedback: false,
+  feedbackQuestion: null,
+  forkedFromDeckId: null,
+  forkedFromDeckName: null,
+  forkedFromUserName: null,
   isOwner: false,
   cards: [
     {
       id: "card-1",
+      scryfallId: "scry-sol-ring",
       name: "Sol Ring",
-      manaCost: "{1}",
       cmc: 1,
-      typeLine: "Artifact",
+      colorIdentity: [],
+      price: null,
       imageUri: "",
       artCropUri: "",
       category: "artifact",
@@ -51,8 +57,6 @@ const deck: PublicDeck = {
     },
   ],
   user: null,
-  createdAt: "2026-10-15T00:00:00Z",
-  updatedAt: "2026-10-15T00:00:00Z",
 };
 
 describe("PublicDeckView card count", () => {

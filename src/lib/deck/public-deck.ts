@@ -12,47 +12,23 @@ import {
   buildViewerScopedRequestInit,
   resolveAppBaseUrl,
 } from "@/lib/api/viewer-request";
+import type { PublicDeckRecord } from "@/lib/deck/public-deck-select";
 
-export interface PublicCard {
-  readonly id: string;
-  readonly name: string;
-  readonly manaCost: string;
-  readonly cmc: number;
-  readonly typeLine: string;
-  readonly imageUri: string;
-  readonly artCropUri: string;
-  readonly category: string;
-  readonly quantity: number;
-  readonly isCommander: boolean;
-  readonly isPartner: boolean;
-  readonly isGameChanger: boolean;
-}
+/** A card of a public deck, exactly as the public allowlist exposes it. */
+export type PublicCard = Readonly<PublicDeckRecord["cards"][number]>;
 
-export interface PublicDeckAuthor {
-  readonly id: string;
-  readonly name: string | null;
-  readonly username: string | null;
-  readonly image: string | null;
-}
+/** The author byline of a public deck. */
+export type PublicDeckAuthor = Readonly<NonNullable<PublicDeckRecord["user"]>>;
 
-export interface PublicDeck {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string | null;
-  readonly format: string;
-  readonly targetBracket: number;
-  readonly isAIGenerated: boolean;
-  readonly isOwner: boolean;
-  readonly seekingFeedback?: boolean;
-  readonly feedbackQuestion?: string | null;
+/**
+ * What every viewer of a public deck receives. The owner receives their whole
+ * deck, which is a superset of this shape.
+ */
+export type PublicDeck = Readonly<Omit<PublicDeckRecord, "cards" | "user">> & {
   readonly cards: readonly PublicCard[];
   readonly user: PublicDeckAuthor | null;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-  readonly forkedFromDeckId?: string | null;
-  readonly forkedFromDeckName?: string | null;
-  readonly forkedFromUserName?: string | null;
-}
+  readonly isOwner: boolean;
+};
 
 /** Fetch a deck for the public deck page, forwarding the viewer's cookies. */
 export async function fetchPublicDeck(
