@@ -26,6 +26,7 @@ import type { CardCategory } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import { logger } from "@/lib/logger";
 import type { ApiCard, ApiSharedDeck } from "@/lib/deck/share-types";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -75,7 +76,9 @@ function CardRow({ card }: { readonly card: ApiCard }) {
       {card.artCropUri ? (
         <div
           className="w-6 h-6 rounded-sm shrink-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${card.artCropUri})` }}
+          style={{
+            backgroundImage: `url(${normalizeScryfallImageUrl(card.artCropUri)})`,
+          }}
         />
       ) : (
         <div className="w-6 h-6 rounded-sm shrink-0 bg-[var(--border)]" />
@@ -173,7 +176,7 @@ export function ShareDeckView({ deck }: ShareDeckViewProps) {
 
   const bgStyle = commander?.artCropUri
     ? {
-        backgroundImage: `url(${commander.artCropUri})`,
+        backgroundImage: `url(${normalizeScryfallImageUrl(commander.artCropUri)})`,
         backgroundSize: "cover",
         backgroundPosition: "center top",
       }

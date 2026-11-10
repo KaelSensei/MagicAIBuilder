@@ -72,6 +72,31 @@ describe("CardTooltip", () => {
     expect(screen.getByText(/USD\s*1\.50/)).toBeInTheDocument();
   });
 
+  it("shows a card stored with Scryfall's JPEG from the WebP grid", async () => {
+    const stored: DeckCard = {
+      ...card,
+      imageUri:
+        "https://cards.scryfall.io/normal/front/f/c/fc817e07-c1f3-469f-9cf7-0945dea7400f.jpg?1793021181",
+    };
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <NextIntlClientProvider locale="en" messages={{}}>
+        <QueryClientProvider client={client}>
+          <CardTooltip card={stored}>
+            <span>row</span>
+          </CardTooltip>
+        </QueryClientProvider>
+      </NextIntlClientProvider>
+    );
+    await hover();
+    expect(screen.getByRole("img", { name: "Sol Ring" })).toHaveAttribute(
+      "src",
+      "https://cards.scryfall.io/grid/front/f/c/fc817e07-c1f3-469f-9cf7-0945dea7400f.webp?1793021181"
+    );
+  });
+
   it("shows the translated printing's image for a French viewer", async () => {
     vi.mocked(scryfallClient.fetchLocalizedPrintingsByNames).mockResolvedValueOnce([frPrinting]);
     renderTooltip("fr", true);

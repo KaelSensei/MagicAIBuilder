@@ -64,3 +64,41 @@ describe("PublicProfileView avatar", () => {
     expect(screen.queryByRole("img", { name: "Totoro" })).not.toHaveAttribute("src");
   });
 });
+
+describe("PublicProfileView deck art", () => {
+  // Scryfall retires the art_crop JPEG on 2027-01-01; decks saved before then
+  // still store it.
+  it("shows a stored JPEG art crop from Scryfall's WebP art", () => {
+    const deck = {
+      id: "deck-1",
+      name: "Superfriends",
+      description: null,
+      format: "commander",
+      targetBracket: 3,
+      isAIGenerated: false,
+      createdAt: "2026-08-23T12:00:00Z",
+      updatedAt: "2026-08-23T12:00:00Z",
+      cards: [
+        {
+          name: "Atraxa",
+          imageUri: "",
+          artCropUri:
+            "https://cards.scryfall.io/art_crop/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.jpg?1599707796",
+        },
+      ],
+    };
+
+    renderWithIntl(
+      <PublicProfileView
+        profile={{ ...makeProfile(), decks: [deck] }}
+        canFollow={false}
+      />,
+      { locale: "en" }
+    );
+
+    expect(screen.getByRole("img", { name: "Atraxa" })).toHaveAttribute(
+      "src",
+      "https://cards.scryfall.io/art/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.webp?1599707796"
+    );
+  });
+});

@@ -5,7 +5,10 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Search, Star } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { CARD_BACK_URL } from "@/lib/scryfall/images";
+import {
+  CARD_BACK_URL,
+  normalizeScryfallImageUrl,
+} from "@/lib/scryfall/images";
 import { VoteButtons } from "./VoteButtons";
 import type { CommanderDeckSummary } from "@/lib/community/discovery-types";
 import { filterDiscoveryDecks } from "@/lib/community/discovery-filter";
@@ -43,9 +46,9 @@ function DeckRow({
       />
 
       <Image
-        src={
+        src={normalizeScryfallImageUrl(
           deck.commander.artCropUri || deck.commander.imageUri || CARD_BACK_URL
-        }
+        )}
         alt={deck.commander.name}
         width={64}
         height={46}

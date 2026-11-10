@@ -19,6 +19,7 @@ import { useLocalizedBanlistQuery } from "@/hooks/useBanlist";
 import { Pagination } from "@/components/rules/Pagination";
 import { PrintingSelectorModal } from "@/components/card/PrintingSelectorModal";
 import { cn } from "@/components/ui/utils";
+import { getListedImageUri } from "@/lib/scryfall/images";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 // ---------------------------------------------------------------------------
@@ -39,10 +40,10 @@ interface CardTileProps {
 
 function getCardNormalImage(card: ScryfallCard): string {
   return (
-    card.image_uris?.normal ??
-    card.card_faces?.[0]?.image_uris?.normal ??
-    card.image_uris?.small ??
-    card.card_faces?.[0]?.image_uris?.small ??
+    getListedImageUri(card.image_uris, "grid") ??
+    getListedImageUri(card.card_faces?.[0]?.image_uris, "grid") ??
+    getListedImageUri(card.image_uris, "thumb") ??
+    getListedImageUri(card.card_faces?.[0]?.image_uris, "thumb") ??
     ""
   );
 }
@@ -136,8 +137,8 @@ function CardZoomModal({
   }, [onClose, goPrev, goNext]);
 
   const largeUri =
-    card.image_uris?.large ??
-    card.card_faces?.[0]?.image_uris?.large ??
+    getListedImageUri(card.image_uris, "display") ??
+    getListedImageUri(card.card_faces?.[0]?.image_uris, "display") ??
     getCardNormalImage(card);
 
   return (

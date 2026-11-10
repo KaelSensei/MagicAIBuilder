@@ -131,6 +131,27 @@ describe("buildProxySlots", () => {
     expect(slots[0].oracleText).toBe("Trample");
     expect(slots[0].powerToughness).toBe("2/2");
   });
+
+  it("prints cards stored with Scryfall's JPEG from the WebP grid", () => {
+    const stored = (id: string) =>
+      `https://cards.scryfall.io/normal/front/f/c/${id}.jpg?1793021181`;
+    const grid = (id: string) =>
+      `https://cards.scryfall.io/grid/front/f/c/${id}.webp?1793021181`;
+    const commanderId = "fc000000-0000-4000-8000-000000000001";
+    const cardId = "fc817e07-c1f3-469f-9cf7-0945dea7400f";
+
+    const slots = buildProxySlots(
+      [makeCard({ imageUri: stored(cardId) })],
+      { ...BASE_COMMANDER, imageUri: stored(commanderId) },
+      null,
+      DEFAULT_PROXY_CONFIG
+    );
+
+    expect(slots.map((slot) => slot.imageUri)).toEqual([
+      grid(commanderId),
+      grid(cardId),
+    ]);
+  });
 });
 
 describe("localizeProxySlots", () => {

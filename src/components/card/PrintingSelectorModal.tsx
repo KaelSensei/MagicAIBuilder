@@ -184,7 +184,7 @@ export function PrintingSelectorModal({
                         }}
                       >
                         <Image
-                          src={getCardImageUri(printing, "normal")}
+                          src={getCardImageUri(printing, "grid")}
                           alt={`${printing.name} — ${printing.set_name}`}
                           width={220}
                           height={308}
@@ -209,7 +209,7 @@ export function PrintingSelectorModal({
                 <aside className="hidden lg:flex w-72 shrink-0 flex-col rounded-xl border border-(--border) bg-(--surface) p-3">
                   <div className="overflow-hidden rounded-[4.75%] border border-(--border)">
                     <Image
-                      src={getCardImageUri(previewedPrinting, "large")}
+                      src={getCardImageUri(previewedPrinting, "display")}
                       alt={`${previewedPrinting.name} — enlarged preview`}
                       width={336}
                       height={468}

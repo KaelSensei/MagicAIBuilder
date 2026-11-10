@@ -7,6 +7,7 @@ import { useState } from "react";
 import type { PlayerBadge } from "@/lib/social/follow";
 import { FollowButton } from "@/components/community/FollowButton";
 import { PlayerBadges } from "@/components/community/PlayerBadges";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface PublicDeckPreview {
   readonly id: string;
@@ -127,7 +128,7 @@ export function PublicProfileView({ profile, canFollow }: PublicProfileViewProps
                     {commander?.artCropUri ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={commander.artCropUri}
+                        src={normalizeScryfallImageUrl(commander.artCropUri)}
                         alt={commander.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

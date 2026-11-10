@@ -7,6 +7,7 @@ import { useLocale } from "next-intl";
 import type { DeckCard } from "@/lib/deck/types";
 import { useLocalizedDeckText } from "@/components/card/LocalizedDeckTextContext";
 import { formatUsdPrice } from "@/i18n/number-format";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 const TOOLTIP_WIDTH = 223;
 const TOOLTIP_HEIGHT = 334; // image 310 + price row
@@ -65,7 +66,9 @@ export function CardTooltip({ card, children }: CardTooltipProps) {
             style={{ left: pos.x, top: pos.y, width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT }}
           >
             <Image
-              src={localized?.imageUri ?? card.imageUri}
+              src={normalizeScryfallImageUrl(
+                localized?.imageUri ?? card.imageUri
+              )}
               alt={localized?.name ?? card.name}
               width={223}
               height={310}

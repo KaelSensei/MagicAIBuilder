@@ -6,6 +6,7 @@
  */
 import type { DeckCard } from "./types";
 import type { LocalizedCardText } from "@/lib/scryfall/localized";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 export interface ProxyConfig {
   /** Paper format */
@@ -34,7 +35,7 @@ export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
 export interface ProxySlot {
   readonly id: string;       // unique key (cardId + index for quantity > 1)
   readonly name: string;
-  readonly imageUri: string; // normal or large depending on quality
+  readonly imageUri: string; // Scryfall grid WebP
   readonly manaCost: string;
   readonly typeLine: string;
   readonly oracleText: string;
@@ -61,7 +62,7 @@ function makeCommanderSlot(cmd: DeckCard): ProxySlot {
   return {
     id: `cmd-${cmd.id}`,
     name: cmd.name,
-    imageUri: cmd.imageUri,
+    imageUri: normalizeScryfallImageUrl(cmd.imageUri),
     manaCost: cmd.manaCost,
     typeLine: cmd.typeLine,
     oracleText: cmd.oracleText ?? "",
@@ -81,10 +82,11 @@ function makeCardSlots(card: DeckCard): ProxySlot[] {
   const powerToughness =
     card.power && card.toughness ? `${card.power}/${card.toughness}` : null;
   const oracleText = card.oracleText ?? "";
+  const imageUri = normalizeScryfallImageUrl(card.imageUri);
   return Array.from({ length: qty }, (_, i) => ({
     id: `${card.id}-${i}`,
     name: card.name,
-    imageUri: card.imageUri,
+    imageUri,
     manaCost: card.manaCost,
     typeLine: card.typeLine,
     oracleText,

@@ -7,7 +7,7 @@ import { DraggableCard } from "./DraggableCard";
 import { cn } from "@/components/ui/utils";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { DFC_LAYOUTS } from "@/lib/scryfall/types";
-import { getCardImageUri } from "@/lib/scryfall/images";
+import { getCardImageUri, getListedImageUri } from "@/lib/scryfall/images";
 import { isMdfcWithLandBack } from "@/lib/deck/categories";
 import type { CardFace, DeckZone } from "@/lib/deck/types";
 import { CollectionBadge } from "@/components/collection/CollectionBadge";
@@ -36,16 +36,24 @@ function buildDfcFaces(card: ScryfallCard): [CardFace, CardFace] | undefined {
       manaCost: f0.mana_cost ?? "",
       typeLine: f0.type_line ?? "",
       oracleText: f0.oracle_text ?? "",
-      imageUri: f0.image_uris?.normal ?? getCardImageUri(card, "normal", "front"),
-      artCropUri: f0.image_uris?.art_crop ?? getCardImageUri(card, "art_crop", "front"),
+      imageUri:
+        getListedImageUri(f0.image_uris, "grid") ??
+        getCardImageUri(card, "grid", "front"),
+      artCropUri:
+        getListedImageUri(f0.image_uris, "art") ??
+        getCardImageUri(card, "art", "front"),
     },
     {
       name: f1.name,
       manaCost: f1.mana_cost ?? "",
       typeLine: f1.type_line ?? "",
       oracleText: f1.oracle_text ?? "",
-      imageUri: f1.image_uris?.normal ?? getCardImageUri(card, "normal", "back"),
-      artCropUri: f1.image_uris?.art_crop ?? getCardImageUri(card, "art_crop", "back"),
+      imageUri:
+        getListedImageUri(f1.image_uris, "grid") ??
+        getCardImageUri(card, "grid", "back"),
+      artCropUri:
+        getListedImageUri(f1.image_uris, "art") ??
+        getCardImageUri(card, "art", "back"),
     },
   ];
 }
@@ -97,8 +105,8 @@ export function CardGrid({
             {draggable ? (
               <DraggableCard card={card}>
                 <CardImage
-                  imageUri={getCardImageUri(card, "normal")}
-                  largeUri={getCardImageUri(card, "large")}
+                  imageUri={getCardImageUri(card, "grid")}
+                  largeUri={getCardImageUri(card, "display")}
                   name={card.name}
                   manaCost={card.mana_cost}
                   cmc={card.cmc}
@@ -110,8 +118,8 @@ export function CardGrid({
               </DraggableCard>
             ) : (
               <CardImage
-                imageUri={getCardImageUri(card, "normal")}
-                largeUri={getCardImageUri(card, "large")}
+                imageUri={getCardImageUri(card, "grid")}
+                largeUri={getCardImageUri(card, "display")}
                 name={card.name}
                 manaCost={card.mana_cost}
                 cmc={card.cmc}

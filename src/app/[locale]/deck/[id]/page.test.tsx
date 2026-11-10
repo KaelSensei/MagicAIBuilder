@@ -37,3 +37,33 @@ it("keeps a missing deck as not found", async () => {
     PublicDeckPage({ params: Promise.resolve({ locale: "en", id: "missing" }) })
   ).rejects.toThrow("NOT_FOUND");
 });
+
+// Scryfall retires the art_crop JPEG on 2027-01-01; decks saved before then
+// still store it, and a link preview must not point at a dead image.
+it("previews the commander with Scryfall's WebP art", async () => {
+  fetchPublicDeck.mockResolvedValue({
+    name: "Superfriends",
+    targetBracket: 3,
+    format: "commander",
+    user: { name: "Totoro", username: "totoro" },
+    cards: [
+      {
+        name: "Atraxa",
+        isCommander: true,
+        isPartner: false,
+        artCropUri:
+          "https://cards.scryfall.io/art_crop/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.jpg?1599707796",
+      },
+    ],
+  });
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: "en", id: "deck-1" }),
+  });
+
+  expect(metadata.openGraph?.images).toEqual([
+    {
+      url: "https://cards.scryfall.io/art/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.webp?1599707796",
+    },
+  ]);
+});

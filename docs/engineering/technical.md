@@ -112,7 +112,7 @@ src/
     scryfall/
       client.ts                 # Rate-limited fetch (100ms min) + DB CardCache
       types.ts                  # ScryfallCard, response types
-      images.ts                 # Image URL helpers (normal/large/art_crop)
+      images.ts                 # Image URL helpers (WebP grid/display/art) + stored-URL normaliser
       search.ts                 # Query builder (name/set/color modes)
     deck/
       types.ts                  # Core domain types (DeckCard, Deck, BracketScore…)

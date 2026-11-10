@@ -80,3 +80,41 @@ describe("PublicDeckView card count", () => {
     expect(screen.getByText("2 cartes")).toBeInTheDocument();
   });
 });
+
+describe("PublicDeckView images", () => {
+  // Decks saved before Scryfall's 2026-10-14 WebP change store its JPEG URLs.
+  it("draws cards stored with Scryfall's JPEG from the WebP grid", () => {
+    const stored = (id: string) =>
+      `https://cards.scryfall.io/normal/front/${id[0]}/${id[1]}/${id}.jpg?1599707796`;
+    const withCommander: PublicDeck = {
+      ...deck,
+      cards: [
+        {
+          ...deck.cards[0],
+          id: "card-cmd",
+          name: "Atraxa",
+          isCommander: true,
+          imageUri: stored("d0d33d52-3d28-4635-b985-51e126289259"),
+        },
+        {
+          ...deck.cards[0],
+          imageUri: stored("fc817e07-c1f3-469f-9cf7-0945dea7400f"),
+        },
+      ],
+    };
+
+    const { container } = renderWithIntl(
+      <PublicDeckView deck={withCommander} isSignedIn={false} />,
+      { locale: "en" }
+    );
+
+    expect(screen.getByRole("img", { name: "Atraxa" })).toHaveAttribute(
+      "src",
+      "https://cards.scryfall.io/grid/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.webp?1599707796"
+    );
+    expect(container.innerHTML).toContain(
+      "https://cards.scryfall.io/grid/front/f/c/fc817e07-c1f3-469f-9cf7-0945dea7400f.webp?1599707796"
+    );
+    expect(container.innerHTML).not.toContain("cards.scryfall.io/normal/");
+  });
+});

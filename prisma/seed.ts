@@ -3,6 +3,7 @@
  * Run with: pnpm db:seed  OR  pnpm prisma db seed
  */
 import { PrismaClient } from "@prisma/client";
+import { buildScryfallImageUrl } from "../src/lib/scryfall/images";
 
 const prisma = new PrismaClient();
 
@@ -47,8 +48,8 @@ function card(
     quantity,
     isCommander: false,
     isPartner: false,
-    imageUri: `https://api.scryfall.com/cards/${scryfallId}?format=image&version=normal`,
-    artCropUri: `https://api.scryfall.com/cards/${scryfallId}?format=image&version=art_crop`,
+    imageUri: buildScryfallImageUrl(scryfallId, "grid"),
+    artCropUri: buildScryfallImageUrl(scryfallId, "art"),
   };
 }
 

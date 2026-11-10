@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ShareDeckView } from "@/components/deck/ShareDeckView";
 import type { ApiSharedDeck } from "@/lib/deck/share-types";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface Params {
   readonly params: Promise<{ token: string }>;
@@ -61,14 +62,21 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       description,
       type: "website",
       images: commander?.artCropUri
-        ? [{ url: commander.artCropUri, alt: commander.name }]
+        ? [
+            {
+              url: normalizeScryfallImageUrl(commander.artCropUri),
+              alt: commander.name,
+            },
+          ]
         : [],
     },
     twitter: {
       card: "summary_large_image",
       title: deck.name,
       description,
-      images: commander?.artCropUri ? [commander.artCropUri] : [],
+      images: commander?.artCropUri
+        ? [normalizeScryfallImageUrl(commander.artCropUri)]
+        : [],
     },
   };
 }
