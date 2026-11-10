@@ -74,6 +74,8 @@
     "export": "Open export modal",
     "import": "Open import modal",
     "triggerLabel": "Shortcuts",
-    "inactiveHint": "Shortcuts are inactive when a text field is focused (except modifier shortcuts)"
+    "inactiveHint": "Shortcuts without Ctrl or ⌘ stay inactive while a text field, list or menu has focus",
+    "singleKeyLabel": "Single-key shortcuts",
+    "singleKeyDescription": "Shortcuts without Ctrl or ⌘: /, ?, Esc, the arrow keys and Enter. Turn them off if you use speech input or a screen reader. Ctrl/⌘ shortcuts keep working."
   }
 }

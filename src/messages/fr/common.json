@@ -74,6 +74,8 @@
     "export": "Ouvrir la fenêtre d'export",
     "import": "Ouvrir la fenêtre d'import",
     "triggerLabel": "Raccourcis",
-    "inactiveHint": "Les raccourcis sont inactifs quand un champ de texte a le focus (sauf ceux avec modificateur)"
+    "inactiveHint": "Les raccourcis sans Ctrl ni ⌘ restent inactifs quand un champ de texte, une liste ou un menu a le focus",
+    "singleKeyLabel": "Raccourcis à une touche",
+    "singleKeyDescription": "Raccourcis sans Ctrl ni ⌘ : /, ?, Échap, les flèches et Entrée. Désactivez-les si vous utilisez la saisie vocale ou un lecteur d'écran. Les raccourcis Ctrl/⌘ restent actifs."
   }
 }
