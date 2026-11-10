@@ -144,23 +144,23 @@ ScryfallCard      + released_at, set_type, collector_number, frame, frame_effect
 
 ## Delivery slices
 
-| #   | Slice                                                                                                       | Depends on                        |
-| --- | ----------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| 1   | Defects 1 and 2: an explicit pick is never replaced; a printing swap updates the row's price                | —                                 |
-| 2   | `choosePrinting` with precedence and fallback; `printingSource` column; added `ScryfallCard` fields         | —                                 |
-| 3   | Rule-to-query compiler, batched server resolver with cache, exclusion code lists and the weekly set check   | 2                                 |
-| 4   | `PrintingPreference`, its API, the settings page with sentence, query link and preview; the product default | 3                                 |
-| 5   | Every entry point in 3.1 through the resolver, with the enumeration test and the add summary                | 3 (product default until 4 ships) |
-| 6   | Import keeps source printings: Archidekt `uid` first, text `(SET) number` next; "use my rule" option        | 5; I-37 slice 16 for text lines   |
-| 7   | AI wizard and copilot: the rule picks printings and budget checks price them                                | 5                                 |
-| 8   | Fork and package dialogs: keep source printings or use my rule                                              | 5                                 |
-| 9   | Apply the rule to a deck: preview, uncheck, one transaction, 409, one undo                                  | 3                                 |
-| 10  | Per-deck override                                                                                           | 4, 9                              |
-| 11  | Per-card pins                                                                                               | 2, 4                              |
-| 12  | Selector shows collector number, price in market and the rule's pick                                        | 3                                 |
-| 13  | Cheapest in the EUR market                                                                                  | 4; I-32 slice 3                   |
-| 14  | Bling with finish                                                                                           | 4; I-37 slice 12                  |
-| 15  | Owned first by uncommitted copies                                                                           | 5; I-16 slice 4                   |
+| #   | Slice                                                                                                                                                                                                     | Depends on                        |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| 1   | Defects 1 and 2: an explicit pick is never replaced; a printing swap updates the row's price                                                                                                              | —                                 |
+| 2   | `choosePrinting` with precedence and fallback; `printingSource` column; added `ScryfallCard` fields                                                                                                       | —                                 |
+| 3   | Rule-to-query compiler, batched server resolver with cache, exclusion code lists and the weekly set check _(2026-11-10: I-67 slices 9 and 10 later switch the source to local tables; no new dependency)_ | 2                                 |
+| 4   | `PrintingPreference`, its API, the settings page with sentence, query link and preview; the product default                                                                                               | 3                                 |
+| 5   | Every entry point in 3.1 through the resolver, with the enumeration test and the add summary                                                                                                              | 3 (product default until 4 ships) |
+| 6   | Import keeps source printings: Archidekt `uid` first, text `(SET) number` next; "use my rule" option                                                                                                      | 5; I-37 slice 16 for text lines   |
+| 7   | AI wizard and copilot: the rule picks printings and budget checks price them                                                                                                                              | 5                                 |
+| 8   | Fork and package dialogs: keep source printings or use my rule                                                                                                                                            | 5                                 |
+| 9   | Apply the rule to a deck: preview, uncheck, one transaction, 409, one undo                                                                                                                                | 3                                 |
+| 10  | Per-deck override                                                                                                                                                                                         | 4, 9                              |
+| 11  | Per-card pins                                                                                                                                                                                             | 2, 4                              |
+| 12  | Selector shows collector number, price in market and the rule's pick                                                                                                                                      | 3                                 |
+| 13  | Cheapest in the EUR market                                                                                                                                                                                | 4; I-32 slice 3                   |
+| 14  | Bling with finish                                                                                                                                                                                         | 4; I-37 slice 12                  |
+| 15  | Owned first by uncommitted copies                                                                                                                                                                         | 5; I-16 slice 4                   |
 
 Slice 1 fixes what players hit today and needs no product decision. Slices 2 to 5 are the core; the Archidekt part of slice 6 can ship without I-37.
 

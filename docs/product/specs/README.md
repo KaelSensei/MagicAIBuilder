@@ -14,6 +14,8 @@ The **Delivery slices** table is the part that matters for automation: each slic
 
 [`dependency-graph.md`](dependency-graph.md) checks those edges across every table and lists the slices that can start now (2026-11-10).
 
+[`owner-decisions.md`](../owner-decisions.md) lists every open decision only the owner can make and opens with a "Decide this week" table. [`legal-questions.md`](../legal-questions.md) collects the lawyer questions of every spec; it is research for counsel, not legal advice. Both were compiled on 2026-11-10.
+
 ## Committed work
 
 | Spec                                                                                      | Initiative | Status | The one-line reason it exists                                                                                                                             |
@@ -83,7 +85,7 @@ Eight initiatives from a dated research pass on the owner's goals, stated on 202
 | [The marketplace ladder](i33-marketplace-ladder.md)                             | I-33       | Parked: owner decision                | Deckbuilders partner with marketplaces and none runs one; the record names the rung that would reverse the non-goal                         |
 | [Commander data reports](i34-commander-data-reports.md)                         | I-34       | Next without the index; Later with it | EDHREC publishes popularity; nobody publishes declared against estimated brackets or per-bracket norms with their n, and nobody in French   |
 | [Pod game log](i35-pod-game-log.md)                                             | I-35       | Later                                 | Trackers count wins at scale; none ties a result to the deck version played or to what the pod declared                                     |
-| [Creator and embed toolkit](i36-creator-and-embed-toolkit.md)                   | I-36       | Later                                 | The social layer here evaluates; creators need one that broadcasts: embeds, link previews, view counts, video in primers                    |
+| [Creator and embed toolkit](i36-creator-and-embed-toolkit.md)                   | I-36       | Later; slices 1–2 Next                | The social layer here evaluates; creators need one that broadcasts: embeds, link previews, view counts, video in primers                    |
 | [Editor depth](i37-editor-depth.md)                                             | I-37       | Next                                  | Archidekt ships editor depth every few months; views, sticky groups, tags, text bulk edit and history are what players compare              |
 
 Two boundaries hold across all eight. Card data, fan content and the evidence a result shows stay free, under the Wizards Fan Content Policy and Scryfall's terms, so a paid tier can sell only usage and personal tools, and only after I-30's legal gate; every other spec names its paid-tier candidate and leaves the decision to I-30. The roadmap's non-goal "full card-trading marketplace" stays in force: I-32 builds the rungs that fit it, and I-33 records the one that would reverse it.
@@ -146,7 +148,7 @@ Three specs from a sixth pass on 2026-11-10, written the same way: dated researc
 
 | Spec                                                                   | Initiative | Status                                                     | The one-line reason it exists                                                                                                                           |
 | ---------------------------------------------------------------------- | ---------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Switching from another site](i62-switching-from-another-site.md)      | I-62       | Next for slices 0–11, 17 and 18; never paid                | Moving 20 decks means 20 imports that keep names only; no product moves many decks in one step, shows what each loses, or makes a re-run change nothing |
+| [Switching from another site](i62-switching-from-another-site.md)      | I-62       | Next for slices 0–11 and 18; never paid                    | Moving 20 decks means 20 imports that keep names only; no product moves many decks in one step, shows what each loses, or makes a re-run change nothing |
 | [One notification system](i63-one-notification-system.md)              | I-63       | Next; web push blocked; never paid                         | Fourteen specs plan their own notices, columns and senders, while `dev` has four switches nothing reads, no email sender and no scheduled job           |
 | [Help centre and in-product guidance](i64-help-centre-and-guidance.md) | I-64       | Next for slices 0–9 and 13; Later for the rest; never paid | No help page exists, the user guide is out of date, Bracket 1 has two names, and no product read links a figure on screen to its definition             |
 
@@ -158,6 +160,15 @@ Two specs from a seventh pass on 2026-11-10, written the same way: dated researc
 | ----------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [How this deck wins](i65-how-this-deck-wins.md)             | I-65       | Next for slices 1–11; slice 8 blocked on the Tagger licence; Later for 12–16 | Every tool shows combos, which end about 8% of games; none maps the other routes, the cards behind each, what finds and protects them, or what stops them |
 | [Running costs and margin](i66-running-costs-and-margin.md) | I-66       | Next for slices 0–8; internal, never shown to players                        | I-30 guessed fixed costs at €150 a month, nothing reads provider usage, and Vercel's free plan forbids the commercial use a paid tier needs               |
+
+## Card data and play-style guides — added 2026-11-10
+
+Two specs from an eighth pass on 2026-11-10, written the same way: dated research that is not committed, every external fact linked to its own source, and legal points as research, not legal advice. The roadmap places I-67 directly after I-63 in [Trust, growth and the physical table](../roadmap.md#trust-growth-and-the-physical-table), and I-68 directly after [I-28](i28-commander-deckbuilding-guide-by-bracket.md), whose content model it extends. [I-67](i67-one-card-data-pipeline.md) takes over the daily Scryfall job that [I-29](i29-cross-site-deck-index.md), [I-32](i32-seller-handoff-and-affiliate-carts.md) and [I-54](i54-find-your-next-commander.md) each planned, and every spec that waited for "the daily job" now points to one of its slices.
+
+| Spec                                                             | Initiative | Status                                                                                    | The one-line reason it exists                                                                                                                                          |
+| ---------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [One card data pipeline](i67-one-card-data-pipeline.md)          | I-67       | Next for slices 0–13; slices 1, 2 and 4 start now; never paid                             | Sixteen specs wait for "the daily job" and six plan their own Scryfall schedule, while nothing on `dev` reads a bulk file and seven Next slices cannot run without one |
+| [Archetype guides from play experience](i68-archetype-guides.md) | I-68       | Next for slices 0–8 and 14; Later for the deck panel, norms and French; guides never paid | Style guides are one writer's experience with no counts, brackets, mulligans or budget path, none reads the reader's deck, and none is in French                       |
 
 ## Discipline
 

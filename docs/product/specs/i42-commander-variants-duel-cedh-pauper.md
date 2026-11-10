@@ -189,22 +189,22 @@ CardLegality   computed per deck load: status, reason, listId; not persisted on 
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                                       | Depends on              |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| 1   | Format picker at creation and in deck settings; switching re-validates and removes nothing; labels from catalogues                                          | —                       |
-| 2   | Server-computed legality from Scryfall per deck load, with per-format `restricted` meaning and the fetch date shown                                         | —                       |
-| 3   | Duel Commander format and the new `FormatConfig` fields: `duel` key, 100 cards, 20 life, no free mulligan, no bracket scoring, banned-as-commander excluded | 1, 2                    |
-| 4   | Duel Commander playtest: one commander cast from the command zone per game                                                                                  | 3                       |
-| 5   | Duel Commander imports and meta labels: Moxfield, Archidekt and MTGTop8 decks offer a Duel Commander deck                                                   | 3                       |
-| 6   | Source register and drift check, Duel Commander first; "under review" state                                                                                 | 2                       |
-| 7   | Player-count choice in the playtest for Commander, Brawl and Oathbreaker                                                                                    | 3                       |
-| 8   | Brawl split into Arena Brawl and Standard Brawl, legendary planeswalker commanders, migration of existing decks                                             | 3                       |
-| 9   | Oathbreaker: planeswalker search and Signature Spell slot                                                                                                   | 3                       |
-| 10  | Pauper Commander: commander eligibility from printings, 30 life                                                                                             | 3                       |
-| 11  | Ban and unban notices on saved decks when a list version changes                                                                                            | 6                       |
-| 12  | cEDH link-outs to EDHTop16 and the cEDH Decklist Database on bracket 5 decks                                                                                | I-28 slice 2            |
-| 13  | Canadian Highlander points                                                                                                                                  | 3, 6                    |
-| 14  | Tiny Leaders Reborn through `tlr`                                                                                                                           | **Parked** on demand; 3 |
+| #   | Slice                                                                                                                                                                                                               | Depends on              |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| 1   | Format picker at creation and in deck settings; switching re-validates and removes nothing; labels from catalogues                                                                                                  | —                       |
+| 2   | Server-computed legality from Scryfall per deck load, with per-format `restricted` meaning and the fetch date shown _(2026-11-10: I-67 slices 9 and 10 later switch the source to local tables; no new dependency)_ | —                       |
+| 3   | Duel Commander format and the new `FormatConfig` fields: `duel` key, 100 cards, 20 life, no free mulligan, no bracket scoring, banned-as-commander excluded                                                         | 1, 2                    |
+| 4   | Duel Commander playtest: one commander cast from the command zone per game                                                                                                                                          | 3                       |
+| 5   | Duel Commander imports and meta labels: Moxfield, Archidekt and MTGTop8 decks offer a Duel Commander deck                                                                                                           | 3                       |
+| 6   | Source register and drift check, Duel Commander first; "under review" state                                                                                                                                         | 2                       |
+| 7   | Player-count choice in the playtest for Commander, Brawl and Oathbreaker                                                                                                                                            | 3                       |
+| 8   | Brawl split into Arena Brawl and Standard Brawl, legendary planeswalker commanders, migration of existing decks                                                                                                     | 3                       |
+| 9   | Oathbreaker: planeswalker search and Signature Spell slot                                                                                                                                                           | 3                       |
+| 10  | Pauper Commander: commander eligibility from printings, 30 life                                                                                                                                                     | 3                       |
+| 11  | Ban and unban notices on saved decks when a list version changes                                                                                                                                                    | 6                       |
+| 12  | cEDH link-outs to EDHTop16 and the cEDH Decklist Database on bracket 5 decks                                                                                                                                        | I-28 slice 2            |
+| 13  | Canadian Highlander points                                                                                                                                                                                          | 3, 6                    |
+| 14  | Tiny Leaders Reborn through `tlr`                                                                                                                                                                                   | **Parked** on demand; 3 |
 
 Slices 1 and 2 ship alone: they make the nine existing formats reachable and their banned flags current. Slice 3 is the first a Duel Commander player can use, and it fixes the shape of `FormatConfig`, so the later variant slices wait for it rather than collide on the same file. Slice 11 is the free notice; the automatic watch across all decks is I-18's paid candidate.
 

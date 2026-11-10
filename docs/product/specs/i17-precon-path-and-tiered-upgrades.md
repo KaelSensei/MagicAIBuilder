@@ -87,14 +87,14 @@ BundleApply    deckId, bundleId, appliedAt, revertedAt?, beforeSnapshotId
 
 ## Delivery slices
 
-| #   | Slice                                                         | Depends on |
-| --- | ------------------------------------------------------------- | ---------- |
-| 1   | Catalogue model and one dated set imported, read-only display | —          |
-| 2   | Open-as-working-copy and the sealed diff via the I-07 engine  | 1          |
-| 3   | Bundle model and application with the not-applied report      | 2          |
-| 4   | One-action revert via `beforeSnapshotId`                      | 3          |
-| 5   | Budget bands, estimate labelling and unpriced disclosure      | 3          |
-| 6   | Hand-off to the I-06 acquisition plan for the missing cards   | 5          |
+| #   | Slice                                                                                                                                      | Depends on                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| 1   | Catalogue model and read-only display _(re-pointed 2026-11-10: the first dated set arrives through I-67 slice 13, which needs this model)_ | —                                  |
+| 2   | Open-as-working-copy and the sealed diff via the I-07 engine                                                                               | 1; I-67 slice 13 for the first set |
+| 3   | Bundle model and application with the not-applied report                                                                                   | 2                                  |
+| 4   | One-action revert via `beforeSnapshotId`                                                                                                   | 3                                  |
+| 5   | Budget bands, estimate labelling and unpriced disclosure                                                                                   | 3                                  |
+| 6   | Hand-off to the I-06 acquisition plan for the missing cards                                                                                | 5                                  |
 
 Slices 1 and 2 are useful alone: a dated precon catalogue with a diff is shippable value before any bundle exists.
 

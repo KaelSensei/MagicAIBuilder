@@ -202,7 +202,7 @@ Routes: `POST /api/reports` (signed in or out); `GET /api/moderation/cases`, `PO
 | 14  | Retention job with dry run, inactive-account warning and deletion                                                   | 0, 3; I-63 slices 5 and 7                    |
 | 15  | Email copies of statements of reasons and notice outcomes                                                           | 10; I-63 slice 7                             |
 
-Slices 1 to 5 and 12 ship whatever counsel says, and slice 2 should go first: it fixes a defect a user can hit today. Slices 6 and 7 can ship a reviewed draft before slice 0 and update their wording after it. Scheduled agents must not pick slice 14 before slice 0's answers are committed, because the retention periods are decisions, not code. The email sender, slice 13, is now [I-63](i63-one-notification-system.md) slice 7, which waits for the owner's choice of provider.
+Slices 1 to 5 and 12 ship whatever counsel says, and slice 2 should go first: it fixes a defect a user can hit today. Slices 6 and 7 can ship a reviewed draft before slice 0 and update their wording after it. Scheduled agents must not pick slice 14 before slice 0's answers are committed, because the retention periods are decisions, not code. The email sender, slice 13, is now [I-63](i63-one-notification-system.md) slice 7, which waits for the owner's choice of provider, so scheduled agents must not pick slice 15 before that choice is committed (added 2026-11-10).
 
 ## Open questions
 

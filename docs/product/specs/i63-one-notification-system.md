@@ -165,7 +165,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10:
 
 ### 10. Scheduled jobs
 
-10.1 One route, `/api/jobs/[job]`, checks `Authorization: Bearer` against `CRON_SECRET` [24] and is registered in a new `vercel.json` `crons` array. The first job, `notifications`, sends digests, deferred and retried mail. I-38's retention job and the single daily price job (I-29 slice 1 or I-32 slice 2, read by I-59) register here instead of adding routes.
+10.1 One route, `/api/jobs/[job]`, checks `Authorization: Bearer` against `CRON_SECRET` [24] and is registered in a new `vercel.json` `crons` array. The first job, `notifications`, sends digests, deferred and retried mail. I-38's retention job and, when it runs on Vercel, I-67's `card-data` job (I-67 slice 3, re-pointed 2026-11-10) register here instead of adding routes.
 10.2 Each run takes a lease in `JobRun`, so a duplicate invocation exits. It processes everything due since the last successful run, so a missed run catches up, and every step is idempotent [24].
 10.3 A dry run reports counts without sending. Each run records counts and duration, and a job with no success for 26 hours reports an error to Sentry.
 
@@ -251,7 +251,7 @@ Slices 1 and 5 can start today in parallel; slices 2, 3 and 6 follow slice 1. Sc
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1–3        | I-59 slice 11 (alerts in the inbox), I-38 slice 10 (in-app statements), I-44 slice 9 (proposal notices), I-52 slice 11, I-53 slice 15, I-18 slice 6 in-app, I-46 slice 5's failure notice, I-48's notice as an inbox entry |
 | 4          | The I-08 notifications item, for replies and follows; mentions and watched decks wait for I-08 to build them                                                                                                               |
-| 5          | I-38 slice 14 (retention job), the daily price job of I-29 slice 1 or I-32 slice 2, the timing of I-51 slice 17 and of I-30 6.7's renewal reminder                                                                         |
+| 5          | I-38 slice 14 (retention job), I-67 slice 3's `card-data` job (re-pointed 2026-11-10), the timing of I-51 slice 17 and of I-30 6.7's renewal reminder                                                                      |
 | 7          | I-61 slices 11 to 14, I-38 slice 15, I-30 6.5 and 6.7                                                                                                                                                                      |
 | 9          | I-48 slice 11, I-51 slice 17, trade-proposal email for I-44, and I-60 open question 3 if the owner accepts it                                                                                                              |
 | 10         | I-59 slice 12, I-18 slice 6 by email, and I-44 slice 16 and I-47 8.2 after I-30 decides                                                                                                                                    |

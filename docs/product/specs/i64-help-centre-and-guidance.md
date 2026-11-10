@@ -231,7 +231,7 @@ Routes: `/help`, `/help/[slug]`, `/help/glossary`; `GET /api/help/search?q=&loca
 | 12  | Owner measurement view (9.2, 9.3)                                                                                                                                            | 3, 7; I-39 slice 10                         |
 | 13  | Subscription articles and the entitlement-to-article test                                                                                                                    | 5; I-30 slices 7 and 8                      |
 | 14  | Glossary links from the I-28 guide, I-47 rules pages and I-27 explanations                                                                                                   | 2; I-28 slice 4; I-47 slice 2; I-27 slice 1 |
-| 15  | Optional model retrieval of article identifiers, with its golden set and disclosure                                                                                          | 9; I-02 slice 10; owner decision            |
+| 15  | Optional model retrieval of article identifiers, with its golden set and disclosure _(the disclosure page re-pointed 2026-11-10 to I-30 slice 5)_                            | 9; I-30 slice 5; owner decision             |
 
 Slices 1 and 3 can start today and need no decision. Slice 2 can start with the terms that do not depend on bracket names. Slice 13 must ship in the same release as I-30's billing, so that cancellation and withdrawal are explained the day a player can pay. Scheduled agents must not pick slice 15.
 

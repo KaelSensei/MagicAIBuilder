@@ -131,7 +131,7 @@ KeepRule       bracket, style? (midrange|aggro|bigMana|spellslinger|cedh), stage
 | 8   | Freshness: rules-state banner and a review task on each Wizards announcement                                                                                                         | 4                                      |
 | 9   | Opening-hand section of the check (4.5–4.7): keep shares under the multiplayer rules, cheap ramp, land plateau, primer pre-fill                                                      | 7; I-21 slice 1 or exact combinatorics |
 
-Slice 1 corrects copy players already see and rules the copilot already applies; it ships alone and should go first. Slice 2 overlaps the bracket 5 item in `commander-power-meter.md`; whichever lands first owns it, and the other reuses it.
+Slice 1 corrects copy players already see and rules the copilot already applies; it ships alone and should go first. Slice 2 overlaps the bracket 5 item in `commander-power-meter.md`; slice 2 owns the Bracket 5 definitions and the power meter reuses them (one owner, decided 2026-11-10).
 
 ## Open questions
 

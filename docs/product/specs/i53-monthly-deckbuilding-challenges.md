@@ -91,7 +91,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10:
 ### 6. Community vote and moderation
 
 6.1 After shortlisting, any account created before entries opened may vote for one finalist and change that vote until the close. An entrant cannot vote for their own entry. Counts stay hidden until the close, and voters are never shown.
-6.2 The tally counts eligible, unvoided ballots, weight one each (1.2), and reads no plan, badge or account field beyond creation date. Ballot writes are rate limited per account on the shared limiter that I-36 slice 11 requires.
+6.2 The tally counts eligible, unvoided ballots, weight one each (1.2), and reads no plan, badge or account field beyond creation date. Ballot writes are rate limited per account on I-05 M2's shared store (one owner, decided 2026-11-10).
 6.3 Community choice is labelled a popularity result and never carries a prize (9.2).
 6.4 Each challenge links to its conduct rules: one entry, no second accounts, no buying or trading votes; sharing an entry's link is welcome. Briefs, entries, judges' notes and comments can be reported through I-38's notice form.
 6.5 Disqualifying an entry, voiding ballots or cancelling a challenge each takes an I-38 decision with a statement of reasons; results state how many ballots were voided, and a cancelled challenge keeps its brief and a public reason. No IP address, fingerprint or cookie is stored for voting, the line [I-36 group 8](i36-creator-and-embed-toolkit.md#8-view-counts-and-privacy) keeps for views.
@@ -163,7 +163,7 @@ Sponsor         id, name, url, kind (store | creator | other), agreementRef (own
 | --- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | 0   | Lawyer questions added to I-30 7.2 (open question 2)                                                                             | — (owner and counsel; no code)                                 |
 | 1   | `checkDeckAgainstRules`: legality, Game Changers, colour identity, slots, commander list, banned cards, AI label; orphan deleted | —                                                              |
-| 2   | Price rules on dated prices                                                                                                      | 1; I-32 slice 2, or I-29 slice 1 if it ships first             |
+| 2   | Price rules on I-67's dated prices _(re-pointed 2026-11-10 to I-67 slice 5)_                                                     | 1; I-67 slice 5                                                |
 | 3   | `bracketRules` from the bracket check                                                                                            | 1; I-28 slice 7                                                |
 | 4   | `maxRarity` from printings                                                                                                       | 1; I-42 slice 10                                               |
 | 5   | Challenge model, host authoring, brief page with plain-language rules, archive list                                              | 1                                                              |
@@ -172,7 +172,7 @@ Sponsor         id, name, url, kind (store | creator | other), agreementRef (own
 | 8   | Private challenges: invite link, member-only gallery, seeded slot draw                                                           | 7; I-21 slice 1 for the seeded draw                            |
 | 9   | Judges, shortlist, notes, awards, results page                                                                                   | 7                                                              |
 | 10  | Reports, withdrawal, disqualification and cancellation with decisions                                                            | 7; I-38 slices 8 to 10                                         |
-| 11  | Community vote on finalists                                                                                                      | 9, 10; I-36 slice 11's shared limiter                          |
+| 11  | Community vote on finalists                                                                                                      | 9, 10; I-05 M2's shared limiter                                |
 | 12  | Results statistics with the withholding threshold; awards on profiles and deck pages; index policy page kind                     | 9; I-34 slice 1                                                |
 | 13  | Product events and the demand threshold                                                                                          | 7; I-39 slice 10                                               |
 | 14  | Store challenges on store pages                                                                                                  | 9; I-41 slices 3 and 11                                        |

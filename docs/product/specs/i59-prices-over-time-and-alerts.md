@@ -2,7 +2,7 @@
 
 > **Initiative:** I-59, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Later; slices 0 to 2 can ship now · **Written 2026-11-10**
 > **Research:** dated notes of 2026-11-10 on price sources and their terms, price history and alerts in nine player tools, the effect of reprints, and a measurement of Scryfall's daily bulk file. The notes are not committed, so every external fact cites a numbered entry in [Sources](#sources).
-> **Owns:** the dated price series per printing in EUR and USD, its retention and archive; deck and collection value over time; the "price moved" marks on a player's lists; the reprint watch; alert rules, their evaluation, the in-app inbox and the email digest; the neutral wording rules for prices. **Does not own:** the daily Scryfall job ([I-29](i29-cross-site-deck-index.md) slice 1); the market choice and today's dated price ([I-32](i32-seller-handoff-and-affiliate-carts.md) slices 2 and 3); today's collection valuation, spare copies and the holdings archive ([I-45](i45-selling-spare-cards.md)); the lists themselves: the acquisition plan ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)), the wanted list ([I-56](i56-wishlists-friends-can-buy-from.md)), want lists ([I-44](i44-trade-lists-within-the-pod.md)) and upgrade bundles ([I-17](i17-precon-path-and-tiered-upgrades.md)); the printing choice and the swap-price defect ([I-57](i57-printing-preferences-everywhere.md)); the set corpus ([I-18](i18-per-deck-radar-of-new-cards.md)); finish and date added on deck rows ([I-37](i37-editor-depth.md)); the email sender, retention and defaults for minors ([I-38](i38-trust-safety-and-user-rights.md)); the paid line and billing ([I-30](i30-business-model-and-paid-tier.md)); the marketplace decision ([I-33](i33-marketplace-ladder.md)).
+> **Owns:** the dated price series per printing in EUR and USD, its retention and archive; deck and collection value over time; the "price moved" marks on a player's lists; the reprint watch; alert rules, their evaluation, the in-app inbox and the email digest; the neutral wording rules for prices. **Does not own:** the daily Scryfall job ([I-67](i67-one-card-data-pipeline.md) slice 5, re-pointed 2026-11-10); the market choice and today's dated price ([I-32](i32-seller-handoff-and-affiliate-carts.md) slices 2 and 3); today's collection valuation, spare copies and the holdings archive ([I-45](i45-selling-spare-cards.md)); the lists themselves: the acquisition plan ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)), the wanted list ([I-56](i56-wishlists-friends-can-buy-from.md)), want lists ([I-44](i44-trade-lists-within-the-pod.md)) and upgrade bundles ([I-17](i17-precon-path-and-tiered-upgrades.md)); the printing choice and the swap-price defect ([I-57](i57-printing-preferences-everywhere.md)); the set corpus ([I-18](i18-per-deck-radar-of-new-cards.md)); finish and date added on deck rows ([I-37](i37-editor-depth.md)); the email sender, retention and defaults for minors ([I-38](i38-trust-safety-and-user-rights.md)); the paid line and billing ([I-30](i30-business-model-and-paid-tier.md)); the marketplace decision ([I-33](i33-marketplace-ladder.md)).
 > **Proposed reassignment, for the integrator:** I-32's price watch (requirements 6.3 and 6.4, slice 12), I-45's value history (5.1, slice 12) and I-56's wanted items in the price watch (slice 18) move here, so that one series and one alert engine serve every list.
 
 ## Overview
@@ -64,8 +64,8 @@ Verified on `dev` at `72fbfc1` on 2026-11-10 by reading the code; nothing was ru
 
 ### 2. The series
 
-2.1 Prices come only from Scryfall's daily data, read by the single daily job of I-29 slice 1 or I-32 slice 2 ([I-32 requirement 2.6](i32-seller-handoff-and-affiliate-carts.md#2-market-and-prices)). Never two jobs, never scraping, never TCGplayer's or Cardmarket's APIs, which are closed [10][11]. No currency conversion.
-2.2 One point per printing per UTC day holds `usd`, `usd_foil`, `usd_etched`, `eur`, `eur_foil` and `eur_etched` in minor units, with the source and Scryfall's file timestamp. I-32's `PriceSnapshot` is the latest point, not a second table.
+2.1 Prices come only from Scryfall's daily data, which [I-67](i67-one-card-data-pipeline.md) slice 5 writes to `CardPrice` once a day (re-pointed 2026-11-10; [I-32 requirement 2.6](i32-seller-handoff-and-affiliate-carts.md#2-market-and-prices)). Never two jobs, never scraping, never TCGplayer's or Cardmarket's APIs, which are closed [10][11]. No currency conversion.
+2.2 One point per printing per UTC day holds `usd`, `usd_foil`, `usd_etched`, `eur`, `eur_foil` and `eur_etched` in minor units, with the source and Scryfall's file timestamp. I-67's `CardPrice` is the latest point, not a second table (re-pointed 2026-11-10 from I-32's `PriceSnapshot`).
 2.3 The database keeps points for **tracked printings**: those on a deck, in a collection, on a wanted list, a want list or a bundle, or named by an alert rule. Points are daily for 90 days, then one per ISO week (estimate under Data model).
 2.4 A compressed daily file of every paper printing is archived outside the database with its hash. A printing that becomes tracked is backfilled from the archive on the next run.
 2.5 A day the job missed is a gap. Charts draw gaps and never interpolate, and no alert fires on a missing or stale day. Totals and changes read the series; a row's stored `price` is shown only as "price when added" until its printing has points.
@@ -120,7 +120,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10 by reading the code; nothing was ru
 ## Data model / API
 
 ```
-PrintingKey      key Int @id, scryfallId (unique), oracleId, paper, releasedAt, firstSeenOn
+PrintingKey      re-pointed 2026-11-10: I-67's CardPrinting.key (scryfallId, oracleKey, games, releasedAt); no table here
 PricePoint       printingKey, day Date, usd?, usdFoil?, usdEtched?, eur?, eurFoil?, eurEtched? (Int, minor units),
                  source ("scryfall"), sourceUpdatedAt                                  @@id([printingKey, day])
 PriceArchiveDay  day @id, objectKey, printings, values, bytes, sha256, sourceUpdatedAt
@@ -163,25 +163,25 @@ NotificationPreference + priceAlertEmail Boolean @default(false), priceAlertEmai
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                            | Depends on                                               |
-| --- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| 0   | Measure tracked printings (distinct Scryfall IDs in decks, collections and favourites) and free database space; record both      | —                                                        |
-| 1   | One deck value function for the panel, analysis diff, stats export and budget checks; label "USD, read when each card was added" | —                                                        |
-| 2   | Neutral wording and colour checks in CI (8.3, 8.4)                                                                               | —                                                        |
-| 3   | `PrintingKey`, `PricePoint`, the writer for tracked printings, downsampling and the run report                                   | 0; I-32 slice 2 or I-29 slice 1 (one job)                |
-| 4   | Daily archive with its hash; backfill of newly tracked printings                                                                 | 3; open question 1                                       |
-| 5   | Printing chart in the printing selector, then in the card panel                                                                  | 2, 3; I-37 slice 4 for the panel                         |
-| 6   | Deck value over time: current list and snapshot points; totals read the series                                                   | 1, 2, 3; I-32 slice 3                                    |
-| 7   | Collection value over time                                                                                                       | 2, 3; I-45 slice 4                                       |
-| 8   | "Moved" marks on deck rows and the acquisition plan                                                                              | 2, 3                                                     |
-| 9   | Marks on the wanted list, want lists and bundles                                                                                 | 8; I-56 slice 1, I-44 slice 1, I-17 slice 3              |
-| 10  | Reprint watch and its marks                                                                                                      | 3                                                        |
-| 11  | Alert rules and the in-app inbox                                                                                                 | 8, 10; I-63 slices 1 to 3                                |
-| 12  | Email digest with opt-in and one-click unsubscribe                                                                               | 11; I-63 slice 10                                        |
-| 13  | Paid entitlement above the free allowance                                                                                        | 11; I-30 slices 0 and 11; **Blocked** on open question 3 |
-| 14  | "Since added" window                                                                                                             | 8; I-37 slice 12                                         |
+| #   | Slice                                                                                                                                                  | Depends on                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| 0   | Measure tracked printings (distinct Scryfall IDs in decks, collections and favourites) and free database space; record both                            | —                                                        |
+| 1   | One deck value function for the panel, analysis diff, stats export and budget checks; label "USD, read when each card was added"                       | —                                                        |
+| 2   | Neutral wording and colour checks in CI (8.3, 8.4)                                                                                                     | —                                                        |
+| 3   | `PricePoint` on I-67's `CardPrinting.key`, the writer for tracked printings, downsampling and the run report _(re-pointed 2026-11-10 to I-67 slice 5)_ | 0; I-67 slice 5                                          |
+| 4   | Daily archive with its hash; backfill of newly tracked printings                                                                                       | 3; open question 1                                       |
+| 5   | Printing chart in the printing selector, then in the card panel                                                                                        | 2, 3; I-37 slice 4 for the panel                         |
+| 6   | Deck value over time: current list and snapshot points; totals read the series                                                                         | 1, 2, 3; I-32 slice 3                                    |
+| 7   | Collection value over time                                                                                                                             | 2, 3; I-45 slice 4                                       |
+| 8   | "Moved" marks on deck rows and the acquisition plan                                                                                                    | 2, 3                                                     |
+| 9   | Marks on the wanted list, want lists and bundles                                                                                                       | 8; I-56 slice 1, I-44 slice 1, I-17 slice 3              |
+| 10  | Reprint watch and its marks                                                                                                                            | 3                                                        |
+| 11  | Alert rules and the in-app inbox                                                                                                                       | 8, 10; I-63 slices 1 to 3                                |
+| 12  | Email digest with opt-in and one-click unsubscribe                                                                                                     | 11; I-63 slice 10                                        |
+| 13  | Paid entitlement above the free allowance                                                                                                              | 11; I-30 slices 0 and 11; **Blocked** on open question 3 |
+| 14  | "Since added" window                                                                                                                                   | 8; I-37 slice 12                                         |
 
-Slices 0 to 2 fix what players see today and need no decision. Slice 3 is the core and waits for the daily job.
+Slices 0 to 2 fix what players see today and need no decision. Slice 3 is the core and waits for I-67 slice 5.
 
 ## Open questions
 

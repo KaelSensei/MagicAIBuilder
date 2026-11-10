@@ -148,13 +148,13 @@ Evidence: on r/EDH, ["Do not use AI to make deck suggestions or clarify rules. I
 
 ### Added delivery slices
 
-| #   | Slice                                                                      | Depends on |
-| --- | -------------------------------------------------------------------------- | ---------- |
-| 6   | Record `stop_reason` and token usage per route; report truncation          | —          |
-| 7   | Per-user monthly metering and quota (with I-05)                            | 6          |
-| 8   | Server-side card-data check of generated decks, unresolved names shown     | —          |
-| 9   | Repair from a legal candidate pool, corrections shown in the verdict panel | 3, 8       |
-| 10  | Public AI-use disclosure page and per-surface labels                       | —          |
+| #   | Slice                                                                      | Depends on            |
+| --- | -------------------------------------------------------------------------- | --------------------- |
+| 6   | Record `stop_reason` and token usage per route; report truncation          | Moved to I-30 slice 1 |
+| 7   | Per-user monthly metering and quota (with I-05)                            | Moved to I-30 slice 2 |
+| 8   | Server-side card-data check of generated decks, unresolved names shown     | —                     |
+| 9   | Repair from a legal candidate pool, corrections shown in the verdict panel | 3, 8                  |
+| 10  | Public AI-use disclosure page and per-surface labels                       | Moved to I-30 slice 5 |
 
 ## Open questions
 

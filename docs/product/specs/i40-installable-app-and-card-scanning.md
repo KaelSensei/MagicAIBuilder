@@ -167,7 +167,7 @@ Verified on `dev` (`61792c1`) on 2026-11-09:
 | 5   | Real-device staging checklist in `quality-gate.md`, including sign-in in installed mode                                    | 1, 4                                           |
 | 6   | Recognition benchmark under `scripts/research/` with committed photos; go or no-go recorded by the owner                   | — (owner's photos)                             |
 | 7   | Written answer from Scryfall and the lawyer question on a derived index; no code                                           | —                                              |
-| 8   | Index build script from Scryfall bulk data, versioned asset, size disclosure                                               | 6 (go), 7                                      |
+| 8   | Index build script from I-67's printing table, versioned asset, size disclosure _(re-pointed 2026-11-10 to I-67 slice 2)_  | 6 (go), 7; I-67 slice 2                        |
 | 9   | Scan route: camera and WebAssembly allowed there only, capture, on-device recognition of Oracle identity, staged rows      | 8; I-06 printing-level ownership; I-26 slice 3 |
 | 10  | Printing resolution and review tray; commit through I-26 with "camera scan" provenance; benchmark on the help page         | 9                                              |
 | 11  | Bulk mode: continuous capture, set lock, review grouped by confidence                                                      | 10; I-30 slice 0                               |

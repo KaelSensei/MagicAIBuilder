@@ -160,18 +160,18 @@ Routes, all scoped to the caller as `playtest-sessions` is: `POST|GET /api/games
 
 ## Delivery slices
 
-| #   | Slice                                                                                                     | Depends on                                                          |
-| --- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| 1   | `PodGame` and `PodGameSeat`; "Log a game" from the deck page with labelled opponents, seats and outcome   | —                                                                   |
-| 2   | Deck version at log time: card-list hash, snapshot reuse or game snapshot (reusable by I-07's record bar) | 1                                                                   |
-| 3   | Edit, delete, JSON and CSV export, account-deletion conversion, privacy-notice text                       | 1; I-29 slice 0 for the notice page                                 |
-| 4   | Personal per-deck figures: fair share, intervals, 10-game floor, goldfish kept apart                      | 1                                                                   |
-| 5   | Declared and computed bracket frozen with scorer version; mismatch and spread                             | 2; I-15 slice 1 for sheet values (the form picker works without it) |
-| 6   | Logging from a pod: linked players, confirm and detach, frozen sheets, pod history                        | 5; I-15 slice 3                                                     |
-| 7   | Version trends, mismatch view, whole-history analysis                                                     | 4, 5; I-21 slice 5 for the verdict; I-30 decision before any gating |
-| 8   | Contribution opt-in and the weekly aggregate job with thresholds; nothing published                       | 3, 5                                                                |
-| 9   | Publish passing cells on I-34 data pages                                                                  | 8; I-34 page slices; legal answers to open question 2               |
-| 10  | Import from a life-counter export such as Lifetap's                                                       | **Blocked** until the export format is verified; 1                  |
+| #   | Slice                                                                                                                                                                             | Depends on                                                          |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 1   | `PodGame` and `PodGameSeat`; "Log a game" from the deck page with labelled opponents, seats and outcome                                                                           | —                                                                   |
+| 2   | Deck version at log time: card-list hash, snapshot reuse or game snapshot (reusable by I-07's record bar) _(the canonical list is I-29 slice 2's; one owner, decided 2026-11-10)_ | 1; I-29 slice 2                                                     |
+| 3   | Edit, delete, JSON and CSV export, account-deletion conversion, privacy-notice text                                                                                               | 1; I-29 slice 0 for the notice page                                 |
+| 4   | Personal per-deck figures: fair share, intervals, 10-game floor, goldfish kept apart                                                                                              | 1                                                                   |
+| 5   | Declared and computed bracket frozen with scorer version; mismatch and spread                                                                                                     | 2; I-15 slice 1 for sheet values (the form picker works without it) |
+| 6   | Logging from a pod: linked players, confirm and detach, frozen sheets, pod history                                                                                                | 5; I-15 slice 3                                                     |
+| 7   | Version trends, mismatch view, whole-history analysis                                                                                                                             | 4, 5; I-21 slice 5 for the verdict; I-30 decision before any gating |
+| 8   | Contribution opt-in and the weekly aggregate job with thresholds; nothing published                                                                                               | 3, 5                                                                |
+| 9   | Publish passing cells on I-34 data pages                                                                                                                                          | 8; I-34 page slices; legal answers to open question 2               |
+| 10  | Import from a life-counter export such as Lifetap's                                                                                                                               | **Blocked** until the export format is verified; 1                  |
 
 Slices 1 to 4 ship alone as a private game log. Slice 8 runs before slice 9 so the thresholds can be checked on real data before anything is public.
 

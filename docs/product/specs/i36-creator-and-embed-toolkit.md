@@ -1,6 +1,6 @@
 # I-36: Creator And Embed Toolkit
 
-> **Initiative:** I-36, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Later · **Written 2026-11-09**
+> **Initiative:** I-36, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Later; slices 1 and 2 Next since 2026-11-10, because slices of I-46, I-50, I-53, I-55 and I-60 wait for them · **Written 2026-11-09**
 > **Research:** dated notes on creator tooling, the growth of reference sites, player demand and monetization (2026-11-09). They are not committed, so every external fact below cites a numbered entry in [Sources](#sources). Legal points are research, not legal advice.
 > **Owns:** deck embeds, shareable deck images, video and card links in primers, the creator page, fork attribution outside the deck page, the public read endpoints of `/api/v1` and their terms, and view counts. **Does not own:** deck visibility, forking policy, the primer template, comments and moderation ([I-08](../roadmap.md#i-08-share-compare-and-learn)); the playtester and its hand-hidden view ([I-07](../roadmap.md#i-07-playtest-and-iteration)); owner-scoped API endpoints, import and export ([I-10](../roadmap.md#i-10-interoperability-and-integrations)); the verification endpoint ([I-22](i22-verification-as-a-public-surface.md)); Discord commands ([I-23](i23-the-pods-own-surface.md)); search across all public decks ([I-29](i29-cross-site-deck-index.md)); data report pages ([I-34](i34-commander-data-reports.md)); the primer editor's layout ([I-37](i37-editor-depth.md)); the paid tier's price and gating ([I-30](i30-business-model-and-paid-tier.md)).
 
@@ -160,22 +160,22 @@ No table stores an IP address or a user agent, and a schema test guards that abs
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                        | Depends on                                                            |
-| --- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 1   | Public projection used by the deck page and `/api/deck/[id]`, with the field snapshot test                                   | —                                                                     |
-| 2   | `/og/deck/{id}` from stored data; deck-page Open Graph and Twitter tags; PNG default; free-text `/api/og` removed            | 1                                                                     |
-| 3   | Embed route: list layout, themes, locale, canonical link, scoped headers, no-tracking tests, snippet dialog, per-deck switch | 1                                                                     |
-| 4   | Embed badges: legality, declared bracket, dated price                                                                        | 3; dated prices from I-29 slice 1; bracket estimate from I-28 slice 2 |
-| 5   | Overlay layout and the auto-height script                                                                                    | 3                                                                     |
-| 6   | Primer card links with preview and unresolved-name disclosure                                                                | — (editor placement agreed with I-37)                                 |
-| 7   | Unique heading anchors and timestamp syntax in the primer parser                                                             | —                                                                     |
-| 8   | Click-to-load video blocks, `frame-src`, timestamp controls                                                                  | 7                                                                     |
-| 9   | Fork attribution on embed and image, fork counts, current-name fallback, "Primer by"                                         | 2, 3                                                                  |
-| 10  | Creator page: bio, links, pinned decks, primer list                                                                          | —                                                                     |
-| 11  | Public read API: scope, two endpoints, attribution, shared limiter, OpenAPI                                                  | 1; the terms page is **blocked** on legal review                      |
-| 12  | View counter with public count and owner toggle                                                                              | 1; **blocked** on the legal answer to open question 1                 |
-| 13  | Creator analytics page for the owner                                                                                         | 12; paid gating waits for the I-30 decision                           |
-| —   | Hand-hidden playtest popout                                                                                                  | Owned by I-07; listed for tracking only                               |
+| #   | Slice                                                                                                                              | Depends on                                                               |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 1   | Public projection used by the deck page and `/api/deck/[id]`, with the field snapshot test                                         | —                                                                        |
+| 2   | `/og/deck/{id}` from stored data; deck-page Open Graph and Twitter tags; PNG default; free-text `/api/og` removed                  | 1                                                                        |
+| 3   | Embed route: list layout, themes, locale, canonical link, scoped headers, no-tracking tests, snippet dialog, per-deck switch       | 1                                                                        |
+| 4   | Embed badges: legality, declared bracket, dated price _(prices re-pointed 2026-11-10 to I-67 slice 5)_                             | 3; dated prices from I-67 slice 5; bracket estimate from I-28 slice 2    |
+| 5   | Overlay layout and the auto-height script                                                                                          | 3                                                                        |
+| 6   | Primer card links with preview and unresolved-name disclosure                                                                      | — (editor placement agreed with I-37)                                    |
+| 7   | Unique heading anchors and timestamp syntax in the primer parser                                                                   | —                                                                        |
+| 8   | Click-to-load video blocks, `frame-src`, timestamp controls                                                                        | 7                                                                        |
+| 9   | Fork attribution on embed and image, fork counts, current-name fallback, "Primer by"                                               | 2, 3                                                                     |
+| 10  | Creator page: bio, links, pinned decks, primer list                                                                                | —                                                                        |
+| 11  | Public read API: scope, two endpoints, attribution, a limiter on I-05 M2's shared store _(one owner, decided 2026-11-10)_, OpenAPI | 1; I-05 M2's shared store; the terms page is **blocked** on legal review |
+| 12  | View counter with public count and owner toggle                                                                                    | 1; **blocked** on the legal answer to open question 1                    |
+| 13  | Creator analytics page for the owner                                                                                               | 12; paid gating waits for the I-30 decision                              |
+| —   | Hand-hidden playtest popout                                                                                                        | Owned by I-07; listed for tracking only                                  |
 
 Slices 2 and 3 ship alone and close the two largest gaps: a deck link that previews well and a deck that embeds. Slice 8 is the differentiator.
 

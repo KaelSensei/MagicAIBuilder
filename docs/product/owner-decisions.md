@@ -51,7 +51,7 @@ Ranked by what each decision unblocks and by its deadline. Each one is short to 
 - **Specs recommend:** no recommendation in the specs between the options. [I-66 requirement 5.4](specs/i66-running-costs-and-margin.md#5-fixed-costs-and-the-plan-upgrade-line) sets the bar: "Either the owner registers `magicaibuilder.com`, or the fallback changes and a production build fails when `NEXT_PUBLIC_BASE_URL` is unset."
 - **Unblocks:** the [I-05](roadmap.md#i-05-production-safety) owner action; I-66 slice 0; I-34 slice 8, the Search Console baseline; I-63 slice 0's sending subdomains, which sit under the domain the owner holds; I-52 slice 0's status-page address; and the site URL the Moxfield draft asks for.
 - **Deadline:** none fixed. Verisign's lookup answered 404 on 2026-11-10.
-- **Cost of waiting:** the domain is the structured-data site URL, the contact URL in the `User-Agent` sent to Scryfall and Commander Spellbook, and the fallback for canonicals, `robots.txt` and the sitemap. Anyone may register it and receive that traffic and those signals. Note: the roadmap's [Explicitly Parked Or Blocked](roadmap.md#explicitly-parked-or-blocked) list still parks "Custom domain and DNS"; the decision should also update that line.
+- **Cost of waiting:** the domain is the structured-data site URL, the contact URL in the `User-Agent` sent to Scryfall and Commander Spellbook, and the fallback for canonicals, `robots.txt` and the sitemap. Anyone may register it and receive that traffic and those signals. Note: until 2026-11-10 the roadmap's [Explicitly Parked Or Blocked](roadmap.md#explicitly-parked-or-blocked) list parked "Custom domain and DNS"; that line now points to this decision.
 
 ### D-03: The email provider
 

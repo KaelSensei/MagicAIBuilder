@@ -89,7 +89,7 @@ A citation stored as a bare number points at different words after one update. R
 
 ### 2. Official rulings on every card
 
-2.1 A server job imports Scryfall's rulings bulk file into a table keyed by Oracle id, weekly and on demand after a set release, as Scryfall advises for gameplay data [2][4]. It records the file's `updated_at`, the row count, a SHA-256 and the newest ruling date.
+2.1 A server job imports Scryfall's rulings bulk file into a table keyed by Oracle id, weekly and on demand after a set release, as Scryfall advises for gameplay data [2][4]. It records the file's `updated_at`, the row count, a SHA-256 and the newest ruling date. _Re-pointed 2026-11-10:_ [I-67](i67-one-card-data-pipeline.md) slice 6 loads the rulings daily into its `CardRuling` and `RulingText` tables and emits `rulings.changed`; this initiative reads them and keeps its change entries, and `DeckCard.oracleId` is [I-37](i37-editor-depth.md) slice 12's.
 2.2 An import is atomic. A malformed line fails it and the previous data stays.
 2.3 Every card the builder opens, and every card on the public deck page, shows its rulings: the date in the locale's format, the text verbatim, the source label (1.3), and "Rulings as of <file date>".
 2.4 "No rulings published" differs from "may not be published yet". When the card's set was released after the newest ruling in the file, the panel says so with the check date.
@@ -155,7 +155,7 @@ CardRuling      id, oracleId String, source (wotc | scryfall), publishedAt Date,
 RulingsImport   id, fileUpdatedAt DateTime, importedAt DateTime, rowCount Int, sha256 String,
                 newestPublishedAt Date
 RulingChange    id, importId, oracleId, kind (added | changed | removed), commentHash String
-DeckCard        + oracleId String?    set on add from the Scryfall card; backfilled once; face id for reversible cards
+DeckCard        + oracleId String?    added by I-37 slice 12 (re-pointed 2026-11-10), backfilled from I-67's CardPrinting
 
 src/lib/rules/data/MagicCompRules-<YYYYMMDD>.txt   one per kept version; versions.ts lists effective date, URL, SHA-256
 content/rules-notes/<slug>.json   { slug, title{en,fr?}, body{en,fr?}, matcher, citations[], author, reviewer,
@@ -198,22 +198,22 @@ Adding `oracleId` to `PUBLIC_DECK_CARD_SELECT` is a deliberate allowlist change,
 
 ## Delivery slices
 
-| #   | Slice                                                                                                        | Depends on                               |
-| --- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
-| 1   | CR import script with diff report; update to 2026-11-06; one served copy and the copy test                   | —                                        |
-| 2   | Rule addresses: paragraph ids, `?rule=`, linked cross-references and search results, French date and strings | 1                                        |
-| 3   | Rulings bulk import: `CardRuling`, `RulingsImport`, `RulingChange`; `DeckCard.oracleId` with backfill        | —                                        |
-| 4   | Deck rules API; builder panel with source labels, dates and file date; browser fetch retired                 | 3                                        |
-| 5   | Rulings on the public deck page through the allowlist                                                        | 4                                        |
-| 6   | Keyword-to-rule links, alias table and catalogue test                                                        | 2, 4                                     |
-| 7   | Weekly freshness check for the CR and the rulings file, opening an issue                                     | 1, 3                                     |
-| 8   | Notes content model, citation contract test and drift rules                                                  | 1, 3                                     |
-| 9   | Review record, "Report a rules error" and the public notes changelog                                         | 8; I-38 slice 8                          |
-| 10  | First catalogue: Commander notes on 903.3d, 903.8, 903.9a and 903.9b                                         | 9; owner names a judge reviewer          |
-| 11  | "Worth knowing in this deck" in the builder and on the public deck page                                      | 5, 10                                    |
-| 12  | Offline and screen-reader inclusion                                                                          | 5; I-19 slice 2; I-24 slice 3            |
-| 13  | Rules watch: CR and rulings changes as entries in I-48's per-deck report and notices (paid candidate)        | 7, 8; I-48 slices 5 and 11; I-30 slice 0 |
-| 14  | Model retrieval of citations, with its golden set                                                            | 8; owner decision                        |
+| #   | Slice                                                                                                                                                                                            | Depends on                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| 1   | CR import script with diff report; update to 2026-11-06; one served copy and the copy test                                                                                                       | —                                        |
+| 2   | Rule addresses: paragraph ids, `?rule=`, linked cross-references and search results, French date and strings                                                                                     | 1                                        |
+| 3   | Rulings reading side: `RulingChange` and the deck's rulings from I-67's `CardRuling` _(re-pointed 2026-11-10: I-67 slice 6 loads the rulings daily, and I-37 slice 12 adds `DeckCard.oracleId`)_ | I-67 slice 6; I-37 slice 12              |
+| 4   | Deck rules API; builder panel with source labels, dates and file date; browser fetch retired                                                                                                     | 3                                        |
+| 5   | Rulings on the public deck page through the allowlist                                                                                                                                            | 4                                        |
+| 6   | Keyword-to-rule links, alias table and catalogue test                                                                                                                                            | 2, 4                                     |
+| 7   | Weekly freshness check for the CR, opening an issue _(the rulings file's freshness re-pointed 2026-11-10 to I-67 slice 11)_                                                                      | 1                                        |
+| 8   | Notes content model, citation contract test and drift rules                                                                                                                                      | 1, 3                                     |
+| 9   | Review record, "Report a rules error" and the public notes changelog                                                                                                                             | 8; I-38 slice 8                          |
+| 10  | First catalogue: Commander notes on 903.3d, 903.8, 903.9a and 903.9b                                                                                                                             | 9; owner names a judge reviewer          |
+| 11  | "Worth knowing in this deck" in the builder and on the public deck page                                                                                                                          | 5, 10                                    |
+| 12  | Offline and screen-reader inclusion                                                                                                                                                              | 5; I-19 slice 2; I-24 slice 3            |
+| 13  | Rules watch: CR and rulings changes as entries in I-48's per-deck report and notices (paid candidate)                                                                                            | 7, 8; I-48 slices 5 and 11; I-30 slice 0 |
+| 14  | Model retrieval of citations, with its golden set                                                                                                                                                | 8; owner decision                        |
 
 Slices 1 to 7 ship value alone and need no reviewer. Slice 1 comes first because every later citation needs a versioned rule to point at. Slices 2 and 6 are what no product read offers today: a card's keywords linked to numbered, versioned rules.
 

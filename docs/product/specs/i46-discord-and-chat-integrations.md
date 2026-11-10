@@ -181,25 +181,25 @@ A schema test fails if any column holds a Discord user id, a username, message t
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                        | Depends on                                     |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| 1   | Preview contract for every public page: full tags, `theme-color`, byte budgets, art credit, PNG default, crawler route and conformance tests | —                                              |
-| 2   | Deck previews switch to `/og/deck/{id}` with dimensions, alt and `?v=`                                                                       | 1; I-36 slice 2                                |
-| 3   | `/oembed` author line and the Discord component embed on deck pages                                                                          | 1                                              |
-| 4   | Chat deck formatter: a pure function from the public projection to a Discord message, with limit tests                                       | I-36 slice 1                                   |
-| 5   | Deck-update feeds by webhook on explicit publish                                                                                             | 4; I-63 slices 1 to 3 for the failure notice   |
-| 6   | App skeleton: signed endpoint, `PING`, `/help`, `/privacy`, `/settings`, `DiscordGuildSettings`, install link kept unlisted                  | I-38 slice 6                                   |
-| 7   | Shared rate limits on commands and Discord 429 handling                                                                                      | 6; the shared limiter of I-36 slice 11 or I-05 |
-| 8   | `/deck`, with the determinism and visibility tests                                                                                           | 4, 7                                           |
-| 9   | `/bracket-check` with declared and estimated brackets and the rules date                                                                     | 8; I-28 slice 7                                |
-| 10  | `/combo` with Commander Spellbook credit                                                                                                     | 8                                              |
-| 11  | `/lineup` for two to six decks                                                                                                               | 9; I-15 slice 4 for prompts only               |
-| 12  | `/gamenight` native poll                                                                                                                     | 7                                              |
-| 13  | `/card` Commander facts with local autocomplete                                                                                              | 7                                              |
-| 14  | Install and command counters                                                                                                                 | 6; I-39 slice 10                               |
-| 15  | Verification and public install link: terms and privacy links, team, Stripe identity                                                         | 6; I-38 slices 6 and 7; owner action           |
-| —   | `/pod` and account linking                                                                                                                   | Owned by I-23 slices 1 and 3                   |
-| —   | Store night line-ups by webhook                                                                                                              | Owned by I-41; reuses slice 5                  |
+| #   | Slice                                                                                                                                        | Depends on                                   |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| 1   | Preview contract for every public page: full tags, `theme-color`, byte budgets, art credit, PNG default, crawler route and conformance tests | —                                            |
+| 2   | Deck previews switch to `/og/deck/{id}` with dimensions, alt and `?v=`                                                                       | 1; I-36 slice 2                              |
+| 3   | `/oembed` author line and the Discord component embed on deck pages                                                                          | 1                                            |
+| 4   | Chat deck formatter: a pure function from the public projection to a Discord message, with limit tests                                       | I-36 slice 1                                 |
+| 5   | Deck-update feeds by webhook on explicit publish                                                                                             | 4; I-63 slices 1 to 3 for the failure notice |
+| 6   | App skeleton: signed endpoint, `PING`, `/help`, `/privacy`, `/settings`, `DiscordGuildSettings`, install link kept unlisted                  | I-38 slice 6                                 |
+| 7   | Shared rate limits on commands and Discord 429 handling _(the store is I-05 M2's; one owner, decided 2026-11-10)_                            | 6; I-05 M2's shared limiter                  |
+| 8   | `/deck`, with the determinism and visibility tests                                                                                           | 4, 7                                         |
+| 9   | `/bracket-check` with declared and estimated brackets and the rules date                                                                     | 8; I-28 slice 7                              |
+| 10  | `/combo` with Commander Spellbook credit                                                                                                     | 8                                            |
+| 11  | `/lineup` for two to six decks                                                                                                               | 9; I-15 slice 4 for prompts only             |
+| 12  | `/gamenight` native poll                                                                                                                     | 7                                            |
+| 13  | `/card` Commander facts with local autocomplete                                                                                              | 7                                            |
+| 14  | Install and command counters                                                                                                                 | 6; I-39 slice 10                             |
+| 15  | Verification and public install link: terms and privacy links, team, Stripe identity                                                         | 6; I-38 slices 6 and 7; owner action         |
+| —   | `/pod` and account linking                                                                                                                   | Owned by I-23 slices 1 and 3                 |
+| —   | Store night line-ups by webhook                                                                                                              | Owned by I-41; reuses slice 5                |
 
 Slice 1 ships alone and fixes what every chat app shows today. Slices 1 to 5 need no bot and no Discord policy review. Slice 11 is the differentiator; it is worth shipping only after slice 9 can show an estimate.
 
