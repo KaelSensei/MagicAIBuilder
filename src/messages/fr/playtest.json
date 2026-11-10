@@ -110,6 +110,7 @@
   "recordResult": "Comment ça s'est passé ?",
   "recording": "Enregistrement…",
   "recordFailed": "Enregistrement impossible",
+  "recordBlockedByMulligan": "Termine d’abord ton mulligan.",
   "skipRecording": "Passer",
   "result": {
     "win": "Victoire",

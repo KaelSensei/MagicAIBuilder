@@ -81,6 +81,17 @@ function start() {
   fireEvent.click(screen.getByRole("button", { name: /draw opening hand/i }));
 }
 
+/** Settles a pending one-card bottom choice with the first card offered. */
+function bottomFirstCard() {
+  const choice = screen.getByRole("group", {
+    name: /choose 1 card to put on the bottom/i,
+  });
+  fireEvent.click(within(choice).getAllByRole("button", { pressed: false })[0]);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Put 1 card on the bottom" })
+  );
+}
+
 describe("PlaytestModal", () => {
   beforeEach(() => {
     usePlaytestStore.setState({ engine: null, isActive: false, setup: null });
@@ -286,6 +297,32 @@ describe("PlaytestModal", () => {
   describe("recording a game", () => {
     afterEach(() => {
       vi.restoreAllMocks();
+    });
+
+    // During the choice the hand still holds seven cards, so a result recorded
+    // then would count the cards still to bottom as extra cards seen.
+    it("blocks recording a result until the mulligan's bottom choice is made", () => {
+      renderModal(makeDeck("modern"));
+      start();
+      const results = () =>
+        ["Win", "Loss", "Draw"].map((name) =>
+          screen.getByRole("button", { name })
+        );
+
+      fireEvent.click(screen.getByRole("button", { name: /mulligan/i }));
+
+      for (const button of results()) {
+        expect(button).toBeDisabled();
+        expect(button).toHaveAccessibleDescription(
+          "Finish your mulligan first."
+        );
+      }
+      expect(screen.getByRole("button", { name: "Skip" })).toBeEnabled();
+
+      bottomFirstCard();
+
+      for (const button of results()) expect(button).toBeEnabled();
+      expect(screen.queryByText("Finish your mulligan first.")).toBeNull();
     });
 
     // Casting the commander takes it from the command zone, not from the library.

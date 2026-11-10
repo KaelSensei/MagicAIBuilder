@@ -76,6 +76,10 @@ function countCardsOutsideLibrary(engine: PlaytestEngine): number {
  * Reads draw-progression evidence from a playtest state, so every view counts
  * the kept hand under the same mulligan rule and the cards seen the same way.
  *
+ * While a London mulligan's bottom choice is pending, the cards still to
+ * bottom are going back to the library (CR 103.5), so they are left out of the
+ * cards seen; otherwise they would read as extra cards.
+ *
  * @param engine - current in-memory playtest state
  * @returns cards seen, extra cards seen, and the strongest relevant verdict
  */
@@ -86,7 +90,10 @@ export function analyzeEngineDrawProgress(
     turn: engine.turn,
     mulliganCount: engine.mulliganCount,
     firstMulliganFree: engine.firstMulliganFree,
-    cardsOutsideLibrary: countCardsOutsideLibrary(engine),
+    cardsOutsideLibrary: Math.max(
+      0,
+      countCardsOutsideLibrary(engine) - engine.cardsToBottom
+    ),
     libraryCount: engine.library.length,
   });
 }

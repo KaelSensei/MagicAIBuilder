@@ -214,6 +214,10 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 cardsSeen={drawEvidence?.cardsSeen ?? 0}
                 additionalCardsSeen={drawEvidence?.additionalCardsSeen ?? 0}
                 onRecorded={handleClose}
+                // The counts are not settled until the bottom choice is made.
+                blockedReason={
+                  choosingBottom ? t("recordBlockedByMulligan") : undefined
+                }
               />
             )}
             <button
