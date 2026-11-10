@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { isCommanderSlug } from "@/lib/meta/fetch";
 import { hreflangPaths, localePath, siteUrl } from "./alternates";
+import { isIndexableProfile } from "./index-policy";
 
 /**
  * Sitemap construction, kept separate from the route so it can be tested
@@ -31,6 +32,8 @@ export interface PublicDeck {
 export interface PublicProfile {
   readonly username: string;
   readonly updatedAt: Date;
+  /** Decks the owner marked `isPublic`, the only ones the profile page lists. */
+  readonly publicDeckCount: number;
 }
 
 /** A commander with at least one public deck. */
@@ -84,6 +87,9 @@ function entryFor(
 /**
  * Every URL this site wants indexed.
  *
+ * A profile is listed only while it shows a public deck, the same rule its
+ * page uses to declare `noindex` (see `isIndexableProfile`).
+ *
  * @param sources Public records already read from the database.
  * @returns Sitemap entries, home page first.
  */
@@ -93,8 +99,10 @@ export function buildSitemap(sources: SitemapSources): MetadataRoute.Sitemap {
     ...sources.decks.map((deck) =>
       entryFor(`/deck/${deck.id}`, deck.updatedAt, "weekly", 0.7)
     ),
-    ...sources.profiles.map((profile) =>
-      entryFor(`/u/${profile.username}`, profile.updatedAt, "weekly", 0.6)
+    ...sources.profiles.flatMap((profile) =>
+      isIndexableProfile(profile.publicDeckCount)
+        ? [entryFor(`/u/${profile.username}`, profile.updatedAt, "weekly", 0.6)]
+        : []
     ),
     ...sources.commanders.map((commander) =>
       entryFor(

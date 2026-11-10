@@ -70,12 +70,21 @@ async function readPublicDecks(): Promise<readonly PublicDeck[]> {
   );
 }
 
-/** Users who have claimed a profile slug; `/u/<username>` is public. */
+/**
+ * Users who have claimed a profile slug; `/u/<username>` is public.
+ *
+ * Each carries its count of public decks, the decks its page lists, so that
+ * `buildSitemap` can leave out a profile with nothing to show.
+ */
 async function readPublicProfiles(): Promise<readonly PublicProfile[]> {
   return readOrReport("publicProfiles", async () => {
     const users = await prisma.user.findMany({
       where: { username: { not: null } },
-      select: { username: true, updatedAt: true },
+      select: {
+        username: true,
+        updatedAt: true,
+        _count: { select: { decks: { where: { isPublic: true } } } },
+      },
     });
 
     // `username` is nullable in the schema; the filter above narrows the rows
@@ -83,7 +92,13 @@ async function readPublicProfiles(): Promise<readonly PublicProfile[]> {
     return users.flatMap((user) =>
       user.username === null
         ? []
-        : [{ username: user.username, updatedAt: user.updatedAt }]
+        : [
+            {
+              username: user.username,
+              updatedAt: user.updatedAt,
+              publicDeckCount: user._count.decks,
+            },
+          ]
     );
   });
 }
