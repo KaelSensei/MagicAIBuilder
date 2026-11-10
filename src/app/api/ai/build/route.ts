@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { mockDeck } from "./mock-deck";
 import { validateGeneratedDeck } from "@/lib/ai/generated-deck-validation";
+import { verifyGeneratedDeck } from "@/lib/ai/generated-deck-legality";
 import {
   createDeckPlan,
   describeBracket,
@@ -22,6 +23,7 @@ import type {
   BuildEvent,
   BuildRequest,
   BuildSource,
+  DeckCorrection,
 } from "./types";
 
 export const runtime = "nodejs";
@@ -206,7 +208,8 @@ async function callOpenAI(
 function streamDeck(
   emit: (event: BuildEvent) => void,
   deck: AIDeckResponse,
-  source: BuildSource
+  source: BuildSource,
+  corrections: readonly DeckCorrection[]
 ): void {
   emit({ type: "commander", name: deck.commander });
   emit({ type: "status", message: "Building card list…" });
@@ -229,7 +232,7 @@ function streamDeck(
     });
   }
 
-  emit({ type: "done", totalCards: total, source });
+  emit({ type: "done", totalCards: total, source, corrections });
 }
 
 /** Narrows the validated bracket number to the Bracket union without a cast. */
@@ -334,7 +337,16 @@ export async function POST(request: Request) {
           );
         }
 
-        streamDeck(emit, deck, source);
+        // Card data, not the model, decides what reaches the player: illegal
+        // cards are repaired and every change rides on the "done" event.
+        const verdict = await verifyGeneratedDeck(deck);
+        if (verdict.status === "rejected") {
+          throw new Error(
+            `Generated deck rejected: ${verdict.reasons.join(" ")}`
+          );
+        }
+
+        streamDeck(emit, verdict.deck, source, verdict.corrections);
       } catch (error) {
         // The cause is logged; the client gets a fixed line so provider
         // errors (quota, model names, stack fragments) never reach the UI.

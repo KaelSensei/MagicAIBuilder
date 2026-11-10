@@ -246,6 +246,51 @@ describe("useAIDeckBuild", () => {
     vi.unstubAllGlobals();
   });
 
+  it("returns the card-data corrections carried by the done event", async () => {
+    const corrections = [
+      {
+        action: "removed",
+        name: "Lightning Bolt",
+        quantity: 1,
+        reason: "outside_color_identity",
+      },
+      { action: "added", name: "Island", quantity: 1, reason: "fill_to_size" },
+    ];
+    const events = [
+      JSON.stringify({
+        type: "card",
+        name: "Island",
+        category: "land",
+        quantity: 99,
+      }),
+      JSON.stringify({
+        type: "done",
+        totalCards: 99,
+        source: "ai",
+        corrections,
+      }),
+    ];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, body: makeStream(events) })
+    );
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["U"],
+        strategy: "control",
+        bracket: 2,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(built).toEqual(expect.objectContaining({ corrections }));
+    vi.unstubAllGlobals();
+  });
+
   it("errors when the stream is cut short instead of importing a partial deck", async () => {
     const events = [
       JSON.stringify({ type: "commander", name: "Atraxa, Praetors' Voice" }),

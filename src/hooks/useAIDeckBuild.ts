@@ -4,6 +4,7 @@ import type {
   BuildEvent,
   BuildRequest,
   BuildSource,
+  DeckCorrection,
 } from "@/app/api/ai/build/types";
 
 // ---------------------------------------------------------------------------
@@ -27,6 +28,8 @@ export interface BuildResult {
   commander: string | null;
   cards: BuildCard[];
   source: BuildSource;
+  /** What the server's card-data check changed in the model's list, for the player to see. */
+  corrections: readonly DeckCorrection[];
 }
 
 export interface AIDeckBuildState {
@@ -60,6 +63,7 @@ type BuildAcc = {
   messages: string[];
   totalCards: number | null;
   source: BuildSource | null;
+  corrections: readonly DeckCorrection[];
 };
 
 /** Total copies accumulated so far, so the progress bar counts cards not entries. */
@@ -106,6 +110,7 @@ function processLines(
       case "done":
         acc.totalCards = event.totalCards ?? countCopies(acc.cards);
         acc.source = event.source ?? "ai";
+        acc.corrections = event.corrections ?? [];
         onUpdate(acc);
         return true;
       case "error":
@@ -127,6 +132,7 @@ async function processBuildStream(
     messages: [],
     totalCards: null,
     source: null,
+    corrections: [],
   };
   let buffer = "";
 
@@ -200,6 +206,7 @@ export function useAIDeckBuild() {
           commander: acc.commander,
           cards: acc.cards,
           source: acc.source ?? "ai",
+          corrections: acc.corrections,
         };
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return null;

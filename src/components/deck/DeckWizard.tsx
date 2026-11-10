@@ -38,7 +38,8 @@ import { categorizeCard } from "@/lib/deck/categories";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import type { CardCategory, DeckCard } from "@/lib/deck/types";
 import { createDeckPlan } from "@/lib/ai/deck-plan";
-import type { BuildRequest } from "@/app/api/ai/build/types";
+import type { BuildRequest, DeckCorrection } from "@/app/api/ai/build/types";
+import { GeneratedDeckCorrections } from "./GeneratedDeckCorrections";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -781,6 +782,12 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   // dialog looks frozen for the whole minute.
   const [importedCount, setImportedCount] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
+  // A deck the server's card-data check changed: the player reads the changes
+  // before the wizard opens it.
+  const [correctedDeck, setCorrectedDeck] = useState<{
+    readonly deckId: string;
+    readonly corrections: readonly DeckCorrection[];
+  } | null>(null);
 
   const { state: buildState, build, reset: resetBuild } = useAIDeckBuild();
   const { createDeck, setActiveDeck, addDeckCard, setCommander } =
@@ -803,6 +810,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       setIsDemoDeck(false);
       setImportedCount(0);
       setImportTotal(0);
+      setCorrectedDeck(null);
       resetBuild();
     }
   }, [open, resetBuild]);
@@ -887,6 +895,10 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
       setImportedCount(0);
       await importCardsInBatches(entries, addDeckCard, setImportedCount);
 
+      if (result.corrections.length > 0) {
+        setCorrectedDeck({ deckId, corrections: result.corrections });
+        return;
+      }
       onComplete(deckId);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Deck build failed";
@@ -969,33 +981,42 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
               style={{ minHeight: 360 }}
             >
               {isBuilding ? (
-                /* Loading / streaming step */
+                /* Loading / streaming step, then the card-data corrections */
                 <div className="flex flex-col items-center justify-center flex-1 py-8">
-                  <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-8">
-                    {t("wizard.aiBuilding")}
-                  </h2>
-                  <StepLoading
-                    statusMessages={buildState.statusMessages}
-                    commander={buildState.commander}
-                    cardCount={countCopies(buildState.cards)}
-                    totalCards={buildState.totalCards}
-                    isDemoDeck={isDemoDeck}
-                    importedCount={importedCount}
-                    importTotal={importTotal}
-                    error={buildError}
-                  />
-                  {buildError && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsBuilding(false);
-                        setBuildError(null);
-                        resetBuild();
-                      }}
-                      className="mt-6 text-sm text-[var(--accent-text)] hover:underline"
-                    >
-                      {t("wizard.tryAgain")}
-                    </button>
+                  {correctedDeck ? (
+                    <GeneratedDeckCorrections
+                      corrections={correctedDeck.corrections}
+                      onOpenDeck={() => onComplete(correctedDeck.deckId)}
+                    />
+                  ) : (
+                    <>
+                      <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-8">
+                        {t("wizard.aiBuilding")}
+                      </h2>
+                      <StepLoading
+                        statusMessages={buildState.statusMessages}
+                        commander={buildState.commander}
+                        cardCount={countCopies(buildState.cards)}
+                        totalCards={buildState.totalCards}
+                        isDemoDeck={isDemoDeck}
+                        importedCount={importedCount}
+                        importTotal={importTotal}
+                        error={buildError}
+                      />
+                      {buildError && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsBuilding(false);
+                            setBuildError(null);
+                            resetBuild();
+                          }}
+                          className="mt-6 text-sm text-[var(--accent-text)] hover:underline"
+                        >
+                          {t("wizard.tryAgain")}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               ) : (
