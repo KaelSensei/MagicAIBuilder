@@ -1,7 +1,7 @@
 // Deck validation: banlist, Game Changers, color identity
 import type { DeckCard, Deck } from "./types";
 import { getCompanionDeckWarnings } from "./companion";
-import { getFormatConfig } from "./formats";
+import { getFormatConfig, isDeckFormat } from "./formats";
 import { PIP_COLORS } from "./mana-alignment";
 
 export interface ValidationResult {
@@ -51,11 +51,25 @@ function checkCardCopyLimit(card: DeckCard, deck: Deck, maxCopies: number): stri
     : `${card.name} exceeds the ${maxCopies}-copy limit`;
 }
 
+/** The message for a deck stored with a format this build does not support. */
+function unsupportedFormatError(format: string): string {
+  return `Unsupported format: ${format}`;
+}
+
 /** Validate whether a card can be added to a deck */
 export function validateCardForDeck(
   card: DeckCard,
   deck: Deck
 ): CardValidationResult {
+  if (!isDeckFormat(deck.format)) {
+    return {
+      canAdd: false,
+      reason: unsupportedFormatError(deck.format),
+      isBanned: card.isBanned,
+      isColorViolation: false,
+      isGameChanger: card.isGameChanger,
+    };
+  }
   const config = getFormatConfig(deck.format);
   const errors: string[] = [];
   let isColorViolation = false;
@@ -153,8 +167,19 @@ function checkSingleton(allCards: DeckCard[], maxCopies: number, errors: string[
   }
 }
 
-/** Full deck validation */
+/**
+ * Full deck validation. A deck stored with a format this build does not
+ * support is reported as such: no other format's rules are applied to it.
+ */
 export function validateDeck(deck: Deck): ValidationResult {
+  if (!isDeckFormat(deck.format)) {
+    return {
+      valid: false,
+      errors: [unsupportedFormatError(deck.format)],
+      warnings: [],
+      companionWarnings: [],
+    };
+  }
   const config = getFormatConfig(deck.format);
   const errors: string[] = [];
   const warnings: string[] = [];
