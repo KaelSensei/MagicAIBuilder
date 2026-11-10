@@ -28,9 +28,7 @@ vi.mock("@/lib/db/deck-api", () => ({
   updateCardMaybeboard: vi.fn(),
   removeAllCards: vi.fn(),
   lookupCardCache: vi.fn(),
-  storeCardCache: vi.fn(),
   lookupSearchCache: vi.fn(),
-  storeSearchCache: vi.fn(),
 }));
 
 import { useDeckStore } from "./store";

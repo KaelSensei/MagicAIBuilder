@@ -296,17 +296,20 @@ model DeckCard {
   @@index([deckId])
 }
 
+/// Shared cache of Scryfall cards (24h TTL), written only by the server from
+/// its own Scryfall requests (src/lib/scryfall/shared-cache.ts).
 model CardCache {
-  scryfallId String   @id
-  data       Json
+  scryfallId String   @id // "srv1:<scryfall id>"; rows without the prefix are retired
+  data       Json // ScryfallCard
   cachedAt   DateTime @default(now())
 
   @@index([cachedAt])
 }
 
-/// Cache for Scryfall search results (1h TTL)
+/// Shared cache of Scryfall search pages (1h TTL), written only by the server
+/// from its own Scryfall requests (src/lib/scryfall/shared-cache.ts).
 model ScryfallSearchCache {
-  cacheKey String   @id // sha256(query|page)
+  cacheKey String   @id // "srv1:" + sha256(multilingual|page|query); rows without the prefix are retired
   data     Json // ScryfallSearchResponse
   cachedAt DateTime @default(now())
 

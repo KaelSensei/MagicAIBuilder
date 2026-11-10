@@ -24,6 +24,8 @@ export interface ScryfallCard {
   printed_name?: string; printed_type_line?: string; printed_text?: string;
 }
 export interface ScryfallSearchResponse { object: "list"; total_cards: number; has_more: boolean; next_page?: string; data: ScryfallCard[]; }
+/** Empty search response — Scryfall answers 404 when a valid query matches nothing */
+export const EMPTY_SEARCH_RESPONSE: ScryfallSearchResponse = { object: "list", total_cards: 0, has_more: false, data: [] };
 export interface ScryfallError { object: "error"; code: string; status: number; details: string; }
 export interface ScryfallAutocompleteResponse { object: "catalog"; total_values: number; data: string[]; }
 export interface ScryfallCollectionIdentifier { id?: string; name?: string; set?: string; collector_number?: string; }

@@ -14,9 +14,7 @@ import {
   updateCardZone,
   updateCardMaybeboard,
   removeAllCards,
-  storeSearchCache,
 } from "@/lib/db/deck-api";
-import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
 
 function mockFetch(data: unknown, ok = true, status = 200) {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
@@ -261,11 +259,11 @@ describe("removeAllCards", () => {
   });
 });
 
-// Test lookupCardCache and storeCardCache
-import { lookupCardCache, storeCardCache } from "@/lib/db/deck-api";
+// Test lookupCardCache and lookupSearchCache
+import { lookupCardCache, lookupSearchCache } from "@/lib/db/deck-api";
 
 describe("lookupCardCache", () => {
-  it("returns null when not in cache", async () => {
+  it("returns null when the answer carries no data", async () => {
     mockFetch({ hit: false }, true, 200);
     const result = await lookupCardCache("missing-id");
     expect(result).toBeNull();
@@ -274,7 +272,13 @@ describe("lookupCardCache", () => {
   it("returns data when cache hit", async () => {
     mockFetch({ hit: true, data: { id: "card-1", name: "Sol Ring" } }, true, 200);
     const result = await lookupCardCache("card-1");
-    expect((result as { id: string })?.id).toBe("card-1");
+    expect(result).toEqual({ id: "card-1", name: "Sol Ring" });
+  });
+
+  it("returns data the server has just fetched to fill a miss", async () => {
+    mockFetch({ hit: false, data: { id: "card-1", name: "Sol Ring" } }, true, 200);
+    const result = await lookupCardCache("card-1");
+    expect(result).toEqual({ id: "card-1", name: "Sol Ring" });
   });
 
   it("returns null on fetch error", async () => {
@@ -290,39 +294,25 @@ describe("lookupCardCache", () => {
   });
 });
 
-describe("storeCardCache", () => {
-  it("POSTs to cache endpoint", async () => {
-    mockFetch({});
-    await storeCardCache("card-id", { name: "Sol Ring" });
+describe("lookupSearchCache", () => {
+  it("reads the page through the search cache route", async () => {
+    mockFetch({ hit: false, data: { object: "list", data: [] } });
+    const result = await lookupSearchCache("t:goblin", 2);
     const call = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(call[0]).toContain("/api/cache/cards");
-    expect(call[1].method).toBe("POST");
+    expect(call[0]).toBe("/api/cache/search?query=t%3Agoblin&page=2");
+    expect(call[1]).toBeUndefined();
+    expect(result).toEqual({ object: "list", data: [] });
   });
 
-  it("does not throw on fetch error", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
-    await expect(storeCardCache("id", {})).resolves.toBeUndefined();
-  });
-});
-
-describe("storeSearchCache", () => {
-  it("POSTs the search result to the cache endpoint", async () => {
-    mockFetch({});
-    await storeSearchCache("t:goblin", 1, { cards: ["a"] });
+  it("asks for multilingual results when told to", async () => {
+    mockFetch({ hit: true, data: {} });
+    await lookupSearchCache("lang:fr t:goblin", 1, true);
     const call = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(call[0]).toContain("/api/cache/search");
-    expect(call[1].method).toBe("POST");
+    expect(call[0]).toContain("multilingual=1");
   });
 
-  it("skips the POST when the payload exceeds the server cache limit", async () => {
-    mockFetch({});
-    const oversized = { blob: "x".repeat(MAX_SEARCH_CACHE_BYTES + 1) };
-    await storeSearchCache("t:goblin", 1, oversized);
-    expect(global.fetch).not.toHaveBeenCalled();
-  });
-
-  it("does not throw on fetch error", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
-    await expect(storeSearchCache("q", 1, {})).resolves.toBeUndefined();
+  it("returns null when the server cannot answer", async () => {
+    mockFetch({ error: "Scryfall did not answer" }, false, 502);
+    await expect(lookupSearchCache("t:goblin", 1)).resolves.toBeNull();
   });
 });

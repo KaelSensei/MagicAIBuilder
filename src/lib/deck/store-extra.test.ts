@@ -64,7 +64,6 @@ vi.mock("@/lib/db/deck-api", () => ({
   updateCardZone: vi.fn().mockResolvedValue({}),
   removeAllCards: vi.fn().mockResolvedValue(undefined),
   lookupCardCache: vi.fn().mockResolvedValue(null),
-  storeCardCache: vi.fn(),
 }));
 
 vi.mock("@/hooks/useToast", () => ({

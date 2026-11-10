@@ -7,9 +7,7 @@ vi.mock("@/lib/logger", () => ({
 // Mock deck-api cache functions before importing client
 vi.mock("@/lib/db/deck-api", () => ({
   lookupCardCache: vi.fn(async () => null),
-  storeCardCache: vi.fn(async () => undefined),
   lookupSearchCache: vi.fn(async () => null),
-  storeSearchCache: vi.fn(async () => undefined),
 }));
 
 import {

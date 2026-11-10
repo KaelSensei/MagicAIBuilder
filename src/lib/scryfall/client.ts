@@ -1,90 +1,50 @@
 // Scryfall API client with rate limiting (max 10 req/s = 100ms between requests)
-// Cards are cached in the DB via /api/cache/cards (TTL: 24h)
-// Search results are cached in the DB via /api/cache/search (TTL: 1h)
+// Cards by id and search pages are read through the shared server cache
+// (/api/cache/cards, 24h; /api/cache/search, 1h). Only the server writes it, from
+// Scryfall answers it fetched itself; this client never writes it back.
 import { forEachSequential } from "@/lib/async/sequential";
-import type {
-  ScryfallCard,
-  ScryfallSearchResponse,
-  ScryfallAutocompleteResponse,
-  ScryfallCollectionIdentifier,
-  ScryfallCollectionResponse,
-} from "./types";
 import {
-  lookupCardCache,
-  storeCardCache,
-  lookupSearchCache,
-  storeSearchCache,
-} from "@/lib/db/deck-api";
+  EMPTY_SEARCH_RESPONSE,
+  type ScryfallCard,
+  type ScryfallSearchResponse,
+  type ScryfallAutocompleteResponse,
+  type ScryfallCollectionIdentifier,
+  type ScryfallCollectionResponse,
+} from "./types";
+import { lookupCardCache, lookupSearchCache } from "@/lib/db/deck-api";
+import { isScryfallCard, isScryfallSearchResponse } from "./guards";
+import { resetScryfallQueue, scheduleScryfallRequest } from "./request-queue";
 import { buildLocalizedNamesQueries } from "./localized";
 import { logger } from "@/lib/logger";
 
 const SCRYFALL_BASE = "https://api.scryfall.com";
-const MIN_DELAY_MS = 100;
 
 const defaultHeaders = {
   "User-Agent": "MagicAIBuilder/1.0",
   Accept: "application/json",
 };
 
-// Detect if we're in a test environment (vitest sets globalThis.vi)
-function isTestMode(): boolean {
-  return typeof globalThis !== "undefined" && "vi" in globalThis;
-}
-
-// Serialized rate-limiting with async mutex (prevents concurrent request race)
-// In test mode (vi.useFakeTimers), bypass delay to avoid timeout issues
-let lastRequestTime = 0;
-let queue: Promise<void> = Promise.resolve();
-
 /**
  * Reset the rate limiter state (for tests only)
  * @internal
  */
 export function __resetRateLimiter() {
-  lastRequestTime = 0;
-  queue = Promise.resolve();
+  resetScryfallQueue();
 }
 
 function rateLimitedFetch(
   url: string,
   options?: RequestInit
 ): Promise<Response> {
-  const run = queue.then(async () => {
-    const now = Date.now();
-    const elapsed = now - lastRequestTime;
-    // Only apply delay in non-test environments (skip in test mode to avoid setTimeout issues)
-    if (elapsed < MIN_DELAY_MS && !isTestMode()) {
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, MIN_DELAY_MS - elapsed)
-      );
-    }
-    lastRequestTime = Date.now();
-
-    return fetch(url, {
+  return scheduleScryfallRequest(() =>
+    fetch(url, {
       ...options,
       headers: {
         ...defaultHeaders,
         ...options?.headers,
       },
-    });
-  });
-
-  // Handing the tail back to `queue` is what makes this a mutex. The previous
-  // version chained off `queue` but never reassigned it, so every concurrent
-  // caller found the same already-resolved promise and ran immediately: they
-  // read one `lastRequestTime`, waited the same delay, and then fired at
-  // Scryfall together — the 10 req/s ceiling the comment promises was never
-  // enforced.
-  //
-  // The tail must not reject, or one failed request would poison the chain for
-  // every request after it. Swallowing here only affects the ordering handle;
-  // `run` still carries the rejection to this call's own caller.
-  queue = run.then(
-    () => undefined,
-    () => undefined
+    })
   );
-
-  return run;
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -99,32 +59,26 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-/** Empty search response — Scryfall answers 404 when a valid query matches nothing */
-const EMPTY_SEARCH_RESPONSE: ScryfallSearchResponse = {
-  object: "list",
-  total_cards: 0,
-  has_more: false,
-  data: [],
-};
-
 /**
  * Search cards using Scryfall query syntax — results cached 1h.
  *
  * `includeMultilingual` must be set whenever the query carries a `lang:`
  * filter: Scryfall hides non-English cards from search without it, so the
- * filter alone returns nothing at all. The DB cache stays correct because the
- * flag is implied by the query text it always travels with.
+ * filter alone returns nothing at all. The flag is part of the cache key.
+ *
+ * The page is read through the shared cache, which the server fills from
+ * Scryfall on a miss. Only when the server cannot answer does the browser ask
+ * Scryfall itself, and it never stores that answer.
  */
 export async function searchCards(
   query: string,
   page = 1,
   includeMultilingual = false
 ): Promise<ScryfallSearchResponse> {
-  // Check cache first
   try {
-    const cached = await lookupSearchCache(query, page);
-    if (cached) {
-      return cached as ScryfallSearchResponse;
+    const cached = await lookupSearchCache(query, page, includeMultilingual);
+    if (isScryfallSearchResponse(cached)) {
+      return cached;
     }
   } catch {
     // Cache lookup failure is non-fatal — fall through to Scryfall
@@ -149,14 +103,7 @@ export async function searchCards(
       return EMPTY_SEARCH_RESPONSE;
     }
 
-    const data = await handleResponse<ScryfallSearchResponse>(response);
-
-    // Store in DB cache (fire-and-forget)
-    storeSearchCache(query, page, data).catch(() => {
-      /* non-fatal */
-    });
-
-    return data;
+    return await handleResponse<ScryfallSearchResponse>(response);
   } finally {
     logger.info("Scryfall search completed", "Scryfall search", {
       status,
@@ -171,12 +118,7 @@ export async function getCardByName(name: string): Promise<ScryfallCard> {
   const response = await rateLimitedFetch(
     `${SCRYFALL_BASE}/cards/named?${params}`
   );
-  const card = await handleResponse<ScryfallCard>(response);
-  // Cache the card by its ID for future lookups
-  storeCardCache(card.id, card).catch(() => {
-    /* non-fatal */
-  });
-  return card;
+  return handleResponse<ScryfallCard>(response);
 }
 
 /** Fuzzy card name lookup */
@@ -185,21 +127,19 @@ export async function getCardByNameFuzzy(name: string): Promise<ScryfallCard> {
   const response = await rateLimitedFetch(
     `${SCRYFALL_BASE}/cards/named?${params}`
   );
-  const card = await handleResponse<ScryfallCard>(response);
-  // Cache the card by its ID for future lookups
-  storeCardCache(card.id, card).catch(() => {
-    /* non-fatal */
-  });
-  return card;
+  return handleResponse<ScryfallCard>(response);
 }
 
-/** Get a single card by Scryfall ID — with DB cache (TTL 24h) */
+/**
+ * Get a single card by Scryfall ID — read through the shared cache (TTL 24h),
+ * which the server fills from Scryfall on a miss. Only when the server cannot
+ * answer does the browser ask Scryfall itself, and it never stores that answer.
+ */
 export async function getCardById(id: string): Promise<ScryfallCard> {
-  // Check DB cache first (only available in browser / server-rendered contexts)
   try {
     const cached = await lookupCardCache(id);
-    if (cached) {
-      return cached as ScryfallCard;
+    if (isScryfallCard(cached)) {
+      return cached;
     }
   } catch {
     // Cache lookup failure is non-fatal — fall through to Scryfall
@@ -210,14 +150,7 @@ export async function getCardById(id: string): Promise<ScryfallCard> {
   try {
     const response = await rateLimitedFetch(`${SCRYFALL_BASE}/cards/${id}`);
     status = response.status;
-    const card = await handleResponse<ScryfallCard>(response);
-
-    // Store in DB cache (fire-and-forget)
-    storeCardCache(id, card).catch(() => {
-      /* non-fatal */
-    });
-
-    return card;
+    return await handleResponse<ScryfallCard>(response);
   } finally {
     logger.info("Scryfall card lookup completed", "Scryfall card lookup", {
       status,

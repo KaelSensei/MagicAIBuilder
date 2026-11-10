@@ -1,67 +1,50 @@
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
-import { requireAuth } from "@/lib/auth/helpers";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
-import { readJsonBody, readRecord } from "@/lib/api/json-body";
-import { toJsonPayload } from "@/lib/api/json-payload";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import {
+  parseSearchCacheKey,
+  searchCacheRowKey,
+} from "@/lib/scryfall/shared-cache-keys";
+import { fetchSearchPage } from "@/lib/scryfall/server-fetch";
+import { readThrough, SEARCH_CACHE } from "@/lib/scryfall/shared-cache";
+import { readThroughResponse } from "../read-through-response";
 
-const WRITE_RATE_LIMIT = 60; // max cache writes
-const WRITE_RATE_WINDOW = 60_000; // per 60 seconds per user
+const FILL_RATE_LIMIT = 60; // max Scryfall fills
+const FILL_RATE_WINDOW = 60_000; // per 60 seconds per client IP
 
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
-
-/** Generate cache key from query and page */
-function generateCacheKey(query: string, page: number): string {
-  return createHash("sha256").update(`${query}|${page}`).digest("hex");
-}
-
-// GET /api/cache/search?query=<string>&page=<number> — lookup cached search result
-export async function GET(request: Request) {
+/**
+ * GET /api/cache/search?query=<string>&page=<1-100>&multilingual=1
+ *
+ * Read-through: serves the stored page, or fetches it from Scryfall, stores the
+ * server's own copy and serves that. The route has no write handler, so
+ * Next.js answers 405 to a POST: no client body can become a shared entry.
+ */
+export async function GET(request: Request): Promise<Response> {
   const startedAt = performance.now();
   let hit = false;
   let failed = false;
   try {
-    const { searchParams } = new URL(request.url);
-    const query = searchParams.get("query");
-    const pageStr = searchParams.get("page");
-    const page = pageStr ? Number.parseInt(pageStr, 10) : 1;
-
-    if (!query || query.length === 0 || Number.isNaN(page)) {
-      return NextResponse.json({ hit: false });
+    const parsed = parseSearchCacheKey(new URL(request.url).searchParams);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.reason }, { status: 400 });
     }
 
-    const cacheKey = generateCacheKey(query, page);
-
-    try {
-      const cached = await prisma.scryfallSearchCache.findUnique({
-        where: { cacheKey },
-      });
-
-      if (!cached) {
-        return NextResponse.json({ hit: false });
+    const { outcome, dbFailed } = await readThrough(
+      SEARCH_CACHE,
+      searchCacheRowKey(parsed.key),
+      {
+        allowFill: () =>
+          checkRateLimit(
+            `cache-fill-search:${getClientIp(request)}`,
+            FILL_RATE_LIMIT,
+            FILL_RATE_WINDOW
+          ),
+        fetchOwnCopy: () => fetchSearchPage(parsed.key),
       }
-
-      const age = Date.now() - new Date(cached.cachedAt).getTime();
-      if (age > CACHE_TTL_MS) {
-        // Stale — delete and report miss
-        await prisma.scryfallSearchCache.delete({ where: { cacheKey } });
-        return NextResponse.json({ hit: false });
-      }
-
-      hit = true;
-      return NextResponse.json({ hit: true, data: cached.data });
-    } catch (error) {
-      failed = true;
-      logger.error(
-        error instanceof Error ? error.message : "unknown",
-        "GET /api/cache/search",
-        { key: String(cacheKey).slice(0, 50) }
-      );
-      return NextResponse.json({ hit: false });
-    }
+    );
+    hit = outcome.kind === "hit";
+    failed = dbFailed;
+    return readThroughResponse(outcome);
   } finally {
     logger.info(
       "Scryfall search cache lookup completed",
@@ -71,72 +54,6 @@ export async function GET(request: Request) {
         failed,
         durationMs: Math.round(performance.now() - startedAt),
       }
-    );
-  }
-}
-
-// POST /api/cache/search — store a search result in the cache
-export async function POST(request: Request) {
-  const auth = await requireAuth();
-  if (auth.error) return auth.error;
-
-  const rl = checkRateLimit(
-    `cache-search:${auth.session.user.id}`,
-    WRITE_RATE_LIMIT,
-    WRITE_RATE_WINDOW
-  );
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Too many requests" },
-      {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
-      }
-    );
-  }
-
-  try {
-    const jsonBody = await readJsonBody(request);
-    if (!jsonBody.ok) return jsonBody.response;
-    const body = readRecord(jsonBody.value);
-    const query = typeof body.query === "string" ? body.query : "";
-    const { page, data } = body;
-
-    if (!query || !data || typeof page !== "number") {
-      return NextResponse.json(
-        { error: "query, page (number), and data are required" },
-        { status: 400 }
-      );
-    }
-
-    if (query.length === 0 || query.length > 1000) {
-      return NextResponse.json(
-        { error: "Query must be 1-1000 characters" },
-        { status: 400 }
-      );
-    }
-
-    const cacheKey = generateCacheKey(query, page);
-
-    if (JSON.stringify(data).length > MAX_SEARCH_CACHE_BYTES) {
-      return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-    }
-
-    const entry = await prisma.scryfallSearchCache.upsert({
-      where: { cacheKey },
-      update: { data: toJsonPayload(data), cachedAt: new Date() },
-      create: { cacheKey, data: toJsonPayload(data) },
-    });
-
-    return NextResponse.json(entry, { status: 201 });
-  } catch (error) {
-    logger.error(
-      error instanceof Error ? error.message : "unknown",
-      "POST /api/cache/search"
-    );
-    return NextResponse.json(
-      { error: "Failed to cache search result" },
-      { status: 500 }
     );
   }
 }
