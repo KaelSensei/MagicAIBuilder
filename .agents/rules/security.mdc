@@ -1,55 +1,54 @@
 ---
 alwaysApply: true
 ---
-# Security Rules for Cursor
 
-This repository contains a **React Native mobile app with JavaScript/TypeScript code** and uses **HTML scraping, SQLite, and local file storage**.  
-Cursor (or any AI assistant) must treat **security and user privacy as first‑class requirements**, even though this is a personal project.
+# Security
 
-Before any branch is considered ready for merge, the following rules **must be enforced**.
+MagicAIBuilder is a public web app with user accounts, personal API keys (`/api/v1`), moderation
+and paid AI calls. Treat every request as hostile until it is parsed and authorised.
 
-## General Security Principles
+## Every route handler
 
-- Never introduce hidden logic, obfuscated code, or unnecessary indirection.
-- Avoid dynamic code execution (`eval`, `Function`, dynamic imports, unsafe reflection).
-- Avoid uncontrolled access to the filesystem or device APIs.
-- Prefer explicit, readable, auditable logic over clever or compact code.
-- Assume all dependencies may be compromised unless verified.
+1. **Authenticate** when the action needs a user: `requireAuth` or `requireDeckOwner`
+   (`src/lib/auth/helpers.ts`), `authenticateApiKey` and `requireApiScope` for API keys
+   (`src/lib/api/authenticate.ts`), `requireModerator` for moderation
+   (`src/lib/auth/require-moderator.ts`).
+2. **Authorise by ownership.** Query with the caller's user id. Never trust an owner id from the
+   body or the URL. Never return another user's private data, not even in an error message.
+3. **Parse input with Zod**, with limits on string length, array size and quantities.
+4. **Return an allowlist of fields**, never a whole Prisma row.
+5. **Rate-limit** expensive or abusable endpoints (AI, import, provider proxies) with
+   `checkRateLimit` (`src/lib/rate-limit.ts`).
+6. **Test** the signed-out case and the other-user case for every new or changed handler.
 
+## Secrets
 
-## JavaScript / TypeScript / React Native Security
+- Secrets live in environment variables read by server code only. Never give a secret a
+  `NEXT_PUBLIC_` name. Model API keys never reach the browser.
+- Never log secrets, tokens, cookies, API keys or whole request bodies. Log through
+  `src/lib/logger.ts`.
 
-- No post-install scripts, shell execution, or arbitrary filesystem access unless **strictly required** for the app.
-- No new network calls to unknown or undocumented endpoints.  
-  - Allowed domains should stay limited to **Moxfield** (for scraping HTML/JSON) and **Scryfall** (for images), plus standard Android/React Native tooling.
-- Avoid dynamic requires/imports based on user input.
-- Avoid prototype pollution vectors and unsafe object merging.
-- Keep dependencies **minimal and well-known**; prefer built‑ins and lightweight libs.
-- Do not introduce any background tracking, analytics, or hidden telemetry.
+## Outbound requests
 
-## Local Data & Offline Behavior
+- The server calls only documented provider hosts, through their adapter. Never fetch a URL taken
+  from user input (SSRF). The card-image proxy accepts `https://cards.scryfall.io/…` only.
+- A new host the browser must reach goes into the Content Security Policy in
+  `src/lib/security-headers.ts`, with the reason in the PR.
 
-- SQLite is the **single source of truth**; never leak or sync data to a remote backend.
-- Local image caching should:
-  - Store only card images and app‑needed assets.
-  - Avoid writing arbitrary user-provided paths.
-  - Clean up safely when needed (no recursive deletes outside the app’s sandbox).
-- Scraping logic must treat remote HTML as **untrusted input**:
-  - Validate and sanitize scraped fields before inserting into SQLite.
-  - Handle missing/changed fields defensively (no crashes on bad data).
+## Code
 
-## Merge Safety Rules
+- No `eval`, no `new Function`, no dynamic import built from input.
+- No `dangerouslySetInnerHTML` with user or provider data. React escapes everything else.
+- Prefer well-known dependencies. CI blocks on a high-severity `pnpm audit --prod` finding.
+- No analytics, tracking or telemetry without the owner's decision.
 
-- Never approve or suggest merging code that has not passed security review.
-- Never auto-merge changes involving execution, permissions, or external calls.
-- If a potential vulnerability or suspicious pattern is detected, highlight it explicitly and explain the risk.
+## Agents
 
-## Cursor Behavior
+- Never weaken an auth check, a rate limit, the CSP or the guard that keeps the Playwright auth
+  bypass dead in production (`PLAYWRIGHT_TEST` with `NODE_ENV !== "production"`) to make something
+  pass.
+- Run `/security-review` on changes to auth, sessions, API keys, uploads or provider proxies.
+- Report a suspected vulnerability in your answer: the file, the risk and the fix. Do not fix an
+  unrelated vulnerability silently in another PR; give it its own `fix/` PR.
 
-- Always reason explicitly about security when modifying code.
-- Prefer defensive coding patterns.
-- When in doubt, **pause and ask** instead of guessing.
-- Security > convenience > performance.
-
-These rules exist to prevent backdoors, malware, supply-chain attacks, privacy leaks, and critical vulnerabilities.
-They must be applied automatically and consistently.
+More: `docs/security/security.md` and `docs/security/production-checklist.md`.

@@ -1,129 +1,57 @@
 ---
 alwaysApply: true
 ---
-# General Principles and Project Philosophy
 
-These rules define the core philosophy and mental model for **MagicTheOfflining** - a personal, offline-first React Native app for managing Magic: The Gathering Commander decks.
+# General principles: MagicAIBuilder
 
-## Project Philosophy
+MagicAIBuilder is a public web app for building, analysing, playtesting and sharing Magic: The
+Gathering Commander decks. It has a backend (Next.js route handlers, PostgreSQL through Prisma),
+user accounts, and AI-assisted features. AI agents write most of its code, so every rule here is
+meant to be checked, not interpreted.
 
-- This is a **personal project**, not production-grade enterprise software
-- Prefer **simple solutions over clever ones**
-- Avoid over-engineering
-- If something can be done locally, **do it locally**
-- Always assume the app must work **offline**
-- This project is supposed to be **fun**, **useful**, and **easy to maintain**
-- Keep it dumb. Keep it working. 😄
+## Order of authority
 
-## Mental Model
+1. The owner's explicit instructions.
+2. `CLAUDE.md`: branch flow, protected docs, pre-PR gate.
+3. The accepted ADRs in `docs/adr/` (index: `docs/adr/README.md`) and
+   `docs/engineering/architecture.md`.
+4. These rules, then the skills in `.agents/skills/`.
 
-Cursor must assume:
+When two sources disagree, follow the higher one and report the conflict in your answer. Never
+resolve it silently.
 
-- **Scraping is allowed and mastered** - HTML scraping and DOM parsing are core skills
-- **Data comes from unreliable HTML** - Moxfield page structure must be understood, and data must be normalized
-- **Everything important is stored locally** - SQLite and local filesystem are the source of truth
-- **Moxfield is read-only** - Scraping only, no synchronization back to Moxfield
+## Principles
 
-This app is:
+- **Optimise for change.** The next reader is another agent with no memory of your session.
+  Prefer simple, explicit, well-named code over clever code.
+- **Speak the domain.** Names in code, tests and docs come from the glossary in `CONTEXT.md`. A
+  word that means different things in two contexts (a "card" in the catalog, in a deck, in a
+  playtest) gets a qualified name.
+- **The Comprehensive Rules are the authority on game rules.** Cite the rule number in a comment
+  (`// CR 903.5b: …`). The code loads `src/lib/rules/data/MagicCompRules-20260807.txt`.
+- **The server owns the rules.** Legality is a report on the deck, never a blocked edit. The
+  server computes it and re-validates every command; the browser may preview it with the same pure
+  functions (`docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`).
+- **Do only what was asked.** Functionality nobody asked for is a defect, even when it looks like
+  the obvious next step. List ideas as follow-ups.
+- **Verify before you claim.** Check every statement about the code against the code, and every
+  number against a command you ran. Say plainly what you could not verify.
+- **English only.** Code, identifiers, comments, docs, ADRs, commits and PR bodies are in English.
+  Locale files under `src/messages/<locale>/` are the only exception
+  (`docs/adr/0008-english-only.md`).
 
-- **Offline** - Works without internet after initial import
-- **Personal** - No user accounts, no cloud sync, no authentication
-- **Fast** - Prioritize speed and readability
-- **Simple** - Functional screens > beautiful screens
+## User-facing text
 
-If a suggestion violates one of these → don't do it.
+Every user-facing string goes through next-intl. The served locales are `en` and `fr`
+(`src/i18n/routing.ts`); write both properly. The eight dormant catalogs stay at key parity with
+`en` and may reuse the English text; say so in the PR.
 
-## Tech Stack Constraints
+## Performance budget
 
-- Platform: **React Native (Android first)**
-- Language: **TypeScript** (preferred) or JavaScript
-- Local database: **SQLite**
-- Scraping: **HTML scraping (no official API)**
-- Image handling: **local filesystem caching**
-- No backend server
-- No authentication
-- No cloud sync
+Every production page must meet, on mobile:
 
-Cursor must assume it **fully masters**:
+- PageSpeed Insights (Lighthouse) score ≥ 90;
+- Core Web Vitals at p75: LCP ≤ 2.5 s, INP ≤ 200 ms, CLS ≤ 0.1.
 
-- HTML scraping and DOM parsing
-- Moxfield page structure and patterns
-- SQLite usage in React Native
-- Local file storage for images
-
-If a suggestion requires a backend, cloud service, or external API → **reject it**.
-
-## Data Rules
-
-- English card names only
-- Commander decks only
-- Moxfield is **read-only** (scraping only)
-- No synchronization back to Moxfield
-
-## Database Rules
-
-- SQLite is the single source of truth
-- Prefer simple schemas
-- Always add indexes when search speed matters
-- Avoid complex ORM abstractions
-
-## UI Rules
-
-- Simple UI
-- No fancy animations
-- Prioritize speed and readability
-- Functional screens > beautiful screens
-
-## Web Performance Standards (When Applicable)
-
-If the project ships pages to a browser, performance is a first-class quality bar, not an
-afterthought. Treat the following as non-negotiable for any production page:
-
-- **PageSpeed Insights >= 90 / 100** on mobile (Lighthouse).
-- **All Core Web Vitals in the green** on field data (p75):
-  - **LCP** (Largest Contentful Paint) <= 2.5 s
-  - **INP** (Interaction to Next Paint) <= 200 ms
-  - **CLS** (Cumulative Layout Shift) <= 0.1
-
-A page that misses these targets is **not done**. Investigate root cause (hero image, render-
-blocking CSS, third-party scripts, hydration cost, layout shift from late content) and fix before
-merging or releasing. See the `web-performance` skill for the full checklist and how to measure.
-
-## Image Handling Rules
-
-- Download card images once
-- Store images locally
-- Reuse images across decks
-- Never depend on online image URLs after import
-
-## Coding Style
-
-- Prefer readable code over short code
-- Explicit > implicit
-- Avoid magic abstractions
-- Comment only when useful
-
-## When Cursor Helps
-
-When asked for help, Cursor should:
-
-- Act as an **expert in scraping and local-first mobile apps**
-- Be confident with:
-  - Scraping HTML pages
-  - Parsing deck and card data
-  - Handling edge cases in scraped data
-- Give **step-by-step answers**
-- Explain **why** when choices exist
-- Default to the **simplest working solution**
-- Assume the user wants something that works now, not perfect later
-
-## What Cursor Should NOT Do
-
-- Do not introduce backend services
-- Do not add user accounts
-- Do not suggest syncing or auth
-- Do not optimize prematurely
-- Do not suggest cloud services
-- Do not add external APIs beyond Moxfield/Scryfall
-
-These principles ensure the project stays true to its offline-first, personal, and simple nature.
+A page that misses these is not done. The `web-performance` skill has the checklist and the way
+to measure.
