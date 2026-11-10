@@ -121,9 +121,12 @@ From `docs/adr/0003-domain-as-readonly-data-and-pure-functions.md`:
 - **No DI container.** Plain factory functions, React `cache()` for per-request reads, ports passed
   explicitly.
 - **Legality is a report, not an invariant.** A deck under construction may be illegal (97 cards,
-  an off-colour card, a banned card); the app reports it and never blocks the edit. The server
-  computes legality and re-validates every command; the browser may preview it with the same pure
-  `format-rules` functions (`docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`).
+  an off-colour card, a banned card). The server computes the report, re-validates every command
+  and never blocks an edit (`docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`).
+  The browser keeps its current checks as feedback for the player: the copy clamp, the companion
+  check and the "already in the deck" check. A refactor never changes them; changing them is an
+  owner decision. A new browser check imports the pure `format-rules` function and never
+  re-implements the rule.
 - **Gather, decide, act.** A use case loads what it needs, calls a pure function to decide, then
   persists or returns. The decision is testable with plain values.
 
@@ -182,11 +185,12 @@ in a behaviour PR.
 - A Prisma import in a component, hook, store or `domain/` file.
 - A `fetch` to a provider outside its adapter, or a provider type (`ScryfallCard`) in a domain or
   use-case signature.
-- A rule re-implemented in a component or store instead of imported from the pure function that
-  owns it.
+- A new rule re-implemented in a component or store instead of imported from the pure function
+  that owns it. (The existing browser legality checks stay as they are; see above.)
 - A route handler with business logic or inline Prisma queries in it.
 - A deep import into another context, or an `index.ts` that re-exports server code.
-- An import cycle: one of the two modules is in the wrong layer or context.
+- A new import cycle: one of the two modules is in the wrong layer or context. The 3 existing
+  type-only cycles are recorded in the baseline.
 
 ## Enforcement
 
@@ -194,8 +198,9 @@ Enforcement lands in stages (`docs/adr/0007-architecture-enforcement-in-stages.m
 
 1. ESLint flat config (prerequisite);
 2. the `server-only` package, with a Vitest stub;
-3. dependency-cruiser: cycles fail now; layer and context rules start from a recorded baseline
-   that may only shrink; it also generates the Mermaid graphs;
+3. dependency-cruiser: runtime cycles fail at once (there are none); the 3 existing type-only
+   cycles and the known layer and context violations start in a recorded baseline that may only
+   shrink; it also generates the Mermaid graphs;
 4. ESLint size and complexity limits, with bulk suppressions as a ratchet;
 5. Knip as an advisory report;
 6. `pnpm arch` joins the pre-PR gate in `CLAUDE.md` once it exists.
@@ -212,7 +217,8 @@ Until a stage exists, review checks the rule. SonarCloud does not check layering
 4. A move PR changes no logic. It rewrites every import and `vi.mock` path in the same commit.
    Logic changes come in a separate PR.
 5. One context per series of small PRs. Temporary re-export shims are removed at the end of the
-   series.
+   series, except the ones the on-hold branch `feat/ai-usage-metering-and-monthly-quota` still
+   imports: they stay until that branch is rebased and the codemod has rewritten its imports.
 
 ## References
 

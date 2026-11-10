@@ -17,8 +17,9 @@ information hiding, naming, test design, security.
 Answer yes, no or n/a, and give a reason for every no.
 
 1. **Scope.** Does the diff do only what the task and the test list asked?
-2. **Placement.** Is each piece of logic in the context and layer that owns it? Is any rule
-   re-implemented in the browser?
+2. **Placement.** Is each piece of logic in the context and layer that owns it? Is a new rule
+   re-implemented in the browser, or did an existing browser legality check change without an
+   owner decision?
 3. **Thin edges.** Do route handlers, pages and components only parse, call and map?
 4. **Types.** Are illegal states unrepresentable? No `any`, `as` or `!`? Is input parsed once, at
    the boundary?

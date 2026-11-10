@@ -28,10 +28,13 @@ resolve it silently.
   word that means different things in two contexts (a "card" in the catalog, in a deck, in a
   playtest) gets a qualified name.
 - **The Comprehensive Rules are the authority on game rules.** Cite the rule number in a comment
-  (`// CR 903.5b: …`). The code loads `src/lib/rules/data/MagicCompRules-20260807.txt`.
-- **The server owns the rules.** Legality is a report on the deck, never a blocked edit. The
-  server computes it and re-validates every command; the browser may preview it with the same pure
-  functions (`docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`).
+  (`// CR 903.5b: …`) and check it in `src/lib/rules/data/MagicCompRules-20260807.txt`, the
+  edition the app ships (effective 2026-08-07).
+- **The server never blocks an edit for legality.** Legality is a report on the deck. The server
+  computes it and re-validates every command
+  (`docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`). The browser keeps its
+  current checks as feedback for the player: the copy clamp, the companion check and the "already
+  in the deck" check. A refactor never changes them; changing them is an owner decision.
 - **Do only what was asked.** Functionality nobody asked for is a defect, even when it looks like
   the obvious next step. List ideas as follow-ups.
 - **Verify before you claim.** Check every statement about the code against the code, and every

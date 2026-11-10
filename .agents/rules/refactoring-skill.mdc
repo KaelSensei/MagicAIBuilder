@@ -31,12 +31,16 @@ characterization test that pins a known bug says so in its name.
 ## Moves
 
 A move PR changes no logic. It rewrites every import and `vi.mock` path in the same commit. Once
-the move codemod exists it makes the moves; re-export shims live only within one series of PRs.
+the move codemod exists it makes the moves. Re-export shims are removed at the end of their series
+of PRs, except the ones the on-hold branch `feat/ai-usage-metering-and-monthly-quota` still
+imports: they stay until that branch is rebased and the codemod has rewritten its imports.
 
 ## Never
 
 - Change behaviour "while you are there". A behaviour change found during a refactor gets its own
   `fix/` PR with a Red test.
+- Change the browser's legality feedback checks (the copy clamp, the companion check, "already in
+  the deck"). Changing them is an owner decision.
 - Edit a file that an open PR or a pending branch changes, unless the task says so; list the
   overlap instead.
 - Delete code that has product intent. Delete only code with no importer and no product intent;

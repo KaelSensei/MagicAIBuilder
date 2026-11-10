@@ -60,12 +60,14 @@ change such code:
 
 - Dependencies point inward: `ui` and `client` → `application` → `domain`. `infrastructure`
   implements the ports. `domain` imports only its own context and other contexts' `index.ts`.
-- The server owns the rules. Legality is a report, never a blocked edit. The browser may preview a
-  rule with the same pure function; it never re-implements one
-  (`docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`).
+- The server owns the rules and never blocks an edit for legality: legality is a report
+  (`docs/adr/0009-legality-is-a-report-and-the-server-owns-rules.md`). The browser keeps its
+  current feedback checks (the copy clamp, the companion check, "already in the deck") unchanged.
+  A new browser check imports the pure function that owns the rule; it never re-implements it.
 - A provider's wire type (`ScryfallCard`, a model response) stays in its adapter
   (`docs/adr/0004-anti-corruption-layers-for-external-providers.md`).
-- No Prisma in a component, a hook, a store or `domain/`. No import cycles.
+- No Prisma in a component, a hook, a store or `domain/`. No new import cycle; the 3 existing
+  type-only cycles are recorded in the baseline.
 
 ## Enforcement
 
