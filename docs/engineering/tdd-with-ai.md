@@ -1,58 +1,196 @@
-# TDD avec une IA
+# TDD with an AI
 
-Le TDD reste le même contrat : le test décrit un comportement attendu, le code
-répond à ce besoin, puis la conception s'améliore sans changer le comportement.
-L'IA change surtout la manière d'obtenir le Green.
+TDD remains the same contract: the test describes an expected behaviour, the code answers that
+need, then the design improves without changing the behaviour. The AI mainly changes how the Green
+is obtained.
 
-## Le cycle de travail
+> This document was translated from the French original on 2026-11-10
+> ([ADR 0008](../adr/0008-english-only.md)) and extended with the testing decisions of
+> [ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md): the test list,
+> outside-in tests from the use case, fakes and contract tests, the mocking policy,
+> characterization tests, structural and behavioural commits, and the forbidden moves. The cycle
+> and its three names are unchanged. The `tdd` skill (`.agents/skills/tdd/SKILL.md`) applies this
+> method; when they disagree, this document wins.
+
+## The work cycle
+
+### Before the cycle: the test list
+
+Before the first Red, write the **test list**: the behaviours the change must cover, one line
+each, in domain words ([CONTEXT.md](../../CONTEXT.md)). Include the happy path, the edge cases and
+the failure behaviour. The list is a plan, not code: turn **one** item at a time into a test.
+
+The list goes into the plan and into the pull request. When the cycle reveals a new behaviour, add
+it to the list rather than to the code under way. When an item turns out to be unnecessary, strike
+it out and say why.
 
 ### Red
 
-On formule un seul comportement observable, puis on écrit le test le plus petit
-possible. On exécute ce test et on vérifie qu'il échoue pour la bonne raison.
-Pour un bug, ce test est d'abord une reproduction et devient la non-régression.
+State a single observable behaviour, then write the smallest possible test. Run that test and
+check that it fails for the right reason. For a bug, this test is first a reproduction and becomes
+the regression test.
+
+Record the focused command and the failure line, for example
+`npx vitest run src/lib/playtest/engine.test.ts -t "first mulligan is free"` followed by the
+failing assertion. The pull request must show this Red evidence
+([definition-of-done.md](definition-of-done.md)). Never describe a test as failing without having
+run it.
 
 ### Super Green
 
-On demande à l'IA une implémentation minimale, mais propre dès maintenant : bon
-nommage, bon emplacement, responsabilité claire, typage strict et gestion des
-erreurs cohérente. Cela ne signifie pas concevoir l'état final du système. Une
-enum, une factory ou une abstraction n'existe que lorsqu'un test la rend utile.
+Ask the AI for a minimal implementation, but clean from the start: good naming, right placement,
+clear responsibility, strict typing and consistent error handling. This does not mean designing
+the final state of the system. An enum, a factory or an abstraction exists only once a test makes
+it useful.
 
-Le Super Green ne supprime donc pas le TPP (Transformation Priority Premise).
-La structure peut être propre alors que le comportement progresse encore par
-petites transformations : constante, scalaire, invariant, conditionnelle, puis
-boucle.
+Super Green therefore does not abolish the TPP (Transformation Priority Premise). The structure can
+be clean while the behaviour still progresses by small transformations: constant, scalar,
+invariant, conditional, then loop.
 
 ### Refining Refactoring
 
-Quand les tests sont verts, on peut améliorer la conception : clarifier une
-frontière métier, isoler une responsabilité réellement apparue, supprimer une
-duplication ou simplifier un flux. Chaque étape conserve le comportement et
-reste vérifiable. On ne crée pas volontairement un Green sale pour justifier un
-second passage de rangement.
+When the tests are green, the design can improve: clarify a business boundary, isolate a
+responsibility that has really emerged, remove duplication or simplify a flow. Each step preserves
+behaviour and stays verifiable. Do not deliberately create a dirty Green to justify a second
+tidying pass.
 
-## Quels tests écrire ?
+A refactoring step is a **structural** change: it needs no new Red, and the tests stay green and
+unchanged before and after it. If a step changes behaviour, it is not a refactoring; start a new
+Red.
 
-Par défaut, MagicAIBuilder privilégie les tests sociables : ils traversent une
-frontière stable, comme une action de store, un cas d'usage, une route ou le
-comportement visible d'un composant, avec les collaborateurs en mémoire. Ils
-résistent mieux aux déplacements de classes et de méthodes par l'IA.
+## Which tests to write?
 
-Les tests solitaires restent adaptés aux fonctions pures, parseurs et politiques
-algorithmiques isolées. Les dépendances externes sont simulées à leur frontière,
-mais les collaborateurs internes ne sont pas mockés pour imposer une structure.
+By default, MagicAIBuilder favours sociable tests: they cross a stable boundary, such as a store
+action, a use case, a route or the visible behaviour of a component, with in-memory collaborators.
+They survive the AI moving classes and methods around much better.
 
-## Contrat pour l'agent
+Solitary tests remain suited to pure functions, parsers and isolated algorithmic policies. External
+dependencies are simulated at their boundary, but internal collaborators are not mocked to impose a
+structure.
 
-À chaque incrément, l'agent doit :
+**New features are tested outside-in, from the use case.** The first test calls the use case (or,
+until a context has use cases, the route handler or the store action that plays that role) with
+in-memory adapters, and states the behaviour the player sees. That test drives the domain functions
+the use case needs; write solitary tests only for the policies that are complex on their own. The
+adapter (Prisma, provider client) comes last, with its contract test.
 
-1. annoncer le comportement ciblé et le fichier de test ;
-2. écrire et exécuter le Red ;
-3. produire le plus petit Super Green propre ;
-4. exécuter le test ciblé puis la suite Vitest ;
-5. proposer séparément un Refining Refactoring si la conception le justifie.
+| What you test                         | Style                                                     | Collaborators                                 |
+| ------------------------------------- | --------------------------------------------------------- | --------------------------------------------- |
+| Pure rule or calculation (`domain/`)  | Solitary, examples and tables                             | None                                          |
+| Use case (`application/`)             | Sociable, outside-in                                      | In-memory fakes of its ports                  |
+| Prisma repository (`infrastructure/`) | Contract test                                             | Real PostgreSQL                               |
+| Provider adapter (`infrastructure/`)  | Adapter test on a recorded fixture                        | MSW                                           |
+| Route handler                         | Sociable: call the exported `GET`/`POST` with a `Request` | Fakes, or the boundary mocks that exist today |
+| Component                             | Testing Library: roles, user events, visible behaviour    | MSW or an injected store                      |
+| User journey                          | Playwright (`e2e/`)                                       | The real stack                                |
 
-L'agent ne doit pas anticiper les besoins futurs, réécrire les tests pour faire
-passer son code, ni mélanger une feature avec une refonte générale. Les tests E2E
-complètent ce cycle lorsqu'un parcours réel ou une intégration le nécessite.
+## Replacing collaborators
+
+- **Owned ports get hand-written in-memory fakes.** A fake is a small, readable implementation of
+  the port, such as `src/test/playtest-db-fake.ts`. Tests assert on the fake's resulting state, not
+  on which methods were called.
+- **Each port has one shared contract suite** that runs against the fake and against the real
+  adapter. A fake that passes the contract can be trusted; one that does not is a liability.
+- **HTTP is replaced with MSW** handlers built from recorded provider responses (`*-v1.ts`
+  fixtures), not with `fetch` stubs. Adopt MSW per test file: many existing files stub the global
+  `fetch`, and a global server would intercept underneath them.
+- **No new `vi.mock` of an internal module.** A `vi.mock("@/lib/…")` is keyed on a file path: when
+  the file moves, the mock silently stops applying and the real module runs. It also lets a test
+  pass whatever the code does. Existing internal mocks are phased out context by context.
+- **Mocks that remain use the typed form**, so a moved or renamed file makes `tsc` fail instead of
+  leaving the mock stale:
+
+  ```ts
+  vi.mock(import("next/navigation"), async (importOriginal) => ({
+    ...(await importOriginal()),
+    useRouter: () => router,
+  }));
+  ```
+
+  Mocks remain acceptable for framework modules that cannot run in jsdom (`next/navigation`,
+  `next/headers`, `next/cache`) and, temporarily, where no port exists yet.
+
+- **Outgoing notifications** with no observable state (an email sent, an event published) use a
+  recording fake that keeps a list of what was sent.
+
+## Changing code that has no tests
+
+Before restructuring code that lacks tests at its public surface, pin its current behaviour with
+**characterization tests** (or approval tests for large outputs such as exports and prompts). They
+record what the code does today, odd behaviour included, so that the restructuring cannot change it
+unnoticed. Name them so a reader knows they pin current behaviour, for example
+`it("characterization: keeps the partner row when the commander is removed", …)`.
+
+This is required before splitting the giant files: the deck store (`src/lib/deck/store.ts`), the
+builder page (`src/app/[locale]/builder/[deckId]/page.tsx`), `DeckWizard`
+(`src/components/deck/DeckWizard.tsx`), the playtest engine (`src/lib/playtest/engine.ts`) and the
+AI routes (`src/app/api/ai/**`).
+
+A characterization test that pins a bug stays until a separate `fix/` pull request changes the
+behaviour on purpose, with its own Red test.
+
+## Commits: structural or behavioural
+
+Never mix structural and behavioural changes in one commit.
+
+- A **structural** commit (rename, move, extract, inline, delete dead code, reformat) keeps
+  behaviour. The tests pass unchanged before and after it. Its message says so, for example
+  `refactor(playtest): extract the bottom choice into its own function`.
+- A **behavioural** commit (`feat:`, `fix:`) adds or changes behaviour and comes with its Red test.
+- A pull request may hold both kinds, as separate commits. A structural change larger than about
+  200 changed lines, or one that moves files between contexts, gets its own pull request.
+- A behaviour change discovered during a refactor gets its own `fix/` pull request. It is never
+  hidden inside the refactor.
+
+## Forbidden moves
+
+- Deleting a test, or weakening an assertion, to make a change pass.
+- Disabling a test: `.skip`, a committed `.only`, or commenting it out.
+- Copying the actual output into the expected value without checking that it is right, including
+  re-approving a snapshot without saying why the new output is correct.
+- Rewriting a test so that it passes against the new code when the requirement did not change.
+- Adding a `vi.mock` of an internal module.
+- Writing several failing tests and making them pass together.
+
+If a test seems wrong, say so and stop; change it only when the requirement changed, and say which.
+
+## Contract for the agent
+
+At each increment, the agent must:
+
+1. write or update the test list, and name the targeted behaviour and the test file;
+2. write and run the Red, and record the command and the failure;
+3. produce the smallest clean Super Green;
+4. run the targeted test, then the tests of the touched files and their neighbours;
+5. propose a Refining Refactoring separately, as a structural commit, if the design justifies it.
+
+The agent must not anticipate future needs, rewrite the tests to make its code pass, or mix a
+feature with a general overhaul. E2E tests complement this cycle when a real journey or an
+integration requires it.
+
+The agent stops and asks for direction when:
+
+- it goes round in circles: the same failure after several attempts;
+- the next step would add functionality nobody asked for, even a reasonable one;
+- making a test pass seems to require one of the forbidden moves.
+
+## Measuring test quality
+
+Coverage says which lines ran, not whether a wrong result would be noticed. Mutation testing does:
+it changes the code in small ways and checks that a test fails. StrykerJS runs on the `domain/`
+folders, advisory at first (nightly and incremental on changed files). A surviving mutant is a
+missing or weak assertion.
+
+## Further reading
+
+- Kent Beck, [Canon TDD](https://newsletter.kentbeck.com/p/canon-tdd), 2023-12-11.
+- Kent Beck, [Augmented Coding: Beyond the Vibes](https://newsletter.kentbeck.com/p/augmented-coding-beyond-the-vibes),
+  2025-06-25.
+- Robert C. Martin, [The Transformation Priority Premise](https://blog.cleancoder.com/uncle-bob/2013/05/27/TheTransformationPriorityPremise.html),
+  2013-05-27.
+- WealCome (Michaël Azerhad), [TDD and Clean Architecture with Node.js and TypeScript](https://wealcomecompany.com/wealcome-nodejs-tdd-clean-architecture-formation):
+  outside-in on a hexagonal architecture, "mostly classicist".
+- J. B. Rainsberger, [Getting Started with Contract Tests](https://blog.thecodewhisperer.com/permalink/getting-started-with-contract-tests),
+  2017-06-25.
+- Michael Feathers, _Working Effectively with Legacy Code_ (2004): characterization tests.
+- Vitest, [Mocking modules](https://vitest.dev/guide/mocking/modules).
