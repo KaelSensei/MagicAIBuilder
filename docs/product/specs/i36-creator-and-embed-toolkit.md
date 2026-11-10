@@ -109,7 +109,7 @@ Verified on `dev` (commit `49983a9`) on 2026-11-09:
 
 8.1 A view is counted on the server when the public deck page or an embed is served to someone who is neither the owner nor a known bot, with no cookie, browser storage or fingerprinting script.
 8.2 Daily de-duplication hashes deck id, IP address and user agent with a salt replaced and deleted every 24 hours. No address, user agent or hash outlives its day. Daily counters per deck and surface (page or embed), and embed loads per host origin from `Referer`, are all that remain; after 25 months they fold into monthly totals.
-8.3 The deck page shows total views, and the owner can hide the number. Views rank nothing here, not discovery, search or the creator page; any ranking use is an I-08 decision under the roadmap's rule that popularity is not advice.
+8.3 The deck page shows total views, and the owner can hide the number. Views rank nothing here, not discovery, search or the creator page; any ranking use is an I-08 decision under the roadmap's rule that popularity is not advice. [I-75](i75-finding-public-decks.md#5-popularity-without-manipulation), which owns deck search since 2026-11-10, keeps this rule: views never sort a search.
 8.4 The privacy notice describes the counter. The CNIL exempts audience-measurement trackers from consent when they serve only audience measurement, produce anonymous statistics, are not combined with other processing and do not follow people across sites, and it recommends keeping collected data at most 25 months [21]. This counter stores nothing on the device; whether it needs consent is a lawyer question.
 
 ### 9. What could be paid ([I-30](i30-business-model-and-paid-tier.md))
@@ -145,7 +145,7 @@ No table stores an IP address or a user agent, and a schema test guards that abs
 - Embedding or framing another site's decks ([I-29](i29-cross-site-deck-index.md) requirement 3.3), or an API listing every public deck.
 - Creator revenue shares, tips or affiliate splits; affiliate links are [I-32](i32-seller-handoff-and-affiliate-carts.md)'s question.
 - Third-party analytics, advertising or pixels on any surface here.
-- Contests and community programming, which are operations rather than product.
+- Contests and community programming, which are operations rather than product. [I-72](i72-growth-loops-referrals-creators-and-return.md#5-creator-programme-owner-decision) proposes early access and a complimentary seat for creators, which would amend this line; that is owner decision [D-80](../owner-decisions.md#product-scope-and-non-goals), and the line stands until it is decided (2026-11-10).
 
 ## Testing strategy
 

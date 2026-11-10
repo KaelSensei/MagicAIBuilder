@@ -102,4 +102,4 @@ Slices 1 and 2 are useful alone: a dated precon catalogue with a diff is shippab
 
 - Who curates the bundles? Editorial content needs an owner and a refresh cadence, or it dates badly — the same failure mode as `design-system.md`.
 - Does the catalogue share its storage with I-16's candidate corpus? Precons are the most trustworthy candidate source, so one table serving both is attractive.
-- Universes Beyond sets ship four precons at a time (the Star Trek set, 2026-11-13, is the immediate example). Is per-set bulk import a day-one requirement?
+- Universes Beyond sets ship four precons at a time (the Star Trek set, 2026-11-13, is the immediate example). Is per-set bulk import a day-one requirement? _Answered 2026-11-10 by [I-73](i73-every-set-release-ready-on-day-one.md#changes-requested-of-other-specs): yes. I-67 slice 13 imports a set's decks when MTGJSON publishes them, and I-73 slice 9 checks it._

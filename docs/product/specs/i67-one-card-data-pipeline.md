@@ -88,20 +88,20 @@ Verified on `dev` at `72fbfc1` on 2026-11-10:
 
 4.1 Each row keeps a hash of the fields consumers read, so a changed URI or rank emits nothing. The diff emits typed events into `CardDataChange`:
 
-| Event                 | Payload (keys, codes and dates only) | Emitted when                                                       | Read by                                   |
-| --------------------- | ------------------------------------ | ------------------------------------------------------------------ | ----------------------------------------- |
-| `oracle.added`        | oracleKey                            | A new Oracle ID                                                    | I-54 catalogue, I-58 lands, I-65 roles    |
-| `oracle.changed`      | oracleKey, fields[]                  | Name, cost, type, text, identity, keywords or mana produced change | I-47 notes review, I-54, I-58, I-65       |
-| `legality.changed`    | oracleKey, format, from, to          | A legality changes                                                 | I-42 2.6, I-48 1.6, I-58 4.4              |
-| `gameChanger.changed` | oracleKey, from, to                  | `game_changer` flips                                               | I-48 1.5–1.6, I-54, I-58 4.5              |
-| `printing.added`      | printingKey, oracleKey, set, reprint | A new printing                                                     | I-18, I-57, I-59 reprint watch, I-40      |
-| `set.added`           | setKey, type, releasedAt             | A new set                                                          | I-18, I-17 (slice 13), I-57's set check   |
-| `printing.migrated`   | old ID, new ID or none, strategy     | A Scryfall migration                                               | 6.3, I-59, I-17                           |
-| `image.updated`       | printingKey, imageVersion            | `image_updated_at` changes                                         | I-19 offline copies, I-40 index           |
-| `prices.published`    | fileDate, printings, values          | Default Cards prices applied                                       | I-59 slice 3, I-32, I-45                  |
-| `rulings.changed`     | oracleKey, added/changed/removed     | The rulings diff                                                   | I-47 2.8                                  |
-| `tags.changed`        | tagKey, kind                         | A tag or its taggings change                                       | I-54 slice 2, I-65 slice 8, I-37 slice 18 |
-| `conformance.failed`  | check, expected, found               | A check in 6 fails                                                 | I-48 1.6, I-42 2.4, the owner             |
+| Event                 | Payload (keys, codes and dates only) | Emitted when                                                       | Read by                                       |
+| --------------------- | ------------------------------------ | ------------------------------------------------------------------ | --------------------------------------------- |
+| `oracle.added`        | oracleKey                            | A new Oracle ID                                                    | I-54 catalogue, I-58 lands, I-65 roles        |
+| `oracle.changed`      | oracleKey, fields[]                  | Name, cost, type, text, identity, keywords or mana produced change | I-47 notes review, I-54, I-58, I-65           |
+| `legality.changed`    | oracleKey, format, from, to          | A legality changes                                                 | I-42 2.6, I-48 1.6, I-58 4.4, I-73            |
+| `gameChanger.changed` | oracleKey, from, to                  | `game_changer` flips                                               | I-48 1.5–1.6, I-54, I-58 4.5                  |
+| `printing.added`      | printingKey, oracleKey, set, reprint | A new printing                                                     | I-18, I-57, I-59 reprint watch, I-40, I-73    |
+| `set.added`           | setKey, type, releasedAt             | A new set                                                          | I-18, I-17 (slice 13), I-57's set check, I-73 |
+| `printing.migrated`   | old ID, new ID or none, strategy     | A Scryfall migration                                               | 6.3, I-59, I-17                               |
+| `image.updated`       | printingKey, imageVersion            | `image_updated_at` changes                                         | I-19 offline copies, I-40 index               |
+| `prices.published`    | fileDate, printings, values          | Default Cards prices applied                                       | I-59 slice 3, I-32, I-45                      |
+| `rulings.changed`     | oracleKey, added/changed/removed     | The rulings diff                                                   | I-47 2.8                                      |
+| `tags.changed`        | tagKey, kind                         | A tag or its taggings change                                       | I-54 slice 2, I-65 slice 8, I-37 slice 18     |
+| `conformance.failed`  | check, expected, found               | A check in 6 fails                                                 | I-48 1.6, I-42 2.4, the owner                 |
 
 4.2 One catalogue entry per event type holds its payload schema, dedupe key and readers, following I-63's catalogue ([I-63 2](i63-one-notification-system.md#2-event-model-and-catalogue)). A contract test rejects payloads with free text or URLs.
 4.3 After a file commits, the run passes each registered consumer the events after its cursor. Handlers are idempotent; a failing one is retried next run and never rolls back the load.
@@ -111,7 +111,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10:
 
 ### 5. Failure and fallback
 
-5.1 **Gates.** A line missing a required field fails its file. Before applying, the file's object count is within 3% of the last one unless new sets explain it; every printing's Oracle ID exists; more than 20 legality or Game Changer events hold the file for an owner's confirmation. A held or failed file leaves the previous data live and reports to Sentry. An unknown top-level field is a warning, so a format change surfaces on its first day. The thresholds are proposals for the owner to confirm.
+5.1 **Gates.** A line missing a required field fails its file. Before applying, the file's object count is within 3% of the last one unless new sets explain it; every printing's Oracle ID exists; more than 20 legality or Game Changer events hold the file for an owner's confirmation. A held or failed file leaves the previous data live and reports to Sentry. An unknown top-level field is a warning, so a format change surfaces on its first day. The thresholds are proposals for the owner to confirm. Added 2026-11-10: a `not_legal` to `legal` event that [I-73](i73-every-set-release-ready-on-day-one.md#7-operational-readiness) slice 4 classifies as a set's release-day switch (`isReleaseLegalitySwitch`) is reported on its own line of the run report and not counted toward the threshold of 20, so a set turning legal does not hold the file.
 5.2 A printing absent from the tables, such as a card spoiled after the last file, is read through the shared cache (#1322) and labelled "live from Scryfall"; the run report counts these misses. If Scryfall is down, reads stay local and nothing a player sees changes.
 5.3 A file not loaded for 36 hours alerts the owner, on I-63 10.3's mechanism. After 72 hours, surfaces showing legality, Game Changers or prices name the data date as stale. Prices keep I-32 2.3's 24-hour label.
 

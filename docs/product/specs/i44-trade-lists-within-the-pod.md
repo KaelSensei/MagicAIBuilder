@@ -127,7 +127,7 @@ Verified on `dev` on 2026-11-09 (commit `61792c1`).
 ### 7. Minors
 
 7.1 Lists, share links, the balance view and the friends and pod audiences are open to every account. A teenager trading with their own pod is the common case.
-7.2 The store and nearby audiences, and proposals outside friends and pods, need a one-time declaration "I am 18 or older", recorded with its date. It adds to I-38's signup age statement ([9.2](i38-trust-safety-and-user-rights.md#9-minors)) and asks for no birth date and no document. SuperSwap restricts its whole app to adults for the same reason [1][4].
+7.2 The store and nearby audiences, and proposals outside friends and pods, need a one-time declaration "I am 18 or older", recorded with its date. It adds to I-38's signup age statement ([9.2](i38-trust-safety-and-user-rights.md#9-minors)) and asks for no birth date and no document. Moved 2026-11-10 to the account: the declaration is `User.adultDeclaredAt`, one field that I-44, I-56, I-63 and [I-72](i72-growth-loops-referrals-creators-and-return.md#data-model--api) read, instead of a field of `TradeArea`. SuperSwap restricts its whole app to adults for the same reason [1][4].
 7.3 No push, email or digest about trade activity is on by default for any account ([I-38 9.1](i38-trust-safety-and-user-rights.md#9-minors)).
 
 ### 8. Scams and abuse
@@ -162,7 +162,8 @@ TradeList          id, userId, kind (have | want), name (owner only), shareToken
 TradeListEntry     id, listId, cardName, scryfallId?, strictness (anyPrinting | set | exact), setCode?, finish (any | nonfoil | foil | etched),
                    language?, condition? (have only: NM | LP | MP | HP | DMG), quantity, source (manual | collection | plan), updatedAt
 TradeListAudience  listId, scope (friends | pod | store | nearby), scopeId?, grantedAt            @@id([listId, scope, scopeId])
-TradeArea          userId @id, cityId, regionId, countryCode, adultDeclaredAt, setAt               -- deleted on opt-out
+TradeArea          userId @id, cityId, regionId, countryCode, setAt                                -- deleted on opt-out
+User               + adultDeclaredAt?   -- moved from TradeArea 2026-11-10; read by I-44, I-56, I-63, I-72
 TradeProposal      id, fromUserId, toUserId, parentId?, give Json, take Json, meeting (nextGame | store), storeId?,
                    slotDate, slotPart (afternoon | evening), status (sent | countered | accepted | declined | withdrawn | expired),
                    createdAt, respondedAt?, itemsPurgedAt?
@@ -201,24 +202,24 @@ Routes: `GET|POST /api/trade-lists`; `PATCH|DELETE /api/trade-lists/[id]`; `POST
 
 ## Delivery slices
 
-| #   | Slice                                                                                                           | Depends on                                                        |
-| --- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| 1   | Private have and want lists: model, create and edit, strictness levels, text paste and export                   | —                                                                 |
-| 2   | Fill a have list from the collection and a want list from the acquisition plan, with a preview                  | 1                                                                 |
-| 3   | Share link and QR code: token, allowlisted public page, `noindex`, robots rule, rotate and disable              | 1                                                                 |
-| 4   | Balance view: two sides, USD or EUR from Scryfall, dated, unpriced cards listed, no account needed              | —                                                                 |
-| 5   | "Compare with mine" on a shared list for a signed-in viewer                                                     | 3                                                                 |
-| 6   | Friends audience (mutual follows) and the match view                                                            | 1                                                                 |
-| 7   | Trade-first marks on the acquisition plan                                                                       | 2, 6                                                              |
-| 8   | Pod audience                                                                                                    | 6; I-15 slice 3 and a pod-membership decision (open question 2)   |
-| 9   | Proposals between friends and pod members: structure, states, expiry, confirmation, collection apply, purge job | 6; I-38 slice 12 (block); I-63 slices 1 to 3 for proposal notices |
-| 10  | Report targets for lists and proposals; a hidden list leaves every audience                                     | 9; I-38 slices 8 to 10                                            |
-| 11  | Free-copies mode for have lists                                                                                 | 2; I-16 slice 4                                                   |
-| 12  | Adult declaration and city opt-in: city list, region fallback, deletion on opt-out, export entry                | I-38 slices 6 and 7; lawyer answers (open question 1)             |
-| 13  | Store audience and the store meeting option, with limits and safety text                                        | 10, 12; I-41 slice 5                                              |
-| 14  | Nearby audience: on-demand matches only, reciprocity, rate limits, account-age delay                            | 13; the cold-start gate (open question 4)                         |
-| 15  | Reputation context: shared context and confirmed-partner bands                                                  | 9                                                                 |
-| 16  | Continuous match watch with digest                                                                              | **Blocked** on I-30's decision; 14; I-63 slice 10                 |
+| #   | Slice                                                                                                                                 | Depends on                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 1   | Private have and want lists: model, create and edit, strictness levels, text paste and export                                         | —                                                                 |
+| 2   | Fill a have list from the collection and a want list from the acquisition plan, with a preview                                        | 1                                                                 |
+| 3   | Share link and QR code: token, allowlisted public page, `noindex`, robots rule, rotate and disable                                    | 1                                                                 |
+| 4   | Balance view: two sides, USD or EUR from Scryfall, dated, unpriced cards listed, no account needed                                    | —                                                                 |
+| 5   | "Compare with mine" on a shared list for a signed-in viewer                                                                           | 3                                                                 |
+| 6   | Friends audience (mutual follows) and the match view                                                                                  | 1                                                                 |
+| 7   | Trade-first marks on the acquisition plan                                                                                             | 2, 6                                                              |
+| 8   | Pod audience                                                                                                                          | 6; I-15 slice 3 and a pod-membership decision (open question 2)   |
+| 9   | Proposals between friends and pod members: structure, states, expiry, confirmation, collection apply, purge job                       | 6; I-38 slice 12 (block); I-63 slices 1 to 3 for proposal notices |
+| 10  | Report targets for lists and proposals; a hidden list leaves every audience                                                           | 9; I-38 slices 8 to 10                                            |
+| 11  | Free-copies mode for have lists                                                                                                       | 2; I-16 slice 4                                                   |
+| 12  | Adult declaration (`User.adultDeclaredAt`, 2026-11-10) and city opt-in: city list, region fallback, deletion on opt-out, export entry | I-38 slices 6 and 7; lawyer answers (open question 1)             |
+| 13  | Store audience and the store meeting option, with limits and safety text                                                              | 10, 12; I-41 slice 5                                              |
+| 14  | Nearby audience: on-demand matches only, reciprocity, rate limits, account-age delay                                                  | 13; the cold-start gate (open question 4)                         |
+| 15  | Reputation context: shared context and confirmed-partner bands                                                                        | 9                                                                 |
+| 16  | Continuous match watch with digest                                                                                                    | **Blocked** on I-30's decision; 14; I-63 slice 10                 |
 
 Slices 1 to 7 need no I-38 work: they show card data only, to the owner, to a link holder or to mutual follows. Slice 4 also serves players who never sign in. Scheduled agents must not pick slice 12 or later before the lawyer answers are committed, because location, age and DAC7 are decisions, not code.
 

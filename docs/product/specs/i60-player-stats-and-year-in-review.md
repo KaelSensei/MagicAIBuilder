@@ -127,9 +127,9 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 
 ### 9. Measurement (through I-39)
 
-9.1 This spec asks [I-39](i39-first-run-activation-and-measurement.md#8-event-contract-and-minimisation) to add four events, enums and integers only: `recap_opt_in` (year, on or off), `recap_viewed` (year), `recap_visibility` (year; private, link or profile) and `recap_shared` (year; image size, link copy or native share; locale), plus `signup_entry` (recap, recap embed, other) written once at account creation.
+9.1 This spec asks [I-39](i39-first-run-activation-and-measurement.md#8-event-contract-and-minimisation) to add four events, enums and integers only: `recap_opt_in` (year, on or off), `recap_viewed` (year), `recap_visibility` (year; private, link or profile) and `recap_shared` (year; image size, link copy or native share; locale), plus `signup_entry` (recap, recap embed, other) written once at account creation. Changed 2026-11-10: the entry is the account field `User.signupEntry`, with `recap` among its values, written by [I-72](i72-growth-loops-referrals-creators-and-return.md#3-measuring-each-loop) slice 2 instead of an event.
 9.2 Anonymous daily counters, server-side, without cookie or identifier: public recap views by level, public images served, embed loads and call-to-action clicks.
-9.3 The owner view reports: opt-in rate among accounts active in the window, share rate among opted-in accounts, public views per shared recap, sign-ups with `signup_entry = recap` and their activation as I-39 defines it, and week-4 retention of recap viewers beside non-viewers, labelled "descriptive, not causal". Figures under 30 show as counts.
+9.3 The owner view reports: opt-in rate among accounts active in the window, share rate among opted-in accounts, public views per shared recap, sign-ups with `User.signupEntry = recap` and their activation as I-39 defines it, and week-4 retention of recap viewers beside non-viewers, labelled "descriptive, not causal". Figures under 30 show as counts.
 9.4 A causal claim needs I-39's experiment protocol, for example an invitation staggered by a week between two random halves (slice 15). The recap itself is never withheld.
 
 ### 10. Privacy, minors, export and deletion
@@ -201,7 +201,7 @@ A row holds: `deckId`, `format`, commander Oracle names with French printed name
 | 6   | Levels, preview, deck choices, `/u/{username}/recap/{year}`, `/recap/{token}`, `noindex` and robots, 60-second revocation, report button                 | 4; I-36 slice 1; I-38 slices 7 and 8    |
 | 7   | Public recap image and preview tags                                                                                                                      | 5, 6; I-46 slice 1                      |
 | 8   | Events, counters and the owner growth view                                                                                                               | 4, 6; I-39 slices 10 and 12             |
-| 9   | Visitor call to action into an import-first first run, with `signup_entry`                                                                               | 6, 8; I-39 slice 5                      |
+| 9   | Visitor call to action into an import-first first run, with `User.signupEntry` _(re-pointed 2026-11-10 to I-72 slice 2)_                                 | 6, 8; I-39 slice 5; I-72 slice 2        |
 | 10  | Games section on the stats page and in the recap                                                                                                         | 2, 4; I-35 slices 4 and 5               |
 | 11  | Recap embed                                                                                                                                              | 6; I-36 slice 3                         |
 | 12  | Exact change counts from the change log                                                                                                                  | 1; I-37 slice 10                        |

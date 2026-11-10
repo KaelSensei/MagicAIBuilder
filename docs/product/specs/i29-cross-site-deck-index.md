@@ -87,6 +87,8 @@ Verified at commit `545da1c` on 2026-11-09:
 
 ### 4. Deck search
 
+Re-scoped 2026-11-10: [I-75](i75-finding-public-decks.md) owns the query contract and the search over MagicAIBuilder's own public decks. This section applies to the indexed external decks that join behind that contract (slice 4), with a source facet.
+
 4.1 **Cards:** include and exclude, combined with and/or, plus "at least N of these M cards". Names resolve to Oracle IDs before the query runs, and unresolved names are disclosed as I-10's import preview does.
 4.2 **Commander and colors:** commander, partner or background pair, and color identity (exact, within, or including).
 4.3 **Bracket:** declared and estimated are separate facets, each labeled. The estimate comes from the product's own scorer once it covers brackets 1 to 5 (I-28 slice 2), with Commander Spellbook's estimate beside it when available, and names its method.
@@ -184,22 +186,22 @@ LinkTemplate  sourceId, kind (commander|card|search), template, verifiedAt, veri
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                                               | Depends on                              |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| 0   | Source register with one `SourcePolicy` per researched source, including the paths I-09 and I-10 already call; public source page, privacy notice and takedown form | —                                       |
-| 1   | Index keys from I-67's `CardOracle.key` _(re-pointed 2026-11-10 to I-67 slice 2: the daily bulk job and dated prices are I-67's)_                                   | I-67 slice 2                            |
-| 2   | Canonical form and hash for I-08 public decks, kept in step with visibility                                                                                         | 1                                       |
-| 3   | Synthetic benchmark at 1M and 10M decks: GIN against a roaring index                                                                                                | 2                                       |
-| 4   | Deck search over I-08 decks: commander, color identity, card include and exclude with and/or, freshness, quality defaults; signed-out access                        | 2                                       |
-| 5   | Link-out row from verified templates, with the no-request test                                                                                                      | 0                                       |
-| 6   | Licensed sources: cEDH Decklist Database, then MTGJSON precons through I-67 slice 13 into I-17's catalog _(re-pointed 2026-11-10)_; push-back list enforced         | 0, 2; I-67 slice 13 for precons         |
-| 7   | Deduplication: exact hash, precon-copy label, near-duplicate clusters                                                                                               | 4, 6                                    |
-| 8   | Bracket facet, declared and estimated; Commander Spellbook combos once its data license is confirmed                                                                | 4; I-28 slice 2                         |
-| 9   | Budget facet from I-67's daily prices _(re-pointed 2026-11-10)_: total and per-commander decile                                                                     | 1, 4; I-67 slice 5                      |
-| 10  | "Decks like mine" and the cohort diff                                                                                                                               | 7                                       |
-| 11  | Computed statistics with labels, thresholds and corpus versions                                                                                                     | 6                                       |
-| 12  | Roaring card index                                                                                                                                                  | 3, only if its result requires it       |
-| 13  | Partner-fed sources: Moxfield, Space Cow Media, TopDeck.gg                                                                                                          | **Blocked** on a signed agreement; 0, 3 |
+| #   | Slice                                                                                                                                                                                         | Depends on                              |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| 0   | Source register with one `SourcePolicy` per researched source, including the paths I-09 and I-10 already call; public source page, privacy notice and takedown form                           | —                                       |
+| 1   | Index keys from I-67's `CardOracle.key` _(re-pointed 2026-11-10 to I-67 slice 2: the daily bulk job and dated prices are I-67's)_                                                             | I-67 slice 2                            |
+| 2   | Canonical form and hash for I-08 public decks, kept in step with visibility                                                                                                                   | 1                                       |
+| 3   | Synthetic benchmark at 1M and 10M decks: GIN against a roaring index                                                                                                                          | 2                                       |
+| 4   | Indexed external decks as a second corpus behind I-75's query contract, with the source facet _(re-scoped 2026-11-10 from "Deck search over I-08 decks", which is I-75 slices 2, 4, 5 and 6)_ | 2; I-75 slice 2                         |
+| 5   | Link-out row from verified templates, with the no-request test                                                                                                                                | 0                                       |
+| 6   | Licensed sources: cEDH Decklist Database, then MTGJSON precons through I-67 slice 13 into I-17's catalog _(re-pointed 2026-11-10)_; push-back list enforced                                   | 0, 2; I-67 slice 13 for precons         |
+| 7   | Deduplication: exact hash, precon-copy label, near-duplicate clusters                                                                                                                         | 4, 6                                    |
+| 8   | Bracket facet, declared and estimated; Commander Spellbook combos once its data license is confirmed                                                                                          | 4; I-28 slice 2                         |
+| 9   | Budget facet from I-67's daily prices _(re-pointed 2026-11-10)_: total and per-commander decile                                                                                               | 1, 4; I-67 slice 5                      |
+| 10  | "Decks like mine" and the cohort diff                                                                                                                                                         | 7                                       |
+| 11  | Computed statistics with labels, thresholds and corpus versions                                                                                                                               | 6                                       |
+| 12  | Roaring card index                                                                                                                                                                            | 3, only if its result requires it       |
+| 13  | Partner-fed sources: Moxfield, Space Cow Media, TopDeck.gg                                                                                                                                    | **Blocked** on a signed agreement; 0, 3 |
 
 Slices 0 and 5 ship alone: a published source policy and links into every other site. Slice 1 follows I-67 slice 2, which now builds the card dictionary other initiatives reuse (re-pointed 2026-11-10). Slice 4 is the first search a player can use, and slice 13 is where "largest" becomes possible.
 

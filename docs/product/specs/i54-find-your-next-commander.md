@@ -84,6 +84,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10:
 2.8 **Not like my decks:** the player ticks some of their decks. A candidate sharing a ticked deck's exact colour identity or its main play style is marked, and the player chooses whether to exclude or only flag it.
 2.9 **Like a commander I enjoy:** the player names commanders; candidates sharing their styles, keywords and colours rank higher, each shared trait listed.
 2.10 **Pairs:** a partner, "Friends forever" or Background commander appears alone, marked with its pairing rule. Listing pairs whose combined identity meets the colour filter is a toggle, capped, and uses `commander-pairing.ts`.
+2.11 **Previews** (added 2026-11-10 from [I-73](i73-every-set-release-ready-on-day-one.md#3-release-status-of-a-card)): an "Include previews" filter, off by default, widens the catalogue's `is:commander legal:commander` through I-73's `previewQuery`, and each preview commander shows its release date.
 
 ### 3. Signals, ranking and explanations
 

@@ -132,7 +132,7 @@ Verified on `dev` on 2026-11-09 (commit `61792c1`):
 
 ### 7. Measurement, for I-39
 
-7.1 Daily counters only, proposed for I-39's `DailyCounter`: installs by context from `APPLICATION_AUTHORIZED` events [33]; commands by name and outcome (ok, not public, rate-limited, error); preview fetches by crawler family; visits arriving through app links, which carry `?via=discord`. None is joined to an account.
+7.1 Daily counters only, proposed for I-39's `DailyCounter`: installs by context from `APPLICATION_AUTHORIZED` events [33]; commands by name and outcome (ok, not public, rate-limited, error); preview fetches by crawler family; visits arriving through app links, which carry `?via=discord`. None is joined to an account. Since 2026-11-10 `discord` is one value of [I-72](i72-growth-loops-referrals-creators-and-return.md#2-the-loops-and-how-a-visitor-enters)'s `via` enum (`embed`, `discord`, `recap`), which a sign-up stores once in `User.signupVia`.
 7.2 I-39 owns the event contract; this list is a request to it.
 
 ### 8. Free and paid ([I-30](i30-business-model-and-paid-tier.md))

@@ -105,7 +105,7 @@ A second research pass and a read of `dev` on 2026-11-09 changed three things th
 
 ### 5. Card-data checks before a generated deck is saved
 
-5.1 The server resolves every generated card against Scryfall and checks existence, colour identity, Commander legality and the Game Changer count for the chosen bracket.
+5.1 The server resolves every generated card against Scryfall and checks existence, colour identity, Commander legality and the Game Changer count for the chosen bracket. Added 2026-11-10: a card whose release status is `preview` is removed with the reason `Preview, legal from <date>`, never "not legal" alone; the wording comes from [I-73](i73-every-set-release-ready-on-day-one.md#3-release-status-of-a-card) slice 2.
 5.2 A failing card is repaired from a legal candidate pool where one exists, and every correction is shown under requirement 2. A build is rejected only when it cannot be repaired.
 5.3 A name Scryfall does not resolve is shown to the player, never dropped silently.
 5.4 Until 5.1 ships, no generated deck carries a "verified" label.

@@ -116,9 +116,12 @@ Verified on `dev` at `72fbfc1` on 2026-11-10:
 | Requests I voted for         | I-52             | On         | Off         | Yes                 |
 | Loans                        | I-51             | Off        | Off         | Yes                 |
 | Gifts I reserved (signed in) | I-56             | Off        | Off         | Yes                 |
-| New cards for my decks       | I-18             | Off        | Off         | Yes                 |
+| New cards for my decks       | I-18, I-73       | Off        | Off         | Yes                 |
+| Saved deck searches          | I-75             | On         | Off         | Yes                 |
 | Challenges                   | I-53             | Off        | Off         | Yes                 |
 | My year in review            | I-60             | Off        | Off         | Yes                 |
+
+Added 2026-11-10: [I-73](i73-every-set-release-ready-on-day-one.md#5-what-players-get)'s `release.digest`, one event per set per opted-in player, joins "New cards for my decks", and [I-75](i75-finding-public-decks.md#9-saved-searches-and-alerts)'s `deck-search.new-matches` is the producer of "Saved deck searches", on in the app only for a search the player set to alert.
 
 4.3 **Existing rows.** The migration copies the four booleans to the in-app cells of Replies, Mentions, Follows and Watched decks and sets every email cell off. Nothing was ever delivered, so the old `true` defaults never meant consent to email.
 4.4 **Consent log.** Turning an email or push cell on or off appends a row with the category, channel, the version of the wording shown, the locale, the source (settings, unsubscribe link, one-click, bounce, complaint, migration) and the time. The latest row is the state, as I-59 7.2 asks.
