@@ -4,6 +4,7 @@
   "start": {
     "prompt": "Ready to test your deck?",
     "hint": "Shuffle and draw your opening hand of seven cards.",
+    "multiplayer": "Multiplayer game (first mulligan free)",
     "action": "Draw opening hand"
   },
   "turn": "Turn {turn}",
@@ -110,6 +111,7 @@
   "recordResult": "How did it go?",
   "recording": "Saving…",
   "recordFailed": "Could not save",
+  "recordBlockedByMulligan": "Finish your mulligan first.",
   "skipRecording": "Skip",
   "result": {
     "win": "Win",

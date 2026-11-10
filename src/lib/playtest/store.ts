@@ -9,6 +9,7 @@ import { getFormatConfig } from "@/lib/deck/formats";
 import { randomAlphanumericId, randomIntBelow } from "@/lib/crypto-random";
 import type { TokenLibraryEntry } from "@/lib/deck/token-library";
 import type { CardZone, PlaytestEngine } from "./engine";
+import { isFirstMulliganFree, isMultiplayerByDefault } from "./free-mulligan";
 import {
   createPlaytestState,
   applyDrawCard,
@@ -39,7 +40,17 @@ interface PlaytestSetup {
   /** Commanders, which start in the command zone instead (CR 903.6). */
   readonly commandZone: readonly DeckCard[];
   readonly startingLife: number;
+  /** Settled when the session starts, so a restart keeps the player's choice. */
   readonly firstMulliganFree: boolean;
+}
+
+/** What the player chooses before the opening hand is dealt. */
+export interface PlaytestOptions {
+  /**
+   * Whether the game has more than two players, which makes the first
+   * mulligan free (CR 103.5c). Defaults to the format's usual table.
+   */
+  readonly multiplayer?: boolean;
 }
 
 /**
@@ -67,10 +78,15 @@ function physicalCopies(card: DeckCard): readonly DeckCard[] {
  * commander slot into the library, as it always has.
  *
  * @param deck - the deck being playtested
- * @returns the library cards, the commanders and the format's starting rules
+ * @param options - the player's choices for this session
+ * @returns the library cards, the commanders and the session's starting rules
  */
-function buildSetup(deck: Deck): PlaytestSetup {
-  const { hasCommander, startingLife, firstMulliganFree } = getFormatConfig(deck.format);
+function buildSetup(deck: Deck, options: PlaytestOptions): PlaytestSetup {
+  const { hasCommander, startingLife } = getFormatConfig(deck.format);
+  const firstMulliganFree = isFirstMulliganFree(
+    deck.format,
+    options.multiplayer ?? isMultiplayerByDefault(deck.format)
+  );
   const commanders = [deck.commander, deck.partner].filter(
     (card): card is DeckCard => card !== null
   );
@@ -105,7 +121,8 @@ interface PlaytestStore {
   setup: PlaytestSetup | null;
 
   // Actions
-  startPlaytest: (deck: Deck) => void;
+  /** Deals a new session; the options hold only for this session. */
+  startPlaytest: (deck: Deck, options?: PlaytestOptions) => void;
   stopPlaytest: () => void;
   drawCard: () => void;
   mulligan: () => void;
@@ -135,8 +152,8 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
   isActive: false,
   setup: null,
 
-  startPlaytest: (deck: Deck) => {
-    const setup = buildSetup(deck);
+  startPlaytest: (deck: Deck, options: PlaytestOptions = {}) => {
+    const setup = buildSetup(deck, options);
     set({ engine: dealFrom(setup), isActive: true, setup });
   },
 

@@ -1,17 +1,22 @@
 "use client";
 // Fullscreen playtest — phases, life, and the hand / battlefield / graveyard zones
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCcw, Layers } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Deck } from "@/lib/deck/types";
+import type { DeckFormat } from "@/lib/deck/formats";
 import type { CardZone } from "@/lib/playtest/engine";
 import {
   isChoosingBottom,
   maxMulligans,
   mulliganBottomCount,
 } from "@/lib/playtest/engine";
-import { usePlaytestStore } from "@/lib/playtest/store";
+import { usePlaytestStore, type PlaytestOptions } from "@/lib/playtest/store";
+import {
+  isMultiplayerByDefault,
+  offersMultiplayerChoice,
+} from "@/lib/playtest/free-mulligan";
 import { PhaseTracker } from "@/components/playtest/PhaseTracker";
 import { LifeTracker } from "@/components/playtest/LifeTracker";
 import { HandZone } from "@/components/playtest/HandZone";
@@ -39,12 +44,19 @@ const BOARD_GROUP_CLASS = "m-0 min-w-0 space-y-4 border-0 p-0";
 
 function PlaytestStartScreen({
   deckId,
+  format,
   onStart,
 }: {
   readonly deckId: string;
-  readonly onStart: () => void;
+  readonly format: DeckFormat;
+  readonly onStart: (options: PlaytestOptions) => void;
 }) {
   const t = useTranslations("playtest");
+  // Commander and Oathbreaker are usually multiplayer, but a one-on-one game
+  // gets no free first mulligan (CR 103.5c). The answer lasts one session.
+  const [multiplayer, setMultiplayer] = useState(() =>
+    isMultiplayerByDefault(format)
+  );
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -52,9 +64,20 @@ function PlaytestStartScreen({
         <p className="text-[var(--text-secondary)] text-sm mb-1">{t("start.prompt")}</p>
         <p className="text-[var(--text-secondary)] text-xs">{t("start.hint")}</p>
       </div>
+      {offersMultiplayerChoice(format) && (
+        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <input
+            type="checkbox"
+            checked={multiplayer}
+            onChange={(event) => setMultiplayer(event.target.checked)}
+            className="h-4 w-4 accent-purple-600"
+          />
+          {t("start.multiplayer")}
+        </label>
+      )}
       <button
         type="button"
-        onClick={onStart}
+        onClick={() => onStart({ multiplayer })}
         className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors text-sm shadow-lg shadow-purple-900/50"
       >
         {t("start.action")}
@@ -101,7 +124,10 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
     onClose();
   }, [stopPlaytest, onClose]);
 
-  const handleStart = useCallback(() => startPlaytest(deck), [deck, startPlaytest]);
+  const handleStart = useCallback(
+    (options: PlaytestOptions) => startPlaytest(deck, options),
+    [deck, startPlaytest]
+  );
 
   const handleMoveFromHand = useCallback(
     (cardId: string, to: "battlefield" | "graveyard") =>
@@ -214,6 +240,10 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                 cardsSeen={drawEvidence?.cardsSeen ?? 0}
                 additionalCardsSeen={drawEvidence?.additionalCardsSeen ?? 0}
                 onRecorded={handleClose}
+                // The counts are not settled until the bottom choice is made.
+                blockedReason={
+                  choosingBottom ? t("recordBlockedByMulligan") : undefined
+                }
               />
             )}
             <button
@@ -230,7 +260,11 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
         {/* Body */}
         {engine === null ? (
           <div className="flex-1 flex items-center justify-center p-6">
-            <PlaytestStartScreen deckId={deck.id} onStart={handleStart} />
+            <PlaytestStartScreen
+              deckId={deck.id}
+              format={deck.format}
+              onStart={handleStart}
+            />
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">

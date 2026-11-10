@@ -206,6 +206,37 @@ describe("usePlaytestStore", () => {
     expect(usePlaytestStore.getState().engine?.cardsToBottom).toBe(0);
   });
 
+  // CR 103.5c: only a multiplayer game (or any Brawl game) gets the free
+  // mulligan, so a one-on-one Commander game bottoms a card on the first one.
+  it("takes no free mulligan in a Commander game the player says is one-on-one", () => {
+    usePlaytestStore
+      .getState()
+      .startPlaytest(makeDeck(), { multiplayer: false });
+    usePlaytestStore.getState().mulligan();
+
+    const engine = usePlaytestStore.getState().engine;
+    expect(engine?.firstMulliganFree).toBe(false);
+    expect(engine?.cardsToBottom).toBe(1);
+  });
+
+  it("keeps the free mulligan in a one-on-one Brawl game", () => {
+    usePlaytestStore
+      .getState()
+      .startPlaytest(makeDeck({ format: "brawl" }), { multiplayer: false });
+
+    expect(usePlaytestStore.getState().engine?.firstMulliganFree).toBe(true);
+  });
+
+  it("restarts under the multiplayer choice the session started with", () => {
+    usePlaytestStore
+      .getState()
+      .startPlaytest(makeDeck(), { multiplayer: false });
+
+    usePlaytestStore.getState().resetPlaytest();
+
+    expect(usePlaytestStore.getState().engine?.firstMulliganFree).toBe(false);
+  });
+
   it("asks a Modern player to bottom a card after the first mulligan, then keeps six", () => {
     usePlaytestStore.getState().startPlaytest(makeDeck({ format: "modern", commander: null }));
     usePlaytestStore.getState().mulligan();

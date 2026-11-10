@@ -81,6 +81,17 @@ function start() {
   fireEvent.click(screen.getByRole("button", { name: /draw opening hand/i }));
 }
 
+/** Settles a pending one-card bottom choice with the first card offered. */
+function bottomFirstCard() {
+  const choice = screen.getByRole("group", {
+    name: /choose 1 card to put on the bottom/i,
+  });
+  fireEvent.click(within(choice).getAllByRole("button", { pressed: false })[0]);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Put 1 card on the bottom" })
+  );
+}
+
 describe("PlaytestModal", () => {
   beforeEach(() => {
     usePlaytestStore.setState({ engine: null, isActive: false, setup: null });
@@ -202,6 +213,63 @@ describe("PlaytestModal", () => {
     ).toBeEnabled();
   });
 
+  describe("choosing whether the game is multiplayer", () => {
+    const multiplayer = () =>
+      screen.queryByRole("checkbox", { name: /multiplayer game/i });
+
+    it("lets a one-on-one Commander game bottom a card on the first mulligan", () => {
+      renderModal();
+      expect(multiplayer()).toBeChecked();
+
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: /multiplayer game/i })
+      );
+      start();
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /mulligan.*new seven, 1 to the bottom/i,
+        })
+      );
+      bottomFirstCard();
+
+      expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+      expect(screen.getByText(/Hand: 6 cards/i)).toBeDefined();
+    });
+
+    // Every Brawl game has the free mulligan; the constructed formats are duels.
+    it.each(["brawl", "modern"] as const)(
+      "does not ask for a %s deck",
+      (format) => {
+        renderModal(makeDeck(format));
+
+        expect(multiplayer()).toBeNull();
+      }
+    );
+
+    // Bracket 1 has a figure for a hand of no lands and no cheap ramp, read
+    // against a fresh seven or, without the free mulligan, against a six.
+    it.each([
+      { table: "multiplayer", isMultiplayer: true, against: /a fresh seven/ },
+      { table: "one-on-one", isMultiplayer: false, against: /going to six/ },
+    ])(
+      "judges the first seven of a $table game against the right next hand",
+      ({ isMultiplayer, against }) => {
+        renderModal({ ...makeDeck(), targetBracket: 1 });
+
+        if (!isMultiplayer) {
+          fireEvent.click(
+            screen.getByRole("checkbox", { name: /multiplayer game/i })
+          );
+        }
+        start();
+
+        expect(screen.getByText(/^Bracket 1, first seven:/)).toHaveTextContent(
+          against
+        );
+      }
+    );
+  });
+
   it("asks a Modern player which card to bottom, holding the game until then", () => {
     renderModal(makeDeck("modern"));
     start();
@@ -286,6 +354,32 @@ describe("PlaytestModal", () => {
   describe("recording a game", () => {
     afterEach(() => {
       vi.restoreAllMocks();
+    });
+
+    // During the choice the hand still holds seven cards, so a result recorded
+    // then would count the cards still to bottom as extra cards seen.
+    it("blocks recording a result until the mulligan's bottom choice is made", () => {
+      renderModal(makeDeck("modern"));
+      start();
+      const results = () =>
+        ["Win", "Loss", "Draw"].map((name) =>
+          screen.getByRole("button", { name })
+        );
+
+      fireEvent.click(screen.getByRole("button", { name: /mulligan/i }));
+
+      for (const button of results()) {
+        expect(button).toBeDisabled();
+        expect(button).toHaveAccessibleDescription(
+          "Finish your mulligan first."
+        );
+      }
+      expect(screen.getByRole("button", { name: "Skip" })).toBeEnabled();
+
+      bottomFirstCard();
+
+      for (const button of results()) expect(button).toBeEnabled();
+      expect(screen.queryByText("Finish your mulligan first.")).toBeNull();
     });
 
     // Casting the commander takes it from the command zone, not from the library.
