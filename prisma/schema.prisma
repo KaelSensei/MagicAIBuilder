@@ -148,9 +148,13 @@ model Deck {
   reports            DeckReport[]
   acquisitionIntents AcquisitionIntent[]
   savedBy            SavedPublicDeck[]
+  /// Client-chosen key that makes POST /api/decks safe to repeat: a retry with
+  /// the same key returns this deck instead of writing a second one.
+  idempotencyKey     String?
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 
+  @@unique([userId, idempotencyKey])
   @@index([userId])
   @@index([folderId])
 }

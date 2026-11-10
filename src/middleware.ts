@@ -44,7 +44,12 @@ function getRequestLocale(pathname: string) {
 function redirectToSignIn(req: NextRequest) {
   const signInUrl = req.nextUrl.clone();
   signInUrl.pathname = `/${getRequestLocale(req.nextUrl.pathname)}/auth/signin`;
-  signInUrl.searchParams.set("callbackUrl", req.nextUrl.href);
+  // A path, not `href`: the sign-in form follows only same-origin paths
+  // (`sanitizeCallbackUrl`), so an absolute URL would land on /decks instead.
+  signInUrl.searchParams.set(
+    "callbackUrl",
+    `${req.nextUrl.pathname}${req.nextUrl.search}`
+  );
 
   return NextResponse.redirect(signInUrl);
 }

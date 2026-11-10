@@ -2,18 +2,30 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
 
-const { mockFindMany, mockCount, mockCreate, mockUserFindUnique, mockUserUpsert } =
-  vi.hoisted(() => ({
-    mockFindMany: vi.fn(),
-    mockCount: vi.fn(),
-    mockCreate: vi.fn(),
-    mockUserFindUnique: vi.fn(),
-    mockUserUpsert: vi.fn(),
-  }));
+const {
+  mockFindMany,
+  mockFindFirst,
+  mockCount,
+  mockCreate,
+  mockUserFindUnique,
+  mockUserUpsert,
+} = vi.hoisted(() => ({
+  mockFindMany: vi.fn(),
+  mockFindFirst: vi.fn(),
+  mockCount: vi.fn(),
+  mockCreate: vi.fn(),
+  mockUserFindUnique: vi.fn(),
+  mockUserUpsert: vi.fn(),
+}));
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    deck: { findMany: mockFindMany, count: mockCount, create: mockCreate },
+    deck: {
+      findMany: mockFindMany,
+      findFirst: mockFindFirst,
+      count: mockCount,
+      create: mockCreate,
+    },
     user: { findUnique: mockUserFindUnique, upsert: mockUserUpsert },
   },
 }));
@@ -53,10 +65,13 @@ function listRequest(query = ""): NextRequest {
   return new NextRequest(`http://localhost:3000/api/decks${query}`);
 }
 
-function createRequest(body: unknown): Request {
+function createRequest(
+  body: unknown,
+  headers: Record<string, string> = {}
+): Request {
   return new Request("http://localhost:3000/api/decks", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -316,5 +331,178 @@ describe("POST /api/decks", () => {
 
     expect(response.status).toBe(401);
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * A guest's deck is saved to the new account in one request: the deck, its
+ * command zone and every card. The request carries an `Idempotency-Key`, so a
+ * double click, a retry or a reload mid-request returns the deck the first one
+ * wrote instead of writing a second.
+ */
+describe("POST /api/decks with cards and an idempotency key", () => {
+  const KEY = "guest-claim-0123456789abcdef";
+  const SOL_RING = {
+    scryfallId: "4cbc6901-6a4a-4d0a-83ea-7eefa3b35021",
+    name: "Sol Ring",
+    category: "ramp",
+    quantity: 1,
+    zone: "main",
+  };
+  const ATRAXA = {
+    scryfallId: "d0d33d52-3d28-4635-b985-51e126289259",
+    name: "Atraxa, Praetors' Voice",
+    category: "commander",
+    isCommander: true,
+  };
+  const EXISTING = {
+    id: "deck-from-first-request",
+    name: "Guest Deck",
+    cards: [],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFindFirst.mockResolvedValue(null);
+    mockCreate.mockImplementation(
+      ({ data }: { data: Record<string, unknown> }) =>
+        Promise.resolve({ id: "deck-1", ...data, cards: [] })
+    );
+  });
+
+  it("writes the deck and all its cards in one create", async () => {
+    authed();
+
+    const response = await POST(
+      createRequest(
+        {
+          name: "Guest Deck",
+          commanderId: ATRAXA.scryfallId,
+          commanderName: ATRAXA.name,
+          description: "Counters matter",
+          tags: ["counters"],
+          manualBracket: 2,
+          cards: [ATRAXA, SOL_RING],
+        },
+        { "Idempotency-Key": KEY }
+      )
+    );
+
+    expect(response.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: OWNER,
+          idempotencyKey: KEY,
+          description: "Counters matter",
+          tags: ["counters"],
+          manualBracket: 2,
+          cards: {
+            create: [
+              expect.objectContaining({ name: ATRAXA.name, isCommander: true }),
+              expect.objectContaining({
+                name: "Sol Ring",
+                category: "ramp",
+                zone: "main",
+              }),
+            ],
+          },
+        }),
+      })
+    );
+  });
+
+  it("returns the deck an earlier request with the same key wrote, without writing", async () => {
+    authed();
+    mockFindFirst.mockResolvedValueOnce(EXISTING);
+
+    const response = await POST(
+      createRequest(
+        { name: "Guest Deck", cards: [SOL_RING] },
+        { "Idempotency-Key": KEY }
+      )
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ id: EXISTING.id });
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: OWNER, idempotencyKey: KEY } })
+    );
+  });
+
+  it("returns the winner's deck when a concurrent request with the same key wrote first", async () => {
+    authed();
+    mockFindFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(EXISTING);
+    mockCreate.mockRejectedValueOnce(
+      Object.assign(new Error("Unique constraint"), { code: "P2002" })
+    );
+
+    const response = await POST(
+      createRequest(
+        { name: "Guest Deck", cards: [SOL_RING] },
+        { "Idempotency-Key": KEY }
+      )
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ id: EXISTING.id });
+  });
+
+  it("rejects a malformed key without writing", async () => {
+    authed();
+
+    const response = await POST(
+      createRequest({ name: "Guest Deck" }, { "Idempotency-Key": "short" })
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid card without writing the deck", async () => {
+    authed();
+
+    const response = await POST(
+      createRequest({
+        name: "Guest Deck",
+        cards: [{ ...SOL_RING, scryfallId: "not-a-uuid" }],
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects two commander rows without writing the deck", async () => {
+    authed();
+
+    const response = await POST(
+      createRequest({
+        name: "Guest Deck",
+        cards: [ATRAXA, { ...SOL_RING, isCommander: true }],
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("still creates an empty deck, with no key, as before", async () => {
+    authed();
+
+    const response = await POST(createRequest({ name: "Atraxa" }));
+
+    expect(response.status).toBe(201);
+    expect(mockFindFirst).not.toHaveBeenCalled();
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          idempotencyKey: null,
+          cards: { create: [] },
+        }),
+      })
+    );
   });
 });

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { InitProvider } from "@/components/providers/InitProvider";
 import { ThemeSync } from "@/components/providers/ThemeSync";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
+import { GuestDeckClaimPrompt } from "@/components/deck/GuestDeckClaimPrompt";
 import { ToastContainer } from "@/components/ui/Toast";
 
 export function Providers({ children }: { readonly children: React.ReactNode }) {
@@ -28,6 +29,8 @@ export function Providers({ children }: { readonly children: React.ReactNode }) 
         <ThemeSync />
         <InitProvider>
           <OnboardingProvider>{children}</OnboardingProvider>
+          {/* Here rather than on one page: sign-in can return to any page. */}
+          <GuestDeckClaimPrompt />
           {/* Mounted once here: it used to live only in the builder page, so
               toasts raised anywhere else were queued and never rendered. */}
           <ToastContainer />

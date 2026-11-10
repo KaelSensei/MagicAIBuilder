@@ -210,6 +210,50 @@ export async function createDeck(
   return res.json();
 }
 
+/** A whole deck, command zone and cards included, for `POST /api/decks`. */
+export interface CreateDeckWithCardsBody {
+  readonly name: string;
+  readonly format: string;
+  readonly targetBracket: number;
+  readonly manualBracket: number | null;
+  readonly budget: number | null;
+  readonly description: string;
+  readonly tags: readonly string[];
+  readonly commanderId: string | null;
+  readonly commanderName: string | null;
+  readonly partnerId: string | null;
+  readonly companionId: string | null;
+  readonly pairingType: CommanderPairingType;
+  readonly cards: readonly AddCardPayload[];
+}
+
+/**
+ * Creates a deck with all of its cards in one request.
+ *
+ * The server keeps the key with the deck: repeating the request with the same
+ * key returns that deck instead of writing a second one, so a double click or a
+ * retry after a lost response is safe.
+ *
+ * @param body - the deck and its cards
+ * @param idempotencyKey - the same value for every attempt at the same deck
+ * @returns the created deck, or the one an earlier attempt created
+ */
+export async function createDeckWithCards(
+  body: CreateDeckWithCardsBody,
+  idempotencyKey: string
+): Promise<ApiDeck> {
+  const res = await fetch("/api/decks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) await handleApiError(res, "createDeckWithCards");
+  return res.json();
+}
+
 export async function updateDeck(
   id: string,
   patch: Partial<{

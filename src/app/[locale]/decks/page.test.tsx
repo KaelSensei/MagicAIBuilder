@@ -33,6 +33,9 @@ vi.mock("@/components/deck/DeckComparisonPanel", () => ({ DeckComparisonPanel: (
 vi.mock("@/components/deck/HomeDeckCard", () => ({ HomeDeckCard: () => null }));
 vi.mock("@/components/deck/DeckListTable", () => ({ DeckListTable: () => null }));
 vi.mock("@/components/deck/DeckListRefreshNotice", () => ({ DeckListRefreshNotice: () => null }));
+vi.mock("@/components/deck/GuestDeckClaimOffer", () => ({
+  GuestDeckClaimOffer: () => null,
+}));
 
 import DecksPage from "./page";
 
