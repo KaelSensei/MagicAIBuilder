@@ -137,8 +137,10 @@ describe("GET /api/user/profile", () => {
     expect(mockUserFindUnique).not.toHaveBeenCalled();
   });
 
-  it("returns 401 when the session user no longer exists and has no recovery email", async () => {
-    mockAuth.mockResolvedValueOnce({ user: { id: "deleted-user" } });
+  it("returns 401 when the session user no longer exists", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "deleted-user", email: "kael@test.com" },
+    });
     mockUserFindUnique.mockResolvedValueOnce(null);
 
     const res = await GET();
