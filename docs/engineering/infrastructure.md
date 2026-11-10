@@ -154,8 +154,7 @@ All CRUD operations go through Next.js App Router API routes:
 | DELETE | `/api/decks/[id]/cards`          | Remove all cards             |
 | DELETE | `/api/decks/[id]/cards/[cardId]` | Remove one card              |
 | PATCH  | `/api/decks/[id]/cards/[cardId]` | Update card (category, etc.) |
-| GET    | `/api/cache/cards?id=<id>`       | Lookup cached Scryfall card  |
-| POST   | `/api/cache/cards`               | Store Scryfall card in cache |
+| GET    | `/api/cache/cards?id=<id>`       | Card via server-filled cache |
 
 ---
 

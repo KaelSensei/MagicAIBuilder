@@ -53,9 +53,9 @@ src/
                 route.ts        # POST /api/decks/[id]/snapshots/[snapshotId]/restore
       cache/
         cards/
-          route.ts              # GET/POST /api/cache/cards
+          route.ts              # GET /api/cache/cards (read-through, 24h TTL)
         search/
-          route.ts              # GET/POST /api/cache/search (1h TTL)
+          route.ts              # GET /api/cache/search (read-through, 1h TTL)
       ai/
         suggest/
           route.ts              # POST /api/ai/suggest
@@ -388,8 +388,7 @@ model DeckSnapshot {
 | POST   | `/api/decks/[id]/cards`                          | Add card to deck                           |
 | DELETE | `/api/decks/[id]/cards/[cardId]`                 | Remove card (uses DB CUID, not scryfallId) |
 | PATCH  | `/api/decks/[id]/cards/[cardId]`                 | Update card category                       |
-| GET    | `/api/cache/cards`                               | Lookup card in DB cache                    |
-| POST   | `/api/cache/cards`                               | Store card in DB cache                     |
+| GET    | `/api/cache/cards`                               | Card via the server-filled DB cache        |
 | POST   | `/api/ai/suggest`                                | Get AI suggestions for deck                |
 | GET    | `/api/decks/[id]/snapshots`                      | List snapshots (newest first, no cardList) |
 | POST   | `/api/decks/[id]/snapshots`                      | Create snapshot from current deck state    |
@@ -884,12 +883,13 @@ Shuffling uses `randomIntBelow` from `src/lib/crypto-random.ts`, not `Math.rando
 
 ## Scryfall API Caching
 
-Server-side search cache via `ScryfallSearchCache` Prisma model (1h TTL):
+Shared server-side caches: `ScryfallSearchCache` (search pages, 1h TTL) and `CardCache` (cards by id, 24h TTL).
 
-- `searchCards()` checks `/api/cache/search` before hitting Scryfall
-- Cache key: `sha256(query|page)` computed server-side (browser-safe)
-- Rate limiter: serialized Promise queue with error recovery
-- Name-based lookups (`getCardByName`, `getCardByNameFuzzy`) store results in `CardCache`
+- Only the server writes them. `GET /api/cache/search` and `GET /api/cache/cards` are read-through: on a miss the server fetches Scryfall itself (`src/lib/scryfall/server-fetch.ts`, `httpGet` with the app's User-Agent), stores its own copy and returns it. There is no write route; clients never send cache bodies.
+- `searchCards()` and `getCardById()` read through those routes. When the server cannot answer (400, 429, 5xx), the browser asks Scryfall directly and does not store the result.
+- Keys are namespaced (`srv1:`): `sha256(multilingual|page|query)` for searches and the Scryfall id for cards. Rows written before the server became the only writer are never read and are pruned on the next write.
+- Bounds (`src/lib/cache-limits.ts`): query 1–1000 characters of letters, digits, punctuation, symbols and spaces; page 1–100; 500 KB per page, 50 KB per card; 200 search rows and 2,000 card rows; Scryfall fills limited per client IP.
+- Rate limiter: one serialized Promise queue per runtime (`src/lib/scryfall/request-queue.ts`), shared by the browser client and the server's Scryfall requests
 
 TanStack Query `gcTime` matches `staleTime` (24h for cards/lists, 5min for search) to prevent re-fetches on component remount.
 

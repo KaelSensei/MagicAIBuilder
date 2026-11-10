@@ -67,8 +67,8 @@ This test plan covers all automated and manual tests for the Scryfall API cachin
 1. Navigate to `/builder/[any-deck-id]` (create a test deck if needed)
 2. In the search panel, type "Sol Ring"
 3. **Expected:**
-   - Scryfall API hit (visible in Network tab: `GET https://api.scryfall.com/cards/search?...`)
-   - `POST /api/cache/search` is called after Scryfall response
+   - `GET /api/cache/search` returns `{ "hit": false, "data": {...} }`: the server fetched Scryfall itself
+   - No browser request to `api.scryfall.com/cards/search`, and no `POST` to `/api/cache/*`
    - Card results display normally
 4. **Verify:**
    - Database: Check `ScryfallSearchCache` table for entry with query hash
@@ -370,12 +370,12 @@ pnpm run build
 
   ```bash
   curl "http://localhost:3000/api/cache/search?query=&page=abc"
-  # Should return { "hit": false }
+  # Should return 400
 
   curl -X POST http://localhost:3000/api/cache/search \
     -H "Content-Type: application/json" \
-    -d '{"query": "test", "page": "not-a-number", "data": {}}'
-  # Should return 400 error
+    -d '{"query": "test", "page": 1, "data": {}}'
+  # Should return 405: the cache accepts no client writes
   ```
 
 ---
