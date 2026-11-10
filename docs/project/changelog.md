@@ -9,6 +9,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 2026-11-10: Playtest runs filed under the deck version, and one row per command-zone slot
+
+- A run recorded in the playtest is filed under the most recent snapshot that holds the deck as saved (the same cards, quantities, zones, commander and partner), or under a new snapshot named `Playtest · <UTC time>`, in one transaction. Repeated runs on an unchanged deck share one snapshot, so the snapshot comparison now receives the runs players record. An explicit `snapshotId` is still honoured, and the history panel no longer crashes on a session with a snapshot (#1315).
+- Replacing or clearing a commander or partner now deletes the old row. The store kept the placed card under its printing id, so its row could not be deleted, and the old commander came back on reload. `Deck.commanderId` stays a printing id (#1317).
+- #1315: two Reds observed before any production change; on the tip rebased onto `dev` at `61792c1`, typecheck, lint and 3,687 unit tests across 359 files passed, and the pre-push Docker E2E gate passed on push. Not checked in a browser or against a real Postgres. #1317: Red observed before the fix; on the tip rebased onto `dev` at `1b95285`, typecheck, lint and 3,743 unit tests across 369 files passed, and the gate passed on push. Sonar was left to CI for both. Decks saved before #1317 can still hold extra commander rows, and no cleanup ships with it.
+
+### 2026-11-10: The i18n navigation E2E test no longer flakes
+
+- "locale prefix is preserved after navigation" suppresses the onboarding dialog before it navigates, clicks the one "Ouvrir mes decks" link in the capability atlas and expects `/fr/decks`. A missing link now fails the test instead of skipping its only assertion (#1316).
+- No production code changed. The Red is the recorded gate failure of 2026-11-08, not re-run. On the tip rebased onto `dev` at `61792c1`, typecheck, lint and 3,665 unit tests across 356 files passed, and the pre-push Docker E2E gate passed on push.
+
 ### 2026-11-09: Bulk edit saves only what changed
 
 - Saving a bulk edit no longer rebuilds the deck. Lines whose quantity did not change keep their rows, printings, categories and notes; more copies go on a line's first row and fewer come off its last rows; new lines are looked up and added. The whole change set, command zone included, is applied in one transaction by the new `PATCH /api/decks/[id]/cards`, which answers 409 on a stale row and writes nothing. An unknown name blocks the save and is named, and invalid partner or companion lines are refused instead of dropped. The guest deck applies the same change set in the browser (#1314).
