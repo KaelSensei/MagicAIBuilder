@@ -7,6 +7,8 @@ const {
   mockFetchTournamentData,
   mockRecordSnapshot,
   mockCheckRateLimit,
+  mockAuth,
+  mockUserFindUnique,
 } = vi.hoisted(() => ({
   mockFindUnique: vi.fn(),
   mockUpsert: vi.fn(),
@@ -14,6 +16,8 @@ const {
   mockFetchTournamentData: vi.fn(),
   mockRecordSnapshot: vi.fn(),
   mockCheckRateLimit: vi.fn(),
+  mockAuth: vi.fn(),
+  mockUserFindUnique: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -22,8 +26,10 @@ vi.mock("@/lib/db/prisma", () => ({
       findUnique: mockFindUnique,
       upsert: mockUpsert,
     },
+    user: { findUnique: mockUserFindUnique },
   },
 }));
+vi.mock("@/lib/auth/config", () => ({ auth: mockAuth }));
 
 vi.mock("@/lib/meta/fetch", () => ({
   fetchEdhrecData: mockFetchEdhrecData,
@@ -62,6 +68,8 @@ beforeEach(() => {
     cards: [{ name: "Sol Ring", inclusion: 0.8 }],
   });
   mockRecordSnapshot.mockResolvedValue(undefined);
+  mockAuth.mockResolvedValue(null);
+  mockUserFindUnique.mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -132,5 +140,80 @@ describe("GET /api/meta/:commanderSlug", () => {
       _meta: { source: "tournament", cached: true, stale: true },
     });
     expect(mockUpsert).not.toHaveBeenCalled();
+  });
+});
+
+/** A cache row written an hour ago, still inside its 24 h lifetime. */
+const FRESH_CACHE = {
+  data: { cards: [] },
+  cachedAt: new Date("2026-08-30T00:00:00.000Z"),
+  expiresAt: new Date("2026-08-31T00:00:00.000Z"),
+};
+
+function requestWithRefresh(refresh: string): Request {
+  return new Request(
+    `http://localhost/api/meta/atraxa?source=edhrec&refresh=${refresh}`
+  );
+}
+
+function signedInAs(id: string, isModerator: boolean): void {
+  mockAuth.mockResolvedValue({ user: { id, email: `${id}@test.com` } });
+  mockUserFindUnique.mockResolvedValue({ id, isModerator });
+}
+
+describe("GET /api/meta/:commanderSlug — forcing a refresh", () => {
+  beforeEach(() => {
+    mockFindUnique.mockResolvedValue(FRESH_CACHE);
+  });
+
+  it("serves the fresh cache when the refresh flag is false", async () => {
+    const response = await GET(requestWithRefresh("false"), params());
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      _meta: { cached: true },
+    });
+    expect(mockFetchEdhrecData).not.toHaveBeenCalled();
+  });
+
+  it("rejects a refresh flag that is neither true nor false", async () => {
+    const response = await GET(requestWithRefresh("yes"), params());
+
+    expect(response.status).toBe(400);
+    expect(mockFetchEdhrecData).not.toHaveBeenCalled();
+  });
+
+  it("serves the fresh cache to an anonymous caller who asks for a refresh", async () => {
+    const response = await GET(requestWithRefresh("true"), params());
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      _meta: { cached: true },
+    });
+    expect(mockFetchEdhrecData).not.toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it("serves the fresh cache to a signed-in member who asks for a refresh", async () => {
+    signedInAs("member-1", false);
+
+    const response = await GET(requestWithRefresh("true"), params());
+
+    await expect(response.json()).resolves.toMatchObject({
+      _meta: { cached: true },
+    });
+    expect(mockFetchEdhrecData).not.toHaveBeenCalled();
+  });
+
+  it("re-fetches upstream when a moderator asks for a refresh", async () => {
+    signedInAs("moderator-1", true);
+
+    const response = await GET(requestWithRefresh("true"), params());
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      _meta: { cached: false, observedAt: OBSERVED_AT },
+    });
+    expect(mockFetchEdhrecData).toHaveBeenCalledWith("atraxa");
   });
 });

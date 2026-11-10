@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { requireModerator } from "@/lib/auth/require-moderator";
 import { fetchEdhrecData, fetchTournamentData } from "@/lib/meta/fetch";
 import { recordEdhrecSnapshot } from "@/lib/meta/snapshots";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
@@ -14,7 +15,12 @@ const RATE_WINDOW = 60_000;
 
 const querySchema = z.object({
   source: z.enum(["edhrec", "tournament"]).default("edhrec"),
-  refresh: z.coerce.boolean().default(false),
+  // Exactly "true" or "false": `z.coerce.boolean()` read every non-empty
+  // string as true, so `?refresh=false` forced a refresh.
+  refresh: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((flag) => flag === "true"),
 });
 
 type Params = { params: Promise<{ commanderSlug: string }> };
@@ -30,6 +36,27 @@ function metaRateLimitResponse(request: Request): NextResponse | null {
     { error: `Too many requests. Retry in ${retrySec}s.` },
     { status: 429, headers: { "Retry-After": String(retrySec) } }
   );
+}
+
+/**
+ * Whether this request may skip a fresh cache and scrape EDHREC or MTGTop8
+ * again. Only a moderator may: the route is public, and a refresh anyone could
+ * force would let a loop over commander slugs keep the server scraping
+ * upstream. Everyone else is served the cache, and still gets a live fetch
+ * when no fresh cache row exists.
+ *
+ * @param requested - whether the query asked for a refresh
+ * @returns true when the cache may be bypassed
+ */
+async function mayForceRefresh(requested: boolean): Promise<boolean> {
+  if (!requested) return false;
+  try {
+    const moderator = await requireModerator();
+    return moderator.error === undefined;
+  } catch {
+    // The moderator lookup failed: serve the cache rather than scrape.
+    return false;
+  }
 }
 
 async function readFreshMetaCache(
@@ -147,7 +174,7 @@ export async function GET(request: Request, { params }: Params) {
 
   const { source, refresh } = parsed.data;
 
-  if (!refresh) {
+  if (!(await mayForceRefresh(refresh))) {
     const cachedResponse = await readFreshMetaCache(commanderSlug, source);
     if (cachedResponse) return cachedResponse;
   }
