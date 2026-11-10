@@ -1,8 +1,14 @@
 "use client";
 // Generic pagination controls: Prev / Next + "Page X / Y" indicator
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+
+/** Emphasises the two page numbers inside the translated "Page X / Y" text. */
+const PAGE_NUMBER_TAG = (chunks: ReactNode) => (
+  <span className="font-semibold text-[var(--text-primary)]">{chunks}</span>
+);
 
 interface PaginationProps {
   readonly currentPage: number;
@@ -41,21 +47,18 @@ export function Pagination({
         )}
       >
         <ChevronLeft className="w-4 h-4" />
-        Previous
+        {t("pagination.previousShort")}
       </button>
 
       <span
         aria-current="page"
         className="text-sm text-[var(--text-secondary)] tabular-nums"
       >
-        Page{" "}
-        <span className="font-semibold text-[var(--text-primary)]">
-          {currentPage}
-        </span>{" "}
-        /{" "}
-        <span className="font-semibold text-[var(--text-primary)]">
-          {totalPages}
-        </span>
+        {t.rich("pagination.pageIndicator", {
+          current: currentPage,
+          total: totalPages,
+          value: PAGE_NUMBER_TAG,
+        })}
       </span>
 
       <button
@@ -70,7 +73,7 @@ export function Pagination({
             : "border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent-text)]"
         )}
       >
-        Next
+        {t("pagination.nextShort")}
         <ChevronRight className="w-4 h-4" />
       </button>
     </nav>

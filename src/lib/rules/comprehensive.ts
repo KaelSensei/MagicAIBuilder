@@ -10,6 +10,7 @@
  */
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { parseRulesEffectiveDate } from "./effective-date";
 
 export interface RuleParagraph {
   /** Rule reference like "100.1" or "100.1a"; null for example/plain lines. */
@@ -37,8 +38,11 @@ export interface GlossaryEntry {
 }
 
 export interface ComprehensiveRules {
-  /** Human-readable effective date, e.g. "August 7, 2026". */
-  readonly effectiveDate: string;
+  /**
+   * Day the rules take effect (midnight UTC), parsed from the file's
+   * "These rules are effective as of August 7, 2026." line; null when absent.
+   */
+  readonly effectiveDate: Date | null;
   readonly sections: readonly RulesSection[];
   readonly glossary: readonly GlossaryEntry[];
 }
@@ -146,11 +150,11 @@ function parseGlossary(lines: readonly string[]): readonly GlossaryEntry[] {
 export function parseComprehensiveRules(raw: string): ComprehensiveRules {
   const lines = raw.replaceAll("\r\n", "\n").split("\n");
 
-  let effectiveDate = "";
+  let effectiveDate: Date | null = null;
   for (const line of lines) {
     const match = EFFECTIVE_DATE_RE.exec(line.trim());
     if (match) {
-      effectiveDate = match[1];
+      effectiveDate = parseRulesEffectiveDate(match[1]);
       break;
     }
   }
