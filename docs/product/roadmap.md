@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-10 (after midnight, Paris time)
+> **Updated:** 2026-11-10 (I-47 to I-53)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -80,6 +80,16 @@ A further pass on the same evening looked at what a paying, growing product need
 - [I-44](#i-44-trade-lists-within-the-pod-and-nearby-players) and [I-45](#i-45-selling-spare-cards-collection-value-buylists-and-seller-exports) turn the collection into trade lists and seller files, with no money through the product (goals 2 and 4).
 - [I-46](#i-46-discord-and-chat-integrations-for-pods-and-creators) makes deck links unfurl well in Discord and other chat apps, then brings deterministic deck commands to Discord without reading the conversation (goal 1).
 
+A third pass, on 2026-11-10, looked at the rules a pod argues about, the official changes that move a saved deck, the players a colour-only display leaves out, the online tables where a deck is played, the cards lent between friends, the loop between players and the team, and deckbuilding challenges. It added I-47 to I-53: four in a new part, [Rules, Access And The Online Table](#rules-access-and-the-online-table), and three at the end of [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table):
+
+- [I-47](#i-47-rules-answers-for-the-cards-in-this-deck) shows the official rulings on every card, gives each rule a versioned address, and leaves interaction notes to people reviewed by a judge, never to a model (goal 1).
+- [I-48](#i-48-official-changes-reach-every-saved-deck) turns each Commander announcement into a dated rules version and tells the owner which saved decks it changed, and why (goal 1).
+- [I-49](#i-49-a-display-that-works-for-colour-blind-and-low-vision-players) gives every colour signal a second channel and fixes light-theme contrast, with no "colour-blind mode" (goal 1).
+- [I-50](#i-50-play-this-deck-online) makes each export to an online table a tested contract, fixes the shipped MTGO and Arena exports, and adds aids for webcam play (goal 1).
+- [I-51](#i-51-cards-lent-and-borrowed-within-the-pod) records cards and decks lent and borrowed, so that a loan changes what a deck counts as owned (goal 1).
+- [I-52](#i-52-a-feedback-loop-players-can-see) gives players a status line, a bug report, release notes in English and French and later a request board: the visible trust a cheap subscription needs (goal 2).
+- [I-53](#i-53-monthly-deckbuilding-challenges) runs deckbuilding challenges checked by the product's own tools, with recognition first and prizes only after the lawyer (goal 1).
+
 ### Strategic boundaries
 
 - Do not become a generic card database; Scryfall already owns that job.
@@ -120,6 +130,8 @@ The comparison tracks workflows rather than feature counts. Prices, sources and 
 [I-33](#i-33-the-marketplace-ladder-decision-record) records the owner's 2026-11-09 ambition to run a recognised marketplace and names the stage that would reverse the marketplace non-goal above, which stays in force pending the owner's decision.
 
 Three of the initiatives added on the evening of 2026-11-09 touch this list without changing it. [I-40](#i-40-installable-app-phone-first-use-and-card-scanning) asks the owner whether camera scanning may leave it, under measured conditions; until the owner decides, the scanning non-goal stands. [I-41](#i-41-store-commander-nights-and-organiser-tools) builds neither a tournament manager nor a venue directory. [I-44](#i-44-trade-lists-within-the-pod-and-nearby-players) and [I-45](#i-45-selling-spare-cards-collection-value-buylists-and-seller-exports) stay below the marketplace line: the product never handles a sale, money or a shipment.
+
+Four of the initiatives added on 2026-11-10 touch this part without changing it. [I-52](#i-52-a-feedback-loop-players-can-see) is product feedback, not deck feedback: the benchmark table's "Do not open a second feedback initiative" refers to deck reviews and "seeking feedback", which stay in I-08. [I-50](#i-50-play-this-deck-online) plans no Arena collection or wildcard work. [I-53](#i-53-monthly-deckbuilding-challenges) has no paid entry, no paid or weighted vote and no featured entry, and [I-51](#i-51-cards-lent-and-borrowed-within-the-pod) charges no fee on a loan.
 
 Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
@@ -243,6 +255,38 @@ Three read-only audits then ran on `dev` at `65e6230` (#1316). None of them ran 
 
 Fix branches for H1, L1, L3 and L4 are still in flight, with no PR.
 
+**2026-11-10, I-47 to I-53:** a third research pass added I-47 to I-53. Each spec read the code on `dev` at `72fbfc1`; none ran it. Each finding is an unchecked scope item with its file paths:
+
+- **Rules data that is old or frozen (I-47, I-48).** The app serves the Comprehensive Rules effective 2026-08-07 (`src/lib/rules/data/MagicCompRules-20260807.txt`), two versions behind the 2026-11-06 file Wizards links. Between the two, 109 rules moved to a new number with the same text, 211 kept their number with new text, chapter 715 changed from Adventurer Cards to Saga Cards, and "Commander games do not use sideboards" moved from 903.5e to 903.5f. No rule has its own anchor. The rulings panel opens only from the printing picker and titles Scryfall's own notes "Oracle rulings". A deck also keeps the Game Changer and banned flags it had when each card was added (`src/lib/deck/store.ts`), and the stats and the bracket score count those stored flags. A deck saved before 2026-02-09 with Farewell therefore counts no Game Changer today, and forks, snapshots and the public and share views copy the stale flags.
+- **The banned list reference (I-48).** `docs/references/banlists.md` listed Sway of the Stars as banned, although it was unbanned on 2025-04-22; it omitted Channel, Erayo, Fastbond and Recurring Nightmare; and it dated the Gifts Ungiven and Panoptic Mirror unbans to February 2026 instead of 2025-04-22. This pass corrects the file against the official list and the two announcements, read on 2026-11-10.
+- **Colour and contrast (I-49).** The light theme fails text contrast for status colours: 496 hard-coded red, amber and green classes in 106 files were tuned for the dark theme and measure 1.45–2.89:1 on white, against the 4.5:1 required. The colour chart draws black mana at 1.24:1 on the dark surface and separates its segments by hue alone, and `DeckStats` tells a warning from an error only by colour.
+- **Exports (I-50, I-10).** The TappedOut export puts Sideboard and Considering cards in its main list. The MTGO export writes `CatID="0"` for every card and puts the commander in the main deck, so XMage rejects the file. The Arena export writes no set codes and warns about neither Arena availability nor Brawl legality. I-10's "Already shipped" list named a ManaBox export that does not exist; that line is corrected under I-10.
+- **Feedback (I-52).** No uptime monitor is configured, and a player cannot report a bug: the error page says the problem "has been reported" but takes no words from the player.
+- **Dead code (I-53).** `src/lib/challenges/challenges.ts`, added in #246 on 2026-03-30, is imported by nothing and ranks entries by a score nothing computes. I-53 slice 1 deletes it.
+
+I-47 to I-50 open a new part, [Rules, Access And The Online Table](#rules-access-and-the-online-table): what the product says about the rules, who can read it, and where the deck is then played. I-51 to I-53 join [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table) instead of opening a part of their own. Lending concerns the physical cards, as I-43 to I-45 do. The feedback loop builds trust and measures growth beside I-38 and I-39. Challenges are a growth habit that relies on I-38's moderation and I-41's stores. I-49 is Next. I-47, I-48, I-50 and I-52 are Next for their early slices (1 to 7, 1 to 8, 0 to 8 and 0 to 8), and I-51 and I-53 are Later with cheap early slices. None is in the 30–50 iteration estimate. Twenty further questions wait for the owner or the lawyer. The lawyer questions join [I-30 requirement 7.2](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate) and are research, not legal advice:
+
+- Who reviews I-47's rules notes: a certified judge, paid or volunteer, and at what level? Who answers for an error quoted at a table? Slices 9 to 11 do not start without a named reviewer.
+- Should a model ever retrieve rules citations for a player's question (I-47 slice 14)? Players' hostility to AI rules answers is documented, and the spec says the slice may be worth never building.
+- In the French interface, do official rulings and rules stay in English, or does the product commission human translations labelled unofficial (I-47)?
+- For the lawyer (I-47): may the app serve the Comprehensive Rules verbatim, which end "All Rights Reserved", and keep old versions? May Wizards' rulings, received through Scryfall, appear on public deck pages? Would a paid rules watch over Scryfall rulings paywall Scryfall data?
+- Where does a Commander rules version live: in the database, published by a moderator on the day, or in a reviewed repository file that reaches players only after a full promotion (I-48)? Who publishes when that moderator is away?
+- Which source is canonical for Commander legality: I-48's published version, with Scryfall as the check, or Scryfall, as I-42 requirement 2.1 has it? Scryfall does not encode Lutri's companion ban.
+- Is the rules-change e-mail free (I-48, decided in I-30)? For the lawyer: is it a service message, or does it need consent under French law?
+- Should I-13 slice 1's "non-colour status encoding" move to I-49's slices 4 to 10, leaving I-13 slice 1 with borders and accent text? The I-49 spec recommends yes, so that one initiative holds each defect.
+- Who are the colour-blind and low-vision players who review I-49's surfaces before slice 7? I-24 has the same open question.
+- For the lawyer (I-49): would a paid subscription make the product an "e-commerce service" under the European Accessibility Act, and would the microenterprise exemption apply? I-49 ships whatever the answer.
+- Where does Magic Online want the commander in a `.dek` file (I-50 slice 6)? Someone with an MTGO account must import both variants and record the result.
+- Should the owner ask Convoke for a deck import, or offer Cockatrice a parser for the public deck JSON (I-50 slice 12)? Nobody has been contacted.
+- For the lawyer (I-50): may a free export use the Magic card back, and how may platform names appear? Does Scryfall's "may not … proxy Scryfall data" reach the existing `/api/proxy-card-image` route?
+- For the lawyer (I-51): does a private label of up to 40 characters, naming a borrower who has no account, make MagicAIBuilder a controller of that person's data under GDPR Recital 18?
+- Who decides that a loan came back: the lender's record alone, as I-51 proposes, or both parties? Is a household of two to six accounts, one household per account, the right unit?
+- Which uptime monitor runs: Upptime, UptimeRobot or both (I-52 slice 0)? When does the request board open: after I-39 shows a stated number of weekly active builders?
+- For the lawyer (I-52): does reading the browser family, version and viewport with a report fall under the ePrivacy Art. 5(3) exemption? Which lawful basis and retention cover a report linked to an account? Would a hosted board's cookies and a US vendor need consent and a transfer basis?
+- What demand opens a public monthly challenge (I-53)? The spec's hypothesis is 20 expected eligible entries, with private challenges first.
+- For the lawyer (I-53): is a recognition-only challenge outside lottery and contest law? With a prize, does a free account count as no financial sacrifice while a paid tier exists (French L322-2-1)? Which territories and minimum age apply, may a community vote decide a prize, how must a sponsor be labelled, and who owes tax on store credit?
+- Does I-38's "no ads" default allow a sponsor's text credit on a challenge (I-53)?
+
 ---
 
 ## Portfolio View
@@ -326,50 +370,71 @@ Fix branches for H1, L1, L3 and L4 are still in flight, with no PR.
 25. **I-46 Discord and chat integrations**
     Next for link previews (slices 1 to 3), which need no bot: full tags, a PNG default image, the artist's credit, oEmbed and a Discord component embed. Later for webhook feeds and the Discord app.
 
+26. **I-48 Official changes reach every saved deck**
+    Next for slices 1 to 8: the Commander rules as dated versions, every saved deck assessed against the version in force, the owner's dated impact report and public "what changed" pages. Slices 1 to 6 should land before the next Commander announcement.
+
+27. **I-50 Play this deck online**
+    Next for slices 0 to 8: every export a tested contract, the MTGO and Arena exports fixed, Cockatrice, XMage, Forge and Tabletop Simulator files, and a "Play online" panel any viewer of a public deck can use. Later for the webcam table view, the deck check link and the printable list.
+
+28. **I-49 A display that works for colour-blind and low-vision players**
+    A second channel for every colour signal, status and chart colours that pass contrast in both themes, and text that scales and reflows, with no "colour-blind mode". Nothing in it is paid.
+
+29. **I-52 A feedback loop players can see**
+    Next for an external monitor and a status line, a bug report that carries only allowlisted context, and human-written release notes in English and French (slices 0 to 8). Later for the public request board.
+
+30. **I-47 Rules answers for the cards in this deck**
+    Next for official rulings on every card and versioned, linkable rules (slices 1 to 7). Later for interaction notes reviewed by a judge. No model decides a rules answer.
+
 ### Later
 
-26. **I-10 Interoperability and integrations**
+31. **I-10 Interoperability and integrations**
     Make MagicAIBuilder a good starting point and a good destination for deck data.
 
-27. **I-11 Localization and regional experience**
+32. **I-11 Localization and regional experience**
     Expand beyond English and French only when translations and prices are genuinely supported.
 
-28. **I-12 Local AI**
+33. **I-12 Local AI**
     Explore local inference only after the cloud copilot has a measurable product fit. Offline reading is I-19.
 
-29. **I-18 Per-deck radar of new cards**
+34. **I-18 Per-deck radar of new cards**
     On demand, explain newly legal cards for one deck and show a diff before any change.
 
-30. **I-20 Collaborative review**
+35. **I-20 Collaborative review**
     Let an invited reviewer propose a patch that the owner accepts or rejects. Live co-editing stays out of this slice.
 
-31. **I-21 Reproducible probability bench**
+36. **I-21 Reproducible probability bench**
     Compare simulated hands across snapshots with a visible seed, sample size and mulligan policy.
 
-32. **I-35 Pod game log and casual results**
+37. **I-35 Pod game log and casual results**
     Log a real game after it ends, tied to the deck version played and the brackets declared and computed, with honest personal statistics and opt-in aggregates.
 
-33. **I-36 Creator and embed toolkit**
+38. **I-36 Creator and embed toolkit**
     Give creators deck embeds, link previews that show the deck, video in primers and a public read API, with no tracking and no paid reach.
 
-34. **I-40 Installable app, phone-first use and card scanning**
+39. **I-40 Installable app, phone-first use and card scanning**
     Later, with a no-regret first part: a manifest, icons, safe areas, install help and phone-sized E2E and Lighthouse runs (slices 1 to 5). Scanning waits for a benchmark, Scryfall's written answer and the owner's decision.
 
-35. **I-41 Store Commander nights and organiser tools**
+40. **I-41 Store Commander nights and organiser tools**
     Later, with a cheap early part: the pod-pairing policy and an account-free pod planner (slices 1 and 2), which need no schema and store no personal data.
 
-36. **I-43 Physical collection: storage places, deck boxes and pull lists**
+41. **I-43 Physical collection: storage places, deck boxes and pull lists**
     Later. The deck-box path (slices 1 to 5) needs no collection import and can be promoted on its own; that is an owner question.
 
-37. **I-44 Trade lists within the pod and nearby players**
+42. **I-44 Trade lists within the pod and nearby players**
     Later, with a cheap early part: private have and want lists, share links, the balance view and the friends audience (slices 1 to 7), which need no I-38 work.
 
-38. **I-45 Selling spare cards**
+43. **I-45 Selling spare cards**
     Later, with a no-regret first part: the deck-aware spare list and seller files for Card Kingdom and Cardmarket's tools (slices 0 to 3), which need no price, contract or legal answer.
+
+44. **I-51 Cards lent and borrowed within the pod**
+    Later. Slices 1 to 6 are private records that involve no second account and could be promoted alone; loans between accounts wait for I-38's block.
+
+45. **I-53 Monthly deckbuilding challenges**
+    Later. The rule checker, the brief page and private challenges between friends (slices 1 and 5 to 8) need no vote, prize or legal answer and could be promoted first.
 
 ### Parked
 
-39. **I-33 The marketplace ladder**
+46. **I-33 The marketplace ladder**
     A decision record, not a build plan. It names the stage that would reverse the marketplace non-goal and the evidence each step up needs. The owner decides; nothing is built for a marketplace.
 
 Open work on I-01, I-05 and I-06 stays ahead of I-14 through I-21. I-28's first slice, a copy correction, shipped in #1300; its guide page should land before I-15, whose Rule 0 sheet reuses the same bracket vocabulary. Among the new initiatives, start with I-14 and I-15, validate demand for I-16 and I-17, and specify the I-19 cache in parallel. Keep I-18 on demand until that flow is validated. Take up I-20 and I-21 only if players use the earlier slices.
@@ -377,6 +442,8 @@ Open work on I-01, I-05 and I-06 stays ahead of I-14 through I-21. I-28's first 
 I-30 to I-37 fit around that order. I-30's slice 0, the written legal answers and the owner's pricing decision, needs no code and can start now. Its slices 1 to 5 (metering, a monthly quota, a model per task, a free-plan entitlement layer and the AI-use disclosure page) ship whatever the legal answer and close I-05's quota gap, so they can start now as production-safety work; no billing code starts before slice 0's answers are committed. I-37's slices 1 to 9 are cheap visual and ergonomic wins with no schema change; run them alongside I-13 so the editor is restyled once. Its change history and finish model (slices 10 and 12) come before its bulk edit, tags and clipboard. I-32's slices 0 to 3 need no commercial relationship and can start; affiliate links wait for the seller's approval and the lawyer. I-31's card classification (slice 2) needs nothing else and can start; the rest depends on I-21 slices 1, 3, 5 and 6, which therefore move ahead of I-21's Later priority. I-34's slices 1 to 7 need no deck index and can start, slice 1 first because it removes today's thin-page exposure; slices 9 to 12 wait for I-29. I-35 and I-36 stay Later. I-33's slices 0, 1 and 4 are owner and outreach work, and nothing for a marketplace is built.
 
 I-38 to I-46 fit around the same order. I-38's slice 2 goes first: #1319 stopped a deleted account coming back, but the session cookie still outlives the deletion; slices 1 to 5 and 12 ship whatever counsel says, and its lawyer questions join I-30's slice 0. I-38 gates public growth and I-30's billing: a paid plan needs terms, a privacy policy and a deletion that cancels first. I-39's slices 1 to 4 need no schema and can start now; its event store (slices 10 to 12) waits for the lawyer questions, and slice 13 is the evidence I-30 waits for. I-42's slices 1 and 2 make the nine existing formats reachable and their banned flags current; slice 3, Duel Commander, waits for the committee's answer on the mulligan. I-46's slice 1 ships alone and fixes what every chat app shows today; slice 2 waits for I-36's deck image, and the Discord app waits for I-38's privacy policy. Among the Later initiatives, the cheap early parts can start without a product decision: I-40 slices 1 to 5, I-41 slices 1 and 2, I-43 slices 1 to 5 if the owner promotes them, I-44 slices 1 to 7 and I-45 slices 0 to 3. Scheduled agents must not pick I-38's slices 13 and 14, I-40's slices 8 to 12, I-41's slices 3 and later, I-43's slices 13 and 14, I-44's slice 12 or later, I-45's slices 11 to 13, or I-46's slice 15 before the decisions, answers or owner actions each spec names.
+
+I-47 to I-53 fit around the same order. I-48 comes first among them. Wizards said on WeeklyMTG, as reported on 2026-10-13, that a Commander announcement is "likely" before the end of 2026, and I-48's slices 1 to 6 make that announcement a data change rather than a release. Its slice 1 waits for I-28 slice 2, and its slice 2 for I-42 slice 2, because both change who reads `isBanned`. I-50 follows, because its slice 0 puts the eight shipped exports under fixtures and fixes the TappedOut export, and its slices 3 and 6 fix the Arena and MTGO files players import today; slice 6's command-zone placement waits for a test on an MTGO account. I-49 and I-52 are small and broad: I-49's slices 1, 2 and 11 can start in parallel today, I-52's bug report and release notes (slices 3 and 6) need no decision, and its monitor (slice 1) needs only the owner's choice of tool. I-47 comes last of the five, because rulings on each card bring parity rather than an advantage; its slice 1, the current Comprehensive Rules, is a correction and can run beside I-48's slice 1. Among the Later initiatives, I-51's slices 1 to 6 and I-53's slices 1 and 5 to 8 can start without a product decision. Scheduled agents must not pick I-47's slices 9 to 11 before the owner names a judge reviewer or its slice 14 before the owner decides, I-48's slice 12, I-50's slice 12, I-51's slice 7 before I-38's block or its slices 17 and 18 before I-30's slice 0 answers, I-52's slice 10 before I-38's report and block slices, or I-53's slices 16 and 17 before the lawyer's answers.
 
 Impact and effort below are planning labels: medium means several small PRs, large means a cross-cutting project. They are not delivery dates.
 
@@ -608,6 +675,7 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
   - [x] Reject whitespace-only partner IDs before creating a deck (#1098).
   - [x] Reject a commander and partner that are different printings of the same Oracle card on deck create and update (`sharesOracleIdentity`, #1131). Imported pairs outside these two APIs remain to be verified.
 - [ ] Version the Game Changers list and bracket rules as dated data rather than code. The list has held at 53 cards since 2026-02-09 and Wizards still labels the brackets beta, so a resumed update cadence should be a data change with an effective date, not a release.
+  - **2026-11-10:** [I-48](#i-48-official-changes-reach-every-saved-deck) slice 1 owns this item: a `CommanderRulesVersion` seeded from the five dated lists and one "version in force" reader for the bracket score, the stats, the companion check and `/rules/game-changers`. It waits for I-28 slice 2. I-48 slice 2 then stops trusting the `isGameChanger` and `isBanned` flags stored when each card was added.
 - [ ] Flag cards whose rules text cannot work with this deck's commander, as a deterministic rules check labelled apart from recommendations. Examples players cite: Arcane Signet and similar mana sources that produce only the commander's colours, under a colourless commander; a card that names a creature type the commander is not, such as Roaming Throne in a Go-Shintai deck, where "Shrine" is not a creature type. Read the condition from Oracle text and the commander's colour identity and type line, never from a model. Players raise this as EDHREC's main failure: ["Remember…take edhrec suggestions with a Grain of salt"](https://www.reddit.com/r/EDH/comments/1rl9bfa/) reached 368 points on r/EDH in March 2026, and replies in that thread name both cards. The same check filters or labels the data-sourced recommendations in I-09.
 
 ### Definition of done
@@ -695,6 +763,7 @@ Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65
 
 - [ ] Add UptimeRobot or an equivalent monitor for /api/health.
   - `/api/health` is documented for uptime monitors and `docs/engineering/dx-ci-overview.md` lists UptimeRobot, but no configured monitor is recorded. `docs/engineering/infrastructure.md` still points to an "Observability ? Level 1" roadmap section that no longer exists.
+  - [I-52](#i-52-a-feedback-loop-players-can-see) slices 0 to 2 close this item: the owner chooses Upptime, UptimeRobot or both, slice 1 sets up the monitor with a status page hosted off the production stack, and slice 2 feeds a cached `GET /api/status` to a footer line, so no browser calls `/api/health`.
 - [ ] Run Playwright E2E in Docker as the authoritative integration environment.
   - The `.husky/pre-push` gate (`scripts/e2e-pre-push.sh`) runs the full suite in Docker and takes its verdict from the container exit code. No GitHub workflow runs Playwright yet, although the script and `docs/engineering/quality-gate.md` say CI has its own E2E job.
   - [x] Queue concurrent pre-push gates behind a machine-wide lock, and clear root-owned reports left by a killed run through a container (#1302). Every clone and worktree on the machine shares one `magicaibuilder-e2e` compose project, so two pushes at once replaced each other's containers and both were blocked with no failing test. The script tests run the real script against a fake `docker`. A CI E2E job remains open.
@@ -715,6 +784,7 @@ Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65
   - [x] Cap the shared Scryfall caches: 500 KB per search page, 50 KB per card, 200 unexpired search rows and 2,000 card rows, with expired and client-written rows deleted before each write (`src/lib/cache-limits.ts`, #1322). The collection limits remain open.
 - [ ] **L2, low:** test that every API route declares its access. The middleware matcher skips `/api` (`src/middleware.ts`), so the API allowlist in `src/lib/auth/edge-config.ts` is never read, and a new route that forgets its guard is silently public. Add an inventory test that fails when a handler neither calls a guard nor appears in an explicit public list.
 - [ ] Delete the components that are never rendered: `TemplatesModal`, `BudgetOptimizationModal`, `PricingShoppingListModal`, `SharePopover`, `DeckDescriptionEditor` and `DeckTagsEditor` in `src/components/deck/`, and `CardNoteInline` in `src/components/card/`. Outside their own files, nothing imports them on `dev` at `576f680`. `TemplatesModal` is the only caller of `GET /api/templates`, which returns two hard-coded fake templates ([I-39](#i-39-first-run-activation-and-product-measurement) slice 3), so both can go together. The hook `src/hooks/useTypewriter.ts` has no consumer either. I-08's primer-length item cites `DeckDescriptionEditor`; re-check it against the editor that is rendered.
+  - The I-53 spec found another orphan: `src/lib/challenges/challenges.ts`, added in #246 on 2026-03-30, imported by nothing and backed by no schema. [I-53](#i-53-monthly-deckbuilding-challenges) slice 1 deletes it.
 - [ ] Keep the gate order explicit: typecheck, lint, unit tests, E2E policy, SonarCloud.
 - [ ] Require SonarCloud open issues to be zero before PR creation or merge.
   - The checklist in `docs/engineering/quality-gate.md` requires zero open issues; nothing enforces it automatically yet.
@@ -972,7 +1042,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - Downloaded text lists treat a bare or commented `99` heading as the main deck, so cards after a Sideboard section return to the correct zone (#1078).
 - Downloaded text lists accept uppercase X quantity markers alongside lowercase x without losing command or secondary zones (#867).
 - Downloaded text lists accept lowercase and mixed-case trailing edition codes without including them in card names (#869); exact-printing restoration remains open.
-- Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, ManaBox, MTGGoldfish, EDHREC and plain text.
+- Exports for Moxfield, MTG Arena, MTGO, TappedOut, Archidekt, MTGGoldfish, EDHREC and plain text. **Correction 2026-11-10:** this line also named a ManaBox export. None exists: on `dev` at `72fbfc1`, `src/lib/deck/export.ts` holds these eight exporters, and the only "ManaBox" under `src/` is an import-parser test (`src/lib/import/decklist-parse.test.ts`).
 - Goldfish and EDHREC plain-list exports keep Sideboard and Considering cards out of the playable main deck.
 - Archidekt exports now count and list only main-zone cards as Mainboard, preserving commander, partner and category tags. Dedicated secondary-zone Archidekt export remains open.
 - Arena text exports preserve the selected companion in a dedicated section and include its sideboard copy only when absent, without changing the stored deck. Companion metadata and secondary-zone quantities are covered by local-parser round-trip tests; live Arena client import remains unverified.
@@ -997,6 +1067,7 @@ A recommendation is never presented as universal truth: the user can see where i
   - [x] Quote carriage returns in deck CSV fields so card names and metadata stay within their cells (#846); spreadsheet-client import remains unverified.
   - [x] Retain printing-specific Scryfall IDs and application categories in simple and full deck CSV exports (#842). Missing printing IDs remain blank; CSV reimport and external category mapping remain open.
   - [x] Include a trailing Zone column in simple and full deck CSV exports, preserving main, sideboard and maybeboard values without changing existing column positions (#840). CSV reimport and command-zone rows remain separate scope.
+  - [I-50](#i-50-play-this-deck-online) slice 0 gives the eight shipped text exports one contract, with typed notices and a `v1` fixture each. I-10 keeps the import side and the round trip.
 - [x] Add an import preview that shows zones, commanders, missing cards and duplicate decisions.
 - [x] Show both parsed commanders in a pasted-list preview when a partner or Background is present (#1076).
 - [x] Validate pasted-list names before confirmation and show unresolved cards in its preview (#1065).
@@ -1005,6 +1076,7 @@ A recommendation is never presented as universal truth: the user can see where i
 - [x] Preserve partner, companion, sideboard and Considering cards when a deck is exported, bulk-edited and reimported as plain text.
 - [x] Export MTGO sideboard quantities as sideboard cards without including Considering cards in the playable list.
 - [x] Keep MTGO XML valid and card names intact when names contain XML-reserved characters.
+- [ ] Keep Sideboard and Considering cards out of the TappedOut export's main list. `exportTappedOut` (`src/lib/deck/export.ts`) writes every entry of `deck.cards`, so they enter its main list unmarked. [I-50](#i-50-play-this-deck-online) slice 0's fixtures catch it, and that slice fixes it.
 - [ ] Improve round-trip fidelity for categories, printings, companions and sideboards across external formats. EDHREC's October and November 2026 fixes for clipboard-to-Archidekt commander assignment and the Archidekt export link are a reminder to keep these fixtures current. They do not add a new integration.
   - [x] Preserve commander, quantities and secondary zones in downloaded plain-text lists using CR, CRLF or LF line endings (#836).
   - Import parsing and preview are more resilient, but exact printing and category round trips remain open; preserving a localized name does not guarantee that Scryfall resolves that language.
@@ -1015,6 +1087,8 @@ A recommendation is never presented as universal truth: the user can see where i
 - [ ] **Owner decision: the supported Moxfield route.** With honest headers, Moxfield answered both of the app's probes on 2026-11-09 with a Cloudflare block page (HTTP 403), so with the fix above Moxfield URL import fails for as long as Moxfield refuses honest requests. The options are to accept paste import as the supported Moxfield route, or to ask Moxfield for API access. No request has been sent to Moxfield. The source policy planned in [I-29](#i-29-cross-site-commander-deck-index) forbids headers that impersonate a source, so restoring the old headers is not an option.
 
 **2026-11-09:** deck embeds for other websites are tracked in [I-36](#i-36-creator-and-embed-toolkit). A "play this deck" link to an online table such as Playgroup.gg or TableCommander would be an export contract here. Neither exists today.
+
+**2026-11-10:** that contract is now [I-50](#i-50-play-this-deck-online)'s. The play-readiness of the MTGO and Arena exports listed above moves there too: commander placement, MTGO Catalog IDs, Arena set codes, availability on each platform and Brawl legality. I-10 keeps import, the other text exports and their round trip.
 
 ### Definition of done
 
@@ -1056,6 +1130,7 @@ A deck can make a round trip through supported tools without silently changing c
   - [ ] Bundle 1, deck views and public pages: about 38 strings in 12 files, such as the "AI" badges, "Fork" and "Save" on a public deck (`src/components/profile/PublicDeckActions.tsx` has no `useTranslations`), the default name "New Deck", and an average rating shown as "4.5" in French. Fix branch in flight: `fix/i18n-public-deck-views`.
   - [ ] Bundle 2, builder, card, playtest and collection panels: about 45 strings in 20 files, such as the card flip and add labels, the playtest counter buttons, recommendation freshness and the companion rule text built in `src/lib/deck/companion.ts`. Averages and percentages are formatted with `toFixed` and `` `${n}%` `` instead of the locale.
   - [ ] Bundle 3, import, export and rules browsing: about 30 strings in 8 files: the Moxfield profile panel, proxy export, the set autocomplete hint, rules pagination and the rules effective date. Fix branch in flight: `fix/i18n-import-export-rules`.
+    - [I-47](#i-47-rules-answers-for-the-cards-in-this-deck) slice 2 also localises the rules page's date and its "No matching rules found." text; whichever lands second reuses the first.
   - [ ] Bundle 4, API and thrown errors shown verbatim: sign-up, the sign-in `?error=` codes, API keys, meta, URL import, Scryfall, snapshots, deck creation, AI build progress and AI suggestions. Each route should return a stable `code` that the client maps to `t()`, as `/api/import/url` already does for a Moxfield refusal.
   - [ ] Bundle 5, deck-store toasts: 34 strings in `src/lib/deck/store.ts` and `src/lib/deck/commander-save-recovery.ts`. Let `useToastStore().add()` take a `{ key, values }` descriptor that `ToastContainer` translates, so the store stays free of React and locale.
 - [ ] Translate the French keys still equal to English: the whole `deck.ratings.*` block (about 19 keys), `profile.followers`, `followingCount`, `signInToFollow`, `followFailed`, `badgeCommunityBuilder` and `badgeHighlyRated`, plus `deck.comparison.secondDeck` and `deck.stats.removal`. In all, 136 of 1,385 French values equal English, most of them legitimately (Foil, CSV).
@@ -1128,6 +1203,8 @@ No separate design-reference document was added with these slices. Screenshot re
 - [ ] Refine the deck editor's dense workspace: card views, commander context, actions, warnings and analytics, without hiding existing workflows or introducing layout jumps.
 - [ ] Refine public decks, discovery and recommendations around card imagery, source-aware evidence, clear filters and consistent detail panels. Imagery, category chips, a name filter and restyled panels shipped in #1267. Source-aware evidence and recommendation filters remain open.
 - [ ] Validate the redesigned journeys at narrow, tablet and wide web widths, with keyboard and screen-reader access, light/dark contrast, visual regression coverage and measured loading/interaction performance. Include tooltips that do not cover the card, and image loading that keeps already seen images available. Run code validation on the VPS. #1270 covers banner and preview stability in the editor and does not close this slice.
+
+**2026-11-10:** the [I-13 spec](specs/i13-visual-direction.md#delivery-slices)'s slice 1 lists "non-colour status encoding" beside the border and accent-text corrections. [I-49](#i-49-a-display-that-works-for-colour-blind-and-low-vision-players) proposes to take that part into its slices 4 to 10, with status tokens for both themes, an icon shape per status and a lint rule against raw status colours, and to leave I-13 slice 1 with borders and accent text. This is an owner question in the status note; until the owner answers, the item stays in I-13. I-49 also found I-13's finding that brackets are encoded by hue alone partly out of date: the bracket's number and name now sit beside its colour, and only its light-theme contrast still fails.
 
 ### Definition of done
 
@@ -1383,6 +1460,7 @@ Wizards publishes the rules but no deckbuilding guidance. EDHREC, CoolStuffInc a
 - [ ] Teach opening hands per bracket and play style: the free mulligan, keep rules built on cheap ramp, and the land plateau for the deck's curve. Report the open deck's own keep profile under the multiplayer rules.
 - [ ] Ship reviewed English and French content; hide sections not reviewed in a locale.
 - [ ] Show the rules state the guide reflects, and open a review whenever Wizards changes brackets, Game Changers or the banned list.
+  - This is slice 8's freshness banner. [I-48](#i-48-official-changes-reach-every-saved-deck) slice 3 stores each Wizards announcement as a dated `RulesAnnouncement` record, and the banner can read it once that slice ships.
 
 ### Engineering enablers
 
@@ -1401,7 +1479,7 @@ The initiatives above carry the work already committed. The six below extend the
 
 Read them as hypotheses with a stated basis, not as commitments. A 2027 initiative is promoted to Next only when its spec's open questions are answered and its dependency has shipped.
 
-**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon. I-30 to I-37, added the same day from a research pass on the owner's goals, are not part of this horizon: four of them are Next and one is Next in part, so they sit in their own section, [Business, Reference And Depth](#business-reference-and-depth), after the list of what the sweep ruled out. I-38 to I-46, added that evening, follow in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table).
+**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon. I-30 to I-37, added the same day from a research pass on the owner's goals, are not part of this horizon: four of them are Next and one is Next in part, so they sit in their own section, [Business, Reference And Depth](#business-reference-and-depth), after the list of what the sweep ruled out. I-38 to I-46, added that evening, follow in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table). I-47 to I-53, added on 2026-11-10, end that part (I-51 to I-53) and open [Rules, Access And The Online Table](#rules-access-and-the-online-table) (I-47 to I-50).
 
 **Why six and not twenty.** Beyond these, the sweep stopped producing gaps the product is positioned to fill. Adding further initiatives would mean inventing them, which fills a roadmap without filling a pipeline. The honest way to extend 2027 further is another dated sweep, not a longer list. The 2026-11-09 pass on the owner's goals was such a sweep, and it produced I-30 to I-37.
 
@@ -1564,6 +1642,7 @@ The beginner audience is the largest in Commander and the one the category serve
 
 - [ ] Attach a short, sourced explanation to each warning class — colour identity, singleton, bracket inputs, companion rules — reachable in one action from the warning.
 - [ ] Link to the comprehensive rules reference where a rule is quoted, with its rules version.
+  - [I-47](#i-47-rules-answers-for-the-cards-in-this-deck) slices 1 and 2 give each rule a versioned address, such as `/rules/comprehensive?rule=903.9a`, and a citation contract; the I-47 spec asks I-27's slice 4 to reuse both.
 - [ ] Keep explanations deterministic and authored. Do not generate rules text with the model.
 - [ ] Never block or gate a build behind a lesson.
 
@@ -1770,7 +1849,7 @@ On 2026-11-09 the owner named a marketplace "recognised like Cardmarket or TCGpl
 | 5     | Pilot marketplace: professional sellers, funds held by a licensed provider | A build spec after the owner's "go" | **Reversed** |
 | 6     | Open player-to-player marketplace with a delivery guarantee                | After a stage-5 review              | Reversed     |
 
-[I-44](#i-44-trade-lists-within-the-pod-and-nearby-players)'s trade lists and [I-45](#i-45-selling-spare-cards-collection-value-buylists-and-seller-exports)'s seller exports add no stage: they sit beside stages 1 to 4, and no money passes through the product.
+[I-44](#i-44-trade-lists-within-the-pod-and-nearby-players)'s trade lists and [I-45](#i-45-selling-spare-cards-collection-value-buylists-and-seller-exports)'s seller exports add no stage: they sit beside stages 1 to 4, and no money passes through the product. [I-51](#i-51-cards-lent-and-borrowed-within-the-pod)'s loans add none either: a deposit or a fee would turn a loan into a transaction, which would be a change for this record's decision log.
 
 ### Scope
 
@@ -1955,6 +2034,8 @@ On the 100-card fixture, a player switches among five views, collapses groups, t
 
 I-38 to I-46 were added on the evening of 2026-11-09, from dated research that each spec links, because its notes are not committed. They cover what a public, paying product owes its users (I-38), how a new player reaches a first deck and how that is counted (I-39), the phone and the store (I-40, I-41), the Commander variants (I-42), the physical cards a player stores, trades and sells (I-43 to I-45), and the chat rooms where pods and creators meet (I-46). I-38 and I-39 are Next, I-42 is Next for slices 1 to 6 and I-46 for slices 1 to 3, and the others are Later with cheap early slices named. The rules of the previous part hold: card data, fan content and evidence stay free, each initiative names its paid-tier candidate and leaves the decision to I-30, legal points are research and not legal advice, and none of them holds money, cards or shipments.
 
+I-51 to I-53 joined this part on 2026-11-10, from a third research pass. I-51 records the cards and decks lent within a pod, beside I-43 to I-45. I-52 makes the product's own reliability and progress visible to players, beside I-38 and I-39. I-53 runs deckbuilding challenges on I-38's moderation and I-41's stores. I-52 is Next for slices 0 to 8, and I-51 and I-53 are Later with cheap early slices. The same rules hold.
+
 ---
 
 ## I-38: Trust, Safety And User Rights
@@ -2138,6 +2219,7 @@ The roadmap lists nine formats as a completed foundation, but no screen lets a p
 - [ ] One commander cast from the command zone per game with two commanders, and imports and meta labels that offer a Duel Commander deck instead of adding its cards silently to a Commander deck (slices 4–5).
 - [ ] A source register that names duelcommander.org, and a scheduled drift check against Scryfall that marks a list "under review" on a mismatch (slice 6).
 - [ ] Later: a player-count choice in the playtest, which closes I-07's follow-up from #1301; the Brawl split; Oathbreaker; Pauper Commander; ban notices on saved decks; cEDH link-outs; Canadian Highlander; and Tiny Leaders, parked on demand (slices 7–14).
+  - The ban notices on saved decks (slice 11) should reuse [I-48](#i-48-official-changes-reach-every-saved-deck) slice 5's notice and dated report rather than build a second notice.
 
 ### Engineering enablers
 
@@ -2303,6 +2385,285 @@ Playgroups, stores and creators organise Commander on Discord, and the reference
 ### Definition of done
 
 A deck link pasted in Discord shows the commander art with its artist, the name, author, declared bracket and legality, and an "Open deck" button; every public page unfurls with a PNG image; a pod runs `/lineup` on four public decks and sees the bracket spread; and a creator's server gets one post per published update with no bot installed.
+
+---
+
+## I-51: Cards Lent And Borrowed Within The Pod
+
+**Spec:** [`specs/i51-cards-lent-and-borrowed.md`](specs/i51-cards-lent-and-borrowed.md)
+
+**Outcome:** a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+**Status:** Later — proposed 2026-11-10
+**Priority:** Later. Slices 1 to 6 are private records that involve no second account and depend on no other initiative, so they could be promoted alone
+**Impact / effort:** Low to medium / medium
+**Depends on:** nothing for slices 1–6; I-38 slice 12's block before loans between accounts (slice 7) and the household (slice 9); I-38 slice 4 for the export; I-15 slice 3 for pod borrowers; I-16, I-43, I-44 and I-45 for their integrations; I-38 slice 13 and I-30 for e-mail reminders and the borrow plan.
+
+Commander players lend cards and whole decks to the people they play with. They record it on a slip of paper in each sleeve, in a photo sent by text, or in a ManaBox binder or a Moxfield sideboard named after the lender ([r/EDH, 2025-12-31](https://www.reddit.com/r/EDH/comments/1q0c3oc/)). The deckbuilder is the right place for that record, because a loan changes what a deck counts as owned. Two small iOS apps record loans: MTG Trades gives it away ([App Store](https://apps.apple.com/us/app/mtg-trades/id736701892)), and Deckhowler sells due-date reminders in its Premium plan ([App Store](https://apps.apple.com/us/app/deckhowler/id6740892169)). Neither describes a borrower who sees the loan, a whole deck lent with a return checklist, or a shared household collection, and no deckbuilder read lets a loan change what a deck counts as owned. The demand evidence is weak to medium: many independent workarounds and a 2010 request on Deckbox that got no staff answer ([forum](https://deckbox.org/forum/viewtopic.php?id=516)), but no post asking for a better method scored above 18 points. No money, messages or ratings are involved.
+
+### Scope
+
+- [ ] A loan schema (`CardLoan`, `CardLoanItem`, `CardLoanReturn`) and one write module that keeps the copies out on open loans at or below a row's quantity, under a row lock (slice 1). The collection routes answer 409 when a decrease or a deletion would leave fewer copies than are out, and a printing-swap merge moves the loan items. Today `CollectionCard` (`prisma/schema.prisma`) has no possession state, and `POST /api/collection`, `PATCH /api/collection/[id]` and `DELETE /api/collection/[id]` change quantities with nothing to protect. A loan can only be an owner-only card note, with no date or counterpart, that changes no count.
+- [ ] Lend copies to a private label, with due dates, returns, closing as returned, given or lost, a history, and "Lent" beside "Used in decks" (slice 2).
+- [ ] Lent copies unavailable in the lender's deck status and flagged in the acquisition plan; borrowed copies recorded from a label, assigned to a deck, shown as "borrowed" and never counted as owned (slices 3–4). Today `getDeckCardStatuses` (`src/lib/collection/shopping-list.ts`) knows only owned, proxy and missing.
+- [ ] Lend a whole deck: a frozen list that survives the deck's deletion, a preview of proxies and missing cards, a banner and a return checklist (slice 5). `DeckSnapshot` cascades with its deck, so the loan keeps its own copy of the list.
+- [ ] A Due view computed on read, with reminders off by default (slice 6).
+- [ ] Loans between mutual follows: pending, accept, decline, a 14-day expiry, detach, and a return claim shown on both sides until the lender confirms it; then the borrower's read-only view of a lent deck through `SHARED_DECK_SELECT` (slices 7–8). No typed text crosses accounts.
+- [ ] A household of two to six accounts that see one physical collection, with each copy's owner and never its purchase price; loans inside it need no acceptance; then pod members as borrowers (slices 9–11).
+- [ ] Loans in the full export, and lent copies excluded from I-16's free cards, I-43's pull lists, I-44's have lists and I-45's spare copies (slices 12–16).
+- [ ] After I-38's sender and I-30's decision: e-mail reminders, and the borrow plan in I-43's game-night planner (slices 17–18).
+
+### Engineering enablers
+
+- Two concurrent loans of a row's last copy let exactly one through, on PostgreSQL.
+- A schema test fails when a column another account can read holds typed text, and labels and lender notes never appear in a response to another account.
+- The borrower's deck payload passes the share route's secret list, owner notes such as "borrowed from Alex" included.
+- Blocking detaches every loan between two accounts in the same transaction, and deleting an account turns its counterpart link into "deleted account".
+
+**Paid-tier angle:** lent and borrowed records, whole-deck loans, the checklist, the history, loans between accounts, the borrower's view, the household and the in-app Due view stay free, because the player's own data is never the lever (I-30 requirement 1.2). The candidates are e-mail reminders, a scheduled job with a sender to pay for, and the borrow plan inside I-43's game-night planner. The spec advises I-30 not to plan revenue on this initiative: its value is moving a record players keep on paper to the place where they build.
+
+### Definition of done
+
+A player lends a deck to a friend, sees the lent copies drop out of what a new deck can use and ticks the cards off as they come back, and the friend sees the loan and its due date; a borrowed card fills a deck without ever counting as owned, and no typed text crosses accounts.
+
+---
+
+## I-52: A Feedback Loop Players Can See
+
+**Spec:** [`specs/i52-feedback-loop-players-can-see.md`](specs/i52-feedback-loop-players-can-see.md)
+
+**Outcome:** a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next for the status line, the bug report and "What's new" (slices 0 to 8); Later for the request board (slices 9 to 13)
+**Impact / effort:** Medium / small for slices 0–8; medium for the board
+**Depends on:** the owner's choice of monitor and of the report retention (slice 0); I-38 slices 8 and 12 before players post or vote (slice 10); I-39 slice 11 for the measurement view; I-05's failure visibility for the status lines per service.
+
+A cheap subscription lives on two things: players trust that the product works, and they see it improve in the direction they asked for. Today neither is visible from inside the product. A player who hits a bug has no form, address or link, and the only changelog is a developer log in English that records merges to `dev`, not what reached players; on 2026-11-10 `dev` was 37 commits ahead of `main`. Every product read takes bugs and requests outside the product, through Discord, a forum, e-mail, GitHub issues or a hosted board. EDHREC and Archidekt publish changelog articles ([EDHREC, 2026-10-22](https://edhrec.com/articles/changelog-redesign-follow-up)), and none links a shipped change to the request behind it. Hosted boards either stop being free early, as Canny's does at 25 tracked users ([pricing](https://canny.io/pricing)), or add a processor, a second sign-in or a script the CSP refuses. So the board is built in the product, with self-hosted Fider (AGPL-3.0) as the exit. No controlled study ties a public board to retention, so the spec measures it. Upptime is free on GitHub and UptimeRobot's free plan allows commercial use ([Upptime](https://github.com/upptime/upptime), [UptimeRobot pricing](https://uptimerobot.com/pricing/)). This is product feedback; deck feedback stays in I-08.
+
+### Scope
+
+- [ ] Slice 0, no code: the owner chooses the monitor and the status page's address and sets the bug-report retention; the lawyer questions join I-30 requirement 7.2 through I-38's slice 0.
+- [ ] An external monitor that checks `/api/health` at least every 5 minutes, and a status page hosted off the production stack (slice 1). This closes I-05's monitor item. Today no monitor is configured, although `docs/engineering/dx-ci-overview.md` lists UptimeRobot, and `/api/health` (`src/app/api/health/route.ts`) is public, has no rate limit and queries the database on every call.
+- [ ] `GET /api/status`, cached for 60 seconds, which answers `unknown`, never `ok`, when the monitor cannot be read; a footer status line, a banner only when something is wrong, and owner notices (slice 2). No browser calls `/api/health`, and a test fails if client code references it.
+- [ ] A bug report stored first-party and reachable from the header, both footers and the error boundary, with a "What will be sent" panel, an allowlist of context, a deck id only behind an unticked consent box, and free text scrubbed of e-mail addresses and tokens (slices 3–4). Today `src/app/[locale]/error.tsx` says the problem "has been reported" and shows a reference but takes nothing from the player, and `src/app/global-error.tsx` renders in English only.
+- [ ] A moderator triage view, Settings → My reports, and promotion to a GitHub issue with the owner's summary, never the player's words (slice 5).
+- [ ] Human-written release notes in English and French, one file per note under `src/content/whats-new/`, written in the `chore/docs` PR and dated by the first day production served them; `/whats-new`, an Atom feed and a header dot for accounts, with no modal or toast (slices 6–7). `docs/project/changelog.md` stays the developer log.
+- [ ] A released bug report links to its release note (slice 8).
+- [ ] Later: the request board's read side; posting and voting after I-38's report and block slices; a status workflow with merges and links to release notes; the owner's measurement view; and status lines for card search and the copilot (slices 9–13).
+
+### Engineering enablers
+
+- A report carrying any key outside the allowlist is rejected, the stored row has no user-agent, e-mail or IP column, and the payload equals the "What will be sent" panel.
+- The scrubber removes e-mail addresses, `Bearer` values, JWT-shaped strings and long hexadecimal and base64 runs, under property tests.
+- `firstServedAt` is written once under concurrent renders, and a note missing either locale fails the schema test.
+- One vote per account per request, and a guard test fails if any public response carries a plan, an entitlement or a voter list.
+
+**Paid-tier angle:** everything here is free: reporting, voting, statuses, release notes and the status page. A paying player's vote counts once, and the board shows no split by plan. Its use to I-30 is evidence and trust. The board counts demand for a paid candidate before it is built, which I-33's threshold of 50 distinct players needs, and a visible trail from request to release is the argument a cheap subscription makes.
+
+### Definition of done
+
+A player sees the site's status in the footer and on a page that loads while the site is down, sends a report from an error page with only the listed context and follows it to the release note that fixed it, and reads that note in English or French, dated by the day production first served it.
+
+---
+
+## I-53: Monthly Deckbuilding Challenges
+
+**Spec:** [`specs/i53-monthly-deckbuilding-challenges.md`](specs/i53-monthly-deckbuilding-challenges.md)
+
+**Outcome:** a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
+
+**Status:** Later — proposed 2026-11-10
+**Priority:** Later. The rule checker, the brief page and private challenges between friends (slices 1 and 5 to 8) need no vote, no prize and no legal answer, and could be promoted first
+**Impact / effort:** Medium / medium
+**Depends on:** I-32 slice 2 for dated prices; I-28 slice 7 for bracket rules; I-42 slice 10 for rarity; I-36 slice 1 for frozen entries and its slice 11 for the shared rate limiter; I-38 slices 8 to 10 for reports and decisions; I-21 slice 1 for the seeded draw; I-34 slice 1, I-39 slice 10, I-41 slices 3 and 11, I-08's notifications and I-46 slice 5 for their slices; the lawyer's answers before a sponsor credit or a prize.
+
+Archidekt and EDHREC have run a monthly deckbuilding contest since at least March 2025, and one month's finalists came "from among the nearly thousand decks entered" ([EDHREC, 2026-06-17](https://edhrec.com/articles/archidekt-deckbuilding-contest-finalists-june-2026)). Staff pick three finalists and "Like" counts place them, and the rules name no defence against second accounts ([rules](https://archidekt.com/contestRules)). Players also set themselves constraints and check them by hand: 31 of the 100 most recent r/EDH posts with "challenge" in the title concern the "32 deck challenge", and pods write briefs such as "bracket 3, $20 max budget" ([r/EDH, 2026-03-19](https://www.reddit.com/r/EDH/comments/1ryag1n/)). No contest found publishes a per-entry check report with legality, bracket rules and a dated price, or freezes the list at entry, and no host tools were found for a store, a creator or friends. France bans lotteries and extends the ban to games of skill that demand a payment, and popularity voting can turn a US skill contest into a game of chance, so recognition comes first and prizes wait for the lawyer. The spec is the decision that I-36 and I-34 left open on contests and community voting events.
+
+### Scope
+
+- [ ] `checkDeckAgainstRules`, a pure checker for legality, Game Changers, colour identity, slots, a frozen commander list, banned cards and the AI label, which replaces the orphan `src/lib/challenges/challenges.ts` and deletes it (slice 1). That module, added in #246 on 2026-03-30, is imported by nothing, ranks entries by a `score` nothing computes, and grants a badge to the top 25% and a `"golden-frame"` cosmetic to the top 10%.
+- [ ] Price rules on I-32's dated prices in the brief's market, bracket rules from I-28 slice 7, and rarity from I-42 slice 10 (slices 2–4). Today `DeckCard.price` is Scryfall's `usd` with no date (`src/lib/deck/pricing.ts`), and no EUR price exists.
+- [ ] The challenge model, the brief page with each rule in plain English and French beside its machine form, and "Check my deck", which stores nothing (slices 5–6).
+- [ ] Entries frozen through I-36's public projection with their check report, one per account or slot, a "changed since entry" notice, and a gallery ordered by a daily hash, never by votes (slice 7). `Deck.tags` stays private: `PUBLIC_DECK_SELECT` (`src/lib/deck/public-deck-select.ts`) leaves it out, so a challenge cannot be a public tag.
+- [ ] Private challenges for up to 12 members by invite link, with a seeded slot draw that any member can replay (slice 8).
+- [ ] Judges, shortlists, notes, awards and the results page; reports, withdrawals and disqualifications through I-38's decisions; then a community vote among the finalists with weight one per account (slices 9–11). Today `POST /api/community/decks/[id]/vote` has no rate limit, and `rankDecksByScore` (`src/lib/community/votes.ts`) orders commander discovery by vote score.
+- [ ] Results statistics withheld below 10 entries, awards on profiles and deck pages, product events and the demand threshold, store challenges and opt-in announcements (slices 12–15).
+- [ ] After the lawyer's answers: a sponsor's text credit, and challenges with a prize that only judges award (slices 16–17).
+
+### Engineering enablers
+
+- Rerunning the check on a frozen list with its recorded price date and checker version gives an identical report.
+- No challenge module imports the AI client, no challenge route reads a plan or an entitlement, and the tally function takes only ballots and account creation dates.
+- `frozenCards` never holds notes, budget or tags, and the gallery order ignores votes, views and ratings.
+- A ballot from an account created after entries opened, from a judge or for one's own entry is refused.
+
+**Paid-tier angle:** entering, checking, voting, results, the archive, private challenges and recognition stay free. A paid entry could also be the financial sacrifice that turns a French skill contest with a prize into a lottery. The candidate is store challenges inside I-41's store plan, and the spec rates its value small. A sponsor may fund a judges' prize through a labelled text credit, never an entry's place, a vote or a judge, and only after the lawyer and the owner's answer on I-38's "no ads" default.
+
+### Definition of done
+
+A player checks a deck against a brief, enters a frozen list that passes, and finds it on a results page that shows each finalist's check report and judges' note; no model decides anything, no ballot counts twice, and no prize is awarded before the lawyer's answers.
+
+---
+
+# Rules, Access And The Online Table
+
+I-47 to I-50 were added on 2026-11-10 from a third research pass, each from dated research its spec links, because the notes are not committed. They cover what the product says about the rules of a deck's cards (I-47) and about the official lists that move a saved deck (I-48), who can read the product's colours and charts (I-49), and how a deck reaches the online tables where it is played (I-50). I-49 is Next, and I-47, I-48 and I-50 are Next for their early slices. The rules of the previous parts hold: no model decides a rules answer, a legality verdict or a replacement; card data and the evidence the product shows stay free; and legal points are research, not legal advice.
+
+---
+
+## I-47: Rules Answers For The Cards In This Deck
+
+**Spec:** [`specs/i47-rules-answers-for-this-deck.md`](specs/i47-rules-answers-for-this-deck.md)
+
+**Outcome:** a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next for official rulings and rule links (slices 1 to 7); Later for the judge-reviewed interaction notes (slices 8 to 11) and for offline and screen-reader inclusion (slice 12); slices 13 and 14 wait on I-48, I-30 and the owner
+**Impact / effort:** Medium / medium for slices 1–7; the notes cost reviewer time on every rules update
+**Depends on:** nothing outside this initiative for slices 1–7; I-38 slice 8 for error reports; a judge the owner names before slices 10 and 11; I-19 slice 2 and I-24 slice 3 for slice 12; I-48 slices 5 and 11 and I-30 slice 0 for the rules watch; the owner's decision for slice 14.
+
+At the table, a pod argues about how two cards in one deck interact, and players say loudly that chatbots get rules wrong: "Do not use AI to make deck suggestions or clarify rules" reached 729 points on r/EDH ([2025-12-31](https://www.reddit.com/r/EDH/comments/1q0epg2/)). A hobby bot grounded in the rules and in Scryfall's rulings was wrong on about one question in sixteen, and committed to an answer every time ([r/mtgrules, 2026-08-01](https://www.reddit.com/r/mtgrules/comments/1vcsp0u/)). Rulings on each card are table stakes: Scryfall, Gatherer, Moxfield and Archidekt show them. Scryfall's daily rulings file holds 79,706 rulings for 20,080 Oracle cards in 5.4 MB ([bulk data](https://scryfall.com/docs/api/bulk-data)), and only 28 of them contain a rule number, so rulings will not link themselves to the rules. No product read joins a card's keywords to rule numbers, versions a citation or lists the interactions that matter in one deck. The opening is a product that cites, versions and declines, which is also the only position the roadmap's boundary allows: no model decides, writes or translates a rules statement a player sees.
+
+### Scope
+
+- [ ] A Comprehensive Rules import script with a diff report, landing as a reviewed PR; an update to the 2026-11-06 version; and one served copy, with a test that fails when a committed copy differs (slice 1). Today the app serves `src/lib/rules/data/MagicCompRules-20260807.txt`, two versions behind the file Wizards links ([rules page](https://magic.wizards.com/en/rules)). Between the two, 109 rules moved to a new number with the same text, 211 changed text under the same number, chapter 715 became "Saga Cards", and 903.5e became 903.5f. Two more copies sit at the 2026-02-27 version, in `docs/rules/` and `.agents/skills/mtg-rules/references/comprehensive-rules.txt`.
+- [ ] Rule addresses: an `id` on each paragraph, `/rules/comprehensive?rule=903.9a`, linked cross-references and search results, and the French date and strings (slice 2). Today `src/components/rules/ComprehensiveRulesView.tsx` renders one chapter per `?chapter=` with no anchor per rule, "No matching rules found." is hard-coded English, and the French page shows the English date.
+- [ ] A weekly server-side import of Scryfall's rulings file into `CardRuling`, with `RulingsImport` and `RulingChange`, and `DeckCard.oracleId` with a backfill (slice 3).
+- [ ] A deck rules API and a builder panel with source labels, dates and the file date, which retires the browser fetch (slice 4). Today `src/lib/scryfall/rulings.ts` fetches rulings from the browser outside the request queue, and `src/components/card/CardRulingsPanel.tsx`, reached only from `PrintingSelectorModal.tsx`, titles every ruling "Oracle rulings", so Scryfall's own notes read as official.
+- [ ] Rulings on the public deck page through the allowlist, and keyword-to-rule links with a reviewed alias table and a catalogue test (slices 5–6). Today `PublicDeckCards.tsx` shows neither Oracle text nor rulings, and `PUBLIC_DECK_CARD_SELECT` (`src/lib/deck/public-deck-select.ts`) carries neither.
+- [ ] A weekly freshness check for the rules and the rulings file, which opens an issue and never deploys rules text (slice 7).
+- [ ] Later: the notes' content model, citation contract and drift rules; a review record, "Report a rules error" and a public changelog of notes; a first catalogue of Commander notes on 903.3d, 903.8, 903.9a and 903.9b; and "Worth knowing in this deck" (slices 8–11). A note whose cited rule changes goes back to review and stops rendering.
+- [ ] Later: rulings and notes in I-19's offline copy and I-24's export (slice 12); the rules watch as entries in I-48's per-deck report (slice 13); and model retrieval of citations only if the owner decides for it (slice 14).
+
+### Engineering enablers
+
+- A dependency test fails if any rules route or component imports the AI client, as in I-46.
+- Rendering a rules statement without a citation fails; every Comprehensive Rules citation carries its version, and every ruling its date and source.
+- The 2026-08-07 and 2026-11-06 files are fixtures: the diff reports 124 rules removed, 145 added and 109 moved with the same text; a note citing 903.5e goes to review, and one citing 712.4a is renumbered to 713.1a.
+- CI fails a note marked reviewed that lacks a reviewer or a date, or whose author is its reviewer.
+
+**Paid-tier angle:** rulings, rule pages and links, and notes stay free and readable signed out. Scryfall requires card data to stay reachable "anonymously or with free accounts" ([API terms](https://scryfall.com/docs/api)), and rival sites show rulings for free. The notes are never sold, because an error in them is the product's to own. The candidate is a rules watch across all of a player's decks, delivered through I-48's report and notices so that each deck has one change report; whether it paywalls Scryfall data is a lawyer question.
+
+### Definition of done
+
+A player opens any card in the builder or on a public deck and sees its rulings with dates and a Wizards or Scryfall label, and follows each keyword to its rule; a link to CR 903.9a opens the version it was written against and says whether a newer one changed it; and when an update changes a rule that a reviewed note cites, the note disappears until a reviewer approves it again.
+
+---
+
+## I-48: Official Changes Reach Every Saved Deck
+
+**Spec:** [`specs/i48-official-changes-reach-every-deck.md`](specs/i48-official-changes-reach-every-deck.md)
+
+**Outcome:** when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next for slices 1 to 8, with slices 1 to 6 before the Commander announcement Wizards expects by the end of 2026; Later for slices 9 to 11; slice 12 waits for I-30
+**Impact / effort:** High / medium
+**Depends on:** I-28 slice 2 before slice 1; I-42 slice 2 before slice 2; I-42 slice 6 for the drift check; I-34 slices 1 and 3 for counts per commander; I-38 slice 13 for the e-mail; I-30's decision and I-06's plan for the cross-deck fix planner.
+
+Wizards now runs the Commander format and changes three lists without a fixed schedule: the banned list, the Game Changers and the bracket definitions. Each change can move a saved deck's legality or bracket. Five cards were unbanned on 2025-04-22, ten Game Changers removed on 2025-10-21, and Biorhythm and Lutri unbanned on 2026-02-09, Lutri staying "banned as a companion" in a new category ([announcement](https://magic.wizards.com/en/news/announcements/commander-banned-and-restricted-february-9-2026)). The February update expected the next one "likely in May or June". None came, and on 2026-10-13 MTG Rocks reported WeeklyMTG's account that an announcement is "likely" before the end of the calendar year ([MTG Rocks](https://mtgrocks.com/mtg-commander-announcement-2026-tease/)). The official pages carry no date, and Scryfall holds only the current state, without Lutri's companion ban. No deckbuilder page read tells an owner that a saved deck changed status, or dates the list its verdict uses. The opening is the dated difference: "Farewell has been a Game Changer since 2026-02-09; your deck now sits above the bracket you declared; here are cards that fill the same role". The spec also found three errors in `docs/references/banlists.md`, corrected on 2026-11-10 (status note).
+
+### Scope
+
+- [ ] `CommanderRulesVersion`, seeded with the history from the list before 2025-02-11 to 2026-02-09 (40, 61, 51 and 53 Game Changers in the four dated versions), and one "version in force" reader for the bracket score, the stats, the companion check and `/rules/game-changers` (slice 1). This closes I-03's open item. Today `src/hooks/useGameChangers.ts` and `src/hooks/useBanlist.ts` read Scryfall live in the browser, with no date; `BRACKET_DEFINITIONS` (`src/lib/constants/brackets.ts`) and the floors in `src/lib/deck/bracket.ts` are code; and Lutri's companion ban is hard-coded in `src/lib/deck/companion.ts`.
+- [ ] `assessDeck` and `compareAssessments`, Game Changer and banned status derived for every reader, and a method version on the bracket estimate (slice 2). Today `src/lib/deck/store.ts` sets `isGameChanger` and `isBanned` when a card is added, `POST /api/decks/[id]/cards` stores the client's values, and `computeDeckStats` (`src/lib/deck/stats.ts`) and `scoreBracket` count the stored flags. Nothing recomputes them, so a deck saved before 2026-02-09 with Farewell counts no Game Changer today. Fork (`src/lib/deck/fork.ts`), duplicate, snapshot restore (`src/lib/deck/snapshot-restore.ts`) and the public and share views copy or show the stale flags; I-42 records the same defect for `isBanned`.
+- [ ] Announcement records and public `/rules/changes` pages in English, backfilled for the four past announcements, then "Is my deck affected?" without an account (slices 3–4).
+- [ ] The owner's impact, computed on the next deck-list load or deck open with no scheduled job: a first catch-up run, a dated notice on the deck list and in the editor, and a report that sets the declared bracket against the new estimate (slice 5).
+- [ ] A publishing workflow: a moderator's draft, a comparison with Scryfall's lists, then publication (slice 6).
+- [ ] Replacement candidates from a Scryfall query the player can read, in a fixed order, through the reviewed diff and never applied automatically (slice 7); the French pages, `noindex` until reviewed (slice 8).
+- [ ] Later: an "under review" state from I-42's drift check, counts per commander from public decks only, and an opt-in e-mail per announcement (slices 9–11); the cross-deck fix planner after I-30's decision (slice 12).
+
+### Engineering enablers
+
+- Golden versions: Food Chain is a Game Changer only from 2025-04-22 to 2025-10-21, Farewell from 2026-02-09; Biorhythm is banned before 2026-02-09 and a Game Changer after; Lutri is banned before that date and banned as a companion after.
+- The same deck in any card order gives the same assessment and the same reasons.
+- A recorded Scryfall fixture with a 54th Game Changer marks the rules "under review", and the network never runs in CI.
+- An import test fails if an AI client is reachable from the assessment, the report or the candidates.
+
+**Paid-tier angle:** every verdict and its version date, the impact report, replacement candidates, the in-app notice, the e-mail, the public pages and the counts per commander stay free: a legality change on a player's own deck is evidence the product shows. The candidates are a planner that fixes every affected deck at once against the collection and hands the missing cards to I-06 and I-32 (medium), and notices for watched or pod decks, which join I-18's row in I-30 (weak).
+
+### Definition of done
+
+When a moderator publishes the next announcement, every saved Commander deck it touches shows a dated notice that names each changed card and its cause, the estimate before and after and the declared bracket, with candidates from a visible query; a visitor checks a pasted list against the announcement's page without an account; and no reader trusts a stored flag.
+
+---
+
+## I-49: A Display That Works For Colour-Blind And Low-Vision Players
+
+**Spec:** [`specs/i49-colour-vision-and-low-vision-display.md`](specs/i49-colour-vision-and-low-vision-display.md)
+
+**Outcome:** every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next. Nothing in it is paid
+**Impact / effort:** High / medium; most slices are mechanical
+**Depends on:** nothing for slices 1, 2 and 11; bundle 5 under I-04 for the chart bars' focus ring (slice 9); bundle 6 under I-24 for the motion wiring (slice 14); a colour-blind and a low-vision player to review the result (slice 15).
+
+Magic is a game of five colours, and a deckbuilder repeats them in mana costs, colour identity, charts, badges and warnings. About 8% of men of European ancestry have a red-green colour-vision deficiency ([Birch, 2012](https://pubmed.ncbi.nlm.nih.gov/22472762/)), and at least 2.2 billion people have a vision impairment ([WHO](https://www.who.int/news-room/fact-sheets/detail/blindness-and-visual-impairment)). The official mana symbols already solve the mana case with pictograms; the gaps appear where a site adds colour of its own, in charts, status and selected states. No deckbuilding site read offers a colour-vision setting or says its charts were checked against simulation. Players ask for a second channel, "a simple character cue", more than for a palette ([r/MagicArena, 2019](https://www.reddit.com/r/MagicArena/comments/easwf2/)). An automated scanner cannot catch a chart that relies on colour: axe-core's only rule for WCAG 1.4.1 concerns links, and none is tagged 1.4.11 ([rule list](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md)). So the defaults must work without a setting, and a colour-blind and a low-vision player review the result. Until this initiative the roadmap never mentioned colour blindness.
+
+### Scope
+
+- [ ] A colour-signal register, captures of six journeys at 200% zoom, at 320 px, under forced colours and under simulated colour vision, a pure `src/lib/a11y/palette.ts`, and a token contrast test that reads `src/styles/globals.css` (slices 1–2).
+- [ ] An E2E harness that emulates protanopia, deuteranopia, tritanopia and achromatopsia, forced colours, zoom, reflow and text spacing, with reviewed baselines (slice 3). Today the repository has no axe tool and no screenshot test.
+- [ ] Status tokens for both themes and a status icon primitive, then the migration of raw status colours, ending with a lint rule and an empty allowlist (slices 4–7). Today 496 hard-coded red, green, amber, yellow, emerald, orange, rose or lime classes in 106 `.tsx` files have no `dark:` variant and no light-theme mapping; on white, `red-400` measures 2.89:1, `green-400` 1.78:1 and `amber-300` 1.45:1, against 4.5:1. In `src/components/deck/DeckStats.tsx` a warning and an error share `AlertTriangle` and differ only by colour.
+- [ ] Chart tokens and a `ColorDistribution` with labelled, outlined segments, a table view and a palette validated under simulation (slice 8). Today `src/components/deck/ColorDistribution.tsx` separates its segments by hue alone, `--mana-black` measures 1.24:1 on the dark surface, and red and green fall under the distance threshold with protanopia.
+- [ ] `ManaCurve` in one neutral hue, sized in `rem`, with a grid in both themes and a table view (slice 9). Today `src/components/deck/ManaCurve.tsx` uses eight hues for eight mana values, and two of them are near-identical even with normal vision.
+- [ ] Bracket colours that pass contrast in each theme, and a marker other than colour on selected colour filters (slice 10). Today `BracketIndicator.tsx` draws its number in green-400 and amber-400, at 1.78:1 and 1.72:1 on white, and the selected filter border in `SearchFilters.tsx` and `BuilderColorSearchPicker.tsx` measures 2.76:1, under 3:1.
+- [ ] Text sizes on the `rem` scale, with no informational text under 12 px, then the reflow and zoom fixes that slice 1 finds (slices 11–12). Today 154 uses of `text-[7px]` to `text-[11px]` sit in 51 files, and `ManaSymbol.tsx` draws cost letters at 7 to 9 px.
+- [ ] Forced-colours and "more contrast" rules, a Display control for motion and contrast beside the theme buttons, and a review by a colour-blind and a low-vision player (slices 13–15).
+
+### Engineering enablers
+
+- Every pair of mana chart colours is at least ΔE 8 apart under each simulated deficiency and 15 with normal vision, checked per theme against the real surface tokens.
+- The lint rule rejects raw status colours in `src/components` and `src/app` with an empty allowlist.
+- Under forced colours, every chart mark keeps a nonzero box and a border distinct from the canvas; under reduced motion, chart bars render at full height on the first frame.
+- At 640×400 and at 320×640, no journey scrolls horizontally, and with the root font size doubled, informational text doubles.
+
+**Paid-tier angle:** none, ever. A player who needs contrast or a second channel would otherwise pay more for the same product, and these surfaces are evidence the product shows. Its value to I-30 is indirect: I-31 and I-34 charts and I-36 embeds inherit charts that read in grayscale, in print and when embedded.
+
+### Definition of done
+
+A deuteranopic player names every segment of a Simic deck's colour chart without the legend, a player on the light theme reads every warning at 4.5:1 or better, and a low-vision player at 200% zoom reads the stats panel without horizontal scrolling or clipped text; a colour-blind and a low-vision player have reviewed the changed surfaces.
+
+---
+
+## I-50: Play This Deck Online
+
+**Spec:** [`specs/i50-play-this-deck-online.md`](specs/i50-play-this-deck-online.md)
+
+**Outcome:** a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next for slices 0 to 8; Later for the webcam aids (slices 9 to 11); slice 12 is blocked on a partner agreement
+**Impact / effort:** Medium / medium
+**Depends on:** nothing for slices 0 to 7, except a test on an MTGO account for slice 6's command-zone placement; I-36 slice 1 for viewer export (slice 8); I-19 slice 3 for the cached table view; I-41 slice 4's QR generator; a signed agreement or an accepted upstream change for slice 12.
+
+A deck built here is usually played somewhere else, and on a weeknight that place is often online: a desktop client, a Tabletop Simulator table, a browser table, or a webcam call with paper cards. Each reads a different file and has its own rules for the commander, the companion and the sideboard, and a wrong guess fails late, in someone else's software. XMage requires the commander and at most one companion in the sideboard and nothing else there ([source](https://github.com/magefree/mage)). Arena Brawl has no sideboard and needs a commander "from a set currently on Arena" ([format page](https://magic.wizards.com/en/formats/brawl)). Of 32,643 Commander-legal cards, 48% have an Arena printing and 96% a Magic Online one (Scryfall, 2026-11-10). No deckbuilder read builds a Tabletop Simulator object, places the command zone where each client's validator expects it, or warns before export which cards a platform lacks. mtg.wtf offers several client formats ([settings](https://mtg.wtf/settings)), and Cockatrice's development build of 2026-11-08 imports deck links from five deckbuilders ([docs](https://cockatrice.github.io/docs/db/d91/importing_decks.html)). Reddit refused automated reads, so the evidence is competitors' investment, not measured demand; the panel counts which destinations players choose. Tabletop Simulator files link Scryfall's full card images as Scryfall serves them, never rehosted or cropped, with the artist credited.
+
+### Scope
+
+- [ ] An export contract: `ExportResult` with typed notices, one module per target, `v1` fixtures for the eight shipped formats, and the TappedOut fix (slice 0). Today `src/lib/deck/export.ts` writes every card line through one `cardLine` helper as `quantity name`, and `exportTappedOut` puts Sideboard and Considering cards in the main list (an I-10 item).
+- [ ] `CardPlatformInfo`, filled on the server: set codes and collector numbers, `games`, `arena_id`, `mtgo_id`, Brawl legality and each set's Arena and MTGO codes; then name rules per target and card layout (slices 1–2). Today `DeckCard` (`prisma/schema.prisma`) stores no set code, collector number, Oracle ID or artist, and `ScryfallCard` (`src/lib/scryfall/types.ts`) does not type `games`, `arena_id` or `mtgo_id`.
+- [ ] An Arena Brawl export with Arena set codes and numbers or neither, notices for cards not on Arena or not legal in Brawl, the deck's Arena coverage, and no sideboard (slice 3). Today `exportArena` promises set and number "if available", writes neither, and checks neither availability nor Brawl legality.
+- [ ] Cockatrice `.cod` and XMage `.dck`, then Forge `.dck` with names only (slices 4–5).
+- [ ] A Magic Online `.dek` for Commander with `CatID` from `mtgo_id` and single-slash split names (slice 6). Today `exportMTGO` writes `CatID="0"` for every card and the commander with `Sideboard="false"`, so XMage, which reads `.dek`, rejects the deck. Where MTGO itself wants the commander is an owner question.
+- [ ] A Tabletop Simulator saved object that links Scryfall's full images, uses a second state for two-faced cards, holds command-zone and token objects and a neutral card back drawn for the product, under an image-rule guard (slice 7).
+- [ ] A "Play online" panel on the builder, public and share pages, with the table-text variant, export by any viewer without forking, and one I-39 event per destination chosen (slice 8). Today only the owner can export: `ExportModal.tsx` opens from the builder, and `PublicDeckView` and `ShareDeckView` offer copy-link and fork.
+- [ ] Later: a read-only table view for webcam play, a revocable `noindex` deck check link that freezes the list and says "Changed since this check", and a printable list with a QR code (slices 9–11). Slice 12, a partner import into Convoke or Cockatrice, is blocked on an agreement or an accepted upstream change.
+
+### Engineering enablers
+
+- Each target's `v1` fixture matches byte for byte. For random decks, the exported command and main counts equal the deck's minus the dropped cards the notices list, and no Considering card reaches a playable zone.
+- The XMage fixture has 1 to 3 sideboard entries, the Arena Brawl fixture has no `Sideboard` section, and the MTGO fixture has no `CatID="0"`.
+- Every image URL in a Tabletop Simulator export is on `cards.scryfall.io` and equals the stored URI; no export contains `data:`, `art_crop` or `/api/proxy-card-image`.
+- A person imports each fixture into the named client and records the client version and the date in its header; a destination never tested says "Not yet tested".
+
+**Paid-tier angle:** every export, the panel, the table view, the printable list and deck check links stay free, with no account for a public deck: I-30 lists exporting as always free, and Scryfall forbids paywalling its data. No export carries an advertisement, a referral code or a tracking parameter. The one adjacent candidate, a check board for a recurring online pod, is rated weak, belongs with I-15 and I-35, and is I-30's to decide.
+
+### Definition of done
+
+A player exports a Commander deck with a partner and a companion to Cockatrice, XMage and Tabletop Simulator, each file imports in the client version its fixture names, and every dropped or substituted card was listed before the download; a viewer of a public deck does the same without signing in; and an Arena Brawl export states the deck's Arena coverage.
 
 ---
 
