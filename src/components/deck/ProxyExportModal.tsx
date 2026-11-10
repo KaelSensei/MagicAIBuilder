@@ -189,7 +189,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     );
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) {
-      setError("Pop-up blocked — allow pop-ups for this site");
+      setError(t("proxy.popupBlocked"));
       return;
     }
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
@@ -203,7 +203,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
     };
     win.addEventListener("load", onLoad, { once: true });
     win.location.assign(objectUrl);
-  }, [slots, config, deckName]);
+  }, [slots, config, deckName, t]);
 
   const imagesReady =
     !isPreparing && imgState !== null && imgState.loaded === imgState.total;
@@ -259,7 +259,7 @@ export function ProxyExportModal({ deck, onClose }: ProxyExportModalProps) {
                         : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/50"
                     )}
                   >
-                    {p === "a4" ? "A4" : "Letter"}
+                    {t(`proxy.paperOption.${p}`)}
                   </button>
                 ))}
               </div>

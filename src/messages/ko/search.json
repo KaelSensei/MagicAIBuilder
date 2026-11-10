@@ -11,6 +11,7 @@
   "setsLoadFailed": "Failed to load sets",
   "noSetsFound": "No sets found for \"{query}\"",
   "clearSet": "Clear selected set",
+  "setsAvailable": "{count, plural, one {# set available} other {# sets available}} — type to search",
   "filters": {
     "colors": "Colors",
     "colorless": "Colorless (c:c) — artifacts, Eldrazi, etc.",

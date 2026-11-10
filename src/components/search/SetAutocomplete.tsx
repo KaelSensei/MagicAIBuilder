@@ -213,7 +213,7 @@ export function SetAutocomplete({
               ))}
               {input.length === 0 && allSets.length > 12 && (
                 <div className="px-3 py-2 text-xs text-[var(--text-secondary)] border-t border-[var(--border)]">
-                  {allSets.length} sets available — type to search
+                  {t("setsAvailable", { count: allSets.length })}
                 </div>
               )}
             </div>

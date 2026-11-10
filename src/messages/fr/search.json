@@ -11,6 +11,7 @@
   "setsLoadFailed": "Échec du chargement des éditions",
   "noSetsFound": "Aucune édition trouvée pour « {query} »",
   "clearSet": "Retirer l'édition sélectionnée",
+  "setsAvailable": "{count, plural, one {# édition disponible} other {# éditions disponibles}} — tape pour rechercher",
   "filters": {
     "colors": "Couleurs",
     "colorless": "Incolore (c:c) — artefacts, Eldrazi, etc.",
