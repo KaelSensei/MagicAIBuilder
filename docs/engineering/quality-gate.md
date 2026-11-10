@@ -195,22 +195,6 @@ Not blocking current merges, but to be addressed:
 
 ## SonarCloud rule exclusions
 
-### S6747 — "Unknown property" in React Three Fiber components
+### S6747 — "Unknown property" (no longer suppressed)
 
-**Scope:** `src/components/landing/**`
-
-SonarCloud flags JSX attributes like `position`, `args`, `roughness`, `emissive`, `intensity` and `decay` as unknown HTML properties. These are **false positives**: they are React Three Fiber intrinsic element props, not HTML.
-
-R3F extends the JSX namespace to map Three.js classes (`mesh`, `boxGeometry`, `meshStandardMaterial`, `pointLight`, …) to JSX elements, with props corresponding to Three.js constructor arguments and object properties. SonarCloud's analyzer has no R3F plugin and cannot resolve those extended types.
-
-**Verification:** `npx tsc --noEmit` and `pnpm lint` both pass on these files, because `@react-three/fiber` ships proper type declarations.
-
-**Config** (`sonar-project.properties`):
-
-```properties
-sonar.issue.ignore.multicriteria=r3f
-sonar.issue.ignore.multicriteria.r3f.ruleKey=typescript:S6747
-sonar.issue.ignore.multicriteria.r3f.resourceKey=src/components/landing/**
-```
-
-50 false positives suppressed. The rule remains active everywhere else.
+`S6747` was suppressed for `src/components/landing/**` while that folder held a React Three Fiber scene, whose JSX props (`position`, `args`, `roughness`, …) SonarCloud cannot resolve. The scene left the page in #308 and its packages were removed later, so the suppression was removed too. The rule now applies to the whole repository.
