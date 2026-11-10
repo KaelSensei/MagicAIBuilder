@@ -376,6 +376,39 @@ describe("validateDeck — multi-format", () => {
   });
 });
 
+/** A deck whose stored format string this build does not know, as a database row can hold. */
+function deckWithStoredFormat(
+  format: string,
+  overrides: Partial<Deck> = {}
+): Deck {
+  const deck = makeDeck(overrides);
+  Reflect.set(deck, "format", format);
+  return deck;
+}
+
+describe("validation — unknown stored format", () => {
+  it("reports the format as unsupported instead of applying Commander rules", () => {
+    const deck = deckWithStoredFormat("duel", {
+      cards: [makeCard({ isBanned: true })],
+    });
+
+    const result = validateDeck(deck);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(["Unsupported format: duel"]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it("refuses to add a card to a deck whose format is unsupported", () => {
+    const deck = deckWithStoredFormat("duel");
+
+    const result = validateCardForDeck(makeCard(), deck);
+
+    expect(result.canAdd).toBe(false);
+    expect(result.reason).toBe("Unsupported format: duel");
+  });
+});
+
 describe("checkColorIdentity", () => {
   it("returns true when all card colors are within commander colors", () => {
     expect(checkColorIdentity(["U", "W"], ["W", "U", "B"])).toBe(true);
