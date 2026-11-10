@@ -52,7 +52,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10 by reading the code; nothing was ru
 - **The cache keeps no history.** Since #1322 only the server writes `CardCache` (24 hours, at most 2,000 rows) and `ScryfallSearchCache` (1 hour, 200 rows), through `src/lib/scryfall/shared-cache.ts` and `server-fetch.ts`; each write prunes expired rows. Only `getCardById` reads through the card cache; name lookups and `/cards/collection` go from the browser to Scryfall. History accrued from traffic, as `MetaSnapshot` does for EDHREC data (one row per commander per UTC day, kept 365 days, "no cron job", `src/lib/meta/snapshots.ts`), would therefore be sparse and biased towards cards opened by ID. A search of `src/` and `prisma/` for price history, price snapshots and price dates finds nothing.
 - **Three deck totals disagree.** `useDeckPrice` (`src/hooks/useDeckPrice.ts`), shown by `DeckPriceDisplay` in the stats panel, sums every row of `deck.cards` (main, sideboard and maybeboard) plus commander and partner. `computeDeckStats` (`src/lib/deck/stats.ts`) sums the main zone, commander and partner, and feeds the analysis diff. `buildExportMetadata` (`src/lib/export/stats-export.ts`) sums `deck.cards` without the command zone. None counts the companion. All are USD, as is the collection's total in `CollectionPageClient.tsx`, which sums stored price times quantity.
 - **No job, no sender.** `.github/workflows` holds CI, Lighthouse and Sonar only; no cron route or mail library exists. `NotificationPreference` stores four toggles that nothing delivers.
-- **The database is small.** `src/lib/cache-limits.ts` sizes the caches for "the 512 MB free-tier database". Hosting is Vercel with Supabase (`docs/engineering/infrastructure.md`).
+- **The database is small.** `src/lib/cache-limits.ts` sizes the caches for "the 512 MB free-tier database", but Supabase's free tier holds 500 MB ([pricing](https://supabase.com/pricing); corrected 2026-11-10 from the [I-66](i66-running-costs-and-margin.md) spec). Hosting is Vercel with Supabase (`docs/engineering/infrastructure.md`).
 
 ## Functional requirements
 
@@ -141,7 +141,7 @@ NotificationPreference + priceAlertEmail Boolean @default(false), priceAlertEmai
 
 | Layout                                        | Arithmetic                                                      | Result                                                                         |
 | --------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Every priced printing, daily, in PostgreSQL   | 104,561 × 76 B a day; × 365 a year                              | 7.9 MB a day, 2.9 GB a year; a 512 MB database is full in about nine weeks     |
+| Every priced printing, daily, in PostgreSQL   | 104,561 × 76 B a day; × 365 a year                              | 7.9 MB a day, 2.9 GB a year; a 500 MB database is full in about nine weeks     |
 | Tracked printings: 90 days daily, then weekly | T × (90 + 40) × 76 B in year one; T × 52 × 76 B each later year | 10,000 printings: 99 MB, then 40 MB a year. 50,000: 494 MB, then 198 MB a year |
 | Daily archive file: integer keys, cents, gzip | 787,576 B measured × 365                                        | 287 MB a year, outside the database                                            |
 

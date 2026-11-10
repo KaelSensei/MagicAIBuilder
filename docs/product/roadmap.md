@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-10 (I-47 to I-64)
+> **Updated:** 2026-11-10 (I-47 to I-66)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -110,6 +110,11 @@ A sixth pass, on 2026-11-10, looked at how a player moves in from another site, 
 - [I-63](#i-63-one-notification-system-inbox-email-and-preferences) builds one inbox, one email channel and one preferences page that every initiative's notices go through, with no marketing email and nothing paid (goal 2).
 - [I-64](#i-64-a-help-centre-and-in-product-guidance) adds a help centre in English and French, one glossary, an info button beside each statistic and a path to I-52's report, with no model writing an answer (goals 1 and 2).
 
+A seventh pass, on 2026-11-10, looked at how a deck wins and at what the product costs to run. It added I-65 and I-66: one with the deck analysis at the end of [Business, Reference And Depth](#business-reference-and-depth), and one in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table):
+
+- [I-65](#i-65-how-this-deck-wins) maps the ways one deck can end a game, from combos to combat, drain, mill, poison and locks, with the cards in each role, the tutors and protection that reach them, a labelled turn estimate and the kinds of cards that commonly stop each route. Code computes every fact, no model decides a route, and the map grades nothing (goal 1).
+- [I-66](#i-66-running-costs-and-margin-per-active-player) gives the owner a dated price book, a cost per active player, the free-tier limit that breaks first, a monthly cost report and budget alerts, with no new tracking of players. It is internal and never shown to players (goal 2).
+
 ### Strategic boundaries
 
 - Do not become a generic card database; Scryfall already owns that job.
@@ -158,6 +163,8 @@ Two of the fourth pass's initiatives touch this part too, without changing it. [
 Three of the fifth pass's initiatives touch this part too, without changing it. [I-58](#i-58-mana-base-builder) never orders lands by popularity and publishes no land pages. [I-59](#i-59-prices-over-time-and-alerts) publishes no price page, download or API, lists no catalogue-wide movers and makes no forecast, so it neither duplicates Scryfall's database nor frames prices as trading. [I-60](#i-60-player-stats-and-a-commander-year-in-review)'s recap shows no streak, rank or named opponent, so it adds no engagement loop.
 
 The sixth pass's initiatives touch this part too, without changing it. [I-62](#i-62-switching-from-another-site-in-one-step) reads only files the player downloaded, holds no other site's credentials and imports no other player's deck, so it stays inside [I-29](#i-29-cross-site-commander-deck-index)'s source policy. [I-63](#i-63-one-notification-system-inbox-email-and-preferences) sends no marketing or re-engagement email and times nothing by activity, so it adds no engagement loop; its email provider is a new external service behind one transport interface, its exit path. [I-64](#i-64-a-help-centre-and-in-product-guidance) adds no chatbot and no hosted help service.
+
+The seventh pass's initiatives touch this part too, without changing it. [I-65](#i-65-how-this-deck-wins) lets no model choose or describe a route, gives no score and builds no second combo database: combos still come from Commander Spellbook through the one lookup per deck that #1324 built. [I-66](#i-66-running-costs-and-margin-per-active-player) adds no external service, no cost-tracking vendor and no tracking of players; it reads the providers the product already uses.
 
 Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
@@ -375,6 +382,24 @@ I-63 takes over delivery from other initiatives, each of which keeps a one-line 
 - **I-64.** Who writes and reviews the articles in each locale? Without a French reviewer, slice 6 does not start. Does a changed label fail the pull request of an article that quotes it, or join a review list in each `chore/docs` PR? Is slice 15, a model that only picks article identifiers, ever built? Do glossary terms stay anchors on one page, with only full articles indexable under I-34's policy?
 - **For the lawyer (I-64).** Are help articles for a paid service its "mode d'emploi" under the loi Toubon, which would make French articles mandatory for paid features? Could a wrong article shown for a cancellation or withdrawal question engage liability under French consumer law, as Moffatt v. Air Canada did in Canada? Which lawful basis covers storing searches that found nothing, when a player may type personal data?
 
+**2026-11-10, I-65, I-66 and an unregistered domain:** a seventh research pass added I-65 and I-66. The specs read the code on `dev` at `72fbfc1`, and each finding below was checked again on `origin/dev` at the same commit before it was recorded. Each is an unchecked scope item with its file paths:
+
+- **A domain nobody has registered (I-05).** `magicaibuilder.com` is hard-coded as the site URL in the structured data (`src/components/JsonLd.tsx:34`), as the contact URL in the `User-Agent` sent to Scryfall, Commander Spellbook and the other sources (`src/lib/http.ts:8`), and as the fallback for canonicals, `robots.txt` and the sitemap when `NEXT_PUBLIC_BASE_URL` is unset (`src/lib/seo/alternates.ts:24`). Verisign's RDAP lookup answered 404 for it on 2026-11-10, and 200 for google.com, so anyone may register it and receive that traffic and those signals. It is an owner action under I-05.
+- **The database size (I-05, I-59).** Supabase's free tier holds 500 MB, not the 512 MB that I-05 M3 and the I-59 spec said ([pricing](https://supabase.com/pricing), read 2026-11-10). Both now say 500 MB. A comment in `src/lib/cache-limits.ts` still says 512 MB; this pass changes no code.
+- **Hosting terms and region (I-66, I-30, I-05).** Vercel's Hobby plan is "restricted to non-commercial personal use only", and a payment request or an advertisement counts as commercial ([fair use](https://vercel.com/docs/limits/fair-use-guidelines), read 2026-11-10). The first paid plan or ad therefore moves hosting to Pro, whatever the traffic; with Supabase Pro, the commercial floor is about €40–44 a month before VAT (I-66 requirement 5). New Vercel projects run functions in Washington, D.C. (`iad1`) unless a region is set ([regions](https://vercel.com/docs/functions/configuring-functions/region)), no `vercel.json` sets one, and `docs/engineering/infrastructure.md` puts the database in Ireland. The region in use is an owner question under I-05.
+- **How a deck wins (I-65, I-31, I-02).** `categorizeCard` (`src/lib/deck/categories.ts`) gives each card one label, and its `winCondition` test matches only "win the game", "infinite", infect, poison counters, combat damage to each opponent and the storm count. On 35 hand-picked route cards the I-65 spec measured 9 labelled `winCondition`, the alternative-win and poison cards, and no combat, drain, mill, equipment, combo or lock card: Craterhoof Behemoth and Blood Artist are `creature`. The Spellbook lookup (`src/lib/combos/find-my-combos.ts`) reads `manaNeeded` but not `manaValueNeeded`, `bracketTag` or the zone each piece starts in. The AI plan's win conditions are fixed text per strategy (`src/lib/ai/deck-plan.ts`), sent to the model and shown in the wizard, and nothing checks them against the built deck.
+- **Tagger tags in bulk data (I-37, I-54, I-65).** Scryfall's bulk-data index lists an "Oracle Tags" file "sourced from Tagger"; the file of 2026-11-09 holds 4,617 tags on 36,453 Oracle IDs ([bulk data](https://api.scryfall.com/bulk-data), counted by the I-65 spec). This answers I-37's open question. Whether the product may use the tags remains a licence question, now shared by I-37, I-54 and I-65.
+- **Bracket 4 by "RC rule" (I-28).** `src/lib/deck/bracket.ts` still forces any deck with a two-card infinite to Bracket 4, labelled "(RC rule)". The queued branch `fix/official-bracket-definitions`, not yet pushed or merged, scores decks against Wizards' Brackets 1 to 5 and names Bracket 1 Exhibition in `BRACKET_DEFINITIONS` and in `BracketIndicator`. This is a fix pending in an open branch; nothing is checked until it merges.
+
+I-65 joins the deck analysis at the end of [Business, Reference And Depth](#business-reference-and-depth), after I-58: a map of how a deck wins is analysis of the player's own list, beside I-31's lab and I-58's land check. Its closest owner is I-03, computed feedback, which gets a pointer; it stays a separate initiative because it owns the route model that I-15, I-28, I-02, I-31 and I-54 read. I-66 joins [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table) between I-63 and I-39, because its daily checks run on I-63's job route and it counts I-39's active accounts. I-30 and I-05, the initiatives it feeds, sit in other parts and get pointers. I-66 is Next for slices 0 to 8, before I-30's price decision, and Later for slices 9 to 12. I-65 is Next for slices 1 to 11, with slice 8 blocked for release on the Tagger licence, and Later for slices 12 to 16. Neither is in the 30–50 iteration estimate.
+
+Each initiative that reads I-65's route model keeps a one-line pointer: I-15's calculated column shows its route line, I-28's guide and bracket check use its route names, I-02's wizard gets its plan-versus-result check, I-31 keeps its own lab kinds and supplies assembly odds, and I-54's play styles link the routes they use. I-66 replaces I-30's guessed fixed costs, assumption A2, with its requirement 5, and its break-even counts stand beside I-30's own without replacing them. Thirteen further questions wait for the owner, the lawyer or an accountant. The lawyer questions join [I-30 requirement 7.2](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate) and are research, not legal advice:
+
+- **I-65.** Which roles must a deck hold before a route is listed: one card per required role, as slice 1 proposes, checked against an owner-labelled set of about 30 decks with precision and recall per route kind published on I-34's methods page? Is the public deck page's default "off", as proposed, or "route kinds only", which shows names and counts but no cards? EDHREC's writer warned that sharing how a deck wins tells opponents "precisely what your weaknesses are" ([2026-06-11](https://edhrec.com/articles/how-much-information-should-be-shared-during-rule-zero)). Does the bracket score's `scoreWinSpeed` move to route data, decided by I-03, I-28 and the power meter from a before-and-after report?
+- **For the lawyer and Scryfall (I-37, I-54, I-65).** May the product show card roles and play styles derived from Scryfall's Oracle Tags file, with attribution? No licence for the tags was found. The answer decides I-65 slice 8, I-54's play styles and I-37 slice 18; ask Scryfall in writing with I-54's question. Does grouping Commander Spellbook's variants into routes and showing its speed band need more than the credit and link its API asks for? Ask Space Cow Media with I-29's partner questions.
+- **I-66.** Which Vercel and Supabase plans, and which function region, run production today? Do Vercel Pro and Supabase Pro start before public launch, at about €40–44 a month, or at the first payment or ad, when Vercel's terms require Pro? How large is Vercel's on-demand budget, does reaching it pause the site, and what is the AI ceiling, which the unmerged metering branch sets to $20 by default? Is the domain a `.com` or a `.fr`, and at which registrar?
+- **For the lawyer and an accountant (I-66).** Does Vercel count I-32's affiliate links or a supporter page as commercial use on Hobby? Ask Vercel in writing. Can the owner's legal structure recover the VAT that provider prices exclude?
+
 ---
 
 ## Portfolio View
@@ -505,59 +530,65 @@ I-63 takes over delivery from other initiatives, each of which keeps a one-line 
 40. **I-64 A help centre and in-product guidance**
     Next for slices 0 to 9: articles tested against the interface, one glossary, the info button, the first articles in English and French, help search and the path into I-52's report. Slice 13, the subscription articles, ships in the same release as I-30's billing. Later for the rest. Never paid.
 
+41. **I-66 Running costs and margin per active player**
+    Next for slices 0 to 8, before I-30's price decision: the price book and cost model, a measurement script, cache headers that cut function calls, sample rates, the region and the monthly report. Slices 1, 3 and 4 need nothing. Later for stored months, the budget webhook and daily checks, which wait for I-30's owner page, I-63's job route or a Pro plan. Internal; never shown to players.
+
+42. **I-65 How this deck wins**
+    Next for slices 1 to 11: route definitions, the map for one deck with finders, protection, a labelled turn estimate and common answers, the builder panel, and the route line in I-15, the primer and the wizard. Slice 8, Tagger tags, is blocked for release on the licence. Later for model rewording, assembly odds and comparisons (slices 12 to 16). The single-deck map stays free.
+
 ### Later
 
-41. **I-10 Interoperability and integrations**
+43. **I-10 Interoperability and integrations**
     Make MagicAIBuilder a good starting point and a good destination for deck data.
 
-42. **I-11 Localization and regional experience**
+44. **I-11 Localization and regional experience**
     Expand beyond English and French only when translations and prices are genuinely supported.
 
-43. **I-12 Local AI**
+45. **I-12 Local AI**
     Explore local inference only after the cloud copilot has a measurable product fit. Offline reading is I-19.
 
-44. **I-18 Per-deck radar of new cards**
+46. **I-18 Per-deck radar of new cards**
     On demand, explain newly legal cards for one deck and show a diff before any change.
 
-45. **I-20 Collaborative review**
+47. **I-20 Collaborative review**
     Let an invited reviewer propose a patch that the owner accepts or rejects. Live co-editing stays out of this slice.
 
-46. **I-21 Reproducible probability bench**
+48. **I-21 Reproducible probability bench**
     Compare simulated hands across snapshots with a visible seed, sample size and mulligan policy.
 
-47. **I-35 Pod game log and casual results**
+49. **I-35 Pod game log and casual results**
     Log a real game after it ends, tied to the deck version played and the brackets declared and computed, with honest personal statistics and opt-in aggregates.
 
-48. **I-36 Creator and embed toolkit**
+50. **I-36 Creator and embed toolkit**
     Give creators deck embeds, link previews that show the deck, video in primers and a public read API, with no tracking and no paid reach.
 
-49. **I-40 Installable app, phone-first use and card scanning**
+51. **I-40 Installable app, phone-first use and card scanning**
     Later, with a no-regret first part: a manifest, icons, safe areas, install help and phone-sized E2E and Lighthouse runs (slices 1 to 5). Scanning waits for a benchmark, Scryfall's written answer and the owner's decision.
 
-50. **I-41 Store Commander nights and organiser tools**
+52. **I-41 Store Commander nights and organiser tools**
     Later, with a cheap early part: the pod-pairing policy and an account-free pod planner (slices 1 and 2), which need no schema and store no personal data.
 
-51. **I-43 Physical collection: storage places, deck boxes and pull lists**
+53. **I-43 Physical collection: storage places, deck boxes and pull lists**
     Later. The deck-box path (slices 1 to 5) needs no collection import and can be promoted on its own; that is an owner question.
 
-52. **I-44 Trade lists within the pod and nearby players**
+54. **I-44 Trade lists within the pod and nearby players**
     Later, with a cheap early part: private have and want lists, share links, the balance view and the friends audience (slices 1 to 7), which need no I-38 work.
 
-53. **I-45 Selling spare cards**
+55. **I-45 Selling spare cards**
     Later, with a no-regret first part: the deck-aware spare list and seller files for Card Kingdom and Cardmarket's tools (slices 0 to 3), which need no price, contract or legal answer.
 
-54. **I-51 Cards lent and borrowed within the pod**
+56. **I-51 Cards lent and borrowed within the pod**
     Later. Slices 1 to 6 are private records that involve no second account and could be promoted alone; loans between accounts wait for I-38's block.
 
-55. **I-53 Monthly deckbuilding challenges**
+57. **I-53 Monthly deckbuilding challenges**
     Later. The rule checker, the brief page and private challenges between friends (slices 1 and 5 to 8) need no vote, prize or legal answer and could be promoted first.
 
-56. **I-59 Prices over time and alerts**
+58. **I-59 Prices over time and alerts**
     Later, with a no-regret first part: tracked printings measured, one deck total and checks on neutral wording (slices 0 to 2). The series waits for the daily Scryfall job. Price history stays free; only alerts above a free allowance are a candidate.
 
 ### Parked
 
-57. **I-33 The marketplace ladder**
+59. **I-33 The marketplace ladder**
     A decision record, not a build plan. It names the stage that would reverse the marketplace non-goal and the evidence each step up needs. The owner decides; nothing is built for a marketplace.
 
 Open work on I-01, I-05 and I-06 stays ahead of I-14 through I-21. I-28's first slice, a copy correction, shipped in #1300; its guide page should land before I-15, whose Rule 0 sheet reuses the same bracket vocabulary. Among the new initiatives, start with I-14 and I-15, validate demand for I-16 and I-17, and specify the I-19 cache in parallel. Keep I-18 on demand until that flow is validated. Take up I-20 and I-21 only if players use the earlier slices.
@@ -573,6 +604,8 @@ I-54 to I-57 come after them. I-57 goes first, because its slice 1 fixes two def
 I-58 to I-61 come after them, behind one dated item: I-05's move to Scryfall's WebP images must ship before 2027-01-01, whatever else is in flight. I-61 goes first among the four. Its slice 5 fixes the 72-byte password truncation and needs nothing, and its slices 2 to 10 and 15, from the session registry to passkeys and two-step, need neither an email sender nor counsel; slice 1 waits only for I-05's shared store, which the AI quota needs anyway. I-58 follows. Its slices 1, 2 and 4, Karsten's tables as data, card mana facts and the wizard's basics split by source targets, have no dependency; slice 2 is shared with I-31 slice 2, and whichever lands first owns it; and slice 3 corrects the proportional advice players see today. I-60's slices 1, 2 and 4 also need nothing outside the initiative. Only if they ship before 1 December 2026 can players get a private 2026 recap; otherwise the first recap is December 2027. I-59 is Later, but its slices 0 to 2 can ship now: slice 0 measures what the series would store, and slice 1 gives a deck one total. Its slice 3 reuses the daily job of I-29 slice 1 or I-32 slice 2, never a second one. Scheduled agents must not pick I-61's slices 11 to 14 before I-38 slice 13 is merged, I-58's slice 14 before the I-02 owner agrees or its slice 15 before I-30's decision, I-59's slice 4 before the owner's storage answer, its slice 12 before I-38 slice 13 or its slice 13 before I-30's decision and the lawyer's answer, or I-60's slice 14 before I-30's slice 0 answers.
 
 I-62 to I-64 come after them. I-63 goes first among the three, because a dozen initiatives wait for its delivery. Its slices 1 and 5, the event model with `notify()` and its contract test, and the protected job route, need nothing and can start in parallel; the inbox, the settings page and the email transport (slices 2, 3 and 6) follow slice 1. I-38's retention job and the single daily price job of I-29 slice 1 or I-32 slice 2 register on slice 5's route, never as routes of their own. Slice 7 is I-38 slice 13: once the owner chooses a provider, it sends what I-61 slices 11 to 14 wait for. I-62 follows. Its slices 0 to 2, the source register, a text adapter that keeps `(SET) number`, `*F*` and `#tag`, and the server write of one deck in one transaction, start now in parallel; the parser change is coordinated with I-57 slice 6, which needs the same tokens. Slices 1 to 5 make a working move-in, which is not announced until slice 11 keeps printings through I-57 slice 3. I-64's slices 1 and 3, the content model with its drift test and the help pages, need no decision, and slice 2's glossary can start with the terms that do not depend on bracket names; slice 5 retires `docs/product/user-guide.md`. Slice 13 ships in the same release as I-30's billing (slices 7 and 8). Scheduled agents must not pick I-63's slice 7 before the owner's provider choice is committed, its slice 9 before I-61 slice 10 or 11 has merged, or its slice 12; I-62's slice 8 before an export from the owner's Moxfield account confirms the text format, or its slice 19; or I-64's slice 15.
+
+I-65 and I-66 come after them. I-66 goes first, because I-30's price decision waits for its figures, and Vercel's terms move hosting to Pro before the first payment or ad. Its slices 1, 3 and 4, the price book and cost model as pure functions, CDN caching headers on the two shared-cache routes and a CDN header on the image proxy, need no decision and no other initiative; slices 3 and 4 cut function calls and origin transfer as soon as they ship. Slice 0 is the owner's: plans, region, Pro timing, domain and budgets. Slices 9 and 11 wait for I-30 slice 10 or I-63 slice 5, and the daily checks register on I-63's job route, never on a route of their own. I-65 follows. Its slices 1 and 2, route definitions as versioned data and the Spellbook fields that #1324 does not read, need nothing. Slices 3 to 7 then give a working private map with no new data source; slice 4's bracket line stays hidden until I-28 slice 2. Slice 8 reads the Oracle Tags join that I-29 slice 1 or I-54 slice 2 builds, never a second one. Scheduled agents must not pick I-66's slices 6 or 10 before slice 0's answers are committed; or release I-65's slice 8 before Scryfall's answer on the tags, pick its slice 11 before the I-02 owner signs off the wizard step, its slice 12 before I-30 slices 1 and 2, or its slice 16 before I-30's decision.
 
 Impact and effort below are planning labels: medium means several small PRs, large means a cross-cutting project. They are not delivery dates.
 
@@ -741,6 +774,8 @@ A user can move a card between every legal zone, reload the page, change its pri
 
 **2026-11-10, fifth pass:** two more initiatives reach the copilot. [I-58](#i-58-mana-base-builder) slice 4 splits the basics that `src/lib/ai/generated-deck-size.ts` adds to a short list by colour-source targets instead of evenly in WUBRG order, and its slice 14 would let the builder pick the wizard's lands so the model proposes nonland cards only; slice 14 needs this initiative's owner to agree. [I-57](#i-57-printing-preferences-applied-everywhere) proposes a filter that leaves out cards printed only in Universes Beyond; copilot suggestions read it once it ships, and an explicit request still finds those cards.
 
+**2026-11-10, seventh pass:** the plan's win conditions are never checked. `DeckPlan.winConditions` (`src/lib/ai/deck-plan.ts`) is fixed text from a table of eight strategies, such as voltron's "Deal 21 commander damage", or from a template; it is sent to the model and shown in the wizard (`DeckWizard.tsx`), and nothing checks whether the built deck holds that route (checked on `origin/dev` at `72fbfc1`). [I-65](#i-65-how-this-deck-wins) slice 11 maps each intended win condition to route kinds and shows which the built deck holds, with counts, without blocking the build. This initiative owns the wizard step and signs it off.
+
 ### Findings from the 2026-11-09 pass
 
 Code facts were read on `dev` on 2026-11-09. Figures marked as estimates are calculations from the [2026-11-09 research pass](./competitive-landscape.md#ai-unit-economics), not measurements; a `count_tokens` run or real usage logs should replace them.
@@ -811,6 +846,8 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 - [ ] Version the Game Changers list and bracket rules as dated data rather than code. The list has held at 53 cards since 2026-02-09 and Wizards still labels the brackets beta, so a resumed update cadence should be a data change with an effective date, not a release.
   - **2026-11-10:** [I-48](#i-48-official-changes-reach-every-saved-deck) slice 1 owns this item: a `CommanderRulesVersion` seeded from the five dated lists and one "version in force" reader for the bracket score, the stats, the companion check and `/rules/game-changers`. It waits for I-28 slice 2. I-48 slice 2 then stops trusting the `isGameChanger` and `isBanned` flags stored when each card was added.
 - [ ] Flag cards whose rules text cannot work with this deck's commander, as a deterministic rules check labelled apart from recommendations. Examples players cite: Arcane Signet and similar mana sources that produce only the commander's colours, under a colourless commander; a card that names a creature type the commander is not, such as Roaming Throne in a Go-Shintai deck, where "Shrine" is not a creature type. Read the condition from Oracle text and the commander's colour identity and type line, never from a model. Players raise this as EDHREC's main failure: ["Remember…take edhrec suggestions with a Grain of salt"](https://www.reddit.com/r/EDH/comments/1rl9bfa/) reached 368 points on r/EDH in March 2026, and replies in that thread name both cards. The same check filters or labels the data-sourced recommendations in I-09.
+
+**2026-11-10, seventh pass:** [I-65](#i-65-how-this-deck-wins) is computed feedback in this initiative's sense. It maps the ways a deck can win, with roles, finders, protection and common answers, states facts and counts, and names no fault. This initiative is its closest home; it stays separate because it owns the route model that I-15, I-28, I-02, I-31 and I-54 read. Whether the bracket score's `scoreWinSpeed`, which counts single-label `winCondition` cards, moves to route data is decided here with I-28 and the power meter, from a before-and-after report on fixture decks (I-65 open question 4).
 
 ### Definition of done
 
@@ -906,6 +943,8 @@ Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65
   - [x] Queue concurrent pre-push gates behind a machine-wide lock, and clear root-owned reports left by a killed run through a container (#1302). Every clone and worktree on the machine shares one `magicaibuilder-e2e` compose project, so two pushes at once replaced each other's containers and both were blocked with no failing test. The script tests run the real script against a fake `docker`. A CI E2E job remains open.
   - [x] Stop the onboarding dialog blocking the i18n navigation test, and make that test fail when its link is missing instead of skipping its only assertion (`e2e/i18n-routing.spec.ts`, #1316). A CI E2E job remains open.
 - [ ] Give scheduled agent runs and manual pushes enough room on the VPS. They share one machine with about 7.6 GiB of RAM and 4 vCPUs. On 2026-11-09 they collided twice on the pre-push gate, and background tasks were killed for memory pressure. Decide between scheduling agents outside working sessions, capping concurrent builds and E2E runs, or a larger machine.
+- [ ] **Owner action: the code names a domain nobody has registered.** `magicaibuilder.com` is hard-coded in `src/components/JsonLd.tsx:34`, the site URL in the structured data; in `src/lib/http.ts:8`, the contact URL in the `User-Agent` sent to Scryfall, Commander Spellbook and every other source; and in `src/lib/seo/alternates.ts:24`, the fallback for canonicals, hreflang, `robots.txt` and the sitemap when `NEXT_PUBLIC_BASE_URL` is unset (checked on `origin/dev` at `72fbfc1`). Verisign's RDAP lookup answered 404 for the domain on 2026-11-10 ([lookup](https://rdap.verisign.com/com/v1/domain/magicaibuilder.com)), so anyone may register it and receive the contact traffic and the canonical signals. The repository's homepage is `magic-ai-builder.vercel.app`. Done means: the owner registers the domain, or all three read the production domain from one setting and a production build fails when it is unset ([I-66](#i-66-running-costs-and-margin-per-active-player) requirement 5.4).
+- [ ] **Owner question: where do the functions run?** No `vercel.json` exists on `origin/dev`, so the function region is whatever the Vercel dashboard holds, and new projects run functions in Washington, D.C. (`iad1`) unless a region is set ([Vercel](https://vercel.com/docs/functions/configuring-functions/region), read 2026-11-10). `docs/engineering/infrastructure.md` puts the database behind `aws-0-eu-west-1.pooler.supabase.com`, in Ireland, so each query may cross the Atlantic. The owner records the region in use; [I-66](#i-66-running-costs-and-margin-per-active-player) slice 6 compares `durationMs` by route before moving functions to Dublin (`dub1`), where CPU and memory cost about 31% more.
 - [ ] Meter AI usage per user and enforce a monthly quota before any public launch or paid tier. Today the only AI limits are per minute (5 builds and 10 suggestions per user per 60 seconds) in an in-memory store that is per instance, and no token metering exists. The theoretical worst case for one account is three orders of magnitude above a few-euro plan (I-02). [I-30](#i-30-business-model-and-the-paid-tier) slices 1 and 2 specify the metering and the quota.
 - [ ] Rate-limit the public read route `GET /api/deck/[id]`. It serves any public deck to any caller with no key and no limit, and the middleware matcher skips `/api` (`src/middleware.ts`). #1312 limited the fields it returns (I-08); this item stays open until a limit is verified.
 - [ ] Keep `docs/project/changelog.md` and `docs/project/progress.md` current after each merge batch, as the project instructions require. Neither changed between 2026-10-28 and 2026-11-09 while 196 commits reached `dev`; a catch-up is in preparation.
@@ -920,7 +959,8 @@ Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65
 - [ ] **M1, medium:** validate `POST /api/ai/suggest` with a bounded schema. `src/app/api/ai/suggest/route.ts` puts `bracketWarnings`, `detectedThemes`, `gameChangersList` and `categories` into the prompt with no size limit and no sanitising, so one free account can send very large prompts on the paid provider key. `/api/ai/build` already uses a bounded schema.
 - [ ] **M2, medium:** keep rate limits in a shared store and add a per-IP login limit. `src/lib/rate-limit.ts` holds counters in each serverless instance's memory, and the login limit in `src/lib/auth/config.ts` is keyed on the email only, so trying one password across many emails is never limited. The AI quota above, the `GET /api/deck/[id]` limit and I-38's comment limits all need this store.
   - The login rules move to [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions) slice 1, which waits for this store: a per-IP bucket across all addresses, a per-address backoff, a separate bucket for the owner's devices, and passkey, Google and reset sign-in left open while password attempts wait. Ten failures on one address lock its owner out of that instance today, because the limit counts successes and failures alike and is keyed on the email only. The store itself stays here.
-- [ ] **M3, medium:** bound user writes. The collection schemas (`src/app/api/collection/route.ts`, `src/app/api/collection/[id]/route.ts`) have no length limit and no row cap, and the search cache takes 500 KB per entry under unlimited keys. One account can fill the 512 MB database, and every write then fails. Cap field sizes and rows per user.
+- [ ] **M3, medium:** bound user writes. The collection schemas (`src/app/api/collection/route.ts`, `src/app/api/collection/[id]/route.ts`) have no length limit and no row cap, and the search cache takes 500 KB per entry under unlimited keys. One account can fill the 500 MB database, and every write then fails. Cap field sizes and rows per user.
+  - **Corrected 2026-11-10:** Supabase's free tier holds 500 MB, not 512 MB ([pricing](https://supabase.com/pricing), read 2026-11-10; the [I-66](#i-66-running-costs-and-margin-per-active-player) spec found it). The comment in `src/lib/cache-limits.ts` still says 512 MB and changes with the code.
   - [x] Cap the shared Scryfall caches: 500 KB per search page, 50 KB per card, 200 unexpired search rows and 2,000 card rows, with expired and client-written rows deleted before each write (`src/lib/cache-limits.ts`, #1322). The collection limits remain open.
   - The I-59 spec found that the server also trusts card prices: the browser sends each deck row's price, `addCardSchema` (`src/lib/validation/card.ts`) accepts any value from 0 to 100,000, and nothing refreshes it. The item is recorded under [I-59](#i-59-prices-over-time-and-alerts).
 - [ ] **L2, low:** test that every API route declares its access. The middleware matcher skips `/api` (`src/middleware.ts`), so the API allowlist in `src/lib/auth/edge-config.ts` is never read, and a new route that forgets its guard is silently public. Add an inventory test that fails when a handler neither calls a guard nor appears in an explicit public list.
@@ -1390,6 +1430,7 @@ This is search, not a new deck generator. DeckCheck Smart Search and Farseek are
 - [ ] Cover both languages with regression tests, and offer an explicit return to syntax-only search.
 - [ ] Leave the current deck unchanged. This flow does not add or cut cards.
 - [ ] Show a card's Scryfall Tagger function tags in the builder as clickable search facets, and offer "find similar cards" as a visible, editable `otag:` query built from those tags. No model is involved. Before building, confirm how a card's tag list can be read under Scryfall's terms: `otag:` works in Scryfall search, but whether tag lists are exposed in the API or bulk data was not verified.
+  - Answered 2026-11-10: Scryfall's bulk data carries an Oracle Tags file from Tagger, 4,617 tags on 36,453 Oracle IDs (status note, seventh pass). Whether the product may show them is the licence question shared by I-37, I-54 and [I-65](#i-65-how-this-deck-wins).
 
 **Demand evidence (2026-11-09):** search by function rather than popularity is a loud, recurring request on r/EDH, and no initiative named Tagger before this. ["Scryfall cheat sheet or: How I Learned to Stop Using EDHRec"](https://www.reddit.com/r/EDH/comments/1k0ih2q/) reached 909 points (April 2025), ["PSA: Check the scryfall tagger"](https://www.reddit.com/r/EDH/comments/1lc7cu9/) 425 (June 2025) and ["PSA: Viewing Scryfall Tags to Find Similar Cards"](https://www.reddit.com/r/EDH/comments/1wxxui2/) 246 (October 2026). A browser extension, MoxTags, adds Scryfall tags to Moxfield, and Archidekt has applied Oracle tags as categories since July 2026. Players reject AI search tools that hide their query; under OffMeta, a commenter asked for each part of the generated query to be shown as an editable assumption ([January 2026](https://www.reddit.com/r/EDH/comments/1q8czkc/)), which is this initiative's design.
 
@@ -1414,6 +1455,7 @@ CommanderSalt, DeckCheck DTI and EDHREC salt are the references for describing h
 ### Scope
 
 - [ ] Record intentions, combos, extra turns, resource denial, proxies and house rules on a per-deck or per-pod sheet.
+  - The sheet's calculated column shows [I-65](#i-65-how-this-deck-wins)'s route line, such as "Combo (2 lines), drain; earliest estimate turn 5", the way it shows the computed bracket (I-65 slice 10). The declared "how the deck wins" field stays the player's: the product never fills it, and a "copy into my sheet" action lets the owner do it.
 - [ ] Keep the profile private by default, and share it only with an explicit consent action.
 - [ ] Compare up to four decks on the same sheet.
 - [ ] Keep preference and salt-style scores separate from official rules, bracket and ban data.
@@ -1622,7 +1664,9 @@ Wizards publishes the rules but no deckbuilding guidance. EDHREC, CoolStuffInc a
 - [x] Correct the bracket names and descriptions players see in the deck wizard, and the bracket rules given to the copilot: bracket 2 is Core with zero Game Changers, bracket 3 Upgraded, bracket 4 Optimized, and cEDH is bracket 5. Use the official French names with the "bracket" alias. Shipped in #1300: the wizard's picker shows the official English names, the French "Catégorie N — Nom (bracket N)" form, and each bracket's Game Changer limit and turn floor. The copilot prompt reads one set of bracket rules for brackets 1 to 5, and the build route's duplicate bracket table is gone. The dormant catalogs carry the English text, held equal to English by a test until a native review.
 - [ ] Extend the bracket definitions to bracket 5 and to the official restrictions on mass land denial, extra turns and two-card combos, and remove the tutor restriction Wizards dropped on 2025-10-21. Still open after #1300: `BRACKET_DEFINITIONS` (`src/lib/constants/brackets.ts`) names bracket 1 "Casual", sets `allowsTutors: false` for it and stops at bracket 4; the wizard's picker offers brackets 1 to 4; and `src/lib/deck/bracket.ts` still forces any two-card infinite to bracket 4, with the warning `deck.bracket.infiniteCombos` labelled "(RC rule)" in every locale.
   - The I-64 spec found what players see: `BracketIndicator.tsx` shows Bracket 1 as "Casual", in its label and its `title`, while the wizard's picker shows "Exhibition" (`src/messages/en/deck.json`), so one screen of the editor names the bracket two ways. This item fixes the name; [I-64](#i-64-a-help-centre-and-in-product-guidance)'s glossary then renders bracket names from `BracketRule` and holds none of its own.
+  - Fix pending in an open branch: `fix/official-bracket-definitions`, queued and not yet pushed or merged, scores decks against Brackets 1 to 5, replaces the two-card-infinite override and its "(RC rule)" label with the official floor, drops the tutor dimension, and names Bracket 1 Exhibition in `BRACKET_DEFINITIONS` and in `BracketIndicator`'s label and `title`. Nothing here is checked until it merges.
 - [ ] Publish a static, indexable guide page with one section per bracket, from the researched document, with every claim labeled Official, Data or Community and linked to a dated source.
+  - The guide's "win conditions and combos" section and the bracket check name routes with [I-65](#i-65-how-this-deck-wins)'s route kinds, and I-65's map shows this initiative's official turn expectations beside its estimates, from the same constants. I-28 keeps the official rules and any finding about them.
 - [x] Make the rules pages reachable signed out. `/rules/game-changers` and `/rules/comprehensive` were in neither public-path list (`PUBLIC_PATH_PREFIXES` in `src/middleware.ts`, `PUBLIC_API_AND_PAGE_PATHS` in `src/lib/auth/edge-config.ts`), although the header and the landing page link to them, so visitors and crawlers were sent to sign-in. Shipped in #1313: the public page paths, `/rules` included, live once in `src/lib/auth/public-paths.ts`, which both the middleware and the `authorized` callback read. [I-34](#i-34-commander-data-reports-and-indexable-data-pages) slice 2 adds their alternates and localized metadata, and keeps the verbatim Comprehensive Rules `noindex`.
 - [ ] Render the guide's official rules from the same definitions the bracket analysis uses, so the two cannot disagree.
 - [ ] Link the bracket badge and the wizard's bracket step to the matching section without losing deck state.
@@ -1649,7 +1693,7 @@ The initiatives above carry the work already committed. The six below extend the
 
 Read them as hypotheses with a stated basis, not as commitments. A 2027 initiative is promoted to Next only when its spec's open questions are answered and its dependency has shipped.
 
-**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon. I-30 to I-37, added the same day from a research pass on the owner's goals, are not part of this horizon: four of them are Next and one is Next in part, so they sit in their own section, [Business, Reference And Depth](#business-reference-and-depth), after the list of what the sweep ruled out. I-38 to I-46, added that evening, follow in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table). I-47 to I-53, added on 2026-11-10, end that part (I-51 to I-53) and open [Rules, Access And The Online Table](#rules-access-and-the-online-table) (I-47 to I-50). I-54 to I-57, added later that day, join Business, Reference And Depth (I-55, I-57) and Trust, Growth And The Physical Table (I-54, I-56). I-58 to I-61, from a fifth pass, join Business, Reference And Depth (I-58) and Trust, Growth And The Physical Table (I-59 to I-61). I-62 to I-64, from a sixth pass, join Trust, Growth And The Physical Table.
+**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon. I-30 to I-37, added the same day from a research pass on the owner's goals, are not part of this horizon: four of them are Next and one is Next in part, so they sit in their own section, [Business, Reference And Depth](#business-reference-and-depth), after the list of what the sweep ruled out. I-38 to I-46, added that evening, follow in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table). I-47 to I-53, added on 2026-11-10, end that part (I-51 to I-53) and open [Rules, Access And The Online Table](#rules-access-and-the-online-table) (I-47 to I-50). I-54 to I-57, added later that day, join Business, Reference And Depth (I-55, I-57) and Trust, Growth And The Physical Table (I-54, I-56). I-58 to I-61, from a fifth pass, join Business, Reference And Depth (I-58) and Trust, Growth And The Physical Table (I-59 to I-61). I-62 to I-64, from a sixth pass, join Trust, Growth And The Physical Table. I-65 and I-66, from a seventh pass, join Business, Reference And Depth (I-65) and Trust, Growth And The Physical Table (I-66).
 
 **Why six and not twenty.** Beyond these, the sweep stopped producing gaps the product is positioned to fill. Adding further initiatives would mean inventing them, which fills a roadmap without filling a pipeline. The honest way to extend 2027 further is another dated sweep, not a longer list. The 2026-11-09 pass on the owner's goals was such a sweep, and it produced I-30 to I-37.
 
@@ -1877,6 +1921,8 @@ I-55 and I-57 joined this part on 2026-11-10, from a fourth research pass, after
 
 I-58 followed the same day, from a fifth pass, after I-57: a land base is deckbuilding depth, and its apply follows I-57's diff-and-apply pattern. It is Next for slices 1 to 9.
 
+I-65 joined from a seventh pass that day, after I-58: a map of how the deck wins is analysis of the player's own list, beside I-31's lab and I-58's land check. It is Next for slices 1 to 11, with slice 8 blocked for release on the Tagger licence, and its single-deck map stays free.
+
 Two rules hold across all eight. Card data, fan content and the evidence the product shows stay free, under the [Wizards Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy) and [Scryfall's API terms](https://scryfall.com/docs/api): a paid tier sells usage and personal tools, and only after I-30's legal gate. Each initiative names its paid-tier candidate and leaves the decision to I-30. The marketplace non-goal stays in force: I-32 builds the rungs that fit it, and I-33 names the one that would reverse it.
 
 ---
@@ -1899,6 +1945,7 @@ The owner wants a cheap SaaS that pays a decent living while the competition is 
 ### Scope
 
 - [ ] Slice 0, no code: commit written answers from a lawyer and an accountant to the spec's legal questions, then the owner's choice of provider, legal structure, price hypothesis (€3.99 a month or €29.99 a year first), withdrawal flow, and whether to ask Wizards for a licence.
+  - Running costs come from [I-66](#i-66-running-costs-and-margin-per-active-player), proposed 2026-11-10. The spec's assumption A2, €150 a month of fixed costs, now cites I-66 requirement 5: about €40–44 a month before VAT for Vercel Pro, Supabase Pro and a domain, or €62–67 with Sentry Team; €150 holds only once I-29's index server exists. With hosting counted, 22 monthly or 33 yearly payers cover that floor, and a living takes about 1,230 monthly or 1,870 yearly payers, beside this spec's own 1,200 and 1,770. Vercel's Hobby plan forbids commercial use, so hosting moves to Pro before the first paid plan (slice 9) or any ad.
 - [ ] Meter every model call through one module: an `AiUsage` row with tokens, `stop_reason`, outcome and a cost from a dated price table. A truncated reply is never parsed as a success (slice 1).
 - [ ] Enforce a monthly allowance per user and route, atomic in PostgreSQL across instances, show what remains before an AI action, and set a global monthly spend ceiling. Calls that fail on our side consume nothing (slice 2). This closes I-05's quota scope.
 - [ ] Move builds and suggestions to the cheapest adequate model once I-02's golden set passes on it (slice 3).
@@ -1910,6 +1957,7 @@ The owner wants a cheap SaaS that pays a decent living while the competition is 
 - [ ] First paid entitlements, a larger AI allowance and early access, then one entitlement per initiative as it ships (slices 9 and 11).
 - [ ] After slice 0, a pod pass: one member's plan unlocks the paid tools for the whole pod. On 2025-12-02 Playgroup.gg gave every playgroup one free league and said that "only _one_ member in a playgroup needs a Supporter Pack" to unlock unlimited leagues ([post](https://playgroup.gg/posts/96-rewind-2025-playgroup-leagues-and-more)). This initiative has no group plan, while pods are already a unit in I-15, I-35, I-41, I-44 and I-51, and one subscriber in a pod of four spreads one price across four players. The pass sells computation and capacity only, such as Deck Lab runs on the pod's decks, pod history beyond a free window and game-night aids, never card data or evidence.
 - [ ] An owner-only metrics page computed from our own database: active accounts, conversion, churn, AI cost per user and net revenue (slice 10).
+  - Its cost section is [I-66](#i-66-running-costs-and-margin-per-active-player)'s: stored monthly costs per provider, cost per active player, per stored account and per payer, and the plan limits with the least headroom (I-66 slice 9).
 - [ ] If slice 0 says no: a supporter page with nothing gated, labelled sponsorships, affiliate income through I-32, and one AI allowance for everyone (slice 12).
 
 ### Engineering enablers
@@ -1942,6 +1990,7 @@ The [opening-hands guide](guides/commander-mulligans-curves-and-play-style.md) s
 
 - [ ] Port the research model into `src/lib/deck-lab/`, with parity tests against `model.mjs` and the guide's exact hypergeometric figures (slice 1).
 - [ ] Classify each card for the simulation by a deterministic rule the player can see and override per deck. No language model (slice 2).
+  - Route roles are a separate layer. `categorizeCard` (`src/lib/deck/categories.ts`) gives each card one label and, on 35 hand-picked route cards, labels no combat, drain, mill, equipment, combo or lock card `winCondition` (I-65 spec, logic re-checked on `origin/dev` at `72fbfc1`). [I-65](#i-65-how-this-deck-wins) adds multi-label route roles that never overwrite `category`; this slice keeps its lab kinds, and the engine supplies I-65's assembly odds (I-65 slice 13).
 - [ ] Run in web workers with progress and cancel, and add a colour model: pips matched to sources each turn, fetch lands, MDFCs and filter rocks (slices 3–4).
 - [ ] Report a cross-fitted keep table per mulligan stage, P(commander cast by turn), per-turn mana and colour percentiles, colour sources, castability per card and land drops, each with a 95% interval and its sample size (slice 5).
 - [ ] A Deck Lab page that runs signed out on a visible or pasted list, with classification review and a limits panel that is always visible (slice 6).
@@ -2195,6 +2244,7 @@ The owner wants an editor "more beautiful and more complete than Moxfield". Arch
 - [ ] Restore the commander fields with the cards. `src/app/api/decks/[id]/snapshots/[snapshotId]/restore/route.ts` deletes and re-creates the deck's `DeckCard` rows in one transaction but leaves `Deck.commanderId`, `commanderName` and `partnerId` as they were. A snapshot taken under another commander therefore restores its cards while the deck keeps the old `commanderName`, which community discovery matches in SQL. Found by the I-55 spec, whose requirement 5.6 writes the three fields in the same transaction.
 - [ ] Finish, language, date added and Oracle identity on deck cards (slice 12). `DeckCard` has none of them today (`prisma/schema.prisma`), and I-06, I-10 and I-32 depend on them.
 - [ ] Custom categories, deck and global tags, card-panel controls, bulk edit as one diff-and-apply transaction, a cross-deck clipboard and Scryfall function tags (slices 13–18). The I-01 bulk-edit fix, #1314, stopped the data loss first.
+  - The spec's open question on where function tags come from is answered (2026-11-10): Scryfall's bulk-data index lists an "Oracle Tags" file "sourced from Tagger", and the file of 2026-11-09 holds 4,617 tags on 36,453 Oracle IDs ([bulk data](https://api.scryfall.com/bulk-data), counted by the I-65 spec; the I-54 spec found the file first). Slice 18 reads it through the one daily join of I-29 slice 1 or I-54 slice 2. Whether the product may show the tags is the licence question shared with I-54 and [I-65](#i-65-how-this-deck-wins), which joins I-30's lawyer list; slice 18 stays blocked until Scryfall answers.
 - [ ] Read-only Stacks and Text on public pages, the validation pass with a side-by-side review, and a split primer editor (slices 19–21).
 - [ ] A command palette opened by Ctrl/Cmd+K or a toolbar button, listing every command that the slice 3 registry declares for the current page, each with its key (slice 22).
 - [ ] From the palette, open any of the player's decks by name, and add a card to the current zone through slice 7's quick add (slice 23).
@@ -2343,6 +2393,46 @@ On a two-colour deck, a player sees the formula's count and each colour's target
 
 ---
 
+## I-65: How This Deck Wins
+
+**Spec:** [`specs/i65-how-this-deck-wins.md`](specs/i65-how-this-deck-wins.md)
+
+**Outcome:** a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next for the route model, the map for one deck and its uses in I-15, the primer and the wizard (slices 1 to 11), with slice 8 blocked for release on the Tagger licence; Later for model rewording, assembly odds and comparisons (slices 12 to 15); slice 16 waits for I-30's decision
+**Impact / effort:** Medium / large
+**Depends on:** nothing for slices 1 and 2; I-28 slice 2 for the bracket line (slice 4); I-29 slice 1 and I-54 slice 2 for the Oracle Tags join, and Scryfall's answer on the tags for release (slice 8); I-15 slice 2 for the sheet line (slice 10); the I-02 owner's sign-off on the wizard step (slice 11); I-30 slices 1 and 2 for rewording (slice 12); I-31 slices 1 and 5 for assembly odds (slice 13); I-55 slice 4 and I-15 slice 3 for comparisons (slices 14 and 15); I-30's decision gate and its slice 11 for slice 16.
+
+Players ask "how does your deck win?" before games with strangers. MagicCon Chicago's Commander area printed it, with "What turn does your deck usually win on?", as a pregame prompt in February 2025 ([MagicCon](https://mcchicago.mtgfestivals.com/en-us/event-play/the-command-zone.html)), and Wizards' bracket text of 2025-10-21 describes each bracket by how its decks win and how many turns its games last ([announcement](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)). The product answers part of the question with a list of Commander Spellbook combos, and combos ended 8.1% of 399,857 multiplayer games logged on Playgroup ([how games ended](https://playgroup.gg/commander/how-to-play), updated 2026-11-04). Every deck tool read shows combos, most of them from Spellbook. None maps the other routes, counts the cards in each role, matches tutors and protection to the pieces or lists what commonly stops a route, and the one written "how it wins" synopsis found, DeckCheck's, does not say who writes it ([DeckCheck](https://deckcheck.co/articles/howto)). Today `categorizeCard` gives each card one label and misses most finishers, the Spellbook lookup ignores `manaValueNeeded`, `bracketTag` and starting zones, and the wizard's win conditions are fixed text that nothing checks. In the spec's sample, Scryfall's Oracle Tags file names the route function of 28 of 29 single-card finishers, so the answer on its licence decides how many cards the map recognises. The map is private by default, because sharing how a deck wins also shares its weaknesses ([EDHREC, 2026-06-11](https://edhrec.com/articles/how-much-information-should-be-shared-during-rule-zero)).
+
+### Scope
+
+- [ ] Route kinds, roles and answer classes as versioned data in I-54's definition format, each route naming the Comprehensive Rules entry that ends the game (104.2b, 104.3b to 104.3e, 903.10a), with Oracle-pattern and keyword clauses and fixtures (slice 1).
+- [ ] Read `manaValueNeeded`, `bracketTag`, each result's status and each piece's `zoneLocations` from the one Spellbook call that #1324 makes, and map Spellbook's results to route kinds through a tested table; an unmapped result shows as "combo: other result" (slice 2). Today `src/lib/combos/find-my-combos.ts` reads none of the four.
+- [ ] `computeRouteMap`, a pure function: combo and single-card routes, route roles per card that never overwrite the player's `category`, the count per role, cards shared between routes, tutors listed by the pieces they reach and protection by what it covers (slice 3). `categorizeCard` (`src/lib/deck/categories.ts`) keeps the player's category; on 35 hand-picked route cards it labels no combat, drain, mill, equipment, combo or lock card `winCondition`.
+- [ ] Turn estimates, always labelled: a mana-only floor with and without one cheap ramp piece, Spellbook's speed band from `manaValueNeeded`, and the hits needed for 21 commander damage, with the target bracket's official turn expectation beside them from I-28's constants, hidden until I-28 slice 2 (slice 4). No damage clock is simulated.
+- [ ] Common answers, attached only when a route's pieces match, from a versioned table of classes such as graveyard exile, artifact removal and "can't win" effects, never naming an opponent's card (slice 5).
+- [ ] A builder panel, "How this deck wins", in English and French, that absorbs the combos panel, with a test that fails on a verdict word in any template (slice 6); owner overrides of route roles, stored per deck (slice 7).
+- [ ] Tagger clauses from the Oracle Tags join, with a daily check of each definition against a Scryfall `otag:` query (slice 8). Blocked for release until Scryfall answers on the tags; without them the map says "function tags unavailable: fewer cards recognised".
+- [ ] The public deck page's setting, off by default, route kinds only, or the full map, and `GET /api/decks/[id]/routes` (slice 9); I-15's calculated line with "copy into my sheet", and the primer's "Win conditions" section pre-filled (slice 10); and the wizard's plan-versus-result check, which never blocks a build (slice 11). Today `DeckPlan.winConditions` (`src/lib/ai/deck-plan.ts`) is fixed text per strategy that nothing checks against the built deck.
+- [ ] Later: a model rewording of a templated sentence, accepted only if it keeps every card name, number and rule and adds no verdict, labelled and counted against I-30's allowance (slice 12); assembly odds from I-31's seeded engine (slice 13); routes compared across builds and snapshots, then across a pod's consented decks (slices 14 and 15); and, after I-30's decision, a paid entitlement for the comparisons (slice 16).
+
+### Engineering enablers
+
+- The same deck, overrides and definitions give the same map byte for byte in any input order, and the map records its input hash, definitions version, tags file date, Spellbook lookup time and rules date.
+- A Spellbook timeout shows "combos not checked", never "no combos", while the other routes still render.
+- "Route kinds only" never returns a card name from the API, and an off map answers 404 to everyone but the owner.
+- Every English and French template passes the verdict-word scan, and a model rewording that adds a card or changes a number falls back to the template.
+
+**Paid-tier angle:** the map for one deck, its sources, its estimates and its use in I-15, the primer and the wizard stay free: it is feedback and evidence, which I-30 requirements 1.1 and 1.4 keep free. The candidate is the comparison of routes across builds, snapshots and a pod's consented decks, a personal tool over the player's own decks over time. The spec rates it unproven, because no product was found charging for route analysis.
+
+### Definition of done
+
+An aristocrats deck shows a drain route with its payoffs, sacrifice outlets and fodder counted, the tutors that reach a creature, a labelled mana-only estimate beside the bracket's official turn expectation, and the answer classes that stop "dies" triggers; a Spellbook timeout leaves the other routes in place; the same deck gives the same map twice; and no sentence grades the deck.
+
+---
+
 # Trust, Growth And The Physical Table
 
 I-38 to I-46 were added on the evening of 2026-11-09, from dated research that each spec links, because its notes are not committed. They cover what a public, paying product owes its users (I-38), how a new player reaches a first deck and how that is counted (I-39), the phone and the store (I-40, I-41), the Commander variants (I-42), the physical cards a player stores, trades and sells (I-43 to I-45), and the chat rooms where pods and creators meet (I-46). I-38 and I-39 are Next, I-42 is Next for slices 1 to 6 and I-46 for slices 1 to 3, and the others are Later with cheap early slices named. The rules of the previous part hold: card data, fan content and evidence stay free, each initiative names its paid-tier candidate and leaves the decision to I-30, legal points are research and not legal advice, and none of them holds money, cards or shipments.
@@ -2354,6 +2444,8 @@ I-54 and I-56 followed later that day, from a fourth pass. I-54 helps a new or r
 I-59 to I-61 joined from a fifth pass that day. I-61 protects the account itself, beside I-38's rights and deletion, and follows it. I-60 gives a player statistics across their decks and a yearly recap, a growth loop measured through I-39, and follows it. I-59 keeps prices over time, beside I-45's collection value, and follows it. I-61 is Next, I-60 is Next for slices 0 to 5 and 13, and I-59 is Later with slices 0 to 2 ready now. The same rules hold.
 
 I-62 to I-64 joined from a sixth pass that day. I-63 delivers what every initiative here tells a player, I-38's sender and I-61's security notices first, and follows I-61. I-62 moves a player's decks in from another site, a first run measured through I-39's events, and follows I-60. I-64 answers players' questions inside the product and sends what it cannot answer to I-52's report, and follows I-52. I-63 is Next, I-62 is Next for slices 0 to 11, 17 and 18, and I-64 for slices 0 to 9 and 13. None of the three is paid.
+
+I-66 joined from a seventh pass that day. It tells the owner what the product costs to run per active player and which free-tier limit breaks first, and it sits between I-63, whose job route runs its daily checks, and I-39, whose active accounts it counts. It is Next for slices 0 to 8. It is internal and never shown to players, so it has no paid-tier candidate.
 
 ---
 
@@ -2484,6 +2576,44 @@ At least fourteen specs plan to tell a player something, and each plans its own 
 ### Definition of done
 
 A reply to a player's comment appears once in their inbox, in their language; they turn on email for one category, receive it within the pacing and quiet hours, and stop it in one click from the email without signing in; a password reset still reaches an address that complained about a digest; and no producer sends mail or stores a preference of its own.
+
+---
+
+## I-66: Running Costs And Margin Per Active Player
+
+**Spec:** [`specs/i66-running-costs-and-margin.md`](specs/i66-running-costs-and-margin.md)
+
+**Outcome:** the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next for slices 0 to 8, before I-30's price decision; Later for slices 9 to 12, which wait for I-30's owner page, I-63's job route or a Pro plan. Internal; never shown to players
+**Impact / effort:** Medium / medium
+**Depends on:** nothing for slices 1, 3 and 4; the owner's slice 0 answers for the region and the budget webhook (slices 6 and 10); slice 2's measurements for slices 5 to 8 and 12; I-30 slice 10 and I-63 slice 5 for stored months (slice 9); I-63 slice 5, and I-30 slice 2 for the AI thresholds, for the daily checks (slice 11); I-08's agreement on its pages for static regeneration (slice 12).
+
+I-30 prices the AI per user and computes how many subscribers a living takes, but it guessed the rest: its assumption A2 put fixed costs at €150 a month. Nothing in the code reads Vercel, Supabase or Sentry usage, and nobody knew which free limit breaks first. The spec's estimates, which slice 2 replaces with measurements: Speed Insights stops collecting at about 250 active players, Sentry's 50 replays run out at about 625, the 500 MB database fills at about 1,100 stored accounts, and Hobby's 10 GB of Fast Origin Transfer runs out at about 1,300 active players. On Pro, hosting costs about $0.002–0.005 per active player a month beyond the included credit, while a free player who uses the whole AI allowance on today's model costs $0.44, about 90 times more. Vercel's Hobby plan forbids commercial use ([fair use](https://vercel.com/docs/limits/fair-use-guidelines)), so the first paid plan or ad needs Pro, and the commercial floor is about €40–44 a month before VAT. Two cheap moves need no decision. The shared Scryfall cache routes set no caching header (`src/app/api/cache/read-through-response.ts`), so every repeat lookup costs a function call and a database read, and the image proxy answers `public, max-age=86400`, which Vercel's CDN does not cache without `s-maxage` ([CDN cache](https://vercel.com/docs/caching/cdn-cache)). The report counts players only from rows that already exist and adds no external service.
+
+### Scope
+
+- [ ] Slice 0, no code: the plans and function region in use today, when to move to Vercel Pro and Supabase Pro, the domain, the budget amounts and whether reaching a budget pauses the site; a written question to Vercel on commercial use, which joins I-30 requirement 7.2.
+- [ ] A dated price book of every provider except AI and payments, and the cost model per active player as pure functions with 13 labelled assumptions, tested against the spec's tables (slice 1); a measurement script that prints Vercel usage by project and region, database and table sizes, active and stored accounts and the `next build` route table (slice 2).
+- [ ] `s-maxage` with `stale-while-revalidate` on 200 answers from `/api/cache/search` and `/api/cache/cards`, never on 400, 429 or 502 (slice 3), and a CDN caching header on `/api/proxy-card-image`, with the response bytes in its log line (slice 4).
+- [ ] Speed Insights and Sentry on-error replay sample rates set from slice 2's counts (slice 5); the function region chosen by comparing `durationMs` by route, then set in the dashboard or in the `vercel.json` that I-63 slice 5 creates (slice 6); and an explicit Prisma `connection_limit` in the documented production URL, with the infrastructure doc corrected to 500 MB (slice 7).
+- [ ] A monthly report script that prints every provider's cost with its source, the denominators, the plan-limit table and the break-even under I-30's prices, and stores nothing (slice 8). Active players are counted from `Deck.updatedAt` and, once I-30 slice 1 merges, `AiUsage`, until I-39's event store replaces them; a missing input shows "not available", never zero.
+- [ ] Later: stored months and the cost section of I-30's owner page (slice 9); Vercel's signed `budget.reached` webhook (slice 10); daily threshold checks on I-63's job route for database size, Hobby allotments, early AI thresholds and a Speed Insights pause (slice 11); and static regeneration for public deck, profile and commander pages, with the saving measured (slice 12).
+- [ ] Changes to neighbours, recorded on 2026-11-10: I-30's assumption A2 cites requirement 5, I-05 M3 and the I-59 spec say 500 MB, and the unregistered fallback domain and the function region are I-05 items. The comment in `src/lib/cache-limits.ts` still says 512 MB and is corrected with the code.
+
+### Engineering enablers
+
+- Pure functions reproduce the spec's cost, limit, floor and break-even tables to the cent, and a dated price change recomputes an older month with that month's prices.
+- A guard test fails if the report's queries touch a table outside an allowlist: `User`, `Deck`, `AiUsage`, `AiMonthlySpend` and its own cost tables.
+- The cache routes send `s-maxage` on hits and fills only, and the proxy sends its CDN header only with a 200 image.
+- A webhook with a bad signature is rejected, a duplicate event is stored once, and each threshold alerts once a month.
+
+**Paid-tier angle:** not applicable. The model, the report and the alerts are for the owner only, and no page, route or export shown to players carries a cost figure. Its value to I-30 is the price decision: it says what one more player costs, free or paying, before slice 0 sets a price.
+
+### Definition of done
+
+The owner runs one command and reads last month's cost per provider, per active player, per stored account and per payer, each figure labelled measured, computed or assumed with its date, and the three limits with the least headroom with the month each would hit; a repeat card lookup is served by the CDN without a function call; and no player-facing page shows a cost, and no new event or column tracks a player.
 
 ---
 
@@ -2859,7 +2989,7 @@ Today a deck row holds one USD price that the browser sent when the card was add
 - [ ] One deck value function for the stats panel, the analysis diff, the stats export and budget checks: the command zone and main deck in the total, Sideboard and Considering apart, the companion counted, unpriced cards counted, labelled "USD, read when each card was added" (slice 1). Today three totals disagree. `useDeckPrice` (`src/hooks/useDeckPrice.ts`) sums every row of `deck.cards`, Sideboard and Considering included, plus commander and partner; `computeDeckStats` (`src/lib/deck/stats.ts`) sums the main zone, commander and partner; `buildExportMetadata` (`src/lib/export/stats-export.ts`) sums `deck.cards` without the command zone; and none counts the companion.
 - [ ] Neutral wording and one colour for up and down, checked in CI over the English and French catalogues (slice 2).
 - [ ] Stop treating the price the browser sent as current. `makeDeckCard` (`src/lib/deck/store-card-faces.ts`) reads `prices.usd` in the browser, `addCardSchema` (`src/lib/validation/card.ts`) accepts any value from 0 to 100,000, the server stores it unchecked, and `patchCardSchema` has no price field, so nothing refreshes it. Until a printing has points, its stored price is shown only as "price when added", and totals read the series once it does (slices 1, 3 and 6). [I-57](#i-57-printing-preferences-applied-everywhere) slice 1 fixes the swap that keeps the old price.
-- [ ] `PrintingKey` and `PricePoint` for tracked printings, daily for 90 days and weekly after, written by the single daily job of I-29 slice 1 or I-32 slice 2, never a second one, with a run report (slice 3), and a compressed daily archive of every paper printing outside the database, with its hash (slice 4). On the spec's estimate, every priced printing daily in PostgreSQL would fill the 512 MB free tier in about nine weeks, while 10,000 tracked printings take about 99 MB in year one.
+- [ ] `PrintingKey` and `PricePoint` for tracked printings, daily for 90 days and weekly after, written by the single daily job of I-29 slice 1 or I-32 slice 2, never a second one, with a run report (slice 3), and a compressed daily archive of every paper printing outside the database, with its hash (slice 4). On the spec's estimate, every priced printing daily in PostgreSQL would fill the 500 MB free tier in about nine weeks, while 10,000 tracked printings take about 99 MB in year one.
 - [ ] A printing's chart in the printing selector and the card panel (slice 5), deck value over time for the current list at past prices and for each snapshot on its own date (slice 6), and collection value over time (slice 7).
 - [ ] "Moved" marks on deck rows and the acquisition plan, then on the wanted list, want lists and bundles (slices 8–9), and a reprint watch for cards on any tracked list (slice 10).
 - [ ] Alert rules over a card or a list, net of owned copies, that fire once per crossing, with an in-app inbox (slice 11); an email digest with its own opt-in, at most one a day, with one-click unsubscribe (slice 12); and "since added" once I-37 slice 12 records it (slice 14).
@@ -3099,6 +3229,7 @@ A player checks a deck against a brief, enters a frozen list that passes, and fi
 
 - [ ] A commander catalogue keyed by Oracle ID, rebuilt daily from Scryfall bulk data and never paged through search (slice 1). `fetchAllPages` (`src/lib/scryfall/client.ts`) stops after `PAGE_SAFETY_CAP = 20` pages, 3,500 cards at 175 a page, fewer than the 3,754 commanders, and returns the partial list without an error; its callers today read the banned list and the Game Changers, far below the cap. `buildCommanderSearchQuery` (`src/lib/scryfall/search.ts`) searches by name and colours only.
 - [ ] One play-style vocabulary with versioned definitions, compiled both to a Scryfall query fragment and to a local predicate, with a daily conformance check and an owner-labelled fixture (slice 2). It replaces three lists: the wizard's 8 strategies, the 11 `ARCHETYPES` (`src/lib/ai/archetypes.ts`) and the 17 themes of `detectThemes` (`src/lib/deck/themes.ts`), whose Tokens rule counts "put a", which also matches counters.
+  - [I-65](#i-65-how-this-deck-wins)'s route definitions reuse this format and its compilers. A style says how a deck plays and a route how a game ends, and each style may link the routes it usually uses. The Oracle Tags join is built once, here or in I-29 slice 1, and I-65 slice 8 reads it.
 - [ ] The finder page and route, signed out: colours, styles in and out, keywords and types, the Game Changer rule, the visible query, a funnel and one "why it matches" line per filter (slice 3); a complexity score with its factors (slice 4); and a seeded "Surprise me" (slice 5).
 - [ ] "Help me choose" in the wizard instead of "let the AI choose", and an honest budget label (slice 6). The budget label defect is recorded under I-02, and removing the prompt branch is I-02's change and the owner's decision.
 - [ ] "Not like my decks" and "like a commander I enjoy" (slice 7), "Help me choose a commander" in I-39's first-run panel (slice 9), free text turned into the same visible filters through I-14 (slice 10), and saved finder profiles (slice 15).
