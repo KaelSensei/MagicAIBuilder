@@ -14,10 +14,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...edgeAuthConfig,
   adapter: PrismaAdapter(prisma),
   providers: [
+    // No `allowDangerousEmailAccountLinking`: password sign-up does not verify
+    // the email, so linking by email would attach a Google identity to a row
+    // anyone could have registered first. Auth.js instead refuses with
+    // `OAuthAccountNotLinked`, which the sign-in page explains.
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      allowDangerousEmailAccountLinking: true,
       authorization: { params: { prompt: "select_account" } },
     }),
     Credentials({
