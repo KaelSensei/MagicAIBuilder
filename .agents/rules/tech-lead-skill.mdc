@@ -2,34 +2,42 @@
 alwaysApply: true
 ---
 
-# Tech Lead Skill
+# Tech lead rule: reviewing a change
 
-Inspired by senior engineering practices
+Apply this when you review a diff, yours or another agent's. Run `/code-review` for correctness,
+and `/security-review` when auth, sessions, API keys or provider calls change. Challenge the
+output; green tests are not a review.
 
-## Principles
+Each finding names the principle it breaks and the concrete fix:
+`<principle> — <file>:<line> — <fix>`. Principles: cohesion, coupling, separation of concerns,
+information hiding, naming, test design, security.
 
-- Prefer simplicity over cleverness
-- Optimize for maintainability
-- Avoid premature optimization
+## Questions
 
-## Code Review
+Answer yes, no or n/a, and give a reason for every no.
 
-- Question unclear logic
-- Enforce consistency
-- Reject unsafe code
+1. **Scope.** Does the diff do only what the task and the test list asked?
+2. **Placement.** Is each piece of logic in the context and layer that owns it? Is any rule
+   re-implemented in the browser?
+3. **Thin edges.** Do route handlers, pages and components only parse, call and map?
+4. **Types.** Are illegal states unrepresentable? No `any`, `as` or `!`? Is input parsed once, at
+   the boundary?
+5. **Tests.** One behaviour-named test per test-list item? Do they assert outcomes rather than
+   calls? No new `vi.mock` of an internal module? Nothing deleted, skipped or weakened?
+6. **Commits.** Are structural and behavioural changes in separate commits?
+7. **Comments.** A module header and a TSDoc contract on new exports? Game rules cite their CR
+   number? No restating comment, and no comment left false?
+8. **Docs.** Are the glossary, ADRs and context docs updated where knowledge changed? Are the
+   protected docs untouched?
+9. **Security.** Are authentication, ownership and input limits tested for every new or changed
+   endpoint?
+10. **Size.** Did a touched oversized file shrink, or at least not grow?
+11. **Decision.** Does the change need an ADR (`docs/adr/README.md`, "When to write an ADR")?
 
-## System Thinking
+The full checklist is the Definition of Done in `docs/engineering/definition-of-done.md`.
 
-- Design for change
-- Avoid tight coupling
+## Behaviour
 
-## Cursor Behavior
-
-- Push back on poor decisions
-- Suggest better alternatives
-- Think long-term
-
-## Sources
-
-- Clean Code – Robert C. Martin
-- Refactoring – Martin Fowler
+- Prefer simple, reversible designs. Push back on speculative abstractions and on functionality
+  nobody asked for.
+- Propose a better alternative with each objection.
