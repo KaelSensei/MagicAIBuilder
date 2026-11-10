@@ -1,35 +1,45 @@
 # Quality Gate — MagicAIBuilder 🧪
 
-> Source of truth for project quality. Any regression against the baseline triggers corrective action.
+> What blocks a merge today, what is only reported, and what is planned. The pre-PR gate itself is in [`CLAUDE.md`](../../CLAUDE.md); this page explains it and must agree with it. The Definition of Done is [definition-of-done.md](definition-of-done.md).
 
-## Baseline (2026-08-15)
+## What blocks today
 
-| Metric                     | Baseline | Minimum | Status |
-| -------------------------- | -------- | ------- | ------ |
-| **Coverage**               | 94.5%    | ≥ 90%   | ✅     |
-| **Bugs**                   | 0        | = 0     | ✅     |
-| **Vulnerabilities**        | 0        | = 0     | ✅     |
-| **Open issues**            | 0        | = 0     | ✅     |
-| **Duplicated Lines**       | ≤ 3.0%   | ≤ 3.0%  | ✅     |
-| **Reliability Rating**     | A        | A       | ✅     |
-| **Security Rating**        | A        | A       | ✅     |
-| **Maintainability Rating** | A        | A       | ✅     |
-| **Unit tests**             | 1764     | —       | ℹ️     |
-| **E2E tests**              | 51       | —       | ℹ️     |
+| Gate                                                   | Where it runs                                                      | What fails it                                                    |
+| ------------------------------------------------------ | ------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `pnpm audit --prod --audit-level=high`                 | `.github/workflows/ci.yml`                                         | a high or critical advisory in the production dependency tree    |
+| `pnpm lint` (`next lint`)                              | `ci.yml`; `next lint --fix` on staged files in the pre-commit hook | a lint error. Warnings do not fail CI; `CLAUDE.md` requires zero |
+| `npx tsc --noEmit`                                     | `ci.yml`                                                           | a type error                                                     |
+| `pnpm test:coverage`                                   | `ci.yml`                                                           | a failing test. No coverage threshold is enforced                |
+| `pnpm build`                                           | `ci.yml`                                                           | a build error                                                    |
+| Playwright suite in Docker (`scripts/e2e-pre-push.sh`) | `.husky/pre-push`, on the developer's machine only                 | a failing E2E test blocks the push. No CI workflow runs it       |
 
-## Blocking thresholds
+Branch protection, read with `gh api` on 2026-11-10: `main` requires the check `Lint, Typecheck, Test, Build` and an up-to-date branch. `dev` and `staging` have no protection rule; their PRs run the same check, and it must be green before a merge.
 
-A PR is **blocked** when it regresses any of these:
+## What is reported but does not block
 
-| Metric             | Hard threshold              |
-| ------------------ | --------------------------- |
-| Coverage           | Must not fall below **90%** |
-| Bugs               | Must stay at **0**          |
-| Vulnerabilities    | Must stay at **0**          |
-| Reliability Rating | Must stay at **A**          |
-| Security Rating    | Must stay at **A**          |
-| Duplicated Lines   | Must not exceed **3.0%**    |
-| Code Smells        | Must not exceed **10**      |
+| Report                                     | Where                                       | Status                                                                                       |
+| ------------------------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| SonarCloud analysis                        | `sonar.yml` (job `continue-on-error: true`) | **Advisory** while the repository integration is repaired (`CLAUDE.md`). Record it in the PR |
+| `pnpm audit --prod --audit-level=moderate` | `ci.yml` (step `continue-on-error: true`)   | Report only                                                                                  |
+| Lighthouse CI (`lighthouserc.yml`)         | `lighthouse.yml`                            | Fails its own workflow below a category threshold; not a required check                      |
+
+**One local hook still treats Sonar as blocking.** `.claude/settings.json` runs `scripts/pre-pr-sonar-gate.sh` before every `gh pr create`, and the script refuses while SonarCloud reports any open issue. Until it is changed to warn, use its escape `SONAR_GATE_OVERRIDE=1` and give the reason in the PR body.
+
+### SonarCloud targets (advisory)
+
+A regression against these targets is a finding to fix or to explain in the PR. It does not block the merge while Sonar is advisory. When the owner makes Sonar blocking again, this table and `CLAUDE.md` change in the same PR.
+
+| Metric                                         | Target | Last recorded (2026-08-15) |
+| ---------------------------------------------- | ------ | -------------------------- |
+| Coverage, SonarCloud scope                     | ≥ 90%  | 94.5%                      |
+| Bugs                                           | 0      | 0                          |
+| Vulnerabilities                                | 0      | 0                          |
+| Open issues                                    | 0      | 0                          |
+| Code smells                                    | ≤ 10   | —                          |
+| Duplicated lines                               | ≤ 3.0% | ≤ 3.0%                     |
+| Reliability, security, maintainability ratings | A      | A                          |
+
+**The SonarCloud coverage figure is not the repository's coverage.** `sonar-project.properties` excludes `src/app/**` and `src/components/**` from it. Vitest measures all of `src`: 48.5% on 2026-08-23 (the breakdown is in the comment in `vitest.config.ts`).
 
 ## Pre-PR checklist
 
@@ -42,10 +52,27 @@ pnpm test:coverage    # all passing — must run BEFORE sonar
 pnpm sonar            # or rely on CI if it hangs locally
 ```
 
-Then confirm SonarCloud reports **zero open issues**:
+Then record the SonarCloud result in the PR. It is advisory, so open issues do not block the merge:
 <https://sonarcloud.io/api/issues/search?componentKeys=KaelSensei_MagicAIBuilder&statuses=OPEN&ps=100>
 
 > `pnpm sonar` does **not** regenerate coverage. Run `pnpm test:coverage` first, or the quality gate reads a stale `lcov` file.
+
+## Planned gates
+
+None of these exist yet. They land in stages ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md)), each in its own PR, which updates this table, `CLAUDE.md` and the agent rules. Until a gate exists, review checks its rule by hand.
+
+| Stage | Gate                                                                                                                                                                                   | Will block                                      | Status  |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------- |
+| 1     | ESLint 9 flat config replaces `next lint` and `.eslintrc.json` (`next lint` is deprecated, and removed in Next 16). A prerequisite for stages 3–4                                      | as today                                        | planned |
+| 2     | The `server-only` package, with a Vitest stub                                                                                                                                          | a build that pulls server code into the browser | planned |
+| 3     | dependency-cruiser (`pnpm arch`). Cycles fail at once; layer and context rules start from a recorded baseline that may only shrink. It also generates the Mermaid graphs               | a cycle or a new violation                      | planned |
+| 4     | ESLint `max-lines`, `max-lines-per-function` and `complexity`, with bulk suppressions as a ratchet                                                                                     | a new file over a limit, or a file that grows   | planned |
+| 5     | Knip: unused files, dependencies and exports                                                                                                                                           | nothing: an advisory report                     | planned |
+| 6     | `pnpm arch` joins the pre-PR gate in `CLAUDE.md`                                                                                                                                       | as stage 3                                      | planned |
+| —     | `eslint-plugin-jsdoc`: `require-jsdoc` on exports, then `informative-docs`, starting in `src/modules/**` ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))               | a missing or restating doc comment              | planned |
+| —     | A lint rule for the typed `vi.mock(import("…"))` form and against new `vi.mock` of internal modules ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md)) | a string-path or internal mock                  | planned |
+| —     | StrykerJS mutation testing on `domain/` folders: nightly, then incremental on changed files ([ADR 0005](../adr/0005-testing-strategy-fakes-contracts-and-characterization.md))         | nothing at first: advisory                      | planned |
+| —     | Docs drift tests: glossary terms exist in code, the ADR index is complete, the dependency graph is generated ([ADR 0006](../adr/0006-comment-and-documentation-standard.md))           | a stale glossary, index or graph                | planned |
 
 ## Promotion gate
 
@@ -55,13 +82,13 @@ Do not skip a branch, merge feature work directly into `staging` or `main`, or p
 
 ### Branch protection the settings cannot express
 
-`delete_branch_on_merge` was enabled once and had to be reverted within minutes. It deletes the PR's **head** branch, and on a promotion PR (`staging` → `dev`) the head is `staging`. Merging the first promotion after enabling it deleted `staging` from the remote. It was restored from `dev`, which carried the same commit, so nothing was lost — but the setting cannot distinguish a throwaway feature branch from a permanent one.
+`delete_branch_on_merge` was enabled once and had to be reverted within minutes. It deletes the PR's **head** branch, and on a promotion PR (`staging` → `main`) the head is `staging`. Merging the first promotion after enabling it deleted `staging` from the remote. It was restored from `dev`, which carried the same commit, so nothing was lost — but the setting cannot distinguish a throwaway feature branch from a permanent one.
 
 `scripts/git-prune.sh` is the right tool: it carries an explicit protected list (`main master develop dev staging production`) and only removes what is not on it.
 
 ### The scan must fail, not skip
 
-`sonar.yml` carried `if: env.SONAR_TOKEN != ''` on the scan step. With no secret set, the step was skipped and **the job still reported success** — so every PR displayed a green SonarCloud check while nothing was analysed, and the "open issues = 0" line in the checklist above was reading a months-old snapshot rather than the code under review. Thirteen batches shipped in one day under that green tick; the first real analysis afterwards found five issues, all in that day's code.
+`sonar.yml` carried `if: env.SONAR_TOKEN != ''` on the scan step. With no secret set, the step was skipped and **the job still reported success** — so every PR displayed a green SonarCloud check while nothing was analysed, and the "open issues = 0" line the checklist then carried was reading a months-old snapshot rather than the code under review. Thirteen batches shipped in one day under that green tick; the first real analysis afterwards found five issues, all in that day's code.
 
 It now fails with an explicit error when the token is missing.
 
@@ -77,7 +104,7 @@ It now fails with an explicit error when the token is missing.
 
 **The verdict always comes from the e2e container's exit code.** An earlier version branched on `claude -p "@e2e-runner ..."`, which exits 0 whenever the CLI ran — the agent's PASS/FAIL was only prose on stdout. The gate printed `✓ E2E passed — push allowed` on a run with 27 failures. The agent is still invoked, but only after a failure and purely to diagnose it; it cannot turn a red run green.
 
-`SKIP_E2E=1` bypasses the gate in an emergency. CI skips it too, having its own job.
+`SKIP_E2E=1` bypasses the gate in an emergency; say so in the PR. The script also exits early when `CI` is set, but **no GitHub workflow runs Playwright** (`ci.yml`, `sonar.yml` and `lighthouse.yml` were checked on 2026-11-10). The pre-push hook is therefore the only place the suite runs. Anything that reaches a branch without a local push — a Dependabot PR, a promotion merged on GitHub — or a push made with `SKIP_E2E=1` has had no E2E run.
 
 ### The report has to leave the container
 
@@ -159,9 +186,10 @@ Every value below is a local test fixture, not a secret. No variable has to be e
 ## Review protocol
 
 1. Read the code and the diff.
-2. Verify CI (lint / typecheck / tests / build) and SonarCloud.
-3. Metrics stable or improved, no regression → merge.
-4. Metrics degraded or problems found → list them with a clear explanation, propose fixes, apply simple ones, open comments for structural ones.
+2. Verify CI (audit, lint, typecheck, tests, build) and read the SonarCloud report (advisory).
+3. Answer the review questions in `.agents/rules/tech-lead-skill.mdc` and check the [Definition of Done](definition-of-done.md).
+4. No blocking gate red and no open finding → merge (a squash merge into `dev`).
+5. Problems found → list them with a clear explanation, propose fixes, apply simple ones, open comments for structural ones.
 
 ### Feedback format
 
@@ -176,7 +204,7 @@ Every value below is a local test fixture, not a secret. No variable has to be e
 
 **Coverage dropped** — a new branch in a route handler with no test for the error path. Cover at minimum the nominal case plus the Prisma failure.
 
-**Cognitive complexity too high** — SonarCloud blocks above 15. Extract nested `if`/`switch` blocks into named functions.
+**Cognitive complexity too high** — SonarCloud flags a function above 15 (advisory, but the `clean-code` skill sets the same limit). Extract nested `if`/`switch` blocks into named functions.
 
 **Duplication** — near-identical Zod validation across routes belongs in a shared schema under `src/lib/validation/`.
 
