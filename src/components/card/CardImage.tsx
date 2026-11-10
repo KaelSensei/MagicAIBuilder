@@ -4,7 +4,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { CARD_BACK_URL } from "@/lib/scryfall/images";
+import {
+  CARD_BACK_URL,
+  normalizeScryfallImageUrl,
+} from "@/lib/scryfall/images";
 import { cn } from "@/components/ui/utils";
 import type { CardFace } from "@/lib/deck/types";
 import { CardFlip } from "./CardFlip";
@@ -98,7 +101,7 @@ export function CardImage({
     );
   }
 
-  const src = imgError ? CARD_BACK_URL : imageUri;
+  const src = imgError ? CARD_BACK_URL : normalizeScryfallImageUrl(imageUri);
 
   return (
     <div
@@ -173,7 +176,7 @@ export function CardImage({
           style={{ left: zoomPos.x, top: zoomPos.y, width: zoomWidth, height: zoomHeight }}
         >
           <Image
-            src={largeUri}
+            src={normalizeScryfallImageUrl(largeUri)}
             alt={`${name} (large)`}
             width={zoomWidth}
             height={zoomHeight}

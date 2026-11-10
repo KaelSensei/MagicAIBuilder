@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { PublicDeckView } from "@/components/profile/PublicDeckView";
 import { fetchPublicDeck } from "@/lib/deck/public-deck";
 import { auth } from "@/lib/auth/config";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface Params {
   readonly params: Promise<{ locale: string; id: string }>;
@@ -39,7 +40,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     openGraph: {
       title: `${deck.name} by ${author}`,
       description: `Commander: ${commander?.name ?? "Unknown"} · Bracket ${deck.targetBracket}`,
-      images: commander?.artCropUri ? [{ url: commander.artCropUri }] : [],
+      images: commander?.artCropUri
+        ? [{ url: normalizeScryfallImageUrl(commander.artCropUri) }]
+        : [],
     },
   };
 }

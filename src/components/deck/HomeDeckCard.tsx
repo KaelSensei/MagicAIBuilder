@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Clock, Copy, Loader2, Trash2 } from "lucide-react";
 import type { Deck } from "@/lib/deck/types";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface HomeDeckCardProps {
   readonly deck: Deck;
@@ -96,7 +97,7 @@ export function HomeDeckCard({
       style={
         hasArt
           ? {
-              backgroundImage: `url(${deck.commander?.artCropUri})`,
+              backgroundImage: `url(${normalizeScryfallImageUrl(deck.commander?.artCropUri ?? "")})`,
               backgroundSize: "cover",
               backgroundPosition: "center top",
             }

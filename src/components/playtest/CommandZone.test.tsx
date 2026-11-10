@@ -40,6 +40,21 @@ describe("CommandZone", () => {
     expect(onCast).toHaveBeenCalledWith("partner");
   });
 
+  it("shows a commander stored with Scryfall's JPEG from the WebP grid", () => {
+    const kenrith = {
+      ...makeCard("cmd", "Kenrith"),
+      imageUri:
+        "https://cards.scryfall.io/normal/front/a/c/ac2b2b62-ec2c-46f7-a8b6-8fca1a1e8b0b.jpg?1677149290",
+    };
+
+    renderWithIntl(<CommandZone cards={[kenrith]} onCast={vi.fn()} />);
+
+    expect(screen.getByRole("img", { name: "Kenrith" })).toHaveAttribute(
+      "src",
+      "https://cards.scryfall.io/grid/front/a/c/ac2b2b62-ec2c-46f7-a8b6-8fca1a1e8b0b.webp?1677149290"
+    );
+  });
+
   it("says how to bring a commander back once the zone is empty", () => {
     renderWithIntl(<CommandZone cards={[]} onCast={vi.fn()} />);
 

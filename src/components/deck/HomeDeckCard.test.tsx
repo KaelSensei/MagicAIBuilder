@@ -141,3 +141,35 @@ describe("HomeDeckCard", () => {
     expect(screen.getByRole("img", { name: "Symbole de mana Vert" })).toBeDefined();
   });
 });
+
+describe("HomeDeckCard commander art", () => {
+  // Scryfall retires the art_crop JPEG on 2027-01-01; decks saved before then
+  // still store it.
+  it("paints a stored JPEG art crop from Scryfall's WebP art", () => {
+    const commander: DeckCard = {
+      ...makeCard("cmd", "Atraxa", ["G"]),
+      artCropUri:
+        "https://cards.scryfall.io/art_crop/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.jpg?1599707796",
+    };
+
+    render(
+      <NextIntlClientProvider
+        locale="en"
+        messages={{ deck: enDeck, builder: enBuilder }}
+        timeZone="UTC"
+      >
+        <HomeDeckCard
+          deck={makeDeck({ commander })}
+          onDelete={vi.fn()}
+          onDuplicate={vi.fn()}
+          deletingId={null}
+          duplicatingId={null}
+        />
+      </NextIntlClientProvider>
+    );
+
+    expect(screen.getByTestId("deck-card").style.backgroundImage).toContain(
+      "https://cards.scryfall.io/art/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.webp?1599707796"
+    );
+  });
+});

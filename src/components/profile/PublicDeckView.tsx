@@ -16,6 +16,7 @@ import { SavePublicDeckButton } from "@/components/community/SavePublicDeckButto
 import { cardSurfaceClassName } from "@/components/ui/Card";
 import { cn } from "@/components/ui/utils";
 import { PublicDeckCards } from "./PublicDeckCards";
+import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface PublicDeckViewProps {
   readonly deck: PublicDeck;
@@ -148,7 +149,7 @@ export function PublicDeckView({ deck, isSignedIn }: PublicDeckViewProps) {
         </div>
         {commander?.imageUri ? (
           <Image
-            src={commander.imageUri}
+            src={normalizeScryfallImageUrl(commander.imageUri)}
             alt={commander.name}
             width={160}
             height={223}
