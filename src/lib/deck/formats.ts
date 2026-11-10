@@ -44,7 +44,9 @@ export interface FormatConfig {
   /**
    * Whether the first mulligan is free: it does not count toward the cards put
    * on the bottom (CR 103.5c). True for Brawl and for the formats played
-   * multiplayer by default; false for the constructed duel formats.
+   * multiplayer by default; false for the constructed duel formats. The
+   * playtest uses it as the default of the player's per-session multiplayer
+   * choice (`lib/playtest/free-mulligan.ts`).
    */
   readonly firstMulliganFree: boolean;
   /**

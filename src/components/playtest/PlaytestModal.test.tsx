@@ -213,6 +213,63 @@ describe("PlaytestModal", () => {
     ).toBeEnabled();
   });
 
+  describe("choosing whether the game is multiplayer", () => {
+    const multiplayer = () =>
+      screen.queryByRole("checkbox", { name: /multiplayer game/i });
+
+    it("lets a one-on-one Commander game bottom a card on the first mulligan", () => {
+      renderModal();
+      expect(multiplayer()).toBeChecked();
+
+      fireEvent.click(
+        screen.getByRole("checkbox", { name: /multiplayer game/i })
+      );
+      start();
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /mulligan.*new seven, 1 to the bottom/i,
+        })
+      );
+      bottomFirstCard();
+
+      expect(usePlaytestStore.getState().engine?.hand).toHaveLength(6);
+      expect(screen.getByText(/Hand: 6 cards/i)).toBeDefined();
+    });
+
+    // Every Brawl game has the free mulligan; the constructed formats are duels.
+    it.each(["brawl", "modern"] as const)(
+      "does not ask for a %s deck",
+      (format) => {
+        renderModal(makeDeck(format));
+
+        expect(multiplayer()).toBeNull();
+      }
+    );
+
+    // Bracket 1 has a figure for a hand of no lands and no cheap ramp, read
+    // against a fresh seven or, without the free mulligan, against a six.
+    it.each([
+      { table: "multiplayer", isMultiplayer: true, against: /a fresh seven/ },
+      { table: "one-on-one", isMultiplayer: false, against: /going to six/ },
+    ])(
+      "judges the first seven of a $table game against the right next hand",
+      ({ isMultiplayer, against }) => {
+        renderModal({ ...makeDeck(), targetBracket: 1 });
+
+        if (!isMultiplayer) {
+          fireEvent.click(
+            screen.getByRole("checkbox", { name: /multiplayer game/i })
+          );
+        }
+        start();
+
+        expect(screen.getByText(/^Bracket 1, first seven:/)).toHaveTextContent(
+          against
+        );
+      }
+    );
+  });
+
   it("asks a Modern player which card to bottom, holding the game until then", () => {
     renderModal(makeDeck("modern"));
     start();

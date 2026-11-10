@@ -4,6 +4,7 @@
   "start": {
     "prompt": "Prêt à tester ton deck ?",
     "hint": "Mélange et pioche ta main de départ de sept cartes.",
+    "multiplayer": "Partie multijoueur (premier mulligan gratuit)",
     "action": "Piocher la main de départ"
   },
   "turn": "Tour {turn}",
