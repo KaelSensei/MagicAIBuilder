@@ -1,3 +1,4 @@
+/** The deck store restores the command zone when a commander or partner save fails. */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ScryfallCard } from "@/lib/scryfall/types";
@@ -76,6 +77,20 @@ function scryfallCommander(overrides: Partial<ScryfallCard>): ScryfallCard {
 const THRASIOS = commandCard("thrasios", "Thrasios, Triton Hero");
 const TYMNA = commandCard("tymna", "Tymna the Weaver");
 const ATRAXA = scryfallCommander({ id: "atraxa", name: "Atraxa, Praetors' Voice" });
+const PARTNER_LINE =
+  "Partner (You can have two commanders if both have partner.)";
+const KRAUM = scryfallCommander({
+  id: "kraum",
+  name: "Kraum, Ludevic's Opus",
+  keywords: ["Partner"],
+  oracle_text: PARTNER_LINE,
+});
+const ISHAI = scryfallCommander({
+  id: "ishai",
+  name: "Ishai, Ojutai Dragonspeaker",
+  keywords: ["Partner"],
+  oracle_text: PARTNER_LINE,
+});
 
 /**
  * Seed an active deck led by a Partner pair.
@@ -170,12 +185,8 @@ describe("commander save recovery", () => {
     const commanderSave = Promise.withResolvers<unknown>();
     mocks.updateDeck.mockReturnValueOnce(commanderSave.promise);
 
-    const failedAttempt = useDeckStore.getState().setCommander(
-      scryfallCommander({ id: "kraum", name: "Kraum, Ludevic's Opus", keywords: ["Partner"] }),
-    );
-    await useDeckStore.getState().setPartner(
-      scryfallCommander({ id: "ishai", name: "Ishai, Ojutai Dragonspeaker", keywords: ["Partner"] }),
-    );
+    const failedAttempt = useDeckStore.getState().setCommander(KRAUM);
+    await useDeckStore.getState().setPartner(ISHAI);
     commanderSave.reject(new Error("Save failed"));
     await failedAttempt;
 

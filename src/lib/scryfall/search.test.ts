@@ -1,3 +1,4 @@
+/** Scryfall query builders: search modes, filters, and the second-commander search. */
 import { describe, it, expect } from "vitest";
 import {
   buildSearchQuery,
@@ -9,6 +10,20 @@ import {
   buildInteractionQuery,
   buildColorQuery,
 } from "./search";
+import {
+  AMY_POND,
+  CECILY_SAVED_BEFORE_RENAME,
+  CLARA_OSWALD,
+  ELLIE,
+  KRATOS,
+  LEONARDO,
+  PIR,
+  RAISED_BY_GIANTS,
+  SEFRIS,
+  TENTH_DOCTOR,
+  TYMNA,
+  WILSON,
+} from "@/lib/deck/fixtures/partner-cards";
 
 describe("buildColorQuery", () => {
   it("OR mode → id<= (within identity, permissive)", () => {
@@ -268,44 +283,83 @@ describe("buildCommanderSearchQuery", () => {
   });
 });
 
-describe("buildPartnerSearchQuery", () => {
-  it("partner type includes Partner oracle text", () => {
-    const q = buildPartnerSearchQuery("partner", "");
-    expect(q).toContain('o:"Partner"');
-    expect(q).toContain('-o:"Partner with"');
-    expect(q).toContain("is:commander");
+describe("buildPartnerSearchQuery — the cards each partner ability allows", () => {
+  it.each([
+    {
+      rule: "702.124m: a companion searches Time Lord Doctors",
+      commander: CLARA_OSWALD,
+      query: 'is:commander t:"Time Lord" t:Doctor',
+    },
+    {
+      rule: "702.124m: a Time Lord Doctor searches companions",
+      commander: TENTH_DOCTOR,
+      query: 'is:commander o:"Doctor\'s companion"',
+    },
+    {
+      rule: "702.124j: partner with searches the named card",
+      commander: PIR,
+      query: '!"Toothy, Imaginary Friend"',
+    },
+    {
+      rule: "702.124h: partner leaves out every other partner ability",
+      commander: TYMNA,
+      query: 'is:commander o:"Partner" -o:"Partner with" -o:"Partner—"',
+    },
+    {
+      rule: "702.124i: partner—Survivors",
+      commander: ELLIE,
+      query: 'is:commander o:"Partner—Survivors"',
+    },
+    {
+      rule: "702.124i: partner—Father & son",
+      commander: KRATOS,
+      query: 'is:commander o:"Partner—Father & son"',
+    },
+    {
+      rule: "702.124i: partner—Friends forever, saved before the rename",
+      commander: CECILY_SAVED_BEFORE_RENAME,
+      query: 'is:commander o:"Partner—Friends forever"',
+    },
+    {
+      rule: "702.124i: partner—Character select",
+      commander: LEONARDO,
+      query: 'is:commander o:"Partner—Character select"',
+    },
+    {
+      rule: "702.124k: choose a Background searches Backgrounds",
+      commander: WILSON,
+      query: "t:background legal:commander",
+    },
+    {
+      rule: "702.124k: a Background searches commanders that choose one",
+      commander: RAISED_BY_GIANTS,
+      query: 'is:commander o:"Choose a Background"',
+    },
+    { rule: "no partner ability", commander: SEFRIS, query: "is:commander" },
+  ])("$commander.name ($rule)", ({ commander, query }) => {
+    expect(buildPartnerSearchQuery(commander, "")).toBe(query);
   });
-  it("generic Partner search excludes Father & son pairs", () => {
-    expect(buildPartnerSearchQuery("partner", "")).toContain('-o:"Father & son"');
+
+  it("offers both of Amy Pond's pairings (CR 702.124g)", () => {
+    expect(buildPartnerSearchQuery(AMY_POND, "")).toBe(
+      '((!"Rory Williams") or (is:commander t:"Time Lord" t:Doctor))'
+    );
   });
-  it("background type searches for Background enchantments (not commanders)", () => {
-    const q = buildPartnerSearchQuery("background", "agent", { colors: ["G"] });
-    expect(q).toContain("t:background");
-    expect(q).toContain("legal:commander");
-    expect(q).toContain("name:/agent/");
-    expect(q).toContain("id<=G");
-    expect(q).not.toContain("is:commander");
+
+  it("searches any commander when the deck has none yet", () => {
+    expect(buildPartnerSearchQuery(null, "")).toBe("is:commander");
   });
-  it("friends_forever type", () => {
-    expect(buildPartnerSearchQuery("friends_forever", "")).toContain('o:"Friends forever"');
+
+  it("adds the name and colour filters", () => {
+    expect(buildPartnerSearchQuery(TYMNA, "korvold", { colors: ["R"] })).toBe(
+      'is:commander o:"Partner" -o:"Partner with" -o:"Partner—" name:/korvold/ id<=R'
+    );
   });
-  it("character_select type", () => {
-    expect(buildPartnerSearchQuery("character_select", "")).toContain('o:"Character select"');
-  });
-  it("Father & son type searches only the matching partner variant", () => {
-    expect(buildPartnerSearchQuery("father_son", "")).toContain('o:"Father & son"');
-  });
-  it("partner_with type", () => {
-    expect(buildPartnerSearchQuery("partner_with", "")).toContain('o:"Partner with"');
-  });
-  it("unknown type → is:commander only", () => {
-    expect(buildPartnerSearchQuery("unknown", "")).toBe("is:commander");
-  });
-  it("adds name filter when text provided", () => {
-    expect(buildPartnerSearchQuery("partner", "korvold")).toContain("name:/korvold/");
-  });
-  it("adds color filter for partner type", () => {
-    expect(buildPartnerSearchQuery("partner", "", { colors: ["R"] })).toContain("id<=R");
+
+  it("searches Backgrounds legal in the deck's format", () => {
+    expect(
+      buildPartnerSearchQuery(WILSON, "agent", { colors: ["G"] }, "brawl")
+    ).toBe("t:background legal:brawl name:/agent/ id<=G");
   });
 });
 

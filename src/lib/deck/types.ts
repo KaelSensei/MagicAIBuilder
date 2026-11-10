@@ -55,6 +55,7 @@ export interface DeckCard {
   cardFaces?: [CardFace, CardFace];
   isFlexibleLand?: boolean;
 }
+/** How a deck's second commander is allowed, one value per partner ability (CR 702.124). */
 export type CommanderPairingType =
   | "none"
   | "partner"
@@ -63,7 +64,8 @@ export type CommanderPairingType =
   | "background"
   | "doctor"
   | "character_select"
-  | "father_son";
+  | "father_son"
+  | "survivors";
 export interface Deck {
   id: string;
   name: string;

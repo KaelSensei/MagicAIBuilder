@@ -11,7 +11,7 @@ import type {
 } from "./types";
 import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
-import { canPairWith, detectPairingType, supportsPartner } from "./pairing";
+import { detectPairingType, pairCommanders } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardById } from "@/lib/scryfall/client";
 import { isBasicLand } from "@/lib/scryfall/type-line";
@@ -1131,15 +1131,15 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
         );
     }
 
-    const pairingType = detectPairingType(card);
+    // CR 702.124: the partner stays only when the new commander can pair with it.
+    const keptPairing = previous.partner
+      ? pairCommanders(deckCard, previous.partner)
+      : null;
+    const pairingType = keptPairing ?? detectPairingType(deckCard);
     const attempted: CommandZone = {
       commander: deckCard,
       pairingType,
-      // Clear partner if new commander doesn't support pairing, or if partner is the same card
-      partner:
-        supportsPartner(pairingType) && previous.partner?.name !== deckCard.name
-          ? previous.partner
-          : null,
+      partner: keptPairing ? previous.partner : null,
     };
 
     // Optimistic update — also update pairingType and clear partner if new commander doesn't support it
@@ -1261,6 +1261,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
   setPartner: async (card: ScryfallCard | null) => {
     const { activeDeckId, decks } = get();
     if (!activeDeckId) return;
+    const commander = decks[activeDeckId]?.commander ?? null;
     const previousPartner = decks[activeDeckId]?.partner ?? null;
     const previousPairingType = decks[activeDeckId]?.pairingType ?? "none";
     let partnerMetadataSaved = false;
@@ -1270,18 +1271,26 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       deckCard.category = "commander";
     }
 
-    // If commander has no pairing type but partner does, derive pairingType from partner
-    // e.g. Jaheira has "Choose a Background" → pairingType should be "background"
-    const partnerPairingType = card ? detectPairingType(card) : "none";
-    if (card && previousPairingType === "father_son" &&
-        !canPairWith(previousPairingType, partnerPairingType)) {
-      useToastStore.getState().add("warning", "A Father & son commander needs another Father & son partner.");
+    // CR 702.124: a second commander joins only through a partner ability
+    // that both cards allow.
+    const pairing =
+      commander && deckCard ? pairCommanders(commander, deckCard) : null;
+    if (commander && deckCard && !pairing) {
+      useToastStore
+        .getState()
+        .add(
+          "warning",
+          `${deckCard.name} cannot share the command zone with ${commander.name}.`
+        );
       return;
     }
+    // Without a commander yet, the partner's own pairing opens the slot.
+    const partnerPairingType = deckCard ? detectPairingType(deckCard) : "none";
     const effectivePairingType =
-      previousPairingType === "none" && partnerPairingType !== "none"
+      pairing ??
+      (previousPairingType === "none" && partnerPairingType !== "none"
         ? partnerPairingType
-        : previousPairingType;
+        : previousPairingType);
 
     // Optimistic update
     set((state) => ({

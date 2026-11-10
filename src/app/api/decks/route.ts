@@ -1,3 +1,4 @@
+/** GET lists the signed-in user's decks; POST creates a deck and its cards in one write. */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
@@ -6,7 +7,7 @@ import { logger } from "@/lib/logger";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 import { readJsonBody } from "@/lib/api/json-body";
 import { sharesOracleIdentity } from "@/lib/deck/commander-pairing";
-import { deckCardIdSchema } from "@/lib/validation/deck";
+import { deckCardIdSchema, pairingTypeSchema } from "@/lib/validation/deck";
 import { addCardSchema, type AddCardInput } from "@/lib/validation/card";
 import { readIdempotencyKey } from "@/lib/api/idempotency-key";
 import { createOnce } from "@/lib/db/create-once";
@@ -44,10 +45,7 @@ const createDeckFieldsSchema = z.object({
   commanderName: z.string().max(200).nullable().optional(),
   partnerId: deckCardIdSchema.nullable().optional(),
   companionId: z.string().nullable().optional(),
-  pairingType: z
-    .enum(["none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son"])
-    .optional()
-    .default("none"),
+  pairingType: pairingTypeSchema.optional().default("none"),
   isAIGenerated: z.boolean().optional().default(false),
   manualBracket: z.number().int().min(1).max(5).nullable().optional(),
   description: z.string().max(2000).optional(),

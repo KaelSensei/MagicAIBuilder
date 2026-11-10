@@ -9,7 +9,7 @@
  */
 import type { ImportResult } from "./import";
 import type { CommanderPairingType, Deck, DeckCard } from "./types";
-import { canPairWith, detectPairingType } from "./pairing";
+import { detectPairingType, pairCommanders, pairingCardOf } from "./pairing";
 import {
   isBannedCompanionInCommander,
   isScryfallCompanionCard,
@@ -176,14 +176,13 @@ function commandZoneRejection(
   cards: CommandZoneCards
 ): BulkEditRejection | null {
   const { commander, partner, companion } = cards;
-  if (partner) {
-    const commanderPairing = commander ? detectPairingType(commander) : "none";
-    const sameCard = partner.name === commander?.name;
-    const unpairable =
-      commanderPairing === "father_son" &&
-      !canPairWith(commanderPairing, detectPairingType(partner));
-    if (sameCard || unpairable)
-      return { status: "invalidPartner", name: partner.name };
+  // CR 702.124: the partner joins only through a partner ability both allow.
+  if (
+    commander &&
+    partner &&
+    !pairCommanders(pairingCardOf(commander), pairingCardOf(partner))
+  ) {
+    return { status: "invalidPartner", name: partner.name };
   }
   if (companion) {
     const refusedNewCompanion =
@@ -195,10 +194,23 @@ function commandZoneRejection(
 }
 
 /**
+ * The pairing a command zone records: the one a pair uses, or the slot a lone
+ * card opens, as when a commander and partner are picked one after the other.
+ *
+ * @param cards - the looked-up card of each filled slot
+ * @returns the pairing type to save
+ */
+function zonePairingType(cards: CommandZoneCards): CommanderPairingType {
+  const commander = cards.commander ? pairingCardOf(cards.commander) : null;
+  const partner = cards.partner ? pairingCardOf(cards.partner) : null;
+  if (commander && partner) return pairCommanders(commander, partner) ?? "none";
+  const lone = commander ?? partner;
+  return lone ? detectPairingType(lone) : "none";
+}
+
+/**
  * The deck fields recording an edited command zone.
  *
- * Pairing follows the commander, as when a commander and partner are picked one
- * after the other: a commander without a pairing ability takes the partner's.
  * A kept slot keeps the printing it already had.
  *
  * @param zone - the edited command zone
@@ -214,19 +226,12 @@ function commandZonePatch(
     if (edit.kind === "keep") return edit.card.scryfallId ?? edit.card.id;
     return cards[slot]?.id ?? null;
   };
-  const commanderPairing = cards.commander
-    ? detectPairingType(cards.commander)
-    : "none";
-  const partnerPairing = cards.partner
-    ? detectPairingType(cards.partner)
-    : "none";
   return {
     commanderId: printingId("commander"),
     commanderName: cards.commander?.name ?? null,
     partnerId: printingId("partner"),
     companionId: printingId("companion"),
-    pairingType:
-      commanderPairing === "none" ? partnerPairing : commanderPairing,
+    pairingType: zonePairingType(cards),
   };
 }
 

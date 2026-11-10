@@ -34,7 +34,7 @@ import {
 import { getFormatConfig } from "@/lib/deck/formats";
 import { PIP_COLORS } from "@/lib/deck/mana-alignment";
 import { maxQuantity } from "@/lib/deck/multiples";
-import { canPairWith, detectPairingType } from "@/lib/deck/pairing";
+import { canPairCommanders, pairingCardOf } from "@/lib/deck/pairing";
 import {
   buildScryfallNameIndex,
   normalizeImportedName,
@@ -91,19 +91,18 @@ function describeLegalityProblem(problem: "banned" | "not_legal"): string {
   return problem === "banned" ? "banned" : "not legal";
 }
 
-/** A Background only fits beside a "Choose a Background" commander; other pairs use the editor's pairing rules. */
+/**
+ * Whether the partner may join the commander: a partner ability allows the
+ * pair (CR 702.124), and a partner that is not a Background can be a
+ * commander on its own (CR 903.3).
+ */
 function canShareCommandZone(
   commander: ScryfallCard,
   partner: ScryfallCard
 ): boolean {
-  const commanderPairing = detectPairingType(commander);
-  if (commanderPairing === "background") return isBackground(partner);
-  const partnerPairing = detectPairingType(partner);
   return (
-    partner.name !== commander.name &&
-    isCommanderEligible(partner) &&
-    (canPairWith(commanderPairing, partnerPairing) ||
-      canPairWith(partnerPairing, commanderPairing))
+    canPairCommanders(pairingCardOf(commander), pairingCardOf(partner)) &&
+    (isBackground(partner) || isCommanderEligible(partner))
   );
 }
 

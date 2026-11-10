@@ -16,6 +16,7 @@
  */
 
 import { API_SCOPES } from "./keys";
+import { pairingTypeSchema } from "@/lib/validation/deck";
 
 /** Bumped when the response shape of an existing endpoint changes incompatibly. */
 export const API_VERSION = "1.0.0";
@@ -107,7 +108,7 @@ export function buildOpenApiDocument(serverUrl: string) {
             commanderName: { type: ["string", "null"] },
             pairingType: {
               type: "string",
-              enum: ["none", "partner", "background", "doctor"],
+              enum: [...pairingTypeSchema.options],
               description:
                 "How the commander and partner relate, when the deck has a partner.",
             },

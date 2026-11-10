@@ -60,6 +60,7 @@ import type {
   DeckZone,
 } from "@/lib/deck/types";
 import type { DeckFormat } from "@/lib/deck/formats";
+import type { PairingCard } from "@/lib/deck/partner-abilities";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 import {
@@ -118,7 +119,8 @@ interface BuildSearchQueryFromModeParams {
   readonly commanderMode: boolean;
   readonly partnerMode: boolean;
   readonly companionMode: boolean;
-  readonly deckPairingType?: string;
+  /** The deck's commander, whose partner abilities decide the partner search. */
+  readonly deckCommander: PairingCard | null;
   readonly format?: DeckFormat;
 }
 
@@ -130,7 +132,7 @@ function buildSearchQueryFromMode(p: BuildSearchQueryFromModeParams): string {
   }
   if (p.partnerMode) {
     return buildPartnerSearchQuery(
-      p.deckPairingType ?? "none",
+      p.deckCommander,
       p.searchText,
       p.filters,
       fmt
@@ -451,7 +453,7 @@ export default function BuilderPage() {
     commanderMode,
     partnerMode,
     companionMode,
-    deckPairingType: deck?.pairingType,
+    deckCommander: deck?.commander ?? null,
     format: deck?.format,
   });
 

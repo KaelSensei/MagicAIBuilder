@@ -1,3 +1,4 @@
+/** Repairs and rejections of an AI-generated deck, checked against card data. */
 import { describe, expect, it } from "vitest";
 import type {
   AIDeckResponse,
@@ -256,6 +257,13 @@ const REJECTED_CASES: readonly {
     reply: reply({ ...TALRAND, partner: "Raised by Giants" }),
     reason:
       /Raised by Giants cannot share the command zone with Talrand, Sky Summoner/,
+  },
+  {
+    label:
+      "a commander that chooses a Background, beside a commander that is not one",
+    reply: reply({ ...TALRAND, partner: "Wilson, Refined Grizzly" }),
+    reason:
+      /Wilson, Refined Grizzly cannot share the command zone with Talrand, Sky Summoner/,
   },
   {
     label: "a list too long with no basic land to trim",

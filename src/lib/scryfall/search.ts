@@ -2,6 +2,11 @@
 import type { ColorMode, InteractionType, SearchFilters } from "@/lib/deck/types";
 import { getFormatConfig } from "@/lib/deck/formats";
 import type { DeckFormat } from "@/lib/deck/formats";
+import {
+  partnerRequirements,
+  type PartnerRequirement,
+} from "@/lib/deck/pairing";
+import type { PairingCard } from "@/lib/deck/partner-abilities";
 
 // ─── Interaction helpers ──────────────────────────────────────────────────────
 
@@ -190,9 +195,60 @@ export function buildCommanderSearchQuery(
   return parts.join(" ");
 }
 
-/** Build a search query for partner slot based on pairing type */
+/**
+ * The Scryfall query for the cards that meet one partner requirement of the
+ * commander (CR 702.124).
+ *
+ * @param requirement - one way the commander can pair
+ * @param format - the deck's format, for the Background legality filter
+ * @returns a query fragment without name or colour filters
+ */
+function partnerRequirementQuery(
+  requirement: PartnerRequirement,
+  format: DeckFormat
+): string {
+  switch (requirement.kind) {
+    case "partner":
+      return 'is:commander o:"Partner" -o:"Partner with" -o:"Partner—"';
+    case "partnerQuality":
+      return `is:commander o:"Partner—${requirement.quality}"`;
+    case "namedPartner":
+      return `!"${requirement.name}"`;
+    case "background":
+      // Backgrounds are not commanders; they are legendary enchantments with subtype Background.
+      return `t:background legal:${getFormatConfig(format).scryfallLegality}`;
+    case "backgroundChooser":
+      return 'is:commander o:"Choose a Background"';
+    case "timeLordDoctor":
+      return 'is:commander t:"Time Lord" t:Doctor';
+    case "doctorsCompanion":
+      return `is:commander o:"Doctor's companion"`;
+    default: {
+      const exhaustive: never = requirement;
+      return exhaustive;
+    }
+  }
+}
+
+/** Joins alternative queries so that Scryfall matches any of them. */
+function anyOf(queries: readonly string[]): string {
+  if (queries.length === 0) return "is:commander";
+  if (queries.length === 1) return queries[0];
+  return `(${queries.map((query) => `(${query})`).join(" or ")})`;
+}
+
+/**
+ * Builds the search for the second command-zone slot from the commander's
+ * partner abilities, so the results are the cards it can pair with.
+ *
+ * @param commander - the deck's commander, or null before one is chosen
+ * @param text - the name the player typed
+ * @param filters - the search filters; only the colours apply here
+ * @param format - the deck's format
+ * @returns the Scryfall query
+ */
 export function buildPartnerSearchQuery(
-  pairingType: string,
+  commander: PairingCard | null,
   text: string,
   filters: Partial<SearchFilters> = {},
   format: DeckFormat = "commander"
@@ -203,24 +259,11 @@ export function buildPartnerSearchQuery(
     filters.colors && filters.colors.length > 0
       ? ` id<=${filters.colors.join("")}`
       : "";
-
-  switch (pairingType) {
-    case "partner":
-      return `is:commander o:"Partner" -o:"Partner with" -o:"Character select" -o:"Father & son"${namePart}${colorPart}`;
-    case "character_select":
-      return `is:commander o:"Character select"${namePart}`;
-    case "father_son":
-      return `is:commander o:"Father & son"${namePart}${colorPart}`;
-    case "friends_forever":
-      return `is:commander o:"Friends forever"${namePart}${colorPart}`;
-    case "partner_with":
-      return `is:commander o:"Partner with"${namePart}${colorPart}`;
-    case "background":
-      // Backgrounds are not commanders; they are legendary enchantments with subtype Background.
-      return `t:background legal:${getFormatConfig(format).scryfallLegality}${namePart}${colorPart}`;
-    default:
-      return `is:commander${namePart}${colorPart}`;
-  }
+  const requirements = commander ? partnerRequirements(commander) : [];
+  const queries = requirements.map((requirement) =>
+    partnerRequirementQuery(requirement, format)
+  );
+  return `${anyOf(queries)}${namePart}${colorPart}`;
 }
 
 /** Companion search — cards with the Companion keyword, format-legal */

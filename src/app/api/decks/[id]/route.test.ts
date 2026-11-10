@@ -1,3 +1,4 @@
+/** Ownership and command-zone checks of GET, PATCH and DELETE on one deck. */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockFindUnique, mockUpdate, mockDelete, mockUserFindUnique, mockUserUpsert } =
@@ -23,6 +24,12 @@ const { mockGetCardCollection } = vi.hoisted(() => ({ mockGetCardCollection: vi.
 vi.mock("@/lib/scryfall/client", () => ({ getCardCollection: mockGetCardCollection }));
 
 import { DELETE, GET, PATCH } from "./route";
+import type { PairingCard } from "@/lib/deck/partner-abilities";
+import {
+  CLARA_OSWALD,
+  SEFRIS,
+  TENTH_DOCTOR,
+} from "@/lib/deck/fixtures/partner-cards";
 
 const OWNER = "user-1";
 const INTRUDER = "user-2";
@@ -46,6 +53,17 @@ function signedInAs(id: string): void {
 
 function params(id = "deck-1") {
   return { params: Promise.resolve({ id }) };
+}
+
+/** The collection entry Scryfall returns for a fixture card's printing. */
+function printingOf(id: string, card: PairingCard) {
+  return {
+    id,
+    oracle_id: `${id}-oracle`,
+    name: card.name,
+    type_line: card.typeLine,
+    oracle_text: card.oracleText,
+  };
 }
 
 function patchRequest(body: unknown): Request {
@@ -161,6 +179,61 @@ describe("PATCH /api/decks/[id]", () => {
 
     expect(response.status).toBe(400);
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a partner no partner ability allows beside the commander (CR 702.124m)", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({
+      id: "deck-1",
+      userId: OWNER,
+      commanderId: "clara",
+      partnerId: null,
+    });
+    mockGetCardCollection.mockResolvedValueOnce({
+      data: [printingOf("clara", CLARA_OSWALD), printingOf("sefris", SEFRIS)],
+      not_found: [],
+    });
+
+    const response = await PATCH(
+      patchRequest({ partnerId: "sefris" }),
+      params()
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Commander and partner cannot share the command zone",
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("saves a partner a partner ability allows (CR 702.124m)", async () => {
+    signedInAs(OWNER);
+    mockFindUnique.mockResolvedValueOnce({
+      id: "deck-1",
+      userId: OWNER,
+      commanderId: "clara",
+      partnerId: null,
+    });
+    mockGetCardCollection.mockResolvedValueOnce({
+      data: [
+        printingOf("clara", CLARA_OSWALD),
+        printingOf("tenth", TENTH_DOCTOR),
+      ],
+      not_found: [],
+    });
+    mockUpdate.mockResolvedValueOnce({ id: "deck-1", cards: [] });
+
+    const response = await PATCH(
+      patchRequest({ partnerId: "tenth", pairingType: "doctor" }),
+      params()
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { partnerId: "tenth", pairingType: "doctor" },
+      })
+    );
   });
 
   it("still renames a legacy deck with an existing duplicate pair", async () => {

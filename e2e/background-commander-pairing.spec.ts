@@ -1,3 +1,4 @@
+/** API-level check that the partner search of a "choose a Background" commander finds Backgrounds. */
 import { test, expect } from "@playwright/test";
 import { buildPartnerSearchQuery } from "@/lib/scryfall/search";
 
@@ -10,11 +11,21 @@ test.describe("Background commander pairing (API-level E2E)", () => {
       params: { exact: "Jaheira, Friend of the Forest" },
     });
     expect(jaheiraRes.ok()).toBe(true);
-    const jaheiraJson = (await jaheiraRes.json()) as { oracle_text?: string | null };
+    const jaheiraJson = (await jaheiraRes.json()) as {
+      oracle_text?: string | null;
+      type_line?: string | null;
+    };
     expect((jaheiraJson.oracle_text ?? "").toLowerCase()).toContain("choose a background");
 
     // Our background partner query should target Background cards (not commanders).
-    const q = buildPartnerSearchQuery("background", "Clan Crafter");
+    const q = buildPartnerSearchQuery(
+      {
+        name: "Jaheira, Friend of the Forest",
+        typeLine: jaheiraJson.type_line ?? "",
+        oracleText: jaheiraJson.oracle_text ?? "",
+      },
+      "Clan Crafter"
+    );
     const backgroundRes = await request.get("https://api.scryfall.com/cards/search", {
       params: { q },
     });

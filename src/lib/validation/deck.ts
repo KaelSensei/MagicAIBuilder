@@ -1,3 +1,4 @@
+/** Zod schemas for deck requests: card ids, pairing types, and the create and patch bodies. */
 import { z } from "zod";
 import { ALL_FORMATS } from "@/lib/deck/formats";
 
@@ -12,6 +13,7 @@ export const deckCardIdSchema = z
 /** How the commander pairs with a second command-zone card. */
 export const pairingTypeSchema = z.enum([
   "none", "partner", "partner_with", "friends_forever", "background", "doctor", "character_select", "father_son",
+  "survivors",
 ]);
 
 // Schema for PATCH /api/decks/[id]

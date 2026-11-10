@@ -564,24 +564,47 @@ describe("useDeckStore — setPartner", () => {
   beforeEach(() => seedDeck());
 
   it("keeps a Father & son pair unchanged when given a generic Partner", async () => {
-    const previousPartner = makeDeckCard({ id: "family-partner", name: "Family Partner" });
-    seedDeck(makeActiveDeck({
-      commander: makeDeckCard({ id: "family-commander", name: "Family Commander" }),
-      partner: previousPartner,
-      pairingType: "father_son",
-    }));
+    const previousPartner = makeDeckCard({
+      id: "atreus",
+      name: "Atreus, Impulsive Son",
+      typeLine: "Legendary Creature — God Archer",
+      oracleText:
+        "Partner—Father & son (You can have two commanders if both have this ability.)",
+    });
+    seedDeck(
+      makeActiveDeck({
+        commander: makeDeckCard({
+          id: "kratos",
+          name: "Kratos, Stoic Father",
+          typeLine: "Legendary Creature — God Warrior",
+          oracleText:
+            "Partner—Father & son (You can have two commanders if both have this ability.)",
+        }),
+        partner: previousPartner,
+        pairingType: "father_son",
+      })
+    );
     vi.mocked(deckApi.updateDeck).mockClear();
     vi.mocked(deckApi.addCard).mockClear();
     toastAdd.mockClear();
 
-    await useDeckStore.getState().setPartner(makeScryfallCard({
-      name: "Generic Partner", keywords: ["Partner"], oracle_text: "Partner",
-    }));
+    await useDeckStore.getState().setPartner(
+      makeScryfallCard({
+        name: "Tymna the Weaver",
+        type_line: "Legendary Creature — Human Cleric",
+        keywords: ["Partner"],
+        oracle_text:
+          "Partner (You can have two commanders if both have partner.)",
+      })
+    );
 
     expect(useDeckStore.getState().decks["deck-1"].partner).toEqual(previousPartner);
     expect(deckApi.updateDeck).not.toHaveBeenCalled();
     expect(deckApi.addCard).not.toHaveBeenCalled();
-    expect(toastAdd).toHaveBeenCalledWith("warning", expect.stringContaining("Father & son"));
+    expect(toastAdd).toHaveBeenCalledWith(
+      "warning",
+      "Tymna the Weaver cannot share the command zone with Kratos, Stoic Father."
+    );
   });
 
   it("sets partner on the active deck", async () => {
