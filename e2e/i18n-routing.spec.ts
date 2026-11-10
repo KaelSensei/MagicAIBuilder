@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { suppressOnboarding } from "./helpers";
 
 test.describe("i18n Locale Routing", () => {
   test("default locale (en) serves pages without prefix", async ({ page }) => {
@@ -50,14 +51,22 @@ test.describe("i18n Locale Routing", () => {
   });
 
   test("locale prefix is preserved after navigation", async ({ page }) => {
+    // The onboarding wizard mounts over the landing page for a first-time
+    // visitor, and its modal backdrop intercepts the click below.
+    await suppressOnboarding(page);
     await page.goto("/fr");
-    // The landing page should have a link to decks
-    const myDecksLink = page.getByRole("link", { name: /My Decks|Mes Decks/i });
-    if (await myDecksLink.isVisible()) {
-      await myDecksLink.click();
-      // Web-first assertion: retries until the URL carries the locale prefix,
-      // instead of waiting on a network-quiet heuristic.
-      await expect(page).toHaveURL(/\/fr\//);
-    }
+
+    // The capability atlas links to the deck list whatever the session state.
+    // Scoped to that region and matched exactly, so the locator names one
+    // link; no visibility guard, so a missing link fails the test instead of
+    // skipping its only assertion.
+    await page
+      .getByRole("region", { name: "Votre guide de terrain Commander" })
+      .getByRole("link", { name: "Ouvrir mes decks", exact: true })
+      .click();
+
+    // Web-first assertion: retries until the URL carries the locale prefix,
+    // instead of waiting on a network-quiet heuristic.
+    await expect(page).toHaveURL(/\/fr\/decks$/);
   });
 });
