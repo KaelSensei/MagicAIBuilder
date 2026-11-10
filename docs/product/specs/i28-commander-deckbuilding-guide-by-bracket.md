@@ -119,17 +119,17 @@ KeepRule       bracket, style? (midrange|aggro|bigMana|spellslinger|cedh), stage
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                                                                | Depends on                             |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
-| 1   | Correct the bracket names and descriptions in `deck.json` for English and French, and the bracket rules in the copilot prompt (`deck-plan.ts`); mark other locales                   | —                                      |
-| 2   | Extend `BRACKET_DEFINITIONS` to bracket 5 and the official restrictions; drop the outdated tutor rule; replace the "(RC rule)" two-card-combo override with the official turn-6 rule | —                                      |
-| 3   | Content model with the evidence-coverage and rule-consistency tests                                                                                                                  | 2                                      |
-| 4   | English guide page from the researched document, static and indexable                                                                                                                | 3                                      |
-| 5   | Links from the bracket badge and the wizard's bracket step to the matching section                                                                                                   | 4                                      |
-| 6   | French review, official French names with the "bracket" alias, and locale gating                                                                                                     | 4                                      |
-| 7   | "Check my deck against bracket N" with hard rules and soft targets                                                                                                                   | 2, 4                                   |
-| 8   | Freshness: rules-state banner and a review task on each Wizards announcement                                                                                                         | 4                                      |
-| 9   | Opening-hand section of the check (4.5–4.7): keep shares under the multiplayer rules, cheap ramp, land plateau, primer pre-fill                                                      | 7; I-21 slice 1 or exact combinatorics |
+| #   | Slice                                                                                                                                                                                           | Depends on                             |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 1   | Correct the bracket names and descriptions in `deck.json` for English and French, and the bracket rules in the copilot prompt (`deck-plan.ts`); mark other locales                              | —                                      |
+| 2   | Extend `BRACKET_DEFINITIONS` to bracket 5 and the official restrictions; drop the outdated tutor rule; replace the "(RC rule)" two-card-combo override with the official turn-6 rule            | —                                      |
+| 3   | Content model with the evidence-coverage and rule-consistency tests, on I-64 slice 1's MDX pipeline _(single owner decided 2026-11-10, coordinator call, the owner may override: I-64 slice 1)_ | 2; I-64 slice 1                        |
+| 4   | English guide page from the researched document, static and indexable                                                                                                                           | 3                                      |
+| 5   | Links from the bracket badge and the wizard's bracket step to the matching section                                                                                                              | 4                                      |
+| 6   | French review, official French names with the "bracket" alias, and locale gating                                                                                                                | 4                                      |
+| 7   | "Check my deck against bracket N" with hard rules and soft targets                                                                                                                              | 2, 4                                   |
+| 8   | Freshness: rules-state banner and a review task on each Wizards announcement                                                                                                                    | 4                                      |
+| 9   | Opening-hand section of the check (4.5–4.7): keep shares under the multiplayer rules, cheap ramp, land plateau, primer pre-fill                                                                 | 7; I-21 slice 1 or exact combinatorics |
 
 Slice 1 corrects copy players already see and rules the copilot already applies; it ships alone and should go first. Slice 2 overlaps the bracket 5 item in `commander-power-meter.md`; slice 2 owns the Bracket 5 definitions and the power meter reuses them (one owner, decided 2026-11-10).
 

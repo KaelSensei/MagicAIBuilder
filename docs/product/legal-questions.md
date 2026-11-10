@@ -2,7 +2,7 @@
 
 > **This is research, not legal advice.** Every legal reading in the roadmap and the specs is a hypothesis written by non-lawyers for a French/EU lawyer to confirm or correct. This brief collects those hypotheses as questions. Nothing here should be acted on as an answer.
 >
-> **Compiled 2026-11-10** from [`roadmap.md`](roadmap.md) (the dated status notes under [Backlog snapshot](roadmap.md#backlog-snapshot---2026-10-20)), the open questions of every spec in [`specs/`](specs/README.md), [I-30 requirement 7.2](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate) and [I-38](specs/i38-trust-safety-and-user-rights.md#open-questions), and [`competitive-landscape.md`](competitive-landscape.md). About 158 individual lawyer questions in 36 specs reduce to the 39 below. Owner product decisions are out of scope and belong in a separate document. Each answer should be written down and committed under `docs/`, as [I-30 requirement 7.1](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate) requires before any billing.
+> **Compiled 2026-11-10** from [`roadmap.md`](roadmap.md) (the dated status notes under [Backlog snapshot](roadmap.md#backlog-snapshot---2026-10-20)), the open questions of every spec in [`specs/`](specs/README.md), [I-30 requirement 7.2](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate) and [I-38](specs/i38-trust-safety-and-user-rights.md#open-questions), and [`competitive-landscape.md`](competitive-landscape.md). About 158 individual lawyer questions in 36 specs reduce to the first 39 below. The ninth pass of the same day added L-40 to L-48 in [section L](#l-the-ai-act-selling-terms-and-operations-added-2026-11-10), for 48 in all. Owner product decisions are out of scope and belong in a separate document. Each answer should be written down and committed under `docs/`, as [I-30 requirement 7.1](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate) requires before any billing.
 
 ## One-page summary
 
@@ -22,6 +22,8 @@ Ranked by how many initiatives and slices wait on the answer, weighted toward th
 | 8   | [L-15](#l-15-the-legal-basis-for-security-email): the legal basis for security email                                                                        | Password reset, verification and security notices (I-61, I-63, I-38, I-30)                                                            |
 | 9   | [L-17](#l-17-affiliate-links-sponsorships-and-donations-under-the-fan-content-policy): affiliate links, sponsors and donations under the Fan Content Policy | The fallback revenue and I-32, I-33, I-45, I-53, I-56                                                                                 |
 | 10  | [L-03](#l-03-withdrawal-renewal-and-cancellation-for-the-subscription): withdrawal, renewal and cancellation                                                | I-30 slices 7–9 and so every paid entitlement; pairs with the accountant's [L-01](#l-01-legal-structure-vat-and-invoicing-accountant) |
+
+Added 2026-11-10, outside the ranking: [L-40](#l-40-the-ai-acts-transparency-duties-art-50), the AI Act's marking duty, carries the nearest date of any question, 2026-12-02, if the grace period applies. Ask it first.
 
 ### Facts about the product the lawyer needs
 
@@ -63,6 +65,7 @@ Vercel's Hobby plan is "restricted to non-commercial personal use only", and a p
 - **Why it matters:** checkout, cancellation and the renewal email are designed around these answers, and no email sender exists yet.
 - **Unblocks:** I-30 slices 7, 8 and 9, and so every paid entitlement; I-41's store plan.
 - **Deadline:** the withdrawal function of L221-21 has applied since 2026-06-19, so it binds the first checkout.
+- **Price rises (2026-11-10):** how a price rise reaches existing monthly and yearly subscribers, and whether it may take effect at the next renewal without new consent, is asked once, in [L-42](#l-42-conformity-guarantee-price-rises-and-feature-removals) (b).
 - **Raised in / sources:** [I-30 6.5–6.7 and 7.2](specs/i30-business-model-and-paid-tier.md#6-billing-accounts-and-the-subscription-lifecycle), [I-41](specs/i41-store-commander-nights.md#open-questions). Légifrance: [L221-18](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032226842), [L221-21](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032226834) (in force 2026-06-19), [L221-28](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000044563170), [L215-1](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000034072591/), [D215-2](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000047615001); INC, [La résiliation des abonnements en trois clics](https://www.inc-conso.fr/content/la-resiliation-des-abonnements-et-contrats-renouvelables-en-trois-clics) (2024-02-26); Your Europe, [Guarantees and returns](https://europa.eu/youreurope/citizens/consumers/shopping/returns/index_en.htm).
 
 ### L-04: The loi Toubon and French help for paid features
@@ -85,11 +88,11 @@ The processors are listed under the facts above, plus a planned email sender (Am
 
 ### L-06: Lawful bases and personal-data status of smaller processing
 
-Which basis applies, and is each item personal data at all? (a) `AiUsage` rows recording each model call per user (I-30 4.8). (b) First-party product events tied to an account id: consent, or legitimate interest with notice and an opt-out (I-39)? (c) A bug report linked to an account, and whether consent suffices to copy its text into a public GitHub issue (I-52). (d) Help searches that found nothing, stored after a scrubber although a player may type personal data (I-64). (e) The five-character SHA-1 prefix of a password sent to Pwned Passwords (I-61). (f) A Discord user id held only in memory for rate limiting (I-46). (g) A link-only gift page showing card names and, optionally, a username (I-56).
+Which basis applies, and is each item personal data at all? (a) `AiUsage` rows recording each model call per user (I-30 4.8). (b) First-party product events tied to an account id: consent, or legitimate interest with notice and an opt-out (I-39)? (c) A bug report linked to an account, and whether consent suffices to copy its text into a public GitHub issue (I-52). (d) Help searches that found nothing, stored after a scrubber although a player may type personal data (I-64). (e) The five-character SHA-1 prefix of a password sent to Pwned Passwords (I-61). (f) A Discord user id held only in memory for rate limiting (I-46). (g) A link-only gift page showing card names and, optionally, a username (I-56). (h) Added 2026-11-10: a confirmed `ai_output` report turned into a public test case of the AI bench, with no user id and the brief rewritten by the owner. What consent and what rewriting does that need (I-70 10.4)?
 
 - **Why it matters:** each item needs a line in the privacy policy, and some cannot ship without the answer.
-- **Unblocks:** I-30 slice 1's notice; I-39 slices 10–11; I-52 slices 3 and 5; I-64 slice 7; I-61 slice 15; I-46 slice 6; I-56 slice 13.
-- **Raised in / sources:** [I-30 7.2](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate), [I-39](specs/i39-first-run-activation-and-measurement.md#open-questions), [I-52](specs/i52-feedback-loop-players-can-see.md#open-questions), [I-64](specs/i64-help-centre-and-guidance.md#open-questions), [I-61](specs/i61-account-security.md#open-questions), [I-46](specs/i46-discord-and-chat-integrations.md#open-questions), [I-56](specs/i56-wishlists-friends-can-buy-from.md#open-questions). Have I Been Pwned, [API v3, Pwned Passwords](https://haveibeenpwned.com/API/v3#PwnedPasswords).
+- **Unblocks:** I-30 slice 1's notice; I-39 slices 10–11; I-52 slices 3 and 5; I-64 slice 7; I-61 slice 15; I-46 slice 6; I-56 slice 13; I-70 slice 15.
+- **Raised in / sources:** [I-30 7.2](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate), [I-39](specs/i39-first-run-activation-and-measurement.md#open-questions), [I-52](specs/i52-feedback-loop-players-can-see.md#open-questions), [I-64](specs/i64-help-centre-and-guidance.md#open-questions), [I-61](specs/i61-account-security.md#open-questions), [I-46](specs/i46-discord-and-chat-integrations.md#open-questions), [I-56](specs/i56-wishlists-friends-can-buy-from.md#open-questions), [I-70](specs/i70-ai-quality-bench-and-model-changes.md#open-questions). Have I Been Pwned, [API v3, Pwned Passwords](https://haveibeenpwned.com/API/v3#PwnedPasswords).
 
 ### L-07: Is a player's stats page or year in review profiling?
 
@@ -320,6 +323,7 @@ The Act covers "e-commerce services" and exempts microenterprises providing serv
 
 - **Unblocks:** whether WCAG conformance (I-04, I-24, I-49) becomes a legal duty at the paid launch, including the checkout.
 - **Deadline:** the Act has applied since 2025-06-28.
+- **Added 2026-11-10 (ninth pass):** when checkout is hosted by a merchant of record, whose "e-commerce service" is it under the Act? Does the microenterprise exemption still cover the owner's own pages? A voluntary accessibility statement built from the six WCAG 2.2 AA audit bundles is planned either way ([I-49](roadmap.md#i-49-a-display-that-works-for-colour-blind-and-low-vision-players)).
 - **Raised in / sources:** [I-49](specs/i49-colour-vision-and-low-vision-display.md#open-questions). [Directive (EU) 2019/882](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019L0882), Arts. 2(2)(f), 3, 4(5), 31(2), Annex I.
 
 ## K. The Digital Services Act and French host law
@@ -346,8 +350,78 @@ The product hosts public decks, primers, comments, reviews, profiles and share l
 - **Unblocks:** I-38 slices 7–11; I-44's audiences (slices 3, 6, 8, 13 and 14).
 - **Raised in / sources:** [I-38](specs/i38-trust-safety-and-user-rights.md#open-questions), [I-44](specs/i44-trade-lists-within-the-pod.md#open-questions). [DSA](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022R2065), Arts. 16–17; [Recital 14](https://www.eu-digital-services-act.com/Digital_Services_Act_Preamble_11_to_20.html) (transcription); Discourse, [DSA page](https://discourse.org/dsa).
 
+## L. The AI Act, selling terms and operations (added 2026-11-10)
+
+The ninth research pass of 2026-11-10 swept the whole roadmap for gaps and added I-69 to I-71. L-40 to L-46 come from that sweep, L-47 from [I-69](specs/i69-operator-console-support-moderation-and-kill-switches.md#open-questions) and L-48 from [I-71](specs/i71-speed-uptime-and-recovery.md#open-questions). The sweep's notes are not committed, so each entry cites its sources. Research, not legal advice.
+
+### L-40: The AI Act's transparency duties (Art. 50)
+
+Sources read on 2026-11-10 agree that Article 50 of the AI Act applies from 2026-08-02, and that the AI Omnibus gave generative systems already on the market before that date until 2026-12-02 for machine-readable marking (Art. 50(2)). They disagree on whether the Omnibus text is formally adopted, so check the Official Journal text. The copilot is live, labels its output "AI Suggestions" (`src/messages/en/deck.json`) and has no disclosure page. (a) When the copilot is built on Anthropic and OpenAI models and offered under the product's own name, is MagicAIBuilder a "provider" of an AI system or only a deployer? (b) Do the visible "AI Suggestions" labels meet Art. 50(1), or is the AI nature "obvious from the context"? (c) Does Art. 50(2) marking cover generated deck lists, explanations and AI-drafted primer text, and does the 2026-12-02 date apply to a system on the market before 2026-08-02? (d) Is there any relief for a micro enterprise?
+
+- **Why it matters:** a search summary of a secondary source gives fines of up to €15 million or 3% of turnover.
+- **Unblocks:** I-30 slice 5, the AI-use disclosure page and its map of model surfaces; the `ai` origin field on saved items and in every export; the label on public AI-built decks; I-02 requirement 6.
+- **Deadline:** 2026-12-02 for machine-readable marking, if the grace period applies; Art. 50(1) has applied since 2026-08-02.
+- **Raised in / sources:** the ninth pass's gap sweep ([roadmap, 2026-11-10](roadmap.md#backlog-snapshot---2026-10-20)). Goodwin, [Not Delayed, Not Deferred: EU AI Act Transparency Obligations Are Now in Force](https://www.goodwinlaw.com/en/insights/publications/2026/08/alerts-technology-dpc-eu-ai-act-transparency-obligations-now-in-force) (2026-08-03); FEDIL, [AI Act update](https://fedil.lu/en/publications/ai-act-update-enforcement-begins-as-the-digital-omnibus-reshapes-the-timeline/) (search summary).
+
+### L-41: Consumer mediation
+
+Every French professional selling to consumers must offer free mediation (Code de la consommation L612-1) and inform consumers of it (L616-1); a secondary source says the professional must have contracted beforehand with a mediator listed by the CECMC, and that L641-1 fines a missing notice €3,000 for an individual and €15,000 for a company. Must the owner contract with a listed mediator before the first sale and display it? If a merchant of record is the consumer's counterparty, does the duty move to it? Which mediator covers a digital subscription? The EU ODR platform closed on 2025-07-20, and with it the duty to link to it.
+
+- **Unblocks:** I-30 slice 0 (who is the seller of record) and slice 7 (the terms of sale and the footer).
+- **Deadline:** before the first sale.
+- **Raised in / sources:** the ninth pass's gap sweep. Service-Public Entreprendre, [Médiation des litiges de la consommation](https://entreprendre.service-public.gouv.fr/vosdroits/F33338) (search summary; page verified 2026-10-16); Lettre des réseaux, [mediator information duty](https://www.lettredesreseaux.com/?p=23453) (search summary); CMS, [The ODR platform is closing](https://cms.law/en/deu/legal-updates/the-odr-platform-is-closing-what-businesses-need-to-know) (search summary).
+
+### L-42: Conformity guarantee, price rises and feature removals
+
+(a) Which statements of the legal conformity guarantee for digital content and services (Directive 2019/770 as transposed) must the terms of sale carry? (b) How much notice does a price rise or a feature removal for existing subscribers need, and must subscribers be able to cancel free before it applies? This replaces a sub-question of L-03. (c) Which of these duties stay with the owner under a merchant of record? A pause of paid AI for every subscriber is asked separately, in [L-47](#l-47-operator-access-its-log-and-global-switches) (c).
+
+- **Unblocks:** I-30 slices 7 and 8; the versioned terms of sale (`LegalDocument` slug `sale`, I-38 table 1.5) and the test that no price change takes effect before its notice date.
+- **Raised in / sources:** the ninth pass's gap sweep. [Directive (EU) 2019/770](https://eur-lex.europa.eu/eli/dir/2019/770/oj) (not fetched this pass).
+
+### L-43: Referral and creator rewards
+
+(a) Is a free month for a converted referral, or a free early-access flag for a creator, a benefit in kind under loi n° 2023-451 on commercial influence, so that posts carrying the link must be labelled as advertising? (b) Must the product tell referrers so, and in which words? (c) May minors take part ([L-08](#l-08-minors-the-stated-minimum-age-and-adult-only-features))? (d) Does a referral credit fit the Fan Content Policy if [L-16](#l-16-does-a-paid-tier-fit-wizards-fan-content-policy) allows a paid tier?
+
+- **Unblocks:** I-30's "give a month, get a month" credit after slice 9; I-36's creator kit and its early-access flag.
+- **Raised in / sources:** the ninth pass's gap sweep; I-36's non-goals exclude revenue shares, tips and affiliate splits. Loi n° 2023-451 of 9 June 2023 (not fetched this pass).
+
+### L-44: The record of processing and a breach procedure
+
+(a) Does the Art. 30(5) exemption for organisations under 250 people reach a solo operator whose processing is not occasional? (b) What must the breach procedure hold for Art. 33 (the CNIL within 72 hours) and Art. 34 (the people affected)? (c) Do the processors' breach clauses (Vercel, Supabase, Sentry, Anthropic, OpenAI) meet Art. 28(3)(f)?
+
+- **Unblocks:** I-38 slice 16, the register and the breach procedure.
+- **Raised in / sources:** the ninth pass's gap sweep. GDPR, [Regulation (EU) 2016/679](https://eur-lex.europa.eu/eli/reg/2016/679/oj), Arts. 28, 30, 33 and 34 (standard text, not fetched this pass).
+
+### L-45: The product's name and the Fan Content notice
+
+(a) Do the name "MagicAIBuilder" and a domain built on "Magic", a Wizards of the Coast trademark, fit trademark law and the Fan Content Policy before money is taken? (b) Must the footer carry the Fan Content Policy's notice verbatim? `LEGAL.md` and the footer text `notAffiliated` in all ten message catalogues cite "Wizards' Fan Site Policy" (checked on `origin/dev` at `72fbfc1`), while the Fan Content Policy gives its own notice: "MagicAIBuilder is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC." This entry places the name question that this brief first listed as not raised by any spec.
+
+- **Unblocks:** I-38 slice 1's footer and `LEGAL.md` text; [D-77](owner-decisions.md#content-and-naming) on the name; I-30's billing; the answer to L-16 depends on it.
+- **Deadline:** before the first payment, ad or affiliate link.
+- **Raised in / sources:** the ninth pass's gap sweep; [I-30 open questions](specs/i30-business-model-and-paid-tier.md#open-questions) ("the footer notice, which still cites the 'Fan Site Policy'"). Wizards of the Coast, [Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy) (last updated 2017-11-15, notice text read 2026-11-10).
+
+### L-46: Selling outside the EU, and invoicing business buyers (accountant)
+
+(a) If the owner sells through Stripe rather than a merchant of record, must he register for UK VAT from the first digital sale to a UK consumer? A secondary source says a seller with no UK establishment has no threshold; confirm on GOV.UK. (b) Which Swiss, Norwegian or US state thresholds apply? (c) For an I-41 store plan sold to French businesses, which e-invoicing and e-reporting dates bind a micro-entrepreneur? Pairs with [L-01](#l-01-legal-structure-vat-and-invoicing-accountant).
+
+- **Unblocks:** the merchant-of-record or Stripe comparison in I-30 slice 0 ([D-11](owner-decisions.md#money-and-plans)); if Stripe is chosen, checkout refuses countries where no registration exists; I-41's store plan.
+- **Raised in / sources:** the ninth pass's gap sweep. VATCalc, [UK VAT on foreign digital services](https://www.vatcalc.com/uk/uk-vat-on-foreign-digital-services/) (search summary, secondary).
+
+### L-47: Operator access, its log and global switches
+
+I-69 gives the operator roles, an append-only log of every view and action on an account, and switches that pause AI or an upstream for every player. (a) After the CJEU's _Pankki S_ judgment (C-579/21, 2023-06-22), must an access request include the dates and purposes of the operator's consultations of the account, and must I-38's export carry them? (b) How long may the operator log be kept, given the CNIL's six months to one year for access logs and up to three years where justified, and may it outlive the account in pseudonymised form? (c) When paid AI is paused for every subscriber (provider outage, security, the spend ceiling, an upstream's demand), is that a lack of conformity or an update under Code de la consommation L224-25-26, which requires a contract clause with "une raison valable", advance notice and no extra cost? What must the terms and the notice say, and is compensation owed?
+
+- **Unblocks:** I-69 slices 10 and 14 and the wording of its requirement 10.3.
+- **Raised in / sources:** [I-69 open question 2](specs/i69-operator-console-support-moderation-and-kill-switches.md#open-questions). CJEU, [press release 107/23](https://curia.europa.eu/jcms/upload/docs/application/pdf/2023-06/cp230107en.pdf); CNIL, [recommandation relative aux mesures de journalisation](https://www.cnil.fr/fr/la-cnil-publie-une-recommandation-relative-aux-mesures-de-journalisation) (2021-11-18); Légifrance, [L224-25-26](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000044133275).
+
+### L-48: Erased accounts in encrypted exports
+
+I-71 keeps 14 daily, 8 weekly and 12 monthly encrypted off-site exports of the database, so an erased account survives in them for up to 12 months, and every restore re-applies the deletions recorded after the export's time before the database serves players. Is that compatible with the right to erasure, and must the privacy policy state the exports' retention?
+
+- **Unblocks:** I-71 slice 2's retention (requirement 4.5) and the export line of I-38 slice 6's privacy policy.
+- **Raised in / sources:** [I-71 open question 4](specs/i71-speed-uptime-and-recovery.md#open-questions), requirements 4.5 and 4.12.
+
 ## Not placed, and gaps this brief noticed
 
 - I-29's research lists "twelve" lawyer questions in uncommitted notes. The spec names four: the paid tier (L-16), database rights (L-24), opt-out signals (L-24) and a GDPR basis for handles (L-09). The other eight could not be recovered.
-- Not raised by any spec: whether the product name "MagicAIBuilder" and an unregistered domain built on "Magic", a Wizards trademark, fit the Fan Content Policy and trademark law before money is taken.
 - Not raised by any spec: [I-13](specs/i13-visual-direction.md#open-questions) calls a fixed hero card art "legally safe" without saying why. L-19 may cover it.

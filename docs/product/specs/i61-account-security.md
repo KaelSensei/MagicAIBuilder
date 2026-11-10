@@ -95,7 +95,7 @@ L6, the unbounded commander discovery query, does not touch accounts and stays w
 1.6 The player can end one session or choose "Sign out everywhere else", after re-authentication (ASVS 7.5.2).
 1.7 Sign-out revokes the row, not only the cookie (ASVS 7.4.1). Account deletion revokes every row in the same transaction (ASVS 7.4.2), which fulfils [I-38 6.2](i38-trust-safety-and-user-rights.md#6-account-deletion) on every device.
 1.8 After a password change, a passkey removal or a two-step change, the player is offered to end every other session, preselected (ASVS 7.4.3). A password reset always ends every session.
-1.9 The owner can end all sessions of one account with a script, for an incident (ASVS 7.4.5).
+1.9 The owner can end all sessions of one account with a script, for an incident (ASVS 7.4.5). Since 2026-11-10 the script becomes [I-69](i69-operator-console-support-moderation-and-kill-switches.md#6-account-lookup-and-support-actions)'s support action 6.2.
 
 ### 2. Re-authentication before sensitive actions
 

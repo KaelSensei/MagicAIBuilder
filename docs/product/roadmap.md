@@ -1,10 +1,92 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-10 (I-47 to I-68)
+> **Updated:** 2026-11-10 (I-47 to I-71)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
 This roadmap is organized by **product initiatives**, not by an arbitrary split between functional and technical work. Every initiative contains the user outcome, the product scope, the engineering enablers, and its definition of done.
+
+## Roadmap At A Glance
+
+One row per initiative, in numeric order, generated on 2026-11-10 by the script behind the [dependency page](specs/dependency-graph.md). State is the initiative's `Status` line. Priority is its place in the [Portfolio View](#portfolio-view), or its `Priority` line for the 2027 horizon. The slice column names the lowest-numbered slice of its spec that can start now and how many others can; a dash means none can today, or that the initiative has no spec (I-01, I-03 to I-12), whose scope list stands in for slices. Regenerate it with the dependency page; do not edit rows by hand.
+
+<!-- glance:start -->
+
+| ID                                                                                 | Initiative            | State    | Priority     | First slice that can start now                                          | Spec                                                                       |
+| ---------------------------------------------------------------------------------- | --------------------- | -------- | ------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [I-01](#i-01-deck-editor-workflow)                                                 | Editor workflow       | Building | Now          | —                                                                       | —                                                                          |
+| [I-02](#i-02-ai-deck-copilot)                                                      | AI copilot            | Building | Now          | 1: Type every claim at the API boundary (+1 more)                       | [spec](specs/i02-checkable-ai-copilot.md)                                  |
+| [I-03](#i-03-trustworthy-deck-feedback)                                            | Deck feedback         | Building | Now          | —                                                                       | —                                                                          |
+| [I-04](#i-04-ux-stability-and-visual-quality)                                      | UX stability          | Next     | Now          | —                                                                       | —                                                                          |
+| [I-05](#i-05-production-safety)                                                    | Production safety     | Building | Now          | —                                                                       | —                                                                          |
+| [I-06](#i-06-collection-and-purchase-planning)                                     | Collection planning   | Building | Next         | —                                                                       | —                                                                          |
+| [I-07](#i-07-playtest-and-iteration)                                               | Playtest              | Building | Next         | —                                                                       | —                                                                          |
+| [I-08](#i-08-share-compare-and-learn)                                              | Share and learn       | Building | Next         | —                                                                       | —                                                                          |
+| [I-09](#i-09-meta-and-evidence)                                                    | Meta and evidence     | Building | Next         | —                                                                       | —                                                                          |
+| [I-10](#i-10-interoperability-and-integrations)                                    | Interop               | Shipped  | Later        | —                                                                       | —                                                                          |
+| [I-11](#i-11-localization-and-regional-experience)                                 | Localization          | Shipped  | Later        | —                                                                       | —                                                                          |
+| [I-12](#i-12-local-ai)                                                             | Local AI              | Parked   | Later        | —                                                                       | —                                                                          |
+| [I-13](#i-13-product-visual-redesign)                                              | Visual redesign       | Building | Next         | 1: Token corrections                                                    | [spec](specs/i13-visual-direction.md)                                      |
+| [I-14](#i-14-verifiable-natural-language-search)                                   | Language search       | Next     | Next         | 1: Translate route + query display                                      | [spec](specs/i14-verifiable-natural-language-search.md)                    |
+| [I-15](#i-15-rule-0-sheets-and-pod-profiles)                                       | Rule 0 sheets         | Next     | Next         | 1: Sheet model, per-deck create and edit                                | [spec](specs/i15-rule-zero-sheets-and-pod-profiles.md)                     |
+| [I-16](#i-16-decks-buildable-from-a-collection)                                    | Buildable decks       | Next     | Next         | —                                                                       | [spec](specs/i16-decks-buildable-from-a-collection.md)                     |
+| [I-17](#i-17-precon-path-and-tiered-upgrades)                                      | Precon path           | Next     | Next         | 1: Catalogue model and read-only display                                | [spec](specs/i17-precon-path-and-tiered-upgrades.md)                       |
+| [I-18](#i-18-per-deck-radar-of-new-cards)                                          | New-card radar        | Later    | Later        | —                                                                       | [spec](specs/i18-per-deck-radar-of-new-cards.md)                           |
+| [I-19](#i-19-offline-game-night-viewing)                                           | Offline viewing       | Next     | Next         | 1: Service worker skeleton with a versioned cache                       | [spec](specs/i19-offline-game-night-viewing.md)                            |
+| [I-20](#i-20-collaborative-review)                                                 | Review                | Later    | Later        | 1: Reviewer role and invitation                                         | [spec](specs/i20-collaborative-review.md)                                  |
+| [I-21](#i-21-reproducible-probability-bench)                                       | Probability bench     | Later    | Later        | 1: Seeded PRNG and shuffler                                             | [spec](specs/i21-reproducible-probability-bench.md)                        |
+| [I-22](#i-22-verification-as-a-public-surface)                                     | Public verification   | Later    | Later (2027) | —                                                                       | [spec](specs/i22-verification-as-a-public-surface.md)                      |
+| [I-23](#i-23-the-pods-own-surface)                                                 | Pod surface           | Later    | Later (2027) | 1: Account linking, revocable                                           | [spec](specs/i23-the-pods-own-surface.md)                                  |
+| [I-24](#i-24-decks-a-screen-reader-can-play-from)                                  | Screen reader         | Later    | Later (2027) | 1: Audit the deck view with a screen reader and record what…            | [spec](specs/i24-decks-a-screen-reader-can-play-from.md)                   |
+| [I-25](#i-25-a-third-locale-chosen-on-evidence)                                    | Third locale          | Later    | Later (2027) | 1: Record the choice and its evidence in this spec                      | [spec](specs/i25-a-third-locale.md)                                        |
+| [I-26](#i-26-collections-arriving-from-elsewhere)                                  | Collection import     | Later    | Later (2027) | —                                                                       | [spec](specs/i26-collections-arriving-from-elsewhere.md)                   |
+| [I-27](#i-27-learning-while-building)                                              | Learning              | Later    | Later (2027) | 1: Content model, with the coverage test over warning classes           | [spec](specs/i27-learning-while-building.md)                               |
+| [I-28](#i-28-commander-deckbuilding-guide-by-bracket)                              | Bracket guide         | Building | Next         | — (slice 2 in flight)                                                   | [spec](specs/i28-commander-deckbuilding-guide-by-bracket.md)               |
+| [I-29](#i-29-cross-site-commander-deck-index)                                      | Deck index            | Later    | Later (2027) | 0: Source register with one `SourcePolicy` per researched so…           | [spec](specs/i29-cross-site-deck-index.md)                                 |
+| [I-30](#i-30-business-model-and-the-paid-tier)                                     | Paid tier             | Next     | Next         | — (slice 1 in flight)                                                   | [spec](specs/i30-business-model-and-paid-tier.md)                          |
+| [I-31](#i-31-deck-lab-analysis-run-on-your-own-list)                               | Deck Lab              | Next     | Next         | 2: Card classification                                                  | [spec](specs/i31-deck-lab.md)                                              |
+| [I-32](#i-32-seller-handoff-affiliate-links-and-buy-this-deck-carts)               | Seller handoff        | Next     | Next         | —                                                                       | [spec](specs/i32-seller-handoff-and-affiliate-carts.md)                    |
+| [I-33](#i-33-the-marketplace-ladder-decision-record)                               | Marketplace           | Parked   | Parked       | —                                                                       | [spec](specs/i33-marketplace-ladder.md)                                    |
+| [I-34](#i-34-commander-data-reports-and-indexable-data-pages)                      | Data reports          | Next     | Next         | 1: Index policy function                                                | [spec](specs/i34-commander-data-reports.md)                                |
+| [I-35](#i-35-pod-game-log-and-casual-results)                                      | Game log              | Later    | Later        | 1: `PodGame` and `PodGameSeat`                                          | [spec](specs/i35-pod-game-log.md)                                          |
+| [I-36](#i-36-creator-and-embed-toolkit)                                            | Creator toolkit       | Later    | Later        | 3: Embed route (+2 more)                                                | [spec](specs/i36-creator-and-embed-toolkit.md)                             |
+| [I-37](#i-37-editor-depth-against-moxfield-and-archidekt)                          | Editor depth          | Next     | Next         | 1: Measurement baseline (+3 more)                                       | [spec](specs/i37-editor-depth.md)                                          |
+| [I-38](#i-38-trust-safety-and-user-rights)                                         | Trust and safety      | Next     | Next         | 1: Legal notice (identity fields supplied by the owner) and… (+4 more)  | [spec](specs/i38-trust-safety-and-user-rights.md)                          |
+| [I-39](#i-39-first-run-activation-and-product-measurement)                         | First run             | Next     | Next         | 1: Stop the onboarding modal opening on public pages and cor… (+2 more) | [spec](specs/i39-first-run-activation-and-measurement.md)                  |
+| [I-40](#i-40-installable-app-phone-first-use-and-card-scanning)                    | Installable app       | Later    | Later        | 1: Manifest, PNG and maskable icons (+1 more)                           | [spec](specs/i40-installable-app-and-card-scanning.md)                     |
+| [I-41](#i-41-store-commander-nights-and-organiser-tools)                           | Store nights          | Later    | Later        | 1: `formPods` with its policy                                           | [spec](specs/i41-store-commander-nights.md)                                |
+| [I-42](#i-42-commander-variants-duel-commander-cedh-pauper-commander-and-others)   | Variants              | Next     | Next         | 1: Format picker at creation and in deck settings                       | [spec](specs/i42-commander-variants-duel-cedh-pauper.md)                   |
+| [I-43](#i-43-physical-collection-storage-places-deck-boxes-and-pull-lists)         | Storage places        | Later    | Later        | 1: Schema and migration for `StoragePlace`                              | [spec](specs/i43-physical-collection-storage-and-pull-lists.md)            |
+| [I-44](#i-44-trade-lists-within-the-pod-and-nearby-players)                        | Trade lists           | Later    | Later        | 4: Balance view                                                         | [spec](specs/i44-trade-lists-within-the-pod.md)                            |
+| [I-45](#i-45-selling-spare-cards-collection-value-buylists-and-seller-exports)     | Selling spares        | Later    | Later        | 0: Spare computation… (+1 more)                                         | [spec](specs/i45-selling-spare-cards.md)                                   |
+| [I-46](#i-46-discord-and-chat-integrations-for-pods-and-creators)                  | Discord               | Next     | Next         | 1: Preview contract for every public page (+1 more)                     | [spec](specs/i46-discord-and-chat-integrations.md)                         |
+| [I-47](#i-47-rules-answers-for-the-cards-in-this-deck)                             | Rules answers         | Next     | Next         | 1: CR import script with diff report                                    | [spec](specs/i47-rules-answers-for-this-deck.md)                           |
+| [I-48](#i-48-official-changes-reach-every-saved-deck)                              | Official changes      | Next     | Next         | —                                                                       | [spec](specs/i48-official-changes-reach-every-deck.md)                     |
+| [I-49](#i-49-a-display-that-works-for-colour-blind-and-low-vision-players)         | Colour and low vision | Next     | Next         | 1: Measure and inventory (+2 more)                                      | [spec](specs/i49-colour-vision-and-low-vision-display.md)                  |
+| [I-50](#i-50-play-this-deck-online)                                                | Play online           | Next     | Next         | 0: Export contract (+1 more)                                            | [spec](specs/i50-play-this-deck-online.md)                                 |
+| [I-51](#i-51-cards-lent-and-borrowed-within-the-pod)                               | Loans                 | Later    | Later        | 1: Schema and migration for `CardLoan`                                  | [spec](specs/i51-cards-lent-and-borrowed.md)                               |
+| [I-52](#i-52-a-feedback-loop-players-can-see)                                      | Feedback loop         | Next     | Next         | 3: Bug report (+1 more)                                                 | [spec](specs/i52-feedback-loop-players-can-see.md)                         |
+| [I-53](#i-53-monthly-deckbuilding-challenges)                                      | Challenges            | Later    | Later        | 1: `checkDeckAgainstRules`                                              | [spec](specs/i53-monthly-deckbuilding-challenges.md)                       |
+| [I-54](#i-54-find-your-next-commander)                                             | Commander finder      | Next     | Next         | —                                                                       | [spec](specs/i54-find-your-next-commander.md)                              |
+| [I-55](#i-55-one-deck-several-builds)                                              | Several builds        | Next     | Next         | 1: `resolveBuild` and the diff to a normalised change set               | [spec](specs/i55-one-deck-several-builds.md)                               |
+| [I-56](#i-56-wishlists-friends-can-buy-from)                                       | Wishlists             | Next     | Next         | 0: Retire the favorites stubs (+1 more)                                 | [spec](specs/i56-wishlists-friends-can-buy-from.md)                        |
+| [I-57](#i-57-printing-preferences-applied-everywhere)                              | Printing preferences  | Next     | Next         | 1: Defects 1 and 2 (+1 more)                                            | [spec](specs/i57-printing-preferences-everywhere.md)                       |
+| [I-58](#i-58-mana-base-builder)                                                    | Mana base             | Next     | Next         | 1: Karsten's tables as data                                             | [spec](specs/i58-mana-base-builder.md)                                     |
+| [I-59](#i-59-prices-over-time-and-alerts)                                          | Price history         | Later    | Later        | 0: Measure tracked printings… (+2 more)                                 | [spec](specs/i59-prices-over-time-and-alerts.md)                           |
+| [I-60](#i-60-player-stats-and-a-commander-year-in-review)                          | Player stats          | Next     | Next         | 1: Pure counting module                                                 | [spec](specs/i60-player-stats-and-year-in-review.md)                       |
+| [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions)              | Account security      | Next     | Next         | 2: Session registry (+1 more)                                           | [spec](specs/i61-account-security.md)                                      |
+| [I-62](#i-62-switching-from-another-site-in-one-step)                              | Switching sites       | Next     | Next         | 0: Source register (+2 more)                                            | [spec](specs/i62-switching-from-another-site.md)                           |
+| [I-63](#i-63-one-notification-system-inbox-email-and-preferences)                  | Notifications         | Next     | Next         | 1: Event model, catalogue (+1 more)                                     | [spec](specs/i63-one-notification-system.md)                               |
+| [I-64](#i-64-a-help-centre-and-in-product-guidance)                                | Help centre           | Next     | Next         | 1: Content model                                                        | [spec](specs/i64-help-centre-and-guidance.md)                              |
+| [I-65](#i-65-how-this-deck-wins)                                                   | How it wins           | Next     | Next         | 1: Route kinds, role and answer-class definitions as version… (+1 more) | [spec](specs/i65-how-this-deck-wins.md)                                    |
+| [I-66](#i-66-running-costs-and-margin-per-active-player)                           | Running costs         | Next     | Next         | 1: Price book and cost model as pure functions (+2 more)                | [spec](specs/i66-running-costs-and-margin.md)                              |
+| [I-67](#i-67-one-card-data-pipeline)                                               | Card data             | Next     | Next         | 1: Bulk reader                                                          | [spec](specs/i67-one-card-data-pipeline.md)                                |
+| [I-68](#i-68-commander-archetype-guides-from-play-experience)                      | Style guides          | Next     | Next         | 0: Retire `src/lib/archetypes/archetypes.ts` and its test               | [spec](specs/i68-archetype-guides.md)                                      |
+| [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches) | Operator console      | Next     | Next         | 1: `OperatorGrant`, `requireOperator`                                   | [spec](specs/i69-operator-console-support-moderation-and-kill-switches.md) |
+| [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes)                           | AI bench              | Next     | Next         | 1: Prompt registry (+1 more)                                            | [spec](specs/i70-ai-quality-bench-and-model-changes.md)                    |
+| [I-71](#i-71-speed-uptime-and-recovery)                                            | Uptime and recovery   | Next     | Next         | 1: Destructive-command guard (+2 more)                                  | [spec](specs/i71-speed-uptime-and-recovery.md)                             |
+
+<!-- glance:end -->
 
 ---
 
@@ -120,6 +202,12 @@ An eighth pass, on 2026-11-10, looked at where the product's card data comes fro
 - [I-67](#i-67-one-card-data-pipeline) loads Scryfall's daily bulk files and MTGJSON's deck lists once a day into versioned local tables with one change log, so that every initiative reads one source instead of planning its own job, and no public card page or download comes from them (goals 1 and 2).
 - [I-68](#i-68-commander-archetype-guides-from-play-experience) publishes one sourced guide per play style, written and reviewed by named people from play experience and cited data, with a private panel that reads the player's own deck and no model writing a word (goal 1).
 
+A ninth pass, on 2026-11-10, looked at what the owner needs to run the product: levers an operator can pull, a way to judge a model change, and a way back after an outage or a lost database. It also swept the whole roadmap for gaps; the ten it found are scope items in their homes, listed in the status note of the same day. It added I-69 to I-71: I-70 directly after [I-02](#i-02-ai-deck-copilot), I-71 directly after [I-05](#i-05-production-safety), and I-69 directly before [I-38](#i-38-trust-safety-and-user-rights) in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table):
+
+- [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches) gives the owner audited operator roles, switches for AI, each upstream source and a read-only mode that act within 15 seconds without a deploy, support actions that show the least personal data, and the operator side of I-38's queue, with no new vendor and nothing sold (goal 2).
+- [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes) judges every build, suggestion and injection attempt by code on a fixed, public set of cases, replays it in CI with no key, and gates every model or prompt change on a committed comparison report, so the cheapest model that holds the line can be sold (goals 1 and 2).
+- [I-71](#i-71-speed-uptime-and-recovery) gives production a daily encrypted off-site export, a quarterly restore drill, phone alerts, a runbook and speed budgets that CI enforces, recovery first because a lost database cannot be undone (goals 1 and 2).
+
 ### Strategic boundaries
 
 - Do not become a generic card database; Scryfall already owns that job.
@@ -147,7 +235,7 @@ The comparison tracks workflows rather than feature counts. Prices, sources and 
 
 #### Deliberate non-goals from the benchmark
 
-- Do not build a draft simulator, cube platform, venue directory or full card-trading marketplace in the current roadmap.
+- Do not build a draft simulator, cube platform (Commander cubes included, added 2026-11-10), venue directory or full card-trading marketplace in the current roadmap.
 - Do not add paid deck promotion, deck-cycling mechanics or engagement loops that rank visibility by spend.
 - Do not duplicate Scryfall's card database or pursue every format before the Commander workflow is excellent.
 - Do not start offline support with a multi-device editor. I-19 is a read-only cache of one chosen deck.
@@ -173,27 +261,31 @@ The seventh pass's initiatives touch this part too, without changing it. [I-65](
 
 The eighth pass's initiatives touch this part too, without changing it. [I-67](#i-67-one-card-data-pipeline) builds a computation index, not a card database: no public card page, card search, download or API comes from its tables, free-text search stays on Scryfall, and MTGJSON is its exit path. [I-68](#i-68-commander-archetype-guides-from-play-experience) ranks no style or commander, publishes no page per style and commander, colour or budget, and lets no model write, translate or summarise a guide.
 
+The ninth pass's initiatives touch this part too, without changing it. [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches) adds no flag service, admin vendor or tracking of players, and no switch turns itself off for cost except the spend ceiling I-30 already specifies. [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes) lets no model decide legality or gate a change by its opinion of prose, and it measures this product's routes, not other products' AI. [I-71](#i-71-speed-uptime-and-recovery)'s off-site store for the database export is a new external service: it solves a user-visible problem, decks that survive a lost database, and its exit path is a standard encrypted dump that any object store can hold. The gap sweep also names Commander cubes in the cube non-goal, so a later pass does not reopen it.
+
 Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
 ---
 
 ## Status And Priorities
 
-| Status          | Meaning                                                           |
-| --------------- | ----------------------------------------------------------------- |
-| **Shipped**     | Available in the product and covered by the current test strategy |
-| **In progress** | Partially available or actively being completed                   |
-| **Next**        | High-value work for the next delivery batches                     |
-| **Later**       | Valuable, but not a near-term commitment                          |
-| **Blocked**     | Do not implement until the stated external condition changes      |
-| **Parked**      | Deliberately deferred; not a product priority right now           |
+| Status       | Meaning                                                           |
+| ------------ | ----------------------------------------------------------------- |
+| **Shipped**  | Available in the product and covered by the current test strategy |
+| **Building** | Partially available or actively being completed                   |
+| **Next**     | High-value work for the next delivery batches                     |
+| **Later**    | Valuable, but not a near-term commitment                          |
+| **Blocked**  | Do not implement until the stated external condition changes      |
+| **Parked**   | Deliberately deferred; not a product priority right now           |
 
 Priority is expressed as **Now**, **Next** and **Later**. A priority is not a promise of a release date.
 
+Every initiative's `Status` line uses exactly one word from the table above (normalised 2026-11-10). "In progress" became Building; "Shipped foundation, next refinement" became Building and "Shipped foundation" Shipped; "English and French shipped" became Shipped; "Experimental / parked" and "Parked — owner decision" became Parked; and the "proposed" dates were dropped, since each spec carries its own. No priority changed.
+
 **Registers, 2026-11-10.** Two documents collect what waits on people rather than on code:
 
-- [`owner-decisions.md`](owner-decisions.md) lists the 77 open decisions only the owner can make, merged from about 300 mentions in the roadmap and the specs, and opens with a "Decide this week" table of the ten that unblock the most work.
-- [`legal-questions.md`](legal-questions.md) reduces about 158 lawyer questions from 36 specs to 39, with the ten answers that unblock the most work first; it is research for counsel, not legal advice.
+- [`owner-decisions.md`](owner-decisions.md) lists the 79 open decisions only the owner can make, merged from about 300 mentions in the roadmap and the specs, and opens with a "Decide this week" table of the ten that unblock the most work. D-78 and D-79 joined from the ninth pass.
+- [`legal-questions.md`](legal-questions.md) reduces about 158 lawyer questions from 36 specs to 39, with the ten answers that unblock the most work first, and the ninth pass added L-40 to L-48, for 48; it is research for counsel, not legal advice.
 
 ### Backlog snapshot - 2026-10-20
 
@@ -438,11 +530,46 @@ Fourteen further questions wait for the owner or the lawyer. The lawyer question
 - **I-68.** Who writes and who reviews each guide? Slice 5 does not start without a named author. May guest authors such as podcast hosts, store organisers or judges write under their own byline, and are they paid? Should I-54 add stax, reanimator, landfall and wheels as styles, as sub-styles, or leave them as sections? May a model help find sources, with disclosure, when it never writes guide text? Is an order from two demand inputs enough until Search Console exists, or does the owner buy one keyword snapshot?
 - **For the lawyer (I-68).** May indexed guide pages show EDHREC-derived figures as cited Data, when EDHREC's terms allow "personal, noncommercial use"? How long a quotation from a podcast or an article, with what attribution, is safe?
 
+**2026-11-10, I-69 to I-71, a gap sweep and a lane for unattended runs:** a ninth research pass added I-69 to I-71, swept the whole roadmap for what it still misses, and listed the slices the scheduled runs may take alone. The specs read the code on `dev` at `72fbfc1`, and each finding below was checked again on `origin/dev` at the same commit before it was recorded. Each is an unchecked scope item with its file paths:
+
+- **No backup of production (I-71).** Production runs on Supabase Free, which keeps no backups, and `scripts/` holds no export. `docs/engineering/infrastructure.md` (lines 348–364) gives `npx prisma db push --force-reset` against the production `DATABASE_URL`, a command that "drops all tables". I-71 slice 1 guards the command and removes the section; this is the most urgent item in this note.
+- **A model past its earliest retirement date (I-70, I-30).** Both AI routes send the alias `claude-haiku-4-5` (`src/app/api/ai/build/route.ts`, `src/app/api/ai/suggest/route.ts`). Anthropic lists Haiku 4.5 as legacy, retiring "not sooner than October 15, 2026", with at least 60 days' notice ([deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations), read 2026-11-10). The change of model waits for I-70's report, I-30 slice 3 and D-01.
+- **A "golden set" that calls no model (I-02, I-30, I-12).** `src/lib/ai/golden-evaluation.test.ts` feeds three hand-written decks and three suggestion cards to the validator, so it cannot judge the model change that I-30 slice 3 and I-12 waited for. I-70's bench becomes that gate, and I-02's lines now say six validator cases.
+- **Card names lose their apostrophes (I-05 M1, I-70).** `sanitizeForPrompt` (`src/lib/validation/ai.ts`) strips ASCII quotes and apostrophes, so "Yuriko, the Tiger's Shadow" reaches the model as "Yuriko, the Tigers Shadow" and a French brief loses its elisions, while an instruction written in plain words passes.
+- **One boolean and no switch (I-69).** `isModerator` (`prisma/schema.prisma`) is the only role, set by hand in SQL. No AI route or upstream caller can be stopped without a redeploy, and removing the AI keys serves a placeholder deck.
+- **The footer cites the wrong policy (I-38).** `LEGAL.md` and the footer text `notAffiliated` in all ten message catalogues cite "Wizards' Fan Site Policy"; the Fan Content Policy has a notice of its own. Which one the footer must carry is lawyer question L-45, not a fix yet.
+- **No security contact (I-61).** No `security.txt` and no vulnerability disclosure policy exist, only `docs/security/security.md`. The contact address is owner decision D-79.
+- **Combos one card away, discarded (I-65).** `parseFindMyCombos` (`src/lib/combos/find-my-combos.ts`) reads only `results.included`, while Spellbook already returns the "almost included" buckets in the response that #1324 fetches.
+
+The gap sweep found the player's loop complete in scope and ten gaps around it, each now a scope item in its home with its dated sources: the AI Act's transparency duties (I-30 slice 5, with an I-02 pointer); terms of sale for a consumer subscription, with a consumer mediator, the conformity guarantee and notice of price changes (I-30, with an I-38 pointer); combos one card away (I-65); a creator kit and a referral credit (I-36, I-30); a record of processing and a breach procedure (I-38 slice 16); the footer notice and the product's name (I-38, L-45); a getting-started email, which I-39 and I-63 rule out, so it becomes owner decision D-78 and both scopes stay as they are; a "make this deck cheaper" pass (I-55); selling outside the EU (I-30); and a security contact (I-61). Below them: a voluntary accessibility statement (I-49), a Digital Fairness Act watch (I-30), a publishing calendar (I-34) and Commander cubes in the cube non-goal. Legal points are research, not legal advice.
+
+I-70 sits directly after I-02, not beside I-30: it judges the copilot's output with I-02's own validator and replaces the set I-02 named, and I-30 only reads its reports. I-71 sits directly after I-05, whose health route and shared store it builds on without repeating them. I-69 sits directly before I-38 in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table), so the operator side and the player side of moderation read together and I-61 still follows I-38. All three are Next in part: I-71 for slices 0 to 8, at 6, first in Next; I-70 for slices 0 to 13, at 19, before I-30; and I-69 for slices 0 to 7, at 26, after I-38. None is paid, and none is in the 30–50 iteration estimate.
+
+Each neighbour keeps a dated note. I-30 slice 3 now waits for I-70 slices 10 and 11 instead of I-02's golden set, and I-30 slice 9 for I-71 slice 12's readiness check. I-02's open golden-set item and its requirement 7.3, and I-12's benchmark, point to I-70. I-30 4.1's `AiUsage` gains `promptVersion`, `resolvedModel` and `latencyMs`, I-52's report gains the kind `ai_output`, and I-39 gains the event `ai_suggestion_action`. The owner pages of I-30 slice 10, I-66 slice 9, I-39 slice 12, I-63 slice 11, I-67 slice 2, I-52 slice 5 and I-48 slice 6 use I-69 slice 1's `requireOperator` once it exists, I-38 slices 9 to 11 use its moderator role, I-61 1.9's session script becomes its support action 6.2, and I-30 4.6's switch-off writes through its switch store. I-05 points to I-71 for budgets, alerts, backups and the runbook, I-52 names I-71 for alerting, and D-04 gains option (f), point-in-time recovery. The MDX content pipeline, the last case with two possible owners, now has one: single owner decided 2026-11-10 (coordinator call, the owner may override): I-64 slice 1, which I-28 slice 3 and I-68 slice 1 consume. The registers grow to 79 owner decisions and 48 lawyer questions.
+
+The [Ready for unattended runs](#ready-for-unattended-runs) table in the Portfolio View lists 25 slices the three daily scheduled runs may take alone. The same check found I-36 slice 1 shipped in #1312 and #1325 and still open here; it is now checked, and I-34's public-route parity test has nothing left to compare since #1313.
+
+Twenty-nine further questions wait for the owner, the lawyer or an accountant. The lawyer questions are L-40 to L-48 in [`legal-questions.md`](legal-questions.md#l-the-ai-act-selling-terms-and-operations-added-2026-11-10) and join [I-30 requirement 7.2](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate); they are research, not legal advice:
+
+- **I-69.** Does the owner want a volunteer moderator with the moderator role only, and a second owner for holidays, and who hears an appeal against the owner's own decision? May the store only lower the AI ceiling at runtime, as proposed, never raise it? Is a password or Google sign-in with re-authentication acceptable for operators until passkeys ship? Is a daily anchor of the audit hash outside the database worth a slice? Does read-only mode also stop sign-ups, new sessions and I-63's jobs?
+- **For the lawyer (I-69, [L-47](legal-questions.md#l-47-operator-access-its-log-and-global-switches)).** After _Pankki S_, must an access request include the dates and purposes of the operator's consultations? How long may the operator log be kept, and may it outlive the account in pseudonymised form? Is a pause of paid AI for every subscriber a lack of conformity or an update under L224-25-26, and what must the notice say?
+- **I-70.** Which scores are hard lines, and which may trade against cost when a cheaper model invents more names? What per-run cap and monthly workspace limit, and is bench spend its own line in I-66's report? Are the scores public, and before or after the validator's repair? Does the OpenAI fallback stay, with its own recordings? Should French players get French rationale, and should the brief stop losing its apostrophes?
+- **For the lawyer (I-70, [L-06](legal-questions.md#l-06-lawful-bases-and-personal-data-status-of-smaller-processing) (h)).** May a confirmed player report become a public test case, with what consent and what rewriting?
+- **I-71.** Is a 24-hour data-loss target acceptable for players' decks, and does point-in-time recovery, about $100 a month, wait for revenue (D-04 (f))? Does the export run as a scheduled GitHub workflow, which a public repository disables after 60 days without activity, or as a cron job on the VPS, which is short of memory? Is 99.5% right for the free period, and does a paid tier publish 99.5% or aim for 99.9%? Does Lighthouse become a required check on promotion PRs? Does the copilot fail over to the second provider on an error?
+- **For the lawyer (I-71, [L-48](legal-questions.md#l-48-erased-accounts-in-encrypted-exports)).** Is an erased account that survives up to 12 months in encrypted exports compatible with erasure when every restore re-applies later deletions, and must the privacy policy say so?
+- **From the gap sweep.** [D-78](owner-decisions.md#product-scope-and-non-goals): one opt-in getting-started series of at most three emails, or none as today? [D-79](owner-decisions.md#infrastructure-and-providers): which contact address `security.txt` names? For the lawyer and an accountant: the AI Act ([L-40](legal-questions.md#l-40-the-ai-acts-transparency-duties-art-50)), consumer mediation (L-41), the conformity guarantee and price changes (L-42), referral and creator rewards (L-43), the record of processing and breaches (L-44), the name and the footer notice (L-45), and selling outside the EU (L-46).
+
 ---
 
 ## Portfolio View
 
 ### Now
+
+**Due 2026-12-02 if the grace period applies (I-30, I-02), dated 2026-11-10:** sources agree that the EU AI Act's transparency duties (Article 50) apply from 2026-08-02, and that the AI Omnibus gave generative systems already on the market before that date until 2026-12-02 for machine-readable marking of their output (Art. 50(2)); they disagree on whether the Omnibus text is formally adopted. The copilot is live and has no disclosure page. Research, not legal advice; check the Official Journal text. The scope is under [I-30](#i-30-business-model-and-the-paid-tier) slice 5 and the question is [L-40](legal-questions.md#l-40-the-ai-acts-transparency-duties-art-50).
+
+**No production backups (I-71), dated 2026-11-10:** production runs on Supabase Free, which keeps no backups, no export exists, and `docs/engineering/infrastructure.md` documents `npx prisma db push --force-reset` against the production database. [I-71](#i-71-speed-uptime-and-recovery) slice 1 guards the command and needs nothing; slice 2's daily encrypted off-site export waits only for the owner's choice of runner and storage.
+
+**Haiku 4.5 past its earliest retirement date (I-70, I-30), dated 2026-11-10:** both AI routes call the alias `claude-haiku-4-5`, and Anthropic lists Haiku 4.5 as legacy, retiring "not sooner than October 15, 2026", with at least 60 days' notice ([deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations), read 2026-11-10). A change of model waits for [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes)'s comparison report (slices 9 to 11), I-30 slice 3 and [D-01](owner-decisions.md#d-01-ai-allowance-numbers).
 
 **Deadline 2027-01-01 (I-05):** move card images to Scryfall's WebP keys, with a `jpeg` fallback, and migrate or derive the stored image URLs. After that date Scryfall stops serving the `small`, `large`, `border_crop` and `art_crop` JPEGs, so the `art_crop` URLs stored in `DeckCard.artCropUri` and the paths `buildScryfallImageUrl` builds break ([Scryfall, 2026-10-14](https://scryfall.com/blog/new-webp-images-jpeg-deprecations-237)). The dated item is under [I-05](#i-05-production-safety).
 
@@ -461,183 +588,224 @@ Fourteen further questions wait for the owner or the lawyer. The lawyer question
 5. **I-05 Production safety**
    Keep CI, unit tests, Docker E2E, SonarCloud and health monitoring aligned with the staging flow.
 
+### Ready for unattended runs
+
+These are the slices the three daily scheduled runs (07:00, 11:00 and 19:00 UTC) may pick without a migration, a new service or secret, an owner decision or a legal answer; a run must still check open PRs and unmerged branches for the same files before it starts. They are ranked by how much work waits on each, and "(part)" means the PR says so and names the remainder. Checked on 2026-11-10 against `origin/dev` at `72fbfc1`.
+
+| #   | Slice                                                                                                                  | Title                                                            | Done means                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | [I-67 slice 1](specs/i67-one-card-data-pipeline.md#2-sources-and-cadence)                                              | Bulk reader behind `CardSource`                                  | Reads Scryfall's `/bulk-data` index; streams and parses a file line by line from a fixture stream; records SHA-256, bytes, object count and `updated_at`; skips a file already loaded; a line missing a required field fails its file; an unknown top-level field is a warning; tests run on small fixtures with no network and no writes.                                                                                                       |
+| 2   | [I-63 slice 1](specs/i63-one-notification-system.md#2-event-model-and-catalogue) (part)                                | Event catalogue, payload guard, en/fr renderers, contract test   | One typed catalogue entry per event (key, category, class, channels, defaults, may-turn-off, digest, dedupe window, payload schema, `en`/`fr` renderer). Payload schemas reject free text, email-shaped values and URLs (2.3). The contract test walks every entry, and a missing subject renders "no longer available". The table and `notify()` need a migration.                                                                              |
+| 3   | [I-21 slice 1](specs/i21-reproducible-probability-bench.md#1-seeded-and-reproducible)                                  | Seeded PRNG and shuffler with the reproducibility test           | A committed seeded PRNG (mulberry32, as `scripts/research/commander-opening-hands/model.mjs` uses) and a Fisher–Yates shuffle that takes it. The same seed gives identical sequences across two runs and two processes, and no `Math.random` appears in the module.                                                                                                                                                                              |
+| 4   | [I-39 slice 1](specs/i39-first-run-activation-and-measurement.md#1-value-before-sign-up)                               | No onboarding modal on public pages; fix its two wrong sentences | `OnboardingWizard` never opens on `/`, `/deck/*`, `/share/*`, `/u/*`, `/commanders/*`, `/auth/*`, in either locale; an RTL test for each prefix; the two sentences the spec names are corrected in `en` and `fr`.                                                                                                                                                                                                                                |
+| 5   | [I-34 slice 1](specs/i34-commander-data-reports.md#4-index-policy) (part)                                              | The index policy as a pure function                              | `indexPolicy(kind, sample, metricsShown)` returns `index`, `noindex` or `absent`, with 4.2's starting thresholds as data; a table-driven test covers every page kind (below threshold gives `noindex` and no sitemap entry, never a robots disallow).                                                                                                                                                                                            |
+| 6   | [I-60 slice 1](specs/i60-player-stats-and-year-in-review.md#3-counting-rules)                                          | Pure counting module; delete `src/lib/deck/analytics.ts`         | Functions for active decks, colours, commanders and partner pairs, cards used most (ties by name, basics excluded), shared cards, brackets, built and changed ("at least"), each with its denominator, following the fixtures in the spec's testing strategy. The unused `analytics.ts` and its test are deleted.                                                                                                                                |
+| 7   | [I-58 slice 1](specs/i58-mana-base-builder.md#2-land-count)                                                            | Karsten's tables as data                                         | The 99-card source column, partial-source weights, the land formula (31.42 + 3.13 × average MV − 0.28 × cheap ramp/draw), MDFC land weights 0.38/0.74 and source weights 0.8/1, and the rule of thumb (42 + Sol Ring − cuts, floor 37), as pure functions whose golden tests match the spec's worked examples.                                                                                                                                   |
+| 8   | [I-31 slice 2](specs/i31-deck-lab.md#2-card-classification) (part)                                                     | Card classification as a pure classifier                         | `classifyDeck(cards, overrides)` maps each card to a lab kind with its rule id; quantities are expanded, commanders are in the command zone, and colours are parsed but not used. It passes the spec's table (Sol Ring, Arcane Signet, a Signet, Command Tower, Cultivate, Llanowar Elves, a fetch land, Evolving Wilds, a shock, a tapped dual, an MDFC, Exotic Orchard), and an override changes the result. Storing overrides is a migration. |
+| 9   | [I-49 slice 2](specs/i49-colour-vision-and-low-vision-display.md#4-palettes-validated-against-simulated-colour-vision) | `palette.ts` and the token contrast test                         | `contrastRatio`, `simulateCvd` (Machado 1.0), `deltaE` (OKLab × 100) and `validatePalette` (`#767676` on white is 4.54:1). A test reads `src/styles/globals.css` tokens in both themes and lists failing pairs as expected failures, with the Red recorded in the PR.                                                                                                                                                                            |
+| 10  | [I-59 slice 2](specs/i59-prices-over-time-and-alerts.md#8-neutral-display)                                             | Neutral price wording and colour checks in CI                    | A Vitest check scans the `en` and `fr` price and alert message keys for the 8.4 deny-list and fails, naming the key; a second check fails if a price-movement component uses a red or green hue for direction.                                                                                                                                                                                                                                   |
+| 11  | [I-38 slice 2](specs/i38-trust-safety-and-user-rights.md#6-account-deletion) (part)                                    | End the session when an account is deleted                       | A successful `DELETE /api/user/profile` response expires the Auth.js session cookies (secure and plain names), and a route test asserts the `Set-Cookie` headers. The tombstone table is a migration.                                                                                                                                                                                                                                            |
+| 12  | [I-66 slice 1](specs/i66-running-costs-and-margin.md#2-the-price-book)                                                 | Price book and cost model as pure functions                      | A dated price book (providers except AI and payments) and a cost model that reproduce the tables in 3.3, 4.1, 5.1 and 9.1 to the cent; a dated price change recomputes an older month with that month's prices.                                                                                                                                                                                                                                  |
+| 13  | [I-50 slice 0](specs/i50-play-this-deck-online.md#1-the-export-contract)                                               | Export contract                                                  | Each of the eight shipped exporters is a pure function returning `ExportResult` (content, file name, MIME type, typed `ExportNotice[]`) in `src/lib/deck/exports/<target>.ts`; a `<target>/v1` fixture matches byte for byte; TappedOut no longer puts Sideboard or Considering cards in the main list.                                                                                                                                          |
+| 14  | [I-41 slice 1](specs/i41-store-commander-nights.md#2-pod-pairing)                                                      | `formPods` with its policy and brute-force tests                 | `formPods(entries, policy, priorPods)` follows 2.1–2.5 (sizes first, least bracket spread, groups never split, stable-hash tie-break, no `Math.random`); it equals a brute-force optimum on generated fixtures up to 12 entries, and counts 0–7 behave per policy.                                                                                                                                                                               |
+| 15  | [I-50 slice 1](specs/i50-play-this-deck-online.md#2-card-identity-across-platforms)                                    | `CardPlatformInfo` read-only route                               | A read-only route returns `CardPlatformInfo` for up to 250 Scryfall IDs, filled on the server from the shared cache and Scryfall with the honest User-Agent, never from client data; set `arena_code` and `mtgo_code` cached at least 24 hours (Dominaria `dom` maps to `dar`); route tests mock `fetch`.                                                                                                                                        |
+| 16  | [I-37 slice 21](specs/i37-editor-depth.md#14-primer-editor-layout)                                                     | Primer editor split view                                         | `DeckDescriptionEditor` shows the Markdown source beside the rendered primer at a working height (stacked below `lg`) and keeps I-08's template insert; RTL tests for both panes and the insert.                                                                                                                                                                                                                                                 |
+| 17  | [I-39 slice 3](specs/i39-first-run-activation-and-measurement.md#4-empty-states-and-sample-decks)                      | Delete or fix `GET /api/templates`                               | No invented authors or upvotes: either the route and the unmounted `TemplatesModal` are deleted, or GET returns `DeckTemplate` rows only; the spec's route test passes: "returns no row the database did not hold".                                                                                                                                                                                                                              |
+| 18  | [I-36 slice 7](specs/i36-creator-and-embed-toolkit.md#4-primers-with-video-and-card-links)                             | Unique heading anchors and `{t=12:30}` in the primer parser      | Repeated headings get `-2` and `-3` suffixes, a heading that slugs to nothing gets a positional anchor, and `{t=1:02:03}` parses to 3723 s and shows in the table of contents. No video embed yet (slice 8).                                                                                                                                                                                                                                     |
+| 19  | [I-59 slice 1](specs/i59-prices-over-time-and-alerts.md#current-state-in-this-codebase) (part)                         | One deck value function                                          | One `deckValue(cards)` (command zone and main deck in the total, Sideboard and Considering apart, an unpriced count) labelled "USD, read when each card was added"; `useDeckPrice` and `src/lib/export/stats-export.ts` use it. `computeDeckStats` waits for a queued branch.                                                                                                                                                                    |
+| 20  | [I-38 slice 12](specs/i38-trust-safety-and-user-rights.md#5-blocking-and-comment-controls) (part)                      | Comment and review rate limits                                   | `POST` on comments and ratings is limited per user through `src/lib/rate-limit.ts` and answers 429 with `Retry-After`; route tests; the PR names the chosen limit. Block and the per-deck switch need migrations.                                                                                                                                                                                                                                |
+| 21  | [I-61 slice 2](specs/i61-account-security.md#1-sessions-a-player-can-see-and-end) (part)                               | One resolver for the direct `auth()` reads                       | The 7 direct `await auth()` reads on `dev` (moderation page, commander decks, comments GET, ratings GET, vote, `/api/deck/[id]`, `/api/users/[username]`) go through one resolver that checks the user row, as `requireAuth` does since #1319; a test per site treats a token whose user is gone as signed out. `UserSession` is a migration.                                                                                                    |
+| 22  | [I-39 slice 4](specs/i39-first-run-activation-and-measurement.md#9-telemetry-already-in-place)                         | Sentry replay settings and URL scrubbing                         | `replaysSessionSampleRate: 0` (today `0.01`); error replay sets text masking and media blocking explicitly; a tested scrubber removes share tokens, usernames and query strings from every URL Sentry sends, events and breadcrumbs.                                                                                                                                                                                                             |
+| 23  | [I-66 slice 3](specs/i66-running-costs-and-margin.md#8-engineering-moves-that-cut-cost)                                | CDN caching headers on the two shared-cache routes               | `s-maxage` with `stale-while-revalidate` on a 200 hit or fill only (`/api/cache/search` 1 hour, `/api/cache/cards` 24 hours); 400, 404, 429 and 502 carry no caching header; route tests.                                                                                                                                                                                                                                                        |
+| 24  | [I-66 slice 4](specs/i66-running-costs-and-margin.md#8-engineering-moves-that-cut-cost)                                | Image proxy CDN header and response bytes in its log line        | `Vercel-CDN-Cache-Control` with a long lifetime on 200 images only, and `bytes` added to the "Card image proxy request completed" log line; tests.                                                                                                                                                                                                                                                                                               |
+| 25  | [I-68 slice 0](specs/i68-archetype-guides.md#delivery-slices)                                                          | Retire `src/lib/archetypes/archetypes.ts`                        | The module and its test are deleted (nothing imports them on `dev`; `src/lib/ai/archetypes.ts` is live and stays), and `tsc` and the tests pass.                                                                                                                                                                                                                                                                                                 |
+
 ### Next
 
-6. **I-06 Collection and purchase planning**
+6. **I-71 Speed, uptime and recovery**
+   Next for slices 0 to 8, first in Next because production keeps no backup and a lost database cannot be undone: the guard on destructive commands, a daily encrypted off-site export, a quarterly restore drill, phone alerts, a runbook and CI budgets for Lighthouse, bundles and queries. Slices 1, 6 and 7 start now; slice 2 waits only for the owner's choice of runner and storage. Later for field data per route, the large-collection budget, degraded modes and the paid-tier readiness check. Never paid.
+
+7. **I-06 Collection and purchase planning**
    Connect deck decisions to owned printings, prices and a realistic acquisition plan. This stays ahead of collection-first discovery.
 
-7. **I-07 Playtest and iteration**
+8. **I-07 Playtest and iteration**
    Turn goldfishing into useful evidence for improving a deck version.
 
-8. **I-08 Share, compare and learn**
+9. **I-08 Share, compare and learn**
    Make public decks useful as learning material, not just static lists.
 
-9. **I-09 Meta and evidence**
-   Combine EDHREC trends, tournament context and deck-specific reasoning without pretending incomplete data is certainty. Keep inclusion, Lift and AI advice distinct.
+10. **I-09 Meta and evidence**
+    Combine EDHREC trends, tournament context and deck-specific reasoning without pretending incomplete data is certainty. Keep inclusion, Lift and AI advice distinct.
 
-10. **I-13 Product visual redesign**
+11. **I-13 Product visual redesign**
     Continue Lumen. Foundations and several surfaces shipped on 2026-11-06. The validation matrix is still open.
 
-11. **I-67 One card data pipeline**
+12. **I-67 One card data pipeline**
     Next for slices 0 to 13: one daily ingest of Scryfall's bulk files and MTGJSON's deck lists into versioned local tables, with a change log, a fallback, a daily conformance check and local reads in place of per-request calls. Slices 1, 2 and 4 start now; slice 3 waits for the owner's runner choice. Seven Next slices of other initiatives wait for it. Later for French names and the exit drill; the image mirror is Parked. Never paid.
 
-12. **I-14 Verifiable natural-language search**
+13. **I-14 Verifiable natural-language search**
     Turn an English or French description into a visible, editable Scryfall query, then search with that query.
 
-13. **I-15 Rule 0 sheets and pod profiles**
+14. **I-15 Rule 0 sheets and pod profiles**
     Let a pod share intentions and house rules. The sheet does not claim to balance the game.
 
-14. **I-16 Decks buildable from a collection**
+15. **I-16 Decks buildable from a collection**
     Rank lists and commanders by owned coverage. Depends on I-06. Validate demand before a large build.
 
-15. **I-17 Precon path and tiered upgrades**
+16. **I-17 Precon path and tiered upgrades**
     Start from a dated official precon and apply reversible budget bundles. This is a different job from I-02.
 
-16. **I-19 Offline game-night viewing**
+17. **I-19 Offline game-night viewing**
     Let a player download one deck, its primer and its tokens for read-only use without a network.
 
-17. **I-28 Commander deckbuilding guide by bracket**
+18. **I-28 Commander deckbuilding guide by bracket**
     Teach how to build for each of the five official brackets from sourced, labeled evidence, and check the open deck against the chosen bracket. The first slice, which corrects the bracket names players already see, shipped in #1300.
 
-18. **I-30 Business model and the paid tier**
+19. **I-70 An AI quality bench and safe model changes**
+    Next for slices 0 to 13: a versioned set of build, suggestion and injection cases scored by code on a pinned card snapshot, replayed in CI with no key, a capped live run, and a comparison report that gates every model or prompt change. I-30 slice 3 waits for slices 10 and 11. Slices 1 and 3 start now. Later for player signals, reports as cases, prose rating and public figures. Never paid.
+
+20. **I-30 Business model and the paid tier**
     Decide what is free and what is paid, at what price and after which written legal answers, before any billing code. Meter and cap AI usage per user first; that part ships whatever the legal answer.
 
-19. **I-31 Deck Lab**
+21. **I-31 Deck Lab**
     Run a seeded, replayable analysis on the player's own list: the keep table for the first seven and the free seven, the commander's cast probability by turn, and swaps judged with an interval. Norms placement (slice 11) is Later until I-29's statistics exist (2026-11-10).
 
-20. **I-32 Seller handoff, affiliate links and buy-this-deck carts**
+22. **I-32 Seller handoff, affiliate links and buy-this-deck carts**
     Send the acquisition plan's exact printings to a seller's cart, priced in the market the player chooses, with any affiliate link labelled where the player clicks.
 
-21. **I-34 Commander data reports and indexable data pages**
+23. **I-34 Commander data reports and indexable data pages**
     Publish dated Commander figures nobody else publishes, each with its method and sample size, and keep thin pages away from search engines. Next for the slices that need no deck index; Later for those built on I-29.
 
-22. **I-37 Editor depth against Moxfield and Archidekt**
+24. **I-37 Editor depth against Moxfield and Archidekt**
     Close the editor gaps players compare between sites: views, sticky groups, tags, text bulk edit, history and a mobile toolbar, measured against latency and stability budgets.
 
-23. **I-38 Trust, safety and user rights**
+25. **I-38 Trust, safety and user rights**
     Build the legal and safety floor: notice and action, statements of reasons, appeals, blocking, legal pages, a deletion that holds and a full export. It gates public growth and I-30's paid tier. Nothing in it is paid.
 
-24. **I-39 First run, activation and product measurement**
+26. **I-69 An operator console**
+    Next for slices 0 to 7: operator roles, an append-only audit log, switches for AI and each upstream source, read-only maintenance mode and the console shell, each acting within 15 seconds without a deploy. Slices 1 to 5 need nothing outside the initiative. Later for account lookup, support actions, the moderation view, dark launches and passkeys for operators. Nothing in it is sold.
+
+27. **I-39 First run, activation and product measurement**
     Keep a guest's work at sign-up, replace the onboarding modal with an inline first-run panel, and count activation and retention in our own database with no third-party script.
 
-25. **I-42 Commander variants**
+28. **I-42 Commander variants**
     Next for slices 1 to 6: a format picker, legality computed on the server from dated lists, and Duel Commander at 20 life with its banned-as-commander list. Later for Pauper Commander, Oathbreaker, the Brawl split, cEDH link-outs and Canadian Highlander.
 
-26. **I-46 Discord and chat integrations**
+29. **I-46 Discord and chat integrations**
     Next for link previews (slices 1 to 3), which need no bot: full tags, a PNG default image, the artist's credit, oEmbed and a Discord component embed. Later for webhook feeds and the Discord app.
 
-27. **I-48 Official changes reach every saved deck**
+30. **I-48 Official changes reach every saved deck**
     Next for slices 1 to 8: the Commander rules as dated versions, every saved deck assessed against the version in force, the owner's dated impact report and public "what changed" pages. Slices 1 to 6 should land before the next Commander announcement.
 
-28. **I-50 Play this deck online**
+31. **I-50 Play this deck online**
     Next for slices 0 to 8: every export a tested contract, the MTGO and Arena exports fixed, Cockatrice, XMage, Forge and Tabletop Simulator files, and a "Play online" panel any viewer of a public deck can use. Later for the webcam table view, the deck check link and the printable list.
 
-29. **I-49 A display that works for colour-blind and low-vision players**
+32. **I-49 A display that works for colour-blind and low-vision players**
     A second channel for every colour signal, status and chart colours that pass contrast in both themes, and text that scales and reflows, with no "colour-blind mode". The display control (slice 14) is Later until I-24's motion bundle (2026-11-10). Nothing in it is paid.
 
-30. **I-52 A feedback loop players can see**
+33. **I-52 A feedback loop players can see**
     Next for an external monitor and a status line, a bug report that carries only allowlisted context, and human-written release notes in English and French (slices 0 to 8). Later for the public request board.
 
-31. **I-47 Rules answers for the cards in this deck**
+34. **I-47 Rules answers for the cards in this deck**
     Next for official rulings on every card and versioned, linkable rules (slices 1 to 7). Later for interaction notes reviewed by a judge. No model decides a rules answer.
 
-32. **I-57 Printing preferences applied everywhere**
+35. **I-57 Printing preferences applied everywhere**
     One printing rule, with exclusions and owned copies first, applied at every entry point and to a whole deck as a reviewed diff. Slice 1 fixes two defects players hit today. Nothing in it is paid.
 
-33. **I-55 One deck, several builds**
+36. **I-55 One deck, several builds**
     Next for slices 1 to 7 and 9: builds stored as differences from the main list, with legality, a bracket estimate and a price per build, promotion back to the main build, and copies counted once across builds. Later for the game-night and public parts, each behind the initiative it extends.
 
-34. **I-56 Wishlists friends can buy from**
+37. **I-56 Wishlists friends can buy from**
     Next for slices 0 to 4: one wanted list filled from the acquisition plan, shared by link, with reservations the owner never sees. Later for the other audiences, sealed products and the seller handoff.
 
-35. **I-54 Find your next commander**
+38. **I-54 Find your next commander**
     Next for slices 1 to 7, 9, 10 and 15: a commander finder on card data, with a visible query, one line of evidence per filter and a seeded random pick, and the wizard's "Help me choose". Later for signals computed from decks, indexable pages and the collection path.
 
-36. **I-61 Account security: passkeys, two-step sign-in and sessions**
+39. **I-61 Account security: passkeys, two-step sign-in and sessions**
     Next. Slice 5 stops the 72-byte password truncation and goes first. Sessions a player can see and end, re-authentication, password change, passkeys and two-step need no email sender; reset, verification and notices wait for the sender, now I-63 slice 7. Nothing in it is paid.
 
-37. **I-58 Mana base builder**
+40. **I-58 Mana base builder**
     Next for slices 1 to 9: Karsten's land count and source targets, a read-only check that replaces the proportional advice, and a proposal within a budget, applied and reverted as one reviewed change. Later for the euro market, the check by simulation through I-31 and the wizard's lands.
 
-38. **I-60 Player stats and a Commander year in review**
+41. **I-60 Player stats and a Commander year in review**
     Next for the private stats page and the private recap (slices 0 to 5 and 13). Later for sharing, images, measurement, game statistics and embeds, which wait for I-36, I-38, I-39 and I-35.
 
-39. **I-63 One notification system: inbox, email and preferences**
+42. **I-63 One notification system: inbox, email and preferences**
     Next. The event model and the job route (slices 1 and 5) start now; the inbox, the settings page and the email transport follow slice 1. Slice 7, the provider and the transactional stream, is I-38 slice 13 and waits for the owner's choice of provider. Web push stays blocked by I-40 requirement 2.6. Never paid.
 
-40. **I-62 Switching from another site in one step**
+43. **I-62 Switching from another site in one step**
     Next for slices 0 to 11 and 18: the source register, many files or a zip, a preview with what each deck loses, one transaction per deck, re-import that changes nothing, and source printings. Slices 1 to 5 make a working move-in, announced only once slice 11 keeps printings. Later for collections and want lists, which wait for I-26 and I-56, and for the owner view's migration metric (slice 17), which waits for I-39's event store (2026-11-10). Never paid.
 
-41. **I-64 A help centre and in-product guidance**
+44. **I-64 A help centre and in-product guidance**
     Next for slices 0 to 9: articles tested against the interface, one glossary, the info button, the first articles in English and French, help search and the path into I-52's report. Slice 13, the subscription articles, ships in the same release as I-30's billing. Later for the rest. Never paid.
 
-42. **I-66 Running costs and margin per active player**
+45. **I-66 Running costs and margin per active player**
     Next for slices 0 to 8, before I-30's price decision: the price book and cost model, a measurement script, cache headers that cut function calls, sample rates, the region and the monthly report. Slices 1, 3 and 4 need nothing. Later for stored months, the budget webhook and daily checks, which wait for I-30's owner page, I-63's job route or a Pro plan. Internal; never shown to players.
 
-43. **I-65 How this deck wins**
+46. **I-65 How this deck wins**
     Next for slices 1 to 11: route definitions, the map for one deck with finders, protection, a labelled turn estimate and common answers, the builder panel, and the route line in I-15, the primer and the wizard. Slice 8, Tagger tags, is blocked for release on the licence. Later for model rewording, assembly odds and comparisons (slices 12 to 16). The single-deck map stays free.
 
-44. **I-68 Commander archetype guides from play experience**
+47. **I-68 Commander archetype guides from play experience**
     Next for slices 0 to 8 and 14: the template and evidence rules, the demand register, the guide pages and the first two English guides, written and reviewed by named people. Slice 0 deletes the dead archetypes module and ships alone. Later for the private deck panel, measured norms and French editions. The guides are never paid.
 
 ### Later
 
-45. **I-10 Interoperability and integrations**
+48. **I-10 Interoperability and integrations**
     Make MagicAIBuilder a good starting point and a good destination for deck data.
 
-46. **I-11 Localization and regional experience**
+49. **I-11 Localization and regional experience**
     Expand beyond English and French only when translations and prices are genuinely supported.
 
-47. **I-12 Local AI**
+50. **I-12 Local AI**
     Explore local inference only after the cloud copilot has a measurable product fit. Offline reading is I-19.
 
-48. **I-18 Per-deck radar of new cards**
+51. **I-18 Per-deck radar of new cards**
     On demand, explain newly legal cards for one deck and show a diff before any change.
 
-49. **I-20 Collaborative review**
+52. **I-20 Collaborative review**
     Let an invited reviewer propose a patch that the owner accepts or rejects. Live co-editing stays out of this slice.
 
-50. **I-21 Reproducible probability bench**
+53. **I-21 Reproducible probability bench**
     Compare simulated hands across snapshots with a visible seed, sample size and mulligan policy.
 
-51. **I-35 Pod game log and casual results**
+54. **I-35 Pod game log and casual results**
     Log a real game after it ends, tied to the deck version played and the brackets declared and computed, with honest personal statistics and opt-in aggregates.
 
-52. **I-36 Creator and embed toolkit**
+55. **I-36 Creator and embed toolkit**
     Give creators deck embeds, link previews that show the deck, video in primers and a public read API, with no tracking and no paid reach. Slices 1 and 2, the public projection and the deck image, are Next since 2026-11-10, because slices of I-46, I-50, I-53, I-55 and I-60 wait for them.
 
-53. **I-40 Installable app, phone-first use and card scanning**
+56. **I-40 Installable app, phone-first use and card scanning**
     Later, with a no-regret first part: a manifest, icons, safe areas, install help and phone-sized E2E and Lighthouse runs (slices 1 to 5). Scanning waits for a benchmark, Scryfall's written answer and the owner's decision.
 
-54. **I-41 Store Commander nights and organiser tools**
+57. **I-41 Store Commander nights and organiser tools**
     Later, with a cheap early part: the pod-pairing policy and an account-free pod planner (slices 1 and 2), which need no schema and store no personal data.
 
-55. **I-43 Physical collection: storage places, deck boxes and pull lists**
+58. **I-43 Physical collection: storage places, deck boxes and pull lists**
     Later. The deck-box path (slices 1 to 5) needs no collection import and can be promoted on its own; that is an owner question.
 
-56. **I-44 Trade lists within the pod and nearby players**
+59. **I-44 Trade lists within the pod and nearby players**
     Later, with a cheap early part: private have and want lists, share links, the balance view and the friends audience (slices 1 to 7), which need no I-38 work.
 
-57. **I-45 Selling spare cards**
+60. **I-45 Selling spare cards**
     Later, with a no-regret first part: the deck-aware spare list and seller files for Card Kingdom and Cardmarket's tools (slices 0 to 3), which need no price, contract or legal answer.
 
-58. **I-51 Cards lent and borrowed within the pod**
+61. **I-51 Cards lent and borrowed within the pod**
     Later. Slices 1 to 6 are private records that involve no second account and could be promoted alone; loans between accounts wait for I-38's block.
 
-59. **I-53 Monthly deckbuilding challenges**
+62. **I-53 Monthly deckbuilding challenges**
     Later. The rule checker, the brief page and private challenges between friends (slices 1 and 5 to 8) need no vote, prize or legal answer and could be promoted first.
 
-60. **I-59 Prices over time and alerts**
+63. **I-59 Prices over time and alerts**
     Later, with a no-regret first part: tracked printings measured, one deck total and checks on neutral wording (slices 0 to 2). The series waits for I-67 slice 5's daily prices. Price history stays free; only alerts above a free allowance are a candidate.
 
 ### Parked
 
-61. **I-33 The marketplace ladder**
+64. **I-33 The marketplace ladder**
     A decision record, not a build plan. It names the stage that would reverse the marketplace non-goal and the evidence each step up needs. The owner decides; nothing is built for a marketplace.
 
 Open work on I-01, I-05 and I-06 stays ahead of I-14 through I-21. I-28's first slice, a copy correction, shipped in #1300; its guide page should land before I-15, whose Rule 0 sheet reuses the same bracket vocabulary. Among the new initiatives, start with I-14 and I-15, validate demand for I-16 and I-17, and specify the I-19 cache in parallel. Keep I-18 on demand until that flow is validated. Take up I-20 and I-21 only if players use the earlier slices.
 
-I-30 to I-37 fit around that order. I-30's slice 0, the written legal answers and the owner's pricing decision, needs no code and can start now. Its slices 1 to 5 (metering, a monthly quota, a model per task, a free-plan entitlement layer and the AI-use disclosure page, which I-02's spec now points to instead of building them twice) ship whatever the legal answer and close I-05's quota gap, so they can start now as production-safety work; no billing code starts before slice 0's answers are committed. I-37's slices 1 to 9 are cheap visual and ergonomic wins with no schema change; run them alongside I-13 so the editor is restyled once. Its change history and finish model (slices 10 and 12) come before its bulk edit, tags and clipboard. I-32's slices 0 and 1 need no commercial relationship and can start, and slices 2 and 3 follow I-67 slice 5's daily prices (re-pointed 2026-11-10); affiliate links wait for the seller's approval and the lawyer. I-31's card classification (slice 2) needs nothing else and can start, and it owns the card mana facts that I-58 slice 2 reads (decided 2026-11-10); the rest depends on I-21 slices 1, 3, 5 and 6, which therefore move ahead of I-21's Later priority. I-34's slices 1 to 5 need no deck index and can start, slice 1 first because it removes today's thin-page exposure; slices 6 and 7 need no deck index either but wait for I-28 slice 4's guide sections, and slice 7 also for I-28 slice 6's French guides (corrected 2026-11-10); slices 9 to 12 wait for I-29. I-35 stays Later, and so does I-36, except its slices 1 and 2, the public projection and the deck image, which moved to Next on 2026-11-10 because I-46, I-50, I-53, I-55 and I-60 wait for them. I-33's slices 0, 1 and 4 are owner and outreach work, and nothing for a marketplace is built.
+I-30 to I-37 fit around that order. I-30's slice 0, the written legal answers and the owner's pricing decision, needs no code and can start now. Its slices 1 to 5 (metering, a monthly quota, a model per task, a free-plan entitlement layer and the AI-use disclosure page, which I-02's spec now points to instead of building them twice) ship whatever the legal answer and close I-05's quota gap. Slices 1, 2, 4 and 5 can start now as production-safety work; slice 3, the model per task, waits for I-70 slices 10 and 11 (corrected 2026-11-10: the golden set it waited for calls no model). No billing code starts before slice 0's answers are committed. I-37's slices 1 to 9 are cheap visual and ergonomic wins with no schema change; run them alongside I-13 so the editor is restyled once. Its change history and finish model (slices 10 and 12) come before its bulk edit, tags and clipboard. I-32's slices 0 and 1 need no commercial relationship and can start, and slices 2 and 3 follow I-67 slice 5's daily prices (re-pointed 2026-11-10); affiliate links wait for the seller's approval and the lawyer. I-31's card classification (slice 2) needs nothing else and can start, and it owns the card mana facts that I-58 slice 2 reads (decided 2026-11-10); the rest depends on I-21 slices 1, 3, 5 and 6, which therefore move ahead of I-21's Later priority. I-34's slices 1 to 5 need no deck index and can start, slice 1 first because it removes today's thin-page exposure; slices 6 and 7 need no deck index either but wait for I-28 slice 4's guide sections, and slice 7 also for I-28 slice 6's French guides (corrected 2026-11-10); slices 9 to 12 wait for I-29. I-35 stays Later, and so does I-36, except its slices 1 and 2, the public projection and the deck image, which moved to Next on 2026-11-10 because I-46, I-50, I-53, I-55 and I-60 wait for them. I-33's slices 0, 1 and 4 are owner and outreach work, and nothing for a marketplace is built.
 
 I-38 to I-46 fit around the same order. I-38's slice 2 goes first: #1319 stopped a deleted account coming back, but the session cookie still outlives the deletion; slices 1 to 5 and 12 ship whatever counsel says, and its lawyer questions join I-30's slice 0. I-38 gates public growth and I-30's billing: a paid plan needs terms, a privacy policy and a deletion that cancels first. I-39's slices 1 to 4 need no schema and can start now; its event store (slices 10 to 12) waits for the lawyer questions, and slice 13 is the evidence I-30 waits for. I-42's slices 1 and 2 make the nine existing formats reachable and their banned flags current; slice 3, Duel Commander, waits for the committee's answer on the mulligan. I-46's slice 1 ships alone and fixes what every chat app shows today; slice 2 waits for I-36's deck image, and the Discord app waits for I-38's privacy policy. Among the Later initiatives, the cheap early parts can start without a product decision: I-40 slices 1 to 5, I-41 slices 1 and 2, I-43 slices 1 to 5 if the owner promotes them, I-44's balance view (slice 4), with its slices 1 to 3 and 5 to 7 once the owner confirms I-56's amendment (corrected 2026-11-10), and I-45 slices 0 to 3. Scheduled agents must not pick I-38's slices 14 and 15, I-40's slices 8 to 12, I-41's slices 3 and later, I-43's slices 13 and 14, I-44's slice 12 or later, I-45's slices 11 and 13, or I-46's slice 15 before the decisions, answers or owner actions each spec names.
 
@@ -651,7 +819,9 @@ I-62 to I-64 come after them. I-63 goes first among the three, because a dozen i
 
 I-65 and I-66 come after them. I-66 goes first, because I-30's price decision waits for its figures, and Vercel's terms move hosting to Pro before the first payment or ad. Its slices 1, 3 and 4, the price book and cost model as pure functions, CDN caching headers on the two shared-cache routes and a CDN header on the image proxy, need no decision and no other initiative; slices 3 and 4 cut function calls and origin transfer as soon as they ship. Slice 0 is the owner's: plans, region, Pro timing, domain and budgets. Slice 9 waits for I-30 slice 10 and I-63 slice 5, and slice 11 for I-63 slice 5 (corrected 2026-11-10: the line read "or"), and the daily checks register on I-63's job route, never on a route of their own. I-65 follows. Its slices 1 and 2, route definitions as versioned data and the Spellbook fields that #1324 does not read, need nothing. Slices 3 to 7 then give a working private map with no new data source; slice 4's bracket line stays hidden until I-28 slice 2. Slice 8 reads the Oracle Tags that I-67 slice 7 loads, through I-54 slice 2's clauses (re-pointed 2026-11-10), never a second join. Scheduled agents must not pick I-66's slices 6 or 10 before slice 0's answers are committed; or release I-65's slice 8 before Scryfall's answer on the tags, pick its slice 11 before the I-02 owner signs off the wizard step, its slice 12 before I-30 slices 1 and 2, or its slice 16 before I-30's decision.
 
-I-67 and I-68 fit around that order. I-67 sits high in Next, at 11, ahead of I-14 to I-21, because I-32 slice 2, I-47 slice 3, I-54 slices 1 and 2, I-58 slice 5, I-19's token item and I-17's precon import cannot run without it. Its slices 1, 2 and 4, the streamed reader, the card tables with their atomic load and the change log with cursors, need nothing outside the initiative and run in sequence; slices 5 to 10, prices, rulings, tags, migrations and the local reads, then follow in parallel. Slice 0 is the owner's: one measured load and the choice of runner. I-68 closes Next, after I-65. Its slice 0 deletes the dead archetypes module and ships alone; slices 1 to 4 follow I-28's or I-64's content pipeline, I-54 slice 2, I-65 slice 1 and I-34 slices 1 and 3; and the first guide waits for a named author. Scheduled agents must not pick I-67's slice 3 before slice 0's runner choice is committed, or its slice 16; or I-68's slice 5 before the owner names an author, its slice 13 before a named French reviewer, or its slice 16 before I-30's decision.
+I-67 and I-68 fit around that order. I-67 sits high in Next, at 12 (11 until I-71 took 6 on 2026-11-10), ahead of I-14 to I-21, because I-32 slice 2, I-47 slice 3, I-54 slices 1 and 2, I-58 slice 5, I-19's token item and I-17's precon import cannot run without it. Its slices 1, 2 and 4, the streamed reader, the card tables with their atomic load and the change log with cursors, need nothing outside the initiative and run in sequence; slices 5 to 10, prices, rulings, tags, migrations and the local reads, then follow in parallel. Slice 0 is the owner's: one measured load and the choice of runner. I-68 closes Next, after I-65. Its slice 0 deletes the dead archetypes module and ships alone; slices 1 to 4 follow I-64 slice 1's content pipeline (single owner decided 2026-11-10), I-54 slice 2, I-65 slice 1 and I-34 slices 1 and 3; and the first guide waits for a named author. Scheduled agents must not pick I-67's slice 3 before slice 0's runner choice is committed, or its slice 16; or I-68's slice 5 before the owner names an author, its slice 13 before a named French reviewer, or its slice 16 before I-30's decision.
+
+I-69 to I-71 fit around that order. [I-71](#i-71-speed-uptime-and-recovery) sits at 6, first in Next, because production runs on Supabase Free with no backup and data loss is the only failure that cannot be undone. Its slices 1, 6 and 7, the guard on destructive commands, explicit Lighthouse budgets and the bundle budget, need nothing and can start now; slice 2, the daily encrypted export, needs only the owner's choice of runner and storage, and slices 3 to 5 follow it. [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes) sits at 19, directly before I-30, because I-30 slice 3 waits for its slices 10 and 11 and the current model's earliest retirement date has passed. Its slices 1 and 3, the prompt registry and the pinned snapshot, can start now, and slice 7 follows slice 1; slice 9, the live runner, spends money and waits for slice 0's caps. [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches) sits at 26, after I-38, whose queue it hosts. Its slices 1 to 5, the operator role, the audit log, the switch store with the AI and upstream switches, and maintenance mode, need nothing outside the initiative, and the command line covers them before the console exists; slice 6 follows I-30 slice 2, and slice 7 waits for I-61 slices 2 and 3. Scheduled agents must not pick I-69's slice 14 before slice 0's answers and the answer to L-47 are committed, or its slice 10 before I-63 slice 7 has merged; I-70's slice 9 before slice 0's caps and workspace are committed; or I-71's slice 9 before L-13 (b) is answered.
 
 Impact and effort below are planning labels: medium means several small PRs, large means a cross-cutting project. They are not delivery dates.
 
@@ -673,7 +843,7 @@ Detailed functional specs live in [`docs/product/specs/`](specs/README.md): one 
 
 **Outcome:** a player can build, reorganize and refine a deck without losing cards, context or intent.
 
-**Status:** In progress
+**Status:** Building
 **Priority:** Now
 
 ### Already shipped
@@ -782,7 +952,7 @@ A user can move a card between every legal zone, reload the page, change its pri
 
 **Outcome:** a player can describe what they want and receive a legal, budget-aware and explainable plan.
 
-**Status:** In progress
+**Status:** Building
 **Priority:** Now
 
 ### Already shipped
@@ -794,7 +964,7 @@ A user can move a card between every legal zone, reload the page, change its pri
 - Per-card reasoning, one-click add and ignore actions.
 - Server-side secrets, validation, rate limiting and prompt-injection protections.
 - Optional player brief covering theme, desired play pattern and dislikes, combined with the existing commander, budget and power target.
-- A small regression set for generated deck structure and recommendation evidence; broader usefulness evaluation remains open.
+- Six validator regression cases for generated deck structure and recommendation evidence; no case calls a model, and broader usefulness evaluation is [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes)'s (corrected 2026-11-10).
 
 ### Next slice
 
@@ -805,8 +975,8 @@ A user can move a card between every legal zone, reload the page, change its pri
 - [x] Diff a proposed change against the current deck before applying it.
 - [x] Support "why is this card here?" and "what is the weakest card?" questions.
 - [x] Add a deterministic post-generation validator; the LLM never decides legality. **Correction 2026-11-09:** for the deck build route this validator checks structure only (see below). Suggestions are checked against Scryfall card data; generated decks are not. **2026-11-10:** #1318 checks generated decks against card data too; see the card-data item below.
-- [x] Build a small golden evaluation set for valid cards, useful explanations and regression checks.
-- [ ] Expand the golden set from deterministic structural and evidence contracts to provider-backed qualitative evaluations only when a stable review rubric exists.
+- [x] Build a small regression set: six validator cases, three generated decks and three suggestion cards (`src/lib/ai/golden-evaluation.test.ts`); no case calls a model. **Corrected 2026-11-10** from "a golden evaluation set for valid cards, useful explanations", which no case measures ([I-70](#i-70-an-ai-quality-bench-and-safe-model-changes)).
+- [ ] Expand the golden set from deterministic structural and evidence contracts to provider-backed qualitative evaluations only when a stable review rubric exists. Re-pointed 2026-11-10 to [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes): its bench scores recorded model replies by code, and rates prose only on a calibrated rubric that never gates.
 - [ ] Keep the deterministic validator's verdict visible in the copilot's output instead of only applying it silently. Competing assistants either validate without explaining or explain without validating; the difference is only a differentiator if the player can see which claims were checked against card data and which are the model's reasoning.
 - [ ] Check a generated deck against card data on the server before it reaches the player: every card exists, sits inside the commander's colour identity, is legal in Commander, and the Game Changer count fits the chosen bracket. Repair a failing card from a legal candidate pool rather than rejecting the whole build, and show each correction. Until this ships, do not label generated decks as verified.
   - [x] Check each card of a generated deck on the server before it is streamed (`verifyGeneratedDeck` in `src/lib/ai/generated-deck-legality.ts`). Unknown names, banned or not-legal cards, off-identity cards, extra copies and a repeated commander are removed; a short list gets basic lands and a long one loses basics; a commander that is unknown, banned, not legal or not eligible fails the build. The wizard shows each correction before it opens the deck (#1318). The Game Changer count for the chosen bracket and repair from a legal candidate pool remain open, so generated decks are still not labelled verified.
@@ -815,6 +985,7 @@ A user can move a card between every legal zone, reload the page, change its pri
   - [x] Report a reply cut off at the token cap as a typed truncation (`ModelOutputTruncatedError` in `src/lib/ai/model-reply.ts`) for Anthropic `stop_reason: "max_tokens"` and OpenAI `finish_reason: "length"`, logged once with the model and cap; the client gets the route's existing error event. The suggestion cap rises from 2,048 to 4,096 tokens (#1305). Token usage per call remains open.
   - One owner, decided 2026-11-10: [I-30](#i-30-business-model-and-the-paid-tier) slices 1, 2 and 5 build the metering, the monthly quota and the AI-use disclosure page, which moved from I-02 slices 6, 7 and 10.
 - [ ] Publish a page that says where the product uses a language model and where it does not, and label each AI surface in the product. Every deterministic surface (legality, colour identity, bracket rules, search syntax, playtest) must stay usable with the copilot switched off.
+  - Dated 2026-11-10: the AI Act's Article 50 reaches the copilot. The map of model surfaces, the machine-readable `ai` origin and the public label are scope of [I-30](#i-30-business-model-and-the-paid-tier) slice 5, the disclosure page's owner. Research, not legal advice; lawyer question [L-40](legal-questions.md#l-40-the-ai-acts-transparency-duties-art-50).
 - [ ] Say whether the wizard's budget is a cap per card or a deck total. `DeckWizard` (`src/components/deck/DeckWizard.tsx`) offers "< $50", "$50 – $200" and "$200 – $500" (`src/messages/en/deck.json`), which read as deck totals, while `src/app/api/ai/build/route.ts` sends the chosen value to the model as a cap per card: the "$50 – $200" option becomes "$200 max per card". Only the step's subtitle says "per-card". [I-54](#i-54-find-your-next-commander) requirement 5.4 asks for the honest label; its finder passes a deck total.
 
 **2026-11-10:** [I-54](#i-54-find-your-next-commander) proposes removing the wizard's "let the AI choose" commander option. Today, when the player names no commander, `src/app/api/ai/build/route.ts` asks the model to "Choose the best commander" for the chosen colours. I-54 slice 6 replaces the option with "Help me choose", which opens the commander finder and returns a pick, so the build route always receives a commander. Removing the route's prompt branch is this initiative's change, and the owner decides (status note).
@@ -852,11 +1023,49 @@ For a fixed brief and deck, the copilot produces reproducible structured output 
 
 ---
 
+## I-70: An AI Quality Bench And Safe Model Changes
+
+**Spec:** [`specs/i70-ai-quality-bench-and-model-changes.md`](specs/i70-ai-quality-bench-and-model-changes.md)
+
+**Outcome:** the owner knows whether a build or a suggestion is good, whether a prompt edit made it better or worse and whether a cheaper model would do, from scores that code computes on a fixed, public set of cases. No model or prompt change ships without a committed comparison report, and every stored build names the model and prompt version that made it.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 13, because I-30 slice 3 moves builds to a cheaper model behind this bench; Later for slices 14 to 18: player signals, reports as cases, prose rating, public figures and other model surfaces. Never paid
+**Impact / effort:** High / medium
+**Depends on:** nothing for slices 1 and 3; slice 1 for the injectable transport (slice 7); the owner's per-run cap, workspace limit and gate limits (slice 0) for the live runner (slice 9) and so for the first report (slice 10); I-30 slice 1 for the `AiUsage` fields (slice 13); I-39 slice 10 for acceptance by model (slice 14); I-52 slice 3 and a lawyer's answer for reports as cases (slice 15); I-30 slice 5 for the public figures (slice 17).
+
+The paid tier's strongest candidate is AI use above a free allowance, and nobody can say today whether a build is good. The roadmap called six tests "the golden set" and made two model changes wait for it (I-30 slice 3, I-12); they feed hand-written replies to the validator, and none calls a model (`src/lib/ai/golden-evaluation.test.ts`, checked on `origin/dev` at `72fbfc1`). Both routes send the alias `claude-haiku-4-5` with no system prompt, from inline templates with no version, and no stored deck records the model or prompt that built it. Anthropic lists Haiku 4.5 as legacy, retiring "not sooner than October 15, 2026", a date already passed, with "at least 60 days' notice" ([deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations), read 2026-11-10). Haiku 5.5 costs a tenth as much per token but counts about 30% more tokens, and API version `2026-10-21` refuses `temperature`, so determinism comes from recorded replies and several trials, not a setting. DeckCheck says a model update can move the score of an unchanged deck and combines three scans ([support](https://deckcheck.co/support)); no AI deck tool found publishes a test set, a pass rate or a before-and-after. A model never decides legality, and a model's opinion of prose never gates anything.
+
+### Scope
+
+- [ ] Slice 0, no code: the per-run cap, the monthly limit of a separate Anthropic workspace, the cost and latency limits of the gate, the first candidates, and whether the scores are public.
+- [ ] A prompt registry: the build and suggest templates as versioned modules that declare their player inputs, with today's prompts unchanged byte for byte (slice 1); case set v1 with 28 build, 20 suggestion and 18 injection cases, and coverage and input-inventory tests (slice 2); a pinned, hashed card snapshot and a dated Game Changer list (slice 3).
+- [ ] Scorers computed by code: outcome, structural issues, corrections by reason and the invented-name rate, basics added, commander honoured, Game Changers against the bracket, land count and colour sources (on I-58's formula once its slice 1 ships), price against budget, tokens, cost and latency (slice 4); suggestion counts, unresolved names, colour identity, legality, duplicates, dislikes and French names (slice 5); injection canaries before and after the validator (slice 6).
+- [ ] An injectable transport in both routes, a recorder and a replayer (slice 7); a CI run that replays the recordings with the network stubbed to fail and no key, against a committed baseline, and fails on a lower score, a missing recording or a template changed without a version bump (slice 8).
+- [ ] A live runner with three trials by default, dated prices, a pre-run estimate and a hard cap, on a workspace key that never reaches production, and a weekly drift run that opens an issue (slice 9); a comparison report with intervals and every new failure's reply text, and the first recordings of `claude-haiku-4-5` (slice 10); the gate in CI, so a model, a model setting or a prompt version changes only with a committed report whose recordings match (slice 11); reports for Haiku 5.5 and Sonnet 5.5 (slice 12).
+- [ ] Provenance: the model and prompt version on the build's `done` event, `Deck.aiModel` and `Deck.aiPromptVersion`, and `AiUsage.promptVersion`, `resolvedModel` and `latencyMs` (slice 13).
+- [ ] Later: acceptance by model and prompt version from one event with enums and integers only (slice 14); an `ai_output` report with consent and a script that turns a confirmed report into a candidate case (slice 15); prose rated on a rubric by a different model, calibrated on 30 owner ratings and never gating (slice 16); quality figures on the AI-use disclosure page (slice 17); I-14, I-47, I-64 and I-12 join with their own sets (slice 18).
+
+### Engineering enablers
+
+- The same recordings and snapshot give a byte-identical score file on every machine.
+- The CI run stubs `fetch` to throw and runs without keys, so any network access fails it.
+- For every case, the prompt the route sends equals the registry's render.
+- With a fake transport, the runner refuses a plan over the cap and stops before the call that would cross it.
+
+**Paid-tier angle:** none. The bench and its page are free. Its value to I-30 is the price: the report lets the owner sell the cheapest model that holds the line, keep a margin on a €3.99 plan, and charge for a deeper Sonnet 5.5 review only if the bench shows it is better.
+
+### Definition of done
+
+A pull request that changes the model or a prompt cannot merge without a committed report showing that every case the incumbent passed in all trials still passes, at a cost and latency within the owner's limits; CI replays the bench with no key and no network; and a saved AI-built deck names its model and prompt version.
+
+---
+
 ## I-03: Trustworthy Deck Feedback
 
 **Outcome:** the player understands what is wrong with a deck and what action would improve it.
 
-**Status:** Shipped foundation, next refinement
+**Status:** Building
 **Priority:** Now
 
 ### Already shipped
@@ -965,7 +1174,7 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 
 **Outcome:** a broken deployment or regression is detected before users depend on it.
 
-**Status:** In progress
+**Status:** Building
 **Priority:** Now
 
 ### Already shipped
@@ -978,6 +1187,8 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 ### Remaining scope
 
 Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65e6230` on 2026-11-10, with the audit's severity. The route posture table and the findings that sit in other initiatives are in [`api-route-inventory.md`](../engineering/api-route-inventory.md).
+
+Speed budgets, the availability objective, alert routing, the off-site database export, restore drills, the incident runbook and degraded modes are [I-71](#i-71-speed-uptime-and-recovery)'s (2026-11-10). This initiative keeps `/api/health`, the shared rate-limit store and the items below.
 
 - [ ] **Due before 2027-01-01:** move card images to Scryfall's WebP keys and migrate the stored image URLs. Scryfall announced on 2026-10-14 that "After January 1st, 2027, the small, large, border_crop, and art_crop JPEG versions will no longer be available". The `normal` JPEG is renamed `jpeg` in the API and stays available; PNG images can no longer be hotlinked; and the User-Agent policy is strictly enforced for scripted image requests. The WebP keys are `thumb` (146 × 204), `grid` (488 × 680), `display` (672 × 936), `crop` (480 × 680) and `art` ([blog](https://scryfall.com/blog/new-webp-images-jpeg-deprecations-237)).
   - Verified on `origin/dev` at `72fbfc1`: `DeckCard.artCropUri` (`prisma/schema.prisma`) stores `cards.scryfall.io/art_crop/…jpg` URLs, written from `store-card-faces.ts`, `store.ts`, `CardGrid.tsx` and `DeckWizard.tsx`, so saved decks hold URLs that stop working. `buildScryfallImageUrl` (`src/lib/scryfall/images.ts`) builds `/<size>/<face>/…/<id>.jpg` for every size, and `ImageSize` and `ScryfallImageUris` (`src/lib/scryfall/types.ts`) know none of the WebP keys. `image_uris.normal` is read in `CardGrid.tsx`, `QuickAddCollectionButton.tsx`, `src/lib/community/verified-package-cards.ts`, `src/lib/deck/store-card-faces.ts` and `GameChangersPageClient.tsx`, which also reads `small` and `large`; `DeckWizard.tsx` reads `art_crop`; `CardGrid.tsx` and `PrintingSelectorModal.tsx` ask for `large`. `getCardImageUri` falls back to `normal` and then to an empty string, so a card whose keys are gone gets no image. `/api/proxy-card-image` already sends its own User-Agent (`MagicAIBuilder/1.0 (image proxy for print export)`).
@@ -1006,6 +1217,7 @@ Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65
   - These three move to [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions): linking Google from settings needs no sender (slice 10), and email verification with a neutral signup answer that ends the 409 waits for the email sender (slice 11), which moved from I-38 to [I-63](#i-63-one-notification-system-inbox-email-and-preferences) slice 7.
 - [x] **H3, high:** write the shared Scryfall caches on the server only. `POST /api/cache/search` and `POST /api/cache/cards` (`src/app/api/cache/*/route.ts`) stored any JSON a signed-in user sent, and `src/lib/scryfall/client.ts` returned it unchecked. One account could therefore forge the banlist and the Game Changer list that every player loads (`src/hooks/useBanlist.ts`, `src/hooks/useGameChangers.ts`). Shipped in #1322: both routes answer `GET` only, fill a miss from Scryfall on the server, check the body's shape and store under `srv1:` keys, so rows that clients wrote are never read again. Fills are limited per IP, per instance (M2).
 - [ ] **M1, medium:** validate `POST /api/ai/suggest` with a bounded schema. `src/app/api/ai/suggest/route.ts` puts `bracketWarnings`, `detectedThemes`, `gameChangersList` and `categories` into the prompt with no size limit and no sanitising, so one free account can send very large prompts on the paid provider key. `/api/ai/build` already uses a bounded schema.
+  - The I-70 spec found the opposite problem in the fields that are sanitised. `sanitizeForPrompt` (`src/lib/validation/ai.ts`) strips ASCII apostrophes and quotes, so card names sent to `/api/ai/suggest` (`route.ts` line 592) and the build route's commander reach the model as "Atraxa, Praetors Voice" and "Yuriko, the Tigers Shadow", and a French brief loses its elisions; it does not stop an instruction written in plain words (verified on `origin/dev` at `72fbfc1`). Injection defence should come from structure, the player's text in its own JSON-encoded block, not from deleting characters that belong to card names. [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes) slice 6's injection cases measure the change, and its slice 4 scores whether the requested commander comes back by name (2026-11-10).
 - [ ] **M2, medium:** keep rate limits in a shared store and add a per-IP login limit. `src/lib/rate-limit.ts` holds counters in each serverless instance's memory, and the login limit in `src/lib/auth/config.ts` is keyed on the email only, so trying one password across many emails is never limited. The AI quota above, the `GET /api/deck/[id]` limit and I-38's comment limits all need this store.
   - The login rules move to [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions) slice 1, which waits for this store: a per-IP bucket across all addresses, a per-address backoff, a separate bucket for the owner's devices, and passkey, Google and reset sign-in left open while password attempts wait. Ten failures on one address lock its owner out of that instance today, because the limit counts successes and failures alike and is keyed on the email only. The store itself stays here.
   - One owner, decided 2026-11-10: I-36 slice 11's public API, I-46 slice 7's Discord commands and I-53 slice 11's ballots use this store and build no limiter of their own.
@@ -1034,7 +1246,7 @@ Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65
 ### Blocked or conditional work
 
 - **Prisma 7:** blocked locally by Node 22.11; revisit at Node 22.12+.
-- **Cloudflare R2:** only when avatars, deck media or generated artifacts need durable object storage.
+- **Cloudflare R2:** only when avatars, deck media or generated artifacts need durable object storage. [I-71](#i-71-speed-uptime-and-recovery) slice 2's encrypted off-site export is a candidate use if the owner picks R2 in its slice 0 (2026-11-10).
 - **Advanced observability:** Datadog, Better Uptime, Grafana, OpenTelemetry and PagerDuty stay parked until usage justifies their operational cost.
 - **Analytics:** choose one privacy-conscious product analytics tool only after defining the product questions it must answer. [I-39](#i-39-first-run-activation-and-product-measurement) writes those questions, measures them first-party, and lists the cookieless candidates for page analytics.
 
@@ -1044,11 +1256,49 @@ A staging PR cannot merge while type safety, tests, E2E policy, SonarCloud or pr
 
 ---
 
+## I-71: Speed, Uptime And Recovery
+
+**Spec:** [`specs/i71-speed-uptime-and-recovery.md`](specs/i71-speed-uptime-and-recovery.md)
+
+**Outcome:** if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 8: the decisions, the guard on destructive commands, the daily export, the first restore drill, alert routing, the runbook and the CI budgets; Later for slices 9 to 12: field data per route, the large-collection budget, degraded modes and the paid-tier readiness check. Nothing in it is paid
+**Impact / effort:** High / medium
+**Depends on:** nothing for slices 1, 6 and 7; the owner's choice of export runner, storage account, objective and phone channel (slice 0) for the export (slice 2); slice 2 for the first drill (slice 3); I-52 slice 1's monitor for alert routing (slice 4), which waits for the owner's choice of monitor; slice 6 for the seeded fixture and query budgets (slice 8); the answer to L-13 (b) and slice 4 for the vitals beacon (slice 9); slice 8 and I-37 slice 1 for the collection budget (slice 10); I-52 slice 2 for the status link (slices 11 and 12).
+
+Production runs on Supabase Free, which keeps no backups ([pricing](https://supabase.com/pricing), read 2026-11-10), and `scripts/` holds no export or restore script. `docs/engineering/infrastructure.md` (lines 348 to 364) gives `npx prisma db push --force-reset` under "Production (Supabase / Neon)", a command that "drops all tables", so one mistyped line would erase every deck with no way back (checked on `origin/dev` at `72fbfc1`). The parts of an answer exist but are not joined: free Speed Insights shows no p75 per metric ([limits](https://vercel.com/docs/speed-insights/limits-and-pricing)), Lighthouse CI asserts category scores on three public pages and blocks no merge into `dev`, `/api/health` says it is "Used by uptime monitors" while none is configured, and no alert rule, recovery target or runbook is written anywhere. Neither Vercel nor Supabase sells an uptime SLA below Enterprise, and Moxfield, Scryfall, Archidekt, EDHREC and Commander Spellbook have no `status.` host. I-05 keeps `/api/health` and the shared rate-limit store, and I-52 the monitor and the status page. Recovery goes first, because data loss is the only failure here that cannot be undone.
+
+### Scope
+
+- [ ] Slice 0, no code: the 99.5% objective, a 24-hour data-loss target and a 4-hour restore target, the export runner (a scheduled GitHub workflow or the VPS) and its storage account, the phone channel, the field-data option, and whether Lighthouse becomes a required check on promotion PRs. Point-in-time recovery is option (f) of [D-04](owner-decisions.md#d-04-hosting-plans-region-and-budget).
+- [ ] **Owner awareness, now: a production reset with no backup.** `docs/engineering/infrastructure.md` lines 348 to 364 give `npx prisma db push --force-reset` against the production `DATABASE_URL`, while production on Supabase Free keeps no backups and no export exists (verified on `origin/dev` at `72fbfc1`). Slice 1 guards it: a `pnpm` script for production schema changes takes an export first and refuses `--force-reset` and `migrate reset` for a production host, and the "Production" reset section is removed.
+- [ ] A daily export of the `public` schema, all data except the three cache tables, encrypted with the owner's public key before it leaves the runner and never uploaded as a workflow artifact of this public repository, kept 14 daily, 8 weekly and 12 monthly in object storage outside Vercel and Supabase, with a manifest and a heartbeat that alerts on a missing export, a 20% size drop or an empty table (slice 2).
+- [ ] A quarterly restore drill into a scratch database: row counts against the manifest, the schema against `prisma/schema.prisma`, a smoke script, and the restore time recorded in `docs/engineering/restore-drills.md`. Once I-38's deletion tombstone exists, every deletion recorded after the export is re-applied before the database serves players (slice 3).
+- [ ] Alerts: "down" reaches the owner's phone within 15 minutes and never on one failed check, with a page check of `/` beside I-52's `/api/health` monitor, and everything else arrives by email at most once a day (slice 4); a runbook with one section per scenario, an incident record template and the additive-migration rule (slice 5).
+- [ ] CI budgets that cannot flake: Lighthouse with explicit `median-run` aggregation and LCP and CLS per URL (slice 6), compressed JavaScript per key route against `perf-budgets.json` (slice 7), and Prisma queries per request on a seeded fixture, which also lets Lighthouse audit a deck page and a commander listing (slice 8).
+- [ ] Later: a first-party vitals beacon that stores daily histograms only, off until L-13 (b) is answered (slice 9); a paginated collection API and a virtualised list within 200 ms of INP on 20,000 rows (slice 10); degraded modes, a dated Spellbook fallback, "Saving paused" and a copilot "unavailable" state (slice 11); the readiness check that I-30 slice 9 waits for (slice 12).
+
+### Engineering enablers
+
+- Against local PostgreSQL, export, encrypt, decrypt and restore give row counts equal to the manifest and empty cache tables; the job refuses to write an unencrypted file, and the workflow uploads no artifact.
+- The production schema script refuses `--force-reset` and `migrate reset` for a production host.
+- The bundle script fails one byte over a budget and passes at it, with no network, and an injected N+1 fails the query budget.
+- A test parses `lighthouserc.yml` and fails unless `aggregationMethod` is set and every URL asserts LCP and CLS.
+
+**Paid-tier angle:** none. Every player gets the same uptime, speed and backups, and no budget is relaxed for free players. Its value to I-30 is slice 12's precondition for a first payment: a restore drill passed in the last 90 days, a public status page and 99.5% history, and an export of the player's own data. None of the incumbents read publishes a status page or a speed figure.
+
+### Definition of done
+
+A restore from the newest off-site export into a scratch database passes the smoke script within four hours and is recorded; a test alert reaches the owner's phone; no documented command can reset production; and a pull request that pushes a key route's JavaScript or queries past its budget fails CI.
+
+---
+
 ## I-06: Collection And Purchase Planning
 
 **Outcome:** the player knows which cards they own, which printing to use and what the deck will cost to build.
 
-**Status:** Shipped foundation, next refinement
+**Status:** Building
 **Priority:** Next
 
 ### Already shipped
@@ -1103,7 +1353,7 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 
 **Outcome:** testing a deck teaches the player what to change.
 
-**Status:** Shipped foundation, next refinement
+**Status:** Building
 **Priority:** Next
 
 ### Already shipped
@@ -1159,7 +1409,7 @@ A player can test two versions of a deck and see evidence that helps choose betw
 
 **Outcome:** public decks help players learn and improve while owners keep control of their work.
 
-**Status:** Shipped foundation, next refinement
+**Status:** Building
 **Priority:** Next
 
 ### Already shipped
@@ -1218,7 +1468,7 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 
 **Outcome:** recommendations combine community patterns and competitive evidence without hiding uncertainty.
 
-**Status:** Shipped foundation, next refinement
+**Status:** Building
 **Priority:** Next
 
 ### Already shipped
@@ -1270,7 +1520,7 @@ A recommendation is never presented as universal truth: the user can see where i
 
 **Outcome:** users can bring existing decks in, work on them here, and take the result wherever they play.
 
-**Status:** Shipped foundation
+**Status:** Shipped
 **Priority:** Later
 
 ### Already shipped
@@ -1347,7 +1597,7 @@ A deck can make a round trip through supported tools without silently changing c
 
 **Outcome:** users can understand the interface and card data in a language and market they actually use.
 
-**Status:** English and French shipped
+**Status:** Shipped
 **Priority:** Later
 
 ### Already shipped
@@ -1395,13 +1645,13 @@ A locale is activated only when its navigation, warnings, dates, prices and card
 
 **Outcome:** explore private or offline deck assistance without compromising the core product.
 
-**Status:** Experimental / parked
+**Status:** Parked
 **Priority:** Later
 
 ### Guardrails
 
 - [ ] Define a real user need first: privacy, offline use, cost or latency.
-- [ ] Benchmark local models against the golden evaluation set from I-02.
+- [ ] Benchmark local models on [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes)'s bench (its slice 18), not on the "golden set" from I-02, which calls no model (re-pointed 2026-11-10).
 - [ ] Keep deterministic card data and legality services outside the model.
 - [ ] Make model choice and data retention explicit.
 - [ ] Do not add local inference infrastructure before cloud AI usage and quality are measured.
@@ -1418,7 +1668,7 @@ A local model is only promoted if it matches the required quality for a clearly 
 
 **Outcome:** a player can find, build, understand and share a Commander deck in an interface that feels coherent, distinctive and calm even when card data is dense.
 
-**Status:** In progress
+**Status:** Building
 **Priority:** Next
 
 Lumen foundations and several surfaces shipped and were promoted to `main` on 2026-11-06 (#1272, #1273). That promotion is not acceptance of the definition of done. The five delivery slices below stay open.
@@ -1706,7 +1956,7 @@ Two snapshots can be compared from a recorded seed and sample size, and a rerun 
 
 **Outcome:** a player who picks a target bracket can learn what a deck at that bracket contains, how its games unfold and how to tell when a deck belongs elsewhere, then check their own list against it.
 
-**Status:** In progress
+**Status:** Building
 **Priority:** Next
 **Impact / effort:** High / medium
 
@@ -1721,6 +1971,7 @@ Wizards publishes the rules but no deckbuilding guidance. EDHREC, CoolStuffInc a
   - One owner, decided 2026-11-10: slice 2 owns the Bracket 5 definitions, and the bracket 5 item of `commander-power-meter.md` reuses them.
 - [ ] Publish a static, indexable guide page with one section per bracket, from the researched document, with every claim labeled Official, Data or Community and linked to a dated source.
   - The guide's "win conditions and combos" section and the bracket check name routes with [I-65](#i-65-how-this-deck-wins)'s route kinds, and I-65's map shows this initiative's official turn expectations beside its estimates, from the same constants. I-28 keeps the official rules and any finding about them.
+  - The guide's content model (slice 3) runs on [I-64](#i-64-a-help-centre-and-in-product-guidance) slice 1's MDX pipeline. Single owner decided 2026-11-10 (coordinator call, the owner may override): I-64 slice 1.
 - [x] Make the rules pages reachable signed out. `/rules/game-changers` and `/rules/comprehensive` were in neither public-path list (`PUBLIC_PATH_PREFIXES` in `src/middleware.ts`, `PUBLIC_API_AND_PAGE_PATHS` in `src/lib/auth/edge-config.ts`), although the header and the landing page link to them, so visitors and crawlers were sent to sign-in. Shipped in #1313: the public page paths, `/rules` included, live once in `src/lib/auth/public-paths.ts`, which both the middleware and the `authorized` callback read. [I-34](#i-34-commander-data-reports-and-indexable-data-pages) slice 2 adds their alternates and localized metadata, and keeps the verbatim Comprehensive Rules `noindex`.
 - [ ] Render the guide's official rules from the same definitions the bracket analysis uses, so the two cannot disagree.
 - [ ] Link the bracket badge and the wizard's bracket step to the matching section without losing deck state.
@@ -1747,10 +1998,10 @@ A player can open the section for their target bracket from the deck, read sourc
 
 **Outcome:** a player who wants to play a style, such as tokens, aristocrats or voltron, reads one sourced guide on how it wins, what it needs by role, how it changes across brackets 1 to 5, its mana and curve, its mulligans, what beats it, its budget paths and its common mistakes, then sees privately how their own deck compares. A named person writes each guide, a second person reviews it in each locale, and no model writes a word of it.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 0 to 8 and 14: the template, the evidence rules, the demand register, the guide pages, the first two English guides, their links and freshness; Later for the deck panel, measured norms and French editions (slices 9 to 13), which wait for I-65, I-58, I-28, I-29 and a named French reviewer; slice 15 adds one guide at a time after slice 6; slice 16 waits for I-30's decision. The guides are never paid
 **Impact / effort:** Medium / large
-**Depends on:** nothing for slice 0; I-28 slice 3 or I-64 slice 1 for the shared content pipeline (slice 1); I-54 slice 2 and I-34 slice 3 for the demand register (slice 2); I-54 slice 2 and I-65 slice 1 for each style's usual routes (slice 3); I-34 slice 1 for the page kind (slice 4); a named author before the first guide (slice 5); I-64 slice 2 for glossary terms (slice 7); I-54 slice 3 for the links (slice 8); I-65 slice 6, I-58 slice 3 and I-28 slices 7 and 9 for the deck panel (slices 9 to 11); I-29 slices 8 and 11 for measured norms (slice 12); a named French reviewer (slice 13); I-48 slice 3 or I-28 slice 8 for freshness (slice 14); I-30's decision gate and its slice 11 for slice 16.
+**Depends on:** nothing for slice 0; I-64 slice 1 for the shared content pipeline (slice 1; single owner decided 2026-11-10, coordinator call, the owner may override); I-54 slice 2 and I-34 slice 3 for the demand register (slice 2); I-54 slice 2 and I-65 slice 1 for each style's usual routes (slice 3); I-34 slice 1 for the page kind (slice 4); a named author before the first guide (slice 5); I-64 slice 2 for glossary terms (slice 7); I-54 slice 3 for the links (slice 8); I-65 slice 6, I-58 slice 3 and I-28 slices 7 and 9 for the deck panel (slices 9 to 11); I-29 slices 8 and 11 for measured norms (slice 12); a named French reviewer (slice 13); I-48 slice 3 or I-28 slice 8 for freshness (slice 14); I-30's decision gate and its slice 11 for slice 16.
 
 Players learn a play style from people who have played it, and that knowledge is scattered and mostly unsourced. EDHREC lists 419 tags with a deck count each, sorted by popularity, and its aristocrats guide of 2025-10-27 builds one deck from one writer's experience, with no role counts, brackets, mulligans or budget path ([guide](https://edhrec.com/guides/edhrec-guide-to-aristocrats-in-commander)). Draftsim calls its 27 archetypes a "non-exhaustive list", Card Kingdom's "Archetype Inspection" series has three posts in two years, two searches found no French guide series, and none of the guides read takes the reader's deck. On r/EDH, 1,202 of 10,367 posts between 2026-08-10 and 2026-11-09 name a style in their title, and 82.9% of those ask a question (counted from the Arctic Shift archive). The product adds an unsourced list of its own: `src/lib/archetypes/archetypes.ts` gives ten archetypes counts such as "Tutors (4–6)" and popularity shares that sum to 145%, and only its own test imports it (checked on `origin/dev` at `72fbfc1`). Google names AI-generated pages at scale as spam ([spam policies](https://developers.google.com/search/docs/essentials/spam-policies)), and players on r/EDH treat AI as a liability, so no model writes, translates or summarises guide text.
 
@@ -1963,7 +2214,7 @@ Every warning class the product raises can be explained in place, from an author
 
 **Outcome:** from MagicAIBuilder, a player can find Commander decks and data wherever they live: in the index when a source allows it, and by a direct link into Moxfield, Archidekt, EDHREC and the others when it does not.
 
-**Status:** Later — proposed 2026-11-09
+**Status:** Later
 **Priority:** Later — 2027
 **Impact / effort:** High / large
 
@@ -2025,10 +2276,10 @@ Two rules hold across all eight. Card data, fan content and the evidence the pro
 
 **Outcome:** the owner knows what is free, what is paid, at what price and after which written legal answers, and no player's model calls can cost more than the plan that pays for them.
 
-**Status:** Next — proposed 2026-11-09
+**Status:** Next
 **Priority:** Next, behind a decision gate: slice 0 (written legal answers and the owner's pricing decision) comes before any billing code
 **Impact / effort:** High / large
-**Depends on:** a French IP/IT and consumer lawyer and an accountant for slice 0; I-02's golden set before the model change in slice 3.
+**Depends on:** a French IP/IT and consumer lawyer and an accountant for slice 0; I-70 slices 10 and 11 for the model change (slice 3), which wait for the owner's caps on live runs (re-pointed 2026-11-10 from I-02's golden set, which calls no model); I-71 slice 12's readiness check for the first paid entitlements (slice 9), which therefore wait for Later work (added 2026-11-10).
 
 The owner wants a cheap SaaS that pays a decent living while the competition is almost free. Free reference sites sell ad removal for about 2 USD a month through Patreon ([Archidekt](https://archidekt.com/faq), [EDHREC](https://edhrec.com/terms)), which is a donation, not a product. Subscriptions at 3–8 USD a month or 30–50 USD a year sell AI usage, price tooling and personal history ([DeckCheck](https://deckcheck.co/get-more), [ManaTap](https://www.manatap.ai/pricing), [Untapped.gg](https://mtga.untapped.gg/premium)), and paywalls on how many decks or binders a player keeps draw one-star reviews. The Fan Content Policy forbids requiring payment to access fan content and Scryfall forbids paywalling its data, so the line is **content free, tools paid**, and a lawyer confirms it before anyone is charged. No billing, entitlement or monthly quota exists today; the only AI limits are per minute, in a per-instance memory store (`src/lib/rate-limit.ts`). The spec's computed case: on stated assumptions, a living wage needs about 1,200–1,800 paying subscribers and 30,000–60,000 active accounts, and is never reached if the free AI allowance is generous and the model stays on today's price.
 
@@ -2039,18 +2290,32 @@ The owner wants a cheap SaaS that pays a decent living while the competition is 
 - [ ] Slice 0, no code: commit written answers from a lawyer and an accountant to the spec's legal questions, then the owner's choice of provider, legal structure, price hypothesis (€3.99 a month or €29.99 a year first), withdrawal flow, and whether to ask Wizards for a licence.
   - Running costs come from [I-66](#i-66-running-costs-and-margin-per-active-player), proposed 2026-11-10. The spec's assumption A2, €150 a month of fixed costs, now cites I-66 requirement 5: about €40–44 a month before VAT for Vercel Pro, Supabase Pro and a domain, or €62–67 with Sentry Team; €150 holds only once I-29's index server exists. With hosting counted, 22 monthly or 33 yearly payers cover that floor, and a living takes about 1,230 monthly or 1,870 yearly payers, beside this spec's own 1,200 and 1,770. Vercel's Hobby plan forbids commercial use, so hosting moves to Pro before the first paid plan (slice 9) or any ad.
   - The lawyer questions of every initiative are collected in [`legal-questions.md`](legal-questions.md) (2026-11-10), research for counsel and not legal advice. The product's name, built on "Magic", a Wizards of the Coast trademark, joined the spec's list that day.
+  - [ ] **Terms of sale for a consumer subscription (gap sweep, 2026-11-10).** Every French professional selling to consumers must offer free mediation (Code de la consommation L612-1) and say so (L616-1) ([Service-Public](https://entreprendre.service-public.gouv.fr/vosdroits/F33338), search summary); a secondary source adds that the mediator must be contracted beforehand and listed by the CECMC ([Lettre des réseaux](https://www.lettredesreseaux.com/?p=23453), search summary). The EU ODR link duty ended on 2025-07-20 ([CMS](https://cms.law/en/deu/legal-updates/the-odr-platform-is-closing-what-businesses-need-to-know), search summary), and the planned Digital Fairness Act targets cancellation, auto-renewal and trial conversion ([Heuking](https://www.heuking.de/en/news-events/newsletter-articles/detail/digital-fairness-act-implementation-obligations-companies-need-to-prepare-for.html), 2026-05-08, search summary). Lawyer questions [L-41](legal-questions.md#l-41-consumer-mediation) and [L-42](legal-questions.md#l-42-conformity-guarantee-price-rises-and-feature-removals).
+    - [ ] Slice 0: decide who the seller of record is. If the owner sells directly, contract with a listed consumer mediator before the first sale. Done means: the contract or the merchant of record's written position is committed under `docs/legal/`, and the mediator's name and website appear in the terms of sale and the footer.
+    - [ ] A versioned `LegalDocument` slug `sale` (I-38 table 1.5) covering price, renewal, cancellation, withdrawal, the legal conformity guarantee for a digital service, and how a price rise or a feature removal is notified. Done means: signup and checkout record the accepted version, and a test proves that a price change cannot take effect before its notice date has passed.
+    - [ ] No ODR link anywhere, and a dated note here to re-check the subscription flow once the Digital Fairness Act proposal is published. Done means: the note carries the publication date and a verdict.
+  - [ ] **Selling outside the EU (gap sweep, 2026-11-10).** Add the non-EU tax position to the merchant-of-record versus Stripe comparison: secondary sources say a business with no UK establishment must register for UK VAT from its first digital sale to a UK consumer, with no threshold ([VATCalc](https://www.vatcalc.com/uk/uk-vat-on-foreign-digital-services/), search summary; confirm on GOV.UK). Done means: the accountant's answer to [L-46](legal-questions.md#l-46-selling-outside-the-eu-and-invoicing-business-buyers-accountant) is committed, and if Stripe is chosen, checkout refuses countries where no registration exists.
 - [ ] Meter every model call through one module: an `AiUsage` row with tokens, `stop_reason`, outcome and a cost from a dated price table. A truncated reply is never parsed as a success (slice 1).
 - [ ] Enforce a monthly allowance per user and route, atomic in PostgreSQL across instances, show what remains before an AI action, and set a global monthly spend ceiling. Calls that fail on our side consume nothing (slice 2). This closes I-05's quota scope.
-- [ ] Move builds and suggestions to the cheapest adequate model once I-02's golden set passes on it (slice 3).
+  - Since 2026-11-10 the ceiling's switch-off writes through [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s switch store (its slice 6), so the owner can lower the ceiling or switch AI off without a deploy, never raise it.
+- [ ] Move builds and suggestions to the cheapest adequate model once [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes)'s comparison report passes on it (slice 3; re-pointed 2026-11-10 from I-02's golden set, which calls no model).
 - [ ] An entitlement layer with a single free plan, enforced on the server, that asks for capabilities rather than plan names (slice 4).
 - [ ] Publish the AI-use disclosure page from I-02's scope (slice 5) and, after slice 0, a public page that explains the free and paid line (slice 6).
+  - [ ] **Dated 2026-11-10, the AI Act (Art. 50).** Sources read that day agree that Article 50 applies from 2026-08-02 and that the AI Omnibus gave generative systems already on the market before that date until 2026-12-02 for machine-readable marking (Art. 50(2)); they disagree on whether the Omnibus text is formally adopted ([Goodwin](https://www.goodwinlaw.com/en/insights/publications/2026/08/alerts-technology-dpc-eu-ai-act-transparency-obligations-now-in-force), 2026-08-03; [FEDIL](https://fedil.lu/en/publications/ai-act-update-enforcement-begins-as-the-digital-omnibus-reshapes-the-timeline/), search summary). Research, not legal advice: check the Official Journal text, and ask [L-40](legal-questions.md#l-40-the-ai-acts-transparency-duties-art-50). The copilot labels its output "AI Suggestions" (`src/messages/en/deck.json`), and no disclosure page exists (gap sweep).
+    - [ ] Map each model surface (build, suggest, card questions, I-47's later retrieval) to the Art. 50 paragraph it falls under, and publish that map on the disclosure page. Done means: the page is live in English and French, names the provider and model, cites Art. 50, and a test fails when a route under `src/app/api/ai/` has no row in the map.
+    - [ ] Store an origin of `ai` on every saved item a model produced (deck proposal, suggestion text), and carry it into the JSON export and `/api/v1` as a machine-readable field. Done means: contract tests over every export format, shipped before 2026-12-02 unless counsel answers L-40 otherwise.
+    - [ ] Keep the label on an AI-built deck after it is saved and made public, until the owner edits it past a stated threshold. Done means: the public deck page shows "Built with AI help" with a link to the disclosure page.
 - [ ] After slice 0: billing in test mode through the chosen provider, webhooks, cancellation online, account deletion that cancels first, and the French withdrawal, renewal-reminder and termination flows (slices 7–8).
   - The cancellation and renewal emails go through [I-63](#i-63-one-notification-system-inbox-email-and-preferences)'s transactional stream (its slice 7), and the renewal reminder is timed by its job route (slice 5). [I-64](#i-64-a-help-centre-and-in-product-guidance) slice 13's subscription articles ship in the same release, so cancellation and withdrawal are explained the day a player can pay.
 - [ ] **Decide in slice 0: is any delivery channel ever paid?** [I-63](#i-63-one-notification-system-inbox-email-and-preferences) requirement 13.3 says no: a free event delivered by email stays free, and what may be sold is how much a player watches. [I-51](#i-51-cards-lent-and-borrowed-within-the-pod) lists email reminders as a paid hypothesis, and [I-59](#i-59-prices-over-time-and-alerts) requirement 9.2 lists the email digest as a paid candidate. The three disagree until this is decided. On I-63's estimate from list prices, 2,000 players on a daily digest send about 60,000 emails a month, about $6 on Amazon SES.
 - [ ] First paid entitlements, a larger AI allowance and early access, then one entitlement per initiative as it ships (slices 9 and 11).
+  - Slice 9 waits for [I-71](#i-71-speed-uptime-and-recovery) slice 12's readiness check: a restore drill passed in the last 90 days, the status page and the 99.5% history public, and a player's own data export (added 2026-11-10).
 - [ ] After slice 0, a pod pass: one member's plan unlocks the paid tools for the whole pod. On 2025-12-02 Playgroup.gg gave every playgroup one free league and said that "only _one_ member in a playgroup needs a Supporter Pack" to unlock unlimited leagues ([post](https://playgroup.gg/posts/96-rewind-2025-playgroup-leagues-and-more)). This initiative has no group plan, while pods are already a unit in I-15, I-35, I-41, I-44 and I-51, and one subscriber in a pod of four spreads one price across four players. The pass sells computation and capacity only, such as Deck Lab runs on the pod's decks, pod history beyond a free window and game-night aids, never card data or evidence.
+- [ ] **A referral credit, after slice 9 (gap sweep, 2026-11-10).** The reference sites grew through creators and gatekeepers ([Product Direction](#owner-ambition-and-business-model-2026-11-09)). Give a month, get a month: the credit applies only when the referred account pays, with no cash, no leaderboard and a yearly cap. Done means: the credit is applied idempotently from the provider webhook, and accounts without an adult age declaration are excluded until L-08 and [L-43](legal-questions.md#l-43-referral-and-creator-rewards) are answered.
+  - [ ] The referral screen tells the referrer how to label a post that carries their link, worded per L-43. Done means: counsel's wording ships in English and French.
 - [ ] An owner-only metrics page computed from our own database: active accounts, conversion, churn, AI cost per user and net revenue (slice 10).
   - Its cost section is [I-66](#i-66-running-costs-and-margin-per-active-player)'s: stored monthly costs per provider, cost per active player, per stored account and per payer, and the plan limits with the least headroom (I-66 slice 9).
+  - The page sits behind [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s `requireOperator` once its slice 1 exists, in I-69's console at `/ops` (2026-11-10).
 - [ ] If slice 0 says no: a supporter page with nothing gated, labelled sponsorships, affiliate income through I-32, and one AI allowance for everyone (slice 12).
 
 ### Engineering enablers
@@ -2072,7 +2337,7 @@ Every model call is metered and capped per month; the free and paid line is publ
 
 **Outcome:** a player opens their own Commander list and gets a seeded, replayable analysis: the best keep rule for the first seven and the free seven, the chance the commander is cast by each turn, per-turn mana and colours, and swaps judged with an interval.
 
-**Status:** Next — proposed 2026-11-09
+**Status:** Next
 **Priority:** Next; Later for slice 11, norms placement, which waits for I-29's corpus statistics (marked 2026-11-10)
 **Impact / effort:** High / large
 **Depends on:** I-21 slices 1 (seeded shuffler), 3 (intervals), 5 (two-sample verdict) and 6 (worker runtime), which therefore move ahead of I-21's Later priority. Norms placement needs I-29's computed statistics and I-28 slice 2.
@@ -2114,7 +2379,7 @@ A player runs Deck Lab on their own list without an account and gets a keep tabl
 
 **Outcome:** a player sends the exact printings still missing across their decks, net of owned copies, to a seller's cart or wants list, priced for the market they chose, with any affiliate link labelled where they click.
 
-**Status:** Next — proposed 2026-11-09
+**Status:** Next
 **Priority:** Next
 **Impact / effort:** High / medium
 **Depends on:** I-06's acquisition plan, which ships. Affiliate activation waits for each seller's approval and the lawyer's answer on disclosure; free-copies and budget-tier carts wait for I-16 slice 4 and I-17 slice 6.
@@ -2155,7 +2420,7 @@ From the acquisition plan, a player picks a market and a seller and reaches that
 
 **Outcome:** the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
 
-**Status:** Parked — owner decision
+**Status:** Parked
 **Priority:** Parked. A decision record, not a build plan: nothing for stages 5 and 6 is scheduled.
 **Impact / effort:** High / decision and outreach work only until stage 5
 **Depends on:** I-32 for stages 1 to 3 and their measurements; I-30 for the revenue comparison.
@@ -2202,7 +2467,7 @@ The decision log holds dated gate reviews whose figures a second person can reco
 
 **Outcome:** players, creators and search engines can cite dated Commander figures that nobody else publishes, each with its method, sample size and a way to reproduce it, in English and French, and no thin page is offered to search engines.
 
-**Status:** Next — proposed 2026-11-09
+**Status:** Next
 **Priority:** Next for slices 1–7, which need no deck index; Later for slices 9–12, built on [I-29](#i-29-cross-site-commander-deck-index). Slice 8 waits for the owner.
 **Impact / effort:** High / medium without the index, large with it
 **Depends on:** I-29 slices 8 and 11 for any figure computed from deck populations; I-28 slices 4 and 6 for guide links and the French guides; the owner's domain and analytics decisions for measurement.
@@ -2213,12 +2478,13 @@ The decision log holds dated gate reviews whose figures a second person can reco
 
 - [ ] One index policy (`index`, `noindex` or absent) that page metadata and the sitemap both call; commander discovery pages below threshold and profiles with no public deck become `noindex` and leave the sitemap; sitemap entries gain `x-default`; a test keeps the two public-path lists equal (slice 1).
   - Before #1313, `/commanders/[slug]/decks` answered HTTP 200 with its empty state, a canonical and no `noindex` for any slug, including one that names no card (`src/app/[locale]/commanders/[slug]/decks/page.tsx`). The sitemap still lists a commander as soon as one public deck names it.
-  - [x] An empty commander listing is `noindex` with no canonical or alternates, a slug no commander name can produce answers the 404 page without calling the API, a failed discovery request goes to the retryable error page, the sitemap drops such slugs, and the two public-path lists became one module, `src/lib/auth/public-paths.ts` (#1313). The shared index policy, `noindex` profiles with no public deck and `x-default` in the sitemap remain open.
+  - [x] An empty commander listing is `noindex` with no canonical or alternates, a slug no commander name can produce answers the 404 page without calling the API, a failed discovery request goes to the retryable error page, the sitemap drops such slugs, and the two public-path lists became one module, `src/lib/auth/public-paths.ts` (#1313). The shared index policy, `noindex` profiles with no public deck and `x-default` in the sitemap remain open. With one list, the public-route parity test has nothing left to compare (noted 2026-11-10).
 - [ ] Make `/rules/game-changers` public with alternates and localized metadata, and `/rules/comprehensive` public but `noindex`, since it reproduces Wizards' text (slice 2). #1313 made both public; their alternates, localized metadata and the Comprehensive Rules `noindex` remain open.
 - [ ] A versioned methods page with one anchor per metric, a citation line and a corpus section (slice 3).
 - [ ] A report framework with permanent URLs, dated errata, `Dataset` markup, and CSV and JSON downloads with checksums (slice 4).
 - [ ] "Commander Opening Hands", first edition, from the seeded simulation and reproducible from its seeds and commit, then five bracket pages with opening-hand norms linked to the I-28 guide (slices 5–6).
 - [ ] French review of the methods page, the report and the bracket pages; an unreviewed French page stays `noindex` (slice 7).
+- [ ] **A publishing calendar (gap sweep, 2026-11-10):** one table that ties set releases and Wizards' bracket and Game Changers updates to this initiative's report refreshes and to [I-18](#i-18-per-deck-radar-of-new-cards)'s radar. Done means: each release date has a named owner and output.
 - [ ] Commander × bracket and card × bracket pages from I-29's statistics, then "State of the Brackets" and precon drift (slices 9–12, Later).
 
 ### Engineering enablers
@@ -2242,7 +2508,7 @@ A first dated report and five bracket pages are public signed out, in English an
 
 **Outcome:** a player logs a real game in under a minute after it ends, tied to the deck version played and to what the pod declared, and reads honest personal statistics; players who opt in feed casual aggregates nobody publishes.
 
-**Status:** Later — proposed 2026-11-09
+**Status:** Later
 **Priority:** Later
 **Impact / effort:** Medium / medium
 **Depends on:** nothing for slices 1 and 4 of the private log; I-29 slice 2's canonical list for slice 2; I-29 slice 0's notice page for slice 3 (corrected 2026-11-10); I-15 for pods and declared brackets; I-21 slice 5 for version verdicts; I-34's data pages and a legal answer before any aggregate is published.
@@ -2279,7 +2545,7 @@ A player logs a game in under a minute, sees it against the deck version and the
 
 **Outcome:** a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
 
-**Status:** Later — proposed 2026-11-09
+**Status:** Later
 **Priority:** Later, except slices 1 and 2. Next for slices 1 and 2, the public projection and the deck image, promoted on 2026-11-10 because slices of I-46, I-50, I-53, I-55 and I-60 wait for them; Later for the rest
 **Impact / effort:** Medium / medium
 **Depends on:** one public projection of a deck (slice 1) before any surface; legal answers before the view counter and the API terms; I-67 slice 5 for dated price badges (slice 4); I-05 M2's shared store for the API's limiter (slice 11).
@@ -2288,13 +2554,14 @@ Reference sites grew because other people linked to them. Creators amplified EDH
 
 ### Scope
 
-- [ ] One public projection of a deck, used by the deck page and by `/api/deck/[id]` for every caller but the owner, with a field snapshot test (slice 1). See I-08.
+- [x] One public projection of a deck, used by the deck page and by `/api/deck/[id]` for every caller but the owner, with a field snapshot test (slice 1). See I-08. Shipped in #1312: non-owners get `PUBLIC_DECK_SELECT`, the deck page reads `/api/deck/[id]` through `fetchPublicDeck`, and the route test "serves an anonymous viewer only the fields the public deck page renders" is the field test; #1325 does the same for share links (checked on `origin/dev` at `72fbfc1` on 2026-11-10).
 - [ ] A deck image built only from stored data at `/og/deck/{id}`, Open Graph and Twitter tags on the deck page, a PNG default, and the free-text `/api/og` removed (slice 2).
 - [ ] An embed route rendered on the server, themed and localized, framable only under `/embed/*`, with no cookie, storage or third-party script and a per-deck switch (slice 3); optional legality, declared-bracket and dated-price badges, and an overlay layout for OBS (slices 4–5).
 - [ ] `[[Card]]` links in primers, unique heading anchors, and click-to-load YouTube (privacy-enhanced mode) and Twitch video blocks with timestamped sections (slices 6–8).
 - [ ] Fork counts and attribution on every surface, and a creator page with a bio, links and pinned decks (slices 9–10).
 - [ ] A `public:read` API scope with two attributed endpoints and a limiter on I-05 M2's shared store (one owner, decided 2026-11-10), behind a terms page reviewed by a lawyer (slice 11).
 - [ ] A cookie-free view counter with daily-salted de-duplication and an owner toggle; views rank nothing (slice 12).
+- [ ] **A creator kit (gap sweep, 2026-11-10).** A page with embeds, deck images, the Fan Content notice and brand rules, a named contact and a free early-access flag the owner grants, with no payment, placement or ranking, as this initiative's non-goals require. Done means: the page is live in English and French, and a test proves that the flag changes no visibility or ordering. Whether the flag is a benefit that creators must label is [L-43](legal-questions.md#l-43-referral-and-creator-rewards).
 
 ### Engineering enablers
 
@@ -2316,7 +2583,7 @@ A creator embeds a public deck that loads without tracking, links back, and turn
 
 **Outcome:** a player edits a deck with the views, groups, tags, text bulk edit, history and mobile toolbar they expect from Moxfield and Archidekt, and the editor stays measurably fast and stable while they do.
 
-**Status:** Next — proposed 2026-11-09
+**Status:** Next
 **Priority:** Next; Later for slice 24, card-link completion, which waits for I-36's card links (split 2026-11-10)
 **Impact / effort:** High / large
 **Depends on:** I-13 spec slice 1 for the visual slices; I-67 slice 2 for the Oracle ID backfill (slice 12); I-36 slice 6 for card-link completion (slice 24). I-01 keeps zones and failed-save recovery, which every slice here reuses.
@@ -2368,7 +2635,7 @@ On the 100-card fixture, a player switches among five views, collapses groups, t
 
 **Outcome:** a player keeps several builds of one deck, such as a Bracket 2 and a Bracket 3 version or a budget and a "bling" version, as named differences from one main list. Each build shows its legality, bracket estimate and price; a change to the main list never lands silently in a build; and a swap kit says which cards to carry to play any of them.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 1 to 7 and 9; Later for slices 8 and 10 to 15, each behind the initiative it extends; slice 16 waits for I-30
 **Impact / effort:** High / medium
 **Depends on:** nothing outside this initiative for slices 1–7 and 9; I-36 slice 1 for public builds; I-43 slice 5 for switch lists by place; I-15 slice 2, I-19 slice 2 and I-35 slice 2 for game night; I-48 slices 5 and 7 for the report per build; I-17 slice 3 for upgrade tiers; I-30 slice 0 for the fit-to-bracket candidate.
@@ -2385,6 +2652,9 @@ Players keep several versions of one deck at the same time, and Wizards' bracket
 - [ ] Changes held or absorbed when the main list moves, a review with three choices, a 409 on edits while changes are held, and a notice naming each build whose legality or estimate moved (slice 6).
 - [ ] Promotion to the main build with a preview of every other build, "Make this the main build" with its invariant, and the same preview before a snapshot restore (slice 7). Snapshot restore today leaves the deck's commander fields as they were; the item is under I-37.
 - [ ] Copies counted as the largest need across a deck's builds, not their sum, in `buildAcquisitionPlan` (`src/lib/collection/acquisition-plan.ts`), with an "assembled separately" switch (slice 9). Today the plan sums decks, so two duplicated builds count each shared card twice.
+- [ ] **Make this deck cheaper (gap sweep, 2026-11-10),** with [I-14](#i-14-verifiable-natural-language-search) and [I-59](#i-59-prices-over-time-and-alerts). EDHREC publishes budget and expensive average-deck variants per commander (URL pattern `…/average-decks/<commander>/…/expensive`, seen in search results on 2026-11-10).
+  - [ ] For a target total, list each card above a per-card threshold with I-14's visible `otag:` similar-card query, filtered to cheaper cards with dated prices. No model chooses. Done means: every swap row shows its query, price date and legality.
+  - [ ] Apply the chosen swaps into a new build. Done means: the build's diff against the main list is reversible, and its bracket estimate is shown beside the main list's.
 - [ ] Later: a build from another owned deck and a near-duplicate suggestion (slice 8); a playtest of a build (slice 10); shown builds on public and share pages, forks of a build and builds in the public comparison (slice 11); the swap kit and switch lists (slice 12); a Rule 0 sheet, an offline download and a game seat per build (slice 13); I-48's report per build (slice 14); and packages and I-17 upgrade tiers applied as a build (slice 15).
 - [ ] After I-30's decision: fit a build to its target bracket with deterministic swap candidates (slice 16).
 
@@ -2409,7 +2679,7 @@ A player creates a Bracket 2 build from a Bracket 3 deck, swaps two Game Changer
 
 **Outcome:** a player sets one printing rule, such as the original printing, the cheapest in their market, no crossover printings and owned copies first, and every card that enters a deck by any path follows it, with the reason recorded. The rule can be applied to a whole deck as a reviewed diff, overridden per deck and pinned per card, and the chosen printing then drives prices, exports, proxies and the acquisition plan.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next. Nothing in it is paid
 **Impact / effort:** Medium / small to medium
 **Depends on:** nothing for slices 1 to 5 and 9; the owner's choice of product default before slice 4; I-37 slice 16 for printings in text lines; I-32 slice 3 for cheapest in euros; I-37 slice 12 for finish; I-16 slice 4 for uncommitted owned copies first.
@@ -2454,7 +2724,7 @@ With "no Universes Beyond", importing Sol Ring never yields a Universes Beyond p
 
 **Outcome:** a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 1 to 9, the free product; Later for slices 10 to 14, each behind the initiative it extends; slice 15 waits for I-30
 **Impact / effort:** Medium / medium
 **Depends on:** nothing outside this initiative for slices 1, 3, 4 and 6 to 8; I-31 slice 2's card mana facts for the land classifier (slice 2), one owner decided 2026-11-10; I-67 slices 2 and 4 for the land catalogue (slice 5), re-pointed 2026-11-10; I-57 slice 2 for printings (slice 9); I-32 slices 2 and 3 for the euro market (slice 10); I-48 slice 2 for Game Changer status (slice 11); I-16 slice 4 for uncommitted owned copies (slice 12); I-31 slices 4, 5 and 8 for the check by simulation (slice 13); the I-02 owner's agreement for slice 14; I-30's decision for slice 15.
@@ -2495,7 +2765,7 @@ On a two-colour deck, a player sees the formula's count and each colour's target
 
 **Outcome:** a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for the route model, the map for one deck and its uses in I-15, the primer and the wizard (slices 1 to 11), with slice 8 blocked for release on the Tagger licence; Later for model rewording, assembly odds and comparisons (slices 12 to 15); slice 16 waits for I-30's decision
 **Impact / effort:** Medium / large
 **Depends on:** nothing for slices 1 and 2; I-28 slice 2 for the bracket line (slice 4); I-67 slice 7 and I-54 slice 2 for the Oracle Tags, re-pointed 2026-11-10, and Scryfall's answer on the tags for release (slice 8); I-15 slice 2 for the sheet line (slice 10); the I-02 owner's sign-off on the wizard step (slice 11); I-30 slices 1 and 2 for rewording (slice 12); I-31 slices 1 and 5 for assembly odds (slice 13); I-55 slice 4 and I-15 slice 3 for comparisons (slices 14 and 15); I-30's decision gate and its slice 11 for slice 16.
@@ -2512,6 +2782,10 @@ Players ask "how does your deck win?" before games with strangers. MagicCon Chic
 - [ ] A builder panel, "How this deck wins", in English and French, that absorbs the combos panel, with a test that fails on a verdict word in any template (slice 6); owner overrides of route roles, stored per deck (slice 7).
 - [ ] Tagger clauses from the Oracle Tags that I-67 slice 7 loads (re-pointed 2026-11-10), with a daily check of each definition against a Scryfall `otag:` query (slice 8). Blocked for release until Scryfall answers on the tags; without them the map says "function tags unavailable: fewer cards recognised".
 - [ ] The public deck page's setting, off by default, route kinds only, or the full map, and `GET /api/decks/[id]/routes` (slice 9); I-15's calculated line with "copy into my sheet", and the primer's "Win conditions" section pre-filled (slice 10); and the wizard's plan-versus-result check, which never blocks a build (slice 11). Today `DeckPlan.winConditions` (`src/lib/ai/deck-plan.ts`) is fixed text per strategy that nothing checks against the built deck.
+- [ ] **Combos one card away (gap sweep, 2026-11-10).** `parseFindMyCombos` (`src/lib/combos/find-my-combos.ts`) reads only `results.included`; its own comment says the "almost included" buckets are combos the deck lacks a card for, and Spellbook already returns them in the response that #1324 fetches once per deck (verified on `origin/dev` at `72fbfc1`). Grimoria lists combos "missing one piece" ([spec](specs/i65-how-this-deck-wins.md#what-the-market-does)).
+  - [ ] Read the "almost included" bucket, within colour identity only, from the existing cached call, and list it in a separate "one card away" section that is never mixed with routes the deck has. Done means: a fixture test shows a found route and a near route kept apart, with no second Spellbook call.
+  - [ ] Each near route shows the missing card, its dated price (I-59), whether it is a Game Changer, and the bracket the deck would estimate with it, using `bracketTag` and I-03. Done means: a near route that would lift the deck above the pod's declared bracket (I-15) is labelled, never hidden, and never ranked by popularity.
+  - [ ] One click adds the card as a reviewed change the player can revert. Done means: the same diff path as I-58's apply, with undo.
 - [ ] Later: a model rewording of a templated sentence, accepted only if it keeps every card name, number and rule and adds no verdict, labelled and counted against I-30's allowance (slice 12); assembly odds from I-31's seeded engine (slice 13); routes compared across builds and snapshots, then across a pod's consented decks (slices 14 and 15); and, after I-30's decision, a paid entitlement for the comparisons (slice 16).
 
 ### Engineering enablers
@@ -2545,6 +2819,45 @@ I-66 joined from a seventh pass that day. It tells the owner what the product co
 
 I-67 joined from an eighth pass that day, directly after I-63. It loads card data once a day for every other initiative, as I-63 delivers every notice, and its run registers on I-63's job route when it runs on Vercel; I-66, which follows, counts its tables. It is Next for slices 0 to 13 and never paid.
 
+I-69 joined from a ninth pass that day, directly before I-38. It is the operator side of trust and safety: the roles, the audit log and the queue view through which the owner works I-38's notices and decisions, and the switches that pause AI or an upstream source without a deploy. Placed before I-38, it leaves I-61 directly after I-38. It is Next for slices 0 to 7, and nothing in it is sold.
+
+---
+
+## I-69: An Operator Console: Support, Moderation Queue, Flags And Kill Switches
+
+**Spec:** [`specs/i69-operator-console-support-moderation-and-kill-switches.md`](specs/i69-operator-console-support-moderation-and-kill-switches.md)
+
+**Outcome:** the owner switches free or paid AI off, pauses one upstream source or puts the site in read-only mode within 15 seconds and without a deploy, finds one account and sees the least personal data needed to act on it, and works I-38's moderation queue, while every view and every action is written to an append-only log in the same transaction.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 7: the operator role, the audit log, the switch store with the AI and upstream switches, maintenance mode and the console shell; Later for slices 8 to 14, which wait for I-61, I-38, I-63 or I-30. Nothing in it is sold
+**Impact / effort:** High / medium
+**Depends on:** nothing outside this initiative for slices 1 to 5; I-30 slice 2's metering for the AI ceiling through the store (slice 6); I-61 slices 2 and 3, the session registry and re-authentication, for the console (slice 7); I-30 slice 2 and I-61 slice 1 for the support actions (slice 9); I-61 slices 11 and 12, I-38 slices 4 and 5 and I-63 slice 7 for support by email (slice 10); I-38 slices 8 to 11 for the moderation view (slice 11); I-61 slice 8 for operator passkeys (slice 13); slice 0's answers, I-63 slice 5 and the answer to L-47 for the retention purge (slice 14).
+
+No spec or roadmap item covered the product's own operator, and each lever today is ad hoc. The moderator role is one boolean, `isModerator` (`prisma/schema.prisma` line 38), set by hand in SQL and checked in two places, and nothing records who looked at what. I-30's spend ceiling is an environment variable on the unmerged metering branch, and Vercel applies a changed variable "only to new deployments" ([docs](https://vercel.com/docs/environment-variables)); removing the AI keys makes both routes return a placeholder deck that hides an outage behind a demo. No upstream caller, from Scryfall to the Archidekt importer that [D-07](owner-decisions.md#d-07-archidekt) questions, can be stopped without a code change and a full promotion, and Vercel's only global stop pauses the whole site ([I-66 7.3](specs/i66-running-costs-and-margin.md#7-budget-alerts)). Flag services add a processor or a second source of truth: Vercel Flags allows 10,000 flag requests a month on Hobby, about 29 active players at I-66's usage estimate (computed), and Supabase's platform audit logs start with the Team plan "from $599/month" ([pricing](https://supabase.com/pricing)). A switch is therefore a row in PostgreSQL, read through one module and changed in the same transaction as its audit event, with no new vendor.
+
+### Scope
+
+- [ ] Slice 0, no code: who holds which role, the audit retention, a passkey from day one or not, and the maintenance scope; lawyer question L-47 joins I-30 requirement 7.2 through I-38 slice 0.
+- [ ] Operator roles in `OperatorGrant` (moderator, support and owner) and one `requireOperator(role)` that replaces `requireModerator` and the moderation page's inline check; the owner role needs a grant and the account id in `OPERATOR_OWNER_IDS`; `isModerator` migrates to grants and is dropped; operator pages answer 404 and join I-05's L2 inventory (slice 1).
+- [ ] `OperatorAuditEvent`: every action and every view of an account, a case or the audit log, written in the action's transaction, append-only by a trigger, hash-chained with a verification command and copied to the application log (slice 2).
+- [ ] A switch registry in code and a `Switch` table read through `readSwitch`, with a 15-second cache and a declared fail mode, set from the console or `pnpm ops:switch` with a reason and an optional expiry; `ai.free` and `ai.paid` answer 503 `ai_paused`, never the placeholder deck (slice 3); a switch per upstream source with typed refusals such as "Import from Archidekt is paused; paste the list instead", the browser's Scryfall calls included (slice 4); read-only maintenance mode, with a coverage test over every mutating route (slice 5).
+- [ ] I-30's ceiling through the store: the automatic switch-off writes `ai.free`, then `ai.paid`, and the owner can lower the ceiling below the environment's bound without a deploy, never raise it (slice 6); the console at `/ops` with step-up, an overview, the switches and the audit log (slice 7).
+- [ ] Later: account lookup by exact email, username or id, with the email masked until a logged reveal (slice 8); support actions without email: end all sessions, an AI grant or reset under a monthly cap, and clearing the password throttle (slice 9); verification, reset, export and deletion links sent through the players' own flows and tracked against GDPR's one month (slice 10); the operator side of I-38's queue, with a decision form that preselects nothing (slice 11); dark launches to named accounts that never gate a paid feature (slice 12); a passkey required for operators (slice 13); the retention purge (slice 14).
+
+### Engineering enablers
+
+- Every `/ops` page answers 404 and every `/api/ops` route 403 without the right grant, and an owner grant without the environment entry is refused.
+- Each action writes exactly one audit event in its transaction, a forced failure writes none, `UPDATE` and `DELETE` on the log raise, and an `/api/ops` route that skips the audit writer fails an inventory test.
+- With an upstream paused, each caller makes no outbound request and returns its typed refusal; with `ai.free` off, the build route answers 503 and never the placeholder.
+- No `/api/ops` route writes a password, an email or a second-factor table, and the account card carries no IP address, private deck name or unmasked email.
+
+**Paid-tier angle:** none. Support, export, deletion and appeals stay free on every plan. Its value to I-30 is margin and trust: runtime AI switches and a ceiling the owner can lower bound the largest variable cost, a goodwill AI grant replaces a refund for a failed build, and a pause of paid AI shows a dated notice with its reason and expected end.
+
+### Definition of done
+
+The owner switches free AI off from the console or the command line and every instance answers `ai_paused` within 15 seconds, with no deploy and no placeholder deck; pauses the Archidekt importer and players get a typed refusal with no request sent; finds an account by email and sees only the minimal card; and each of those steps appears once in an append-only log whose hash chain verifies.
+
 ---
 
 ## I-38: Trust, Safety And User Rights
@@ -2553,7 +2866,7 @@ I-67 joined from an eighth pass that day, directly after I-63. It loads card dat
 
 **Outcome:** a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
 
-**Status:** Next — proposed 2026-11-09
+**Status:** Next
 **Priority:** Next. A launch gate for I-30's paid tier (its slice 7 changes account deletion, and a paid plan needs terms and a privacy policy) and for any public growth
 **Impact / effort:** High / large
 **Depends on:** the owner's identity fields for the legal notice; counsel's written answers, added to I-30's slice 0, for the final wording of the terms and privacy policy and before the email sender and the retention job.
@@ -2564,21 +2877,27 @@ MagicAIBuilder shows public decks, primers, comments, reviews, profiles, package
 
 - [ ] Slice 0, no code: counsel's written answers to the spec's lawyer questions, added to I-30's slice 0.
 - [ ] A legal notice and a DSA contact page in French and English, linked from every footer (slice 1).
+  - **Footer notice (gap sweep, 2026-11-10).** `LEGAL.md` and the footer text `notAffiliated` (`src/messages/*/common.json`, line 24) in all ten message catalogues cite "Wizards' Fan Site Policy", the fan-site-kit text (checked on `origin/dev` at `72fbfc1`). The [Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy), last updated 2017-11-15, gives its own notice: "MagicAIBuilder is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC." Which notice the footer must carry is lawyer question [L-45](legal-questions.md#l-45-the-products-name-and-the-fan-content-notice), asked with the product's name ([D-77](owner-decisions.md#content-and-naming)); this slice changes the text after the answer. Done means: a test asserts the chosen notice in every locale's footer and in `LEGAL.md`.
 - [ ] End the session when an account is deleted, with a 7-day tombstone and a regression test that replays a still-valid JWT (slice 2, first). Today `DELETE /api/user/profile` (`src/app/api/user/profile/route.ts`) does not sign out. Until #1319, `resolveAuthenticatedUser` (`src/lib/auth/helpers.ts`) re-created the deleted user from the token's email on the next request. I-05 records the same defect.
   - [x] Stop re-creating the deleted user, and replay a still-valid JWT in a regression test (`src/app/api/user/profile/account-lifecycle.test.ts`): after `DELETE`, the same token gets 401 and no user is created (#1319). The session cookie is not yet ended; the PR suggests the deletion UI call `signOut()` (slice 5). It also argues that spec 6.2's tombstone is no longer needed, since nothing re-creates a user per request.
   - [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions) supplies the rest: its slice 2 revokes every server-side session when the account is deleted, on every device, and its slice 3 the re-authentication that deletion needs. Once slice 2 ships, I-61 proposes dropping the 7-day tombstone; this slice decides with it.
 - [ ] Apply the deletion cascade of the spec's table 6.4 (slice 3). Today `DeckComment.parent` cascades (`prisma/schema.prisma`), so deleting an account deletes every reply other players wrote under its comments, and `DeckReport` cascades from its reporter, so the reports the user filed disappear with their decisions. Replies must survive under a cleared comment, forks must show a neutral label, and reports and decisions must stay, anonymised.
 - [ ] A full JSON export with a versioned schema and a guard test, then a Settings → Account page that downloads it and deletes the account after re-authentication (slices 4–5).
 - [ ] A privacy policy rendered from the retention constants and listing every processor, and terms with moderation rules and a minimum age, accepted and recorded at signup (slices 6–7). Today `src/instrumentation-client.ts` records Sentry Session Replay for 1% of all sessions and every session with an error, and prompts go to Anthropic with OpenAI as fallback (`src/app/api/ai/build/route.ts`, `src/app/api/ai/suggest/route.ts`); none of this is disclosed, because no privacy page exists. [I-39](#i-39-first-run-activation-and-product-measurement) slice 4 sets random-session replay to zero.
+  - The terms of sale, `LegalDocument` slug `sale`, are scoped under [I-30](#i-30-business-model-and-the-paid-tier) slice 0 with the gap sweep's consumer-law items (2026-11-10).
 - [x] Return only the fields the share view needs from `GET /api/share/[token]`. `src/app/api/share/[token]/route.ts` returned the whole deck row minus the token, `userId`, `budget` and `manualBracket` included. Shipped in #1325 through the `SHARED_DECK_SELECT` allowlist; I-08 records the same item.
 - [ ] A generic `Report` for every public item with a signed-out notice form and an acknowledgement, then hide, restore and posting restrictions filtered from every public surface (slices 8–9).
 - [ ] Statements of reasons to the author and the notifier, a police-referral action and appeals within six months (slices 10–11).
+  - The operator side, recorded 2026-11-10: slices 9 to 11 use [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s moderator role and `requireOperator`, and I-69 slice 11 builds the queue's operator view (tabs, the case view, a decision form that preselects nothing, appeals and the referral record) on this initiative's notices, decisions and appeals.
 - [ ] Block, a per-deck comment switch, and rate limits on comments and reviews (slice 12).
   - [ ] **L5, low (security audit, 2026-11-10):** no community write calls `checkRateLimit` today: comments, ratings, votes, follows and card packages (`src/app/api/community/`). Per-user limits need the shared store of I-05's M2 first.
 - [ ] **L4, low (security audit, 2026-11-10):** stop a repeated report reopening a closed deck report. `src/app/api/community/decks/[id]/reports/route.ts` upserts with `status: "pending"`, so a reporter can send a dismissed report back to the queue after every decision. Fix branch in flight: `fix/api-small-hardening`, no PR yet.
 - [ ] After slice 0: a transactional email sender with an exit path, a daily retention job with a dry run, and email copies of statements of reasons (slices 13–15).
   - [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions) slices 11 to 14 wait for this sender: email verification, password reset, security notices and email change. Whether security email may ship before counsel answers is an owner question in the status note.
   - Moved 2026-11-10: the sender (slice 13) is [I-63](#i-63-one-notification-system-inbox-email-and-preferences) slice 7, built on its slice 6's transport and templates, so every initiative sends through one transactional stream. The retention job (slice 14) registers on I-63 slice 5's job route, and statements of reasons reach the inbox through I-63 slices 1 to 3 (slice 10). Whether slice 7 waits for all of slice 0 or only for the privacy policy's processor entry is an owner question.
+- [ ] **A record of processing and a breach procedure (slice 16, added 2026-11-10 from the gap sweep).** GDPR Art. 30 asks for records, and its exemption below 250 people does not cover processing that is "not occasional"; Art. 33 asks for notice to the CNIL within 72 hours, and Art. 34 to the people affected ([GDPR](https://eur-lex.europa.eu/eli/reg/2016/679/oj), standard text, not fetched this pass). Neither appears in `docs/`. Lawyer question [L-44](legal-questions.md#l-44-the-record-of-processing-and-a-breach-procedure).
+  - [ ] `docs/legal/processing-register.md` lists each purpose, basis, data set, retention period (read from the retention constants) and processor. Done means: the guard test that already lists every Prisma model with a `userId` also fails when a model is missing from the register.
+  - [ ] `docs/legal/breach-procedure.md`: the 72-hour clock, the CNIL route, a breach log, and a player notice template on I-63's transactional stream. Done means: one recorded tabletop drill, with each processor's breach-notice clause checked.
 
 ### Engineering enablers
 
@@ -2601,7 +2920,7 @@ A deleted account stays deleted on every device after its owner could download a
 
 **Outcome:** a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next. Slice 5 goes first; slices 2 to 10 and 15 need neither an email sender nor counsel; slice 1 waits for I-05's shared store; slices 11 to 14 wait for the email sender, I-63 slice 7. Never paid
 **Impact / effort:** High / large
 **Depends on:** nothing for slices 2 to 10 and 15; I-05 M2's shared rate-limit store for slice 1; the transactional email sender for slices 11 to 14, which was I-38 slice 13 and is now [I-63](#i-63-one-notification-system-inbox-email-and-preferences) slice 7, waiting for the owner's provider choice.
@@ -2619,6 +2938,8 @@ An account will soon hold more than decks: trade proposals (I-44), loans (I-51),
 - [ ] `emailVerified` from Google's claim, linking Google from Settings, and clearing the stored Google tokens nothing reads (slice 10); Google's Cross-Account Protection receiver (slice 15).
 - [ ] Login throttling on I-05's shared store: a per-IP bucket across all addresses, a per-address backoff to a 15-minute cap, the password disabled after 100 consecutive failures, a separate bucket for the owner's devices, and the same answer for an unknown address (slice 1). Today `src/lib/rate-limit.ts` keeps counters in each instance's memory, and the login limit in `src/lib/auth/config.ts` allows 10 attempts per 15 minutes keyed on the email only, successes included. One password tried across many emails is never limited, and ten failures lock the owner out of that instance. Passkey, Google and reset sign-in stay open while password attempts wait.
 - [ ] After I-63 slice 7 (formerly I-38 slice 13): email verification and a neutral signup answer that ends the 409 enumeration (slice 11); password reset, which hands a never-verified account to whoever proves the mailbox, and "set a password" for Google-only accounts (slice 12); security notice emails with "This wasn't me" (slice 13); and an email change with a revert link (slice 14). Today no password reset exists and no email is ever sent, so a player who forgets the password, or whose address was squatted before #1321, has no way back.
+- [ ] **A security contact (gap sweep, 2026-11-10).** No `security.txt` and no vulnerability disclosure policy exist on `origin/dev` at `72fbfc1`, only `docs/security/security.md`. Serve `/.well-known/security.txt` (`Contact`, `Expires`, `Policy`, `Preferred-Languages` en, fr) under [RFC 9116](https://www.rfc-editor.org/rfc/rfc9116), linked to a short disclosure policy page. Done means: a test fails when `Expires` is less than 30 days away. The contact address is owner decision [D-79](owner-decisions.md#infrastructure-and-providers), and no personal email goes into the docs.
+- Recorded 2026-11-10: requirement 1.9's script that ends every session of one account becomes [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s support action 6.2, and I-69's console requires this initiative's session registry and re-authentication (I-69 slice 7), then its passkeys (I-69 slice 13).
 
 ### Engineering enablers
 
@@ -2641,7 +2962,7 @@ A player signs in on two devices, ends one session from Settings and sees its co
 
 **Outcome:** a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next. Slices 1 and 5 start now; slices 2, 3 and 6 follow slice 1; slice 7 waits for the owner's provider choice; slice 9 waits for I-61 slice 10 or 11; web push (slice 12) is blocked by I-40 requirement 2.6. Never paid
 **Impact / effort:** High / large
 **Depends on:** nothing for slices 1 and 5; the owner's choice of provider, sending subdomains and job cadence (slice 0) and I-38 slice 6's processor entry, or all of I-38 slice 0 if the owner says so, for slice 7; I-38 slice 12 for blocked actors (slice 4); I-61 slice 10 for Google accounts or slice 11 for password accounts, which verify the address (slice 9); I-19's service worker, I-40 slice 1 and the owner reversing I-40 requirement 2.6 for web push (slice 12).
@@ -2658,6 +2979,7 @@ At least fourteen specs plan to tell a player something, and each plans its own 
 - [ ] One job route, `/api/jobs/[job]`, behind `CRON_SECRET` in a new `vercel.json`, with a lease, catch-up and a dry run (slice 5). I-38's retention job and, when it runs on Vercel, I-67's `card-data` job (I-67 slice 3, re-pointed 2026-11-10) register here.
 - [ ] An `EmailTransport` with log and test transports, a transactional and a notification stream on separate subdomains, SPF, DKIM and DMARC from the first send, templates in English and French, and caps that keep sign-up and reset forms from flooding a victim's mailbox (slice 6); the provider in production, with signed bounce and complaint webhooks and suppression (slice 7, which is I-38 slice 13).
 - [ ] One-click unsubscribe on every notification email, with a `GET` that changes nothing and a confirmation page that needs no sign-in (slice 8); immediate activity email, to a verified address only, paced and held by quiet hours (slice 9); a daily or weekly digest (slice 10); and a deliverability page for the owner (slice 11).
+  - The deliverability page (slice 11) sits behind [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s `requireOperator` once its slice 1 exists (2026-11-10).
 - [ ] Taken over on 2026-11-10, each source keeping a pointer: I-38 slice 13's sender (slice 7), I-59's inbox and email digest (slices 2 and 10), and I-08's in-product notifications (slices 1 to 4). I-48's `rulesChangesEmail`, I-52's `requestUpdates` and I-59's `priceAlertEmail` become categories, not columns.
   - What each slice unblocks: slices 1 to 3, inbox entries for I-59, I-38, I-44, I-52, I-53, I-18, I-46 and I-48; slice 5, I-38's retention job, I-67's `card-data` job and the timing of I-51's and I-30's reminders; slice 7, I-61 slices 11 to 14, I-38 slice 15 and I-30's cancellation and renewal emails; slice 9, I-48 slice 11, I-51 slice 17 and I-44's proposal email; slice 10, I-59 slice 12 and I-18's email.
 - [ ] Blocked: web push for installed apps, per device and category, until the owner reverses I-40 requirement 2.6 (slice 12).
@@ -2683,7 +3005,7 @@ A reply to a player's comment appears once in their inbox, in their language; th
 
 **Outcome:** every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 0 to 13, high in the delivery order because seven Next slices cannot run without it; slices 1, 2 and 4 start now; slice 3 waits for slice 0's runner choice. Later for French names and the exit drill (slices 14 and 15); slice 16, an image mirror, is Parked. Never paid
 **Impact / effort:** High / large
 **Depends on:** nothing for slices 1, 2 and 4; the owner's measured load and runner choice (slice 0), and I-63 slice 5 if the runner is the job route, for the scheduled run (slice 3); the I-05 WebP item for image versions (slice 12); I-17 slice 1's catalogue model for MTGJSON's decks (slice 13); open question 5 for French names (slice 14); Scryfall requiring a mirror, or the owner's storage decision, for slice 16.
@@ -2694,6 +3016,7 @@ Sixteen specs hold at least seventeen slices or items that wait for "the daily j
 
 - [ ] Slice 0, the owner's: one Default Cards load measured on a Hobby function against the Irish database, then the runner, a Vercel function (300 seconds at most, `iad1` by default) or a GitHub Actions scheduled workflow (free on this public repository, but delayed under load, run from `main` only and disabled after 60 days without activity); the contact URL; and free database space, with I-59 slice 0.
 - [ ] A streamed bulk reader behind one `CardSource` interface, with line guards and hashes (slice 1); `CardOracle`, `CardPrinting`, `CardSet` and `CardRelation` with `int4` keys that are never reused, loaded through staging, gates and one atomic diff, with a run report and an owner page (slice 2); the scheduled `card-data` job with a lease, catch-up, a dry run and a 36-hour alert (slice 3).
+  - The run report's owner page uses [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s `requireOperator` once its slice 1 exists, and I-69's console lists slice 7's Tagger kill switch read-only (2026-11-10).
 - [ ] `CardDataChange`: twelve typed events that carry keys and dates only, a catalogue and contract test on I-63's model, a cursor per consumer and a test harness (slice 4); today's price for every printing (slice 5), rulings (slice 6), Oracle Tags with a kill switch and no display (slice 7), and Scryfall's migrations, which rewrite a merged ID in every deck and collection table in one transaction (slice 8).
 - [ ] Local reads instead of per-request calls: cards by key, one CDN-cached Game Changer and banned list until I-48 slice 1 serves its version, sets, and the card cache cut from 2,000 rows to 200 (slice 9); a local name index and printing lists for imports, the wizard, packages, AI checks and the printing selector (slice 10). Free-text search stays on Scryfall.
 - [ ] A daily check of 25 random printings and every Game Changer against `/cards/:id`, counts checked against `is:gamechanger` and `banned:commander`, and a weekly hash of Scryfall's terms (slice 11); image versions and WebP URLs derived from the printing ID, after I-05's WebP item (slice 12); MTGJSON's new Commander decks into I-17's catalogue, sealed contents and MTGJSON's MIT notice (slice 13).
@@ -2721,7 +3044,7 @@ A daily run loads Scryfall's four files into local tables, one transaction per f
 
 **Outcome:** the owner knows what one more active player costs each month, free or paying, which plan limit breaks first and when, and what the product spends with each provider, from dated prices, provider exports and the database's own counts. An alert fires before a limit or a budget is reached, and no player is tracked for it.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 0 to 8, before I-30's price decision; Later for slices 9 to 12, which wait for I-30's owner page, I-63's job route or a Pro plan. Internal; never shown to players
 **Impact / effort:** Medium / medium
 **Depends on:** nothing for slices 1, 3 and 4; the owner's slice 0 answers for the region and the budget webhook (slices 6 and 10); slice 2's measurements for slices 5 to 8 and 12; I-30 slice 10 and I-63 slice 5 for stored months (slice 9); I-63 slice 5, and I-30 slice 2 for the AI thresholds, for the daily checks (slice 11); I-08's agreement on its pages for static regeneration (slice 12).
@@ -2736,6 +3059,7 @@ I-30 prices the AI per user and computes how many subscribers a living takes, bu
 - [ ] Speed Insights and Sentry on-error replay sample rates set from slice 2's counts (slice 5); the function region chosen by comparing `durationMs` by route, then set in the dashboard or in the `vercel.json` that I-63 slice 5 creates (slice 6); and an explicit Prisma `connection_limit` in the documented production URL, with the infrastructure doc corrected to 500 MB (slice 7).
 - [ ] A monthly report script that prints every provider's cost with its source, the denominators, the plan-limit table and the break-even under I-30's prices, and stores nothing (slice 8). Active players are counted from `Deck.updatedAt` and, once I-30 slice 1 merges, `AiUsage`, until I-39's event store replaces them; a missing input shows "not available", never zero.
 - [ ] Later: stored months and the cost section of I-30's owner page (slice 9); Vercel's signed `budget.reached` webhook (slice 10); daily threshold checks on I-63's job route for database size, Hobby allotments, early AI thresholds and a Speed Insights pause (slice 11); and static regeneration for public deck, profile and commander pages, with the saving measured (slice 12).
+  - Recorded 2026-11-10: the owner pages of slices 9 and 10 use [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s `requireOperator` once its slice 1 exists, and the 50% and 80% budget alerts show on I-69's console overview.
 - [ ] Changes to neighbours, recorded on 2026-11-10: I-30's assumption A2 cites requirement 5, I-05 M3 and the I-59 spec say 500 MB, and the unregistered fallback domain and the function region are I-05 items. The comment in `src/lib/cache-limits.ts` still says 512 MB and is corrected with the code.
 
 ### Engineering enablers
@@ -2759,7 +3083,7 @@ The owner runs one command and reads last month's cost per provider, per active 
 
 **Outcome:** a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
 
-**Status:** Next — proposed 2026-11-09
+**Status:** Next
 **Priority:** Next
 **Impact / effort:** High / medium
 **Depends on:** I-38's privacy policy and the lawyer questions of slice 0 before the event store; I-17 slice 2 for official precon samples; I-30 slice 1 for AI usage; I-05's tool decision before any page analytics.
@@ -2779,6 +3103,7 @@ I-30 needs evidence before a price, and today none of it can be counted: there i
 - [ ] Instrumentation, then an owner-only activation view with n and 95% intervals (slices 11–12).
 - [ ] I-30's evidence: 30-day active accounts, AI calls per active account, use of each paid candidate's free version, and one opt-in survey (slice 13).
 - [ ] An experiment protocol: a dated file per experiment, a sample size fixed in advance, and significance read only at the planned end (slice 14).
+- Recorded 2026-11-10: the owner's measurement view (slice 12) uses [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s `requireOperator` once its slice 1 exists, and requirement 8.2's event list gains `ai_suggestion_action`, enums and integers only, for [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes) slice 14.
 
 ### Engineering enablers
 
@@ -2801,7 +3126,7 @@ A fresh visitor builds, checks, playtests and exports with no modal and no accou
 
 **Outcome:** a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for the private stats page and the private recap (slices 0 to 5 and 13); Later for sharing, images, measurement, game statistics and embeds (slices 6 to 12, 14 and 15). A private 2026 recap needs slices 1, 2 and 4 before 1 December 2026; the first shareable edition is realistic in December 2027
 **Impact / effort:** Medium / medium
 **Depends on:** nothing outside this initiative for slices 1, 2, 4 and 13; counsel for slice 0; I-32 slice 2 for dated prices (slice 3); I-36 slices 1 to 3 for the deck image, the public projection and embeds (slices 5, 6 and 11); I-38 slices 7 and 8 for age steps and reports (slice 6); I-46 slice 1 for preview tags (slice 7); I-39 slices 5, 10, 12 and 14 for measurement (slices 8, 9 and 15); I-35 slices 4 and 5 for games (slice 10); I-37 slice 10 for exact change counts (slice 12); I-30 slice 0 for slice 14.
@@ -2840,7 +3165,7 @@ A player with ten decks opens `/stats` and sees colours, commanders, shared card
 
 **Outcome:** a player who keeps decks on another site downloads them with that site's own export, drops every file here at once, sees each deck and what it will lose before anything is written, confirms, and gets a report. A second run with the same files changes nothing, and the product never logs in to, scrapes or calls the other site.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 0 to 11 and 18; slices 12 to 14 follow I-37 and I-08; Later for collections (slice 15), want lists (slice 16) and the migration metric in the owner view (slice 17), which waits for I-39's event store (marked 2026-11-10); an API route (slice 19) is blocked on a written permission. Never paid
 **Impact / effort:** High / large
 **Depends on:** nothing for slices 0 to 2; I-57 slice 3 for source printings (slice 11); I-37 slices 12 to 14 for finish, language, categories and tags (slices 12 and 13); I-08's primer limit (slice 14); I-26 slices 3 and 4 for collections (slice 15); I-56 slice 1 for want lists (slice 16); I-39 slices 5, 10 and 12 for the first-run panel and measurement (slices 17 and 18); a source's written permission for slice 19.
@@ -2880,7 +3205,7 @@ Twenty Archidekt text files in a zip with two directories become twenty private 
 
 **Outcome:** a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
 
-**Status:** Later — proposed 2026-11-09
+**Status:** Later
 **Priority:** Later, with a no-regret first part (installability and phone journeys, slices 1 to 5) that can ship now
 **Impact / effort:** Medium / medium for slices 1–5; large for scanning
 **Depends on:** nothing for slices 1–5. Scanning needs I-06 printing-level ownership, I-26 slice 3's staged commit, the benchmark and Scryfall's answer (slices 6–7), and the owner's go decision.
@@ -2918,7 +3243,7 @@ The app installs on iOS and Android, and the phone journeys pass in mobile WebKi
 
 **Outcome:** an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
 
-**Status:** Later — proposed 2026-11-09
+**Status:** Later
 **Priority:** Later, with a cheap early part: the pairing policy and an account-free pod planner (slices 1 and 2) need no schema and store no personal data
 **Impact / effort:** Medium / medium
 **Depends on:** stores' demand, measured on the planner and asked of two stores, one French, before slice 3; I-15 for declarations and pod sheets; I-35 slice 6 for logging; I-36 slice 1 for public decks; I-38 slices 6 and 8; I-30 for the store plan.
@@ -2955,7 +3280,7 @@ At a night, every checked-in player sits in a pod of an allowed size within the 
 
 **Outcome:** a player chooses a deck's format, sees each legality verdict with its named, dated list, and builds and playtests a Duel Commander deck at 20 life with no free mulligan and no banned-as-commander card in the command zone.
 
-**Status:** Next — proposed 2026-11-09
+**Status:** Next
 **Priority:** Next for the format picker, legality and Duel Commander (slices 1 to 6); Later for the other variants
 **Impact / effort:** High / medium
 **Depends on:** the Duel Commander Rules Committee's answer on the mulligan before slice 3 ships; I-28 slice 2 for bracket 5 and the cEDH link-outs.
@@ -2993,7 +3318,7 @@ A player creates a Duel Commander deck, sees each verdict with its list and date
 
 **Outcome:** a player records where each physical copy sits, pairs a built deck with its box, and gets a pull list ordered by place and a put-back list when a deck changes or is dismantled.
 
-**Status:** Later — proposed 2026-11-09
+**Status:** Later
 **Priority:** Later. The deck-box path (slices 1 to 5) needs no collection import and can be promoted on its own; binders and boxes at scale wait for I-26 slice 3
 **Impact / effort:** Medium / medium
 **Depends on:** nothing for slices 1–5; I-26 slice 3 for places in a collection import; I-19 slices 3 and 4 for offline labels; I-30 for the two paid candidates.
@@ -3035,7 +3360,7 @@ A player pairs a deck with its box, pulls the missing cards in place order, puts
 
 **Outcome:** a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
 
-**Status:** Later — proposed 2026-11-09
+**Status:** Later
 **Priority:** Later, with a cheap early part: private lists, share links, the balance view and the friends audience (slices 1 to 7) need no I-38 work and collect no new personal data
 **Impact / effort:** Medium / large
 **Depends on:** I-15 pods for the pod audience; I-38's block, reports and legal pages before proposals and the wider audiences; I-41 check-in for the store audience; I-16 slice 4 for free copies; lawyer answers before slice 12.
@@ -3074,7 +3399,7 @@ Two players in one pod see each other's matching cards, total both sides at the 
 
 **Outcome:** a player sees which owned copies no deck uses and their estimated value in a chosen market, with source and date, and exports them in a file that Card Kingdom or Cardmarket's tools accept; the sale happens on the buyer's site.
 
-**Status:** Later — proposed 2026-11-09
+**Status:** Later
 **Priority:** Later, with a no-regret first part (slices 0 to 3) that may be pulled forward
 **Impact / effort:** Medium / medium
 **Depends on:** I-32 slices 2 and 3 for the market choice and dated prices (slice 4); I-16 slice 4 for one commitment index; I-06 for per-copy condition and the etched finish; Card Kingdom's written permission, I-30's legal gate and a feed contract for the paid candidates.
@@ -3113,7 +3438,7 @@ A player exports their spare copies, which never include a copy their decks use,
 
 **Outcome:** a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
 
-**Status:** Later — proposed 2026-11-10
+**Status:** Later
 **Priority:** Later. Slices 0 to 2 can ship now and need no decision; slice 3, the core, waits for I-67 slice 5's daily prices (re-pointed 2026-11-10)
 **Impact / effort:** Medium / medium
 **Depends on:** I-67 slice 5 for the daily prices (slice 3), re-pointed 2026-11-10; the owner's storage answer for the archive (slice 4); I-32 slice 3 for the market (slice 6); I-45 slice 4 for collection value (slice 7); I-56 slice 1, I-44 slice 1 and I-17 slice 3 for marks on their lists (slice 9); I-63 slices 1 to 3 for the inbox (slice 11) and its slice 10 for the email digest (slice 12); I-30 slices 0 and 11 and the lawyer's answer for the paid allowance (slice 13); I-37 slice 12 for "since added" (slice 14).
@@ -3155,7 +3480,7 @@ A player opens a deck and sees its value over 90 days in euros, with gaps drawn 
 
 **Outcome:** a deck link pasted into Discord, Slack, WhatsApp or Telegram shows the commander art with its artist, the deck's name and author, its declared bracket and its legality; a pod compares its decks with a slash command; and a creator's server receives deck updates by webhook. No bot reads the conversation.
 
-**Status:** Next — proposed 2026-11-09
+**Status:** Next
 **Priority:** Next for link previews (slices 1 to 3, no bot); Later for webhook feeds and the Discord app (slices 4 to 15)
 **Impact / effort:** Medium / small for previews; medium for the app
 **Depends on:** I-36 slices 1 and 2 for the public projection and the deck image; I-38 slices 6 and 7 before the app's install link is public; I-28 slice 7 for estimated brackets; the rate limiter shared across instances of I-05 M2 (one owner, decided 2026-11-10).
@@ -3193,7 +3518,7 @@ A deck link pasted in Discord shows the commander art with its artist, the name,
 
 **Outcome:** a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
 
-**Status:** Later — proposed 2026-11-10
+**Status:** Later
 **Priority:** Later. Slices 1 to 6 are private records that involve no second account and depend on no other initiative, so they could be promoted alone
 **Impact / effort:** Low to medium / medium
 **Depends on:** nothing for slices 1–6; I-38 slice 12's block before loans between accounts (slice 7) and the household (slice 9); I-38 slice 4 for the export; I-15 slice 3 for pod borrowers; I-16, I-43, I-44 and I-45 for their integrations; I-63 slice 9 (the sender was I-38 slice 13) and I-30 for e-mail reminders, and I-30 for the borrow plan.
@@ -3234,7 +3559,7 @@ A player lends a deck to a friend, sees the lent copies drop out of what a new d
 
 **Outcome:** a player sees whether the site is working, reports a problem from any page with only safe context attached and follows it, reads what changed in production in English or French, and later votes on requests whose status and release note are public.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for the status line, the bug report and "What's new" (slices 0 to 8); Later for the request board (slices 9 to 13)
 **Impact / effort:** Medium / small for slices 0–8; medium for the board
 **Depends on:** the owner's choice of monitor and of the report retention (slice 0); I-38 slices 8 and 12 before players post or vote (slice 10); I-39 slice 11 for the measurement view; I-05's failure visibility for the status lines per service.
@@ -3245,10 +3570,13 @@ A cheap subscription lives on two things: players trust that the product works, 
 
 - [ ] Slice 0, no code: the owner chooses the monitor and the status page's address and sets the bug-report retention; the lawyer questions join I-30 requirement 7.2 through I-38's slice 0.
 - [ ] An external monitor that checks `/api/health` at least every 5 minutes, and a status page hosted off the production stack (slice 1). This closes I-05's monitor item. Today no monitor is configured, although `docs/engineering/dx-ci-overview.md` lists UptimeRobot, and `/api/health` (`src/app/api/health/route.ts`) is public, has no rate limit and queries the database on every call.
+  - Alert routing, the phone alert for "down" and a page check of `/` beside this monitor, is [I-71](#i-71-speed-uptime-and-recovery) slice 4's, and I-71 owns the availability objective (2026-11-10).
 - [ ] `GET /api/status`, cached for 60 seconds, which answers `unknown`, never `ok`, when the monitor cannot be read; a footer status line, a banner only when something is wrong, and owner notices (slice 2). No browser calls `/api/health`, and a test fails if client code references it.
 - [ ] A bug report stored first-party and reachable from the header, both footers and the error boundary, with a "What will be sent" panel, an allowlist of context, a deck id only behind an unticked consent box, and free text scrubbed of e-mail addresses and tokens (slices 3–4). Today `src/app/[locale]/error.tsx` says the problem "has been reported" and shows a reference but takes nothing from the player, and `src/app/global-error.tsx` renders in English only.
   - [I-64](#i-64-a-help-centre-and-in-product-guidance) slice 9 adds one field to the allowlist, the help article the player came from, and shows up to three matching articles beside the form without blocking it. No second support channel is added.
+  - [I-70](#i-70-an-ai-quality-bench-and-safe-model-changes) slice 15 adds the kind `ai_output`, opened from the wizard's result and the suggestion panel, with the AI context attached only behind unticked boxes (2026-11-10).
 - [ ] A moderator triage view, Settings → My reports, and promotion to a GitHub issue with the owner's summary, never the player's words (slice 5).
+  - The triage view uses [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s moderator role and `requireOperator` once its slice 1 exists (2026-11-10).
 - [ ] Human-written release notes in English and French, one file per note under `src/content/whats-new/`, written in the `chore/docs` PR and dated by the first day production served them; `/whats-new`, an Atom feed and a header dot for accounts, with no modal or toast (slices 6–7). `docs/project/changelog.md` stays the developer log.
 - [ ] A released bug report links to its release note (slice 8).
 - [ ] Later: the request board's read side; posting and voting after I-38's report and block slices; a status workflow with merges and links to release notes; the owner's measurement view; and status lines for card search and the copilot (slices 9–13).
@@ -3275,7 +3603,7 @@ A player sees the site's status in the footer and on a page that loads while the
 
 **Outcome:** a player who wonders what "Game Changer", "2 owned · 1 proxy · 3 missing" or "free: new seven" means presses an "i" button beside it, or opens a help centre in English or French, and reads one reviewed definition. An article that outlives the interface it describes fails a test, and a player whom help does not answer reaches I-52's report, never a model.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 0 to 9, and for slice 13, which ships with I-30's billing; Later for the rest; slice 15 waits for the owner. Never paid
 **Impact / effort:** Medium / medium
 **Depends on:** nothing for slices 1 and 3; the owner's choice of writers and reviewers for slice 6; I-28 slices 1 and 2 for bracket names in the glossary (slice 2); I-39 slice 5 for the first-run surfaces (slice 8); I-52 slice 3 for the report (slice 9); I-30 slices 7 and 8 for slice 13; I-28 slice 4, I-47 slice 2 and I-27 slice 1 for glossary links (slice 14); I-30 slice 5's AI-use disclosure page (re-pointed 2026-11-10) and the owner's decision for slice 15.
@@ -3285,7 +3613,7 @@ None of the 16 page routes is a help, FAQ, glossary or about page, and the produ
 ### Scope
 
 - [ ] Slice 0, no code: who writes and reviews each locale; the lawyer questions join I-30 requirement 7.2 through I-38 slice 0.
-- [ ] A content model: MDX articles under `src/content/help/<slug>/` with a validated `meta.ts`, and `<Ui>`, `<Route>` and `<Anchor>` components. A test fails, naming the article, when a quoted key, route or anchor disappears or a quoted label changes after its review (slice 1). One MDX pipeline serves I-28's guide too; whichever of I-28 slice 3 or this slice lands first builds it.
+- [ ] A content model: MDX articles under `src/content/help/<slug>/` with a validated `meta.ts`, and `<Ui>`, `<Route>` and `<Anchor>` components. A test fails, naming the article, when a quoted key, route or anchor disappears or a quoted label changes after its review (slice 1). One MDX pipeline serves I-28's guide and I-68's style guides too. Single owner decided 2026-11-10 (coordinator call, the owner may override): I-64 slice 1; I-28 slice 3 and I-68 slice 1 consume it.
 - [ ] One glossary registry rendered through `<Term>`, with `/help/glossary` and the first terms players argue about (slice 2). Bracket terms take their names from I-28's `BracketRule`, game terms cite I-47's rule addresses, and metrics link I-34's `/methods`.
 - [ ] Public `/help` and article pages with a helpful counter, and a "Help" entry in the header and both footers, in the same order relative to "Report a problem" (slice 3).
 - [ ] `HelpTip`, an "i" button that opens on click, Enter or Space, closes on Escape and never opens on hover alone, and a registry that maps every statistic to its definition, with a test that fails when one renders without it (slice 4). Today `@radix-ui/react-tooltip` is installed and imported nowhere, 43 files carry 89 `title=` props, and `DeckStats`, `BracketIndicator`, `ManaCurve` and `CollectionStatsPanel` link to no definition.
@@ -3316,7 +3644,7 @@ A signed-out visitor opens `/fr/help`, finds "GC" through search and reads the G
 
 **Outcome:** a player reads a challenge brief, checks a deck against its rules with the product's deterministic tools, and enters a frozen list. Judges shortlist finalists, the community votes among them, and the results and the archive keep every brief, finalist and check report. Friends run private challenges the same way.
 
-**Status:** Later — proposed 2026-11-10
+**Status:** Later
 **Priority:** Later. The rule checker, the brief page and private challenges between friends (slices 1 and 5 to 8) need no vote, no prize and no legal answer, and could be promoted first
 **Impact / effort:** Medium / medium
 **Depends on:** I-67 slice 5 for dated prices (re-pointed 2026-11-10); I-28 slice 7 for bracket rules; I-42 slice 10 for rarity; I-36 slice 1 for frozen entries; I-05 M2's shared rate limiter (one owner, decided 2026-11-10); I-38 slices 8 to 10 for reports and decisions; I-21 slice 1 for the seeded draw; I-34 slice 1, I-39 slice 10, I-41 slices 3 and 11, I-63 slices 1 to 3 and I-46 slice 5 for their slices; the lawyer's answers before a sponsor credit or a prize.
@@ -3355,7 +3683,7 @@ A player checks a deck against a brief, enters a frozen list that passes, and fi
 
 **Outcome:** a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for the finder on card data, the wizard's commander step, the first-run entry and free text (slices 1 to 7, 9, 10 and 15); Later for signals computed from decks, indexable pages and the collection path (slices 8, 11 to 14 and 16), which wait for I-29, I-34 and I-16
 **Impact / effort:** Medium / medium
 **Depends on:** I-67 slices 2 and 7 for the card and Oracle Tags tables (slice 1), re-pointed 2026-11-10; I-02 and the owner for the build route's prompt branch (slice 6); I-39 slice 5 for the first-run panel; I-14 slices 1, 2 and 4 for free text; I-29 slices 8, 9 and 11 for deck signals; I-34 slice 1 for curated pages; I-16 slices 2 and 4 for the collection path; I-30's decision for slice 14.
@@ -3394,7 +3722,7 @@ A guest filters commanders by colours, style, complexity and budget, sees the qu
 
 **Outcome:** a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 0 to 4: one wanted list, filled from the acquisition plan, shared by link, with reservations hidden from the owner; Later for the rest
 **Impact / effort:** Medium / medium
 **Depends on:** nothing outside this initiative for slices 0–4; the owner's confirmation of the I-44 amendment before slice 9; I-44 slices 1, 6 and 12 for trades, friends and the adult declaration; I-17 slice 1 for precons; I-38 slices 4, 8 and 12 for export, reports and blocking; I-45 slice 1 for the keep mark; I-32 slices 1, 3 and 6 for the handoff, market prices and affiliate codes; I-57 slice 4 for printing exclusions. The price watch moved to I-59.
@@ -3439,7 +3767,7 @@ I-47 to I-50 were added on 2026-11-10 from a third research pass, each from date
 
 **Outcome:** a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for official rulings and rule links (slices 1 to 7); Later for the judge-reviewed interaction notes (slices 8 to 11) and for offline and screen-reader inclusion (slice 12); slices 13 and 14 wait on I-48, I-30 and the owner
 **Impact / effort:** Medium / medium for slices 1–7; the notes cost reviewer time on every rules update
 **Depends on:** nothing outside this initiative for slices 1, 2 and 7; I-67 slice 6's daily rulings and I-37 slice 12's `DeckCard.oracleId` for the rulings (slice 3), and so for slices 4 to 6, re-pointed 2026-11-10; I-38 slice 8 for error reports; a judge the owner names before slices 10 and 11; I-19 slice 2 and I-24 slice 3 for slice 12; I-48 slices 5 and 11 and I-30 slice 0 for the rules watch; the owner's decision for slice 14.
@@ -3480,7 +3808,7 @@ A player opens any card in the builder or on a public deck and sees its rulings 
 
 **Outcome:** when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 1 to 8, with slices 1 to 6 before the Commander announcement Wizards expects by the end of 2026; Later for slices 9 to 11; slice 12 waits for I-30
 **Impact / effort:** High / medium
 **Depends on:** I-28 slice 2 before slice 1; I-42 slice 2 before slice 2; I-42 slice 6 for the drift check; I-67 slice 4 for the draft comparison (slice 6) and I-67 slice 11 for the "under review" state (slice 9), both re-pointed 2026-11-10 from live searches; I-34 slices 1 and 3 for counts per commander; I-63 slice 9 for the e-mail (the sender was I-38 slice 13); I-30's decision and I-06's plan for the cross-deck fix planner.
@@ -3495,6 +3823,7 @@ Wizards now runs the Commander format and changes three lists without a fixed sc
 - [ ] The owner's impact, computed on the next deck-list load or deck open with no scheduled job: a first catch-up run, a dated notice on the deck list and in the editor, and a report that sets the declared bracket against the new estimate (slice 5).
 - [ ] A publishing workflow: a moderator's draft, a comparison with Scryfall's lists, then publication (slice 6).
   - Re-pointed 2026-11-10 to [I-67](#i-67-one-card-data-pipeline): the comparison reads I-67's `legality.changed` and `gameChanger.changed` events (its slice 4) instead of live searches, and slice 9's "under review" state reads I-67's count check (its slice 11).
+  - The moderator's publishing page uses [I-69](#i-69-an-operator-console-support-moderation-queue-flags-and-kill-switches)'s `requireOperator` once its slice 1 exists (2026-11-10).
 - [ ] Replacement candidates from a Scryfall query the player can read, in a fixed order, through the reviewed diff and never applied automatically (slice 7); the French pages, `noindex` until reviewed (slice 8).
 - [ ] Later: an "under review" state from I-42's drift check, counts per commander from public decks only, and an opt-in e-mail per announcement (slices 9–11); the cross-deck fix planner after I-30's decision (slice 12).
   - The in-app notice is an [I-63](#i-63-one-notification-system-inbox-email-and-preferences) inbox entry, and the e-mail opt-in is I-63's "Rules changes on my decks" category, not the spec's `rulesChangesEmail` column.
@@ -3520,7 +3849,7 @@ When a moderator publishes the next announcement, every saved Commander deck it 
 
 **Outcome:** every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next; Later for slice 14, the display control, which waits for I-24's motion bundle (marked 2026-11-10). Nothing in it is paid
 **Impact / effort:** High / medium; most slices are mechanical
 **Depends on:** nothing for slices 1, 2 and 11; bundle 5 under I-04 for the chart bars' focus ring (slice 9); bundle 6 under I-24 for the motion wiring (slice 14); a colour-blind and a low-vision player to review the result (slice 15).
@@ -3537,6 +3866,7 @@ Magic is a game of five colours, and a deckbuilder repeats them in mana costs, c
 - [ ] Bracket colours that pass contrast in each theme, and a marker other than colour on selected colour filters (slice 10). Today `BracketIndicator.tsx` draws its number in green-400 and amber-400, at 1.78:1 and 1.72:1 on white, and the selected filter border in `SearchFilters.tsx` and `BuilderColorSearchPicker.tsx` measures 2.76:1, under 3:1.
 - [ ] Text sizes on the `rem` scale, with no informational text under 12 px, then the reflow and zoom fixes that slice 1 finds (slices 11–12). Today 154 uses of `text-[7px]` to `text-[11px]` sit in 51 files, and `ManaSymbol.tsx` draws cost letters at 7 to 9 px.
 - [ ] Forced-colours and "more contrast" rules, a Display control for motion and contrast beside the theme buttons, and a review by a colour-blind and a low-vision player (slices 13–15).
+- [ ] **A voluntary accessibility statement (gap sweep, 2026-11-10),** generated from the six WCAG 2.2 AA audit bundles of I-04 and I-24. Done means: the page lists each bundle's status and date. Whether the European Accessibility Act applies once a merchant of record hosts checkout is added to [L-36](legal-questions.md#l-36-the-european-accessibility-act).
 
 ### Engineering enablers
 
@@ -3559,7 +3889,7 @@ A deuteranopic player names every segment of a Simic deck's colour chart without
 
 **Outcome:** a player, or any viewer of a public deck, takes the deck to Tabletop Simulator, Cockatrice, XMage, Forge, Magic Online, MTG Arena Brawl or a browser table in a file each destination accepts, and is told before copying what that destination lacks or will refuse. Webcam players get a table view, a printable list and a frozen deck check link.
 
-**Status:** Next — proposed 2026-11-10
+**Status:** Next
 **Priority:** Next for slices 0 to 8; Later for the webcam aids (slices 9 to 11); slice 12 is blocked on a partner agreement
 **Impact / effort:** Medium / medium
 **Depends on:** nothing for slices 0 to 7, except a test on an MTGO account for slice 6's command-zone placement; I-36 slice 1 for viewer export (slice 8); I-19 slice 3 for the cached table view; I-41 slice 4's QR generator; a signed agreement or an accepted upstream change for slice 12.
@@ -3615,7 +3945,7 @@ These capabilities are not future bets. They are part of the product baseline:
 These items remain visible so they are not forgotten, but they are not part of the next delivery order:
 
 - **Prisma 7:** wait for Node 22.12+ locally.
-- **Cloudflare R2:** wait for a concrete durable-media use case.
+- **Cloudflare R2:** wait for a concrete durable-media use case. [I-71](#i-71-speed-uptime-and-recovery) slice 2's encrypted off-site export of the database is one, if the owner picks R2 in its slice 0 (2026-11-10).
 - **Custom domain and DNS:** no longer parked for the domain itself (2026-11-10). The code already names `magicaibuilder.com`, which nobody has registered, so registering it, or making a production build fail without a set domain, is an owner action now under [I-05](#i-05-production-safety) and [D-02](owner-decisions.md#d-02-the-domain). Further DNS records, such as I-63's sending subdomains, follow the owner's choice.
 - **PostHog, Plausible or LogRocket:** choose after defining measurable product questions.
 - **Chromatic:** adopt when the component surface and visual regression budget justify it.

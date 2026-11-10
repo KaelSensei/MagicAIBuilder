@@ -37,7 +37,7 @@ Already shipped, per the roadmap:
 - A **deterministic post-generation validator**; the LLM never decides legality. **Corrected 2026-11-09:** for generated decks this validator checks structure only. See "Revision 2026-11-09" below.
 - Structured plan before generation; per-card reasoning; alternatives by budget, power and play pattern.
 - Diff before applying; "why is this card here?" and "what is the weakest card?".
-- A golden evaluation set for structure and evidence contracts.
+- Six validator regression cases for structure and evidence contracts (`src/lib/ai/golden-evaluation.test.ts`); no case calls a model. **Corrected 2026-11-10** from "a golden evaluation set": the bench that judges a model is [I-70](i70-ai-quality-bench-and-model-changes.md).
 - `ExternalRecommendationFreshness` and AI-suggested labelling (#1052) — the labelling vocabulary already exists for external sources.
 
 Open in the roadmap: _"Keep the deterministic validator's verdict visible in the copilot's output instead of only applying it silently."_ This spec details that item.
@@ -70,7 +70,7 @@ Open in the roadmap: _"Keep the deterministic validator's verdict visible in the
 ## Non-goals
 
 - Increasing generation volume or speed. Explicitly a non-goal in the roadmap: a wrong deck produced instantly is the failure this product exists to avoid.
-- Qualitative provider-backed evaluation of usefulness, until a stable review rubric exists — that remains the open golden-set item.
+- Qualitative provider-backed evaluation of usefulness, until a stable review rubric exists — that remains the open golden-set item, now owned by [I-70](i70-ai-quality-bench-and-model-changes.md#11-prose-if-ever) (2026-11-10).
 - Replacing I-09's source-and-freshness labelling with a second vocabulary. Reuse it.
 
 ## Testing strategy
@@ -79,7 +79,7 @@ Open in the roadmap: _"Keep the deterministic validator's verdict visible in the
 - **Contract:** a checked claim carries a source and an observation time; a reasoned claim carries neither.
 - **Sociable:** a brief that provokes an illegal suggestion renders it as rejected with its rule, and the deck is unchanged.
 - **Accessibility:** the checked/reasoned distinction survives greyscale and a screen reader.
-- **Regression:** the existing golden set passes unchanged — this spec must not alter validator behaviour.
+- **Regression:** the six existing validator regression cases (`golden-evaluation.test.ts`) pass unchanged — this spec must not alter validator behaviour.
 
 ## Delivery slices
 
@@ -130,7 +130,7 @@ Evidence: on r/EDH, ["Do not use AI to make deck suggestions or clarify rules. I
 
 7.1 Each AI route records `stop_reason` and `usage.output_tokens`. A response cut off at `max_tokens` is reported as truncated, not as a parse error.
 7.2 Usage is metered per user per month, and a monthly quota is enforced before any public launch or paid tier. Today the only limits are 5 builds and 10 suggestions per user per 60 seconds, held in an in-memory store per instance (`src/lib/rate-limit.ts`). In theory one account could send 216,000 builds in 30 days, about 1,776 USD on today's model (estimate). Metering is tracked under I-05.
-7.3 A change of model is judged on the golden set before it ships.
+7.3 A change of model is judged on the golden set before it ships. **Re-pointed 2026-11-10:** that set calls no model, so a change of model or prompt is judged by [I-70](i70-ai-quality-bench-and-model-changes.md#8-the-comparison-report-and-the-model-change-gate)'s comparison report and gate.
 
 **Prices.** Both routes call `claude-haiku-4-5`. Anthropic's [pricing page](https://platform.claude.com/docs/en/about-claude/pricing), read 2026-11-09, lists per million tokens: Haiku 4.5 at 1 USD input and 5 USD output; Haiku 5.5 at 0.10 and 0.50 USD for prompts up to 100,000 tokens; Sonnet 5.5 at 2 and 10 USD. The Batch API halves input and output. Haiku 5.5 and later models use a tokenizer that produces about 30% more tokens for the same text. Haiku 4.5 caches no prompt shorter than 4,096 tokens, and today's prompts are shorter.
 
@@ -138,7 +138,7 @@ Evidence: on r/EDH, ["Do not use AI to make deck suggestions or clarify rules. I
 
 **Truncation (to verify).** The default suggestion task asks for 8 additions with up to 3 alternatives each, 4 removals and an analysis. Its estimated output, about 2,200 tokens, sits at or above the route's 2,048-token cap. The route parses the text as JSON without checking `stop_reason`, so a truncated answer would surface as a failure. Measure before changing the cap.
 
-**Techniques to evaluate against the golden set** (design estimates, not measured here):
+**Techniques to evaluate on [I-70](i70-ai-quality-bench-and-model-changes.md)'s bench** (design estimates, not measured here; re-pointed 2026-11-10 from "the golden set"):
 
 - Retrieve a legal candidate pool from Scryfall before calling the model: colour identity inside the commander's, `legal:commander`, Game Changers by bracket, a price cap. Off-identity and illegal cards then become impossible rather than detected.
 - Ask the model for numbered picks from that pool, grouped by role, instead of full JSON objects. This could cut build output from about 1,500 tokens to 200–400.

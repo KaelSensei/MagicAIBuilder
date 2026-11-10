@@ -124,13 +124,13 @@ On today's model a heavy user costs more than a €3.99 plan nets. Haiku 5.5 mak
 
 ### 4. AI metering and quotas (production safety; ships before billing)
 
-4.1 Every model call goes through one server module. It records an `AiUsage` row: user, route, provider, model, input, output and cache tokens from `usage`, `stop_reason`, outcome, and a cost computed from a dated price table. The OpenAI fallback and the placeholder deck are recorded too, the placeholder at zero cost.
+4.1 Every model call goes through one server module. It records an `AiUsage` row: user, route, provider, model, input, output and cache tokens from `usage`, `stop_reason`, outcome, and a cost computed from a dated price table. The OpenAI fallback and the placeholder deck are recorded too, the placeholder at zero cost. Added 2026-11-10: the row also records `promptVersion`, `resolvedModel` and `latencyMs` ([I-70 9.3](i70-ai-quality-bench-and-model-changes.md#9-provenance-on-stored-builds-and-suggestions)).
 4.2 Outcomes are `ok`, `truncated` (`stop_reason: max_tokens`), `refused`, `parseFailed`, `rejectedByValidator` and `providerError`. A truncated reply is never parsed as a success.
 4.3 A monthly allowance per user and route, checked and incremented atomically in PostgreSQL before the call, so it holds across instances. The hypothesis: free 10 builds and 30 suggestion calls a month; paid 100 and 300. **Computed** at the estimated cost per call on Haiku 5.5, a fully used allowance costs about $0.06 and $0.59 a month.
 4.4 Calls that fail on our side (truncated, parse failure, validator rejection, provider error) do not consume the allowance; they are still recorded as our cost.
 4.5 Before an AI action the UI shows the remaining allowance and its reset date. An exhausted allowance returns HTTP 429 with `code: "allowance_exhausted"` and `resetsAt`, and the core flow continues without AI (1.5).
-4.6 A global monthly spend ceiling. Crossing it switches off free AI first, then paid AI above its allowance, and alerts the owner.
-4.7 **Model per task.** Deterministic rules never call a model. Builds, suggestions and short explanations move to Claude Haiku 5.5 once the golden set passes, with thinking at low effort and a raised `max_tokens`, because Haiku 5.5 thinks by default, counts about 30% more tokens and has no server-side refusal fallback. A paid "deep review" may use Sonnet 5.5, metered per call. Commander-level plans can be precomputed with the Batch API at half price [29].
+4.6 A global monthly spend ceiling. Crossing it switches off free AI first, then paid AI above its allowance, and alerts the owner. Since 2026-11-10 the switch-off writes through [I-69](i69-operator-console-support-moderation-and-kill-switches.md#5-the-switches-this-spec-ships)'s switch store (its slice 6), so the owner can lower the ceiling or switch AI off without a deploy.
+4.7 **Model per task.** Deterministic rules never call a model. Builds, suggestions and short explanations move to Claude Haiku 5.5 once [I-70](i70-ai-quality-bench-and-model-changes.md#8-the-comparison-report-and-the-model-change-gate)'s comparison report passes (re-pointed 2026-11-10: the "golden set" holds six validator cases and calls no model), with thinking at low effort and a raised `max_tokens`, because Haiku 5.5 thinks by default, counts about 30% more tokens and has no server-side refusal fallback. A paid "deep review" may use Sonnet 5.5, metered per call. Commander-level plans can be precomputed with the Batch API at half price [29].
 4.8 Usage rows are personal data: the privacy notice names them, and rows older than 13 months are aggregated without the user id (retention to be confirmed in slice 0).
 
 ### 5. Entitlements
@@ -220,23 +220,23 @@ The allowance check is a single conditional `UPDATE … SET used = used + 1 WHER
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                                         | Depends on                     |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| 0   | Decision gate: written lawyer and accountant answers to 7.2; owner picks provider, legal structure, price hypothesis, withdrawal flow, Wizards license or not | — (owner and counsel; no code) |
-| 1   | Metered model client: one module for both routes, `AiUsage`, outcomes, `stop_reason` handling, dated price table                                              | —                              |
-| 2   | Monthly allowance for every user in PostgreSQL, remaining allowance in the UI, global spend ceiling                                                           | 1                              |
-| 3   | Model per task: build and suggest on Haiku 5.5 behind the golden set, low-effort thinking, raised `max_tokens`                                                | 1; I-02 golden set             |
-| 4   | Entitlement layer with the free plan only, `GET /api/me/entitlements`, free-access guard test                                                                 | 2                              |
-| 5   | Public AI-use disclosure page                                                                                                                                 | 1                              |
-| 6   | Public "free and paid" page                                                                                                                                   | 0                              |
-| 7   | Billing in test mode: checkout, webhooks, `Subscription`, `BillingEvent`, portal, cancellation, account deletion                                              | 0, 4                           |
-| 8   | Consumer-law flows: withdrawal function and chosen flow, renewal reminder, termination function                                                               | 0, 7                           |
-| 9   | First paid entitlements: larger AI allowance and early access                                                                                                 | 5, 8                           |
-| 10  | Owner metrics page (8.1)                                                                                                                                      | 1, 7                           |
-| 11  | Further paid entitlements, each when its feature ships: I-59 alerts, I-18 watch, I-07/I-21 history, I-16 collection tools, I-31 variants, I-35 statistics     | 9; that initiative's slice     |
-| 12  | Fallback if slice 0 says no: supporter page, sponsor disclosure, uniform AI allowance                                                                         | 0; replaces 6–11               |
+| #   | Slice                                                                                                                                                                                           | Depends on                     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| 0   | Decision gate: written lawyer and accountant answers to 7.2; owner picks provider, legal structure, price hypothesis, withdrawal flow, Wizards license or not                                   | — (owner and counsel; no code) |
+| 1   | Metered model client: one module for both routes, `AiUsage`, outcomes, `stop_reason` handling, dated price table                                                                                | —                              |
+| 2   | Monthly allowance for every user in PostgreSQL, remaining allowance in the UI, global spend ceiling                                                                                             | 1                              |
+| 3   | Model per task: build and suggest on Haiku 5.5 behind I-70's comparison report, low-effort thinking, raised `max_tokens` _(re-pointed 2026-11-10 from "I-02 golden set", which calls no model)_ | 1; I-70 slices 10 and 11       |
+| 4   | Entitlement layer with the free plan only, `GET /api/me/entitlements`, free-access guard test                                                                                                   | 2                              |
+| 5   | Public AI-use disclosure page                                                                                                                                                                   | 1                              |
+| 6   | Public "free and paid" page                                                                                                                                                                     | 0                              |
+| 7   | Billing in test mode: checkout, webhooks, `Subscription`, `BillingEvent`, portal, cancellation, account deletion                                                                                | 0, 4                           |
+| 8   | Consumer-law flows: withdrawal function and chosen flow, renewal reminder, termination function                                                                                                 | 0, 7                           |
+| 9   | First paid entitlements: larger AI allowance and early access _(I-71's readiness check added 2026-11-10)_                                                                                       | 5, 8; I-71 slice 12            |
+| 10  | Owner metrics page (8.1)                                                                                                                                                                        | 1, 7                           |
+| 11  | Further paid entitlements, each when its feature ships: I-59 alerts, I-18 watch, I-07/I-21 history, I-16 collection tools, I-31 variants, I-35 statistics                                       | 9; that initiative's slice     |
+| 12  | Fallback if slice 0 says no: supporter page, sponsor disclosure, uniform AI allowance                                                                                                           | 0; replaces 6–11               |
 
-Slices 1 to 5 are production safety and honesty work; they ship whatever the legal answer. Slice 0 is a human decision, so scheduled agents must not pick slices 6 to 12 before its answers are committed.
+Slices 1 to 5 are production safety and honesty work; they ship whatever the legal answer. Slice 3 waits for I-70 slices 10 and 11 (re-pointed 2026-11-10). Slice 0 is a human decision, so scheduled agents must not pick slices 6 to 12 before its answers are committed.
 
 ## Open questions
 
