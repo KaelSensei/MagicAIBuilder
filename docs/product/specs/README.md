@@ -12,6 +12,8 @@ Every spec follows the same shape, matching the house format already used by [`c
 
 The **Delivery slices** table is the part that matters for automation: each slice is independently reviewable, and the dependency column says which ones cannot start yet. Three scheduled agents pick work from this roadmap every day — the dependency edges are what stop them colliding.
 
+[`dependency-graph.md`](dependency-graph.md) checks those edges across every table and lists the slices that can start now (2026-11-10).
+
 ## Committed work
 
 | Spec                                                                                      | Initiative | Status | The one-line reason it exists                                                                                                                             |

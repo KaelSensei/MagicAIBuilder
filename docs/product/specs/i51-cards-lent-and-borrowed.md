@@ -100,7 +100,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 ### 8. Reminders
 
 8.1 Reminders are off by default ([I-38 9.1](i38-trust-safety-and-user-rights.md#9-minors)). Each party turns them on for themselves, per loan or as a default. A **Due** view lists loans due within 7 days and overdue loans. It is computed when the player opens it, against the player's local date. A count appears on the collection page only for a player who turned reminders on.
-8.2 Email reminders wait for I-38 slice 13's sender: at most two per loan (the due date and 7 days after), sent only to a party who opted in. A lender cannot nudge the borrower, and there are no streaks or leaderboards.
+8.2 Email reminders wait for [I-63](i63-one-notification-system.md) slice 9 (the sender was I-38 slice 13): at most two per loan (the due date and 7 days after), sent only to a party who opted in. A lender cannot nudge the borrower, and there are no streaks or leaderboards.
 
 ### 9. With the neighbouring initiatives
 
@@ -187,7 +187,7 @@ Write the failing test first, as the [TDD contract](../../engineering/tdd-with-a
 | 14  | I-43 integration: `lent` and `returned` moves, the joint invariant, pull lists                                                                               | 3; I-43 slice 5                                 |
 | 15  | I-44 have lists exclude lent copies; "apply to my collection" refuses a copy that is out                                                                     | 3; I-44 slice 2                                 |
 | 16  | I-45 spare copies exclude lent copies                                                                                                                        | 3; I-45 slice 1                                 |
-| 17  | Email reminders                                                                                                                                              | 6; I-38 slice 13; I-30 slices 0 and 11 if paid  |
+| 17  | Email reminders                                                                                                                                              | 6; I-63 slice 9; I-30 slices 0 and 11 if paid   |
 | 18  | Paid candidate: the borrow plan in I-43's game-night planner                                                                                                 | 10, 14; I-43 slice 13; I-30 slices 0 and 11     |
 
 Slices 1 to 6 involve no other account and could ship alone. Slice 1 carries the loan schema; slice 9 adds the household tables. Scheduled agents must not pick slice 7 before I-38's block exists, or slices 17 and 18 before I-30's slice 0 answers are committed.

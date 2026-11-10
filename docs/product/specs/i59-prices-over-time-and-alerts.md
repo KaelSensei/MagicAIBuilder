@@ -99,7 +99,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10 by reading the code; nothing was ru
 ### 7. Delivery, consent and unsubscribe
 
 7.1 No rule exists until the player creates one, and the in-app inbox is the default channel. Nothing is sent to bring a player back: no reminders, no streaks, no "you have not checked your prices". No alert concerns a card the player did not put on a list.
-7.2 Email needs its own opt-in, off by default and recorded with its date, as [I-38 requirement 9.1](i38-trust-safety-and-user-rights.md#9-minors) keeps engagement notifications off by default. It uses I-38 slice 13's sender.
+7.2 Email needs its own opt-in, off by default and recorded with its date, as [I-38 requirement 9.1](i38-trust-safety-and-user-rights.md#9-minors) keeps engagement notifications off by default. It goes out in [I-63](i63-one-notification-system.md)'s digest (its slice 10), whose sender was I-38 slice 13.
 7.3 Email is a digest: at most one a day, grouped by list ([I-32 requirement 6.4](i32-seller-handoff-and-affiliate-carts.md#6-splitting-and-the-price-watch)). Each email carries a one-click unsubscribe that works without signing in, an HTTPS `List-Unsubscribe` with `List-Unsubscribe-Post: List-Unsubscribe=One-Click` [24], and a link to the rules.
 7.4 An alert links to the card in the player's list, never to a seller. The seller handoff stays one step further, under I-32's disclosure rules. Rules and events are in the [I-38 export](i38-trust-safety-and-user-rights.md#7-full-data-export) and are deleted with the account. Event retention is I-38's call; this spec proposes 365 days.
 
@@ -176,8 +176,8 @@ NotificationPreference + priceAlertEmail Boolean @default(false), priceAlertEmai
 | 8   | "Moved" marks on deck rows and the acquisition plan                                                                              | 2, 3                                                     |
 | 9   | Marks on the wanted list, want lists and bundles                                                                                 | 8; I-56 slice 1, I-44 slice 1, I-17 slice 3              |
 | 10  | Reprint watch and its marks                                                                                                      | 3                                                        |
-| 11  | Alert rules and the in-app inbox                                                                                                 | 8, 10                                                    |
-| 12  | Email digest with opt-in and one-click unsubscribe                                                                               | 11; I-38 slice 13                                        |
+| 11  | Alert rules and the in-app inbox                                                                                                 | 8, 10; I-63 slices 1 to 3                                |
+| 12  | Email digest with opt-in and one-click unsubscribe                                                                               | 11; I-63 slice 10                                        |
 | 13  | Paid entitlement above the free allowance                                                                                        | 11; I-30 slices 0 and 11; **Blocked** on open question 3 |
 | 14  | "Since added" window                                                                                                             | 8; I-37 slice 12                                         |
 

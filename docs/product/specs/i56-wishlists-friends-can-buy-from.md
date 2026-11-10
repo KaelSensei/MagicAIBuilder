@@ -154,7 +154,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 ### 8. Free and paid
 
 8.1 **Free on every plan:** the list, every way of filling it, all audiences, reservations, prices, the store view and the handoff. The TappedOut and Deckbox pages read name no charge for the wishlist, and Giftster calls itself "free" [1][2][11]. Scryfall forbids paywalling prices [19], and I-30 never charges for the player's own data.
-8.2 **One candidate for I-30:** wanted items in I-32's [price watch](i32-seller-handoff-and-affiliate-carts.md#6-splitting-and-the-price-watch), a daily or weekly digest when a wanted printing drops. I-32 slice 12, I-30 and I-32's question Q3 decide it. Demand evidence is weak: one r/EDH thread asked for "Wishlist price alerts?" (2023-02-21, 2 points) [21].
+8.2 **One candidate for I-30:** wanted items in I-32's [price watch](i32-seller-handoff-and-affiliate-carts.md#6-splitting-and-the-price-watch), a daily or weekly digest when a wanted printing drops. It moved to [I-59](i59-prices-over-time-and-alerts.md) slice 11 with the price watch (formerly I-32 slice 12); I-30 and I-32's question Q3 decide it. Demand evidence is weak: one r/EDH thread asked for "Wishlist price alerts?" (2023-02-21, 2 points) [21].
 8.3 **Why free competitors lack gift reservations** (inference): their wishlist is a deck-like list with one state; Moxfield's issue tracker calls it "a modified deck list" [3]. A reservation hidden from the owner needs a second person and a second state. That gap is a reason to choose the product, not to charge for it.
 8.4 **Affiliate income is small.** A relative buying for a player may be a new buyer, and Mana Pool pays "5% of the first sale when you refer someone" [22]. Computed example, not a forecast: a 40 USD gift order earns 2 USD. No volume estimate exists, so I-30 plans no revenue on this initiative.
 
@@ -221,7 +221,7 @@ Routes: `GET|POST /api/wishlist/items`; `PATCH|DELETE /api/wishlist/items/[id]`;
 | 15  | Keep mark on received gifts                                                                                                                                   | 5; I-45 slice 1                                            |
 | 16  | Market prices on the gift page                                                                                                                                | 3; I-32 slice 3                                            |
 | 17  | Any-printing items follow the owner's printing-rule exclusions, in words and image (1.7)                                                                      | 3; I-57 slice 4                                            |
-| 18  | Wanted items in the price watch                                                                                                                               | **Blocked** on I-30's decision and I-32 slice 12           |
+| 18  | Wanted items in the price watch                                                                                                                               | Moved to I-59 slice 11                                     |
 
 Slices 0 to 4 need no I-38 work and no lawyer answer: they show card data to the owner and to link holders, store no personal data about givers and no typed text, and depend on nothing outside this spec. Slice 0 also closes I-44's open question 6. The I-44 amendment in 1.4 must be merged before either I-44 slice 1 or slice 9 here starts, or the two initiatives will build two want tables.
 

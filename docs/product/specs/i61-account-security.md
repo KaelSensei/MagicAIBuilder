@@ -2,7 +2,7 @@
 
 > **Initiative:** I-61, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next. Slices 1 to 10 and 15 need neither an email sender nor counsel; slices 11 to 14 wait for [I-38](i38-trust-safety-and-user-rights.md)'s email sender. Never paid · **Written 2026-11-10**
 > **Research:** one dated note on Auth.js, OWASP ASVS 5.0, NIST SP 800-63B-4, the CNIL's password recommendation, the Pwned Passwords API and five competitors. It is not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate) through I-38's slice 0.
-> **Owns:** how a person proves who they are and how long that proof lasts: passwords and their storage, the breached-password check, passkeys, two-step sign-in and recovery codes, the session registry and the sessions page, re-authentication before sensitive actions, email verification, password reset and account recovery, linking Google from settings, sign-in throttling rules, and security notices. **Does not own:** the shared rate-limit store ([I-05](../roadmap.md#i-05-production-safety) M2); the `callbackUrl` fix (I-05 H1, done in [I-39](i39-first-run-activation-and-measurement.md) slice 2); the transactional email sender and the retention job (I-38 slices 13 and 14); account deletion, its cascade and the export (I-38 requirements 6 and 7); billing ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** how a person proves who they are and how long that proof lasts: passwords and their storage, the breached-password check, passkeys, two-step sign-in and recovery codes, the session registry and the sessions page, re-authentication before sensitive actions, email verification, password reset and account recovery, linking Google from settings, sign-in throttling rules, and security notices. **Does not own:** the shared rate-limit store ([I-05](../roadmap.md#i-05-production-safety) M2); the `callbackUrl` fix (I-05 H1, done in [I-39](i39-first-run-activation-and-measurement.md) slice 2); the transactional email sender ([I-63](i63-one-notification-system.md) slice 7, formerly I-38 slice 13) and the retention job (I-38 slice 14); account deletion, its cascade and the export (I-38 requirements 6 and 7); billing ([I-30](i30-business-model-and-paid-tier.md)).
 
 ## Overview
 
@@ -219,25 +219,25 @@ The unused Auth.js `Session` and `VerificationToken` models stay until a cleanup
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                                                               | Depends on       |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| 1   | Login throttling of group 8 on the shared store: per-IP bucket, per-address backoff, 100-failure disable, same answers, dummy hash, `docs/security` page            | I-05 M2; 2       |
-| 2   | Session registry: `UserSession`, `sid` in the JWT, one resolver for `requireAuth` and the ten `auth()` sites, sign-out and deletion revoke, timeouts, device cookie | —                |
-| 3   | Re-authentication by password or Google round trip; applied to API key creation and account deletion                                                                | 2                |
-| 4   | Settings → Security: sessions list, end one, sign out everywhere else, in-app event log                                                                             | 2, 3             |
-| 5   | Argon2id with upgrade on sign-in, full-length verification, 12–128 rule for new passwords, `autocomplete` and show-password                                         | —                |
-| 6   | Change password with the current one, and the offer to end other sessions                                                                                           | 3, 5             |
-| 7   | Breached-password check at signup, change and sign-in, with the forced change and the local fallback list                                                           | 5, 6             |
-| 8   | Passkeys: register, sign in with autofill, list, rename, remove, last-way-in rule; passkey as a re-authentication                                                   | 3, 4             |
-| 9   | Two-step with recovery codes; second step after password and Google sign-in through the ticket provider                                                             | 3, 4             |
-| 10  | `emailVerified` from Google's claim; link Google from Settings; clear unused Google tokens                                                                          | 3                |
-| 11  | Email verification at signup and the neutral signup answer                                                                                                          | I-38 slice 13    |
-| 12  | Password reset with the provisional-factor rule, and "set a password" for Google-only accounts                                                                      | 7, 11            |
-| 13  | Security notice emails, including new device and "This wasn't me"                                                                                                   | 4, I-38 slice 13 |
-| 14  | Change email with re-authentication, notice and revert link                                                                                                         | 3, 11            |
-| 15  | Google Cross-Account Protection receiver                                                                                                                            | 2                |
+| #   | Slice                                                                                                                                                               | Depends on      |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| 1   | Login throttling of group 8 on the shared store: per-IP bucket, per-address backoff, 100-failure disable, same answers, dummy hash, `docs/security` page            | I-05 M2; 2      |
+| 2   | Session registry: `UserSession`, `sid` in the JWT, one resolver for `requireAuth` and the ten `auth()` sites, sign-out and deletion revoke, timeouts, device cookie | —               |
+| 3   | Re-authentication by password or Google round trip; applied to API key creation and account deletion                                                                | 2               |
+| 4   | Settings → Security: sessions list, end one, sign out everywhere else, in-app event log                                                                             | 2, 3            |
+| 5   | Argon2id with upgrade on sign-in, full-length verification, 12–128 rule for new passwords, `autocomplete` and show-password                                         | —               |
+| 6   | Change password with the current one, and the offer to end other sessions                                                                                           | 3, 5            |
+| 7   | Breached-password check at signup, change and sign-in, with the forced change and the local fallback list                                                           | 5, 6            |
+| 8   | Passkeys: register, sign in with autofill, list, rename, remove, last-way-in rule; passkey as a re-authentication                                                   | 3, 4            |
+| 9   | Two-step with recovery codes; second step after password and Google sign-in through the ticket provider                                                             | 3, 4            |
+| 10  | `emailVerified` from Google's claim; link Google from Settings; clear unused Google tokens                                                                          | 3               |
+| 11  | Email verification at signup and the neutral signup answer                                                                                                          | I-63 slice 7    |
+| 12  | Password reset with the provisional-factor rule, and "set a password" for Google-only accounts                                                                      | 7, 11           |
+| 13  | Security notice emails, including new device and "This wasn't me"                                                                                                   | 4, I-63 slice 7 |
+| 14  | Change email with re-authentication, notice and revert link                                                                                                         | 3, 11           |
+| 15  | Google Cross-Account Protection receiver                                                                                                                            | 2               |
 
-Slice 5 should go first: it fixes the truncation and needs nothing. Slices 2 to 10 and 15 ship without an email sender and without counsel. Slice 1 waits only for I-05's store, which I-05 already needs for the AI quota. Scheduled agents must not pick slices 11 to 14 before I-38 slice 13 is merged, which itself waits for I-38 slice 0.
+Slice 5 should go first: it fixes the truncation and needs nothing. Slices 2 to 10 and 15 ship without an email sender and without counsel. Slice 1 waits only for I-05's store, which I-05 already needs for the AI quota. Scheduled agents must not pick slices 11 to 14 before I-63 slice 7 is merged, which itself waits for the owner's provider choice (I-63 slice 0).
 
 ## Open questions
 

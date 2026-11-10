@@ -232,7 +232,7 @@ The allowance check is a single conditional `UPDATE … SET used = used + 1 WHER
 | 8   | Consumer-law flows: withdrawal function and chosen flow, renewal reminder, termination function                                                               | 0, 7                           |
 | 9   | First paid entitlements: larger AI allowance and early access                                                                                                 | 5, 8                           |
 | 10  | Owner metrics page (8.1)                                                                                                                                      | 1, 7                           |
-| 11  | Further paid entitlements, each when its feature ships: I-32 alerts, I-18 watch, I-07/I-21 history, I-16 collection tools, I-31 variants, I-35 statistics     | 9; that initiative's slice     |
+| 11  | Further paid entitlements, each when its feature ships: I-59 alerts, I-18 watch, I-07/I-21 history, I-16 collection tools, I-31 variants, I-35 statistics     | 9; that initiative's slice     |
 | 12  | Fallback if slice 0 says no: supporter page, sponsor disclosure, uniform AI allowance                                                                         | 0; replaces 6–11               |
 
 Slices 1 to 5 are production safety and honesty work; they ship whatever the legal answer. Slice 0 is a human decision, so scheduled agents must not pick slices 6 to 12 before its answers are committed.

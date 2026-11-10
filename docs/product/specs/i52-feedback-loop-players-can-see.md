@@ -122,7 +122,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 4.4 Before posting, a title search shows similar requests. A moderator can merge duplicates: votes move to the kept request, counted once per account.
 4.5 Statuses: Under review, Planned, In progress, Shipped, Not planned and Duplicate. Each change is dated, kept in a history, and may carry a note. Not planned always has a written reason.
 4.6 Planned and In progress may link to a roadmap initiative (`I-37`, for example). The board never shows a delivery date.
-4.7 Shipped links to the release note that shipped it, and the note shows "Requested on the board" with the vote count. Voters see the change in-app, controlled by a new `NotificationPreference.requestUpdates` (on by default), until I-08's notification centre or I-38's e-mail sender exists.
+4.7 Shipped links to the release note that shipped it, and the note shows "Requested on the board" with the vote count. Voters see the change in-app, controlled by a new `NotificationPreference.requestUpdates` (on by default), until [I-63](i63-one-notification-system.md)'s inbox (its slices 1 to 3) exists.
 4.8 Suggestions sent through the bug report (2.3) before the board exists are seeded into it as requests written by the owner, without naming their senders.
 4.9 A public "How we decide" page states that votes inform decisions but do not dictate them, that each vote counts once, that money never weighs a vote (requirement 5), and that "Not planned" always has a reason.
 
@@ -217,7 +217,7 @@ Routes: `/whats-new` and `/whats-new/feed.xml`; `POST /api/user/whats-new-seen`;
 | 8   | A released bug report links to its release note                                                                                 | 5, 6                                         |
 | 9   | Board read side: models, public list and detail, statuses, initiative links, "How we decide", suggestions seeded                | 3                                            |
 | 10  | Posting, voting, title search and comments                                                                                      | 9; I-38 slices 8 and 12                      |
-| 11  | Status workflow: history, merges, Shipped linked to release notes, voter notices with `requestUpdates`                          | 6, 10                                        |
+| 11  | Status workflow: history, merges, Shipped linked to release notes, voter notices with `requestUpdates`                          | 6, 10; I-63 slices 1 to 3 for voter notices  |
 | 12  | Owner measurement view (7.2, 7.3, 7.5)                                                                                          | 11; I-39 slice 11                            |
 | 13  | Status lines for card search and the copilot                                                                                    | 2; I-05's failure visibility for those paths |
 

@@ -187,7 +187,7 @@ A schema test fails if any column holds a Discord user id, a username, message t
 | 2   | Deck previews switch to `/og/deck/{id}` with dimensions, alt and `?v=`                                                                       | 1; I-36 slice 2                                |
 | 3   | `/oembed` author line and the Discord component embed on deck pages                                                                          | 1                                              |
 | 4   | Chat deck formatter: a pure function from the public projection to a Discord message, with limit tests                                       | I-36 slice 1                                   |
-| 5   | Deck-update feeds by webhook on explicit publish                                                                                             | 4                                              |
+| 5   | Deck-update feeds by webhook on explicit publish                                                                                             | 4; I-63 slices 1 to 3 for the failure notice   |
 | 6   | App skeleton: signed endpoint, `PING`, `/help`, `/privacy`, `/settings`, `DiscordGuildSettings`, install link kept unlisted                  | I-38 slice 6                                   |
 | 7   | Shared rate limits on commands and Discord 429 handling                                                                                      | 6; the shared limiter of I-36 slice 11 or I-05 |
 | 8   | `/deck`, with the determinism and visibility tests                                                                                           | 4, 7                                           |

@@ -119,7 +119,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 7.1 The in-app notice in 3.3 is free and on for everyone. If I-08 ships a notification centre, the rules notice becomes one of its event types.
 7.2 E-mail is opt-in, off by default, and stored as a new preference `rulesChangesEmail`. This follows the safe defaults of I-38 9.1, which keep engagement notifications off unless the player turns them on.
 7.3 One e-mail per announcement per account, sent only if a deck changed. It lists the affected decks and links to each report and to the public page. It carries an unsubscribe link and no tracking pixel.
-7.4 E-mail waits for I-38's transactional sender (I-38 slice 13), which waits for its legal answers.
+7.4 E-mail waits for [I-63](i63-one-notification-system.md) slice 9, which sends through the transactional sender that was I-38 slice 13.
 7.5 Whether this e-mail is a service message or needs consent under French law is a lawyer question (research, not legal advice). Opt-in is the default either way.
 
 ### 8. What is free and what could be paid
@@ -185,7 +185,7 @@ NotificationPreference + rulesChangesEmail Boolean @default(false)
 | 8   | French catalogues and review of the public pages, with locale gating                                                                                                        | 3                                              |
 | 9   | "Under review" state from I-42's drift check, extended to Commander                                                                                                         | 6; I-42 slice 6                                |
 | 10  | Impact counts per commander on announcement pages, public decks only                                                                                                        | 2, 3; I-34 slices 1 and 3                      |
-| 11  | Opt-in e-mail per announcement                                                                                                                                              | 5; I-38 slice 13                               |
+| 11  | Opt-in e-mail per announcement                                                                                                                                              | 5; I-63 slice 9                                |
 | 12  | Paid candidate: the cross-deck fix planner                                                                                                                                  | **Blocked** on the I-30 decision; 7; I-06 plan |
 
 Slices 1, 3 and 6 make the next announcement a data change rather than a release. Slices 2 and 5 are what an owner sees, and slice 4 is what a visitor sees. Slice 1 waits for I-28 slice 2, which corrects `BRACKET_DEFINITIONS` and adds bracket 5, so the seeded data starts from correct rules. Slice 2 waits for I-42 slice 2 because both change who reads `isBanned`; landing them in order avoids two agents editing the same readers. I-28 slice 8, its guide's freshness banner, can read `RulesAnnouncement` once slice 3 exists. I-42 slice 11 should reuse slice 5's notice rather than build its own.

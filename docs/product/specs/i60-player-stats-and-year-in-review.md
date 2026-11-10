@@ -215,7 +215,7 @@ Slices 1, 2 and 4 give a player their own statistics and a private December reca
 
 1. **Lawyer (route to [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate)):** Is the stats page or the recap profiling under Article 4(4) [18], and on which basis does each run: performance of the service the player asked for, legitimate interest, or consent? If the recap opt-in is consent, does a player under 15 in France need a parent's joint consent [22], and is a profile-level recap compatible with I-38's defaults for minors? Does the public level meet Article 25(2) [19] as designed?
 2. **Cut-off:** 30 November with a 1 December release (this spec), or the full year with a January release, as Letterboxd's 2 January wrap does? A December release misses December's decks; a January one misses the season.
-3. **Notice by email:** should a player who asks be able to receive one email when their recap is ready? It needs I-38 slice 13's sender, and I-39 7.4 forbids re-engagement email as written.
+3. **Notice by email:** should a player who asks be able to receive one email when their recap is ready? It needs [I-63](i63-one-notification-system.md) slice 9 (the sender was I-38 slice 13), and I-39 7.4 forbids re-engagement email as written.
 4. **Community comparison:** should a private recap set the player's colour mix beside I-34's published community figures with their n? It must not become a rank (7.2).
 5. **Social figures:** should forks of the player's public decks (public under I-36 6.2) appear as an optional section? Follower counts stay out.
 

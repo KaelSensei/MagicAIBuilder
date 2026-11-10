@@ -183,26 +183,26 @@ Routes: `POST /api/reports` (signed in or out); `GET /api/moderation/cases`, `PO
 
 ## Delivery slices
 
-| #   | Slice                                                                                                               | Depends on                     |
-| --- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| 0   | Written answers to the lawyer questions below, added to I-30's slice 0                                              | — (owner and counsel; no code) |
-| 1   | Legal notice (identity fields supplied by the owner) and DSA contact page in French and English, footer links       | —                              |
-| 2   | Deletion defect: end the session on delete and add the tombstone; regression test with a live JWT                   | —                              |
-| 3   | Deletion cascade rules of 6.4: replies survive, fork label, anonymised reports                                      | 2                              |
-| 4   | Full JSON export endpoint with its schema and the guard test                                                        | —                              |
-| 5   | Settings → Account page: download export, delete account with re-authentication                                     | 3, 4                           |
-| 6   | Privacy policy v1 rendered from the retention constants, processor list, versioned legal documents                  | — (final wording after 0)      |
-| 7   | Terms v1 with moderation rules and minimum age; acceptance and age declaration recorded at signup                   | 6 (final wording after 0)      |
-| 8   | Generic `Report` replacing `DeckReport`, report buttons on every item type, signed-out notice form, acknowledgement | 1                              |
-| 9   | Moderation actions: `moderationState`, hide and restore, posting restriction, filtering on every public surface     | 8                              |
-| 10  | Decisions and statements of reasons, in-app notices to author and notifier, police-referral action                  | 9                              |
-| 11  | Appeals within six months                                                                                           | 10                             |
-| 12  | Block, per-deck comment switch, comment and review rate limits                                                      | —                              |
-| 13  | Transactional email sender with an exit path (reused by I-30 6.5 and 6.7)                                           | 0                              |
-| 14  | Retention job with dry run, inactive-account warning and deletion                                                   | 3, 13                          |
-| 15  | Email copies of statements of reasons and notice outcomes                                                           | 10, 13                         |
+| #   | Slice                                                                                                               | Depends on                                   |
+| --- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| 0   | Written answers to the lawyer questions below, added to I-30's slice 0                                              | — (owner and counsel; no code)               |
+| 1   | Legal notice (identity fields supplied by the owner) and DSA contact page in French and English, footer links       | —                                            |
+| 2   | Deletion defect: end the session on delete and add the tombstone; regression test with a live JWT                   | —                                            |
+| 3   | Deletion cascade rules of 6.4: replies survive, fork label, anonymised reports                                      | 2                                            |
+| 4   | Full JSON export endpoint with its schema and the guard test                                                        | —                                            |
+| 5   | Settings → Account page: download export, delete account with re-authentication                                     | 3, 4                                         |
+| 6   | Privacy policy v1 rendered from the retention constants, processor list, versioned legal documents                  | — (final wording after 0)                    |
+| 7   | Terms v1 with moderation rules and minimum age; acceptance and age declaration recorded at signup                   | 6 (final wording after 0)                    |
+| 8   | Generic `Report` replacing `DeckReport`, report buttons on every item type, signed-out notice form, acknowledgement | 1                                            |
+| 9   | Moderation actions: `moderationState`, hide and restore, posting restriction, filtering on every public surface     | 8                                            |
+| 10  | Decisions and statements of reasons, in-app notices to author and notifier, police-referral action                  | 9; I-63 slices 1 to 3 for the in-app notices |
+| 11  | Appeals within six months                                                                                           | 10                                           |
+| 12  | Block, per-deck comment switch, comment and review rate limits                                                      | —                                            |
+| 13  | Transactional email sender with an exit path (reused by I-30 6.5 and 6.7)                                           | Moved to I-63 slice 7                        |
+| 14  | Retention job with dry run, inactive-account warning and deletion                                                   | 0, 3; I-63 slices 5 and 7                    |
+| 15  | Email copies of statements of reasons and notice outcomes                                                           | 10; I-63 slice 7                             |
 
-Slices 1 to 5 and 12 ship whatever counsel says, and slice 2 should go first: it fixes a defect a user can hit today. Slices 6 and 7 can ship a reviewed draft before slice 0 and update their wording after it. Scheduled agents must not pick slice 13 or 14 before slice 0's answers are committed, because the email provider and the retention periods are decisions, not code.
+Slices 1 to 5 and 12 ship whatever counsel says, and slice 2 should go first: it fixes a defect a user can hit today. Slices 6 and 7 can ship a reviewed draft before slice 0 and update their wording after it. Scheduled agents must not pick slice 14 before slice 0's answers are committed, because the retention periods are decisions, not code. The email sender, slice 13, is now [I-63](i63-one-notification-system.md) slice 7, which waits for the owner's choice of provider.
 
 ## Open questions
 

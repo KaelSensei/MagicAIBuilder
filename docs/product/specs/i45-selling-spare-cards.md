@@ -171,22 +171,22 @@ CollectionValueSnapshot (paid, blocked) userId, day, market, currency, totalMino
 
 ## Delivery slices
 
-| #   | Slice                                                                                                                 | Depends on                                                                           |
-| --- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| 0   | Spare computation (pure function and `GET /api/collection/spares`), sideboard setting, other-printing flag; no prices | —                                                                                    |
-| 1   | Spare view on the collection page with keep marks (`CollectionKeep`) and set and rarity filters                       | 0                                                                                    |
-| 2   | Card Kingdom sell CSV with edition mapping, part splitting and the "kept / set again / unmapped" summary              | 0; a browser check of the fixture                                                    |
-| 3   | Cardmarket listing sheet and the generic CSV, with server-side identifiers                                            | 0                                                                                    |
-| 4   | Free valuation: spare values and the corrected "Total Value", per market, finish-aware, dated                         | 1; I-32 slices 2 and 3                                                               |
-| 5   | Per-copy condition and etched finish on collection rows (I-06 data change, with migration)                            | — (coordinate with I-26 slice 1)                                                     |
-| 6   | Inventory report with its hash                                                                                        | 4                                                                                    |
-| 7   | Printable list for shops without upload; Star City Games adapter once a person verifies its format                    | 3                                                                                    |
-| 8   | "Remove sold copies" with per-line confirmation                                                                       | 1                                                                                    |
-| 9   | Export counts per day, target and line bucket                                                                         | 2                                                                                    |
-| 10  | Switch the spare count to I-16's commitment index                                                                     | 0; I-16 slice 4                                                                      |
-| 11  | Buylist comparison against Card Kingdom (5.3)                                                                         | 2, 4; **Blocked** on Card Kingdom's written permission and L2                        |
-| 12  | Value history (5.1)                                                                                                   | 4; **Blocked** on I-30 slice 0, L1, and a feed contract covering the player's market |
-| 13  | Snapshot archive (5.2)                                                                                                | 6, 12; **Blocked** as slice 12                                                       |
+| #   | Slice                                                                                                                 | Depends on                                                                                         |
+| --- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 0   | Spare computation (pure function and `GET /api/collection/spares`), sideboard setting, other-printing flag; no prices | —                                                                                                  |
+| 1   | Spare view on the collection page with keep marks (`CollectionKeep`) and set and rarity filters                       | 0                                                                                                  |
+| 2   | Card Kingdom sell CSV with edition mapping, part splitting and the "kept / set again / unmapped" summary              | 0; a browser check of the fixture                                                                  |
+| 3   | Cardmarket listing sheet and the generic CSV, with server-side identifiers                                            | 0                                                                                                  |
+| 4   | Free valuation: spare values and the corrected "Total Value", per market, finish-aware, dated                         | 1; I-32 slices 2 and 3                                                                             |
+| 5   | Per-copy condition and etched finish on collection rows (I-06 data change, with migration)                            | — (coordinate with I-26 slice 1)                                                                   |
+| 6   | Inventory report with its hash                                                                                        | 4                                                                                                  |
+| 7   | Printable list for shops without upload; Star City Games adapter once a person verifies its format                    | 3                                                                                                  |
+| 8   | "Remove sold copies" with per-line confirmation                                                                       | 1                                                                                                  |
+| 9   | Export counts per day, target and line bucket                                                                         | 2                                                                                                  |
+| 10  | Switch the spare count to I-16's commitment index                                                                     | 0; I-16 slice 4                                                                                    |
+| 11  | Buylist comparison against Card Kingdom (5.3)                                                                         | 2, 4; **Blocked** on Card Kingdom's written permission and L2                                      |
+| 12  | Value history (5.1)                                                                                                   | Moved to I-59 slice 7                                                                              |
+| 13  | Snapshot archive (5.2)                                                                                                | 6; I-59 slice 7; **Blocked** on I-30 slice 0, L1, and a feed contract covering the player's market |
 
 Slices 0 to 3 ship without any price, contract or legal answer: they give players a deck-aware spare list and files that Card Kingdom and Cardmarket's tools accept. Slice 4 adds honest values once I-32's snapshot exists. Slices 11 to 13 are where any revenue would come from, and each waits for a human decision.
 

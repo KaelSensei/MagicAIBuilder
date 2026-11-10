@@ -151,7 +151,7 @@ Verified on `dev` on 2026-11-09 (commit `61792c1`).
 
 10.1 **Free on every plan:** lists, filling them from the collection and the plan, import and export, share links and QR codes, the balance view, matching within friends, pods and stores, on-demand nearby matching, proposals, safety, reporting, blocking and export.
 10.2 **Why free.** SuperSwap, Dragon Shield and EchoMTG give lists and a value comparison away, CardNexus gives trade lists away, and SuperSwap shares lists by link or QR code [1][6][8][11]. A paywall on them would lose players for no gain. Scryfall forbids paywalling its prices [15]. I-30 keeps sharing free (1.1) and never charges for the player's own data (1.2). TappedOut charges $5 to start a trade request [10]. This spec rejects that model, because contact and safety are never paid levers ([I-38 10.1](i38-trust-safety-and-user-rights.md#10-the-paid-tier-boundary)).
-10.3 **Candidate for I-30, decided there:** a continuous watch. It checks the player's wants against every audience the player can see (several pods, stores and the city) and sends a daily or weekly digest. It is a personal tool that watches over time ([I-30 1.3](i30-business-model-and-paid-tier.md#1-the-free-and-paid-line)). It also costs background compute and an email sender (I-38 slice 13).
+10.3 **Candidate for I-30, decided there:** a continuous watch. It checks the player's wants against every audience the player can see (several pods, stores and the city) and sends a daily or weekly digest. It is a personal tool that watches over time ([I-30 1.3](i30-business-model-and-paid-tier.md#1-the-free-and-paid-line)). It also costs background compute and an email sender (I-63 slice 7, formerly I-38 slice 13).
 10.4 **The evidence for paying is weak.** SuperSwap alerts on nearby matches for free [2], and EchoMTG alerts on want-list matches for free [6]. I-30 should not plan revenue on 10.3.
 10.5 A paid plan never changes who sees a list, the order of matches or the limits in 8.3.
 
@@ -201,24 +201,24 @@ Routes: `GET|POST /api/trade-lists`; `PATCH|DELETE /api/trade-lists/[id]`; `POST
 
 ## Delivery slices
 
-| #   | Slice                                                                                                           | Depends on                                                      |
-| --- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| 1   | Private have and want lists: model, create and edit, strictness levels, text paste and export                   | —                                                               |
-| 2   | Fill a have list from the collection and a want list from the acquisition plan, with a preview                  | 1                                                               |
-| 3   | Share link and QR code: token, allowlisted public page, `noindex`, robots rule, rotate and disable              | 1                                                               |
-| 4   | Balance view: two sides, USD or EUR from Scryfall, dated, unpriced cards listed, no account needed              | —                                                               |
-| 5   | "Compare with mine" on a shared list for a signed-in viewer                                                     | 3                                                               |
-| 6   | Friends audience (mutual follows) and the match view                                                            | 1                                                               |
-| 7   | Trade-first marks on the acquisition plan                                                                       | 2, 6                                                            |
-| 8   | Pod audience                                                                                                    | 6; I-15 slice 3 and a pod-membership decision (open question 2) |
-| 9   | Proposals between friends and pod members: structure, states, expiry, confirmation, collection apply, purge job | 6; I-38 slice 12 (block)                                        |
-| 10  | Report targets for lists and proposals; a hidden list leaves every audience                                     | 9; I-38 slices 8 to 10                                          |
-| 11  | Free-copies mode for have lists                                                                                 | 2; I-16 slice 4                                                 |
-| 12  | Adult declaration and city opt-in: city list, region fallback, deletion on opt-out, export entry                | I-38 slices 6 and 7; lawyer answers (open question 1)           |
-| 13  | Store audience and the store meeting option, with limits and safety text                                        | 10, 12; I-41 slice 5                                            |
-| 14  | Nearby audience: on-demand matches only, reciprocity, rate limits, account-age delay                            | 13; the cold-start gate (open question 4)                       |
-| 15  | Reputation context: shared context and confirmed-partner bands                                                  | 9                                                               |
-| 16  | Continuous match watch with digest                                                                              | **Blocked** on I-30's decision; 14; I-38 slice 13               |
+| #   | Slice                                                                                                           | Depends on                                                        |
+| --- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 1   | Private have and want lists: model, create and edit, strictness levels, text paste and export                   | —                                                                 |
+| 2   | Fill a have list from the collection and a want list from the acquisition plan, with a preview                  | 1                                                                 |
+| 3   | Share link and QR code: token, allowlisted public page, `noindex`, robots rule, rotate and disable              | 1                                                                 |
+| 4   | Balance view: two sides, USD or EUR from Scryfall, dated, unpriced cards listed, no account needed              | —                                                                 |
+| 5   | "Compare with mine" on a shared list for a signed-in viewer                                                     | 3                                                                 |
+| 6   | Friends audience (mutual follows) and the match view                                                            | 1                                                                 |
+| 7   | Trade-first marks on the acquisition plan                                                                       | 2, 6                                                              |
+| 8   | Pod audience                                                                                                    | 6; I-15 slice 3 and a pod-membership decision (open question 2)   |
+| 9   | Proposals between friends and pod members: structure, states, expiry, confirmation, collection apply, purge job | 6; I-38 slice 12 (block); I-63 slices 1 to 3 for proposal notices |
+| 10  | Report targets for lists and proposals; a hidden list leaves every audience                                     | 9; I-38 slices 8 to 10                                            |
+| 11  | Free-copies mode for have lists                                                                                 | 2; I-16 slice 4                                                   |
+| 12  | Adult declaration and city opt-in: city list, region fallback, deletion on opt-out, export entry                | I-38 slices 6 and 7; lawyer answers (open question 1)             |
+| 13  | Store audience and the store meeting option, with limits and safety text                                        | 10, 12; I-41 slice 5                                              |
+| 14  | Nearby audience: on-demand matches only, reciprocity, rate limits, account-age delay                            | 13; the cold-start gate (open question 4)                         |
+| 15  | Reputation context: shared context and confirmed-partner bands                                                  | 9                                                                 |
+| 16  | Continuous match watch with digest                                                                              | **Blocked** on I-30's decision; 14; I-63 slice 10                 |
 
 Slices 1 to 7 need no I-38 work: they show card data only, to the owner, to a link holder or to mutual follows. Slice 4 also serves players who never sign in. Scheduled agents must not pick slice 12 or later before the lawyer answers are committed, because location, age and DAC7 are decisions, not code.
 

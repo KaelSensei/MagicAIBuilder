@@ -176,7 +176,7 @@ Sponsor         id, name, url, kind (store | creator | other), agreementRef (own
 | 12  | Results statistics with the withholding threshold; awards on profiles and deck pages; index policy page kind                     | 9; I-34 slice 1                                                |
 | 13  | Product events and the demand threshold                                                                                          | 7; I-39 slice 10                                               |
 | 14  | Store challenges on store pages                                                                                                  | 9; I-41 slices 3 and 11                                        |
-| 15  | Announcements: opt-in notice and a Discord webhook feed                                                                          | 5; I-08 notifications; I-46 slice 5                            |
+| 15  | Announcements: opt-in notice and a Discord webhook feed                                                                          | 5; I-63 slices 1 to 3; I-46 slice 5                            |
 | 16  | Sponsor credit                                                                                                                   | 5; **Blocked** on slice 0 and the owner's answer to question 3 |
 | 17  | Prize-bearing challenges: rules page, eligibility, judges-only prizes                                                            | 9; **Blocked** on slice 0                                      |
 
