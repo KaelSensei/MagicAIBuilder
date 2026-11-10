@@ -100,4 +100,17 @@ describe("Header", () => {
 
     expect(createDeck).toHaveBeenCalledWith(expect.stringMatching(/^Deck importé — /));
   });
+
+  // The blank deck was always stored as "New Deck", whatever the creator's locale.
+  it("names a new deck in the creator's locale", async () => {
+    const createDeck = vi.fn(async (_name: string) => "deck-123");
+    createDeckImpl = (name: string) => createDeck(name);
+
+    const { Header } = await import("./Header");
+
+    renderWithIntl(React.createElement(Header), "fr");
+    await userEvent.click(screen.getByRole("button", { name: "Nouveau deck" }));
+
+    expect(createDeck).toHaveBeenCalledWith("Nouveau deck");
+  });
 });

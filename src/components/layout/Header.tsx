@@ -55,12 +55,14 @@ export function Header({ deckId }: HeaderProps = {}) {
     if (isCreatingDeck) return;
     setIsCreatingDeck(true);
     try {
-      const id = await createDeck("New Deck");
+      // The default name is stored data: write it once, in the creator's
+      // locale, as the imported-deck name below already does.
+      const id = await createDeck(t("nav.newDeck"));
       router.push(`/builder/${id}`);
     } finally {
       setIsCreatingDeck(false);
     }
-  }, [createDeck, isCreatingDeck, router]);
+  }, [createDeck, isCreatingDeck, router, t]);
 
   const handleImportFromHome = useCallback(async () => {
     if (isCreatingImportDeck) return;

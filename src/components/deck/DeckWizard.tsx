@@ -880,9 +880,16 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
 
       setIsDemoDeck(result.source === "demo");
 
-      const deckId = await createDeck(`AI Deck — ${strategy}`, {
-        isAIGenerated: true,
-      });
+      // Stored once, in the creator's locale, with the strategy's label
+      // rather than its English id.
+      const strategyOption = STRATEGIES.find((s) => s.value === strategy);
+      const strategyLabel = strategyOption
+        ? t(`wizard.${strategyOption.labelKey}`)
+        : strategy;
+      const deckId = await createDeck(
+        t("wizard.aiDeckName", { strategy: strategyLabel }),
+        { isAIGenerated: true }
+      );
       await setActiveDeck(deckId);
 
       // Read the commander off the build result, not off `buildState`: this

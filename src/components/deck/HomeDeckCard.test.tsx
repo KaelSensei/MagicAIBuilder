@@ -140,6 +140,30 @@ describe("HomeDeckCard", () => {
 
     expect(screen.getByRole("img", { name: "Symbole de mana Vert" })).toBeDefined();
   });
+
+  // The badge was the English literal "AI" under every locale.
+  it("marks an AI-generated deck in French", () => {
+    const deck: Deck = { ...makeDeck(), isAIGenerated: true };
+
+    render(
+      <NextIntlClientProvider
+        locale="fr"
+        messages={{ deck: frDeck, builder: frBuilder }}
+        timeZone="UTC"
+      >
+        <HomeDeckCard
+          deck={deck}
+          onDelete={vi.fn()}
+          onDuplicate={vi.fn()}
+          deletingId={null}
+          duplicatingId={null}
+        />
+      </NextIntlClientProvider>
+    );
+
+    expect(screen.getByText("IA")).toBeInTheDocument();
+    expect(screen.queryByText("AI")).not.toBeInTheDocument();
+  });
 });
 
 describe("HomeDeckCard commander art", () => {

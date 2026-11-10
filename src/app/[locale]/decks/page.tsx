@@ -128,7 +128,8 @@ export default function DecksPage() {
 
     setIsCreating(true);
     try {
-      const name = `New Deck ${deckList.length + 1}`;
+      // Stored once, in the creator's locale; renaming stays the user's call.
+      const name = t("home.newDeckName", { index: deckList.length + 1 });
       const id = await createDeck(name);
       router.push(`/builder/${id}`);
     } catch (error) {

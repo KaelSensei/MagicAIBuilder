@@ -118,3 +118,20 @@ describe("PublicDeckView images", () => {
     expect(container.innerHTML).not.toContain("cards.scryfall.io/normal/");
   });
 });
+
+// The bracket pill, the AI badge and the author fallback were English literals.
+describe("PublicDeckView header in French", () => {
+  it("labels the bracket, the AI badge and an anonymous author", () => {
+    renderWithIntl(
+      <PublicDeckView
+        deck={{ ...deck, isAIGenerated: true }}
+        isSignedIn={false}
+      />,
+      { locale: "fr" }
+    );
+
+    expect(screen.getByText("Bracket 2")).toBeInTheDocument();
+    expect(screen.getByText("Généré par IA")).toBeInTheDocument();
+    expect(screen.getByText("Anonyme")).toBeInTheDocument();
+  });
+});

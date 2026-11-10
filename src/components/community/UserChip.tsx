@@ -2,6 +2,7 @@
 // Small author chip: avatar (or placeholder) plus a profile link when one exists.
 import { Link } from "@/i18n/navigation";
 import { User } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export interface UserChipProps {
   readonly name: string | null;
@@ -10,7 +11,8 @@ export interface UserChipProps {
 }
 
 export function UserChip({ name, username, image }: UserChipProps) {
-  const displayName = name ?? username ?? "Anonymous";
+  const t = useTranslations("deck.community");
+  const displayName = name ?? username ?? t("anonymous");
 
   return (
     <>

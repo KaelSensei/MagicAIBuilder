@@ -10,21 +10,8 @@ import { getDeckPresentationManaColors } from "./HomeDeckCard";
 
 type HomeDeckManaColor = "W" | "U" | "B" | "R" | "G" | "C";
 
-const HOME_DECK_MANA_LABELS: Record<HomeDeckManaColor, string> = {
-  W: "White",
-  U: "Blue",
-  B: "Black",
-  R: "Red",
-  G: "Green",
-  C: "Colorless",
-};
-
 function getDeckManaSymbolUrl(color: HomeDeckManaColor): string {
   return `https://svgs.scryfall.io/card-symbols/${color}.svg`;
-}
-
-function getDeckManaSymbolAlt(color: HomeDeckManaColor): string {
-  return `${HOME_DECK_MANA_LABELS[color]} mana symbol`;
 }
 
 const BRACKET_COLORS: Record<number, string> = {
@@ -102,6 +89,7 @@ function DeckListRow({
   const isManual = Boolean(deck.manualBracket);
   const manaColors = useMemo(() => getDeckPresentationManaColors(deck), [deck]);
   const t = useTranslations("deck");
+  const tBuilder = useTranslations("builder");
   const format = useFormatter();
 
   return (
@@ -127,7 +115,9 @@ function DeckListRow({
               <Image
                 key={`${deck.id}-${color}`}
                 src={getDeckManaSymbolUrl(color)}
-                alt={getDeckManaSymbolAlt(color)}
+                alt={tBuilder("manaSymbolAlt", {
+                  color: tBuilder(`manaColors.${color}`),
+                })}
                 width={16}
                 height={16}
                 unoptimized

@@ -4,8 +4,14 @@ import { fireEvent, screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) =>
-    React.createElement("a", { href, ...props }, children),
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => React.createElement("a", { href, ...props }, children),
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
   usePathname: () => "/",
 }));
@@ -29,9 +35,12 @@ function makeProfile() {
 
 describe("PublicProfileView — member-since date", () => {
   it("renders the month in English under the en locale", () => {
-    renderWithIntl(<PublicProfileView profile={makeProfile()} canFollow={false} />, {
-      locale: "en",
-    });
+    renderWithIntl(
+      <PublicProfileView profile={makeProfile()} canFollow={false} />,
+      {
+        locale: "en",
+      }
+    );
 
     expect(screen.getByText(/August 2026/)).toBeInTheDocument();
   });
@@ -39,9 +48,12 @@ describe("PublicProfileView — member-since date", () => {
   // The date was formatted with a hardcoded toLocaleDateString("en-US"), so a
   // French visitor read "August 2026" on an otherwise French page.
   it("renders the month in French under the fr locale", () => {
-    renderWithIntl(<PublicProfileView profile={makeProfile()} canFollow={false} />, {
-      locale: "fr",
-    });
+    renderWithIntl(
+      <PublicProfileView profile={makeProfile()} canFollow={false} />,
+      {
+        locale: "fr",
+      }
+    );
 
     expect(screen.getByText(/août 2026/)).toBeInTheDocument();
   });
@@ -51,17 +63,24 @@ describe("PublicProfileView avatar", () => {
   it("shows an accessible neutral fallback when the avatar image fails", () => {
     renderWithIntl(
       <PublicProfileView
-        profile={{ ...makeProfile(), image: "https://example.test/broken-avatar.png" }}
+        profile={{
+          ...makeProfile(),
+          image: "https://example.test/broken-avatar.png",
+        }}
         canFollow={false}
       />,
-      { locale: "en" },
+      { locale: "en" }
     );
 
     const avatar = screen.getByRole("img", { name: "Totoro" });
     fireEvent.error(avatar);
 
-    expect(screen.getByRole("img", { name: "Totoro" })).not.toBeInstanceOf(HTMLImageElement);
-    expect(screen.queryByRole("img", { name: "Totoro" })).not.toHaveAttribute("src");
+    expect(screen.getByRole("img", { name: "Totoro" })).not.toBeInstanceOf(
+      HTMLImageElement
+    );
+    expect(screen.queryByRole("img", { name: "Totoro" })).not.toHaveAttribute(
+      "src"
+    );
   });
 });
 
@@ -100,5 +119,31 @@ describe("PublicProfileView deck art", () => {
       "src",
       "https://cards.scryfall.io/art/front/d/0/d0d33d52-3d28-4635-b985-51e126289259.webp?1599707796"
     );
+  });
+});
+
+// The deck tile badge was the English literal "✦ AI" under every locale.
+describe("PublicProfileView AI badge", () => {
+  it("marks an AI-generated deck in French", () => {
+    const aiDeck = {
+      id: "deck-1",
+      name: "Robot deck",
+      description: null,
+      format: "commander",
+      targetBracket: 2,
+      isAIGenerated: true,
+      createdAt: "2026-08-23T12:00:00Z",
+      updatedAt: "2026-08-23T12:00:00Z",
+      cards: [],
+    };
+    renderWithIntl(
+      <PublicProfileView
+        profile={{ ...makeProfile(), decks: [aiDeck] }}
+        canFollow={false}
+      />,
+      { locale: "fr" }
+    );
+
+    expect(screen.getByText("IA")).toBeInTheDocument();
   });
 });
