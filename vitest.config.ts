@@ -11,6 +11,10 @@ export default defineConfig({
     // Only include unit tests — E2E tests are run via Playwright separately
     include: ["src/**/*.test.ts", "src/**/*.test.tsx", "scripts/**/*.test.ts"],
     exclude: ["e2e/**", "node_modules/**", ".next/**"],
+    // next-auth imports "next/server" without an extension, which Node's ESM
+    // loader cannot resolve outside a bundler. Inlining lets Vite resolve it,
+    // so a test can drive the real Auth.js route handlers.
+    server: { deps: { inline: ["next-auth"] } },
     /**
      * Coverage is measured over **all** of `src`.
      *

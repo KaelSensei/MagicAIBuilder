@@ -71,6 +71,10 @@ vi.stubEnv("GOOGLE_CLIENT_SECRET", "test-secret");
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- side-effect import triggers NextAuth config
 import "./config";
+import Google from "next-auth/providers/google";
+
+/** The options `config.ts` handed to the Google provider when it loaded. */
+const googleOptions = vi.mocked(Google).mock.calls[0]?.[0];
 
 type AuthorizeType = (credentials: Record<string, unknown> | undefined) => Promise<{ id: string; email: string; name: string | null; image: string | null } | null>;
 
@@ -83,6 +87,13 @@ function getAuthorize(): AuthorizeType {
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
+
+describe("Google provider", () => {
+  it("never links a Google sign-in to an existing account by email alone", () => {
+    expect(googleOptions).toBeDefined();
+    expect(googleOptions?.allowDangerousEmailAccountLinking).toBeUndefined();
+  });
+});
 
 describe("Credentials authorize", () => {
   let authorize: AuthorizeType;
