@@ -69,6 +69,35 @@ describe("buildSuggestionDiff", () => {
       )
     ).toEqual({ additions: ["Rhystic Study"], removals: ["Island"] });
   });
+
+  it("keeps a removal whose name carries an apostrophe", () => {
+    expect(
+      buildSuggestionDiff(["Urza's Saga"], [], [removal("Urza's Saga")])
+    ).toEqual({ additions: [], removals: ["Urza's Saga"] });
+  });
+
+  // The model may echo a name with a typographic apostrophe, another case or
+  // doubled spaces. The diff must still find the deck card, and must name it
+  // as the deck spells it: the builder removes the card by exact name.
+  it("matches a removal spelt differently by the model and reports the deck's spelling", () => {
+    expect(
+      buildSuggestionDiff(
+        ["Atraxa, Praetors' Voice", "Thassa's Oracle"],
+        [],
+        [removal("atraxa,  praetors’ voice"), removal("Thassa’s Oracle")]
+      )
+    ).toEqual({
+      additions: [],
+      removals: ["Atraxa, Praetors' Voice", "Thassa's Oracle"],
+    });
+  });
+
+  it("does not add a card the deck already holds under another spelling", () => {
+    expect(buildSuggestionDiff(["Urza's Saga"], ["Urza’s Saga"], [])).toEqual({
+      additions: [],
+      removals: [],
+    });
+  });
 });
 
 describe("toggleSuggestionSelection", () => {
