@@ -21,7 +21,6 @@ vi.mock("@/lib/db/deck-api", () => ({
   updateCardNotes: vi.fn().mockResolvedValue({}),
   removeAllCards: vi.fn(),
   lookupCardCache: vi.fn().mockResolvedValue(null),
-  storeCardCache: vi.fn(),
 }));
 
 // Also mock useToast so the store doesn't blow up

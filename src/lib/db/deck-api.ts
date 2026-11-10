@@ -11,8 +11,6 @@ import {
   type CommandSlot,
   type CommandZonePatch,
 } from "@/lib/deck/bulk-edit-command-zone";
-import { logger } from "@/lib/logger";
-import { MAX_SEARCH_CACHE_BYTES } from "@/lib/cache-limits";
 import {
   createGuestDeck,
   isGuestDeckId,
@@ -522,69 +520,52 @@ function normalizeCardCategory(category: string | undefined): CardCategory {
 }
 
 // ─── Scryfall Cache ───────────────────────────────────────────────────────────
+// Read-only from the browser: the server fills the shared cache on a miss, from
+// Scryfall answers it fetched itself, and accepts no writes from clients.
 
+/** The body's `data`, whether the server served it from the cache or just fetched it. */
+async function readCacheData(res: Response): Promise<unknown> {
+  if (!res.ok) return null;
+  const body: unknown = await res.json();
+  return typeof body === "object" && body !== null && "data" in body
+    ? body.data
+    : null;
+}
+
+/**
+ * Reads a card through the shared cache.
+ * @param scryfallId - Scryfall card id
+ * @returns the card body, or null when the server could not provide one
+ */
 export async function lookupCardCache(scryfallId: string): Promise<unknown> {
   try {
     const res = await fetch(
       `/api/cache/cards?id=${encodeURIComponent(scryfallId)}`
     );
-    if (!res.ok) return null;
-    const body = await res.json();
-    return body.hit ? body.data : null;
+    return await readCacheData(res);
   } catch {
     return null;
   }
 }
 
-export async function storeCardCache(
-  scryfallId: string,
-  data: unknown
-): Promise<void> {
-  try {
-    await fetch("/api/cache/cards", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ scryfallId, data }),
-    });
-  } catch (err) {
-    logger.warn("Failed to cache card", "storeCardCache", err);
-  }
-}
-
-// ─── Scryfall Search Cache ────────────────────────────────────────────────────
-
-/** Look up a cached search result by query + page (hash computation happens server-side) */
+/**
+ * Reads a search page through the shared cache (the key is hashed server-side).
+ * @param query - Scryfall query
+ * @param page - 1-based page
+ * @param multilingual - whether Scryfall must include non-English printings
+ * @returns the page body, or null when the server could not provide one
+ */
 export async function lookupSearchCache(
   query: string,
-  page: number
+  page: number,
+  multilingual = false
 ): Promise<unknown> {
   try {
     const params = new URLSearchParams({ query, page: String(page) });
+    if (multilingual) params.set("multilingual", "1");
     const res = await fetch(`/api/cache/search?${params}`);
-    if (!res.ok) return null;
-    const body = await res.json();
-    return body.hit ? body.data : null;
+    return await readCacheData(res);
   } catch {
     return null;
-  }
-}
-
-/** Store a search result in the cache (hash computation happens server-side) */
-export async function storeSearchCache(
-  query: string,
-  page: number,
-  data: unknown
-): Promise<void> {
-  try {
-    const body = JSON.stringify({ query, page, data });
-    // The server rejects oversized cache writes with 413 — skip them entirely
-    if (body.length > MAX_SEARCH_CACHE_BYTES) return;
-    await fetch("/api/cache/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-  } catch (err) {
-    logger.warn("Failed to cache search result", "storeSearchCache", err);
   }
 }
