@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   alternatesFor,
   buildAlternates,
+  hreflangPaths,
   localePath,
   siteUrl,
 } from "./alternates";
@@ -38,6 +39,22 @@ describe("localePath", () => {
     );
     expect(localePath("fr", "/commanders/atraxa/decks")).toBe(
       "/fr/commanders/atraxa/decks"
+    );
+  });
+});
+
+describe("hreflangPaths", () => {
+  it("maps each served locale and x-default to its root-relative path", () => {
+    expect(hreflangPaths("/u/kael")).toEqual({
+      en: "/u/kael",
+      fr: "/fr/u/kael",
+      "x-default": "/u/kael",
+    });
+  });
+
+  it("is the set page metadata declares, whatever the page's own locale", () => {
+    expect(buildAlternates("fr", "/u/kael").languages).toEqual(
+      hreflangPaths("/u/kael")
     );
   });
 });
