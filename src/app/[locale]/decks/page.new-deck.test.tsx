@@ -41,6 +41,9 @@ vi.mock("@/components/deck/DeckListTable", () => ({
 vi.mock("@/components/deck/DeckListRefreshNotice", () => ({
   DeckListRefreshNotice: () => null,
 }));
+vi.mock("@/components/deck/GuestDeckClaimOffer", () => ({
+  GuestDeckClaimOffer: () => null,
+}));
 
 import DecksPage from "./page";
 
