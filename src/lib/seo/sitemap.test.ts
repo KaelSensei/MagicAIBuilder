@@ -55,7 +55,7 @@ describe("buildSitemap", () => {
     const entries = buildSitemap(
       sources({
         decks: [{ id: "deck-1", updatedAt: AUGUST }],
-        profiles: [{ username: "kael", updatedAt: AUGUST }],
+        profiles: [{ username: "kael", updatedAt: AUGUST, publicDeckCount: 1 }],
         commanders: [{ slug: "atraxa", updatedAt: AUGUST }],
       })
     );
@@ -79,7 +79,7 @@ describe("buildSitemap", () => {
     const entries = buildSitemap(
       sources({
         decks: [{ id: "deck-1", updatedAt: AUGUST }],
-        profiles: [{ username: "kael", updatedAt: AUGUST }],
+        profiles: [{ username: "kael", updatedAt: AUGUST, publicDeckCount: 1 }],
         commanders: [{ slug: "atraxa", updatedAt: SEPTEMBER }],
       })
     );
@@ -89,6 +89,20 @@ describe("buildSitemap", () => {
     expect(urls.some((url) => url.endsWith("/u/kael"))).toBe(true);
     expect(urls.some((url) => url.endsWith("/commanders/atraxa/decks"))).toBe(
       true
+    );
+  });
+
+  it("leaves out a profile with no public deck", () => {
+    // A claimed username with nothing published renders an empty profile:
+    // a thin page that I-34 keeps out of the sitemap (spec §4.5).
+    const entries = buildSitemap(
+      sources({
+        profiles: [{ username: "lurker", updatedAt: AUGUST, publicDeckCount: 0 }],
+      })
+    );
+
+    expect(entries.map((entry) => entry.url)).not.toContainEqual(
+      expect.stringMatching(/\/u\/lurker$/)
     );
   });
 
@@ -112,7 +126,7 @@ describe("buildSitemap", () => {
     const entries = buildSitemap(
       sources({
         decks: [{ id: "deck-1", updatedAt: AUGUST }],
-        profiles: [{ username: "kael", updatedAt: AUGUST }],
+        profiles: [{ username: "kael", updatedAt: AUGUST, publicDeckCount: 1 }],
         commanders: [{ slug: "atraxa", updatedAt: AUGUST }],
       })
     );

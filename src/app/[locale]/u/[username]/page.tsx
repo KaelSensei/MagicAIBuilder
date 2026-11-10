@@ -9,6 +9,7 @@ import {
   resolveAppBaseUrl,
 } from "@/lib/api/viewer-request";
 import { auth } from "@/lib/auth/config";
+import { isIndexableProfile } from "@/lib/seo/index-policy";
 
 interface Params {
   readonly params: Promise<{ locale: string; username: string }>;
@@ -34,6 +35,24 @@ async function fetchProfile(username: string) {
   }
 }
 
+/**
+ * Robots metadata for a found profile: `noindex` while it lists no public deck.
+ *
+ * Only a deck list proves the profile is empty, so a response without one
+ * keeps the default rather than hiding a profile that may have decks.
+ *
+ * @param profile The profile API response.
+ * @returns `{ robots: { index: false } }` for an empty profile, else nothing.
+ */
+function profileRobots(profile: unknown): Pick<Metadata, "robots"> {
+  const decks =
+    typeof profile === "object" && profile !== null && "decks" in profile
+      ? profile.decks
+      : undefined;
+  if (!Array.isArray(decks) || isIndexableProfile(decks.length)) return {};
+  return { robots: { index: false } };
+}
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { username, locale } = await params;
   let profile;
@@ -49,6 +68,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const displayName = profile.name ?? profile.username;
   return {
+    ...profileRobots(profile),
     alternates: alternatesFor(locale, `/u/${username}`),
     title: `${displayName} — MagicAIBuilder`,
     description: `${displayName}'s public Commander decks on MagicAIBuilder.`,
