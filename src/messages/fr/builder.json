@@ -65,9 +65,16 @@
     "sortByField": "Trier par {label} {hint}",
     "groupByField": "Grouper par {label}"
   },
+  "actionLabels": {
+    "duplicate": "Dupliquer",
+    "bulkEdit": "Édition groupée",
+    "playtest": "Tester",
+    "export": "Exporter"
+  },
   "badges": {
     "cmd": "CMD",
-    "comp": "COMP"
+    "comp": "COMP",
+    "ai": "IA"
   },
   "manaColors": {
     "W": "Blanc",
@@ -145,7 +152,17 @@
     "title": "Deck introuvable",
     "back": "Retour à mes decks"
   },
+  "mobileTabs": {
+    "search": "Recherche",
+    "deck": "Deck",
+    "stats": "Stats"
+  },
   "searchFilterPlaceholder": "Filtrer par nom (facultatif)…",
+  "filtersToggle": {
+    "show": "Afficher les filtres",
+    "hide": "Masquer les filtres"
+  },
+  "colorSearchHint": "Sélectionnez des couleurs pour parcourir les cartes",
   "searchModes": {
     "name": "Nom",
     "set": "Par édition",
