@@ -5,22 +5,33 @@ import { useTranslations } from "next-intl";
 import { AlertTriangle, ChevronDown, ChevronRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/ui/utils";
+import type { CommanderRuleIssue } from "@/lib/deck/commander-rules-check";
+import { CommanderRulesSection } from "./CommanderRulesSection";
 
 interface BanlistAlertProps {
   readonly bannedCards: readonly string[];
   readonly colorViolations: readonly string[];
+  /** Cards the deterministic rules check found cannot work with the commander. */
+  readonly rulesIssues?: readonly CommanderRuleIssue[];
   readonly onDismiss?: () => void;
   readonly className?: string;
 }
 
+const NO_RULES_ISSUES: readonly CommanderRuleIssue[] = [];
+
 export function BanlistAlert({
   bannedCards,
   colorViolations,
+  rulesIssues = NO_RULES_ISSUES,
   onDismiss,
   className,
 }: BanlistAlertProps) {
   const t = useTranslations("deck");
-  const hasIssues = bannedCards.length > 0 || colorViolations.length > 0;
+  const tRules = useTranslations("commanderRules");
+  const hasIssues =
+    bannedCards.length > 0 ||
+    colorViolations.length > 0 ||
+    rulesIssues.length > 0;
   const [expanded, setExpanded] = useState(false);
 
   const issueSummary = useMemo(() => {
@@ -29,8 +40,16 @@ export function BanlistAlert({
       parts.push(t("banlist.banned", { count: bannedCards.length }));
     if (colorViolations.length > 0)
       parts.push(t("banlist.colorId", { count: colorViolations.length }));
+    if (rulesIssues.length > 0)
+      parts.push(tRules("summary", { count: rulesIssues.length }));
     return parts.join(" \u2022 ");
-  }, [bannedCards.length, colorViolations.length, t]);
+  }, [
+    bannedCards.length,
+    colorViolations.length,
+    rulesIssues.length,
+    t,
+    tRules,
+  ]);
 
   return (
     <AnimatePresence>
@@ -119,6 +138,7 @@ export function BanlistAlert({
                   </p>
                 </section>
               )}
+              <CommanderRulesSection issues={rulesIssues} />
             </div>
           )}
         </motion.div>

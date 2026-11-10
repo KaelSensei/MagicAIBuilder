@@ -21,6 +21,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const playtest = (await import(`@/messages/${locale}/playtest.json`)).default;
   const playtestEvidence = (await import(`@/messages/${locale}/playtest-evidence.json`)).default;
   const card = (await import(`@/messages/${locale}/card.json`)).default;
+  const commanderRules = (
+    await import(`@/messages/${locale}/commander-rules.json`)
+  ).default;
   const settings = (await import(`@/messages/${locale}/settings.json`)).default;
 
   return {
@@ -39,6 +42,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       profile,
       playtest,
       playtestEvidence,
+      commanderRules,
       settings,
     },
   };

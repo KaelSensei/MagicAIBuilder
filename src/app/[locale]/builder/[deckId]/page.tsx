@@ -433,7 +433,8 @@ export default function BuilderPage() {
       return "";
     }
 
-    return `${stats.bannedCards.join("\u0000")}::${stats.colorIdentityViolations.join("\u0000")}`;
+    const ruleIssueIds = stats.commanderRuleIssues.map((issue) => issue.cardId);
+    return `${stats.bannedCards.join("\u0000")}::${stats.colorIdentityViolations.join("\u0000")}::${ruleIssueIds.join("\u0000")}`;
   }, [stats]);
 
   useEffect(() => {
@@ -1019,11 +1020,13 @@ export default function BuilderPage() {
             {stats &&
               !isBanlistAlertDismissed &&
               (stats.bannedCards.length > 0 ||
-                stats.colorIdentityViolations.length > 0) && (
+                stats.colorIdentityViolations.length > 0 ||
+                stats.commanderRuleIssues.length > 0) && (
                 <div className="p-3 border-b border-[var(--border)]">
                   <BanlistAlert
                     bannedCards={stats.bannedCards}
                     colorViolations={stats.colorIdentityViolations}
+                    rulesIssues={stats.commanderRuleIssues}
                     onDismiss={() => setIsBanlistAlertDismissed(true)}
                   />
                 </div>

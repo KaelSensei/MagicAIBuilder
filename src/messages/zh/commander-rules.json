@@ -1,0 +1,10 @@
+{
+  "summary": "{count, plural, one {# card can't work} other {# cards can't work}}",
+  "title": "Cards that can't work with this commander",
+  "label": "Rules check: deterministic, read from Oracle text and your commander's color identity. Not a recommendation.",
+  "citation": "CR {rules}",
+  "reasons": {
+    "colorless-identity-mana": "Your commander's color identity has no colors, so this card adds no mana, not even colorless."
+  },
+  "action": "Replace each card with one that works with this commander."
+}

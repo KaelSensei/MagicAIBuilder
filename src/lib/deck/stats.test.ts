@@ -231,6 +231,39 @@ describe("computeDeckStats", () => {
     expect(stats.colorIdentityViolations).toHaveLength(0);
   });
 
+  it("reports Arcane Signet as unable to work under a colorless commander", () => {
+    const deck = emptyDeck();
+    deck.commander = makeDeckCard({
+      id: "karn",
+      name: "Karn, Silver Golem",
+      manaCost: "{5}",
+      category: "commander",
+      typeLine: "Legendary Artifact Creature — Golem",
+      oracleText:
+        "Whenever Karn blocks or becomes blocked, it gets -4/+4 until end of turn.\n{1}: Target noncreature artifact becomes an artifact creature with power and toughness each equal to its mana value until end of turn.",
+      colorIdentity: [],
+    });
+    deck.cards = [
+      makeDeckCard({
+        id: "signet",
+        name: "Arcane Signet",
+        manaCost: "{2}",
+        category: "ramp",
+        typeLine: "Artifact",
+        oracleText: "{T}: Add one mana of any color in your commander's color identity.",
+        colorIdentity: [],
+      }),
+    ];
+
+    expect(computeDeckStats(deck).commanderRuleIssues).toEqual([
+      {
+        cardId: "signet",
+        cardName: "Arcane Signet",
+        rule: "colorless-identity-mana",
+      },
+    ]);
+  });
+
   it("counts ramp and draw separately", () => {
     const deck = emptyDeck();
     deck.cards = [
