@@ -14,10 +14,11 @@ import PublicDeckPage, { generateMetadata } from "./page";
 
 const ATRAXA: PublicCard = {
   id: "card-1",
+  scryfallId: "scryfall-atraxa",
   name: "Atraxa, Praetors' Voice",
-  manaCost: "{G}{W}{U}{B}",
   cmc: 4,
-  typeLine: "Legendary Creature — Phyrexian Angel Horror",
+  colorIdentity: ["W", "U", "B", "G"],
+  price: null,
   imageUri: "https://cards.example/atraxa.jpg",
   artCropUri: "https://cards.example/atraxa-art.jpg",
   category: "Commander",
@@ -36,9 +37,12 @@ const PUBLIC_DECK: PublicDeck = {
   isAIGenerated: false,
   isOwner: false,
   cards: [ATRAXA],
+  seekingFeedback: false,
+  feedbackQuestion: null,
+  forkedFromDeckId: null,
+  forkedFromDeckName: null,
+  forkedFromUserName: null,
   user: { id: "user-1", name: null, username: "kael", image: null },
-  createdAt: "2026-08-01T00:00:00Z",
-  updatedAt: "2026-08-01T00:00:00Z",
 };
 
 /** Every routed locale plus x-default, the same set on every locale's page. */
