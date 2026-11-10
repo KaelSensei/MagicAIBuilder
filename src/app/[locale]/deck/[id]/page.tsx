@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { alternatesFor } from "@/lib/seo/alternates";
 import { metadataTranslations } from "@/lib/seo/page-metadata";
-import { deckImagePath, DECK_IMAGE_SIZE } from "@/lib/seo/deck-image";
+import {
+  deckImagePath,
+  deckImageVersion,
+  DECK_IMAGE_SIZE,
+} from "@/lib/seo/deck-image";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -52,7 +56,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   // Built from stored data by /og/deck/[id]. Not the commander's art crop:
   // Scryfall's crop cuts the artist credit, and art alone says nothing of the deck.
   const image = {
-    url: deckImagePath(id, deck.updatedAt),
+    url: deckImagePath(id, deckImageVersion(deck)),
     ...DECK_IMAGE_SIZE,
     alt: imageText("imageAlt", { deck: deck.name, author: byline.author }),
   };

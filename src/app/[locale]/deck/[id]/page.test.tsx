@@ -32,6 +32,7 @@ vi.mock("next-intl/server", async () => {
 });
 
 import PublicDeckPage, { generateMetadata } from "./page";
+import { deckImageVersion } from "@/lib/seo/deck-image";
 
 const ATRAXA: PublicCard = {
   id: "card-1",
@@ -183,9 +184,8 @@ const PUBLIC_DECK = {
     {
       id: "c1",
       name: "Atraxa, Praetors' Voice",
-      manaCost: "{G}{W}{U}{B}",
       cmc: 4,
-      typeLine: "Legendary Creature",
+      colorIdentity: ["W", "U", "B", "G"],
       imageUri: "https://cards.scryfall.io/normal/atraxa.jpg",
       artCropUri: "https://cards.scryfall.io/art_crop/atraxa.jpg",
       category: "commander",
@@ -196,12 +196,10 @@ const PUBLIC_DECK = {
     },
   ],
   user: { id: "u1", name: "Kael", username: "kael", image: null },
-  createdAt: "2026-11-01T10:00:00.000Z",
-  updatedAt: "2026-11-09T10:00:00.000Z",
 };
 
-/** The image URL carries `updatedAt` so a chat app re-fetches it after an edit. */
-const DECK_IMAGE_URL = `/og/deck/deck-1?v=${Date.parse("2026-11-09T10:00:00.000Z")}`;
+/** The image URL carries a version of what it prints, so a chat app re-fetches it after an edit. */
+const DECK_IMAGE_URL = `/og/deck/deck-1?v=${deckImageVersion(PUBLIC_DECK)}`;
 
 it("points Open Graph and Twitter at the deck image built from stored data", async () => {
   fetchPublicDeck.mockResolvedValue(PUBLIC_DECK);
