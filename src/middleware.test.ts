@@ -22,6 +22,7 @@ vi.mock("next-intl/middleware", () => ({
 }));
 
 import middleware from "./middleware";
+import { sanitizeCallbackUrl } from "@/lib/auth/callback-url";
 
 /**
  * Runs the middleware the way a signed-out visitor or a crawler reaches it.
@@ -53,5 +54,19 @@ describe("middleware for a signed-out visitor", () => {
 
     expect(response?.headers.get(SERVED_BY_LOCALE_MIDDLEWARE)).toBeNull();
     expect(new URL(location).pathname).toBe("/fr/auth/signin");
+  });
+
+  /**
+   * The sign-in form only follows a same-origin path. An absolute URL, even
+   * one naming this site, falls back to the deck list, so the page the visitor
+   * asked for has to travel as a path.
+   */
+  it("hands sign-in the requested page as a path the form will follow", async () => {
+    const response = await visitSignedOut("/fr/collection?view=list");
+    const location = new URL(response?.headers.get("location") ?? "");
+    const callbackUrl = location.searchParams.get("callbackUrl");
+
+    expect(callbackUrl).toBe("/fr/collection?view=list");
+    expect(sanitizeCallbackUrl(callbackUrl)).toBe("/fr/collection?view=list");
   });
 });

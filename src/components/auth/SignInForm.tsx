@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { authPageHref, sanitizeCallbackUrl } from "@/lib/auth/callback-url";
 import { AuthPageShell } from "./AuthPageShell";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { AuthDivider } from "./AuthDivider";
@@ -12,7 +13,7 @@ import { AuthDivider } from "./AuthDivider";
 export function SignInForm() {
   const t = useTranslations("auth");
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/decks";
+  const callbackUrl = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
   const errorParam = searchParams.get("error");
 
   const [email, setEmail] = useState("");
@@ -111,7 +112,7 @@ export function SignInForm() {
       <p className="text-center text-sm text-[var(--text-secondary)]">
         {t("signIn.noAccount")}{" "}
         <Link
-          href="/auth/signup"
+          href={authPageHref("/auth/signup", callbackUrl)}
           className="text-[var(--accent-text)] underline"
         >
           {t("signIn.signUpLink")}
