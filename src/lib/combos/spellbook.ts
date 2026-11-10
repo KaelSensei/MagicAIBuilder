@@ -1,147 +1,82 @@
-// Commander Spellbook API integration for combo detection
-import { forEachSequential } from "@/lib/async/sequential";
+// Commander Spellbook combo detection: the combo shape and the browser-side lookup.
+import { z } from "zod";
+import type { DeckComboQuery } from "@/lib/combos/deck-query";
 
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+/** What a combo needs beyond its named cards, as Commander Spellbook lists it. */
+export interface ComboPrerequisites {
+  /** Generic extra pieces any matching card fills, e.g. "Permanent Castable for {C}". */
+  readonly otherPieces: readonly string[];
+  /** Game states to reach first; Spellbook's notable ones come before its easy ones. */
+  readonly conditions: readonly string[];
+  /** Mana spent while the combo runs, in `{X}` notation, or "" when Spellbook lists none. */
+  readonly manaNeeded: string;
+}
 
+/** One Commander Spellbook combo variant that the deck can assemble. */
 export interface SpellbookVariant {
-  id: string;
-  uses: { card: { name: string } }[];
-  produces: { feature: { name: string } }[];
-  description: string;
-  cards: string[]; // Resolved card names
-  effects: string[]; // Resolved effect names
-  isInfinite: boolean;
+  /** Spellbook's variant id, which also names its page on commanderspellbook.com. */
+  readonly id: string;
+  /** Names of the cards the combo uses. */
+  readonly cards: readonly string[];
+  /** Names of the effects the combo produces. */
+  readonly effects: readonly string[];
+  /** Spellbook's step-by-step description, or the effects joined when it has none. */
+  readonly description: string;
+  /** Whether an effect reads as infinite or game-winning (used by bracket scoring). */
+  readonly isInfinite: boolean;
+  /** What else the combo needs before it works. */
+  readonly prerequisites: ComboPrerequisites;
 }
 
-interface SpellbookApiVariant {
-  id: string;
-  uses: { card: { name: string } }[];
-  produces: { feature: { name: string } }[];
-  description?: string;
-  notes?: string;
-}
+const comboPrerequisitesSchema = z.object({
+  otherPieces: z.array(z.string()),
+  conditions: z.array(z.string()),
+  manaNeeded: z.string(),
+});
 
-interface SpellbookApiResponse {
-  count: number;
-  results: SpellbookApiVariant[];
-}
+/** Validates a combo as `POST /api/combos` sends it. */
+export const spellbookVariantSchema = z.object({
+  id: z.string(),
+  cards: z.array(z.string()),
+  effects: z.array(z.string()),
+  description: z.string(),
+  isInfinite: z.boolean(),
+  prerequisites: comboPrerequisitesSchema,
+}) satisfies z.ZodType<SpellbookVariant>;
 
-// In-memory cache: cardName → { variants, fetchedAt }
-const cache = new Map<string, { variants: SpellbookVariant[]; fetchedAt: number }>();
+const comboLookupResponseSchema = z.object({
+  combos: z.array(spellbookVariantSchema),
+});
 
-function isInfiniteCombo(effects: string[]): boolean {
-  const infiniteKeywords = [
-    "infinite",
-    "unlimited",
-    "win the game",
-    "lose the game",
-    "draw all",
-    "kills all",
-    "infinite loop",
-  ];
-  return effects.some((effect) =>
-    infiniteKeywords.some((kw) => effect.toLowerCase().includes(kw))
-  );
-}
-
-function parseVariant(raw: SpellbookApiVariant): SpellbookVariant {
-  const cards = raw.uses.map((u) => u.card.name);
-  const effects = raw.produces.map((p) => p.feature.name);
-  const description =
-    raw.description ?? raw.notes ?? effects.join(" + ");
-
-  return {
-    id: raw.id,
-    uses: raw.uses,
-    produces: raw.produces,
-    description,
-    cards,
-    effects,
-    isInfinite: isInfiniteCombo(effects),
-  };
-}
-
-/** Longest wait for one card's combo lookup; a stalled request counts as no combos. */
+/** Longest wait for the deck's combo lookup; the route itself gives up on Spellbook sooner. */
 export const COMBO_FETCH_TIMEOUT_MS = 15_000;
 
-/** Fetch combos for a single card name, with 1h cache */
-export async function fetchCombosForCard(
-  cardName: string
-): Promise<SpellbookVariant[]> {
-  const now = Date.now();
-  const cached = cache.get(cardName);
-  if (cached && now - cached.fetchedAt < CACHE_TTL_MS) {
-    return cached.variants;
-  }
-
-  try {
-    const url = `/api/combos?cards=${encodeURIComponent(cardName)}&format=json`;
-    const response = await fetch(url, {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(COMBO_FETCH_TIMEOUT_MS),
-    });
-
-    if (!response.ok) {
-      // Don't throw — just return empty to avoid cascade failures
-      cache.set(cardName, { variants: [], fetchedAt: now });
-      return [];
-    }
-
-    const data: SpellbookApiResponse = await response.json();
-    const variants = (data.results ?? []).map(parseVariant);
-
-    cache.set(cardName, { variants, fetchedAt: now });
-    return variants;
-  } catch {
-    cache.set(cardName, { variants: [], fetchedAt: now });
-    return [];
-  }
-}
-
-/** Fetch and deduplicate all combos for a list of card names */
+/**
+ * Looks the whole deck up in one request to `POST /api/combos`.
+ *
+ * A failed lookup rejects instead of resolving to an empty list: "no known
+ * combos" is a finding, and a check that never ran must not be shown as one.
+ *
+ * @param query - the commanders and main-deck card names to check
+ * @returns the combos the deck can assemble, infinite ones first
+ * @throws when the route answers with an error, times out, or sends an unexpected shape
+ */
 export async function fetchCombosForDeck(
-  cardNames: string[]
+  query: DeckComboQuery
 ): Promise<SpellbookVariant[]> {
-  const uniqueNames = Array.from(
-    new Set(cardNames.map((n) => n.trim()).filter((n) => n.length > 0))
-  );
-
-  // Concurrency limit: avoids getting throttled when decks have ~100 cards.
-  const CONCURRENCY = 10;
-  const allVariantArrays: SpellbookVariant[][] = [];
-
-  const offsets = Array.from({ length: Math.ceil(uniqueNames.length / CONCURRENCY) }, (_, index) => index * CONCURRENCY);
-  await forEachSequential(offsets, async (i) => {
-    const slice = uniqueNames.slice(i, i + CONCURRENCY);
-    const batch = await Promise.all(slice.map((name) => fetchCombosForCard(name)));
-    allVariantArrays.push(...batch);
+  const response = await fetch("/api/combos", {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(query),
+    signal: AbortSignal.timeout(COMBO_FETCH_TIMEOUT_MS),
   });
-
-  // Flatten and deduplicate by variant id
-  const seen = new Map<string, SpellbookVariant>();
-  for (const variants of allVariantArrays) {
-    for (const variant of variants) {
-      if (!seen.has(variant.id)) {
-        seen.set(variant.id, variant);
-      }
-    }
+  if (!response.ok) {
+    throw new Error(`Combo lookup failed with HTTP ${response.status}`);
   }
 
-  // Only return combos where ALL required cards are in the deck
-  const deckSet = new Set(uniqueNames.map((n) => n.toLowerCase()));
-  const filteredCombos = Array.from(seen.values()).filter((variant) =>
-    variant.cards.every((card) => deckSet.has(card.toLowerCase()))
-  );
-
-  // Sort: infinite first, then alphabetical
-  return filteredCombos.sort((a, b) => {
-    if (a.isInfinite && !b.isInfinite) return -1;
-    if (!a.isInfinite && b.isInfinite) return 1;
-    return a.cards.length - b.cards.length;
-  });
-}
-
-/** Clear in-memory cache (for testing) */
-export function clearSpellbookCache() {
-  cache.clear();
+  const parsed = comboLookupResponseSchema.safeParse(await response.json());
+  if (!parsed.success) {
+    throw new Error("Combo lookup sent an unexpected response");
+  }
+  return parsed.data.combos;
 }

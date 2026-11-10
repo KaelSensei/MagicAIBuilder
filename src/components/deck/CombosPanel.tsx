@@ -1,21 +1,70 @@
 "use client";
 // Commander Spellbook combo detection panel
+import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
-import type { SpellbookVariant } from "@/lib/combos/spellbook";
+import type {
+  ComboPrerequisites,
+  SpellbookVariant,
+} from "@/lib/combos/spellbook";
 import { Zap, Loader2 } from "lucide-react";
+
+const SPELLBOOK_URL = "https://commanderspellbook.com/";
 
 interface CombosPanelProps {
   readonly combos?: readonly SpellbookVariant[];
   readonly isLoading?: boolean;
   readonly isEnabled?: boolean; // False when deck < 10 cards
+  /** True when the lookup failed, so the panel must not claim the deck has no combos. */
+  readonly isUnavailable?: boolean;
   readonly className?: string;
   readonly observedAt?: Date;
 }
 
-function ComboCard({ combo }: { readonly combo: SpellbookVariant }) {
+function hasPrerequisites({
+  otherPieces,
+  conditions,
+  manaNeeded,
+}: ComboPrerequisites): boolean {
   return (
-    <div className="rounded bg-[var(--surface-hover)] border border-[var(--border)] p-3 space-y-2">
+    otherPieces.length > 0 || conditions.length > 0 || manaNeeded.length > 0
+  );
+}
+
+function PrerequisiteList({
+  prerequisites,
+}: {
+  readonly prerequisites: ComboPrerequisites;
+}) {
+  const t = useTranslations("deck");
+  if (!hasPrerequisites(prerequisites)) return null;
+  const { otherPieces, conditions, manaNeeded } = prerequisites;
+
+  return (
+    <div className="space-y-1">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+        {t("combos.prerequisites")}
+      </p>
+      <ul className="list-disc space-y-0.5 pl-4 text-xs text-[var(--text-primary)] leading-relaxed">
+        {otherPieces.map((piece) => (
+          <li key={`piece:${piece}`}>{t("combos.otherPiece", { piece })}</li>
+        ))}
+        {conditions.map((condition) => (
+          <li key={`condition:${condition}`}>{condition}</li>
+        ))}
+        {manaNeeded.length > 0 && (
+          <li>{t("combos.manaNeeded", { mana: manaNeeded })}</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+function ComboCard({ combo }: { readonly combo: SpellbookVariant }) {
+  const t = useTranslations("deck");
+
+  return (
+    <li className="rounded bg-[var(--surface-hover)] border border-[var(--border)] p-3 space-y-2">
       {/* Cards involved */}
       <div className="flex flex-wrap gap-1">
         {combo.cards.map((cardName) => (
@@ -46,13 +95,24 @@ function ComboCard({ combo }: { readonly combo: SpellbookVariant }) {
         ))}
       </div>
 
+      <PrerequisiteList prerequisites={combo.prerequisites} />
+
       {/* Description */}
       {combo.description && (
         <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
           {combo.description}
         </p>
       )}
-    </div>
+
+      <a
+        href={`${SPELLBOOK_URL}combo/${encodeURIComponent(combo.id)}/`}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-block text-[10px] text-[var(--text-secondary)] underline underline-offset-2"
+      >
+        {t("combos.viewOnSpellbook")}
+      </a>
+    </li>
   );
 }
 
@@ -60,6 +120,7 @@ export function CombosPanel({
   combos,
   isLoading,
   isEnabled = true,
+  isUnavailable = false,
   className,
   observedAt,
 }: CombosPanelProps) {
@@ -68,6 +129,7 @@ export function CombosPanel({
   const observedDate = observedAt
     ? format.dateTime(observedAt, { dateStyle: "medium", timeZone: "UTC" })
     : null;
+  const isSettled = isEnabled && !isLoading && !isUnavailable;
 
   return (
     <div
@@ -96,16 +158,22 @@ export function CombosPanel({
         </p>
       )}
 
-      {isEnabled && !isLoading && observedDate && (
-        <a
-          href="https://commanderspellbook.com/"
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Commander Spellbook results observed ${observedDate}`}
-          className="block text-[10px] text-[var(--text-secondary)] underline-offset-2 hover:underline"
-        >
-          Commander Spellbook
-        </a>
+      {isSettled && observedDate && (
+        <p className="text-[10px] text-[var(--text-secondary)]">
+          {t.rich("combos.credit", {
+            link: (chunks: ReactNode) => (
+              <a
+                href={SPELLBOOK_URL}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={t("combos.observedLabel", { date: observedDate })}
+                className="underline-offset-2 hover:underline"
+              >
+                {chunks}
+              </a>
+            ),
+          })}
+        </p>
       )}
 
       {isEnabled && isLoading && (
@@ -114,13 +182,22 @@ export function CombosPanel({
         </p>
       )}
 
-      {isEnabled && !isLoading && (combos?.length ?? 0) === 0 && (
+      {isEnabled && !isLoading && isUnavailable && (
+        <p
+          role="status"
+          className="text-xs text-[var(--text-secondary)] italic"
+        >
+          {t("combos.unavailable")}
+        </p>
+      )}
+
+      {isSettled && (combos?.length ?? 0) === 0 && (
         <p className="text-xs text-[var(--text-secondary)] italic">
           {t("combos.noKnown")}
         </p>
       )}
 
-      {isEnabled && !isLoading && combos && combos.length > 0 && (
+      {isSettled && combos && combos.length > 0 && (
         <div className="space-y-2">
           {/* Infinite combos first */}
           {combos.some((c) => c.isInfinite) && (
@@ -131,9 +208,11 @@ export function CombosPanel({
               </span>
             </div>
           )}
-          {combos.map((combo) => (
-            <ComboCard key={combo.id} combo={combo} />
-          ))}
+          <ul className="space-y-2">
+            {combos.map((combo) => (
+              <ComboCard key={combo.id} combo={combo} />
+            ))}
+          </ul>
         </div>
       )}
     </div>

@@ -525,7 +525,14 @@
     "minCards": "Ajoutez au moins 10 cartes pour détecter les combos",
     "checking": "Vérification avec Commander Spellbook…",
     "noKnown": "Aucun combo connu détecté",
-    "infinite": "Combos infinis"
+    "infinite": "Combos infinis",
+    "unavailable": "Commander Spellbook est injoignable : les combos n’ont pas été vérifiés. Réessayez plus tard.",
+    "prerequisites": "Prérequis",
+    "otherPiece": "Il faut aussi : {piece}",
+    "manaNeeded": "Mana nécessaire : {mana}",
+    "viewOnSpellbook": "Étapes sur Commander Spellbook",
+    "credit": "Données de combos : <link>Commander Spellbook</link>",
+    "observedLabel": "Résultats Commander Spellbook observés le {date}"
   },
   "meta": {
     "title": "Analyse Méta",

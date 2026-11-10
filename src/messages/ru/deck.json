@@ -387,7 +387,14 @@
     "minCards": "Add at least 10 cards to detect combos",
     "checking": "Checking Commander Spellbook…",
     "noKnown": "No known combos detected",
-    "infinite": "Infinite combos"
+    "infinite": "Infinite combos",
+    "unavailable": "Commander Spellbook could not be reached, so combos were not checked. Try again later.",
+    "prerequisites": "Prerequisites",
+    "otherPiece": "Also needs: {piece}",
+    "manaNeeded": "Mana needed: {mana}",
+    "viewOnSpellbook": "Steps on Commander Spellbook",
+    "credit": "Combo data from <link>Commander Spellbook</link>",
+    "observedLabel": "Commander Spellbook results observed {date}"
   },
   "meta": {
     "title": "Meta Analysis",

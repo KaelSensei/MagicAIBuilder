@@ -9,7 +9,7 @@
 
 - **Scryfall JSON API**: Called directly from the browser for search/collection where applicable
 - **Scryfall card images**: Proxied via `GET /api/proxy-card-image?url=…` for print/proxy export only — browser `fetch()` to `cards.scryfall.io` is blocked by CORS; the route only allows `https://cards.scryfall.io/*` (no open SSRF)
-- **Commander Spellbook**: Proxied via `/api/combos` (server-side) to avoid CORS fragility
+- **Commander Spellbook**: `POST /api/combos` takes one deck's card list (at most 2 commanders and 250 main-deck names) and makes one `find-my-combos` call for it — no free-form proxying. Results are cached server-side for 6 hours by a hash of the normalized list; each client address gets 30 lookups per minute, and each server instance makes at most 60 Spellbook calls per minute (Spellbook's guide calls 80 safe)
 - **EDHREC**: If added in future phases, MUST be proxied via a Next.js API route — do not call directly from browser
 
 ## LLM Integration (Phase 4)
