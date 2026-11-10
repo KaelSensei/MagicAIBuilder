@@ -2,27 +2,24 @@
 
 ## Stack
 
-| Layer           | Technology                  | Version | Why                                                                        |
-| --------------- | --------------------------- | ------- | -------------------------------------------------------------------------- |
-| Framework       | Next.js App Router          | 15.x    | Server components, file-based routing, image optimization                  |
-| Language        | TypeScript                  | 5.x     | Strict typing, full project coverage                                       |
-| Styling         | Tailwind CSS                | 4.x     | Utility-first, v4 CSS-native (no config file needed)                       |
-| Components      | shadcn/ui + Radix           | latest  | Accessible primitives, dark theme ready                                    |
-| Animations      | Framer Motion               | 11.x    | Card hover zoom, stagger grids, panel transitions                          |
-| State           | Zustand                     | 5.x     | Simple, minimal boilerplate vs. Redux                                      |
-| Data Fetching   | TanStack Query              | 5.x     | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
-| Drag & Drop     | dnd-kit                     | 6.x     | Actively maintained, better perf than react-beautiful-dnd                  |
-| Database        | PostgreSQL 16               | —       | Persistent deck storage via Docker Compose                                 |
-| ORM             | Prisma                      | 6.x     | Type-safe DB client, migrations, schema                                    |
-| Validation      | Zod                         | 4.x     | Runtime schema validation on API boundaries                                |
-| Icons           | Lucide React                | latest  | Consistent, tree-shakeable                                                 |
-| Bundle Analysis | @next/bundle-analyzer       | 16.x    | Visual treemap of JS bundles — run `pnpm analyze`                          |
-| 3D Engine       | Three.js + R3F + drei       | 0.183.x | Immersive landing page (spellbook scene)                                   |
-| Camera Anim     | gsap                        | 3.14.x  | Cinematic zoom on glyph click                                              |
-| Post-Processing | @react-three/postprocessing | 3.x     | Bloom + vignette effects                                                   |
-| Package Manager | pnpm                        | 10.x    | Fast, disk-efficient                                                       |
-| Testing (unit)  | Vitest                      | 3.x     | Vite-native, fast, ESM-compatible                                          |
-| Testing (E2E)   | Playwright                  | 1.51.x  | Cross-browser, reliable                                                    |
+| Layer           | Technology            | Version | Why                                                                        |
+| --------------- | --------------------- | ------- | -------------------------------------------------------------------------- |
+| Framework       | Next.js App Router    | 15.x    | Server components, file-based routing, image optimization                  |
+| Language        | TypeScript            | 5.x     | Strict typing, full project coverage                                       |
+| Styling         | Tailwind CSS          | 4.x     | Utility-first, v4 CSS-native (no config file needed)                       |
+| Components      | shadcn/ui + Radix     | latest  | Accessible primitives, dark theme ready                                    |
+| Animations      | Framer Motion         | 11.x    | Card hover zoom, stagger grids, panel transitions                          |
+| State           | Zustand               | 5.x     | Simple, minimal boilerplate vs. Redux                                      |
+| Data Fetching   | TanStack Query        | 5.x     | Built-in caching, deduplication, retry — critical for Scryfall rate limits |
+| Drag & Drop     | dnd-kit               | 6.x     | Actively maintained, better perf than react-beautiful-dnd                  |
+| Database        | PostgreSQL 16         | —       | Persistent deck storage via Docker Compose                                 |
+| ORM             | Prisma                | 6.x     | Type-safe DB client, migrations, schema                                    |
+| Validation      | Zod                   | 4.x     | Runtime schema validation on API boundaries                                |
+| Icons           | Lucide React          | latest  | Consistent, tree-shakeable                                                 |
+| Bundle Analysis | @next/bundle-analyzer | 16.x    | Visual treemap of JS bundles — run `pnpm analyze`                          |
+| Package Manager | pnpm                  | 10.x    | Fast, disk-efficient                                                       |
+| Testing (unit)  | Vitest                | 3.x     | Vite-native, fast, ESM-compatible                                          |
+| Testing (E2E)   | Playwright            | 1.51.x  | Cross-browser, reliable                                                    |
 
 ---
 
@@ -33,7 +30,7 @@ src/
   app/                          # Next.js App Router pages
     layout.tsx                  # Root layout: fonts, dark theme, suppressHydrationWarning
     providers.tsx               # TanStack Query client + EnrichmentProvider
-    page.tsx                    # Home: 3D spellbook (unauth) or deck list (auth)
+    page.tsx                    # Home: static marketing landing (unauth) or deck list (auth)
     builder/[deckId]/
       page.tsx                  # 3-panel builder view (Search | DeckEditor | Stats)
     api/
@@ -62,15 +59,8 @@ src/
 
   components/
     landing/
-      SpellbookScene.tsx        # R3F Canvas + scene composition (ssr: false)
-      Spellbook.tsx             # Procedural open book model
-      Altar.tsx                 # Stone altar base
-      GlyphSymbol.tsx           # Interactive glowing runes (Sign In/Up)
-      CameraRig.tsx             # Idle sway + gsap cinematic zoom
-      ManaParticles.tsx         # Sparkles particle system
-      PostEffects.tsx           # Bloom + vignette
-      LandingPage.tsx           # Mobile/a11y detection wrapper
-      StaticLandingPage.tsx     # 2D fallback
+      LandingPage.tsx           # Entry point for unauthenticated visitors
+      MarketingLanding.tsx      # Navbar, Hero, CapabilityAtlas, FinalCta, footer
     ui/
       utils.ts                  # cn() helper (clsx + tailwind-merge)
     card/
@@ -895,37 +885,16 @@ TanStack Query `gcTime` matches `staleTime` (24h for cards/lists, 5min for searc
 
 ---
 
-## 3D Landing Page Architecture
+## Landing Page Architecture
 
-`src/components/landing/` — Three.js scene for unauthenticated visitors:
+`src/components/landing/` is a static marketing page for unauthenticated visitors: plain React, Tailwind and design tokens, with no WebGL.
 
 ```
-LandingPage.tsx          # Detects mobile/reduced-motion → static or 3D
-  ├── SpellbookScene.tsx # R3F Canvas (dynamic import, ssr: false)
-  │     ├── Altar.tsx    # Stone base (BoxGeometry)
-  │     ├── Spellbook.tsx# Open book (procedural planes)
-  │     ├── GlyphSymbol  # Interactive runes (raycasting + emissive)
-  │     ├── CameraRig    # Idle sway + gsap zoom on click
-  │     ├── ManaParticles# Sparkles from drei
-  │     └── PostEffects  # Bloom + Vignette
-  └── StaticLandingPage  # 2D fallback (CSS gradients + buttons)
+LandingPage.tsx            # Entry point rendered by src/app/[locale]/page.tsx
+  └── MarketingLanding.tsx # LandingNavbar, Hero (+ HeroPreview), CapabilityAtlas (+ CapabilityCard), FinalCta, LandingFooter
 ```
 
-Performance: dpr capped at 1.5, 80 particles, no shadows. Three.js never loads on authenticated pages.
-
-### SonarCloud & React Three Fiber
-
-SonarCloud's `S6747` rule ("Unknown property") does not understand R3F's extended JSX namespace. All R3F intrinsic elements (`<mesh>`, `<boxGeometry>`, `<meshStandardMaterial>`, `<pointLight>`, etc.) use props like `position`, `args`, `roughness`, `emissive`, `intensity` that map to Three.js object properties — not HTML attributes.
-
-These are **verified false positives**: TypeScript and ESLint both pass clean because `@react-three/fiber` provides proper JSX type declarations. The rule is suppressed for `src/components/landing/**` only via `sonar-project.properties`:
-
-```properties
-sonar.issue.ignore.multicriteria=r3f
-sonar.issue.ignore.multicriteria.r3f.ruleKey=typescript:S6747
-sonar.issue.ignore.multicriteria.r3f.resourceKey=src/components/landing/**
-```
-
-If R3F components are added outside `src/components/landing/`, the exclusion scope must be extended.
+The earlier 3D spellbook scene (Three.js, React Three Fiber, gsap) was removed from the page in #308. Its packages, its `public/textures/` maps and the SonarCloud `S6747` suppression that only R3F props needed were removed later. The [I-13 visual direction](../product/specs/i13-visual-direction.md) replaces the 3D landing rather than reviving it.
 
 ---
 

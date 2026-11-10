@@ -58,7 +58,7 @@ export function buildContentSecurityPolicy({ isDev }: SecurityHeadersOptions): s
     // next/font self-hosts every face; data: covers icon fonts inlined by libraries.
     "font-src 'self' data:",
     `connect-src 'self' ${CONNECT_HOSTS.join(" ")}`,
-    // Three.js / R3F spawn blob workers on the landing scene.
+    // Sentry Replay runs its compression worker from a blob: URL.
     "worker-src 'self' blob:",
     "media-src 'self'",
     "object-src 'none'",
