@@ -359,4 +359,45 @@ describe("checkGeneratedDeckLegality", () => {
       expect.objectContaining({ corrections: [added("Wastes", 98)] })
     );
   });
+
+  describe("with Snow-Covered basics", () => {
+    const snowIsland = {
+      id: "snow-covered-island",
+      cmc: 0,
+      name: "Snow-Covered Island",
+      type_line: "Basic Snow Land — Island",
+      color_identity: ["U"],
+      legalities: { commander: "legal" },
+    };
+    const cardData = buildScryfallNameIndex([
+      ...ALL_GENERATED_DECK_CARDS,
+      snowIsland,
+    ]);
+
+    it("keeps a stack of them as basic lands", () => {
+      const modelReply = reply({ ...TALRAND, basic: snowIsland.name });
+
+      expect(checkGeneratedDeckLegality(modelReply, cardData)).toEqual({
+        status: "accepted",
+        deck: modelReply,
+        corrections: [],
+      });
+    });
+
+    it("trims them when the list is too long", () => {
+      const modelReply = reply({
+        ...TALRAND,
+        basic: snowIsland.name,
+        entries: [["Sol Ring", 1]],
+        size: 100,
+      });
+
+      expect(checkGeneratedDeckLegality(modelReply, cardData)).toEqual(
+        expect.objectContaining({
+          status: "accepted",
+          corrections: [removed(snowIsland.name, 1, "over_size")],
+        })
+      );
+    });
+  });
 });

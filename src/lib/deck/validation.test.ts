@@ -125,9 +125,38 @@ describe("validateCardForDeck", () => {
     const result = validateCardForDeck(another, deck);
     expect(result.canAdd).toBe(true);
   });
+
+  it("allows another copy of a Snow-Covered basic", () => {
+    const snowForest = {
+      name: "Snow-Covered Forest",
+      typeLine: "Basic Snow Land — Forest",
+      colorIdentity: ["G"],
+    };
+    const deck = makeDeck({ cards: [makeCard({ id: "orig", ...snowForest })] });
+    const result = validateCardForDeck(
+      makeCard({ id: "dup", ...snowForest }),
+      deck
+    );
+    expect(result.canAdd).toBe(true);
+  });
 });
 
 describe("validateDeck", () => {
+  it("does not report many Snow-Covered basics as a singleton violation", () => {
+    const deck = makeDeck({
+      commander: makeCommander(["G"]),
+      cards: [
+        makeCard({
+          name: "Snow-Covered Forest",
+          typeLine: "Basic Snow Land — Forest",
+          colorIdentity: ["G"],
+          quantity: 10,
+        }),
+      ],
+    });
+    expect(validateDeck(deck).errors).toEqual([]);
+  });
+
   it("reports missing commander", () => {
     const deck = makeDeck();
     const result = validateDeck(deck);

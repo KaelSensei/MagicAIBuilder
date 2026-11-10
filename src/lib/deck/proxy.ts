@@ -7,6 +7,7 @@
 import type { DeckCard } from "./types";
 import type { LocalizedCardText } from "@/lib/scryfall/localized";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 
 export interface ProxyConfig {
   /** Paper format */
@@ -48,11 +49,10 @@ const BASIC_LAND_TYPES = new Set([
   "plains", "island", "swamp", "mountain", "forest", "wastes",
 ]);
 
-function isBasicLand(card: DeckCard): boolean {
-  const type = card.typeLine.toLowerCase();
+/** The name list covers deck rows stored without a type line (the column defaults to ""). */
+function isBasicLandRow(card: DeckCard): boolean {
   return (
-    type.includes("basic land") ||
-    BASIC_LAND_TYPES.has(card.name.toLowerCase())
+    isBasicLand(card.typeLine) || BASIC_LAND_TYPES.has(card.name.toLowerCase())
   );
 }
 
@@ -73,7 +73,7 @@ function makeCommanderSlot(cmd: DeckCard): ProxySlot {
 
 function shouldExcludeCard(card: DeckCard, config: ProxyConfig): boolean {
   if (card.zone !== "main") return true;
-  if (!config.includeLands && isBasicLand(card)) return true;
+  if (!config.includeLands && isBasicLandRow(card)) return true;
   return false;
 }
 

@@ -54,6 +54,38 @@ describe("CardPackagesPanel", () => {
     ]);
   });
 
+  it("saves a Snow-Covered basic as a basic land", async () => {
+    const snowForest: DeckCard = {
+      ...cards[0],
+      id: "snow-forest",
+      scryfallId: "scryfall-snow-forest",
+      name: "Snow-Covered Forest",
+      typeLine: "Basic Snow Land — Forest",
+      quantity: 10,
+    };
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(response([]));
+    renderWithIntl(<CardPackagesPanel deckId="deck-1" cards={[snowForest]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Card packages" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create package" }));
+    fireEvent.change(screen.getByLabelText("Package name"), {
+      target: { value: "Snow base" },
+    });
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /Snow-Covered Forest/ })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Save package" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock.mock.calls[1]?.[1]).toEqual(
+      expect.objectContaining({
+        body: expect.stringContaining('"isBasicLand":true'),
+      })
+    );
+  });
+
   it("previews legality and applies only selected ready cards", async () => {
     const onApplied = vi.fn();
     const fetchMock = vi

@@ -1,5 +1,5 @@
 /**
- * Cards allowed in multiples (besides basic lands).
+ * Copy limit per card name: basic lands, then cards allowed in multiples.
  *
  * Primary detection: oracle text contains "a deck can have any number of cards named"
  * (works for any language since Scryfall returns english oracle text)
@@ -8,6 +8,7 @@
  * Nazgûl: capped at 9 — oracle text says "up to nine"
  * Seven Dwarves: capped at 7 — oracle text says "up to seven"
  */
+import { isBasicLand } from "@/lib/scryfall/type-line";
 import { getFormatConfig } from "./formats";
 import type { DeckFormat } from "./formats";
 
@@ -44,7 +45,8 @@ export function maxQuantity(
   oracleText: string = "",
   format: DeckFormat = "commander"
 ): number {
-  if (typeLine.toLowerCase().includes("basic land")) return 99;
+  // CR 903.5b and CR 100.2a: basic lands are exempt from the copy limit.
+  if (isBasicLand(typeLine)) return 99;
   if (oracleAllowsMultiples(oracleText)) return 99;
   if (CAPPED_MULTIPLES[cardName] !== undefined) return CAPPED_MULTIPLES[cardName];
   return getFormatConfig(format).maxCopiesPerCard;

@@ -50,6 +50,15 @@ describe("maxQuantity", () => {
     expect(maxQuantity("Island", "Basic Land — Island", "")).toBe(99);
   });
 
+  // CR 903.5b: the singleton exemption covers every land with the basic supertype.
+  it.each([
+    ["Snow-Covered Forest", "Basic Snow Land — Forest"],
+    ["Snow-Covered Wastes", "Basic Snow Land"],
+    ["Wastes", "Basic Land"],
+  ])("returns 99 for %s", (name, typeLine) => {
+    expect(maxQuantity(name, typeLine, "")).toBe(99);
+  });
+
   it("returns 99 for oracle-text multiples (Relentless Rats)", () => {
     expect(
       maxQuantity(

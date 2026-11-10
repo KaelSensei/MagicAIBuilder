@@ -14,6 +14,7 @@ import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
 import { canPairWith, detectPairingType, supportsPartner } from "./pairing";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { getCardById } from "@/lib/scryfall/client";
+import { isBasicLand } from "@/lib/scryfall/type-line";
 import * as deckApi from "@/lib/db/deck-api";
 import { useCollectionStore } from "@/lib/collection/store";
 import { useToastStore } from "@/hooks/useToast";
@@ -1470,7 +1471,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const isBasic = card.type_line.toLowerCase().includes("basic land");
+    const isBasic = isBasicLand(card.type_line);
 
     const { maxQuantity } = await import("@/lib/deck/multiples");
     const max = maxQuantity(card.name, card.type_line, card.oracle_text ?? "");
@@ -2411,11 +2412,9 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     const deck = decks[activeDeckId];
     if (!deck) return;
 
-    const isBasicLand = (card.type_line ?? "")
-      .toLowerCase()
-      .includes("basic land");
+    // As in the deck (CR 903.5b), a basic land may sit in the maybeboard more than once.
     const exists =
-      !isBasicLand &&
+      !isBasicLand(card.type_line ?? "") &&
       uniqueDeckCards(deck).find(
         (c) =>
           c.name === card.name &&
