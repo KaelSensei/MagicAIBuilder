@@ -1,6 +1,6 @@
 # MagicAIBuilder: Product Roadmap
 
-> **Updated:** 2026-11-10 (I-47 to I-57)
+> **Updated:** 2026-11-10 (I-47 to I-61)
 
 > **North star:** help a Commander player go from an idea to a legal, explainable, testable and enjoyable deck.
 
@@ -97,6 +97,13 @@ A fourth pass, later the same day, looked at how a player chooses the next comma
 - [I-56](#i-56-wishlists-friends-can-buy-from) gives each player one wanted list, filled from the acquisition plan, that friends can reserve gifts from without the owner seeing what was reserved (goals 1 and 2).
 - [I-57](#i-57-printing-preferences-applied-everywhere) applies one printing rule wherever a card enters a deck, and fixes two defects that make printings and prices wrong today (goal 1).
 
+A fifth pass, on 2026-11-10, looked at the lands a deck runs, what its cards cost over time, what a player builds across a year, and how an account is protected. It added I-58 to I-61: one with the editor work at the end of [Business, Reference And Depth](#business-reference-and-depth), and three in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table):
+
+- [I-58](#i-58-mana-base-builder) proposes a land base for the open deck from Karsten's published tables, explains every land and applies it as a reviewed change the player can revert, with no model choosing a land (goal 1).
+- [I-59](#i-59-prices-over-time-and-alerts) keeps one dated price per printing per day, shows deck and collection value over time for free, and sends an alert only when the player asked for one, in neutral words (goals 1 and 2).
+- [I-60](#i-60-player-stats-and-a-commander-year-in-review) gives a player statistics across their own decks and an opt-in Commander year in review each December, free, with no streaks and no ranking (goals 1 and 2).
+- [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions) adds passkeys, optional two-step sign-in, a sessions page and password reset, and fixes the password and session defects found on `dev`; nothing in it is paid (goal 2).
+
 ### Strategic boundaries
 
 - Do not become a generic card database; Scryfall already owns that job.
@@ -141,6 +148,8 @@ Three of the initiatives added on the evening of 2026-11-09 touch this list with
 Four of the initiatives added on 2026-11-10 touch this part without changing it. [I-52](#i-52-a-feedback-loop-players-can-see) is product feedback, not deck feedback: the benchmark table's "Do not open a second feedback initiative" refers to deck reviews and "seeking feedback", which stay in I-08. [I-50](#i-50-play-this-deck-online) plans no Arena collection or wildcard work. [I-53](#i-53-monthly-deckbuilding-challenges) has no paid entry, no paid or weighted vote and no featured entry, and [I-51](#i-51-cards-lent-and-borrowed-within-the-pod) charges no fee on a loan.
 
 Two of the fourth pass's initiatives touch this part too, without changing it. [I-54](#i-54-find-your-next-commander) never orders commanders by popularity, as the strategic boundaries require. [I-56](#i-56-wishlists-friends-can-buy-from) takes no payment, pools no money and stores no address, so gift reservations stay below the marketplace line.
+
+Three of the fifth pass's initiatives touch this part too, without changing it. [I-58](#i-58-mana-base-builder) never orders lands by popularity and publishes no land pages. [I-59](#i-59-prices-over-time-and-alerts) publishes no price page, download or API, lists no catalogue-wide movers and makes no forecast, so it neither duplicates Scryfall's database nor frames prices as trading. [I-60](#i-60-player-stats-and-a-commander-year-in-review)'s recap shows no streak, rank or named opponent, so it adds no engagement loop.
 
 Sources are listed in [`competitive-landscape.md`](./competitive-landscape.md). Revalidate a competitor's behavior before implementation. Capabilities change.
 
@@ -318,11 +327,34 @@ I-55 and I-57 join the editor work at the end of [Business, Reference And Depth]
 - Should the printing rule prefer French printings for French players (I-57, decided with I-11 before slice 4)?
 - Does Moxfield's import payload carry a Scryfall ID or a set and collector number (I-57, I-10)? Moxfield refused automated requests, so a person must check in a browser.
 
+**2026-11-10, I-58 to I-61, a Scryfall deadline and competitor scope:** a fifth research pass added I-58 to I-61, a scan of 40 dated competitor features and scope additions to existing initiatives. The specs read the code on `dev` at `72fbfc1`, and each defect below was checked again on `origin/dev` at the same commit before it was recorded. Each is an unchecked scope item with its file paths:
+
+- **Card images, due before 2027-01-01 (I-05).** Scryfall announced on 2026-10-14 that after 2027-01-01 the `small`, `large`, `border_crop` and `art_crop` JPEGs "will no longer be available", that `normal` is renamed `jpeg` in the API, that PNG images can no longer be hotlinked, and that its User-Agent policy is strictly enforced for scripted image requests ([blog](https://scryfall.com/blog/new-webp-images-jpeg-deprecations-237)). `DeckCard.artCropUri` stores `art_crop` URLs, `buildScryfallImageUrl` builds a JPEG path for every size, and seven components and modules read the retiring keys. This is the most urgent item in this note.
+- **Accounts (I-61, I-05).** bcryptjs reads at most 72 bytes of a password while signup accepts 128 characters. The login limit lives in each instance's memory and is keyed on the email only, so an attacker can lock a victim out. JWT sessions are re-issued on use and never expire while active, and sign-out does not revoke a copied token. No route changes or resets a password, and no email is ever sent.
+- **Prices (I-59, I-57, I-05).** Three deck totals disagree: `useDeckPrice` counts Sideboard and Considering, `computeDeckStats` does not, the stats export leaves out the command zone, and none counts the companion. Card prices are sent by the browser, stored unchecked and never refreshed; `patchCardSchema` has no price field.
+- **Tokens (I-19).** The deck's token list parses Oracle text (`src/lib/deck/token-library.ts`). Smothering Tithe, Krenko, Mob Boss, Bitterblossom and Palace Jailer give an empty list, and every emblem is named "Emblem". The playtest's token picker reads the same list.
+- **Dead code (I-37, I-58, I-60, I-05).** `src/lib/shortcuts/shortcuts.ts` binds Ctrl+T and Ctrl+L while listing both as reserved by the browser. `src/lib/deck/analytics.ts` labels USD prices as euros and names a price tier "cEDH". `suggestBudgetReductions` and `BudgetOptimizationModal` propose "Basic Land" at a fixed 0.1 for any land. Only tests import them.
+- **Corrections.** Section 7 of [`competitive-landscape.md`](./competitive-landscape.md#7-card-data-tournaments-and-distribution) said Commander Spellbook v0.84.0 added per-deck and per-card endpoints. It added card pages and sitemaps to the website, and the I-09 item that repeated the claim now carries a dated correction. The same section's "refreshed twice a day" and "blocks automated fetching" are corrected from Scryfall's own documentation, read with a named User-Agent, which also confirms 2 requests a second for card search (I-05). Section 10 now names Moxfield's YouTube channel as a dated source. The bracket guide's source 99, Karsten's land-count article, is served by TCGplayer and dated 2022-07-29, so its access caveat is lifted. The I-31 spec now credits the MDFC weights 0.38 and 0.74 to Karsten's land-count article.
+
+I-58 joins the editor work at the end of [Business, Reference And Depth](#business-reference-and-depth), after I-57: a land base is deckbuilding depth, and its apply follows I-57's diff-and-apply pattern. I-59 to I-61 join [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table). I-61 sits directly after I-38, whose deletion flow and email sender it shares. I-60 follows I-39, because its recap is a growth loop measured through I-39's event store. I-59 follows I-45, because it extends I-45's collection value over time and takes over I-45's value history. I-61 is Next. I-58 and I-60 are Next for their early slices (1 to 9; 0 to 5 and 13). I-59 is Later, and its slices 0 to 2 can ship now. I-59 also takes over I-32's price watch (slice 12), I-45's value history (slice 12) and I-56's wanted items in the price watch (slice 18); each source keeps a one-line pointer. None of the four is in the 30–50 iteration estimate.
+
+The scope additions go to existing initiatives: a command palette and the dead shortcuts module (I-37); a keep drill in the playtest (I-07, then I-31); builds counted once and copies needed per deck (I-43, I-16); Secret Lair drops and the products that hold missing cards (I-17); and tokens from Scryfall's `all_parts`, game pieces, counters and a printable checklist (I-19). QR and NFC labels on deck boxes are already covered by I-43. The competitor scan's top five uncovered features become scope items too, each with its dated source: a pod pass (I-30), a deck highlighter (I-37 slice 6), cards dropped from other sites into a deck (I-37, with I-10), a filter for cards printed only in Universes Beyond (I-57, with I-15 and I-02), and a pod game-night planner (I-15). Twenty-two further questions wait for the owner or the lawyer. The lawyer questions join [I-30 requirement 7.2](specs/i30-business-model-and-paid-tier.md#7-the-legal-gate) and are research, not legal advice:
+
+- **I-58.** Which land count leads by default: the deck's current count, as proposed, or Karsten's formula, which gives about 38 at an average mana value of 3.0 against measured medians of 35–37 for Brackets 1 to 3? Do utility-land candidates come from a reviewed list by function, which needs an owner, or from EDHREC's list per commander, which needs I-29's terms review and risks presenting popularity as advice? May an exact calculation, as `src/lib/deck/turn-one.ts` already makes, show a probability before I-31 ships? Should `Deck.budget` become structured (per card, total, market), since I-17 and I-54 read budgets too?
+- **I-59.** Does the owner accept price history as card data, free for good under I-30 requirement 1.4? That reverses the paid value history of I-45 and the paid plan history of I-32. How many printings are tracked, does the database stay on its free tier, and where does the daily archive live, given that a storage bucket is a new external service that needs an exit path? Which threshold marks a price as moved, and how many alert rules are free?
+- **For the lawyer and Scryfall (I-59).** Does a paid alert carrying free Scryfall prices paywall them? Does a stored chart shown only beside the player's own cards stay clear of "simply repackage, republish, or proxy"? Are price-alert emails a service the player asked for, or prospecting that needs another consent, minors included? May the first 90 days come from MTGJSON's AllPrices, whose MIT licence may not reach the provider prices inside?
+- **I-60.** Does the recap stop at 30 November with a 1 December release, as proposed, or cover the full year with a January release? May a player ask for one email when the recap is ready, which needs I-38's sender and which I-39 requirement 7.4 forbids as written?
+- **For the lawyer (I-60).** Are the stats page and the recap profiling under GDPR Article 4(4), and on which lawful basis does each run? If the recap opt-in is consent, does a player under 15 in France need a parent's consent? Does the public level meet Article 25(2) as designed?
+- **I-61.** After a player loses every second factor, is there no recovery, a person who checks something other than an identity document, or a 7-day delayed path through the mailbox, which the spec recommends? May security email ship before I-38's legal answers, and should the owner choose the email provider now? Is the minimum password length 12 characters, which meets the CNIL's 50-bit case by computation, or 15, which NIST requires for a password used alone? Does two-step sign-in also apply after a Google sign-in, as the spec proposes?
+- **For the lawyer (I-61).** What is the legal basis for security notices that cannot be turned off? Is the five-character hash prefix sent to Pwned Passwords personal data?
+
 ---
 
 ## Portfolio View
 
 ### Now
+
+**Deadline 2027-01-01 (I-05):** move card images to Scryfall's WebP keys, with a `jpeg` fallback, and migrate or derive the stored image URLs. After that date Scryfall stops serving the `small`, `large`, `border_crop` and `art_crop` JPEGs, so the `art_crop` URLs stored in `DeckCard.artCropUri` and the paths `buildScryfallImageUrl` builds break ([Scryfall, 2026-10-14](https://scryfall.com/blog/new-webp-images-jpeg-deprecations-237)). The dated item is under [I-05](#i-05-production-safety).
 
 1. **I-01 Deck Editor workflow**
    Zone persistence and cross-zone targets shipped on 2026-11-06. Finish concurrent save recovery so editing stays predictable.
@@ -428,56 +460,68 @@ I-55 and I-57 join the editor work at the end of [Business, Reference And Depth]
 34. **I-54 Find your next commander**
     Next for slices 1 to 7, 9, 10 and 15: a commander finder on card data, with a visible query, one line of evidence per filter and a seeded random pick, and the wizard's "Help me choose". Later for signals computed from decks, indexable pages and the collection path.
 
+35. **I-61 Account security: passkeys, two-step sign-in and sessions**
+    Next. Slice 5 stops the 72-byte password truncation and goes first. Sessions a player can see and end, re-authentication, password change, passkeys and two-step need no email sender; reset, verification and notices wait for I-38's. Nothing in it is paid.
+
+36. **I-58 Mana base builder**
+    Next for slices 1 to 9: Karsten's land count and source targets, a read-only check that replaces the proportional advice, and a proposal within a budget, applied and reverted as one reviewed change. Later for the euro market, the check by simulation through I-31 and the wizard's lands.
+
+37. **I-60 Player stats and a Commander year in review**
+    Next for the private stats page and the private recap (slices 0 to 5 and 13). Later for sharing, images, measurement, game statistics and embeds, which wait for I-36, I-38, I-39 and I-35.
+
 ### Later
 
-35. **I-10 Interoperability and integrations**
+38. **I-10 Interoperability and integrations**
     Make MagicAIBuilder a good starting point and a good destination for deck data.
 
-36. **I-11 Localization and regional experience**
+39. **I-11 Localization and regional experience**
     Expand beyond English and French only when translations and prices are genuinely supported.
 
-37. **I-12 Local AI**
+40. **I-12 Local AI**
     Explore local inference only after the cloud copilot has a measurable product fit. Offline reading is I-19.
 
-38. **I-18 Per-deck radar of new cards**
+41. **I-18 Per-deck radar of new cards**
     On demand, explain newly legal cards for one deck and show a diff before any change.
 
-39. **I-20 Collaborative review**
+42. **I-20 Collaborative review**
     Let an invited reviewer propose a patch that the owner accepts or rejects. Live co-editing stays out of this slice.
 
-40. **I-21 Reproducible probability bench**
+43. **I-21 Reproducible probability bench**
     Compare simulated hands across snapshots with a visible seed, sample size and mulligan policy.
 
-41. **I-35 Pod game log and casual results**
+44. **I-35 Pod game log and casual results**
     Log a real game after it ends, tied to the deck version played and the brackets declared and computed, with honest personal statistics and opt-in aggregates.
 
-42. **I-36 Creator and embed toolkit**
+45. **I-36 Creator and embed toolkit**
     Give creators deck embeds, link previews that show the deck, video in primers and a public read API, with no tracking and no paid reach.
 
-43. **I-40 Installable app, phone-first use and card scanning**
+46. **I-40 Installable app, phone-first use and card scanning**
     Later, with a no-regret first part: a manifest, icons, safe areas, install help and phone-sized E2E and Lighthouse runs (slices 1 to 5). Scanning waits for a benchmark, Scryfall's written answer and the owner's decision.
 
-44. **I-41 Store Commander nights and organiser tools**
+47. **I-41 Store Commander nights and organiser tools**
     Later, with a cheap early part: the pod-pairing policy and an account-free pod planner (slices 1 and 2), which need no schema and store no personal data.
 
-45. **I-43 Physical collection: storage places, deck boxes and pull lists**
+48. **I-43 Physical collection: storage places, deck boxes and pull lists**
     Later. The deck-box path (slices 1 to 5) needs no collection import and can be promoted on its own; that is an owner question.
 
-46. **I-44 Trade lists within the pod and nearby players**
+49. **I-44 Trade lists within the pod and nearby players**
     Later, with a cheap early part: private have and want lists, share links, the balance view and the friends audience (slices 1 to 7), which need no I-38 work.
 
-47. **I-45 Selling spare cards**
+50. **I-45 Selling spare cards**
     Later, with a no-regret first part: the deck-aware spare list and seller files for Card Kingdom and Cardmarket's tools (slices 0 to 3), which need no price, contract or legal answer.
 
-48. **I-51 Cards lent and borrowed within the pod**
+51. **I-51 Cards lent and borrowed within the pod**
     Later. Slices 1 to 6 are private records that involve no second account and could be promoted alone; loans between accounts wait for I-38's block.
 
-49. **I-53 Monthly deckbuilding challenges**
+52. **I-53 Monthly deckbuilding challenges**
     Later. The rule checker, the brief page and private challenges between friends (slices 1 and 5 to 8) need no vote, prize or legal answer and could be promoted first.
+
+53. **I-59 Prices over time and alerts**
+    Later, with a no-regret first part: tracked printings measured, one deck total and checks on neutral wording (slices 0 to 2). The series waits for the daily Scryfall job. Price history stays free; only alerts above a free allowance are a candidate.
 
 ### Parked
 
-50. **I-33 The marketplace ladder**
+54. **I-33 The marketplace ladder**
     A decision record, not a build plan. It names the stage that would reverse the marketplace non-goal and the evidence each step up needs. The owner decides; nothing is built for a marketplace.
 
 Open work on I-01, I-05 and I-06 stays ahead of I-14 through I-21. I-28's first slice, a copy correction, shipped in #1300; its guide page should land before I-15, whose Rule 0 sheet reuses the same bracket vocabulary. Among the new initiatives, start with I-14 and I-15, validate demand for I-16 and I-17, and specify the I-19 cache in parallel. Keep I-18 on demand until that flow is validated. Take up I-20 and I-21 only if players use the earlier slices.
@@ -489,6 +533,8 @@ I-38 to I-46 fit around the same order. I-38's slice 2 goes first: #1319 stopped
 I-47 to I-53 fit around the same order. I-48 comes first among them. Wizards said on WeeklyMTG, as reported on 2026-10-13, that a Commander announcement is "likely" before the end of 2026, and I-48's slices 1 to 6 make that announcement a data change rather than a release. Its slice 1 waits for I-28 slice 2, and its slice 2 for I-42 slice 2, because both change who reads `isBanned`. I-50 follows, because its slice 0 puts the eight shipped exports under fixtures and fixes the TappedOut export, and its slices 3 and 6 fix the Arena and MTGO files players import today; slice 6's command-zone placement waits for a test on an MTGO account. I-49 and I-52 are small and broad: I-49's slices 1, 2 and 11 can start in parallel today, I-52's bug report and release notes (slices 3 and 6) need no decision, and its monitor (slice 1) needs only the owner's choice of tool. I-47 comes last of the five, because rulings on each card bring parity rather than an advantage; its slice 1, the current Comprehensive Rules, is a correction and can run beside I-48's slice 1. Among the Later initiatives, I-51's slices 1 to 6 and I-53's slices 1 and 5 to 8 can start without a product decision. Scheduled agents must not pick I-47's slices 9 to 11 before the owner names a judge reviewer or its slice 14 before the owner decides, I-48's slice 12, I-50's slice 12, I-51's slice 7 before I-38's block or its slices 17 and 18 before I-30's slice 0 answers, I-52's slice 10 before I-38's report and block slices, or I-53's slices 16 and 17 before the lawyer's answers.
 
 I-54 to I-57 come after them. I-57 goes first, because its slice 1 fixes two defects players hit today, an explicit pick that is replaced and a price that is not updated, and needs no decision; slices 2 to 5 then make every entry point choose a printing the same way. The owner's choice of product default should come before slice 4. I-55 follows: its core (slices 1 to 7) needs nothing outside the initiative and reuses #1314's change set and #1315's version identity, and slice 9 keeps the acquisition plan from counting a card twice once builds exist. I-56's slices 0 to 4 need no I-38 work and no lawyer answer, and slice 0 retires the favorites stubs that answer 201 for nothing; the owner must confirm the I-44 amendment before I-44 slice 1 or I-56 slice 9 starts, or the two initiatives build two want tables. I-54 is the largest. Its slice 1 builds the Scryfall bulk-data job that I-29 slice 1 plans, never a second one, and the budget label on the wizard is an I-02 defect that need not wait for the finder. Scheduled agents must not pick I-54's slice 6 prompt change before the owner decides with I-02, or its slice 14, I-55's slice 16 before I-30's slice 0 answers, I-56's slice 9 before the owner confirms the amendment, or its slice 18.
+
+I-58 to I-61 come after them, behind one dated item: I-05's move to Scryfall's WebP images must ship before 2027-01-01, whatever else is in flight. I-61 goes first among the four. Its slice 5 fixes the 72-byte password truncation and needs nothing, and its slices 2 to 10 and 15, from the session registry to passkeys and two-step, need neither an email sender nor counsel; slice 1 waits only for I-05's shared store, which the AI quota needs anyway. I-58 follows. Its slices 1, 2 and 4, Karsten's tables as data, card mana facts and the wizard's basics split by source targets, have no dependency; slice 2 is shared with I-31 slice 2, and whichever lands first owns it; and slice 3 corrects the proportional advice players see today. I-60's slices 1, 2 and 4 also need nothing outside the initiative. Only if they ship before 1 December 2026 can players get a private 2026 recap; otherwise the first recap is December 2027. I-59 is Later, but its slices 0 to 2 can ship now: slice 0 measures what the series would store, and slice 1 gives a deck one total. Its slice 3 reuses the daily job of I-29 slice 1 or I-32 slice 2, never a second one. Scheduled agents must not pick I-61's slices 11 to 14 before I-38 slice 13 is merged, I-58's slice 14 before the I-02 owner agrees or its slice 15 before I-30's decision, I-59's slice 4 before the owner's storage answer, its slice 12 before I-38 slice 13 or its slice 13 before I-30's decision and the lawyer's answer, or I-60's slice 14 before I-30's slice 0 answers.
 
 Impact and effort below are planning labels: medium means several small PRs, large means a cross-cutting project. They are not delivery dates.
 
@@ -655,6 +701,8 @@ A user can move a card between every legal zone, reload the page, change its pri
 
 **2026-11-10:** [I-54](#i-54-find-your-next-commander) proposes removing the wizard's "let the AI choose" commander option. Today, when the player names no commander, `src/app/api/ai/build/route.ts` asks the model to "Choose the best commander" for the chosen colours. I-54 slice 6 replaces the option with "Help me choose", which opens the commander finder and returns a pick, so the build route always receives a commander. Removing the route's prompt branch is this initiative's change, and the owner decides (status note).
 
+**2026-11-10, fifth pass:** two more initiatives reach the copilot. [I-58](#i-58-mana-base-builder) slice 4 splits the basics that `src/lib/ai/generated-deck-size.ts` adds to a short list by colour-source targets instead of evenly in WUBRG order, and its slice 14 would let the builder pick the wizard's lands so the model proposes nonland cards only; slice 14 needs this initiative's owner to agree. [I-57](#i-57-printing-preferences-applied-everywhere) proposes a filter that leaves out cards printed only in Universes Beyond; copilot suggestions read it once it ships, and an explicit request still finds those cards.
+
 ### Findings from the 2026-11-09 pass
 
 Code facts were read on `dev` on 2026-11-09. Figures marked as estimates are calculations from the [2026-11-09 research pass](./competitive-landscape.md#ai-unit-economics), not measurements; a `count_tokens` run or real usage logs should replace them.
@@ -809,6 +857,9 @@ The editor remains visually stable while the user searches, hovers, moves cards,
 
 Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65e6230` on 2026-11-10, with the audit's severity. The route posture table and the findings that sit in other initiatives are in [`api-route-inventory.md`](../engineering/api-route-inventory.md).
 
+- [ ] **Due before 2027-01-01:** move card images to Scryfall's WebP keys and migrate the stored image URLs. Scryfall announced on 2026-10-14 that "After January 1st, 2027, the small, large, border_crop, and art_crop JPEG versions will no longer be available". The `normal` JPEG is renamed `jpeg` in the API and stays available; PNG images can no longer be hotlinked; and the User-Agent policy is strictly enforced for scripted image requests. The WebP keys are `thumb` (146 × 204), `grid` (488 × 680), `display` (672 × 936), `crop` (480 × 680) and `art` ([blog](https://scryfall.com/blog/new-webp-images-jpeg-deprecations-237)).
+  - Verified on `origin/dev` at `72fbfc1`: `DeckCard.artCropUri` (`prisma/schema.prisma`) stores `cards.scryfall.io/art_crop/…jpg` URLs, written from `store-card-faces.ts`, `store.ts`, `CardGrid.tsx` and `DeckWizard.tsx`, so saved decks hold URLs that stop working. `buildScryfallImageUrl` (`src/lib/scryfall/images.ts`) builds `/<size>/<face>/…/<id>.jpg` for every size, and `ImageSize` and `ScryfallImageUris` (`src/lib/scryfall/types.ts`) know none of the WebP keys. `image_uris.normal` is read in `CardGrid.tsx`, `QuickAddCollectionButton.tsx`, `src/lib/community/verified-package-cards.ts`, `src/lib/deck/store-card-faces.ts` and `GameChangersPageClient.tsx`, which also reads `small` and `large`; `DeckWizard.tsx` reads `art_crop`; `CardGrid.tsx` and `PrintingSelectorModal.tsx` ask for `large`. `getCardImageUri` falls back to `normal` and then to an empty string, so a card whose keys are gone gets no image. `/api/proxy-card-image` already sends its own User-Agent (`MagicAIBuilder/1.0 (image proxy for print export)`).
+  - Done means: every reader uses the WebP keys with the `jpeg` key as fallback; stored `art_crop`, `small` and `large` URLs are rewritten by a migration or derived from `scryfallId` at read time; `next.config.ts`'s `remotePatterns` cover the WebP URLs; a test fails when code builds a retired size; and all of it ships before 2027-01-01. `image_updated_at` and `/cards/manifest` can drive later re-syncs.
 - [ ] Add UptimeRobot or an equivalent monitor for /api/health.
   - `/api/health` is documented for uptime monitors and `docs/engineering/dx-ci-overview.md` lists UptimeRobot, but no configured monitor is recorded. `docs/engineering/infrastructure.md` still points to an "Observability ? Level 1" roadmap section that no longer exists.
   - [I-52](#i-52-a-feedback-loop-players-can-see) slices 0 to 2 close this item: the owner chooses Upptime, UptimeRobot or both, slice 1 sets up the monitor with a status page hosted off the production stack, and slice 2 feeds a cached `GET /api/status` to a footer line, so no browser calls `/api/health`.
@@ -823,17 +874,22 @@ Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65
   - [x] Record merges #1111 to #1302 and recount the progress metrics (#1306). Later batches are recorded by their own `chore/docs` PRs.
 - [ ] End the session when an account is deleted. `DELETE /api/user/profile` (`src/app/api/user/profile/route.ts`) deletes the user but does not sign out, sessions are JWTs valid for 7 days (`src/lib/auth/edge-config.ts`), and until #1319, on the next authenticated request, `resolveAuthenticatedUser` (`src/lib/auth/helpers.ts`) missed the id and re-created the user from the token's email, name and image, so a deleted account came back, empty, from any device still signed in. [I-38](#i-38-trust-safety-and-user-rights) slice 2 owns the tombstone and the regression test.
   - [x] Stop re-creating a deleted account. `requireAuth` now looks up only the user row the token names and answers 401 when it is gone; only the Playwright test bypass still upserts by email (#1319). The delete route still leaves the session cookie, so protected pages keep their signed-in chrome until sign-out.
+  - [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions) slice 2 closes this item on every device: deletion revokes every server-side session row in the same transaction.
 - [ ] **H1, high:** accept only a same-origin `callbackUrl` at sign-in. After a password sign-in, `src/components/auth/SignInForm.tsx` navigates to the raw query parameter, and the CSP allows inline script (`src/lib/security-headers.ts`). So `?callbackUrl=javascript:…` runs in the app's origin, and an `https://` value redirects off-site. The form also shows any `?error=` text verbatim. Fix branch in flight: the guest-deck branch `fix/guest-deck-survives-sign-up` ([I-39](#i-39-first-run-activation-and-product-measurement) slice 2), no PR yet.
 - [x] **H2, high:** stop linking a Google sign-in to an unverified account. `src/lib/auth/config.ts` set `allowDangerousEmailAccountLinking: true`, and `src/app/api/auth/signup/route.ts` creates a password account for any email without verifying it. An attacker who signed up with a victim's address took over the account when the victim first used Google. Signup's 409 also reveals which emails have an account. Shipped in #1321: the Google provider no longer sets the flag, so such a sign-in returns `OAuthAccountNotLinked` with a message to use the email and password. Google-first and already linked accounts are unchanged. The 409, email verification and linking Google from settings wait for an email sender (I-38).
+  - These three move to [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions): linking Google from settings needs no sender (slice 10), and email verification with a neutral signup answer that ends the 409 waits for I-38's sender (slice 11).
 - [x] **H3, high:** write the shared Scryfall caches on the server only. `POST /api/cache/search` and `POST /api/cache/cards` (`src/app/api/cache/*/route.ts`) stored any JSON a signed-in user sent, and `src/lib/scryfall/client.ts` returned it unchecked. One account could therefore forge the banlist and the Game Changer list that every player loads (`src/hooks/useBanlist.ts`, `src/hooks/useGameChangers.ts`). Shipped in #1322: both routes answer `GET` only, fill a miss from Scryfall on the server, check the body's shape and store under `srv1:` keys, so rows that clients wrote are never read again. Fills are limited per IP, per instance (M2).
 - [ ] **M1, medium:** validate `POST /api/ai/suggest` with a bounded schema. `src/app/api/ai/suggest/route.ts` puts `bracketWarnings`, `detectedThemes`, `gameChangersList` and `categories` into the prompt with no size limit and no sanitising, so one free account can send very large prompts on the paid provider key. `/api/ai/build` already uses a bounded schema.
 - [ ] **M2, medium:** keep rate limits in a shared store and add a per-IP login limit. `src/lib/rate-limit.ts` holds counters in each serverless instance's memory, and the login limit in `src/lib/auth/config.ts` is keyed on the email only, so trying one password across many emails is never limited. The AI quota above, the `GET /api/deck/[id]` limit and I-38's comment limits all need this store.
+  - The login rules move to [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions) slice 1, which waits for this store: a per-IP bucket across all addresses, a per-address backoff, a separate bucket for the owner's devices, and passkey, Google and reset sign-in left open while password attempts wait. Ten failures on one address lock its owner out of that instance today, because the limit counts successes and failures alike and is keyed on the email only. The store itself stays here.
 - [ ] **M3, medium:** bound user writes. The collection schemas (`src/app/api/collection/route.ts`, `src/app/api/collection/[id]/route.ts`) have no length limit and no row cap, and the search cache takes 500 KB per entry under unlimited keys. One account can fill the 512 MB database, and every write then fails. Cap field sizes and rows per user.
   - [x] Cap the shared Scryfall caches: 500 KB per search page, 50 KB per card, 200 unexpired search rows and 2,000 card rows, with expired and client-written rows deleted before each write (`src/lib/cache-limits.ts`, #1322). The collection limits remain open.
+  - The I-59 spec found that the server also trusts card prices: the browser sends each deck row's price, `addCardSchema` (`src/lib/validation/card.ts`) accepts any value from 0 to 100,000, and nothing refreshes it. The item is recorded under [I-59](#i-59-prices-over-time-and-alerts).
 - [ ] **L2, low:** test that every API route declares its access. The middleware matcher skips `/api` (`src/middleware.ts`), so the API allowlist in `src/lib/auth/edge-config.ts` is never read, and a new route that forgets its guard is silently public. Add an inventory test that fails when a handler neither calls a guard nor appears in an explicit public list.
 - [ ] Delete the components that are never rendered: `TemplatesModal`, `BudgetOptimizationModal`, `PricingShoppingListModal`, `SharePopover`, `DeckDescriptionEditor` and `DeckTagsEditor` in `src/components/deck/`, and `CardNoteInline` in `src/components/card/`. Outside their own files, nothing imports them on `dev` at `576f680`. `TemplatesModal` is the only caller of `GET /api/templates`, which returns two hard-coded fake templates ([I-39](#i-39-first-run-activation-and-product-measurement) slice 3), so both can go together. The hook `src/hooks/useTypewriter.ts` has no consumer either. I-08's primer-length item cites `DeckDescriptionEditor`; re-check it against the editor that is rendered.
   - The I-53 spec found another orphan: `src/lib/challenges/challenges.ts`, added in #246 on 2026-03-30, imported by nothing and backed by no schema. [I-53](#i-53-monthly-deckbuilding-challenges) slice 1 deletes it.
   - The I-56 spec found the favorites stubs: `src/lib/favorites/favorites.ts` is imported only by its test, `src/components/card/FavoriteButton.tsx` is rendered nowhere outside its own test, and the `CardFavorite`, `FavoriteList` and `CardInFavoriteList` models are never written. [I-56](#i-56-wishlists-friends-can-buy-from) slice 0 retires them with the two favorites routes.
+  - The fifth pass found three more modules imported only by their tests, each re-checked on `origin/dev` at `72fbfc1`: `src/lib/shortcuts/shortcuts.ts`, deleted when [I-37](#i-37-editor-depth-against-moxfield-and-archidekt)'s shortcut registry lands; `src/lib/deck/analytics.ts`, which [I-60](#i-60-player-stats-and-a-commander-year-in-review) slice 1 replaces; and `suggestBudgetReductions` (`src/lib/deck/pricing.ts`), the heuristic `BudgetOptimizationModal` displays, which [I-58](#i-58-mana-base-builder) deletes with the modal.
 - [ ] Keep the gate order explicit: typecheck, lint, unit tests, E2E policy, SonarCloud.
 - [ ] Require SonarCloud open issues to be zero before PR creation or merge.
   - The checklist in `docs/engineering/quality-gate.md` requires zero open issues; nothing enforces it automatically yet.
@@ -841,6 +897,7 @@ Items tagged H1 to L6 come from the read-only API security audit of `dev` at `65
   - The strategy is documented in the "E2E gate" section of `docs/engineering/quality-gate.md`. The environment variables set in `docker-compose.e2e.yml` (`DATABASE_URL`, `NEXT_PUBLIC_APP_URL`, `AUTH_SECRET`, plus the Postgres service settings) are not yet listed there.
 - [ ] Upgrade Prisma only after the local Node toolchain is at least 22.12.
 - [ ] Confirm Scryfall's current per-endpoint request limits and bulk-data format against Scryfall's own documentation, then align the client limiter. `src/lib/scryfall/client.ts` sends `User-Agent` and `Accept` and serialises calls behind a 100 ms mutex, which honours a 10 req/s sustained ceiling but not a stricter per-endpoint search limit; bulk files are reported to have moved to gzipped JSONL on 2026-07-20. Scryfall blocks automated fetching, so a human must read the policy before the limiter changes.
+  - **Corrected 2026-11-10:** Scryfall's documentation answers a client that names itself, which its policy requires anyway; only generic fetchers are refused. Read that day with a unique User-Agent: `/cards/search`, `/cards/named`, `/cards/random` and `/cards/collection` allow 2 requests a second, `/cards/manifest` 10 a minute and every other method 10 a second, a 429 limits the client for 30 seconds, and prices are updated "once per day" ([rate limits](https://scryfall.com/docs/api/rate-limits)). Bulk files are "daily exports", collected "once every 12-24 hours" ([bulk data](https://scryfall.com/docs/api/bulk-data)). The limiter still has to be aligned.
 - [x] Add request latency and failure visibility for profile, deck and Scryfall paths before adopting heavier observability.
   - `GET /api/decks` status and duration shipped in #1034. Profile and Scryfall paths remain open; do not close this item yet.
   - Profile mutation latency on `/api/user/profile` is recorded (#1132). Profile reads and other Scryfall paths remain open.
@@ -959,6 +1016,9 @@ Importing or editing a deck produces a trustworthy owned, missing and estimated-
 - [ ] Offer a popout view that hides the hand, for streaming and screen sharing. Archidekt offers one.
 - [ ] Save a playtest and resume it later. Closing the playtest discards the game today.
 - [ ] Let a player force chosen cards into the opening hand to test new cards. BlueprintMTG ships this as "New Card Trial", and a Moxfield feedback request asks for it.
+- [ ] A keep drill in the playtest deals opening hands from the deck with the free multiplayer mulligan, takes the player's keep or mulligan call before it shows any advice, then reveals the keep-rule verdict and its margin.
+- [ ] Each drill ends with the share of calls that matched the verdict, counting judgment calls (margins within 2%) and hands without a rule separately, and drill hands are never filed as playtest sessions.
+  - Both drill items need only #1301 and #1303, and cover Commander and the first and free sevens, as `src/lib/playtest/keep-rules.ts` does; a 1v1 drill needs the per-session "multiplayer game" choice above. [KrakenTheMeta](https://krakenthemeta.com/mtg-odds) (© 2026, undated) deals sevens from a pasted list with the free first mulligan but compares no verdict with the player's call, and StarCityGames' and MTGAzone's "Keep or Mulligan" columns ask readers to vote on the author's 60-card hands. None scores the player's calls on their own deck, where the [opening-hands guide](guides/commander-mulligans-curves-and-play-style.md) finds the largest gap between practice and the optimum: two- and three-land sevens with nothing cheap to cast. [I-31](#i-31-deck-lab-analysis-run-on-your-own-list) slice 14 later judges the calls against the deck's own keep table.
 - [ ] **Owner decision:** scripted opponent interaction. Archidekt's interaction simulator (about September 2026) rolls configurable removal, counterspells and attacks against the board after a chosen turn, with archetype presets and a log, and never acts on its own. BlueprintMTG's "Resistance Mode" bots cast scripted interaction during playtests, and its two r/EDH launch posts reached 742 and 585 points in July and August 2026. Playgroup.gg offers "phantom opponents" for solo playtesting, built from its tracked games. These are scripted or random events, not an AI opponent and not a rules engine. The roadmap's non-goal "Do not add an AI opponent or a full Magic rules engine under I-21" therefore does not clearly cover them. The owner should confirm whether scripted interaction is in scope for I-07 or I-21.
 
 ### Definition of done
@@ -1061,6 +1121,7 @@ A user can discover, inspect, compare and safely fork a deck without leaking pri
 - [ ] Revisit richer tournament statistics only under terms that allow this product to show them. Match-level cEDH data exists at TopDeck.gg; its terms are the block (see below).
 - [ ] Adopt EDHREC's Lift semantics explicitly wherever a co-occurrence number is shown or ranked. Lift is a ratio centred on 1 — inclusion in context divided by inclusion at large — and replaced Synergy on `/commanders`, `/combos` and `/tags` on 2026-10-01. Label it as Lift with its definition available on demand; do not relabel it as a synergy percentage or sort it as one.
 - [x] Re-check the Commander Spellbook integration against the per-deck and per-card combo endpoints added in v0.84.0 (2026-10-20), and cache identical card-list lookups so a much-viewed public deck cannot repeatedly hit the service. Show the prerequisites Spellbook lists with each combo, not only a card count: players' most-upvoted 2026 complaint about combo data is a "two-card" combo that needs a third card ([407 points, August 2026](https://www.reddit.com/r/EDH/comments/1vrt8ww/); [262 points, November 2025](https://www.reddit.com/r/EDH/comments/1oxuhqy/)). Shipped in #1324: one `find-my-combos` call per deck, a 6-hour cache keyed on the normalized card list, and each combo's other pieces, conditions, mana and Spellbook link in `CombosPanel`. The cache is per server instance, and only the first page of results is read.
+  - **Corrected 2026-11-10:** v0.84.0 is a release of Commander Spellbook's website repository; it added card pages and sitemaps built from the bulk export, not API endpoints ([release](https://github.com/SpaceCowMedia/commander-spellbook-site/releases/tag/v0.84.0)). The backend's v7.3.0 of the same day only tests that clients ignore unknown fields, and the per-deck lookup #1324 uses existed before. The shipped work stands; only the reason given for it was wrong.
 - [x] Stop `/api/combos` acting as an open proxy to Commander Spellbook. `src/app/api/combos/route.ts` forwarded any `cards` value to `backend.commanderspellbook.com` for any caller, with no cache and no rate limit, and `fetchCombosForDeck` in `src/lib/combos/spellbook.ts` called it once per distinct card, about 100 lookups per deck view, cached only in the browser's memory. Shipped in #1324: `POST /api/combos` takes a bounded deck list, allows 30 lookups a minute per address and 60 Spellbook calls a minute per instance, and serves repeats from its cache. The limits are per instance (M2).
 - [ ] **L3, low (security audit, 2026-11-10):** honour `?refresh` on `GET /api/meta/[commanderSlug]` only when it means true, and only for a signed-in user. `z.coerce.boolean()` in `src/app/api/meta/[commanderSlug]/route.ts` reads `refresh=false` as true, so any anonymous caller can skip the 24-hour cache and make the server scrape EDHREC and MTGTop8 again. Fix branch in flight: `fix/api-small-hardening`, no PR yet.
 - [ ] Label data-sourced cuts apart from the copilot's AI cuts. EDHREC Recs scores adds and cuts for a pasted list (cut scores came back on 2026-10-22), and Archidekt shows EDHREC's recommended cuts in its editor since March 2026. Apply I-03's rules-aware check to data-sourced recommendations, so a popular card that cannot work with this commander is filtered or labelled.
@@ -1141,6 +1202,8 @@ A recommendation is never presented as universal truth: the user can see where i
 **2026-11-09:** deck embeds for other websites are tracked in [I-36](#i-36-creator-and-embed-toolkit). A "play this deck" link to an online table such as Playgroup.gg or TableCommander would be an export contract here. Neither exists today.
 
 **2026-11-10:** that contract is now [I-50](#i-50-play-this-deck-online)'s. The play-readiness of the MTGO and Arena exports listed above moves there too: commander placement, MTGO Catalog IDs, Arena set codes, availability on each platform and Brawl legality. I-10 keeps import, the other text exports and their round trip.
+
+**2026-11-10, fifth pass:** cards dragged or pasted from another site into the editor are [I-37](#i-37-editor-depth-against-moxfield-and-archidekt)'s slice 24. I-10 keeps the formats: which link and image shapes from Scryfall, EDHREC, Archidekt and Moxfield resolve to a card, under fixtures like any other import.
 
 ### Definition of done
 
@@ -1313,6 +1376,8 @@ CommanderSalt, DeckCheck DTI and EDHREC salt are the references for describing h
 - [ ] Compare up to four decks on the same sheet.
 - [ ] Keep preference and salt-style scores separate from official rules, bracket and ban data.
 - [ ] State on the sheet that it does not guarantee a balanced game.
+- [ ] A structured house rule "no cards printed only in Universes Beyond" on the sheet, checked against each deck through [I-57](#i-57-printing-preferences-applied-everywhere)'s card-level flag instead of free text. Cube Cobra merged a preference that hides such cards from search and suggestions on 2026-11-02 ([PR #3118](https://github.com/dekkerglen/CubeCobra/pull/3118)).
+- [ ] A pod game-night planner, after the pods of spec slice 3: a recurring night with an RSVP that names the deck version and the declared bracket each player brings, the pod's sheet attached, tables formed by [I-41](#i-41-store-commander-nights-and-organiser-tools)'s pairing policy, and [I-35](#i-35-pod-game-log-and-casual-results)'s log prompted after the game; [I-46](#i-46-discord-and-chat-integrations-for-pods-and-creators) may post the reminder to Discord. It works before the table and needs no chat. It is free, with a possible pod-pass perk under I-30. Playgroup.gg added "a calendar tool, recurring game nights" to its playgroups on 2026-11-04 ([post](https://playgroup.gg/posts/101-the-new-playgroup-app-and-everything-else-since-july)). It sits here rather than in I-23, because the RSVP carries the deck and declared bracket this sheet already holds, while I-23 is a Discord surface planned for 2027.
 
 ### Definition of done
 
@@ -1340,6 +1405,7 @@ MTGGoldfish SuperBrew and Mana For Cards Discover are the references. This initi
 - [ ] Offer a free-cards mode that treats copies already allocated to other decks as unavailable.
 - [ ] Show where each candidate list came from, and mark unknown prices on their own.
 - [ ] Leave collection ownership and the open deck unchanged while ranking.
+- [ ] Show owned copies as free or committed, such as "1 of 3 free, 2 in other decks", in card search and on the deck's rows, reading slice 4's commitment index (slice 6; I-37 slice 17 places the search marker). The index needs only deck rows, as `GET /api/collection/usage` already reads them, so slice 6 may go ahead of slice 0. A Moxfield feedback request asks for "1 of 3 available (2 in other decks)" ([nolt 2554](https://moxfield.nolt.io/2554), search summary, undated), and Archidekt staff called an in-use banner hard to build ([thread 15420664](https://archidekt.com/forum/thread/15420664), about 14 months before 2026-11-10).
 
 ### Definition of done
 
@@ -1366,6 +1432,10 @@ EDHREC precon upgrades, DeckCheck and Farseek are the references. Generic budget
 - [ ] Offer editorial swap bundles by budget band, separate from I-02 suggestions.
 - [ ] Apply each bundle to a distinct working copy, and make the bundle reversible.
 - [ ] Label every price as an estimate, not a guaranteed quote.
+- [ ] Import Secret Lair drops into the catalogue from MTGJSON's deck files, which list each drop's cards by Scryfall ID under the MIT licence, dated and versioned like precons (slice 7). MTGJSON 5.3.0+20261109 lists 782 "Secret Lair Drop" decks and 206 "Commander Deck" decks; refreshes reach the product through a reviewed pull request.
+- [ ] For the missing cards in I-06's plan or in one deck's shopping list, list the fixed-content products that hold them, precons and Secret Lair drops, ranked by missing copies covered and showing the singles value of those copies (slice 8).
+- [ ] Name, in the printing selector, the precon or Secret Lair drop that each printing came from (slice 8).
+  - The three items above stay free, and match by name until I-37 slice 12 stores Oracle identity. Products with random contents, such as boosters, stay out, and no sealed price is shown until I-32 provides a source. [Draftsim's precon database](https://draftsim.com/commander-precons/) (prices updated 2026-11-06) sorts precons by singles value against sealed price, but no tool found looks up the products that hold a card or a list of cards.
 
 ### Definition of done
 
@@ -1418,6 +1488,11 @@ ManaBox offline search is the reference. This slice is a voluntary read-only cac
 - [ ] Show the date of the cached copy.
 - [ ] Purge the private cache on sign-out, so one account's deck is not left for the next account on the device.
 - [ ] Cover airplane-mode reading in tests.
+- [ ] Build the deck's token list from Scryfall's `all_parts` instead of the Oracle-text pattern in `src/lib/deck/token-library.ts`, which misses Treasure, X-sized and two-word tokens and names no emblem (before slice 2). Checked on `origin/dev` at `72fbfc1`: Smothering Tithe ("a Treasure token" has no power and toughness), Krenko, Mob Boss (X tokens), Bitterblossom (a "Faerie Rogue") and Palace Jailer (the monarch) give an empty list, and Elspeth's emblem comes out as "Emblem". The fix also corrects the playtest's token picker (`BattlefieldZone.tsx` and `PlaytestModal.tsx` read the same list), I-24's token reading and I-50's token deck.
+- [ ] List the game pieces a deck needs beside its tokens, each with the cards that need it: the monarch, the initiative and Undercity, the Ring, day and night, dungeons, named emblems, and energy, experience and poison counters (before slice 2).
+- [ ] List the counter kinds that the deck's cards put on permanents, such as +1/+1, −1/−1, shield, stun and oil, from a tested list read in Oracle text, since `all_parts` does not link them (before slice 2).
+- [ ] A printable one-page checklist in black and white, with a tick box, the count and the source cards for each token and game piece, offered on the deck, share and public pages and inside the offline download (slice 2).
+  - Archidekt's "Extras" tab shows emblems and dungeons ([news](https://archidekt.com/news/3834269), about three years before 2026-11-10), and its users reported the monarch, the City's Blessing and Mizzix's experience counter missing ([thread 9348841](https://archidekt.com/forum/thread/9348841)). No printable checklist was found anywhere. All four items stay free.
 
 ### Definition of done
 
@@ -1531,7 +1606,7 @@ The initiatives above carry the work already committed. The six below extend the
 
 Read them as hypotheses with a stated basis, not as commitments. A 2027 initiative is promoted to Next only when its spec's open questions are answered and its dependency has shipped.
 
-**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon. I-30 to I-37, added the same day from a research pass on the owner's goals, are not part of this horizon: four of them are Next and one is Next in part, so they sit in their own section, [Business, Reference And Depth](#business-reference-and-depth), after the list of what the sweep ruled out. I-38 to I-46, added that evening, follow in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table). I-47 to I-53, added on 2026-11-10, end that part (I-51 to I-53) and open [Rules, Access And The Online Table](#rules-access-and-the-online-table) (I-47 to I-50). I-54 to I-57, added later that day, join Business, Reference And Depth (I-55, I-57) and Trust, Growth And The Physical Table (I-54, I-56).
+**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon. I-30 to I-37, added the same day from a research pass on the owner's goals, are not part of this horizon: four of them are Next and one is Next in part, so they sit in their own section, [Business, Reference And Depth](#business-reference-and-depth), after the list of what the sweep ruled out. I-38 to I-46, added that evening, follow in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table). I-47 to I-53, added on 2026-11-10, end that part (I-51 to I-53) and open [Rules, Access And The Online Table](#rules-access-and-the-online-table) (I-47 to I-50). I-54 to I-57, added later that day, join Business, Reference And Depth (I-55, I-57) and Trust, Growth And The Physical Table (I-54, I-56). I-58 to I-61, from a fifth pass, join Business, Reference And Depth (I-58) and Trust, Growth And The Physical Table (I-59 to I-61).
 
 **Why six and not twenty.** Beyond these, the sweep stopped producing gaps the product is positioned to fill. Adding further initiatives would mean inventing them, which fills a roadmap without filling a pipeline. The honest way to extend 2027 further is another dated sweep, not a longer list. The 2026-11-09 pass on the owner's goals was such a sweep, and it produced I-30 to I-37.
 
@@ -1757,6 +1832,8 @@ The eight initiatives below were added on 2026-11-09 from a dated research pass 
 
 I-55 and I-57 joined this part on 2026-11-10, from a fourth research pass, after I-37: several builds of one deck, and the printing each card gets, are editor depth. I-57 is Next, and I-55 is Next for slices 1 to 7 and 9.
 
+I-58 followed the same day, from a fifth pass, after I-57: a land base is deckbuilding depth, and its apply follows I-57's diff-and-apply pattern. It is Next for slices 1 to 9.
+
 Two rules hold across all eight. Card data, fan content and the evidence the product shows stay free, under the [Wizards Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy) and [Scryfall's API terms](https://scryfall.com/docs/api): a paid tier sells usage and personal tools, and only after I-30's legal gate. Each initiative names its paid-tier candidate and leaves the decision to I-30. The marketplace non-goal stays in force: I-32 builds the rungs that fit it, and I-33 names the one that would reverse it.
 
 ---
@@ -1774,7 +1851,7 @@ Two rules hold across all eight. Card data, fan content and the evidence the pro
 
 The owner wants a cheap SaaS that pays a decent living while the competition is almost free. Free reference sites sell ad removal for about 2 USD a month through Patreon ([Archidekt](https://archidekt.com/faq), [EDHREC](https://edhrec.com/terms)), which is a donation, not a product. Subscriptions at 3–8 USD a month or 30–50 USD a year sell AI usage, price tooling and personal history ([DeckCheck](https://deckcheck.co/get-more), [ManaTap](https://www.manatap.ai/pricing), [Untapped.gg](https://mtga.untapped.gg/premium)), and paywalls on how many decks or binders a player keeps draw one-star reviews. The Fan Content Policy forbids requiring payment to access fan content and Scryfall forbids paywalling its data, so the line is **content free, tools paid**, and a lawyer confirms it before anyone is charged. No billing, entitlement or monthly quota exists today; the only AI limits are per minute, in a per-instance memory store (`src/lib/rate-limit.ts`). The spec's computed case: on stated assumptions, a living wage needs about 1,200–1,800 paying subscribers and 30,000–60,000 active accounts, and is never reached if the free AI allowance is generous and the model stays on today's price.
 
-**Never paid:** card data and images, search, deck pages, building, importing, exporting and sharing, guides, data reports, the bracket check, the index, the evidence behind any result, and how many decks, folders, collection cards or snapshots a player keeps. **Candidates**, each decided when its initiative ships: AI above a free allowance (I-02), the price watch (I-32), automatic deck watch (I-18), history across snapshots (I-07, I-21), collection-scale tools (I-06, I-16), Deck Lab variants (I-31), game-log trends (I-35), creator analytics (I-36), longer editor history (I-37) and early access.
+**Never paid:** card data and images, search, deck pages, building, importing, exporting and sharing, guides, data reports, the bracket check, the index, the evidence behind any result, and how many decks, folders, collection cards or snapshots a player keeps. **Candidates**, each decided when its initiative ships: AI above a free allowance (I-02), price alerts above a free allowance (I-59, which took over I-32's price watch), automatic deck watch (I-18), history across snapshots (I-07, I-21), collection-scale tools (I-06, I-16), Deck Lab variants (I-31), game-log trends (I-35), creator analytics (I-36), longer editor history (I-37) and early access.
 
 ### Scope
 
@@ -1786,6 +1863,7 @@ The owner wants a cheap SaaS that pays a decent living while the competition is 
 - [ ] Publish the AI-use disclosure page from I-02's scope (slice 5) and, after slice 0, a public page that explains the free and paid line (slice 6).
 - [ ] After slice 0: billing in test mode through the chosen provider, webhooks, cancellation online, account deletion that cancels first, and the French withdrawal, renewal-reminder and termination flows (slices 7–8).
 - [ ] First paid entitlements, a larger AI allowance and early access, then one entitlement per initiative as it ships (slices 9 and 11).
+- [ ] After slice 0, a pod pass: one member's plan unlocks the paid tools for the whole pod. On 2025-12-02 Playgroup.gg gave every playgroup one free league and said that "only _one_ member in a playgroup needs a Supporter Pack" to unlock unlimited leagues ([post](https://playgroup.gg/posts/96-rewind-2025-playgroup-leagues-and-more)). This initiative has no group plan, while pods are already a unit in I-15, I-35, I-41, I-44 and I-51, and one subscriber in a pod of four spreads one price across four players. The pass sells computation and capacity only, such as Deck Lab runs on the pod's decks, pod history beyond a free window and game-night aids, never card data or evidence.
 - [ ] An owner-only metrics page computed from our own database: active accounts, conversion, churn, AI cost per user and net revenue (slice 10).
 - [ ] If slice 0 says no: a supporter page with nothing gated, labelled sponsorships, affiliate income through I-32, and one AI allowance for everyone (slice 12).
 
@@ -1823,9 +1901,10 @@ The [opening-hands guide](guides/commander-mulligans-curves-and-play-style.md) s
 - [ ] Report a cross-fitted keep table per mulligan stage, P(commander cast by turn), per-turn mana and colour percentiles, colour sources, castability per card and land drops, each with a 95% interval and its sample size (slice 5).
 - [ ] A Deck Lab page that runs signed out on a visible or pasted list, with classification review and a limits panel that is always visible (slice 6).
 - [ ] Recorded runs and a replay link that names the engine version (slice 7).
-- [ ] Variants on common random numbers with the policy re-solved, Holm-corrected verdicts, and "not distinguishable at this sample size" with the sample that would be needed (slice 8).
+- [ ] Variants on common random numbers with the policy re-solved, Holm-corrected verdicts, and "not distinguishable at this sample size" with the sample that would be needed (slice 8). A variant may change several lines at once, so that [I-58](#i-58-mana-base-builder)'s whole proposed land base can be checked as one variant (I-58 slice 13).
 - [ ] Server runs, history across snapshots, and percentile placement within bracket × colour identity with n and withheld cells (slices 9–11).
 - [ ] Give I-07's playtest advice and I-28's opening-hand check the deck's own keep table when a run matches the list (slice 13).
+- [ ] Once a Deck Lab run matches the list, judge keep-drill calls against the deck's own cross-fitted keep table and show the margin of each disagreement (slice 14). The drill itself is I-07's; this needs slices 5 and 13.
 
 ### Engineering enablers
 
@@ -1864,7 +1943,8 @@ I-06 stops one step short of buying: the plan lists missing printings with undat
 - [ ] Finish, minimum condition and exact-or-any printing on each plan line, and a flag on lines owned in another printing (slices 4–5).
 - [ ] Mana Pool's prefilled link with our affiliate code, a visible label beside every affiliate control, and a setting that removes our codes (slice 6, blocked on approval and the lawyer). Further sellers follow one per pull request (slice 7).
 - [ ] Count handoffs, monthly buyers and wrong-cart reports with no user, deck or IP column, for I-30 and I-33 (slice 8).
-- [ ] Free-copies and budget-tier handoffs, the CardTrader token flow behind a security review, and a price watch on the player's own plan (slices 9–12).
+- [ ] Free-copies and budget-tier handoffs and the CardTrader token flow behind a security review (slices 9–11).
+- Moved 2026-11-10: the price watch on the player's own plan (requirements 6.3 and 6.4, slice 12) is now [I-59](#i-59-prices-over-time-and-alerts)'s, so that one price series and one alert engine serve every list.
 
 ### Engineering enablers
 
@@ -1873,7 +1953,7 @@ I-06 stops one step short of buying: the plan lists missing printings with undat
 - A golden fixture per seller covers double-faced, split, foil-only, etched, Secret Lair and unmappable cards.
 - A handoff leaves `CollectionCard` and `AcquisitionIntent` unchanged.
 
-**Paid-tier angle:** prices, the market choice, the plan and every handoff stay free, by Scryfall's paywall clause and because affiliate income depends on click volume. The candidate is a price watch on the player's own plan, with that plan's price history (I-30), blocked on the lawyer's answer about Scryfall data.
+**Paid-tier angle:** prices, the market choice, the plan and every handoff stay free, by Scryfall's paywall clause and because affiliate income depends on click volume. The candidate was a price watch on the player's own plan, with that plan's price history; both moved to [I-59](#i-59-prices-over-time-and-alerts), which proposes the history free and keeps alerts above a free allowance as the candidate.
 
 ### Definition of done
 
@@ -2060,8 +2140,10 @@ The owner wants an editor "more beautiful and more complete than Moxfield". Arch
 - [ ] A measurement baseline: a 100-card fixture, a latency and layout-shift harness, click-depth counts, and screenshots at three widths and three theme states (slice 1).
 - [ ] Persisted view and density, collapsible headings with collapse-all, and sticky headings (slice 2).
 - [ ] A shortcut registry that generates the help modal, an off switch for single-character keys, and native undo inside text fields (slice 3). See I-04. The off switch (#1320) and native undo (#1309) shipped under I-04; the registry and remapping remain.
+- [ ] Delete `src/lib/shortcuts/shortcuts.ts` when the registry lands. Only its own test imports it, and it binds Ctrl+T and Ctrl+L while listing both as reserved by the browser (slice 3). It also declares Ctrl+K "Focus search field", which nothing wires.
 - [ ] A card panel that follows pointer, focus and selection, with element toggles and a text-only render; grouped Grid and a Stacks view (slices 4–5).
 - [ ] An in-deck filter bar, and statistics that filter the deck when clicked (slice 6).
+  - The bar also accepts a Scryfall query, which the product's search already parses and I-14 builds from English or French, and offers a highlight-and-dim mode in every view with a match count, so "highlight my ramp" becomes a checkable query. Moxfield's highlighter, published on 2026-03-10, "lets you use search commands at the deck level to display cards that match your search term" ([video](https://www.youtube.com/shorts/Opd_rrdE2S4)); spec 10.1's bar searches plain text and facets only, and filters instead of highlighting.
 - [ ] A mobile bottom toolbar with localized labels, Layout and More drawers and quick add, replacing today's three English-only tabs (slice 7). See I-11.
 - [ ] Text and Table views, and main-deck multi-select with bulk category, zone and removal (slices 8–9).
 - [ ] A change record written in each mutation's transaction, automatic snapshots before restores and bulk edits, a history view, revert and redo (slices 10–11).
@@ -2069,6 +2151,10 @@ The owner wants an editor "more beautiful and more complete than Moxfield". Arch
 - [ ] Finish, language, date added and Oracle identity on deck cards (slice 12). `DeckCard` has none of them today (`prisma/schema.prisma`), and I-06, I-10 and I-32 depend on them.
 - [ ] Custom categories, deck and global tags, card-panel controls, bulk edit as one diff-and-apply transaction, a cross-deck clipboard and Scryfall function tags (slices 13–18). The I-01 bulk-edit fix, #1314, stopped the data loss first.
 - [ ] Read-only Stacks and Text on public pages, the validation pass with a side-by-side review, and a split primer editor (slices 19–21).
+- [ ] A command palette opened by Ctrl/Cmd+K or a toolbar button, listing every command that the slice 3 registry declares for the current page, each with its key (slice 22).
+- [ ] From the palette, open any of the player's decks by name, and add a card to the current zone through slice 7's quick add (slice 23).
+  - The palette is a dialog that holds a combobox, with labels from the message catalogues. It needs no single-character key, so WCAG 2.1.4 does not apply, and on touch it opens from slice 7's More drawer. A palette outside the editor needs a mount in the layout, because `useKeyboardShortcuts` is mounted only in the builder page (`src/app/[locale]/builder/[deckId]/page.tsx`). Mythic Hub's palette "opens with Ctrl+K on Windows or Cmd+K on Mac" (search summary of its help page, undated); none was found on Moxfield, Archidekt, EDHREC or Scryfall. Whether browsers claim Ctrl+K on Windows and Linux is unverified; if they do, the palette calls `preventDefault`.
+- [ ] Accept a card dragged or pasted from Scryfall, EDHREC, Archidekt or Moxfield, as a link or an image: resolve it by Scryfall ID or name, apply I-57's printing rule, and land it in the zone under the pointer, with undo and keyboard and touch equivalents (slice 24). Moxfield said on 2026-10-29 that "there are now three sites you can drag and drop cards from directly in to your decks" ([video](https://www.youtube.com/shorts/bfXJIfZw2Cg)); every drag in this roadmap stays inside the app today. [I-10](#i-10-interoperability-and-integrations) keeps the link and image formats under fixtures.
 
 ### Engineering enablers
 
@@ -2143,15 +2229,18 @@ A card enters a deck by at least ten paths, and each picks a printing its own wa
 
 - [ ] Never replace a printing the player picked (slice 1). Today `handlePrintingSelect` (`src/app/[locale]/builder/[deckId]/page.tsx`) passes the picked printing to `addCard`, and `getOwnedPrinting` (`src/lib/deck/store.ts`) swaps in the first owned row with the same name and a different Scryfall ID. A player who owns any other printing of the card gets that one, even when they own the picked printing too.
 - [ ] Update the price when a printing is swapped (slice 1). Today `swapCardPrinting` (`src/lib/deck/store.ts`) sends the new `scryfallId`, `imageUri` and `artCropUri` to `PATCH /api/decks/[id]/cards/[cardId]` and never the price, so deck totals and the acquisition plan (`src/lib/collection/acquisition-plan.ts`), which read `DeckCard.price`, keep the old printing's price.
+  - `patchCardSchema` (`src/lib/validation/card.ts`) has no price field, so this slice adds one. The I-59 spec found the wider defect, prices sent by the browser, stored unchecked and never refreshed, recorded under [I-59](#i-59-prices-over-time-and-alerts).
 - [ ] `choosePrinting` with its precedence (explicit pick, source printing, pin, owned copy, rule, fallback), a `printingSource` on each deck row, and the missing `ScryfallCard` fields (slice 2). A card is ranked down, never dropped: when every printing is excluded, the fallback keeps the order and names the card.
 - [ ] A rule-to-query compiler, a batched server resolver with a cache, so that a 100-card import needs at most 8 search requests, dated Secret Lair and The List code lists, and a weekly set check (slice 3). Today the name lookups in `src/lib/scryfall/client.ts` do not filter to paper, so a digital-only printing can be chosen.
 - [ ] `PrintingPreference`, its API, and a settings page that states the rule as a sentence, links its Scryfall query and previews three cards, with the product default (slice 4).
 - [ ] Every entry point through the resolver, with a test that fails when a store action that creates deck rows bypasses it, and an add summary by source (slice 5). Today `addCard`, `addDeckCard` and `applyBulkEdit` take an owned printing silently, while `setCommander`, `setPartner`, `setCompanion` and `addToMaybeboard` do not.
+  - [I-58](#i-58-mana-base-builder)'s mana base builder joins the entry points: the lands its proposal adds take their printing from the resolver (I-58 slice 9), and the builder never picks a printing.
 - [ ] Imports keep the printing their source names, an Archidekt row's Scryfall `uid` first and a text line's `(SET) number` next, with a "Use my printing rule for every card" option (slice 6). Today `SET_CODE_PATTERN` (`src/lib/deck/import.ts`) strips the set and number, and `src/lib/import/url-import.ts` reads names only.
 - [ ] The AI wizard and the copilot get printings from the rule, and their budget checks price that printing (slice 7); fork and package dialogs offer to keep the source's printings or use the rule (slice 8).
 - [ ] "Apply my printing rule" to a deck: a diff with explicit, pinned and owned lines unchecked, one transaction, a 409 on a stale deck and one undo entry (slice 9).
 - [ ] A per-deck override, per-card pins, and a printing selector that shows each printing's collector number and price and marks the rule's pick (slices 10–12).
 - [ ] Later: cheapest in euros after I-32 slice 3, bling with finish after I-37 slice 12, and owned copies not committed to another deck first after I-16 slice 4 (slices 13–15).
+- [ ] Leave out cards printed only in Universes Beyond, not only their printings: the same card-level flag that resolves `not:universesbeyond` hides such cards from card search, copilot suggestions ([I-02](#i-02-ai-deck-copilot)), I-18's radar and I-54's commander finder, off by default and with no value judgement shown. An explicit Universes Beyond search still finds them, and [I-15](#i-15-rule-0-sheets-and-pod-profiles)'s sheet can state the choice as a house rule checked against each deck. Cube Cobra merged such a preference on 2026-11-02 ([PR #3118](https://github.com/dekkerglen/CubeCobra/pull/3118)); cards that also have a regular printing stay. Demand is mixed: a Draftsim article of August 2025 (search summary) puts Universes Beyond commanders at 20% of EDHREC's top commanders.
 
 ### Engineering enablers
 
@@ -2168,6 +2257,47 @@ With "no Universes Beyond", importing Sol Ring never yields a Universes Beyond p
 
 ---
 
+## I-58: Mana Base Builder
+
+**Spec:** [`specs/i58-mana-base-builder.md`](specs/i58-mana-base-builder.md)
+
+**Outcome:** a player opens a Commander deck and gets a land count from a published formula, a source target per colour from a published table, and a proposed land base within a budget, owned copies first, with a reason on every line. Nothing changes until the player reviews the diff; apply takes a snapshot first, and one action reverts it.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next for slices 1 to 9, the free product; Later for slices 10 to 14, each behind the initiative it extends; slice 15 waits for I-30
+**Impact / effort:** Medium / medium
+**Depends on:** nothing outside this initiative for slices 1 to 8; I-57 slice 2 for printings (slice 9); I-32 slices 2 and 3 for the euro market (slice 10); I-48 slice 2 for Game Changer status (slice 11); I-16 slice 4 for uncommitted owned copies (slice 12); I-31 slices 4, 5 and 8 for the check by simulation (slice 13); the I-02 owner's agreement for slice 14; I-30's decision for slice 15.
+
+Today the deck page's "Mana Alignment" (`buildManaAlignment` in `src/lib/deck/mana-alignment.ts`) counts lands only and recommends sources in proportion to pips. The AI wizard asks a model for "approximately 36-38 lands" and fills a short list with basics spread evenly in WUBRG order (`src/lib/ai/generated-deck-size.ts`), so a model chooses the lands, a deterministic job the strategic boundaries keep away from it. Frank Karsten published a 99-card land formula, 31.42 + 3.13 × average mana value − 0.28 × cheap ramp and draw ([2022-07-29, updated 2025-02-13](https://www.tcgplayer.com/content/article/How-Many-Lands-Do-You-Need-in-Your-Deck-An-Updated-Analysis/cd1c1a24-d439-4a8e-b369-b936edb0b38a/)), and a 99-card table of coloured sources keyed to the most demanding spell ([2022-08-02](https://www.tcgplayer.com/content/article/How-Many-Sources-Do-You-Need-to-Consistently-Cast-Your-Spells-A-2022-Update/dc23a7d2-0a16-4c0b-ad36-586fcca03ad8/)). Free tools give counts and splits: [DeckFlow](https://www.deckflow.gg/manabase) checks castability without naming lands, and [mtg.land](https://mtgland.pages.dev/) and [ScrollVault](https://scrollvault.net/tools/manabase/) name lands within a budget tier. None found reads the player's own list, collection and bracket together, explains each land against a cited table and applies a change that can be reverted. Wizards restricts no land except through the Game Changer count; on 2026-11-10 Scryfall listed 53 Game Changers, seven of them lands ([search](https://scryfall.com/search?q=is%3Agamechanger+t%3Aland)). No model chooses a land, a count or a split, and every probability shown comes from a cited table or I-31's seeded engine.
+
+### Scope
+
+- [ ] Karsten's tables as data: the 99-card source column, partial-source weights, the land formula, MDFC weights (0.38, or 0.74 when mythic) and the rule of thumb, as pure functions with golden tests (slice 1).
+- [ ] Card mana facts on `ScryfallCard` (`produced_mana`, `game_changer`, `rarity`, `prices.eur`) and a land classifier for colours produced, fetchable types and four enters-tapped classes from a dated cycle table, shared with I-31 slice 2 (slice 2).
+- [ ] A read-only "Mana base check" that replaces the proportional advice: the count against the formula, the driver and target per colour, current sources at Karsten's weights and the tapped-land facts, with one land definition for MDFCs in stats and playtest (slice 3). Today stats count `category === "land"`, while `isOpeningHandLand` (`src/lib/playtest/opening-hand-evidence.ts`) counts any type line with "Land", MDFCs included.
+- [ ] Split the wizard's added basics by source targets, not evenly in WUBRG order (slice 4).
+- [ ] A land catalogue keyed by Oracle ID, cached on the server and refreshed weekly (slice 5), and a deterministic proposal with constraints, a preference order, templated reasons and a shortfall report (slice 6). Game Changer lands are never candidates at Brackets 1 and 2, nor past three at Bracket 3, and need an opt-in at Brackets 4 and 5.
+- [ ] Review and apply: a land-only diff, a snapshot and then one transaction through `PATCH /api/decks/[id]/cards`, a 409 when the deck changed since the review, an apply record and a one-action revert (slice 7).
+- [ ] Utility slots with the reason for what each replaces, from a dated, reviewed list (slice 8), and owned copies first, with printings from I-57's resolver (slice 9).
+- [ ] Delete `suggestBudgetReductions` (`src/lib/deck/pricing.ts`) and `BudgetOptimizationModal` (`src/components/deck/BudgetOptimizationModal.tsx`), which only tests import. The heuristic proposes "Basic Land" at a fixed 0.1 for any land and a "(budget alternative)" at 30% of the price for any other card; it is not a base for this initiative. I-05 lists the modal among the components never rendered.
+- [ ] Later: a budget in the EUR market (slice 10), Game Changer status from the deck's rules version (slice 11), uncommitted owned copies first (slice 12), a check by simulation through a multi-line I-31 variant (slice 13), and the builder picking the wizard's lands, with the I-02 owner's agreement (slice 14).
+- [ ] After I-30's decision: a cross-deck allocation of owned lands and the cheapest purchase plan that meets every deck's targets (slice 15).
+
+### Engineering enablers
+
+- Every cost in the encoded column returns Karsten's value, and the formula gives 40.81 at an average of 3.0 with no cheap pieces and 38.01 with ten.
+- Identical inputs give an identical proposal. No proposed land is outside the identity, banned, over the per-card budget or a Game Changer above the bracket limit, and an unpriced card never counts as zero.
+- The snapshot exists before rows change, a failure mid-apply leaves the deck and its snapshots unchanged, and revert restores exactly when the deck is unchanged.
+- An import test fails if `src/lib/mana-base/` can reach an AI client.
+
+**Paid-tier angle:** the count, the source check, the tapped-land facts, the reasons and a one-deck proposal within a budget, applied and reverted, stay free: DeckFlow, ScrollVault and Draftsim give counts and splits free, and I-30 requirement 1.1 keeps building and evidence free. The one candidate is a cross-deck allocation of the player's owned lands, a personal tool over their own data that no tool read offers. The spec rates it unproven.
+
+### Definition of done
+
+On a two-colour deck, a player sees the formula's count and each colour's target with its driver and table entry, takes a proposal within a budget with owned lands first and a reason on every line, applies it after unchecking one line, and reverts it in one action; a Bracket 2 deck never receives a Game Changer land; and no model chose a land.
+
+---
+
 # Trust, Growth And The Physical Table
 
 I-38 to I-46 were added on the evening of 2026-11-09, from dated research that each spec links, because its notes are not committed. They cover what a public, paying product owes its users (I-38), how a new player reaches a first deck and how that is counted (I-39), the phone and the store (I-40, I-41), the Commander variants (I-42), the physical cards a player stores, trades and sells (I-43 to I-45), and the chat rooms where pods and creators meet (I-46). I-38 and I-39 are Next, I-42 is Next for slices 1 to 6 and I-46 for slices 1 to 3, and the others are Later with cheap early slices named. The rules of the previous part hold: card data, fan content and evidence stay free, each initiative names its paid-tier candidate and leaves the decision to I-30, legal points are research and not legal advice, and none of them holds money, cards or shipments.
@@ -2175,6 +2305,8 @@ I-38 to I-46 were added on the evening of 2026-11-09, from dated research that e
 I-51 to I-53 joined this part on 2026-11-10, from a third research pass. I-51 records the cards and decks lent within a pod, beside I-43 to I-45. I-52 makes the product's own reliability and progress visible to players, beside I-38 and I-39. I-53 runs deckbuilding challenges on I-38's moderation and I-41's stores. I-52 is Next for slices 0 to 8, and I-51 and I-53 are Later with cheap early slices. The same rules hold.
 
 I-54 and I-56 followed later that day, from a fourth pass. I-54 helps a new or returning player choose a commander, beside I-39's first run. I-56 keeps the cards a player wants, beside the cards they store, trade, sell and lend (I-43 to I-45, I-51), and would absorb I-44's want lists if the owner agrees. I-54 is Next for slices 1 to 7, 9, 10 and 15, and I-56 for slices 0 to 4.
+
+I-59 to I-61 joined from a fifth pass that day. I-61 protects the account itself, beside I-38's rights and deletion, and follows it. I-60 gives a player statistics across their decks and a yearly recap, a growth loop measured through I-39, and follows it. I-59 keeps prices over time, beside I-45's collection value, and follows it. I-61 is Next, I-60 is Next for slices 0 to 5 and 13, and I-59 is Later with slices 0 to 2 ready now. The same rules hold.
 
 ---
 
@@ -2197,6 +2329,7 @@ MagicAIBuilder shows public decks, primers, comments, reviews, profiles, package
 - [ ] A legal notice and a DSA contact page in French and English, linked from every footer (slice 1).
 - [ ] End the session when an account is deleted, with a 7-day tombstone and a regression test that replays a still-valid JWT (slice 2, first). Today `DELETE /api/user/profile` (`src/app/api/user/profile/route.ts`) does not sign out. Until #1319, `resolveAuthenticatedUser` (`src/lib/auth/helpers.ts`) re-created the deleted user from the token's email on the next request. I-05 records the same defect.
   - [x] Stop re-creating the deleted user, and replay a still-valid JWT in a regression test (`src/app/api/user/profile/account-lifecycle.test.ts`): after `DELETE`, the same token gets 401 and no user is created (#1319). The session cookie is not yet ended; the PR suggests the deletion UI call `signOut()` (slice 5). It also argues that spec 6.2's tombstone is no longer needed, since nothing re-creates a user per request.
+  - [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions) supplies the rest: its slice 2 revokes every server-side session when the account is deleted, on every device, and its slice 3 the re-authentication that deletion needs. Once slice 2 ships, I-61 proposes dropping the 7-day tombstone; this slice decides with it.
 - [ ] Apply the deletion cascade of the spec's table 6.4 (slice 3). Today `DeckComment.parent` cascades (`prisma/schema.prisma`), so deleting an account deletes every reply other players wrote under its comments, and `DeckReport` cascades from its reporter, so the reports the user filed disappear with their decisions. Replies must survive under a cleared comment, forks must show a neutral label, and reports and decisions must stay, anonymised.
 - [ ] A full JSON export with a versioned schema and a guard test, then a Settings → Account page that downloads it and deletes the account after re-authentication (slices 4–5).
 - [ ] A privacy policy rendered from the retention constants and listing every processor, and terms with moderation rules and a minimum age, accepted and recorded at signup (slices 6–7). Today `src/instrumentation-client.ts` records Sentry Session Replay for 1% of all sessions and every session with an error, and prompts go to Anthropic with OpenAI as fallback (`src/app/api/ai/build/route.ts`, `src/app/api/ai/suggest/route.ts`); none of this is disclosed, because no privacy page exists. [I-39](#i-39-first-run-activation-and-product-measurement) slice 4 sets random-session replay to zero.
@@ -2207,6 +2340,7 @@ MagicAIBuilder shows public decks, primers, comments, reviews, profiles, package
   - [ ] **L5, low (security audit, 2026-11-10):** no community write calls `checkRateLimit` today: comments, ratings, votes, follows and card packages (`src/app/api/community/`). Per-user limits need the shared store of I-05's M2 first.
 - [ ] **L4, low (security audit, 2026-11-10):** stop a repeated report reopening a closed deck report. `src/app/api/community/decks/[id]/reports/route.ts` upserts with `status: "pending"`, so a reporter can send a dismissed report back to the queue after every decision. Fix branch in flight: `fix/api-small-hardening`, no PR yet.
 - [ ] After slice 0: a transactional email sender with an exit path, a daily retention job with a dry run, and email copies of statements of reasons (slices 13–15).
+  - [I-61](#i-61-account-security-passkeys-two-step-sign-in-and-sessions) slices 11 to 14 wait for this sender: email verification, password reset, security notices and email change. Whether security email may ship before counsel answers is an owner question in the status note.
 
 ### Engineering enablers
 
@@ -2220,6 +2354,46 @@ MagicAIBuilder shows public decks, primers, comments, reviews, profiles, package
 ### Definition of done
 
 A deleted account stays deleted on every device after its owner could download all of it, and other players' replies survive; every public item can be reported signed in or out, and every restriction reaches its author with a statement of reasons and a route to appeal; the legal notice, DSA contact, terms and privacy policy are public, versioned and name every processor.
+
+---
+
+## I-61: Account Security: Passkeys, Two-Step Sign-In And Sessions
+
+**Spec:** [`specs/i61-account-security.md`](specs/i61-account-security.md)
+
+**Outcome:** a player sees where their account is signed in and ends any session, signs in with a passkey, turns on two-step sign-in with recovery codes, changes or resets a password, and gets a notice when something changes. A forgotten password no longer means a lost account, and the throttle that slows an attacker never locks out the owner.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next. Slice 5 goes first; slices 2 to 10 and 15 need neither an email sender nor counsel; slice 1 waits for I-05's shared store; slices 11 to 14 wait for I-38's email sender. Never paid
+**Impact / effort:** High / large
+**Depends on:** nothing for slices 2 to 10 and 15; I-05 M2's shared rate-limit store for slice 1; I-38 slice 13's email sender, which itself waits for I-38 slice 0, for slices 11 to 14.
+
+An account will soon hold more than decks: trade proposals (I-44), loans (I-51), gift reservations (I-56) and perhaps a subscription (I-30). Today all of it sits behind one password that cannot be changed or reset, and the code fails several Level 1 requirements of [OWASP ASVS 5.0](https://github.com/OWASP/ASVS/blob/v5.0.0/5.0/en/0x15-V6-Authentication.md), its lowest level. Among the products read, Cardmarket documents authenticator-app codes and urges every user to turn them on ([help](https://help.cardmarket.com/en/TwoFactorAuthentication)), and a community directory lists the same for Scryfall. No deckbuilder read documents a second factor and no product read offers passkeys, though Moxfield's and TCGplayer's pages answered 403, so this is "not found", not "absent". NIST now requires a verifier at AAL2 to offer a phishing-resistant option and accepts synced passkeys there ([SP 800-63B-4, 2025-07-31](https://csrc.nist.gov/pubs/sp/800/63/b/4/final)). Auth.js calls its passkey provider "experimental and not recommended for production use" ([guide](https://authjs.dev/getting-started/authentication/webauthn)), and it creates an account on a signed-out registration, so passkeys run on the current `@simplewebauthn/server` behind the product's own routes. Auth.js stays for the session cookie and Google, as `docs/references/better-auth-evaluation.md` (2026-08-22) advised until two-factor or passkeys became a requirement.
+
+### Scope
+
+- [ ] Verify passwords in full: Argon2id for new hashes, a bcrypt hash upgraded at the next sign-in, 12 to 128 characters for new passwords, `autocomplete` and a show-password toggle (slice 5, first). Today signup (`src/app/api/auth/signup/route.ts`) accepts 8 to 128 characters and hashes with `bcryptjs` cost 12. bcryptjs 3.0.3 reads at most 72 bytes and does not check the length, so two passwords that share their first 72 bytes both work.
+- [ ] A session registry: a `UserSession` row per sign-in, its id in the JWT, one resolver for `requireAuth` and the ten direct `auth()` reads, sign-out and deletion that revoke the row, and limits of 7 days inactive and 30 days absolute (slice 2). Today `src/lib/auth/edge-config.ts` issues JWT sessions of 7 days, re-issued once a day on use, so an active session never expires. Sign-out only clears the cookie (`src/components/auth/UserMenu.tsx`), so a copied token stays valid for up to 7 days, and ten pages and routes read `auth()` without the user lookup that `requireAuth` makes since #1319.
+- [ ] Re-authentication within the last 10 minutes before sensitive actions: password, passkeys, two-step, recovery codes, email, Google linking, sessions, API keys and account deletion (slice 3). Today `DELETE /api/user/profile` and `POST /api/user/api-keys` act on the session alone.
+- [ ] Settings → Security: active sessions with a device label and a country, never the IP address, "sign out everywhere else" and a 90-day event log (slice 4).
+- [ ] Change the password with the current one, with an offer to end other sessions (slice 6), and a breached-password check at signup, change and sign-in that sends only the first five hex characters of a SHA-1 hash to Pwned Passwords, with a bundled list as fallback (slice 7). Today no route changes a password, and nothing refuses a common one.
+- [ ] Passkeys with autofill, rename, removal and a last-way-in rule (slice 8), and optional two-step sign-in with ten single-use recovery codes, asked after password and Google sign-in (slice 9). No SMS codes.
+- [ ] `emailVerified` from Google's claim, linking Google from Settings, and clearing the stored Google tokens nothing reads (slice 10); Google's Cross-Account Protection receiver (slice 15).
+- [ ] Login throttling on I-05's shared store: a per-IP bucket across all addresses, a per-address backoff to a 15-minute cap, the password disabled after 100 consecutive failures, a separate bucket for the owner's devices, and the same answer for an unknown address (slice 1). Today `src/lib/rate-limit.ts` keeps counters in each instance's memory, and the login limit in `src/lib/auth/config.ts` allows 10 attempts per 15 minutes keyed on the email only, successes included. One password tried across many emails is never limited, and ten failures lock the owner out of that instance. Passkey, Google and reset sign-in stay open while password attempts wait.
+- [ ] After I-38 slice 13: email verification and a neutral signup answer that ends the 409 enumeration (slice 11); password reset, which hands a never-verified account to whoever proves the mailbox, and "set a password" for Google-only accounts (slice 12); security notice emails with "This wasn't me" (slice 13); and an email change with a revert link (slice 14). Today no password reset exists and no email is ever sent, so a player who forgets the password, or whose address was squatted before #1321, has no way back.
+
+### Engineering enablers
+
+- A password longer than 72 bytes fails when only its 73rd byte differs, and a bcrypt hash becomes Argon2id after sign-in.
+- A revoked session's replayed JWT gets 401 at every one of the ten `auth()` call sites, and account deletion ends every session.
+- Eleven failures across eleven addresses from one IP are refused, while a passkey sign-in and a reset still work during the wait.
+- The breach client sends exactly five characters with `Add-Padding: true`, and every route added appears in I-05's L2 route inventory with its access class.
+
+**Paid-tier angle:** none. Every control here is free on every plan and never limited by expiry or downgrade, extending I-38's rule. Its value to I-30 is a precondition: a subscription, a trade reputation and gift reservations are worth selling or keeping only on an account that cannot be quietly taken.
+
+### Definition of done
+
+A player signs in on two devices, ends one session from Settings and sees its copied token refused everywhere; adds a passkey and signs in with it; turns on two-step sign-in and recovers with a code; a password longer than 72 bytes is checked in full; guesses from another network never lock the owner out; and, once the email sender ships, a forgotten password is reset by a link that ends every session.
 
 ---
 
@@ -2261,6 +2435,45 @@ I-30 needs evidence before a price, and today none of it can be counted: there i
 ### Definition of done
 
 A fresh visitor builds, checks, playtests and exports with no modal and no account and keeps the deck on signing up, and the owner reads weekly activation and retention, with n and intervals, from rows that hold nothing personal beyond an account id.
+
+---
+
+## I-60: Player Stats And A Commander Year In Review
+
+**Spec:** [`specs/i60-player-stats-and-year-in-review.md`](specs/i60-player-stats-and-year-in-review.md)
+
+**Outcome:** a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+**Status:** Next — proposed 2026-11-10
+**Priority:** Next for the private stats page and the private recap (slices 0 to 5 and 13); Later for sharing, images, measurement, game statistics and embeds (slices 6 to 12, 14 and 15). A private 2026 recap needs slices 1, 2 and 4 before 1 December 2026; the first shareable edition is realistic in December 2027
+**Impact / effort:** Medium / medium
+**Depends on:** nothing outside this initiative for slices 1, 2, 4 and 13; counsel for slice 0; I-32 slice 2 for dated prices (slice 3); I-36 slices 1 to 3 for the deck image, the public projection and embeds (slices 5, 6 and 11); I-38 slices 7 and 8 for age steps and reports (slice 6); I-46 slice 1 for preview tags (slice 7); I-39 slices 5, 10, 12 and 14 for measurement (slices 8, 9 and 15); I-35 slices 4 and 5 for games (slice 10); I-37 slice 10 for exact change counts (slice 12); I-30 slice 0 for slice 14.
+
+A player with a dozen decks cannot see them as a whole: the profile lists public decks one by one and shows no statistics. Recaps spread: Spotify counted over 500 million shares of Wrapped 2025, screenshots included ([TechCrunch, 2025-12-04](https://techcrunch.com/2025/12/04/spotify-says-wrapped-2025-is-its-biggest-yet-with-200m-users-in-its-first-day)), and Playgroup.gg ships a December "Rewind" for Commander games ([page](https://playgroup.gg/tracker)). No deckbuilder found offers a recap of the decks themselves. Recaps can also push and rank. Playgroup's sample 2026 page shows "top 2.51% of active players" and names a "nemesis" ([page](https://playgroup.gg/profiles/46552-eatman/rewind)), and Strava moved its recap to subscribers in December 2025, to public complaints ([road.cc, 2025-12-23](https://road.cc/content/news/strava-year-sport-now-only-subscribers-317425)). This recap is free, counts honestly, names its denominators and never pushes: no streaks, no ranking against other players, no opponents named, and no private deck made public without the owner's say. EDHREC's yearly article stays the site-wide view, under I-34.
+
+### Scope
+
+- [ ] Lawyer questions added to I-30's list, and the stats and recap paragraph for I-38's privacy policy (slice 0, no code).
+- [ ] A pure counting module: active decks, colours, commanders, the cards used most, shared cards, brackets, and decks built and changed. A deck counts once, its builds through the main build, and a card once per deck (slice 1). It replaces `src/lib/deck/analytics.ts`, which only its own test imports, labels Scryfall's USD prices as euros and names a price tier "cEDH", conflating cost with power; slice 1 deletes it.
+- [ ] A `/stats` page and `GET /api/user/stats` in English and French, with accessible charts and tables (slice 2), and a value section with dated prices (slice 3).
+- [ ] The recap: an opt-in, a job on 1 December over 1 January to 30 November, frozen `YearRecap` rows, an owner page, the December invitation, deletion and a tone deny-list test (slice 4), and an image download in both orientations and languages (slice 5).
+- [ ] `Deck.origin` written by the create, import, fork, duplicate and AI routes, so that built and imported decks are counted apart (slice 13). Today only `forkedFromDeckId` and `isAIGenerated` mark an origin.
+- [ ] Later: sharing levels, a preview, `/u/{username}/recap/{year}` and `/recap/{token}`, `noindex` and robots rules, revocation within 60 seconds and a report button (slice 6). Every path under `/u` is public by prefix (`PUBLIC_PAGE_PREFIXES` in `src/lib/auth/public-paths.ts`), and `src/app/sitemap.ts` lists every user with a username, so the recap page checks its own visibility and stays out of the sitemap.
+- [ ] Later: the public recap image and preview tags (slice 7), events and the owner's growth view (slice 8), a visitor call to action into an import-first first run (slice 9), games from I-35 (slice 10), a recap embed (slice 11), exact change counts from I-37's change log (slice 12), and a staggered-invitation experiment (slice 15).
+- [ ] After I-30's decision: statistics over any date range and trends across several years (slice 14).
+
+### Engineering enablers
+
+- One module counts decks, builds and cards by stated rules, and every figure on the page and in the recap names its denominator.
+- A tone test fails on any streak, rank, percentile, named opponent or share reward in the English and French recap text.
+- A private or link-only recap is absent from the sitemap and returns nothing at its public path, a public recap is `noindex`, and a revoked link stops working within 60 seconds.
+- Deleting the account deletes its recaps, and I-38's export holds them.
+
+**Paid-tier angle:** the stats page for every year, the recap with all its sections, images, sharing levels, embeds and the export stay free. The recap is an acquisition loop, Spotify, Goodreads and Playgroup give theirs away, and Strava's move to subscribers drew public complaints. The one candidate is statistics over any date range and trends across several years, a personal tool over the player's history; the spec rates the case weak.
+
+### Definition of done
+
+A player with ten decks opens `/stats` and sees colours, commanders, shared cards and brackets, each with its denominator; on 1 December an opted-in player gets a private recap in their language that names no other player and ranks them against no one; and a recap shared by link stops working within a minute of revocation and never reaches a search engine.
 
 ---
 
@@ -2397,6 +2610,8 @@ A player creates a Duel Commander deck, sees each verdict with its list and date
 - [ ] Deck-box pairing, the box state on the deck page, and "put this deck in its box" with a preview (slice 4).
 - [ ] A read-only pull list ordered by place, confirmed as moves with undo (slice 5).
 - [ ] The put-back list and dismantling, misplaced-card and contention warnings, and cards across decks with a "built decks only" acquisition scope (slices 6–8).
+- [ ] Count a deck's builds once, by I-55's largest-need rule, in the contention warning and the cross-deck list (slices 7–8). This needs I-55 slice 2. Today `acquisition-plan.ts` adds every deck's requirement to the total.
+- [ ] Beside the copies needed to keep every deck assembled, show the copies needed to assemble one deck at a time, which is the largest need of any single deck, for players who move staples between boxes (slice 8). A player asked for storage "that works with … swapping what I take to games" (I-43 spec source 18, r/EDH, 2026-09-09), and Archidekt staff answered a request for an "in-use" banner that "there's not a great way to do this from a technical perspective" ([thread 15420664](https://archidekt.com/forum/thread/15420664), about 14 months before 2026-11-10).
 - [ ] Deck-box labels with a QR code to a revocable `/b/<token>`, disallowed in robots and `noindex`; offline labels through I-19; a place column in the collection export and later its import (slices 9–12).
 - [ ] After I-30's decision: a game-night planner across several decks, and a move-history timeline (slices 13–14).
 
@@ -2475,7 +2690,8 @@ Players own more copies than their decks use, and nothing in the product works i
 - [ ] Free valuation per market and finish, dated, with unpriced copies apart, applied also to the collection's "Total Value", which today prices every copy, foils included, at `prices.usd` with no date (`src/components/collection/CollectionPageClient.tsx`) (slice 4).
 - [ ] Per-copy condition and the etched finish on collection rows (slice 5, an I-06 data change), an inventory report with its SHA-256, printable lists for shops without an upload, "remove sold copies" with confirmation, and export counts with no user column (slices 6–9).
 - [ ] Switch the spare count to I-16's commitment index once it ships (slice 10).
-- [ ] Paid candidates, each blocked on a decision: a buylist comparison against Card Kingdom's price list, value history and a snapshot archive on a licensed feed (slices 11–13).
+- [ ] Paid candidates, each blocked on a decision: a buylist comparison against Card Kingdom's price list and a snapshot archive on a licensed feed (slices 11 and 13).
+- Moved 2026-11-10: value history (requirement 5.1, slice 12) is now [I-59](#i-59-prices-over-time-and-alerts)'s collection value over time, which proposes it free on Scryfall's daily prices, an owner decision in the status note. The snapshot archive (slice 13) stays here.
 
 ### Engineering enablers
 
@@ -2484,11 +2700,52 @@ Players own more copies than their decks use, and nothing in the product works i
 - No seller file contains a Scryfall price, and an EU-market view never shows a USD figure.
 - Exporting leaves `CollectionCard` unchanged.
 
-**Paid-tier angle:** the spare list, valuation, exports and the inventory report stay free, by Scryfall's paywall clause and the player's right to their own data. Candidates for I-30 are value history and a snapshot archive for insurance, on a licensed feed, and a buylist comparison that the spec recommends keeping free if Card Kingdom permits it. None ships before I-30's legal gate, and none sends "sell now" alerts.
+**Paid-tier angle:** the spare list, valuation, exports and the inventory report stay free, by Scryfall's paywall clause and the player's right to their own data. Candidates for I-30 are a snapshot archive for insurance, on a licensed feed, and a buylist comparison that the spec recommends keeping free if Card Kingdom permits it; value history moved to I-59. None ships before I-30's legal gate, and none sends "sell now" alerts.
 
 ### Definition of done
 
 A player exports their spare copies, which never include a copy their decks use, as a Card Kingdom file and a Cardmarket listing sheet, each line valued in the chosen market with its date or listed as unpriced, and the product never handles the sale.
+
+---
+
+## I-59: Prices Over Time And Alerts
+
+**Spec:** [`specs/i59-prices-over-time-and-alerts.md`](specs/i59-prices-over-time-and-alerts.md)
+
+**Outcome:** a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+**Status:** Later — proposed 2026-11-10
+**Priority:** Later. Slices 0 to 2 can ship now and need no decision; slice 3, the core, waits for the daily Scryfall job
+**Impact / effort:** Medium / medium
+**Depends on:** I-29 slice 1 or I-32 slice 2 for the one daily job (slice 3); the owner's storage answer for the archive (slice 4); I-32 slice 3 for the market (slice 6); I-45 slice 4 for collection value (slice 7); I-56 slice 1, I-44 slice 1 and I-17 slice 3 for marks on their lists (slice 9); I-38 slice 13 for email (slice 12); I-30 slices 0 and 11 and the lawyer's answer for the paid allowance (slice 13); I-37 slice 12 for "since added" (slice 14).
+
+Today a deck row holds one USD price that the browser sent when the card was added; the server stores it unchecked, nothing refreshes it, and nothing records its date. No price is kept over time. Scryfall relays one price a day per printing, Cardmarket's in euros and TCGplayer's in dollars, with no history, and its terms forbid requiring a subscription for access to its data ([API terms](https://scryfall.com/docs/api)). Price sites sell alerts: MTGStocks' tier with alerts costs 12.71 USD a month billed yearly ([page](https://www.mtgstocks.com/go-premium)), and EchoMTG sells watchlists from 4 USD a month ([plans](https://www.echomtg.com/plans/)). Dragon Shield shows 30 days of history free, and no history or alert was found on Moxfield or Archidekt. The finance tools speak the language of trading: "Penny Stocks", "Rapid Riches", "Robinhood for your collection". This initiative treats price history as card data, free with no quota and shown only beside the player's own cards, and it says what moved, by how much, from which source and between which dates, and nothing more. Reprints show up early: Scryfall's file of 2026-11-09 held 410 paper reprint printings of 241 cards released after 2026-11-10.
+
+### Scope
+
+- [ ] Measure the tracked printings, the distinct Scryfall IDs in decks, collections and favourites, and the database's free space, and record both (slice 0).
+- [ ] One deck value function for the stats panel, the analysis diff, the stats export and budget checks: the command zone and main deck in the total, Sideboard and Considering apart, the companion counted, unpriced cards counted, labelled "USD, read when each card was added" (slice 1). Today three totals disagree. `useDeckPrice` (`src/hooks/useDeckPrice.ts`) sums every row of `deck.cards`, Sideboard and Considering included, plus commander and partner; `computeDeckStats` (`src/lib/deck/stats.ts`) sums the main zone, commander and partner; `buildExportMetadata` (`src/lib/export/stats-export.ts`) sums `deck.cards` without the command zone; and none counts the companion.
+- [ ] Neutral wording and one colour for up and down, checked in CI over the English and French catalogues (slice 2).
+- [ ] Stop treating the price the browser sent as current. `makeDeckCard` (`src/lib/deck/store-card-faces.ts`) reads `prices.usd` in the browser, `addCardSchema` (`src/lib/validation/card.ts`) accepts any value from 0 to 100,000, the server stores it unchecked, and `patchCardSchema` has no price field, so nothing refreshes it. Until a printing has points, its stored price is shown only as "price when added", and totals read the series once it does (slices 1, 3 and 6). [I-57](#i-57-printing-preferences-applied-everywhere) slice 1 fixes the swap that keeps the old price.
+- [ ] `PrintingKey` and `PricePoint` for tracked printings, daily for 90 days and weekly after, written by the single daily job of I-29 slice 1 or I-32 slice 2, never a second one, with a run report (slice 3), and a compressed daily archive of every paper printing outside the database, with its hash (slice 4). On the spec's estimate, every priced printing daily in PostgreSQL would fill the 512 MB free tier in about nine weeks, while 10,000 tracked printings take about 99 MB in year one.
+- [ ] A printing's chart in the printing selector and the card panel (slice 5), deck value over time for the current list at past prices and for each snapshot on its own date (slice 6), and collection value over time (slice 7).
+- [ ] "Moved" marks on deck rows and the acquisition plan, then on the wanted list, want lists and bundles (slices 8–9), and a reprint watch for cards on any tracked list (slice 10).
+- [ ] Alert rules over a card or a list, net of owned copies, that fire once per crossing, with an in-app inbox (slice 11); an email digest with its own opt-in, at most one a day, with one-click unsubscribe (slice 12); and "since added" once I-37 slice 12 records it (slice 14).
+- [ ] Taken over on 2026-11-10, so that one series and one alert engine serve every list: I-32's price watch (requirements 6.3 and 6.4, slice 12), I-45's value history (requirement 5.1, slice 12) and I-56's wanted items in the price watch (slice 18). Slices 6, 7 and 11 to 13 cover them; each source keeps a pointer.
+- [ ] After I-30's decision and the lawyer's answer: alert rules above a free allowance, list-wide scopes and the email digest as a paid entitlement (slice 13).
+
+### Engineering enablers
+
+- Rerunning a day writes nothing new, a failed day leaves a gap and sends nothing, and a printing that becomes tracked is backfilled from the archive.
+- A target rule fires once when the price crosses it and re-arms only above it, and no alert fires on a missing or stale day.
+- A CI check fails on any word of the trading list in the English and French price catalogues, and every chart shows its currency, source and date, "Past prices do not predict future prices" and a table view.
+- The history route refuses signed-out and bulk calls, and no page, download or API publishes the series.
+
+**Paid-tier angle:** price history, value over time, "moved" marks, the reprint watch and in-app alerts up to an allowance stay free. Each point is a Scryfall price the product already shows free, and Scryfall forbids requiring a subscription for access to its data. This reverses the paid value history of I-45 and the paid plan history of I-32, an owner decision in the status note. The candidate is the watch that runs and delivers: rules above the allowance, list-wide scopes and the email digest, blocked on the lawyer's answer on whether a paid alert carrying free prices paywalls them.
+
+### Definition of done
+
+A player opens a deck and sees its value over 90 days in euros, with gaps drawn and the source and dates on every figure; the deck's total is the same in the stats panel, the export and the chart; a wanted card shows that it was just reprinted; and a card on the acquisition plan that falls to the player's target produces one inbox entry, worded without "deal", "buy" or "spike".
 
 ---
 
@@ -2695,7 +2952,7 @@ A guest filters commanders by colours, style, complexity and budget, sees the qu
 **Status:** Next — proposed 2026-11-10
 **Priority:** Next for slices 0 to 4: one wanted list, filled from the acquisition plan, shared by link, with reservations hidden from the owner; Later for the rest
 **Impact / effort:** Medium / medium
-**Depends on:** nothing outside this initiative for slices 0–4; the owner's confirmation of the I-44 amendment before slice 9; I-44 slices 1, 6 and 12 for trades, friends and the adult declaration; I-17 slice 1 for precons; I-38 slices 4, 8 and 12 for export, reports and blocking; I-45 slice 1 for the keep mark; I-32 slices 1, 3 and 6 for the handoff, market prices and affiliate codes; I-57 slice 4 for printing exclusions; I-30 and I-32 slice 12 for the price watch.
+**Depends on:** nothing outside this initiative for slices 0–4; the owner's confirmation of the I-44 amendment before slice 9; I-44 slices 1, 6 and 12 for trades, friends and the adult declaration; I-17 slice 1 for precons; I-38 slices 4, 8 and 12 for export, reports and blocking; I-45 slice 1 for the keep mark; I-32 slices 1, 3 and 6 for the handoff, market prices and affiliate codes; I-57 slice 4 for printing exclusions. The price watch moved to I-59.
 
 Players keep a list of cards they want, and around a birthday or the holidays a partner, a parent or a friend asks what to buy. The person asking often does not play: a mother of a 16-year-old is told "Ask him what format he plays" ([r/magicTCG, 2026-09-03](https://www.reddit.com/r/magicTCG/comments/1w5vd9u/)). Every MTG collection tool read keeps a wishlist, and none lets a friend mark an item as being bought. Gift registries agree on the surprise rule: on Elfster, "the Wishlist owner won't be notified or see that the wish has been marked as purchased" ([help](https://help.elfster.com/en/articles/11517983-how-do-i-mark-that-i-bought-an-item-on-another-elfster-wishlist)), and Wishpicks lets anyone with the link reserve without an account by default ([docs](https://docs.wishpicks.com/en/articles/16189859-how-does-gift-reservation-work)). No tool read nets several decks against owned printings, which I-06's plan already does. Wrong printings and duplicate gifts are an inference from the registries' design, not an observed complaint. Four boundaries hold: no money and no addresses, no typed text between people, no identity on the gift page by default, and no engagement loops.
 
@@ -2708,7 +2965,7 @@ Players keep a list of cards they want, and around a birthday or the holidays a 
 - [ ] Reservations, anonymous or signed in: a manage key stored only as a hash, quantities, states, expiry computed on read, a spoiler gate, owner responses identical whether or not anything is reserved, a blind reset and per-browser limits (slice 4).
 - [ ] Later: received gifts into the collection, the gift-window notice in the plan, a store view with a QR code, and the seller handoff of a giver's reservations, with affiliate codes only after I-32 slice 6 and never on a list without the adult declaration (slices 5–8).
 - [ ] Later: I-44's want side reading the items open to trades, once the owner confirms the amendment (slice 9); the friends and profile audiences, precons and sealed products, reports, blocking and export, the keep mark, market prices, and any-printing items that follow I-57's exclusions (slices 10–17).
-- [ ] After I-30's decision and I-32 slice 12: wanted items in I-32's price watch (slice 18).
+- Moved 2026-11-10: wanted items in the price watch (slice 18) are now [I-59](#i-59-prices-over-time-and-alerts)'s alert rules, which take the wanted list as a scope.
 
 ### Engineering enablers
 
@@ -2717,7 +2974,7 @@ Players keep a list of cards they want, and around a birthday or the holidays a 
 - The gift page payload carries no name, image, email, deck, collection or settings, and `/api/v1` returns no wishlist data.
 - A schema test fails when one of these models gains a free-text column another person can read.
 
-**Paid-tier angle:** the list, every way of filling it, every audience, reservations, prices, the store view and the handoff stay free: TappedOut and Deckbox charge nothing for a wishlist, Scryfall forbids paywalling prices, and I-30 never charges for the player's own data. The one candidate is wanted items in I-32's price watch, with weak demand evidence. Affiliate income on gift orders is small and not estimated, so I-30 plans no revenue here.
+**Paid-tier angle:** the list, every way of filling it, every audience, reservations, prices, the store view and the handoff stay free: TappedOut and Deckbox charge nothing for a wishlist, Scryfall forbids paywalling prices, and I-30 never charges for the player's own data. The one candidate, wanted items in a price watch, has weak demand evidence and moved to I-59 with the watch. Affiliate income on gift orders is small and not estimated, so I-30 plans no revenue here.
 
 ### Definition of done
 
