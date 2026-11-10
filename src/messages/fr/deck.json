@@ -838,5 +838,17 @@
     "editorHelp": "{count}/{max} · Ctrl+Entrée pour enregistrer · Échap pour annuler",
     "save": "Enregistrer",
     "empty": "Aucune description — cliquez pour en ajouter une"
+  },
+  "guestClaim": {
+    "title": "Enregistrer votre deck invité dans votre compte ?",
+    "description": "« {name} » ({count, plural, one {# carte} other {# cartes}}) n’est encore enregistré que dans ce navigateur.",
+    "accept": "Enregistrer dans mon compte",
+    "decline": "Plus tard",
+    "saving": "Enregistrement…",
+    "retry": "Réessayer",
+    "failed": "Le deck n’a pas pu être enregistré. Il reste dans ce navigateur : vous pouvez réessayer.",
+    "saved": "« {name} » est maintenant dans votre compte.",
+    "open": "Ouvrir le deck",
+    "close": "Fermer"
   }
 }

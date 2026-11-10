@@ -838,5 +838,17 @@
     "editorHelp": "{count}/{max} · Ctrl+Enter to save · Esc to cancel",
     "save": "Save",
     "empty": "No description — click to add one"
+  },
+  "guestClaim": {
+    "title": "Save your guest deck to your account?",
+    "description": "“{name}” ({count, plural, one {# card} other {# cards}}) is still saved in this browser only.",
+    "accept": "Save to my account",
+    "decline": "Not now",
+    "saving": "Saving…",
+    "retry": "Try again",
+    "failed": "The deck could not be saved. It is still in this browser, so you can try again.",
+    "saved": "“{name}” is now in your account.",
+    "open": "Open deck",
+    "close": "Close"
   }
 }

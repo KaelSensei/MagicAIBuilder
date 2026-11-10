@@ -36,6 +36,7 @@ import {
   withSavedCommandRow,
 } from "./command-zone-rows";
 import {
+  clearGuestDeck,
   createGuestDeck,
   GUEST_DECK_ID,
   isGuestDeckId,
@@ -283,6 +284,12 @@ export interface DeckStore {
   ) => Promise<string>;
   duplicateDeck: (id: string) => Promise<string>;
   deleteDeck: (id: string) => Promise<void>;
+  /**
+   * Drops the guest deck from memory and from this browser, once an account
+   * holds a copy. Memory goes first: the guest deck is written back to the
+   * browser on every store change while it is held here.
+   */
+  forgetGuestDeck: () => void;
   renameDeck: (id: string, name: string) => Promise<void>;
   setActiveDeck: (id: string) => Promise<void>;
   loadDecks: () => Promise<void>;
@@ -922,6 +929,21 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     } finally {
       set({ isSyncing: hasPendingSaves() });
     }
+  },
+
+  forgetGuestDeck: () => {
+    set((state) => {
+      const { [GUEST_DECK_ID]: _guest, ...rest } = state.decks;
+      return {
+        decks: rest,
+        activeDeckId:
+          state.activeDeckId === GUEST_DECK_ID ? null : state.activeDeckId,
+        undoStack: state.undoStack.filter(
+          (action) => action.deckId !== GUEST_DECK_ID
+        ),
+      };
+    });
+    clearGuestDeck();
   },
 
   duplicateDeck: async (id: string) => {

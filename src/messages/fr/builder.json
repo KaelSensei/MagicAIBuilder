@@ -140,7 +140,7 @@
   },
   "guest": {
     "title": "Deck invité.",
-    "description": "Enregistré uniquement dans ce navigateur. Créez un compte pour le conserver et y accéder partout.",
+    "description": "Enregistré uniquement dans ce navigateur. Avec un compte, vous pourrez l’y enregistrer et l’ouvrir partout.",
     "anotherTabTitle": "Ce deck invité est déjà ouvert dans un autre onglet.",
     "anotherTabDescription": "Créez un compte pour travailler sur plusieurs onglets sans risquer vos modifications.",
     "createAccount": "Créer un compte",
