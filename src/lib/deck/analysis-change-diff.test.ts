@@ -19,6 +19,7 @@ const before: DeckStats = {
   overBudgetCards: [],
   bannedCards: ["Banned card"],
   colorIdentityViolations: ["Off-color card"],
+  commanderRuleIssues: [],
   flexibleLands: 4,
   formatStats: null,
   manaAlignment: null,

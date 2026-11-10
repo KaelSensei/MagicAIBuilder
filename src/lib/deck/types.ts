@@ -108,6 +108,8 @@ export interface DeckStats {
   overBudgetCards: string[];
   bannedCards: string[];
   colorIdentityViolations: string[];
+  /** Main-deck cards whose rules text cannot work with this commander (deterministic rules check) */
+  commanderRuleIssues: readonly import("./commander-rules-check").CommanderRuleIssue[];
   themes?: import("./themes").DetectedTheme[];
   flexibleLands: number;
   /** Curve / threat / interaction measures; null for Commander (bracket scoring instead) */
