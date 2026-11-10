@@ -1,6 +1,7 @@
 "use client";
 // Zustand deck store — manages all deck state (synced to DB via API routes)
 import { create } from "zustand";
+import type { StoreApi } from "zustand";
 import type { Deck, DeckCard, DeckZone, CardCategory } from "./types";
 import { loadSortPreference, saveSortPreference } from "./sort";
 import type { SortField, SortDirection, GroupBy, SortPreference } from "./sort";
@@ -360,6 +361,7 @@ export interface DeckStore {
 
 let latestDeckListRequest = 0;
 const latestRenameRequests = new Map<string, symbol>();
+const latestTagSaves = new Map<string, symbol>();
 
 /** A partner save that may still need to be undone. */
 interface FailedPartnerSave {
@@ -405,6 +407,100 @@ function restorePartnerAfterFailedSave(
   useToastStore
     .getState()
     .add("error", "Could not save partner — try again");
+}
+
+/** A tag save that may still need to be undone. */
+interface FailedTagSave {
+  readonly deckId: string;
+  readonly request: symbol;
+  /** The tags this attempt put on screen. */
+  readonly attempted: readonly string[];
+  /** The tags on screen before this attempt. */
+  readonly previous: string[];
+}
+
+function haveSameTags(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((tag, index) => tag === b[index]);
+}
+
+/**
+ * Restores the tags that were on screen before a tag save failed, while that
+ * attempt is still the latest tag edit of a deck that still exists.
+ *
+ * Every tag save sends the whole list, so a newer edit already carries this
+ * attempt's change to the server. It is left alone and no error is shown.
+ *
+ * @param setDeckState - Store update used only when a rollback is required
+ * @param state - Store snapshot taken when the save failed
+ * @param save - The attempt that just failed
+ * @returns Nothing. Updates the store and shows an error when the tags are restored.
+ */
+function restoreTagsAfterFailedSave(
+  setDeckState: (partial: Pick<DeckStore, "decks">) => void,
+  state: DeckStore,
+  save: FailedTagSave,
+): void {
+  const currentDeck = state.decks[save.deckId];
+  if (
+    !currentDeck ||
+    latestTagSaves.get(save.deckId) !== save.request ||
+    !haveSameTags(currentDeck.tags, save.attempted)
+  ) {
+    return;
+  }
+  setDeckState({
+    decks: {
+      ...state.decks,
+      [save.deckId]: { ...currentDeck, tags: save.previous },
+    },
+  });
+  useToastStore
+    .getState()
+    .add("error", "Could not save deck tags. Please retry.");
+}
+
+/**
+ * Shows a deck's new tag list at once, saves it, and puts the previous list
+ * back if that save fails.
+ *
+ * @param set - Deck store update
+ * @param get - Deck store snapshot
+ * @param deck - The deck as it was before this edit
+ * @param tags - The complete tag list to save
+ * @param operation - Store action name, for the error log
+ * @returns Resolves once the save has settled, whether or not it succeeded.
+ */
+async function saveDeckTags(
+  set: StoreApi<DeckStore>["setState"],
+  get: () => DeckStore,
+  deck: Deck,
+  tags: string[],
+  operation: "addTag" | "removeTag",
+): Promise<void> {
+  const deckId = deck.id;
+  const request = Symbol(operation);
+  latestTagSaves.set(deckId, request);
+  set((state) => ({
+    decks: {
+      ...state.decks,
+      [deckId]: { ...state.decks[deckId], tags, updatedAt: new Date() },
+    },
+  }));
+  set({ isSyncing: true });
+  try {
+    await deckApi.updateDeck(deckId, { tags });
+  } catch (err) {
+    logger.error("Unexpected error", operation, err);
+    restoreTagsAfterFailedSave(set, get(), {
+      deckId,
+      request,
+      attempted: tags,
+      previous: deck.tags,
+    });
+  } finally {
+    if (latestTagSaves.get(deckId) === request) latestTagSaves.delete(deckId);
+    set({ isSyncing: hasPendingSaves() });
+  }
 }
 
 export const useDeckStore = create<DeckStore>()((set, get) => ({
@@ -976,43 +1072,14 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     if (!current) return;
     const trimmed = tag.trim().slice(0, 50);
     if (!trimmed || current.tags.includes(trimmed)) return;
-    const tags = [...current.tags, trimmed];
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [deckId]: { ...state.decks[deckId], tags, updatedAt: new Date() },
-      },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(deckId, { tags });
-    } catch (err) {
-      logger.error("Unexpected error", "addTag", err);
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
+    await saveDeckTags(set, get, current, [...current.tags, trimmed], "addTag");
   },
 
   removeTag: async (deckId: string, tag: string) => {
     const current = get().decks[deckId];
     if (!current) return;
     const tags = current.tags.filter((t) => t !== tag);
-    // Optimistic update
-    set((state) => ({
-      decks: {
-        ...state.decks,
-        [deckId]: { ...state.decks[deckId], tags, updatedAt: new Date() },
-      },
-    }));
-    set({ isSyncing: true });
-    try {
-      await deckApi.updateDeck(deckId, { tags });
-    } catch (err) {
-      logger.error("Unexpected error", "removeTag", err);
-    } finally {
-      set({ isSyncing: hasPendingSaves() });
-    }
+    await saveDeckTags(set, get, current, tags, "removeTag");
   },
 
   setCommander: async (card: ScryfallCard) => {

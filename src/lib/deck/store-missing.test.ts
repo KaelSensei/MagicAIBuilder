@@ -528,16 +528,17 @@ describe("useDeckStore — setBudget error path", () => {
 // ── addTag / removeTag error paths ────────────────────────────────────────────
 
 describe("useDeckStore — addTag / removeTag error paths", () => {
-  it("addTag keeps optimistic tag when API throws", async () => {
+  it("addTag restores the previous tags when API throws", async () => {
     vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("api error"));
 
     await useDeckStore.getState().addTag("deck-1", "stax");
 
-    expect(useDeckStore.getState().decks["deck-1"].tags).toContain("stax");
+    expect(useDeckStore.getState().decks["deck-1"].tags).not.toContain("stax");
     expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save deck tags. Please retry.");
   });
 
-  it("removeTag keeps optimistic removal when API throws", async () => {
+  it("removeTag restores the removed tag when API throws", async () => {
     useDeckStore.setState({
       decks: { "deck-1": seedDeck({ tags: ["stax", "budget"] }) },
       activeDeckId: "deck-1",
@@ -546,8 +547,9 @@ describe("useDeckStore — addTag / removeTag error paths", () => {
 
     await useDeckStore.getState().removeTag("deck-1", "stax");
 
-    expect(useDeckStore.getState().decks["deck-1"].tags).not.toContain("stax");
+    expect(useDeckStore.getState().decks["deck-1"].tags).toEqual(["stax", "budget"]);
     expect(useDeckStore.getState().isSyncing).toBe(false);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", "Could not save deck tags. Please retry.");
   });
 });
 

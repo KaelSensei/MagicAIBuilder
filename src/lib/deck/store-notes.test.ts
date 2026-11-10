@@ -23,9 +23,10 @@ vi.mock("@/lib/db/deck-api", () => ({
   lookupCardCache: vi.fn().mockResolvedValue(null),
 }));
 
-// Also mock useToast so the store doesn't blow up
+// Toasts are the player's only signal that a save failed, so tests read them.
+const toastAdd = vi.hoisted(() => vi.fn());
 vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
+  useToastStore: { getState: () => ({ add: toastAdd }) },
 }));
 
 import * as deckApi from "@/lib/db/deck-api";
@@ -206,6 +207,77 @@ describe("useDeckStore — addTag / removeTag", () => {
     (deckApi.updateDeck as Mock).mockResolvedValue({});
     await useDeckStore.getState().removeTag("deck-1", "budget");
     expect(useDeckStore.getState().decks["deck-1"].tags).toEqual([]);
+  });
+});
+
+describe("useDeckStore — failed tag saves", () => {
+  const RETRY_TOAST = "Could not save deck tags. Please retry.";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Saves succeed unless a test says otherwise; tag actions ignore the reply.
+    vi.mocked(deckApi.updateDeck).mockReset();
+    seedDeck(makeDeck({ tags: ["casual"] }));
+  });
+
+  /** Holds the next tag save open until the test settles it. */
+  function holdNextTagSave() {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof deckApi.updateDeck>>>();
+    vi.mocked(deckApi.updateDeck).mockReturnValueOnce(pending.promise);
+    return pending;
+  }
+
+  it("takes an added tag back off the deck and asks for a retry when its save fails", async () => {
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().addTag("deck-1", "WIP");
+
+    expect(useDeckStore.getState().decks["deck-1"].tags).toEqual(["casual"]);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", RETRY_TOAST);
+  });
+
+  it("puts a removed tag back and asks for a retry when its save fails", async () => {
+    vi.mocked(deckApi.updateDeck).mockRejectedValueOnce(new Error("offline"));
+
+    await useDeckStore.getState().removeTag("deck-1", "casual");
+
+    expect(useDeckStore.getState().decks["deck-1"].tags).toEqual(["casual"]);
+    expect(toastAdd).toHaveBeenCalledExactlyOnceWith("error", RETRY_TOAST);
+  });
+
+  it("keeps a newer saved tag edit when an older one fails", async () => {
+    const older = holdNextTagSave();
+    const olderAdd = useDeckStore.getState().addTag("deck-1", "WIP");
+    // The newer save sends the whole list, WIP included, so it also saves WIP.
+    await useDeckStore.getState().addTag("deck-1", "budget");
+    older.reject(new Error("offline"));
+    await olderAdd;
+
+    expect(useDeckStore.getState().decks["deck-1"].tags).toEqual(["casual", "WIP", "budget"]);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("keeps newer saved tags that match the failed attempt", async () => {
+    const older = holdNextTagSave();
+    const olderAdd = useDeckStore.getState().addTag("deck-1", "WIP");
+    await useDeckStore.getState().removeTag("deck-1", "WIP");
+    await useDeckStore.getState().addTag("deck-1", "WIP");
+    older.reject(new Error("offline"));
+    await olderAdd;
+
+    expect(useDeckStore.getState().decks["deck-1"].tags).toEqual(["casual", "WIP"]);
+    expect(toastAdd).not.toHaveBeenCalled();
+  });
+
+  it("does not recreate a deleted deck or warn when its tag save fails late", async () => {
+    const pending = holdNextTagSave();
+    const add = useDeckStore.getState().addTag("deck-1", "WIP");
+    await useDeckStore.getState().deleteDeck("deck-1");
+    pending.reject(new Error("offline"));
+    await add;
+
+    expect(useDeckStore.getState().decks["deck-1"]).toBeUndefined();
+    expect(toastAdd).not.toHaveBeenCalled();
   });
 });
 
