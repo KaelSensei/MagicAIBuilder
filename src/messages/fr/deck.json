@@ -502,6 +502,11 @@
     "analysedAgo": "Analysé {time}",
     "addCommanderHint": "Ajoutez un commandant pour obtenir des suggestions",
     "retry": "Réessayer",
+    "limits": {
+      "buildAllowanceExhausted": "Constructions IA du mois épuisées ({limit}). Elles se renouvellent le {date}. Vous pouvez toujours construire un deck à la main.",
+      "suggestAllowanceExhausted": "Suggestions IA du mois épuisées ({limit}). Elles se renouvellent le {date}. Tout le reste fonctionne normalement.",
+      "spendCeilingReached": "Les fonctions IA sont en pause jusqu'au {date}. Tout le reste fonctionne normalement."
+    },
     "cardsToAdd": "Cartes à ajouter",
     "cardsToCut": "Cartes à retirer",
     "ignored": "{count} ignorées",

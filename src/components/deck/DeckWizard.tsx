@@ -30,6 +30,7 @@ import {
 } from "@/lib/scryfall/client";
 import { logger } from "@/lib/logger";
 import { useAIDeckBuild, countCopies } from "@/hooks/useAIDeckBuild";
+import { useAiDenialMessage } from "@/hooks/useAiDenialMessage";
 import type { BuildCard } from "@/hooks/useAIDeckBuild";
 import { useLocalizedCardText } from "@/hooks/useLocalizedCardText";
 import { useDeckStore } from "@/lib/deck/store";
@@ -800,6 +801,7 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
   } | null>(null);
 
   const { state: buildState, build, reset: resetBuild } = useAIDeckBuild();
+  const describeDenial = useAiDenialMessage();
   const { createDeck, setActiveDeck, addDeckCard, setCommander } =
     useDeckStore();
 
@@ -1018,7 +1020,11 @@ export function DeckWizard({ open, onClose, onComplete }: DeckWizardProps) {
                         isDemoDeck={isDemoDeck}
                         importedCount={importedCount}
                         importTotal={importTotal}
-                        error={buildError}
+                        error={
+                          buildState.denial
+                            ? describeDenial(buildState.denial)
+                            : buildError
+                        }
                       />
                       {buildError && (
                         <button

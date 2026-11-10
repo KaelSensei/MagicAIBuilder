@@ -80,6 +80,52 @@ describe("useAIDeckBuild", () => {
 
     expect(result.current.state.error).toContain("500");
     expect(result.current.state.isLoading).toBe(false);
+    expect(result.current.state.denial).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it("exposes why the server refused the build when the month's allowance is used up", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json(
+          {
+            error: "Monthly AI allowance used up",
+            code: "allowance_exhausted",
+            route: "build",
+            limit: 10,
+            resetsAt: "2026-12-01T00:00:00.000Z",
+          },
+          { status: 429 }
+        )
+      )
+    );
+
+    const { result } = renderHook(() => useAIDeckBuild());
+    let built: BuildResult | null = null;
+    await act(async () => {
+      built = await result.current.build({
+        colors: ["G"],
+        strategy: "ramp",
+        bracket: 1,
+        commanderName: null,
+        budget: null,
+      });
+    });
+
+    expect(built).toBeNull();
+    expect(result.current.state.isLoading).toBe(false);
+    expect(result.current.state.denial).toEqual({
+      code: "allowance_exhausted",
+      route: "build",
+      limit: 10,
+      resetsAt: new Date("2026-12-01T00:00:00.000Z"),
+    });
+
+    act(() => {
+      result.current.reset();
+    });
+    expect(result.current.state.denial).toBeNull();
     vi.unstubAllGlobals();
   });
 

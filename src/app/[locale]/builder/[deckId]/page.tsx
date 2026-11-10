@@ -349,6 +349,7 @@ export default function BuilderPage() {
     result: aiResult,
     isLoading: aiLoading,
     error: aiError,
+    denial: aiDenial,
     analyze: analyzeAI,
     detectedArchetype,
     analysedAt,
@@ -1083,6 +1084,7 @@ export default function BuilderPage() {
               result={aiResult}
               isLoading={aiLoading}
               error={aiError}
+              denial={aiDenial}
               onAnalyze={handleAIAnalyze}
               onAddCard={handleAIAddCard}
               onRemoveCard={(cardName) => {

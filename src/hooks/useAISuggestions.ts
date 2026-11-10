@@ -6,6 +6,10 @@ import type { Archetype } from "@/lib/ai/archetypes";
 import { deckCategoryCounts, hashDeckState, buildSuggestPayload } from "@/lib/ai/suggest-payload";
 import { processStream } from "@/lib/ai/suggestion-stream";
 import type { AIAnalysisOptions, AISuggestionResult } from "@/lib/ai/suggestion-types";
+import {
+  readAiCallDenialResponse,
+  type AiCallDenial,
+} from "@/lib/ai/usage/denial";
 
 export type { Archetype } from "@/lib/ai/archetypes";
 export type {
@@ -28,6 +32,7 @@ export function useAISuggestions() {
   const [result, setResult] = useState<AISuggestionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [denial, setDenial] = useState<AiCallDenial | null>(null);
   const [detectedArchetype, setDetectedArchetype] = useState<Archetype | null>(null);
   const [analysedAt, setAnalysedAt] = useState<Date | null>(null);
   const [ignoredSuggestions, setIgnoredSuggestions] = useState<Set<string>>(new Set());
@@ -55,6 +60,7 @@ export function useAISuggestions() {
 
       if (hash === lastHash.current && lastResult.current && !options?.archetypeOverride) {
         setResult(lastResult.current);
+        setDenial(null);
         return;
       }
 
@@ -68,6 +74,7 @@ export function useAISuggestions() {
 
       setIsLoading(true);
       setError(null);
+      setDenial(null);
       setResult({
         suggestions: [],
         removals: [],
@@ -84,7 +91,10 @@ export function useAISuggestions() {
           signal: AbortSignal.timeout(60000),
         });
 
-        if (!response.ok) throw new Error(`AI request failed (${response.status})`);
+        if (!response.ok) {
+          setDenial((await readAiCallDenialResponse(response)) ?? null);
+          throw new Error(`AI request failed (${response.status})`);
+        }
         if (!response.body) throw new Error("No response body");
 
         const acc = await processStream(response.body.getReader(), (current) => {
@@ -122,6 +132,8 @@ export function useAISuggestions() {
     result,
     isLoading,
     error,
+    /** Why the server refused the last analysis before calling a model. */
+    denial,
     analyze,
     invalidateCache,
     detectedArchetype,
