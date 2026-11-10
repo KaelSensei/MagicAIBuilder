@@ -267,6 +267,25 @@ describe("useKeyboardShortcuts", () => {
     expect(useUIStore.getState().searchClearSignal).toBe(before + 1);
   });
 
+  // A Radix dialog closes on Escape from a document capture listener and calls
+  // preventDefault(); the dialog underneath must stay open.
+  it("Escape a dialog already consumed neither closes a modal nor clears search", () => {
+    mount();
+    act(() => {
+      useUIStore.getState().setShowExportModal(true);
+    });
+    const before = useUIStore.getState().searchClearSignal;
+    const consume = (event: KeyboardEvent) => event.preventDefault();
+    document.addEventListener("keydown", consume, { capture: true });
+    try {
+      pressInside(document.createElement("button"), "Escape");
+    } finally {
+      document.removeEventListener("keydown", consume, { capture: true });
+    }
+    expect(useUIStore.getState().showExportModal).toBe(true);
+    expect(useUIStore.getState().searchClearSignal).toBe(before);
+  });
+
   // -------------------------------------------------------------------------
   // Arrow keys — navigation
   // -------------------------------------------------------------------------

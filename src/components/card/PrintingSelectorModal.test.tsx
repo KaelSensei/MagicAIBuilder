@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 
+import { renderWithIntl } from "@/test/render-with-intl";
 import { PrintingSelectorModal } from "./PrintingSelectorModal";
 import cardMessages from "@/messages/en/card.json";
+import commonMessages from "@/messages/en/common.json";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { CollectionCard } from "@/lib/collection/types";
@@ -46,7 +48,7 @@ function renderModal(
   locale = "en"
 ) {
   return render(
-    <NextIntlClientProvider locale={locale} messages={{ card: cardMessages, collection: { ownership: { ownedCount: "Owned (×{count})" } } }}>
+    <NextIntlClientProvider locale={locale} messages={{ card: cardMessages, common: commonMessages, collection: { ownership: { ownedCount: "Owned (×{count})" } } }}>
       <PrintingSelectorModal card={card} onSelect={onSelect} onClose={() => {}} />
     </NextIntlClientProvider>
   );
@@ -188,5 +190,40 @@ describe("PrintingSelectorModal", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Owned only" }));
     expect(screen.getByRole("button", { name: "Lightning Bolt — First Set" })).toBeDefined();
+  });
+});
+
+describe("PrintingSelectorModal as a dialog", () => {
+  it("is a dialog named by the card it shows", () => {
+    renderWithIntl(
+      <PrintingSelectorModal
+        card={makeCard()}
+        onSelect={() => {}}
+        onClose={() => {}}
+      />
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "Lightning Bolt" })
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    ["en", "Close"],
+    ["fr", "Fermer"],
+  ] as const)("names its close button in %s", (locale, name) => {
+    const onClose = vi.fn();
+    renderWithIntl(
+      <PrintingSelectorModal
+        card={makeCard()}
+        onSelect={() => {}}
+        onClose={onClose}
+      />,
+      { locale }
+    );
+
+    fireEvent.click(screen.getByRole("button", { name }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

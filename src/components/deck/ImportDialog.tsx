@@ -319,6 +319,7 @@ export function ImportDialog({
             <Dialog.Close asChild>
               <button
                 type="button"
+                aria-label={t("import.close")}
                 className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
               >
                 <X className="w-4 h-4" />
