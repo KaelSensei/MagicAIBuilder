@@ -79,16 +79,17 @@ export function localePath(locale: SupportedLocale, path: string): string {
 }
 
 /**
- * Canonical plus one hreflang entry per served locale, for a single page.
+ * The hreflang set for one page: its path in each served locale, plus
+ * `x-default` pointing at the default locale.
  *
- * @param locale Locale the page is being rendered in.
+ * Page metadata and the sitemap both build from this, so they always declare
+ * the same set. A sitemap that disagreed with the page's own
+ * `<link rel="alternate">` tags would give a crawler two answers for one URL.
+ *
  * @param path Locale-free path, starting with a slash.
- * @returns A `Metadata["alternates"]` value; resolved against `metadataBase`.
+ * @returns Hreflang code to root-relative path.
  */
-export function buildAlternates(
-  locale: SupportedLocale,
-  path: string
-): NonNullable<Metadata["alternates"]> {
+export function hreflangPaths(path: string): Readonly<Record<string, string>> {
   const languages: Record<string, string> = {};
 
   for (const served of SUPPORTED_LOCALES) {
@@ -99,9 +100,23 @@ export function buildAlternates(
   // routed sends a crawler to a redirect or a 404.
   languages["x-default"] = localePath(routing.defaultLocale, path);
 
+  return languages;
+}
+
+/**
+ * Canonical plus the page's hreflang set (see `hreflangPaths`).
+ *
+ * @param locale Locale the page is being rendered in.
+ * @param path Locale-free path, starting with a slash.
+ * @returns A `Metadata["alternates"]` value; resolved against `metadataBase`.
+ */
+export function buildAlternates(
+  locale: SupportedLocale,
+  path: string
+): NonNullable<Metadata["alternates"]> {
   return {
     canonical: localePath(locale, path),
-    languages,
+    languages: hreflangPaths(path),
   };
 }
 

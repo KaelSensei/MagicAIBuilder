@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import { SUPPORTED_LOCALES, routing } from "@/i18n/routing";
+import { routing } from "@/i18n/routing";
 import { isCommanderSlug } from "@/lib/meta/fetch";
-import { localePath, siteUrl } from "./alternates";
+import { hreflangPaths, localePath, siteUrl } from "./alternates";
 
 /**
  * Sitemap construction, kept separate from the route so it can be tested
@@ -51,11 +51,11 @@ type SitemapEntry = MetadataRoute.Sitemap[number];
 type ChangeFrequency = NonNullable<SitemapEntry["changeFrequency"]>;
 
 /**
- * One entry, with an hreflang alternate per served locale.
+ * One entry, with an hreflang alternate per served locale plus `x-default`.
  *
- * The alternates mirror the `<link rel="alternate">` tags #517 puts on the
- * pages themselves. A sitemap that disagreed with the page would give a
- * crawler two answers.
+ * The alternates come from `hreflangPaths`, the same set behind the
+ * `<link rel="alternate">` tags #517 puts on the pages themselves. A sitemap
+ * that disagreed with the page would give a crawler two answers.
  *
  * @param path Locale-free path, starting with a slash.
  */
@@ -68,8 +68,8 @@ function entryFor(
   const base = siteUrl();
   const languages: Record<string, string> = {};
 
-  for (const locale of SUPPORTED_LOCALES) {
-    languages[locale] = `${base}${localePath(locale, path)}`;
+  for (const [hreflang, href] of Object.entries(hreflangPaths(path))) {
+    languages[hreflang] = `${base}${href}`;
   }
 
   return {

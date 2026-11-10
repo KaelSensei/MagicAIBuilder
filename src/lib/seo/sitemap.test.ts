@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { routing } from "@/i18n/routing";
+import { buildAlternates, siteUrl } from "./alternates";
 import {
   buildSitemap,
   collapseToCommanders,
@@ -28,6 +30,24 @@ function sources(overrides: Partial<SitemapSources> = {}): SitemapSources {
     now: AUGUST,
     ...overrides,
   };
+}
+
+/**
+ * The hreflang set a page declares in its own metadata, made absolute as a
+ * sitemap must state it.
+ *
+ * @param path Locale-free path, starting with a slash.
+ * @returns Language code (or `x-default`) to absolute URL.
+ */
+function pageHreflang(path: string): Record<string, string> {
+  const { languages } = buildAlternates(routing.defaultLocale, path);
+  const absolute: Record<string, string> = {};
+
+  for (const [language, href] of Object.entries(languages ?? {})) {
+    if (typeof href === "string") absolute[language] = `${siteUrl()}${href}`;
+  }
+
+  return absolute;
 }
 
 describe("buildSitemap", () => {
@@ -76,8 +96,31 @@ describe("buildSitemap", () => {
     const [home] = buildSitemap(sources());
     const languages = home?.alternates?.languages ?? {};
 
-    expect(Object.keys(languages).sort()).toEqual(["en", "fr"]);
+    expect(Object.keys(languages).sort()).toEqual(["en", "fr", "x-default"]);
     expect(String(languages.fr)).toMatch(/\/fr$/);
+  });
+
+  it("names the English URL as x-default, as the pages themselves do", () => {
+    const [home] = buildSitemap(sources());
+
+    expect(home?.alternates?.languages?.["x-default"]).toBe(home?.url);
+  });
+
+  it("declares on every entry the same hreflang set as the page's own metadata", () => {
+    // A sitemap that disagreed with the page's <link rel="alternate"> tags
+    // would give a crawler two answers for the same URL.
+    const entries = buildSitemap(
+      sources({
+        decks: [{ id: "deck-1", updatedAt: AUGUST }],
+        profiles: [{ username: "kael", updatedAt: AUGUST }],
+        commanders: [{ slug: "atraxa", updatedAt: AUGUST }],
+      })
+    );
+    const paths = ["/", "/deck/deck-1", "/u/kael", "/commanders/atraxa/decks"];
+
+    expect(entries.map((entry) => entry.alternates?.languages)).toEqual(
+      paths.map(pageHreflang)
+    );
   });
 
   it("uses the unprefixed URL for the default locale", () => {
