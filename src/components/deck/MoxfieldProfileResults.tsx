@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import type { MoxfieldUserDeckSummary } from "@/lib/import/moxfield-user";
 
 interface SavedMoxfieldProfilesProps {
@@ -17,10 +18,11 @@ export function SavedMoxfieldProfiles({
   onLoad,
   onRemove,
 }: SavedMoxfieldProfilesProps) {
+  const t = useTranslations("deck.import.moxfieldProfiles");
   if (profiles.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-2" aria-label="Saved Moxfield profiles">
+    <div className="flex flex-wrap gap-2" aria-label={t("savedProfiles")}>
       {profiles.map((profile) => (
         <span
           key={profile}
@@ -35,7 +37,7 @@ export function SavedMoxfieldProfiles({
           </button>
           <button
             type="button"
-            aria-label={`Remove @${profile}`}
+            aria-label={t("removeProfile", { profile })}
             onClick={() => onRemove(profile)}
             className="border-l border-[var(--border)] px-2 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           >
@@ -76,12 +78,14 @@ export function MoxfieldDeckResults({
   onNext,
   onDeckSelected,
 }: MoxfieldDeckResultsProps) {
+  const t = useTranslations("deck.import.moxfieldProfiles");
+  const tPagination = useTranslations("common.pagination");
   if (decks.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2">
       <p aria-live="polite" className="text-xs text-[var(--text-secondary)]">
-        {firstResult}–{lastResult} of {total} decks
+        {t("range", { first: firstResult, last: lastResult, total })}
       </p>
       <ul className="flex max-h-40 flex-col gap-1 overflow-y-auto">
         {decks.map((deck) => (
@@ -101,29 +105,29 @@ export function MoxfieldDeckResults({
               }
               className="shrink-0 text-xs text-[var(--accent)] hover:underline"
             >
-              Import {deck.name}
+              {t("importDeck", { name: deck.name })}
             </button>
           </li>
         ))}
       </ul>
-      <nav aria-label="Moxfield deck pages" className="flex justify-end gap-2">
+      <nav aria-label={t("deckPages")} className="flex justify-end gap-2">
         <button
           type="button"
-          aria-label="Previous page"
+          aria-label={tPagination("previous")}
           disabled={!canLoadPrevious}
           onClick={onPrevious}
           className="rounded border border-[var(--border)] px-2 py-1 text-xs text-[var(--text-secondary)] disabled:opacity-50"
         >
-          Previous
+          {tPagination("previousShort")}
         </button>
         <button
           type="button"
-          aria-label="Next page"
+          aria-label={tPagination("next")}
           disabled={!canLoadNext}
           onClick={onNext}
           className="rounded border border-[var(--border)] px-2 py-1 text-xs text-[var(--text-secondary)] disabled:opacity-50"
         >
-          Next
+          {tPagination("nextShort")}
         </button>
       </nav>
     </div>

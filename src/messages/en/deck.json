@@ -183,6 +183,21 @@
     "import": "Import",
     "previewDecklist": "Preview decklist",
     "moxfieldRefused": "Moxfield refused MagicAIBuilder's request, so this deck can't be fetched from here. To import it anyway, open the deck on moxfield.com, use Export to copy the list as text, then paste it in the {tab} tab.",
+    "moxfieldProfiles": {
+      "title": "Moxfield profiles",
+      "description": "Save a username to quickly import one of its public decks.",
+      "username": "Moxfield username",
+      "saveProfile": "Save profile",
+      "loadDecks": "Load decks",
+      "loading": "Loading…",
+      "retry": "Retry",
+      "loadFailed": "Could not load Moxfield decks.",
+      "savedProfiles": "Saved Moxfield profiles",
+      "removeProfile": "Remove @{profile}",
+      "deckPages": "Moxfield deck pages",
+      "range": "{first, number}–{last, number} of {total, plural, one {# deck} other {# decks}}",
+      "importDeck": "Import {name}"
+    },
     "previewZone": {
       "main": "Main",
       "sideboard": "Sideboard",
@@ -301,6 +316,10 @@
     "title": "Export Proxy Sheets",
     "description": "Configure and print proxy cards for your deck.",
     "paper": "Paper",
+    "paperOption": {
+      "a4": "A4",
+      "letter": "Letter"
+    },
     "layout": "Layout",
     "quality": "Quality",
     "qualityOption": {
@@ -320,7 +339,8 @@
     "preload": "Preload Images",
     "print": "Print / Save PDF",
     "hintArt": "Preload images first, then print. Choose “Save as PDF” in the dialog. Desktop recommended.",
-    "hintTextOnly": "No images — opens print immediately with name, type, and rules text. Choose “Save as PDF” in the dialog."
+    "hintTextOnly": "No images — opens print immediately with name, type, and rules text. Choose “Save as PDF” in the dialog.",
+    "popupBlocked": "Pop-up blocked — allow pop-ups for this site"
   },
   "buyList": {
     "buyLater": "Later",

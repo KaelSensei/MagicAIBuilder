@@ -63,6 +63,7 @@ export function MoxfieldProfileImport({
   onDeckSelected,
 }: MoxfieldProfileImportProps) {
   const t = useTranslations("deck");
+  const tProfiles = useTranslations("deck.import.moxfieldProfiles");
   const [username, setUsername] = useState("");
   const [activeProfile, setActiveProfile] = useState("");
   const [profiles, setProfiles] = useState<string[]>(readSavedProfiles);
@@ -120,8 +121,11 @@ export function MoxfieldProfileImport({
           });
           return;
         }
-        if (!response.ok || !isDeckPage(data))
-          throw new Error("Could not load Moxfield decks.");
+        if (!response.ok || !isDeckPage(data)) {
+          setStatus("error");
+          setError({ message: tProfiles("loadFailed"), retryable: true });
+          return;
+        }
         setDecks(data.decks);
         setPageNumber(requestedPage);
         setTotal(data.total);
@@ -132,14 +136,12 @@ export function MoxfieldProfileImport({
         setStatus("error");
         setError({
           message:
-            cause instanceof Error
-              ? cause.message
-              : "Could not load Moxfield decks.",
+            cause instanceof Error ? cause.message : tProfiles("loadFailed"),
           retryable: true,
         });
       }
     },
-    [t]
+    [t, tProfiles]
   );
 
   const loadFirstPage = useCallback(
@@ -176,21 +178,21 @@ export function MoxfieldProfileImport({
     <section className="flex flex-col gap-3 rounded border border-[var(--border)] p-3">
       <div>
         <h3 className="text-sm font-medium text-[var(--text-primary)]">
-          Moxfield profiles
+          {tProfiles("title")}
         </h3>
         <p className="text-xs text-[var(--text-secondary)]">
-          Save a username to quickly import one of its public decks.
+          {tProfiles("description")}
         </p>
       </div>
       <div className="flex items-center gap-2">
         <label className="sr-only" htmlFor="moxfield-username">
-          Moxfield username
+          {tProfiles("username")}
         </label>
         <input
           id="moxfield-username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
-          placeholder="Moxfield username"
+          placeholder={tProfiles("username")}
           className="min-w-0 flex-1 rounded border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)]"
         />
         <button
@@ -199,7 +201,7 @@ export function MoxfieldProfileImport({
           disabled={!username.trim()}
           className="rounded border border-[var(--border)] px-3 py-2 text-xs text-[var(--text-secondary)] disabled:opacity-50"
         >
-          Save profile
+          {tProfiles("saveProfile")}
         </button>
         <button
           type="button"
@@ -207,7 +209,7 @@ export function MoxfieldProfileImport({
           disabled={!username.trim() || status === "loading"}
           className="rounded bg-[var(--accent)] px-3 py-2 text-xs text-white disabled:opacity-50"
         >
-          {status === "loading" ? "Loading…" : "Load decks"}
+          {status === "loading" ? tProfiles("loading") : tProfiles("loadDecks")}
         </button>
       </div>
       <SavedMoxfieldProfiles
@@ -225,7 +227,7 @@ export function MoxfieldProfileImport({
               disabled={status === "loading"}
               className="underline disabled:opacity-50"
             >
-              Retry
+              {tProfiles("retry")}
             </button>
           )}
         </div>

@@ -34,6 +34,7 @@
     "glossary": "词汇表",
     "search": "Search rules",
     "searchPlaceholder": "Search rules and glossary...",
-    "searchResults": "Search results"
+    "searchResults": "Search results",
+    "noResults": "No matching rules found."
   }
 }

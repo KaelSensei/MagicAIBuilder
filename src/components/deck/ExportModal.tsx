@@ -37,8 +37,9 @@ type ExportFormat =
   | "edhrec"
   | "plaintext";
 
-// Brand names, deliberately not translated
-const FORMAT_LABELS: Record<ExportFormat, string> = {
+// Brand names, deliberately not translated. Plain text is not a brand: its
+// label comes from the catalog, shared with the import dialog's tab.
+const BRAND_LABELS: Record<Exclude<ExportFormat, "plaintext">, string> = {
   moxfield: "Moxfield",
   arena: "MTG Arena",
   mtgo: "MTGO",
@@ -46,7 +47,6 @@ const FORMAT_LABELS: Record<ExportFormat, string> = {
   archidekt: "Archidekt",
   goldfish: "MTGGoldfish",
   edhrec: "EDHRec",
-  plaintext: "Plain Text",
 };
 
 function getExportText(deck: Deck, format: ExportFormat): string {
@@ -74,6 +74,8 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
   const t = useTranslations("deck");
   const [copied, setCopied] = useState<ExportFormat | null>(null);
   const [showProxy, setShowProxy] = useState(false);
+  const formatLabel = (format: ExportFormat): string =>
+    format === "plaintext" ? t("import.tabText") : BRAND_LABELS[format];
 
   const handleCopy = async (format: ExportFormat) => {
     const text = getExportText(deck, format);
@@ -152,7 +154,7 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
                 )}
                 {copied === format
                   ? t("export.copied")
-                  : t("export.copyFor", { format: FORMAT_LABELS[format] })}
+                  : t("export.copyFor", { format: formatLabel(format) })}
               </Button>
               {/* Every format downloads — MTGO as .dek XML, the rest as .txt */}
               <Button
@@ -161,7 +163,7 @@ export function ExportModal({ deck, onClose }: ExportModalProps) {
                 size="sm"
                 onClick={() => handleDownload(format)}
                 title={t("export.downloadFormat", {
-                  format: FORMAT_LABELS[format],
+                  format: formatLabel(format),
                 })}
               >
                 <Download className="w-3.5 h-3.5" />

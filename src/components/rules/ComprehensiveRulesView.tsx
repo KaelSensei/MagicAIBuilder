@@ -3,7 +3,7 @@
  * Rules. One chapter (or the glossary) is rendered at a time, selected via the
  * `?chapter=` query param; navigation is plain locale-aware links.
  */
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { BookOpen, Shield } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import {
@@ -14,6 +14,15 @@ import {
 import { cn } from "@/components/ui/utils";
 
 const GLOSSARY_KEY = "glossary";
+
+/**
+ * The effective date is a calendar day stored at midnight UTC. Formatting it
+ * in UTC keeps the day the file states, whatever the server's time zone.
+ */
+const EFFECTIVE_DATE_FORMAT = {
+  dateStyle: "long",
+  timeZone: "UTC",
+} as const satisfies Intl.DateTimeFormatOptions;
 
 interface ComprehensiveRulesViewProps {
   /** Raw `?chapter=` value: a chapter number like "903", or "glossary". */
@@ -52,6 +61,7 @@ export async function ComprehensiveRulesView({
   requestedQuery = "",
 }: ComprehensiveRulesViewProps) {
   const t = await getTranslations("rules");
+  const format = await getFormatter();
   const rules = loadComprehensiveRules();
 
   const allChapters = rules.sections.flatMap((s) => s.chapters);
@@ -70,8 +80,11 @@ export async function ComprehensiveRulesView({
           {t("comprehensive.title")}
         </h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          {t("comprehensive.subtitle")}{" "}
-          {t("comprehensive.effectiveDate", { date: rules.effectiveDate })}
+          {t("comprehensive.subtitle")}
+          {rules.effectiveDate !== null &&
+            ` ${t("comprehensive.effectiveDate", {
+              date: format.dateTime(rules.effectiveDate, EFFECTIVE_DATE_FORMAT),
+            })}`}
         </p>
       </div>
 
@@ -115,7 +128,11 @@ export async function ComprehensiveRulesView({
               <p className="mt-1 text-sm leading-relaxed text-[var(--text-primary)]">{result.text}</p>
             </article>
           ))}
-          {searchResults.length === 0 && <p className="text-sm text-[var(--text-secondary)]">No matching rules found.</p>}
+          {searchResults.length === 0 && (
+            <p className="text-sm text-[var(--text-secondary)]">
+              {t("comprehensive.noResults")}
+            </p>
+          )}
         </section>
       ) : null}
 

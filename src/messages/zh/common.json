@@ -59,7 +59,10 @@
   "pagination": {
     "label": "Pagination",
     "previous": "Previous page",
-    "next": "Next page"
+    "next": "Next page",
+    "previousShort": "Previous",
+    "nextShort": "Next",
+    "pageIndicator": "Page <value>{current}</value> / <value>{total}</value>"
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",

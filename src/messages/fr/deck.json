@@ -183,6 +183,21 @@
     "import": "Importer",
     "previewDecklist": "Prévisualiser la liste",
     "moxfieldRefused": "Moxfield a refusé la requête de MagicAIBuilder : ce deck ne peut donc pas être récupéré d’ici. Pour l’importer quand même, ouvrez le deck sur moxfield.com, utilisez Export pour copier la liste en texte, puis collez-la dans l’onglet {tab}.",
+    "moxfieldProfiles": {
+      "title": "Profils Moxfield",
+      "description": "Enregistrez un nom d’utilisateur pour importer rapidement l’un de ses decks publics.",
+      "username": "Nom d’utilisateur Moxfield",
+      "saveProfile": "Enregistrer le profil",
+      "loadDecks": "Charger les decks",
+      "loading": "Chargement…",
+      "retry": "Réessayer",
+      "loadFailed": "Impossible de charger les decks Moxfield.",
+      "savedProfiles": "Profils Moxfield enregistrés",
+      "removeProfile": "Retirer @{profile}",
+      "deckPages": "Pages de decks Moxfield",
+      "range": "{first, number}–{last, number} sur {total, plural, one {# deck} other {# decks}}",
+      "importDeck": "Importer {name}"
+    },
     "previewZone": {
       "main": "Principal",
       "sideboard": "Réserve",
@@ -301,6 +316,10 @@
     "title": "Exporter des planches de proxys",
     "description": "Configurez et imprimez les proxys de votre deck.",
     "paper": "Papier",
+    "paperOption": {
+      "a4": "A4",
+      "letter": "Lettre US"
+    },
     "layout": "Disposition",
     "quality": "Qualité",
     "qualityOption": {
@@ -320,7 +339,8 @@
     "preload": "Précharger les images",
     "print": "Imprimer / Enregistrer en PDF",
     "hintArt": "Préchargez les images, puis imprimez. Choisissez « Enregistrer en PDF » dans la boîte de dialogue. Ordinateur recommandé.",
-    "hintTextOnly": "Sans images — l'impression s'ouvre immédiatement avec le nom, le type et le texte de règles. Choisissez « Enregistrer en PDF » dans la boîte de dialogue."
+    "hintTextOnly": "Sans images — l'impression s'ouvre immédiatement avec le nom, le type et le texte de règles. Choisissez « Enregistrer en PDF » dans la boîte de dialogue.",
+    "popupBlocked": "Fenêtre pop-up bloquée — autorisez les pop-ups pour ce site"
   },
   "buyList": {
     "buyLater": "Plus tard",
