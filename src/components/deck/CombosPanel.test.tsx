@@ -103,9 +103,9 @@ describe("CombosPanel", () => {
   it("says the check did not run when Spellbook is unavailable, instead of reporting no combos", () => {
     renderWithIntl(<CombosPanel isUnavailable />);
 
-    expect(
-      screen.getByText(/Commander Spellbook could not be reached/)
-    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /Commander Spellbook could not be reached/
+    );
     expect(
       screen.queryByText("No known combos detected")
     ).not.toBeInTheDocument();
