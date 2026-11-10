@@ -36,11 +36,11 @@
 
 ## Branch workflow
 
-| Branch | Role | Entry condition | Exit condition |
-| ------ | ---- | --------------- | -------------- |
-| `dev` | Daily integration of features and fixes | Feature/fix PR reviewed and checks pass | Candidate is selected for alpha validation |
-| `staging` | QA alpha candidate and colleague validation | Promotion PR from `dev` | QA and colleague validation complete |
-| `main` | Validated release code | Promotion PR from `staging` | Release is deployed through the production path |
+| Branch    | Role                                        | Entry condition                         | Exit condition                                  |
+| --------- | ------------------------------------------- | --------------------------------------- | ----------------------------------------------- |
+| `dev`     | Daily integration of features and fixes     | Feature/fix PR reviewed and checks pass | Candidate is selected for alpha validation      |
+| `staging` | QA alpha candidate and colleague validation | Promotion PR from `dev`                 | QA and colleague validation complete            |
+| `main`    | Validated release code                      | Promotion PR from `staging`             | Release is deployed through the production path |
 
 Feature and fix PRs target `dev`. Promotion PRs are the only way to move code from `dev` to `staging`, then from `staging` to `main`. Do not skip a branch or merge feature work directly into `staging` or `main`.
 
@@ -56,7 +56,7 @@ Runs on every push to `main` and every PR targeting `dev`, `staging` or `main`.
 
 ```
 pnpm install
-→ next lint
+→ pnpm lint (eslint)
 → tsc --noEmit
 → vitest --coverage
 → next build
@@ -88,11 +88,8 @@ SonarCloud also runs on PRs. A merge must not be used to hide a failed analysis;
 
 On every `git commit`, automatically runs:
 
-- `next lint --fix` on staged `.ts` / `.tsx` files
+- `eslint --fix` on staged `.ts` / `.tsx` files (rules in `eslint.config.mjs`)
 - `prettier --write` on `.json`, `.md`, `.yml`, `.yaml`
-
-> Note: `next lint --fix` is used instead of `eslint --fix` directly — ESLint v9 cannot locate
-> `.eslintrc.json` when called standalone, but Next.js resolves it correctly.
 
 ### Useful scripts
 
