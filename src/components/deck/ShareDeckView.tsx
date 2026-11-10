@@ -25,44 +25,7 @@ import { CategoryFilter, DeckCardStrip } from "./DeckPreviewChrome";
 import type { CardCategory } from "@/lib/deck/types";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/deck/categories";
 import { logger } from "@/lib/logger";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface ApiCard {
-  readonly id: string;
-  readonly scryfallId: string;
-  readonly name: string;
-  readonly manaCost: string;
-  readonly cmc: number;
-  readonly typeLine: string;
-  readonly oracleText: string;
-  readonly colorIdentity: readonly string[];
-  readonly isGameChanger: boolean;
-  readonly isBanned: boolean;
-  readonly price: number | null;
-  readonly imageUri: string;
-  readonly artCropUri: string;
-  readonly category: string;
-  readonly quantity: number;
-  readonly isCommander: boolean;
-  readonly isPartner: boolean;
-}
-
-interface ApiSharedDeck {
-  readonly id: string;
-  readonly name: string;
-  readonly format: string;
-  readonly targetBracket: number;
-  readonly budget: number | null;
-  readonly commanderId: string | null;
-  readonly partnerId: string | null;
-  readonly companionId: string | null;
-  readonly pairingType: string;
-  readonly shareEnabled: boolean;
-  readonly cards: readonly ApiCard[];
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}
+import type { ApiCard, ApiSharedDeck } from "@/lib/deck/share-types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
