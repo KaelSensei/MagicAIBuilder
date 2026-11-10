@@ -11,6 +11,30 @@ import { Zap, Loader2 } from "lucide-react";
 
 const SPELLBOOK_URL = "https://commanderspellbook.com/";
 
+/**
+ * The `<link>` tag of the Spellbook credit line.
+ *
+ * Built outside the component so no render function is declared during render.
+ *
+ * @param label - the link's accessible name, which carries the observation date
+ * @returns the renderer `t.rich` calls with the link text
+ */
+function spellbookCreditLink(label: string) {
+  return function SpellbookCreditLink(chunks: ReactNode) {
+    return (
+      <a
+        href={SPELLBOOK_URL}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={label}
+        className="underline-offset-2 hover:underline"
+      >
+        {chunks}
+      </a>
+    );
+  };
+}
+
 interface CombosPanelProps {
   readonly combos?: readonly SpellbookVariant[];
   readonly isLoading?: boolean;
@@ -161,16 +185,8 @@ export function CombosPanel({
       {isSettled && observedDate && (
         <p className="text-[10px] text-[var(--text-secondary)]">
           {t.rich("combos.credit", {
-            link: (chunks: ReactNode) => (
-              <a
-                href={SPELLBOOK_URL}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={t("combos.observedLabel", { date: observedDate })}
-                className="underline-offset-2 hover:underline"
-              >
-                {chunks}
-              </a>
+            link: spellbookCreditLink(
+              t("combos.observedLabel", { date: observedDate })
             ),
           })}
         </p>
@@ -183,12 +199,9 @@ export function CombosPanel({
       )}
 
       {isEnabled && !isLoading && isUnavailable && (
-        <p
-          role="status"
-          className="text-xs text-[var(--text-secondary)] italic"
-        >
+        <output className="block text-xs text-[var(--text-secondary)] italic">
           {t("combos.unavailable")}
-        </p>
+        </output>
       )}
 
       {isSettled && (combos?.length ?? 0) === 0 && (
