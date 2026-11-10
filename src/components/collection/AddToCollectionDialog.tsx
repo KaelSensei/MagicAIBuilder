@@ -68,7 +68,7 @@ export function AddToCollectionDialog() {
       price: selected.prices?.usd
         ? Number.parseFloat(selected.prices.usd)
         : null,
-      imageUri: getCardImageUri(selected, "normal"),
+      imageUri: getCardImageUri(selected, "grid"),
     });
     setAdded(true);
     setTimeout(() => {

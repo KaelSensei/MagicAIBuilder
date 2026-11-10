@@ -207,6 +207,6 @@ export function resolveLocalizedText(card: ScryfallCard): LocalizedCardText {
     // Keyed off the printing's language, not the printed_* fields: Scryfall
     // emits those on English printings too, where they are not a translation.
     isLocalized: card.lang !== undefined && card.lang !== "en",
-    imageUri: getCardImageUri(card, "normal", "front"),
+    imageUri: getCardImageUri(card, "grid", "front"),
   };
 }

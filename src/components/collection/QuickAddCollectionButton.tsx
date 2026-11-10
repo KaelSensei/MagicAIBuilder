@@ -9,6 +9,7 @@ import { Plus, Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useCollectionStore } from "@/lib/collection/store";
 import { cn } from "@/components/ui/utils";
+import { getListedImageUri } from "@/lib/scryfall/images";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface QuickAddCollectionButtonProps {
@@ -36,7 +37,7 @@ export function QuickAddCollectionButton({
         name: card.name,
         quantity: 1,
         price: card.prices?.usd ? Number.parseFloat(card.prices.usd) : null,
-        imageUri: card.image_uris?.normal ?? "",
+        imageUri: getListedImageUri(card.image_uris, "grid") ?? "",
       });
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 1200);

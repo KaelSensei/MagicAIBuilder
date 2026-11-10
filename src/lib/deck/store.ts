@@ -1877,7 +1877,7 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
       oracle_text: card.oracleText,
       color_identity: card.colorIdentity,
       image_uris: card.imageUri
-        ? { normal: card.imageUri, art_crop: card.artCropUri ?? card.imageUri }
+        ? { grid: card.imageUri, art: card.artCropUri ?? card.imageUri }
         : undefined,
       prices: {},
       legalities: {},
@@ -1927,8 +1927,8 @@ export const useDeckStore = create<DeckStore>()((set, get) => ({
     );
     if (!previousCard) return;
     const { getCardImageUri } = await import("@/lib/scryfall/images");
-    const imageUri = getCardImageUri(printing, "normal");
-    const artCropUri = getCardImageUri(printing, "art_crop");
+    const imageUri = getCardImageUri(printing, "grid");
+    const artCropUri = getCardImageUri(printing, "art");
     set((state) => ({
       decks: {
         ...state.decks,

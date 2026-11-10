@@ -35,7 +35,7 @@ import { useLocalizedCardText } from "@/hooks/useLocalizedCardText";
 import { useDeckStore } from "@/lib/deck/store";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 import { categorizeCard } from "@/lib/deck/categories";
-import { getCardImageUri } from "@/lib/scryfall/images";
+import { getCardImageUri, getListedImageUri } from "@/lib/scryfall/images";
 import type { CardCategory, DeckCard } from "@/lib/deck/types";
 import { createDeckPlan } from "@/lib/ai/deck-plan";
 import type { BuildRequest, DeckCorrection } from "@/app/api/ai/build/types";
@@ -358,6 +358,7 @@ function StepCommander({
   const t = useTranslations("deck");
   // Display only — the deck is always built from the English commanderName.
   const localizedCommander = useLocalizedCardText(commanderCard);
+  const commanderArt = getListedImageUri(commanderCard?.image_uris, "art");
   const [query, setQuery] = useState(commanderName);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -442,10 +443,10 @@ function StepCommander({
       {/* Selected commander preview */}
       {commanderCard && (
         <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent)]/5">
-          {commanderCard.image_uris?.art_crop && (
+          {commanderArt && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={commanderCard.image_uris.art_crop}
+              src={commanderArt}
               alt={localizedCommander?.name ?? commanderCard.name}
               className="w-12 h-12 rounded-lg object-cover"
             />
@@ -734,8 +735,8 @@ async function importCardsInBatches(
           isGameChanger: false,
           isBanned: false,
           price: sc.prices?.usd ? Number.parseFloat(sc.prices.usd) : null,
-          imageUri: getCardImageUri(sc, "normal"),
-          artCropUri: getCardImageUri(sc, "art_crop"),
+          imageUri: getCardImageUri(sc, "grid"),
+          artCropUri: getCardImageUri(sc, "art"),
           category: isDeckCategory(entry?.category)
             ? entry.category
             : categorizeCard(sc),

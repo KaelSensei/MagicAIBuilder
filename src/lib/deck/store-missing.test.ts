@@ -79,10 +79,13 @@ vi.mock("@/hooks/useToast", () => ({
 
 vi.mock("@/lib/scryfall/images", () => ({
   getCardImageUri: vi.fn((_card: unknown, size: string) =>
-    size === "art_crop" ? "https://example.com/art.jpg" : "https://example.com/normal.jpg"
+    size === "art"
+      ? "https://example.com/art.jpg"
+      : "https://example.com/normal.jpg"
   ),
-  buildScryfallImageUrl: vi.fn((id: string, size: string, face: string) =>
-    `https://cards.scryfall.io/${size}/${face}/${id}.jpg`
+  buildScryfallImageUrl: vi.fn(
+    (id: string, size: string, face: string) =>
+      `https://cards.scryfall.io/${size}/${face}/${id}.webp`
   ),
 }));
 

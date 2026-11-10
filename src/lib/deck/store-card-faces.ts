@@ -5,7 +5,11 @@ import type { DeckCard, CardFace } from "./types";
 import { categorizeCard, categorizeDfcCard } from "./categories";
 import type { ScryfallCard, ScryfallCardFace } from "@/lib/scryfall/types";
 import { DFC_LAYOUTS } from "@/lib/scryfall/types";
-import { getCardImageUri, buildScryfallImageUrl } from "@/lib/scryfall/images";
+import {
+  getCardImageUri,
+  getListedImageUri,
+  buildScryfallImageUrl,
+} from "@/lib/scryfall/images";
 
 /**
  * Maps one Scryfall face onto the deck face shape.
@@ -25,8 +29,12 @@ function toCardFace(
     manaCost: face.mana_cost ?? "",
     typeLine: face.type_line ?? "",
     oracleText: face.oracle_text ?? "",
-    imageUri: face.image_uris?.normal ?? getCardImageUri(sc, "normal", side),
-    artCropUri: face.image_uris?.art_crop ?? getCardImageUri(sc, "art_crop", side),
+    imageUri:
+      getListedImageUri(face.image_uris, "grid") ??
+      getCardImageUri(sc, "grid", side),
+    artCropUri:
+      getListedImageUri(face.image_uris, "art") ??
+      getCardImageUri(sc, "art", side),
   };
 }
 
@@ -92,8 +100,9 @@ export function makeDeckCard(scryfallCard: ScryfallCard): DeckCard {
     isGameChanger: false,
     isBanned: false,
     price: usdPrice(scryfallCard.prices?.usd),
-    imageUri: cardFaces?.[0].imageUri ?? getCardImageUri(scryfallCard, "normal"),
-    artCropUri: cardFaces?.[0].artCropUri ?? getCardImageUri(scryfallCard, "art_crop"),
+    imageUri: cardFaces?.[0].imageUri ?? getCardImageUri(scryfallCard, "grid"),
+    artCropUri:
+      cardFaces?.[0].artCropUri ?? getCardImageUri(scryfallCard, "art"),
     category: cardFaces
       ? categorizeDfcCard(scryfallCard)
       : categorizeCard(scryfallCard),
@@ -150,8 +159,8 @@ function storedFace(
     manaCost: fields.manaCost,
     typeLine: fields.typeLine,
     oracleText: fields.oracleText,
-    imageUri: buildScryfallImageUrl(scryfallId, "normal", side),
-    artCropUri: buildScryfallImageUrl(scryfallId, "art_crop", side),
+    imageUri: buildScryfallImageUrl(scryfallId, "grid", side),
+    artCropUri: buildScryfallImageUrl(scryfallId, "art", side),
   };
 }
 

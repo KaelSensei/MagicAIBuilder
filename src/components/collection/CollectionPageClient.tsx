@@ -137,7 +137,7 @@ export function CollectionPageClient() {
       await swapPrinting(printingsTarget.id, {
         scryfallId: printing.id,
         name: printing.name,
-        imageUri: getCardImageUri(printing, "normal"),
+        imageUri: getCardImageUri(printing, "grid"),
         price: printing.prices?.usd
           ? Number.parseFloat(printing.prices.usd)
           : null,

@@ -1,5 +1,6 @@
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getCardCollection } from "@/lib/scryfall/client";
+import { getListedImageUri } from "@/lib/scryfall/images";
 import { forEachSequential } from "@/lib/async/sequential";
 
 export interface StoredPackageCard {
@@ -42,7 +43,10 @@ export async function verifyPackageCards(
         isBanned: legality !== "legal" && legality !== "restricted",
         isRestricted: legality === "restricted",
         isBasicLand: /\bbasic land\b/i.test(card.type_line),
-        imageUri: card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? "",
+        imageUri:
+          getListedImageUri(card.image_uris, "grid") ??
+          getListedImageUri(card.card_faces?.[0]?.image_uris, "grid") ??
+          "",
       });
     }
   });
