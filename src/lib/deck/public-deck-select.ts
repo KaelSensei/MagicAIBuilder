@@ -11,9 +11,10 @@ import type { Prisma } from "@prisma/client";
  * only when a public surface renders it and it is listed here.
  *
  * Read today by the public deck page (`/deck/[id]`: header, primer, fork
- * attribution, focused-feedback request, card list, metadata) and by the
+ * attribution, focused-feedback request, card list, metadata), by the
  * community deck comparison (cards matched by Scryfall id, compared by mana
- * value, price, colour identity and role).
+ * value, price, colour identity and role), and, widened by
+ * {@link FORK_SOURCE_SELECT}, by a fork.
  */
 
 /** The author byline on a public deck: never the email or any account field. */
@@ -62,3 +63,37 @@ export const PUBLIC_DECK_SELECT = {
 export type PublicDeckRecord = Prisma.DeckGetPayload<{
   select: typeof PUBLIC_DECK_SELECT;
 }>;
+
+/**
+ * Card columns a fork copies: the public ones, plus what the copy needs to
+ * work as a deck of its own — the Scryfall card text the builder reads and the
+ * zone that keeps a maybeboard card out of the main deck. Neither belongs to
+ * the owner. The owner's notes stay out.
+ */
+export const FORK_SOURCE_CARD_SELECT = {
+  ...PUBLIC_DECK_CARD_SELECT,
+  manaCost: true,
+  typeLine: true,
+  oracleText: true,
+  power: true,
+  toughness: true,
+  isBanned: true,
+  zone: true,
+} as const satisfies Prisma.DeckCardSelect;
+
+/**
+ * Deck columns `POST /api/decks/[id]/fork` reads from a public source: the
+ * public ones, plus the command-zone slots that keep the copy's commander,
+ * partner and companion. The owner's budget, bracket override, tags, folder
+ * and sharing settings are not read, so a fork can neither copy nor return
+ * them.
+ */
+export const FORK_SOURCE_SELECT = {
+  ...PUBLIC_DECK_SELECT,
+  commanderId: true,
+  commanderName: true,
+  partnerId: true,
+  companionId: true,
+  pairingType: true,
+  cards: { select: FORK_SOURCE_CARD_SELECT },
+} as const satisfies Prisma.DeckSelect;

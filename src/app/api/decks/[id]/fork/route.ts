@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
 import { buildForkData } from "@/lib/deck/fork";
+import { FORK_SOURCE_SELECT } from "@/lib/deck/public-deck-select";
 import { logger } from "@/lib/logger";
 
 type Params = { params: Promise<{ id: string }> };
 
-/** POST /api/decks/[id]/fork — create a private attributed copy of a public deck. */
+/**
+ * POST /api/decks/[id]/fork — create a private attributed copy of a public deck.
+ *
+ * The source is read through {@link FORK_SOURCE_SELECT}, so the owner's
+ * private columns are never loaded, copied or returned.
+ */
 export async function POST(_req: Request, { params }: Params) {
   const { id } = await params;
   if (!id || id.length > 50) {
@@ -18,14 +24,11 @@ export async function POST(_req: Request, { params }: Params) {
 
   try {
     const source = await prisma.deck.findUnique({
-      where: { id },
-      include: {
-        cards: true,
-        user: { select: { name: true, username: true } },
-      },
+      where: { id, isPublic: true },
+      select: FORK_SOURCE_SELECT,
     });
 
-    if (!source?.isPublic) {
+    if (!source) {
       return NextResponse.json(
         { error: "Public deck not found" },
         { status: 404 }
@@ -39,14 +42,12 @@ export async function POST(_req: Request, { params }: Params) {
         description: source.description,
         format: source.format,
         targetBracket: source.targetBracket,
-        manualBracket: source.manualBracket,
-        budget: source.budget,
         commanderId: source.commanderId,
         commanderName: source.commanderName,
         partnerId: source.partnerId,
         companionId: source.companionId,
         pairingType: source.pairingType,
-        userId: source.userId,
+        userId: source.user?.id ?? null,
         userName: source.user?.name ?? source.user?.username ?? null,
         cards: source.cards.map((card) => ({
           ...card,
