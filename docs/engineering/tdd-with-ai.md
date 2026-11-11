@@ -93,7 +93,8 @@ adapter (Prisma, provider client) comes last, with its contract test.
   adapter. A fake that passes the contract can be trusted; one that does not is a liability.
 - **HTTP is replaced with MSW** handlers built from recorded provider responses (`*-v1.ts`
   fixtures), not with `fetch` stubs. Adopt MSW per test file: many existing files stub the global
-  `fetch`, and a global server would intercept underneath them.
+  `fetch`, and a global server would intercept underneath them. See
+  [Network in tests](#network-in-tests).
 - **No new `vi.mock` of an internal module.** A `vi.mock("@/lib/…")` is keyed on a file path: when
   the file moves, the mock silently stops applying and the real module runs. It also lets a test
   pass whatever the code does. Existing internal mocks are phased out context by context.
@@ -112,6 +113,47 @@ adapter (Prisma, provider client) comes last, with its contract test.
 
 - **Outgoing notifications** with no observable state (an email sent, an event published) use a
   recording fake that keeps a list of what was sent.
+
+## Network in tests
+
+Pick the double by who owns the other side of the port:
+
+| The code talks to                                                                         | Replace it with                                                                     |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| A third party over HTTP (Commander Spellbook, Scryfall, EDHREC, MTGTop8, model providers) | MSW handlers that serve a recorded response                                         |
+| A port this project owns (a repository, a store, a cache)                                 | A hand-written in-memory fake (`src/test/*-fake.ts`), never MSW and never `vi.mock` |
+
+For HTTP, call `useMsw` from `src/test/msw.ts` once per test file, at the top of the file or of
+its outer `describe`:
+
+```ts
+const server = useMsw(
+  http.post(SPELLBOOK_FIND_MY_COMBOS_URL, () =>
+    HttpResponse.json(FIND_MY_COMBOS_RECORDED)
+  )
+);
+
+it("degrades to 502 when Spellbook fails", async () => {
+  server.use(
+    http.post(SPELLBOOK_FIND_MY_COMBOS_URL, () =>
+      HttpResponse.json({}, { status: 500 })
+    )
+  );
+  // …
+});
+```
+
+- The handlers serve a recorded response (a `*-v1.ts` fixture that says where and when it was
+  recorded), not a shape written from memory.
+- A request no handler serves never reaches the network, and it fails the test that sent it, even
+  when the code under test catches the error. Add a handler, or find out why the request was sent.
+- A handler added with `server.use` lasts one test. To assert on what was sent, record the
+  `request` in the handler and assert on the list, not on a `fetch` spy.
+- The helper works in both the `node` and `jsdom` environments. MSW 3 no longer patches timers:
+  to test a timeout, fire the client's abort signal from the handler instead of waiting.
+- New tests never stub the global `fetch` (`vi.stubGlobal("fetch", …)`) and never `vi.mock` an
+  internal module. Existing `fetch` stubs move to MSW file by file;
+  `src/app/api/combos/route.test.ts` is the first converted file and the example to copy.
 
 ## Changing code that has no tests
 
