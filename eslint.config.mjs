@@ -100,6 +100,25 @@ const eslintConfig = [
       "@typescript-eslint/max-params": ["error", { max: 3 }],
     },
   },
+
+  // Type-escape ratchet (ADR 0007, stage 4). Strict TypeScript is only
+  // as strong as its escape hatches: a cast (`x as T`, `<T>x`) or a non-null
+  // assertion (`x!`) tells the compiler to stop checking, and the
+  // typescript-craftsmanship skill forbids both. Narrow instead: a type
+  // guard, a Zod parse at the boundary (ADR 0003, "parse once"), `satisfies`,
+  // or an explicit `undefined` check. `as const` widens nothing and stays
+  // allowed.
+  {
+    files: SOURCE_FILES,
+    ignores: TEST_FILES,
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/consistent-type-assertions": [
+        "error",
+        { assertionStyle: "never" },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

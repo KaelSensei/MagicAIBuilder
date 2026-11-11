@@ -216,13 +216,15 @@ Every value below is a local test fixture, not a secret. No variable has to be e
 - a file with recorded breaches fails as soon as it has one more breach of the same rule;
 - a file with fewer breaches than recorded also fails, with "There are suppressions left that do not occur anymore", until the count is pruned. The baseline can only go down.
 
-| Rule                            | Limit                                                    |
-| ------------------------------- | -------------------------------------------------------- |
-| `max-lines`                     | 300 code lines in a `.ts` module, 200 in a `.tsx` module |
-| `max-lines-per-function`        | 80 code lines                                            |
-| `complexity`                    | 15                                                       |
-| `max-depth`                     | 3 nested blocks                                          |
-| `@typescript-eslint/max-params` | 3 parameters                                             |
+| Rule                                            | Limit                                                    |
+| ----------------------------------------------- | -------------------------------------------------------- |
+| `max-lines`                                     | 300 code lines in a `.ts` module, 200 in a `.tsx` module |
+| `max-lines-per-function`                        | 80 code lines                                            |
+| `complexity`                                    | 15                                                       |
+| `max-depth`                                     | 3 nested blocks                                          |
+| `@typescript-eslint/max-params`                 | 3 parameters                                             |
+| `@typescript-eslint/consistent-type-assertions` | no cast (`x as T`, `<T>x`); `as const` stays allowed     |
+| `@typescript-eslint/no-non-null-assertion`      | no non-null assertion (`x!`)                             |
 
 Comments and blank lines never count toward a line limit, so the comment standard cannot push a module over one. The rules apply to shipped code: every `src/**/*.{ts,tsx}` file except `*.test.{ts,tsx}`, `src/test/**` and the `testing/` and `fixtures/` folders. Tests keep the preset rules.
 
@@ -230,7 +232,7 @@ Comments and blank lines never count toward a line limit, so the comment standar
 
 ### Shrinking the baseline
 
-1. Fix the breach: split the module, extract the function, flatten the nesting.
+1. Fix the breach: split the module, extract the function, flatten the nesting, replace the cast or the `!` with a type guard, a Zod parse at the boundary or `satisfies`.
 2. Run `pnpm lint --prune-suppressions`. It lowers the counts in `eslint-suppressions.json`, deletes the entries that reached zero and drops the paths that no longer exist.
 3. Commit the smaller `eslint-suppressions.json` with the fix. The pre-commit hook lints staged files against it, so the commit fails until step 2 is done.
 

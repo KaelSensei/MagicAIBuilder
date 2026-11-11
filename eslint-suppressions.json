@@ -1,5 +1,8 @@
 {
   "src/app/[locale]/builder/[deckId]/page.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 6
+    },
     "@typescript-eslint/max-params": {
       "count": 2
     },
@@ -10,6 +13,11 @@
       "count": 1
     },
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/commanders/[slug]/decks/page.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -24,6 +32,16 @@
       "count": 1
     }
   },
+  "src/app/[locale]/layout.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/ai/build/mock-deck.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
   "src/app/api/ai/build/route.ts": {
     "@typescript-eslint/max-params": {
       "count": 2
@@ -33,6 +51,9 @@
     }
   },
   "src/app/api/ai/suggest/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 3
+    },
     "complexity": {
       "count": 2
     },
@@ -61,18 +82,56 @@
       "count": 1
     }
   },
+  "src/app/api/community/commanders/[slug]/decks/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/app/api/community/decks/[id]/comments/[commentId]/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/decks/[id]/comments/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/app/api/community/decks/[id]/ratings/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/community/decks/[id]/vote/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/app/api/decks/[id]/playtest-sessions/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
   "src/app/api/decks/route.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
     }
   },
   "src/app/api/meta/[commanderSlug]/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
     "@typescript-eslint/max-params": {
       "count": 1
     }
   },
   "src/app/api/og/route.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/app/api/users/[username]/route.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -87,6 +146,9 @@
     }
   },
   "src/components/auth/UserMenu.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
     "max-lines-per-function": {
       "count": 1
     }
@@ -112,6 +174,11 @@
   },
   "src/components/card/CardNoteInline.tsx": {
     "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/card/CardTooltip.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -180,6 +247,9 @@
     }
   },
   "src/components/community/DeckReportButton.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
     "max-lines-per-function": {
       "count": 1
     }
@@ -195,11 +265,17 @@
     }
   },
   "src/components/community/VoteButtons.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
     "max-lines-per-function": {
       "count": 1
     }
   },
   "src/components/deck/AISuggestionsPanel.tsx": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
     "complexity": {
       "count": 1
     },
@@ -240,11 +316,17 @@
     }
   },
   "src/components/deck/CardPackageCreator.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
     "max-lines-per-function": {
       "count": 1
     }
   },
   "src/components/deck/CardPackageLibrary.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
     "max-lines-per-function": {
       "count": 1
     }
@@ -274,11 +356,17 @@
     }
   },
   "src/components/deck/DeckDescriptionEditor.tsx": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
     "max-lines-per-function": {
       "count": 1
     }
   },
   "src/components/deck/DeckEditor.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 3
+    },
     "complexity": {
       "count": 1
     },
@@ -321,6 +409,9 @@
     }
   },
   "src/components/deck/DeckWizard.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
     "complexity": {
       "count": 1
     },
@@ -363,6 +454,9 @@
     }
   },
   "src/components/deck/ImportFromUrlTab.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
     "complexity": {
       "count": 1
     },
@@ -374,6 +468,9 @@
     }
   },
   "src/components/deck/MainZoneContent.tsx": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 3
+    },
     "max-lines": {
       "count": 1
     },
@@ -430,6 +527,9 @@
     }
   },
   "src/components/deck/ShareDeckView.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
     "complexity": {
       "count": 1
     },
@@ -441,6 +541,9 @@
     }
   },
   "src/components/deck/SharePopover.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
     "max-lines-per-function": {
       "count": 1
     }
@@ -459,6 +562,9 @@
     }
   },
   "src/components/deck/TemplatesModal.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
     "max-lines": {
       "count": 1
     },
@@ -523,6 +629,9 @@
     }
   },
   "src/components/playtest/PlaytestHistoryPanel.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
     "max-lines-per-function": {
       "count": 1
     }
@@ -599,6 +708,9 @@
     }
   },
   "src/components/search/SearchFilters.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
     "max-lines": {
       "count": 1
     },
@@ -612,6 +724,9 @@
     }
   },
   "src/components/search/SetAutocomplete.tsx": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
     "complexity": {
       "count": 1
     },
@@ -635,6 +750,11 @@
       "count": 1
     }
   },
+  "src/hooks/useAIDeckBuild.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
   "src/hooks/useAISuggestions.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
@@ -646,9 +766,44 @@
       "count": 1
     }
   },
+  "src/hooks/useApiKeys.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 3
+    }
+  },
+  "src/hooks/useCardPrintings.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 2
+    }
+  },
+  "src/hooks/useCardSearch.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/hooks/useGameChangers.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
   "src/hooks/useKeyboardShortcuts.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
+    }
+  },
+  "src/hooks/useMetaShifts.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/i18n/request.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/ai/archetypes.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
     }
   },
   "src/lib/ai/model-reply.ts": {
@@ -674,8 +829,23 @@
       "count": 1
     }
   },
+  "src/lib/auth/edge-config.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/auth/helpers.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
   "src/lib/collection/acquisition-plan.ts": {
     "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/collection/parse.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -697,11 +867,26 @@
       "count": 1
     }
   },
+  "src/lib/community/votes.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
   "src/lib/db/deck-api.ts": {
     "complexity": {
       "count": 1
     },
     "max-lines": {
+      "count": 1
+    }
+  },
+  "src/lib/db/prisma.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/lib/db/snapshot-api.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -715,9 +900,24 @@
       "count": 1
     }
   },
+  "src/lib/deck/formats.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/deck/guest-deck.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
   "src/lib/deck/import.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
+    }
+  },
+  "src/lib/deck/mana-alignment.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 5
     }
   },
   "src/lib/deck/multiples.ts": {
@@ -738,7 +938,15 @@
       "count": 1
     }
   },
+  "src/lib/deck/sort.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
   "src/lib/deck/stats.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
     "max-depth": {
       "count": 1
     }
@@ -757,6 +965,9 @@
     }
   },
   "src/lib/deck/store.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 4
+    },
     "@typescript-eslint/max-params": {
       "count": 3
     },
@@ -775,6 +986,11 @@
       "count": 1
     }
   },
+  "src/lib/deck/themes.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
   "src/lib/deck/turn-one.ts": {
     "@typescript-eslint/max-params": {
       "count": 1
@@ -782,6 +998,11 @@
   },
   "src/lib/deck/validation.ts": {
     "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/http.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -795,6 +1016,11 @@
       "count": 1
     },
     "max-lines": {
+      "count": 1
+    }
+  },
+  "src/lib/mana/parse.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -815,6 +1041,9 @@
     }
   },
   "src/lib/playtest/session-input.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 4
+    },
     "complexity": {
       "count": 1
     }
@@ -824,8 +1053,23 @@
       "count": 1
     }
   },
+  "src/lib/playtest/summary-view.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/lib/ratings/ratings.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
   "src/lib/recommendations/engine.ts": {
     "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/scryfall/client.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -844,6 +1088,11 @@
   },
   "src/lib/seo/sitemap.ts": {
     "@typescript-eslint/max-params": {
+      "count": 1
+    }
+  },
+  "src/lib/shortcuts/shortcuts.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   }
