@@ -773,16 +773,19 @@ export default function BuilderPage() {
   const handleStartEditName = () => {
     setNameInput(deck.name);
     setIsEditingName(true);
+    setIsInputFocused(true);
     setTimeout(() => {
       nameInputRef.current?.focus({ preventScroll: true });
       nameInputRef.current?.select();
     }, 0);
   };
 
-  const handleSaveName = async () => {
-    const trimmed = nameInput.trim();
-    if (trimmed && trimmed !== deck.name) await renameDeck(deckId, trimmed);
+  const commitDeckName = (rawName: string) => {
+    const trimmed = rawName.trim();
     setIsEditingName(false);
+    setIsInputFocused(false);
+    if (!trimmed || trimmed === deck.name) return;
+    void renameDeck(deckId, trimmed);
   };
 
   return (
@@ -818,17 +821,23 @@ export default function BuilderPage() {
                 aria-label={t("actions.rename")}
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
-                onBlur={handleSaveName}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void handleSaveName();
-                  if (e.key === "Escape") setIsEditingName(false);
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={(event) => commitDeckName(event.currentTarget.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    commitDeckName(event.currentTarget.value);
+                  }
+                  if (event.key === "Escape") setIsEditingName(false);
                 }}
                 className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] outline-none min-w-0"
                 maxLength={200}
               />
               <button
                 type="button"
-                onClick={handleSaveName}
+                onClick={() =>
+                  commitDeckName(nameInputRef.current?.value ?? nameInput)
+                }
                 className="text-green-400 hover:text-green-300 shrink-0"
               >
                 <Check className="w-3.5 h-3.5" />
