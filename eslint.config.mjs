@@ -40,6 +40,37 @@ const TEST_FILES = [
  */
 const VITEST_FILES = ["**/*.test.{ts,tsx}"];
 
+/** A `vi.mock(…)` or `vi.doMock(…)` call, as an esquery selector. */
+const VI_MOCK_CALL =
+  "CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock)$/]";
+
+/**
+ * A module path of this repository: the `@/` alias or a relative path.
+ * esquery regexes cannot contain a `/`, hence `\u002F`.
+ */
+const INTERNAL_PATH = "/^(@\\u002F|\\.)/";
+
+/**
+ * `no-restricted-syntax` entries for ADR 0005, rule 5: no new mock of an
+ * internal module, in the string form or the typed `import()` form. Test the
+ * behaviour through the module's public surface, with in-memory fakes behind
+ * a port and MSW at the HTTP boundary. Packages (`next/navigation`) may still
+ * be mocked. Existing internal mocks are the baseline in
+ * `eslint-suppressions.json`; they go as their context migrates.
+ */
+const INTERNAL_MOCK_BANS = [
+  {
+    selector: `${VI_MOCK_CALL}[arguments.0.type='Literal'][arguments.0.value=${INTERNAL_PATH}]`,
+    message:
+      "Do not mock a module of this repository (ADR 0005, rule 5): test through its public behaviour, with an in-memory fake behind a port or MSW for HTTP.",
+  },
+  {
+    selector: `${VI_MOCK_CALL}[arguments.0.type='ImportExpression'][arguments.0.source.value=${INTERNAL_PATH}]`,
+    message:
+      "Do not mock a module of this repository (ADR 0005, rule 5): test through its public behaviour, with an in-memory fake behind a port or MSW for HTTP.",
+  },
+];
+
 /** Every TypeScript module under `src/`; combine with `ignores: TEST_FILES`. */
 const SOURCE_FILES = ["src/**/*.{ts,tsx}"];
 
@@ -247,10 +278,28 @@ const eslintConfig = [
     ),
   },
 
-  // Test hygiene (ADR 0005). `@vitest/eslint-plugin` knows Vitest's API, so
-  // its rules read `vi.mock` and `it.only` the way Vitest does. It is
-  // registered for test files only; no rule of it is switched on yet.
-  { files: VITEST_FILES, plugins: { vitest } },
+  // Test hygiene (ADR 0005, rules 5 and 7). `@vitest/eslint-plugin` knows
+  // Vitest's API, so its rules read `vi.mock` and `it.only` the way Vitest
+  // does. The mocks that predate these rules are recorded in
+  // `eslint-suppressions.json`, like the other ratchets; this block must stay
+  // the last one to set `no-restricted-syntax` for test files
+  // (`src/test/test-hygiene-lint.test.ts` fails otherwise).
+  {
+    files: VITEST_FILES,
+    plugins: { vitest },
+    rules: {
+      // `vi.mock(import("@/x"))`: `tsc` checks the path and the factory
+      // against the real module, so a moved module cannot leave a mock that
+      // silently applies to nothing. Its autofix rewrites the string form.
+      "vitest/prefer-import-in-mock": "error",
+      "no-restricted-syntax": ["error", ...INTERNAL_MOCK_BANS],
+      // A committed `.only` silently skips the rest of the file in CI, and
+      // `.skip` disables a test; both are forbidden moves (ADR 0005, rule 7).
+      // No autofix: the author sees the failure instead of a silent edit.
+      "vitest/no-focused-tests": ["error", { fixable: false }],
+      "vitest/no-disabled-tests": "error",
+    },
+  },
 ];
 
 export default eslintConfig;
