@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody } from "@/lib/api/json-body";
+import { rateLimitResponse, retryAfterHeaders } from "@/lib/api/route-kit";
 import { readCachedCombos, storeCachedCombos } from "@/lib/combos/combo-cache";
 import {
   MAX_QUERY_BODY_BYTES,
@@ -21,10 +22,6 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const UNAVAILABLE = { error: "Combo lookup unavailable" };
 
-function retryAfter(retryAfterMs: number): Record<string, string> {
-  return { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) };
-}
-
 function clientRateLimitResponse(request: Request): NextResponse | null {
   const ip = getClientIp(request);
   const limit = checkRateLimit(
@@ -33,10 +30,7 @@ function clientRateLimitResponse(request: Request): NextResponse | null {
     COMBO_LOOKUP_WINDOW_MS
   );
   if (limit.allowed) return null;
-  return NextResponse.json(
-    { error: "Too many combo lookups" },
-    { status: 429, headers: retryAfter(limit.retryAfterMs) }
-  );
+  return rateLimitResponse(limit, "Too many combo lookups");
 }
 
 function declaresOversizeBody(request: Request): boolean {
@@ -124,7 +118,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!budget.allowed) {
     return NextResponse.json(UNAVAILABLE, {
       status: 503,
-      headers: retryAfter(budget.retryAfterMs),
+      headers: retryAfterHeaders(budget),
     });
   }
 

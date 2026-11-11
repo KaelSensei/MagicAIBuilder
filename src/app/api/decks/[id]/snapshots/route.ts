@@ -4,11 +4,10 @@ import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody, readRecord } from "@/lib/api/json-body";
 import { snapshotContent } from "@/lib/deck/deck-version";
-
-type Params = { params: Promise<{ id: string }> };
+import type { RouteParams } from "@/lib/api/route-kit";
 
 // GET /api/decks/[id]/snapshots — list snapshots for a deck
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const ownership = await requireDeckOwner(id);
@@ -35,7 +34,7 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 // POST /api/decks/[id]/snapshots — create a snapshot
-export async function POST(request: Request, { params }: Params) {
+export async function POST(request: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const ownership = await requireDeckOwner(id);

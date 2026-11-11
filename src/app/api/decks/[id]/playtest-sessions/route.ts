@@ -25,14 +25,12 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/helpers";
-import { logger } from "@/lib/logger";
+import { logRouteFailure, type RouteParams } from "@/lib/api/route-kit";
 import type { PlaytestSession } from "@/lib/playtest/analytics";
 import { parseSessionInput, summarizeSessions } from "@/lib/playtest/session-input";
 import { readJsonBody } from "@/lib/api/json-body";
 import { compareSessionGroups } from "@/lib/playtest/comparison";
 import { findSnapshotOfVersion, snapshotContent } from "@/lib/deck/deck-version";
-
-type Params = { params: Promise<{ id: string }> };
 
 /** Rows are capped so one enthusiastic tester cannot make the panel unbounded. */
 const MAX_SESSIONS = 500;
@@ -148,7 +146,7 @@ async function snapshotOfSavedDeck(
 }
 
 // GET /api/decks/[id]/playtest-sessions
-export async function GET(request: Request, { params }: Params) {
+export async function GET(request: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
 
   try {
@@ -191,13 +189,13 @@ export async function GET(request: Request, { params }: Params) {
       comparison: compareSessionGroups(before, after),
     });
   } catch (error) {
-    logger.error("Unexpected error", "GET /api/decks/:id/playtest-sessions", error);
+    logRouteFailure(error, "GET /api/decks/:id/playtest-sessions");
     return NextResponse.json({ error: "Failed to fetch playtest sessions" }, { status: 500 });
   }
 }
 
 // POST /api/decks/[id]/playtest-sessions
-export async function POST(request: Request, { params }: Params) {
+export async function POST(request: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
 
   try {
@@ -245,7 +243,7 @@ export async function POST(request: Request, { params }: Params) {
       { status: 201 }
     );
   } catch (error) {
-    logger.error("Unexpected error", "POST /api/decks/:id/playtest-sessions", error);
+    logRouteFailure(error, "POST /api/decks/:id/playtest-sessions");
     return NextResponse.json({ error: "Failed to record playtest session" }, { status: 500 });
   }
 }

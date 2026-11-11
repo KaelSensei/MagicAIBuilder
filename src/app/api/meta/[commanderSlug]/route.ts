@@ -8,6 +8,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { EdhrecData, TournamentData } from "@/lib/meta/fetch";
 import { logger } from "@/lib/logger";
 import { toJsonPayload } from "@/lib/api/json-payload";
+import { rateLimitResponse, type RouteParams } from "@/lib/api/route-kit";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const RATE_LIMIT = 30;
@@ -23,18 +24,15 @@ const querySchema = z.object({
     .transform((flag) => flag === "true"),
 });
 
-type Params = { params: Promise<{ commanderSlug: string }> };
-
 type MetaSource = z.infer<typeof querySchema>["source"];
 
 function metaRateLimitResponse(request: Request): NextResponse | null {
   const ip = getClientIp(request);
   const rl = checkRateLimit(`meta:${ip}`, RATE_LIMIT, RATE_WINDOW);
   if (rl.allowed) return null;
-  const retrySec = Math.ceil(rl.retryAfterMs / 1000);
-  return NextResponse.json(
-    { error: `Too many requests. Retry in ${retrySec}s.` },
-    { status: 429, headers: { "Retry-After": String(retrySec) } }
+  return rateLimitResponse(
+    rl,
+    (seconds) => `Too many requests. Retry in ${seconds}s.`
   );
 }
 
@@ -151,7 +149,10 @@ async function tryStaleMetaResponse(
   return null;
 }
 
-export async function GET(request: Request, { params }: Params) {
+export async function GET(
+  request: Request,
+  { params }: RouteParams<"commanderSlug">
+) {
   const rateLimited = metaRateLimitResponse(request);
   if (rateLimited) return rateLimited;
 

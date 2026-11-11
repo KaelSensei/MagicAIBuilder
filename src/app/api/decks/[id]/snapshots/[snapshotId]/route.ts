@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
-
-type Params = { params: Promise<{ id: string; snapshotId: string }> };
+import type { RouteParams } from "@/lib/api/route-kit";
 
 // DELETE /api/decks/[id]/snapshots/[snapshotId] — delete a snapshot
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(
+  _req: Request,
+  { params }: RouteParams<"id" | "snapshotId">
+) {
   const { id, snapshotId } = await params;
   try {
     const ownership = await requireDeckOwner(id);

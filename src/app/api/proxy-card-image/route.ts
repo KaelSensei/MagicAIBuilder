@@ -16,6 +16,7 @@ import { NextResponse } from "next/server";
 import { USER_AGENT } from "@/lib/http";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimitResponse } from "@/lib/api/route-kit";
 
 const ALLOWED_HOST = "cards.scryfall.io";
 const MAX_PARAM_LEN = 700;
@@ -92,13 +93,7 @@ async function proxyCardImage(request: Request): Promise<NextResponse> {
     RATE_WINDOW_MS
   );
   if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Too many requests" },
-      {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
-      }
-    );
+    return rateLimitResponse(rl, "Too many requests");
   }
 
   const urlParam = new URL(request.url).searchParams.get("url");

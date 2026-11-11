@@ -7,8 +7,7 @@ import {
   PUBLIC_DECK_READS_PER_CLIENT,
 } from "@/lib/deck/public-read-policy";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-
-type Params = { params: Promise<{ id: string }> };
+import { rateLimitResponse, type RouteParams } from "@/lib/api/route-kit";
 
 /** A 429 once this client has spent its read budget, otherwise null. */
 function readRateLimitResponse(request: Request): NextResponse | null {
@@ -18,13 +17,7 @@ function readRateLimitResponse(request: Request): NextResponse | null {
     PUBLIC_DECK_READ_WINDOW_MS
   );
   if (limit.allowed) return null;
-  return NextResponse.json(
-    { error: "Too many deck requests" },
-    {
-      status: 429,
-      headers: { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) },
-    }
-  );
+  return rateLimitResponse(limit, "Too many deck requests");
 }
 
 /**
@@ -39,7 +32,7 @@ function readRateLimitResponse(request: Request): NextResponse | null {
  * is checked or the deck is read. The limiter is in-memory and per instance
  * (`src/lib/rate-limit.ts`).
  */
-export async function GET(request: Request, { params }: Params) {
+export async function GET(request: Request, { params }: RouteParams<"id">) {
   const rateLimited = readRateLimitResponse(request);
   if (rateLimited) return rateLimited;
 

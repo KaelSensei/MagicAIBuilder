@@ -10,6 +10,7 @@
  * @module api/cache/read-through-response
  */
 import { NextResponse } from "next/server";
+import { rateLimitResponse } from "@/lib/api/route-kit";
 import type { ReadThroughOutcome } from "@/lib/scryfall/shared-cache";
 
 /**
@@ -54,15 +55,7 @@ export function readThroughResponse<T>(
         { headers: cdnCaching(lifetimeMs) }
       );
     case "throttled":
-      return NextResponse.json(
-        { error: "Too many requests" },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(Math.ceil(outcome.retryAfterMs / 1000)),
-          },
-        }
-      );
+      return rateLimitResponse(outcome, "Too many requests");
     case "not_found":
       return NextResponse.json(
         { error: "Not found on Scryfall" },
