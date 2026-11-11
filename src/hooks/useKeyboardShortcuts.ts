@@ -12,7 +12,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 
 interface UseKeyboardShortcutsOptions {
   /** Current search results — used for Enter (add first card) and arrow navigation */
-  searchResults: ScryfallCard[];
+  searchResults: readonly ScryfallCard[];
   /** Called when the user requests to add a card (e.g. via Enter) */
   onAddCard: (card: ScryfallCard) => void;
   /** Whether a text input/textarea is focused (suppresses single-key shortcuts) */
@@ -134,7 +134,7 @@ function handleEscapeKey(): void {
  */
 function handleEnterKey(
   e: KeyboardEvent,
-  searchResults: ScryfallCard[],
+  searchResults: readonly ScryfallCard[],
   onAddCard: (card: ScryfallCard) => void,
 ): void {
   if (searchResults.length === 0) return;
@@ -148,7 +148,7 @@ function handleEnterKey(
 /** Handle single-key shortcuts (slash, escape, arrows, enter) */
 function handleSingleKeyShortcut(
   e: KeyboardEvent,
-  searchResults: ScryfallCard[],
+  searchResults: readonly ScryfallCard[],
   onAddCard: (card: ScryfallCard) => void,
 ): void {
   switch (e.key) {

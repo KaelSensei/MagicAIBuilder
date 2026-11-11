@@ -33,7 +33,7 @@ import { addNamedCardToZone } from "@/lib/deck/ai-add-card";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/lib/ui/store";
 import { useBracketScore } from "@/hooks/useBracketScore";
-import { useCardSearch } from "@/hooks/useCardSearch";
+import { useCardSearchResults } from "@/hooks/useCardSearchResults";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
@@ -457,11 +457,8 @@ export default function BuilderPage() {
     format: deck?.format,
   });
 
-  const {
-    data: searchData,
-    isLoading: searchLoading,
-    error: searchError,
-  } = useCardSearch(query);
+  const searchResults = useCardSearchResults(query);
+  const searchLoading = searchResults.isLoading;
 
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
@@ -522,7 +519,7 @@ export default function BuilderPage() {
 
   // Keyboard shortcuts — global listener
   useKeyboardShortcuts({
-    searchResults: searchData?.data ?? [],
+    searchResults: searchResults.cards,
     onAddCard: handleCardClick,
     isInputFocused,
   });
@@ -978,10 +975,10 @@ export default function BuilderPage() {
 
             <div className="flex-1 overflow-y-auto">
               <SearchResults
-                cards={searchData?.data ?? []}
+                cards={searchResults.cards}
                 isLoading={searchLoading}
-                error={searchError instanceof Error ? searchError : null}
-                totalCards={searchData?.total_cards}
+                error={searchResults.error}
+                totalCards={searchResults.totalCards}
                 onCardClick={handleCardClick}
                 onAddToMaybeboard={addToMaybeboard}
                 onAddToZone={handleAddToZone}
