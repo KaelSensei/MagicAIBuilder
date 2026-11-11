@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 /**
  * Contract and performance tests for critical API endpoints, under
@@ -66,7 +66,10 @@ test.describe("API Performance", () => {
     expect(duration).toBeLessThan(1000);
   });
 
-  test("GET /api/decks returns only commander/partner/companion cards, not all cards", async ({ request }) => {
+  test("GET /api/decks returns only commander/partner/companion cards, not all cards", async ({
+    request,
+    seededDeck,
+  }) => {
     // Create a deck with a card first
     const createRes = await request.post("/api/decks", {
       data: { name: "Perf Test Deck" },
@@ -74,6 +77,10 @@ test.describe("API Performance", () => {
     expect(createRes.ok()).toBe(true);
     const created = await createRes.json();
     const deckId = created.id;
+    // This test checks each seeding answer itself (the add must be a 201), so
+    // it keeps its own calls; the fixture only deletes the deck, even when an
+    // assertion fails.
+    seededDeck.adopt(deckId);
 
     // Add a non-commander card. `scryfallId` must be a real Scryfall UUID —
     // addCardSchema rejects anything else with a 400, and this write used to
@@ -109,8 +116,5 @@ test.describe("API Performance", () => {
     const fullDeck = await fullRes.json();
     expect(fullDeck.cards).toHaveLength(1);
     expect(fullDeck.cards[0].name).toBe("Lightning Bolt");
-
-    // Cleanup
-    await request.delete(`/api/decks/${deckId}`);
   });
 });
