@@ -12,7 +12,7 @@
 | `npx tsc --noEmit`                                      | `ci.yml`                                                        | a type error                                                  |
 | `pnpm test:coverage`                                    | `ci.yml`                                                        | a failing test. No coverage threshold is enforced             |
 | `pnpm build`                                            | `ci.yml`                                                        | a build error                                                 |
-| Playwright suite in Docker (`scripts/e2e-pre-push.sh`)  | `.husky/pre-push`, on the developer's machine only              | a failing E2E test blocks the push. No CI workflow runs it    |
+| Playwright suite in Docker (`scripts/e2e-pre-push.sh`)  | `.husky/pre-push`; CI in `e2e.yml` (see _E2E gate_)             | a failing E2E test blocks the push; `e2e.yml` is not required |
 
 Branch protection, read with `gh api` on 2026-11-10: `main` requires the check `Lint, Typecheck, Test, Build` and an up-to-date branch. `dev` and `staging` have no protection rule; their PRs run the same check, and it must be green before a merge.
 
@@ -129,7 +129,9 @@ It now fails with an explicit error when the token is missing.
 
 **The verdict always comes from the e2e container's exit code.** An earlier version branched on `claude -p "@e2e-runner ..."`, which exits 0 whenever the CLI ran — the agent's PASS/FAIL was only prose on stdout. The gate printed `✓ E2E passed — push allowed` on a run with 27 failures. The agent is still invoked, but only after a failure and purely to diagnose it; it cannot turn a red run green.
 
-`SKIP_E2E=1` bypasses the gate in an emergency; say so in the PR. The script also exits early when `CI` is set, but **no GitHub workflow runs Playwright** (`ci.yml`, `sonar.yml` and `lighthouse.yml` were checked on 2026-11-10). The pre-push hook is therefore the only place the suite runs. Anything that reaches a branch without a local push — a Dependabot PR, a promotion merged on GitHub — or a push made with `SKIP_E2E=1` has had no E2E run.
+`SKIP_E2E=1` bypasses the gate in an emergency; say so in the PR. The script also exits early when `CI` is set.
+
+**CI runs the same stack** from `.github/workflows/e2e.yml` (owner decision OD-14, 2026-11-10): on PRs into `staging` and `main`, nightly on `dev`, and on demand. It uploads `playwright-report/` and `test-results/` as the `playwright-report` artifact. PRs into `dev` do not run it, to save CI minutes, so a change that reaches `dev` without a local push (a Dependabot PR, a push made with `SKIP_E2E=1`) is first tested by the next nightly run. It is not a required check. GitHub starts scheduled workflows from the default branch only, so the nightly run begins once the workflow is on `main`.
 
 ### The report has to leave the container
 

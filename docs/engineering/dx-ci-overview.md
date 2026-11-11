@@ -48,7 +48,7 @@ The `staging` checkpoint includes QA sign-off for the critical desktop and respo
 
 ## CI / GitHub Actions
 
-Three workflows, each triggered by every push to `main` and every PR targeting `dev`, `staging` or `main`. **None of them runs Playwright.** The E2E suite runs only in the local pre-push hook (see [Local DX](#local-dx) and [quality-gate.md](quality-gate.md#e2e-gate)).
+Three workflows run on every push to `main` and every PR targeting `dev`, `staging` or `main`. A fourth, `e2e.yml`, runs the Playwright suite on PRs targeting `staging` or `main`, nightly on `dev` and on demand. Every push also runs the suite locally first (see [Local DX](#local-dx) and [quality-gate.md](quality-gate.md#e2e-gate)).
 
 ### `ci.yml` — Main pipeline (required on `main`)
 
@@ -86,6 +86,17 @@ pnpm install --frozen-lockfile
 
 It fails its own workflow when a category drops below its threshold. It is not a required check.
 
+### `e2e.yml` — Playwright suite in Docker
+
+Runs on PRs targeting `staging` or `main`, nightly on `dev` (03:17 UTC) and on demand; not on PRs targeting `dev`, to save CI minutes. It is not a required check.
+
+```
+docker compose -f docker-compose.e2e.yml up --build --exit-code-from e2e
+  (Postgres → prisma migrate deploy → next build → Playwright against next start)
+→ upload playwright-report/ and test-results/ as an artifact
+→ docker compose down -v
+```
+
 ---
 
 ## Branch Protection
@@ -107,7 +118,7 @@ On every `git commit`, automatically runs:
 
 ### Pre-push (Husky)
 
-On every `git push`, `.husky/pre-push` runs `scripts/e2e-pre-push.sh`: the full Playwright suite in Docker (`docker-compose.e2e.yml`). A failing test blocks the push. `SKIP_E2E=1` skips it in an emergency. This is the only place the E2E suite runs; see [quality-gate.md](quality-gate.md#e2e-gate).
+On every `git push`, `.husky/pre-push` runs `scripts/e2e-pre-push.sh`: the full Playwright suite in Docker (`docker-compose.e2e.yml`). A failing test blocks the push. `SKIP_E2E=1` skips it in an emergency. CI runs the same stack in `e2e.yml`; see [quality-gate.md](quality-gate.md#e2e-gate).
 
 ### Useful scripts
 
@@ -194,6 +205,6 @@ or `503` if the database is unreachable.
 
 - [ ] Increase `lib/deck/store.ts` coverage (82% → 90%)
 - [ ] Missing tests: `forceSave`, `promoteToCommander`, `swapCardPrinting`
-- [ ] Run the Playwright suite in CI; today only the local pre-push hook runs it (Lighthouse CI already runs on every PR, in `lighthouse.yml`)
+- [x] Run the Playwright suite in CI (`e2e.yml`, on PRs targeting `staging` or `main` and nightly on `dev`)
 - [ ] Posthog or Plausible for user analytics
 - [ ] Document UptimeRobot setup in technical.md
