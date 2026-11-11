@@ -134,12 +134,12 @@ This test plan covers all automated and manual tests for the Scryfall API cachin
 2. Alternatively: Rapidly click between different search filters (Color, Set, etc.) on the builder page
 3. **Expected:**
    - Network tab shows no 429 (Too Many Requests) errors from Scryfall
-   - Requests are serialized: ~100ms minimum between each API call
+   - Requests are serialized: two card searches start at least 500 ms apart, any two calls at least 100 ms apart
    - All searches return valid results
 4. **Verify:**
    - Check browser console for any fetch errors
-   - Scryfall rate limit: max 10 req/s = 100ms between calls
-   - Rate limiter in `src/lib/scryfall/client.ts` enforces this
+   - Scryfall rate limits: 2 req/s (500 ms) on `/cards/search`, `/cards/named`, `/cards/random`, `/cards/collection`; 10 req/s (100 ms) on other methods ([rate limits](https://scryfall.com/docs/api/rate-limits), read 2026-11-10)
+   - The queue in `src/lib/scryfall/request-queue.ts` enforces them
 
 ### 5. Name-Based Lookup Caching
 
@@ -426,7 +426,7 @@ pnpm run build
   - TanStack Query gcTime: Matches staleTime (prevents premature GC)
 
 - **Rate Limiting:**
-  - Scryfall limit: 10 req/s = 100ms between requests
+  - Scryfall limits: 500 ms between two requests to a card search endpoint, 100 ms between any two requests
   - Serialized via async mutex pattern
   - Detects test environment and skips delay during tests
 

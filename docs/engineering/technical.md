@@ -126,9 +126,11 @@ on-page JavaScript. A request that has not answered after 10 seconds is aborted
 (`SCRYFALL_TIMEOUT_MS` in `src/lib/scryfall/client.ts`), so a hung request cannot hold the queue.
 
 Scryfall's published hard limits are stricter for card endpoints: 2 requests per second (500 ms)
-on `/cards/search`, `/cards/named`, `/cards/random` and `/cards/collection`, and 10 per second on
-other methods ([rate limits](https://scryfall.com/docs/api/rate-limits), read 2026-11-10). The
-100 ms spacing does not yet distinguish them.
+on `/cards/search`, `/cards/named`, `/cards/random` and `/cards/collection`, 10 per minute on
+`/cards/manifest`, and 10 per second on other methods
+([rate limits](https://scryfall.com/docs/api/rate-limits), read 2026-11-10). The queue spaces a
+request to one of those endpoints from the previous request to the same endpoint
+(`ENDPOINT_SPACING_MS`: 500 ms, or 6 s for the manifest), on top of the 100 ms between any two.
 
 TanStack Query's deduplication prevents duplicate concurrent requests. `getCardById()` reads the
 shared server cache first (see [Scryfall API Caching](#scryfall-api-caching)).

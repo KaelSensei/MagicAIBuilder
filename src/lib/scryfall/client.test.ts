@@ -517,10 +517,10 @@ describe("searchCardPrintings", () => {
   });
 });
 
-// The module promises "max 10 req/s" and calls its queue an async mutex, so a
+// The request queue paces Scryfall calls and is an async mutex, so a
 // second caller must not reach `fetch` while the first request is still open.
 // The delay itself is skipped under isTestMode(); what is asserted here is the
-// ordering the mutex exists to provide, which is what the 100ms spacing rides on.
+// ordering the mutex exists to provide. request-queue.test.ts tests the spacing.
 describe("rate limiting", () => {
   afterEach(() => {
     vi.restoreAllMocks();
