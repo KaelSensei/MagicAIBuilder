@@ -64,12 +64,34 @@ export function collectionRow(
   };
 }
 
+/** A column value as `JSON.stringify` writes it: a `Date` becomes a string. */
+type OnTheWire<Value> = Value extends Date ? string : Value;
+
+/** A {@link FakeCollectionRow} as a route's JSON body carries it. */
+type WireCollectionRow = {
+  readonly [Column in keyof FakeCollectionRow]: OnTheWire<
+    FakeCollectionRow[Column]
+  >;
+};
+
 /**
+ * The row a client reads from a collection route's JSON body.
+ *
+ * `NextResponse.json` writes each `Date` through `Date.prototype.toJSON`,
+ * which is its ISO string. That lossy step is the point here, so it is
+ * spelt out rather than left to a JSON round trip, which SonarCloud S7784
+ * reads as a deep clone. A new `Date` column fails `tsc` until this
+ * function converts it too.
+ *
  * @param row - A stored row.
- * @returns The same row as the JSON wire carries it, with dates as strings.
+ * @returns The same row, with its dates as ISO strings.
  */
-export function wireRow(row: FakeCollectionRow): unknown {
-  return JSON.parse(JSON.stringify(row));
+export function wireRow(row: FakeCollectionRow): WireCollectionRow {
+  return {
+    ...row,
+    acquiredAt: row.acquiredAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+  };
 }
 
 /**

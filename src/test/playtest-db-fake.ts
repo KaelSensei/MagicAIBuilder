@@ -155,9 +155,16 @@ function find<T extends Row & { readonly createdAt: Date }>(
   return args.take === undefined ? found : found.slice(0, args.take);
 }
 
-/** @returns A copy of `value` as a JSON column would store it. */
+/**
+ * @returns A copy of `value`, as a JSON column stores it, so a later change
+ *   to the caller's array cannot reach the stored row. A structured clone is
+ *   enough: both routes that create a snapshot store `toJsonPayload` output
+ *   (through `snapshotContent` in `lib/deck/deck-version.ts`), which holds
+ *   JSON values only, so no `Date` or `undefined` is left for a JSON round
+ *   trip to convert.
+ */
 function asStoredJson(value: unknown): unknown {
-  return JSON.parse(JSON.stringify(value));
+  return structuredClone(value);
 }
 
 /** @returns `value` when it is a string, otherwise `fallback`. */
