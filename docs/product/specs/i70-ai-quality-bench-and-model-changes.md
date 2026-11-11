@@ -28,7 +28,7 @@ Read on 2026-11-10.
 
 A player's blog describes the failure the bench measures: chatbots given a list "confidently make up mana costs, invent abilities" [15]. On r/EDH, AI advice is distrusted and players ask for disclosure ([I-02 requirement 6](i02-checkable-ai-copilot.md#revision-2026-11-09)).
 
-**The pattern.** Every AI deck tool found asserts quality; none publishes a number. DeckCheck is the most candid: it documents that a model update moves scores on unchanged decks, and it averages three runs. Nobody publishes a test set, a pass rate or a before-and-after for a model change.
+**The pattern.** Every AI deck tool found asserts quality; none publishes a number. DeckCheck is the most candid: it documents that a model update moves scores on unchanged decks, and it averages three runs. Nobody publishes a test set, a pass rate or a before-and-after for a model change. _Corrected 2026-11-11:_ this still holds for AI. Since 2026-11-10, SpellRack publishes a dated pass rate for its deterministic bracket scorer: 83.4%, 131 of 157 precons, all 26 misses over-predicted [16]. That is the bar [I-77](i77-a-bracket-estimate-players-can-audit.md) sets for our own scorer.
 
 ### Public guidance on evaluations
 
@@ -266,3 +266,4 @@ Read on 2026-11-10 unless dated otherwise.
 13. Farseek, [blog post on ChatGPT and Commander deckbuilding](https://farseek.ai/blog/chatgpt-fails-commander-deckbuilding), 2026-04-02, updated 2026-10-11.
 14. [mtgcommander.ai](https://mtgcommander.ai/) (no date on the page).
 15. xoPLA.NET, [A little tool to make AI better at Magic: The Gathering deckbuilding](https://xopla.net/posts/a-little-tool-to-make-ai-better-at-magic-the-gathering-deckbuilding), 2025-11-09.
+16. SpellRack, [accuracy](https://spellrack.com/accuracy), "Public benchmark · 2026-11-10"; added 2026-11-11.

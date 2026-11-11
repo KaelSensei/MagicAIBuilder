@@ -120,6 +120,7 @@ Every guide has these sections in this order. A section without sourced content 
 6.4 **Private:** computed in the browser where the functions allow, otherwise by an owner-only route that is never cached across accounts. Nothing is stored. No deck ID or card name appears in the page URL, in analytics events (I-39 records kinds only), in info-level server logs or in HTML served to crawlers.
 6.5 The guide renders fully without the panel, which loads after the content.
 6.6 The deck links back: `ThemeDetector`'s "Archetypes" panel, the wizard's style step and I-54's results link the guide for each style, without losing deck state (as I-28 4.1).
+6.7 _Added 2026-11-11:_ the roadmap's "Start from this skeleton" action opens a guest deck the player completes through [I-76](i76-complete-this-deck-from-my-collection.md)'s proposal route, with slice 10's owned substitute for cards the player lacks. The skeleton stays authored, never generated (non-goals). No new slice here.
 
 ### 7. Pages and the index
 

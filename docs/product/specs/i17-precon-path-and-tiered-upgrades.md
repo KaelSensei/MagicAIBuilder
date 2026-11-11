@@ -53,6 +53,7 @@ This initiative is therefore mostly **data plus editorial**, not new engine work
 3.3 Applying a bundle creates or updates a **distinct working copy**. The sealed list is never modified.
 3.4 Applying a bundle is reversible in one action, restoring the working copy to its pre-bundle state.
 3.5 A bundle states which cards it could not apply and why — colour identity, legality, or a card already present.
+3.6 _Added 2026-11-11:_ on a working copy, a card the player does not own offers [I-76](i76-complete-this-deck-from-my-collection.md) slice 10's owned substitute, and open slots go to I-76's proposal route. No new slice here.
 
 ### 4. Prices are estimates
 

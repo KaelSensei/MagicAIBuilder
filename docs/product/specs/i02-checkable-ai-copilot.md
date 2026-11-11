@@ -153,8 +153,10 @@ Evidence: on r/EDH, ["Do not use AI to make deck suggestions or clarify rules. I
 | 6   | Record `stop_reason` and token usage per route; report truncation          | Moved to I-30 slice 1 |
 | 7   | Per-user monthly metering and quota (with I-05)                            | Moved to I-30 slice 2 |
 | 8   | Server-side card-data check of generated decks, unresolved names shown     | —                     |
-| 9   | Repair from a legal candidate pool, corrections shown in the verdict panel | 3, 8                  |
+| 9   | Repair from a legal candidate pool, corrections shown in the verdict panel | 3, 8; I-76 slice 3    |
 | 10  | Public AI-use disclosure page and per-surface labels                       | Moved to I-30 slice 5 |
+
+Added 2026-11-11: slice 9's pool reads [I-76](i76-complete-this-deck-from-my-collection.md) slice 3's `isLegalCandidate`, so the legal-candidate filter has one owner. Completion from the collection is I-76; its AI mode (I-76 slice 20) picks from slice 9's pool and counts against the allowance.
 
 ## Open questions
 

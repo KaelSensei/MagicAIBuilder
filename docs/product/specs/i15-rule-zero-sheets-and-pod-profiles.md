@@ -19,7 +19,7 @@ Wizards shipped **Commander Brackets** in 2025 as the official vocabulary: five 
 | **commandermatchup.online**                | Positions itself as a Rule 0 matchmaking hub                            | Matchmaking is a different product from a pod's own sheet                                    |
 | **DeckCheck DTI**                          | A deck-tendency index inside the editor                                 | Proprietary scale, not the official brackets                                                 |
 
-One number worth keeping: a published bracket calculator tested against **1,229 tournament decklists matched the organiser's bracket exactly 77.1 % of the time, and was within one bracket 99.5 %** of the time. That is the realistic accuracy ceiling for automatic classification, and the reason this initiative records stated intentions rather than inferring them.
+One number worth keeping: tested against **1,229 tournament decklists, a published calculator matched 77.1 %, against 73.9 % for always answering Bracket 3** ([ScrollVault](https://scrollvault.net/posts/how-scrollvault-bracket-calculator-works.html), FAQ citing engine v389, October 2026). Corrected 2026-11-11: this line called 77.1 % exact and 99.5 % within one bracket "the realistic accuracy ceiling for automatic classification". 77.1 % is about 3 points above that constant guess, and "within one" is nearly automatic in a sample of Brackets 2 to 4. An estimate this close to a constant guess is the reason this initiative records stated intentions rather than inferring them.
 
 **The gap.** Every tool classifies a deck. None records an agreement between four people, keeps it private by default, and keeps preference apart from rule.
 
@@ -33,10 +33,10 @@ One number worth keeping: a published bracket calculator tested against **1,229 
 
 ### 1. The sheet
 
-1.1 A sheet attaches to a deck, or to a pod of up to four decks.
+1.1 A sheet attaches to a deck, a pod of up to four decks, or an [I-79](i79-table-sets.md) table set _(added 2026-11-11)_. A set is not a pod (D-40): a pod is people, a set is one author's decks.
 1.2 Recorded fields: intended speed, how the deck wins, combos present, extra turns, resource denial (land destruction, stax), proxy count, and free-text house rules.
 1.3 Every field is **player-stated**. Nothing on the sheet is inferred from the decklist.
-1.4 The sheet shows the deck's computed bracket **beside** the stated intent, visibly separated, with the label that one is calculated and the other declared.
+1.4 The sheet shows the deck's computed bracket **beside** the stated intent, visibly separated, with the label that one is calculated and the other declared. _Added 2026-11-11:_ the calculated column shows [I-77](i77-a-bracket-estimate-players-can-audit.md)'s estimate with its method version and audit link, and [I-78](i78-what-this-deck-does-to-the-table.md)'s table line. Beside the declared combos, extra turns and resource denial fields (1.2), it shows the computed counts with their cards and a "copy into my sheet" action. 1.3 stands: no declared field is filled.
 
 ### 2. Privacy and consent
 
@@ -49,7 +49,7 @@ One number worth keeping: a published bracket calculator tested against **1,229 
 
 3.1 Up to four consented sheets compare side by side on one screen.
 3.2 The comparison highlights declared mismatches — a deck stating "ends on turn 5" in a pod stating "long games" — as a conversation prompt, never as a verdict.
-3.3 Official data (bracket, Game Changers, banlist) renders in a separate column from declared preferences, with distinct styling.
+3.3 Official data (bracket, Game Changers, banlist) renders in a separate column from declared preferences, with distinct styling. _Added 2026-11-11:_ that column shows I-77's estimate with its method version and audit link, and each deck's I-78 table line (I-78 slice 5). An I-79 table set's balance view reuses this comparison layout.
 
 ### 4. Honesty
 
@@ -89,13 +89,13 @@ PodShare      podSheetId, podId, consentedAt, revokedAt?
 
 ## Delivery slices
 
-| #   | Slice                                                                | Depends on |
-| --- | -------------------------------------------------------------------- | ---------- |
-| 1   | Sheet model, per-deck create and edit, private only                  | —          |
-| 2   | The computed bracket shown beside declared intent, visibly separated | 1          |
-| 3   | Pod creation, explicit consent share, revoke                         | 1          |
-| 4   | Four-way comparison with the mismatch prompts                        | 2, 3       |
-| 5   | Salt-style score as a labelled, dated community signal               | 4          |
+| #   | Slice                                                                | Depends on      |
+| --- | -------------------------------------------------------------------- | --------------- |
+| 1   | Sheet model, per-deck create and edit, private only                  | —               |
+| 2   | The computed bracket shown beside declared intent, visibly separated | 1; I-77 slice 1 |
+| 3   | Pod creation, explicit consent share, revoke                         | 1               |
+| 4   | Four-way comparison with the mismatch prompts                        | 2, 3            |
+| 5   | Salt-style score as a labelled, dated community signal               | 4               |
 
 Slice 5 depends on I-09's source-and-freshness disclosure already being applied to EDHREC data; do not start it before that is true.
 

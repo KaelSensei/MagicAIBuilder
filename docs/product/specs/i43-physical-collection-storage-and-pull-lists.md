@@ -102,6 +102,7 @@ Verified on `dev` (`61792c1`) on 2026-11-09:
 6.2 The deck page and the box page show both counts and link to the two lists. "Check my deck boxes" lists every paired box with its state, computed when asked. There is no background job and no notification.
 6.3 **Contention.** When the paired decks together need more copies of a printing than the player owns, the printing is listed with the decks competing for it and the number of copies short.
 6.4 Warnings never block editing a deck or the collection.
+6.5 _Added 2026-11-11:_ contention (6.3) and pull lists also accept an [I-79](i79-table-sets.md) table set as their scope: "Check this set's boxes" runs them over the set's seats. The paid game-night planner (slice 13) may take a set as its input.
 
 ### 7. Cards across all decks
 

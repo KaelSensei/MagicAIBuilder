@@ -99,7 +99,7 @@ Verified on `dev` (commit `61792c1`) on 2026-11-09:
 ### 6. Declared and estimated brackets
 
 6.1 Organiser and pod views show both, labelled "declared" and "estimated from the list", as [I-15 1.4](i15-rule-zero-sheets-and-pod-profiles.md#1-the-sheet) requires. The estimate is deterministic (I-03); no model is called.
-6.2 An estimate two or more brackets from the declaration shows the organiser "talk before the game". A gap of one is shown without a flag: a published calculator matched organisers exactly only 77.1% of the time, but within one bracket 99.5% of the time (I-15).
+6.2 An estimate two or more brackets from the declaration shows the organiser "talk before the game". A gap of one gets a soft prompt, worded as a question, never a flag. It cites Playgroup's measured cost, that one bracket above wins "about five percentage points more often" [21], and [I-77](i77-a-bracket-estimate-players-can-audit.md#8-the-accuracy-report)'s per-bracket figure (I-77 8.5). _Corrected 2026-11-11:_ this requirement read "A gap of one is shown without a flag: a published calculator matched organisers exactly only 77.1% of the time, but within one bracket 99.5% of the time (I-15)". 77.1% is about 3 points above a constant guess of Bracket 3 at 73.9%, and "within one" is nearly automatic in a sample of Brackets 2 to 4, so the 99.5% does not show that a one-bracket gap is harmless.
 6.3 A declared bracket outside the night's allowed range is refused at check-in, citing the store's rule. An estimate outside it is a prompt, never a refusal.
 6.4 Until I-28 slice 2 ships, the label says the estimate stops at bracket 4.
 
@@ -167,21 +167,21 @@ Organiser routes check `StoreMember`: `POST /api/stores`, `PATCH /api/stores/[sl
 
 ## Delivery slices
 
-| #   | Slice                                                                                                        | Depends on                                                               |
-| --- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| 1   | `formPods` with its policy, deterministic tie-break and brute-force tests                                    | —                                                                        |
-| 2   | Account-free pod planner page, printable, with the no-network test and one I-39 product event                | 1                                                                        |
-| 3   | Store, staff roles, store page with house rules, "not verified" label, `noindex`                             | —                                                                        |
-| 4   | Nights: policy, check-in window, token rotation, printable QR code                                           | 3                                                                        |
-| 5   | Account check-in: deck pick, declared and estimated brackets frozen, drop                                    | 4; I-15 slice 1 for sheet values (the form works without it)             |
-| 6   | Guest check-in and staff walk-ins, Art. 13 notice, 24-hour name purge                                        | 4; I-38 slice 6 for the policy link; lawyer answers before public launch |
-| 7   | Organiser screen: rounds from `formPods`, manual moves, latecomers, waiting list, mismatch prompts           | 1, 5                                                                     |
-| 8   | Night page: tables, seats, declared brackets, public decks through I-36's projection, counts after the night | 7; I-36 slice 1                                                          |
-| 9   | Consented I-15 sheets per night pod                                                                          | 7; I-15 slices 3 and 4                                                   |
-| 10  | Log a game from a night pod                                                                                  | 8; I-35 slice 6                                                          |
-| 11  | Store verification by a link from the store's website; reports through I-38                                  | 3; I-38 slice 8                                                          |
-| 12  | Store-private history across nights and the pod-health report                                                | 8                                                                        |
-| 13  | Store-plan entitlements: templates, history, report, staff seats, export                                     | **Blocked** on I-30 slice 0; 12; I-30 slice 4                            |
+| #   | Slice                                                                                                                                                          | Depends on                                                               |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 1   | `formPods` with its policy, deterministic tie-break and brute-force tests                                                                                      | —                                                                        |
+| 2   | Account-free pod planner page, printable, with the no-network test and one I-39 product event                                                                  | 1                                                                        |
+| 3   | Store, staff roles, store page with house rules, "not verified" label, `noindex`                                                                               | —                                                                        |
+| 4   | Nights: policy, check-in window, token rotation, printable QR code                                                                                             | 3                                                                        |
+| 5   | Account check-in: deck pick, declared and estimated brackets frozen, drop; the estimate's method version and I-77 audit link frozen with it (added 2026-11-11) | 4; I-15 slice 1 for sheet values (the form works without it)             |
+| 6   | Guest check-in and staff walk-ins, Art. 13 notice, 24-hour name purge                                                                                          | 4; I-38 slice 6 for the policy link; lawyer answers before public launch |
+| 7   | Organiser screen: rounds from `formPods`, manual moves, latecomers, waiting list, mismatch prompts                                                             | 1, 5                                                                     |
+| 8   | Night page: tables, seats, declared brackets, public decks through I-36's projection, counts after the night                                                   | 7; I-36 slice 1                                                          |
+| 9   | Consented I-15 sheets per night pod                                                                                                                            | 7; I-15 slices 3 and 4                                                   |
+| 10  | Log a game from a night pod                                                                                                                                    | 8; I-35 slice 6                                                          |
+| 11  | Store verification by a link from the store's website; reports through I-38                                                                                    | 3; I-38 slice 8                                                          |
+| 12  | Store-private history across nights and the pod-health report                                                                                                  | 8                                                                        |
+| 13  | Store-plan entitlements: templates, history, report, staff seats, export                                                                                       | **Blocked** on I-30 slice 0; 12; I-30 slice 4                            |
 
 Slices 1 and 2 ship alone and are the cheap early part. Slices 3 to 8 wait for open question 1's demand threshold. Slice 6 puts the purge-time guard in the entry serialiser, so every later page inherits it.
 
@@ -218,3 +218,4 @@ Read 2026-11-09 unless dated.
 18. La Bonne Excuse, "Soirée Commander / EDH", weekly listing. https://la-bonne-excuse.fr/evenements/soiree-commander-edh-magic-the-gathering
 19. GDPR Art. 13. https://gdpr-info.eu/art-13-gdpr/
 20. CNIL, "Recommandation 4 : rechercher le consentement d'un parent pour les mineurs de moins de 15 ans", 2021-06-09. https://cnil.fr/recommandation-4-rechercher-le-consentement-dun-parent-pour-les-mineurs-de-moins-de-15-ans
+21. Playgroup, Commander power level, updated 2026-11-10; added 2026-11-11. https://playgroup.gg/commander/power-level

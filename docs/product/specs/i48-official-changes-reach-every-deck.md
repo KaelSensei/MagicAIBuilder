@@ -39,7 +39,7 @@ On WeeklyMTG, as reported on 2026-10-13, Wizards said a Commander announcement i
 | Archidekt                                      | Not verified: the first page of its news lists updates on the playtester, deck help, mobile UI and card view. Its brackets post is not on that page and was not read. | [17]   |
 | Commander Spellbook, MTGGoldfish and DeckCheck | Not verified: no page found, or the page answered 403.                                                                                                                | —      |
 
-No page read shows a deckbuilder telling an owner that a saved deck changed status, or dating the list its verdict uses. I-42 likewise found no competitor page that dates the variant list its legality check applies. That absence is a claim about the pages read on 2026-11-10, not proof. Revalidate it before it justifies marketing copy.
+No page read shows a deckbuilder telling an owner that a saved deck changed status, or dating the list its verdict uses. I-42 likewise found no competitor page that dates the variant list its legality check applies. That absence is a claim about the pages read on 2026-11-10, not proof. Revalidate it before it justifies marketing copy. _Corrected 2026-11-11:_ this holds for the Magic pages read, not for deckbuilders in general. NetrunnerDB's decklist page lists every ban-list version, marks the active one and says "This decklist is not legal for tournament play currently, due to Card Errata, Rotation or Legality" [18], and arkham.build pins a taboo version per deck, with "Latest" as a default [19]. Marketing copy built on this initiative should say "among Magic deckbuilders".
 
 **The opening.** The verdict itself is common: any site that reads Scryfall shows today's status. What nobody was found doing is the dated difference: "on 2026-02-09 Farewell became a Game Changer; your deck now sits above the bracket you declared; here are cards that fill the same role". The same difference, published per announcement and readable without an account, gives the "what changed" page original content to rank on.
 
@@ -71,11 +71,11 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 
 ### 2. Assessing a deck against a version
 
-2.1 `assessDeck(deck, version)` is a pure function. It returns the banned cards, a companion banned as a companion, the Game Changers, the floor each official rule sets, the heuristic score, the estimate and a reason for each floor.
+2.1 `assessDeck(deck, version)` is a pure function. It returns the banned cards, a companion banned as a companion, the Game Changers, the floor each official rule sets, the heuristic score, the estimate and a reason for each floor. _Added 2026-11-11:_ the floors, terms and reasons are [I-77](i77-a-bracket-estimate-players-can-audit.md)'s `explainBracket` output, and the assessment adds the rules version.
 2.2 Stored `isGameChanger` and `isBanned` are no longer trusted by any reader. Status is derived from the version. `isGameChanger` follows the path I-42 sets for `isBanned`: the column stays until every reader uses derived status.
 2.3 Fork, duplicate, snapshot restore, public pages and the share view show derived status.
 2.4 `compareAssessments(before, after)` lists each change with its cause: card banned, card unbanned, card banned as a companion, Game Changer added or removed, or a bracket limit changed. Order is by cause, then card name, then Oracle ID, whatever the deck order.
-2.5 The bracket estimate carries a method version. A report never attributes a movement caused by our estimator to Wizards, and the reverse.
+2.5 The bracket estimate carries a method version, which is I-77's `BRACKET_METHOD_VERSION` (added 2026-11-11). A report never attributes a movement caused by our estimator to Wizards, and the reverse.
 2.6 The comparison covers floors that depend on the lists and the bracket definitions. The two-card combo floor needs Commander Spellbook and is re-checked only when the deck is opened; the report says so.
 
 ### 3. The owner's impact report
@@ -176,7 +176,7 @@ NotificationPreference + rulesChangesEmail Boolean @default(false)
 | #   | Slice                                                                                                                                                                       | Depends on                                     |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | 1   | `CommanderRulesVersion` seeded with the history; one "version in force" reader for brackets, stats, the companion check and `/rules/game-changers`. Closes I-03's open item | I-28 slice 2                                   |
-| 2   | `assessDeck` and `compareAssessments`; derived Game Changer and banned status for every reader; method version on the estimate                                              | 1; I-42 slice 2                                |
+| 2   | `assessDeck` and `compareAssessments`; derived Game Changer and banned status for every reader; method version on the estimate                                              | 1; I-42 slice 2; I-77 slice 1                  |
 | 3   | Announcement records and the public `/rules/changes` pages in English, backfilled for the four past announcements                                                           | 1                                              |
 | 4   | "Is my deck affected?" on the public page, without an account                                                                                                               | 2, 3                                           |
 | 5   | Owner impact: lazy computation, the first catch-up run, the notice on the deck list and in the editor, and the dated report                                                 | 2, 3                                           |
@@ -219,3 +219,5 @@ Slices 1, 3 and 6 make the next announcement a data change rather than a release
 15. Scryfall API, search `otag:board-wipe id<=w legal:commander -is:gamechanger mv>=5 mv<=7` (90 cards). https://api.scryfall.com/cards/search?q=otag%3Aboard-wipe+id%3C%3Dw+legal%3Acommander+-is%3Agamechanger+mv%3E%3D5+mv%3C%3D7 (read 2026-11-10)
 16. Moxfield, Commander brackets page; answered HTTP 403. https://moxfield.com/commanderbrackets (tried 2026-11-10)
 17. Archidekt, news, first page. https://archidekt.com/news (read 2026-11-10)
+18. NetrunnerDB, a decklist page, published 2018-07-05, seen 2026-11-10; added 2026-11-11. https://netrunnerdb.com/en/decklist/6092a490-4d1a-4f83-b9eb-440e7d07c657
+19. arkham.build, release v2.20.0, 2025-04-22; added 2026-11-11. https://github.com/arkham-build/arkham.build/releases/tag/v2.20.0

@@ -159,6 +159,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10 by reading the code; nothing was ru
 11.2 It downloads as CSV and JSON. CSV cells are escaped like the existing exports.
 11.3 It is kept for 30 days, then deleted, and appears in I-38's export while it exists.
 11.4 It suggests the next fixes, such as decks without a commander and unresolved names. It carries no upsell.
+11.5 _Added 2026-11-11:_ for an imported deck with open slots or cards the player does not own, the report links [I-76](i76-complete-this-deck-from-my-collection.md)'s proposal route and slice 10's owned substitute. No new slice here.
 
 ### 12. Measurement through I-39
 

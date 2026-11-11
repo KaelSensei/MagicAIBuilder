@@ -63,6 +63,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 2.2 A card the lender only borrowed, or a household copy owned by someone else, is not lent onward. The preview lists it with its owner so the lender can say so.
 2.3 A deck has at most one open whole-deck loan. Its page shows "Lent to … since …, due …". Editing stays allowed; a banner says the return checklist uses the list as lent. Deleting the deck keeps the loan and its frozen list.
 2.4 **Return checklist:** every card of the frozen list, grouped as in the deck. "All back" closes the loan in one action; unticked cards stay open on it.
+2.5 _Added 2026-11-11:_ **Lend this set** creates one whole-deck loan (2.1) per chosen seat of an [I-79](i79-table-sets.md) table set in one action, with one combined return checklist. Lent copies are unavailable to the set's copy check (I-79 slice 3).
 
 ### 3. Borrowed copies
 

@@ -114,7 +114,7 @@ Verified on `dev` (commit `49983a9`) on 2026-11-09:
 
 ### 6. Methods page and open data
 
-6.1 `/methods` has one anchor per metric: definition, numerator, denominator, threshold, sources, and known biases (self-declared brackets, a self-selected corpus, the model's limits).
+6.1 `/methods` has one anchor per metric: definition, numerator, denominator, threshold, sources, and known biases (self-declared brackets, a self-selected corpus, the model's limits). _Added 2026-11-11:_ it also has the anchor `bracket-estimate` for [I-77](i77-a-bracket-estimate-players-can-audit.md)'s accuracy report, its labelled sets, its constant-guess baseline and its method change log. Slice 3 reserves the anchor; I-77 slice 9 fills it.
 6.2 The method has a version number and a change log. Each report and data page names the version it used.
 6.3 A "how to cite" line gives title, edition, date, URL and method version.
 6.4 A corpus section lists the sources, their I-29 tiers, the deck count per source and the last computation date.
@@ -191,7 +191,7 @@ Index-based figures are read from I-29's `CorpusStat` (scope, metric, value, sam
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | 1   | Index policy function; apply it to commander discovery and profile pages; `x-default` in sitemap entries; public-route parity test                            | —                                                                         |
 | 2   | Public `/rules/game-changers` with alternates and localized metadata; `/rules/comprehensive` public but `noindex`, since it reproduces Wizards' text verbatim | 1                                                                         |
-| 3   | Methods page, version 1, in English, with the citation line and the corpus section                                                                            | 1                                                                         |
+| 3   | Methods page, version 1, in English, with the citation line and the corpus section; the `bracket-estimate` anchor reserved for I-77 (added 2026-11-11)        | 1                                                                         |
 | 4   | Report framework: edition model, permanent URLs, errata, `Dataset` markup, CSV and JSON downloads with checksums                                              | 3                                                                         |
 | 5   | "Commander Opening Hands" first edition from the seeded model, rerun on the rules in force, with intervals and reproduction steps                             | 4                                                                         |
 | 6   | Five bracket pages with opening-hand norms, linked to the I-28 guide sections                                                                                 | 5; I-28 slice 4 for the guide links                                       |
