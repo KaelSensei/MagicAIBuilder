@@ -2,7 +2,7 @@
 
 > **Initiative:** I-36, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Later; slices 1 and 2 Next since 2026-11-10, because slices of I-46, I-50, I-53, I-55 and I-60 wait for them · **Written 2026-11-09**
 > **Research:** dated notes on creator tooling, the growth of reference sites, player demand and monetization (2026-11-09). They are not committed, so every external fact below cites a numbered entry in [Sources](#sources). Legal points are research, not legal advice.
-> **Owns:** deck embeds, shareable deck images, video and card links in primers, the creator page, fork attribution outside the deck page, the public read endpoints of `/api/v1` and their terms, and view counts. **Does not own:** deck visibility, forking policy, the primer template, comments and moderation ([I-08](../roadmap.md#i-08-share-compare-and-learn)); the playtester and its hand-hidden view ([I-07](../roadmap.md#i-07-playtest-and-iteration)); owner-scoped API endpoints, import and export ([I-10](../roadmap.md#i-10-interoperability-and-integrations)); the verification endpoint ([I-22](i22-verification-as-a-public-surface.md)); Discord commands ([I-23](i23-the-pods-own-surface.md)); search across all public decks ([I-29](i29-cross-site-deck-index.md)); data report pages ([I-34](i34-commander-data-reports.md)); the primer editor's layout ([I-37](i37-editor-depth.md)); the paid tier's price and gating ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** deck embeds, shareable deck images, video and card links in primers, the creator page, fork attribution outside the deck page, the public read endpoints of `/api/v1` and their terms, and view counts. **Does not own:** deck visibility, forking policy, the primer template, comments and moderation ([I-08](i08-share-compare-and-learn.md)); the playtester and its hand-hidden view ([I-07](i07-playtest-and-iteration.md)); owner-scoped API endpoints, import and export ([I-10](i10-interoperability-and-integrations.md)); the verification endpoint ([I-22](i22-verification-as-a-public-surface.md)); Discord commands ([I-23](i23-the-pods-own-surface.md)); search across all public decks ([I-29](i29-cross-site-deck-index.md)); data report pages ([I-34](i34-commander-data-reports.md)); the primer editor's layout ([I-37](i37-editor-depth.md)); the paid tier's price and gating ([I-30](i30-business-model-and-paid-tier.md)).
 
 ## Overview
 
@@ -210,3 +210,167 @@ Slices 2 and 3 ship alone and close the two largest gaps: a deck link that previ
 19. YouTube Help, [Embed videos and playlists](https://support.google.com/youtube/answer/171780?hl=en), privacy-enhanced mode and start time, read 2026-11-09.
 20. Twitch Developers, [Embedding video and clips](https://dev.twitch.tv/docs/embed/video-and-clips/), `parent`, minimum size and `time`, read 2026-11-09.
 21. CNIL, [Cookies : solutions pour les outils de mesure d'audience](https://www.cnil.fr/fr/cookies-et-autres-traceurs/regles/cookies-solutions-pour-les-outils-de-mesure-daudience), published 2025-07-04, read 2026-11-09.
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+### Goals
+
+- A creator embeds a public deck that loads without tracking, links back, and turns unavailable within a minute of the deck going private; a pasted deck link previews the deck; and a primer plays its video from a timestamped section.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-36-01
+
+As a player, I want the outcome of I-36, so that the work in this file is the reason to build it.
+
+#### US-36-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-36-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-36-01 Happy path
+
+Given a signed-in player and the English locale
+When a creator embeds a public deck that loads without tracking, links back, and turns unavailable within a minute of the deck going private; a pasted deck link previews the deck; and a primer plays its video from a timestamped section.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-36-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-36-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-36-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-36-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-36-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-36-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://edhrec.com/articles/edhrec-founder-don-miner-to-speak-at-mv-con-2025
+- https://tappedout.net/mtg-forum/tappedout/is-tappedout-dying
+- https://www.reddit.com/r/EDH/comments/1wv8mf7/
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-36: Creator And Embed Toolkit
+
+**Spec:** [`specs/i36-creator-and-embed-toolkit.md`](i36-creator-and-embed-toolkit.md)
+
+**Outcome:** a creator embeds a deck with one snippet, a deck link previews as the deck in Discord and on social sites, primers carry card links and timestamped video, and a developer reads public decks through a documented, attributed API.
+
+**Status:** Later
+**Priority:** Later, except slices 1 and 2. Next for slices 1 and 2, the public projection and the deck image, promoted on 2026-11-10 because slices of I-46, I-50, I-53, I-55 and I-60 wait for them; Later for the rest
+**Impact / effort:** Medium / medium
+**Depends on:** one public projection of a deck (slice 1) before any surface; legal answers before the view counter and the API terms; I-67 slice 5 for dated price badges (slice 4); I-05 M2's shared store for the API's limiter (slice 11).
+
+Reference sites grew because other people linked to them. Creators amplified EDHREC early ([EDHREC](https://edhrec.com/articles/edhrec-founder-don-miner-to-speak-at-mv-con-2025)), community gatekeepers' link rules helped Moxfield displace TappedOut in 2020 ([TappedOut forum](https://tappedout.net/mtg-forum/tappedout/is-tappedout-dying)), and free APIs made Scryfall and Commander Spellbook infrastructure. Players also choose on presentation: "Moxfield for play-testing because it's easier to frame in OBS for Spelltable" ([r/EDH](https://www.reddit.com/r/EDH/comments/1wv8mf7/)). MagicAIBuilder's social layer is evaluative; the broadcast layer does not exist. There is no embed route under `src/app`, every route sends `frame-ancestors 'none'` (`src/lib/security-headers.ts`), the schema has no view counter, and the unused `/api/og` prints whatever text it is given. No reviewed site documents video sections in primers.
+
+### Scope
+
+- [x] One public projection of a deck, used by the deck page and by `/api/deck/[id]` for every caller but the owner, with a field snapshot test (slice 1). See I-08. Shipped in #1312: non-owners get `PUBLIC_DECK_SELECT`, the deck page reads `/api/deck/[id]` through `fetchPublicDeck`, and the route test "serves an anonymous viewer only the fields the public deck page renders" is the field test; #1325 does the same for share links (checked on `origin/dev` at `72fbfc1` on 2026-11-10).
+- [ ] A deck image built only from stored data at `/og/deck/{id}`, Open Graph and Twitter tags on the deck page, a PNG default, and the free-text `/api/og` removed (slice 2).
+- [ ] An embed route rendered on the server, themed and localized, framable only under `/embed/*`, with no cookie, storage or third-party script and a per-deck switch (slice 3); optional legality, declared-bracket and dated-price badges, and an overlay layout for OBS (slices 4–5).
+- [ ] `[[Card]]` links in primers, unique heading anchors, and click-to-load YouTube (privacy-enhanced mode) and Twitch video blocks with timestamped sections (slices 6–8).
+- [ ] Fork counts and attribution on every surface, and a creator page with a bio, links and pinned decks (slices 9–10).
+- [ ] A `public:read` API scope with two attributed endpoints and a limiter on I-05 M2's shared store (one owner, decided 2026-11-10), behind a terms page reviewed by a lawyer (slice 11).
+- [ ] A cookie-free view counter with daily-salted de-duplication and an owner toggle; views rank nothing (slice 12).
+- Moved 2026-11-10: the creator kit is now [I-72](i72-growth-loops-referrals-creators-and-return.md)'s slice 13, and operator-verified links on the creator page its slice 14. Early access and a complimentary seat for creators (I-72 slice 15) would amend this initiative's non-goal "contests and community programming"; the non-goal stands until owner decision [D-80](../owner-decisions.md#product-scope-and-non-goals). Whether such a grant must be labelled is [L-43](../legal-questions.md#l-43-referral-and-creator-rewards).
+
+### Engineering enablers
+
+- A test enumerates route families: only `/embed/*` allows framing, and `frame-src` names exactly the two video hosts.
+- A snapshot test fails if `notes`, `folderId`, `budget`, `shareEnabled`, `manualBracket` or `userId` appears in any public response.
+- No table stores an IP address or a user agent.
+
+**Paid-tier angle:** everything a viewer, a reader or a developer within the quota needs stays free. The candidate is creator analytics on the author's own decks: views per day, embed loads per host site, forks over time and an export (slice 13, after I-30's decision). Placement, reach and featuring are never sold.
+
+### Definition of done
+
+A creator embeds a public deck that loads without tracking, links back, and turns unavailable within a minute of the deck going private; a pasted deck link previews the deck; and a primer plays its video from a timestamped section.
+
+---
+

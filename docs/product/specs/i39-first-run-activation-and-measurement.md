@@ -2,7 +2,7 @@
 
 > **Status:** Proposed · **Priority:** Next · **Written 2026-11-09**
 > **Research:** dated notes on onboarding, measurement law and benchmarks. The notes are not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice, and go to the lawyer questions in [Open questions](#open-questions).
-> **Owns:** the path from the landing page to a first useful deck, the replacement of the onboarding dialog, empty states, sample decks, the first-build checklist, keeping a guest's work when they create an account, the product event contract and its minimisation rules, the definitions of activation, retention and a north-star metric, the owner's activation view and the experiment protocol. **Does not own:** importers ([I-10](../roadmap.md#i-10-interoperability-and-integrations)); the precon catalogue ([I-17](i17-precon-path-and-tiered-upgrades.md)); explanations of rules ([I-27](i27-learning-while-building.md)); the landing page's visual design ([I-13](i13-visual-direction.md)); conversion, churn, revenue and the owner metrics page ([I-30](i30-business-model-and-paid-tier.md)); deck view counts ([I-36](i36-creator-and-embed-toolkit.md)); the referral baseline ([I-34](i34-commander-data-reports.md)); the statistics method ([I-21](i21-reproducible-probability-bench.md)); the privacy policy, account deletion and the list of processors ([I-38](i38-trust-safety-and-user-rights.md)). The choice of an analytics product stays an [I-05](../roadmap.md#i-05-production-safety) item, which waits for "the product questions it must answer"; this spec writes those questions.
+> **Owns:** the path from the landing page to a first useful deck, the replacement of the onboarding dialog, empty states, sample decks, the first-build checklist, keeping a guest's work when they create an account, the product event contract and its minimisation rules, the definitions of activation, retention and a north-star metric, the owner's activation view and the experiment protocol. **Does not own:** importers ([I-10](i10-interoperability-and-integrations.md)); the precon catalogue ([I-17](i17-precon-path-and-tiered-upgrades.md)); explanations of rules ([I-27](i27-learning-while-building.md)); the landing page's visual design ([I-13](i13-visual-direction.md)); conversion, churn, revenue and the owner metrics page ([I-30](i30-business-model-and-paid-tier.md)); deck view counts ([I-36](i36-creator-and-embed-toolkit.md)); the referral baseline ([I-34](i34-commander-data-reports.md)); the statistics method ([I-21](i21-reproducible-probability-bench.md)); the privacy policy, account deletion and the list of processors ([I-38](i38-trust-safety-and-user-rights.md)). The choice of an analytics product stays an [I-05](i05-production-safety.md) item, which waits for "the product questions it must answer"; this spec writes those questions.
 
 ## Overview
 
@@ -92,7 +92,7 @@ Verified on `dev` on 2026-11-09 (commit `61792c1`).
 
 3.1 The global modal is removed. An inline first-run panel sits in the empty builder, for guests and accounts, and offers three actions: choose a commander (focuses search), paste or import a list, open a sample deck.
 3.2 The panel never blocks input, never takes focus on load, is fully usable by keyboard, and disappears once the deck holds a card.
-3.3 Its copy describes only the screen it sits on, in English and French ([I-11](../roadmap.md#i-11-localization-and-regional-experience)).
+3.3 Its copy describes only the screen it sits on, in English and French ([I-11](i11-localization-and-regional-experience.md)).
 3.4 A guest's dismissal carries to the account at sign-up. "Replay tutorial" reopens the panel without a modal.
 
 ### 4. Empty states and sample decks
@@ -295,3 +295,207 @@ Read 2026-11-09 unless dated otherwise. "Search summary" means the claim comes f
 20. EDPB, [Guidelines 03/2022 on deceptive design patterns in social media platform interfaces](https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-032022-deceptive-design-patterns-social-media_en), version 2.0, 2023-02-24.
 21. EDPB, [Guidelines 2/2023 on Technical Scope of Art. 5(3) of ePrivacy Directive](https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-22023-technical-scope-art-53-eprivacy-directive_en), version 2.0, 2024-10-16.
 22. Regulation (EU) 2022/2065, [Digital Services Act](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2065), Articles 19(1) and 25.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+### Goals
+
+- A fresh visitor builds, checks, playtests and exports with no modal and no account and keeps the deck on signing up, and the owner reads weekly activation and retention, with n and intervals, from rows that hold nothing personal beyond an account id.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-39-01
+
+As a new player, I want the deck I started while signed out to be there after I create an account, so that the first run is not a dead end.
+
+#### US-39-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-39-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-39-01 Happy path
+
+Given a signed-in player and the English locale
+When the onboarding modal does not open on a public page.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-39-02 Happy path
+
+Given a signed-in player and the English locale
+When a guest deck is attached to the new account, not discarded.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-39-03 Happy path
+
+Given a signed-in player and the English locale
+When an event row contains no email, name, deck name, card name, list or URL.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-39-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-39-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-39-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: The guest path is the default. Measurement of signed-in use waits on the store. No flag that turns the guest deck off.
+
+#### AC-39-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-39-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-39-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+Empty states say what to do next. Sample decks are real rows or absent, never invented authors.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+The event store is first-party. Sentry replay stays at the settings this initiative names. No third-party product script.
+
+### Analytics and telemetry
+
+`signup_completed {had_guest_deck: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+The guest path is the default. Measurement of signed-in use waits on the store. No flag that turns the guest deck off.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+The lawyer questions on the event store are the gate for slices that write it. Until then, events in other enrichments are names only.
+
+### Sources
+
+- https://company.wizards.com/en/legal/fancontentpolicy
+- https://hearthstone.blizzard.com/en-us/blog/20811880
+- https://mtgarena-support.wizards.com/hc/en-us/articles/35805365023124-Patch-Notes-2025-46-20
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-39: First Run, Activation And Product Measurement
+
+**Spec:** [`specs/i39-first-run-activation-and-measurement.md`](i39-first-run-activation-and-measurement.md)
+
+**Outcome:** a visitor reaches a useful deck without an account and keeps it on signing up, and the owner counts activation and retention from the product's own database, with no third-party tracker.
+
+**Status:** Next
+**Priority:** Next
+**Impact / effort:** High / medium
+**Depends on:** I-38's privacy policy and the lawyer questions of slice 0 before the event store; I-17 slice 2 for official precon samples; I-30 slice 1 for AI usage; I-05's tool decision before any page analytics.
+
+I-30 needs evidence before a price, and today none of it can be counted: there is no event store, no activation definition and no retention view. The first run also loses players the product already won: a modal covers the landing page, and a guest who builds a deck and then signs up lands on an empty deck list. The readable references, EDHREC, Archidekt and ManaBox, let a visitor start without an account, and the [Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy) forbids requiring "email registration to access your Fan Content". The CNIL exempts audience measurement from consent only under strict conditions and names no product, and PostHog Cloud EU's own documentation asks for consent. So measurement stays first-party, written by the app's own routes, with an allowlist of seven events and an opt-out. No conversion, activation or retention figure for any MTG tool was found.
+
+### Scope
+
+- [ ] Stop the onboarding modal opening on public pages and correct its two wrong lines (slice 1). Today `OnboardingWizard` (`src/components/onboarding/OnboardingWizard.tsx`) mounts on every `[locale]` page through `src/app/[locale]/providers.tsx`, the landing and public deck pages included, and `src/messages/en/onboarding.json` points to a "New Deck" button the landing navbar lacks and to an AI wizard a guest cannot open.
+- [ ] Keep a guest's deck at sign-up (slices 2 and 6). Today `SignUpForm` (`src/components/auth/SignUpForm.tsx`) ignores `callbackUrl` and sends both sign-up routes to `/decks`, and nothing copies the guest deck from the browser into the account, so the new account starts empty. Slice 2 honours a same-origin `callbackUrl` and says honestly that the deck stays in the browser; slice 6 offers to save the guest deck and clears the local copy only after the server confirms.
+  - [x] Keep a guest's deck when the guest creates an account, and sanitise `callbackUrl` on sign-in and sign-up (#1333, 2026-11-10). Which parts of slices 2 and 6 remain is checked against the spec before the item is ticked.
+- [ ] Tell a guest that AI suggestions need an account (slice 2). Today `useAISuggestions` (`src/hooks/useAISuggestions.ts`) shows the raw `AI request failed (401)` in the guest builder.
+- [ ] Delete `GET /api/templates` or make it return real rows only (slice 3). Today `src/app/api/templates/route.ts` returns two hard-coded templates for any commander, with invented authors ("CommunityBuilder", "TopPlayer") and upvote counts.
+- [ ] Set Sentry's random-session replay to zero, keep error replays with explicit masking, and keep tokens, usernames and query strings out of URLs sent to third parties (slice 4). Today `src/instrumentation-client.ts` sets `replaysSessionSampleRate: 0.01`, and neither the replay nor the AI providers are disclosed; I-38 slice 6 discloses them.
+- [ ] An inline first-run panel and empty states that offer import and a sample deck, landing starts that work signed out, interim sample decks and a first-build checklist computed from the deck's state (slices 5, 7–9).
+- [ ] A first-party event store: seven allowlisted events, one activity row per account per day, guest counters with no identifier, an opt-out that deletes past rows, and a 25-month fold into cohort aggregates (slice 10).
+  - Proposed 2026-11-10 by [I-62](i62-switching-from-another-site.md) (its requirement 12.1, slice 17): an eighth event, `migration_finished`, with a source enum, an outcome and five integers, never a file, deck or card name; a guest counter, `migration_guide_opened`; and `migration` as a value of `Deck.origin`, which I-60 slice 13 writes. Activation is reported apart for accounts whose first full-size deck came from a migration. The empty states of slices 5 and 7 to 9 gain "Moving from another site?", and [I-64](i64-help-centre-and-guidance.md) adds one help link to each.
+  - Proposed 2026-11-10 by [I-72](i72-growth-loops-referrals-creators-and-return.md) (its requirements 3.1 and 3.2, slice 2): `User.signupEntry` and `User.signupVia`, written once at sign-up from allowlisted enums and nulled by the opt-out, and a `share_action` event with a surface and a method, enums only. I-72 slice 3 adds a loop view by entry to the owner page of slice 12.
+- [ ] Instrumentation, then an owner-only activation view with n and 95% intervals (slices 11–12).
+- [ ] I-30's evidence: 30-day active accounts, AI calls per active account, use of each paid candidate's free version, and one opt-in survey (slice 13).
+- [ ] An experiment protocol: a dated file per experiment, a sample size fixed in advance, and significance read only at the planned end (slice 14).
+- Recorded 2026-11-10: the owner's measurement view (slice 12) uses [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s `requireOperator` once its slice 1 exists, and requirement 8.2's event list gains `ai_suggestion_action`, enums and integers only, for [I-70](i70-ai-quality-bench-and-model-changes.md) slice 14.
+- [ ] On the empty builder (slice 5), pasting a recognised deck list with Ctrl/Cmd+V opens I-10's import preview, read from the paste event with no clipboard permission. Hearthstone asks whether to use a copied list when a deck is created ([Blizzard](https://hearthstone.blizzard.com/en-us/blog/20811880), 2017-06-01). Added 2026-11-11.
+- [ ] The sample shelf (slice 8) groups decks by I-54 style and offers "Play a test hand" signed out before "Copy this deck"; 7.4 still excludes rewards. Arena gives every player ten starter decks ([Patch Notes 2025.46.20](https://mtgarena-support.wizards.com/hc/en-us/articles/35805365023124-Patch-Notes-2025-46-20), search-index text). Added 2026-11-11.
+- [ ] Neighbour changes, 2026-11-11: section 8.2 gains [I-76](i76-complete-this-deck-from-my-collection.md)'s four count-only events (`completion_run`, `completion_applied`, `completion_reverted`, `missing_card_path`), and section 11 the derived "table day" metric [I-79](i79-table-sets.md)'s gate A reads; `export_done` gains `scope: deck | set`.
+
+### Engineering enablers
+
+- A schema test rejects any event property that is free text, an email-shaped value, a URL or an unknown key; no measurement row or log line holds an email, name, IP address, user agent, card list or URL.
+- No third-party analytics script, pixel or SDK loads, and `script-src` gains no host.
+- A config test asserts that `replaysSessionSampleRate` is 0 and that masking is explicit.
+- A denominator under 30 renders as a count, not a rate.
+
+**Paid-tier angle:** nothing here is paid. Its use to I-30 is evidence: it turns I-30's audience and cost assumptions into counts before a price is set. Interest in a future paid feature is asked through a labelled survey, never through a control for a feature that does not exist.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a new player, I want the deck I started while signed out to be there after I create an account, so that the first run is not a dead end.
+
+**Acceptance.**
+- The onboarding modal does not open on a public page.
+- A guest deck is attached to the new account, not discarded.
+- An event row contains no email, name, deck name, card name, list or URL.
+
+**UX.** Empty states say what to do next. Sample decks are real rows or absent, never invented authors.
+
+**Data and API.** The event store is first-party. Sentry replay stays at the settings this initiative names. No third-party product script.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `signup_completed {had_guest_deck: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** The guest path is the default. Measurement of signed-in use waits on the store. No flag that turns the guest deck off.
+
+**Open questions.** The lawyer questions on the event store are the gate for slices that write it. Until then, events in other enrichments are names only.
+
+### Definition of done
+
+A fresh visitor builds, checks, playtests and exports with no modal and no account and keeps the deck on signing up, and the owner reads weekly activation and retention, with n and intervals, from rows that hold nothing personal beyond an account id.
+
+---
+

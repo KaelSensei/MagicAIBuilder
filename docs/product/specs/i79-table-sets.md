@@ -2,7 +2,7 @@
 
 > **Initiative:** I-79, proposed for the [roadmap](../roadmap.md) · **Status:** Later · **Priority:** Later, behind two demand gates added to D-52 (requirement 7). Nothing past slice 0 starts before gate A is met and the owner answers D-89 · **Paid:** building, checking, sharing, publishing and exporting a set are free; a balance run across the set is a candidate for [I-30](i30-business-model-and-paid-tier.md) (requirement 8) · **Written 2026-11-11**
 > **Research:** one dated note, not committed, so every external fact links its own entry in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** the table set (a named group of two to four Commander decks one author builds for one table), its seats, the rules checked across a set, the physical-copy check across a set, the balance view, set sharing, publishing and forking, the table export, and the demand gates for this work. **Does not own:** each deck's legality, bracket estimate, routes or table effects ([I-03](../roadmap.md#i-03-trustworthy-deck-feedback), [I-77](../roadmap.md#i-77-a-bracket-estimate-players-can-audit), [I-65](i65-how-this-deck-wins.md), [I-78](../roadmap.md#i-78-what-this-deck-does-to-the-table)); pods, sheets and consent ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)); free copies ([I-16](i16-decks-buildable-from-a-collection.md)); boxes and contention ([I-43](i43-physical-collection-storage-and-pull-lists.md)); loans ([I-51](i51-cards-lent-and-borrowed.md)); per-target exporters ([I-50](i50-play-this-deck-online.md)); rule types ([I-53](i53-monthly-deckbuilding-challenges.md)); simulations ([I-31](i31-deck-lab.md)); events ([I-39](i39-first-run-activation-and-measurement.md)); plans ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** the table set (a named group of two to four Commander decks one author builds for one table), its seats, the rules checked across a set, the physical-copy check across a set, the balance view, set sharing, publishing and forking, the table export, and the demand gates for this work. **Does not own:** each deck's legality, bracket estimate, routes or table effects ([I-03](i03-trustworthy-deck-feedback.md), [I-77](i77-a-bracket-estimate-players-can-audit.md), [I-65](i65-how-this-deck-wins.md), [I-78](i78-what-this-deck-does-to-the-table.md)); pods, sheets and consent ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)); free copies ([I-16](i16-decks-buildable-from-a-collection.md)); boxes and contention ([I-43](i43-physical-collection-storage-and-pull-lists.md)); loans ([I-51](i51-cards-lent-and-borrowed.md)); per-target exporters ([I-50](i50-play-this-deck-online.md)); rule types ([I-53](i53-monthly-deckbuilding-challenges.md)); simulations ([I-31](i31-deck-lab.md)); events ([I-39](i39-first-run-activation-and-measurement.md)); plans ([I-30](i30-business-model-and-paid-tier.md)).
 
 **Proposed changes to neighbours, for the integrator:**
 
@@ -210,3 +210,161 @@ Read on 2026-11-11 unless stated otherwise. Reddit scores and comment counts are
 18. r/EDH, "Commander recommendations to lend to friends playing for the first time?", 2026-01-13, 14 points, 47 comments. <https://www.reddit.com/r/EDH/comments/1qbmzch/>
 19. r/EDH, "You should build an EDH Battle Box for your pod!", 2026-10-23, 36 points, 17 comments. <https://www.reddit.com/r/EDH/comments/1xd68g6/>
 20. MTG Nexus, "Commander Challenge Runs" (search summary; the page refused automated reads). <https://www.mtgnexus.com/viewtopic.php?p=200446>
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+a player builds, checks and shares two to four Commander decks meant for one table (gift decks, a gauntlet, a loaner box or a pod's agreed set), sees their brackets, routes and table effects side by side, applies rules across the set (no duplicate commander, one physical copy per card), learns which box lends a contended card, publishes and forks the set as one object, and exports the whole table in one action.
+
+### Goals
+
+- A host builds a set of four of their own decks for newcomers, sees that two seats need the one Cyclonic Rift they own and that seat 3 estimates a bracket above the others, asked as a question, and exports all four decks to Cockatrice in one ZIP, each file identical to that deck's own export; no slice past 0 started before gate A was recorded as met.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-79-01
+
+As a player, I want the outcome of I-79, so that the work in this file is the reason to build it.
+
+#### US-79-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-79-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-79-01 Happy path
+
+Given a signed-in player and the English locale
+When a host builds a set of four of their own decks for newcomers, sees that two seats need the one Cyclonic Rift they own and that seat 3 estimates a bracket above the others, asked as a question, and exports all four decks to Cockatrice in one ZIP, each file identical to that deck's own export; no slice past 0 started before gate A was recorded as met.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-79-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-79-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-79-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-79-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-79-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-79-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://ringsdb.com/fellowship/view/3786/our-fellowship-for-attack-on-dol-guldur
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-79: Table Sets: Decks Built To Play Together
+
+**Spec:** [`specs/i79-table-sets.md`](i79-table-sets.md)
+
+**Outcome:** a player builds, checks and shares two to four Commander decks meant for one table (gift decks, a gauntlet, a loaner box or a pod's agreed set), sees their brackets, routes and table effects side by side, applies rules across the set (no duplicate commander, one physical copy per card), learns which box lends a contended card, publishes and forks the set as one object, and exports the whole table in one action.
+
+**Status:** Later
+**Priority:** Later, behind two demand gates proposed for D-52; nothing past slice 0 starts before gate A is met and the owner answers D-89. Building, checking, sharing, publishing and exporting a set are free; a balance run across the set is an I-30 candidate
+**Impact / effort:** Medium / medium
+**Depends on:** I-39 slices 11 and 12 for gate A's measurement (slice 0); gate A and D-89 for the schema (slice 1); I-50 slices 0, 2 and 8 for the table export (slice 6); I-50 slices 10 and 11 for per-seat check links (slice 7); I-16 slice 4 and I-51 slice 3 for free and lent copies (slice 8); I-77 slice 1 and I-65 slice 4 for floors and speed (slice 9); I-78 slice 1 for the table line (slice 10); gate B for publishing, the Tabletop Simulator save and house rules (slices 11, 13 and 14), with I-50 slice 7 and I-53 slice 1; I-15 slice 1 (slice 15); I-51 slice 5 (slice 16); I-43 slice 7 (slice 17); I-31 slices 5 and 9, I-21 slice 5, gate B and I-30's decision for the balance run (slice 18); D-89's second stage, D-40 and I-15 slice 3 (slice 19).
+
+In Commander the table, not the deck, is the unit of play, and some players build all of it: a host keeps decks for guests who own none, a player gives friends decks that work against each other, a pod agrees on a gauntlet. Today each deck is checked alone, and two decks that need the one Cyclonic Rift meet at the table. `Deck` has one `folderId`, `buildAcquisitionPlan` sums simultaneous requirements by printing, so one printing in two decks shows a shortage when the card is owned in another printing, comparison is pairwise, and export writes one deck (checked on `dev` at `2cf792e8`). Co-operative card games treat a group of decks as one object: RingsDB's "fellowships" of two to four decks are published, commented and opened together at an online table ([fellowship](https://ringsdb.com/fellowship/view/3786/our-fellowship-for-attack-on-dol-guldur), 2017-12-04; 120 pages of listings), Arkham Cards groups decks into campaigns, and Decks of KeyForge sells "Team Decks" for "$5+ a month" (2020-04-09). Commander demand is real but thin: a few r/EDH battle-box and loaner threads of 1 to 36 points, one r/Moxfield request for a community folder (2026-09-16) and one forum thread seen only as a search summary. Hence Later, behind gates measured on the product's own exports. No initiative owns an authored container of decks: [I-15](i15-rule-zero-sheets-and-pod-profiles.md)'s pod gathers four players' own decks under consent, folders are storage, I-55's builds are versions of one deck, I-43 pairs a deck with a box and I-51 lends. A set is not a cube: every seat is a complete deck.
+
+### Scope
+
+- [ ] Gate A's measurement: a "table day", a UTC day on which an account exports two or more distinct full-size decks it owns to the same play destination, derived from `export_done` with a `scope` field, and owner-view rows (slice 0). Gate A is met when 30 accounts, and at least 3% of the median week's game-ready builders, record one over eight weeks; both numbers are proposals for [D-52](../owner-decisions.md#product-scope-and-non-goals).
+- [ ] A set of up to four seats holding the author's own Commander decks only ([D-89](../owner-decisions.md#product-scope-and-non-goals)), private by default, with owner-only routes (slice 1); `checkTableSet`: no commander, partner or Background in two seats by default, distinct identities and a bracket spread as options, and failures that read "set rule", never "illegal" (slice 2); a physical-copy check by card across printings, with basics left out and proxies counted apart (slice 3); a balance view with computed and declared rows apart, spreads worded as questions and no balance score (slice 4).
+- [ ] Link sharing with a 128-bit token, the shared-deck projection and `noindex` (slice 5); "Export the table": one ZIP of per-seat files, or table text per seat, each byte-identical to that deck's own export (slice 6); per-seat deck check links on one printable page (slice 7); free and lent copies (slice 8); I-77's floors and I-65's speed (slice 9) and [I-78](i78-what-this-deck-does-to-the-table.md)'s table line (slice 10) as they ship.
+- [ ] After gate B, 50 accounts with a set of two or more full-size decks within 12 weeks of slice 3 and 30 of those sets used: publishing with a profile listing and a seat mention on deck pages (slice 11), "Copy this table" (slice 12), a Tabletop Simulator table save (slice 13) and house rules with set scope from I-53 (slice 14). Also an I-15 sheet attached to a set (slice 15), "Lend this set" (slice 16), "Check this set's boxes" (slice 17), the balance run as a paid candidate (slice 18) and, at D-89's second stage, a consented seat from another player's deck (slice 19).
+
+### Engineering enablers
+
+- The rule union has an exhaustive `never` guard, and the seat invariant (`deck.userId === set.ownerId`) lives in one write module; another account's deck is refused like a missing one.
+- A schema test keeps collection fields out of the shared and public projections, and publishing refuses while a seat deck is private.
+- Each seat's export equals the single-deck exporter's byte for byte, and the gate metric counts a deck exported twice once and ignores formats that are not for play.
+
+**Paid-tier angle:** sets, seats, rules, the copy check, the balance view, sharing, publishing, forking and every export are free. The candidate is the balance run: I-31's run on every seat with one seed, each pair of seats compared under Holm's correction. No product read checks balance across decks, and Decks of KeyForge charges "$5+ a month" to form a team. D-89 recommends that the pod pass covers sets.
+
+### Definition of done
+
+A host builds a set of four of their own decks for newcomers, sees that two seats need the one Cyclonic Rift they own and that seat 3 estimates a bracket above the others, asked as a question, and exports all four decks to Cockatrice in one ZIP, each file identical to that deck's own export; no slice past 0 started before gate A was recorded as met.
+
+---
+

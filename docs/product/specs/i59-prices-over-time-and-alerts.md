@@ -2,7 +2,7 @@
 
 > **Initiative:** I-59, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Later; slices 0 to 2 can ship now · **Written 2026-11-10**
 > **Research:** dated notes of 2026-11-10 on price sources and their terms, price history and alerts in nine player tools, the effect of reprints, and a measurement of Scryfall's daily bulk file. The notes are not committed, so every external fact cites a numbered entry in [Sources](#sources).
-> **Owns:** the dated price series per printing in EUR and USD, its retention and archive; deck and collection value over time; the "price moved" marks on a player's lists; the reprint watch; alert rules, their evaluation, the in-app inbox and the email digest; the neutral wording rules for prices. **Does not own:** the daily Scryfall job ([I-67](i67-one-card-data-pipeline.md) slice 5, re-pointed 2026-11-10); the market choice and today's dated price ([I-32](i32-seller-handoff-and-affiliate-carts.md) slices 2 and 3); today's collection valuation, spare copies and the holdings archive ([I-45](i45-selling-spare-cards.md)); the lists themselves: the acquisition plan ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)), the wanted list ([I-56](i56-wishlists-friends-can-buy-from.md)), want lists ([I-44](i44-trade-lists-within-the-pod.md)) and upgrade bundles ([I-17](i17-precon-path-and-tiered-upgrades.md)); the printing choice and the swap-price defect ([I-57](i57-printing-preferences-everywhere.md)); the set corpus ([I-18](i18-per-deck-radar-of-new-cards.md)); finish and date added on deck rows ([I-37](i37-editor-depth.md)); the email sender, retention and defaults for minors ([I-38](i38-trust-safety-and-user-rights.md)); the paid line and billing ([I-30](i30-business-model-and-paid-tier.md)); the marketplace decision ([I-33](i33-marketplace-ladder.md)).
+> **Owns:** the dated price series per printing in EUR and USD, its retention and archive; deck and collection value over time; the "price moved" marks on a player's lists; the reprint watch; alert rules, their evaluation, the in-app inbox and the email digest; the neutral wording rules for prices. **Does not own:** the daily Scryfall job ([I-67](i67-one-card-data-pipeline.md) slice 5, re-pointed 2026-11-10); the market choice and today's dated price ([I-32](i32-seller-handoff-and-affiliate-carts.md) slices 2 and 3); today's collection valuation, spare copies and the holdings archive ([I-45](i45-selling-spare-cards.md)); the lists themselves: the acquisition plan ([I-06](i06-collection-and-purchase-planning.md)), the wanted list ([I-56](i56-wishlists-friends-can-buy-from.md)), want lists ([I-44](i44-trade-lists-within-the-pod.md)) and upgrade bundles ([I-17](i17-precon-path-and-tiered-upgrades.md)); the printing choice and the swap-price defect ([I-57](i57-printing-preferences-everywhere.md)); the set corpus ([I-18](i18-per-deck-radar-of-new-cards.md)); finish and date added on deck rows ([I-37](i37-editor-depth.md)); the email sender, retention and defaults for minors ([I-38](i38-trust-safety-and-user-rights.md)); the paid line and billing ([I-30](i30-business-model-and-paid-tier.md)); the marketplace decision ([I-33](i33-marketplace-ladder.md)).
 > **Proposed reassignment, for the integrator:** I-32's price watch (requirements 6.3 and 6.4, slice 12), I-45's value history (5.1, slice 12) and I-56's wanted items in the price watch (slice 18) move here, so that one series and one alert engine serve every list.
 
 ## Overview
@@ -218,3 +218,171 @@ Slices 0 to 2 fix what players see today and need no decision. Slice 3 is the co
 23. Computed for this spec on 2026-11-10 from Scryfall's Default Cards file updated 2026-11-09 22:06 UTC (81,070,372 bytes compressed), listed by the [bulk-data endpoint](https://api.scryfall.com/bulk-data). The archive figure is that day's prices as a CSV with integer keys and cents, compressed with gzip at level 9.
 24. IETF, [RFC 8058: Signaling One-Click Functionality for List Email Headers](https://datatracker.ietf.org/doc/html/rfc8058), January 2017.
 25. PostgreSQL 18, [Database Page Layout](https://www.postgresql.org/docs/current/storage-page-layout.html), read 2026-11-10.
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+### Goals
+
+- A player opens a deck and sees its value over 90 days in euros, with gaps drawn and the source and dates on every figure; the deck's total is the same in the stats panel, the export and the chart; a wanted card shows that it was just reprinted; and a card on the acquisition plan that falls to the player's target produces one inbox entry, worded without "deal", "buy" or "spike".
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-59-01
+
+As a player, I want the outcome of I-59, so that the work in this file is the reason to build it.
+
+#### US-59-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-59-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-59-01 Happy path
+
+Given a signed-in player and the English locale
+When a player opens a deck and sees its value over 90 days in euros, with gaps drawn and the source and dates on every figure; the deck's total is the same in the stats panel, the export and the chart; a wanted card shows that it was just reprinted; and a card on the acquisition plan that falls to the player's target produces one inbox entry, worded without "deal", "buy" or "spike".
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-59-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-59-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-59-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-59-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-59-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-59-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://scryfall.com/docs/api
+- https://www.mtgstocks.com/go-premium
+- https://www.echomtg.com/plans/
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-59: Prices Over Time And Alerts
+
+**Spec:** [`specs/i59-prices-over-time-and-alerts.md`](i59-prices-over-time-and-alerts.md)
+
+**Outcome:** a player sees what a deck or their collection was worth over time, in euros or dollars, beside their own cards, and which cards on their lists moved in price or were just reprinted, each figure with its source and dates. When they ask for it, an alert tells them once, in an inbox or a daily digest, in neutral words.
+
+**Status:** Later
+**Priority:** Later. Slices 0 to 2 can ship now and need no decision; slice 3, the core, waits for I-67 slice 5's daily prices (re-pointed 2026-11-10)
+**Impact / effort:** Medium / medium
+**Depends on:** I-67 slice 5 for the daily prices (slice 3), re-pointed 2026-11-10; the owner's storage answer for the archive (slice 4); I-32 slice 3 for the market (slice 6); I-45 slice 4 for collection value (slice 7); I-56 slice 1, I-44 slice 1 and I-17 slice 3 for marks on their lists (slice 9); I-63 slices 1 to 3 for the inbox (slice 11) and its slice 10 for the email digest (slice 12); I-30 slices 0 and 11 and the lawyer's answer for the paid allowance (slice 13); I-37 slice 12 for "since added" (slice 14).
+
+Today a deck row holds one USD price that the browser sent when the card was added; the server stores it unchecked, nothing refreshes it, and nothing records its date. No price is kept over time. Scryfall relays one price a day per printing, Cardmarket's in euros and TCGplayer's in dollars, with no history, and its terms forbid requiring a subscription for access to its data ([API terms](https://scryfall.com/docs/api)). Price sites sell alerts: MTGStocks' tier with alerts costs 12.71 USD a month billed yearly ([page](https://www.mtgstocks.com/go-premium)), and EchoMTG sells watchlists from 4 USD a month ([plans](https://www.echomtg.com/plans/)). Dragon Shield shows 30 days of history free, and no history or alert was found on Moxfield or Archidekt. The finance tools speak the language of trading: "Penny Stocks", "Rapid Riches", "Robinhood for your collection". This initiative treats price history as card data, free with no quota and shown only beside the player's own cards, and it says what moved, by how much, from which source and between which dates, and nothing more. Reprints show up early: Scryfall's file of 2026-11-09 held 410 paper reprint printings of 241 cards released after 2026-11-10.
+
+### Scope
+
+- [ ] Measure the tracked printings, the distinct Scryfall IDs in decks, collections and favourites, and the database's free space, and record both (slice 0).
+- [ ] One deck value function for the stats panel, the analysis diff, the stats export and budget checks: the command zone and main deck in the total, Sideboard and Considering apart, the companion counted, unpriced cards counted, labelled "USD, read when each card was added" (slice 1). Today three totals disagree. `useDeckPrice` (`src/hooks/useDeckPrice.ts`) sums every row of `deck.cards`, Sideboard and Considering included, plus commander and partner; `computeDeckStats` (`src/lib/deck/stats.ts`) sums the main zone, commander and partner; `buildExportMetadata` (`src/lib/export/stats-export.ts`) sums `deck.cards` without the command zone; and none counts the companion.
+- [ ] Neutral wording and one colour for up and down, checked in CI over the English and French catalogues (slice 2).
+- [ ] Stop treating the price the browser sent as current. `makeDeckCard` (`src/lib/deck/store-card-faces.ts`) reads `prices.usd` in the browser, `addCardSchema` (`src/lib/validation/card.ts`) accepts any value from 0 to 100,000, the server stores it unchecked, and `patchCardSchema` has no price field, so nothing refreshes it. Until a printing has points, its stored price is shown only as "price when added", and totals read the series once it does (slices 1, 3 and 6). [I-57](i57-printing-preferences-everywhere.md) slice 1 fixes the swap that keeps the old price.
+- [ ] `PricePoint` for tracked printings, keyed by I-67's `CardPrinting.key` and written from I-67 slice 5's daily `CardPrice` (re-pointed 2026-11-10), daily for 90 days and weekly after, never by a job of its own, with a run report (slice 3), and a compressed daily archive of every paper printing outside the database, with its hash (slice 4). On the spec's estimate, every priced printing daily in PostgreSQL would fill the 500 MB free tier in about nine weeks, while 10,000 tracked printings take about 99 MB in year one.
+- [ ] A printing's chart in the printing selector and the card panel (slice 5), deck value over time for the current list at past prices and for each snapshot on its own date (slice 6), and collection value over time (slice 7).
+- [ ] "Moved" marks on deck rows and the acquisition plan, then on the wanted list, want lists and bundles (slices 8–9), and a reprint watch for cards on any tracked list (slice 10).
+- [ ] Alert rules over a card or a list, net of owned copies, that fire once per crossing, with an in-app inbox (slice 11); an email digest with its own opt-in, at most one a day, with one-click unsubscribe (slice 12); and "since added" once I-37 slice 12 records it (slice 14).
+  - Moved 2026-11-10: the inbox and the email digest are [I-63](i63-one-notification-system.md)'s (its slices 2 and 10), and the spec's `priceAlertEmail` column becomes I-63's "Price alerts I created" category. I-59 keeps the alert rules, their evaluation and the alert text.
+- [ ] Taken over on 2026-11-10, so that one series and one alert engine serve every list: I-32's price watch (requirements 6.3 and 6.4, slice 12), I-45's value history (requirement 5.1, slice 12) and I-56's wanted items in the price watch (slice 18). Slices 6, 7 and 11 to 13 cover them; each source keeps a pointer.
+- [ ] After I-30's decision and the lawyer's answer: alert rules above a free allowance, list-wide scopes and the email digest as a paid entitlement (slice 13).
+
+### Engineering enablers
+
+- Rerunning a day writes nothing new, a failed day leaves a gap and sends nothing, and a printing that becomes tracked is backfilled from the archive.
+- A target rule fires once when the price crosses it and re-arms only above it, and no alert fires on a missing or stale day.
+- A CI check fails on any word of the trading list in the English and French price catalogues, and every chart shows its currency, source and date, "Past prices do not predict future prices" and a table view.
+- The history route refuses signed-out and bulk calls, and no page, download or API publishes the series.
+
+**Paid-tier angle:** price history, value over time, "moved" marks, the reprint watch and in-app alerts up to an allowance stay free. Each point is a Scryfall price the product already shows free, and Scryfall forbids requiring a subscription for access to its data. This reverses the paid value history of I-45 and the paid plan history of I-32, an owner decision in the status note. The candidate is the watch that runs and delivers: rules above the allowance, list-wide scopes and the email digest, blocked on the lawyer's answer on whether a paid alert carrying free prices paywalls them. I-63 proposes that no delivery channel is ever paid, which would take the digest off this list; I-30 decides.
+
+### Definition of done
+
+A player opens a deck and sees its value over 90 days in euros, with gaps drawn and the source and dates on every figure; the deck's total is the same in the stats panel, the export and the chart; a wanted card shows that it was just reprinted; and a card on the acquisition plan that falls to the player's target produces one inbox entry, worded without "deal", "buy" or "spike".
+
+---
+

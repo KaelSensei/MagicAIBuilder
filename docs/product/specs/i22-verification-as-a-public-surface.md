@@ -64,3 +64,176 @@ The opening is the unclaimed middle: nobody is the place you send a list to find
 
 - Who are the first consumers? Building a public contract before one real consumer exists is how APIs acquire the wrong shape. I-23's Discord surface is the natural first client, and building it _on_ this contract would validate the shape before anyone external depends on it.
 - Does publishing the verdict invite competitors to consume the differentiator rather than buy it? Probably — and that is also how Scryfall became indispensable. Worth deciding deliberately rather than by default.
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+another tool, a Discord bot or a tournament organiser can submit a decklist and receive the same deterministic verdict a player sees in the product, with its rules and its data dates.
+
+### Goals
+
+- A third party submits a list and receives a versioned, dated, rule-level verdict that matches what the product shows its own players for the same list.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-22-01
+
+As a player, I want the outcome of I-22, so that the work in this file is the reason to build it.
+
+#### US-22-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-22-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-22-01 Happy path
+
+Given a signed-in player and the English locale
+When a third party submits a list and receives a versioned, dated, rule-level verdict that matches what the product shows its own players for the same list.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-22-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-22-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-22-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-22-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-22-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-22-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://xopla.net/posts/a-little-tool-to-make-ai-better-at-magic-the-gathering-deckbuilding
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+# 2027 Horizon
+
+The initiatives above carry the work already committed. The six below extend the pipeline into 2027. Each comes from a **verified gap** in the 2026-11-08 market sweep, not from a brainstorm, and each names the evidence that produced it.
+
+Read them as hypotheses with a stated basis, not as commitments. A 2027 initiative is promoted to Next only when its spec's open questions are answered and its dependency has shipped.
+
+**I-29 was added on 2026-11-09**, after the sweep and at the owner's request, from its own dated research. It is the seventh initiative in this horizon. I-30 to I-37, added the same day from a research pass on the owner's goals, are not part of this horizon: four of them are Next and one is Next in part, so they sit in their own section, [Business, Reference And Depth](#business-reference-and-depth), after the list of what the sweep ruled out. I-38 to I-46, added that evening, follow in [Trust, Growth And The Physical Table](#trust-growth-and-the-physical-table). I-47 to I-53, added on 2026-11-10, end that part (I-51 to I-53) and open [Rules, Access And The Online Table](#rules-access-and-the-online-table) (I-47 to I-50). I-54 to I-57, added later that day, join Business, Reference And Depth (I-55, I-57) and Trust, Growth And The Physical Table (I-54, I-56). I-58 to I-61, from a fifth pass, join Business, Reference And Depth (I-58) and Trust, Growth And The Physical Table (I-59 to I-61). I-62 to I-64, from a sixth pass, join Trust, Growth And The Physical Table. I-65 and I-66, from a seventh pass, join Business, Reference And Depth (I-65) and Trust, Growth And The Physical Table (I-66). I-67 and I-68, from an eighth pass, join Trust, Growth And The Physical Table (I-67) and the guides after I-28 (I-68).
+
+**Why six and not twenty.** Beyond these, the sweep stopped producing gaps the product is positioned to fill. Adding further initiatives would mean inventing them, which fills a roadmap without filling a pipeline. The honest way to extend 2027 further is another dated sweep, not a longer list. The 2026-11-09 pass on the owner's goals was such a sweep, and it produced I-30 to I-37.
+
+---
+
+## I-22: Verification As A Public Surface
+
+**Spec:** [`specs/i22-verification-as-a-public-surface.md`](i22-verification-as-a-public-surface.md)
+
+**Outcome:** another tool, a Discord bot or a tournament organiser can submit a decklist and receive the same deterministic verdict a player sees in the product, with its rules and its data dates.
+
+**Status:** Later
+**Priority:** Later — 2027
+**Impact / effort:** High / medium
+**Depends on:** I-02's claim typing. Do not expose a verdict whose provenance is not yet modelled internally.
+
+The sweep found six products generating decks and none publishing what was checked. The product's validator is its differentiator, and a differentiator nobody can call is a feature; a differentiator other tools depend on is a position. A read-only `/api/v1` already exists, so the surface is an extension rather than a new system.
+
+### Scope
+
+- [ ] Accept a decklist and a format, and return the deterministic verdict: legality, colour identity, singleton, banlist, Game Changers, bracket inputs.
+- [ ] Return the rule and the data date behind every judgement, never a bare boolean.
+- [ ] Version the contract, and keep an older version answering while a newer one exists.
+- [ ] Rate-limit and authenticate per consumer, with a documented quota.
+- [ ] Publish no recommendation through this surface. Verification only.
+- [ ] State in every verdict that no language model produced it, and link the AI-use disclosure page planned in I-02. On r/EDH undisclosed AI is now a reason to dismiss a tool (I-02's 2026-11-09 findings), so a verdict that is visibly model-free is the form of the product that community accepts.
+- [ ] After slice 3, an MCP adapter under the same key and quota exposes verification tools only:
+  - legality;
+  - colour identity;
+  - singleton;
+  - the Game Changer count;
+  - bracket inputs;
+  - Spellbook combos with data dates.
+
+  Every answer states that no model produced it ([D-54](../owner-decisions.md#product-scope-and-non-goals)). Players paste lists into assistants that "confidently make up mana costs" ([xoPLA.NET](https://xopla.net/posts/a-little-tool-to-make-ai-better-at-magic-the-gathering-deckbuilding), 2025-11-09). Whether such answers count as proxying Scryfall data is [L-21](../legal-questions.md#l-21-proxying-repackaging-and-our-own-api-terms-scryfall). Added 2026-11-11.
+
+### Definition of done
+
+A third party submits a list and receives a versioned, dated, rule-level verdict that matches what the product shows its own players for the same list.
+
+---
+

@@ -2,7 +2,7 @@
 
 > **Status:** Proposed · **Priority:** Later, with a no-regret first part (installability and phone journeys, slices 1 to 5) that can ship now · **Written 2026-11-09**
 > **Research:** dated notes on store apps, player reviews, web-app platforms, store rules and card recognition. They are not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice.
-> **Owns:** the web app manifest and icons, installed-mode presentation (theme colour, safe areas, launch page, install help), the phone-journey test harness, the distribution decision (web app, store wrapper or native), and camera scanning as a source of staged collection rows. **Does not own:** the service worker and the offline deck cache ([I-19](i19-offline-game-night-viewing.md)); the mobile editing toolbar and its labels ([I-37](i37-editor-depth.md)); printing-level ownership ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)); the staged import, its commit and its provenance ([I-26](i26-collections-arriving-from-elsewhere.md)); plans, prices and billing ([I-30](i30-business-model-and-paid-tier.md)); visual thresholds ([I-13](i13-visual-direction.md)); local model inference ([I-12](../roadmap.md#i-12-local-ai)).
+> **Owns:** the web app manifest and icons, installed-mode presentation (theme colour, safe areas, launch page, install help), the phone-journey test harness, the distribution decision (web app, store wrapper or native), and camera scanning as a source of staged collection rows. **Does not own:** the service worker and the offline deck cache ([I-19](i19-offline-game-night-viewing.md)); the mobile editing toolbar and its labels ([I-37](i37-editor-depth.md)); printing-level ownership ([I-06](i06-collection-and-purchase-planning.md)); the staged import, its commit and its provenance ([I-26](i26-collections-arriving-from-elsewhere.md)); plans, prices and billing ([I-30](i30-business-model-and-paid-tier.md)); visual thresholds ([I-13](i13-visual-direction.md)); local model inference ([I-12](i12-local-ai.md)).
 > **Touches a non-goal:** the roadmap excludes camera scanning, and the [2027 sweep](README.md#what-the-sweep-ruled-out-for-2027) says it "stays a non-goal". This spec keeps that in force until the gates in requirement 6 pass and the owner decides.
 
 ## Overview
@@ -226,3 +226,165 @@ Read 2026-11-09 unless dated otherwise.
 35. PokVault Rev, [a privacy-preserving, on-device visual search system for trading card identification](https://didierrlopes.github.io/pokemon-card-scanner-paper) (undated).
 36. Google Cloud, [Cloud Vision pricing](https://cloud.google.com/vision/pricing).
 37. MDN, [CSP: script-src](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/script-src), modified 2026-08-12.
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+### Goals
+
+- The app installs on iOS and Android, and the phone journeys pass in mobile WebKit and Chromium on every push and on two real devices before promotion. For scanning, either the owner's go decision and a published benchmark exist, or scanning stays a recorded non-goal.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-40-01
+
+As a player, I want the outcome of I-40, so that the work in this file is the reason to build it.
+
+#### US-40-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-40-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-40-01 Happy path
+
+Given a signed-in player and the English locale
+When the app installs on iOS and Android, and the phone journeys pass in mobile WebKit and Chromium on every push and on two real devices before promotion. For scanning, either the owner's go decision and a published benchmark exist, or scanning stays a recorded non-goal.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-40-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-40-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-40-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-40-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-40-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-40-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- No external URL in the moved record. The record itself is the source for behaviour that is already in the code.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-40: Installable App, Phone-First Use And Card Scanning
+
+**Spec:** [`specs/i40-installable-app-and-card-scanning.md`](i40-installable-app-and-card-scanning.md)
+
+**Outcome:** a player installs MagicAIBuilder to the home screen and uses its main journeys at phone size, tested on every push; camera scanning enters the product only if a published benchmark, Scryfall's written answer and the owner's decision allow it.
+
+**Status:** Later
+**Priority:** Later, with a no-regret first part (installability and phone journeys, slices 1 to 5) that can ship now
+**Impact / effort:** Medium / medium for slices 1–5; large for scanning
+**Depends on:** nothing for slices 1–5. Scanning needs I-06 printing-level ownership, I-26 slice 3's staged commit, the benchmark and Scryfall's answer (slices 6–7), and the owner's go decision.
+
+Players build and check decks on their phones, at the table and at the store. Today the site has no manifest, no home-screen icon and no phone-sized test, and a security header blocks the camera on every page. Installing as a web app is cheap: Safari 26 opens every home-screen site as a web app, and Chrome needs a manifest but no service worker. Scanning is different. In our count of the 250 most recent US App Store reviews per app, 57 of ManaBox's 82 reviews at three stars or fewer mention scanning, and Dragon Shield and TCGplayer draw the same complaints: sleeved and foil cards, the wrong printing, slow confirmation. No published accuracy figure for a browser-based Magic scanner was found. Single scans are mostly free elsewhere; what is sold is quantity or bulk.
+
+### Scope
+
+- [ ] A manifest with PNG, maskable and apple-touch icons, theme colours from the Lumen tokens, `viewportFit: "cover"`, `appleWebApp` and localized shortcuts, reachable without a session and guarded by a test (slice 1).
+- [ ] Safe-area insets on the builder's bottom bar and the header, an in-app way back on journey screens, and external links that open outside the app window (slice 2).
+- [ ] An install help page in English and French, with no automatic prompt (slice 3).
+- [ ] Mobile WebKit and mobile Chromium Playwright projects running `@phone` journeys in the Docker gate, a Lighthouse mobile run, and a real-device checklist for staging (slices 4–5).
+- [ ] Allow the camera and WebAssembly on the scan route only (part of slice 9). Today `src/lib/security-headers.ts` sends `Permissions-Policy: camera=()` on every route, and `src/lib/security-headers.test.ts` asserts it, so `getUserMedia` fails; the production CSP has no `'wasm-unsafe-eval'`, so in-browser recognition would load in development and fail in production. Every other route keeps `camera=()`.
+- [ ] A recognition benchmark under `scripts/research/` on at least 300 photos of real cards, Scryfall's written answer on an index derived from its images, and the owner's recorded go or no-go (slices 6–7). No scanning code enters `src/` before all three.
+- [ ] After a go: an index built from Scryfall bulk data, a signed-in scan route that stages rows through I-26 with "camera scan" provenance and never picks a printing silently, then bulk mode and server help (slices 8–12).
+  - Re-pointed 2026-11-10 to [I-67](i67-one-card-data-pipeline.md) slice 2: the index is built from I-67's printing table, not from a download of its own.
+
+### Engineering enablers
+
+- Every icon the manifest names exists at its stated size, read from the PNG header.
+- The security-header test denies the camera on every route except the scan route.
+- On the scan route, request interception shows that no image leaves the device unless the player accepted server help for that batch.
+
+**Paid-tier angle:** installability, the phone journeys and single on-device scans stay free and unlimited; single scans cost the server nothing. Bulk mode and server help are I-30 candidates because they save time or cost money to run. Whether a paid tool fits the Fan Content Policy and Scryfall's no-paywall rule is I-30's legal question.
+
+### Definition of done
+
+The app installs on iOS and Android, and the phone journeys pass in mobile WebKit and Chromium on every push and on two real devices before promotion. For scanning, either the owner's go decision and a published benchmark exist, or scanning stays a recorded non-goal.
+
+---
+

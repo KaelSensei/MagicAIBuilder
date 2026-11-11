@@ -2,7 +2,7 @@
 
 > **Initiative:** I-44, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Later, with a cheap early part: private lists, share links, the balance view and the friends audience (slices 1 to 7) need no [I-38](i38-trust-safety-and-user-rights.md) work and collect no new personal data · **Written 2026-11-09**
 > **Research:** one dated note on trade apps, their legal pages, community threads and EU law. It is not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** have and want lists, their audiences and share links, matching, the trade balance view, structured trade proposals, the city opt-in for nearby players, and trade reputation. **Does not own:** collection ownership and the acquisition plan ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)); free copies ([I-16](i16-decks-buildable-from-a-collection.md)); collection import ([I-26](i26-collections-arriving-from-elsewhere.md)); pods ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)) and their Discord surface ([I-23](i23-the-pods-own-surface.md)); stores and check-in ([I-41](i41-store-commander-nights.md)); reporting, moderation, blocking, the age statement and account deletion (I-38); seller hand-off ([I-32](i32-seller-handoff-and-affiliate-carts.md)); plans and billing ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** have and want lists, their audiences and share links, matching, the trade balance view, structured trade proposals, the city opt-in for nearby players, and trade reputation. **Does not own:** collection ownership and the acquisition plan ([I-06](i06-collection-and-purchase-planning.md)); free copies ([I-16](i16-decks-buildable-from-a-collection.md)); collection import ([I-26](i26-collections-arriving-from-elsewhere.md)); pods ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)) and their Discord surface ([I-23](i23-the-pods-own-surface.md)); stores and check-in ([I-41](i41-store-commander-nights.md)); reporting, moderation, blocking, the age statement and account deletion (I-38); seller hand-off ([I-32](i32-seller-handoff-and-affiliate-carts.md)); plans and billing ([I-30](i30-business-model-and-paid-tier.md)).
 > **Touches one non-goal:** the roadmap excludes a "full card-trading marketplace" ([deliberate non-goals](../roadmap.md#deliberate-non-goals-from-the-benchmark)). This spec stays below it; requirement 1 places it on the [I-33](i33-marketplace-ladder.md) ladder.
 > **Proposed 2026-11-10: fold into I-56's wanted list (owner question).** [I-56 requirement 1.4](i56-wishlists-friends-can-buy-from.md#1-one-wanted-list) proposes that the want lists of requirements 2.1 to 2.3 become I-56's single wanted list, read here through its "open to trades" switch. I-44 would keep have lists, audiences, matching, proposals and the balance view; its data model would lose the want side, and slices 1 and 2 would cover have lists only. The requirements below stay as written until the owner decides, before slice 1 starts. I-56 slice 0 answers open question 6.
 
@@ -258,3 +258,169 @@ Read on 2026-11-09 unless dated otherwise. Reddit threads were read through the 
 16. Regulation (EU) 2022/2065 (Digital Services Act) <https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022R2065>; Recital 14 read from a transcription site <https://www.eu-digital-services-act.com/Digital_Services_Act_Preamble_11_to_20.html>
 17. Regulation (EU) 2016/679 (GDPR), Art. 25. <https://gdpr-info.eu/art-25-gdpr/>
 18. HMRC, International Exchange of Information Manual, IEIM901710 "Form of Consideration", the UK rules implementing the OECD model that DAC7 follows, updated 2026-10-15. The EU directive's own text was not read. <https://www.gov.uk/hmrc-internal-manuals/international-exchange-of-information/ieim901710>
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+### Goals
+
+- Two players in one pod see each other's matching cards, total both sides at the day's price, and agree a swap for their next game; no field another player can read holds typed text, and no asking price, payment or address is stored.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-44-01
+
+As a player, I want the outcome of I-44, so that the work in this file is the reason to build it.
+
+#### US-44-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-44-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-44-01 Happy path
+
+Given a signed-in player and the English locale
+When two players in one pod see each other's matching cards, total both sides at the day's price, and agree a swap for their next game; no field another player can read holds typed text, and no asking price, payment or address is stored.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-44-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-44-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-44-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-44-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-44-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-44-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- No external URL in the moved record. The record itself is the source for behaviour that is already in the code.
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-44: Trade Lists Within The Pod And Nearby Players
+
+**Spec:** [`specs/i44-trade-lists-within-the-pod.md`](i44-trade-lists-within-the-pod.md)
+
+**Proposed 2026-11-10: fold into I-56's wanted list (owner question).** [I-56](i56-wishlists-friends-can-buy-from.md) gives each player one wanted list, and its requirement 1.4 proposes that I-44's want lists become that list's items marked "open to trades". I-44 would keep have lists, audiences, matching, proposals and the balance view, and its slices 1 and 2 would cover the have side only. The requirements below stay as written until the owner decides, and the decision must come before I-44 slice 1 or I-56 slice 9 starts. I-56 slice 0 also answers I-44's open question 6, on the unused favorites tables.
+
+**Outcome:** a player keeps have and want lists filled from the collection and the acquisition plan, shares them by link or with friends and the pod, compares both sides of a swap at dated prices, and agrees a card-for-card swap at a store or the next game, with no chat and no money.
+
+**Status:** Later
+**Priority:** Later, with a cheap early part: private lists, share links, the balance view and the friends audience (slices 1 to 7) need no I-38 work and collect no new personal data
+**Impact / effort:** Medium / large
+**Depends on:** I-15 pods for the pod audience; I-38's block, reports and legal pages before proposals and the wider audiences; I-41 check-in for the store audience; I-16 slice 4 for free copies; lawyer answers before slice 12.
+
+Commander players trade with the people they play with, and a deckbuilder already knows the two facts a trade needs: the cards each deck still lacks and the copies no deck uses. No product read builds wants from a deck's missing cards or haves from unused copies. Where a price was stated, lists and a value comparison are free (SuperSwap, Dragon Shield, EchoMTG up to $50 a trade); TappedOut charges $5 once to start a trade request. Nearby matching has a cold-start problem: SuperSwap's users in Rouen, the Paris region and a town of 50,000 found few or no players near them. Trade lists also lead towards a marketplace: CardNexus announced its marketplace in the same post as its trade lists. So the pod and friends come first and nearby players last, and the spec stays below the marketplace line.
+
+### Scope
+
+- [ ] Private have and want lists with three strictness levels, pasted and exported in the deck text format (slice 1). "Any printing" matches by English name until Oracle identity is stored: I-37 slice 12 for deck cards, I-06 for collection rows.
+- [ ] Fill a have list from the collection and a want list from the acquisition plan, with a preview (slice 2).
+- [ ] A share link and QR code with an allowlisted public page, `noindex` and a robots rule (slice 3), and a balance view in USD or EUR from Scryfall's dated prices, with no account needed and no conversion (slice 4).
+- [ ] "Compare with mine", a friends audience of mutual follows, and trade-first marks on the acquisition plan (slices 5–7).
+- [ ] A pod audience, then structured proposals between friends and pod members, with no free text, a 7-day expiry and a 30-day purge (slices 8–9).
+- [ ] Reports for lists and proposals and a free-copies mode, then, after the lawyer answers, an adult declaration with a city opt-in, a store audience and on-demand nearby matches behind a density gate (slices 10–14).
+  - Moved 2026-11-10 to the account: the adult declaration is `User.adultDeclaredAt`, one field that I-44, I-56, I-63 and [I-72](i72-growth-loops-referrals-creators-and-return.md) read, instead of a field of `TradeArea`; slice 12 still records it.
+- [ ] Confirmed-partner bands instead of ratings (slice 15), and a continuous match watch only after I-30's decision (slice 16).
+  - Proposal notices (slice 9) and the match watch's digest (slice 16) go through [I-63](i63-one-notification-system.md)'s inbox and digest under its "Trade proposals" category, not through a sender of their own.
+
+### Engineering enablers
+
+- A schema test fails when a trade model gains a text column another player can read.
+- No route returns another player's city outside a nearby match, and opting out deletes the row in the same transaction.
+- The balance module holds no exchange rate.
+- A list shared with one pod is unreachable from another pod, from a signed-out request and from `/api/v1`.
+
+**Paid-tier angle:** lists, sharing, the balance view, matching within friends, pods and stores, on-demand nearby matching, proposals, safety and blocking stay free. The one candidate is a continuous match watch with a digest, and the spec rates the evidence for it weak, because SuperSwap and EchoMTG alert for free. A paid plan never changes who sees a list, the order of matches or the limits.
+
+### Definition of done
+
+Two players in one pod see each other's matching cards, total both sides at the day's price, and agree a swap for their next game; no field another player can read holds typed text, and no asking price, payment or address is stored.
+
+---
+

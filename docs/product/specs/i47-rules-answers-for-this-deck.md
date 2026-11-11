@@ -255,3 +255,209 @@ Read on 2026-11-10 unless dated. Scryfall's pages answered 403 to the fetch tool
 23. r/EDH, ["Do not use AI to make deck suggestions or clarify rules. It's wrong most of the time."](https://www.reddit.com/r/EDH/comments/1q0epg2/), 2025-12-31, 729 points.
 24. r/mtgrules, ["I tested my rules chatbot on rules questions from the /magicTCG sub's Daily Questions thread"](https://www.reddit.com/r/mtgrules/comments/1vcsp0u/), 2026-08-01.
 25. r/mtgrules, ["Possible disagreement between the Comprehensive Rules and the card rulings regarding backup"](https://www.reddit.com/r/mtgrules/comments/1x45ay1/), 2026-10-12.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+### Goals
+
+- A player opens any card in the builder or on a public deck and sees its rulings with dates and a Wizards or Scryfall label, and follows each keyword to its rule; a link to CR 903.9a opens the version it was written against and says whether a newer one changed it; and when an update changes a rule that a reviewed note cites, the note disappears until a reviewer approves it again.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-47-01
+
+As a player arguing about a card, I want the official ruling and a link to the rule number, so that a model is not the judge.
+
+#### US-47-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-47-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-47-01 Happy path
+
+Given a signed-in player and the English locale
+When each card on the deck can open its official rulings.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-47-02 Happy path
+
+Given a signed-in player and the English locale
+When a rule citation is a versioned address, with the rules date.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-47-03 Happy path
+
+Given a signed-in player and the English locale
+When the page declines to answer an interaction the rulings do not cover.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-47-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-47-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-47-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-out on public decks, signed-in on private decks. No flag. Judge-written notes stay Later and do not start without a named reviewer.
+
+#### AC-47-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-47-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-47-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The rulings panel is available from the card, not only from the printing picker. A missing ruling says there is none.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Rulings load through I-67. The Comprehensive Rules file is the one the product ships, replaced by a dated import. No model route.
+
+### Analytics and telemetry
+
+`rulings_opened {found: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-out on public decks, signed-in on private decks. No flag. Judge-written notes stay Later and do not start without a named reviewer.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether French players see official English rulings or a labelled unofficial translation is open. The product does not commission a translation in this slice.
+
+### Sources
+
+- https://www.reddit.com/r/EDH/comments/1q0epg2/
+- https://www.reddit.com/r/mtgrules/comments/1vcsp0u/
+- https://scryfall.com/docs/api/bulk-data
+- https://magic.wizards.com/en/rules
+- https://scryfall.com/docs/api
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+# Rules, Access And The Online Table
+
+I-47 to I-50 were added on 2026-11-10 from a third research pass, each from dated research its spec links, because the notes are not committed. They cover what the product says about the rules of a deck's cards (I-47) and about the official lists that move a saved deck (I-48), who can read the product's colours and charts (I-49), and how a deck reaches the online tables where it is played (I-50). I-49 is Next, and I-47, I-48 and I-50 are Next for their early slices. The rules of the previous parts hold: no model decides a rules answer, a legality verdict or a replacement; card data and the evidence the product shows stay free; and legal points are research, not legal advice.
+
+---
+
+## I-47: Rules Answers For The Cards In This Deck
+
+**Spec:** [`specs/i47-rules-answers-for-this-deck.md`](i47-rules-answers-for-this-deck.md)
+
+**Outcome:** a player opens any card in the builder or on a public deck and reads its official rulings with their dates and sources, follows each keyword to its rule in a stated version of the Comprehensive Rules, and later reads reviewed notes on the interactions in this deck. When nothing reviewed applies, the product says so and points to a judge.
+
+**Status:** Next
+**Priority:** Next for official rulings and rule links (slices 1 to 7); Later for the judge-reviewed interaction notes (slices 8 to 11) and for offline and screen-reader inclusion (slice 12); slices 13 and 14 wait on I-48, I-30 and the owner
+**Impact / effort:** Medium / medium for slices 1–7; the notes cost reviewer time on every rules update
+**Depends on:** nothing outside this initiative for slices 1, 2 and 7; I-67 slice 6's daily rulings and I-37 slice 12's `DeckCard.oracleId` for the rulings (slice 3), and so for slices 4 to 6, re-pointed 2026-11-10; I-38 slice 8 for error reports; a judge the owner names before slices 10 and 11; I-19 slice 2 and I-24 slice 3 for slice 12; I-48 slices 5 and 11 and I-30 slice 0 for the rules watch; the owner's decision for slice 14.
+
+At the table, a pod argues about how two cards in one deck interact, and players say loudly that chatbots get rules wrong: "Do not use AI to make deck suggestions or clarify rules" reached 729 points on r/EDH ([2025-12-31](https://www.reddit.com/r/EDH/comments/1q0epg2/)). A hobby bot grounded in the rules and in Scryfall's rulings was wrong on about one question in sixteen, and committed to an answer every time ([r/mtgrules, 2026-08-01](https://www.reddit.com/r/mtgrules/comments/1vcsp0u/)). Rulings on each card are table stakes: Scryfall, Gatherer, Moxfield and Archidekt show them. Scryfall's daily rulings file holds 79,706 rulings for 20,080 Oracle cards in 5.4 MB ([bulk data](https://scryfall.com/docs/api/bulk-data)), and only 28 of them contain a rule number, so rulings will not link themselves to the rules. No product read joins a card's keywords to rule numbers, versions a citation or lists the interactions that matter in one deck. The opening is a product that cites, versions and declines, which is also the only position the roadmap's boundary allows: no model decides, writes or translates a rules statement a player sees.
+
+### Scope
+
+- [ ] A Comprehensive Rules import script with a diff report, landing as a reviewed PR; an update to the 2026-11-06 version; and one served copy, with a test that fails when a committed copy differs (slice 1). Today the app serves `src/lib/rules/data/MagicCompRules-20260807.txt`, two versions behind the file Wizards links ([rules page](https://magic.wizards.com/en/rules)). Between the two, 109 rules moved to a new number with the same text, 211 changed text under the same number, chapter 715 became "Saga Cards", and 903.5e became 903.5f. Two more copies sit at the 2026-02-27 version, in `docs/rules/` and `.agents/skills/mtg-rules/references/comprehensive-rules.txt`.
+  - Also a row of [I-73](i73-every-set-release-ready-on-day-one.md)'s release playbook (2026-11-10): seven days before each release the owner compares the served Comprehensive Rules with Wizards' page. Wizards linked the 2026-11-06 file a week before Star Trek's release.
+- [ ] Rule addresses: an `id` on each paragraph, `/rules/comprehensive?rule=903.9a`, linked cross-references and search results, and the French date and strings (slice 2). Today `src/components/rules/ComprehensiveRulesView.tsx` renders one chapter per `?chapter=` with no anchor per rule, "No matching rules found." is hard-coded English, and the French page shows the English date.
+- [ ] A weekly server-side import of Scryfall's rulings file into `CardRuling`, with `RulingsImport` and `RulingChange`, and `DeckCard.oracleId` with a backfill (slice 3).
+  - Re-pointed 2026-11-10 to [I-67](i67-one-card-data-pipeline.md) slice 6, which loads the rulings daily into `CardRuling`; slice 3 keeps the reading side and the change entries, and `DeckCard.oracleId` is I-37 slice 12's.
+- [ ] A deck rules API and a builder panel with source labels, dates and the file date, which retires the browser fetch (slice 4). Today `src/lib/scryfall/rulings.ts` fetches rulings from the browser outside the request queue, and `src/components/card/CardRulingsPanel.tsx`, reached only from `PrintingSelectorModal.tsx`, titles every ruling "Oracle rulings", so Scryfall's own notes read as official.
+- [ ] Rulings on the public deck page through the allowlist, and keyword-to-rule links with a reviewed alias table and a catalogue test (slices 5–6). Today `PublicDeckCards.tsx` shows neither Oracle text nor rulings, and `PUBLIC_DECK_CARD_SELECT` (`src/lib/deck/public-deck-select.ts`) carries neither.
+- [ ] A weekly freshness check for the rules and the rulings file, which opens an issue and never deploys rules text (slice 7).
+  - The rulings file's freshness moved to I-67 slice 11 on 2026-11-10; slice 7 keeps the Comprehensive Rules check.
+- [ ] Later: the notes' content model, citation contract and drift rules; a review record, "Report a rules error" and a public changelog of notes; a first catalogue of Commander notes on 903.3d, 903.8, 903.9a and 903.9b; and "Worth knowing in this deck" (slices 8–11). A note whose cited rule changes goes back to review and stops rendering.
+- [ ] Later: rulings and notes in I-19's offline copy and I-24's export (slice 12); the rules watch as entries in I-48's per-deck report (slice 13); and model retrieval of citations only if the owner decides for it (slice 14).
+
+### Engineering enablers
+
+- A dependency test fails if any rules route or component imports the AI client, as in I-46.
+- Rendering a rules statement without a citation fails; every Comprehensive Rules citation carries its version, and every ruling its date and source.
+- The 2026-08-07 and 2026-11-06 files are fixtures: the diff reports 124 rules removed, 145 added and 109 moved with the same text; a note citing 903.5e goes to review, and one citing 712.4a is renumbered to 713.1a.
+- CI fails a note marked reviewed that lacks a reviewer or a date, or whose author is its reviewer.
+
+**Paid-tier angle:** rulings, rule pages and links, and notes stay free and readable signed out. Scryfall requires card data to stay reachable "anonymously or with free accounts" ([API terms](https://scryfall.com/docs/api)), and rival sites show rulings for free. The notes are never sold, because an error in them is the product's to own. The candidate is a rules watch across all of a player's decks, delivered through I-48's report and notices so that each deck has one change report; whether it paywalls Scryfall data is a lawyer question.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player arguing about a card, I want the official ruling and a link to the rule number, so that a model is not the judge.
+
+**Acceptance.**
+- Each card on the deck can open its official rulings.
+- A rule citation is a versioned address, with the rules date.
+- The page declines to answer an interaction the rulings do not cover.
+
+**UX.** The rulings panel is available from the card, not only from the printing picker. A missing ruling says there is none.
+
+**Data and API.** Rulings load through I-67. The Comprehensive Rules file is the one the product ships, replaced by a dated import. No model route.
+
+**i18n and access.** Interface chrome in English and French. Ruling text stays the language of the source. A machine translation of a ruling is out of scope.
+
+**Telemetry.** `rulings_opened {found: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-out on public decks, signed-in on private decks. No flag. Judge-written notes stay Later and do not start without a named reviewer.
+
+**Open questions.** Whether French players see official English rulings or a labelled unofficial translation is open. The product does not commission a translation in this slice.
+
+### Definition of done
+
+A player opens any card in the builder or on a public deck and sees its rulings with dates and a Wizards or Scryfall label, and follows each keyword to its rule; a link to CR 903.9a opens the version it was written against and says whether a newer one changed it; and when an update changes a rule that a reviewed note cites, the note disappears until a reviewer approves it again.
+
+---
+

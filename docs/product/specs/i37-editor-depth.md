@@ -2,7 +2,7 @@
 
 > **Initiative:** I-37, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next; Later for slice 24, card-link completion, which waits for I-36's card links (split 2026-11-10) · **Written 2026-11-09**
 > **Owns:** editor views (Stacks, Table, Text), collapsible and sticky groups, custom categories, deck, global and function tags, main-deck multi-select, in-place text bulk edit, quick add, the cross-deck clipboard, automatic change history, the card panel, statistics that filter the deck, the mobile editing toolbar, the shortcut registry, the primer editor's layout, and finish, language and date added on deck cards.
-> **Does not own:** zones, persistence and failed-save recovery ([I-01](../roadmap.md#i-01-deck-editor-workflow)); tokens, registers and acceptance thresholds ([I-13](i13-visual-direction.md)); format grammars and round-trip fixtures ([I-10](../roadmap.md#i-10-interoperability-and-integrations)); printing-level ownership and vendor prices ([I-06](../roadmap.md#i-06-collection-and-purchase-planning), [I-32](i32-seller-handoff-and-affiliate-carts.md)); share pages, comparison and primers ([I-08](../roadmap.md#i-08-share-compare-and-learn)); the playtester ([I-07](../roadmap.md#i-07-playtest-and-iteration)); embeds ([I-36](i36-creator-and-embed-toolkit.md)); patches ([I-20](i20-collaborative-review.md)); new analyses ([I-03](../roadmap.md#i-03-trustworthy-deck-feedback), [I-31](i31-deck-lab.md)); the paid tier ([I-30](i30-business-model-and-paid-tier.md)).
+> **Does not own:** zones, persistence and failed-save recovery ([I-01](../roadmap.md#i-01-deck-editor-workflow)); tokens, registers and acceptance thresholds ([I-13](i13-visual-direction.md)); format grammars and round-trip fixtures ([I-10](i10-interoperability-and-integrations.md)); printing-level ownership and vendor prices ([I-06](i06-collection-and-purchase-planning.md), [I-32](i32-seller-handoff-and-affiliate-carts.md)); share pages, comparison and primers ([I-08](i08-share-compare-and-learn.md)); the playtester ([I-07](i07-playtest-and-iteration.md)); embeds ([I-36](i36-creator-and-embed-toolkit.md)); patches ([I-20](i20-collaborative-review.md)); new analyses ([I-03](i03-trustworthy-deck-feedback.md), [I-31](i31-deck-lab.md)); the paid tier ([I-30](i30-business-model-and-paid-tier.md)).
 > **Research:** dated notes of 2026-11-09 on editor feature depth and player demand. They are not committed, so every external fact cites a numbered entry in **Sources**. Moxfield's rows rest on weak sources; see the warning below the table. _Corrected 2026-11-11:_ Moxfield's production JavaScript, referenced by the 2026-05-14 Wayback capture of its packages help page, is a primary source [29][30]. It shows co-authors, packages, a hypergeometric calculator, pinned decks, deleted-deck restore, notification preferences, Signature Spell slots, and Attraction, Sticker and Contraption boards. It proves a feature was built by May 2026, not where it appears today.
 
 ## Overview
@@ -301,3 +301,227 @@ Read on 2026-11-09 unless dated otherwise. "Snippet" means the page refused auto
 28. Wizards of the Coast, [Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy), last updated 2017-11-15.
 29. Moxfield, [production JavaScript bundle](https://assets.moxfield.net/assets/assets/moxfield.cef6c321948dbc3a893f.js), as referenced by the capture in [30]; added 2026-11-11.
 30. Internet Archive, [Wayback capture of Moxfield's "What are packages" help page](https://web.archive.org/web/20260514164209/https://moxfield.com/help/help-articles/what-are-packages), 2026-05-14; added 2026-11-11.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player edits a deck with the views, groups, tags, text bulk edit, history and mobile toolbar they expect from Moxfield and Archidekt, and the editor stays measurably fast and stable while they do.
+
+### Goals
+
+- On the 100-card fixture, a player switches among five views, collapses groups, tags and filters cards, bulk-edits as text without losing printings or notes, and reverts a change from history, on desktop and at 390 px, within the latency and stability budgets.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-37-01
+
+As a player coming from Moxfield or Archidekt, I want views, tags and a history that do not reset my printings, so that the editor is as deep without being a copy.
+
+#### US-37-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-37-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-37-01 Happy path
+
+Given a signed-in player and the English locale
+When a bulk edit changes only the lines that differ, and keeps printings on the lines that do not.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-37-02 Happy path
+
+Given a signed-in player and the English locale
+When the previous view remains selectable after a default changes.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-37-03 Happy path
+
+Given a signed-in player and the English locale
+When a 100-card fixture stays inside the latency and layout-shift bars named on this initiative.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-37-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-37-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-37-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in. Guests keep today's editor. Views ship one at a time, each behind the measurement slice. No flag that hides a view the player already chose.
+
+#### AC-37-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-37-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-37-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+Stacks, table and text are views, not separate decks. A category can nest one level. Multi-select tags a group.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+History is a row written in the same transaction as the mutation. Oracle id arrives once, from I-67, on the deck card. No second card database.
+
+### Analytics and telemetry
+
+`editor_view_changed {view}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in. Guests keep today's editor. Views ship one at a time, each behind the measurement slice. No flag that hides a view the player already chose.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Tagger tags stay blocked until Scryfall answers. Foil and language are this initiative's slice 12.
+
+### Sources
+
+- https://archidekt.com/news/19248512
+- https://archidekt.com/news/22633051
+- https://www.reddit.com/r/Moxfield/comments/1wsnch7/
+- https://www.reddit.com/r/EDH/comments/1x7v653/
+- https://www.youtube.com/shorts/Opd_rrdE2S4
+- https://api.scryfall.com/bulk-data
+- https://www.youtube.com/shorts/bfXJIfZw2Cg
+- https://archidekt.com/faq
+- https://archidekt.com/news/2981306
+- https://archidekt.com/features
+- https://www.reddit.com/r/Moxfield/comments/1udcr1n/
+- https://mtgarena-support.wizards.com/hc/en-us/articles/47748861568916-Patch-Notes-2026-57-50
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-37: Editor Depth Against Moxfield And Archidekt
+
+**Spec:** [`specs/i37-editor-depth.md`](i37-editor-depth.md)
+
+**Outcome:** a player edits a deck with the views, groups, tags, text bulk edit, history and mobile toolbar they expect from Moxfield and Archidekt, and the editor stays measurably fast and stable while they do.
+
+**Status:** Next
+**Priority:** Next; Later for slice 24, card-link completion, which waits for I-36's card links (split 2026-11-10)
+**Impact / effort:** High / large
+**Depends on:** I-13 spec slice 1 for the visual slices; I-67 slice 2 for the Oracle ID backfill (slice 12); I-36 slice 6 for card-link completion (slice 24). I-01 keeps zones and failed-save recovery, which every slice here reuses.
+
+The owner wants an editor "more beautiful and more complete than Moxfield". Archidekt shipped visible editor changes in January, March, May and July 2026: collapsible and sticky categories ([January](https://archidekt.com/news/19248512)), a static card panel, a mobile bottom toolbar ([May](https://archidekt.com/news/22633051)) and Oracle tags as categories. Moxfield previewed a redesign to Patreon members on 28 September 2026 ([r/Moxfield](https://www.reddit.com/r/Moxfield/comments/1wsnch7/)). MagicAIBuilder's editor has two views, one closed set of 16 categories, deck-level tags only, selection only in Sideboard and Considering, an in-memory undo and no change history. Players choose between the incumbents on speed and readability, and punish redesigns that bury filters and sorts ([r/EDH](https://www.reddit.com/r/EDH/comments/1x7v653/)), so "beautiful" is measured here: on a 100-card fixture, Interaction to Next Paint of 200 ms or less, layout shift of 0.1 or less, and no task taking more clicks than before.
+
+### Scope
+
+- [ ] A measurement baseline: a 100-card fixture, a latency and layout-shift harness, click-depth counts, and screenshots at three widths and three theme states (slice 1).
+- [ ] Persisted view and density, collapsible headings with collapse-all, and sticky headings (slice 2).
+- [ ] A shortcut registry that generates the help modal, an off switch for single-character keys, and native undo inside text fields (slice 3). See I-04. The off switch (#1320) and native undo (#1309) shipped under I-04; the registry and remapping remain.
+- [ ] Delete `src/lib/shortcuts/shortcuts.ts` when the registry lands. Only its own test imports it, and it binds Ctrl+T and Ctrl+L while listing both as reserved by the browser (slice 3). It also declares Ctrl+K "Focus search field", which nothing wires.
+- [ ] A card panel that follows pointer, focus and selection, with element toggles and a text-only render; grouped Grid and a Stacks view (slices 4–5).
+- [ ] An in-deck filter bar, and statistics that filter the deck when clicked (slice 6).
+  - The bar also accepts a Scryfall query, which the product's search already parses and I-14 builds from English or French, and offers a highlight-and-dim mode in every view with a match count, so "highlight my ramp" becomes a checkable query. Moxfield's highlighter, published on 2026-03-10, "lets you use search commands at the deck level to display cards that match your search term" ([video](https://www.youtube.com/shorts/Opd_rrdE2S4)); spec 10.1's bar searches plain text and facets only, and filters instead of highlighting.
+- [ ] A mobile bottom toolbar with localized labels, Layout and More drawers and quick add, replacing today's three English-only tabs (slice 7). See I-11.
+- [ ] Text and Table views, and main-deck multi-select with bulk category, zone and removal (slices 8–9).
+- [ ] A change record written in each mutation's transaction, automatic snapshots before restores and bulk edits, a history view, revert and redo (slices 10–11).
+- [ ] Restore the commander fields with the cards. `src/app/api/decks/[id]/snapshots/[snapshotId]/restore/route.ts` deletes and re-creates the deck's `DeckCard` rows in one transaction but leaves `Deck.commanderId`, `commanderName` and `partnerId` as they were. A snapshot taken under another commander therefore restores its cards while the deck keeps the old `commanderName`, which community discovery matches in SQL. Found by the I-55 spec, whose requirement 5.6 writes the three fields in the same transaction.
+- [ ] Finish, language, date added and Oracle identity on deck cards (slice 12). `DeckCard` has none of them today (`prisma/schema.prisma`), and I-06, I-10 and I-32 depend on them.
+  - One owner, 2026-11-10: this slice adds `DeckCard.oracleId`, backfilled from [I-67](i67-one-card-data-pipeline.md)'s `CardPrinting` with no API call, and I-47 slice 3 no longer adds it.
+- [ ] Custom categories, deck and global tags, card-panel controls, bulk edit as one diff-and-apply transaction, a cross-deck clipboard and Scryfall function tags (slices 13–18). The I-01 bulk-edit fix, #1314, stopped the data loss first.
+  - The spec's open question on where function tags come from is answered (2026-11-10): Scryfall's bulk-data index lists an "Oracle Tags" file "sourced from Tagger", and the file of 2026-11-09 holds 4,617 tags on 36,453 Oracle IDs ([bulk data](https://api.scryfall.com/bulk-data), counted by the I-65 spec; the I-54 spec found the file first). Slice 18 reads the tags that I-67 slice 7 loads (re-pointed 2026-11-10). Whether the product may show the tags is the licence question shared with I-54 and [I-65](i65-how-this-deck-wins.md), which joins I-30's lawyer list; slice 18 stays blocked until Scryfall answers.
+- [ ] Read-only Stacks and Text on public pages, the validation pass with a side-by-side review, and a split primer editor (slices 19–21).
+  - Split on 2026-11-10: card-link completion in the primer editor is slice 24, which waits for I-36 slice 6, so the split view (slice 21) ships without it. The command palette below is slices 22 and 23 of the spec's table.
+- [ ] A command palette opened by Ctrl/Cmd+K or a toolbar button, listing every command that the slice 3 registry declares for the current page, each with its key (slice 22).
+- [ ] From the palette, open any of the player's decks by name, and add a card to the current zone through slice 7's quick add (slice 23).
+  - The palette is a dialog that holds a combobox, with labels from the message catalogues. It needs no single-character key, so WCAG 2.1.4 does not apply, and on touch it opens from slice 7's More drawer. A palette outside the editor needs a mount in the layout, because `useKeyboardShortcuts` is mounted only in the builder page (`src/app/[locale]/builder/[deckId]/page.tsx`). Mythic Hub's palette "opens with Ctrl+K on Windows or Cmd+K on Mac" (search summary of its help page, undated); none was found on Moxfield, Archidekt, EDHREC or Scryfall. Whether browsers claim Ctrl+K on Windows and Linux is unverified; if they do, the palette calls `preventDefault`.
+- [ ] Accept a card dragged or pasted from Scryfall, EDHREC, Archidekt or Moxfield, as a link or an image: resolve it by Scryfall ID or name, apply I-57's printing rule, and land it in the zone under the pointer, with undo and keyboard and touch equivalents (slice 24). Moxfield said on 2026-10-29 that "there are now three sites you can drag and drop cards from directly in to your decks" ([video](https://www.youtube.com/shorts/bfXJIfZw2Cg)); every drag in this roadmap stays inside the app today. [I-10](i10-interoperability-and-integrations.md) keeps the link and image formats under fixtures.
+- [ ] Category templates in account settings, chosen at deck creation and editable later (with slice 13). Archidekt keeps them in account settings ([FAQ](https://archidekt.com/faq), seen 2026-11-10; [dev update](https://archidekt.com/news/2981306), about 2022). Added 2026-11-11.
+- [ ] One level of nesting for custom categories, for example ramp into rocks and dorks. Archidekt "[Builder] Subcategories", 240 points, open ([features](https://archidekt.com/features), seen 2026-11-10). Added 2026-11-11.
+- [ ] A fixed set of about ten icon flags per deck card (cut candidate, pet card, proxy, table talk), shown in every view without regrouping and exported as tags. "Small visual tags that don't require sorting" ([r/Moxfield](https://www.reddit.com/r/Moxfield/comments/1udcr1n/), 2026-06-23). Added 2026-11-11.
+- [ ] Slice 17's search markers gain "would break" chips naming the rule a result breaks before it is added: off-identity, already in the deck, banned, a Game Changer over the target bracket, over the per-card budget, or the companion's condition. Arena shows incompatible cards "in red instead of removing them" ([Patch Notes 2026.57.50](https://mtgarena-support.wizards.com/hc/en-us/articles/47748861568916-Patch-Notes-2026-57-50), search-index text, date not read). The owner-decided "Collection only" toggle (I-06) sits beside them. Added 2026-11-11.
+- [ ] Add to the open deck from card, rules and public-deck pages, not only from the editor's search. Scryfall's "Add to Deck" tray works across its site ([FAQ](https://scryfall.com/docs/faqs/where-did-the-deck-tray-or-add-to-deck-button-go-19), seen 2026-11-10). Added 2026-11-11.
+- [ ] Low: a custom mana value per card for the curve (X spells, cost reducers), as ManaBox ([FAQ](https://manabox.app/guides/decks/faq/), seen 2026-11-10) and Archidekt (about 2022) offer. Added 2026-11-11.
+- [ ] **Owner decision, 2026-11-10:** the deck's tags are among the orphaned deck fields to re-mount (see I-01).
+
+### Engineering enablers
+
+- Every slice meets I-13's acceptance thresholds and the 24 px minimum target size (WCAG 2.5.8).
+- A mutation route writes exactly one change record inside its transaction, and none on failure.
+- For every clickable statistic, the filtered count equals the figure.
+- A person checks moxfield.com in a normal browser before any slice whose only reference is Moxfield. No automated runs against competitor sites.
+
+**Paid-tier angle:** every view, category, tag, filter, bulk edit, the clipboard and shortcuts stay free, as they are at Moxfield and Archidekt, and no slice limits decks, tags or clipboard size. Candidates are history kept beyond a free window, early access to new views, and presentation themes for public decks.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player coming from Moxfield or Archidekt, I want views, tags and a history that do not reset my printings, so that the editor is as deep without being a copy.
+
+**Acceptance.**
+- A bulk edit changes only the lines that differ, and keeps printings on the lines that do not.
+- The previous view remains selectable after a default changes.
+- A 100-card fixture stays inside the latency and layout-shift bars named on this initiative.
+
+**UX.** Stacks, table and text are views, not separate decks. A category can nest one level. Multi-select tags a group.
+
+**Data and API.** History is a row written in the same transaction as the mutation. Oracle id arrives once, from I-67, on the deck card. No second card database.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `editor_view_changed {view}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests keep today's editor. Views ship one at a time, each behind the measurement slice. No flag that hides a view the player already chose.
+
+**Open questions.** Tagger tags stay blocked until Scryfall answers. Foil and language are this initiative's slice 12.
+
+### Definition of done
+
+On the 100-card fixture, a player switches among five views, collapses groups, tags and filters cards, bulk-edits as text without losing printings or notes, and reverts a change from history, on desktop and at 390 px, within the latency and stability budgets.
+
+---
+

@@ -2,7 +2,7 @@
 
 > **Initiative:** I-51, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Later. Slices 1 to 6 are private records that involve no second account and depend on no other initiative, so they could be promoted alone · **Written 2026-11-10**
 > **Research:** one dated note on player posts, collection apps and the GDPR household exemption. It is not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** loans of collection copies and of whole decks, borrowed copies and how they count in a deck, due dates and opt-in reminders, return history, what the borrower sees, and the household: accounts that share one physical collection while each keeps its own ownership. **Does not own:** ownership quantities, printings, proxies and the acquisition plan ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)); free copies and the commitment index ([I-16](i16-decks-buildable-from-a-collection.md)); storage places and pull lists ([I-43](i43-physical-collection-storage-and-pull-lists.md)); have and want lists and trade proposals ([I-44](i44-trade-lists-within-the-pod.md)); spare copies ([I-45](i45-selling-spare-cards.md)); pods ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)) and their chat surfaces ([I-23](i23-the-pods-own-surface.md), [I-46](i46-discord-and-chat-integrations.md)); blocking, export and account deletion ([I-38](i38-trust-safety-and-user-rights.md)); plans and billing ([I-30](i30-business-model-and-paid-tier.md)); collection import ([I-26](i26-collections-arriving-from-elsewhere.md)).
+> **Owns:** loans of collection copies and of whole decks, borrowed copies and how they count in a deck, due dates and opt-in reminders, return history, what the borrower sees, and the household: accounts that share one physical collection while each keeps its own ownership. **Does not own:** ownership quantities, printings, proxies and the acquisition plan ([I-06](i06-collection-and-purchase-planning.md)); free copies and the commitment index ([I-16](i16-decks-buildable-from-a-collection.md)); storage places and pull lists ([I-43](i43-physical-collection-storage-and-pull-lists.md)); have and want lists and trade proposals ([I-44](i44-trade-lists-within-the-pod.md)); spare copies ([I-45](i45-selling-spare-cards.md)); pods ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)) and their chat surfaces ([I-23](i23-the-pods-own-surface.md), [I-46](i46-discord-and-chat-integrations.md)); blocking, export and account deletion ([I-38](i38-trust-safety-and-user-rights.md)); plans and billing ([I-30](i30-business-model-and-paid-tier.md)); collection import ([I-26](i26-collections-arriving-from-elsewhere.md)).
 
 ## Overview
 
@@ -219,3 +219,171 @@ Read on 2026-11-10 unless stated otherwise. Reddit scores and comment counts are
 13. TCGplayer, App Store listing, version 5.5.0 of 2026-11-04 <https://apps.apple.com/us/app/id1247645833>; MTG Delver TCG Scanner, version 1.25 of 2026-10-16 <https://apps.apple.com/app/id6504142186>
 14. Archidekt, feature voting page. <https://archidekt.com/features>
 15. GDPR Recital 18, "Non-application to personal or household activities". <https://gdpr-info.eu/recitals/no-18/>
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+### Goals
+
+- A player lends a deck to a friend, sees the lent copies drop out of what a new deck can use and ticks the cards off as they come back, and the friend sees the loan and its due date; a borrowed card fills a deck without ever counting as owned, and no typed text crosses accounts.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-51-01
+
+As a player, I want the outcome of I-51, so that the work in this file is the reason to build it.
+
+#### US-51-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-51-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-51-01 Happy path
+
+Given a signed-in player and the English locale
+When a player lends a deck to a friend, sees the lent copies drop out of what a new deck can use and ticks the cards off as they come back, and the friend sees the loan and its due date; a borrowed card fills a deck without ever counting as owned, and no typed text crosses accounts.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-51-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-51-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-51-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-51-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-51-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-51-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://www.reddit.com/r/EDH/comments/1q0c3oc/
+- https://apps.apple.com/us/app/mtg-trades/id736701892
+- https://apps.apple.com/us/app/deckhowler/id6740892169
+- https://deckbox.org/forum/viewtopic.php?id=516
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-51: Cards Lent And Borrowed Within The Pod
+
+**Spec:** [`specs/i51-cards-lent-and-borrowed.md`](i51-cards-lent-and-borrowed.md)
+
+**Outcome:** a player records the cards and whole decks lent to or borrowed from friends, with dates, a return checklist and a history. A lent copy stays owned but is not available to a new deck, and a borrowed copy fills a deck tonight without hiding a purchase. A household shares one physical collection while each copy keeps its owner.
+
+**Status:** Later
+**Priority:** Later. Slices 1 to 6 are private records that involve no second account and depend on no other initiative, so they could be promoted alone
+**Impact / effort:** Low to medium / medium
+**Depends on:** nothing for slices 1–6; I-38 slice 12's block before loans between accounts (slice 7) and the household (slice 9); I-38 slice 4 for the export; I-15 slice 3 for pod borrowers; I-16, I-43, I-44 and I-45 for their integrations; I-63 slice 9 (the sender was I-38 slice 13) and I-30 for e-mail reminders, and I-30 for the borrow plan.
+
+Commander players lend cards and whole decks to the people they play with. They record it on a slip of paper in each sleeve, in a photo sent by text, or in a ManaBox binder or a Moxfield sideboard named after the lender ([r/EDH, 2025-12-31](https://www.reddit.com/r/EDH/comments/1q0c3oc/)). The deckbuilder is the right place for that record, because a loan changes what a deck counts as owned. Two small iOS apps record loans: MTG Trades gives it away ([App Store](https://apps.apple.com/us/app/mtg-trades/id736701892)), and Deckhowler sells due-date reminders in its Premium plan ([App Store](https://apps.apple.com/us/app/deckhowler/id6740892169)). Neither describes a borrower who sees the loan, a whole deck lent with a return checklist, or a shared household collection, and no deckbuilder read lets a loan change what a deck counts as owned. The demand evidence is weak to medium: many independent workarounds and a 2010 request on Deckbox that got no staff answer ([forum](https://deckbox.org/forum/viewtopic.php?id=516)), but no post asking for a better method scored above 18 points. No money, messages or ratings are involved.
+
+### Scope
+
+- [ ] A loan schema (`CardLoan`, `CardLoanItem`, `CardLoanReturn`) and one write module that keeps the copies out on open loans at or below a row's quantity, under a row lock (slice 1). The collection routes answer 409 when a decrease or a deletion would leave fewer copies than are out, and a printing-swap merge moves the loan items. Today `CollectionCard` (`prisma/schema.prisma`) has no possession state, and `POST /api/collection`, `PATCH /api/collection/[id]` and `DELETE /api/collection/[id]` change quantities with nothing to protect. A loan can only be an owner-only card note, with no date or counterpart, that changes no count.
+- [ ] Lend copies to a private label, with due dates, returns, closing as returned, given or lost, a history, and "Lent" beside "Used in decks" (slice 2).
+- [ ] Lent copies unavailable in the lender's deck status and flagged in the acquisition plan; borrowed copies recorded from a label, assigned to a deck, shown as "borrowed" and never counted as owned (slices 3–4). Today `getDeckCardStatuses` (`src/lib/collection/shopping-list.ts`) knows only owned, proxy and missing.
+- [ ] Lend a whole deck: a frozen list that survives the deck's deletion, a preview of proxies and missing cards, a banner and a return checklist (slice 5). `DeckSnapshot` cascades with its deck, so the loan keeps its own copy of the list.
+- [ ] A Due view computed on read, with reminders off by default (slice 6).
+- [ ] Loans between mutual follows: pending, accept, decline, a 14-day expiry, detach, and a return claim shown on both sides until the lender confirms it; then the borrower's read-only view of a lent deck through `SHARED_DECK_SELECT` (slices 7–8). No typed text crosses accounts.
+- [ ] A household of two to six accounts that see one physical collection, with each copy's owner and never its purchase price; loans inside it need no acceptance; then pod members as borrowers (slices 9–11).
+- [ ] Loans in the full export, and lent copies excluded from I-16's free cards, I-43's pull lists, I-44's have lists and I-45's spare copies (slices 12–16).
+- [ ] After I-63's email (slice 9) and I-30's decision: e-mail reminders, and the borrow plan in I-43's game-night planner (slices 17–18).
+  - Reminders reach players through [I-63](i63-one-notification-system.md)'s "Loans" category, off by default. I-63 proposes that email delivery is never paid, against this spec's paid hypothesis for e-mail reminders; I-30 decides (status note).
+
+### Engineering enablers
+
+- Two concurrent loans of a row's last copy let exactly one through, on PostgreSQL.
+- A schema test fails when a column another account can read holds typed text, and labels and lender notes never appear in a response to another account.
+- The borrower's deck payload passes the share route's secret list, owner notes such as "borrowed from Alex" included.
+- Blocking detaches every loan between two accounts in the same transaction, and deleting an account turns its counterpart link into "deleted account".
+
+**Paid-tier angle:** lent and borrowed records, whole-deck loans, the checklist, the history, loans between accounts, the borrower's view, the household and the in-app Due view stay free, because the player's own data is never the lever (I-30 requirement 1.2). The candidates are e-mail reminders, a scheduled job with a sender to pay for, and the borrow plan inside I-43's game-night planner. The spec advises I-30 not to plan revenue on this initiative: its value is moving a record players keep on paper to the place where they build.
+
+### Definition of done
+
+A player lends a deck to a friend, sees the lent copies drop out of what a new deck can use and ticks the cards off as they come back, and the friend sees the loan and its due date; a borrowed card fills a deck without ever counting as owned, and no typed text crosses accounts.
+
+---
+

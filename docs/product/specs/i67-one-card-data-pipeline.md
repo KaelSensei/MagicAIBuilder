@@ -2,7 +2,7 @@
 
 > **Initiative:** I-67, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next. Slices 1, 2 and 4 need nothing outside the initiative and can start today; slice 3 waits for the runner chosen in slice 0 and, on Vercel, for [I-63](i63-one-notification-system.md) slice 5; slices 14 and 15 are Later; slice 16 is Parked. Never paid · **Written 2026-11-10**
 > **Research:** one dated note on Scryfall's bulk files, API rules, terms, tags, migrations and image change; MTGJSON's files, licence, decks and sealed products; Vercel, GitHub Actions and Supabase limits; and measurements made for this spec on Scryfall's files of 2026-11-09. It is not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** every scheduled read of Scryfall's bulk files, sets and migrations and of MTGJSON; the local card, printing, set, related-card, today's-price, rulings and Oracle-tag tables, their keys and versions; the run report; change detection and the typed change log; the fallback and conformance checks; moving per-request card reads onto those tables; the User-Agent and attribution rules for card data; the exit path. **Does not own:** what a consumer does with a change; the job route, lease and stale-job alert (I-63 slice 5); player notices (I-63's `notify()`); price history, alerts and the archive ([I-59](i59-prices-over-time-and-alerts.md)); markets and price labels ([I-32](i32-seller-handoff-and-affiliate-carts.md)); rules versions and their publishing ([I-48](i48-official-changes-reach-every-deck.md)); variant legality ([I-42](i42-commander-variants-duel-cedh-pauper.md)); rulings display ([I-47](i47-rules-answers-for-this-deck.md)); the precon catalogue model ([I-17](i17-precon-path-and-tiered-upgrades.md)); the Tagger licence answer ([I-54](i54-find-your-next-commander.md) open question 1); migrating stored image URLs to WebP ([I-05](../roadmap.md#i-05-production-safety)); free-text search ([I-14](i14-verifiable-natural-language-search.md)).
+> **Owns:** every scheduled read of Scryfall's bulk files, sets and migrations and of MTGJSON; the local card, printing, set, related-card, today's-price, rulings and Oracle-tag tables, their keys and versions; the run report; change detection and the typed change log; the fallback and conformance checks; moving per-request card reads onto those tables; the User-Agent and attribution rules for card data; the exit path. **Does not own:** what a consumer does with a change; the job route, lease and stale-job alert (I-63 slice 5); player notices (I-63's `notify()`); price history, alerts and the archive ([I-59](i59-prices-over-time-and-alerts.md)); markets and price labels ([I-32](i32-seller-handoff-and-affiliate-carts.md)); rules versions and their publishing ([I-48](i48-official-changes-reach-every-deck.md)); variant legality ([I-42](i42-commander-variants-duel-cedh-pauper.md)); rulings display ([I-47](i47-rules-answers-for-this-deck.md)); the precon catalogue model ([I-17](i17-precon-path-and-tiered-upgrades.md)); the Tagger licence answer ([I-54](i54-find-your-next-commander.md) open question 1); migrating stored image URLs to WebP ([I-05](i05-production-safety.md)); free-text search ([I-14](i14-verifiable-natural-language-search.md)).
 > **For the integrator:** place I-67 right after I-63 in the order. [Re-pointed ownership](#re-pointed-ownership) lists each sentence to change, including "I-29 slice 1 or I-32 slice 2".
 
 ## Overview
@@ -269,7 +269,7 @@ Slices 1, 2 and 4 can start today in sequence; 5 to 10 follow in parallel. Sched
 2. **Tagger tags.** Loading them for computation is slice 7; showing anything derived from them waits for Scryfall's written answer ([I-54 open question 1](i54-find-your-next-commander.md#open-questions)), with the kill switch either way [6].
 3. **For the lawyer and Scryfall** (research, not legal advice): does storing Scryfall data and serving derived values stay clear of "simply repackage, republish, or proxy" [3]? Does a 180-day change log, or I-48's public "what changed" page built from it, count as republishing? With no researched image alternative, what does the exit path owe players?
 4. **Image mirror.** If Scryfall's documentation makes re-serving a requirement for "large/popular applications" [10], about 6.7 GB of storage is needed (9.3). At what traffic does the owner accept that cost?
-5. **French names.** All Cards (404 MB compressed) weekly, MTGJSON's `foreignData`, or today's per-deck `lang:fr` searches? Scryfall finds a French printing for 31,393 cards [13]. Decide with [I-11](../roadmap.md#i-11-localization-and-regional-experience) before slice 14.
+5. **French names.** All Cards (404 MB compressed) weekly, MTGJSON's `foreignData`, or today's per-deck `lang:fr` searches? Scryfall finds a French printing for 31,393 cards [13]. Decide with [I-11](i11-localization-and-regional-experience.md) before slice 14.
 
 ## Sources
 
@@ -297,3 +297,200 @@ Slices 1, 2 and 4 can start today in sequence; 5 to 10 follow in parallel. Sched
 22. GitHub Docs, [Events that trigger workflows: `schedule`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows), read 2026-11-10.
 23. GitHub Docs, [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions), read 2026-11-10; the repository's visibility read with `gh repo view` the same day.
 24. Supabase, [File limits](https://supabase.com/docs/guides/storage/uploads/file-limits), read 2026-11-10.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+### Goals
+
+- A daily run loads Scryfall's four files into local tables, one transaction per file; a Game Changer change reaches I-48 as a typed event the next morning; a deck load, an import and the printing selector read local rows with no Scryfall call; a broken file leaves yesterday's data live and alerts the owner; and no public card page, download or API comes from the tables.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-67-01
+
+As a player, I want one daily copy of card data, so that bans, printings and prices do not depend on a browser cache.
+
+#### US-67-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-67-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-67-01 Happy path
+
+Given a signed-in player and the English locale
+When a bulk file is read once, hashed, and skipped if that hash was loaded.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-67-02 Happy path
+
+Given a signed-in player and the English locale
+When a file that fails its count check is not published.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-67-03 Happy path
+
+Given a signed-in player and the English locale
+When search still goes to Scryfall. This pipeline is not a second public card database.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-67-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-67-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-67-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Internal. The first full load is the owner's measurement. Guests and signed-in players see the same published fields.
+
+#### AC-67-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-67-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-67-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+Players do not see a job. They see fresher fields on the cards they already have, with the date I-86 shows.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Tables for printings, prices, rulings and tags. A scheduled run, one, shared. No public download of the tables.
+
+### Analytics and telemetry
+
+`card_data_loaded {held: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Internal. The first full load is the owner's measurement. Guests and signed-in players see the same published fields.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+GitHub Actions or a Vercel function is the owner's choice. The Tagger licence and the image-mirror question stay open.
+
+### Sources
+
+- https://scryfall.com/docs/api/rate-limits
+- https://scryfall.com/blog/category/api
+- https://mtgjson.com/license/
+- https://mtgjson.com/faq/
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-67: One Card Data Pipeline
+
+**Spec:** [`specs/i67-one-card-data-pipeline.md`](i67-one-card-data-pipeline.md)
+
+**Outcome:** every initiative that needs cards, printings, prices, rulings or tags reads them from one set of versioned local tables, filled once a day from Scryfall's bulk files and MTGJSON's deck lists by one scheduled ingest, and learns what changed from one typed change log. A broken file leaves yesterday's data live, a daily check compares the tables with Scryfall's API, and no public card page, download or API comes from them.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 13, high in the delivery order because seven Next slices cannot run without it; slices 1, 2 and 4 start now; slice 3 waits for slice 0's runner choice. Later for French names and the exit drill (slices 14 and 15); slice 16, an image mirror, is Parked. Never paid
+**Impact / effort:** High / large
+**Depends on:** nothing for slices 1, 2 and 4; the owner's measured load and runner choice (slice 0), and I-63 slice 5 if the runner is the job route, for the scheduled run (slice 3); the I-05 WebP item for image versions (slice 12); I-17 slice 1's catalogue model for MTGJSON's decks (slice 13); open question 5 for French names (slice 14); Scryfall requiring a mirror, or the owner's storage decision, for slice 16.
+
+Sixteen specs hold at least seventeen slices or items that wait for "the daily job" or a local card table, and six plan their own Scryfall schedule; I-59 waited for "the single daily job of I-29 slice 1 or I-32 slice 2", an owner nobody could name. Seven Next slices cannot run at all without a bulk file or MTGJSON: I-32 slice 2, I-47 slice 3, I-54 slices 1 and 2, I-58 slice 5, I-19's token item and I-17's precon import. Today nothing reads Scryfall's bulk files or MTGJSON, `DeckCard` copies card facts with no Oracle ID, and the Game Changer and banned flags freeze when a card is added (checked on `origin/dev` at `72fbfc1`). Scryfall says that rapid lookups of names, prices or images "must use the bulk data files" ([rate limits](https://scryfall.com/docs/api/rate-limits)), and it changes formats at short notice: it announced JSONL bulk files on 2026-07-01 and dropped the old format on 2026-07-20 ([blog](https://scryfall.com/blog/category/api)). The spec measured the files of 2026-11-09: Default Cards holds 120,053 printings and Node 22 parsed it in 6.8 seconds with 139 MB of memory, and the local tables would take about 100 MB of the 500 MB free database (estimate). MTGJSON is MIT-licensed and carries Scryfall IDs, so it is the exit path for cards and rulings, but it draws on Scryfall and replaces neither prices, tags nor images ([licence](https://mtgjson.com/license/), [FAQ](https://mtgjson.com/faq/)).
+
+### Scope
+
+- [ ] Slice 0, the owner's: one Default Cards load measured on a Hobby function against the Irish database, then the runner, a Vercel function (300 seconds at most, `iad1` by default) or a GitHub Actions scheduled workflow (free on this public repository, but delayed under load, run from `main` only and disabled after 60 days without activity); the contact URL; and free database space, with I-59 slice 0.
+- [ ] A streamed bulk reader behind one `CardSource` interface, with line guards and hashes (slice 1); `CardOracle`, `CardPrinting`, `CardSet` and `CardRelation` with `int4` keys that are never reused, loaded through staging, gates and one atomic diff, with a run report and an owner page (slice 2); the scheduled `card-data` job with a lease, catch-up, a dry run and a 36-hour alert (slice 3).
+  - The run report's owner page uses [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s `requireOperator` once its slice 1 exists, and I-69's console lists slice 7's Tagger kill switch read-only (2026-11-10).
+  - Release-day legality events are classified by [I-73](i73-every-set-release-ready-on-day-one.md) slice 4 (2026-11-10): a `not_legal` to `legal` switch on a card whose set releases within 21 days is reported on its own line and not counted toward the threshold of 20, so a set's legal switch does not hold the Oracle file. I-73 slice 4 merges before slice 3's scheduled run meets its first release; Star Trek's three sets brought 467 new Oracle cards.
+- [ ] `CardDataChange`: twelve typed events that carry keys and dates only, a catalogue and contract test on I-63's model, a cursor per consumer and a test harness (slice 4); today's price for every printing (slice 5), rulings (slice 6), Oracle Tags with a kill switch and no display (slice 7), and Scryfall's migrations, which rewrite a merged ID in every deck and collection table in one transaction (slice 8).
+- [ ] Local reads instead of per-request calls: cards by key, one CDN-cached Game Changer and banned list until I-48 slice 1 serves its version, sets, and the card cache cut from 2,000 rows to 200 (slice 9); a local name index and printing lists for imports, the wizard, packages, AI checks and the printing selector (slice 10). Free-text search stays on Scryfall.
+- [ ] A daily check of 25 random printings and every Game Changer against `/cards/:id`, counts checked against `is:gamechanger` and `banned:commander`, and a weekly hash of Scryfall's terms (slice 11); image versions and WebP URLs derived from the printing ID, after I-05's WebP item (slice 12); MTGJSON's new Commander decks into I-17's catalogue, sealed contents and MTGJSON's MIT notice (slice 13).
+- [ ] Later: French names from All Cards (slice 14) and a quarterly drill that rebuilds `CardOracle` from MTGJSON and reports the differences (slice 15). Parked: an image mirror of about 6.7 GB of WebP for paper printings, beyond Supabase's 1 GB of free storage, until Scryfall requires one or the owner decides (slice 16).
+- [ ] Ownership re-pointed on 2026-11-10, each source keeping a dated note: the daily job of I-29 slice 1, I-32 slice 2 and I-54 slice 1 (slices 2 and 5); I-59's price series (slice 5); the job registered on I-63 slice 5's route (slice 3); I-47's rulings import and its rulings-file check (slices 6 and 11); the Oracle Tags read by I-54, I-65 and I-37 (slice 7); I-58's land catalogue (slices 2 and 4); I-48's comparison with Scryfall (slices 4 and 11); I-18's set corpus, I-40's recognition index and I-19's tokens (slice 2); I-17's and I-29's precons (slice 13); and I-66's moves 2 and 11 (slice 9). I-37 slice 12 adds `DeckCard.oracleId` once, backfilled from `CardPrinting`.
+
+### Engineering enablers
+
+- A file with a missing required field fails, a file more than 3% off the last object count without new sets is held, and yesterday's data stays live in both cases; readers never see half a file.
+- Two consecutive file excerpts produce the expected rows and events, a reload changes nothing, and a printing absent from a file is marked, never deleted.
+- A test fails if a key column is `int2` or a key is reused, and no module that runs in the browser sets a User-Agent.
+- In CI the conformance checks run on recorded fixtures; the live checks run only on schedule, so the network never fails a build.
+
+**Paid-tier angle:** none. Card data stays free and anonymous under Scryfall's terms and [I-30 requirement 1.1](i30-business-model-and-paid-tier.md#1-the-free-and-paid-line), and no part of the pipeline is sold. Lower running costs make paid tools such as I-59's alerts above the allowance cheaper to run; those stay with their specs and I-30.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player, I want one daily copy of card data, so that bans, printings and prices do not depend on a browser cache.
+
+**Acceptance.**
+- A bulk file is read once, hashed, and skipped if that hash was loaded.
+- A file that fails its count check is not published.
+- Search still goes to Scryfall. This pipeline is not a second public card database.
+
+**UX.** Players do not see a job. They see fresher fields on the cards they already have, with the date I-86 shows.
+
+**Data and API.** Tables for printings, prices, rulings and tags. A scheduled run, one, shared. No public download of the tables.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `card_data_loaded {held: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Internal. The first full load is the owner's measurement. Guests and signed-in players see the same published fields.
+
+**Open questions.** GitHub Actions or a Vercel function is the owner's choice. The Tagger licence and the image-mirror question stay open.
+
+### Definition of done
+
+A daily run loads Scryfall's four files into local tables, one transaction per file; a Game Changer change reaches I-48 as a typed event the next morning; a deck load, an import and the printing selector read local rows with no Scryfall call; a broken file leaves yesterday's data live and alerts the owner; and no public card page, download or API comes from the tables.
+
+---
+

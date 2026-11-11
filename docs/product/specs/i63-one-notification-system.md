@@ -2,8 +2,8 @@
 
 > **Initiative:** I-63, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next. Slices 1 to 6 and 8 need neither an email provider nor counsel; slice 7 waits for the owner's provider choice; slice 12 is blocked on [I-40](i40-installable-app-and-card-scanning.md) requirement 2.6. Never paid · **Written 2026-11-10**
 > **Research:** one dated note on mailbox-provider rules, RFC 8058, French and EU rules on email, five email providers, web push on iOS, Novu and Vercel scheduling. It is not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate) through [I-38](i38-trust-safety-and-user-rights.md) slice 0.
-> **Owns:** the notification event model and its catalogue, the in-app inbox, the delivery channels (in-app, email, and web push later), the preferences page per category and channel, notification consent records, the email transport and its templates in English and French, one-click unsubscribe, the digest, quiet hours, per-user pacing, suppression after bounces and complaints, the scheduled job route, and the test harness producers use. **Does not own:** when an event fires and what it says, which stays with each producer (listed under [Overview](#overview)); sign-in, verification and reset flows ([I-61](i61-account-security.md)); billing and its plans ([I-30](i30-business-model-and-paid-tier.md)); deletion, export, retention periods, blocking and the age declaration (I-38); the shared rate-limit store ([I-05](../roadmap.md#i-05-production-safety) M2); Discord feeds ([I-46](i46-discord-and-chat-integrations.md)); installability and the service worker (I-40, [I-19](i19-offline-game-night-viewing.md)); product events ([I-39](i39-first-run-activation-and-measurement.md)).
-> **Proposed reassignments, for the integrator:** I-38 slice 13, the transactional email sender, is delivered by I-63 slices 6 and 7. I-59's "in-app inbox and the email digest" move here; [I-59](i59-prices-over-time-and-alerts.md) keeps alert rules, their evaluation and the alert text. The [I-08](../roadmap.md#i-08-share-compare-and-learn) item "in-product notifications for replies, mentions, follows and changes to explicitly watched decks" is delivered by slices 1 to 4, with I-08 owning those events. I-48's `rulesChangesEmail`, I-52's `requestUpdates` and I-59's `priceAlertEmail` become categories in I-63's settings instead of new columns.
+> **Owns:** the notification event model and its catalogue, the in-app inbox, the delivery channels (in-app, email, and web push later), the preferences page per category and channel, notification consent records, the email transport and its templates in English and French, one-click unsubscribe, the digest, quiet hours, per-user pacing, suppression after bounces and complaints, the scheduled job route, and the test harness producers use. **Does not own:** when an event fires and what it says, which stays with each producer (listed under [Overview](#overview)); sign-in, verification and reset flows ([I-61](i61-account-security.md)); billing and its plans ([I-30](i30-business-model-and-paid-tier.md)); deletion, export, retention periods, blocking and the age declaration (I-38); the shared rate-limit store ([I-05](i05-production-safety.md) M2); Discord feeds ([I-46](i46-discord-and-chat-integrations.md)); installability and the service worker (I-40, [I-19](i19-offline-game-night-viewing.md)); product events ([I-39](i39-first-run-activation-and-measurement.md)).
+> **Proposed reassignments, for the integrator:** I-38 slice 13, the transactional email sender, is delivered by I-63 slices 6 and 7. I-59's "in-app inbox and the email digest" move here; [I-59](i59-prices-over-time-and-alerts.md) keeps alert rules, their evaluation and the alert text. The [I-08](i08-share-compare-and-learn.md) item "in-product notifications for replies, mentions, follows and changes to explicitly watched decks" is delivered by slices 1 to 4, with I-08 owning those events. I-48's `rulesChangesEmail`, I-52's `requestUpdates` and I-59's `priceAlertEmail` become categories in I-63's settings instead of new columns.
 
 ## Overview
 
@@ -296,3 +296,207 @@ Slices 1 and 5 can start today in parallel; slices 2, 3 and 6 follow slice 1. Sc
 23. Vercel, [Usage & Pricing for Cron Jobs](https://vercel.com/docs/cron-jobs/usage-and-pricing), last updated 2026-07-15.
 24. Vercel, [Managing Cron Jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs), last updated 2026-08-11.
 25. Vercel, [Schedules Limits](https://vercel.com/docs/schedules/limits), beta, read 2026-11-10.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+### Goals
+
+- A reply to a player's comment appears once in their inbox, in their language; they turn on email for one category, receive it within the pacing and quiet hours, and stop it in one click from the email without signing in; a password reset still reaches an address that complained about a digest; and no producer sends mail or stores a preference of its own.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-63-01
+
+As a player, I want one inbox and one place to turn notices off, so that every feature does not invent its own email.
+
+#### US-63-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-63-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-63-01 Happy path
+
+Given a signed-in player and the English locale
+When every notice the product sends is a catalogue entry with a category the player can switch.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-63-02 Happy path
+
+Given a signed-in player and the English locale
+When security notices that cannot be turned off are listed as such.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-63-03 Happy path
+
+Given a signed-in player and the English locale
+When no marketing email is sent.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-63-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-63-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-63-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in. Guests get no inbox. Email stays off until the provider and the privacy policy name it. A free notice stays free.
+
+#### AC-63-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-63-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-63-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The inbox is a page. Email uses the same text. Quiet hours are a setting, not a hidden default the player cannot find.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+An event catalogue and `notify()`. The provider waits on the owner's choice. Switches the product already stores and nothing reads are replaced by this catalogue.
+
+### Analytics and telemetry
+
+`notice_sent {category, channel: inbox or email}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in. Guests get no inbox. Email stays off until the provider and the privacy policy name it. A free notice stays free.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Amazon SES, Resend or Postmark is the owner's choice. Whether a notice the player asked for is a service message is a lawyer question.
+
+### Sources
+
+- https://support.google.com/a/answer/81126
+- https://support.google.com/a/answer/14229414
+- https://datatracker.ietf.org/doc/html/rfc8058
+- https://novu.co/pricing/
+- https://vercel.com/docs/cron-jobs/manage-cron-jobs
+- https://itunes.apple.com/us/rss/customerreviews/page=1/id=1669698500/sortby=mostrecent/json
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-63: One Notification System: Inbox, Email And Preferences
+
+**Spec:** [`specs/i63-one-notification-system.md`](i63-one-notification-system.md)
+
+**Outcome:** a player reads every notice in one inbox, chooses per category whether it reaches them in the app, by email or in a digest, and stops any email in one click; security and account notices always arrive and cannot be turned off. Every initiative that tells a player something does it through one call, and nothing is sent that the player did not ask for or cause.
+
+**Status:** Next
+**Priority:** Next. Slices 1 and 5 start now; slices 2, 3 and 6 follow slice 1; slice 7 waits for the owner's provider choice; slice 9 waits for I-61 slice 10 or 11; web push (slice 12) is blocked by I-40 requirement 2.6. Never paid
+**Impact / effort:** High / large
+**Depends on:** nothing for slices 1 and 5; the owner's choice of provider, sending subdomains and job cadence (slice 0) and I-38 slice 6's processor entry, or all of I-38 slice 0 if the owner says so, for slice 7; I-38 slice 12 for blocked actors (slice 4); I-61 slice 10 for Google accounts or slice 11 for password accounts, which verify the address (slice 9); I-19's service worker, I-40 slice 1 and the owner reversing I-40 requirement 2.6 for web push (slice 12).
+
+At least fourteen specs plan to tell a player something, and each plans its own preference column, sender or inbox: I-08's replies and follows, I-38's statements of reasons, I-44's proposals, I-48's rules changes, I-51's loan reminders, I-52's request updates, I-59's price alerts, I-61's security notices and more. None of it can ship, because `dev` has no notification table, no mail library, no `vercel.json` and no scheduled workflow. Mailbox providers set the floor: since 2024-02-01 Gmail asks every sender for SPF or DKIM and a spam rate below 0.3%, and bulk senders for DMARC and one-click unsubscribe, with enforcement "ramping up" from November 2025 ([guidelines](https://support.google.com/a/answer/81126), [FAQ](https://support.google.com/a/answer/14229414)); [RFC 8058](https://datatracker.ietf.org/doc/html/rfc8058) defines that unsubscribe as a POST with no cookie and no redirect. A hosted layer such as Novu would add a processor holding every recipient ([pricing](https://novu.co/pricing/)), so the system is built in the product, behind one email transport that a provider change replaces. Vercel's Hobby crons run at most once a day, are best effort and may run twice ([docs](https://vercel.com/docs/cron-jobs/manage-cron-jobs)), so every job takes a lease and catches up. It sends no marketing or re-engagement mail, as I-39 requirement 7.4 rules, and tracks no opens or clicks.
+
+### Scope
+
+- [ ] Slice 0, no code: the provider, the sending subdomains and the job cadence; the lawyer questions join I-30 requirement 7.2 through I-38 slice 0.
+- [ ] An event model and catalogue: `notify()` inside the producer's transaction, payloads of ids and enums only, entries rendered in English and French from current data, so a deleted or hidden subject shows "This is no longer available", dedupe and collapse, no event for the recipient's own action or from a blocked or restricted actor, and a harness and contract test every producer uses (slice 1).
+- [ ] `/notifications` and a header bell counting to "9+", with read, read all and archive, and entries purged 180 days after creation on write; no count in the tab title, favicon or badge, and no sound (slice 2).
+- [ ] Settings → Notifications as a matrix of category and channel, linked from the user menu and every email: in the app on for events aimed at the player, email and push off for every activity category, security and account cells locked; a consent log with the wording version; locale, time zone, quiet hours on from 22:00 to 08:00, and a pause (slice 3). It replaces the four switches that nothing reads: `NotificationPreference` (`prisma/schema.prisma`, `acc66d01`, 2026-11-02) holds `replies`, `mentions`, `follows` and `watchedDecks`, all true by default, read only by its route and the `/settings/notifications` page, which no link reaches (`src/components/auth/UserMenu.tsx` links only `/settings/api-keys`). The migration copies them to the in-app cells and turns every email cell off, since nothing was ever delivered.
+- [ ] Replies and follows (I-08) as the first producers (slice 4). Only these two of the four switches have a source today; no code parses mentions, and no deck can be watched.
+  - Two producers join (2026-11-10): [I-73](i73-every-set-release-ready-on-day-one.md)'s `release.digest`, one event per set in "New cards for my decks", and [I-75](i75-finding-public-decks.md)'s `deck-search.new-matches` in a new category, "Saved deck searches", on in the app only for a search the player set to alert and off by email.
+- [ ] One job route, `/api/jobs/[job]`, behind `CRON_SECRET` in a new `vercel.json`, with a lease, catch-up and a dry run (slice 5). I-38's retention job and, when it runs on Vercel, I-67's `card-data` job (I-67 slice 3, re-pointed 2026-11-10) register here.
+- [ ] An `EmailTransport` with log and test transports, a transactional and a notification stream on separate subdomains, SPF, DKIM and DMARC from the first send, templates in English and French, and caps that keep sign-up and reset forms from flooding a victim's mailbox (slice 6); the provider in production, with signed bounce and complaint webhooks and suppression (slice 7, which is I-38 slice 13).
+- [ ] One-click unsubscribe on every notification email, with a `GET` that changes nothing and a confirmation page that needs no sign-in (slice 8); immediate activity email, to a verified address only, paced and held by quiet hours (slice 9); a daily or weekly digest (slice 10); and a deliverability page for the owner (slice 11).
+  - The deliverability page (slice 11) sits behind [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s `requireOperator` once its slice 1 exists (2026-11-10).
+- [ ] Taken over on 2026-11-10, each source keeping a pointer: I-38 slice 13's sender (slice 7), I-59's inbox and email digest (slices 2 and 10), and I-08's in-product notifications (slices 1 to 4). I-48's `rulesChangesEmail`, I-52's `requestUpdates` and I-59's `priceAlertEmail` become categories, not columns.
+  - What each slice unblocks: slices 1 to 3, inbox entries for I-59, I-38, I-44, I-52, I-53, I-18, I-46 and I-48; slice 5, I-38's retention job, I-67's `card-data` job and the timing of I-51's and I-30's reminders; slice 7, I-61 slices 11 to 14, I-38 slice 15 and I-30's cancellation and renewal emails; slice 9, I-48 slice 11, I-51 slice 17 and I-44's proposal email; slice 10, I-59 slice 12 and I-18's email.
+- [ ] Blocked: web push for installed apps, per device and category, until the owner reverses I-40 requirement 2.6 (slice 12).
+- [ ] An event "a pod member published or changed a deck": opt-in per pod, chronological, with no counts, streaks or ranking, shown on I-15's pod page. "I'd like an option to 'share' that I built a new deck and be able to see that of my friends as well" ([Mythic Tools reviews](https://itunes.apple.com/us/rss/customerreviews/page=1/id=1669698500/sortby=mostrecent/json), 2026-07-19). Added 2026-11-11.
+
+### Engineering enablers
+
+- `notify()` in a rolled-back transaction leaves no event, and a failed delivery never rolls back its cause.
+- A contract test renders every catalogue type in English and French, rejects free text, email-shaped values and URLs in payloads, keeps activity email and push off by default, and locks security and account entries.
+- The unsubscribe `POST` works without a session, never redirects and is idempotent; notification mail carries both RFC 8058 headers, and transactional mail carries neither.
+- A second concurrent job run exits on the lease, a missed run catches up, and the job route answers 401 without the secret.
+
+**Paid-tier angle:** none. The inbox, every channel, the digest, quiet hours, unsubscribe and security notices are free on every plan. Paid candidates stay with their producers, such as I-59's alerts above an allowance, and reach players through these free channels. The spec's rule that a free event delivered by email stays free conflicts with I-51's email reminders and I-59's email digest as paid candidates; I-30 decides (status note).
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player, I want one inbox and one place to turn notices off, so that every feature does not invent its own email.
+
+**Acceptance.**
+- Every notice the product sends is a catalogue entry with a category the player can switch.
+- Security notices that cannot be turned off are listed as such.
+- No marketing email is sent.
+
+**UX.** The inbox is a page. Email uses the same text. Quiet hours are a setting, not a hidden default the player cannot find.
+
+**Data and API.** An event catalogue and `notify()`. The provider waits on the owner's choice. Switches the product already stores and nothing reads are replaced by this catalogue.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `notice_sent {category, channel: inbox or email}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests get no inbox. Email stays off until the provider and the privacy policy name it. A free notice stays free.
+
+**Open questions.** Amazon SES, Resend or Postmark is the owner's choice. Whether a notice the player asked for is a service message is a lawyer question.
+
+### Definition of done
+
+A reply to a player's comment appears once in their inbox, in their language; they turn on email for one category, receive it within the pacing and quiet hours, and stop it in one click from the email without signing in; a password reset still reaches an address that complained about a digest; and no producer sends mail or stores a preference of its own.
+
+---
+

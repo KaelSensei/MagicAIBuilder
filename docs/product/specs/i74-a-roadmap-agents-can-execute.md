@@ -2,7 +2,7 @@
 
 > **Initiative:** I-74, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for slices 0 to 13, before any new automation slot is added; Later for slices 14 and 15 · **Paid:** nothing here is a paid feature; requirement 8 estimates the owner's time it saves · **Written 2026-11-10**
 > **Research:** one dated note of 2026-11-10, not committed. Every external fact links its own source in [Sources](#sources). Facts about the three automations come from the machine they run on, read the same day.
-> **Owns:** the slice registry and its schema; the generators of the [glance table](../roadmap.md#roadmap-at-a-glance), the [ready lane](../roadmap.md#ready-for-unattended-runs), the [dependency page](dependency-graph.md) and each spec's slice table, and the CI check that keeps them current; the run protocol (live lane, overlap check, draft-PR claim, finish); the run guard; run budgets, run records and the weekly summary of wasted runs. **Does not own:** the VPS capacity decision (D-22 under [Infrastructure and providers](../owner-decisions.md#infrastructure-and-providers), and [I-05](../roadmap.md#i-05-production-safety)'s VPS item); the E2E gate, apart from the empty-push rule (I-05); CI speed budgets and the guard on destructive database commands ([I-71](i71-speed-uptime-and-recovery.md) slices 1, 6 and 7); SonarCloud gating (I-05); the TDD contract ([`tdd-with-ai.md`](../../engineering/tdd-with-ai.md)).
+> **Owns:** the slice registry and its schema; the generators of the [glance table](../roadmap.md#roadmap-at-a-glance), the [ready lane](../roadmap.md#ready-for-unattended-runs), the [dependency page](dependency-graph.md) and each spec's slice table, and the CI check that keeps them current; the run protocol (live lane, overlap check, draft-PR claim, finish); the run guard; run budgets, run records and the weekly summary of wasted runs. **Does not own:** the VPS capacity decision (D-22 under [Infrastructure and providers](../owner-decisions.md#infrastructure-and-providers), and [I-05](i05-production-safety.md)'s VPS item); the E2E gate, apart from the empty-push rule (I-05); CI speed budgets and the guard on destructive database commands ([I-71](i71-speed-uptime-and-recovery.md) slices 1, 6 and 7); SonarCloud gating (I-05); the TDD contract ([`tdd-with-ai.md`](../../engineering/tdd-with-ai.md)).
 > **Proposed changes to neighbours, for the integrator:** I-05's VPS item points here for run budgets and the precheck. D-22 gains an option: run the agents as cloud scheduled tasks or GitHub Actions (open question 2). The specs README says slice tables are generated from `docs/product/slices/`. The dependency page's header names `pnpm roadmap:generate` once slice 14 ships. Slice 0's answers become new owner decisions: [D-85](../owner-decisions.md#infrastructure-and-providers) (the registry format), [D-86](../owner-decisions.md#infrastructure-and-providers) (enforcing the caps, with the forbidden list, the `CLAUDE.md` line and where records go) and [D-87](../owner-decisions.md#d-87-protect-dev-and-staging) (protecting `dev` and `staging`).
 
 ## Overview
@@ -248,3 +248,194 @@ All read on 2026-11-10. None of the pages shows a last-updated date.
 14. GitHub Docs, [About code owners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
 15. GitHub Docs, [About rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets).
 16. GitHub REST API for `KaelSensei/MagicAIBuilder`: repository visibility, branch protection of `dev`, `staging` and `main`, rulesets, `CODEOWNERS`, and authors of PRs #1285 to #1327.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+each scheduled run picks a slice from a lane computed on `origin/dev`, skips one whose files a queued branch or an open PR already changes, claims it with a draft PR before writing code, stops at a budget and leaves a record; the tables people read are generated from one slice registry and fail CI when stale; and what a run must never do is refused by deny rules, a hook and a required CI check, not by its prompt.
+
+### Goals
+
+- A scheduled run started from `origin/dev` picks a slice from the generated lane, skips one whose files a queued branch changes, opens a draft claim before writing code and stops at its cap with a salvage bundle; and it cannot merge, push to `dev` or edit this roadmap, because a deny rule, a hook and a required CI check each refuse it.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-74-01
+
+As an agent picking work, I want the glance table and the dependency page generated from one registry, so that a hand-edited row cannot drift.
+
+#### US-74-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-74-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-74-01 Happy path
+
+Given a signed-in player and the English locale
+When a slice in the registry appears in the glance table and the dependency page.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-74-02 Happy path
+
+Given a signed-in player and the English locale
+When a stale generated section fails CI.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-74-03 Happy path
+
+Given a signed-in player and the English locale
+When a scheduled run does not pick a slice that touches the rules of the run.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-74-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-74-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-74-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Internal. No player flag. Agents pick none of this initiative's own slices.
+
+#### AC-74-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-74-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-74-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+Players do not see this. The registry is a file a reviewer can read.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+A schema for slices. Generation writes between markers. I-80 to I-98, which have no spec, stay hand-written until they have slices.
+
+### Analytics and telemetry
+
+`roadmap_check_failed {reason: stale or overlap}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Internal. No player flag. Agents pick none of this initiative's own slices.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+The registry format is D-85. Protecting `dev` and `staging` is D-87 and needs no code.
+
+### Sources
+
+- https://code.claude.com/docs/en/best-practices
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-74: A Roadmap Scheduled Agents Can Execute Safely
+
+**Spec:** [`specs/i74-a-roadmap-agents-can-execute.md`](i74-a-roadmap-agents-can-execute.md)
+
+**Outcome:** each scheduled run picks a slice from a lane computed on `origin/dev`, skips one whose files a queued branch or an open PR already changes, claims it with a draft PR before writing code, stops at a budget and leaves a record; the tables people read are generated from one slice registry and fail CI when stale; and what a run must never do is refused by deny rules, a hook and a required CI check, not by its prompt.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 13, before any new automation slot is added; Later for slices 14 and 15. Scheduled agents pick none of its slices. Nothing in it is a paid feature
+**Impact / effort:** High / medium
+**Depends on:** nothing for slices 1 and 6; slice 1 for the renderers (slice 3) and the live lane (slice 5); the owner's registry format (slice 0) for the migration (slice 2); slices 2 and 3 for the generator and stale check (slice 4); slice 0 for the run guard (slice 7) and the run record and watchdog (slice 9); slices 2 and 7 for the CI guard (slice 8); slices 4, 5, 6, 7 and 9 for the canonical run protocol (slice 10); slice 5 for the lane after each merge (slice 11); slice 9 for the weekly summary (slice 12); slice 8 for the required check, which is the owner's (slice 13); slice 4 for retiring the outside scripts (slice 14); four weeks of run records for size calibration (slice 15).
+
+Three scheduled runs a day pick one roadmap item and open one PR against `dev`. They work: from 2026-11-07 to 2026-11-10 eight runs opened seven PRs, and all seven merged (#1285, #1292, #1295, #1297, #1309, #1326, #1327). The failures cost more than the count suggests. The one run that pushed nothing used 36% of the eight runs' output tokens and was still alive 29 hours later, holding its worktree, and two runs collided with queued local branches, #1326 with `fix/official-bracket-definitions` on `src/lib/deck/store.ts` and #1327 with `fix/localized-page-metadata` on `src/lib/seo/alternates.ts`. The cause is what the runs read: `origin/dev`'s roadmap stops at I-37, slice metadata sits in free-text cells across 61 tables, the [lane](#ready-for-unattended-runs) is written by hand, claims exist only as open PRs, and every rule is a sentence in a prompt. GitHub's API shows that `dev` and `staging` have no protection while the runs act as the owner's account (2026-11-10). Anthropic's guidance for unattended runs says "If something has to happen every time, make it a hook, a deny rule, or a managed setting" ([best practices](https://code.claude.com/docs/en/best-practices)). I-05 keeps the VPS capacity decision ([D-22](../owner-decisions.md#infrastructure-and-providers)) and the E2E gate, and [I-71](i71-speed-uptime-and-recovery.md) the CI budgets and the guard on destructive commands.
+
+### Scope
+
+- [ ] Slice 0, the owner's: the registry format ([D-85](../owner-decisions.md#infrastructure-and-providers)), how the caps are enforced, with the forbidden list, the `CLAUDE.md` line and where run records go ([D-86](../owner-decisions.md#infrastructure-and-providers)), and protecting `dev` with the guard as a required check ([D-87](../owner-decisions.md#d-87-protect-dev-and-staging)).
+- [ ] **Owner actions, found 2026-11-10.** The precheck and the run prompt live on the VPS, outside the repository, and `CLAUDE.md` is the owner's to change. The precheck (`~/bin/mab-automation-precheck`) counts only open PRs whose head contains `roadmap-`, while the runs of 2026-11-08 pushed `fix/bracket-warning-unique-names-20261108` and `fix/card-add-command-pairing-20261108`; done means it counts `KaelSensei/auto-` heads, drafts included (requirement 4.5). The run prompt still tells a run to fix root-owned test reports with `sudo chown`, which #1302 made unnecessary, since `scripts/e2e-pre-push.sh` now clears them through a container; done means the line is gone, since `sudo` is on the forbidden list. `scripts/git-prune.sh`, which [`CLAUDE.md`](../../CLAUDE.md) recommends for cleanup, force-removes every other worktree and deletes every unprotected local and remote branch, so a run that used it would delete the queue and the other runs' worktrees; done means the prompt and the run guard forbid it and a run removes only what it created (requirement 4.4).
+- [ ] One JSON file of slices per spec in `docs/product/slices/`, validated with `zod` (slice 1); the migration of the 61 tables with a parity report against the scripts kept outside the repository (slice 2); renderers for the glance table, the lane, the dependency page and spec tables (slice 3); and `pnpm roadmap:generate` and `roadmap:check` in CI, so that a stale generated section fails its PR (slice 4).
+- [ ] The run protocol: a live lane on `origin/dev` that drops shipped, claimed and overlapping slices (slice 5); an empty push that skips the E2E gate, so a claim costs nothing (slice 6); a run-only settings file with deny rules and a `PreToolUse` guard (slice 7), and a CI job, "Unattended run guard", for `KaelSensei/auto-` heads (slice 8); run records, a budget watchdog and a salvage bundle (slice 9); and `docs/engineering/unattended-runs.md` with the canonical prompt, which the owner applies to the three automations (slice 10).
+- [ ] The lane recomputed after each merge into `dev` (slice 11), a weekly summary of wasted runs (slice 12), and the owner making the guard a required check on `dev` and pushing queued branches as draft PRs (slice 13).
+- [ ] Later: retire the outside scripts and name the registry on the dependency page (slice 14); let runs take size M slices if four weeks of records support it (slice 15).
+
+### Engineering enablers
+
+- One failing fixture per validation rule, and a frozen snapshot of 2026-11-10 that gives the same ready slices and lane as the outside scripts on the same commit.
+- A one-byte change inside a generated section fails `roadmap:check`; text outside the markers is ignored.
+- Replaying #1327 against a queued branch that changes `src/lib/seo/alternates.ts`, and #1326 against one that changes `src/lib/deck/store.ts`, skips both.
+- The run guard exits 2 on `gh pr merge`, a push to `dev`, `--no-verify`, `SKIP_E2E`, `sudo`, `git-prune.sh`, `prisma migrate` and an edit of this roadmap, and lets `pnpm test` through.
+
+**Paid-tier angle:** none; nothing reaches players. Its value is the owner's week: at the observed rate of three runs in eight needing repair, about 8 of the 21 weekly runs, plus rebuilding the lane by hand after each merge batch, the spec estimates 4 to 6 hours a week, and a third of the runs' output tokens.
+
+### Enrichment (2026-11-11)
+
+**User story.** As an agent picking work, I want the glance table and the dependency page generated from one registry, so that a hand-edited row cannot drift.
+
+**Acceptance.**
+- A slice in the registry appears in the glance table and the dependency page.
+- A stale generated section fails CI.
+- A scheduled run does not pick a slice that touches the rules of the run.
+
+**UX.** Players do not see this. The registry is a file a reviewer can read.
+
+**Data and API.** A schema for slices. Generation writes between markers. I-80 to I-98, which have no spec, stay hand-written until they have slices.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `roadmap_check_failed {reason: stale or overlap}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Internal. No player flag. Agents pick none of this initiative's own slices.
+
+**Open questions.** The registry format is D-85. Protecting `dev` and `staging` is D-87 and needs no code.
+
+### Definition of done
+
+A scheduled run started from `origin/dev` picks a slice from the generated lane, skips one whose files a queued branch changes, opens a draft claim before writing code and stops at its cap with a salvage bundle; and it cannot merge, push to `dev` or edit this roadmap, because a deny rule, a hook and a required CI check each refuse it.
+
+---
+

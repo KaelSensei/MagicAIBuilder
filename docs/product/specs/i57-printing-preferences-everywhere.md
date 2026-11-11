@@ -2,7 +2,7 @@
 
 > **Initiative:** I-57, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next · **Written 2026-11-10**
 > **Research:** dated notes of 2026-11-10 on how competitors choose a printing, Scryfall's search keywords, and a sample of 150 Commander staples resolved through Scryfall's API. The notes are not committed, so every external fact cites a numbered entry in [Sources](#sources).
-> **Owns:** the player's printing rule, its per-deck override, per-card pins, the order in which a printing is chosen when a card enters a deck by any path, the reason recorded with each choice, and the reviewed diff that applies the rule to an existing deck. **Does not own:** printing-level ownership and the acquisition plan ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)); free copies and the commitment index ([I-16](i16-decks-buildable-from-a-collection.md)); the market choice and dated prices ([I-32](i32-seller-handoff-and-affiliate-carts.md)); finish, language, the printing selector's controls, the line syntax and change history ([I-37](i37-editor-depth.md)); export formats ([I-50](i50-play-this-deck-online.md), [I-10](../roadmap.md#i-10-interoperability-and-integrations)); colour signals ([I-49](i49-colour-vision-and-low-vision-display.md)); what the copilot generates ([I-02](i02-checkable-ai-copilot.md)).
+> **Owns:** the player's printing rule, its per-deck override, per-card pins, the order in which a printing is chosen when a card enters a deck by any path, the reason recorded with each choice, and the reviewed diff that applies the rule to an existing deck. **Does not own:** printing-level ownership and the acquisition plan ([I-06](i06-collection-and-purchase-planning.md)); free copies and the commitment index ([I-16](i16-decks-buildable-from-a-collection.md)); the market choice and dated prices ([I-32](i32-seller-handoff-and-affiliate-carts.md)); finish, language, the printing selector's controls, the line syntax and change history ([I-37](i37-editor-depth.md)); export formats ([I-50](i50-play-this-deck-online.md), [I-10](i10-interoperability-and-integrations.md)); colour signals ([I-49](i49-colour-vision-and-low-vision-display.md)); what the copilot generates ([I-02](i02-checkable-ai-copilot.md)).
 
 ## Overview
 
@@ -189,3 +189,209 @@ Slice 1 fixes what players hit today and needs no product decision. Slices 2 to 
 13. EDHMat, [How to import a decklist from Moxfield or Archidekt](https://edhmat.com/guides/import-deck-moxfield-archidekt), updated 2026-09-24.
 14. Archidekt public deck API, [deck 28130431](https://archidekt.com/api/decks/28130431/), one request on 2026-11-10, read for field names only.
 15. Deckstats forum, [topic 5353](https://deckstats.net/forum/index.php/topic,5353.0/prev_next,next.html), 2021, read as a search summary on 2026-11-10; the page answered an automated request with HTTP 402.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player sets one printing rule, such as the original printing, the cheapest in their market, no crossover printings and owned copies first, and every card that enters a deck by any path follows it, with the reason recorded. The rule can be applied to a whole deck as a reviewed diff, overridden per deck and pinned per card, and the chosen printing then drives prices, exports, proxies and the acquisition plan.
+
+### Goals
+
+- With "no Universes Beyond", importing Sol Ring never yields a Universes Beyond printing, and each deck row says why its printing was chosen; a printing the player picks stays picked; a swap updates the price; and applying the rule to a deck changes its total exactly as the preview showed.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-57-01
+
+As a player who picked a printing, I want that printing to stay, so that a later import does not swap it for a different edition and a stale price.
+
+#### US-57-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-57-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-57-01 Happy path
+
+Given a signed-in player and the English locale
+When choosing a printing keeps it, including when the player owns another printing of the same card.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-57-02 Happy path
+
+Given a signed-in player and the English locale
+When a printing change updates the stored price.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-57-03 Happy path
+
+Given a signed-in player and the English locale
+When the rule that chooses a printing is the same at search, import, the wizard and a suggestion.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-57-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-57-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-57-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in. The default rule applies to guests' session decks too, so a guest does not get a different edition than a signed-in player. No flag.
+
+#### AC-57-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-57-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-57-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The current rule is visible: owned first, then the product default, with the exclusions the player set. Applying it to a whole deck is a diff.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+The deck card stores the Scryfall id it already has, and gains language and finish in I-37's slice. The chooser is a pure function.
+
+### Analytics and telemetry
+
+`printing_rule_applied {changed: count}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in. The default rule applies to guests' session decks too, so a guest does not get a different edition than a signed-in player. No flag.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+The product default, newest edition or newest non-Universes-Beyond printing, is an owner decision. French printings for French players are decided with I-11.
+
+### Sources
+
+- https://scryfall.com/docs/api
+- https://archidekt.com/news/3289648
+- https://tappedout.net/mtg-forum/tappedout/how-do-i-avoid-alternate-art-when-deckbuilding/
+- https://cockatrice.github.io/docs/d7/d64/editing_decks_printings.html
+- https://edhmat.com/guides/import-deck-moxfield-archidekt
+- https://github.com/dekkerglen/CubeCobra/pull/3118
+- https://archidekt.com/features
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-57: Printing Preferences Applied Everywhere
+
+**Spec:** [`specs/i57-printing-preferences-everywhere.md`](i57-printing-preferences-everywhere.md)
+
+**Outcome:** a player sets one printing rule, such as the original printing, the cheapest in their market, no crossover printings and owned copies first, and every card that enters a deck by any path follows it, with the reason recorded. The rule can be applied to a whole deck as a reviewed diff, overridden per deck and pinned per card, and the chosen printing then drives prices, exports, proxies and the acquisition plan.
+
+**Status:** Next
+**Priority:** Next. Nothing in it is paid
+**Impact / effort:** Medium / small to medium
+**Depends on:** nothing for slices 1 to 5 and 9; the owner's choice of product default before slice 4; I-37 slice 16 for printings in text lines; I-32 slice 3 for cheapest in euros; I-37 slice 12 for finish; I-16 slice 4 for uncommitted owned copies first.
+
+A card enters a deck by at least ten paths, and each picks a printing its own way; most ask Scryfall by name and get its newest edition. On 2026-11-10 that edition was a Universes Beyond printing for 87 of the 150 most-played Commander cards, 67 of them from two Star Trek sets released three days later, and Lotus Petal resolved to a Magic Online-only printing with no price (computed from the [Scryfall API](https://scryfall.com/docs/api)). Archidekt offers a preferred printing and an "Optimize printings" preview in which each line can be unchecked ([news](https://archidekt.com/news/3289648)), TappedOut a default-printing dropdown ([forum, 2025-09-14](https://tappedout.net/mtg-forum/tappedout/how-do-i-avoid-alternate-art-when-deckbuilding/)), and Cockatrice a pinned printing per card ([docs](https://cockatrice.github.io/docs/d7/d64/editing_decks_printings.html)). Moxfield, read through search summaries only, has a default query that users report does not apply to imports. EDHMat's import guide says "crossover reprints take over the table" ([2026-09-24](https://edhmat.com/guides/import-deck-moxfield-archidekt)). No product found applies one rule at every entry point, import and AI included, records why each printing was chosen, or puts an owned copy first. The copilot never chooses a printing; the rule does.
+
+### Scope
+
+- [ ] Never replace a printing the player picked (slice 1). Today `handlePrintingSelect` (`src/app/[locale]/builder/[deckId]/page.tsx`) passes the picked printing to `addCard`, and `getOwnedPrinting` (`src/lib/deck/store.ts`) swaps in the first owned row with the same name and a different Scryfall ID. A player who owns any other printing of the card gets that one, even when they own the picked printing too.
+- [ ] Update the price when a printing is swapped (slice 1). Today `swapCardPrinting` (`src/lib/deck/store.ts`) sends the new `scryfallId`, `imageUri` and `artCropUri` to `PATCH /api/decks/[id]/cards/[cardId]` and never the price, so deck totals and the acquisition plan (`src/lib/collection/acquisition-plan.ts`), which read `DeckCard.price`, keep the old printing's price.
+  - `patchCardSchema` (`src/lib/validation/card.ts`) has no price field, so this slice adds one. The I-59 spec found the wider defect, prices sent by the browser, stored unchecked and never refreshed, recorded under [I-59](i59-prices-over-time-and-alerts.md).
+- [ ] `choosePrinting` with its precedence (explicit pick, source printing, pin, owned copy, rule, fallback), a `printingSource` on each deck row, and the missing `ScryfallCard` fields (slice 2). A card is ranked down, never dropped: when every printing is excluded, the fallback keeps the order and names the card.
+- [ ] A rule-to-query compiler, a batched server resolver with a cache, so that a 100-card import needs at most 8 search requests, dated Secret Lair and The List code lists, and a weekly set check (slice 3). Today the name lookups in `src/lib/scryfall/client.ts` do not filter to paper, so a digital-only printing can be chosen.
+- [ ] `PrintingPreference`, its API, and a settings page that states the rule as a sentence, links its Scryfall query and previews three cards, with the product default (slice 4).
+- [ ] Every entry point through the resolver, with a test that fails when a store action that creates deck rows bypasses it, and an add summary by source (slice 5). Today `addCard`, `addDeckCard` and `applyBulkEdit` take an owned printing silently, while `setCommander`, `setPartner`, `setCompanion` and `addToMaybeboard` do not.
+  - [I-58](i58-mana-base-builder.md)'s mana base builder joins the entry points: the lands its proposal adds take their printing from the resolver (I-58 slice 9), and the builder never picks a printing.
+- [ ] Imports keep the printing their source names, an Archidekt row's Scryfall `uid` first and a text line's `(SET) number` next, with a "Use my printing rule for every card" option (slice 6). Today `SET_CODE_PATTERN` (`src/lib/deck/import.ts`) strips the set and number, and `src/lib/import/url-import.ts` reads names only.
+- [ ] The AI wizard and the copilot get printings from the rule, and their budget checks price that printing (slice 7); fork and package dialogs offer to keep the source's printings or use the rule (slice 8).
+- [ ] "Apply my printing rule" to a deck: a diff with explicit, pinned and owned lines unchecked, one transaction, a 409 on a stale deck and one undo entry (slice 9).
+- [ ] A per-deck override, per-card pins, and a printing selector that shows each printing's collector number and price and marks the rule's pick (slices 10–12).
+- [ ] Later: cheapest in euros after I-32 slice 3, bling with finish after I-37 slice 12, and owned copies not committed to another deck first after I-16 slice 4 (slices 13–15).
+- [ ] Leave out cards printed only in Universes Beyond, not only their printings: the same card-level flag that resolves `not:universesbeyond` hides such cards from card search, copilot suggestions ([I-02](i02-checkable-ai-copilot.md)), I-18's radar and I-54's commander finder, off by default and with no value judgement shown. An explicit Universes Beyond search still finds them, and [I-15](i15-rule-zero-sheets-and-pod-profiles.md)'s sheet can state the choice as a house rule checked against each deck. Cube Cobra merged such a preference on 2026-11-02 ([PR #3118](https://github.com/dekkerglen/CubeCobra/pull/3118)); cards that also have a regular printing stay. Demand is mixed: a Draftsim article of August 2025 (search summary) puts Universes Beyond commanders at 20% of EDHREC's top commanders.
+- [ ] Recommend answering [D-74](../owner-decisions.md#french-language) "yes": a language rule option, "prefer French printings when owned or when they exist", resolved through Scryfall's `lang:` search and cached by I-67. Archidekt "Non-English card version support", 140 points, open ([features](https://archidekt.com/features), seen 2026-11-10). Added 2026-11-11.
+
+### Engineering enablers
+
+- The precedence table, the tie-breaks, the all-excluded fallback and the rejection of digital-only printings are solitary tests, and the same rule, data and price date give the same printing.
+- Recorded Scryfall responses of 2026-11-10 for Sol Ring, Command Tower, Dark Ritual, The One Ring and Lotus Petal fix the expected printing under each rule.
+- Applying the rule changes only the checked lines and only their printing fields, in one transaction.
+- Every keyword the query compiler emits appears in a stored copy of Scryfall's syntax page.
+
+**Paid-tier angle:** none. Archidekt, TappedOut and Moxfield offer printing defaults free, and printing data is card data, which the strategic boundaries keep free.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who picked a printing, I want that printing to stay, so that a later import does not swap it for a different edition and a stale price.
+
+**Acceptance.**
+- Choosing a printing keeps it, including when the player owns another printing of the same card.
+- A printing change updates the stored price.
+- The rule that chooses a printing is the same at search, import, the wizard and a suggestion.
+
+**UX.** The current rule is visible: owned first, then the product default, with the exclusions the player set. Applying it to a whole deck is a diff.
+
+**Data and API.** The deck card stores the Scryfall id it already has, and gains language and finish in I-37's slice. The chooser is a pure function.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `printing_rule_applied {changed: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. The default rule applies to guests' session decks too, so a guest does not get a different edition than a signed-in player. No flag.
+
+**Open questions.** The product default, newest edition or newest non-Universes-Beyond printing, is an owner decision. French printings for French players are decided with I-11.
+
+### Definition of done
+
+With "no Universes Beyond", importing Sol Ring never yields a Universes Beyond printing, and each deck row says why its printing was chosen; a printing the player picks stays picked; a swap updates the price; and applying the rule to a deck changes its total exactly as the preview showed.
+
+---
+

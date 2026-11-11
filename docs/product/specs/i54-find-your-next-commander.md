@@ -2,7 +2,7 @@
 
 > **Initiative:** I-54, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for the finder on card data, the wizard's commander step, the first-run entry and free text (slices 1 to 7, 9, 10 and 15); Later for signals computed from decks, indexable pages and the collection path (slices 8, 11 to 14 and 16), which wait for I-29, I-34 and I-16 · **Written 2026-11-10**
 > **Research:** one dated note on commander finders, quizzes, random pickers, EDHREC and Scryfall browsing, and r/EDH requests. It is not committed, so every external fact links its own entry in [Sources](#sources). Points on terms are research, not legal advice.
-> **Owns:** the commander catalogue and the signals computed for each commander, the play-style vocabulary and its definitions, the finder's filters and their visible query, the ranking and its "why it matches" lines, "not like my decks", the seeded random pick, the wizard's commander step, and the public finder pages with their page kind for the index policy. **Does not own:** turning a description into a query ([I-14](i14-verifiable-natural-language-search.md)); owned coverage and free copies ([I-16](i16-decks-buildable-from-a-collection.md)); the precon catalogue ([I-17](i17-precon-path-and-tiered-upgrades.md)); explanations of rules and terms ([I-27](i27-learning-while-building.md)); bracket names, rules and the bracket check ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the deck corpus and statistics computed from it ([I-29](i29-cross-site-deck-index.md)); the index policy and its thresholds ([I-34](i34-commander-data-reports.md)); the first-run panel and product events ([I-39](i39-first-run-activation-and-measurement.md)); the build route's prompt ([I-02](i02-checkable-ai-copilot.md)); dated regional prices ([I-32](i32-seller-handoff-and-affiliate-carts.md) slice 2); public deck pages by commander ([I-08](../roadmap.md#i-08-share-compare-and-learn)); Commander variants ([I-42](i42-commander-variants-duel-cedh-pauper.md)); plans and prices ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** the commander catalogue and the signals computed for each commander, the play-style vocabulary and its definitions, the finder's filters and their visible query, the ranking and its "why it matches" lines, "not like my decks", the seeded random pick, the wizard's commander step, and the public finder pages with their page kind for the index policy. **Does not own:** turning a description into a query ([I-14](i14-verifiable-natural-language-search.md)); owned coverage and free copies ([I-16](i16-decks-buildable-from-a-collection.md)); the precon catalogue ([I-17](i17-precon-path-and-tiered-upgrades.md)); explanations of rules and terms ([I-27](i27-learning-while-building.md)); bracket names, rules and the bracket check ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the deck corpus and statistics computed from it ([I-29](i29-cross-site-deck-index.md)); the index policy and its thresholds ([I-34](i34-commander-data-reports.md)); the first-run panel and product events ([I-39](i39-first-run-activation-and-measurement.md)); the build route's prompt ([I-02](i02-checkable-ai-copilot.md)); dated regional prices ([I-32](i32-seller-handoff-and-affiliate-carts.md) slice 2); public deck pages by commander ([I-08](i08-share-compare-and-learn.md)); Commander variants ([I-42](i42-commander-variants-duel-cedh-pauper.md)); plans and prices ([I-30](i30-business-model-and-paid-tier.md)).
 
 ## Overview
 
@@ -240,3 +240,202 @@ Read 2026-11-10 unless dated otherwise.
 32. Arctic Shift, subreddit index searched for the prefix "edhrec". https://arctic-shift.photon-reddit.com/api/subreddits/search?subreddit_prefix=edhrec
 33. Scryfall, API documentation, use of Scryfall data. https://scryfall.com/docs/api
 34. Scryfall, bulk data: the Oracle Cards file (one object per Oracle ID), the Oracle Tags file from Tagger, and "prices should be considered dangerously stale after 24 hours"; files dated 2026-11-09. https://scryfall.com/docs/api/bulk-data
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+### Goals
+
+- A guest filters commanders by colours, style, complexity and budget, sees the query and one line of evidence per filter on each result, takes a replayable random pick and starts a deck with it; every build request carries a commander; and no page built only from Scryfall data enters the index.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-54-01
+
+As a player who has not picked a commander, I want filters I set and a reason on each result, so that a model is not choosing for me.
+
+#### US-54-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-54-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-54-01 Happy path
+
+Given a signed-in player and the English locale
+When every active filter is visible and removable.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-54-02 Happy path
+
+Given a signed-in player and the English locale
+When each result has one line that cites the filter it matched.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-54-03 Happy path
+
+Given a signed-in player and the English locale
+When results are not ordered by popularity.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-54-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-54-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-54-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-out to browse. Saving the choice needs an account or a guest deck. The flag for any model wording stays off.
+
+#### AC-54-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-54-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-54-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The finder is a page the wizard can open. A seeded shuffle is labelled as random, not as best.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Reads I-67's card table. Writes the chosen commander through the existing commander save. No model call in the default path.
+
+### Analytics and telemetry
+
+`commander_chosen {source: finder or typed, filters: count}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-out to browse. Saving the choice needs an account or a guest deck. The flag for any model wording stays off.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether budget pages can show a full-deck estimate depends on a price source we do not have for most commanders.
+
+### Sources
+
+- https://www.reddit.com/r/EDH/comments/1vwdrw2/
+- https://edhrec.com/commanders
+- https://loreweavermtg.pages.dev/DeckbuilderQuiz-Announce
+- https://scryfall.com/docs/api
+- https://serebii.net/tcgpocket/themedecks.shtml
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-54: Find Your Next Commander
+
+**Spec:** [`specs/i54-find-your-next-commander.md`](i54-find-your-next-commander.md)
+
+**Outcome:** a player narrows the commanders Scryfall says can lead a deck with filters for colours, play style, mechanics, complexity, bracket target, a budget for the whole deck and "not like my decks", and every result says why it matches, one line per filter with its source. The finder works signed out, and no model chooses, orders or describes a commander.
+
+**Status:** Next
+**Priority:** Next for the finder on card data, the wizard's commander step, the first-run entry and free text (slices 1 to 7, 9, 10 and 15); Later for signals computed from decks, indexable pages and the collection path (slices 8, 11 to 14 and 16), which wait for I-29, I-34 and I-16
+**Impact / effort:** Medium / medium
+**Depends on:** I-67 slices 2 and 7 for the card and Oracle Tags tables (slice 1), re-pointed 2026-11-10; I-02 and the owner for the build route's prompt branch (slice 6); I-39 slice 5 for the first-run panel; I-14 slices 1, 2 and 4 for free text; I-29 slices 8, 9 and 11 for deck signals; I-34 slice 1 for curated pages; I-16 slices 2 and 4 for the collection path; I-30's decision for slice 14.
+
+"Which commander should I build next?" is a recurring r/EDH post: titles containing "what commander" alone gave 22 requests in 83 days. Players state a play style, their other decks, a bracket, colours and sometimes a budget for the whole deck, such as "I dont wanna spend more than 250€" ([r/EDH, 2026-08-23](https://www.reddit.com/r/EDH/comments/1vwdrw2/)). EDHREC ranks commanders by how many decks they lead and explains nothing beyond the count ([Top Commanders](https://edhrec.com/commanders)), and its random button ignores every filter. A quiz maps answers to a commander by a method it calls "not scientific, but it's fun" ([Loreweaver, 2025-06-05](https://loreweavermtg.pages.dev/DeckbuilderQuiz-Announce)). No finder found combines a budget for the whole deck, a complexity preference and "not like my decks", explains each result against each filter, ranks by owned coverage or works in French. Scryfall's terms bound what a page may be: "You may not simply repackage, republish, or proxy Scryfall data" ([API terms](https://scryfall.com/docs/api)), so a page built only from card data is not indexable. MagicAIBuilder's own wizard asks a model to "Choose the best commander" when the player skips the step.
+
+### Scope
+
+- [ ] A commander catalogue keyed by Oracle ID, rebuilt daily from I-67's card and Oracle Tags tables (re-pointed 2026-11-10 to I-67 slices 2 and 7) and never paged through search (slice 1). `fetchAllPages` (`src/lib/scryfall/client.ts`) stops after `PAGE_SAFETY_CAP = 20` pages, 3,500 cards at 175 a page, fewer than the 3,754 commanders, and returns the partial list without an error; its callers today read the banned list and the Game Changers, far below the cap. `buildCommanderSearchQuery` (`src/lib/scryfall/search.ts`) searches by name and colours only.
+  - An "Include previews" filter, off by default, adds preview commanders through [I-73](i73-every-set-release-ready-on-day-one.md)'s `previewQuery`, each labelled with its release date (2026-11-10). The spec's catalogue query, `is:commander legal:commander`, misses them.
+- [ ] One play-style vocabulary with versioned definitions, compiled both to a Scryfall query fragment and to a local predicate, with a daily conformance check and an owner-labelled fixture (slice 2). It replaces three lists: the wizard's 8 strategies, the 11 `ARCHETYPES` (`src/lib/ai/archetypes.ts`) and the 17 themes of `detectThemes` (`src/lib/deck/themes.ts`), whose Tokens rule counts "put a", which also matches counters.
+  - [I-65](i65-how-this-deck-wins.md)'s route definitions reuse this format and its compilers. A style says how a deck plays and a route how a game ends, and each style may link the routes it usually uses. I-67 slice 7 loads the Oracle Tags once (re-pointed 2026-11-10); slice 2 builds the style clauses on them, and I-65 slice 8 reads both.
+- [ ] The finder page and route, signed out: colours, styles in and out, keywords and types, the Game Changer rule, the visible query, a funnel and one "why it matches" line per filter (slice 3); a complexity score with its factors (slice 4); and a seeded "Surprise me" (slice 5).
+- [ ] "Help me choose" in the wizard instead of "let the AI choose", and an honest budget label (slice 6). The budget label defect is recorded under I-02, and removing the prompt branch is I-02's change and the owner's decision.
+- [ ] "Not like my decks" and "like a commander I enjoy" (slice 7), "Help me choose a commander" in I-39's first-run panel (slice 9), free text turned into the same visible filters through I-14 (slice 10), and saved finder profiles (slice 15).
+- [ ] Later: a full-deck cost estimate and a bracket distribution from public decks, with n and date (slice 8); curated pages under I-34's policy, `noindex` until deck signals pass its thresholds (slice 11); collection-aware ranking (slice 12); similarity and popularity bands with their denominators (slice 13); and the French review (slice 16).
+- [ ] After I-30's decision: a paid entitlement for slice 12 (slice 14).
+- [ ] A filter "can include card X": colour identity contains X's, X is legal, and X's Game Changer status fits the chosen bracket. Pokémon TCG Pocket builds theme decks around a "highlight card" ([Serebii](https://serebii.net/tcgpocket/themedecks.shtml), seen 2026-11-10). Added 2026-11-11.
+
+### Engineering enablers
+
+- No finder module imports the AI client, every result line carries a source, and no response sorts by `edhrec_rank`, which ranks a card, not a commander's popularity.
+- For each style, the local predicate and Scryfall's count agree on a recorded response, and a mismatch fails the refresh.
+- A curated page below threshold is `noindex` and absent from the sitemap, a query-string page is `noindex` without a canonical, and no commander slug equals a reserved segment such as `find`.
+- Once slice 6 ships, every build request carries a commander.
+
+**Paid-tier angle:** the finder, its explanations, the random pick, popularity and price signals, public pages and saved profiles stay free: card data cannot be paywalled, and fan content cannot need a subscription. The one candidate is collection-aware ranking, which orders commanders by how much of a reference list the player owns, net of copies committed elsewhere. The spec rates the case weak until I-16's demand test and I-29's reference lists exist.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who has not picked a commander, I want filters I set and a reason on each result, so that a model is not choosing for me.
+
+**Acceptance.**
+- Every active filter is visible and removable.
+- Each result has one line that cites the filter it matched.
+- Results are not ordered by popularity.
+
+**UX.** The finder is a page the wizard can open. A seeded shuffle is labelled as random, not as best.
+
+**Data and API.** Reads I-67's card table. Writes the chosen commander through the existing commander save. No model call in the default path.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `commander_chosen {source: finder or typed, filters: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-out to browse. Saving the choice needs an account or a guest deck. The flag for any model wording stays off.
+
+**Open questions.** Whether budget pages can show a full-deck estimate depends on a price source we do not have for most commanders.
+
+### Definition of done
+
+A guest filters commanders by colours, style, complexity and budget, sees the query and one line of evidence per filter on each result, takes a replayable random pick and starts a deck with it; every build request carries a commander; and no page built only from Scryfall data enters the index.
+
+---
+

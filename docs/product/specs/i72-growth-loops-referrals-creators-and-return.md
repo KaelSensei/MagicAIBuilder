@@ -74,7 +74,7 @@ Verified on `dev` at `fee835d8` on 2026-11-10:
 
 | Loop                            | What travels                                    | Entry value                                         | Surface owner                                      |
 | ------------------------------- | ----------------------------------------------- | --------------------------------------------------- | -------------------------------------------------- |
-| Shared deck link                | A public or share-token deck URL                | `deck_page`, `share_page`                           | [I-08](../roadmap.md#i-08-share-compare-and-learn) |
+| Shared deck link                | A public or share-token deck URL                | `deck_page`, `share_page`                           | [I-08](i08-share-compare-and-learn.md) |
 | Embed and deck image            | An iframe in an article; the preview image      | `deck_page` (via `embed`)                           | I-36                                               |
 | Discord                         | A link preview; an app reply                    | `deck_page` (via `discord`)                         | I-46                                               |
 | Creator decklist in a video     | A deck URL in a description or pinned comment   | `deck_page`, `creator_page`                         | I-36, group 5                                      |
@@ -245,3 +245,194 @@ Slices 5 and 7 can start today, and slice 1 follows I-39 slice 2. Slice 1 is the
 11. Légifrance, [Loi n° 2023-451 du 9 juin 2023](https://www.legifrance.gouv.fr/loda/id/JORFTEXT000047663185), consolidated version in force on 2026-11-10: art. 1 as amended by ordonnance 2024-978, art. 5-2, art. 8.
 12. Directive 2005/29/EC, [Annex I](https://www.legislation.gov.uk/eudr/2005/29/annex/I/adopted), point 28, legislation.gov.uk copy of the text as adopted; read through a search summary on 2026-11-10 because EUR-Lex returned no content to the fetcher.
 13. [Moxfield on Patreon](https://www.patreon.com/moxfield) and [EDHREC on Patreon](https://www.patreon.com/edhrec/about), both HTTP 403 on 2026-11-10.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
+
+### Goals
+
+- A signed-out visitor forks a public deck, signs up with Google and lands in the builder on the fork; the owner sees that sign-up under its entry, with n and an interval; no link a player copies carries a parameter; and no notice reaches a player because they went quiet.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-72-01
+
+As a player who found a deck while signed out, I want to fork it and land back on my copy, so that sign-up is not a dead end.
+
+#### US-72-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-72-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-72-01 Happy path
+
+Given a signed-in player and the English locale
+When a signed-out fork goes through sign-up and returns to the new deck.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-72-02 Happy path
+
+Given a signed-in player and the English locale
+When the entry point is recorded without a campaign that ranks people.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-72-03 Happy path
+
+Given a signed-in player and the English locale
+When a referral, if one exists later, is plan time, not cash.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-72-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-72-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-72-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: The signed-out fork is on when I-39's guest handoff is on. Referral credit stays Later, behind the lawyer.
+
+#### AC-72-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-72-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-72-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The fork button on a public deck is enabled for a visitor and explains that an account is required. No countdown and no streak.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+A field on the account for the entry. Events go through I-39. Rewards, later, are ledger rows, not a balance of money.
+
+### Analytics and telemetry
+
+`signup_entry {via: fork, direct or other}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+The signed-out fork is on when I-39's guest handoff is on. Referral credit stays Later, behind the lawyer.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+A getting-started email stays off unless D-78 changes. Creator seats stay behind D-80.
+
+### Sources
+
+- https://support.cardcastle.co/articles/2014406-referral-program
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-72: Growth Loops That Respect Players: Referrals, Creators And Coming Back
+
+**Spec:** [`specs/i72-growth-loops-referrals-creators-and-return.md`](i72-growth-loops-referrals-creators-and-return.md)
+
+**Outcome:** every way a Commander player arrives, from a shared deck or a creator's decklist to a pod invite or a referral link, leads into an account without losing the page; the owner sees sign-ups, activation and time to the first full-size deck by entry; rewards are months of the plan, never cash; and nothing brings a player back that the player did not set up.
+
+**Status:** Next
+**Priority:** Next for slices 1, 5, 7, 8 and 9, which need no decision, and for slices 2 and 3 once I-39's event store lands (its slice 10, behind its legal slice 0); Later for slices 4, 6 and 10 to 16, which wait for view counts, the paid tier, I-36's later slices, counsel or the owner. Nothing in it is sold: the referral credit and the creator seat hand out months of the paid plan, so they exist only if I-30 sells one
+**Impact / effort:** High / medium
+**Depends on:** nothing for slices 5 and 7; I-39 slice 2 for the signed-out fork (slice 1); I-39 slice 10 for the entry fields and `share_action` (slice 2); I-39 slice 12 for the loop view (slice 3); I-36 slice 12's view counts for the share-to-signup rate (slice 4); I-30 slice 10 for the "what it takes" panel (slice 6); I-63 slice 1 for the return-loop guard (slice 9); I-63 slices 2 and 3, D-78 and D-50 for a reminder the player sets (slice 10); I-30 slice 9, I-44 slice 12, I-61 slices 10 and 11 and L-43 for the referral code (slice 11), and I-30 slices 7 and 8 for its ledger (slice 12); I-36 slices 2 and 3 for the creator kit (slice 13); I-36 slice 10 and I-69 slice 1 for verified links (slice 14); I-30 slices 4 and 9, D-80 and L-43 for creator grants (slice 15); I-15 slices 3 and 4 and D-40 for the pod invite (slice 16).
+
+The product has to pay, and nothing yet counts where an account comes from. [I-66](i66-running-costs-and-margin.md) finds that 22 monthly or 33 yearly payers cover the fixed costs and about 1,230 to 1,870 make a living; at I-30's assumed 3% conversion that is 733 to 62,000 active accounts. A visitor who opens a shared deck cannot fork it: `PublicDeckActions.tsx` disables "Fork" when signed out (line 115), and `SignUpForm.tsx` sends both sign-up routes to `/decks` (lines 43 and 59), checked on `origin/dev` at `fee835d8`. The reference sites grew through creators and gatekeepers: Archidekt sponsors creators and earns affiliate income, EDHREC recruits writers with no pay mentioned, and CardCastle gives both sides "$9 in credits" for a sign-up that pays nothing ([help centre, 2023-08-09](https://support.cardcastle.co/articles/2014406-referral-program)). None found ties a reward to a real payment or labels it for the referrer. One rule holds the initiative together: a loop is something a player chooses to do. Nothing fires because a player went quiet, nothing ranks people by spend, referrals or audience, and the product never writes to a third party.
+
+### Scope
+
+- [ ] Slice 0, no code: the answer to [D-78](../owner-decisions.md#product-scope-and-non-goals) (this initiative recommends none now, and a reminder the player sets once D-50 is answered), the creator programme ([D-80](../owner-decisions.md#product-scope-and-non-goals)), the referral terms (one month each, at most six credited months a year, proposed), and L-43 (e) to (h) for counsel.
+- [ ] A signed-out fork and "Build your own" on public deck and share pages, through credentials and Google sign-up and back to the builder on the fork (slice 1); `User.signupEntry` and `User.signupVia` written once from allowlisted enums, `via` only on the product's own links (embed, Discord, recap), and a `share_action` event in I-39's allowlist (slice 2); a loop view in I-39's owner page with n and intervals (slice 3).
+- [ ] `whatItTakes`, a pure function that turns I-66's payers into the sign-ups a month each goal needs, with fixture tests (slice 5). On the spec's assumptions the floor needs about 244 a month and a living thousands (computed).
+- [ ] The publishing calendar, which says which content ships when: `docs/product/publishing-calendar.md`, each row with its source, read date, output slice and named owner, reading set dates and milestones from [I-73](i73-every-set-release-ready-on-day-one.md)'s release calendar once it exists (slice 7), and a docs check that fails on a missing field and lists rows due within 30 days (slice 8). Moved 2026-11-10 from I-34's "publishing calendar" item.
+- [ ] Returning players: only events the player set up bring them back (a rules change on a deck they own, a price rule on their wanted list, a radar watch they turned on), through I-63's categories, with a guard test that no producer reads activity or session data (slice 9).
+- [ ] Later: a share-to-signup rate per 1,000 public deck and embed views (slice 4) and the "what it takes" panel with measured rates (slice 6); a reminder the player sets on one deck, blocked on D-78 and D-50 (slice 10); the referral code, `/join/{code}` with no cookie and the labelling text in English and French (slice 11), and the credit ledger, applied after the 14-day withdrawal window, void on refund and capped at six months a year (slice 12), both moved from I-30; the creator kit (slice 13), moved from I-36, and operator-verified links (slice 14); early access and a capped complimentary seat for creators, if D-80 allows (slice 15); a pod invite that opens the pod's comparison signed out, after D-40 (slice 16).
+
+### Engineering enablers
+
+- A signed-out fork ends in the builder on the fork with `signupEntry = deck_page`; an unknown entry stores `other`; an absolute or `//host` return path falls back to `/decks`.
+- The share action and the copy button produce the canonical URL with no query string, and no generated URL carries a user id, username or code except the referral link.
+- Discovery, community, search and sitemap outputs are byte-identical with and without a creator grant or a verified link.
+- A dependency test fails if a notification producer imports `UserActivityDay`, session tables or a last-seen field.
+
+**Paid-tier angle:** nothing is sold. Every loop, page, link, notice and the creator kit stay free, and no loop gates a deck, guide or report. The referral credit and the creator seat hand out months of the paid plan, so they wait for I-30 slice 9 and L-16. A credited referral forgoes at most two months of contribution, about €4.14 on the monthly plan, and 25 creator seats would cost €2.50 to €13.75 a month (estimates in the spec).
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who found a deck while signed out, I want to fork it and land back on my copy, so that sign-up is not a dead end.
+
+**Acceptance.**
+- A signed-out fork goes through sign-up and returns to the new deck.
+- The entry point is recorded without a campaign that ranks people.
+- A referral, if one exists later, is plan time, not cash.
+
+**UX.** The fork button on a public deck is enabled for a visitor and explains that an account is required. No countdown and no streak.
+
+**Data and API.** A field on the account for the entry. Events go through I-39. Rewards, later, are ledger rows, not a balance of money.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `signup_entry {via: fork, direct or other}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** The signed-out fork is on when I-39's guest handoff is on. Referral credit stays Later, behind the lawyer.
+
+**Open questions.** A getting-started email stays off unless D-78 changes. Creator seats stay behind D-80.
+
+### Definition of done
+
+A signed-out visitor forks a public deck, signs up with Google and lands in the builder on the fork; the owner sees that sign-up under its entry, with n and an interval; no link a player copies carries a parameter; and no notice reaches a player because they went quiet.
+
+---
+

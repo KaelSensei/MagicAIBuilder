@@ -3,7 +3,7 @@
 > **Initiative:** I-78, proposed for the [roadmap](../roadmap.md) · **Status:** Next — proposed 2026-11-11 · **Priority:** Next for slices 1 to 3 (definitions and the profile, the builder panel, the Rule 0 sheet line); Later for slices 4 to 9, which wait for the owner's labelled fixture, I-34 slice 3, I-15 slice 4, I-65 slices 3 and 4, an owner decision on public pages, L-22 (Tagger) and D-25 (salt) · **Paid:** never for one deck's profile · **Written 2026-11-11**
 > **Placement:** a third card taxonomy, beside [I-65](i65-how-this-deck-wins.md)'s route roles (how a deck ends a game) and [I-31](i31-deck-lab.md)'s lab kinds (mana). Hosting it in I-65 would change that initiative's outcome from "how it wins" to "how it plays at the table". [I-15](i15-rule-zero-sheets-and-pod-profiles.md) records only what players state (1.3), and [I-54](i54-find-your-next-commander.md) owns play styles.
 > **Research:** one dated note of 2026-11-11, not committed, so every external fact links its entry in [Sources](#sources). Counts marked **computed** come from Scryfall's public search on 2026-11-11. Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** the table-effect classes and their versioned definitions, the per-card matches, the deck's table profile and its exact and heuristic labels, the table line offered to I-15 and the pod fit check, and the builder panel. **Does not own:** the clause format and the verdict-word list (I-65 slice 1, shared); route kinds, roles and answer classes (I-65); bracket rules, `BracketRule` and the bracket check ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the dated Game Changers list ([I-48](i48-official-changes-reach-every-deck.md)); the Spellbook lookup ([I-09](../roadmap.md#i-09-meta-and-evidence)); sheets, pods and consent (I-15); the Oracle Tags join ([I-67](i67-one-card-data-pipeline.md) slice 7); the methods page ([I-34](i34-commander-data-reports.md)); salt data and partnerships ([I-29](i29-cross-site-deck-index.md) slice 13, D-25).
+> **Owns:** the table-effect classes and their versioned definitions, the per-card matches, the deck's table profile and its exact and heuristic labels, the table line offered to I-15 and the pod fit check, and the builder panel. **Does not own:** the clause format and the verdict-word list (I-65 slice 1, shared); route kinds, roles and answer classes (I-65); bracket rules, `BracketRule` and the bracket check ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the dated Game Changers list ([I-48](i48-official-changes-reach-every-deck.md)); the Spellbook lookup ([I-09](i09-meta-and-evidence.md)); sheets, pods and consent (I-15); the Oracle Tags join ([I-67](i67-one-card-data-pipeline.md) slice 7); the methods page ([I-34](i34-commander-data-reports.md)); salt data and partnerships ([I-29](i29-cross-site-deck-index.md) slice 13, D-25).
 
 **Proposed changes to neighbours, for the integrator:**
 
@@ -260,3 +260,192 @@ Read 2026-11-11 unless dated otherwise.
 14. r/EDH, "Cards, decks and Commanders that ARE the correct threat assessment", 2025-09-28 (Arctic Shift). https://www.reddit.com/r/EDH/comments/1nsltai/
 15. Arctic Shift, r/EDH titles containing "archenemy" since 2025-01-01 (**computed**: 69 titles, 1,635 points). https://arctic-shift.photon-reddit.com/api/posts/search?subreddit=EDH&title=archenemy&after=2025-01-01&limit=100 ; the quoted thread, 2026-10-17: https://www.reddit.com/r/EDH/comments/1x8guim/
 16. Scryfall API, card collection lookups for the fixture cards named in the testing strategy, 2026-11-11. https://api.scryfall.com/cards/collection
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+the deck page lists, with counts and the cards, what the deck gives to, takes from and provokes in the other three players: group hug, gifts, wheels and donation; group slug, mass removal, theft and taxes; goad, forced attacks and attack deterrents; the monarch, the initiative and votes; effects that grow per opponent; and the four categories the bracket rules name (Game Changers, mass land denial, extra turns, two-card combos). Each class is labelled exact or heuristic, never as an opinion, and the Rule 0 sheet and the pod fit check read one line from it.
+
+### Goals
+
+- A group-hug player opens the panel and reads one line of counts per group and the four bracket-rule counts, expands each class to its cards and the clause that matched, and sees which classes are exact and which heuristic; the pod's Rule 0 sheet shows the same line beside the declared fields without filling any of them, and a Spellbook timeout reads "two-card combos not checked".
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-78-01
+
+As a player sitting down, I want to see what this deck does to the other three players, so that the sheet can mention extra turns or land denial without calling the deck rude.
+
+#### US-78-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-78-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-78-01 Happy path
+
+Given a signed-in player and the English locale
+When each class names its definition and the cards.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-78-02 Happy path
+
+Given a signed-in player and the English locale
+When the words salty, unfair and threat do not appear.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-78-03 Happy path
+
+Given a signed-in player and the English locale
+When a declared field on the Rule 0 sheet is not overwritten.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-78-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-78-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-78-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in for the private panel. No flag for the private panel once the definitions pass. Salt stays behind D-25.
+
+#### AC-78-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-78-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-78-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+A line on the builder and, when I-15's comparison exists, a computed column. Public pages stay off until the owner decides.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Classes are versioned definitions over oracle text, Game Changers and Spellbook. No new feed. No stored score.
+
+### Analytics and telemetry
+
+`table_line_shown {classes: count}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in for the private panel. No flag for the private panel once the definitions pass. Salt stays behind D-25.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether heuristic classes reach the sheet before they are measured is open. Tagger clauses wait on the licence.
+
+### Sources
+
+- https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025
+- https://www.reddit.com/r/EDH/comments/1orb6cd/
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-78: What This Deck Does To The Table
+
+**Spec:** [`specs/i78-what-this-deck-does-to-the-table.md`](i78-what-this-deck-does-to-the-table.md)
+
+**Outcome:** the deck page lists, with counts and the cards, what the deck gives to, takes from and provokes in the other three players: group hug, gifts, wheels and donation; group slug, mass removal, theft and taxes; goad, forced attacks and attack deterrents; the monarch, the initiative and votes; effects that grow per opponent; and the four categories the bracket rules name (Game Changers, mass land denial, extra turns, two-card combos). Each class is labelled exact or heuristic, never as an opinion, and the Rule 0 sheet and the pod fit check read one line from it.
+
+**Status:** Next
+**Priority:** Next for slices 1 to 3 (the definitions and the profile, the builder panel, the Rule 0 sheet line), directly after I-65; Later for slices 4 to 9, which wait for the owner's labelled decks, I-34 slice 3, I-15 slice 4, I-65 slices 3 and 4, a decision on public pages, L-22 (Tagger) and D-25 (salt). One deck's profile is never paid
+**Impact / effort:** Medium / medium
+**Depends on:** I-65 slice 1 for the classes (slice 1); I-15 slice 2 for the sheet line (slice 3); I-34 slice 3 and the owner's labelled decks for precision and recall (slice 4); I-15 slice 4 for the pod fit check (slice 5); I-65 slices 3 and 4 for "built on the board or from hand" (slice 6); an owner decision for public pages (slice 7); I-67 slice 7, blocked for release on L-22, for Tagger clauses (slice 8); I-29 slice 13, blocked on D-25, L-24 and L-23, for salt (slice 9).
+
+No file under `src` classifies the monarch, the initiative, goad, group hug, pillowfort, theft or donation. `detectThemes`'s Stax rule (`src/lib/deck/themes.ts`) folds phrases such as "each opponent" into one theme confidence, mass land denial and extra turns appear only as rules in the copilot's prompt, and the Spellbook schema drops `salt` (checked on `dev` at `2cf792e8`). Wizards' bracket text names four table effects and describes Bracket 2 wins as "telegraphed on the board" ([update](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025), 2025-10-21). Players ask: "What are your threat assessment tips and rules of thumb?" drew 99 points and 130 comments on r/EDH ([thread](https://www.reddit.com/r/EDH/comments/1orb6cd/), 2025-11-08), and 69 r/EDH titles since 2025-01-01 contain "archenemy". Scryfall Tagger already classifies these behaviours per card (on 2026-11-10, `symmetrical` 891, `group-slug` 849 and `per-opponent` 480 Commander-legal cards), but its tags wait for [L-22](../legal-questions.md#l-22-scryfalls-tagger-tags), so version 1 matches Oracle text. The tools found score power or sum opinion salt (Archidekt, ScrollVault); none lists what a player's own list does to the table. [I-65](i65-how-this-deck-wins.md) maps how a deck ends a game and grades nothing, so hosting table effects there would change its outcome; I-78 is a third card taxonomy beside I-65's route roles and I-31's lab kinds, and reuses I-65's definition format.
+
+### Scope
+
+- [ ] Twenty classes in six groups as versioned data in I-65 slice 1's clause format, each match with a scope (each player, each opponent, one opponent, a chosen player) and an Exact or Heuristic label: mass land denial follows Wizards' definition, extra turns list every phrasing, and the monarch means bringing it into the game. `classifyCard`, `computeTableProfile` and a typed table line; punisher stays "not checked" until Tagger clauses (slice 1).
+- [ ] The builder panel "What this deck does to the table": the table line, each class with its cards and the clause that matched, Exact and Heuristic badges, the bracket-rule group with its zeros, "two-card combos not checked" when Spellbook is down, and English and French templates that pass I-65's verdict-word test with "salty", "archenemy", "threat" and "unfair" added (slice 2).
+- [ ] The Rule 0 sheet: the table line in [I-15](i15-rule-zero-sheets-and-pod-profiles.md)'s calculated column, and computed counts with their cards beside the declared combos, extra turns and resource denial fields, with "copy into my sheet"; no declared field is ever filled (slice 3).
+- [ ] Later: about 30 owner-labelled decks and precision and recall per class on the methods page, with a floor that takes a weak class off the sheet (slice 4); each consented deck's line in I-15's pod fit check, with mismatches worded as questions that name the cards (slice 5); "built on the board or from hand" per route, labelled estimate (slice 6); the owner's switch for public pages (slice 7); Tagger clauses and the punisher class after L-22 (slice 8); community salt beside the profile, labelled as opinion, after D-25 (slice 9).
+
+### Engineering enablers
+
+- Card fixtures name one card per phrasing and per known near-miss: Throne Warden and Blood Artist have no class, Stranglehold is not an extra turn, and Cyclonic Rift is one-sided mass removal only through its overload.
+- The same input gives the same profile byte for byte, whatever the order; an exact class never holds a pattern clause; reminder text never matches.
+- No table-effects file imports the AI client, React, Prisma or Tagger data, and slices 1 to 3 add no table and no route.
+
+**Paid-tier angle:** one deck's profile, in the builder, on the sheet, in a pod's first comparison and on a public page, is free: it is evidence about the player's own list. A profile across versions or weeks belongs to I-30's pod-pass candidate, not to a paid line here, and no product found charges for it.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player sitting down, I want to see what this deck does to the other three players, so that the sheet can mention extra turns or land denial without calling the deck rude.
+
+**Acceptance.**
+- Each class names its definition and the cards.
+- The words salty, unfair and threat do not appear.
+- A declared field on the Rule 0 sheet is not overwritten.
+
+**UX.** A line on the builder and, when I-15's comparison exists, a computed column. Public pages stay off until the owner decides.
+
+**Data and API.** Classes are versioned definitions over oracle text, Game Changers and Spellbook. No new feed. No stored score.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `table_line_shown {classes: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in for the private panel. No flag for the private panel once the definitions pass. Salt stays behind D-25.
+
+**Open questions.** Whether heuristic classes reach the sheet before they are measured is open. Tagger clauses wait on the licence.
+
+### Definition of done
+
+A group-hug player opens the panel and reads one line of counts per group and the four bracket-rule counts, expands each class to its cards and the clause that matched, and sees which classes are exact and which heuristic; the pod's Rule 0 sheet shows the same line beside the declared fields without filling any of them, and a Spellbook timeout reads "two-card combos not checked".
+
+---
+

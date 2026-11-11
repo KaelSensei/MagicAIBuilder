@@ -2,7 +2,7 @@
 
 > **Initiative:** I-49, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next; Later for slice 14, the display control, which waits for I-24's motion bundle (marked 2026-11-10) · **Written 2026-11-10**
 > **Research:** one dated note on colour-vision prevalence, Magic clients and deck sites, player requests, palettes, simulation, test tooling and EU accessibility law. It is not committed, so every external fact links its own source in [Sources](#sources). Contrast ratios and colour distances are computed from the token values on `dev`, with the method stated. Legal points are research, not legal advice; they go to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** every signal a sighted player reads from colour (WCAG 1.4.1); the contrast of status colours, charts, symbols and selected states (1.4.3, 1.4.11); semantic status and chart tokens in both themes; text size, zoom, reflow and spacing (1.4.4, 1.4.10, 1.4.12); forced colours and "more contrast"; the display preferences; the colour-vision test harness. **Does not own:** what a screen reader hears, text alternatives and `aria-pressed` ([I-24](i24-decks-a-screen-reader-can-play-from.md) and accessibility bundles 2 and 3 under [I-24 in the roadmap](../roadmap.md#i-24-decks-a-screen-reader-can-play-from)); page structure and the `prefers-reduced-motion` wiring (bundle 6, same place); dialogs, forms, focus rings and target size (bundles 1, 4 and 5 under [I-04](../roadmap.md#i-04-ux-stability-and-visual-quality)); the visual direction, the border and accent-text corrections and the per-slice thresholds ([I-13](i13-visual-direction.md)); bracket names and levels ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)).
+> **Owns:** every signal a sighted player reads from colour (WCAG 1.4.1); the contrast of status colours, charts, symbols and selected states (1.4.3, 1.4.11); semantic status and chart tokens in both themes; text size, zoom, reflow and spacing (1.4.4, 1.4.10, 1.4.12); forced colours and "more contrast"; the display preferences; the colour-vision test harness. **Does not own:** what a screen reader hears, text alternatives and `aria-pressed` ([I-24](i24-decks-a-screen-reader-can-play-from.md) and accessibility bundles 2 and 3 under [I-24 in the roadmap](i24-decks-a-screen-reader-can-play-from.md)); page structure and the `prefers-reduced-motion` wiring (bundle 6, same place); dialogs, forms, focus rings and target size (bundles 1, 4 and 5 under [I-04](i04-ux-stability-and-visual-quality.md)); the visual direction, the border and accent-text corrections and the per-slice thresholds ([I-13](i13-visual-direction.md)); bracket names and levels ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)).
 
 ## Overview
 
@@ -148,7 +148,7 @@ src/lib/a11y/palette.ts   contrastRatio · simulateCvd · deltaE · validatePale
 - A colour-blind palette mode, or one mode per deficiency type (requirement 1.1).
 - Recolouring or filtering card images. Card names, costs and text are already shown as text.
 - Replacing or recolouring the official mana symbols.
-- Text alternatives, screen-reader output and focus management ([I-24](i24-decks-a-screen-reader-can-play-from.md), [I-04](../roadmap.md#i-04-ux-stability-and-visual-quality) bundles).
+- Text alternatives, screen-reader output and focus management ([I-24](i24-decks-a-screen-reader-can-play-from.md), [I-04](i04-ux-stability-and-visual-quality.md) bundles).
 - AAA contrast (7:1) by default. It is available through "more contrast".
 - Claiming WCAG conformance. Each slice says what was tested and by whom, as I-24 requires.
 - A native application.
@@ -226,3 +226,200 @@ Read 2026-11-10 unless dated. Ratios and distances marked "own computation" come
 20. Archidekt, own reading of [deck 28247803](https://archidekt.com/decks/28247803) markup.
 21. 17lands, own reading of the [card data page](https://www.17lands.com/card_data) markup.
 22. A. Gioia, Mana font: [README v1.18.0](https://cdn.jsdelivr.net/npm/mana-font@1.18.0/README.md), [`mana.css`](https://cdn.jsdelivr.net/npm/mana-font@1.18.0/css/mana.css), [documentation site](https://mana.andrewgioia.com/), [repository](https://github.com/andrewgioia/mana).
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+### Goals
+
+- A deuteranopic player names every segment of a Simic deck's colour chart without the legend, a player on the light theme reads every warning at 4.5:1 or better, and a low-vision player at 200% zoom reads the stats panel without horizontal scrolling or clipped text; a colour-blind and a low-vision player have reviewed the changed surfaces.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-49-01
+
+As a player who does not see red and green as others do, I want every status to have a second channel, so that I do not need a mode to find.
+
+#### US-49-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-49-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-49-01 Happy path
+
+Given a signed-in player and the English locale
+When status colours in both themes meet the contrast bar, or they are not the only signal.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-49-02 Happy path
+
+Given a signed-in player and the English locale
+When charts have a label or a pattern, not hue alone.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-49-03 Happy path
+
+Given a signed-in player and the English locale
+When text scales to 200 percent and the tested journeys do not scroll sideways at 320 CSS pixels.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-49-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-49-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-49-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: On for everyone, guest and signed-in. Never paid. The display control waits on I-24's motion work.
+
+#### AC-49-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-49-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-49-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+There is no colour-blind mode to discover. Defaults work. A display control for motion and contrast sits with the theme control.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Tokens in the stylesheet. A test reads the tokens. No per-user palette stored on the server in the first slices.
+
+### Analytics and telemetry
+
+`contrast_audit_failed {surface, theme: light or dark}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+On for everyone, guest and signed-in. Never paid. The display control waits on I-24's motion work.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Who the colour-blind and low-vision reviewers are is open. The European Accessibility Act question is L-36.
+
+### Sources
+
+- https://pubmed.ncbi.nlm.nih.gov/22472762/
+- https://www.who.int/news-room/fact-sheets/detail/blindness-and-visual-impairment
+- https://www.reddit.com/r/MagicArena/comments/easwf2/
+- https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-49: A Display That Works For Colour-Blind And Low-Vision Players
+
+**Spec:** [`specs/i49-colour-vision-and-low-vision-display.md`](i49-colour-vision-and-low-vision-display.md)
+
+**Outcome:** every signal a sighted player reads from colour has a second channel, status colours and charts pass contrast in both themes, text scales to 200% and reflows at 320 CSS px, and Windows contrast themes and reduced motion are honoured, with no "colour-blind mode" to find.
+
+**Status:** Next
+**Priority:** Next; Later for slice 14, the display control, which waits for I-24's motion bundle (marked 2026-11-10). Nothing in it is paid
+**Impact / effort:** High / medium; most slices are mechanical
+**Depends on:** nothing for slices 1, 2 and 11; bundle 5 under I-04 for the chart bars' focus ring (slice 9); bundle 6 under I-24 for the motion wiring (slice 14); a colour-blind and a low-vision player to review the result (slice 15).
+
+Magic is a game of five colours, and a deckbuilder repeats them in mana costs, colour identity, charts, badges and warnings. About 8% of men of European ancestry have a red-green colour-vision deficiency ([Birch, 2012](https://pubmed.ncbi.nlm.nih.gov/22472762/)), and at least 2.2 billion people have a vision impairment ([WHO](https://www.who.int/news-room/fact-sheets/detail/blindness-and-visual-impairment)). The official mana symbols already solve the mana case with pictograms; the gaps appear where a site adds colour of its own, in charts, status and selected states. No deckbuilding site read offers a colour-vision setting or says its charts were checked against simulation. Players ask for a second channel, "a simple character cue", more than for a palette ([r/MagicArena, 2019](https://www.reddit.com/r/MagicArena/comments/easwf2/)). An automated scanner cannot catch a chart that relies on colour: axe-core's only rule for WCAG 1.4.1 concerns links, and none is tagged 1.4.11 ([rule list](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md)). So the defaults must work without a setting, and a colour-blind and a low-vision player review the result. Until this initiative the roadmap never mentioned colour blindness.
+
+### Scope
+
+- [ ] A colour-signal register, captures of six journeys at 200% zoom, at 320 px, under forced colours and under simulated colour vision, a pure `src/lib/a11y/palette.ts`, and a token contrast test that reads `src/styles/globals.css` (slices 1–2).
+- [ ] An E2E harness that emulates protanopia, deuteranopia, tritanopia and achromatopsia, forced colours, zoom, reflow and text spacing, with reviewed baselines (slice 3). Today the repository has no axe tool and no screenshot test.
+- [ ] Status tokens for both themes and a status icon primitive, then the migration of raw status colours, ending with a lint rule and an empty allowlist (slices 4–7). Today 496 hard-coded red, green, amber, yellow, emerald, orange, rose or lime classes in 106 `.tsx` files have no `dark:` variant and no light-theme mapping; on white, `red-400` measures 2.89:1, `green-400` 1.78:1 and `amber-300` 1.45:1, against 4.5:1. In `src/components/deck/DeckStats.tsx` a warning and an error share `AlertTriangle` and differ only by colour.
+- [ ] Chart tokens and a `ColorDistribution` with labelled, outlined segments, a table view and a palette validated under simulation (slice 8). Today `src/components/deck/ColorDistribution.tsx` separates its segments by hue alone, `--mana-black` measures 1.24:1 on the dark surface, and red and green fall under the distance threshold with protanopia.
+- [ ] `ManaCurve` in one neutral hue, sized in `rem`, with a grid in both themes and a table view (slice 9). Today `src/components/deck/ManaCurve.tsx` uses eight hues for eight mana values, and two of them are near-identical even with normal vision.
+- [ ] Bracket colours that pass contrast in each theme, and a marker other than colour on selected colour filters (slice 10). Today `BracketIndicator.tsx` draws its number in green-400 and amber-400, at 1.78:1 and 1.72:1 on white, and the selected filter border in `SearchFilters.tsx` and `BuilderColorSearchPicker.tsx` measures 2.76:1, under 3:1.
+- [ ] Text sizes on the `rem` scale, with no informational text under 12 px, then the reflow and zoom fixes that slice 1 finds (slices 11–12). Today 154 uses of `text-[7px]` to `text-[11px]` sit in 51 files, and `ManaSymbol.tsx` draws cost letters at 7 to 9 px.
+- [ ] Forced-colours and "more contrast" rules, a Display control for motion and contrast beside the theme buttons, and a review by a colour-blind and a low-vision player (slices 13–15).
+- [ ] **A voluntary accessibility statement (gap sweep, 2026-11-10),** generated from the six WCAG 2.2 AA audit bundles of I-04 and I-24. Done means: the page lists each bundle's status and date. Whether the European Accessibility Act applies once a merchant of record hosts checkout is added to [L-36](../legal-questions.md#l-36-the-european-accessibility-act).
+
+### Engineering enablers
+
+- Every pair of mana chart colours is at least ΔE 8 apart under each simulated deficiency and 15 with normal vision, checked per theme against the real surface tokens.
+- The lint rule rejects raw status colours in `src/components` and `src/app` with an empty allowlist.
+- Under forced colours, every chart mark keeps a nonzero box and a border distinct from the canvas; under reduced motion, chart bars render at full height on the first frame.
+- At 640×400 and at 320×640, no journey scrolls horizontally, and with the root font size doubled, informational text doubles.
+
+**Paid-tier angle:** none, ever. A player who needs contrast or a second channel would otherwise pay more for the same product, and these surfaces are evidence the product shows. Its value to I-30 is indirect: I-31 and I-34 charts and I-36 embeds inherit charts that read in grayscale, in print and when embedded.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who does not see red and green as others do, I want every status to have a second channel, so that I do not need a mode to find.
+
+**Acceptance.**
+- Status colours in both themes meet the contrast bar, or they are not the only signal.
+- Charts have a label or a pattern, not hue alone.
+- Text scales to 200 percent and the tested journeys do not scroll sideways at 320 CSS pixels.
+
+**UX.** There is no colour-blind mode to discover. Defaults work. A display control for motion and contrast sits with the theme control.
+
+**Data and API.** Tokens in the stylesheet. A test reads the tokens. No per-user palette stored on the server in the first slices.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `contrast_audit_failed {surface, theme: light or dark}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for everyone, guest and signed-in. Never paid. The display control waits on I-24's motion work.
+
+**Open questions.** Who the colour-blind and low-vision reviewers are is open. The European Accessibility Act question is L-36.
+
+### Definition of done
+
+A deuteranopic player names every segment of a Simic deck's colour chart without the legend, a player on the light theme reads every warning at 4.5:1 or better, and a low-vision player at 200% zoom reads the stats panel without horizontal scrolling or clipped text; a colour-blind and a low-vision player have reviewed the changed surfaces.
+
+---
+

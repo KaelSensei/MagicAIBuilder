@@ -2,7 +2,7 @@
 
 > **Initiative:** I-41, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Later, with a cheap early part: the pairing policy and an account-free pod planner (slices 1 and 2) need no schema and store no personal data · **Written 2026-11-09**
 > **Research:** one dated note on store tools, Wizards Play Network (WPN) guidance, store pages and community threads. It is not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** stores and their staff, store Commander nights and their house rules, check-in by QR code, guest entries, pod pairing by bracket at a night, the night and store pages, and the store-plan candidates. **Does not own:** Rule 0 sheets, pods between friends and consent ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)); bracket scoring ([I-03](../roadmap.md#i-03-trustworthy-deck-feedback)); bracket names and rules ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the game log ([I-35](i35-pod-game-log.md)); Discord ([I-23](i23-the-pods-own-surface.md)); the public projection of a deck ([I-36](i36-creator-and-embed-toolkit.md) slice 1); legal pages, the privacy policy and retention jobs ([I-38](i38-trust-safety-and-user-rights.md)); product events ([I-39](i39-first-run-activation-and-measurement.md)); plans, prices and billing ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** stores and their staff, store Commander nights and their house rules, check-in by QR code, guest entries, pod pairing by bracket at a night, the night and store pages, and the store-plan candidates. **Does not own:** Rule 0 sheets, pods between friends and consent ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)); bracket scoring ([I-03](i03-trustworthy-deck-feedback.md)); bracket names and rules ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the game log ([I-35](i35-pod-game-log.md)); Discord ([I-23](i23-the-pods-own-surface.md)); the public projection of a deck ([I-36](i36-creator-and-embed-toolkit.md) slice 1); legal pages, the privacy policy and retention jobs ([I-38](i38-trust-safety-and-user-rights.md)); product events ([I-39](i39-first-run-activation-and-measurement.md)); plans, prices and billing ([I-30](i30-business-model-and-paid-tier.md)).
 > **Touches three non-goals:** the roadmap excludes a tournament manager and a venue directory ([deliberate non-goals](../roadmap.md#deliberate-non-goals-from-the-benchmark)), and I-15 excludes pairing players. This spec builds neither of the first two (requirement 1) and owns the store pairing that I-15 leaves out.
 
 ## Overview
@@ -219,3 +219,168 @@ Read 2026-11-09 unless dated.
 19. GDPR Art. 13. https://gdpr-info.eu/art-13-gdpr/
 20. CNIL, "Recommandation 4 : rechercher le consentement d'un parent pour les mineurs de moins de 15 ans", 2021-06-09. https://cnil.fr/recommandation-4-rechercher-le-consentement-dun-parent-pour-les-mineurs-de-moins-de-15-ans
 21. Playgroup, Commander power level, updated 2026-11-10; added 2026-11-11. https://playgroup.gg/commander/power-level
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+### Goals
+
+- At a night, every checked-in player sits in a pod of an allowed size within the night's bracket spread or waits with a stated reason, the public page shows declared brackets only, and no guest name survives 24 hours after the night ends.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-41-01
+
+As a player, I want the outcome of I-41, so that the work in this file is the reason to build it.
+
+#### US-41-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-41-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-41-01 Happy path
+
+Given a signed-in player and the English locale
+When at a night, every checked-in player sits in a pod of an allowed size within the night's bracket spread or waits with a stated reason, the public page shows declared brackets only, and no guest name survives 24 hours after the night ends.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-41-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-41-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-41-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-41-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-41-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-41-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://playgroup.gg/commander/power-level
+- https://yugiohblog.konami.com/2025/genesys/different-point-caps-what-to-expect/
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-41: Store Commander Nights And Organiser Tools
+
+**Spec:** [`specs/i41-store-commander-nights.md`](i41-store-commander-nights.md)
+
+**Outcome:** an organiser opens a casual Commander night, checks players in by QR code with or without an account, and forms pods of three to five by declared and estimated bracket. Players never pay, and a guest leaves only a nickname that is deleted within a day.
+
+**Status:** Later
+**Priority:** Later, with a cheap early part: the pairing policy and an account-free pod planner (slices 1 and 2) need no schema and store no personal data
+**Impact / effort:** Medium / medium
+**Depends on:** stores' demand, measured on the planner and asked of two stores, one French, before slice 3; I-15 for declarations and pod sheets; I-35 slice 6 for logging; I-36 slice 1 for public decks; I-38 slices 6 and 8; I-30 for the store plan.
+
+Wizards EventLink records who came and forms no pods: for Commander "no pairings or match results are required", and Player List Only events "do not generate pairings". Pod pairing was requested in 2021, and Wizards answered that each community defines a Commander event differently. Stores pair by hand, in WhatsApp, with a browser extension, or pay TopDeck.gg $12 a month for pods, check-in and a store page. DeckCheck checks store lists against a bracket for free but forms no pods. No tool found pairs a night's pods by declared and estimated bracket. MagicAIBuilder already holds the deck and a deterministic bracket estimate. EventLink deletes a guest's name after 24 hours, and this initiative applies the same rule. It builds neither a tournament manager nor a venue directory, and it owns the store pairing that I-15 leaves out.
+
+### Scope
+
+- [ ] `formPods`, a pure function with allowed pod sizes, a maximum bracket spread, dedicated brackets, play-together groups and a deterministic tie-break, tested against a brute-force optimum (slice 1).
+- [ ] An account-free pod planner that prints pods and sends no label over the network (slice 2).
+- [ ] Stores with owner and staff roles, a "not verified" label and `noindex` until verified; nights with a check-in window, capacity, house rules and a rotating QR token (slices 3–4).
+- [ ] Account check-in that freezes the deck version, the declared bracket and the estimate with its method, and guest check-in with a display name only, the GDPR Art. 13 notice and a purge 24 hours after the night (slices 5–6). `Deck.targetBracket` is never read as a declaration.
+- [ ] An organiser screen with rounds, manual moves, latecomers, a waiting list and a "talk before the game" prompt at a gap of two brackets, then a public night page through I-36's public projection; a night creates no share link (slices 7–8).
+- [ ] Consented I-15 sheets per pod, logging a game through I-35, and store verification with reports through I-38 (slices 9–11).
+- [ ] Store-private history and a pod-health report, then store-plan entitlements after I-30's decision (slices 12–13).
+- [ ] Revisit 6.2's one-gap rule (correction 2026-11-11 below). A one-bracket gap gets a soft prompt that cites the measured cost ([Playgroup](https://playgroup.gg/commander/power-level), updated 2026-11-10) and [I-77](i77-a-bracket-estimate-players-can-audit.md)'s per-bracket accuracy. Added 2026-11-11.
+  - **Corrected 2026-11-11:** the spec's 6.2 showed a one-bracket gap without a flag, on the strength of a calculator's 99.5% "within one". In a sample of Brackets 2 to 4, "within one" is nearly automatic, since Bracket 3 is within one of all three, and the same calculator's 77.1% exact is about three points above always answering Bracket 3 (73.9%). Playgroup measures a one-bracket gap at about five percentage points of win rate. Slice 5 also freezes [I-77](i77-a-bracket-estimate-players-can-audit.md)'s method version and audit link with the estimate.
+- [ ] A store's house rules use I-15's rule objects (I-53's types), including a Game Changer or points cap the store picks, printed on the night's sheet. In Konami's Genesys, "stores can set their cap at 200, 50, or zero points", with an official tabulator ([Konami](https://yugiohblog.konami.com/2025/genesys/different-point-caps-what-to-expect/), 2025-09-30). Whether a house verdict may change a public legality badge is [D-90](../owner-decisions.md#product-scope-and-non-goals). Added 2026-11-11.
+
+### Engineering enablers
+
+- The same input gives the same pods, and total spread equals a brute-force optimum on fixtures of up to 12 entries.
+- Past the purge time no response holds a guest's name, and a guest request carrying an email is refused.
+- The public check-in endpoint is rate-limited per night and per network address across instances, not by today's per-instance memory store.
+
+**Paid-tier angle:** players never pay: check-in, pods, sheets, logging, the planner and a store page stay free. Candidates are store tools over the store's own nights: recurring templates, history across nights, a pod-health report, extra staff seats, branded posters and a CSV export without guest names. The spec estimates €8 to €12 a month, anchored on TopDeck.gg's $12, the only public comparable found; I-30 decides.
+
+### Definition of done
+
+At a night, every checked-in player sits in a pod of an allowed size within the night's bracket spread or waits with a stated reason, the public page shows declared brackets only, and no guest name survives 24 hours after the night ends.
+
+---
+

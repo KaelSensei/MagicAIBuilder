@@ -1,9 +1,9 @@
 # I-65: How This Deck Wins
 
 > **Initiative:** I-65, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for the route model, the map for one deck and its uses in I-15, I-02 and the primer (slices 1 to 11); Later for model phrasing, assembly odds and comparisons (slices 12 to 15), which wait for I-30, I-31, I-55 and I-15; slice 16 waits for I-30's decision gate · **Written 2026-11-10**
-> **Placement:** the evidence does not support folding this into [I-31](i31-deck-lab.md) or [I-15](i15-rule-zero-sheets-and-pod-profiles.md). I-31 classifies cards for mana simulation, not for winning, and I-15 records only what a player states (I-15 requirement 1.3). The closest home is [I-03](../roadmap.md#i-03-trustworthy-deck-feedback), as computed feedback. This spec stays separate because it owns the route model that I-15, I-28, I-02, I-31 and I-54 read.
+> **Placement:** the evidence does not support folding this into [I-31](i31-deck-lab.md) or [I-15](i15-rule-zero-sheets-and-pod-profiles.md). I-31 classifies cards for mana simulation, not for winning, and I-15 records only what a player states (I-15 requirement 1.3). The closest home is [I-03](i03-trustworthy-deck-feedback.md), as computed feedback. This spec stays separate because it owns the route model that I-15, I-28, I-02, I-31 and I-54 read.
 > **Research:** one dated note on the official bracket texts, Commander Spellbook's API and bracket code, Scryfall's Oracle Tags file, five deck tools and pregame conversations. It is not committed, so every external fact links its own entry in [Sources](#sources). Moxfield and Reddit refused automated reads; rows that rest on search summaries say so. Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** the route model (route kinds, the rule that ends the game, the roles each route needs, the answer classes), the route roles computed per card, the map for one deck (cards, redundancy, finders, protection, turn estimate, common answers), its sentence templates, the computed "how it wins" line offered to I-15 and the primer, the wizard's plan-versus-result check, and route comparisons. **Does not own:** the Spellbook lookup, its cache and rate limits ([I-09](../roadmap.md#i-09-meta-and-evidence), shipped in #1324); the player's single category and the display of function tags ([I-37](i37-editor-depth.md)); the play-style vocabulary and its definition format ([I-54](i54-find-your-next-commander.md)); bracket rules and the bracket check ([I-28](i28-commander-deckbuilding-guide-by-bracket.md), I-03); declared sheets (I-15); simulation ([I-21](i21-reproducible-probability-bench.md), I-31); rule text and citations ([I-47](i47-rules-answers-for-this-deck.md)); pricing (I-30).
+> **Owns:** the route model (route kinds, the rule that ends the game, the roles each route needs, the answer classes), the route roles computed per card, the map for one deck (cards, redundancy, finders, protection, turn estimate, common answers), its sentence templates, the computed "how it wins" line offered to I-15 and the primer, the wizard's plan-versus-result check, and route comparisons. **Does not own:** the Spellbook lookup, its cache and rate limits ([I-09](i09-meta-and-evidence.md), shipped in #1324); the player's single category and the display of function tags ([I-37](i37-editor-depth.md)); the play-style vocabulary and its definition format ([I-54](i54-find-your-next-commander.md)); bracket rules and the bracket check ([I-28](i28-commander-deckbuilding-guide-by-bracket.md), I-03); declared sheets (I-15); simulation ([I-21](i21-reproducible-probability-bench.md), I-31); rule text and citations ([I-47](i47-rules-answers-for-this-deck.md)); pricing (I-30).
 
 ## Overview
 
@@ -58,7 +58,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 | Initiative                                             | What it says                                                                                                                                                                                               | Resolution                                                                                                                                                                                                            |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [I-31](i31-deck-lab.md)                                | "Roles are single labels" (line 57); norms use the single `category` (2.5, line 78); its classifier serves mana simulation (2.1)                                                                           | I-31 keeps its lab kinds. Route roles are a separate, multi-label layer that never overwrites `category`. I-31's engine supplies assembly odds (slice 13)                                                             |
-| [I-03](../roadmap.md#i-03-trustworthy-deck-feedback)   | Outcome: "the player understands what is wrong with a deck"; combo detection shipped; "Keep warning calculations deterministic"                                                                            | The map is computed feedback in I-03's sense, but states facts and no faults. Whether `scoreWinSpeed` reads route data is for I-03 and the power meter (open question 4)                                              |
+| [I-03](i03-trustworthy-deck-feedback.md)   | Outcome: "the player understands what is wrong with a deck"; combo detection shipped; "Keep warning calculations deterministic"                                                                            | The map is computed feedback in I-03's sense, but states facts and no faults. Whether `scoreWinSpeed` reads route data is for I-03 and the power meter (open question 4)                                              |
 | [I-15](i15-rule-zero-sheets-and-pod-profiles.md)       | Records "how the deck wins" (1.2, line 37), player-stated only (1.3); shows the computed bracket beside it (1.4); non-goal: inferring intent (line 79)                                                     | The declared field stays declared. The route summary appears in the calculated column, the way 1.4 shows the bracket. The owner may copy it into the declared field; the product never does                           |
 | [I-28](i28-commander-deckbuilding-guide-by-bracket.md) | The guide's sections "win conditions and combos" and "how games are actually won" (1.1, 1.2, lines 50–51); rule constants shared with the check (3.1); one shared vocabulary with I-15 and I-27 (line 141) | I-28 owns the official turn expectations and the combo rule; the map displays them from the same constants. I-65 owns the route names, and I-28, I-15 and [I-64](i64-help-centre-and-guidance.md)'s glossary use them |
 | [I-48](i48-official-changes-reach-every-deck.md)       | Maps each `categorizeCard` role to a Scryfall tag (4.3, line 95)                                                                                                                                           | I-48 may use route roles for replacement candidates once slice 3 ships; its table stays valid until then                                                                                                              |
@@ -258,3 +258,208 @@ Read 2026-11-10 unless dated otherwise.
 25. Alex Wicker, "How Much Information Should Be Shared During Rule Zero?", EDHREC, 2026-06-11. https://edhrec.com/articles/how-much-information-should-be-shared-during-rule-zero
 26. r/EDH, "Am I wrong?", 2024-06-11; search summary only, as Reddit refused automated reads. https://www.reddit.com/r/EDH/comments/1dd50uy/
 27. Inkborn Forge, supporter-only Deck Insights for Lorcana, Substack post, 2026-08-13; added 2026-11-11 from the wave 11 findings. https://inkbornforge.substack.com/p/supporter-feature-deck-insights
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+### Goals
+
+- An aristocrats deck shows a drain route with its payoffs, sacrifice outlets and fodder counted, the tutors that reach a creature, a labelled mana-only estimate beside the bracket's official turn expectation, and the answer classes that stop "dies" triggers; a Spellbook timeout leaves the other routes in place; the same deck gives the same map twice; and no sentence grades the deck.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-65-01
+
+As a player who has to explain a deck, I want the routes it actually contains, so that the plan in the wizard is not a sentence the list does not support.
+
+#### US-65-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-65-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-65-01 Happy path
+
+Given a signed-in player and the English locale
+When a route is listed only when the required roles are in the deck.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-65-02 Happy path
+
+Given a signed-in player and the English locale
+When each route names the cards and the definition version.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-65-03 Happy path
+
+Given a signed-in player and the English locale
+When the panel does not call the deck salty, unfair or a threat.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-65-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-65-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-65-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in on private decks. Public display defaults off. No flag for the private panel once the definitions pass their fixture.
+
+#### AC-65-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-65-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-65-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The panel is on the builder, off on the public page until the owner says otherwise. A missing route is omitted, not scored as zero.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Definitions are versioned data. Spellbook fields the combo lookup does not read yet are added here. No model decides a route.
+
+### Analytics and telemetry
+
+`route_panel_viewed {routes: count}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in on private decks. Public display defaults off. No flag for the private panel once the definitions pass their fixture.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+How many cards a role needs, and whether Tagger tags may be used, are open. The public default is D-48.
+
+### Sources
+
+- https://mcchicago.mtgfestivals.com/en-us/event-play/the-command-zone.html
+- https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025
+- https://playgroup.gg/commander/how-to-play
+- https://deckcheck.co/articles/howto
+- https://edhrec.com/articles/how-much-information-should-be-shared-during-rule-zero
+- https://inkbornforge.substack.com/p/supporter-feature-deck-insights
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-65: How This Deck Wins
+
+**Spec:** [`specs/i65-how-this-deck-wins.md`](i65-how-this-deck-wins.md)
+
+**Outcome:** a player opens a deck and sees each way it can end a game: the combos Spellbook finds, an alternative win, commander damage, combat, drain, mill, poison or a lock. Each route lists its cards by role with a count, the tutors that can find its pieces, the protection that can defend them, a turn estimate labelled as an estimate and the kinds of cards that commonly stop it. Code computes every fact, and nothing grades the deck.
+
+**Status:** Next
+**Priority:** Next for the route model, the map for one deck and its uses in I-15, the primer and the wizard (slices 1 to 11), with slice 8 blocked for release on the Tagger licence; Later for model rewording, assembly odds and comparisons (slices 12 to 15); slice 16 waits for I-30's decision
+**Impact / effort:** Medium / large
+**Depends on:** nothing for slices 1 and 2; I-28 slice 2 for the bracket line (slice 4); I-67 slice 7 and I-54 slice 2 for the Oracle Tags, re-pointed 2026-11-10, and Scryfall's answer on the tags for release (slice 8); I-15 slice 2 for the sheet line (slice 10); the I-02 owner's sign-off on the wizard step (slice 11); I-30 slices 1 and 2 for rewording (slice 12); I-31 slices 1 and 5 for assembly odds (slice 13); I-55 slice 4 for comparisons across builds (slice 14); slice 6 and I-15 slice 3 for the pod comparison (slice 15), re-pointed 2026-11-11 so that it does not wait for builds; I-30's decision gate and its slice 11 for slice 16.
+
+Players ask "how does your deck win?" before games with strangers. MagicCon Chicago's Commander area printed it, with "What turn does your deck usually win on?", as a pregame prompt in February 2025 ([MagicCon](https://mcchicago.mtgfestivals.com/en-us/event-play/the-command-zone.html)), and Wizards' bracket text of 2025-10-21 describes each bracket by how its decks win and how many turns its games last ([announcement](https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025)). The product answers part of the question with a list of Commander Spellbook combos, and combos ended 8.1% of 399,857 multiplayer games logged on Playgroup ([how games ended](https://playgroup.gg/commander/how-to-play), updated 2026-11-04). Every deck tool read shows combos, most of them from Spellbook. None maps the other routes, counts the cards in each role, matches tutors and protection to the pieces or lists what commonly stops a route, and the one written "how it wins" synopsis found, DeckCheck's, does not say who writes it ([DeckCheck](https://deckcheck.co/articles/howto)). Today `categorizeCard` gives each card one label and misses most finishers, the Spellbook lookup ignores `manaValueNeeded`, `bracketTag` and starting zones, and the wizard's win conditions are fixed text that nothing checks. In the spec's sample, Scryfall's Oracle Tags file names the route function of 28 of 29 single-card finishers, so the answer on its licence decides how many cards the map recognises. The map is private by default, because sharing how a deck wins also shares its weaknesses ([EDHREC, 2026-06-11](https://edhrec.com/articles/how-much-information-should-be-shared-during-rule-zero)).
+
+### Scope
+
+- [ ] Route kinds, roles and answer classes as versioned data in I-54's definition format, each route naming the Comprehensive Rules entry that ends the game (104.2b, 104.3b to 104.3e, 903.10a), with Oracle-pattern and keyword clauses and fixtures (slice 1).
+- [ ] Read `manaValueNeeded`, `bracketTag`, each result's status and each piece's `zoneLocations` from the one Spellbook call that #1324 makes, and map Spellbook's results to route kinds through a tested table; an unmapped result shows as "combo: other result" (slice 2). Today `src/lib/combos/find-my-combos.ts` reads none of the four.
+- [ ] `computeRouteMap`, a pure function: combo and single-card routes, route roles per card that never overwrite the player's `category`, the count per role, cards shared between routes, tutors listed by the pieces they reach and protection by what it covers (slice 3). `categorizeCard` (`src/lib/deck/categories.ts`) keeps the player's category; on 35 hand-picked route cards it labels no combat, drain, mill, equipment, combo or lock card `winCondition`.
+- [ ] Turn estimates, always labelled: a mana-only floor with and without one cheap ramp piece, Spellbook's speed band from `manaValueNeeded`, and the hits needed for 21 commander damage, with the target bracket's official turn expectation beside them from I-28's constants, hidden until I-28 slice 2 (slice 4). No damage clock is simulated.
+- [ ] Common answers, attached only when a route's pieces match, from a versioned table of classes such as graveyard exile, artifact removal and "can't win" effects, never naming an opponent's card (slice 5).
+- [ ] A builder panel, "How this deck wins", in English and French, that absorbs the combos panel, with a test that fails on a verdict word in any template (slice 6); owner overrides of route roles, stored per deck (slice 7).
+- [ ] Tagger clauses from the Oracle Tags that I-67 slice 7 loads (re-pointed 2026-11-10), with a daily check of each definition against a Scryfall `otag:` query (slice 8). Blocked for release until Scryfall answers on the tags; without them the map says "function tags unavailable: fewer cards recognised".
+- [ ] The public deck page's setting, off by default, route kinds only, or the full map, and `GET /api/decks/[id]/routes` (slice 9); I-15's calculated line with "copy into my sheet", and the primer's "Win conditions" section pre-filled (slice 10); and the wizard's plan-versus-result check, which never blocks a build (slice 11). Today `DeckPlan.winConditions` (`src/lib/ai/deck-plan.ts`) is fixed text per strategy that nothing checks against the built deck.
+- [ ] **Combos one card away (gap sweep, 2026-11-10).** `parseFindMyCombos` (`src/lib/combos/find-my-combos.ts`) reads only `results.included`; its own comment says the "almost included" buckets are combos the deck lacks a card for, and Spellbook already returns them in the response that #1324 fetches once per deck (verified on `origin/dev` at `72fbfc1`). Grimoria lists combos "missing one piece" ([spec](i65-how-this-deck-wins.md#what-the-market-does)).
+  - [ ] Read the "almost included" bucket, within colour identity only, from the existing cached call, and list it in a separate "one card away" section that is never mixed with routes the deck has. Done means: a fixture test shows a found route and a near route kept apart, with no second Spellbook call.
+  - [ ] Each near route shows the missing card, its dated price (I-59), whether it is a Game Changer, and the bracket the deck would estimate with it, using `bracketTag` and I-03. Done means: a near route that would lift the deck above the pod's declared bracket (I-15) is labelled, never hidden, and never ranked by popularity.
+  - [ ] One click adds the card as a reviewed change the player can revert. Done means: the same diff path as I-58's apply, with undo.
+- [ ] Later: a model rewording of a templated sentence, accepted only if it keeps every card name, number and rule and adds no verdict, labelled and counted against I-30's allowance (slice 12); assembly odds from I-31's seeded engine (slice 13); routes compared across builds and snapshots, then across a pod's consented decks (slices 14 and 15); and, after I-30's decision, a paid entitlement for the comparisons (slice 16).
+- [ ] Slice 15 depends on slice 6 and I-15 slice 3 instead of slice 14, so a pod's first comparison does not wait for builds (I-55). Its first view of the player's own pod stays free ([D-95](../owner-decisions.md#money-and-plans)). This answers the strongest Commander ask in the player-voice sample. Added 2026-11-11.
+- [ ] Table effects belong to [I-78](i78-what-this-deck-does-to-the-table.md), which reuses slice 1's clause and definition format and its verdict-word list, published as a shared deck-analysis module; slice 1 also carries [I-76](i76-complete-this-deck-from-my-collection.md)'s slot roles under their own ids (pointer, 2026-11-11). I-65's outcome, routes and answer classes do not change.
+
+### Engineering enablers
+
+- The same deck, overrides and definitions give the same map byte for byte in any input order, and the map records its input hash, definitions version, tags file date, Spellbook lookup time and rules date.
+- A Spellbook timeout shows "combos not checked", never "no combos", while the other routes still render.
+- "Route kinds only" never returns a card name from the API, and an off map answers 404 to everyone but the owner.
+- Every English and French template passes the verdict-word scan, and a model rewording that adds a card or changes a number falls back to the template.
+
+**Paid-tier angle:** the map for one deck, its sources, its estimates and its use in I-15, the primer and the wizard stay free: it is feedback and evidence, which I-30 requirements 1.1 and 1.4 keep free. The candidate is the comparison of routes across builds, snapshots and a pod's consented decks, a personal tool over the player's own decks over time. The spec rates it unproven, because no Magic product was found charging for route analysis (corrected 2026-11-11: Inkborn Forge's supporter-only Deck Insights for Lorcana "estimates a win turn", [2026-08-13](https://inkbornforge.substack.com/p/supporter-feature-deck-insights)). Whether the first view of a player's own pod is free is [D-95](../owner-decisions.md#money-and-plans), which recommends it; history across versions stays the candidate.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who has to explain a deck, I want the routes it actually contains, so that the plan in the wizard is not a sentence the list does not support.
+
+**Acceptance.**
+- A route is listed only when the required roles are in the deck.
+- Each route names the cards and the definition version.
+- The panel does not call the deck salty, unfair or a threat.
+
+**UX.** The panel is on the builder, off on the public page until the owner says otherwise. A missing route is omitted, not scored as zero.
+
+**Data and API.** Definitions are versioned data. Spellbook fields the combo lookup does not read yet are added here. No model decides a route.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `route_panel_viewed {routes: count}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in on private decks. Public display defaults off. No flag for the private panel once the definitions pass their fixture.
+
+**Open questions.** How many cards a role needs, and whether Tagger tags may be used, are open. The public default is D-48.
+
+### Definition of done
+
+An aristocrats deck shows a drain route with its payoffs, sacrifice outlets and fodder counted, the tutors that reach a creature, a labelled mana-only estimate beside the bracket's official turn expectation, and the answer classes that stop "dies" triggers; a Spellbook timeout leaves the other routes in place; the same deck gives the same map twice; and no sentence grades the deck.
+
+---
+

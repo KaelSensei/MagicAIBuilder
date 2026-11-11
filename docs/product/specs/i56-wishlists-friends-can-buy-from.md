@@ -2,7 +2,7 @@
 
 > **Initiative:** I-56, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for slices 0 to 4 (one wanted list, filled from the acquisition plan, shared by link, with reservations hidden from the owner); Later for the rest · **Written 2026-11-10**
 > **Research:** one dated note on MTG collection tools, gift registries and player threads. It is not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** the player's one wanted list and its items, filling it from the plan, by hand, from precons and from sealed products, the gift audiences and gift page, reservations and the surprise rule, received gifts, the owner's gift-window notice, and the giver's store view. **Does not own:** ownership, printings and the acquisition plan ([I-06](../roadmap.md#i-06-collection-and-purchase-planning)); prices, markets, seller adapters, affiliate rules and the price watch ([I-32](i32-seller-handoff-and-affiliate-carts.md)); have lists, trade audiences, matching and proposals ([I-44](i44-trade-lists-within-the-pod.md)); spare copies and keep marks ([I-45](i45-selling-spare-cards.md)); loans and households ([I-51](i51-cards-lent-and-borrowed.md)); the player's printing rule ([I-57](i57-printing-preferences-everywhere.md)); the precon catalogue ([I-17](i17-precon-path-and-tiered-upgrades.md)); reporting, blocking, export, deletion and the defaults for minors ([I-38](i38-trust-safety-and-user-rights.md)); plans and billing ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** the player's one wanted list and its items, filling it from the plan, by hand, from precons and from sealed products, the gift audiences and gift page, reservations and the surprise rule, received gifts, the owner's gift-window notice, and the giver's store view. **Does not own:** ownership, printings and the acquisition plan ([I-06](i06-collection-and-purchase-planning.md)); prices, markets, seller adapters, affiliate rules and the price watch ([I-32](i32-seller-handoff-and-affiliate-carts.md)); have lists, trade audiences, matching and proposals ([I-44](i44-trade-lists-within-the-pod.md)); spare copies and keep marks ([I-45](i45-selling-spare-cards.md)); loans and households ([I-51](i51-cards-lent-and-borrowed.md)); the player's printing rule ([I-57](i57-printing-preferences-everywhere.md)); the precon catalogue ([I-17](i17-precon-path-and-tiered-upgrades.md)); reporting, blocking, export, deletion and the defaults for minors ([I-38](i38-trust-safety-and-user-rights.md)); plans and billing ([I-30](i30-business-model-and-paid-tier.md)).
 > **Changes one neighbour:** I-44's want lists become the wanted list defined here (requirement 1.4). I-44 keeps everything else.
 
 ## Overview
@@ -264,3 +264,198 @@ Read on 2026-11-10 unless dated otherwise. Reddit refuses automated reads, so th
 21. "Wishlist price alerts?", r/EDH, 2023-02-21, 2 points, 12 comments. <https://www.reddit.com/r/EDH/comments/1181l57/>
 22. Mana Pool, "Affiliates" (undated). <https://manapool.com/affiliates>
 23. For example "FYI - Looks like the Gift Bundles are going to have one less booster in them", r/mtgfinance, 2026-10-10, 132 points. <https://www.reddit.com/r/mtgfinance/comments/1x21xoj/>
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+### Goals
+
+- A player fills the wanted list from the acquisition plan and shares it by link; two relatives open it, one reserves a card and the other sees it taken; the owner's pages look the same whether or not anything is reserved; and the gift page shows no name, age or location and is never indexed.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-56-01
+
+As a player with a birthday coming, I want one list of cards I want, so that a friend can reserve a gift without me seeing which one.
+
+#### US-56-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-56-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-56-01 Happy path
+
+Given a signed-in player and the English locale
+When the wanted list can be filled from the acquisition plan.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-56-02 Happy path
+
+Given a signed-in player and the English locale
+When a reservation is hidden from the owner.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-56-03 Happy path
+
+Given a signed-in player and the English locale
+When the favorites routes that answer success and store nothing are gone.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-56-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-56-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-56-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: The owner is signed-in. The friend may reserve without an account if that option is on, with the limits the spec names. Default is the spec's recommendation until the owner confirms it.
+
+#### AC-56-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-56-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-56-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The owner sees the list and the count reserved, not the names of who reserved what. The friend opens a link.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+One want table, private. The gift link is a token. Prices on it are labelled estimates. No address is stored.
+
+### Analytics and telemetry
+
+`wishlist_reserved {signed_in: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+The owner is signed-in. The friend may reserve without an account if that option is on, with the limits the spec names. Default is the spec's recommendation until the owner confirms it.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether one wanted list replaces I-44's want lists is the amendment the owner must confirm before either slice that writes the table.
+
+### Sources
+
+- https://www.reddit.com/r/magicTCG/comments/1w5vd9u/
+- https://help.elfster.com/en/articles/11517983-how-do-i-mark-that-i-bought-an-item-on-another-elfster-wishlist
+- https://docs.wishpicks.com/en/articles/16189859-how-does-gift-reservation-work
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-56: Wishlists Friends Can Buy From
+
+**Spec:** [`specs/i56-wishlists-friends-can-buy-from.md`](i56-wishlists-friends-can-buy-from.md)
+
+**Outcome:** a player keeps one wanted list, filled from the acquisition plan net of owned copies and by hand, with a priority, a printing or "any printing", a finish, a language and a minimum condition per item. They share it for gifts: a friend or relative marks "I'm buying this", so nobody buys the same card twice, and the owner never sees what was reserved. The same list feeds trade matching.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 4: one wanted list, filled from the acquisition plan, shared by link, with reservations hidden from the owner; Later for the rest
+**Impact / effort:** Medium / medium
+**Depends on:** nothing outside this initiative for slices 0–4; the owner's confirmation of the I-44 amendment before slice 9; I-44 slices 1, 6 and 12 for trades, friends and the adult declaration; I-17 slice 1 for precons; I-38 slices 4, 8 and 12 for export, reports and blocking; I-45 slice 1 for the keep mark; I-32 slices 1, 3 and 6 for the handoff, market prices and affiliate codes; I-57 slice 4 for printing exclusions. The price watch moved to I-59.
+
+Players keep a list of cards they want, and around a birthday or the holidays a partner, a parent or a friend asks what to buy. The person asking often does not play: a mother of a 16-year-old is told "Ask him what format he plays" ([r/magicTCG, 2026-09-03](https://www.reddit.com/r/magicTCG/comments/1w5vd9u/)). Every MTG collection tool read keeps a wishlist, and none lets a friend mark an item as being bought. Gift registries agree on the surprise rule: on Elfster, "the Wishlist owner won't be notified or see that the wish has been marked as purchased" ([help](https://help.elfster.com/en/articles/11517983-how-do-i-mark-that-i-bought-an-item-on-another-elfster-wishlist)), and Wishpicks lets anyone with the link reserve without an account by default ([docs](https://docs.wishpicks.com/en/articles/16189859-how-does-gift-reservation-work)). No tool read nets several decks against owned printings, which I-06's plan already does. Wrong printings and duplicate gifts are an inference from the registries' design, not an observed complaint. Four boundaries hold: no money and no addresses, no typed text between people, no identity on the gift page by default, and no engagement loops.
+
+### Scope
+
+- [ ] Retire the favorites stubs: both routes, `src/lib/favorites`, `FavoriteButton` and the three models, with a migration that refuses to drop a non-empty table (slice 0). Today `POST /api/favorites` (`src/app/api/favorites/route.ts`) checks no session and answers 201 for data it discards, `DELETE /api/favorites/[scryfallId]` answers 200 the same way, and `GET` returns `[]`. This answers I-44's open question 6.
+- [ ] One wanted list: `WantedItem`, an owner page, items added by hand with the printing selector, every item field, the "open to gifts" and "open to trades" switches, paste and export (slice 1).
+- [ ] Fill from the acquisition plan, with a preview of owned copies, intents and borrowed flags, and a refresh on request that never overwrites an item the player edited (slice 2).
+- [ ] A gift link: an unguessable token, an allowlisted page with plain-language items and dated USD prices, `noindex`, robots rules under both `/` and `/fr/`, and rotate and disable (slice 3). Today `src/app/robots.ts` disallows `/share/` but not `/fr/share/`; that item is under I-08.
+- [ ] Reservations, anonymous or signed in: a manage key stored only as a hash, quantities, states, expiry computed on read, a spoiler gate, owner responses identical whether or not anything is reserved, a blind reset and per-browser limits (slice 4).
+- [ ] Later: received gifts into the collection, the gift-window notice in the plan, a store view with a QR code, and the seller handoff of a giver's reservations, with affiliate codes only after I-32 slice 6 and never on a list without the adult declaration (slices 5–8).
+- [ ] Later: I-44's want side reading the items open to trades, once the owner confirms the amendment (slice 9); the friends and profile audiences, precons and sealed products, reports, blocking and export, the keep mark, market prices, and any-printing items that follow I-57's exclusions (slices 10–17).
+- Moved 2026-11-10: wanted items in the price watch (slice 18) are now [I-59](i59-prices-over-time-and-alerts.md)'s alert rules, which take the wanted list as a scope.
+
+### Engineering enablers
+
+- For random lists and reservation sets, every owner response, the gift-window notice included, is byte-identical with and without reservations.
+- The plain manage key never reaches the database or the logs, and two transactions on the last copy let exactly one through.
+- The gift page payload carries no name, image, email, deck, collection or settings, and `/api/v1` returns no wishlist data.
+- A schema test fails when one of these models gains a free-text column another person can read.
+
+**Paid-tier angle:** the list, every way of filling it, every audience, reservations, prices, the store view and the handoff stay free: TappedOut and Deckbox charge nothing for a wishlist, Scryfall forbids paywalling prices, and I-30 never charges for the player's own data. The one candidate, wanted items in a price watch, has weak demand evidence and moved to I-59 with the watch. Affiliate income on gift orders is small and not estimated, so I-30 plans no revenue here.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player with a birthday coming, I want one list of cards I want, so that a friend can reserve a gift without me seeing which one.
+
+**Acceptance.**
+- The wanted list can be filled from the acquisition plan.
+- A reservation is hidden from the owner.
+- The favorites routes that answer success and store nothing are gone.
+
+**UX.** The owner sees the list and the count reserved, not the names of who reserved what. The friend opens a link.
+
+**Data and API.** One want table, private. The gift link is a token. Prices on it are labelled estimates. No address is stored.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `wishlist_reserved {signed_in: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** The owner is signed-in. The friend may reserve without an account if that option is on, with the limits the spec names. Default is the spec's recommendation until the owner confirms it.
+
+**Open questions.** Whether one wanted list replaces I-44's want lists is the amendment the owner must confirm before either slice that writes the table.
+
+### Definition of done
+
+A player fills the wanted list from the acquisition plan and shares it by link; two relatives open it, one reserves a card and the other sees it taken; the owner's pages look the same whether or not anything is reserved; and the gift page shows no name, age or location and is never indexed.
+
+---
+

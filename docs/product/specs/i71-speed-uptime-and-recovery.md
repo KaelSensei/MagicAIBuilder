@@ -2,7 +2,7 @@
 
 > **Initiative:** I-71, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for slices 0 to 8 (decisions, the guard, the export, the first restore drill, alerts, the runbook and the CI budgets); Later for slices 9 to 12 (field data per route, the collection budget, degraded modes, paid-tier readiness) · **Paid:** nothing here is a paid feature; the paid tier's promises rest on it (requirement 8) · **Written 2026-11-10**
 > **Research:** one dated note of 2026-11-10, not committed. Every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate) through [I-38](i38-trust-safety-and-user-rights.md)'s slice 0.
-> **Owns:** speed budgets (field Core Web Vitals per route, bundle bytes, query counts, server response times, the large-collection interaction budget) and how CI enforces them; the availability objective and its error budget; alert routing to the owner's phone; the off-site database export, its encryption and retention; the restore drill and the recovery targets; the incident runbook and incident records; the degraded-mode matrix. **Does not own:** the `/api/health` contract and the shared rate-limit store ([I-05](../roadmap.md#i-05-production-safety)); the monitor tool and the public status page ([I-52](i52-feedback-loop-players-can-see.md#6-status-line-and-status-page), D-20); plans, prices, the Speed Insights sample rate and budget alerts ([I-66](i66-running-costs-and-margin.md#7-budget-alerts), D-04); the editor's lab latency budget on a 100-card deck ([I-37 1.2 and 1.3](i37-editor-depth.md#1-beautiful-measured)); the mobile Lighthouse run ([I-40 3.3](i40-installable-app-and-card-scanning.md#3-phone-journeys-and-their-gate)); Scryfall fallback ([I-67 §5](i67-one-card-data-pipeline.md#5-failure-and-fallback)); the copilot-off rule ([I-02 6.3](i02-checkable-ai-copilot.md#6-disclosure-of-ai-use)); the job route and its stale-job alert ([I-63 §10](i63-one-notification-system.md#10-scheduled-jobs)); the offline deck cache ([I-19](i19-offline-game-night-viewing.md)).
+> **Owns:** speed budgets (field Core Web Vitals per route, bundle bytes, query counts, server response times, the large-collection interaction budget) and how CI enforces them; the availability objective and its error budget; alert routing to the owner's phone; the off-site database export, its encryption and retention; the restore drill and the recovery targets; the incident runbook and incident records; the degraded-mode matrix. **Does not own:** the `/api/health` contract and the shared rate-limit store ([I-05](i05-production-safety.md)); the monitor tool and the public status page ([I-52](i52-feedback-loop-players-can-see.md#6-status-line-and-status-page), D-20); plans, prices, the Speed Insights sample rate and budget alerts ([I-66](i66-running-costs-and-margin.md#7-budget-alerts), D-04); the editor's lab latency budget on a 100-card deck ([I-37 1.2 and 1.3](i37-editor-depth.md#1-beautiful-measured)); the mobile Lighthouse run ([I-40 3.3](i40-installable-app-and-card-scanning.md#3-phone-journeys-and-their-gate)); Scryfall fallback ([I-67 §5](i67-one-card-data-pipeline.md#5-failure-and-fallback)); the copilot-off rule ([I-02 6.3](i02-checkable-ai-copilot.md#6-disclosure-of-ai-use)); the job route and its stale-job alert ([I-63 §10](i63-one-notification-system.md#10-scheduled-jobs)); the offline deck cache ([I-19](i19-offline-game-night-viewing.md)).
 > **Proposed changes to neighbours, for the integrator:** I-05 gains one line pointing here for budgets, alerts, backups and the runbook. I-52's "Does not own" names I-71, not I-05, for alerting. I-30 slice 9, the first paid entitlements, depends on I-71 slice 12. D-04 gains an option (f): point-in-time recovery yes or no. `legal-questions.md` gains the retention question in open question 4.
 
 ## Overview
@@ -137,7 +137,7 @@ Verified on `dev` at `72fbfc1` on 2026-11-10.
 | Dependency          | Today on `dev`                                | Required degraded mode                                                                                                             | Owner                                                                                                                                                                           |
 | ------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Scryfall            | Errors from the client                        | Reads from local tables; stale data labelled after 72 hours                                                                        | [I-67 §5](i67-one-card-data-pipeline.md#5-failure-and-fallback)                                                                                                                 |
-| Commander Spellbook | 502 or 504, "Combo lookup unavailable"        | The last good result, up to 7 days old, served with its date and a retry; never an empty "no combos"                               | I-71 slice 11, inside [I-09](../roadmap.md#i-09-meta-and-evidence)'s integration                                                                                                |
+| Commander Spellbook | 502 or 504, "Combo lookup unavailable"        | The last good result, up to 7 days old, served with its date and a retry; never an empty "no combos"                               | I-71 slice 11, inside [I-09](i09-meta-and-evidence.md)'s integration                                                                                                |
 | AI provider         | "AI deck build failed"; no switch of provider | An "unavailable" state linking to the status page; deterministic surfaces untouched; no allowance consumed                         | [I-02 6.3](i02-checkable-ai-copilot.md#6-disclosure-of-ai-use), [I-30 4.4](i30-business-model-and-paid-tier.md#4-ai-metering-and-quotas-production-safety-ships-before-billing) |
 | Database            | Error page; edits roll back                   | Static pages keep serving; the editor shows "Saving paused" and disables writes; the guest deck and I-19's cached deck stay usable | I-71 slice 11; [I-19](i19-offline-game-night-viewing.md)                                                                                                                        |
 | Vercel              | Nothing                                       | The status page stays up off the production stack                                                                                  | [I-52 6.2](i52-feedback-loop-players-can-see.md#6-status-line-and-status-page)                                                                                                  |
@@ -248,3 +248,196 @@ All read on 2026-11-10 unless stated.
 24. DNS lookups made for this spec on 2026-11-10 found no record for `status.moxfield.com`, `status.scryfall.com`, `status.archidekt.com`, `status.edhrec.com` or `status.commanderspellbook.com`. The home pages [edhrec.com](https://edhrec.com/), [archidekt.com](https://archidekt.com/) and [commanderspellbook.com](https://commanderspellbook.com/) answered HTTP 200 with no link containing "status"; [moxfield.com](https://moxfield.com/) answered 403.
 25. Upstream status pages, each answering HTTP 200: [Vercel](https://www.vercel-status.com/), [Supabase](https://status.supabase.com/), [Anthropic](https://status.claude.com/) (redirected from `status.anthropic.com`), [OpenAI](https://status.openai.com/).
 26. GitHub REST API for `KaelSensei/MagicAIBuilder`: branch protection of `dev`, `staging` and `main`, and the last 30 runs of `lighthouse.yml`.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+### Goals
+
+- A restore from the newest off-site export into a scratch database passes the smoke script within four hours and is recorded; a test alert reaches the owner's phone; no documented command can reset production; and a pull request that pushes a key route's JavaScript or queries past its budget fails CI.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-71-01
+
+As a player, I want the deck to survive a database mistake, so that a bad command cannot empty production.
+
+#### US-71-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-71-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-71-01 Happy path
+
+Given a signed-in player and the English locale
+When the documented reset command refuses to run against production.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-71-02 Happy path
+
+Given a signed-in player and the English locale
+When a daily encrypted export exists, or the owner has not yet chosen the store and the slice says so.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-71-03 Happy path
+
+Given a signed-in player and the English locale
+When a restore drill has been run on a copy, not only described.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-71-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-71-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-71-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Internal. No player flag. The guard ships before new product surface that writes decks.
+
+#### AC-71-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-71-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-71-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+Players see a maintenance banner when the site is read-only. They do not see the backup.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+An encrypted dump. The store is the owner's choice. Alerts go to the owner, not to a player's inbox.
+
+### Analytics and telemetry
+
+`backup_finished {restored_in_drill: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Internal. No player flag. The guard ships before new product surface that writes decks.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+A 24-hour loss target, and whether point-in-time recovery waits for revenue, are owner questions.
+
+### Sources
+
+- https://supabase.com/pricing
+- https://vercel.com/docs/speed-insights/limits-and-pricing
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-71: Speed, Uptime And Recovery
+
+**Spec:** [`specs/i71-speed-uptime-and-recovery.md`](i71-speed-uptime-and-recovery.md)
+
+**Outcome:** if the database were lost tonight, yesterday's decks come back within four hours from an encrypted copy kept off the production stack, by a procedure tested every quarter; the owner's phone rings within 15 minutes of an outage; and each key route has a speed budget, measured on real players or enforced in CI.
+
+**Status:** Next
+**Priority:** Next for slices 0 to 8: the decisions, the guard on destructive commands, the daily export, the first restore drill, alert routing, the runbook and the CI budgets; Later for slices 9 to 12: field data per route, the large-collection budget, degraded modes and the paid-tier readiness check. Nothing in it is paid
+**Impact / effort:** High / medium
+**Depends on:** nothing for slices 1, 6 and 7; the owner's choice of export runner, storage account, objective and phone channel (slice 0) for the export (slice 2); slice 2 for the first drill (slice 3); I-52 slice 1's monitor for alert routing (slice 4), which waits for the owner's choice of monitor; slice 6 for the seeded fixture and query budgets (slice 8); the answer to L-13 (b) and slice 4 for the vitals beacon (slice 9); slice 8 and I-37 slice 1 for the collection budget (slice 10); I-52 slice 2 for the status link (slices 11 and 12).
+
+Production runs on Supabase Free, which keeps no backups ([pricing](https://supabase.com/pricing), read 2026-11-10), and `scripts/` holds no export or restore script. `docs/engineering/infrastructure.md` (lines 348 to 364) gives `npx prisma db push --force-reset` under "Production (Supabase / Neon)", a command that "drops all tables", so one mistyped line would erase every deck with no way back (checked on `origin/dev` at `72fbfc1`). The parts of an answer exist but are not joined: free Speed Insights shows no p75 per metric ([limits](https://vercel.com/docs/speed-insights/limits-and-pricing)), Lighthouse CI asserts category scores on three public pages and blocks no merge into `dev`, `/api/health` says it is "Used by uptime monitors" while none is configured, and no alert rule, recovery target or runbook is written anywhere. Neither Vercel nor Supabase sells an uptime SLA below Enterprise, and Moxfield, Scryfall, Archidekt, EDHREC and Commander Spellbook have no `status.` host. I-05 keeps `/api/health` and the shared rate-limit store, and I-52 the monitor and the status page. Recovery goes first, because data loss is the only failure here that cannot be undone.
+
+### Scope
+
+- [ ] Slice 0, no code: the 99.5% objective, a 24-hour data-loss target and a 4-hour restore target, the export runner (a scheduled GitHub workflow or the VPS) and its storage account, the phone channel, the field-data option, and whether Lighthouse becomes a required check on promotion PRs. Point-in-time recovery is option (f) of [D-04](../owner-decisions.md#d-04-hosting-plans-region-and-budget).
+- [ ] **Owner awareness, now: a production reset with no backup.** `docs/engineering/infrastructure.md` lines 348 to 364 give `npx prisma db push --force-reset` against the production `DATABASE_URL`, while production on Supabase Free keeps no backups and no export exists (verified on `origin/dev` at `72fbfc1`). Slice 1 guards it: a `pnpm` script for production schema changes takes an export first and refuses `--force-reset` and `migrate reset` for a production host, and the "Production" reset section is removed.
+- [ ] A daily export of the `public` schema, all data except the three cache tables, encrypted with the owner's public key before it leaves the runner and never uploaded as a workflow artifact of this public repository, kept 14 daily, 8 weekly and 12 monthly in object storage outside Vercel and Supabase, with a manifest and a heartbeat that alerts on a missing export, a 20% size drop or an empty table (slice 2).
+- [ ] A quarterly restore drill into a scratch database: row counts against the manifest, the schema against `prisma/schema.prisma`, a smoke script, and the restore time recorded in `docs/engineering/restore-drills.md`. Once I-38's deletion tombstone exists, every deletion recorded after the export is re-applied before the database serves players (slice 3).
+- [ ] Alerts: "down" reaches the owner's phone within 15 minutes and never on one failed check, with a page check of `/` beside I-52's `/api/health` monitor, and everything else arrives by email at most once a day (slice 4); a runbook with one section per scenario, an incident record template and the additive-migration rule (slice 5).
+- [ ] CI budgets that cannot flake: Lighthouse with explicit `median-run` aggregation and LCP and CLS per URL (slice 6), compressed JavaScript per key route against `perf-budgets.json` (slice 7), and Prisma queries per request on a seeded fixture, which also lets Lighthouse audit a deck page and a commander listing (slice 8).
+- [ ] Later: a first-party vitals beacon that stores daily histograms only, off until L-13 (b) is answered (slice 9); a paginated collection API and a virtualised list within 200 ms of INP on 20,000 rows (slice 10); degraded modes, a dated Spellbook fallback, "Saving paused" and a copilot "unavailable" state (slice 11); the readiness check that I-30 slice 9 waits for (slice 12).
+
+### Engineering enablers
+
+- Against local PostgreSQL, export, encrypt, decrypt and restore give row counts equal to the manifest and empty cache tables; the job refuses to write an unencrypted file, and the workflow uploads no artifact.
+- The production schema script refuses `--force-reset` and `migrate reset` for a production host.
+- The bundle script fails one byte over a budget and passes at it, with no network, and an injected N+1 fails the query budget.
+- A test parses `lighthouserc.yml` and fails unless `aggregationMethod` is set and every URL asserts LCP and CLS.
+
+**Paid-tier angle:** none. Every player gets the same uptime, speed and backups, and no budget is relaxed for free players. Its value to I-30 is slice 12's precondition for a first payment: a restore drill passed in the last 90 days, a public status page and 99.5% history, and an export of the player's own data. None of the incumbents read publishes a status page or a speed figure.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player, I want the deck to survive a database mistake, so that a bad command cannot empty production.
+
+**Acceptance.**
+- The documented reset command refuses to run against production.
+- A daily encrypted export exists, or the owner has not yet chosen the store and the slice says so.
+- A restore drill has been run on a copy, not only described.
+
+**UX.** Players see a maintenance banner when the site is read-only. They do not see the backup.
+
+**Data and API.** An encrypted dump. The store is the owner's choice. Alerts go to the owner, not to a player's inbox.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `backup_finished {restored_in_drill: yes or no}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Internal. No player flag. The guard ships before new product surface that writes decks.
+
+**Open questions.** A 24-hour loss target, and whether point-in-time recovery waits for revenue, are owner questions.
+
+### Definition of done
+
+A restore from the newest off-site export into a scratch database passes the smoke script within four hours and is recorded; a test alert reaches the owner's phone; no documented command can reset production; and a pull request that pushes a key route's JavaScript or queries past its budget fails CI.
+
+---
+

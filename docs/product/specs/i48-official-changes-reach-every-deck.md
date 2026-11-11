@@ -2,7 +2,7 @@
 
 > **Initiative:** I-48, proposed for the [roadmap](../roadmap.md) · **Status:** proposed · **Priority:** Next for slices 1 to 8, with slices 1 to 6 before the Commander announcement Wizards expects by the end of 2026; Later for slices 9 to 11; slice 12 waits for I-30 · **Impact / effort:** High / medium · **Written** 2026-11-10
 > **Research:** one dated note, not committed. Every external fact below links its own source in [Sources](#sources). Points on e-mail consent are research, not legal advice.
-> **Owns:** the Commander rules as dated versions (the open item in [I-03](../roadmap.md#i-03-trustworthy-deck-feedback)), the announcement record, the assessment of a deck against a rules version, the owner's dated impact report, deterministic replacement candidates for violations a rules change causes, the public "what changed" pages, and the notice and opt-in e-mail for a rules change. **Does not own:** bracket names, descriptions and the guide ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); variant lists, server legality per load and the drift check ([I-42](i42-commander-variants-duel-cedh-pauper.md)); the general notification centre ([I-08](../roadmap.md#i-08-share-compare-and-learn)); new-card suggestions ([I-18](i18-per-deck-radar-of-new-cards.md)); the report framework and the index policy ([I-34](i34-commander-data-reports.md)); the e-mail sender ([I-38](i38-trust-safety-and-user-rights.md)); the paid tier ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** the Commander rules as dated versions (the open item in [I-03](i03-trustworthy-deck-feedback.md)), the announcement record, the assessment of a deck against a rules version, the owner's dated impact report, deterministic replacement candidates for violations a rules change causes, the public "what changed" pages, and the notice and opt-in e-mail for a rules change. **Does not own:** bracket names, descriptions and the guide ([I-28](i28-commander-deckbuilding-guide-by-bracket.md)); variant lists, server legality per load and the drift check ([I-42](i42-commander-variants-duel-cedh-pauper.md)); the general notification centre ([I-08](i08-share-compare-and-learn.md)); new-card suggestions ([I-18](i18-per-deck-radar-of-new-cards.md)); the report framework and the index policy ([I-34](i34-commander-data-reports.md)); the e-mail sender ([I-38](i38-trust-safety-and-user-rights.md)); the paid tier ([I-30](i30-business-model-and-paid-tier.md)).
 
 ## Overview
 
@@ -221,3 +221,202 @@ Slices 1, 3 and 6 make the next announcement a data change rather than a release
 17. Archidekt, news, first page. https://archidekt.com/news (read 2026-11-10)
 18. NetrunnerDB, a decklist page, published 2018-07-05, seen 2026-11-10; added 2026-11-11. https://netrunnerdb.com/en/decklist/6092a490-4d1a-4f83-b9eb-440e7d07c657
 19. arkham.build, release v2.20.0, 2025-04-22; added 2026-11-11. https://github.com/arkham-build/arkham.build/releases/tag/v2.20.0
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+### Goals
+
+- When a moderator publishes the next announcement, every saved Commander deck it touches shows a dated notice that names each changed card and its cause, the estimate before and after and the declared bracket, with candidates from a visible query; a visitor checks a pasted list against the announcement's page without an account; and no reader trusts a stored flag.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-48-01
+
+As a player with saved decks, I want to know which of them a Commander announcement changed, so that a stored flag from last year is not the ban list.
+
+#### US-48-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-48-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-48-01 Happy path
+
+Given a signed-in player and the English locale
+When an announcement is a dated rules version.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-48-02 Happy path
+
+Given a signed-in player and the English locale
+When each affected deck lists the cards and the cause.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-48-03 Happy path
+
+Given a signed-in player and the English locale
+When a visitor can check a pasted list against that page without an account.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-48-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-48-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-48-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: The public page is signed-out. The owner's impact list is signed-in. Email, if any, waits on I-63 and on the lawyer's answer about consent.
+
+#### AC-48-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-48-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-48-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The notice is on the deck and on a public page for the announcement. The estimate before and after is I-77's when that exists.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Rules versions are records. Assessment reads current card data, not the flag copied onto the deck card at add time.
+
+### Analytics and telemetry
+
+`rules_change_seen {decks_affected: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+The public page is signed-out. The owner's impact list is signed-in. Email, if any, waits on I-63 and on the lawyer's answer about consent.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Where the version is published from, the database or a reviewed file, is an owner question.
+
+### Sources
+
+- https://magic.wizards.com/en/news/announcements/commander-banned-and-restricted-february-9-2026
+- https://mtgrocks.com/mtg-commander-announcement-2026-tease/
+- https://netrunnerdb.com/en/decklist/6092a490-4d1a-4f83-b9eb-440e7d07c657
+- https://github.com/arkham-build/arkham.build/releases/tag/v2.20.0
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-48: Official Changes Reach Every Saved Deck
+
+**Spec:** [`specs/i48-official-changes-reach-every-deck.md`](i48-official-changes-reach-every-deck.md)
+
+**Outcome:** when Wizards changes the Commander banned list, the Game Changers or the brackets, every saved deck is assessed against the dated version in force. The owner sees which decks changed, why, and replacement candidates chosen by a visible rule; anyone, without an account, can read what each announcement changed and check a list against it.
+
+**Status:** Next
+**Priority:** Next for slices 1 to 8, with slices 1 to 6 before the Commander announcement Wizards expects by the end of 2026; Later for slices 9 to 11; slice 12 waits for I-30
+**Impact / effort:** High / medium
+**Depends on:** I-28 slice 2 before slice 1; I-42 slice 2 and I-77 slice 1 before slice 2 (I-77 added 2026-11-11); I-42 slice 6 for the drift check; I-67 slice 4 for the draft comparison (slice 6) and I-67 slice 11 for the "under review" state (slice 9), both re-pointed 2026-11-10 from live searches; I-34 slices 1 and 3 for counts per commander; I-63 slice 9 for the e-mail (the sender was I-38 slice 13); I-30's decision and I-06's plan for the cross-deck fix planner.
+
+Wizards now runs the Commander format and changes three lists without a fixed schedule: the banned list, the Game Changers and the bracket definitions. Each change can move a saved deck's legality or bracket. Five cards were unbanned on 2025-04-22, ten Game Changers removed on 2025-10-21, and Biorhythm and Lutri unbanned on 2026-02-09, Lutri staying "banned as a companion" in a new category ([announcement](https://magic.wizards.com/en/news/announcements/commander-banned-and-restricted-february-9-2026)). The February update expected the next one "likely in May or June". None came, and on 2026-10-13 MTG Rocks reported WeeklyMTG's account that an announcement is "likely" before the end of the calendar year ([MTG Rocks](https://mtgrocks.com/mtg-commander-announcement-2026-tease/)). The official pages carry no date, and Scryfall holds only the current state, without Lutri's companion ban. No deckbuilder page read tells an owner that a saved deck changed status, or dates the list its verdict uses. The opening is the dated difference: "Farewell has been a Game Changer since 2026-02-09; your deck now sits above the bracket you declared; here are cards that fill the same role". The spec also found three errors in `docs/references/banlists.md`, corrected on 2026-11-10 (status note).
+
+### Scope
+
+- [ ] `CommanderRulesVersion`, seeded with the history from the list before 2025-02-11 to 2026-02-09 (40, 61, 51 and 53 Game Changers in the four dated versions), and one "version in force" reader for the bracket score, the stats, the companion check and `/rules/game-changers` (slice 1). This closes I-03's open item. Today `src/hooks/useGameChangers.ts` and `src/hooks/useBanlist.ts` read Scryfall live in the browser, with no date; `BRACKET_DEFINITIONS` (`src/lib/constants/brackets.ts`) and the floors in `src/lib/deck/bracket.ts` are code; and Lutri's companion ban is hard-coded in `src/lib/deck/companion.ts`.
+- [ ] `assessDeck` and `compareAssessments`, Game Changer and banned status derived for every reader, and a method version on the bracket estimate (slice 2). Today `src/lib/deck/store.ts` sets `isGameChanger` and `isBanned` when a card is added, `POST /api/decks/[id]/cards` stores the client's values, and `computeDeckStats` (`src/lib/deck/stats.ts`) and `scoreBracket` count the stored flags. Nothing recomputes them, so a deck saved before 2026-02-09 with Farewell counts no Game Changer today. Fork (`src/lib/deck/fork.ts`), duplicate, snapshot restore (`src/lib/deck/snapshot-restore.ts`) and the public and share views copy or show the stale flags; I-42 records the same defect for `isBanned`.
+- [ ] Announcement records and public `/rules/changes` pages in English, backfilled for the four past announcements, then "Is my deck affected?" without an account (slices 3–4).
+- [ ] The owner's impact, computed on the next deck-list load or deck open with no scheduled job: a first catch-up run, a dated notice on the deck list and in the editor, and a report that sets the declared bracket against the new estimate (slice 5).
+- [ ] A publishing workflow: a moderator's draft, a comparison with Scryfall's lists, then publication (slice 6).
+  - Re-pointed 2026-11-10 to [I-67](i67-one-card-data-pipeline.md): the comparison reads I-67's `legality.changed` and `gameChanger.changed` events (its slice 4) instead of live searches, and slice 9's "under review" state reads I-67's count check (its slice 11).
+  - The moderator's publishing page uses [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s `requireOperator` once its slice 1 exists (2026-11-10).
+- [ ] Replacement candidates from a Scryfall query the player can read, in a fixed order, through the reviewed diff and never applied automatically (slice 7); the French pages, `noindex` until reviewed (slice 8).
+- [ ] Later: an "under review" state from I-42's drift check, counts per commander from public decks only, and an opt-in e-mail per announcement (slices 9–11); the cross-deck fix planner after I-30's decision (slice 12).
+  - The in-app notice is an [I-63](i63-one-notification-system.md) inbox entry, and the e-mail opt-in is I-63's "Rules changes on my decks" category, not the spec's `rulesChangesEmail` column.
+- [ ] Neighbour change from [I-77](i77-a-bracket-estimate-players-can-audit.md), 2026-11-11: `assessDeck` (2.1) returns I-77's `explainBracket` output for floors, terms and reasons, and 2.5's method version is I-77's `BRACKET_METHOD_VERSION`, so slice 2 also waits for I-77 slice 1. **Corrected 2026-11-11:** the claim that no deckbuilder tells an owner a saved deck changed status holds among Magic deckbuilders only; NetrunnerDB's decklist pages say a list "is not legal for tournament play currently" ([decklist](https://netrunnerdb.com/en/decklist/6092a490-4d1a-4f83-b9eb-440e7d07c657), 2018-07-05), and arkham.build pins a taboo version per deck ([v2.20.0](https://github.com/arkham-build/arkham.build/releases/tag/v2.20.0), 2025-04-22).
+
+### Engineering enablers
+
+- Golden versions: Food Chain is a Game Changer only from 2025-04-22 to 2025-10-21, Farewell from 2026-02-09; Biorhythm is banned before 2026-02-09 and a Game Changer after; Lutri is banned before that date and banned as a companion after.
+- The same deck in any card order gives the same assessment and the same reasons.
+- A recorded Scryfall fixture with a 54th Game Changer marks the rules "under review", and the network never runs in CI.
+- An import test fails if an AI client is reachable from the assessment, the report or the candidates.
+
+**Paid-tier angle:** every verdict and its version date, the impact report, replacement candidates, the in-app notice, the e-mail, the public pages and the counts per commander stay free: a legality change on a player's own deck is evidence the product shows. The candidates are a planner that fixes every affected deck at once against the collection and hands the missing cards to I-06 and I-32 (medium), and notices for watched or pod decks, which join I-18's row in I-30 (weak).
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player with saved decks, I want to know which of them a Commander announcement changed, so that a stored flag from last year is not the ban list.
+
+**Acceptance.**
+- An announcement is a dated rules version.
+- Each affected deck lists the cards and the cause.
+- A visitor can check a pasted list against that page without an account.
+
+**UX.** The notice is on the deck and on a public page for the announcement. The estimate before and after is I-77's when that exists.
+
+**Data and API.** Rules versions are records. Assessment reads current card data, not the flag copied onto the deck card at add time.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `rules_change_seen {decks_affected: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** The public page is signed-out. The owner's impact list is signed-in. Email, if any, waits on I-63 and on the lawyer's answer about consent.
+
+**Open questions.** Where the version is published from, the database or a reviewed file, is an owner question.
+
+### Definition of done
+
+When a moderator publishes the next announcement, every saved Commander deck it touches shows a dated notice that names each changed card and its cause, the estimate before and after and the declared bracket, with candidates from a visible query; a visitor checks a pasted list against the announcement's page without an account; and no reader trusts a stored flag.
+
+---
+

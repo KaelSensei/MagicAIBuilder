@@ -2,7 +2,7 @@
 
 > **Initiative:** I-35, proposed for the [roadmap](../roadmap.md) · **Status:** Later — proposed 2026-11-09 · **Priority:** Later · **Written:** 2026-11-09
 > **Research:** one dated note on casual game trackers, published results, data protection and cEDH match data (2026-11-09). It is not committed, so every external fact cites its own source in [Sources](#sources). Legal points are research, not legal advice.
-> **Owns:** logging real games after they end, personal game statistics, opt-in contribution and the publication thresholds of casual aggregates. **Does not own:** pods, sheets and consent ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)); goldfish sessions ([I-07](../roadmap.md#i-07-playtest-and-iteration)); bracket scoring ([I-03](../roadmap.md#i-03-trustworthy-deck-feedback), [I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the statistical verdict ([I-21](i21-reproducible-probability-bench.md)); data pages ([I-34](i34-commander-data-reports.md)); billing ([I-30](i30-business-model-and-paid-tier.md)); Discord ([I-23](i23-the-pods-own-surface.md)).
+> **Owns:** logging real games after they end, personal game statistics, opt-in contribution and the publication thresholds of casual aggregates. **Does not own:** pods, sheets and consent ([I-15](i15-rule-zero-sheets-and-pod-profiles.md)); goldfish sessions ([I-07](i07-playtest-and-iteration.md)); bracket scoring ([I-03](i03-trustworthy-deck-feedback.md), [I-28](i28-commander-deckbuilding-guide-by-bracket.md)); the statistical verdict ([I-21](i21-reproducible-probability-bench.md)); data pages ([I-34](i34-commander-data-reports.md)); billing ([I-30](i30-business-model-and-paid-tier.md)); Discord ([I-23](i23-the-pods-own-surface.md)).
 
 ## Overview
 
@@ -218,3 +218,171 @@ Read 2026-11-09 unless dated. [4], [6], [21], [22], [28] and [29] were re-checke
 30. Playgroup.gg, Hugh, First of Many (search summary). https://playgroup.gg/commanders/5200-hugh-first-of-many
 31. EDHTop16, Narset, Enlightened Master (events Nov 2025–Oct 2026). https://edhtop16.com/commander/Narset%2C%20Enlightened%20Master
 32. Arkham Cards on the App Store, v6.3.7, seen 2026-11-10; added 2026-11-11. https://apps.apple.com/us/app/arkham-cards/id1424000351
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+a player logs a real game in under a minute after it ends, tied to the deck version played and to what the pod declared, and reads honest personal statistics; players who opt in feed casual aggregates nobody publishes.
+
+### Goals
+
+- A player logs a game in under a minute, sees it against the deck version and the brackets declared and computed, can export or delete it, and no stored record names a person who has no account.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-35-01
+
+As a player, I want the outcome of I-35, so that the work in this file is the reason to build it.
+
+#### US-35-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-35-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-35-01 Happy path
+
+Given a signed-in player and the English locale
+When a player logs a game in under a minute, sees it against the deck version and the brackets declared and computed, can export or delete it, and no stored record names a person who has no account.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-35-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-35-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-35-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-35-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-35-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-35-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://playgroup.gg/about
+- https://playgroup.gg/commander/turn-order
+- https://commandersherald.com/am-i-the-bolas-stat-tracking-in-a-casual-game/
+- https://gdpr-info.eu/recitals/no-18/
+- https://rules.fabtcg.com/en/trp/09-special-formats/
+- https://playgroup.gg/commander/power-level
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-35: Pod Game Log And Casual Results
+
+**Spec:** [`specs/i35-pod-game-log.md`](i35-pod-game-log.md)
+
+**Outcome:** a player logs a real game in under a minute after it ends, tied to the deck version played and to what the pod declared, and reads honest personal statistics; players who opt in feed casual aggregates nobody publishes.
+
+**Status:** Later
+**Priority:** Later
+**Impact / effort:** Medium / medium
+**Depends on:** nothing for slices 1 and 4 of the private log; I-29 slice 2's canonical list for slice 2; I-29 slice 0's notice page for slice 3 (corrected 2026-11-10); I-15 for pods and declared brackets; I-21 slice 5 for version verdicts; I-34's data pages and a legal answer before any aggregate is published.
+
+Casual results are already tracked at scale by life-counter apps. [Playgroup.gg](https://playgroup.gg/about) reports more than 770,000 games and publishes a robust first-seat advantage: 29.1% of single-winner four-player games against a fair 25% ([turn order](https://playgroup.gg/commander/turn-order)). No tracker found ties a result to the exact deck version played, or publishes outcomes by declared against computed bracket. MagicAIBuilder holds deck snapshots today, and the I-15 Rule 0 sheet once it ships. Two risks shape the design: a reader's letter describes tracked win rates turning a casual group to "targeted play" ([Commander's Herald](https://commandersherald.com/am-i-the-bolas-stat-tracking-in-a-casual-game/)), and the GDPR household exemption does not cover a platform that stores a non-user's name ([Recital 18](https://gdpr-info.eu/recitals/no-18/)). This is a post-game log, not the table companion the 2027 sweep ruled out, and casual logs do not unblock tournament win rates (I-09).
+
+### Scope
+
+- [ ] "Log a game" from the deck page: date, pod size, seat order, the logger's seat and deck, the outcome, and optional turn, mulligans, how it ended and fun (slice 1).
+- [ ] Freeze the deck version played, by card-list hash or a new game snapshot (slice 2). The same helper can tie I-07's recorded sessions to a snapshot.
+- [ ] Edit, delete, JSON and CSV export, and seats turned into labels when an account is deleted (slice 3).
+- [ ] Personal figures per deck: wins against the fair share for the pod size, 95% Wilson intervals, a game list instead of a percentage under 10 games, goldfish sessions kept apart (slice 4).
+- [ ] Declared and computed brackets frozen with the scorer version, and mismatch and pod spread with nothing imputed (slice 5).
+- [ ] Logging from an I-15 pod, with linked players who confirm or detach their seat (slice 6).
+- [ ] Opt-in contribution and a weekly aggregate job that publishes a cell only at 40 games from 10 accounts and 5 pods, none supplying more than a third (slices 8–9).
+- [ ] Optional elimination order per seat, with the turn when known, so a log shows placements as well as the winner. Flesh and Blood's Ultimate Pit Fight "may also track the order in which players lost" ([TRP §9](https://rules.fabtcg.com/en/trp/09-special-formats/), seen 2026-11-10). Added 2026-11-11.
+- [ ] On slice 7: after about twenty logged games of one deck version, the owner privately sees whether it plays above or below its declared bracket, with the interval. It is never shared unless the owner shares it, and never ranks a player. A deck's own record predicts its later games "roughly 15-20 times better" than its declared bracket ([Playgroup](https://playgroup.gg/commander/power-level), updated 2026-11-10). Added 2026-11-11.
+
+### Engineering enablers
+
+- No seat column accepts a name, and the API refuses one: opponents are linked accounts or per-game labels such as "Seat 3, Atraxa, Praetors' Voice".
+- A logged game does not change when a sheet is edited, a share is revoked or the bracket scorer changes.
+- Every results screen reads "Self-reported casual games. Not tournament results, not a random sample." in English and French.
+
+**Paid-tier angle:** logging, history, export, deletion, per-deck figures over 12 months and every published aggregate stay free. Candidates are trends across deck versions, the mismatch view across all of a player's decks, and whole-history analysis; I-30 rates them weak, because Playgroup and Lifetap give statistics away.
+
+### Definition of done
+
+A player logs a game in under a minute, sees it against the deck version and the brackets declared and computed, can export or delete it, and no stored record names a person who has no account.
+
+---
+

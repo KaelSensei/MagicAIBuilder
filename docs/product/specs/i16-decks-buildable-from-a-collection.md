@@ -101,3 +101,194 @@ Slice 0 is the whole risk of this initiative. Slices 4 and 6 need only deck and 
 
 - Where does the candidate corpus come from? Public community decks are free but uneven; precons are dated and trustworthy but few. Starting with precons would make this initiative share its catalogue with I-17.
 - Does coverage weight cards by role? A collection covering 95 % of a list but missing its commander covers nothing useful. A hard floor on the command zone is probably required before any percentage is shown.
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player can start from owned cards and see which commanders or lists those cards can build, including free copies and the cost of what is missing.
+
+### Goals
+
+- A collection produces a ranked, sourced view of buildable lists that shows free copies and unknown prices, without changing ownership.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-16-01
+
+As a player starting from a box of cards, I want commanders ranked by what I already own, so that a copy committed to another deck is not treated as free.
+
+#### US-16-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-16-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-16-01 Happy path
+
+Given a signed-in player and the English locale
+When oracle identity is used for colour and legality. Printing identity is used for price.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-16-02 Happy path
+
+Given a signed-in player and the English locale
+When a free-cards mode treats copies in other decks as unavailable.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-16-03 Happy path
+
+Given a signed-in player and the English locale
+When an unknown price is marked unknown, not zero.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-16-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-16-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-16-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in, because it reads the collection. No guest ranking. Flag off until the commitment index matches a hand-checked fixture.
+
+#### AC-16-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-16-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-16-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The ranking does not change the open deck or the collection. Each candidate names where the list came from.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Reads the commitment index and the collection. No write. Public decks, when used as candidates, go through I-75's query.
+
+### Analytics and telemetry
+
+`buildable_ranked {mode: all_owned or free_copies, unpriced: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in, because it reads the collection. No guest ranking. Flag off until the commitment index matches a hand-checked fixture.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+The candidate corpus is public decks first. A generated 100-card list from the collection stays out of scope.
+
+### Sources
+
+- https://moxfield.nolt.io/2554
+- https://archidekt.com/forum/thread/15420664
+- https://github.com/arkham-build/arkham.build/releases/tag/v3.5.0
+- https://github.com/arkham-build/arkham.build/releases/tag/v4.1.0
+- https://www.reddit.com/r/Moxfield/comments/1xl4te2/
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-16: Decks Buildable From A Collection
+
+**Spec:** [`specs/i16-decks-buildable-from-a-collection.md`](i16-decks-buildable-from-a-collection.md)
+
+**Outcome:** a player can start from owned cards and see which commanders or lists those cards can build, including free copies and the cost of what is missing.
+
+**Status:** Next
+**Priority:** Next
+**Impact / effort:** High / medium to large
+**Depends on:** I-06 printing-level ownership. Do not rank lists against oracle identity alone while cost still depends on the printing.
+
+MTGGoldfish SuperBrew and Mana For Cards Discover are the references. This initiative ranks candidates from the collection. I-06 still reconciles a deck the player has already chosen. Validate demand before a large build.
+
+### Scope
+
+- [ ] Rank candidate lists or commanders by how much of the collection they cover.
+- [ ] Use Oracle identity for color identity and legality, and printing identity for price.
+- [ ] Offer a free-cards mode that treats copies already allocated to other decks as unavailable.
+- [ ] Show where each candidate list came from, and mark unknown prices on their own.
+- [ ] Leave collection ownership and the open deck unchanged while ranking.
+- [ ] Show owned copies as free or committed, such as "1 of 3 free, 2 in other decks", in card search and on the deck's rows, reading slice 4's commitment index (slice 6; I-37 slice 17 places the search marker). The index needs only deck rows, as `GET /api/collection/usage` already reads them, so slice 6 may go ahead of slice 0. A Moxfield feedback request asks for "1 of 3 available (2 in other decks)" ([nolt 2554](https://moxfield.nolt.io/2554), search summary, undated), and Archidekt staff called an in-use banner hard to build ([thread 15420664](https://archidekt.com/forum/thread/15420664), about 14 months before 2026-11-10).
+- [ ] A per-deck card pool, shown as a tag on the deck: owned only, free copies only, my collection on a date, or printed up to a set. Search, [I-76](i76-complete-this-deck-from-my-collection.md)'s completion and I-02's suggestions respect it, extending the owner-decided "Collection only" toggle. arkham.build's deck "environment" restricts search and validation ([v3.5.0](https://github.com/arkham-build/arkham.build/releases/tag/v3.5.0), 2025-08-22; [v4.1.0](https://github.com/arkham-build/arkham.build/releases/tag/v4.1.0), 2026-08-26). Added 2026-11-11.
+- [ ] Answer open question 1 (the candidate corpus) with "public decks first, through I-75's query contract": players ask for public decks sorted by what they own ([r/Moxfield](https://www.reddit.com/r/Moxfield/comments/1xl4te2/), 2026-11-01). Added 2026-11-11.
+- [ ] Neighbour changes from [I-76](i76-complete-this-deck-from-my-collection.md), 2026-11-11: spec slice 4's commitment index needs nothing, since it reads deck rows and collection rows as `GET /api/collection/usage` already does; the free-cards ranking moves to a new slice 7 (after slices 2 and 4); copies in the main and command zones commit, Considering and sideboard copies do not. The non-goal "Generating a full 100-card list from the collection" stands as written: I-76 fills an existing partial deck slot by slot, which is not that non-goal.
+
+**Twelfth pass, 2026-11-11:** a reprint of a card the player owns is [I-84](i84-a-reprint-watch-for-cards-you-own.md), not a candidate list. A Cardsphere file is [I-90](i90-a-cardsphere-file-you-upload-yourself.md). Neither ranks commanders.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player starting from a box of cards, I want commanders ranked by what I already own, so that a copy committed to another deck is not treated as free.
+
+**Acceptance.**
+- Oracle identity is used for colour and legality. Printing identity is used for price.
+- A free-cards mode treats copies in other decks as unavailable.
+- An unknown price is marked unknown, not zero.
+
+**UX.** The ranking does not change the open deck or the collection. Each candidate names where the list came from.
+
+**Data and API.** Reads the commitment index and the collection. No write. Public decks, when used as candidates, go through I-75's query.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `buildable_ranked {mode: all_owned or free_copies, unpriced: zero or some}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in, because it reads the collection. No guest ranking. Flag off until the commitment index matches a hand-checked fixture.
+
+**Open questions.** The candidate corpus is public decks first. A generated 100-card list from the collection stays out of scope.
+
+### Definition of done
+
+A collection produces a ranked, sourced view of buildable lists that shows free copies and unknown prices, without changing ownership.
+
+---
+

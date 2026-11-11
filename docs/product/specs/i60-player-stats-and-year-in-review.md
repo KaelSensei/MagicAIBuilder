@@ -2,7 +2,7 @@
 
 > **Initiative:** I-60, proposed for the [roadmap](../roadmap.md) · **Status:** Proposed · **Priority:** Next for the private stats page and the private recap (slices 0 to 5 and 13); Later for sharing, images, measurement, game statistics and embeds (slices 6 to 12, 14 and 15), which wait for I-36, I-38, I-39 and I-35. A private 2026 recap is possible only if slices 1, 2 and 4 ship before 1 December 2026; the first shareable edition is realistic in December 2027 · **Written 2026-11-10**
 > **Research:** one dated note on year-in-review features in hobby and game apps, EDHREC's yearly look at Commander, evidence on how recaps spread, what makes them feel creepy or pushy, and GDPR on profiling and public sharing. It is not committed, so every external fact links its own entry in [Sources](#sources). Legal points are research, not legal advice; each goes to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** the player's statistics across their own decks, the counting rules behind them, the yearly recap (opt-in, cut-off, frozen snapshot, sections, English and French text), its visibility levels and public projection, the recap image and embed routes, the recap's tone rules and its growth-loop measurement. **Does not own:** per-deck statistics and the bracket scorer (`src/lib/deck/stats.ts`, `bracket.ts`; [I-03](../roadmap.md#i-03-trustworthy-deck-feedback), [I-28](i28-commander-deckbuilding-guide-by-bracket.md)); logging games and per-deck game figures ([I-35](i35-pod-game-log.md)); builds and their resolution ([I-55](i55-one-deck-several-builds.md)); the change log ([I-37](i37-editor-depth.md)); dated prices ([I-32](i32-seller-handoff-and-affiliate-carts.md) slice 2); the deck image, the public projection and embeds as a surface ([I-36](i36-creator-and-embed-toolkit.md)); link-preview tags ([I-46](i46-discord-and-chat-integrations.md)); the event contract and first run ([I-39](i39-first-run-activation-and-measurement.md)); profiles, follows and reviews ([I-08](../roadmap.md#i-08-share-compare-and-learn)); reporting, export, deletion and minors ([I-38](i38-trust-safety-and-user-rights.md)); the index policy and site-wide yearly reports ([I-34](i34-commander-data-reports.md)); plans and prices ([I-30](i30-business-model-and-paid-tier.md)).
+> **Owns:** the player's statistics across their own decks, the counting rules behind them, the yearly recap (opt-in, cut-off, frozen snapshot, sections, English and French text), its visibility levels and public projection, the recap image and embed routes, the recap's tone rules and its growth-loop measurement. **Does not own:** per-deck statistics and the bracket scorer (`src/lib/deck/stats.ts`, `bracket.ts`; [I-03](i03-trustworthy-deck-feedback.md), [I-28](i28-commander-deckbuilding-guide-by-bracket.md)); logging games and per-deck game figures ([I-35](i35-pod-game-log.md)); builds and their resolution ([I-55](i55-one-deck-several-builds.md)); the change log ([I-37](i37-editor-depth.md)); dated prices ([I-32](i32-seller-handoff-and-affiliate-carts.md) slice 2); the deck image, the public projection and embeds as a surface ([I-36](i36-creator-and-embed-toolkit.md)); link-preview tags ([I-46](i46-discord-and-chat-integrations.md)); the event contract and first run ([I-39](i39-first-run-activation-and-measurement.md)); profiles, follows and reviews ([I-08](i08-share-compare-and-learn.md)); reporting, export, deletion and minors ([I-38](i38-trust-safety-and-user-rights.md)); the index policy and site-wide yearly reports ([I-34](i34-commander-data-reports.md)); plans and prices ([I-30](i30-business-model-and-paid-tier.md)).
 
 ## Overview
 
@@ -245,3 +245,200 @@ All read on 2026-11-10 unless stated.
 20. Article 29 Working Party, "Guidelines on Automated individual decision-making and Profiling for the purposes of Regulation 2016/679", wp251rev.01, page dated 2018-08-22 (text not extracted). https://ec.europa.eu/newsroom/article29/items/612053
 21. EDPB, "Guidelines 03/2022 on deceptive design patterns in social media platform interfaces", version 2.0, 2023-02-24 (title and date only). https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-032022-deceptive-design-patterns-social-media_en
 22. CNIL, "Recommandation 4 : rechercher le consentement d'un parent pour les mineurs de moins de 15 ans", 2021-06-09, as cited by I-38. https://www.cnil.fr/fr/recommandation-4-rechercher-le-consentement-dun-parent-pour-les-mineurs-de-moins-de-15-ans
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+### Goals
+
+- A player with ten decks opens `/stats` and sees colours, commanders, shared cards and brackets, each with its denominator; on 1 December an opted-in player gets a private recap in their language that names no other player and ranks them against no one; and a recap shared by link stops working within a minute of revocation and never reaches a search engine.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-60-01
+
+As a player looking back at a year, I want counts of what I built, so that the recap is mine and not a ranking.
+
+#### US-60-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-60-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-60-01 Happy path
+
+Given a signed-in player and the English locale
+When each statistic shows its denominator.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-60-02 Happy path
+
+Given a signed-in player and the English locale
+When the recap has no streak, no rank and no named opponent.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-60-03 Happy path
+
+Given a signed-in player and the English locale
+When the recap is private unless the player later opts into a share, which is Later.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-60-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-60-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-60-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Signed-in. Guests have no stats. The recap email, if the player asks for one, waits on I-63 and on the lawyer.
+
+#### AC-60-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-60-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-60-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The stats page is a list of counts. The recap is a page in December, not a modal.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+Pure counts over the player's decks. The dead analytics module is deleted. No public aggregate in this slice.
+
+### Analytics and telemetry
+
+`stats_opened {surface: page or recap}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Signed-in. Guests have no stats. The recap email, if the player asks for one, waits on I-63 and on the lawyer.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Whether the first recap cuts off at 30 November is open. A player under 15 and the lawful basis are lawyer questions.
+
+### Sources
+
+- https://techcrunch.com/2025/12/04/spotify-says-wrapped-2025-is-its-biggest-yet-with-200m-users-in-its-first-day
+- https://playgroup.gg/tracker
+- https://playgroup.gg/profiles/46552-eatman/rewind
+- https://road.cc/content/news/strava-year-sport-now-only-subscribers-317425
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-60: Player Stats And A Commander Year In Review
+
+**Spec:** [`specs/i60-player-stats-and-year-in-review.md`](i60-player-stats-and-year-in-review.md)
+
+**Outcome:** a player sees statistics across their own decks on a private page: colours, commanders, the cards used most, brackets, deck value, cards shared across decks, and decks built and changed, each with its denominator. Each December, if they opted in, they get a Commander year in review in English or French, frozen at a stated cut-off, which they may keep private, share by link or show on their profile.
+
+**Status:** Next
+**Priority:** Next for the private stats page and the private recap (slices 0 to 5 and 13); Later for sharing, images, measurement, game statistics and embeds (slices 6 to 12, 14 and 15). A private 2026 recap needs slices 1, 2 and 4 before 1 December 2026; the first shareable edition is realistic in December 2027
+**Impact / effort:** Medium / medium
+**Depends on:** nothing outside this initiative for slices 1, 2, 4 and 13; counsel for slice 0; I-32 slice 2 for dated prices (slice 3); I-36 slices 1 to 3 for the deck image, the public projection and embeds (slices 5, 6 and 11); I-38 slices 7 and 8 for age steps and reports (slice 6); I-46 slice 1 for preview tags (slice 7); I-39 slices 5, 10, 12 and 14 for measurement (slices 8, 9 and 15); I-72 slice 2's `User.signupEntry` for the sign-up entry (slice 9, added 2026-11-10); I-35 slices 4 and 5 for games (slice 10); I-37 slice 10 for exact change counts (slice 12); I-30 slice 0 for slice 14.
+
+A player with a dozen decks cannot see them as a whole: the profile lists public decks one by one and shows no statistics. Recaps spread: Spotify counted over 500 million shares of Wrapped 2025, screenshots included ([TechCrunch, 2025-12-04](https://techcrunch.com/2025/12/04/spotify-says-wrapped-2025-is-its-biggest-yet-with-200m-users-in-its-first-day)), and Playgroup.gg ships a December "Rewind" for Commander games ([page](https://playgroup.gg/tracker)). No deckbuilder found offers a recap of the decks themselves. Recaps can also push and rank. Playgroup's sample 2026 page shows "top 2.51% of active players" and names a "nemesis" ([page](https://playgroup.gg/profiles/46552-eatman/rewind)), and Strava moved its recap to subscribers in December 2025, to public complaints ([road.cc, 2025-12-23](https://road.cc/content/news/strava-year-sport-now-only-subscribers-317425)). This recap is free, counts honestly, names its denominators and never pushes: no streaks, no ranking against other players, no opponents named, and no private deck made public without the owner's say. EDHREC's yearly article stays the site-wide view, under I-34.
+
+### Scope
+
+- [ ] Lawyer questions added to I-30's list, and the stats and recap paragraph for I-38's privacy policy (slice 0, no code).
+- [ ] A pure counting module: active decks, colours, commanders, the cards used most, shared cards, brackets, and decks built and changed. A deck counts once, its builds through the main build, and a card once per deck (slice 1). It replaces `src/lib/deck/analytics.ts`, which only its own test imports, labels Scryfall's USD prices as euros and names a price tier "cEDH", conflating cost with power; slice 1 deletes it.
+- [ ] A `/stats` page and `GET /api/user/stats` in English and French, with accessible charts and tables (slice 2), and a value section with dated prices (slice 3).
+- [ ] The recap: an opt-in, a job on 1 December over 1 January to 30 November, frozen `YearRecap` rows, an owner page, the December invitation, deletion and a tone deny-list test (slice 4), and an image download in both orientations and languages (slice 5).
+- [ ] `Deck.origin` written by the create, import, fork, duplicate and AI routes, so that built and imported decks are counted apart (slice 13). Today only `forkedFromDeckId` and `isAIGenerated` mark an origin.
+- [ ] Later: sharing levels, a preview, `/u/{username}/recap/{year}` and `/recap/{token}`, `noindex` and robots rules, revocation within 60 seconds and a report button (slice 6). Every path under `/u` is public by prefix (`PUBLIC_PAGE_PREFIXES` in `src/lib/auth/public-paths.ts`), and `src/app/sitemap.ts` lists every user with a username, so the recap page checks its own visibility and stays out of the sitemap.
+- [ ] Later: the public recap image and preview tags (slice 7), events and the owner's growth view (slice 8), a visitor call to action into an import-first first run (slice 9), games from I-35 (slice 10), a recap embed (slice 11), exact change counts from I-37's change log (slice 12), and a staggered-invitation experiment (slice 15).
+  - Slice 9's sign-up entry is `User.signupEntry = recap`, written by [I-72](i72-growth-loops-referrals-creators-and-return.md) slice 2, instead of a `signup_entry` event (2026-11-10).
+- [ ] After I-30's decision: statistics over any date range and trends across several years (slice 14).
+
+### Engineering enablers
+
+- One module counts decks, builds and cards by stated rules, and every figure on the page and in the recap names its denominator.
+- A tone test fails on any streak, rank, percentile, named opponent or share reward in the English and French recap text.
+- A private or link-only recap is absent from the sitemap and returns nothing at its public path, a public recap is `noindex`, and a revoked link stops working within 60 seconds.
+- Deleting the account deletes its recaps, and I-38's export holds them.
+
+**Paid-tier angle:** the stats page for every year, the recap with all its sections, images, sharing levels, embeds and the export stay free. The recap is an acquisition loop, Spotify, Goodreads and Playgroup give theirs away, and Strava's move to subscribers drew public complaints. The one candidate is statistics over any date range and trends across several years, a personal tool over the player's history; the spec rates the case weak.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player looking back at a year, I want counts of what I built, so that the recap is mine and not a ranking.
+
+**Acceptance.**
+- Each statistic shows its denominator.
+- The recap has no streak, no rank and no named opponent.
+- The recap is private unless the player later opts into a share, which is Later.
+
+**UX.** The stats page is a list of counts. The recap is a page in December, not a modal.
+
+**Data and API.** Pure counts over the player's decks. The dead analytics module is deleted. No public aggregate in this slice.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `stats_opened {surface: page or recap}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** Signed-in. Guests have no stats. The recap email, if the player asks for one, waits on I-63 and on the lawyer.
+
+**Open questions.** Whether the first recap cuts off at 30 November is open. A player under 15 and the lawful basis are lawyer questions.
+
+### Definition of done
+
+A player with ten decks opens `/stats` and sees colours, commanders, shared cards and brackets, each with its denominator; on 1 December an opted-in player gets a private recap in their language that names no other player and ranks them against no one; and a recap shared by link stops working within a minute of revocation and never reaches a search engine.
+
+---
+

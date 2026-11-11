@@ -2,7 +2,7 @@
 
 > **Initiative:** I-33, proposed for the [roadmap](../roadmap.md) · **Status:** Parked: owner decision required · **Priority:** Parked · **Written 2026-11-09**
 > **Kind:** a decision record, not a build plan. It records the owner's ambition, a six-stage path, the gates between stages and the evidence each gate needs. Nothing here is scheduled for building.
-> **Related:** stages 1 to 3 are built in [I-32](i32-seller-handoff-and-affiliate-carts.md) on top of [I-06](../roadmap.md#i-06-collection-and-purchase-planning). The revenue comparison feeds [I-30](i30-business-model-and-paid-tier.md). The non-goal this record could reverse sits in the roadmap's [deliberate non-goals](../roadmap.md#deliberate-non-goals-from-the-benchmark).
+> **Related:** stages 1 to 3 are built in [I-32](i32-seller-handoff-and-affiliate-carts.md) on top of [I-06](i06-collection-and-purchase-planning.md). The revenue comparison feeds [I-30](i30-business-model-and-paid-tier.md). The non-goal this record could reverse sits in the roadmap's [deliberate non-goals](../roadmap.md#deliberate-non-goals-from-the-benchmark).
 > **Research:** dated notes of 2026-11-09 on marketplaces, launch strategy, EU and French law, costs and affiliates. They are not committed, so every external fact cites a numbered entry in **Sources**. Legal points are research, not legal advice.
 
 ## Overview
@@ -218,3 +218,175 @@ Read on 2026-11-09 unless dated otherwise. "Search summary" means the official p
 25. Stripe, [Connect pricing (France)](https://stripe.com/fr/connect/pricing); Mangopay, [legal notice](https://mangopay.com/legal-notice) (CSSF-licensed e-money institution) and [pricing](https://mangopay.com/pricing), historical rate from [FrenchWeb](https://www.frenchweb.fr/mangopay).
 26. Gigazine, [summary of PSA's 2025 counterfeit data](https://gigazine.net/gsc_news/en/20260512-tcg-fake), 2026-05-12.
 27. [MTGGoldfish Premium](https://www.mtggoldfish.com/premium) (search summary) and [TopDecked Powered features](https://topdecked.com/articles/powered-features).
+
+## Feature contract (Light, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+
+This file is light because the initiative is Later or Parked and is not in I-80 to I-98. The scenarios below are the bar for when it is promoted. They are not a promise to build it next.
+
+### Summary and problem
+
+the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
+
+### Goals
+
+- The decision log holds dated gate reviews whose figures a second person can recompute, and the owner's stage-5 decision is recorded with its evidence, whether it is go, hold or no.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-33-01
+
+As a player, I want the outcome of I-33, so that the work in this file is the reason to build it.
+
+#### US-33-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-33-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-33-01 Happy path
+
+Given a signed-in player and the English locale
+When the decision log holds dated gate reviews whose figures a second person can recompute, and the owner's stage-5 decision is recorded with its evidence, whether it is go, hold or no.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-33-02 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-33-03 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-33-04 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+#### AC-33-05 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-33-06 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-33-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+The flow is the one described in the moved record. Empty, loading and error states use a catalogue string, not a blank panel.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+See the moved record. No public route is added unless that record names one.
+
+### Analytics and telemetry
+
+No new event until the moved record names one.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+Follows the initiative priority. Guest and signed-in behaviour is the moved record's.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+None beyond the moved record.
+
+### Sources
+
+- https://manapool.com/mass-entry-info
+- https://stripe.com/fr/connect/pricing
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-33: The Marketplace Ladder (decision record)
+
+**Spec:** [`specs/i33-marketplace-ladder.md`](i33-marketplace-ladder.md)
+
+**Outcome:** the owner can decide from measured evidence and a legal review whether MagicAIBuilder should ever hold buyers' money, and every rung below that decision is useful on its own.
+
+**Status:** Parked
+**Priority:** Parked. A decision record, not a build plan: nothing for stages 5 and 6 is scheduled.
+**Impact / effort:** High / decision and outreach work only until stage 5
+**Depends on:** I-32 for stages 1 to 3 and their measurements; I-30 for the revenue comparison.
+
+On 2026-11-09 the owner named a marketplace "recognised like Cardmarket or TCGplayer" as a possible goal. The research found that deckbuilders partner with marketplaces and that none of the major ones runs its own: EDHREC, Moxfield, Archidekt and mtgcommander.ai hand off to [Mana Pool](https://manapool.com/mass-entry-info), Card Kingdom or TCGplayer. Mana Pool built supply from store inventory integrations and demand from those deckbuilders. A marketplace switches on Digital Services Act duties, seller-status disclosure, DAC7 reporting, product-safety duties and payment licensing, so buyers' funds must sit with a licensed provider such as [Stripe Connect](https://stripe.com/fr/connect/pricing). At a 5% take, each million euros of sales grosses about €50,000 and keeps about €24,600 to €44,600 after payment costs, roughly one support salary, while Cardmarket had more than 80 staff in February 2026. The roadmap's non-goal "full card-trading marketplace" stays in force.
+
+| Stage | What it is                                                                 | Home                                | Non-goal     |
+| ----- | -------------------------------------------------------------------------- | ----------------------------------- | ------------ |
+| 1     | Disclosed affiliate links                                                  | I-32                                | Fits         |
+| 2     | Region-aware prices from a source with display rights                      | I-32                                | Fits         |
+| 3     | Buy-this-deck carts on the seller's own site                               | I-32                                | Fits         |
+| 4     | Cart split and price alerts, where a feed's terms allow                    | A future spec                       | Fits         |
+| 5     | Pilot marketplace: professional sellers, funds held by a licensed provider | A build spec after the owner's "go" | **Reversed** |
+| 6     | Open player-to-player marketplace with a delivery guarantee                | After a stage-5 review              | Reversed     |
+
+[I-44](i44-trade-lists-within-the-pod.md)'s trade lists and [I-45](i45-selling-spare-cards.md)'s seller exports add no stage: they sit beside stages 1 to 4, and no money passes through the product. [I-51](i51-cards-lent-and-borrowed.md)'s loans add none either: a deposit or a fee would turn a loan into a transaction, which would be a change for this record's decision log. Nor do [I-56](i56-wishlists-friends-can-buy-from.md)'s gift reservations: the product takes no payment, pools no money and stores no shipping address.
+
+### Scope
+
+- [ ] The owner confirms or edits the proposed gate thresholds and metric definitions as the first decision-log entry, before any measuring starts (slice 0).
+- [ ] Specify the gate metrics with I-32: handoffs, network-reported attributed sales, monthly active buyers and wrong-printing reports (slice 1).
+- [ ] Ask Cardmarket, Mana Pool and CardTrader for listing-level feeds and display rights, and record the answers (slice 4).
+- [ ] Measure stage 1 for six months with quarterly review entries, then choose the first market (slices 2–3).
+- [ ] Compare affiliate, take-rate and subscription income on measured numbers, then commission a legal review of stage 5 (slices 5–6).
+- [ ] Log the owner's stage-5 go or no-go. A "go" lands in the same pull request as the roadmap change that reverses the non-goal (slice 9).
+
+### Boundaries
+
+- No advice reads affiliate, commission or seller data at any stage; a budget the player sets is the only price input to advice.
+- No in-house wallet, escrow or store credit, and no paid placement of sellers, decks or cards.
+- The proposed stage-5 entry gate includes €1M of attributed yearly sales for six months, 1,000 monthly active buyers, sellers' letters of intent covering 80% of sampled plan lines, a dated legal review and a signed payment-provider contract.
+
+**Paid-tier angle:** stage-4 price alerts are the only rung with a plausible paid feature, and only on a feed whose terms allow it. Affiliate and take-rate income are alternatives to charging players, never a charge on card data.
+
+### Definition of done
+
+The decision log holds dated gate reviews whose figures a second person can recompute, and the owner's stage-5 decision is recorded with its evidence, whether it is go, hold or no.
+
+---
+

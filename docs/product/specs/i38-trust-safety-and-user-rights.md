@@ -2,7 +2,7 @@
 
 > **Status:** Proposed · **Priority:** Next. A launch gate for [I-30](i30-business-model-and-paid-tier.md)'s paid tier (its slice 7 changes account deletion, and a paid plan needs terms and a privacy policy) and for any public growth · **Written 2026-11-09**
 > **Research:** a dated note on EU and French platform law, GDPR practice and five competitors' public pages. The note is not committed, so every external fact links its own source in [Sources](#sources). Legal points are research, not legal advice; each one is routed to the lawyer list in [I-30 requirement 7.2](i30-business-model-and-paid-tier.md#7-the-legal-gate).
-> **Owns:** reporting and moderation of every kind of user content, statements of reasons and appeals, blocking and comment controls, the legal pages (legal notice, terms, privacy policy, DSA contact page), account deletion and its cascade, the full data export, retention jobs, the age statement and the defaults that protect minors. **Does not own:** the social features themselves ([I-08](../roadmap.md#i-08-share-compare-and-learn)); the public projection of a deck ([I-36](i36-creator-and-embed-toolkit.md) slice 1); the API rate limit ([I-05](../roadmap.md#i-05-production-safety)); billing and the subscription lifecycle (I-30); the deck-index takedown form ([I-29](i29-cross-site-deck-index.md) 1.7), which should reuse the notice form here; game-log deletion rules ([I-35](i35-pod-game-log.md) 6.2), which extend the cascade here.
+> **Owns:** reporting and moderation of every kind of user content, statements of reasons and appeals, blocking and comment controls, the legal pages (legal notice, terms, privacy policy, DSA contact page), account deletion and its cascade, the full data export, retention jobs, the age statement and the defaults that protect minors. **Does not own:** the social features themselves ([I-08](i08-share-compare-and-learn.md)); the public projection of a deck ([I-36](i36-creator-and-embed-toolkit.md) slice 1); the API rate limit ([I-05](i05-production-safety.md)); billing and the subscription lifecycle (I-30); the deck-index takedown form ([I-29](i29-cross-site-deck-index.md) 1.7), which should reuse the notice form here; game-log deletion rules ([I-35](i35-pod-game-log.md) 6.2), which extend the cascade here.
 
 ## Overview
 
@@ -244,3 +244,213 @@ Read 2026-11-09 unless dated otherwise. Legal sources are research, not legal ad
 18. TappedOut forum, "Disable or Delete Comments on Decks", 2013-10-07 (replies by users, one described as an admin). <https://tappedout.net/mtg-forum/tappedout/disable-or-delete-comments-on-decks>
 19. Cardmarket, help page on usernames <https://help.cardmarket.com/en/NetiquetteUsernamesPasswords>; privacy policy HTTP 403 <https://www.cardmarket.com/en/Magic/Policies/PrivacyPolicy>
 20. Discourse, Digital Services Act page. <https://discourse.org/dsa>
+
+## Feature contract (Full, 2026-11-11)
+
+The roadmap entry is a link. This section is the player contract. The engineering slices above, if this file already had them, stay the build plan.
+
+### Summary and problem
+
+a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+### Goals
+
+- A deleted account stays deleted on every device after its owner could download all of it, and other players' replies survive; every public item can be reported signed in or out, and every restriction reaches its author with a statement of reasons and a route to appeal; the legal notice, DSA contact, terms and privacy policy are public, versioned and name every processor.
+
+### Non-goals
+
+- Do not reverse a non-goal already named in the moved record or in the roadmap's strategic boundaries.
+- Do not invent a usage count, a win rate, or a score the moved record does not already cite from a named source.
+
+### Personas
+
+See the roadmap persona table. This initiative serves the rows that list its id.
+
+### User stories
+
+#### US-38-01
+
+As a player who wants to leave, I want deletion, export and a way to report someone, so that the account is mine.
+
+#### US-38-02
+
+As a signed-out player, I want the guest rule in the rollout to be true, so that I am not shown a control that fails when I have no account.
+
+#### US-38-03
+
+As a player using a keyboard or a screen reader, I want the primary action to have a name and a visible focus, so that colour is not the only signal.
+
+### Acceptance criteria
+
+#### AC-38-01 Happy path
+
+Given a signed-in player and the English locale
+When deletion expires the session and does not recreate the account on the next request.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-38-02 Happy path
+
+Given a signed-in player and the English locale
+When an export contains the player's decks and collection and not another player's reports.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-38-03 Happy path
+
+Given a signed-in player and the English locale
+When a report can be filed on a deck, a comment, a review, a profile or a package, and the reporter sees a status.
+Then that outcome holds, and the French locale shows the French catalogue string for every new control
+
+#### AC-38-04 Error and failure
+
+Given the action cannot finish
+When the player retries or leaves the screen
+Then the last confirmed state is unchanged, and the message is a catalogue string rather than a stack trace or a raw status code
+
+#### AC-38-05 Edge cases
+
+Given an empty deck, a missing price, or a field the record says may be absent
+When the screen renders
+Then the empty state says what is missing, and it does not show a zero in place of an unknown value
+
+#### AC-38-06 Guest and signed-in
+
+Given the rollout in this contract
+When a guest and a signed-in player open the same surface
+Then the rollout holds: On for every account before public growth or a charge. Guests can report a public deck only if the form stores no free-text identity beyond what I-38 already allows.
+
+#### AC-38-07 Locales
+
+Given the ten catalogs
+When this feature adds a user-facing string
+Then The ten catalogs on disk are `en`, `fr`, `de`, `it`, `es`, `ja`, `zh`, `ko`, `ru` and `pt` (`src/i18n/routing.ts`). Only `en` and `fr` are routed. The other eight stay at key parity with `en` and may reuse the English text until a person who speaks the language reviews them. A new string is not shipped in a routed locale as hard-coded English.
+
+#### AC-38-08 Accessibility
+
+Given a keyboard, a visible focus, and a screen reader
+When the player completes US-38-01 without a pointer
+Then every new control has an accessible name, focus returns on close, and a status uses a word or an icon as well as colour
+
+### UX flow and states
+
+Legal pages are linked from the footer. A block hides that person's content. The statement of reasons is a page the affected player can open.
+
+- Empty: the screen says what is missing and what to do next.
+- Loading: a busy state that does not shift the layout when it ends.
+- Error: the catalogue message and a way to retry, without losing the last confirmed edit.
+
+### Data model and API
+
+New tables for reports, blocks and the export job. The export is the player's JSON, signed-in only. No public feed of reports.
+
+### Analytics and telemetry
+
+`report_filed {target: deck, comment, review, profile or package}`. Reserved for I-39. Not emitted before that store exists.
+
+The event is reserved for I-39's store. It is not emitted before that store exists. The row holds counts and enums only: no email, name, username, deck name, card name, list, search text or URL.
+
+### Rollout and feature flags
+
+On for every account before public growth or a charge. Guests can report a public deck only if the form stores no free-text identity beyond what I-38 already allows.
+
+### Dependencies
+
+Hard waits are in the roadmap dependency table. Slice edges, where this file has a delivery-slice table, stay in that table and in `dependency-graph.md`.
+
+### Risks and mitigations
+
+- Shipping the surface before its wait is met: the roadmap sequence forbids the pick.
+- A string or a status that only some players can read: the locale and accessibility scenarios above fail the change.
+
+### Kill criteria
+
+None. This initiative is not in the Now band. Stop it if it would reverse a non-goal in the moved record.
+
+### Open questions
+
+Who moderates, and how fast, is an owner question. The lawyer questions are already in the legal register.
+
+### Sources
+
+- https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022R2065
+- https://company.wizards.com/en/legal/fancontentpolicy
+- https://eur-lex.europa.eu/eli/reg/2016/679/oj
+
+### Record moved from the roadmap (2026-11-11)
+
+Nothing in the roadmap entry was dropped. The section below is the initiative text as it stood, including scope lists, status notes and the earlier enrichment.
+
+## I-38: Trust, Safety And User Rights
+
+**Spec:** [`specs/i38-trust-safety-and-user-rights.md`](i38-trust-safety-and-user-rights.md)
+
+**Outcome:** a player can report anything public, learn why something was hidden and contest it, block another player, read who runs the site and how their data is used, download everything tied to their account and delete it for good.
+
+**Status:** Next
+**Priority:** Next. A launch gate for I-30's paid tier (its slice 7 changes account deletion, and a paid plan needs terms and a privacy policy) and for any public growth
+**Impact / effort:** High / large
+**Depends on:** the owner's identity fields for the legal notice; counsel's written answers, added to I-30's slice 0, for the final wording of the terms and privacy policy and before the email sender and the retention job.
+
+MagicAIBuilder shows public decks, primers, comments, reviews, profiles, packages and share links at its users' request, so in EU terms it is an online platform ([DSA Art. 3](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022R2065)). As a micro enterprise it escapes most of the platform section, but every host owes points of contact, terms that describe moderation, a notice-and-action mechanism, a statement of reasons for each restriction and reports of threats to life to the police (Arts. 11–18). France adds the LCEN legal notice and Arcom as supervisor since May 2024, and the GDPR adds access, portability and erasure within a month. Today a public deck can be reported and a moderator can mark the report reviewed. Nothing else exists: no legal page, no export, no deletion button, no block and no statement of reasons. No deckbuilder read publishes a DSA contact, a notice form or a statement of reasons, and none documents a full account export. TappedOut sold the removal of comments from one's own decks in 2013; here every safety and rights control is free.
+
+### Scope
+
+- [ ] Slice 0, no code: counsel's written answers to the spec's lawyer questions, added to I-30's slice 0.
+- [ ] A legal notice and a DSA contact page in French and English, linked from every footer (slice 1).
+  - **Footer notice (gap sweep, 2026-11-10).** `LEGAL.md` and the footer text `notAffiliated` (`src/messages/*/common.json`, line 24) in all ten message catalogues cite "Wizards' Fan Site Policy", the fan-site-kit text (checked on `origin/dev` at `72fbfc1`). The [Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy), last updated 2017-11-15, gives its own notice: "MagicAIBuilder is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC." Which notice the footer must carry is lawyer question [L-45](../legal-questions.md#l-45-the-products-name-and-the-fan-content-notice), asked with the product's name ([D-77](../owner-decisions.md#content-and-naming)); this slice changes the text after the answer. Done means: a test asserts the chosen notice in every locale's footer and in `LEGAL.md`.
+- [ ] End the session when an account is deleted, with a 7-day tombstone and a regression test that replays a still-valid JWT (slice 2, first). Today `DELETE /api/user/profile` (`src/app/api/user/profile/route.ts`) does not sign out. Until #1319, `resolveAuthenticatedUser` (`src/lib/auth/helpers.ts`) re-created the deleted user from the token's email on the next request. I-05 records the same defect.
+  - [x] Stop re-creating the deleted user, and replay a still-valid JWT in a regression test (`src/app/api/user/profile/account-lifecycle.test.ts`): after `DELETE`, the same token gets 401 and no user is created (#1319). The session cookie is not yet ended; the PR suggests the deletion UI call `signOut()` (slice 5). It also argues that spec 6.2's tombstone is no longer needed, since nothing re-creates a user per request.
+  - [I-61](i61-account-security.md) supplies the rest: its slice 2 revokes every server-side session when the account is deleted, on every device, and its slice 3 the re-authentication that deletion needs. Once slice 2 ships, I-61 proposes dropping the 7-day tombstone; this slice decides with it.
+- [ ] Apply the deletion cascade of the spec's table 6.4 (slice 3). Today `DeckComment.parent` cascades (`prisma/schema.prisma`), so deleting an account deletes every reply other players wrote under its comments, and `DeckReport` cascades from its reporter, so the reports the user filed disappear with their decisions. Replies must survive under a cleared comment, forks must show a neutral label, and reports and decisions must stay, anonymised.
+- [ ] A full JSON export with a versioned schema and a guard test, then a Settings → Account page that downloads it and deletes the account after re-authentication (slices 4–5).
+- [ ] A privacy policy rendered from the retention constants and listing every processor, and terms with moderation rules and a minimum age, accepted and recorded at signup (slices 6–7). Today `src/instrumentation-client.ts` records Sentry Session Replay for 1% of all sessions and every session with an error, and prompts go to Anthropic with OpenAI as fallback (`src/app/api/ai/build/route.ts`, `src/app/api/ai/suggest/route.ts`); none of this is disclosed, because no privacy page exists. [I-39](i39-first-run-activation-and-measurement.md) slice 4 sets random-session replay to zero.
+  - The terms of sale, `LegalDocument` slug `sale`, are scoped under [I-30](i30-business-model-and-paid-tier.md) slice 0 with the gap sweep's consumer-law items (2026-11-10).
+- [x] Return only the fields the share view needs from `GET /api/share/[token]`. `src/app/api/share/[token]/route.ts` returned the whole deck row minus the token, `userId`, `budget` and `manualBracket` included. Shipped in #1325 through the `SHARED_DECK_SELECT` allowlist; I-08 records the same item.
+- [ ] A generic `Report` for every public item with a signed-out notice form and an acknowledgement, then hide, restore and posting restrictions filtered from every public surface (slices 8–9).
+- [ ] Statements of reasons to the author and the notifier, a police-referral action and appeals within six months (slices 10–11).
+  - The operator side, recorded 2026-11-10: slices 9 to 11 use [I-69](i69-operator-console-support-moderation-and-kill-switches.md)'s moderator role and `requireOperator`, and I-69 slice 11 builds the queue's operator view (tabs, the case view, a decision form that preselects nothing, appeals and the referral record) on this initiative's notices, decisions and appeals.
+- [ ] Block, a per-deck comment switch, and rate limits on comments and reviews (slice 12).
+  - [ ] **L5, low (security audit, 2026-11-10):** no community write calls `checkRateLimit` today: comments, ratings, votes, follows and card packages (`src/app/api/community/`). Per-user limits need the shared store of I-05's M2 first.
+- [ ] **L4, low (security audit, 2026-11-10):** stop a repeated report reopening a closed deck report. `src/app/api/community/decks/[id]/reports/route.ts` upserts with `status: "pending"`, so a reporter can send a dismissed report back to the queue after every decision. Fix branch in flight: `fix/api-small-hardening`, no PR yet.
+- [ ] After slice 0: a transactional email sender with an exit path, a daily retention job with a dry run, and email copies of statements of reasons (slices 13–15).
+  - [I-61](i61-account-security.md) slices 11 to 14 wait for this sender: email verification, password reset, security notices and email change. Whether security email may ship before counsel answers is an owner question in the status note.
+  - Moved 2026-11-10: the sender (slice 13) is [I-63](i63-one-notification-system.md) slice 7, built on its slice 6's transport and templates, so every initiative sends through one transactional stream. The retention job (slice 14) registers on I-63 slice 5's job route, and statements of reasons reach the inbox through I-63 slices 1 to 3 (slice 10). Whether slice 7 waits for all of slice 0 or only for the privacy policy's processor entry is an owner question.
+- [ ] **A record of processing and a breach procedure (slice 16, added 2026-11-10 from the gap sweep).** GDPR Art. 30 asks for records, and its exemption below 250 people does not cover processing that is "not occasional"; Art. 33 asks for notice to the CNIL within 72 hours, and Art. 34 to the people affected ([GDPR](https://eur-lex.europa.eu/eli/reg/2016/679/oj), standard text, not fetched this pass). Neither appears in `docs/`. Lawyer question [L-44](../legal-questions.md#l-44-the-record-of-processing-and-a-breach-procedure).
+  - [ ] `docs/legal/processing-register.md` lists each purpose, basis, data set, retention period (read from the retention constants) and processor. Done means: the guard test that already lists every Prisma model with a `userId` also fails when a model is missing from the register.
+  - [ ] `docs/legal/breach-procedure.md`: the 72-hour clock, the CNIL route, a breach log, and a player notice template on I-63's transactional stream. Done means: one recorded tabletop drill, with each processor's breach-notice clause checked.
+
+### Engineering enablers
+
+- A deletion test seeds a user with every relation and asserts each row of the cascade table; a request with the deleted user's valid JWT returns 401 and creates no user.
+- A guard test fails when a Prisma model with a `userId` is neither exported nor listed as excluded.
+- A hidden item is absent from the public deck page, the profile, community lists, the share link and `/api/v1`, and its author still sees it.
+- Each retention period lives in one constant that the job and the privacy policy both read.
+
+**Paid-tier angle:** none. Export, deletion, reporting, blocking, comment controls and appeals are free on every plan, and expiry or downgrade never limits them, extending I-30 requirement 1.2. Its value to I-30 is trust: a cheap subscription is easier to sell when leaving is easy and documented.
+
+### Enrichment (2026-11-11)
+
+**User story.** As a player who wants to leave, I want deletion, export and a way to report someone, so that the account is mine.
+
+**Acceptance.**
+- Deletion expires the session and does not recreate the account on the next request.
+- An export contains the player's decks and collection and not another player's reports.
+- A report can be filed on a deck, a comment, a review, a profile or a package, and the reporter sees a status.
+
+**UX.** Legal pages are linked from the footer. A block hides that person's content. The statement of reasons is a page the affected player can open.
+
+**Data and API.** New tables for reports, blocks and the export job. The export is the player's JSON, signed-in only. No public feed of reports.
+
+**i18n and access.** English and French chrome through the message catalogues. Card text stays the printing's language. New controls have an accessible name and a keyboard path, and a status is not colour alone.
+
+**Telemetry.** `report_filed {target: deck, comment, review, profile or package}`. Reserved for I-39. Not emitted before that store exists.
+
+**Rollout.** On for every account before public growth or a charge. Guests can report a public deck only if the form stores no free-text identity beyond what I-38 already allows.
+
+**Open questions.** Who moderates, and how fast, is an owner question. The lawyer questions are already in the legal register.
+
+### Definition of done
+
+A deleted account stays deleted on every device after its owner could download all of it, and other players' replies survive; every public item can be reported signed in or out, and every restriction reaches its author with a statement of reasons and a route to appeal; the legal notice, DSA contact, terms and privacy policy are public, versioned and name every processor.
+
+---
+
