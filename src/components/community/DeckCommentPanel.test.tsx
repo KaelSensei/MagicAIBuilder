@@ -4,15 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import enDeck from "@/messages/en/deck.json";
 import enCommon from "@/messages/en/common.json";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
-  usePathname: () => "/",
-}));
+vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 import { DeckCommentPanel } from "./DeckCommentPanel";
 

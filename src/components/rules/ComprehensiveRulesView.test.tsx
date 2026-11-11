@@ -1,4 +1,3 @@
-import { createElement, type ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ComprehensiveRulesView } from "./ComprehensiveRulesView";
@@ -30,10 +29,10 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children }: { readonly children: ReactNode }) =>
-    createElement("a", null, children),
-}));
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 /** A query that matches no rule paragraph and no glossary entry. */
 const UNMATCHED_QUERY = "zzqxjv";

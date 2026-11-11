@@ -6,7 +6,7 @@ import type { Deck, DeckCard } from "@/lib/deck/types";
 import { ExportModal } from "./ExportModal";
 
 // Printed names come from Scryfall; this test is about the dialog's own copy.
-vi.mock("@/hooks/useLocalizedDeckIndex", () => ({
+vi.mock(import("@/hooks/useLocalizedDeckIndex"), () => ({
   useLocalizedDeckIndex: () => new Map(),
 }));
 

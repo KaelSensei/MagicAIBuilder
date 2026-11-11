@@ -6,10 +6,10 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
   useFormatter: () => ({ number: (value: number) => String(value) }),
 }));
-vi.mock("./AddToCollectionDialog", () => ({ AddToCollectionDialog: () => null }));
-vi.mock("@/components/card/PrintingSelectorModal", () => ({ PrintingSelectorModal: () => null }));
-vi.mock("@/components/collection/AcquisitionPlanPanel", () => ({ AcquisitionPlanPanel: () => null }));
-vi.mock("@/components/collection/PrintingDeckUsage", () => ({ PrintingDeckUsage: () => null }));
+vi.mock(import("./AddToCollectionDialog"), () => ({ AddToCollectionDialog: () => <></> }));
+vi.mock(import("@/components/card/PrintingSelectorModal"), () => ({ PrintingSelectorModal: () => <></> }));
+vi.mock(import("@/components/collection/AcquisitionPlanPanel"), () => ({ AcquisitionPlanPanel: () => <></> }));
+vi.mock(import("@/components/collection/PrintingDeckUsage"), () => ({ PrintingDeckUsage: () => <></> }));
 
 import { CollectionPageClient } from "./CollectionPageClient";
 

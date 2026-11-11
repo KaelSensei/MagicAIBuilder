@@ -6,7 +6,7 @@ import { useGameChangersList, useGameChangersSet, useGameChangers } from "./useG
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 
-vi.mock("@/lib/scryfall/client");
+vi.mock(import("@/lib/scryfall/client"));
 
 function createWrapper() {
   const client = new QueryClient({

@@ -7,11 +7,10 @@ const { session } = vi.hoisted(() => ({
   session: { status: "unauthenticated" },
 }));
 vi.mock("next-auth/react", () => ({ useSession: () => session }));
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
-  ),
-}));
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 /**
  * The notice used to promise that an account would "keep it safe", while

@@ -3,15 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { DeckReportQueue } from "./DeckReportQueue";
 
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({
-    children,
-    href,
-  }: {
-    readonly children: React.ReactNode;
-    readonly href: string;
-  }) => <a href={href}>{children}</a>,
-}));
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 const REPORT = {
   id: "report-1",

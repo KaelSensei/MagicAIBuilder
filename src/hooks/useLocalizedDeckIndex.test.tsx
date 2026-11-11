@@ -7,7 +7,7 @@ import { useLocalizedDeckIndex } from "./useLocalizedDeckIndex";
 import * as scryfallClient from "@/lib/scryfall/client";
 import type { ScryfallCard } from "@/lib/scryfall/types";
 
-vi.mock("@/lib/scryfall/client");
+vi.mock(import("@/lib/scryfall/client"));
 
 function createWrapper(locale: string) {
   const client = new QueryClient({

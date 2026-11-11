@@ -15,11 +15,10 @@ const { session } = vi.hoisted(() => ({
   session: { status: "unauthenticated" },
 }));
 vi.mock("next-auth/react", () => ({ useSession: () => session }));
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
-  ),
-}));
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 const OFFER_TITLE = "Save your guest deck to your account?";
 const ACCEPT = "Save to my account";

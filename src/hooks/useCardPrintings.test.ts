@@ -5,7 +5,7 @@ import React from "react";
 import { useCardPrintings } from "./useCardPrintings";
 import * as scryfallClient from "@/lib/scryfall/client";
 
-vi.mock("@/lib/scryfall/client");
+vi.mock(import("@/lib/scryfall/client"));
 
 function createWrapper() {
   const client = new QueryClient({

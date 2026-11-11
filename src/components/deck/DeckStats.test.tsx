@@ -10,7 +10,7 @@ import type { ManaAlignment } from "@/lib/deck/mana-alignment";
 import type { TurnOnePlayability } from "@/lib/deck/turn-one";
 
 // Pulls live price from the store; irrelevant to what is asserted here.
-vi.mock("./DeckPriceDisplay", () => ({ DeckPriceDisplay: () => null }));
+vi.mock(import("./DeckPriceDisplay"), () => ({ DeckPriceDisplay: () => null }));
 
 function makeFormatStats(overrides: Partial<FormatStats> = {}): FormatStats {
   return {

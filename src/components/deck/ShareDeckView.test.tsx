@@ -4,16 +4,20 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import type { ApiCard, ApiSharedDeck } from "@/lib/deck/share-types";
 import { ShareDeckView } from "./ShareDeckView";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({
-    href,
-    children,
-  }: {
-    readonly href: string;
-    readonly children: React.ReactNode;
-  }) => React.createElement("a", { href }, children),
+vi.mock(import("next/navigation"), () => ({
+  useRouter: () => ({
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
 }));
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 const ATRAXA = "d0d33d52-3d28-4635-b985-51e126289259";
 const SOL_RING = "fc817e07-c1f3-469f-9cf7-0945dea7400f";

@@ -5,16 +5,20 @@ import enAuth from "@/messages/en/auth.json";
 import frAuth from "@/messages/fr/auth.json";
 import { SignInForm } from "./SignInForm";
 
-vi.mock("next-auth/react", () => ({ signIn: vi.fn() }));
-vi.mock("next/navigation", () => ({
-  useSearchParams: () =>
-    new URLSearchParams({ error: "OAuthAccountNotLinked" }),
-}));
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
-  ),
-}));
+vi.mock(import("next-auth/react"), () => ({ signIn: vi.fn() }));
+vi.mock(import("next/navigation"), async (importOriginal) => {
+  const { ReadonlyURLSearchParams } = await importOriginal();
+  return {
+    useSearchParams: () =>
+      new ReadonlyURLSearchParams(
+        new URLSearchParams({ error: "OAuthAccountNotLinked" })
+      ),
+  };
+});
+vi.mock(
+  import("@/i18n/navigation"),
+  () => import("@/test/i18n-navigation-stub")
+);
 
 /**
  * Auth.js redirects a Google sign-in whose email already belongs to another
