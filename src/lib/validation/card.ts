@@ -67,7 +67,19 @@ export const addCardSchema = z.object({
 
 export type AddCardInput = z.infer<typeof addCardSchema>;
 
-// Schema for PATCH /api/decks/[id]/cards/[cardId]
+/**
+ * Longest private note a player may keep on one deck card, in UTF-16 code
+ * units. It matches the `maxLength` of the note editor's textarea
+ * (`CardNoteInline`), so the server never rejects what the editor let through.
+ */
+export const MAX_CARD_NOTES_LENGTH = 1000;
+
+/**
+ * Body of PATCH /api/decks/[id]/cards/[cardId]. Each key is optional and the
+ * route writes exactly the keys present. Zod drops unlisted keys without an
+ * error, so a field the client sends must be listed here or it is silently
+ * lost. `notes: null` clears the note.
+ */
 export const patchCardSchema = z.object({
   category: z.enum(VALID_CATEGORIES).optional(),
   zone: z.enum(VALID_ZONES).optional(),
@@ -75,6 +87,7 @@ export const patchCardSchema = z.object({
   scryfallId: z.string().regex(SCRYFALL_UUID_REGEX, "Invalid Scryfall ID").optional(),
   imageUri: z.url().max(500).optional(),
   artCropUri: z.url().max(500).optional(),
+  notes: z.string().max(MAX_CARD_NOTES_LENGTH).nullable().optional(),
 });
 
 export type PatchCardInput = z.infer<typeof patchCardSchema>;
