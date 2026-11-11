@@ -35,6 +35,23 @@ function readDescription(raw: string | null): string {
   return typeof description === "string" ? description : "";
 }
 
+/**
+ * Scryfall searches the editor issues on its own, before any described search.
+ *
+ * Game Changers and the Commander banlist load as catalogs. An empty name
+ * search is still `legal:commander`, and that string is long enough to fetch.
+ * None of these is the query the player accepts.
+ */
+function isEditorBackgroundSearch(query: string): boolean {
+  return (
+    query === "legal:commander" ||
+    query === "is:gamechanger" ||
+    query.startsWith("is:gamechanger ") ||
+    query === "banned:commander" ||
+    query.startsWith("banned:commander ")
+  );
+}
+
 test.describe("Verifiable natural-language search", () => {
   test("shows one editable query, then searches that text without changing the deck", async ({ page }) => {
     const scryfallQueries: string[] = [];
@@ -58,7 +75,12 @@ test.describe("Verifiable natural-language search", () => {
       await route.fulfill({ json: { hit: false } });
     });
     await page.route("https://api.scryfall.com/cards/search**", async (route) => {
-      scryfallQueries.push(new URL(route.request().url()).searchParams.get("q") ?? "");
+      const query = new URL(route.request().url()).searchParams.get("q") ?? "";
+      if (isEditorBackgroundSearch(query)) {
+        await route.continue();
+        return;
+      }
+      scryfallQueries.push(query);
       await route.fulfill({
         json: { object: "list", total_cards: 1, has_more: false, data: [BRAINSTORM] },
       });
