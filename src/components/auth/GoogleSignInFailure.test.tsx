@@ -1,7 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import auth from "@/messages/en/auth.json";
 import { SignInForm } from "./SignInForm";
 import { SignUpForm } from "./SignUpForm";
 
@@ -23,11 +22,7 @@ describe("Google sign-in failure", () => {
 
   it("shows a recoverable error on the sign-up page too", async () => {
     signIn.mockRejectedValueOnce(new Error("Network unavailable"));
-    render(
-      <NextIntlClientProvider locale="en" messages={{ auth }}>
-        <SignUpForm />
-      </NextIntlClientProvider>
-    );
+    renderWithIntl(<SignUpForm />);
     fireEvent.click(
       screen.getByRole("button", { name: "Continue with Google" })
     );
@@ -40,11 +35,7 @@ describe("Google sign-in failure", () => {
 
   it("shows a recoverable error when Google sign-in cannot start", async () => {
     signIn.mockRejectedValueOnce(new Error("Network unavailable"));
-    render(
-      <NextIntlClientProvider locale="en" messages={{ auth }}>
-        <SignInForm />
-      </NextIntlClientProvider>
-    );
+    renderWithIntl(<SignInForm />);
     fireEvent.click(
       screen.getByRole("button", { name: "Continue with Google" })
     );

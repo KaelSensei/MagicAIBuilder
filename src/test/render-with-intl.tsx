@@ -1,43 +1,19 @@
+/**
+ * Renders a component inside next-intl alone, with the real catalogs. Part of the shared test kit;
+ * `render.tsx` adds TanStack Query and Auth.js on top for components that need them.
+ *
+ * @module test/render-with-intl
+ */
 import type { ReactElement } from "react";
-import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
+import {
+  render,
+  type RenderOptions,
+  type RenderResult,
+} from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import common from "@/messages/en/common.json";
-import builder from "@/messages/en/builder.json";
-import card from "@/messages/en/card.json";
-import deck from "@/messages/en/deck.json";
-import playtest from "@/messages/en/playtest.json";
-import search from "@/messages/en/search.json";
-import collection from "@/messages/en/collection.json";
-import profile from "@/messages/en/profile.json";
-import settings from "@/messages/en/settings.json";
+import { testMessages, type TestLocale } from "@/test/intl-catalogs";
 
-import frCommon from "@/messages/fr/common.json";
-import frBuilder from "@/messages/fr/builder.json";
-import frCard from "@/messages/fr/card.json";
-import frDeck from "@/messages/fr/deck.json";
-import frPlaytest from "@/messages/fr/playtest.json";
-import frSearch from "@/messages/fr/search.json";
-import frCollection from "@/messages/fr/collection.json";
-import frProfile from "@/messages/fr/profile.json";
-import frSettings from "@/messages/fr/settings.json";
-
-const CATALOGS = {
-  en: { common, builder, card, deck, playtest, search, collection, profile, settings },
-  fr: {
-    common: frCommon,
-    builder: frBuilder,
-    card: frCard,
-    deck: frDeck,
-    playtest: frPlaytest,
-    search: frSearch,
-    collection: frCollection,
-    profile: frProfile,
-    settings: frSettings,
-  },
-} as const;
-
-/** The locales `renderWithIntl` can render under — the two `routing` actually serves. */
-export type TestLocale = keyof typeof CATALOGS;
+export type { TestLocale } from "@/test/intl-catalogs";
 
 interface RenderWithIntlOptions extends Omit<RenderOptions, "wrapper"> {
   /** Locale to render under. Defaults to `en`. */
@@ -50,6 +26,9 @@ interface RenderWithIntlOptions extends Omit<RenderOptions, "wrapper"> {
  * Any component calling `useTranslations` throws without this provider, so every
  * test of a translated component needs it. Using the real catalogs rather than
  * stubs means a test breaks when a key is removed or renamed, which is the point.
+ * Every namespace of the locale is loaded (`intl-catalogs.ts`). A component that
+ * also needs TanStack Query or a session renders with `renderWithProviders`
+ * (`render.tsx`) instead.
  *
  * The locale is a parameter rather than a constant because `en` is the one
  * locale under which a hardcoded `toLocaleDateString("en-US")` looks correct.
@@ -69,7 +48,11 @@ export function renderWithIntl(
   const { locale = "en", ...renderOptions } = options ?? {};
 
   return render(
-    <NextIntlClientProvider locale={locale} timeZone="UTC" messages={CATALOGS[locale]}>
+    <NextIntlClientProvider
+      locale={locale}
+      timeZone="UTC"
+      messages={testMessages(locale)}
+    >
       {ui}
     </NextIntlClientProvider>,
     renderOptions

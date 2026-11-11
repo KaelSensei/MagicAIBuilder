@@ -1,52 +1,47 @@
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { describe, expect, it } from "vitest";
 
-import deckMessages from "@/messages/en/deck.json";
-import frDeckMessages from "@/messages/fr/deck.json";
-import frBuilderMessages from "@/messages/fr/builder.json";
 import { SuggestionEvidenceDetails } from "./SuggestionEvidenceDetails";
 
 describe("SuggestionEvidenceDetails", () => {
   it("shows a localized role for a French suggestion", () => {
-    render(
-      <NextIntlClientProvider locale="fr" messages={{ deck: frDeckMessages, builder: frBuilderMessages }}>
-        <SuggestionEvidenceDetails
-          evidence={{
-            role: "draw",
-            synergy: "Accelerates the commander.",
-            manaValue: 2,
-            curveImpact: "Below the deck average (3.40)",
-            colorIdentity: [],
-            colorCompatible: true,
-            commanderLegal: true,
-            priceUsd: 1.25,
-            verified: true,
-          }}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <SuggestionEvidenceDetails
+        evidence={{
+          role: "draw",
+          synergy: "Accelerates the commander.",
+          manaValue: 2,
+          curveImpact: "Below the deck average (3.40)",
+          colorIdentity: [],
+          colorCompatible: true,
+          commanderLegal: true,
+          priceUsd: 1.25,
+          verified: true,
+        }}
+      />,
+      { locale: "fr" }
     );
 
     expect(screen.getByText("Pioche")).toBeInTheDocument();
   });
 
   it("formats a Scryfall USD price for French without converting it to euros", () => {
-    render(
-      <NextIntlClientProvider locale="fr" messages={{ deck: frDeckMessages }}>
-        <SuggestionEvidenceDetails
-          evidence={{
-            role: "ramp",
-            synergy: "Acceleration.",
-            manaValue: 2,
-            curveImpact: "Below average",
-            colorIdentity: [],
-            colorCompatible: true,
-            commanderLegal: true,
-            priceUsd: 1234.5,
-            verified: true,
-          }}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <SuggestionEvidenceDetails
+        evidence={{
+          role: "ramp",
+          synergy: "Acceleration.",
+          manaValue: 2,
+          curveImpact: "Below average",
+          colorIdentity: [],
+          colorCompatible: true,
+          commanderLegal: true,
+          priceUsd: 1234.5,
+          verified: true,
+        }}
+      />,
+      { locale: "fr" }
     );
 
     expect(
@@ -58,22 +53,20 @@ describe("SuggestionEvidenceDetails", () => {
   });
 
   it("shows verified legality, colors, curve and price", () => {
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-        <SuggestionEvidenceDetails
-          evidence={{
-            role: "ramp",
-            synergy: "Accelerates the commander.",
-            manaValue: 2,
-            curveImpact: "Below the deck average (3.40)",
-            colorIdentity: [],
-            colorCompatible: true,
-            commanderLegal: true,
-            priceUsd: 1.25,
-            verified: true,
-          }}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <SuggestionEvidenceDetails
+        evidence={{
+          role: "ramp",
+          synergy: "Accelerates the commander.",
+          manaValue: 2,
+          curveImpact: "Below the deck average (3.40)",
+          colorIdentity: [],
+          colorCompatible: true,
+          commanderLegal: true,
+          priceUsd: 1.25,
+          verified: true,
+        }}
+      />
     );
 
     expect(screen.getByText("Scryfall verified")).toBeInTheDocument();
@@ -87,22 +80,20 @@ describe("SuggestionEvidenceDetails", () => {
   });
 
   it("does not claim facts when Scryfall verification is unavailable", () => {
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }}>
-        <SuggestionEvidenceDetails
-          evidence={{
-            role: "draw",
-            synergy: "Provider rationale.",
-            manaValue: null,
-            curveImpact: "Mana value unavailable",
-            colorIdentity: [],
-            colorCompatible: null,
-            commanderLegal: null,
-            priceUsd: null,
-            verified: false,
-          }}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <SuggestionEvidenceDetails
+        evidence={{
+          role: "draw",
+          synergy: "Provider rationale.",
+          manaValue: null,
+          curveImpact: "Mana value unavailable",
+          colorIdentity: [],
+          colorCompatible: null,
+          commanderLegal: null,
+          priceUsd: null,
+          verified: false,
+        }}
+      />
     );
 
     expect(screen.getByText("Verification unavailable")).toBeInTheDocument();

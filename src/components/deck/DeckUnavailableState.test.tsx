@@ -1,30 +1,22 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { fireEvent, screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
-import builderMessages from "@/messages/en/builder.json";
-import frBuilderMessages from "@/messages/fr/builder.json";
-import deckMessages from "@/messages/en/deck.json";
-import commonMessages from "@/messages/en/common.json";
 import { DeckUnavailableState } from "./DeckUnavailableState";
 
 vi.mock(import("@/i18n/navigation"), () => import("@/test/i18n-navigation-stub"));
 
 function show(loadError: string | null, onRetry = vi.fn()) {
-  render(
-    <NextIntlClientProvider locale="en" messages={{ builder: builderMessages, deck: deckMessages, common: commonMessages }}>
-      <DeckUnavailableState isLoading={false} loadError={loadError} onRetry={onRetry} />
-    </NextIntlClientProvider>
+  renderWithIntl(
+    <DeckUnavailableState isLoading={false} loadError={loadError} onRetry={onRetry} />
   );
   return onRetry;
 }
 
 describe("DeckUnavailableState", () => {
   it("shows an accessible editor-shaped skeleton while a deck loads", () => {
-    const { container } = render(
-      <NextIntlClientProvider locale="en" messages={{ builder: builderMessages, deck: deckMessages, common: commonMessages }}>
-        <DeckUnavailableState isLoading loadError={null} onRetry={vi.fn()} />
-      </NextIntlClientProvider>
+    const { container } = renderWithIntl(
+      <DeckUnavailableState isLoading loadError={null} onRetry={vi.fn()} />
     );
 
     const status = screen.getByRole("status");
@@ -35,10 +27,9 @@ describe("DeckUnavailableState", () => {
   });
 
   it("announces the loading skeleton in French", () => {
-    render(
-      <NextIntlClientProvider locale="fr" messages={{ builder: frBuilderMessages, deck: deckMessages, common: commonMessages }}>
-        <DeckUnavailableState isLoading loadError={null} onRetry={vi.fn()} />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <DeckUnavailableState isLoading loadError={null} onRetry={vi.fn()} />,
+      { locale: "fr" }
     );
 
     expect(screen.getByRole("status")).toHaveTextContent("Chargement du deck");
@@ -62,10 +53,8 @@ describe("DeckUnavailableState", () => {
 
   it("offers retry for an individual deck failure without calling it a list failure", () => {
     const retry = vi.fn();
-    render(
-      <NextIntlClientProvider locale="en" messages={{ builder: builderMessages, deck: deckMessages, common: commonMessages }}>
-        <DeckUnavailableState isLoading={false} loadError="offline" errorSource="deck" onRetry={retry} />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <DeckUnavailableState isLoading={false} loadError="offline" errorSource="deck" onRetry={retry} />
     );
 
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();

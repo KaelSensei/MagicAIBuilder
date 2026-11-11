@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
+import { screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 
 import { PlaytestHistoryPanel } from "./PlaytestHistoryPanel";
-import playtestMessages from "@/messages/en/playtest.json";
-import frenchPlaytestMessages from "@/messages/fr/playtest.json";
 import type { PlaytestHistory } from "@/hooks/usePlaytestHistory";
 import type { PlaytestSession } from "@/lib/playtest/analytics";
 import type { SessionSummary } from "@/lib/playtest/session-input";
@@ -37,14 +35,7 @@ function renderPanel(
   historyResult.current = {
     data: summary === null ? null : { sessions, summary },
   };
-  render(
-    <NextIntlClientProvider
-      locale={locale}
-      messages={{ playtest: locale === "en" ? playtestMessages : frenchPlaytestMessages }}
-    >
-      <PlaytestHistoryPanel deckId="deck-1" />
-    </NextIntlClientProvider>
-  );
+  renderWithIntl(<PlaytestHistoryPanel deckId="deck-1" />, { locale });
 }
 
 beforeEach(() => {
@@ -54,10 +45,8 @@ beforeEach(() => {
 describe("PlaytestHistoryPanel", () => {
   it("renders nothing while the history is still loading", () => {
     historyResult.current = { data: undefined };
-    const { container } = render(
-      <NextIntlClientProvider locale="en" messages={{ playtest: playtestMessages }}>
-        <PlaytestHistoryPanel deckId="deck-1" />
-      </NextIntlClientProvider>
+    const { container } = renderWithIntl(
+      <PlaytestHistoryPanel deckId="deck-1" />
     );
     expect(container.firstChild).toBeNull();
   });

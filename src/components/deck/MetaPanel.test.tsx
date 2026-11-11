@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test/render-with-intl";
 import React from "react";
-import { NextIntlClientProvider } from "next-intl";
 import { MetaPanel, TournamentDeckRow } from "./MetaPanel";
 import type { TournamentDeck } from "@/lib/meta/fetch";
-import deckMessages from "@/messages/en/deck.json";
 
 const metaAnalysisMocks = vi.hoisted(() => ({
   fetchSource: vi.fn(),
@@ -100,10 +99,8 @@ describe("TournamentDeckRow", () => {
 
 describe("MetaPanel", () => {
   it("keeps the recommendation add action visible and touch-friendly without hover", () => {
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
-        <MetaPanel commanderName="Atraxa" deckCardNames={new Set<string>()} onAddCard={vi.fn()} />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <MetaPanel commanderName="Atraxa" deckCardNames={new Set<string>()} onAddCard={vi.fn()} />
     );
     fireEvent.click(screen.getByRole("button", { name: /meta analysis/i }));
 
@@ -113,10 +110,8 @@ describe("MetaPanel", () => {
   });
 
   it("explains when all popular cards are in the deck and restores the list when unfiltered", () => {
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
-        <MetaPanel commanderName="Atraxa" deckCardNames={new Set(["Sol Ring"])} onAddCard={vi.fn()} />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <MetaPanel commanderName="Atraxa" deckCardNames={new Set(["Sol Ring"])} onAddCard={vi.fn()} />
     );
     fireEvent.click(screen.getByRole("button", { name: /meta analysis/i }));
     const missingFilter = screen.getByRole("checkbox", { name: "Not in deck" });
@@ -131,18 +126,12 @@ describe("MetaPanel", () => {
   });
 
   it("shows source observation times beside external recommendation sections", () => {
-    render(
-      <NextIntlClientProvider
-        locale="en"
-        messages={{ deck: deckMessages }}
-        timeZone="UTC"
-      >
-        <MetaPanel
-          commanderName="Atraxa"
-          deckCardNames={new Set<string>()}
-          onAddCard={vi.fn()}
-        />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <MetaPanel
+        commanderName="Atraxa"
+        deckCardNames={new Set<string>()}
+        onAddCard={vi.fn()}
+      />
     );
 
     fireEvent.click(screen.getByRole("button", { name: /meta analysis/i }));
@@ -157,10 +146,8 @@ describe("MetaPanel", () => {
   });
 
   it("discloses the covered tournament evidence window", () => {
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
-        <MetaPanel commanderName="Atraxa" deckCardNames={new Set<string>()} onAddCard={vi.fn()} />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <MetaPanel commanderName="Atraxa" deckCardNames={new Set<string>()} onAddCard={vi.fn()} />
     );
 
     fireEvent.click(screen.getByRole("button", { name: /meta analysis/i }));
@@ -172,10 +159,8 @@ describe("MetaPanel", () => {
 
   it("retries only the failed EDHREC source", () => {
     metaAnalysisMocks.errorEdhrec = "EDHREC is temporarily unavailable";
-    render(
-      <NextIntlClientProvider locale="en" messages={{ deck: deckMessages }} timeZone="UTC">
-        <MetaPanel commanderName="Atraxa" deckCardNames={new Set<string>()} onAddCard={vi.fn()} />
-      </NextIntlClientProvider>
+    renderWithIntl(
+      <MetaPanel commanderName="Atraxa" deckCardNames={new Set<string>()} onAddCard={vi.fn()} />
     );
 
     fireEvent.click(screen.getByRole("button", { name: /meta analysis/i }));
