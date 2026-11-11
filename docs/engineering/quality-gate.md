@@ -208,6 +208,36 @@ Every value below is a local test fixture, not a secret. No variable has to be e
 
 `src/lib/toolchain.test.ts` fails the unit suite when the Compose file sets a variable this table does not list, so a new variable cannot ship undocumented.
 
+## Lint ratchet
+
+`eslint.config.mjs` enforces rules that the existing code does not meet yet (stage 4 of [ADR 0007](../adr/0007-architecture-enforcement-in-stages.md)). Each one is an `error`. The breaches that existed when a rule arrived are recorded in `eslint-suppressions.json` with [ESLint bulk suppressions](https://eslint.org/docs/latest/use/suppressions), which count breaches per file and per rule:
+
+- a new file must meet every rule;
+- a file with recorded breaches fails as soon as it has one more breach of the same rule;
+- a file with fewer breaches than recorded also fails, with "There are suppressions left that do not occur anymore", until the count is pruned. The baseline can only go down.
+
+| Rule                            | Limit                                                    |
+| ------------------------------- | -------------------------------------------------------- |
+| `max-lines`                     | 300 code lines in a `.ts` module, 200 in a `.tsx` module |
+| `max-lines-per-function`        | 80 code lines                                            |
+| `complexity`                    | 15                                                       |
+| `max-depth`                     | 3 nested blocks                                          |
+| `@typescript-eslint/max-params` | 3 parameters                                             |
+
+Comments and blank lines never count toward a line limit, so the comment standard cannot push a module over one. The rules apply to shipped code: every `src/**/*.{ts,tsx}` file except `*.test.{ts,tsx}`, `src/test/**` and the `testing/` and `fixtures/` folders. Tests keep the preset rules.
+
+`next build` does not lint (`eslint.ignoreDuringBuilds` in `next.config.ts`): it calls the ESLint Node.js API, which ignores the suppressions file in ESLint 9. `pnpm lint` in CI and lint-staged on commit run the ESLint CLI, which applies it.
+
+### Shrinking the baseline
+
+1. Fix the breach: split the module, extract the function, flatten the nesting.
+2. Run `pnpm lint --prune-suppressions`. It lowers the counts in `eslint-suppressions.json`, deletes the entries that reached zero and drops the paths that no longer exist.
+3. Commit the smaller `eslint-suppressions.json` with the fix. The pre-commit hook lints staged files against it, so the commit fails until step 2 is done.
+
+Never grow the file to get a change through. A pull request that adds or raises an entry says why in its description ([ADR 0007](../adr/0007-architecture-enforcement-in-stages.md), "Consequences").
+
+A file move is the one routine case that re-records entries. They are keyed by path, so the moved file fails until `npx eslint <new paths> --suppress-all` records it again; `pnpm lint --prune-suppressions` then drops the old paths. The counts stay the same.
+
 ## Review protocol
 
 1. Read the code and the diff.

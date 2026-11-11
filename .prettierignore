@@ -14,3 +14,7 @@ pnpm-lock.yaml
 coverage/
 playwright-report/
 test-results/
+
+# Written by ESLint (`--suppress-rule`, `--prune-suppressions`); formatting it
+# would turn every prune into a whitespace diff.
+eslint-suppressions.json
