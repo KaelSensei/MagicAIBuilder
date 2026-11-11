@@ -22,6 +22,7 @@ import {
   searchCardPrintings,
   fetchLocalizedPrintingsByNames,
   __resetRateLimiter,
+  SCRYFALL_TIMEOUT_MS,
 } from "@/lib/scryfall/client";
 import { lookupCardCache } from "@/lib/db/deck-api";
 import { logger } from "@/lib/logger";
@@ -543,5 +544,97 @@ describe("rate limiting", () => {
     await expect(getCardByName("Llanowar Elves")).resolves.toMatchObject({
       id: "after-failure",
     });
+  });
+});
+
+/**
+ * Stands in for a Scryfall request that never answers: like the real `fetch`,
+ * it rejects with the signal's reason once the signal aborts, and only then.
+ */
+function hangUntilAborted(
+  _input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  return new Promise((_resolve, reject) => {
+    init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+  });
+}
+
+/**
+ * Stands in for a Scryfall request that answers `card` after `delayMs`, unless
+ * its signal aborts first.
+ */
+function answerAfter(delayMs: number, card: ScryfallCard) {
+  return (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
+    new Promise((resolve, reject) => {
+      const timer = setTimeout(
+        () => resolve(new Response(JSON.stringify(card), { status: 200 })),
+        delayMs
+      );
+      init?.signal?.addEventListener("abort", () => {
+        clearTimeout(timer);
+        reject(init.signal?.reason);
+      });
+    });
+}
+
+describe("request headers and timeout in the browser", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    __resetRateLimiter();
+  });
+
+  it("keeps the browser's own User-Agent, as Scryfall asks of on-page JavaScript", async () => {
+    const fetchMock = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify(makeScryfallCard()), { status: 200 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getCardByName("Sol Ring");
+
+    const headers = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
+    expect(headers.has("User-Agent")).toBe(false);
+    expect(headers.get("Accept")).toBe("application/json");
+  });
+
+  // jsdom's AbortSignal.timeout runs on the faked timers; Node's does not,
+  // which is why this case lives in the jsdom suite.
+  it("rejects a request Scryfall never answers once the timeout elapses", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn(hangUntilAborted));
+
+    let outcome: unknown = "pending";
+    getCardByName("Sol Ring").then(
+      () => (outcome = "resolved"),
+      (error: unknown) => (outcome = error)
+    );
+    await vi.advanceTimersByTimeAsync(SCRYFALL_TIMEOUT_MS);
+
+    expect(outcome).toMatchObject({ name: "TimeoutError" });
+  });
+
+  it("starts the timeout when the request leaves the queue, not while it waits its turn", async () => {
+    vi.useFakeTimers();
+    const firstAnswersAfter = SCRYFALL_TIMEOUT_MS - 1_000;
+    const secondAnswersAfter = 2_000;
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn<typeof fetch>()
+        .mockImplementationOnce(
+          answerAfter(firstAnswersAfter, makeScryfallCard("ring"))
+        )
+        .mockImplementationOnce(
+          answerAfter(secondAnswersAfter, makeScryfallCard("signet"))
+        )
+    );
+
+    void getCardByName("Sol Ring");
+    const second = getCardByName("Arcane Signet");
+    await vi.advanceTimersByTimeAsync(firstAnswersAfter + secondAnswersAfter);
+
+    await expect(second).resolves.toMatchObject({ id: "signet" });
   });
 });

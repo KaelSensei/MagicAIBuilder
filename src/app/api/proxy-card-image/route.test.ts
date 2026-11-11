@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { GET } from "./route";
 import { logger } from "@/lib/logger";
+import { USER_AGENT } from "@/lib/http";
 
 const VALID_URL =
   "https://cards.scryfall.io/normal/front/a/b/abc123.jpg";
@@ -86,6 +87,13 @@ describe("GET /api/proxy-card-image", () => {
       )
     );
     expect(res.status).toBe(403);
+  });
+
+  it("names the app with the shared User-Agent", async () => {
+    await GET(makeReq(`url=${encodeURIComponent(VALID_URL)}`));
+
+    const init = vi.mocked(global.fetch).mock.calls[0]?.[1];
+    expect(new Headers(init?.headers).get("User-Agent")).toBe(USER_AGENT);
   });
 
   it("proxies allowed URL and returns image bytes", async () => {

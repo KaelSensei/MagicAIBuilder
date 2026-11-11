@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { httpGet, parseJson, BOT_CHALLENGE_MESSAGE } from "./http";
+import { httpGet, parseJson, BOT_CHALLENGE_MESSAGE, USER_AGENT } from "./http";
 
 describe("parseJson", () => {
   it("returns the value typed as T", () => {
@@ -100,5 +100,17 @@ describe("httpGet", () => {
     await httpGet("https://example.com/api");
     const callHeaders = spy.mock.calls[0][1]?.headers as Record<string, string>;
     expect(callHeaders["User-Agent"]).toContain("MagicAIBuilder");
+  });
+});
+
+describe("USER_AGENT", () => {
+  // Scryfall asks for the application's name (https://scryfall.com/docs/api,
+  // read 2026-11-10). magicaibuilder.com is not registered (I-66), so the
+  // product points at the site it actually runs on, and at nothing personal.
+  it("names the product and the site it runs on, with no contact address", () => {
+    expect(USER_AGENT).toBe(
+      "MagicAIBuilder/1.0 (+https://magic-ai-builder.vercel.app)"
+    );
+    expect(USER_AGENT).not.toContain("@");
   });
 });
