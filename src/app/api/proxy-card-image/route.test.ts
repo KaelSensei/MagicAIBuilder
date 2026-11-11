@@ -189,3 +189,40 @@ describe("GET /api/proxy-card-image upstream redirects", () => {
     expect(network.requested).toEqual([VALID_URL]);
   });
 });
+
+describe("GET /api/proxy-card-image rate limit", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  /** @returns a proxy request for a real image from the client at `ip` */
+  function fromClient(ip: string): Request {
+    return new Request(
+      `http://localhost:3000/api/proxy-card-image?url=${encodeURIComponent(VALID_URL)}`,
+      { headers: { "x-real-ip": ip } }
+    );
+  }
+
+  it("answers 429 once a client passes 300 requests a minute, and serves other clients", async () => {
+    vi.useFakeTimers({
+      now: new Date("2026-11-11T10:00:00Z"),
+      toFake: ["Date"],
+    });
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    const network = fakeNetwork({ [VALID_URL]: imageResponse });
+    vi.stubGlobal("fetch", network.fetch);
+    for (let request = 0; request < 300; request++) {
+      await GET(fromClient("203.0.113.9"));
+    }
+
+    const throttled = await GET(fromClient("203.0.113.9"));
+
+    expect(throttled.status).toBe(429);
+    expect(throttled.headers.get("Retry-After")).toBe("60");
+    expect(await throttled.json()).toEqual({ error: "Too many requests" });
+    expect(network.requested).toHaveLength(300);
+    expect((await GET(fromClient("203.0.113.10"))).status).toBe(200);
+  });
+});
