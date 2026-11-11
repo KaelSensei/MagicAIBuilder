@@ -28,7 +28,7 @@ export function describePlan(
     `Path-keyed files: ${plan.jsonEdits.length}`,
     ...plan.jsonEdits.map(
       ({ path, count: changed }) =>
-        `  ${path}: ${count(changed, "path", "paths")}`
+        `  ${path}: ${count(changed, "entry", "entries")}`
     ),
   ];
 }

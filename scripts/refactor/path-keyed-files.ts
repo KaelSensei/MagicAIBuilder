@@ -43,13 +43,14 @@ const ALIASED_TYPES: readonly string[] = [
  * `type` and `dependencyTypes` too (`compareViolationsBase` in
  * dependency-cruiser's `src/graph-utl/compare.mjs`).
  *
- * The file is written as dependency-cruiser writes it,
- * `JSON.stringify(entries, null, 2)` and a newline. Returns `undefined` when
- * nothing changes or the file is not a list.
+ * The file is written as dependency-cruiser writes it: sorted by its
+ * `compareViolations`, then `JSON.stringify(entries, null, 2)` and a newline.
+ * A later shrink-only prune then only deletes entries. Returns `undefined`
+ * when nothing changes or the file is not a list.
  *
- * Not updated: the `dependencyTypes` inside `cycle` elements (the comparison
- * reads only their names), and a cycle whose path dependency-cruiser picks
- * differently once names change; `pnpm arch` reports either as stale.
+ * Not updated: the `dependencyTypes` inside `cycle` elements, which no
+ * comparison reads. A cycle whose path dependency-cruiser picks differently
+ * once names change shows up as a stale entry in `pnpm arch`.
  */
 export function rewriteKnownViolations(
   text: string,
@@ -64,9 +65,9 @@ export function rewriteKnownViolations(
     if (JSON.stringify(next) !== JSON.stringify(entry)) count += 1;
     return next;
   });
-  return count === 0
-    ? undefined
-    : { content: `${JSON.stringify(updated, null, 2)}\n`, count };
+  if (count === 0) return undefined;
+  const sorted = updated.toSorted(compareViolations);
+  return { content: `${JSON.stringify(sorted, null, 2)}\n`, count };
 }
 
 /**
@@ -116,6 +117,70 @@ function refreshEdge(entry: unknown, rewrites: SpecifierRewrites): unknown {
       ? { dependencyTypes: retype(dependencyTypes, isAlias(rewritten)) }
       : {}),
   };
+}
+
+/**
+ * dependency-cruiser's `compareViolations` (src/graph-utl/compare.mjs in
+ * 18.7.2), the order its `--baseline` output is written in. Strings compare
+ * with `localeCompare`, as there, so both agree in the same environment.
+ */
+function compareViolations(a: unknown, b: unknown): number {
+  return (
+    Math.sign(severityRank(a) - severityRank(b)) ||
+    text(field(field(a, "rule"), "name")).localeCompare(
+      text(field(field(b, "rule"), "name"))
+    ) ||
+    text(field(a, "from")).localeCompare(text(field(b, "from"))) ||
+    text(field(a, "to")).localeCompare(text(field(b, "to"))) ||
+    text(field(a, "unresolvedTo")).localeCompare(
+      text(field(b, "unresolvedTo"))
+    ) ||
+    text(field(a, "type")).localeCompare(text(field(b, "type"))) ||
+    compareLists(
+      strings(field(a, "dependencyTypes")),
+      strings(field(b, "dependencyTypes"))
+    ) ||
+    compareLists(names(field(a, "cycle")), names(field(b, "cycle"))) ||
+    compareLists(names(field(a, "via")), names(field(b, "via")))
+  );
+}
+
+// dependency-cruiser ranks an unknown severity -1, before "error".
+const SEVERITY_RANK: ReadonlyMap<string, number> = new Map([
+  ["error", 1],
+  ["warn", 2],
+  ["info", 3],
+  ["ignore", 4],
+]);
+
+function severityRank(entry: unknown): number {
+  return SEVERITY_RANK.get(text(field(field(entry, "rule"), "severity"))) ?? -1;
+}
+
+function compareLists(a: readonly string[], b: readonly string[]): number {
+  for (let index = 0; index < Math.min(a.length, b.length); index += 1) {
+    const order = a[index].localeCompare(b[index]);
+    if (order !== 0) return order;
+  }
+  return Math.sign(a.length - b.length);
+}
+
+function field(value: unknown, key: string): unknown {
+  return isRecord(value) ? value[key] : undefined;
+}
+
+function text(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function strings(value: unknown): readonly string[] {
+  return isStringList(value) ? value : [];
+}
+
+function names(value: unknown): readonly string[] {
+  return Array.isArray(value)
+    ? value.map((item: unknown) => text(field(item, "name")))
+    : [];
 }
 
 function retype(types: readonly string[], aliased: boolean): readonly string[] {

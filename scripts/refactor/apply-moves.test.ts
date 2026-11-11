@@ -420,6 +420,60 @@ describe("path-keyed files", () => {
     );
   });
 
+  it("keeps the baseline in dependency-cruiser's order, so that a later prune only deletes entries", () => {
+    const turnOneFirst = {
+      type: "cycle",
+      from: "src/lib/deck/turn-one.ts",
+      to: "src/lib/deck/types.ts",
+      unresolvedTo: "./types",
+      dependencyTypes: TYPE_IMPORT,
+      rule: CYCLE_RULE,
+      cycle: cycleOf("src/lib/deck/types.ts", "src/lib/deck/turn-one.ts"),
+    };
+    const typesFirst = {
+      type: "cycle",
+      from: "src/lib/deck/types.ts",
+      to: "src/lib/deck/turn-one.ts",
+      unresolvedTo: "./turn-one",
+      dependencyTypes: TYPE_IMPORT,
+      rule: CYCLE_RULE,
+      cycle: cycleOf("src/lib/deck/turn-one.ts", "src/lib/deck/types.ts"),
+    };
+    const moved = "src/modules/deck-analysis/domain/turn-one.ts";
+    const root = createRepo({
+      "src/lib/deck/types.ts":
+        'import type { TurnOne } from "./turn-one";\nexport type Deck = { turnOne: TurnOne };\n',
+      "src/lib/deck/turn-one.ts":
+        'import type { Deck } from "./types";\nexport type TurnOne = (deck: Deck) => boolean;\n',
+      ".dependency-cruiser-known-violations.json": baselineOf([
+        turnOneFirst,
+        typesFirst,
+      ]),
+    });
+
+    runMoves(root, [{ from: "src/lib/deck/turn-one.ts", to: moved }]);
+
+    // `src/modules/…` now sorts after `src/lib/deck/types.ts`.
+    expect(read(root, ".dependency-cruiser-known-violations.json")).toBe(
+      baselineOf([
+        {
+          ...typesFirst,
+          to: moved,
+          unresolvedTo: "@/modules/deck-analysis/domain/turn-one",
+          dependencyTypes: [...ALIASED, ...TYPE_IMPORT],
+          cycle: cycleOf(moved, "src/lib/deck/types.ts"),
+        },
+        {
+          ...turnOneFirst,
+          from: moved,
+          unresolvedTo: "@/lib/deck/types",
+          dependencyTypes: [...ALIASED, ...TYPE_IMPORT],
+          cycle: cycleOf("src/lib/deck/types.ts", moved),
+        },
+      ])
+    );
+  });
+
   it("renames moved files in the ESLint suppressions, keeping the file's layout", () => {
     const suppressions = `{
   "src/lib/dice.ts": {
