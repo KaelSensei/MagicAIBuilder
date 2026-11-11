@@ -55,6 +55,19 @@ describe("mock rules", () => {
     ]);
   });
 
+  it("offers no autofix, so lint-staged's eslint --fix never rewrites a baselined mock behind the author's back", async () => {
+    const source = `${VI}.mock("@/lib/db/prisma", () => ({ prisma: {} }));\n`;
+
+    const [result] = await eslint.lintText(source, { filePath: TEST_FILE });
+
+    expect(
+      (result?.messages ?? []).map((message) => [
+        message.ruleId,
+        message.fix === undefined,
+      ])
+    ).toEqual([["vitest/prefer-import-in-mock", true]]);
+  });
+
   it.each([
     ["an @/ module", "@/lib/logger"],
     ["a sibling module", "./store"],

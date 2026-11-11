@@ -318,8 +318,12 @@ const eslintConfig = [
     rules: {
       // `vi.mock(import("@/x"))`: `tsc` checks the path and the factory
       // against the real module, so a moved module cannot leave a mock that
-      // silently applies to nothing. Its autofix rewrites the string form.
-      "vitest/prefer-import-in-mock": "error",
+      // silently applies to nothing. Its autofix is off: lint-staged runs
+      // `eslint --fix` on every staged file, and would rewrite a baselined
+      // mock whose factory then fails `tsc`, and leave a stale suppression
+      // that fails the commit. docs/engineering/quality-gate.md says how to
+      // convert a file on purpose.
+      "vitest/prefer-import-in-mock": ["error", { fixable: false }],
       "no-restricted-syntax": ["error", ...INTERNAL_MOCK_BANS],
       // A committed `.only` silently skips the rest of the file in CI, and
       // `.skip` disables a test; both are forbidden moves (ADR 0005, rule 7).
