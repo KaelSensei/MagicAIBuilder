@@ -11,7 +11,9 @@
  *
  * Exit codes: 0 done or nothing to do; 1 a reference resolves to no file,
  * so nothing was written; 2 the command line or the move map is invalid, or
- * the map cannot be applied (two moves claim one destination).
+ * the map cannot be applied (two moves claim one destination, or a shim is
+ * marked and eslint.config.mjs has no migration-guard section). What it only
+ * reports (scope changes, old paths in docs and configs) never fails a run.
  *
  * @module refactor/apply-moves
  */

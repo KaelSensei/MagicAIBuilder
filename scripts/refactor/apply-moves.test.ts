@@ -4,104 +4,33 @@
  *
  * Each test writes a small project into a temporary folder, commits it, runs
  * the planner and the applier (or the real command line through tsx), then
- * reads the files and the git index back. Fixture sources spell Vitest's
- * object as `${VI}`, so that this file holds no literal mock call: the
- * stale-mock guard (`src/test/vi-mock-paths.ts`) reads test sources as text.
+ * reads the files and the git index back (`testing/fixture-repo.ts`). Fixture
+ * sources spell Vitest's object as `${VI}`, so that this file holds no
+ * literal mock call: the stale-mock guard (`src/test/vi-mock-paths.ts`)
+ * reads test sources as text.
  */
-import { execFileSync, spawnSync } from "node:child_process";
-import {
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Move } from "./move-map";
-import { applyPlan } from "./apply-plan";
-import { planMoves, type MovePlan } from "./move-plan";
+import { planMoves } from "./move-plan";
+import {
+  createRepo,
+  git,
+  read,
+  removeFixtureRepos,
+  runCli,
+  runMoves,
+  snapshot,
+  writeFile,
+} from "./testing/fixture-repo";
 
 const VI = "vi";
-const TSX = resolve(__dirname, "../../node_modules/.bin/tsx");
-const CLI = resolve(__dirname, "apply-moves.ts");
 const DICE_MOVE: Move = {
   from: "src/lib/dice.ts",
   to: "src/modules/playtest/domain/dice.ts",
 };
 const DICE = "export type Die = number;\nexport const roll = (): Die => 4;\n";
 
-const roots: string[] = [];
-afterEach(() => {
-  for (const root of roots.splice(0))
-    rmSync(root, { recursive: true, force: true });
-});
-
-function git(root: string, ...args: readonly string[]): string {
-  return execFileSync(
-    "git",
-    [
-      "-c",
-      "user.name=Fixture",
-      "-c",
-      "user.email=fixture@example.com",
-      "-c",
-      "commit.gpgsign=false",
-      "-c",
-      "core.hooksPath=/dev/null",
-      "-c",
-      "init.defaultBranch=main",
-      ...args,
-    ],
-    { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
-  );
-}
-
-function writeFile(root: string, path: string, content: string): void {
-  mkdirSync(dirname(join(root, path)), { recursive: true });
-  writeFileSync(join(root, path), content);
-}
-
-/** A committed repository holding exactly `files`. */
-function createRepo(files: Readonly<Record<string, string>>): string {
-  const root = mkdtempSync(join(tmpdir(), "apply-moves-"));
-  roots.push(root);
-  for (const [path, content] of Object.entries(files))
-    writeFile(root, path, content);
-  git(root, "init", "--quiet");
-  git(root, "add", "-A");
-  git(root, "commit", "--quiet", "-m", "fixture");
-  return root;
-}
-
-function read(root: string, path: string): string {
-  return readFileSync(join(root, path), "utf8");
-}
-
-/** Plans the moves and applies them when nothing dangles, as the command line does. */
-function runMoves(root: string, moves: readonly Move[]): MovePlan {
-  const plan = planMoves(root, moves);
-  if (plan.kind === "ready") applyPlan(root, plan);
-  return plan;
-}
-
-/** Every file of the working tree, `.git` aside, with its content. */
-function snapshot(root: string, folder = root): Record<string, string> {
-  const files: Record<string, string> = {};
-  for (const entry of readdirSync(folder, { withFileTypes: true })) {
-    const path = join(folder, entry.name);
-    if (entry.name === ".git") continue;
-    if (entry.isDirectory()) Object.assign(files, snapshot(root, path));
-    else files[relative(root, path)] = readFileSync(path, "utf8");
-  }
-  return files;
-}
-
-function runCli(root: string, ...args: readonly string[]) {
-  return spawnSync(TSX, [CLI, ...args], { cwd: root, encoding: "utf8" });
-}
+afterEach(removeFixtureRepos);
 
 describe("moving files", () => {
   it("moves a file with git mv, so git stages it as a rename", () => {
