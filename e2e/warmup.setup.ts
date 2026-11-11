@@ -3,9 +3,11 @@ import { test, expect } from "@playwright/test";
 /**
  * Compiles every route segment the suite navigates, before any test runs.
  *
- * The gate's web server is `next dev`, which compiles routes on demand. A
- * navigation that lands mid-compile can render a client component against a
- * different instance of the next-intl context module than the provider used —
+ * This matters under `next dev` (a local `pnpm test:e2e`), which compiles
+ * routes on demand. The Docker stack serves a prebuilt app, where the sweep
+ * only checks that every segment answers. Under `next dev`, a navigation
+ * that lands mid-compile can render a client component against a different
+ * instance of the next-intl context module than the provider used —
  * the intermittent "context from NextIntlClientProvider was not found" in the
  * web-server log, an aborted navigation in the failing test. Visiting each
  * segment once makes all compilation happen here, so the module graph is

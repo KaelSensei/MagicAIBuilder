@@ -22,4 +22,21 @@ describe("formatCollectionPrintingCsv", () => {
 
     expect(csv.split("\n")[1]).toBe('"Jace, ""Unraveler""",1,No,,,"id,""one"""');
   });
+
+  it("exports a card name that starts like a formula as text", () => {
+    const csv = formatCollectionPrintingCsv([
+      {
+        scryfallId: "printing-a",
+        name: '=HYPERLINK("https://example.com","Sol Ring")',
+        quantity: 1,
+        foil: false,
+        condition: "NM",
+        price: 2,
+      },
+    ]);
+
+    expect(csv.split("\n")[1]).toBe(
+      `"'=HYPERLINK(""https://example.com"",""Sol Ring"")",1,No,NM,2,"printing-a"`
+    );
+  });
 });

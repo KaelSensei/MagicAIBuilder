@@ -7,6 +7,7 @@ import {
   vi,
   type MockInstance,
 } from "vitest";
+import { delay, http, HttpResponse, type JsonBodyType } from "msw";
 import {
   FIND_MY_COMBOS_RECORDED,
   FIND_MY_COMBOS_RECORDED_REQUEST,
@@ -16,7 +17,11 @@ import {
   COMBO_LOOKUPS_PER_CLIENT,
   SPELLBOOK_CALLS_PER_WINDOW,
 } from "@/lib/combos/lookup-policy";
-import { SPELLBOOK_FIND_MY_COMBOS_URL } from "@/lib/combos/find-my-combos";
+import {
+  SPELLBOOK_FIND_MY_COMBOS_URL,
+  SPELLBOOK_TIMEOUT_MS,
+} from "@/lib/combos/find-my-combos";
+import { useMsw } from "@/test/msw";
 
 type PostHandler = (request: Request) => Promise<Response>;
 
@@ -27,7 +32,8 @@ const RECORDED_DECK = {
   main: FIND_MY_COMBOS_RECORDED_REQUEST.main.map((entry) => entry.card),
 };
 
-const mockFetch = vi.fn();
+/** Every request Spellbook received during the current test, in order. */
+let spellbookRequests: Request[] = [];
 let POST: PostHandler;
 let warn: MockInstance;
 
@@ -47,43 +53,67 @@ function lookup(
   });
 }
 
-function spellbookAnswers(body: unknown, status = 200): void {
-  mockFetch.mockImplementation(
-    async () =>
-      new Response(JSON.stringify(body), {
-        status,
-        headers: { "Content-Type": "application/json" },
-      })
+/** Spellbook's `find-my-combos` endpoint answering every request with `body`. */
+function spellbookAnswers(body: JsonBodyType, status = 200) {
+  return http.post(SPELLBOOK_FIND_MY_COMBOS_URL, ({ request }) => {
+    spellbookRequests.push(request.clone());
+    return HttpResponse.json(body, { status });
+  });
+}
+
+/**
+ * Spellbook taking one request and never answering it. Also replaces the next
+ * `AbortSignal.timeout` call, the route's 10-second Spellbook timeout, with a
+ * signal this handler fires once the request has arrived: the test neither
+ * waits 10 seconds nor races a short timer. `vi.restoreAllMocks` undoes it.
+ */
+function spellbookTimesOutOnce() {
+  const clientTimeout = new AbortController();
+  vi.spyOn(AbortSignal, "timeout").mockReturnValueOnce(clientTimeout.signal);
+  return http.post(
+    SPELLBOOK_FIND_MY_COMBOS_URL,
+    async ({ request }) => {
+      spellbookRequests.push(request.clone());
+      clientTimeout.abort(
+        new DOMException(
+          "The operation was aborted due to timeout",
+          "TimeoutError"
+        )
+      );
+      await delay("infinite");
+    },
+    { once: true }
   );
 }
 
 describe("POST /api/combos", () => {
+  // Spellbook serves the recorded response unless a test says otherwise; any
+  // other outgoing request fails the test.
+  const server = useMsw(spellbookAnswers(FIND_MY_COMBOS_RECORDED));
+
   beforeEach(async () => {
     // Fresh modules give every test an empty cache and empty rate-limit windows.
     vi.resetModules();
     ({ POST } = await import("./route"));
     const { logger } = await import("@/lib/logger");
     warn = vi.spyOn(logger, "warn").mockImplementation(() => undefined);
-    mockFetch.mockReset();
-    vi.stubGlobal("fetch", mockFetch);
+    spellbookRequests = [];
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("asks Spellbook once for the whole deck and returns only the combos it contains", async () => {
-    spellbookAnswers(FIND_MY_COMBOS_RECORDED);
-
     const response = await POST(lookup(RECORDED_DECK));
 
     expect(response.status).toBe(200);
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    const [url, init] = mockFetch.mock.calls[0];
-    expect(url).toBe(SPELLBOOK_FIND_MY_COMBOS_URL);
-    expect(init.method).toBe("POST");
-    expect(init.headers["User-Agent"]).toMatch(/^MagicAIBuilder\//);
-    const sent = JSON.parse(String(init.body));
+    expect(spellbookRequests).toHaveLength(1);
+    const [request] = spellbookRequests;
+    expect(request.url).toBe(SPELLBOOK_FIND_MY_COMBOS_URL);
+    expect(request.method).toBe("POST");
+    expect(request.headers.get("User-Agent")).toMatch(/^MagicAIBuilder\//);
+    const sent = await request.json();
     expect(sent.commanders).toEqual([{ card: "kenrith, the returned king" }]);
     expect(sent.main).toHaveLength(RECORDED_DECK.main.length);
     expect(sent.main).toContainEqual({ card: "thassa's oracle" });
@@ -97,7 +127,6 @@ describe("POST /api/combos", () => {
   });
 
   it("serves the same card list from the cache, whatever its order, case or spacing", async () => {
-    spellbookAnswers(FIND_MY_COMBOS_RECORDED);
     const shuffled = {
       commanders: ["  KENRITH, THE RETURNED KING "],
       main: [...RECORDED_DECK.main].reverse().map((name) => name.toUpperCase()),
@@ -106,13 +135,12 @@ describe("POST /api/combos", () => {
     const first = await POST(lookup(RECORDED_DECK));
     const second = await POST(lookup(shuffled));
 
-    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(spellbookRequests).toHaveLength(1);
     expect(second.status).toBe(200);
     expect(await second.json()).toEqual(await first.json());
   });
 
   it("answers 429 with Retry-After once one client goes over its limit", async () => {
-    spellbookAnswers(FIND_MY_COMBOS_RECORDED);
     for (let i = 0; i < COMBO_LOOKUPS_PER_CLIENT; i += 1) {
       expect((await POST(lookup(RECORDED_DECK, "203.0.113.7"))).status).toBe(
         200
@@ -136,7 +164,7 @@ describe("POST /api/combos", () => {
     const response = await POST(lookup(oversize));
 
     expect(response.status).toBe(400);
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(spellbookRequests).toHaveLength(0);
   });
 
   it("rejects a body that declares more bytes than any valid list needs", async () => {
@@ -147,7 +175,7 @@ describe("POST /api/combos", () => {
     );
 
     expect(response.status).toBe(413);
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(spellbookRequests).toHaveLength(0);
   });
 
   it("answers an empty card list without calling Spellbook", async () => {
@@ -155,17 +183,11 @@ describe("POST /api/combos", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ combos: [] });
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(spellbookRequests).toHaveLength(0);
   });
 
   it("degrades to 504 when Spellbook times out, and does not cache the failure", async () => {
-    spellbookAnswers(FIND_MY_COMBOS_RECORDED);
-    mockFetch.mockRejectedValueOnce(
-      new DOMException(
-        "The operation was aborted due to timeout",
-        "TimeoutError"
-      )
-    );
+    server.use(spellbookTimesOutOnce());
 
     const timedOut = await POST(lookup(RECORDED_DECK));
     const retried = await POST(lookup(RECORDED_DECK));
@@ -175,7 +197,8 @@ describe("POST /api/combos", () => {
       error: "Combo lookup unavailable",
     });
     expect(retried.status).toBe(200);
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(AbortSignal.timeout).toHaveBeenCalledWith(SPELLBOOK_TIMEOUT_MS);
+    expect(spellbookRequests).toHaveLength(2);
     expect(warn).toHaveBeenCalledWith(
       "Commander Spellbook timed out",
       "POST /api/combos"
@@ -183,10 +206,10 @@ describe("POST /api/combos", () => {
   });
 
   it("degrades to 502 when Spellbook fails or answers with an unexpected shape", async () => {
-    spellbookAnswers({ detail: "Internal error" }, 500);
+    server.use(spellbookAnswers({ detail: "Internal error" }, 500));
     const failed = await POST(lookup(RECORDED_DECK));
 
-    spellbookAnswers({ results: "not a combo list" });
+    server.use(spellbookAnswers({ results: "not a combo list" }));
     const malformed = await POST(lookup(RECORDED_DECK));
 
     expect(failed.status).toBe(502);
@@ -206,7 +229,6 @@ describe("POST /api/combos", () => {
   });
 
   it("stops calling Spellbook once this server's shared budget is spent", async () => {
-    spellbookAnswers(FIND_MY_COMBOS_RECORDED);
     for (let i = 0; i < SPELLBOOK_CALLS_PER_WINDOW; i += 1) {
       const deck = { commanders: [], main: [`Card ${i}`] };
       expect((await POST(lookup(deck, `198.51.100.${i}`))).status).toBe(200);
@@ -218,6 +240,6 @@ describe("POST /api/combos", () => {
 
     expect(overBudget.status).toBe(503);
     expect(Number(overBudget.headers.get("Retry-After"))).toBeGreaterThan(0);
-    expect(mockFetch).toHaveBeenCalledTimes(SPELLBOOK_CALLS_PER_WINDOW);
+    expect(spellbookRequests).toHaveLength(SPELLBOOK_CALLS_PER_WINDOW);
   });
 });

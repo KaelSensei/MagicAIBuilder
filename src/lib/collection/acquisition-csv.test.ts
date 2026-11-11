@@ -29,6 +29,25 @@ describe("formatAcquisitionCsv", () => {
     expect(csv.split("\n")[1]).toBe('"Jace, ""Unraveler""",1,,,"id,""one""",""');
   });
 
+  it("exports a card or deck name that starts like a formula as text", () => {
+    const csv = formatAcquisitionCsv([
+      {
+        scryfallId: "printing-a",
+        name: "@SUM(1+1)",
+        quantity: 1,
+        price: 2,
+        deckAllocations: [
+          { name: "=1+1", quantity: 1 },
+          { name: "Breya", quantity: 1 },
+        ],
+      },
+    ]);
+
+    expect(csv.split("\n")[1]).toBe(
+      `"'@SUM(1+1)",1,2,2,"printing-a","'=1+1 (1); Breya (1)"`
+    );
+  });
+
   it("exports a cent-accurate total for multiple copies", () => {
     const csv = formatAcquisitionCsv([
       { scryfallId: "printing-a", name: "Sol Ring", quantity: 3, price: 0.1 },

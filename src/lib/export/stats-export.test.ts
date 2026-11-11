@@ -76,6 +76,22 @@ describe("CSV card zones", () => {
   });
 });
 
+describe("CSV formula cells", () => {
+  it("exports a deck name, a tag and a card name that start like a formula as text", () => {
+    const deck = makeDeck({
+      name: "=1+1",
+      tags: ["@SUM(1+1)"],
+      cards: [makeCard("c1", "+2 Mace")],
+    });
+
+    const lines = generateDeckCSVFull(deck).split("\n");
+
+    expect(lines).toContain("Deck:,'=1+1");
+    expect(lines).toContain("Tags:,'@SUM(1+1)");
+    expect(lines).toContain("'+2 Mace,1,2,Creature,W,5.00,main,c1,creature");
+  });
+});
+
 describe("generateDeckCSV", () => {
   it("generates valid CSV with header row", () => {
     const deck = makeDeck();

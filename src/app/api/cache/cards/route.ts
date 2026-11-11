@@ -44,7 +44,7 @@ export async function GET(request: Request): Promise<Response> {
     );
     hit = outcome.kind === "hit";
     failed = dbFailed;
-    return readThroughResponse(outcome);
+    return readThroughResponse(outcome, CARD_CACHE.ttlMs);
   } finally {
     logger.info("Card cache lookup completed", "GET /api/cache/cards", {
       hit,

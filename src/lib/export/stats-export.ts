@@ -3,6 +3,7 @@
  * Zero framework dependencies. All outputs are deterministic from inputs.
  */
 
+import { neutralizeFormula } from "@/lib/csv";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -41,7 +42,10 @@ export interface TypeBreakdown {
 // ─── CSV helpers ───────────────────────────────────────────────────────────
 function escapeCSV(value: string | number | null): string {
   if (value === null || value === undefined) return "";
-  const str = String(value);
+  // Text includes the deck name, tags and card names, chosen by the player;
+  // numbers are counts and mana values the app computed.
+  const str =
+    typeof value === "string" ? neutralizeFormula(value) : String(value);
   if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
     return `"${str.replaceAll('"', '""')}"`;
   }

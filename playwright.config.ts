@@ -1,14 +1,25 @@
 import { defineConfig, devices } from "@playwright/test";
 import { STORAGE_STATE } from "./e2e/storage-state";
 
+/**
+ * The server Playwright drives. The Docker E2E stack (docker-compose.e2e.yml)
+ * runs `next build` first and sets `E2E_DEVELOPMENT_BUILD=1`, so it serves that
+ * build; a local `pnpm test:e2e` starts `next dev`, which compiles each route
+ * on its first request.
+ */
+const WEB_SERVER_COMMAND =
+  process.env.E2E_DEVELOPMENT_BUILD === "1"
+    ? "pnpm exec next start"
+    : "cross-env NODE_OPTIONS=--max-old-space-size=4096 PLAYWRIGHT_TEST=1 pnpm dev";
+
 export default defineConfig({
   testDir: "./e2e",
 
-  // The e2e suite runs in exactly one place: the Dockerised pre-push gate in
-  // docker-compose.e2e.yml. **No GitHub workflow runs Playwright**, and that
-  // container does not set `CI` — so every setting keyed on `process.env.CI`
-  // was dead code that never once took its intended value. They are stated
-  // outright below rather than inferred from a variable nothing sets.
+  // The suite runs in the Docker stack of docker-compose.e2e.yml, from the
+  // pre-push gate and from .github/workflows/e2e.yml. The container does not
+  // set `CI`, so every setting keyed on `process.env.CI` was dead code that
+  // never once took its intended value. They are stated outright below rather
+  // than inferred from a variable the suite never sees.
   fullyParallel: true,
 
   // A stray `test.only` must never pass the gate. Keyed on `CI`, this was
@@ -43,12 +54,14 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
-    // Compiles every route segment once before the suite runs. The web server
-    // is `next dev`, and a navigation landing mid-compile intermittently
-    // renders against a stale next-intl context module ("context from
+    // Compiles every route segment once before the suite runs. Under
+    // `next dev`, a navigation landing mid-compile intermittently renders
+    // against a stale next-intl context module ("context from
     // NextIntlClientProvider was not found") and aborts — see
-    // docs/engineering/quality-gate.md. The default testMatch never picks
-    // this file up (it is .setup.ts, not .spec.ts), so it runs only here.
+    // docs/engineering/quality-gate.md. Against the prebuilt server of the
+    // Docker stack it only checks that every segment answers. The default
+    // testMatch never picks this file up (it is .setup.ts, not .spec.ts), so
+    // it runs only here.
     {
       name: "warmup",
       testMatch: /warmup\.setup\.ts/,
@@ -80,7 +93,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "cross-env NODE_OPTIONS=--max-old-space-size=4096 PLAYWRIGHT_TEST=1 pnpm dev",
+    command: WEB_SERVER_COMMAND,
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 300000,

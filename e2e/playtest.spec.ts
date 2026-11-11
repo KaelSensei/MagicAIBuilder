@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
-import { seedDeckWithCards, suppressOnboarding } from "./helpers";
+import { test, expect } from "./fixtures";
+import { fixtureCards, suppressOnboarding } from "./helpers";
 
 /**
  * The playtest engine, its store and the five zone components were all written
@@ -8,10 +8,14 @@ import { seedDeckWithCards, suppressOnboarding } from "./helpers";
  * end so the engine cannot silently become orphaned again.
  */
 test.describe("Playtest mode", () => {
-  test.beforeEach(async ({ page, request }) => {
+  test.beforeEach(async ({ page, seededDeck }) => {
     // A deck with cards is required: the builder's "New Deck" button creates an
-    // empty one, and playtesting that draws no opening hand at all.
-    const deckId = await seedDeckWithCards(request, 20);
+    // empty one, and playtesting that draws no opening hand at all. The fixture
+    // deletes the deck after each test.
+    const deckId = await seededDeck.create({
+      name: "Playtest Deck",
+      cards: fixtureCards(20),
+    });
 
     await suppressOnboarding(page);
     await page.goto(`/builder/${deckId}`);

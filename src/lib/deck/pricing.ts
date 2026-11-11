@@ -3,6 +3,7 @@
  * Pure functions for price calculations and recommendations
  */
 
+import { csvText } from "@/lib/csv";
 import type { DeckCard } from "@/lib/deck/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -225,6 +226,9 @@ export function findCheaperAlternatives(
  * sorted-by-price view, wrong for a list of what to buy, where a missing row
  * means a card you never purchase.
  *
+ * Names go through `csvText`: a name that starts like a formula is exported
+ * as text, and a quote inside a name is doubled.
+ *
  * @param cards - the cards to list
  * @returns CSV text, priced cards first, most expensive first
  */
@@ -240,7 +244,7 @@ export function generateShoppingListCSV(
     ...[...priced, ...unpriced].map((c) => {
       const unit = c.price ?? 0;
       const total = unit * c.quantity;
-      return `"${c.name}",${c.quantity},$${unit.toFixed(2)},$${total.toFixed(2)}`;
+      return `${csvText(c.name)},${c.quantity},$${unit.toFixed(2)},$${total.toFixed(2)}`;
     }),
   ];
 

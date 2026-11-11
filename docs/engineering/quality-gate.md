@@ -12,7 +12,7 @@
 | `npx tsc --noEmit`                                      | `ci.yml`                                                        | a type error                                                  |
 | `pnpm test:coverage`                                    | `ci.yml`                                                        | a failing test. No coverage threshold is enforced             |
 | `pnpm build`                                            | `ci.yml`                                                        | a build error                                                 |
-| Playwright suite in Docker (`scripts/e2e-pre-push.sh`)  | `.husky/pre-push`, on the developer's machine only              | a failing E2E test blocks the push. No CI workflow runs it    |
+| Playwright suite in Docker (`scripts/e2e-pre-push.sh`)  | `.husky/pre-push`; CI in `e2e.yml` (see _E2E gate_)             | a failing E2E test blocks the push; `e2e.yml` is not required |
 
 Branch protection, read with `gh api` on 2026-11-10: `main` requires the check `Lint, Typecheck, Test, Build` and an up-to-date branch. `dev` and `staging` have no protection rule; their PRs run the same check, and it must be green before a merge.
 
@@ -129,7 +129,9 @@ It now fails with an explicit error when the token is missing.
 
 **The verdict always comes from the e2e container's exit code.** An earlier version branched on `claude -p "@e2e-runner ..."`, which exits 0 whenever the CLI ran — the agent's PASS/FAIL was only prose on stdout. The gate printed `✓ E2E passed — push allowed` on a run with 27 failures. The agent is still invoked, but only after a failure and purely to diagnose it; it cannot turn a red run green.
 
-`SKIP_E2E=1` bypasses the gate in an emergency; say so in the PR. The script also exits early when `CI` is set, but **no GitHub workflow runs Playwright** (`ci.yml`, `sonar.yml` and `lighthouse.yml` were checked on 2026-11-10). The pre-push hook is therefore the only place the suite runs. Anything that reaches a branch without a local push — a Dependabot PR, a promotion merged on GitHub — or a push made with `SKIP_E2E=1` has had no E2E run.
+`SKIP_E2E=1` bypasses the gate in an emergency; say so in the PR. The script also exits early when `CI` is set.
+
+**CI runs the same stack** from `.github/workflows/e2e.yml` (owner decision OD-14, 2026-11-10): on PRs into `staging` and `main`, nightly on `dev`, and on demand. It uploads `playwright-report/` and `test-results/` as the `playwright-report` artifact. PRs into `dev` do not run it, to save CI minutes, so a change that reaches `dev` without a local push (a Dependabot PR, a push made with `SKIP_E2E=1`) is first tested by the next nightly run. It is not a required check. GitHub starts scheduled workflows from the default branch only, so the nightly run begins once the workflow is on `main`.
 
 ### The report has to leave the container
 
@@ -163,6 +165,8 @@ If the failure recurs _with_ the warmup in place, hypothesis 3 is wrong or incom
 
 **Recurred — hypothesis 3 falsified as stated (2026-08-19, same day).** A later gate run failed 3 specs across unrelated files (community, deck-builder, playtest) with seven intl-context errors in the log, warmup active. Two observations survive: the run took 2.1 minutes against the usual ~1.4 — the host was visibly loaded (multiple Docker gate runs that day) — and the error still always accompanies the failures. So compile-timing may be _a_ trigger but is not _the_ mechanism; whatever it is, load widens it. The remaining credible path is the one already recorded: stop testing `next dev` and run the gate against a production build, which requires un-tying the auth bypass from `NODE_ENV` first — a security-relevant redesign that should not be done casually. Until then the flake is understood to be load-sensitive: avoid running other Docker builds while the gate runs.
 
+**The gate no longer runs `next dev` (2026-11-11).** It builds the app once and serves the build with `next start` (see _E2E environment_), so nothing compiles during a run. The build is a _development_ build, so the auth bypass and its `NODE_ENV` guard are unchanged. A production build still needs the bypass redesign above. The same day, the `next dev` server of the gate had reached 3.9 GB RSS on the 7.7 GB host. The first run on the prebuilt server (sampled every 3 s): 83 passed in 3.8 minutes, against 6.8 + 2.3 minutes for the two `next dev` invocations in the gate run recorded in #1364; `next-server` peaked at 730 MB RSS; `next build` peaked at 3.3 GB for about a minute before the tests started; the whole gate took 5.8 minutes.
+
 > **`retries` is 0 here, and stays 0.** Adding retries would stop a known intermittent failure from blocking, which is the sort of quiet loosening this gate has already been fixed for twice. Fix the flake, do not pad the gate.
 >
 > **The config no longer keys anything on `CI` (2026-08-22).** It read `retries: process.env.CI ? 2 : 0`, `workers: process.env.CI ? 1 : undefined` and `forbidOnly: !!process.env.CI` — and `CI` is set nowhere: not in the e2e container, and no GitHub workflow runs Playwright at all. **Every one of those branches was dead code that never took its intended value.** The retries side happened to land on the value this doc wanted, which is why it went unnoticed; the other two did not.
@@ -178,7 +182,7 @@ If the failure recurs _with_ the warmup in place, hypothesis 3 is wrong or incom
 | Tag         | Rationale                                                                                                                                                   |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@external` | Depends on a third-party service (e.g. the live Moxfield API). A deck going private there turns the gate red with no code change on our side.               |
-| `@perf`     | Asserts wall-clock latency against `next dev`, which compiles routes on demand — one endpoint measured 41 ms alone and 5163 ms under full-suite contention. |
+| `@perf`     | Asserts wall-clock latency. Under `next dev` one endpoint took 41 ms alone, 5163 ms under load. A prebuilt server on a busy host or CI runner still varies. |
 
 Both are opt-out, not silent: `PLAYWRIGHT_GREP_INVERT=""` runs everything. Contract assertions from the same specs still run on every push; only the timing assertions are tagged.
 
@@ -188,7 +192,9 @@ Both are opt-out, not silent: `PLAYWRIGHT_GREP_INVERT=""` runs everything. Contr
 
 ### E2E environment
 
-`docker-compose.e2e.yml` runs as its own Compose project (`magicaibuilder-e2e`), so it never replaces the development `db` container. The `db` service starts Postgres 16 on a throwaway `pgdata_e2e` volume, removed by the `down -v` cleanup after every run. The `e2e` service waits for a TCP-level `pg_isready`, applies `prisma migrate deploy`, then runs Playwright once for the `chromium` project and once for `authenticated`, failing on the first non-zero exit.
+`docker-compose.e2e.yml` runs as its own Compose project (`magicaibuilder-e2e`), so it never replaces the development `db` container. The `db` service starts Postgres 16 on a throwaway `pgdata_e2e` volume, removed by the `down -v` cleanup after every run. The `e2e` service waits for a TCP-level `pg_isready`, applies `prisma migrate deploy`, runs `next build`, then runs Playwright once for the `chromium` and `authenticated` projects, which serves that build with `next start`. Any non-zero exit fails the run.
+
+The build is a development build: `next.config.ts` sets `experimental.allowDevelopmentBuild` when `E2E_DEVELOPMENT_BUILD=1` and `NODE_ENV=development`. A production build inlines `NODE_ENV="production"` into every bundle and so compiles out the `PLAYWRIGHT_TEST` bypass the specs seed their data through. The same settings skip the type check; `next build --no-lint` skips lint. CI and the pre-PR gate check both.
 
 Every value below is a local test fixture, not a secret. No variable has to be exported on the host: the two `PLAYWRIGHT_*` controls are the only ones read from the host shell, and both have defaults.
 
@@ -198,11 +204,13 @@ Every value below is a local test fixture, not a secret. No variable has to be e
 | `POSTGRES_USER`          | `db`    | `magic`                                                    | Owner role used by the app and the health check.                                                                    |
 | `POSTGRES_PASSWORD`      | `db`    | `magic_dev_only`                                           | Fixture password for that role; never reused outside the e2e stack.                                                 |
 | `DATABASE_URL`           | `e2e`   | `postgresql://magic:magic_dev_only@db:5432/magicaibuilder` | Prisma connection for migrations and the app under test, addressed by the `db` service name.                        |
-| `NEXT_PUBLIC_APP_URL`    | `e2e`   | `http://localhost:3000`                                    | Public base URL of the `next dev` server Playwright drives.                                                         |
+| `NEXT_PUBLIC_APP_URL`    | `e2e`   | `http://localhost:3000`                                    | Public base URL of the server Playwright drives.                                                                    |
 | `AUTH_SECRET`            | `e2e`   | `playwright-test-secret`                                   | NextAuth signing secret; a fixed fixture because sessions are bypassed in test mode.                                |
 | `GOOGLE_CLIENT_ID`       | `e2e`   | `playwright`                                               | Placeholder so the Google provider initialises; never contacted.                                                    |
 | `GOOGLE_CLIENT_SECRET`   | `e2e`   | `playwright`                                               | Placeholder paired with the client ID.                                                                              |
 | `PLAYWRIGHT_TEST`        | `e2e`   | `1`                                                        | Enables the auth bypass. `requireAuth` keeps it dead when `NODE_ENV` is `production`.                               |
+| `NODE_ENV`               | `e2e`   | `development`                                              | Required by `allowDevelopmentBuild` at `next build` and `next start`; keeps the bypass compiled in.                 |
+| `E2E_DEVELOPMENT_BUILD`  | `e2e`   | `1`                                                        | Makes `next.config.ts` allow the development build and `playwright.config.ts` serve it with `next start`.           |
 | `PLAYWRIGHT_SPEC`        | `e2e`   | host value, default empty                                  | Narrows the run to one spec file. Empty means the full suite; the pre-push gate always forces it empty.             |
 | `PLAYWRIGHT_GREP_INVERT` | `e2e`   | host value, default `@external\|@perf`                     | Tags excluded from the blocking run (see _Tests excluded from the blocking run_). Set it to `""` to run everything. |
 
