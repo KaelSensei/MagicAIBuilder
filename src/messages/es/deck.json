@@ -353,6 +353,11 @@
     "analysedAgo": "Analysed {time}",
     "addCommanderHint": "Add a commander to get suggestions",
     "retry": "Retry",
+    "limits": {
+      "buildAllowanceExhausted": "Monthly AI deck builds used up ({limit}). They reset on {date}. You can still build a deck by hand.",
+      "suggestAllowanceExhausted": "Monthly AI suggestions used up ({limit}). They reset on {date}. Everything else keeps working.",
+      "spendCeilingReached": "AI features are paused until {date}. Everything else keeps working."
+    },
     "cardsToAdd": "Cards to Add",
     "cardsToCut": "Cards to Cut",
     "ignored": "{count} ignored",

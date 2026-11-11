@@ -6,6 +6,10 @@ import type {
   BuildSource,
   DeckCorrection,
 } from "@/app/api/ai/build/types";
+import {
+  readAiCallDenialResponse,
+  type AiCallDenial,
+} from "@/lib/ai/usage/denial";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -40,6 +44,8 @@ export interface AIDeckBuildState {
   source: BuildSource | null;
   isLoading: boolean;
   error: string | null;
+  /** Why the server refused the build before calling a model, if it did. */
+  denial: AiCallDenial | null;
 }
 
 export type AIDeckBuildParams = BuildRequest;
@@ -52,6 +58,7 @@ const EMPTY_STATE: AIDeckBuildState = {
   source: null,
   isLoading: false,
   error: null,
+  denial: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -178,8 +185,11 @@ export function useAIDeckBuild() {
           signal: abort.signal,
         });
 
-        if (!response.ok)
+        if (!response.ok) {
+          const denial = (await readAiCallDenialResponse(response)) ?? null;
+          setState((prev) => ({ ...prev, denial }));
           throw new Error(`Build request failed (${response.status})`);
+        }
         if (!response.body) throw new Error("No response body");
 
         const acc = await processBuildStream(response.body.getReader(), (a) => {

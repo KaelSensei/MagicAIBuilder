@@ -20,11 +20,19 @@ import {
   readDeckQuestion,
   type DeckQuestion,
 } from "@/lib/ai/deck-question";
+import type { AIProvider, ModelCall } from "@/lib/ai/model-reply";
 import {
-  readAnthropicReplyText,
-  readOpenAIReplyText,
-  type ModelCall,
-} from "@/lib/ai/model-reply";
+  callModelMetered,
+  chooseModelTarget,
+  replyParseFailed,
+  type ModelTarget,
+  type ReplyInterpretation,
+} from "@/lib/ai/metered-model";
+import {
+  recordPlaceholderAnswer,
+  type AiCallTicket,
+} from "@/lib/ai/usage/meter";
+import { reserveAiCallForRoute } from "@/lib/ai/usage/route-gate";
 
 export const runtime = "nodejs";
 
@@ -43,17 +51,30 @@ const RATE_WINDOW = 60_000; // per 60 seconds per user
  */
 const SUGGEST_MAX_OUTPUT_TOKENS = 4096;
 
-const ANTHROPIC_SUGGEST_CALL: ModelCall = {
-  provider: "anthropic",
-  model: "claude-haiku-4-5",
-  maxTokens: SUGGEST_MAX_OUTPUT_TOKENS,
+const SUGGEST_CALLS: Readonly<Record<AIProvider, ModelCall>> = {
+  anthropic: {
+    provider: "anthropic",
+    model: "claude-haiku-4-5",
+    maxTokens: SUGGEST_MAX_OUTPUT_TOKENS,
+  },
+  openai: {
+    provider: "openai",
+    model: "gpt-4o-mini",
+    maxTokens: SUGGEST_MAX_OUTPUT_TOKENS,
+  },
 };
 
-const OPENAI_SUGGEST_CALL: ModelCall = {
-  provider: "openai",
-  model: "gpt-4o-mini",
-  maxTokens: SUGGEST_MAX_OUTPUT_TOKENS,
-};
+/**
+ * Where this request's suggestions come from: a metered model call holding a
+ * reserved call, or the built-in suggestions when no provider key is set.
+ */
+type SuggestionOrigin =
+  | {
+      readonly kind: "model";
+      readonly target: ModelTarget;
+      readonly ticket: AiCallTicket;
+    }
+  | { readonly kind: "placeholder" };
 
 interface BracketDimensions {
   ramp: number;
@@ -311,64 +332,31 @@ TASK:
 ${task}`;
 }
 
-async function callAnthropic(
-  prompt: string,
-  apiKey: string
-): Promise<SuggestResponse> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: ANTHROPIC_SUGGEST_CALL.model,
-      max_tokens: ANTHROPIC_SUGGEST_CALL.maxTokens,
-      messages: [{ role: "user", content: prompt }],
-    }),
-    signal: AbortSignal.timeout(45000),
-  });
-  if (!response.ok) throw new Error(`Anthropic API error: ${response.status}`);
-  const text =
-    readAnthropicReplyText(await response.json(), ANTHROPIC_SUGGEST_CALL) ??
-    "{}";
-  const parsed = JSON.parse(text);
-  return {
-    suggestions: parsed.suggestions ?? [],
-    removals: parsed.removals ?? [],
-    analysis: parsed.analysis ?? "",
-    provider: "anthropic",
-  };
-}
-
-async function callOpenAI(
-  prompt: string,
-  apiKey: string
-): Promise<SuggestResponse> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: OPENAI_SUGGEST_CALL.model,
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      max_tokens: OPENAI_SUGGEST_CALL.maxTokens,
-    }),
-    signal: AbortSignal.timeout(45000),
-  });
-  if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
-  const text =
-    readOpenAIReplyText(await response.json(), OPENAI_SUGGEST_CALL) ?? "{}";
-  const parsed = JSON.parse(text);
-  return {
-    suggestions: parsed.suggestions ?? [],
-    removals: parsed.removals ?? [],
-    analysis: parsed.analysis ?? "",
-    provider: "openai",
+/**
+ * Reads a complete model reply as suggestions.
+ *
+ * @param provider - the provider that answered, shown in the panel
+ * @returns an interpreter that fails with `parseFailed` on text that is not
+ *   a JSON object
+ */
+function interpretSuggestReply(
+  provider: AIProvider
+): (text: string) => ReplyInterpretation<SuggestResponse> {
+  return (text) => {
+    try {
+      const parsed = JSON.parse(text);
+      return {
+        ok: true,
+        value: {
+          suggestions: parsed.suggestions ?? [],
+          removals: parsed.removals ?? [],
+          analysis: parsed.analysis ?? "",
+          provider,
+        },
+      };
+    } catch (error) {
+      return replyParseFailed(error);
+    }
   };
 }
 
@@ -603,10 +591,22 @@ export async function POST(request: Request) {
   if (body.partnerName)
     body.partnerName = sanitizeForPrompt(body.partnerName, 200);
 
-  const playtestEvidence = await loadPlaytestEvidence(
-    body.deckId,
-    auth.session.user.id
-  );
+  // A model call needs a call from this month's allowance before anything
+  // else is loaded, so a refusal is cheap and can still be an HTTP status.
+  const userId = auth.session.user.id;
+  const target = chooseModelTarget(SUGGEST_CALLS);
+  let origin: SuggestionOrigin = { kind: "placeholder" };
+  if (target) {
+    const gate = await reserveAiCallForRoute(
+      userId,
+      "suggest",
+      "POST /api/ai/suggest"
+    );
+    if (!gate.ok) return gate.response;
+    origin = { kind: "model", target, ticket: gate.ticket };
+  }
+
+  const playtestEvidence = await loadPlaytestEvidence(body.deckId, userId);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -614,12 +614,17 @@ export async function POST(request: Request) {
       try {
         const prompt = buildPrompt(body, playtestEvidence);
         let result: SuggestResponse;
-        // The key that selects a provider is the one sent to it.
-        const anthropicKey = process.env.ANTHROPIC_API_KEY;
-        const openAIKey = process.env.OPENAI_API_KEY;
-        if (anthropicKey) result = await callAnthropic(prompt, anthropicKey);
-        else if (openAIKey) result = await callOpenAI(prompt, openAIKey);
-        else result = mockSuggestions(body);
+        if (origin.kind === "model") {
+          result = await callModelMetered({
+            ticket: origin.ticket,
+            target: origin.target,
+            prompt,
+            interpret: interpretSuggestReply(origin.target.call.provider),
+          });
+        } else {
+          result = mockSuggestions(body);
+          await recordPlaceholderAnswer(userId, "suggest");
+        }
         await streamResponse(
           controller,
           await enrichSuggestionEvidence(result, body)

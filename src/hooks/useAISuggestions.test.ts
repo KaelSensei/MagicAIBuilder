@@ -109,6 +109,36 @@ describe("useAISuggestions", () => {
 
     expect(result.current.error).toContain("500");
     expect(result.current.isLoading).toBe(false);
+    expect(result.current.denial).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it("exposes why the server refused the analysis when AI is paused for the month", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json(
+          {
+            error: "AI is paused until the monthly budget resets",
+            code: "ai_spend_ceiling_reached",
+            resetsAt: "2026-12-01T00:00:00.000Z",
+          },
+          { status: 503 }
+        )
+      )
+    );
+
+    const { result } = renderHook(() => useAISuggestions());
+    await act(async () => {
+      await result.current.analyze(makeDeck(), makeStats(), null);
+    });
+
+    expect(result.current.denial).toEqual({
+      code: "ai_spend_ceiling_reached",
+      resetsAt: new Date("2026-12-01T00:00:00.000Z"),
+    });
+    expect(result.current.result).toBeNull();
+    expect(result.current.isLoading).toBe(false);
     vi.unstubAllGlobals();
   });
 

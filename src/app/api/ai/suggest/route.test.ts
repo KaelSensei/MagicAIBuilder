@@ -4,9 +4,13 @@ const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   requireAuth: vi.fn(),
 }));
+const db = await vi.hoisted(async () => {
+  const { createAiUsageDb } = await import("@/test/ai-usage-db");
+  return createAiUsageDb();
+});
 
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { playtestSession: { findMany: mocks.findMany } },
+  prisma: { ...db, playtestSession: { findMany: mocks.findMany } },
 }));
 vi.mock("@/lib/auth/helpers", () => ({ requireAuth: mocks.requireAuth }));
 vi.mock("@/lib/rate-limit", () => ({
@@ -14,6 +18,7 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 
 import { logger } from "@/lib/logger";
+import { resetAiUsageDb } from "@/test/ai-usage-db";
 import { POST } from "./route";
 
 /** Reads every NDJSON event the route streamed. */
@@ -54,6 +59,7 @@ function suggestRequest(
 describe("POST /api/ai/suggest", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    resetAiUsageDb(db);
     mocks.requireAuth.mockResolvedValue({
       session: { user: { id: "user-1" } },
       error: null,
@@ -365,5 +371,137 @@ describe("POST /api/ai/suggest", () => {
         }),
       })
     );
+  });
+
+  describe("monthly allowance and metering", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("answers 429 with the reset date and asks nothing of the model or Scryfall once the month's suggestions are used up", async () => {
+      vi.useFakeTimers({
+        now: new Date("2026-11-30T23:00:00.000Z"),
+        toFake: ["Date"],
+      });
+      db.usageCounter.updateMany.mockResolvedValue({ count: 0 });
+      const providerFetch = vi.fn();
+      vi.stubGlobal("fetch", providerFetch);
+
+      const response = await POST(suggestRequest());
+
+      expect(response.status).toBe(429);
+      expect(response.headers.get("Retry-After")).toBe("3600");
+      await expect(response.json()).resolves.toEqual({
+        error: "Monthly AI allowance used up",
+        code: "allowance_exhausted",
+        route: "suggest",
+        limit: 30,
+        resetsAt: "2026-12-01T00:00:00.000Z",
+      });
+      expect(providerFetch).not.toHaveBeenCalled();
+      expect(mocks.findMany).not.toHaveBeenCalled();
+    });
+
+    it("records the billed tokens of a reply cut off at the cap and gives the call back", async () => {
+      vi.spyOn(logger, "error").mockImplementation(() => {});
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            stop_reason: "max_tokens",
+            content: [{ type: "text", text: '{"suggestions": [' }],
+            usage: { input_tokens: 2_000, output_tokens: 4_096 },
+          }),
+        })
+      );
+
+      await (await POST(suggestRequest())).text();
+
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId: "user-1",
+          route: "suggest",
+          model: "claude-haiku-4-5",
+          inputTokens: 2_000,
+          outputTokens: 4_096,
+          stopReason: "max_tokens",
+          outcome: "truncated",
+          costMicroUsd: 2_000 + 4_096 * 5,
+          countsAgainstAllowance: false,
+        }),
+      });
+      expect(db.usageCounter.updateMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ key: "ai.suggest" }),
+          data: { used: { decrement: 1 } },
+        })
+      );
+    });
+
+    it("records a complete reply that is not JSON as a parse failure and gives the call back", async () => {
+      vi.spyOn(logger, "error").mockImplementation(() => {});
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            stop_reason: "end_turn",
+            content: [{ type: "text", text: "Here are my suggestions:" }],
+            usage: { input_tokens: 2_000, output_tokens: 40 },
+          }),
+        })
+      );
+
+      const events = await streamedEvents(await POST(suggestRequest()));
+
+      expect(events).toEqual([
+        { type: "error", message: "AI suggestion failed" },
+      ]);
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: "parseFailed",
+          countsAgainstAllowance: false,
+        }),
+      });
+      expect(db.usageCounter.updateMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({ data: { used: { decrement: 1 } } })
+      );
+    });
+
+    it("reports a refusal without parsing it, and the refused call counts", async () => {
+      const logError = vi.spyOn(logger, "error").mockImplementation(() => {});
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            stop_reason: "refusal",
+            content: [{ type: "text", text: "{}" }],
+            usage: { input_tokens: 2_000, output_tokens: 3 },
+          }),
+        })
+      );
+
+      const events = await streamedEvents(await POST(suggestRequest()));
+
+      expect(events).toEqual([
+        { type: "error", message: "AI suggestion failed" },
+      ]);
+      expect(logError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "ModelRefusedError",
+          provider: "anthropic",
+        }),
+        "POST /api/ai/suggest"
+      );
+      expect(db.aiUsage.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          outcome: "refused",
+          countsAgainstAllowance: true,
+        }),
+      });
+      expect(db.usageCounter.updateMany).toHaveBeenCalledTimes(1);
+    });
   });
 });
