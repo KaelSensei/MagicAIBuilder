@@ -101,18 +101,15 @@ an account, and the deck list's sort and grouping preferences are kept in `local
 **Enrichment**: the builder page loads the Game Changers and banlist name sets
 (`useGameChangersSet`, `useBanlistSet`) and passes them to the store (`setGameChangerNames`,
 `setBannedNames`), which sets each card's `isGameChanger` and `isBanned` flags.
-`src/components/providers/EnrichmentProvider.tsx` exists but is never mounted.
 
 ### TanStack Query Keys
 
-| Hook                        | Query Key                            | Cache TTL |
-| --------------------------- | ------------------------------------ | --------- |
-| `useCardSearch(query)`      | `["scryfall", "search", query]`      | 5 min     |
-| `useCardLookup(id)`         | `["scryfall", "card", "id", id]`     | 24h       |
-| `useCardLookupByName(name)` | `["scryfall", "card", "name", name]` | 24h       |
-| `useGameChangers()`         | `["scryfall", "game-changers"]`      | 24h       |
-| `useBanlist(format)`        | `["scryfall", "banlist", format]`    | 24h       |
-| `useCombos(deck)`           | `["combos", "spellbook", queryKey]`  | 1h        |
+| Hook                   | Query Key                           | Cache TTL |
+| ---------------------- | ----------------------------------- | --------- |
+| `useCardSearch(query)` | `["scryfall", "search", query]`     | 5 min     |
+| `useGameChangers()`    | `["scryfall", "game-changers"]`     | 24h       |
+| `useBanlist(format)`   | `["scryfall", "banlist", format]`   | 24h       |
+| `useCombos(deck)`      | `["combos", "spellbook", queryKey]` | 1h        |
 
 ### Scryfall Rate Limiting
 
