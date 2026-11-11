@@ -38,7 +38,9 @@ export type PartnerAbility =
   | { readonly kind: "doctorsCompanion" };
 
 const PARTNER_WITH_LINE = /^partner with (.+)$/i;
-const PARTNER_QUALITY_LINE = /^partner\s*—\s*(.+)$/i;
+// No `\s*` after the dash: `qualityNamed` trims the capture, and a blank run
+// that both `\s*` and `(.+)` can take makes a failed match quadratic.
+const PARTNER_QUALITY_LINE = /^partner\s*—(.+)$/i;
 const REMINDER_TEXT = /\([^()]*\)$/;
 // "Time Lord" is the one creature type two words long (CR 205.3m).
 const TIME_LORD = "time lord";
