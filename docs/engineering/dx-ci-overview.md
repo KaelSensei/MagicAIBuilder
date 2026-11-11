@@ -48,37 +48,50 @@ The `staging` checkpoint includes QA sign-off for the critical desktop and respo
 
 ## CI / GitHub Actions
 
-Two workflows:
+Three workflows, each triggered by every push to `main` and every PR targeting `dev`, `staging` or `main`. **None of them runs Playwright.** The E2E suite runs only in the local pre-push hook (see [Local DX](#local-dx) and [quality-gate.md](quality-gate.md#e2e-gate)).
 
-### `ci.yml` — Main pipeline (Required)
-
-Runs on every push to `main` and every PR targeting `dev`, `staging` or `main`.
+### `ci.yml` — Main pipeline (required on `main`)
 
 ```
-pnpm install
-→ pnpm lint (eslint)
-→ tsc --noEmit
-→ vitest --coverage
-→ next build
+pnpm install --frozen-lockfile
+→ pnpm audit --prod --audit-level=high       (blocks)
+→ pnpm audit --prod --audit-level=moderate   (report only)
+→ pnpm lint                                  (eslint flat config; any warning fails)
+→ npx tsc --noEmit
+→ pnpm test:coverage                         (vitest; no coverage threshold)
+→ pnpm build
 ```
 
-### `sonar.yml` — Quality analysis
+### `sonar.yml` — Quality analysis (advisory)
 
-Runs on every push to `main` and every PR targeting `dev`, `staging` or `main`.
+The job has `continue-on-error: true`: a failed scan never blocks a merge.
 
 ```
-pnpm install
-→ vitest --coverage   (generates lcov.info)
-→ SonarCloud scan     (uploads coverage + analysis)
+pnpm install --frozen-lockfile
+→ pnpm test:coverage   (generates lcov.info)
+→ SonarCloud scan      (uploads coverage + analysis)
 ```
+
+It fails loudly when `SONAR_TOKEN` is missing, and only warns on fork and Dependabot PRs, which GitHub runs without repository secrets.
+
+### `lighthouse.yml` — Performance, accessibility and SEO audit
+
+```
+pnpm install --frozen-lockfile
+→ pnpm build
+→ pnpm lighthouse      (lhci autorun; URLs and thresholds in lighthouserc.yml)
+→ upload .lighthouseci/ as an artifact
+```
+
+It fails its own workflow when a category drops below its threshold. It is not a required check.
 
 ---
 
 ## Branch Protection
 
-The **Required** check for integration and promotion merges is `CI / Lint, Typecheck, Test, Build`.
+Read with `gh api` on 2026-11-10: only `main` is protected. It requires the check `Lint, Typecheck, Test, Build` and a branch that is up to date with `main`. `dev` and `staging` have no protection rule; their PRs run the same checks, and the CI check must be green before a merge.
 
-SonarCloud also runs on PRs. A merge must not be used to hide a failed analysis; a failure must be resolved or explicitly documented before promotion to `main`.
+SonarCloud also runs on PRs, as an advisory report. Record its result in the PR; it does not block a merge while the integration is repaired (see `CLAUDE.md`).
 
 ---
 
@@ -91,6 +104,10 @@ On every `git commit`, automatically runs:
 - `eslint --fix` on staged `.ts` / `.tsx` files (rules in `eslint.config.mjs`)
 - `prettier --write` on `.json`, `.md`, `.yml`, `.yaml`
 
+### Pre-push (Husky)
+
+On every `git push`, `.husky/pre-push` runs `scripts/e2e-pre-push.sh`: the full Playwright suite in Docker (`docker-compose.e2e.yml`). A failing test blocks the push. `SKIP_E2E=1` skips it in an emergency. This is the only place the E2E suite runs; see [quality-gate.md](quality-gate.md#e2e-gate).
+
 ### Useful scripts
 
 ```bash
@@ -100,7 +117,7 @@ pnpm lint             # full lint
 pnpm test             # unit tests
 pnpm test:coverage    # tests + coverage report
 pnpm build            # production build
-pnpm git:prune        # delete all branches except main (local + remote)
+pnpm git:prune        # owner only: delete every non-protected branch (local + remote) and extra worktrees
 ```
 
 ### Environment variables
@@ -119,18 +136,21 @@ pnpm git:prune        # delete all branches except main (local + remote)
 
 ### SonarCloud
 
-- Quality gate on every PR
-- Coverage uploaded from CI (lcov format)
-- Target: 0 HIGH/MEDIUM issues, coverage > 80%
+- Analysis on every PR, **advisory** (`continue-on-error: true` in `sonar.yml`)
+- Coverage uploaded from CI (lcov format); SonarCloud's coverage scope excludes `src/app/**` and `src/components/**`
+- Targets: see [quality-gate.md](quality-gate.md#sonarcloud-targets-advisory)
 
 ### Test coverage (Vitest)
 
-| Area                | Coverage                 |
-| ------------------- | ------------------------ |
-| Overall             | ~92%                     |
-| `lib/deck/store.ts` | ~82% (needs improvement) |
-| `lib/validation/`   | 100%                     |
-| `hooks/`            | ~93%                     |
+Vitest measures coverage over all of `src`; no threshold is enforced. Last measured on 2026-08-23 (breakdown in `vitest.config.ts`):
+
+| Area          | Coverage |
+| ------------- | -------- |
+| All of `src`  | 48.5%    |
+| `lib/`        | 96.6%    |
+| `hooks/`      | 87.4%    |
+| `components/` | 25.2%    |
+| `app/`        | 25.1%    |
 
 ### Dependabot
 
@@ -171,6 +191,6 @@ or `503` if the database is unreachable.
 
 - [ ] Increase `lib/deck/store.ts` coverage (82% → 90%)
 - [ ] Missing tests: `forceSave`, `promoteToCommander`, `swapCardPrinting`
-- [ ] Lighthouse CI in `ci.yml` (perf/accessibility score on every PR)
+- [ ] Run the Playwright suite in CI; today only the local pre-push hook runs it (Lighthouse CI already runs on every PR, in `lighthouse.yml`)
 - [ ] Posthog or Plausible for user analytics
 - [ ] Document UptimeRobot setup in technical.md

@@ -22,9 +22,11 @@ if [[ "${SKIP_E2E:-}" == "1" ]]; then
   exit 0
 fi
 
-# Skip in CI — CI has its own e2e job.
+# Skip in CI. No GitHub workflow runs Playwright (see "E2E gate" in
+# docs/engineering/quality-gate.md); this guard only keeps a push made from a
+# CI job from starting the Docker stack there.
 if [[ -n "${CI:-}" ]]; then
-  echo "ℹ  CI detected — skipping local e2e pre-push gate (CI runs e2e separately)."
+  echo "ℹ  CI detected — skipping the local e2e pre-push gate. No CI workflow runs e2e."
   exit 0
 fi
 

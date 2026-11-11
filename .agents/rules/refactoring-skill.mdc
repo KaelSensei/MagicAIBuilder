@@ -2,33 +2,46 @@
 alwaysApply: true
 ---
 
-# Refactoring Skill
+# Refactoring rule
 
-Based on Martin Fowler (Refactoring)
+Based on Martin Fowler (_Refactoring_), Kent Beck (_Tidy First?_) and Michael Feathers (_Working
+Effectively with Legacy Code_).
 
 ## Principles
 
-- Refactoring must not change behavior
-- Work in small steps
-- Keep code always functional
+- A refactoring changes structure, never behaviour. The tests are green before and after, and no
+  assertion changes (a move may rewrite import and `vi.mock` paths in tests, nothing else).
+- Keep structural and behavioural changes in separate commits. A structural change of more than
+  about 200 changed lines, or any move across contexts, gets its own PR, because features are
+  squash-merged.
+- "Make the change easy, then make the easy change." When a behaviour change is hard, tidy first,
+  in a separate commit.
+- Take small steps. After each one the code compiles and the focused tests pass.
+- Common tidyings: guard clause, extract function, explaining variable or constant, rename,
+  reorder for reading, delete dead code, delete a redundant comment.
 
-## Techniques
+## Before splitting a large file
 
-- Extract function
-- Rename variables
-- Remove duplication
-- Simplify conditionals
+Pin its current behaviour with characterization or approval tests at its public surface: store
+actions, rendered output, route responses. Their names start with `characterization:`. The first
+candidates are the deck store, the builder page, `DeckWizard`, the playtest engine and the AI
+routes (`docs/adr/0005-testing-strategy-fakes-contracts-and-characterization.md`). A
+characterization test that pins a known bug says so in its name.
 
-## Safety
+## Moves
 
-- Only refactor with confidence (tests or clear reasoning)
-- If unsure, stop and ask
+A move PR changes no logic. It rewrites every import and `vi.mock` path in the same commit. Once
+the move codemod exists it makes the moves. Re-export shims are removed at the end of their series
+of PRs, except the ones the on-hold branch `feat/ai-usage-metering-and-monthly-quota` still
+imports: they stay until that branch is rebased and the codemod has rewritten its imports.
 
-## Cursor Behavior
+## Never
 
-- Never mix refactor with feature/fix
-- Keep changes small and reviewable
-
-## Sources
-
-- Refactoring – Martin Fowler
+- Change behaviour "while you are there". A behaviour change found during a refactor gets its own
+  `fix/` PR with a Red test.
+- Change the browser's legality feedback checks (the copy clamp, the companion check, "already in
+  the deck"). Changing them is an owner decision.
+- Edit a file that an open PR or a pending branch changes, unless the task says so; list the
+  overlap instead.
+- Delete code that has product intent. Delete only code with no importer and no product intent;
+  list orphaned features for the owner.
