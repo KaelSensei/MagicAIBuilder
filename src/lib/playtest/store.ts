@@ -1,16 +1,27 @@
 /**
- * Playtest Store — Zustand for playtest session state
- * Isolated from main deck store to avoid pollution
+ * The playtest session the modal shows: one Zustand store around the pure engine.
+ *
+ * Context: playtest. The store deals a deck into a game (one card per physical copy,
+ * commanders in the command zone, CR 903.6), forwards each player action to its engine
+ * transition, and keeps the setup so a reset deals the same deck again. It is separate from
+ * the deck store, so a game never changes the saved deck.
+ *
+ * `createPlaytestStore` builds a store whose shuffles, die rolls and timestamps come from the
+ * ports it is given; the app uses `usePlaytestStore`, built with the production ports. Copy and
+ * token ids come from Web Crypto either way, and never reach the action log.
+ *
+ * @module playtest/store
  */
 
-import { create } from "zustand";
+import { create, type StoreApi, type UseBoundStore } from "zustand";
 import type { Deck, DeckCard } from "@/lib/deck/types";
 import { getFormatConfig } from "@/lib/deck/formats";
-import { randomAlphanumericId, randomIntBelow } from "@/lib/crypto-random";
+import { randomAlphanumericId } from "@/lib/crypto-random";
 import type { TokenLibraryEntry } from "@/lib/deck/token-library";
-import type { CardZone, PlaytestEngine } from "./engine";
+import type { CardZone, PlaytestDeps, PlaytestEngine } from "./engine";
 import { isFirstMulliganFree, isMultiplayerByDefault } from "./free-mulligan";
 import {
+  defaultPlaytestDeps,
   createPlaytestState,
   applyDrawCard,
   applyNextPhase,
@@ -103,14 +114,15 @@ function buildSetup(deck: Deck, options: PlaytestOptions): PlaytestSetup {
  * Deals a fresh game from the retained setup.
  *
  * @param setup - the deck and the format's starting rules
+ * @param deps - the shuffle's random source
  * @returns a new engine with the format's life total, mulligan rule and command zone
  */
-function dealFrom(setup: PlaytestSetup): PlaytestEngine {
+function dealFrom(setup: PlaytestSetup, deps: PlaytestDeps): PlaytestEngine {
   return createPlaytestState(setup.cards, {
     lifeTotal: setup.startingLife,
     firstMulliganFree: setup.firstMulliganFree,
     commandZone: setup.commandZone,
-  });
+  }, deps);
 }
 
 interface PlaytestStore {
@@ -147,14 +159,23 @@ interface PlaytestStore {
   resetPlaytest: () => void;
 }
 
-export const usePlaytestStore = create<PlaytestStore>((set) => ({
+/**
+ * Creates a playtest store whose games take their randomness and time from `deps`: the deal
+ * and mulligan shuffles, die rolls, and the life and undo timestamps.
+ *
+ * A test builds its own store with a seeded source to replay a session exactly; each call
+ * returns an independent store.
+ */
+export const createPlaytestStore = (
+  deps: PlaytestDeps = defaultPlaytestDeps
+): UseBoundStore<StoreApi<PlaytestStore>> => create<PlaytestStore>((set) => ({
   engine: null,
   isActive: false,
   setup: null,
 
   startPlaytest: (deck: Deck, options: PlaytestOptions = {}) => {
     const setup = buildSetup(deck, options);
-    set({ engine: dealFrom(setup), isActive: true, setup });
+    set({ engine: dealFrom(setup, deps), isActive: true, setup });
   },
 
   stopPlaytest: () => {
@@ -164,77 +185,77 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
   drawCard: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyDrawCard(state.engine) };
+      return { engine: applyDrawCard(state.engine, deps) };
     });
   },
 
   mulligan: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyMulligan(state.engine) };
+      return { engine: applyMulligan(state.engine, deps) };
     });
   },
 
   bottomCards: (cardIds) => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyBottomCards(state.engine, cardIds) };
+      return { engine: applyBottomCards(state.engine, cardIds, deps) };
     });
   },
 
   nextPhase: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyNextPhase(state.engine) };
+      return { engine: applyNextPhase(state.engine, deps) };
     });
   },
 
   nextTurn: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyNextTurn(state.engine) };
+      return { engine: applyNextTurn(state.engine, deps) };
     });
   },
 
   damage: (amount: number, description = "damage") => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyDamage(state.engine, amount, description) };
+      return { engine: applyDamage(state.engine, amount, description, deps) };
     });
   },
 
   heal: (amount: number) => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyHeal(state.engine, amount) };
+      return { engine: applyHeal(state.engine, amount, deps) };
     });
   },
 
   tap: (cardId: string) => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyTap(state.engine, cardId) };
+      return { engine: applyTap(state.engine, cardId, deps) };
     });
   },
 
   untapAll: () => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyUntapAll(state.engine) };
+      return { engine: applyUntapAll(state.engine, deps) };
     });
   },
 
   moveToZone: (cardId, from, to) => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyMoveToZone(state.engine, cardId, from, to) };
+      return { engine: applyMoveToZone(state.engine, cardId, from, to, deps) };
     });
   },
 
   addCounter: (cardId: string, amount: number) => {
     set((state) => {
       if (!state.engine) return state;
-      return { engine: applyAddCounter(state.engine, cardId, amount) };
+      return { engine: applyAddCounter(state.engine, cardId, amount, deps) };
     });
   },
 
@@ -242,7 +263,7 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
     set((state) => {
       if (!state.engine) return state;
       const copyId = `playtest-copy-${randomAlphanumericId(16)}`;
-      return { engine: applyCreateCardCopy(state.engine, cardId, copyId) };
+      return { engine: applyCreateCardCopy(state.engine, cardId, copyId, deps) };
     });
   },
 
@@ -250,7 +271,7 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
     set((state) => {
       if (!state.engine) return state;
       const tokenId = `playtest-token-${randomAlphanumericId(16)}`;
-      return { engine: applyCreateToken(state.engine, token, tokenId) };
+      return { engine: applyCreateToken(state.engine, token, tokenId, deps) };
     });
   },
 
@@ -258,7 +279,12 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
     set((state) => {
       if (!state.engine) return state;
       return {
-        engine: applyRollDie(state.engine, sides, randomIntBelow(sides) + 1),
+        engine: applyRollDie(
+          state.engine,
+          sides,
+          deps.random.intBelow(sides) + 1,
+          deps
+        ),
       };
     });
   },
@@ -266,21 +292,21 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
   addLogEntry: (description: string) => {
     set((state) =>
       state.engine
-        ? { engine: applyAddActionLogEntry(state.engine, description) }
+        ? { engine: applyAddActionLogEntry(state.engine, description, deps) }
         : state
     );
   },
 
   recordMana: (amount: number) => {
     set((state) => state.engine
-      ? { engine: applyRecordMana(state.engine, amount) }
+      ? { engine: applyRecordMana(state.engine, amount, deps) }
       : state);
   },
 
   editLogEntry: (entryId: number, description: string) => {
     set((state) =>
       state.engine
-        ? { engine: applyEditActionLogEntry(state.engine, entryId, description) }
+        ? { engine: applyEditActionLogEntry(state.engine, entryId, description, deps) }
         : state
     );
   },
@@ -288,7 +314,7 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
   removeLogEntry: (entryId: number) => {
     set((state) =>
       state.engine
-        ? { engine: applyRemoveActionLogEntry(state.engine, entryId) }
+        ? { engine: applyRemoveActionLogEntry(state.engine, entryId, deps) }
         : state
     );
   },
@@ -310,7 +336,10 @@ export const usePlaytestStore = create<PlaytestStore>((set) => ({
       // resurrect it from the retained setup.
       if (!state.setup || !state.engine) return state;
 
-      return { engine: dealFrom(state.setup) };
+      return { engine: dealFrom(state.setup, deps) };
     });
   },
 }));
+
+/** The app's playtest store: Web Crypto shuffles and dice, and the system clock. */
+export const usePlaytestStore = createPlaytestStore();

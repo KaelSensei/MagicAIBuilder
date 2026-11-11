@@ -1,10 +1,67 @@
 /**
- * Playtest Engine — Pure functions for game state management
- * Zero framework dependencies. All state transitions are immutable and reversible.
+ * The state of one goldfish game and every move the player can make in it.
+ *
+ * Context: playtest. Each `apply*` transition is a pure function from one readonly
+ * `PlaytestEngine` to the next, and returns the same state when the move does not apply.
+ * `store.ts` holds the current state for the playtest modal (`components/playtest/`).
+ * Undo works by snapshot: a transition stores the state it replaced in `history`.
+ *
+ * Randomness and time come in through two ports, `RandomSource` and `Clock`, bundled as
+ * `PlaytestDeps`. The transitions that shuffle or stamp a time take them as their optional
+ * last argument and default to `defaultPlaytestDeps` (Web Crypto and the system clock), so a
+ * test can replay a whole game from a seed (`engine-golden.test.ts`).
+ *
+ * Rules: the London mulligan and the free multiplayer mulligan (CR 103.5, 103.5c), commanders
+ * in the command zone (CR 903.6, 903.9b).
+ * Not responsible for: turning deck rows into physical cards (`store.ts`), whether a mulligan
+ * is still allowed (`PlaytestModal.tsx`), keep advice (`keep-rules.ts`), draw evidence
+ * (`draw-progress-evidence.ts`) or the log export (`action-log-export.ts`).
+ *
+ * @module playtest/engine
  */
 
 import type { DeckCard } from "@/lib/deck/types";
 import { randomIntBelow } from "@/lib/crypto-random";
+
+// ─── Ports ───────────────────────────────────────────────────────────────
+/**
+ * Where the engine's randomness comes from: the shuffle of the deal and of every mulligan.
+ *
+ * `intBelow(n)` returns a uniform integer in `[0, n)` for a positive integer `n`. A shuffle of
+ * `k` cards asks for `k - 1` of them, from the last position down (Fisher–Yates), so a source
+ * that replays the same numbers replays the same deal.
+ */
+export interface RandomSource {
+  readonly intBelow: (upperExclusive: number) => number;
+}
+
+/**
+ * Where the engine reads the time: the stamps on life-history and undo entries.
+ *
+ * `now()` returns milliseconds since the Unix epoch, as `Date.now()` does. Nothing orders or
+ * compares the stamps; the life tracker uses them in list keys.
+ */
+export interface Clock {
+  readonly now: () => number;
+}
+
+/** The ports a transition may use; each transition reads only the ones it needs. */
+export interface PlaytestDeps {
+  readonly random: RandomSource;
+  readonly clock: Clock;
+}
+
+/**
+ * The production ports: Web Crypto without modulo bias (`randomIntBelow`) and the system clock.
+ *
+ * Web Crypto, not `Math.random`, because a shuffle must leave the library in an order nobody
+ * can predict (CR 701.24a). Both read the platform when called, not when this module loads, so
+ * a test that stubs `crypto.getRandomValues` or fakes `Date` still reaches them.
+ */
+export const defaultPlaytestDeps: PlaytestDeps = {
+  random: { intBelow: (upperExclusive) => randomIntBelow(upperExclusive) },
+  clock: { now: () => Date.now() },
+};
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 /** Commander default; per-format totals live in FORMAT_CONFIG.startingLife. */
@@ -133,15 +190,16 @@ type PlaytestEnginePatch = {
  *
  * `deckCards` holds one entry per physical library card. The commanders go in
  * `overrides.commandZone`, never in `deckCards`; they become `commanderIds`.
+ *
+ * @param deps - only `random` is read, for the shuffle
  */
 export function createPlaytestState(
   deckCards: readonly DeckCard[],
-  overrides: Partial<PlaytestEngine> = {}
+  overrides: Partial<PlaytestEngine> = {},
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
-  // Fisher-Yates shuffle
-  const shuffled = shuffleCards([...deckCards]);
+  const shuffled = shuffleCards(deckCards, deps.random);
 
-  // Draw 7, rest to library
   const hand = shuffled.slice(0, OPENING_HAND_SIZE);
   const library = shuffled.slice(OPENING_HAND_SIZE);
 
@@ -173,22 +231,29 @@ export function createPlaytestState(
 }
 
 // ─── Shuffle ──────────────────────────────────────────────────────────────
-function shuffleCards<T>(arr: T[]): T[] {
-  const a = [...arr];
+/**
+ * Returns a shuffled copy (Fisher–Yates), asking `random` for one index per position from the
+ * last down; the input is not changed.
+ */
+function shuffleCards<T>(cards: readonly T[], random: RandomSource): T[] {
+  const a = [...cards];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = randomIntBelow(i + 1);
+    const j = random.intBelow(i + 1);
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
 }
 
 // ─── Draw card ────────────────────────────────────────────────────────────
-export function applyDrawCard(state: PlaytestEngine): PlaytestEngine {
+export function applyDrawCard(
+  state: PlaytestEngine,
+  deps: PlaytestDeps = defaultPlaytestDeps
+): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   if (state.library.length === 0) return state;
 
   const [drawn, ...rest] = state.library;
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     hand: [...state.hand, drawn],
     library: rest,
   }, "Drew a card", { kind: "draw" });
@@ -271,22 +336,26 @@ function describeMulligan(cardsToBottom: number): string {
  * (CR 903.9b); the command zone itself is never shuffled in.
  *
  * @param state - current game state
+ * @param deps - `random` shuffles the hand back in; `clock` stamps the undo entry
  * @returns the state with a new seven and, unless the mulligan was free, a
  * pending bottom choice
  */
-export function applyMulligan(state: PlaytestEngine): PlaytestEngine {
+export function applyMulligan(
+  state: PlaytestEngine,
+  deps: PlaytestDeps = defaultPlaytestDeps
+): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   if (state.mulliganCount >= maxMulligans(state)) return state;
 
   const mulliganCount = state.mulliganCount + 1;
   const { commanders, rest } = setAsideCommanders(state.hand, state.commanderIds);
-  const shuffled = shuffleCards([...rest, ...state.library]);
+  const shuffled = shuffleCards([...rest, ...state.library], deps.random);
   const cardsToBottom = mulliganBottomCount({
     mulliganCount,
     firstMulliganFree: state.firstMulliganFree,
   });
 
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     mulliganCount,
     cardsToBottom,
     hand: shuffled.slice(0, OPENING_HAND_SIZE),
@@ -348,18 +417,20 @@ function pickBottomCards(
  *
  * @param state - a state whose bottom choice is pending
  * @param cardIds - exactly `cardsToBottom` distinct hand cards, in the order chosen
+ * @param deps - only `clock` is read, to stamp the undo entry
  * @returns the state with the opening hand settled, or the same state when the
  * choice is not valid
  */
 export function applyBottomCards(
   state: PlaytestEngine,
-  cardIds: readonly string[]
+  cardIds: readonly string[],
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   const chosen = pickBottomCards(state.hand, cardIds, state.cardsToBottom);
   if (chosen === null) return state;
 
   const chosenIds = new Set(cardIds);
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     cardsToBottom: 0,
     hand: state.hand.filter((card) => !chosenIds.has(card.id)),
     library: [...state.library, ...chosen],
@@ -367,7 +438,10 @@ export function applyBottomCards(
 }
 
 // ─── Phase progression ────────────────────────────────────────────────────
-export function applyNextPhase(state: PlaytestEngine): PlaytestEngine {
+export function applyNextPhase(
+  state: PlaytestEngine,
+  deps: PlaytestDeps = defaultPlaytestDeps
+): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   const currentIndex = PHASES.indexOf(state.phase);
   const isLastPhase = currentIndex === PHASES.length - 1;
@@ -379,7 +453,7 @@ export function applyNextPhase(state: PlaytestEngine): PlaytestEngine {
       tapped: false,
     }));
 
-    return pushHistory(state, {
+    return pushHistory(state, deps.clock, {
       turn: state.turn + 1,
       phase: "Untap" as const,
       battlefield: untappedBattlefield,
@@ -389,11 +463,19 @@ export function applyNextPhase(state: PlaytestEngine): PlaytestEngine {
   // Advance to next phase
   const nextPhase = PHASES[currentIndex + 1];
   if (nextPhase === undefined) return state;
-  return pushHistory(state, { phase: nextPhase }, `Advanced to ${nextPhase}`);
+  return pushHistory(
+    state,
+    deps.clock,
+    { phase: nextPhase },
+    `Advanced to ${nextPhase}`
+  );
 }
 
 // ─── Next turn ────────────────────────────────────────────────────────────
-export function applyNextTurn(state: PlaytestEngine): PlaytestEngine {
+export function applyNextTurn(
+  state: PlaytestEngine,
+  deps: PlaytestDeps = defaultPlaytestDeps
+): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   // Untap all permanents
   const untappedBattlefield = state.battlefield.map((p) => ({
@@ -411,7 +493,7 @@ export function applyNextTurn(state: PlaytestEngine): PlaytestEngine {
     newLibrary = rest;
   }
 
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     turn: state.turn + 1,
     phase: "Draw" as const,
     hand: newHand,
@@ -430,20 +512,21 @@ export function applyNextTurn(state: PlaytestEngine): PlaytestEngine {
 export function applyDamage(
   state: PlaytestEngine,
   amount: number,
-  description = "damage"
+  description = "damage",
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   const newLife = state.lifeTotal - amount;
   const entry: LifeHistoryEntry = {
     turn: state.turn,
     phase: state.phase,
-    timestamp: Date.now(),
+    timestamp: deps.clock.now(),
     delta: -amount,
     description,
   };
   const newHistory = [...state.lifeHistory, entry];
 
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     lifeTotal: newLife,
     lifeHistory: newHistory,
     isGameOver: newLife <= 0,
@@ -452,27 +535,32 @@ export function applyDamage(
 
 export function applyHeal(
   state: PlaytestEngine,
-  amount: number
+  amount: number,
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   const newLife = state.lifeTotal + amount;
   const entry: LifeHistoryEntry = {
     turn: state.turn,
     phase: state.phase,
-    timestamp: Date.now(),
+    timestamp: deps.clock.now(),
     delta: amount,
     description: "heal",
   };
   const newHistory = [...state.lifeHistory, entry];
 
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     lifeTotal: newLife,
     lifeHistory: newHistory,
   }, `Gained ${amount} life`, { kind: "life", lifeDelta: amount });
 }
 
 // ─── Tap / untap ──────────────────────────────────────────────────────────
-export function applyTap(state: PlaytestEngine, cardId: string): PlaytestEngine {
+export function applyTap(
+  state: PlaytestEngine,
+  cardId: string,
+  deps: PlaytestDeps = defaultPlaytestDeps
+): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   const exists = state.battlefield.some((c) => c.id === cardId);
   if (!exists) return state;
@@ -484,15 +572,24 @@ export function applyTap(state: PlaytestEngine, cardId: string): PlaytestEngine 
   const permanent = state.battlefield.find((card) => card.id === cardId);
   return pushHistory(
     state,
+    deps.clock,
     { battlefield: updated },
     `${permanent?.tapped ? "Untapped" : "Tapped"} ${permanent?.name ?? "card"}`
   );
 }
 
-export function applyUntapAll(state: PlaytestEngine): PlaytestEngine {
+export function applyUntapAll(
+  state: PlaytestEngine,
+  deps: PlaytestDeps = defaultPlaytestDeps
+): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   const untapped = state.battlefield.map((p) => ({ ...p, tapped: false }));
-  return pushHistory(state, { battlefield: untapped }, "Untapped all permanents");
+  return pushHistory(
+    state,
+    deps.clock,
+    { battlefield: untapped },
+    "Untapped all permanents"
+  );
 }
 
 // ─── Move to zone ─────────────────────────────────────────────────────────
@@ -642,13 +739,15 @@ function describeMove(name: string, from: CardZone, to: CardZone): string {
  * @param cardId - card to move
  * @param from - zone the card leaves
  * @param to - zone the card enters
+ * @param deps - only `clock` is read, to stamp the undo entry
  * @returns the next engine state
  */
 export function applyMoveToZone(
   state: PlaytestEngine,
   cardId: string,
   from: CardZone,
-  to: CardZone
+  to: CardZone,
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   if (to === "command" && !state.commanderIds.includes(cardId)) return state;
@@ -657,22 +756,30 @@ export function applyMoveToZone(
 
   const { card, updates } = removed;
   if (isSessionCopyLeavingPlay(card, to)) {
-    return pushHistory(state, updates, `Removed ${card.name} from the battlefield`);
+    return pushHistory(
+      state,
+      deps.clock,
+      updates,
+      `Removed ${card.name} from the battlefield`
+    );
   }
 
   placeInZone(state, updates, to, card);
   const description = describeMove(card.name, from, to);
   if (from === "library") {
-    return pushHistory(state, updates, description, { kind: "cardSeen" });
+    return pushHistory(state, deps.clock, updates, description, {
+      kind: "cardSeen",
+    });
   }
-  return pushHistory(state, updates, description);
+  return pushHistory(state, deps.clock, updates, description);
 }
 
 // ─── Card copies ─────────────────────────────────────────────────────────
 export function applyCreateCardCopy(
   state: PlaytestEngine,
   cardId: string,
-  copyId: string
+  copyId: string,
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   if (state.battlefield.some((card) => card.id === copyId)) return state;
@@ -691,6 +798,7 @@ export function applyCreateCardCopy(
 
   return pushHistory(
     state,
+    deps.clock,
     { battlefield: [...state.battlefield, copy] },
     `Created a copy of ${source.name}`
   );
@@ -707,7 +815,8 @@ const TOKEN_COLOR_IDENTITIES: Readonly<Record<string, string>> = {
 export function applyCreateToken(
   state: PlaytestEngine,
   token: PlaytestTokenSpec,
-  tokenId: string
+  tokenId: string,
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   if (state.battlefield.some((card) => card.id === tokenId)) return state;
@@ -742,7 +851,7 @@ export function applyCreateToken(
     isSessionCopy: true,
   };
 
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     battlefield: [...state.battlefield, battlefieldToken],
   }, `Created ${name}`);
 }
@@ -751,13 +860,14 @@ export function applyCreateToken(
 export function applyRollDie(
   state: PlaytestEngine,
   sides: number,
-  result: number
+  result: number,
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   if (!Number.isInteger(sides) || sides < 2) return state;
   if (!Number.isInteger(result) || result < 1 || result > sides) return state;
 
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     diceRolls: [...state.diceRolls, { sides, result }].slice(-10),
   }, `Rolled d${sides}: ${result}`);
 }
@@ -765,30 +875,39 @@ export function applyRollDie(
 // ─── Editable action log ─────────────────────────────────────────────────
 export function applyAddActionLogEntry(
   state: PlaytestEngine,
-  description: string
+  description: string,
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   const normalized = description.trim();
   if (normalized === "") return state;
-  return pushHistory(state, {}, normalized);
+  return pushHistory(state, deps.clock, {}, normalized);
 }
 
-export function applyRecordMana(state: PlaytestEngine, amount: number): PlaytestEngine {
+export function applyRecordMana(
+  state: PlaytestEngine,
+  amount: number,
+  deps: PlaytestDeps = defaultPlaytestDeps
+): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   if (!Number.isInteger(amount) || amount < 1 || amount > 100) return state;
-  return pushHistory(state, {}, `Produced ${amount} mana`, { kind: "mana", amount });
+  return pushHistory(state, deps.clock, {}, `Produced ${amount} mana`, {
+    kind: "mana",
+    amount,
+  });
 }
 
 export function applyEditActionLogEntry(
   state: PlaytestEngine,
   entryId: number,
-  description: string
+  description: string,
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   const normalized = description.trim();
   const exists = state.actionLog.some((entry) => entry.id === entryId);
   if (!exists || normalized === "") return state;
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     actionLog: state.actionLog.map((entry) => {
       if (entry.id !== entryId) return entry;
       return {
@@ -805,11 +924,12 @@ export function applyEditActionLogEntry(
 
 export function applyRemoveActionLogEntry(
   state: PlaytestEngine,
-  entryId: number
+  entryId: number,
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   if (!state.actionLog.some((entry) => entry.id === entryId)) return state;
-  return pushHistory(state, {
+  return pushHistory(state, deps.clock, {
     actionLog: state.actionLog.filter((entry) => entry.id !== entryId),
   });
 }
@@ -818,7 +938,8 @@ export function applyRemoveActionLogEntry(
 export function applyAddCounter(
   state: PlaytestEngine,
   cardId: string,
-  amount: number
+  amount: number,
+  deps: PlaytestDeps = defaultPlaytestDeps
 ): PlaytestEngine {
   if (isChoosingBottom(state)) return state;
   const permanent = state.battlefield.find((c) => c.id === cardId);
@@ -831,6 +952,7 @@ export function applyAddCounter(
 
   return pushHistory(
     state,
+    deps.clock,
     { battlefield: updated },
     `${amount >= 0 ? "Added" : "Removed"} a counter ${amount >= 0 ? "to" : "from"} ${permanent.name}`,
     { kind: "counter", counterDelta: amount }
@@ -855,10 +977,16 @@ function toBattlefieldCard(card: DeckCard | BattlefieldCard): BattlefieldCard {
 }
 
 /**
- * Create a new state with updates, push old state to undo history (max 10 entries).
+ * Applies `updates`, logs `actionDescription` when given, and pushes the replaced state onto
+ * the undo stack, stamped by `clock`.
+ *
+ * `history` keeps the ten most recent snapshots, but each snapshot keeps its own `history`, so
+ * undo can still walk back to the deal and every earlier state stays in memory (pinned in
+ * `engine.characterization.test.ts`).
  */
 function pushHistory(
   state: PlaytestEngine,
+  clock: Clock,
   updates: PlaytestEnginePatch,
   actionDescription?: string,
   evidence?: Partial<
@@ -890,8 +1018,7 @@ function pushHistory(
     nextActionId: actionDescription ? state.nextActionId + 1 : state.nextActionId,
   };
 
-  // Push to undo history, limit to 10
-  const historyEntry: UndoHistoryEntry = { timestamp: Date.now(), state };
+  const historyEntry: UndoHistoryEntry = { timestamp: clock.now(), state };
   const newHistory = [historyEntry, ...state.history].slice(0, 10);
 
   return {
