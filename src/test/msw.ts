@@ -9,7 +9,7 @@
  *
  * Not started globally on purpose: many test files still replace the global `fetch` with a
  * stub, and a server running under every file would intercept beneath those stubs. A file opts
- * in by calling `useMsw`.
+ * in by calling `setupMsw`.
  *
  * @module test/msw
  */
@@ -33,10 +33,13 @@ import { setupServer, type SetupServer } from "msw/node";
  *   `afterAll` fails the file the same way.
  * - When the file ends, the server closes and interception stops, so no other test file sees MSW.
  *
+ * The name says `setup`, not `use`: React's `rules-of-hooks` lint rule takes any `use…` call for a
+ * React hook and rejects it outside a component, though this one registers Vitest hooks.
+ *
  * @param handlers - the file's default handlers, usually built from a recorded `*-v1.ts` fixture
  * @returns the running server, for `server.use(...)` overrides that last one test
  */
-export function useMsw(...handlers: readonly AnyHandler[]): SetupServer {
+export function setupMsw(...handlers: readonly AnyHandler[]): SetupServer {
   const server = setupServer(...handlers);
   const unserved: string[] = [];
   server.events.on("request:unhandled", ({ request }) => {
@@ -47,7 +50,7 @@ export function useMsw(...handlers: readonly AnyHandler[]): SetupServer {
     const sent = unserved.splice(0);
     if (sent.length === 0) return;
     throw new Error(
-      `useMsw: no handler serves ${sent.join(", ")}. Add a handler that answers it, or find out why the code sent it.`
+      `setupMsw: no handler serves ${sent.join(", ")}. Add a handler that answers it, or find out why the code sent it.`
     );
   };
 

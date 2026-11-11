@@ -22,7 +22,7 @@ import {
   SPELLBOOK_FIND_MY_COMBOS_URL,
   SPELLBOOK_TIMEOUT_MS,
 } from "@/modules/combos/infrastructure/find-my-combos";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 
 type PostHandler = (request: Request) => Promise<Response>;
 
@@ -90,7 +90,7 @@ function spellbookTimesOutOnce() {
 describe("POST /api/combos", () => {
   // Spellbook serves the recorded response unless a test says otherwise; any
   // other outgoing request fails the test.
-  const server = useMsw(spellbookAnswers(FIND_MY_COMBOS_RECORDED));
+  const server = setupMsw(spellbookAnswers(FIND_MY_COMBOS_RECORDED));
 
   beforeEach(async () => {
     // Fresh modules give every test an empty cache and empty rate-limit windows.

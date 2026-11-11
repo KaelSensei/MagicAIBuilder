@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { http, HttpResponse } from "msw";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 
 const PROVIDER_URL = "https://provider.example.test/answer";
 // `.test` is reserved (RFC 2606): even a request that escaped MSW could not reach a real host.
@@ -11,8 +11,8 @@ async function providerAnswer(): Promise<unknown> {
   return response.json();
 }
 
-describe("useMsw", () => {
-  const server = useMsw(
+describe("setupMsw", () => {
+  const server = setupMsw(
     http.get(PROVIDER_URL, () => HttpResponse.json({ answer: "recorded" }))
   );
 
@@ -38,7 +38,7 @@ describe("useMsw", () => {
     let outcome: "answered" | "rejected" | "not sent" = "not sent";
     let failures: readonly string[] = [];
 
-    // `fails` inverts the result: this test passes only because useMsw failed it. The body
+    // `fails` inverts the result: this test passes only because setupMsw failed it. The body
     // swallows the network error, as `requestDeckCombos` and most provider clients do, to
     // show that the helper does not rely on the code under test to surface the error.
     it.fails(

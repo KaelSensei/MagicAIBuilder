@@ -31,7 +31,7 @@ import {
   FIND_MY_COMBOS_RECORDED_REQUEST,
 } from "@/modules/combos/infrastructure/fixtures/find-my-combos-v1";
 import type { Deck, DeckCard, DeckZone } from "@/lib/deck/types";
-import { useMsw } from "@/test/msw";
+import { setupMsw } from "@/test/msw";
 
 /** The browser calls the route by path; MSW resolves it against jsdom's origin. */
 const API_COMBOS = "/api/combos";
@@ -159,7 +159,7 @@ function renderCombos(subject: Deck) {
 }
 
 describe("useCombos, replayed end to end against the recorded Spellbook lookup", () => {
-  const server = useMsw(
+  const server = setupMsw(
     apiCombosServedByRoute(),
     spellbookAnswers(FIND_MY_COMBOS_RECORDED)
   );

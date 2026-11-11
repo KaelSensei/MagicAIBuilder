@@ -114,6 +114,21 @@ adapter (Prisma, provider client) comes last, with its contract test.
 - **Outgoing notifications** with no observable state (an email sent, an event published) use a
   recording fake that keeps a list of what was sent.
 
+## The shared test kit
+
+`src/test/` holds what many test files need. Reach for it before writing a local copy:
+
+- `renderWithProviders` and `renderHookWithProviders` (`src/test/render.tsx`) mount a component
+  or a hook inside the app's providers: next-intl with every namespace of the real catalogs, in
+  `en` or `fr`; a fresh TanStack Query client that does not retry; and an Auth.js session when the
+  test passes `session` (a player, or `null` for a guest). `renderWithIntl` stays for tests that
+  need next-intl alone.
+- `aDeckCard`, `aDeck` and `aScryfallCard` (`src/test/builders/`) build a valid object from
+  documented defaults; a test passes only the fields it cares about. Each builder moves to its
+  context's `testing/` folder when that context moves.
+- `setupMsw` (`src/test/msw.ts`) replaces HTTP, and the in-memory fakes (`src/test/*-fake.ts`)
+  replace owned ports.
+
 ## Network in tests
 
 Pick the double by who owns the other side of the port:
@@ -123,11 +138,11 @@ Pick the double by who owns the other side of the port:
 | A third party over HTTP (Commander Spellbook, Scryfall, EDHREC, MTGTop8, model providers) | MSW handlers that serve a recorded response                                         |
 | A port this project owns (a repository, a store, a cache)                                 | A hand-written in-memory fake (`src/test/*-fake.ts`), never MSW and never `vi.mock` |
 
-For HTTP, call `useMsw` from `src/test/msw.ts` once per test file, at the top of the file or of
+For HTTP, call `setupMsw` from `src/test/msw.ts` once per test file, at the top of the file or of
 its outer `describe`:
 
 ```ts
-const server = useMsw(
+const server = setupMsw(
   http.post(SPELLBOOK_FIND_MY_COMBOS_URL, () =>
     HttpResponse.json(FIND_MY_COMBOS_RECORDED)
   )
