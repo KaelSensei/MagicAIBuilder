@@ -1,25 +1,19 @@
+/**
+ * Zod schemas for the deck card routes: add, patch and delete one card, and the bulk edit, with
+ * the deck version the writer read. Card categories come from the deck domain's tuple.
+ */
 import { z } from "zod";
 import { SCRYFALL_ID_PATTERN } from "@/lib/scryfall/scryfall-id";
 import { deckCardIdSchema, pairingTypeSchema } from "./deck";
+import { CARD_CATEGORIES } from "@/lib/deck/types";
 
-export const VALID_CATEGORIES = [
-  "commander",
-  "companion",
-  "creature",
-  "instant",
-  "sorcery",
-  "artifact",
-  "enchantment",
-  "planeswalker",
-  "land",
-  "ramp",
-  "draw",
-  "removal",
-  "boardWipe",
-  "winCondition",
-  "protection",
-  "other",
-] as const;
+/**
+ * The categories a card write accepts: the deck domain's `CARD_CATEGORIES`, under the name the
+ * validation tests and the test fakes still import.
+ *
+ * @deprecated Import `CARD_CATEGORIES` from `@/lib/deck/types`.
+ */
+export const VALID_CATEGORIES = CARD_CATEGORIES;
 
 export const VALID_ZONES = ["main", "sideboard", "maybeboard"] as const;
 
@@ -56,7 +50,7 @@ export const addCardSchema = z.object({
   price: z.number().min(0).max(100000).nullable().optional().default(null),
   imageUri: z.url().max(500).optional().default(""),
   artCropUri: z.url().max(500).optional().default(""),
-  category: z.enum(VALID_CATEGORIES).optional().default("other"),
+  category: z.enum(CARD_CATEGORIES).optional().default("other"),
   quantity: z.number().int().min(1).max(99).optional().default(1),
   isCommander: z.boolean().optional().default(false),
   isPartner: z.boolean().optional().default(false),
@@ -113,7 +107,7 @@ export const MAX_CARD_NOTES_LENGTH = 1000;
  * lost. `notes: null` clears the note.
  */
 export const patchCardSchema = z.object({
-  category: z.enum(VALID_CATEGORIES).optional(),
+  category: z.enum(CARD_CATEGORIES).optional(),
   zone: z.enum(VALID_ZONES).optional(),
   quantity: z.number().int().min(1).max(99).optional(),
   scryfallId: z.string().regex(SCRYFALL_ID_PATTERN, "Invalid Scryfall ID").optional(),
