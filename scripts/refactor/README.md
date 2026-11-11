@@ -48,8 +48,13 @@ removed, because branches still in flight re-run the map after a rebase.
    - The extension and `/index` are kept out when the original left them out.
    - Strings that do not name a module (comments, plain strings, `readFileSync` paths) are not
      touched.
-3. **Renames paths** in `.dependency-cruiser-known-violations.json` and, when it exists,
-   `eslint-suppressions.json`, keeping their layout byte for byte.
+3. **Updates the path-keyed files.**
+   - `.dependency-cruiser-known-violations.json`: each entry stays equal to the violation
+     `pnpm arch` will report after the move. Paths follow the moves, and an edge whose specifier
+     was rewritten gets the new `unresolvedTo` and, if it changed between relative and `@/`, the
+     matching `dependencyTypes`: the gate's stale-entry check compares those fields too.
+   - `eslint-suppressions.json`, when it exists: moved files are renamed among the keys; the rest
+     of the file stays byte for byte.
 4. **Checks** that every relative and `@/` specifier in the scanned folders resolves after the
    moves. If one does not, it prints them, writes nothing and exits 1.
 
@@ -77,8 +82,9 @@ new path.
 ## Limits
 
 - Specifiers built at run time (a template with `${}`) are not seen.
-- A relative `unresolvedTo` in the dependency-cruiser baseline is left as recorded; it is
-  informational, and dependency-cruiser matches on `from`, `to` and the cycle names.
+- A move can fix a recorded violation (a file leaves `src/app`, say). `pnpm arch` then reports
+  the entry as stale; prune it with the shrink-only command in `.dependency-cruiser.cjs`. It can
+  also make dependency-cruiser pick another path for a recorded cycle, which shows the same way.
 - For a file moved without the codemod, a relative specifier is resolved from its new folder
   first, then from its old one. If both folders hold a file of that name, the new one wins.
 

@@ -30,9 +30,14 @@ import {
 } from "node:fs";
 import { join, posix } from "node:path";
 import { findModuleSpecifiers } from "./module-specifiers";
-import { isAtOrUnder, mapMovedPath, type Move } from "./move-map";
+import { isAtOrUnder, type Move } from "./move-map";
 import {
-  retargetAlias,
+  rewriteKnownViolations,
+  rewriteSuppressions,
+  type JsonRewrite,
+  type SpecifierRewrites,
+} from "./path-keyed-files";
+import {
   retargetSpecifier,
   type Importer,
   type ModuleLayout,
@@ -68,7 +73,7 @@ export interface SourceRewrite {
   readonly edits: readonly SpecifierEdit[];
 }
 
-/** A path-keyed JSON file's new content, with how many strings changed. */
+/** A path-keyed JSON file's new content, with how many entries or keys changed. */
 export interface PathKeyedRewrite {
   readonly path: string;
   readonly content: string;
@@ -106,18 +111,24 @@ export type MovePlan =
 const SCANNED_FOLDERS = ["src", "e2e", "scripts"] as const;
 const SOURCE_FILE = /\.[cm]?[jt]sx?$/;
 
-/**
- * Path-keyed files whose paths follow the moves. Matching is by path:
- * dependency-cruiser compares `from`, `to` and the `cycle` names
- * (node_modules/dependency-cruiser/src/analyze/soften-known-violations.mjs),
- * ESLint the suppression keys. A relative `unresolvedTo` is informational
- * and is left as recorded.
- */
-const PATH_KEYED_FILES = [
-  ".dependency-cruiser-known-violations.json",
-  "eslint-suppressions.json",
-] as const;
-const JSON_STRING = /"(?:[^"\\]|\\.)*"/g;
+/** The path-keyed files that follow the moves, when they exist; `path-keyed-files.ts` says what each needs. */
+const PATH_KEYED_FILES: readonly {
+  readonly path: string;
+  readonly rewrite: (
+    text: string,
+    moves: readonly Move[],
+    rewrites: SpecifierRewrites
+  ) => JsonRewrite | undefined;
+}[] = [
+  {
+    path: ".dependency-cruiser-known-violations.json",
+    rewrite: rewriteKnownViolations,
+  },
+  {
+    path: "eslint-suppressions.json",
+    rewrite: (text, moves) => rewriteSuppressions(text, moves),
+  },
+];
 
 /**
  * Works out what applying `moves` to the working tree at `root` changes,
@@ -168,8 +179,10 @@ export function planMoves(root: string, moves: readonly Move[]): MovePlan {
       .filter(([path, writtenAt]) => path !== writtenAt)
       .map(([to, from]) => ({ from, to, tracked: tracked.has(from) })),
     fileEdits,
-    jsonEdits: PATH_KEYED_FILES.flatMap(
-      (path) => rewritePathKeyedFile(root, path, moduleLayout) ?? []
+    jsonEdits: rewritePathKeyedFiles(
+      root,
+      moves,
+      specifierRewritesOf(fileEdits)
     ),
   };
   return dangling.length === 0
@@ -284,27 +297,31 @@ function rewriteSource(
   return { content: content + text.slice(cursor), edits, dangling };
 }
 
-/** Rewrites every JSON string that names a moved path or a moved `@/` module, keeping the file's layout byte for byte. */
-function rewritePathKeyedFile(
+function rewritePathKeyedFiles(
   root: string,
-  path: string,
-  layout: ModuleLayout
-): PathKeyedRewrite | undefined {
-  if (!existsSync(join(root, path))) return undefined;
-  let count = 0;
-  const content = readFileSync(join(root, path), "utf8").replace(
-    JSON_STRING,
-    (token) => {
-      const value: unknown = JSON.parse(token);
-      if (typeof value !== "string") return token;
-      const next =
-        retargetAlias(value, layout) ?? mapMovedPath(layout.moves, value);
-      if (next === value) return token;
-      count += 1;
-      return JSON.stringify(next);
-    }
+  moves: readonly Move[],
+  rewrites: SpecifierRewrites
+): readonly PathKeyedRewrite[] {
+  return PATH_KEYED_FILES.flatMap(({ path, rewrite }) => {
+    if (!existsSync(join(root, path))) return [];
+    const result = rewrite(
+      readFileSync(join(root, path), "utf8"),
+      moves,
+      rewrites
+    );
+    return result === undefined ? [] : [{ path, ...result }];
+  });
+}
+
+function specifierRewritesOf(
+  fileEdits: readonly SourceRewrite[]
+): SpecifierRewrites {
+  return new Map(
+    fileEdits.map(({ path, edits }) => [
+      path,
+      new Map(edits.map(({ before, after }) => [before, after])),
+    ])
   );
-  return count === 0 ? undefined : { path, content, count };
 }
 
 function removeEmptiedFolders(root: string, folders: readonly string[]): void {

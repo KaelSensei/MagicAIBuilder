@@ -119,22 +119,6 @@ export function retargetSpecifier(
   return { kind: "dangling" };
 }
 
-/**
- * The new form of an `@/…` string found in a path-keyed file (such as
- * dependency-cruiser's `unresolvedTo`), or `undefined` when its target did not
- * move or does not resolve.
- */
-export function retargetAlias(
-  alias: string,
-  layout: ModuleLayout
-): string | undefined {
-  if (!alias.startsWith(ALIAS)) return undefined;
-  const target = findTarget(posix.join(SRC, alias.slice(ALIAS.length)), layout);
-  if (target === undefined || target.before === target.after) return undefined;
-  const modulePath = withoutSuffix(target);
-  return isAtOrUnder(modulePath, SRC) ? aliasOf(modulePath) : undefined;
-}
-
 function isProjectSpecifier(specifier: string): boolean {
   return (
     specifier.startsWith(ALIAS) ||

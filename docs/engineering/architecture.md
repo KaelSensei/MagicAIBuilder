@@ -407,8 +407,8 @@ A move pull request appends its entries to `scripts/refactor/moves.json` and run
 `pnpm refactor:apply-moves` (first with `--dry-run`). The codemod moves each file with `git mv`,
 rewrites every module specifier that names it in `src/`, `e2e/` and `scripts/` (imports, `import()`
 and `typeof import()`, `require`, and the path of every `vi.mock`-family call), keeps `@/`
-specifiers as `@/`, renames the paths in the dependency-cruiser baseline and the ESLint
-suppressions, and refuses to write anything if a specifier would resolve to no file. It leaves the
+specifiers as `@/`, keeps the dependency-cruiser baseline and the ESLint suppressions in step with
+the moved paths, and refuses to write anything if a specifier would resolve to no file. It leaves the
 rewrites unstaged, so the pure renames are committed first and the rewrites second. The map only
 grows, and a second run changes nothing, so a branch that predates a move is rebased and then runs
 the same command. Root configs and docs that name a moved path are checked by hand with

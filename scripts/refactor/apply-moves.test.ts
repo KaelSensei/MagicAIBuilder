@@ -329,24 +329,98 @@ describe("rewriting module specifiers", () => {
 });
 
 describe("path-keyed files", () => {
-  it("renames moved paths in the dependency-cruiser baseline and the ESLint suppressions, keeping their layout", () => {
-    const baseline = `[
-  {
-    "type": "dependency",
-    "from": "src/lib/dice.ts",
-    "to": "src/app/types.ts",
-    "unresolvedTo": "@/app/types",
-    "rule": { "severity": "error", "name": "lib-not-outer-layers" }
-  },
-  {
-    "type": "cycle",
-    "from": "src/app/types.ts",
-    "to": "src/lib/dice.ts",
-    "unresolvedTo": "@/lib/dice",
-    "cycle": [{ "name": "src/lib/dice.ts" }, { "name": "src/app/types.ts" }]
-  }
-]
-`;
+  /** dependency-cruiser's own layout for `--baseline` output. */
+  const baselineOf = (entries: readonly object[]): string =>
+    `${JSON.stringify(entries, null, 2)}\n`;
+  const TYPE_IMPORT = ["local", "type-only", "import"];
+  const ALIASED = ["aliased", "aliased-tsconfig", "aliased-tsconfig-paths"];
+  const LAYER_RULE = { severity: "error", name: "lib-not-outer-layers" };
+  const CYCLE_RULE = { severity: "error", name: "no-circular" };
+  const cycleOf = (...names: readonly string[]) =>
+    names.map((name) => ({ name, dependencyTypes: TYPE_IMPORT }));
+
+  it("keeps each dependency-cruiser baseline entry equal to what the gate will report after the move", () => {
+    const before = [
+      {
+        type: "dependency",
+        from: "src/lib/ai/plan.ts",
+        to: "src/app/build/types.ts",
+        unresolvedTo: "@/app/build/types",
+        dependencyTypes: [...ALIASED, ...TYPE_IMPORT],
+        rule: LAYER_RULE,
+      },
+      {
+        type: "cycle",
+        from: "src/lib/deck/turn-one.ts",
+        to: "src/lib/deck/types.ts",
+        unresolvedTo: "./types",
+        dependencyTypes: TYPE_IMPORT,
+        rule: CYCLE_RULE,
+        cycle: cycleOf("src/lib/deck/types.ts", "src/lib/deck/turn-one.ts"),
+      },
+      {
+        type: "cycle",
+        from: "src/lib/deck/types.ts",
+        to: "src/lib/deck/turn-one.ts",
+        unresolvedTo: "./turn-one",
+        dependencyTypes: TYPE_IMPORT,
+        rule: CYCLE_RULE,
+        cycle: cycleOf("src/lib/deck/turn-one.ts", "src/lib/deck/types.ts"),
+      },
+    ];
+    const root = createRepo({
+      "src/lib/ai/plan.ts":
+        'import type { BuildRequest } from "@/app/build/types";\nexport type Plan = BuildRequest;\n',
+      "src/app/build/types.ts":
+        "export type BuildRequest = { colors: string };\n",
+      "src/lib/deck/types.ts":
+        'import type { TurnOne } from "./turn-one";\nexport type Deck = { turnOne: TurnOne };\n',
+      "src/lib/deck/turn-one.ts":
+        'import type { Deck } from "./types";\nexport type TurnOne = (deck: Deck) => boolean;\n',
+      ".dependency-cruiser-known-violations.json": baselineOf(before),
+    });
+
+    runMoves(root, [
+      {
+        from: "src/lib/deck/turn-one.ts",
+        to: "src/lib/deck/analysis/turn-one.ts",
+      },
+      { from: "src/app/build/types.ts", to: "src/modules/ai/build-types.ts" },
+    ]);
+
+    expect(read(root, ".dependency-cruiser-known-violations.json")).toBe(
+      baselineOf([
+        {
+          ...before[0],
+          to: "src/modules/ai/build-types.ts",
+          unresolvedTo: "@/modules/ai/build-types",
+        },
+        {
+          ...before[1],
+          from: "src/lib/deck/analysis/turn-one.ts",
+          // The move turned `./types` into `@/lib/deck/types`, and
+          // dependency-cruiser types an aliased import differently.
+          unresolvedTo: "@/lib/deck/types",
+          dependencyTypes: [...ALIASED, ...TYPE_IMPORT],
+          cycle: cycleOf(
+            "src/lib/deck/types.ts",
+            "src/lib/deck/analysis/turn-one.ts"
+          ),
+        },
+        {
+          ...before[2],
+          to: "src/lib/deck/analysis/turn-one.ts",
+          unresolvedTo: "./analysis/turn-one",
+          cycle: cycleOf(
+            "src/lib/deck/analysis/turn-one.ts",
+            "src/lib/deck/types.ts"
+          ),
+        },
+      ])
+    );
+  });
+
+  it("renames moved files in the ESLint suppressions, keeping the file's layout", () => {
     const suppressions = `{
   "src/lib/dice.ts": {
     "max-lines": {
@@ -357,18 +431,11 @@ describe("path-keyed files", () => {
 `;
     const root = createRepo({
       "src/lib/dice.ts": DICE,
-      "src/app/types.ts": "export type Id = string;\n",
-      ".dependency-cruiser-known-violations.json": baseline,
       "eslint-suppressions.json": suppressions,
     });
 
     runMoves(root, [DICE_MOVE]);
 
-    expect(read(root, ".dependency-cruiser-known-violations.json")).toBe(
-      baseline
-        .replaceAll("src/lib/dice.ts", DICE_MOVE.to)
-        .replaceAll("@/lib/dice", "@/modules/playtest/domain/dice")
-    );
     expect(read(root, "eslint-suppressions.json")).toBe(
       suppressions.replaceAll("src/lib/dice.ts", DICE_MOVE.to)
     );
