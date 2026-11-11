@@ -135,6 +135,68 @@ describe("/api/cache/cards — the server is the only writer", () => {
   });
 });
 
+describe("GET /api/cache/cards — CDN caching", () => {
+  beforeEach(() => {
+    scryfallCacheDb.reset();
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("lets the CDN keep a card the server just fetched for a day", async () => {
+    scryfallAnswers(SOL_RING);
+
+    const response = await lookup();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, s-maxage=86400, stale-while-revalidate=60"
+    );
+  });
+
+  it("lets the CDN keep a card served from the shared cache for a day", async () => {
+    scryfallAnswers(SOL_RING);
+    await lookup();
+
+    const response = await lookup();
+
+    expect(await response.json()).toEqual({ hit: true, data: SOL_RING });
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, s-maxage=86400, stale-while-revalidate=60"
+    );
+  });
+
+  it("keeps a rejected id out of the CDN", async () => {
+    const response = await lookup("not-a-uuid");
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get("Cache-Control")).toBeNull();
+  });
+
+  // Vercel's CDN caches a 404 that carries s-maxage, so this guard matters.
+  it("keeps a card Scryfall does not know out of the CDN", async () => {
+    scryfallAnswers({ object: "error", status: 404 }, 404);
+
+    const response = await lookup();
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Cache-Control")).toBeNull();
+  });
+
+  it("keeps a failed Scryfall fetch out of the CDN", async () => {
+    scryfallAnswers({ object: "error", details: "down" }, 503);
+
+    const response = await lookup();
+
+    expect(response.status).toBe(502);
+    expect(response.headers.get("Cache-Control")).toBeNull();
+  });
+});
+
 describe("GET /api/cache/cards request timing", () => {
   let info: ReturnType<typeof vi.spyOn>;
 

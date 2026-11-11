@@ -277,6 +277,71 @@ describe("/api/cache/search — the server is the only writer", () => {
   });
 });
 
+describe("GET /api/cache/search — CDN caching", () => {
+  beforeEach(() => {
+    scryfallCacheDb.reset();
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("lets the CDN keep a page the server just fetched for an hour", async () => {
+    scryfallAnswers(GAME_CHANGERS);
+
+    const response = await read({ query: "is:gamechanger", page: "1" });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, s-maxage=3600, stale-while-revalidate=60"
+    );
+  });
+
+  it("lets the CDN keep a page served from the shared cache for an hour", async () => {
+    scryfallAnswers(GAME_CHANGERS);
+    await read({ query: "is:gamechanger", page: "1" });
+
+    const response = await read({ query: "is:gamechanger", page: "1" });
+
+    expect(await response.json()).toEqual({ hit: true, data: GAME_CHANGERS });
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, s-maxage=3600, stale-while-revalidate=60"
+    );
+  });
+
+  it("keeps a rejected query out of the CDN", async () => {
+    const response = await read({ query: "" });
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get("Cache-Control")).toBeNull();
+  });
+
+  it("keeps a throttled fill out of the CDN", async () => {
+    scryfallAnswers(GAME_CHANGERS);
+    const ip = "198.51.100.61";
+    for (let index = 0; index < 60; index += 1) {
+      await read({ query: `t:elf cmc=${index}` }, ip);
+    }
+
+    const response = await read({ query: "t:elf cmc=60" }, ip);
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Cache-Control")).toBeNull();
+  });
+
+  it("keeps a failed Scryfall fetch out of the CDN", async () => {
+    scryfallAnswers({ object: "error", details: "down" }, 503);
+
+    const response = await read({ query: "t:goblin", page: "1" });
+
+    expect(response.status).toBe(502);
+    expect(response.headers.get("Cache-Control")).toBeNull();
+  });
+});
+
 describe("GET /api/cache/search — request logging", () => {
   beforeEach(() => {
     scryfallCacheDb.reset();

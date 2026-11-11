@@ -44,7 +44,7 @@ export async function GET(request: Request): Promise<Response> {
     );
     hit = outcome.kind === "hit";
     failed = dbFailed;
-    return readThroughResponse(outcome);
+    return readThroughResponse(outcome, SEARCH_CACHE.ttlMs);
   } finally {
     logger.info(
       "Scryfall search cache lookup completed",
