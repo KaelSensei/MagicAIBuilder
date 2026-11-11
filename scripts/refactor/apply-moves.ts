@@ -20,7 +20,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { parseMoveMap } from "./move-map";
-import { applyPlan, planMoves } from "./move-plan";
+import { applyPlan } from "./apply-plan";
+import { planMoves } from "./move-plan";
 import { describeDangling, describePlan, NEXT_STEPS } from "./plan-report";
 
 const MOVE_MAP = "scripts/refactor/moves.json";

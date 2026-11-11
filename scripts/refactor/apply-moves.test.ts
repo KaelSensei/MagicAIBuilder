@@ -21,7 +21,8 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Move } from "./move-map";
-import { applyPlan, planMoves, type MovePlan } from "./move-plan";
+import { applyPlan } from "./apply-plan";
+import { planMoves, type MovePlan } from "./move-plan";
 
 const VI = "vi";
 const TSX = resolve(__dirname, "../../node_modules/.bin/tsx");

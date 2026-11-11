@@ -1,14 +1,10 @@
 /**
- * Plans and applies a move map on a git working tree: which files move,
- * which module specifiers and path-keyed entries change, and which
- * references would resolve to no file.
+ * Plans a move map on a git working tree: which files move, which module
+ * specifiers and path-keyed entries change, and which references would
+ * resolve to no file.
  *
  * Planning reads the tree and writes nothing, so a dry run and a real run
- * take the same decisions. Applying moves each file with `git mv` and writes
- * the rewrites to the working tree without staging them: the index then
- * holds pure renames, which can be committed apart from the rewrites. Git
- * records no renames; it guesses them from content similarity (50 % by
- * default, git-diff(1) `-M`), so a byte-identical move is always seen as one.
+ * take the same decisions; `apply-plan.ts` carries a ready plan out.
  *
  * Scanned sources: `.ts`, `.tsx`, `.js`, `.jsx` and their `m`/`c` variants
  * under `src/`, `e2e/` and `scripts/`. Root configs (`vitest.config.ts`,
@@ -18,17 +14,8 @@
  * @module refactor/move-plan
  */
 import { execFileSync } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  renameSync,
-  rmdirSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
-import { join, posix } from "node:path";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { findModuleSpecifiers } from "./module-specifiers";
 import { isAtOrUnder, type Move } from "./move-map";
 import {
@@ -190,27 +177,6 @@ export function planMoves(root: string, moves: readonly Move[]): MovePlan {
     : { kind: "blocked", ...changes, dangling };
 }
 
-/**
- * Applies a ready plan: `git mv` for each tracked file (its folder created
- * first), a plain rename for an untracked one, then the source and
- * path-keyed rewrites, then removes the folders the moves emptied.
- */
-export function applyPlan(root: string, plan: ReadyPlan): void {
-  for (const { from, to, tracked } of plan.fileMoves) {
-    mkdirSync(join(root, posix.dirname(to)), { recursive: true });
-    if (tracked)
-      execFileSync("git", ["mv", "--", from, to], { cwd: root, stdio: "pipe" });
-    else renameSync(join(root, from), join(root, to));
-  }
-  for (const { path, content } of [...plan.fileEdits, ...plan.jsonEdits]) {
-    writeFileSync(join(root, path), content);
-  }
-  removeEmptiedFolders(
-    root,
-    plan.fileMoves.map(({ from }) => posix.dirname(from))
-  );
-}
-
 /** Runs the moves over the listed files, returning each file's path after the moves mapped to its path now. */
 function expandMoves(
   files: readonly string[],
@@ -322,20 +288,6 @@ function specifierRewritesOf(
       new Map(edits.map(({ before, after }) => [before, after])),
     ])
   );
-}
-
-function removeEmptiedFolders(root: string, folders: readonly string[]): void {
-  for (const start of new Set(folders)) {
-    let folder = start;
-    while (
-      folder !== "." &&
-      existsSync(join(root, folder)) &&
-      readdirSync(join(root, folder)).length === 0
-    ) {
-      rmdirSync(join(root, folder));
-      folder = posix.dirname(folder);
-    }
-  }
 }
 
 function gitFiles(root: string, options: readonly string[]): readonly string[] {

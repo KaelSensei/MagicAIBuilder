@@ -52,7 +52,9 @@ removed, because branches still in flight re-run the map after a rebase.
    - `.dependency-cruiser-known-violations.json`: each entry stays equal to the violation
      `pnpm arch` will report after the move. Paths follow the moves, and an edge whose specifier
      was rewritten gets the new `unresolvedTo` and, if it changed between relative and `@/`, the
-     matching `dependencyTypes`: the gate's stale-entry check compares those fields too.
+     matching `dependencyTypes`: the gate's stale-entry check compares those fields too. The
+     file keeps dependency-cruiser's own order and layout, so a later shrink-only prune only
+     deletes entries.
    - `eslint-suppressions.json`, when it exists: moved files are renamed among the keys; the rest
      of the file stays byte for byte.
 4. **Checks** that every relative and `@/` specifier in the scanned folders resolves after the
