@@ -1,6 +1,7 @@
 import { test, expect } from "./fixtures";
 import type { Page } from "@playwright/test";
 import {
+  getThroughApi,
   suppressOnboarding,
   type DeckCardSeed,
   type DeckSeed,
@@ -73,7 +74,7 @@ test.describe("Deck editor add, move, reload and recovery", () => {
     await page.getByRole("button", { name: /^Considering\b/ }).click();
     await expect(card).toBeVisible();
 
-    const loaded = await request.get(`/api/decks/${deckId}`);
+    const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
     expect(loaded.ok()).toBe(true);
     expect(readZones(await loaded.json())).toEqual([
       expect.objectContaining({ name: "Flow Considering Card", zone: "maybeboard" }),
@@ -111,7 +112,7 @@ test.describe("Deck editor add, move, reload and recovery", () => {
     await page.getByRole("button", { name: /^Considering\b/ }).click();
     await expect(card).toBeVisible();
 
-    const loaded = await request.get(`/api/decks/${deckId}`);
+    const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
     expect(readZones(await loaded.json())).toContainEqual(
       expect.objectContaining({ name: "Flow Main Card", zone: "maybeboard" })
     );
@@ -158,7 +159,7 @@ test.describe("Deck editor add, move, reload and recovery", () => {
     await expect(card).toBeVisible();
     await expect(page.getByRole("button", { name: /^Considering\b/ })).toHaveText(/0/);
 
-    const loaded = await request.get(`/api/decks/${deckId}`);
+    const loaded = await getThroughApi(request, `/api/decks/${deckId}`);
     expect(readZones(await loaded.json())).toContainEqual(
       expect.objectContaining({ name: "Flow Main Card", zone: "main" })
     );
