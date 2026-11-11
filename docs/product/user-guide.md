@@ -236,6 +236,7 @@ The editor shows a **short rule summary** where the app encodes it (for example 
 
 The **Deck details** panel opens the right panel (the **Stats** tab on a phone). It holds the settings of the deck itself, and each one is saved as soon as you change it:
 
+- **Description** — your notes on how the deck plays. Click the pencil to write, or open the line and click the text; an empty description offers a **primer template** (game plan, mulligan guide, win conditions…). It saves when you click **Save**, press Ctrl+Enter (Cmd+Enter on a Mac) or click away; Esc drops your changes. Up to 2,000 characters.
 - **Tags** — short labels such as `casual` or `WIP`. Click **Add tag**, type a tag and press Enter; Tab takes the first suggestion. Click × on a tag to remove it.
 
 ### Deck Statistics

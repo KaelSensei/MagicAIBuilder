@@ -122,4 +122,44 @@ describe("DeckDetailsPanel", () => {
       expect(deckPatches()).toEqual([{ tags: ["casual", "WIP"] }]);
     });
   });
+
+  describe("description", () => {
+    it("saves the description the player writes", async () => {
+      const user = userEvent.setup();
+      openDeck();
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.click(
+        within(details).getByRole("button", { name: "Edit description" })
+      );
+      await user.type(
+        within(details).getByRole("textbox"),
+        "Go wide, then sacrifice the tokens."
+      );
+      await user.keyboard("{Control>}{Enter}{/Control}");
+
+      expect(storedDeck()?.description).toBe(
+        "Go wide, then sacrifice the tokens."
+      );
+      expect(deckPatches()).toEqual([
+        { description: "Go wide, then sacrifice the tokens." },
+      ]);
+    });
+
+    it("saves the description once when the player clicks Save", async () => {
+      const user = userEvent.setup();
+      openDeck();
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      await user.click(
+        within(details).getByRole("button", { name: "Edit description" })
+      );
+      await user.type(within(details).getByRole("textbox"), "Aristocrats.");
+      await user.click(within(details).getByRole("button", { name: "Save" }));
+
+      expect(deckPatches()).toEqual([{ description: "Aristocrats." }]);
+    });
+  });
 });

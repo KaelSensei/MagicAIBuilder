@@ -17,10 +17,11 @@
 import { useId } from "react";
 import { useTranslations } from "next-intl";
 import type { Deck } from "@/lib/deck/types";
+import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
 import { DeckTagsEditor } from "./DeckTagsEditor";
 
 /** The deck fields this panel shows and edits. */
-export type DeckDetails = Pick<Deck, "id" | "tags">;
+export type DeckDetails = Pick<Deck, "id" | "description" | "tags">;
 
 interface DeckDetailsPanelProps {
   /** The deck as the store holds it, so a failed save shows the restored value. */
@@ -43,6 +44,7 @@ export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
       >
         {t("title")}
       </h2>
+      <DeckDescriptionEditor deckId={deck.id} description={deck.description} />
       <DeckTagsEditor deckId={deck.id} tags={deck.tags} />
     </section>
   );

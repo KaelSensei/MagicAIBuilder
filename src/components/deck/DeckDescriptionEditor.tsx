@@ -159,6 +159,9 @@ export function DeckDescriptionEditor({
                 </span>
                 <button
                   type="button"
+                  // Keep focus in the textarea: its blur also saves, so a press
+                  // that moved focus here sent the description twice.
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={handleSave}
                   className="text-xs px-2 py-0.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded transition-colors"
                 >
