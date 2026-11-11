@@ -72,7 +72,7 @@ import { Link } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/components/ui/utils";
 import { CombosPanel } from "@/modules/combos/ui/CombosPanel";
-import { useCombos } from "@/modules/combos/client/useCombos";
+import { useCombos } from "@/modules/combos/client";
 import { ExportModal } from "@/components/deck/ExportModal";
 import { ImportDialog } from "@/components/deck/ImportDialog";
 import { BulkEditModal } from "@/components/deck/BulkEditModal";

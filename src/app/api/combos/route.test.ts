@@ -12,11 +12,12 @@ import {
   FIND_MY_COMBOS_RECORDED,
   FIND_MY_COMBOS_RECORDED_REQUEST,
 } from "@/modules/combos/infrastructure/fixtures/find-my-combos-v1";
-import { MAX_MAIN_CARDS, MAX_QUERY_BODY_BYTES } from "@/modules/combos/domain/deck-query";
 import {
   COMBO_LOOKUPS_PER_CLIENT,
+  MAX_MAIN_CARDS,
+  MAX_QUERY_BODY_BYTES,
   SPELLBOOK_CALLS_PER_WINDOW,
-} from "@/modules/combos/domain/lookup-policy";
+} from "@/modules/combos";
 import {
   SPELLBOOK_FIND_MY_COMBOS_URL,
   SPELLBOOK_TIMEOUT_MS,

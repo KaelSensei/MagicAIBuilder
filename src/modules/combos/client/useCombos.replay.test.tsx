@@ -5,7 +5,8 @@
  *
  * Characterization for the combos pilot (CMB-01). MSW stands in for both
  * network hops: `/api/combos` is answered by the real route handler, and
- * Spellbook by the recording in `@/lib/combos/fixtures/find-my-combos-v1`. No
+ * Spellbook by the recording in
+ * `@/modules/combos/infrastructure/fixtures/find-my-combos-v1`. No
  * module is mocked, so the move into `src/modules/combos` (CMB-02) and the
  * route's use case (CMB-04) change nothing here but import paths.
  *
