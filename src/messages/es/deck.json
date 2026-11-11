@@ -903,5 +903,11 @@
     "saved": "“{name}” is now in your account.",
     "open": "Open deck",
     "close": "Close"
+  },
+  "socialImage": {
+    "imageAlt": "Preview of the deck {deck} by {author}",
+    "byAuthor": "by {author}",
+    "cardCount": "{count, plural, one {# card} other {# cards}}",
+    "tagline": "Commander deck builder"
   }
 }

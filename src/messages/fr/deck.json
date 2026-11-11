@@ -903,5 +903,11 @@
     "saved": "« {name} » est maintenant dans votre compte.",
     "open": "Ouvrir le deck",
     "close": "Fermer"
+  },
+  "socialImage": {
+    "imageAlt": "Aperçu du deck {deck} par {author}",
+    "byAuthor": "par {author}",
+    "cardCount": "{count, plural, one {# carte} other {# cartes}}",
+    "tagline": "Créateur de decks Commander"
   }
 }

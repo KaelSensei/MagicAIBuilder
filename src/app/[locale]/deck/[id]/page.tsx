@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import { alternatesFor } from "@/lib/seo/alternates";
 import { metadataTranslations } from "@/lib/seo/page-metadata";
+import {
+  deckImagePath,
+  deckImageVersion,
+  DECK_IMAGE_SIZE,
+} from "@/lib/seo/deck-image";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout/Header";
 import { PublicDeckView } from "@/components/profile/PublicDeckView";
 import { fetchPublicDeck } from "@/lib/deck/public-deck";
 import { auth } from "@/lib/auth/config";
-import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
 
 interface Params {
   readonly params: Promise<{ locale: string; id: string }>;
@@ -42,17 +47,34 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     commander: commander?.name ?? t("unknownCommander"),
     bracket: deck.targetBracket,
   };
+  const socialTitle = t("socialTitle", byline);
+  const socialDescription = t("socialDescription", summary);
+  const imageText = await getTranslations({
+    locale,
+    namespace: "deck.socialImage",
+  });
+  // Built from stored data by /og/deck/[id]. Not the commander's art crop:
+  // Scryfall's crop cuts the artist credit, and art alone says nothing of the deck.
+  const image = {
+    url: deckImagePath(id, deckImageVersion(deck)),
+    ...DECK_IMAGE_SIZE,
+    alt: imageText("imageAlt", { deck: deck.name, author: byline.author }),
+  };
 
   return {
     alternates: alternatesFor(locale, `/deck/${id}`),
     title: t("title", byline),
     description: t("description", { ...summary, format: deck.format }),
     openGraph: {
-      title: t("socialTitle", byline),
-      description: t("socialDescription", summary),
-      images: commander?.artCropUri
-        ? [{ url: normalizeScryfallImageUrl(commander.artCropUri) }]
-        : [],
+      title: socialTitle,
+      description: socialDescription,
+      images: [image],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: socialTitle,
+      description: socialDescription,
+      images: [image],
     },
   };
 }

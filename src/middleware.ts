@@ -91,5 +91,9 @@ export default auth((req) => {
 
 export const config = {
   // Next.js statically parses matcher — rejects String.raw (TaggedTemplateExpression)
-  matcher: ["/((?!_next/static|_next/image|api|favicon|og-image|.*\\..*).*)"], // NOSONAR
+  // `og/` is the deck image: crawlers fetch it signed out, and next-intl would
+  // rewrite it to a locale path no route answers.
+  matcher: [
+    "/((?!_next/static|_next/image|api|favicon|og-image|og/|.*\\..*).*)", // NOSONAR
+  ],
 };

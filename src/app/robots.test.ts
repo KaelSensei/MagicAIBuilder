@@ -87,6 +87,18 @@ describe("robots", () => {
     expect(disallow).toContain("/collection");
   });
 
+  it("lets crawlers fetch the deck image", () => {
+    // X documents skipping a card image that robots.txt blocks, which is why
+    // the deck image lives at /og/deck/{id} and not under the disallowed /api/.
+    const disallow = [rule()?.disallow].flat();
+
+    expect(
+      disallow.filter(
+        (path) => path !== undefined && "/og/deck/deck-1".startsWith(path)
+      )
+    ).toEqual([]);
+  });
+
   it("points at an absolute sitemap URL", () => {
     expect(() => new URL(String(robots().sitemap))).not.toThrow();
     expect(String(robots().sitemap)).toMatch(/\/sitemap\.xml$/);
