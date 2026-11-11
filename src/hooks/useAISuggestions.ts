@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
-import type { Deck, DeckStats, BracketScore } from "@/lib/deck/types";
+import type { Deck } from "@/lib/deck/types";
+import type { DeckStats, BracketScore } from "@/lib/deck/analysis-types";
 import { detectArchetypes } from "@/lib/ai/archetypes";
 import type { Archetype } from "@/lib/ai/archetypes";
 import { deckCategoryCounts, hashDeckState, buildSuggestPayload } from "@/lib/ai/suggest-payload";

@@ -2,7 +2,8 @@
 // Live stats panel with bracket-aware benchmarks
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
-import type { BracketLevel, DeckStats, DeckCard } from "@/lib/deck/types";
+import type { BracketLevel, DeckCard } from "@/lib/deck/types";
+import type { DeckStats } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import { getFormatConfig } from "@/lib/deck/formats";
 import type { BenchmarkStatus, FormatStats } from "@/lib/deck/format-stats";

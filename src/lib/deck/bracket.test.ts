@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { scoreBracket } from "@/lib/deck/bracket";
 import type { SpellbookVariant } from "@/lib/combos/spellbook";
-import type { Deck, DeckCard, DeckStats } from "@/lib/deck/types";
+import type { Deck, DeckCard } from "@/lib/deck/types";
+import type { DeckStats } from "@/lib/deck/analysis-types";
 
 function makeDeck(overrides: Partial<Deck> = {}): Deck {
   return {
