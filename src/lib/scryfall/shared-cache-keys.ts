@@ -10,6 +10,7 @@
  */
 import "server-only";
 import { createHash } from "node:crypto";
+import { isScryfallId } from "./scryfall-id";
 
 /** Prefix of every row key the server writes; rows without it are retired. */
 export const SHARED_CACHE_NAMESPACE = "srv1:";
@@ -28,9 +29,6 @@ export const MAX_SEARCH_PAGE = 100;
 const SEARCH_QUERY_PATTERN = /^[\p{L}\p{M}\p{N}\p{P}\p{S} ]+$/u;
 
 const PAGE_PATTERN = /^\d{1,3}$/;
-
-const SCRYFALL_ID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** One Scryfall search page, exactly as the server will ask Scryfall for it. */
 export interface SearchCacheKey {
@@ -97,7 +95,7 @@ export function parseSearchCacheKey(
  */
 export function parseCardCacheId(params: URLSearchParams): ParsedKey<string> {
   const id = params.get("id") ?? "";
-  if (!SCRYFALL_ID_PATTERN.test(id)) {
+  if (!isScryfallId(id)) {
     return { ok: false, reason: "id must be a Scryfall card id" };
   }
   return { ok: true, key: id.toLowerCase() };
