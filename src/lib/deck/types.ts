@@ -1,4 +1,5 @@
 import type { DeckFormat } from "./formats";
+import type { BracketLevel } from "@/lib/constants/brackets";
 // Core deck and card types for MagicAIBuilder
 export type CardCategory =
   | "commander"
@@ -18,7 +19,7 @@ export type CardCategory =
   | "protection"
   | "other";
 export type DeckZone = "main" | "sideboard" | "maybeboard";
-export type BracketLevel = 1 | 2 | 3 | 4;
+export type { BracketLevel };
 export interface CardFace {
   name: string;
   manaCost: string;
@@ -77,8 +78,8 @@ export interface Deck {
   format: DeckFormat;
   /** Total card count (including commander/partner/companion). Set from _count on listing, derived from cards on full load. */
   cardCount: number;
-  targetBracket: 1 | 2 | 3 | 4;
-  manualBracket: 1 | 2 | 3 | 4 | null;
+  targetBracket: BracketLevel;
+  manualBracket: BracketLevel | null;
   budget: number | null;
   description: string;
   tags: string[];
@@ -120,12 +121,16 @@ export interface DeckStats {
   turnOnePlayability: import("./turn-one").TurnOnePlayability | null;
 }
 export interface BracketScore {
-  overall: 1 | 2 | 3 | 4;
+  /** Estimated bracket, 1 to 4: the cEDH metagame that sets Bracket 5 apart is not visible in a list. */
+  overall: BracketLevel;
+  /**
+   * Power signals, each scored 1–4. Tutors are not one: Wizards removed the
+   * tutor restriction on 2025-10-21 and lets the Game Changers list catch them.
+   */
   dimensions: {
     ramp: number;
     draw: number;
     removal: number;
-    tutors: number;
     winSpeed: number;
     avgCmc: number;
   };

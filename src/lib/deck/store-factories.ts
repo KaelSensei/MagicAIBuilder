@@ -9,20 +9,13 @@
 import type { Deck, DeckCard } from "./types";
 import type { CommandSlot } from "./bulk-edit-command-zone";
 import type * as deckApi from "@/lib/db/deck-api";
+import { parseBracketLevel } from "@/lib/constants/brackets";
 import { rebuildCardFaces } from "./store-card-faces";
 
 export { buildCardFaces, makeDeckCard } from "./store-card-faces";
 
-/**
- * Keeps a manual bracket only when it is one of the four Commander brackets.
- *
- * @param value - bracket stored by the API
- * @returns the bracket, or null when it is absent or out of range
- */
-function toManualBracket(value: number | null | undefined): Deck["manualBracket"] {
-  if (value === 1 || value === 2 || value === 3 || value === 4) return value;
-  return null;
-}
+/** The target bracket of a new deck, and of a stored one outside 1–5 (the database default). */
+const DEFAULT_TARGET_BRACKET: Deck["targetBracket"] = 3;
 
 /**
  * Builds an empty deck shell.
@@ -48,7 +41,7 @@ export function createEmptyDeck(
     maybeboard: [],
     format,
     cardCount: 0,
-    targetBracket: 3,
+    targetBracket: DEFAULT_TARGET_BRACKET,
     manualBracket: null,
     budget: null,
     description: "",
@@ -146,8 +139,8 @@ export function apiDeckToStoreDeck(d: deckApi.ApiDeck): Deck {
     name: d.name,
     folderId: d.folderId ?? null,
     format: d.format,
-    targetBracket: d.targetBracket,
-    manualBracket: toManualBracket(d.manualBracket),
+    targetBracket: parseBracketLevel(d.targetBracket) ?? DEFAULT_TARGET_BRACKET,
+    manualBracket: parseBracketLevel(d.manualBracket),
     budget: d.budget,
     description: d.description ?? "",
     tags: d.tags ?? [],

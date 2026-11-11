@@ -24,6 +24,7 @@ const BRACKET_COLORS: Record<number, string> = {
   2: "text-blue-400 bg-blue-500/15 border-blue-500/30",
   3: "text-amber-400 bg-amber-500/15 border-amber-500/30",
   4: "text-red-400 bg-red-500/15 border-red-500/30",
+  5: "text-fuchsia-400 bg-fuchsia-500/15 border-fuchsia-500/30",
 };
 
 /**

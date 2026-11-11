@@ -51,6 +51,7 @@ Color scheme, typography, and visual identity reference.
 | Bracket 2 | `#3b82f6` | `--bracket-2` |
 | Bracket 3 | `#f59e0b` | `--bracket-3` |
 | Bracket 4 | `#ef4444` | `--bracket-4` |
+| Bracket 5 | `#d946ef` | `--bracket-5` |
 
 ### Landing Page (Marketing)
 

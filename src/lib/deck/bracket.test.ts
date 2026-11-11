@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { scoreBracket } from "@/lib/deck/bracket";
+import type { SpellbookVariant } from "@/lib/combos/spellbook";
 import type { Deck, DeckCard, DeckStats } from "@/lib/deck/types";
 
 function makeDeck(overrides: Partial<Deck> = {}): Deck {
@@ -56,6 +57,49 @@ function makeStats(overrides: Partial<DeckStats> = {}): DeckStats {
     ...overrides,
   };
 }
+
+/** A Commander Spellbook variant: an infinite combo of exactly two cards. */
+function twoCardInfinite(first: string, second: string): SpellbookVariant {
+  return {
+    id: `${first}+${second}`,
+    cards: [first, second],
+    isInfinite: true,
+    effects: ["Infinite tokens"],
+    description: "",
+    prerequisites: { otherPieces: [], conditions: [], manaNeeded: "" },
+  };
+}
+
+/** A main-deck tutor that is not a Game Changer, e.g. Diabolic Tutor. */
+function plainTutor(index: number): DeckCard {
+  return {
+    id: `tutor-${index}`,
+    name: `Plain Tutor ${index}`,
+    manaCost: "{2}{B}{B}",
+    cmc: 4,
+    typeLine: "Sorcery",
+    oracleText:
+      "Search your library for a card, put that card into your hand, then shuffle.",
+    colorIdentity: ["B"],
+    isGameChanger: false,
+    isBanned: false,
+    price: null,
+    imageUri: "",
+    artCropUri: "",
+    category: "other",
+    quantity: 1,
+    zone: "main",
+  };
+}
+
+/** Very casual stats: every dimension scores 1. */
+const EXHIBITION_STATS: Partial<DeckStats> = {
+  ramp: 2,
+  draw: 2,
+  removal: 2,
+  boardWipes: 0,
+  avgCmc: 4.5,
+};
 
 /** Assert non-null and return typed result (all test decks use format: "commander") */
 function assertBracket(result: ReturnType<typeof scoreBracket>) {
@@ -176,15 +220,20 @@ describe("scoreBracket", () => {
     expect(result.overall).toBe(4);
   });
 
-  it("includes all 6 dimensions", () => {
+  it("scores five dimensions, none of them a tutor count", () => {
     const deck = makeDeck();
     const stats = makeStats();
     const result = assertBracket(scoreBracket(deck, stats));
-    const expectedKeys = ["ramp", "draw", "removal", "tutors", "winSpeed", "avgCmc"];
-    for (const key of expectedKeys) {
-      expect(result.dimensions).toHaveProperty(key);
-      expect(result.dimensions[key as keyof typeof result.dimensions]).toBeGreaterThanOrEqual(1);
-      expect(result.dimensions[key as keyof typeof result.dimensions]).toBeLessThanOrEqual(4);
+    expect(Object.keys(result.dimensions).sort()).toEqual([
+      "avgCmc",
+      "draw",
+      "ramp",
+      "removal",
+      "winSpeed",
+    ]);
+    for (const score of Object.values(result.dimensions)) {
+      expect(score).toBeGreaterThanOrEqual(1);
+      expect(score).toBeLessThanOrEqual(4);
     }
   });
 
@@ -224,16 +273,19 @@ describe("scoreBracket", () => {
     ).toHaveLength(0);
   });
 
-  it("forces bracket 4 when a 2-card infinite combo is present", () => {
+  it("states the official two-card combo rule, not a Rules Committee rule", () => {
     const deck = makeDeck();
     const stats = makeStats({ ramp: 2, draw: 2, avgCmc: 4.5, gameChangersCount: 0 });
-    const combos = [
-      { id: "c1", cards: ["Chatterfang, Squirrel General", "Pitiless Plunderer"], isInfinite: true, effects: ["Infinite tokens"], description: "", prerequisites: { otherPieces: [], conditions: [], manaNeeded: "" } },
-    ];
-    const result = assertBracket(scoreBracket(deck, stats, combos as import("@/lib/combos/spellbook").SpellbookVariant[]));
-    expect(result.overall).toBe(4);
+    const result = assertBracket(
+      scoreBracket(deck, stats, [
+        twoCardInfinite("Chatterfang, Squirrel General", "Pitiless Plunderer"),
+      ])
+    );
     expect(result.twoCardInfiniteCombos).toBe(1);
-    expect(result.warnings.some((w) => w.includes("2-card combo"))).toBe(true);
+    expect(result.warnings).toContain(
+      "1 infinite 2-card combo detected — Bracket 3 minimum: Brackets 1–2 allow none, Bracket 3 none before turn 6"
+    );
+    expect(result.warnings.join("\n")).not.toMatch(/\bRC\b|Rules Committee/);
   });
 
   it("does NOT force bracket 4 for a 3-card infinite combo", () => {
@@ -370,4 +422,85 @@ describe("scoreBracket", () => {
     expect(result.warnings.some((w) => w.toLowerCase().includes("lutri"))).toBe(true);
     expect(result.warnings.some((w) => w.toLowerCase().includes("banned"))).toBe(true);
   });
+});
+
+/**
+ * The official restrictions set a floor under the estimate (bracket text of
+ * 2025-10-21): Brackets 1–2 allow no Game Changers and no two-card combos,
+ * Bracket 3 up to three Game Changers and two-card combos that do not come up
+ * before turn 6, Bracket 4 anything legal. A deck list cannot show how early a
+ * combo comes up, so a two-card combo sets the floor at Bracket 3, not 4.
+ */
+describe("scoreBracket — official floor per restriction", () => {
+  it.each([
+    { gameChangers: 0, twoCardCombos: 0, expected: 1 },
+    { gameChangers: 1, twoCardCombos: 0, expected: 3 },
+    { gameChangers: 3, twoCardCombos: 0, expected: 3 },
+    { gameChangers: 4, twoCardCombos: 0, expected: 4 },
+    { gameChangers: 0, twoCardCombos: 1, expected: 3 },
+    { gameChangers: 0, twoCardCombos: 2, expected: 3 },
+    { gameChangers: 3, twoCardCombos: 1, expected: 3 },
+    { gameChangers: 4, twoCardCombos: 1, expected: 4 },
+  ])(
+    "an Exhibition-level list with $gameChangers Game Changers and $twoCardCombos two-card combos scores Bracket $expected",
+    ({ gameChangers, twoCardCombos, expected }) => {
+      const stats = makeStats({
+        ...EXHIBITION_STATS,
+        gameChangersCount: gameChangers,
+        gameChangersList: Array.from(
+          { length: gameChangers },
+          (_, i) => `Game Changer ${i}`
+        ),
+      });
+      const combos = Array.from({ length: twoCardCombos }, (_, i) =>
+        twoCardInfinite(`Piece A${i}`, `Piece B${i}`)
+      );
+      expect(
+        assertBracket(scoreBracket(makeDeck(), stats, combos)).overall
+      ).toBe(expected);
+    }
+  );
+
+  it("never estimates Bracket 5: only the cEDH metagame separates it from Bracket 4", () => {
+    const stats = makeStats({
+      ramp: 25,
+      draw: 20,
+      avgCmc: 1.8,
+      gameChangersCount: 15,
+    });
+    const combos = [twoCardInfinite("Thassa's Oracle", "Demonic Consultation")];
+    expect(assertBracket(scoreBracket(makeDeck(), stats, combos)).overall).toBe(
+      4
+    );
+  });
+});
+
+/**
+ * Regression: Wizards removed the tutor restriction on 2025-10-21 and relies on
+ * the Game Changers list to catch efficient tutors. Tutors that are not Game
+ * Changers must not move a deck out of Bracket 1 or 2.
+ */
+describe("scoreBracket — tutors are not restricted", () => {
+  it.each([
+    { shell: "Exhibition", stats: EXHIBITION_STATS, bracket: 1 },
+    { shell: "Core", stats: {}, bracket: 2 },
+  ])(
+    "a $shell list stays in Bracket $bracket with six plain tutors",
+    ({ stats, bracket }) => {
+      const deckStats = makeStats(stats);
+      const without = assertBracket(scoreBracket(makeDeck(), deckStats));
+      const withTutors = assertBracket(
+        scoreBracket(
+          makeDeck({
+            cards: Array.from({ length: 6 }, (_, i) => plainTutor(i)),
+          }),
+          deckStats
+        )
+      );
+
+      expect(without.overall).toBe(bracket);
+      expect(withTutors.overall).toBe(bracket);
+      expect(withTutors.warnings).toEqual(without.warnings);
+    }
+  );
 });

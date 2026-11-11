@@ -3,20 +3,18 @@
 import { useTranslations } from "next-intl";
 import { Zap } from "lucide-react";
 import { cn } from "@/components/ui/utils";
+import {
+  BRACKET_DEFINITIONS,
+  type BracketLevel,
+} from "@/lib/constants/brackets";
+import { minimumBracket } from "@/lib/deck/bracket-floor";
 
 interface GameChangersBadgeProps {
   readonly count: number;
   readonly names?: string[];
-  readonly targetBracket?: 1 | 2 | 3 | 4;
+  readonly targetBracket?: BracketLevel;
   readonly className?: string;
 }
-
-const BRACKET_MAX_GC: Record<number, number> = {
-  1: 0,
-  2: 0,
-  3: 3,
-  4: Infinity,
-};
 
 export function GameChangersBadge({
   count,
@@ -25,7 +23,7 @@ export function GameChangersBadge({
   className,
 }: GameChangersBadgeProps) {
   const t = useTranslations("deck");
-  const maxAllowed = BRACKET_MAX_GC[targetBracket] ?? Infinity;
+  const maxAllowed = BRACKET_DEFINITIONS[targetBracket].maxGameChangers;
   const isOverLimit = count > maxAllowed;
 
   return (
@@ -56,14 +54,19 @@ export function GameChangersBadge({
               max: maxAllowed === Infinity ? "∞" : String(maxAllowed),
             })}
           </span>
-          {isOverLimit && targetBracket <= 2 && (
+          {isOverLimit && maxAllowed === 0 && (
             <span className="text-xs text-amber-400 font-medium">
               {t("stats.gcOverLimit", { bracket: targetBracket })}
             </span>
           )}
-          {isOverLimit && targetBracket >= 3 && (
+          {isOverLimit && maxAllowed > 0 && (
             <span className="text-xs text-amber-400 font-medium">
-              {t("stats.gcForcesBracket", { bracket: count > 3 ? 4 : 3 })}
+              {t("stats.gcForcesBracket", {
+                bracket: minimumBracket({
+                  gameChangers: count,
+                  twoCardCombos: 0,
+                }),
+              })}
             </span>
           )}
         </div>

@@ -1,9 +1,17 @@
 // Bracket scoring engine
-import type { Deck, DeckStats, BracketScore } from "./types";
+import type { Deck, DeckStats, BracketLevel, BracketScore } from "./types";
 import type { SpellbookVariant } from "@/lib/combos/spellbook";
+import { parseBracketLevel } from "@/lib/constants/brackets";
+import { minimumBracket } from "./bracket-floor";
 import { getCompanionDeckWarnings } from "./companion";
 import { getFormatConfig } from "./formats";
 import { sortedUniqueNames } from "./validation";
+
+/**
+ * The highest bracket a deck list is scored at. Brackets 4 and 5 share one rule
+ * set; only the cEDH metagame separates them, and no list signal shows it.
+ */
+const ESTIMATE_CEILING = 4;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -12,6 +20,11 @@ function clamp(value: number, min: number, max: number): number {
 function average(values: number[]): number {
   if (values.length === 0) return 1;
   return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+/** Rounds a score to the bracket it reads as, from Bracket 1 to the estimate ceiling. */
+function toEstimatedBracket(score: number): BracketLevel {
+  return parseBracketLevel(clamp(Math.round(score), 1, ESTIMATE_CEILING)) ?? 1;
 }
 
 /** Score 1–4 based on a value and thresholds */
@@ -45,18 +58,6 @@ function scoreDraw(drawCount: number): number {
 function scoreRemoval(removalCount: number, boardWipes: number): number {
   const total = removalCount + boardWipes * 1.5;
   return scoreLinear(total, [4, 7, 10]);
-}
-
-function scoreTutors(cards: Deck["cards"]): number {
-  const tutors = cards.filter((c) => {
-    const text = c.oracleText.toLowerCase();
-    return (
-      text.includes("search your library") &&
-      !text.includes("basic land") &&
-      !text.includes("land card")
-    );
-  }).length;
-  return scoreLinear(tutors, [0, 2, 5]);
 }
 
 function scoreWinSpeed(cards: Deck["cards"], avgCmc: number): number {
@@ -108,27 +109,38 @@ function getBanWarnings(stats: DeckStats): string[] {
   return warnings;
 }
 
-/** Helper: generate combo-related warnings */
+/**
+ * Helper: generate combo-related warnings. A list cannot show how early a
+ * combo comes up, so the warning states the official turn rule.
+ */
 function getComboWarnings(twoCardInfiniteCombos: number): string[] {
-  const warnings: string[] = [];
-  if (twoCardInfiniteCombos > 0) {
-    const plural = twoCardInfiniteCombos > 1 ? "s" : "";
-    warnings.push(
-      `${twoCardInfiniteCombos} infinite 2-card combo${plural} detected — deck is Bracket 4 (RC rule)`
-    );
-  }
-  return warnings;
+  if (twoCardInfiniteCombos === 0) return [];
+  const floor = minimumBracket({
+    gameChangers: 0,
+    twoCardCombos: twoCardInfiniteCombos,
+  });
+  const plural = twoCardInfiniteCombos > 1 ? "s" : "";
+  return [
+    `${twoCardInfiniteCombos} infinite 2-card combo${plural} detected — Bracket ${floor} minimum: Brackets 1–2 allow none, Bracket 3 none before turn 6`,
+  ];
 }
 
 /** Helper: generate Game Changers warnings */
 function getGameChangersWarnings(gameChangersCount: number, gameChangersList: readonly string[]): string[] {
-  const warnings: string[] = [];
-  if (gameChangersCount > 3) {
-    warnings.push(`${gameChangersCount} Game Changers detected — deck is Bracket 4 minimum`);
-  } else if (gameChangersCount > 0) {
-    warnings.push(`${gameChangersCount} Game Changer(s): ${warningCardNames(gameChangersList)}`);
+  if (gameChangersCount === 0) return [];
+  const floor = minimumBracket({
+    gameChangers: gameChangersCount,
+    twoCardCombos: 0,
+  });
+  // Name the floor once the count passes the first bracket that admits Game Changers.
+  if (floor > minimumBracket({ gameChangers: 1, twoCardCombos: 0 })) {
+    return [
+      `${gameChangersCount} Game Changers detected — deck is Bracket ${floor} minimum`,
+    ];
   }
-  return warnings;
+  return [
+    `${gameChangersCount} Game Changer(s): ${warningCardNames(gameChangersList)}`,
+  ];
 }
 
 /** Helper: generate deck composition warnings */
@@ -186,36 +198,30 @@ export function scoreBracket(deck: Deck, stats: DeckStats, combos: SpellbookVari
 
   // Only score main-zone cards (sideboard/maybeboard don't affect bracket)
   const mainCards = deck.cards.filter((c) => c.zone === "main");
+  // Tutors are not scored: Wizards removed the tutor restriction on 2025-10-21
+  // and relies on the Game Changers list to catch the efficient ones.
   const dimensions = {
     ramp: scoreRamp(stats.ramp, stats.avgCmc),
     draw: scoreDraw(stats.draw),
     removal: scoreRemoval(stats.removal, stats.boardWipes),
-    tutors: scoreTutors(mainCards),
     winSpeed: scoreWinSpeed(mainCards, stats.avgCmc),
     avgCmc: scoreCmc(stats.avgCmc),
   };
 
-  let overall = Math.round(average(Object.values(dimensions)));
-
-  // 2-card infinite combos → Bracket 4 (RC rule)
+  // The official restrictions set a floor: the lowest bracket whose rules admit
+  // the deck's Game Changers and two-card combos.
   const twoCardInfiniteCombos = countTwoCardInfiniteCombos(combos);
-  if (twoCardInfiniteCombos > 0) {
-    overall = 4;
-  }
-
-  // Game Changers force minimum bracket
-  // Bracket 1 & 2: 0 allowed → any GC forces bracket 3
-  // Bracket 3: max 3 → more than 3 forces bracket 4
-  if (stats.gameChangersCount > 3) {
-    overall = Math.max(overall, 4);
-  } else if (stats.gameChangersCount > 0) {
-    overall = Math.max(overall, 3);
-  }
+  const floor = minimumBracket({
+    gameChangers: stats.gameChangersCount,
+    twoCardCombos: twoCardInfiniteCombos,
+  });
 
   const warnings = generateWarnings(deck, stats, dimensions, twoCardInfiniteCombos);
 
   return {
-    overall: clamp(overall, 1, 4) as 1 | 2 | 3 | 4,
+    overall: toEstimatedBracket(
+      Math.max(average(Object.values(dimensions)), floor)
+    ),
     dimensions,
     gameChangers: stats.gameChangersCount,
     twoCardInfiniteCombos,

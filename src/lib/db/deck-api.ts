@@ -25,6 +25,7 @@ export interface ApiDeck extends Omit<
   | "commander"
   | "partner"
   | "cards"
+  | "targetBracket"
   | "manualBracket"
   | "cardCount"
 > {
@@ -35,7 +36,9 @@ export interface ApiDeck extends Omit<
   partnerId: string | null;
   companionId: string | null;
   pairingType: CommanderPairingType;
-  /** Raw DB value — cast to 1|2|3|4|null in store */
+  /** Raw DB value — read as an official bracket (1–5) in the store */
+  targetBracket: number;
+  /** Raw DB value — read as an official bracket (1–5) or null in the store */
   manualBracket: number | null;
   isAIGenerated: boolean;
   isPublic: boolean;
