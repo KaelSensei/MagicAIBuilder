@@ -153,6 +153,10 @@ model Deck {
   /// Client-chosen key that makes POST /api/decks safe to repeat: a retry with
   /// the same key returns this deck instead of writing a second one.
   idempotencyKey     String?
+  /// Optimistic lock: moves by one with every saved card write
+  /// (src/lib/deck/deck-repository.ts). A writer that sends the version it
+  /// read is refused with 409 when another write landed in between.
+  version            Int               @default(0)
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 

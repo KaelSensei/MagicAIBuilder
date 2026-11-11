@@ -155,6 +155,8 @@ const SHARED_PRIVATE_DECK: Deck = {
   folderId: "folder-private",
   // Set, so the allowlist tests also prove the guest import key stays private.
   idempotencyKey: "guest-import-key",
+  // Non-zero, so the allowlist tests also prove the optimistic-lock counter stays private.
+  version: 12,
   createdAt: new Date("2026-03-21T00:00:00Z"),
   updatedAt: new Date("2026-03-21T12:00:00Z"),
 };

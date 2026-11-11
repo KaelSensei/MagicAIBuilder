@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockDeckFindUnique, mockDeckUpdate, mockCardCreate, mockUserFindUnique } = vi.hoisted(
+const { mockDeckFindUnique, mockDeckVersionClaim, mockCardCreate, mockUserFindUnique } = vi.hoisted(
   () => ({
     mockDeckFindUnique: vi.fn(),
-    mockDeckUpdate: vi.fn(),
+    mockDeckVersionClaim: vi.fn(),
     mockCardCreate: vi.fn(),
     mockUserFindUnique: vi.fn(),
   })
@@ -11,20 +11,26 @@ const { mockDeckFindUnique, mockDeckUpdate, mockCardCreate, mockUserFindUnique }
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
-  const deck = { findUnique: mockDeckFindUnique, update: mockDeckUpdate };
+  const deck = { findUnique: mockDeckFindUnique };
   const deckCard = { create: mockCardCreate };
+  // Inside the transaction the deck repository claims the deck's next version
+  // and reads it back (lib/deck/deck-repository.ts). Its own deck delegate
+  // keeps those calls out of the lookups counted below; route.atomic.test.ts
+  // and route.version.test.ts check what the transaction stores.
+  const versionedDeck = {
+    updateMany: mockDeckVersionClaim,
+    findUnique: async () => ({ version: 1 }),
+  };
   return stubPrisma(await importOriginal(), {
     deck,
     deckCard,
     user: { findUnique: mockUserFindUnique },
-    // The card and the deck update share a transaction (B2-09). Here it runs on
-    // the same mocks; route.atomic.test.ts checks what a failure leaves stored.
     $transaction: (
       run: (tx: {
-        deck: typeof deck;
+        deck: typeof versionedDeck;
         deckCard: typeof deckCard;
       }) => Promise<unknown>
-    ) => run({ deck, deckCard }),
+    ) => run({ deck: versionedDeck, deckCard }),
   });
 });
 
@@ -80,7 +86,7 @@ describe("POST /api/decks/[id]/cards — command-zone pairing", () => {
     vi.clearAllMocks();
     signedInAsOwner();
     mockCardCreate.mockResolvedValue({ id: "row-1" });
-    mockDeckUpdate.mockResolvedValue({ id: "deck-1" });
+    mockDeckVersionClaim.mockResolvedValue({ count: 1 });
   });
 
   it("rejects a partner card that reprints the commander's Oracle card", async () => {

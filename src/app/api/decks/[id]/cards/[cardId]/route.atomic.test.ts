@@ -62,7 +62,10 @@ describe("DELETE /api/decks/[id]/cards/[cardId] — the card and the deck timest
     const response = await removeCard(SIGNET.id);
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ success: true });
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      version: CARDS_DECK.version + 1,
+    });
     expect(deckCardsDb.cards()).toEqual([FOREST]);
     expect(deckCardsDb.deck().updatedAt.getTime()).toBeGreaterThan(
       CARDS_DECK.updatedAt.getTime()
@@ -100,6 +103,7 @@ describe("PATCH /api/decks/[id]/cards/[cardId] — the card and the deck timesta
       ...FOREST,
       quantity: 12,
       zone: "sideboard",
+      version: CARDS_DECK.version + 1,
     });
     expect(deckCardsDb.cards()).toEqual([
       SIGNET,

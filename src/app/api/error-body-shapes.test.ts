@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
- * Characterization suite: the exact JSON body of the API's 400, 403 and 404
- * answers, one route per family, as they are today.
+ * Characterization suite: the exact JSON body of the API's 400, 403, 404 and
+ * 409 answers, one route per family, as they are today.
  *
  * The app routes answer a bad request in five shapes (audit "server" §1.3,
  * M4): `{ error }`, `{ error, details: string[] }`,
@@ -111,9 +111,22 @@ function modelDelegate(rows: readonly Row[]) {
 
 /** @returns what the fake client answers for `prisma[property]` */
 function fakeClientMember(property: string | symbol): unknown {
+  if (property === "$transaction") return runOnFakeClient;
   if (typeof property !== "string" || property.startsWith("$"))
     return undefined;
   return modelDelegate(fake.tables.get(property) ?? []);
+}
+
+/**
+ * An interactive `$transaction` over the same tables. The fake's writes
+ * change nothing, so there is nothing to commit or roll back.
+ */
+async function runOnFakeClient(
+  run: (tx: unknown) => Promise<unknown>
+): Promise<unknown> {
+  return run(
+    new Proxy({}, { get: (_tx, property) => fakeClientMember(property) })
+  );
 }
 
 const OWNER_ID = "owner-1";
@@ -676,6 +689,29 @@ describe("404: not found, or not yours", () => {
     expect(await answer(response)).toEqual({
       status: 404,
       body: { error: { code: "not_found", message: "Deck not found" } },
+    });
+  });
+});
+
+describe("409: the deck changed since the writer read it", () => {
+  it("deck cards: a card write with an outdated expectedVersion answers { error }", async () => {
+    signInAs(OWNER_ID);
+    fake.tables.set("deck", [
+      { id: PRIVATE_DECK_ID, userId: OWNER_ID, version: 4, cards: [] },
+    ]);
+    const response = await addDeckCard(
+      request("POST", `/api/decks/${PRIVATE_DECK_ID}/cards`, {
+        scryfallId: "11111111-1111-4111-8111-111111111111",
+        name: "Sol Ring",
+        expectedVersion: 3,
+      }),
+      params({ id: PRIVATE_DECK_ID })
+    );
+    expect(await answer(response)).toEqual({
+      status: 409,
+      body: {
+        error: "The deck changed since it was opened — reload it and try again",
+      },
     });
   });
 });

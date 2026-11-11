@@ -1,16 +1,30 @@
+/**
+ * `/api/decks/[id]/cards/[cardId]`: the owner edits (PATCH) or removes
+ * (DELETE) one card row of their deck.
+ *
+ * Both go through the deck repository, which writes the row and steps the
+ * deck's `version` in one transaction. Both accept an optional
+ * `expectedVersion` (PATCH: in the JSON body; DELETE: `?expectedVersion=`)
+ * and answer 409 when another write landed since the client read the deck;
+ * their success bodies carry the deck's new `version`.
+ */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { patchCardSchema } from "@/lib/validation/card";
+import { patchCardRequestSchema } from "@/lib/validation/card";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
-import { writeDeckCards } from "@/lib/deck/deck-card-writes";
+import {
+  deckWriteResponse,
+  readExpectedVersionQuery,
+} from "@/lib/api/versioned-deck-write";
+import { deckRepository } from "@/lib/deck/deck-repository";
 
 type Params = { params: Promise<{ id: string; cardId: string }> };
 
 // DELETE /api/decks/[id]/cards/[cardId] — remove a single card
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(request: Request, { params }: Params) {
   const { id: deckId, cardId } = await params;
   try {
     const ownership = await requireDeckOwner(deckId);
@@ -24,11 +38,16 @@ export async function DELETE(_req: Request, { params }: Params) {
       return NextResponse.json({ error: "Card not found" }, { status: 404 });
     }
 
-    await writeDeckCards(deckId, (tx) =>
-      tx.deckCard.delete({ where: { id: cardId } })
-    );
+    const query = readExpectedVersionQuery(request);
+    if (!query.ok) return query.response;
 
-    return NextResponse.json({ success: true });
+    const result = await deckRepository.removeCard(
+      { deckId, expectedVersion: query.expectedVersion },
+      cardId
+    );
+    return deckWriteResponse(result, ({ version }) =>
+      NextResponse.json({ success: true, version })
+    );
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "DELETE /api/decks/:id/cards/:cardId", { deckId: String(deckId).slice(0, 50), cardId: String(cardId).slice(0, 50) });
     return NextResponse.json(
@@ -58,7 +77,7 @@ export async function PATCH(request: Request, { params }: Params) {
     if (!jsonBody.ok) return jsonBody.response;
 
     const raw = jsonBody.value;
-    const parsed = patchCardSchema.safeParse(raw);
+    const parsed = patchCardRequestSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid request body", details: z.flattenError(parsed.error) },
@@ -67,15 +86,17 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
     // The schema is the allow-list: it drops unknown keys and leaves absent
-    // ones out, so the parsed body is exactly the columns to write.
-    const updated = await writeDeckCards(deckId, (tx) =>
-      tx.deckCard.update({
-        where: { id: cardId },
-        data: parsed.data,
-      })
+    // ones out, so past `expectedVersion` the parsed body is exactly the
+    // columns to write.
+    const { expectedVersion, ...edit } = parsed.data;
+    const result = await deckRepository.editCard(
+      { deckId, expectedVersion },
+      cardId,
+      edit
     );
-
-    return NextResponse.json(updated);
+    return deckWriteResponse(result, ({ value, version }) =>
+      NextResponse.json({ ...value, version })
+    );
   } catch (error) {
     logger.error(error instanceof Error ? error.message : "unknown", "PATCH /api/decks/:id/cards/:cardId", { deckId: String(deckId).slice(0, 50), cardId: String(cardId).slice(0, 50) });
     return NextResponse.json(

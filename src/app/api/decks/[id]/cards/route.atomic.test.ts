@@ -99,7 +99,10 @@ describe("DELETE /api/decks/[id]/cards — every card and the deck timestamp tog
     const response = await removeAllCards();
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ success: true });
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      version: CARDS_DECK.version + 1,
+    });
     expect(deckCardsDb.cards()).toEqual([]);
     expect(deckCardsDb.deck().updatedAt.getTime()).toBeGreaterThan(
       CARDS_DECK.updatedAt.getTime()
