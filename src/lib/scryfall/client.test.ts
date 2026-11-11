@@ -490,6 +490,31 @@ describe("searchCardPrintings", () => {
     expect(fetchCall).toContain("unique=prints");
     expect(fetchCall).toContain("game%3Apaper");
   });
+
+  // Scryfall has no escape for a quote inside `!"…"`: the double-quoted form
+  // of this name finds nothing (HTTP 404), the single-quoted form finds its
+  // three printings (api.scryfall.com, checked 2026-11-11).
+  it("finds the printings of a name that holds double quotes", async () => {
+    mockFetchSuccess(makeSearchResponse([makeScryfallCard()]));
+    const promise = searchCardPrintings('Henzie "Toolbox" Torre');
+    vi.runAllTimers();
+    await promise;
+
+    const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string;
+    expect(new URL(fetchCall).searchParams.get("q")).toBe(
+      `!'Henzie "Toolbox" Torre' game:paper`
+    );
+  });
+
+  it("asks Scryfall nothing for a name no exact term can carry", async () => {
+    mockFetchSuccess(makeSearchResponse([makeScryfallCard()]));
+    const promise = searchCardPrintings(`Bad "Name's"`);
+    vi.runAllTimers();
+
+    await expect(promise).resolves.toMatchObject({ total_cards: 0, data: [] });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
 });
 
 // The module promises "max 10 req/s" and calls its queue an async mutex, so a

@@ -16,6 +16,7 @@ import { lookupCardCache, lookupSearchCache } from "@/lib/db/deck-api";
 import { isScryfallCard, isScryfallSearchResponse } from "./guards";
 import { resetScryfallQueue, scheduleScryfallRequest } from "./request-queue";
 import { buildLocalizedNamesQueries } from "./localized";
+import { exactNameTerm } from "./exact-name";
 import { logger } from "@/lib/logger";
 
 const SCRYFALL_BASE = "https://api.scryfall.com";
@@ -276,19 +277,23 @@ export async function getCommanderBanlist(): Promise<ScryfallSearchResponse> {
  * returns nothing at all, which reads as "no French printing exists" rather
  * than as the mistake it is.
  *
- * @param cardName - exact English card name
+ * @param cardName - exact English card name; quotes in it are handled by
+ *   `exactNameTerm`
  * @param lang - Scryfall language code; omit or pass "en" for English printings
- * @returns the printings, newest first
+ * @returns the printings, newest first; no printings, without a request, for a
+ *   name that holds both kinds of quote, which no exact term can carry
  */
 export async function searchCardPrintings(
   cardName: string,
   lang?: string
 ): Promise<ScryfallSearchResponse> {
+  const nameTerm = exactNameTerm(cardName);
+  if (nameTerm === null) return EMPTY_SEARCH_RESPONSE;
   const wantsTranslation = lang !== undefined && lang !== "en";
   const langFilter = wantsTranslation ? ` lang:${lang}` : "";
   const params = new URLSearchParams({
     // Do NOT filter by legality here: banned cards still have many printings/arts (e.g. Black Lotus).
-    q: `!"${cardName}" game:paper${langFilter}`,
+    q: `${nameTerm} game:paper${langFilter}`,
     unique: "prints",
     order: "released",
     dir: "desc",

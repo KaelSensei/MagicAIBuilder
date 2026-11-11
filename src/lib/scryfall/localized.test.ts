@@ -219,8 +219,21 @@ describe("buildLocalizedNamesQueries", () => {
     expect(buildLocalizedNamesQueries([], "fr")).toEqual([]);
   });
 
-  it("drops names containing a double quote rather than breaking the query", () => {
-    const queries = buildLocalizedNamesQueries(['Bad "Name"', "Sol Ring"], "fr");
+  it("asks for a name that holds double quotes in single quotes", () => {
+    const queries = buildLocalizedNamesQueries(
+      ['Henzie "Toolbox" Torre', "Sol Ring"],
+      "fr"
+    );
+    expect(queries).toEqual([
+      `lang:fr unique:cards (!'Henzie "Toolbox" Torre' or !"Sol Ring")`,
+    ]);
+  });
+
+  it("drops a name holding both kinds of quote rather than breaking the query", () => {
+    const queries = buildLocalizedNamesQueries(
+      [`Bad "Name's"`, "Sol Ring"],
+      "fr"
+    );
     expect(queries).toEqual(['lang:fr unique:cards (!"Sol Ring")']);
   });
 });

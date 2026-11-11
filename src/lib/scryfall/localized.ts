@@ -23,6 +23,7 @@
  * @module scryfall/localized
  */
 
+import { exactNameTerm } from "./exact-name";
 import { getCardImageUri } from "./images";
 import type { ScryfallCard, ScryfallCardFace } from "./types";
 
@@ -138,8 +139,10 @@ const NAMES_PER_QUERY = 20;
  *
  * `/cards/collection` cannot be used: it has no language parameter and returns
  * whichever printing Scryfall considers canonical, which is English. A search
- * with `lang:` and OR-joined `!"name"` terms is the only batch form that
- * honours a language, so names are chunked to keep each query short.
+ * with `lang:` and OR-joined exact-name terms (`exactNameTerm`) is the only
+ * batch form that honours a language, so names are chunked to keep each query
+ * short. A name that holds both kinds of quote has no exact term and stays
+ * English.
  *
  * Every query returned **must** be sent with `include_multilingual`, or the
  * `lang:` filter matches nothing — see `searchCards`.
@@ -153,16 +156,15 @@ export function buildLocalizedNamesQueries(
   lang: string
 ): string[] {
   if (lang === "en") return [];
-  // A quote inside a name would terminate its `!"…"` term early and corrupt
-  // the rest of the chunk, so such a name is left English rather than risked.
-  const unique = [...new Set(names)].filter((name) => !name.includes('"'));
+  // A name no exact term can carry would end its term early and corrupt the
+  // rest of the chunk, so it is left English rather than risked.
+  const terms = [...new Set(names)].flatMap(
+    (name) => exactNameTerm(name) ?? []
+  );
   const queries: string[] = [];
-  for (let start = 0; start < unique.length; start += NAMES_PER_QUERY) {
-    const terms = unique
-      .slice(start, start + NAMES_PER_QUERY)
-      .map((name) => `!"${name}"`)
-      .join(" or ");
-    queries.push(`lang:${lang} unique:cards (${terms})`);
+  for (let start = 0; start < terms.length; start += NAMES_PER_QUERY) {
+    const chunk = terms.slice(start, start + NAMES_PER_QUERY).join(" or ");
+    queries.push(`lang:${lang} unique:cards (${chunk})`);
   }
   return queries;
 }
