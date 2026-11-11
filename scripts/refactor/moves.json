@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "from": "src/lib/combos/lookup-policy.ts",
+    "to": "src/modules/combos/domain/lookup-policy.ts"
+  },
+  {
+    "from": "src/lib/combos/deck-query.ts",
+    "to": "src/modules/combos/domain/deck-query.ts"
+  },
+  {
+    "from": "src/lib/combos/deck-query.test.ts",
+    "to": "src/modules/combos/domain/deck-query.test.ts"
+  },
+  {
+    "from": "src/lib/combos/combo-cache.ts",
+    "to": "src/modules/combos/infrastructure/combo-cache.ts"
+  },
+  {
+    "from": "src/lib/combos/combo-cache.test.ts",
+    "to": "src/modules/combos/infrastructure/combo-cache.test.ts"
+  },
+  {
+    "from": "src/lib/combos/find-my-combos.ts",
+    "to": "src/modules/combos/infrastructure/find-my-combos.ts"
+  },
+  {
+    "from": "src/lib/combos/find-my-combos.test.ts",
+    "to": "src/modules/combos/infrastructure/find-my-combos.test.ts"
+  },
+  {
+    "from": "src/lib/combos/find-my-combos.replay.test.ts",
+    "to": "src/modules/combos/infrastructure/find-my-combos.replay.test.ts"
+  },
+  {
+    "from": "src/lib/combos/fixtures",
+    "to": "src/modules/combos/infrastructure/fixtures"
+  },
+  {
+    "from": "src/lib/combos/spellbook.ts",
+    "to": "src/modules/combos/client/api.ts"
+  },
+  {
+    "from": "src/lib/combos/spellbook.test.ts",
+    "to": "src/modules/combos/client/api.test.ts"
+  },
+  {
+    "from": "src/hooks/useCombos.ts",
+    "to": "src/modules/combos/client/useCombos.ts"
+  },
+  {
+    "from": "src/hooks/useCombos.test.ts",
+    "to": "src/modules/combos/client/useCombos.test.ts"
+  },
+  {
+    "from": "src/hooks/useCombos.replay.test.tsx",
+    "to": "src/modules/combos/client/useCombos.replay.test.tsx"
+  },
+  {
+    "from": "src/components/deck/CombosPanel.tsx",
+    "to": "src/modules/combos/ui/CombosPanel.tsx"
+  },
+  {
+    "from": "src/components/deck/CombosPanel.test.tsx",
+    "to": "src/modules/combos/ui/CombosPanel.test.tsx"
+  }
+]

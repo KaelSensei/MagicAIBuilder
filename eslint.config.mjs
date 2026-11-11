@@ -157,6 +157,12 @@ const IMPORT_BANS = {
     message:
       "`client/` and `ui/` ship to the browser (ADR 0002): no Prisma, no server-only module, no `server.ts`, `application/` or `infrastructure/`. Go through the context's API client.",
   },
+  applicationAdapters: {
+    regex:
+      "^(next|zod|@prisma/client)(/|$)|^@/lib/db(/|$)|^@/modules/[^/]+/(infrastructure|client|ui)(/|$)",
+    message:
+      "`application/` holds use cases that take a parsed command and call ports, so they run without Next.js, a database or the network (ADR 0001, ADR 0003). Declare a port in `application/`, implement it in `infrastructure/`, and wire both in `server.ts`.",
+  },
 };
 
 /**
@@ -290,10 +296,10 @@ const eslintConfig = [
       IMPORT_BANS.uiIntoDatabase
     ),
   },
-  // Pre-armed layer bans for `src/modules/<context>/` (ADR 0001 to 0003). No
-  // module exists yet, so they start with no breach, and every module that
-  // moves in meets them from its first commit. `index.ts` is the pure entry
-  // point and `client.ts` the browser one (ADR 0002).
+  // Layer bans for `src/modules/<context>/` (ADR 0001 to 0003). They were
+  // armed before the first context moved in, so every module meets them from
+  // its first commit. `index.ts` is the pure entry point and `client.ts` the
+  // browser one (ADR 0002).
   {
     files: ["src/modules/*/domain/**/*.{ts,tsx}", "src/modules/*/index.ts"],
     ignores: TEST_FILES,
@@ -315,6 +321,29 @@ const eslintConfig = [
       IMPORT_BANS.testSupport,
       IMPORT_BANS.browserIntoServer
     ),
+  },
+  {
+    // A use case is not an adapter (docs/architecture/target-structure.md,
+    // "Enforcement"); dependency-cruiser's `application-is-not-an-adapter`
+    // checks the same edges on resolved paths. `fetch` is a global, which
+    // only ESLint can see.
+    files: ["src/modules/*/application/**/*.{ts,tsx}"],
+    ignores: TEST_FILES,
+    rules: {
+      ...banImports(
+        IMPORT_BANS.parentRelative,
+        IMPORT_BANS.testSupport,
+        IMPORT_BANS.applicationAdapters
+      ),
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "fetch",
+          message:
+            "A use case does not call the network: declare a port in `application/` and implement it with `fetch` in `infrastructure/` (ADR 0004).",
+        },
+      ],
+    },
   },
 
   // Test hygiene (ADR 0005, rules 5 and 7). `@vitest/eslint-plugin` knows

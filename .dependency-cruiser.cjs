@@ -9,8 +9,10 @@
 //   import by import in `eslint.config.mjs` (phase 1, P0-14), so the graph and
 //   the linter agree;
 // - the rules of the target `src/modules/<context>/` layout (ADR 0001 and
-//   ADR 0002). No module exists yet, so they match nothing until the first
-//   context moves in, and every context meets them from its first commit;
+//   ADR 0002). They were armed before the first context (`combos`) moved in,
+//   so every context meets them from its first commit;
+// - for each context whose move series is under way, that the code not yet
+//   in `src/modules/` reaches it only through its entry points;
 // - orphans, as information only.
 //
 // Known violations live in `.dependency-cruiser-known-violations.json`, which
@@ -53,6 +55,38 @@ const PRISMA = [
   "^src/lib/db/prisma\\.ts$",
   npmPackage("@prisma/client|\\.prisma"),
 ];
+
+/**
+ * A context's entry points (ADR 0002) for the code that has not moved into
+ * `src/modules/` yet: `src/app`, `src/lib`, `src/hooks`, `src/components`.
+ * Inside `src/modules/`, `public-api-only` already says the same thing.
+ *
+ * A context gets this rule when its move series starts, at `warn`. A branch
+ * that predates the move re-runs the codemod after its rebase, which points
+ * its imports at the moved files, not at an entry point; the warning names
+ * the import to change without blocking the branch. The series' closing pull
+ * request raises the rule to `error` (ADR 0007, stage 3).
+ *
+ * @param {string} context - the folder name under `src/modules/`
+ * @param {"warn" | "error"} severity - `warn` while the series runs
+ * @returns {import('dependency-cruiser').IForbiddenRuleType} the rule
+ */
+function throughEntryPoints(context, severity) {
+  const root = `^src/modules/${context}/`;
+  return {
+    name: `${context}-through-entry-points`,
+    comment:
+      `Code outside \`src/modules/\` reaches the ${context} context only through its \`index.ts\`, \`server.ts\` ` +
+      "or `client.ts`, or a component path under `ui/` (ADR 0002). Import the symbol from the entry point that " +
+      "exports it, or export it there if it belongs to the context's public API.",
+    severity,
+    from: { path: "^src/", pathNot: "^src/modules/" },
+    to: {
+      path: root,
+      pathNot: [`${root}(index|server|client)\\.ts$`, `${root}ui/`],
+    },
+  };
+}
 
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
@@ -135,6 +169,25 @@ module.exports = {
         pathNot: ["^src/modules/$1/", MODULES.entryPoints, MODULES.components],
       },
     },
+    {
+      name: "application-is-not-an-adapter",
+      comment:
+        "`application/` holds use cases: they take a parsed command and call ports, so they run in Vitest " +
+        "without Next.js, a database or the network (ADR 0001, ADR 0003). No `infrastructure/`, `client/` or " +
+        "`ui/`, no Prisma or other `src/lib/db/` module, no Next.js and no Zod (input is parsed at the route). " +
+        "Declare a port in `application/`, implement it in `infrastructure/` and wire both in `server.ts`. " +
+        "ESLint also bans the global `fetch` there (docs/architecture/target-structure.md, Enforcement).",
+      severity: "error",
+      from: { path: "^src/modules/[^/]+/application/" },
+      to: {
+        path: [
+          "^src/modules/[^/]+/(infrastructure|client|ui)/",
+          "^src/lib/db/",
+          npmPackage("@prisma/client|\\.prisma|next|zod"),
+        ],
+      },
+    },
+    throughEntryPoints("combos", "warn"),
     {
       name: "no-orphans",
       comment:

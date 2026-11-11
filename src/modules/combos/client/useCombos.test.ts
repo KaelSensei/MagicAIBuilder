@@ -3,10 +3,10 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { useCombos } from "./useCombos";
-import * as spellbook from "@/lib/combos/spellbook";
+import * as spellbook from "@/modules/combos/client/api";
 import type { Deck } from "@/lib/deck/types";
 
-vi.mock(import("@/lib/combos/spellbook"));
+vi.mock(import("@/modules/combos/client/api"));
 
 function createWrapper() {
   const client = new QueryClient({

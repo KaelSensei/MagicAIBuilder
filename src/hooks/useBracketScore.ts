@@ -5,7 +5,7 @@ import { scoreBracket } from "@/lib/deck/bracket";
 import { computeDeckStats } from "@/lib/deck/stats";
 import type { Deck } from "@/lib/deck/types";
 import type { BracketScore } from "@/lib/deck/analysis-types";
-import type { SpellbookVariant } from "@/lib/combos/spellbook";
+import type { SpellbookVariant } from "@/modules/combos/client";
 
 /** Returns live bracket score for the active deck, accounting for 2-card infinite combos */
 export function useBracketScore(deck: Deck | null, combos?: SpellbookVariant[]): BracketScore | null {

@@ -11,16 +11,17 @@ import { delay, http, HttpResponse, type JsonBodyType } from "msw";
 import {
   FIND_MY_COMBOS_RECORDED,
   FIND_MY_COMBOS_RECORDED_REQUEST,
-} from "@/lib/combos/fixtures/find-my-combos-v1";
-import { MAX_MAIN_CARDS, MAX_QUERY_BODY_BYTES } from "@/lib/combos/deck-query";
+} from "@/modules/combos/infrastructure/fixtures/find-my-combos-v1";
 import {
   COMBO_LOOKUPS_PER_CLIENT,
+  MAX_MAIN_CARDS,
+  MAX_QUERY_BODY_BYTES,
   SPELLBOOK_CALLS_PER_WINDOW,
-} from "@/lib/combos/lookup-policy";
+} from "@/modules/combos";
 import {
   SPELLBOOK_FIND_MY_COMBOS_URL,
   SPELLBOOK_TIMEOUT_MS,
-} from "@/lib/combos/find-my-combos";
+} from "@/modules/combos/infrastructure/find-my-combos";
 import { useMsw } from "@/test/msw";
 
 type PostHandler = (request: Request) => Promise<Response>;

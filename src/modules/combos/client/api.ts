@@ -1,6 +1,6 @@
 // Commander Spellbook combo detection: the combo shape and the browser-side lookup.
 import { z } from "zod";
-import type { DeckComboQuery } from "@/lib/combos/deck-query";
+import type { DeckComboQuery } from "@/modules/combos/domain/deck-query";
 
 /** What a combo needs beyond its named cards, as Commander Spellbook lists it. */
 export interface ComboPrerequisites {

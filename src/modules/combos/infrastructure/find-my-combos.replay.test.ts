@@ -18,13 +18,13 @@ import { delay, http, HttpResponse, type JsonBodyType } from "msw";
 import {
   FIND_MY_COMBOS_RECORDED,
   FIND_MY_COMBOS_RECORDED_REQUEST,
-} from "@/lib/combos/fixtures/find-my-combos-v1";
+} from "@/modules/combos/infrastructure/fixtures/find-my-combos-v1";
 import {
   SPELLBOOK_FIND_MY_COMBOS_URL,
   SPELLBOOK_TIMEOUT_MS,
   requestDeckCombos,
   type DeckCombosResult,
-} from "@/lib/combos/find-my-combos";
+} from "@/modules/combos/infrastructure/find-my-combos";
 import { USER_AGENT } from "@/lib/http";
 import { useMsw } from "@/test/msw";
 

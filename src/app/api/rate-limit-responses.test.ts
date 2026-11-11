@@ -18,8 +18,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { logger } from "@/lib/logger";
-import { COMBO_LOOKUPS_PER_CLIENT } from "@/lib/combos/lookup-policy";
-import { MAX_QUERY_BODY_BYTES } from "@/lib/combos/deck-query";
+import {
+  COMBO_LOOKUPS_PER_CLIENT,
+  MAX_QUERY_BODY_BYTES,
+} from "@/modules/combos";
 import { PUBLIC_DECK_READS_PER_CLIENT } from "@/lib/deck/public-read-policy";
 import { POST as signUp } from "./auth/signup/route";
 import { readThroughResponse } from "./cache/read-through-response";
