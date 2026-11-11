@@ -60,6 +60,12 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # dependency-cruiser (ADR 0007, stage 3): cycles, the layer rules and the
+      # browser/server boundary, checked on the import graph. The cache folder
+      # is not restored between runs, so this is a cold run of a few seconds.
+      - name: Architecture
+        run: pnpm arch
+
       - name: Typecheck
         run: npx tsc --noEmit
 
