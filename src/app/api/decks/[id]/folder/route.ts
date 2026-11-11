@@ -3,15 +3,12 @@ import { z } from "zod";
 import { readJsonBody } from "@/lib/api/json-body";
 import { requireAuth } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/db/prisma";
-import { logger } from "@/lib/logger";
+import { logRouteFailure, type RouteParams } from "@/lib/api/route-kit";
 
 const MoveSchema = z.object({ folderId: z.string().min(1).max(50).nullable() });
-interface RouteContext {
-  readonly params: Promise<{ readonly id: string }>;
-}
 
 /** Moves one owned deck into an owned folder, or back to the unfiled library. */
-export async function PATCH(request: Request, context: RouteContext) {
+export async function PATCH(request: Request, context: RouteParams<"id">) {
   try {
     const authentication = await requireAuth();
     if (authentication.error) return authentication.error;
@@ -42,7 +39,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     return NextResponse.json({ id, folderId: parsed.data.folderId });
   } catch (error) {
-    logger.error("Unexpected error", "PATCH /api/decks/:id/folder", error);
+    logRouteFailure(error, "PATCH /api/decks/:id/folder");
     return NextResponse.json({ error: "Failed to move deck" }, { status: 500 });
   }
 }

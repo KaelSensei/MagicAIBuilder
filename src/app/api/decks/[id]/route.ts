@@ -10,11 +10,10 @@ import { requireAuth } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
 import { commandPairProblem } from "@/lib/deck/commander-pairing";
-
-type Params = { params: Promise<{ id: string }> };
+import type { RouteParams } from "@/lib/api/route-kit";
 
 // GET /api/decks/[id] — get a single deck (must own it)
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const result = await requireAuth();
@@ -97,7 +96,7 @@ async function commandPairError(
 }
 
 // PATCH /api/decks/[id] — update deck metadata (must own it)
-export async function PATCH(request: Request, { params }: Params) {
+export async function PATCH(request: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const result = await requireAuth();
@@ -150,7 +149,7 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 // DELETE /api/decks/[id] — delete a deck and all its cards (must own it)
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const result = await requireAuth();

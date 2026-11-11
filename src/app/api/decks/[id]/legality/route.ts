@@ -4,8 +4,7 @@ import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { checkDeckLegality } from "@/lib/deck/check-deck-legality";
 import type { LegalityDeckCard } from "@/lib/deck/legality";
-
-type Params = { params: Promise<{ id: string }> };
+import type { RouteParams } from "@/lib/api/route-kit";
 
 /** Answer the verdict, or 502 when Scryfall cannot supply the card data. */
 async function verdictResponse(
@@ -31,7 +30,7 @@ async function verdictResponse(
 }
 
 // GET /api/decks/[id]/legality — the deck's legality in its format, from Scryfall data the server fetches
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: Request, { params }: RouteParams<"id">) {
   const { id: deckId } = await params;
   try {
     const ownership = await requireDeckOwner(deckId);

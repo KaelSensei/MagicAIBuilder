@@ -8,7 +8,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { EdhrecData, TournamentData } from "@/lib/meta/fetch";
 import { logger } from "@/lib/logger";
 import { toJsonPayload } from "@/lib/api/json-payload";
-import { rateLimitResponse } from "@/lib/api/route-kit";
+import { rateLimitResponse, type RouteParams } from "@/lib/api/route-kit";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const RATE_LIMIT = 30;
@@ -23,8 +23,6 @@ const querySchema = z.object({
     .default("false")
     .transform((flag) => flag === "true"),
 });
-
-type Params = { params: Promise<{ commanderSlug: string }> };
 
 type MetaSource = z.infer<typeof querySchema>["source"];
 
@@ -151,7 +149,10 @@ async function tryStaleMetaResponse(
   return null;
 }
 
-export async function GET(request: Request, { params }: Params) {
+export async function GET(
+  request: Request,
+  { params }: RouteParams<"commanderSlug">
+) {
   const rateLimited = metaRateLimitResponse(request);
   if (rateLimited) return rateLimited;
 

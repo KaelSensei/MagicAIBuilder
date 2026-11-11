@@ -3,18 +3,15 @@ import { z } from "zod";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/logger";
+import type { RouteParams } from "@/lib/api/route-kit";
 
 const IntentSchema = z.object({
   scryfallId: z.string().min(1).max(100),
   mode: z.enum(["proxy_now", "buy_later", "buy_now"]),
 });
 
-interface RouteContext {
-  readonly params: Promise<{ readonly id: string }>;
-}
-
 /** List the saved acquisition intentions for one private deck. */
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(_request: Request, context: RouteParams<"id">) {
   try {
     const { id: deckId } = await context.params;
     const ownership = await requireDeckOwner(deckId);
@@ -32,7 +29,7 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 /** Persist or clear a player's reversible acquisition intention for one printing. */
-export async function PUT(request: Request, context: RouteContext) {
+export async function PUT(request: Request, context: RouteParams<"id">) {
   const { id: deckId } = await context.params;
   const ownership = await requireDeckOwner(deckId);
   if (ownership.error) return ownership.error;

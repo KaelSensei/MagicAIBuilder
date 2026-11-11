@@ -3,16 +3,15 @@ import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
+import type { RouteParams } from "@/lib/api/route-kit";
 
 /** Generate a URL-safe random token of ~12 chars (base64url, trimmed) */
 function generateToken(): string {
   return randomBytes(9).toString("base64url"); // 9 bytes -> 12 base64url chars
 }
 
-type Params = { params: Promise<{ id: string }> };
-
 // POST /api/decks/[id]/share — enable sharing, generate token
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const ownership = await requireDeckOwner(id);
@@ -47,7 +46,7 @@ export async function POST(_req: Request, { params }: Params) {
 }
 
 // DELETE /api/decks/[id]/share — disable sharing
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const ownership = await requireDeckOwner(id);

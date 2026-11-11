@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
-
-type Params = { params: Promise<{ id: string }> };
+import type { RouteParams } from "@/lib/api/route-kit";
 
 // POST /api/decks/[id]/duplicate — duplicate a deck with all its cards
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(_req: Request, { params }: RouteParams<"id">) {
   const { id } = await params;
   try {
     const ownership = await requireDeckOwner(id);
