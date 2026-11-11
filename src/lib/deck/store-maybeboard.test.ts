@@ -36,9 +36,11 @@ vi.mock("@/lib/db/deck-api", () => ({
 }));
 
 // ── Mock useToast (imported inside store) ─────────────────────────────────────
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: vi.fn() }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: vi.fn() });
+  return { useToastStore };
+});
 
 import { useDeckStore } from "@/lib/deck/store";
 import * as deckApi from "@/lib/db/deck-api";

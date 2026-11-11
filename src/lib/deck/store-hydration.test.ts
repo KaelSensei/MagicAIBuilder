@@ -13,7 +13,7 @@ const { mockFetchDeck, mockFetchDecks } = vi.hoisted(() => ({
   mockFetchDecks: vi.fn(),
 }));
 
-vi.mock("@/lib/db/deck-api", () => ({
+vi.mock(import("@/lib/db/deck-api"), () => ({
   fetchDeck: mockFetchDeck,
   fetchDecks: mockFetchDecks,
   createDeck: vi.fn(),

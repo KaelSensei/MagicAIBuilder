@@ -14,7 +14,7 @@ const { mockFetchDeck, toastAdd } = vi.hoisted(() => ({
   toastAdd: vi.fn(),
 }));
 
-vi.mock("@/lib/db/deck-api", () => ({
+vi.mock(import("@/lib/db/deck-api"), () => ({
   fetchDeck: mockFetchDeck,
   fetchDecks: vi.fn(),
   createDeck: vi.fn(),
@@ -32,9 +32,11 @@ vi.mock("@/lib/db/deck-api", () => ({
   lookupSearchCache: vi.fn(),
 }));
 
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: toastAdd }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: toastAdd });
+  return { useToastStore };
+});
 
 import { useDeckStore } from "./store";
 

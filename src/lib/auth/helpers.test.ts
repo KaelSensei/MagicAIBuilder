@@ -8,8 +8,9 @@ const { mockDeckFindUnique, mockUserFindUnique, mockUserUpsert } = vi.hoisted(()
   mockUserUpsert: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     user: {
       findUnique: mockUserFindUnique,
       upsert: mockUserUpsert,
@@ -17,8 +18,8 @@ vi.mock("@/lib/db/prisma", () => ({
     deck: {
       findUnique: mockDeckFindUnique,
     },
-  },
-}));
+  });
+});
 
 // ─── Mock NextAuth auth() ─────────────────────────────────────────────────────
 
@@ -26,7 +27,7 @@ const { mockAuth } = vi.hoisted(() => ({
   mockAuth: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/config", () => ({
+vi.mock(import("@/lib/auth/config"), () => ({
   auth: mockAuth,
 }));
 

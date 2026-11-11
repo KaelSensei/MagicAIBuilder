@@ -7,16 +7,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const toastAdd = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/db/deck-api", () => ({
+vi.mock(import("@/lib/db/deck-api"), () => ({
   updateDeck: vi.fn().mockResolvedValue({}),
   addCard: vi.fn().mockResolvedValue({ id: "saved-row" }),
   removeCard: vi.fn().mockResolvedValue(undefined),
   lookupCardCache: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: toastAdd }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: toastAdd });
+  return { useToastStore };
+});
 
 import * as deckApi from "@/lib/db/deck-api";
 import { createEmptyDeck } from "./store-factories";

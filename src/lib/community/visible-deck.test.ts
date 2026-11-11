@@ -2,13 +2,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockDeckFindUnique = vi.fn();
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
+vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
+  const { stubPrisma } = await import("@/test/prisma-stub");
+  return stubPrisma(await importOriginal(), {
     deck: {
       findUnique: mockDeckFindUnique,
     },
-  },
-}));
+  });
+});
 
 const { findVisibleDeck } = await import("./visible-deck");
 

@@ -15,7 +15,7 @@ import type { Mock } from "vitest";
 const toastAdd = vi.hoisted(() => vi.fn());
 
 // ── Mock deck-api BEFORE importing the store ─────────────────────────────────
-vi.mock("@/lib/db/deck-api", () => ({
+vi.mock(import("@/lib/db/deck-api"), () => ({
   fetchDecks: vi.fn().mockResolvedValue({ decks: [], total: 0, page: 0, limit: 20 }),
   createDeck: vi.fn().mockResolvedValue({
     id: "deck-1",
@@ -71,9 +71,11 @@ vi.mock("@/lib/db/deck-api", () => ({
 }));
 
 // ── Mock useToast so the store doesn't blow up ────────────────────────────────
-vi.mock("@/hooks/useToast", () => ({
-  useToastStore: { getState: () => ({ add: toastAdd }) },
-}));
+vi.mock(import("@/hooks/useToast"), async (importOriginal) => {
+  const { useToastStore } = await importOriginal();
+  useToastStore.setState({ add: toastAdd });
+  return { useToastStore };
+});
 
 const collectionState = vi.hoisted(() => ({
   collectionCards: {} as Record<string, { name: string; quantity: number; scryfallId: string }>,
@@ -84,7 +86,7 @@ vi.mock("@/lib/collection/store", () => ({
   useCollectionStore: { getState: () => collectionState },
 }));
 
-vi.mock("@/lib/scryfall/client", () => ({
+vi.mock(import("@/lib/scryfall/client"), () => ({
   getCardById: vi.fn(),
 }));
 

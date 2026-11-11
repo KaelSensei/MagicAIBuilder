@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const captureException = vi.fn();
 const captureMessage = vi.fn();
 
-vi.mock("@sentry/nextjs", () => ({
+vi.mock(import("@sentry/nextjs"), () => ({
   captureException: (...args: readonly unknown[]) => captureException(...args),
   captureMessage: (...args: readonly unknown[]) => captureMessage(...args),
 }));
