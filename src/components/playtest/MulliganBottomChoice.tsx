@@ -1,4 +1,14 @@
 "use client";
+/**
+ * The bottom choice of a London mulligan: the player picks, in order, the
+ * cards that go to the bottom of the library.
+ *
+ * Playtest (ui), drawn by `HandZone` in place of the hand actions while the
+ * engine waits. Rules: CR 103.5. Not responsible for: counting the cards to
+ * bottom or moving them; the caller passes both through `BottomChoiceRequest`.
+ *
+ * @module playtest/MulliganBottomChoice
+ */
 import { useId, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/components/ui/utils";
@@ -64,7 +74,13 @@ export function MulliganBottomChoice({
   }
 
   return (
-    <div role="group" aria-labelledby={promptId} className="space-y-3">
+    // A native fieldset carries the group role (Sonar S6819). The prompt names
+    // it by id: as a <legend> it would leave the spacing it shares with the
+    // live progress line.
+    <fieldset
+      aria-labelledby={promptId}
+      className="m-0 min-w-0 space-y-3 border-0 p-0"
+    >
       <div className="space-y-1">
         <p
           id={promptId}
@@ -143,6 +159,6 @@ export function MulliganBottomChoice({
           ↩ {t("life.undo")}
         </button>
       </div>
-    </div>
+    </fieldset>
   );
 }

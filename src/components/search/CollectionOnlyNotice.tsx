@@ -43,7 +43,9 @@ export function CollectionOnlyBlockedState({
   return (
     <div className="flex h-40 flex-col items-center justify-center gap-2 px-6 text-center text-sm text-[var(--text-secondary)]">
       <Package className="h-5 w-5" aria-hidden="true" />
-      <p role="status">{t(blockedMessageKey(state))}</p>
+      <output aria-live="polite" aria-atomic="true" className="block">
+        {t(blockedMessageKey(state))}
+      </output>
     </div>
   );
 }

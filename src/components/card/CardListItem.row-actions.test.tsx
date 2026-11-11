@@ -7,7 +7,13 @@
  * deck API and answers it as the server would.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -342,6 +348,17 @@ describe("quantity stepper on a deck row", () => {
     await waitFor(() =>
       expect(requests.map((request) => request.body)).toEqual([{ quantity: 1 }])
     );
+  });
+
+  // Sonar S6819: a native fieldset carries the group role, named as before.
+  it("groups the stepper in a native fieldset named after the card", () => {
+    openSavedDeck(forest(3));
+    renderWithIntl(<CardListItem card={forest(3)} />);
+
+    const stepper = screen.getByRole("group", { name: "Copies of Forest" });
+    expect(stepper).toBeInstanceOf(HTMLFieldSetElement);
+    expect(stepper).not.toHaveAttribute("role");
+    expect(within(stepper).getAllByRole("button")).toHaveLength(2);
   });
 
   it("names the stepper in the player's language", () => {

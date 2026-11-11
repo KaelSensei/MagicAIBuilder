@@ -47,10 +47,12 @@ export function DeckTargetBracketPicker({
   const bracketName = (level: BracketLevel) => tDeck(`bracket.name.${level}`);
 
   return (
-    <div
-      role="group"
+    // A native fieldset carries the group role (Sonar S6819); the label stays
+    // in the row beside the current bracket, so it names the group by id
+    // rather than as a <legend>, which would leave that row.
+    <fieldset
       aria-labelledby={labelId}
-      className="space-y-1.5 border-b border-[var(--border)] px-3 py-2"
+      className="m-0 min-w-0 space-y-1.5 border-b border-[var(--border)] px-3 py-2"
     >
       <div className="flex items-baseline justify-between gap-2">
         <span id={labelId} className="text-xs text-[var(--text-secondary)]">
@@ -94,6 +96,6 @@ export function DeckTargetBracketPicker({
           );
         })}
       </div>
-    </div>
+    </fieldset>
   );
 }

@@ -1,5 +1,14 @@
 "use client";
-
+/**
+ * Offers a signed-in user the guest deck this browser still holds, and
+ * confirms once the account owns it.
+ *
+ * Deck building (ui). `useGuestDeckClaim` drives the claim: when to offer it,
+ * one save request at a time, and clearing the browser copy; this module only
+ * draws the offer and its outcome.
+ *
+ * @module deck/GuestDeckClaimOffer
+ */
 import { useId } from "react";
 import { useTranslations } from "next-intl";
 import { Archive, X } from "lucide-react";
@@ -98,9 +107,10 @@ function SavedBody({ deckId, deckName, onClose }: SavedBodyProps) {
 
   return (
     <div className="flex items-start gap-3">
-      <p
-        role="status"
-        className="min-w-0 flex-1 text-sm text-[var(--text-primary)]"
+      <output
+        aria-live="polite"
+        aria-atomic="true"
+        className="block min-w-0 flex-1 text-sm text-[var(--text-primary)]"
       >
         {t("saved", { name: deckName })}{" "}
         <Link
@@ -109,7 +119,7 @@ function SavedBody({ deckId, deckName, onClose }: SavedBodyProps) {
         >
           {t("open")}
         </Link>
-      </p>
+      </output>
       <Button
         variant="ghost"
         size="icon"
