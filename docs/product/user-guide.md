@@ -422,11 +422,13 @@ When you have cards in your collection:
 - Cards you own show a green **In Collection (xN)** badge
 - Use the **📦 Show only collection cards** toggle in the filters to limit search results to cards you own
 
-**In the Deck Editor:**
+**In the Deck Editor (List view):**
 
 - Each card in your deck shows either:
-  - **📦 Owned** (green) — you have this card in your collection
-  - **🛒 Buy** (amber) — you need to acquire this card
+  - **📦 Owned** (green) — your collection holds the copies this card needs
+  - **🛒 Buy** (amber) — you need to acquire more copies; hover the badge to see how many
+- Copies are counted per printing: owning another printing of the card does not count
+- Basic lands have no badge, since you are never asked to buy them
 
 This lets you instantly see what you need to buy to complete a deck.
 
