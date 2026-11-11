@@ -2,6 +2,7 @@ import { z } from "zod";
 import { PIP_COLORS, type PipColor } from "@/lib/deck/mana-alignment";
 import { ALL_FORMATS, getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import { FIVE_COLORS } from "@/lib/mana/colors";
+import { isNonEmptyString, isRecord } from "@/lib/guards";
 import { sanitizeForPrompt } from "@/lib/validation/ai";
 import {
   applySearchContext,
@@ -182,9 +183,7 @@ export function readSearchQueryResult(payload: unknown): SearchQueryReadResult {
 function readTranslatedQuery(
   payload: unknown
 ): { query: string; context: TranslatedQueryContext } | null {
-  if (!isRecord(payload) || typeof payload.query !== "string" || payload.query.length === 0) {
-    return null;
-  }
+  if (!isRecord(payload) || !isNonEmptyString(payload.query)) return null;
   if (!isRecord(payload.context) || !isDeckFormat(payload.context.format)) return null;
   if (!Array.isArray(payload.context.colorIdentity)) return null;
   const colorIdentity = payload.context.colorIdentity.filter(
@@ -234,10 +233,6 @@ function isDeckFormat(value: unknown): value is DeckFormat {
 
 function isPipColor(value: string): value is PipColor {
   return COLOR_NAMES.includes(value);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function normalizeColorIdentity(colors: readonly string[]): readonly PipColor[] {

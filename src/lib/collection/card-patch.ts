@@ -17,7 +17,8 @@
  * @module collection/card-patch
  */
 
-import { isRecord, parseCollectionCard } from "./parse";
+import { isRecordOrArray } from "@/lib/guards";
+import { parseCollectionCard } from "./parse";
 import type { CardCondition, CollectionCard } from "./types";
 
 /** Fields a client may change on one collection row. */
@@ -57,7 +58,7 @@ export interface CollectionMaps {
 export function parseCollectionPatchResponse(
   raw: unknown
 ): CollectionPatchResult | null {
-  if (!isRecord(raw)) return null;
+  if (!isRecordOrArray(raw)) return null;
   if (raw["deleted"] === true) return { kind: "deleted" };
 
   const card = parseCollectionCard(raw["card"]);

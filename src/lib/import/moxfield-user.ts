@@ -1,3 +1,4 @@
+import { isNonEmptyString, isRecordOrArray } from "@/lib/guards";
 import { fetchMoxfieldJson } from "./moxfield-client";
 
 export interface MoxfieldUserDeckSummary {
@@ -21,18 +22,14 @@ interface MoxfieldDeckRecord {
   readonly lastUpdatedAtUtc?: unknown;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 function asDeckRecord(value: unknown): MoxfieldDeckRecord | null {
-  return isRecord(value) ? value : null;
+  return isRecordOrArray(value) ? value : null;
 }
 
 function readItems(data: unknown): { items: readonly unknown[]; total: number } {
-  if (!isRecord(data)) return { items: [], total: 0 };
+  if (!isRecordOrArray(data)) return { items: [], total: 0 };
 
-  const nested = isRecord(data.results) ? data.results : null;
+  const nested = isRecordOrArray(data.results) ? data.results : null;
   let items: readonly unknown[] = [];
   if (Array.isArray(nested?.items)) {
     items = nested.items;
@@ -62,7 +59,7 @@ export function parseMoxfieldUserDecks(data: unknown): MoxfieldUserDeckPage {
     if (!record) continue;
     const rawId = record.publicId ?? record.id;
     const rawName = record.name;
-    if (typeof rawId !== "string" || rawId.length === 0 || typeof rawName !== "string") {
+    if (!isNonEmptyString(rawId) || typeof rawName !== "string") {
       continue;
     }
 

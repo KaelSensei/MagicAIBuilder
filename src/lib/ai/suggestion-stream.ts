@@ -1,4 +1,5 @@
 import type { StreamEvent } from "@/app/api/ai/suggest/route";
+import { isRecordOrArray } from "@/lib/guards";
 import type {
   AISuggestionResult,
   CardRemoval,
@@ -14,23 +15,13 @@ export interface SuggestionStreamAcc {
 }
 
 /**
- * True when a value is a plain object.
- *
- * @param value - parsed JSON
- * @returns whether the value has named fields
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-/**
  * Accepts one NDJSON object as a suggestion-stream event.
  *
  * @param value - parsed line
  * @returns whether the object matches a known event
  */
 function isStreamEvent(value: unknown): value is StreamEvent {
-  if (!isRecord(value) || typeof value.type !== "string") return false;
+  if (!isRecordOrArray(value) || typeof value.type !== "string") return false;
   switch (value.type) {
     case "analysis": {
       const provider = value.provider;
@@ -59,7 +50,7 @@ function isStreamEvent(value: unknown): value is StreamEvent {
  * @returns whether the suggestion can be stored
  */
 function isSuggestionData(value: unknown): boolean {
-  if (!isRecord(value)) return false;
+  if (!isRecordOrArray(value)) return false;
   const priority = value.priority;
   return (
     typeof value.name === "string" &&
@@ -76,7 +67,11 @@ function isSuggestionData(value: unknown): boolean {
  * @returns whether the removal can be stored
  */
 function isRemovalData(value: unknown): boolean {
-  return isRecord(value) && typeof value.name === "string" && typeof value.reason === "string";
+  return (
+    isRecordOrArray(value) &&
+    typeof value.name === "string" &&
+    typeof value.reason === "string"
+  );
 }
 
 /**

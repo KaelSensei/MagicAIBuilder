@@ -12,6 +12,7 @@
  * @module playtest/session-input
  */
 
+import { isRecordOrArray } from "@/lib/guards";
 import { maxMulligans } from "./engine";
 import {
   buildTrendData,
@@ -75,10 +76,6 @@ export interface SessionSummary {
   readonly trend: readonly TrendPoint[];
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 function isOptionalText(value: unknown): value is string | undefined {
   return value === undefined || typeof value === "string";
 }
@@ -117,7 +114,7 @@ function fail(error: string): ParseResult {
  * @returns the validated session, or the name of the field that failed
  */
 export function parseSessionInput(payload: unknown): ParseResult {
-  if (!isRecord(payload)) return fail("body must be an object");
+  if (!isRecordOrArray(payload)) return fail("body must be an object");
 
   const {
     result,

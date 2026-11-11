@@ -11,6 +11,7 @@
  * @module collection/parse
  */
 
+import { isRecordOrArray } from "@/lib/guards";
 import {
   CARD_CONDITIONS,
   type CollectionCard,
@@ -28,18 +29,6 @@ export function parseCondition(v: unknown): CardCondition | null {
 }
 
 /**
- * Type guard for plain objects.
- *
- * Note this accepts arrays, which are objects — callers that care read named
- * properties, and an array has none of them, so the field checks reject it.
- *
- * @param v - any value
- */
-export function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === "object" && v !== null;
-}
-
-/**
  * Parses one collection card from an unknown payload.
  *
  * Every field the store relies on is checked; a single wrong type rejects the
@@ -50,7 +39,7 @@ export function isRecord(v: unknown): v is Record<string, unknown> {
  * @returns the card, or null when the payload cannot be trusted
  */
 export function parseCollectionCard(v: unknown): CollectionCard | null {
-  if (!isRecord(v)) return null;
+  if (!isRecordOrArray(v)) return null;
 
   const { id, scryfallId, name, quantity, foil, createdAt, acquiredAt, price, imageUri } = v;
 

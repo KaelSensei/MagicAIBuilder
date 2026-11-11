@@ -10,6 +10,7 @@
  * @module scryfall/rulings
  */
 import { SCRYFALL_API } from "./constants";
+import { isRecord } from "@/lib/guards";
 
 /** A dated card ruling returned by Scryfall. */
 export interface CardRuling {
@@ -35,10 +36,6 @@ export const RULINGS_TIMEOUT_MS = 15_000;
 
 /** Maximum recently viewed cards retained for offline rulings access. */
 const MAX_CACHED_CARDS = 50;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function parseRuling(value: unknown): CardRuling | null {
   if (!isRecord(value)) return null;
