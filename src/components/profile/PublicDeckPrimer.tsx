@@ -1,7 +1,18 @@
 "use client";
-
+/**
+ * A public deck's primer: the owner's Markdown description, reduced to headings, lists,
+ * paragraphs and links, with a contents bar and copy and download actions.
+ *
+ * Community context, mounted by `PublicDeckView`. The owner writes the text and every visitor
+ * reads it, so it is never parsed as HTML, and every link goes through `classifyUserLink`
+ * before it gets an `href`.
+ * Not responsible for: the link policy itself, which lives in `lib/community/user-link.ts`.
+ *
+ * @module profile/PublicDeckPrimer
+ */
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Check, Copy, Download } from "lucide-react";
+import { classifyUserLink, type UserLink } from "@/lib/community/user-link";
 
 interface PublicDeckPrimerProps {
   readonly description: string;
@@ -22,13 +33,8 @@ type PrimerBlock =
       readonly items: readonly string[];
     };
 
-/**
- * Schemes an author's link may use. OWASP allow-lists http and https only for an untrusted URL
- * in an `href` ("Allow-list http and HTTPS URLs only"), so `mailto:` stays plain text.
- * Source: https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
- * (read 2026-11-11).
- */
-const SAFE_PROTOCOLS = new Set(["http:", "https:"]);
+const PRIMER_LINK_CLASS =
+  "font-medium text-[var(--accent-text)] underline underline-offset-2";
 
 function destinationEndings(text: string): readonly number[] {
   // Precompute destination endings so malformed nested links cannot rescan
@@ -75,12 +81,38 @@ function headingId(text: string): string {
   return `primer-${slug || "section"}`;
 }
 
-function safePrimerUrl(url: string): string | null {
-  if (url.startsWith("/") || url.startsWith("#")) return url;
-  try {
-    return SAFE_PROTOCOLS.has(new URL(url).protocol) ? url : null;
-  } catch {
-    return null;
+/** An author's link, rendered as far as {@link classifyUserLink} allows it to lead. */
+function PrimerLink({
+  label,
+  link,
+}: {
+  readonly label: string;
+  readonly link: UserLink;
+}): ReactNode {
+  switch (link.kind) {
+    case "external":
+      return (
+        <a
+          href={link.href}
+          target="_blank"
+          rel="noreferrer noopener"
+          className={PRIMER_LINK_CLASS}
+        >
+          {label}
+        </a>
+      );
+    case "same-site":
+      return (
+        <a href={link.href} className={PRIMER_LINK_CLASS}>
+          {label}
+        </a>
+      );
+    case "refused":
+      return <span>{label}</span>;
+    default: {
+      const unhandled: never = link;
+      return unhandled;
+    }
   }
 }
 
@@ -139,22 +171,12 @@ function renderInline(text: string): readonly ReactNode[] {
   for (const match of primerLinks(text)) {
     const index = match.index;
     if (index > cursor) nodes.push(text.slice(cursor, index));
-    const href = safePrimerUrl(match.url);
-    const label = match.label;
     nodes.push(
-      href ? (
-        <a
-          key={`${index}-${href}`}
-          href={href}
-          target={href.startsWith("http") ? "_blank" : undefined}
-          rel={href.startsWith("http") ? "noreferrer noopener" : undefined}
-          className="font-medium text-[var(--accent-text)] underline underline-offset-2"
-        >
-          {label}
-        </a>
-      ) : (
-        <span key={`${index}-unsafe`}>{label}</span>
-      )
+      <PrimerLink
+        key={`link-${index}`}
+        label={match.label}
+        link={classifyUserLink(match.url)}
+      />
     );
     cursor = match.end;
   }
