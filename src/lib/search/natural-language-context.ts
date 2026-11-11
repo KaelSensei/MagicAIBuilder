@@ -68,7 +68,10 @@ function orderedColors(colors: readonly string[]): readonly PipColor[] {
 }
 
 function isPipColor(value: string): value is PipColor {
-  return PIP_COLORS.some((pip) => pip === value);
+  for (const color of PIP_COLORS) {
+    if (color === value) return true;
+  }
+  return false;
 }
 
 function appendToken(query: string, token: string): string {
@@ -80,7 +83,7 @@ function appendToken(query: string, token: string): string {
 
 function hasDeckLegality(query: string, format: DeckFormat): boolean {
   const expected = `legal:${getFormatConfig(format).scryfallLegality}`;
-  const clauses = query.toLowerCase().match(new RegExp("\\blegal:[a-z]+\\b", "gi")) ?? [];
+  const clauses = query.toLowerCase().match(/\blegal:[a-z]+\b/gi) ?? [];
   return clauses.length === 1 && clauses[0]?.toLowerCase() === expected;
 }
 

@@ -37,8 +37,6 @@ import { useCardSearchResults } from "@/hooks/useCardSearchResults";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Header } from "@/components/layout/Header";
 import { SearchBar } from "@/components/search/SearchBar";
-import { NaturalLanguageSearch } from "@/components/search/NaturalLanguageSearch";
-import { NaturalLanguageSearchBoundary } from "@/components/search/NaturalLanguageSearchBoundary";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchResults } from "@/components/search/SearchResults";
 import { DeckEditor } from "@/components/deck/DeckEditor";
@@ -97,6 +95,7 @@ import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
 import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
+import { BuilderDescribedSearch } from "@/components/builder/BuilderDescribedSearch";
 import {
   buildNaturalLanguageSearchContext,
   toSearchLocale,
@@ -129,6 +128,37 @@ interface BuildSearchQueryFromModeParams {
   /** The deck's commander, whose partner abilities decide the partner search. */
   readonly deckCommander: PairingCard | null;
   readonly format?: DeckFormat;
+}
+
+function pinnedQueryLabel(pinned: string | null): string | undefined {
+  if (pinned === null) return undefined;
+  return pinned;
+}
+
+/** Name search can describe a card only when it is not choosing a command slot. */
+function nameSearchAllowsDescription(input: {
+  readonly mode: SearchMode;
+  readonly commanderMode: boolean;
+  readonly partnerMode: boolean;
+  readonly companionMode: boolean;
+}): boolean {
+  return (
+    input.mode === "name" &&
+    !input.commanderMode &&
+    !input.partnerMode &&
+    !input.companionMode
+  );
+}
+
+/** The confirmed description search, or the syntax query when none is pinned. */
+function searchQueryOrPinned(pinned: string | null, syntax: string): string {
+  if (pinned === null) return syntax;
+  return pinned;
+}
+
+/** The confirmed description search is active only while description search is allowed. */
+function descriptionSearchIsActive(describing: boolean, allowed: boolean): boolean {
+  return describing && allowed;
 }
 
 /** Build Scryfall search query based on current mode and filters */
@@ -464,9 +494,13 @@ export default function BuilderPage() {
       }),
     [deck?.format, deck?.commander, deck?.partner]
   );
-  const naturalSearchAllowed =
-    searchMode === "name" && !commanderMode && !partnerMode && !companionMode;
-  const describeActive = describeSearch && naturalSearchAllowed;
+  const naturalSearchAllowed = nameSearchAllowsDescription({
+    mode: searchMode,
+    commanderMode,
+    partnerMode,
+    companionMode,
+  });
+  const describeActive = descriptionSearchIsActive(describeSearch, naturalSearchAllowed);
 
   useEffect(() => {
     if (naturalSearchAllowed) return;
@@ -486,9 +520,7 @@ export default function BuilderPage() {
     deckCommander: deck?.commander ?? null,
     format: deck?.format,
   });
-  // A confirmed description search stays the executed query until the player
-  // types a new syntax search, including after they return to syntax mode.
-  const query = pinnedQuery ?? syntaxQuery;
+  const query = searchQueryOrPinned(pinnedQuery, syntaxQuery);
 
   // Set and colour search show no filters panel, so a "Collection only" left on there must not
   // filter a list whose toggle the player cannot see.
@@ -944,25 +976,18 @@ export default function BuilderPage() {
               {/* Mode-specific controls */}
               {searchMode === "name" && (
                 <>
-                  {!describeActive && (
-                    <SearchBar
-                      onSearch={handleSearch}
-                      isLoading={searchLoading}
-                      showKeyboardHint={true}
-                      onFocus={() => setIsInputFocused(true)}
-                      onBlur={() => setIsInputFocused(false)}
-                    />
-                  )}
-                  {naturalSearchAllowed && (
-                    <NaturalLanguageSearchBoundary>
-                      <NaturalLanguageSearch
-                        context={naturalSearchContext}
-                        locale={searchLocale}
-                        onActiveChange={handleDescribeActive}
-                        onRunQuery={handleNaturalQuery}
-                      />
-                    </NaturalLanguageSearchBoundary>
-                  )}
+                  <BuilderDescribedSearch
+                    describeActive={describeActive}
+                    allowed={naturalSearchAllowed}
+                    searchLoading={searchLoading}
+                    context={naturalSearchContext}
+                    locale={searchLocale}
+                    onSearch={handleSearch}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
+                    onActiveChange={handleDescribeActive}
+                    onRunQuery={handleNaturalQuery}
+                  />
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -1043,7 +1068,7 @@ export default function BuilderPage() {
                 onAddToMaybeboard={addToMaybeboard}
                 onAddToZone={handleAddToZone}
                 draggable={true}
-                executedQuery={pinnedQuery ?? undefined}
+                executedQuery={pinnedQueryLabel(pinnedQuery)}
               />
             </div>
           </motion.div>

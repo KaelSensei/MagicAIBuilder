@@ -3,18 +3,14 @@ import { PIP_COLORS, type PipColor } from "@/lib/deck/mana-alignment";
 import { ALL_FORMATS, getFormatConfig, type DeckFormat } from "@/lib/deck/formats";
 import { sanitizeForPrompt } from "@/lib/validation/ai";
 import {
-  isAcceptableScryfallQuery,
-  readModelQuery,
-} from "./scryfall-query-syntax";
-import {
   applySearchContext,
-  queryWidensDeckContext,
   type NaturalLanguageSearchContext,
 } from "./natural-language-context";
+import { isAcceptableScryfallQuery, readModelQuery } from "./scryfall-query-syntax";
 
 export type { NaturalLanguageSearchContext };
-
-export { isAcceptableScryfallQuery, applySearchContext, queryWidensDeckContext };
+export { applySearchContext, queryWidensDeckContext } from "./natural-language-context";
+export { isAcceptableScryfallQuery } from "./scryfall-query-syntax";
 
 /** Player descriptions longer than this never reach the model. */
 const MAX_CARD_DESCRIPTION_LENGTH = 400;
@@ -224,15 +220,26 @@ function languageName(locale: SearchDescriptionLocale): string {
 }
 
 function isSearchQueryErrorCode(value: unknown): value is SearchQueryErrorCode {
-  return typeof value === "string" && SEARCH_QUERY_ERROR_CODES.some((code) => code === value);
+  if (typeof value !== "string") return false;
+  for (const code of SEARCH_QUERY_ERROR_CODES) {
+    if (code === value) return true;
+  }
+  return false;
 }
 
 function isDeckFormat(value: unknown): value is DeckFormat {
-  return typeof value === "string" && ALL_FORMATS.some((format) => format === value);
+  if (typeof value !== "string") return false;
+  for (const format of ALL_FORMATS) {
+    if (format === value) return true;
+  }
+  return false;
 }
 
 function isPipColor(value: string): value is PipColor {
-  return PIP_COLORS.some((color) => color === value);
+  for (const color of PIP_COLORS) {
+    if (color === value) return true;
+  }
+  return false;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

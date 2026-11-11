@@ -66,7 +66,7 @@ export function readModelQuery(modelText: string): string | null {
  * @returns the query without those clauses
  */
 export function removeLegalityClause(query: string): string {
-  return collapseSpaces(query.replace(new RegExp("\\blegal:[a-z]+\\b", "gi"), " "));
+  return collapseSpaces(query.replace(/\blegal:[a-z]+\b/gi, " "));
 }
 
 function collapseSpaces(value: string): string {
@@ -107,7 +107,7 @@ function hasBalancedDelimiters(query: string): boolean {
 function hasSearchIntent(query: string): boolean {
   const remainder = removeLegalityClause(query);
   if (remainder.length === 0) return false;
-  if (new RegExp('(?:^|\\s)!"').test(remainder)) return true;
+  if (/(?:^|\s)!"/.test(remainder)) return true;
   return hasKnownKeyword(remainder);
 }
 
@@ -123,6 +123,10 @@ function hasKnownKeyword(query: string): boolean {
 function stripCodeFence(text: string): string {
   const trimmed = text.trim();
   if (!trimmed.startsWith("```")) return trimmed;
-  const withoutOpen = trimmed.replace(/^```(?:json)?\s*/i, "");
-  return withoutOpen.replace(/\s*```$/, "").trim();
+  const withoutTicks = trimmed.slice(3);
+  const body = withoutTicks.startsWith("json")
+    ? withoutTicks.slice(4).trimStart()
+    : withoutTicks.trimStart();
+  const closing = body.endsWith("```") ? body.slice(0, -3) : body;
+  return closing.trim();
 }
