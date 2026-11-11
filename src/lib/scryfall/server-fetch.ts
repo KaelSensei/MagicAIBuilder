@@ -6,6 +6,7 @@
  * queue. A body is returned only after it passes the shape check, so nothing
  * but a Scryfall card or list can reach the cache.
  */
+import "server-only";
 import { httpGet, HttpStatusError } from "@/lib/http";
 import { isScryfallCard, isScryfallSearchResponse } from "./guards";
 import { scheduleScryfallRequest } from "./request-queue";

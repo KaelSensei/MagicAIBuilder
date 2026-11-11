@@ -1,4 +1,5 @@
 // Server-side cache of combo lookups, keyed by a hash of the canonical card list.
+import "server-only";
 import { createHash } from "node:crypto";
 import {
   deckComboQueryKey,

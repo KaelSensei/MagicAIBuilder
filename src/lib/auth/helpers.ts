@@ -1,3 +1,15 @@
+/**
+ * Session guards for route handlers: `requireAuth` (a signed-in user whose row
+ * still exists) and `requireDeckOwner` (that user owns the deck).
+ *
+ * Each returns either its value or a ready `NextResponse` (401, 403 or 404)
+ * for the handler to return. Outside production, `PLAYWRIGHT_TEST=1` signs an
+ * anonymous caller in as a fixed test user. Bearer keys of the public API are
+ * checked in `lib/api/authenticate.ts`, never here.
+ *
+ * @module auth/helpers
+ */
+import "server-only";
 import { auth } from "@/lib/auth/config";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";

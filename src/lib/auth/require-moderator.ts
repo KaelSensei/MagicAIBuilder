@@ -1,3 +1,14 @@
+/**
+ * The moderation gate for route handlers: a signed-in user whose `isModerator`
+ * flag is set.
+ *
+ * The flag is read from the database on every call, not from the session
+ * token, so revoking it takes effect on the next request. Answers 401 through
+ * `requireAuth` and 403 when the flag is off.
+ *
+ * @module auth/require-moderator
+ */
+import "server-only";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "./helpers";

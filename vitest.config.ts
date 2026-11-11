@@ -64,6 +64,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+      // The real `server-only` throws unless resolved with the `react-server`
+      // condition, which Vitest does not set; the stub says why that is safe.
+      "server-only": resolve(__dirname, "./src/test/stubs/server-only.ts"),
     },
   },
 });

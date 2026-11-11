@@ -1,3 +1,15 @@
+/**
+ * The Auth.js instance for the Node runtime: `auth`, `signIn`, `signOut` and
+ * the `/api/auth/*` route `handlers`.
+ *
+ * It extends `edge-config.ts`, which the middleware runs, with what the Edge
+ * runtime cannot load: the Prisma adapter and the bcryptjs password check of
+ * the credentials provider, rate-limited per email. It also holds the Google
+ * client secret.
+ *
+ * @module auth/config
+ */
+import "server-only";
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Google from "next-auth/providers/google";
