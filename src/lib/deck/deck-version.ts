@@ -13,7 +13,7 @@
 
 import type { Prisma } from "@prisma/client";
 
-import { toJsonPayload } from "@/lib/api/json-payload";
+import { toJsonPayload } from "@/lib/db/json-payload";
 import { restoredDeckCards } from "./snapshot-restore";
 
 /** The card columns that decide whether two deck lists play the same. */
