@@ -8,7 +8,7 @@ import type { ScryfallCard } from "@/lib/scryfall/types";
 import { useCardPrintings } from "@/hooks/useCardPrintings";
 import { getCardImageUri } from "@/lib/scryfall/images";
 import { resolveLocalizedText, toScryfallLang } from "@/lib/scryfall/localized";
-import { Modal } from "@/components/ui/Modal";
+import { Modal, ModalTitle } from "@/components/ui/Modal";
 import { CardRulingsPanel } from "@/components/card/CardRulingsPanel";
 import { useCollectionStore } from "@/lib/collection/store";
 import type { CollectionCard } from "@/lib/collection/types";
@@ -37,6 +37,7 @@ export function PrintingSelectorModal({
   onClose,
 }: PrintingSelectorModalProps) {
   const t = useTranslations("card");
+  const tCommon = useTranslations("common");
   const tOwnership = useTranslations("collection.ownership");
   const locale = useLocale();
   const { data, isLoading } = useCardPrintings(card.name, toScryfallLang(locale));
@@ -81,9 +82,9 @@ export function PrintingSelectorModal({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-(--border) shrink-0">
         <div>
-          <h2 className="text-base font-semibold text-(--text-primary)">
+          <ModalTitle className="text-base font-semibold text-(--text-primary)">
             {name}
-          </h2>
+          </ModalTitle>
           <p className="text-xs text-(--text-secondary) mt-0.5">
             {isLoading
               ? t("loadingPrintings")
@@ -93,6 +94,7 @@ export function PrintingSelectorModal({
         <button
           type="button"
           onClick={onClose}
+          aria-label={tCommon("actions.close")}
           className="text-(--text-secondary) hover:text-(--text-primary) transition-colors"
         >
           <X className="w-4 h-4" />

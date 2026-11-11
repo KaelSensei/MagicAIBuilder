@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { useState, type ReactNode } from "react";
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PlaytestModal } from "./PlaytestModal";
@@ -61,19 +63,68 @@ function makeDeck(format: Deck["format"] = "commander"): Deck {
   };
 }
 
-function renderModal(deck = makeDeck(), onClose = vi.fn()) {
+function Providers({ children }: { readonly children: ReactNode }) {
   // The header bar and history panel both query, so the modal needs a client.
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  const [queryClient] = useState(
+    () => new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  );
+  return (
     <QueryClientProvider client={queryClient}>
       <NextIntlClientProvider
         locale="en"
-        messages={{ playtest: messages, playtestEvidence: evidenceMessages, builder: builderMessages }}
+        messages={{
+          playtest: messages,
+          playtestEvidence: evidenceMessages,
+          builder: builderMessages,
+        }}
       >
-        <PlaytestModal deck={deck} onClose={onClose} />
+        {children}
       </NextIntlClientProvider>
     </QueryClientProvider>
   );
+}
+
+function renderModal(deck = makeDeck(), onClose = vi.fn()) {
+  return render(
+    <Providers>
+      <PlaytestModal deck={deck} onClose={onClose} />
+    </Providers>
+  );
+}
+
+/** The builder's side of the playtest: a button that opens it, as the page does. */
+function BuilderPlaytest({ onClose }: { readonly onClose: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Playtest this deck
+      </button>
+      {open && (
+        <PlaytestModal
+          deck={makeDeck()}
+          onClose={() => {
+            onClose();
+            setOpen(false);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+/** Opens the playtest from its builder button, with a real keyboard. */
+async function openFromBuilder() {
+  const user = userEvent.setup();
+  const onClose = vi.fn();
+  render(
+    <Providers>
+      <BuilderPlaytest onClose={onClose} />
+    </Providers>
+  );
+  const trigger = screen.getByRole("button", { name: "Playtest this deck" });
+  await user.click(trigger);
+  return { user, trigger, onClose };
 }
 
 /** Deals the opening hand, as the user does before anything else is possible. */
@@ -401,6 +452,76 @@ describe("PlaytestModal", () => {
         cardsSeen: 8,
         additionalCardsSeen: 0,
       });
+    });
+  });
+
+  describe("as a modal dialog", () => {
+    it("is named after the deck and hides the builder behind it", async () => {
+      await openFromBuilder();
+
+      expect(
+        screen.getByRole("dialog", { name: "Playtest — Kenrith Goodstuff" })
+      ).toBeInTheDocument();
+      // The builder leaves the accessibility tree, so Tab and a screen
+      // reader no longer reach the page covered by the playtest.
+      expect(
+        screen.queryByRole("button", { name: "Playtest this deck" })
+      ).not.toBeInTheDocument();
+    });
+
+    it("moves focus into the playtest when it opens", async () => {
+      await openFromBuilder();
+
+      expect(
+        screen.getByRole("button", { name: "Close playtest" })
+      ).toHaveFocus();
+    });
+
+    it("keeps Tab inside the playtest", async () => {
+      const { user, trigger } = await openFromBuilder();
+      const dialog = screen.getByRole("dialog", { name: /playtest/i });
+
+      // Backwards from the first control wraps to the last one, not the builder.
+      await user.tab({ shift: true });
+
+      expect(dialog.contains(document.activeElement)).toBe(true);
+      expect(trigger).not.toHaveFocus();
+    });
+
+    it("closes on Escape and gives focus back to the builder's button", async () => {
+      const { user, trigger, onClose } = await openFromBuilder();
+
+      await user.keyboard("{Escape}");
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      await waitFor(() => expect(trigger).toHaveFocus());
+    });
+
+    // Closing discards the game, and the action log uses Escape to cancel an edit.
+    it("leaves Escape in a text field to the field instead of closing", async () => {
+      const { user, onClose } = await openFromBuilder();
+      await user.click(
+        screen.getByRole("button", { name: /draw opening hand/i })
+      );
+      await user.type(
+        screen.getByRole("textbox", { name: /record a manual action/i }),
+        "Tapped two lands{Enter}"
+      );
+      await user.click(screen.getByRole("button", { name: "Edit" }));
+      expect(
+        screen.getByRole("textbox", { name: "Edit action" })
+      ).toHaveFocus();
+
+      await user.keyboard("{Escape}");
+
+      expect(
+        screen.queryByRole("textbox", { name: "Edit action" })
+      ).not.toBeInTheDocument();
+      expect(onClose).not.toHaveBeenCalled();
+      expect(
+        screen.getByRole("dialog", { name: /playtest/i })
+      ).toBeInTheDocument();
     });
   });
 

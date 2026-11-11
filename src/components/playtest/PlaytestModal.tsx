@@ -1,7 +1,6 @@
 "use client";
 // Fullscreen playtest — phases, life, and the hand / battlefield / graveyard zones
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCcw, Layers } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Deck } from "@/lib/deck/types";
@@ -17,6 +16,8 @@ import {
   isMultiplayerByDefault,
   offersMultiplayerChoice,
 } from "@/lib/playtest/free-mulligan";
+import { ModalTitle } from "@/components/ui/Modal";
+import { PlaytestDialog } from "@/components/playtest/PlaytestDialog";
 import { PhaseTracker } from "@/components/playtest/PhaseTracker";
 import { LifeTracker } from "@/components/playtest/LifeTracker";
 import { HandZone } from "@/components/playtest/HandZone";
@@ -61,8 +62,12 @@ function PlaytestStartScreen({
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="text-center">
-        <p className="text-[var(--text-secondary)] text-sm mb-1">{t("start.prompt")}</p>
-        <p className="text-[var(--text-secondary)] text-xs">{t("start.hint")}</p>
+        <p className="text-[var(--text-secondary)] text-sm mb-1">
+          {t("start.prompt")}
+        </p>
+        <p className="text-[var(--text-secondary)] text-xs">
+          {t("start.hint")}
+        </p>
       </div>
       {offersMultiplayerChoice(format) && (
         <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
@@ -141,7 +146,8 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   );
 
   const handleRestore = useCallback(
-    (cardId: string, from: CardZone, to: CardZone) => moveToZone(cardId, from, to),
+    (cardId: string, from: CardZone, to: CardZone) =>
+      moveToZone(cardId, from, to),
     [moveToZone]
   );
 
@@ -197,32 +203,31 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
   );
 
   const requiredTokens = useMemo(
-    () => buildTokenLibrary([deck.commander, deck.partner, ...deck.cards].filter((card) => card !== null)),
+    () =>
+      buildTokenLibrary(
+        [deck.commander, deck.partner, ...deck.cards].filter(
+          (card) => card !== null
+        )
+      ),
     [deck.commander, deck.partner, deck.cards]
   );
 
   return (
     <LocalizedDeckTextProvider names={cardNames}>
-    <AnimatePresence>
-      <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="playtest-title"
-        className="fixed inset-0 z-50 flex flex-col bg-[var(--background)] text-[var(--text-primary)]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
+      <PlaytestDialog onClose={handleClose}>
         {/* Header */}
         <div
           data-testid="playtest-header"
           className="flex shrink-0 flex-col gap-3 border-b border-[var(--border)] px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between"
         >
           <div className="flex min-w-0 items-center gap-3">
-            <Layers className="w-5 h-5 text-purple-400 shrink-0" aria-hidden="true" />
-            <h2 id="playtest-title" className="truncate font-semibold text-[var(--text-primary)]">
+            <Layers
+              className="w-5 h-5 text-purple-400 shrink-0"
+              aria-hidden="true"
+            />
+            <ModalTitle className="truncate font-semibold text-[var(--text-primary)]">
               {t("title")} — {deck.name}
-            </h2>
+            </ModalTitle>
             {engine && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 whitespace-nowrap">
                 {t("turn", { turn: engine.turn })}
@@ -271,10 +276,17 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
             <div className="mx-auto max-w-7xl grid gap-4 lg:grid-cols-[20rem_1fr]">
               {/* Left rail: turn structure and life */}
               <aside>
-                <fieldset disabled={choosingBottom} className={BOARD_GROUP_CLASS}>
+                <fieldset
+                  disabled={choosingBottom}
+                  className={BOARD_GROUP_CLASS}
+                >
                   {engine.turn > 1 && <DrawProgressEvidence engine={engine} />}
-                  {(canMulligan || (keepRules !== undefined && choosingBottom)) && (
-                    <OpeningHandEvidence hand={engine.hand} keepRules={keepRules} />
+                  {(canMulligan ||
+                    (keepRules !== undefined && choosingBottom)) && (
+                    <OpeningHandEvidence
+                      hand={engine.hand}
+                      keepRules={keepRules}
+                    />
                   )}
                   <PhaseTracker
                     turn={engine.turn}
@@ -294,9 +306,15 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
 
               {/* Board */}
               <div className="space-y-4">
-                <fieldset disabled={choosingBottom} className={BOARD_GROUP_CLASS}>
+                <fieldset
+                  disabled={choosingBottom}
+                  className={BOARD_GROUP_CLASS}
+                >
                   {commanderIds.size > 0 && (
-                    <CommandZone cards={engine.commandZone} onCast={handleCast} />
+                    <CommandZone
+                      cards={engine.commandZone}
+                      onCast={handleCast}
+                    />
                   )}
                   <DiceRoller rolls={engine.diceRolls} onRoll={rollDie} />
                   <BattlefieldZone
@@ -316,11 +334,18 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
                   onMoveCard={handleMoveFromHand}
                   bottomChoice={
                     choosingBottom
-                      ? { count: engine.cardsToBottom, onConfirm: bottomCards, onUndo: undo }
+                      ? {
+                          count: engine.cardsToBottom,
+                          onConfirm: bottomCards,
+                          onUndo: undo,
+                        }
                       : undefined
                   }
                 />
-                <fieldset disabled={choosingBottom} className={BOARD_GROUP_CLASS}>
+                <fieldset
+                  disabled={choosingBottom}
+                  className={BOARD_GROUP_CLASS}
+                >
                   <GraveyardZone
                     graveyard={engine.graveyard}
                     exile={engine.exile}
@@ -371,8 +396,7 @@ export function PlaytestModal({ deck, onClose }: PlaytestModalProps) {
             </div>
           </div>
         )}
-      </motion.div>
-    </AnimatePresence>
+      </PlaytestDialog>
     </LocalizedDeckTextProvider>
   );
 }

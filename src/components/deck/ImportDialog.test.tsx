@@ -241,3 +241,16 @@ it("ignores a validation result that arrives after the dialog closes", async () 
 
   expect(screen.queryByRole("button", { name: "Import this preview" })).not.toBeInTheDocument();
 });
+
+it.each([
+  ["en", deckMessages, "Close"],
+  ["fr", frenchDeckMessages, "Fermer"],
+] as const)("names the header close button in %s", (locale, messages, name) => {
+  render(
+    <NextIntlClientProvider locale={locale} messages={{ deck: messages }}>
+      <ImportDialog open onOpenChange={vi.fn()} />
+    </NextIntlClientProvider>
+  );
+
+  expect(screen.getByRole("button", { name })).toBeInTheDocument();
+});

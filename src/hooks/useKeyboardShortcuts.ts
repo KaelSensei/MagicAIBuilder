@@ -161,6 +161,9 @@ function handleSingleKeyShortcut(
       useUIStore.getState().setShowKeyboardModal(true);
       break;
     case "Escape":
+      // A dialog that closed on this Escape already consumed it; acting again
+      // would close the dialog underneath or clear the search.
+      if (e.defaultPrevented) break;
       e.preventDefault();
       handleEscapeKey();
       break;
