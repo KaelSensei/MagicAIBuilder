@@ -31,6 +31,8 @@ interface SearchResultsProps {
   readonly onAddToZone?: (card: ScryfallCard, zone: DeckZone) => void;
   /** Set while "Collection only" filters `cards`; changes the count and the empty states. */
   readonly collectionOnly?: CollectionOnlyState;
+  /** The Scryfall query that produced an empty list, shown so the player can edit it. */
+  readonly executedQuery?: string;
 }
 
 /**
@@ -47,6 +49,7 @@ export function SearchResults({
   onAddToZone,
   draggable = false,
   collectionOnly,
+  executedQuery,
 }: SearchResultsProps) {
   const t = useTranslations("search");
   const viewMode = useDeckStore((s) => s.searchViewMode);
@@ -92,6 +95,11 @@ export function SearchResults({
     return (
       <div className="flex flex-col items-center justify-center h-40 text-[var(--text-secondary)] text-sm">
         <p>{t(collectionOnly ? "collectionOnly.noMatch" : "noResults")}</p>
+        {executedQuery ? (
+          <p className="mt-2 max-w-full truncate px-4 text-center font-mono text-xs">
+            {t("executedQuery", { query: executedQuery })}
+          </p>
+        ) : null}
         {coverageNote}
       </div>
     );

@@ -56,9 +56,9 @@ describe("countsAgainstAllowance", () => {
 });
 
 describe("readAiUsageLimits", () => {
-  it("defaults to 10 builds and 30 suggestion calls a month and a 20 USD spend ceiling", () => {
+  it("defaults to 10 builds, 30 suggestion calls and 60 search translations a month", () => {
     expect(readAiUsageLimits({})).toEqual({
-      monthlyCalls: { build: 10, suggest: 30 },
+      monthlyCalls: { build: 10, suggest: 30, translate: 60 },
       monthlySpendCeilingMicroUsd: 20_000_000,
     });
     expect(readAiUsageLimits({})).toEqual(DEFAULT_AI_USAGE_LIMITS);
@@ -72,7 +72,7 @@ describe("readAiUsageLimits", () => {
         AI_MONTHLY_SPEND_CEILING_USD: "12.5",
       })
     ).toEqual({
-      monthlyCalls: { build: 3, suggest: 0 },
+      monthlyCalls: { build: 3, suggest: 0, translate: 60 },
       monthlySpendCeilingMicroUsd: 12_500_000,
     });
   });

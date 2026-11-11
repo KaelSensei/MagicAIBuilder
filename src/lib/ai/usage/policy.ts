@@ -5,10 +5,10 @@
  */
 
 /** An API route that sends a prompt to a model on a user's behalf. */
-export type AiRoute = "build" | "suggest";
+export type AiRoute = "build" | "suggest" | "translate";
 
 /** Every metered route, in a stable order. */
-export const AI_ROUTES: readonly AiRoute[] = ["build", "suggest"];
+export const AI_ROUTES: readonly AiRoute[] = ["build", "suggest", "translate"];
 
 /**
  * How one model call ended (I-30 requirement 4.2).
@@ -93,13 +93,14 @@ export interface AiUsageLimits {
 /**
  * Conservative defaults, each an owner decision.
  *
- * The allowances are I-30's free-plan hypothesis (requirement 4.3). The
- * ceiling is not in the spec: 20 USD covers about 45 users using their whole
- * allowance on today's Haiku 4.5, at I-02's estimate of 0.008 USD a build and
- * 0.012 USD a suggestion call.
+ * The allowances are I-30's free-plan hypothesis (requirement 4.3). Search
+ * translation is one short completion, so its allowance is higher than a
+ * suggestion. The ceiling is not in the spec: 20 USD covers about 45 users
+ * using their whole allowance on today's Haiku 4.5, at I-02's estimate of
+ * 0.008 USD a build and 0.012 USD a suggestion call.
  */
 export const DEFAULT_AI_USAGE_LIMITS: AiUsageLimits = {
-  monthlyCalls: { build: 10, suggest: 30 },
+  monthlyCalls: { build: 10, suggest: 30, translate: 60 },
   monthlySpendCeilingMicroUsd: 20_000_000,
 };
 
@@ -107,6 +108,7 @@ export const DEFAULT_AI_USAGE_LIMITS: AiUsageLimits = {
 const ALLOWANCE_ENV: Readonly<Record<AiRoute, string>> = {
   build: "AI_MONTHLY_BUILD_ALLOWANCE",
   suggest: "AI_MONTHLY_SUGGEST_ALLOWANCE",
+  translate: "AI_MONTHLY_TRANSLATE_ALLOWANCE",
 };
 
 const SPEND_CEILING_ENV = "AI_MONTHLY_SPEND_CEILING_USD";
@@ -147,6 +149,10 @@ export function readAiUsageLimits(
       suggest: readWholeNumber(
         env[ALLOWANCE_ENV.suggest],
         DEFAULT_AI_USAGE_LIMITS.monthlyCalls.suggest
+      ),
+      translate: readWholeNumber(
+        env[ALLOWANCE_ENV.translate],
+        DEFAULT_AI_USAGE_LIMITS.monthlyCalls.translate
       ),
     },
     monthlySpendCeilingMicroUsd:

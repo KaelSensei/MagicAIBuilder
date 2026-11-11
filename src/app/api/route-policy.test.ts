@@ -133,6 +133,8 @@ const ROUTE_POLICIES: Readonly<
   "moderation/deck-reports": { GET: "moderator" },
   "moderation/deck-reports/[reportId]": { PATCH: "moderator" },
   "proxy-card-image": { GET: "public" },
+  // GET answers anyone so the builder can hide the control; POST is signed-in.
+  "search/translate": { GET: "optional-viewer", POST: "session" },
   "share/[token]": { GET: "share-token" },
   templates: { GET: "public", POST: "session" },
   "user/api-keys": { GET: "session", POST: "session" },

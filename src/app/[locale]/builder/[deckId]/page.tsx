@@ -2,7 +2,7 @@
 // Main builder view — 3-panel layout: Search | DeckEditor | Stats
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   DndContext,
   DragEndEvent,
@@ -95,6 +95,11 @@ import { CardPackagesPanel } from "@/components/deck/CardPackagesPanel";
 import { useGameChangersSet } from "@/hooks/useGameChangers";
 import { useBanlistSet } from "@/hooks/useBanlist";
 import { BuilderNameSearchModeBar } from "@/components/builder/BuilderNameSearchModeBar";
+import { BuilderDescribedSearch } from "@/components/builder/BuilderDescribedSearch";
+import {
+  buildNaturalLanguageSearchContext,
+  toSearchLocale,
+} from "@/lib/search/natural-language-query";
 import { BuilderColorSearchPicker } from "@/components/builder/BuilderColorSearchPicker";
 import {
   BuilderMobileTabBar,
@@ -123,6 +128,37 @@ interface BuildSearchQueryFromModeParams {
   /** The deck's commander, whose partner abilities decide the partner search. */
   readonly deckCommander: PairingCard | null;
   readonly format?: DeckFormat;
+}
+
+function pinnedQueryLabel(pinned: string | null): string | undefined {
+  if (pinned === null) return undefined;
+  return pinned;
+}
+
+/** Name search can describe a card only when it is not choosing a command slot. */
+function nameSearchAllowsDescription(input: {
+  readonly mode: SearchMode;
+  readonly commanderMode: boolean;
+  readonly partnerMode: boolean;
+  readonly companionMode: boolean;
+}): boolean {
+  return (
+    input.mode === "name" &&
+    !input.commanderMode &&
+    !input.partnerMode &&
+    !input.companionMode
+  );
+}
+
+/** The confirmed description search, or the syntax query when none is pinned. */
+function searchQueryOrPinned(pinned: string | null, syntax: string): string {
+  if (pinned === null) return syntax;
+  return pinned;
+}
+
+/** The confirmed description search is active only while description search is allowed. */
+function descriptionSearchIsActive(describing: boolean, allowed: boolean): boolean {
+  return describing && allowed;
 }
 
 /** Build Scryfall search query based on current mode and filters */
@@ -276,6 +312,7 @@ function UnavailableBuilderPage({
 
 export default function BuilderPage() {
   const t = useTranslations("builder");
+  const searchLocale = toSearchLocale(useLocale());
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
@@ -387,6 +424,8 @@ export default function BuilderPage() {
 
   // Search mode
   const [searchMode, setSearchMode] = useState<SearchMode>("name");
+  const [describeSearch, setDescribeSearch] = useState(false);
+  const [pinnedQuery, setPinnedQuery] = useState<string | null>(null);
   const [selectedSet, setSelectedSet] = useState<string>("");
   const [colorFilter, setColorFilter] = useState<string[]>([]);
   const toggleColorFilter = useCallback((code: string) => {
@@ -445,7 +484,31 @@ export default function BuilderPage() {
     setIsBanlistAlertDismissed(false);
   }, [banlistAlertKey]);
 
-  const query = buildSearchQueryFromMode({
+  const naturalSearchContext = useMemo(
+    () =>
+      buildNaturalLanguageSearchContext({
+        format: deck?.format ?? "commander",
+        commanderColorIdentity: deck?.commander?.colorIdentity ?? [],
+        partnerColorIdentity: deck?.partner?.colorIdentity ?? [],
+        hasCommander: deck?.commander != null,
+      }),
+    [deck?.format, deck?.commander, deck?.partner]
+  );
+  const naturalSearchAllowed = nameSearchAllowsDescription({
+    mode: searchMode,
+    commanderMode,
+    partnerMode,
+    companionMode,
+  });
+  const describeActive = descriptionSearchIsActive(describeSearch, naturalSearchAllowed);
+
+  useEffect(() => {
+    if (naturalSearchAllowed) return;
+    setDescribeSearch(false);
+    setPinnedQuery(null);
+  }, [naturalSearchAllowed]);
+
+  const syntaxQuery = buildSearchQueryFromMode({
     mode: searchMode,
     searchText,
     filters,
@@ -457,6 +520,7 @@ export default function BuilderPage() {
     deckCommander: deck?.commander ?? null,
     format: deck?.format,
   });
+  const query = searchQueryOrPinned(pinnedQuery, syntaxQuery);
 
   // Set and colour search show no filters panel, so a "Collection only" left on there must not
   // filter a list whose toggle the player cannot see.
@@ -468,6 +532,15 @@ export default function BuilderPage() {
 
   const handleSearch = useCallback((text: string) => {
     setSearchText(text);
+    if (text.trim().length > 0) setPinnedQuery(null);
+  }, []);
+
+  const handleDescribeActive = useCallback((active: boolean) => {
+    setDescribeSearch(active);
+  }, []);
+
+  const handleNaturalQuery = useCallback((nextQuery: string) => {
+    setPinnedQuery(nextQuery);
   }, []);
 
   const handleCardClick = useCallback(
@@ -700,16 +773,19 @@ export default function BuilderPage() {
   const handleStartEditName = () => {
     setNameInput(deck.name);
     setIsEditingName(true);
+    setIsInputFocused(true);
     setTimeout(() => {
       nameInputRef.current?.focus({ preventScroll: true });
       nameInputRef.current?.select();
     }, 0);
   };
 
-  const handleSaveName = async () => {
-    const trimmed = nameInput.trim();
-    if (trimmed && trimmed !== deck.name) await renameDeck(deckId, trimmed);
+  const commitDeckName = (rawName: string) => {
+    const trimmed = rawName.trim();
     setIsEditingName(false);
+    setIsInputFocused(false);
+    if (!trimmed || trimmed === deck.name) return;
+    void renameDeck(deckId, trimmed);
   };
 
   return (
@@ -745,17 +821,23 @@ export default function BuilderPage() {
                 aria-label={t("actions.rename")}
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
-                onBlur={handleSaveName}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void handleSaveName();
-                  if (e.key === "Escape") setIsEditingName(false);
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={(event) => commitDeckName(event.currentTarget.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    commitDeckName(event.currentTarget.value);
+                  }
+                  if (event.key === "Escape") setIsEditingName(false);
                 }}
                 className="flex-1 text-sm font-semibold bg-transparent border-b border-[var(--accent)] text-[var(--text-primary)] outline-none min-w-0"
                 maxLength={200}
               />
               <button
                 type="button"
-                onClick={handleSaveName}
+                onClick={() =>
+                  commitDeckName(nameInputRef.current?.value ?? nameInput)
+                }
                 className="text-green-400 hover:text-green-300 shrink-0"
               >
                 <Check className="w-3.5 h-3.5" />
@@ -903,12 +985,17 @@ export default function BuilderPage() {
               {/* Mode-specific controls */}
               {searchMode === "name" && (
                 <>
-                  <SearchBar
+                  <BuilderDescribedSearch
+                    describeActive={describeActive}
+                    allowed={naturalSearchAllowed}
+                    searchLoading={searchLoading}
+                    context={naturalSearchContext}
+                    locale={searchLocale}
                     onSearch={handleSearch}
-                    isLoading={searchLoading}
-                    showKeyboardHint={true}
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}
+                    onActiveChange={handleDescribeActive}
+                    onRunQuery={handleNaturalQuery}
                   />
                   <div className="flex items-center gap-2">
                     <button
@@ -990,6 +1077,7 @@ export default function BuilderPage() {
                 onAddToMaybeboard={addToMaybeboard}
                 onAddToZone={handleAddToZone}
                 draggable={true}
+                executedQuery={pinnedQueryLabel(pinnedQuery)}
               />
             </div>
           </motion.div>

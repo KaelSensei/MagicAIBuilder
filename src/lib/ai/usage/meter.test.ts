@@ -292,6 +292,7 @@ describe("AI usage meter", () => {
         routes: {
           build: { limit: 10, used: 3, remaining: 7 },
           suggest: { limit: 30, used: 0, remaining: 30 },
+          translate: { limit: 60, used: 0, remaining: 60 },
         },
       });
       expect(db.usageCounter.findMany).toHaveBeenCalledWith({
