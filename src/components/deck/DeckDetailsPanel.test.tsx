@@ -162,4 +162,67 @@ describe("DeckDetailsPanel", () => {
       expect(deckPatches()).toEqual([{ description: "Aristocrats." }]);
     });
   });
+
+  describe("target bracket", () => {
+    it("offers the five official brackets with the target pressed, and saves the one picked", async () => {
+      const user = userEvent.setup();
+      openDeck({ targetBracket: 3 });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+      const target = within(details).getByRole("group", {
+        name: "Target bracket",
+      });
+
+      const brackets = within(target).getAllByRole("button");
+      expect(brackets).toHaveLength(5);
+      [
+        "Bracket 1: Exhibition",
+        "Bracket 2: Core",
+        "Bracket 3: Upgraded",
+        "Bracket 4: Optimized",
+        "Bracket 5: cEDH",
+      ].forEach((name, index) =>
+        expect(brackets[index]).toHaveAccessibleName(name)
+      );
+      expect(
+        within(target).getByRole("button", { pressed: true })
+      ).toHaveAccessibleName("Bracket 3: Upgraded");
+
+      await user.click(
+        within(target).getByRole("button", { name: "Bracket 4: Optimized" })
+      );
+
+      expect(
+        within(target).getByRole("button", { pressed: true })
+      ).toHaveAccessibleName("Bracket 4: Optimized");
+      expect(storedDeck()?.targetBracket).toBe(4);
+      expect(deckPatches()).toEqual([{ targetBracket: 4 }]);
+    });
+
+    it("names the target bracket and each bracket in French", () => {
+      openDeck({ targetBracket: 2 });
+      renderPanel("fr");
+      const details = screen.getByRole("region", { name: "Détails du deck" });
+      const target = within(details).getByRole("group", {
+        name: "Bracket cible",
+      });
+
+      expect(
+        within(target).getByRole("button", { pressed: true })
+      ).toHaveAccessibleName("Bracket 2 : Basique");
+      expect(
+        within(target).getByRole("button", { name: "Bracket 3 : Amélioré" })
+      ).toBeInTheDocument();
+    });
+
+    it("leaves the target bracket out of a format without brackets", () => {
+      openDeck({ format: "modern" });
+      renderPanel();
+      const details = screen.getByRole("region", { name: "Deck details" });
+
+      expect(
+        within(details).queryByRole("group", { name: "Target bracket" })
+      ).toBeNull();
+    });
+  });
 });

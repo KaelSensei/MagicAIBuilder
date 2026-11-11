@@ -24,7 +24,9 @@
     "placeholder": "nom de l'étiquette…"
   },
   "details": {
-    "title": "Détails du deck"
+    "title": "Détails du deck",
+    "targetBracket": "Bracket cible",
+    "targetBracketOption": "Bracket {level} : {name}"
   },
   "searchCommander": "Recherchez un commandant ci-dessus",
   "searchPartner": "Recherchez un {partnerLabel}",

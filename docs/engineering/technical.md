@@ -832,6 +832,10 @@ Field `notes String?` on `DeckCard`. Synced via `PATCH /api/decks/[id]/cards/[ca
 
 Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array (at most 20 tags of 50 characters, `patchDeckSchema`). The `DeckTagsEditor` component, in the builder's **Deck details** panel (`DeckDetailsPanel`, top of the analysis sidebar), shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. No other screen reads the tags yet: the deck list has no tag filter.
 
+### Target Bracket
+
+Field `targetBracket Int @default(3)` on `Deck`: the official Commander Bracket (1 Exhibition to 5 cEDH, `BRACKET_LEVELS` in `src/lib/constants/brackets.ts`) the player builds for. `DeckTargetBracketPicker`, in the **Deck details** panel, sets it through `setTargetBracket`, which writes to the store's active deck. It is shown only for formats with `hasBracketScoring` (Commander). `GameChangersBadge` and the `DeckStats` benchmarks measure the deck against it; `BracketIndicator` shows it beside the bracket estimate when they differ.
+
 ---
 
 ## Phase Roadmap

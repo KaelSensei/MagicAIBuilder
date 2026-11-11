@@ -16,15 +16,25 @@
  */
 import { useId } from "react";
 import { useTranslations } from "next-intl";
+import { getFormatConfig } from "@/lib/deck/formats";
+import { useDeckStore } from "@/lib/deck/store";
 import type { Deck } from "@/lib/deck/types";
 import { DeckDescriptionEditor } from "./DeckDescriptionEditor";
 import { DeckTagsEditor } from "./DeckTagsEditor";
+import { DeckTargetBracketPicker } from "./DeckTargetBracketPicker";
 
 /** The deck fields this panel shows and edits. */
-export type DeckDetails = Pick<Deck, "id" | "description" | "tags">;
+export type DeckDetails = Pick<
+  Deck,
+  "id" | "format" | "description" | "tags" | "targetBracket"
+>;
 
 interface DeckDetailsPanelProps {
-  /** The deck as the store holds it, so a failed save shows the restored value. */
+  /**
+   * The store's active deck, as the store holds it: a failed save then shows
+   * the restored value. It must be the active deck because `setTargetBracket`
+   * writes to the active deck rather than to a deck id.
+   */
   readonly deck: DeckDetails;
 }
 
@@ -32,6 +42,7 @@ interface DeckDetailsPanelProps {
 export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
   const t = useTranslations("builder.details");
   const headingId = useId();
+  const setTargetBracket = useDeckStore((state) => state.setTargetBracket);
 
   return (
     <section
@@ -46,6 +57,13 @@ export function DeckDetailsPanel({ deck }: DeckDetailsPanelProps) {
       </h2>
       <DeckDescriptionEditor deckId={deck.id} description={deck.description} />
       <DeckTagsEditor deckId={deck.id} tags={deck.tags} />
+      {/* Brackets are a Commander scale; the other formats have none. */}
+      {getFormatConfig(deck.format).hasBracketScoring && (
+        <DeckTargetBracketPicker
+          value={deck.targetBracket}
+          onChange={(bracket) => void setTargetBracket(bracket)}
+        />
+      )}
     </section>
   );
 }

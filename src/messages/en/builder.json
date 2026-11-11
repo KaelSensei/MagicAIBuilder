@@ -24,7 +24,9 @@
     "placeholder": "tag name…"
   },
   "details": {
-    "title": "Deck details"
+    "title": "Deck details",
+    "targetBracket": "Target bracket",
+    "targetBracketOption": "Bracket {level}: {name}"
   },
   "searchCommander": "Search for a commander above",
   "searchPartner": "Search for a {partnerLabel}",

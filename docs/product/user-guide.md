@@ -238,6 +238,7 @@ The **Deck details** panel opens the right panel (the **Stats** tab on a phone).
 
 - **Description** — your notes on how the deck plays. Click the pencil to write, or open the line and click the text; an empty description offers a **primer template** (game plan, mulligan guide, win conditions…). It saves when you click **Save**, press Ctrl+Enter (Cmd+Enter on a Mac) or click away; Esc drops your changes. Up to 2,000 characters.
 - **Tags** — short labels such as `casual` or `WIP`. Click **Add tag**, type a tag and press Enter; Tab takes the first suggestion. Click × on a tag to remove it.
+- **Target bracket** (Commander only) — the bracket you are building for, from 1 Exhibition to 5 cEDH. The Game Changers badge and the deck checks measure your deck against it; the bracket score below is the app's own reading of your list.
 
 ### Deck Statistics
 
