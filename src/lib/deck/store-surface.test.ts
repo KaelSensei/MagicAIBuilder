@@ -236,7 +236,7 @@ describe("deck store view preferences", () => {
     useDeckStore.getState().setDeckViewMode("list");
     useDeckStore.getState().setDeckGridCols(3);
 
-    expect(localStorage.length).toBe(0);
+    expect(localStorage).toHaveLength(0);
     const reloaded = (await freshStore()).getState();
     expect([
       reloaded.searchViewMode,
