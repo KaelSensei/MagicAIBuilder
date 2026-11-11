@@ -1,5 +1,10 @@
 # MagicAIBuilder — Technical Documentation
 
+> **Start with [architecture.md](architecture.md)** for the structure: the bounded contexts, the
+> layers, where code goes, and a map from today's folders to the target modules. Decisions are in
+> [docs/adr/](../adr/README.md), domain words in [CONTEXT.md](../../CONTEXT.md). This file covers
+> the stack, local development and notes on individual features.
+
 ## Stack
 
 | Layer           | Technology            | Version | Why                                                                        |
@@ -25,184 +30,78 @@
 
 ## Directory Architecture
 
+The tree as it is today (2026-11-10). The target layout, one module per bounded context under
+`src/modules/`, and a map from these folders to the contexts are in
+[architecture.md](architecture.md#how-to-read-the-code-base-today).
+
 ```
 src/
-  app/                          # Next.js App Router pages
-    layout.tsx                  # Root layout: fonts, dark theme, suppressHydrationWarning
-    providers.tsx               # TanStack Query client + EnrichmentProvider
-    page.tsx                    # Home: static marketing landing (unauth) or deck list (auth)
-    builder/[deckId]/
-      page.tsx                  # 3-panel builder view (Search | DeckEditor | Stats)
-    api/
-      decks/
-        route.ts                # GET /api/decks, POST /api/decks
-        [id]/
-          route.ts              # GET/PATCH/DELETE /api/decks/[id]
-          cards/
-            route.ts            # POST /api/decks/[id]/cards
-            [cardId]/
-              route.ts          # DELETE/PATCH /api/decks/[id]/cards/[cardId]
-          snapshots/
-            route.ts            # GET/POST /api/decks/[id]/snapshots
-            [snapshotId]/
-              route.ts          # DELETE /api/decks/[id]/snapshots/[snapshotId]
-              restore/
-                route.ts        # POST /api/decks/[id]/snapshots/[snapshotId]/restore
-      cache/
-        cards/
-          route.ts              # GET /api/cache/cards (read-through, 24h TTL)
-        search/
-          route.ts              # GET /api/cache/search (read-through, 1h TTL)
-      ai/
-        suggest/
-          route.ts              # POST /api/ai/suggest
-
-  components/
-    landing/
-      LandingPage.tsx           # Entry point for unauthenticated visitors
-      MarketingLanding.tsx      # Navbar, Hero, CapabilityAtlas, FinalCta, footer
-    ui/
-      utils.ts                  # cn() helper (clsx + tailwind-merge)
-    card/
-      CardImage.tsx             # Image + hover zoom (Framer Motion)
-      CardTooltip.tsx           # Radix Tooltip with card detail
-      CardGrid.tsx              # Animated stagger grid
-      CardListItem.tsx          # Compact row with flags + remove
-      DraggableCard.tsx         # dnd-kit draggable wrapper
-      PrintingSelectorModal.tsx # Choose printing/art before adding to deck
-    search/
-      SearchBar.tsx             # Debounced input (400ms)
-      SearchFilters.tsx         # Color/CMC/price filters
-      SearchResults.tsx         # Loading / error / results
-      SetAutocomplete.tsx       # Set code autocomplete for set search
-    deck/
-      DeckEditor.tsx            # Collapsible category groups + droppable zones
-      DeckStats.tsx             # Stat rows with status icons
-      ManaCurve.tsx             # Animated bar chart
-      ColorDistribution.tsx     # Color distribution display
-      BracketIndicator.tsx      # Score + dimension mini bars
-      GameChangersBadge.tsx     # GC count + over-limit warning
-      BanlistAlert.tsx          # Animated banned/color identity alert
-      CombosPanel.tsx           # Commander Spellbook combo detection
-      AISuggestionsPanel.tsx    # AI-assisted deck suggestions
-      SnapshotsPanel.tsx        # Named deck snapshots — save/restore/delete + diff badge
-      ImportDialog.tsx          # Text decklist import modal
-      ExportModal.tsx           # Multi-format export (MTGO, Arena, plain text)
-    layout/
-      Header.tsx                # Logo, nav, theme toggle, actions
-      Footer.tsx                # Legal notices (WotC + Scryfall disclaimers)
-    providers/
-      EnrichmentProvider.tsx    # Background GC + banlist enrichment on load
-      ThemeSync.tsx             # Syncs CSS data-theme with Zustand theme store
-
-  lib/
-    db/
-      prisma.ts                 # PrismaClient singleton (dev hot-reload safe)
-      deck-api.ts               # HTTP client for /api/deck* routes
-    scryfall/
-      client.ts                 # Rate-limited fetch (100ms min) + DB CardCache
-      types.ts                  # ScryfallCard, response types
-      images.ts                 # Image URL helpers (WebP grid/display/art) + stored-URL normaliser
-      search.ts                 # Query builder (name/set/color modes)
-    deck/
-      types.ts                  # Core domain types (DeckCard, Deck, BracketScore…)
-      store.ts                  # Zustand store — DB-synced, no localStorage
-      categories.ts             # Auto-categorization engine (15 categories)
-      stats.ts                  # computeDeckStats()
-      bracket.ts                # scoreBracket() — 6-dimension engine
-      validation.ts             # validateCardForDeck() / validateDeck()
-      multiples.ts              # maxQuantity() / allowsMultiples() — Commander singleton rules
-      import.ts                 # Text decklist parser
-      export.ts                 # MTGO / Arena / plain text export
-    constants/
-      brackets.ts               # Bracket definitions + colors
-      benchmarks.ts             # EDH heuristic thresholds
-
-  hooks/
-    useCardSearch.ts            # TanStack Query search (5 min cache)
-    useCardSearchInfinite.ts    # Paginated card search
-    useCardLookup.ts            # TanStack Query single card by ID (24h)
-    useCardLookupByName.ts      # TanStack Query single card by name (24h)
-    useDeck.ts                  # Zustand + computed stats
-    useBracketScore.ts          # Memoized bracket score
-    useGameChangers.ts          # GC list + isGameChanger() helper
-    useBanlist.ts               # Banlist + isBanned() helper
-    useCombos.ts                # Commander Spellbook API combo detection
-    useTheme.ts                 # Dark/light theme preference store
-    useAISuggestions.ts         # AI analysis with Anthropic/OpenAI provider fallback
-
-  styles/
-    globals.css                 # Tailwind 4 + CSS custom properties (theme tokens)
-
-__tests__/                      # Vitest unit tests
-  lib/deck/
-    bracket.test.ts
-    validation.test.ts
-    categories.test.ts
-  lib/scryfall/
-    client.test.ts
-
-e2e/                            # Playwright E2E tests
-  search.spec.ts
-  deck-builder.spec.ts
-
+  middleware.ts                 # Edge: locale routing and the Auth.js session gate (pages only)
+  instrumentation*.ts           # Sentry, server and browser
+  app/
+    layout.tsx, sitemap.ts, robots.ts, global-error.tsx, not-found.tsx
+    [locale]/                   # every page sits under the locale segment
+      layout.tsx, providers.tsx # providers: TanStack Query, session, init, theme, toasts
+      page.tsx                  # landing for visitors, deck list for signed-in players
+      builder/[deckId]/         # the builder (a client page)
+      decks/, collection/, deck/[id]/, share/[token]/, u/[username]/,
+      commanders/[slug]/decks/, saved-decks/, settings/, moderation/, rules/, auth/
+    api/                        # 67 route handlers, by URL family:
+                                #   decks/ 15, community/ 13, user/ 7, collection/ 4,
+                                #   v1/ 4 (public API, API keys), 2 each: ai/, auth/, cache/,
+                                #   deck-folders/, favorites/, import/, meta/, moderation/;
+                                #   1 each: combos/, deck/, health/, og/, proxy-card-image/,
+                                #   share/, templates/, users/
+  components/                   # React components, by screen: deck/ (74 files), card/,
+                                # search/, builder/, playtest/, collection/, community/,
+                                # profile/, moderation/, settings/, landing/, rules/,
+                                # layout/ (app shell), ui/ (primitives), providers/
+  lib/                          # rules, analysis, client stores, provider clients, server helpers
+    deck/                       # deck types, format rules, analysis, editing, the deck store
+    playtest/                   # the pure game engine, keep advice, session analytics
+    scryfall/                   # Scryfall client, shared server cache, images, localised text
+    ai/, combos/, meta/, import/, collection/, community/, ratings/, social/, rules/, seo/
+    auth/, api/                 # Auth.js configuration, API keys and scopes, request helpers
+    db/                         # prisma.ts, plus deck-api.ts and snapshot-api.ts, which are
+                                # browser HTTP clients despite the folder name
+    validation/                 # Zod schemas for request bodies
+  hooks/                        # 29 hooks, one per file
+  i18n/                         # next-intl routing and request configuration
+  messages/<locale>/            # UI strings, one JSON file per namespace, 10 locales
+  styles/globals.css            # Tailwind 4 and the theme tokens
+  test/                         # shared test helpers and in-memory fakes
+e2e/                            # Playwright specs
 prisma/
-  schema.prisma                 # Deck, DeckCard, CardCache models
-  migrations/                   # Auto-generated Prisma migrations
+  schema.prisma                 # 30 models
+  migrations/
 ```
+
+Tests sit next to the file they test (`foo.test.ts` beside `foo.ts`); there is no `__tests__/`
+folder.
 
 ---
 
 ## Key Patterns
 
-### Zustand Store Shape
+### Zustand Stores
 
-```typescript
-// lib/deck/store.ts
-interface DeckStore {
-  // State
-  decks: Record<string, Deck>; // All decks by ID (loaded from DB)
-  activeDeckId: string | null; // Currently edited deck
+| Store                                       | File                          | Holds                                                                                                                                                       |
+| ------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useDeckStore`                              | `src/lib/deck/store.ts`       | Decks by id, the active deck, undo, view and sort preferences. Every edit is optimistic and saved through the browser HTTP client `src/lib/db/deck-api.ts`. |
+| `useCollectionStore`                        | `src/lib/collection/store.ts` | The signed-in player's collection                                                                                                                           |
+| `usePlaytestStore`                          | `src/lib/playtest/store.ts`   | The running playtest game and the deck as it was dealt                                                                                                      |
+| `useUIStore`, `useShortcutPreferencesStore` | `src/lib/ui/`                 | Modal visibility, keyboard navigation, shortcut preferences                                                                                                 |
+| `useThemeStore`                             | `src/hooks/useTheme.ts`       | Light or dark theme                                                                                                                                         |
+| `useToastStore`                             | `src/hooks/useToast.ts`       | Toast messages                                                                                                                                              |
 
-  // Deck CRUD (all synced to DB via /api/decks)
-  createDeck(name: string): Promise<string>;
-  deleteDeck(id: string): Promise<void>;
-  renameDeck(id: string, name: string): Promise<void>;
-  setActiveDeck(id: string): void;
-  loadDecks(): Promise<void>; // Hydrate from DB on mount
+**Persistence**: a signed-in player's decks live in PostgreSQL and are loaded by `loadDecks()`. A
+guest's single deck lives in `localStorage` (`src/lib/deck/guest-deck.ts`) until it is claimed into
+an account, and the deck list's sort and grouping preferences are kept in `localStorage` too.
 
-  // Card management (synced to DB via /api/decks/[id]/cards)
-  setCommander(card: ScryfallCard): Promise<void>;
-  addCard(
-    card: ScryfallCard,
-    quantity?: number,
-    zone?: "main" | "sideboard" | "maybeboard"
-  ): Promise<void>;
-  removeCard(cardId: string): Promise<void>;
-  updateCardCategory(cardId: string, category: CardCategory): Promise<void>;
-  moveCardToZone(
-    cardId: string,
-    zone: "main" | "sideboard" | "maybeboard"
-  ): Promise<void>;
-
-  // View preferences
-  deckViewMode: "grid" | "list";
-  deckGridCols: 2 | 3 | 4 | 6 | 8; // Default: 6
-  setDeckViewMode(mode: "grid" | "list"): void;
-  setDeckGridCols(cols: 2 | 3 | 4 | 6 | 8): void;
-
-  // Settings
-  setTargetBracket(bracket: 1 | 2 | 3 | 4): void;
-  setBudget(budget: number | null): void;
-
-  // Computed
-  getActiveDeck(): Deck | null;
-}
-```
-
-**Persistence**: PostgreSQL via Prisma. No localStorage. State is loaded on mount via `loadDecks()`.
-
-**Enrichment**: On `addCard` and `setCommander`, the store cross-references GC list and banlist to set `isGameChanger` and `isBanned` flags. This happens via `EnrichmentProvider` on app start.
+**Enrichment**: the builder page loads the Game Changers and banlist name sets
+(`useGameChangersSet`, `useBanlistSet`) and passes them to the store (`setGameChangerNames`,
+`setBannedNames`), which sets each card's `isGameChanger` and `isBanned` flags.
+`src/components/providers/EnrichmentProvider.tsx` exists but is never mounted.
 
 ### TanStack Query Keys
 
@@ -213,32 +112,22 @@ interface DeckStore {
 | `useCardLookup(id)`            | `["scryfall", "card", "id", id]`            | 24h       |
 | `useCardLookupByName(name)`    | `["scryfall", "card", "name", name]`        | 24h       |
 | `useGameChangers()`            | `["scryfall", "game-changers"]`             | 24h       |
-| `useBanlist()`                 | `["scryfall", "banlist"]`                   | 24h       |
-| `useCombos(deck)`              | `["combos", "spellbook", cardListKey]`      | 1h        |
+| `useBanlist(format)`           | `["scryfall", "banlist", format]`           | 24h       |
+| `useCombos(deck)`              | `["combos", "spellbook", queryKey]`         | 1h        |
 
 ### Scryfall Rate Limiting
 
-Scryfall allows max 10 requests/second. Strategy:
+Every request to `api.scryfall.com`, from the browser or the server, waits its turn in one queue
+per runtime: `scheduleScryfallRequest` in `src/lib/scryfall/request-queue.ts` starts one request
+at a time, at least 100 ms apart, with the app's `User-Agent` and `Accept` headers.
 
-```typescript
-// lib/scryfall/client.ts
-let lastRequestTime = 0;
+Scryfall's published hard limits are stricter for card endpoints: 2 requests per second (500 ms)
+on `/cards/search`, `/cards/named`, `/cards/random` and `/cards/collection`, and 10 per second on
+other methods ([rate limits](https://scryfall.com/docs/api/rate-limits), read 2026-11-10). The
+100 ms spacing does not yet distinguish them.
 
-async function rateLimitedFetch(url: string, options?: RequestInit) {
-  const now = Date.now();
-  const elapsed = now - lastRequestTime;
-  if (elapsed < 100) {
-    await new Promise((resolve) => setTimeout(resolve, 100 - elapsed));
-  }
-  lastRequestTime = Date.now();
-  return fetch(url, {
-    ...options,
-    headers: { "User-Agent": "MagicAIBuilder/1.0", ...headers },
-  });
-}
-```
-
-TanStack Query's deduplication prevents duplicate concurrent requests. `getCardById()` checks the DB `CardCache` before hitting Scryfall (24h TTL).
+TanStack Query's deduplication prevents duplicate concurrent requests. `getCardById()` reads the
+shared server cache first (see [Scryfall API Caching](#scryfall-api-caching)).
 
 ### Search Modes (3 tabs)
 
@@ -289,7 +178,9 @@ type CommanderPairingType =
   | "partner_with" // "Partner with [specific name]"
   | "friends_forever" // Doctor Who sets
   | "background" // "Choose a Background" + Background enchantment
-  | "doctor"; // "Doctor's companion"
+  | "doctor" // "Doctor's companion"
+  | "character_select" // "Partner—Character select"
+  | "father_son"; // "Partner—Father & son"
 ```
 
 ### dnd-kit Drag & Drop Architecture
@@ -303,15 +194,20 @@ type CommanderPairingType =
 ### AI Suggestions Pattern
 
 ```typescript
-// POST /api/ai/suggest
-// Body: { deck: Deck, stats: DeckStats, bracketScore: BracketScore }
-// Response: { suggestions: string[], reasoning: string }
+// POST /api/ai/suggest  (src/app/api/ai/suggest/route.ts)
+// Body: the deck, its stats and bracket, an optional deck brief and deck question
+// Response: application/x-ndjson stream of StreamEvent lines:
+//   { type: "analysis", content, provider } | { type: "suggestion", data }
+//   | { type: "removal", data } | { type: "done" }
 
 // Provider fallback order:
-// 1. ANTHROPIC_API_KEY → claude-sonnet-4-6
-// 2. OPENAI_API_KEY → gpt-4o
+// 1. ANTHROPIC_API_KEY → claude-haiku-4-5
+// 2. OPENAI_API_KEY → gpt-4o-mini
 // 3. Mock response (no key configured)
 ```
+
+`POST /api/ai/build` streams an AI-built deck the same way. Both cap the reply at 4,096 output
+tokens. The behaviour is specified in [I-02](../product/specs/i02-checkable-ai-copilot.md).
 
 ### Theme Toggle Pattern
 
@@ -326,66 +222,43 @@ type CommanderPairingType =
 
 ## Prisma Schema
 
-```prisma
-model Deck {
-  id          String     @id @default(cuid())
-  name        String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  cards       DeckCard[]
-}
+`prisma/schema.prisma` holds 30 models. Grouped by the bounded context that owns them (see
+[architecture.md](architecture.md#bounded-contexts)):
 
-model DeckCard {
-  id            String   @id @default(cuid())
-  deckId        String
-  scryfallId    String
-  name          String
-  category      String
-  quantity      Int      @default(1)
-  isCommander   Boolean  @default(false)
-  isPartner     Boolean  @default(false)
-  isMaybeboard  Boolean  @default(false)  // Considered cards outside the 99
-  deck          Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-}
+| Context       | Models                                                                                                                                       |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deck building | `Deck`, `DeckCard`, `DeckFolder`, `DeckSnapshot`, `DeckTemplate`                                                                             |
+| Playtest      | `PlaytestSession`                                                                                                                            |
+| Card catalog  | `CardCache`, `ScryfallSearchCache`                                                                                                           |
+| Meta insights | `MetaCache`, `MetaSnapshot`                                                                                                                  |
+| Collection    | `CollectionCard`, `AcquisitionIntent`, `CardFavorite`, `FavoriteList`, `CardInFavoriteList`                                                  |
+| Community     | `DeckVote`, `DeckRating`, `DeckComment`, `DeckReport`, `SavedPublicDeck`, `PublicDeckFolder`, `CardPackage`, `CardPackageCard`, `UserFollow` |
+| Identity      | `User`, `Account`, `Session`, `VerificationToken`, `ApiKey`, `NotificationPreference`                                                        |
 
-model CardCache {
-  id          String   @id  // Scryfall card ID
-  data        Json         // Full ScryfallCard JSON
-  cachedAt    DateTime @default(now())
-}
-
-model DeckSnapshot {
-  id        String   @id @default(cuid())
-  deckId    String
-  name      String
-  cardList  Json     // Full DeckCard array at snapshot time
-  commander String?  // Commander name at snapshot time
-  cardCount Int
-  createdAt DateTime @default(now())
-  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
-}
-```
+`CardFavorite`, `FavoriteList`, `CardInFavoriteList` and `DeckTemplate` are never queried.
 
 ---
 
 ## API Routes
 
-| Method | Path                                             | Description                                |
-| ------ | ------------------------------------------------ | ------------------------------------------ |
-| GET    | `/api/decks`                                     | List all decks                             |
-| POST   | `/api/decks`                                     | Create new deck                            |
-| GET    | `/api/decks/[id]`                                | Get deck with cards                        |
-| PATCH  | `/api/decks/[id]`                                | Rename deck                                |
-| DELETE | `/api/decks/[id]`                                | Delete deck (cascade cards)                |
-| POST   | `/api/decks/[id]/cards`                          | Add card to deck                           |
-| DELETE | `/api/decks/[id]/cards/[cardId]`                 | Remove card (uses DB CUID, not scryfallId) |
-| PATCH  | `/api/decks/[id]/cards/[cardId]`                 | Update card category                       |
-| GET    | `/api/cache/cards`                               | Card via the server-filled DB cache        |
-| POST   | `/api/ai/suggest`                                | Get AI suggestions for deck                |
-| GET    | `/api/decks/[id]/snapshots`                      | List snapshots (newest first, no cardList) |
-| POST   | `/api/decks/[id]/snapshots`                      | Create snapshot from current deck state    |
-| DELETE | `/api/decks/[id]/snapshots/[snapshotId]`         | Delete a snapshot                          |
-| POST   | `/api/decks/[id]/snapshots/[snapshotId]/restore` | Restore deck to snapshot (transactional)   |
+There are 67 route handlers under `src/app/api/`. Each URL family belongs to one bounded context:
+
+| URL family                                                                               | Context          | Notes                                                                                                             |
+| ---------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `/api/decks/**`, `/api/deck/[id]`, `/api/deck-folders/**`, `/api/templates`              | Deck building    | `/api/deck/[id]` is the public read of one deck; `/api/decks/[id]/legality` returns the server's legality verdict |
+| `/api/decks/[id]/playtest-sessions`                                                      | Playtest         | Recorded goldfish runs                                                                                            |
+| `/api/decks/[id]/acquisition-intent`, `/api/collection/**`                               | Collection       |                                                                                                                   |
+| `/api/ai/suggest`, `/api/ai/build`                                                       | AI copilot       | Streamed as NDJSON                                                                                                |
+| `/api/cache/cards`, `/api/cache/search`, `/api/proxy-card-image`                         | Card catalog     | Read-through Scryfall cache                                                                                       |
+| `/api/combos`                                                                            | Combos           | Commander Spellbook lookup                                                                                        |
+| `/api/meta/**`                                                                           | Meta insights    | EDHREC and MTGTop8                                                                                                |
+| `/api/import/**`                                                                         | Deck interchange | Moxfield profile and URL import                                                                                   |
+| `/api/community/**`, `/api/users/[username]`, `/api/share/[token]`, `/api/moderation/**` | Community        |                                                                                                                   |
+| `/api/auth/**`, `/api/user/**`, `/api/v1/**`                                             | Identity         | `/api/v1` is the public API, authenticated by API key                                                             |
+| `/api/og`, `/api/health`                                                                 | Site             | Open Graph images; the health check                                                                               |
+| `/api/favorites/**`                                                                      | Collection       | A stub: persistence is deferred                                                                                   |
+
+URLs are a public contract: they stay when the code behind them moves.
 
 ---
 
@@ -518,15 +391,15 @@ See `docs/engineering/infrastructure.md` for Docker + full infra setup.
 | `GET /cards/search?q=is:gamechanger`   | Game Changers list                 |
 | `GET /cards/search?q=banned:commander` | Commander banlist                  |
 
-Rate limit: 10 req/s (100ms enforced). Scryfall is free and community-supported — be respectful.
+Rate limits: see [Scryfall Rate Limiting](#scryfall-rate-limiting). Scryfall is free and community-supported — be respectful.
 
-**Known limitation**: Scryfall returns 175 cards/page. GC and banlist lists only fetch the first page. For lists > 175 cards, pagination would need to be added.
+Scryfall returns 175 cards per page; the Game Changers and banlist hooks fetch every page (`fetchAllPages`).
 
 ### Commander Spellbook
 
-| Endpoint                                  | Used For                          |
-| ----------------------------------------- | --------------------------------- |
-| `GET /api/v2/variants/?commanders={name}` | Combo detection by commander name |
+| Endpoint                                                     | Used For                                          |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| `POST https://backend.commanderspellbook.com/find-my-combos` | Combos contained in a decklist, via `/api/combos` |
 
 ---
 
@@ -661,7 +534,7 @@ Ranking is score first, then rating count (more ratings means more evidence behi
 
 Both live under `/api/community` so the edge auth allowlist (`src/lib/auth/edge-config.ts`) can expose `GET` anonymously without opening the protected `/api/decks` tree. `/commanders` is on the page allowlist in both `edge-config.ts` and `middleware.ts`.
 
-> **Known limitation.** Commander identity lives on the deck's _cards_ (`isCommander`), not on the `Deck` row, so the slug cannot be matched in SQL — the route loads public decks with a commander and slugs them in memory. Fine while public decks are few; it needs a denormalised `commanderName` column on `Deck` before that stops being true.
+> **Commander slug in SQL.** `Deck.commanderName` is denormalised from the commander row (migration `20260819210000_denormalise_deck_commander`), so the route matches the slug in SQL, backed by the partial expression index `Deck_commanderSlug_public_idx` that the migration creates.
 
 An unknown slug is not a 404: it is a commander nobody has published for yet, so the page renders its empty state.
 
@@ -869,8 +742,6 @@ Shuffling uses `randomIntBelow` from `src/lib/crypto-random.ts`, not `Math.rando
 
 **`PlaytestModal`** subscribes with fine-grained selectors and clears the session on unmount: the store outlives the modal, so a stale game would otherwise reappear on reopen.
 
-`analytics.ts` (`calculateWinRate`, `getMulliganDistribution`, …) is written and tested but not reachable — there is no `PlaytestSession` Prisma model to feed it.
-
 ---
 
 ## Scryfall API Caching
@@ -942,6 +813,10 @@ The earlier 3D spellbook scene (Three.js, React Three Fiber, gsap) was removed f
 ---
 
 ## Deck Annotations (feat/deck-notes-description)
+
+> **Current state (2026-11-10).** The fields and the API described below exist, but
+> `DeckDescriptionEditor`, `DeckTagsEditor` and `CardNoteInline` have no importer, so their editors
+> are not reachable in the interface. Rewiring or removing them is an owner decision.
 
 ### Deck Description
 
@@ -1085,5 +960,3 @@ Used by UptimeRobot (configure once app is deployed).
 - `sentry.server.config.ts` — server/API route error capture
 - `sentry.edge.config.ts` — edge runtime error capture
 - Source maps uploaded automatically on Vercel deploy via `SENTRY_AUTH_TOKEN`
-  | Phase 5 | Deck Annotations — description, card notes, tags | ✅ Complete |
-  | Phase 6 | Onboarding & Tutorial (planned) | 📋 Planned |
