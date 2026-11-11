@@ -88,13 +88,14 @@ Feature branches MUST NOT modify `docs/project/changelog.md`, `docs/project/prog
 
 1. `npx tsc --noEmit` — zero errors
 2. `pnpm lint` — zero warnings
-3. `pnpm test` — all passing
-4. `pnpm sonar` — run when credentials and the local environment are available; otherwise document the limitation and rely on CI
-5. SonarCloud status — record the result, but it is **advisory** while the repository integration is being repaired:
+3. `pnpm arch` — zero errors: dependency-cruiser checks cycles, the layer rules and the browser/server boundary ([quality-gate.md](docs/engineering/quality-gate.md#architecture-gate))
+4. `pnpm test` — all passing
+5. `pnpm sonar` — run when credentials and the local environment are available; otherwise document the limitation and rely on CI
+6. SonarCloud status — record the result, but it is **advisory** while the repository integration is being repaired:
    - https://sonarcloud.io/project/issues?issueStatuses=OPEN&id=KaelSensei_MagicAIBuilder
    - API: https://sonarcloud.io/api/issues/search?componentKeys=KaelSensei_MagicAIBuilder&statuses=OPEN&ps=100
 
-`pnpm arch` (dependency-cruiser) joins this gate once it exists ([ADR 0007](docs/adr/0007-architecture-enforcement-in-stages.md)); the staged gates are listed in [quality-gate.md](docs/engineering/quality-gate.md#planned-gates).
+The gates still to come are listed in [quality-gate.md](docs/engineering/quality-gate.md#planned-gates) ([ADR 0007](docs/adr/0007-architecture-enforcement-in-stages.md)).
 
 ## Deep reference
 

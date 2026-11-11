@@ -283,8 +283,9 @@ Each kind of knowledge has one home. When you are about to write something down,
 | What a module or function guarantees          | The code: module header and TSDoc                                                                                               | This standard                                                                                        |
 | Release history and progress                  | `docs/project/changelog.md`, `docs/project/progress.md`, `docs/product/roadmap.md`                                              | Changed only in a dedicated `chore/docs` pull request after a merge batch, never on a feature branch |
 
-What is derivable from code (the dependency graph, the route table, the API reference) will be
-generated and checked in CI rather than written by hand.
+What is derivable from code is generated rather than written by hand. The dependency graph is
+[dependency-graph.generated.md](dependency-graph.generated.md), written by `pnpm arch:graph`; the
+route table and the API reference will follow, checked in CI.
 
 ## Per-context README template
 

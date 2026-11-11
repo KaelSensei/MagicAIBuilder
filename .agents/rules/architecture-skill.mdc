@@ -71,6 +71,8 @@ change such code:
 
 ## Enforcement
 
-Today review checks these rules. dependency-cruiser (`pnpm arch`), `server-only` and the ESLint
-boundaries come in stages (`docs/adr/0007-architecture-enforcement-in-stages.md`); until they
-exist, say in the PR when a change adds to a known violation.
+`pnpm arch` (dependency-cruiser) checks cycles, the layer rules, the `src/modules/` rules and that
+no `"use client"` module reaches a `server-only` module. Its known violations are in
+`.dependency-cruiser-known-violations.json`, which may only shrink; a PR that adds an entry says
+why (`docs/engineering/quality-gate.md`, "Architecture gate"). The other checks come in stages
+(`docs/adr/0007-architecture-enforcement-in-stages.md`); until they exist, review checks the rule.
