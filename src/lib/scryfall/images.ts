@@ -1,5 +1,6 @@
 // Scryfall card image URL helpers
 import type { ScryfallCard, ScryfallImageUris } from "./types";
+import { SCRYFALL_IMAGE_HOST } from "./constants";
 
 /**
  * Scryfall's WebP image versions, the ones the app shows: `thumb` 146×204,
@@ -10,8 +11,6 @@ import type { ScryfallCard, ScryfallImageUris } from "./types";
 export type ImageSize = "thumb" | "grid" | "display" | "crop" | "art";
 
 type CardSide = "front" | "back";
-
-const SCRYFALL_IMAGE_HOST = "cards.scryfall.io";
 
 /**
  * The JPEG keys each WebP version replaces, for card JSON cached before the

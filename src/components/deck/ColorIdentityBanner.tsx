@@ -14,6 +14,7 @@
 import Image from "next/image";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { manaSymbolSvgUrl } from "@/lib/scryfall/constants";
 
 /** The identity symbols this banner can draw a pip for. */
 export type BannerManaColor = "W" | "U" | "B" | "R" | "G" | "C";
@@ -61,16 +62,6 @@ function getDisplayColorIdentity(
   );
 
   return normalized.length > 0 ? normalized : ["C"];
-}
-
-/**
- * Build the Scryfall SVG URL for a mana symbol used in the banner.
- *
- * @param color Supported mana color symbol.
- * @returns Remote SVG asset URL.
- */
-function getBannerManaSymbolUrl(color: BannerManaColor): string {
-  return `https://svgs.scryfall.io/card-symbols/${color}.svg`;
 }
 
 /**
@@ -138,7 +129,7 @@ export function ColorIdentityBanner({
               >
                 <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.5),_transparent_42%)]" />
                 <Image
-                  src={getBannerManaSymbolUrl(color)}
+                  src={manaSymbolSvgUrl(color)}
                   alt={t("manaSymbolAlt", {
                     color: t(`manaColors.${getBannerManaColorKey(color)}`),
                   })}
