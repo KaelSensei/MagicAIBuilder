@@ -9,6 +9,8 @@
   "moveNamedToMaybeboard": "Déplacer {name} vers À l'étude",
   "moveNamedToSideboard": "Déplacer {name} vers la réserve",
   "removeNamed": "Retirer {name}",
+  "setAsCommander": "Définir comme commandant",
+  "setAsCommanderNamed": "Définir {name} comme commandant",
   "noText": "Aucun texte",
   "noCardsFound": "Aucune carte trouvée",
   "loadingPrintings": "Chargement des éditions…",

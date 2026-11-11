@@ -354,3 +354,79 @@ describe("quantity stepper on a deck row", () => {
     ).toBeEnabled();
   });
 });
+
+describe("set as commander on a deck row", () => {
+  const atraxa = deckRow({
+    id: "row-atraxa",
+    scryfallId: "d0d33d52-3d28-4635-b985-51e126289259",
+    name: "Atraxa, Praetors' Voice",
+    manaCost: "{G}{W}{U}{B}",
+    cmc: 4,
+    typeLine: "Legendary Creature — Phyrexian Angel Horror",
+    oracleText:
+      "Flying, vigilance, deathtouch, lifelink\nAt the beginning of your end step, proliferate.",
+    colorIdentity: ["W", "U", "B", "G"],
+    category: "creature",
+  });
+
+  it("makes a legendary creature the commander and takes it out of the deck list", async () => {
+    const user = userEvent.setup();
+    openSavedDeck(atraxa);
+    renderWithIntl(<CardListItem card={atraxa} />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Set Atraxa, Praetors' Voice as commander",
+      })
+    );
+
+    await waitFor(() =>
+      expect(requests.map(({ method, path }) => `${method} ${path}`)).toEqual([
+        `DELETE /api/decks/${DECK_ID}/cards/row-atraxa`,
+        `PATCH /api/decks/${DECK_ID}`,
+        `POST /api/decks/${DECK_ID}/cards`,
+      ])
+    );
+    expect(requests[1]?.body).toMatchObject({
+      commanderId: atraxa.scryfallId,
+      commanderName: "Atraxa, Praetors' Voice",
+    });
+    expect(useDeckStore.getState().decks[DECK_ID]?.commander?.name).toBe(
+      "Atraxa, Praetors' Voice"
+    );
+    expect(storedRow("row-atraxa")).toBeUndefined();
+  });
+
+  it("offers it on a card whose text says it can be your commander (CR 903.3a)", () => {
+    const grist = deckRow({
+      id: "row-grist",
+      name: "Grist, the Hunger Tide",
+      typeLine: "Legendary Planeswalker — Grist",
+      oracleText:
+        "Grist, the Hunger Tide can be your commander.\nAs long as Grist isn't on the battlefield, it's a 1/1 Insect creature in addition to its other types.",
+      category: "planeswalker",
+    });
+    openSavedDeck(grist);
+    renderWithIntl(<CardListItem card={grist} />, { locale: "fr" });
+
+    expect(
+      screen.getByRole("button", {
+        name: "Définir Grist, the Hunger Tide comme commandant",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("offers it only on a card that can be a commander (CR 903.3)", () => {
+    const solRing = deckRow({
+      id: "row-sol-ring",
+      name: "Sol Ring",
+      typeLine: "Artifact",
+    });
+    openSavedDeck(solRing);
+    renderWithIntl(<CardListItem card={solRing} />);
+
+    expect(
+      screen.queryByRole("button", { name: /as commander/ })
+    ).not.toBeInTheDocument();
+  });
+});

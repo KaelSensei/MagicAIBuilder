@@ -9,6 +9,8 @@
   "moveNamedToMaybeboard": "Move {name} to Considering",
   "moveNamedToSideboard": "Move {name} to Sideboard",
   "removeNamed": "Remove {name}",
+  "setAsCommander": "Set as commander",
+  "setAsCommanderNamed": "Set {name} as commander",
   "noCardsFound": "No cards found",
   "loadingPrintings": "Loading printings…",
   "printingsAvailable": "{count, plural, one {# printing available} other {# printings available}}",
