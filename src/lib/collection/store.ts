@@ -4,7 +4,8 @@ import { create } from "zustand";
 import { forEachSequential } from "@/lib/async/sequential";
 import type { CollectionCard, AddToCollectionInput, CardCondition } from "./types";
 import { logger } from "@/lib/logger";
-import { indexCollectionCards, isRecord, parseCollectionCard } from "./parse";
+import { indexCollectionCards } from "./parse";
+import { applyCollectionPatchResult, patchCollectionCard } from "./card-patch";
 import { updateCollectionQuantity } from "./quantity-update";
 
 /** Newest `loadCollection` call. An older response must not replace it. */
@@ -29,8 +30,11 @@ export interface CollectionStore {
   addToCollection: (input: AddToCollectionInput) => Promise<void>;
   bulkAddToCollection: (inputs: readonly AddToCollectionInput[]) => Promise<void>;
   removeFromCollection: (id: string) => Promise<void>;
+  /** Shows the new quantity at once; a failed save rolls it back, and 0 removes the row. */
   updateQuantity: (id: string, quantity: number) => Promise<void>;
+  /** Saves a condition, then shows the row the server returns. */
   updateCondition: (id: string, condition: CardCondition | null) => Promise<void>;
+  /** Moves a row to another printing; onto an owned printing, the two rows merge. */
   swapPrinting: (id: string, next: { scryfallId: string; name: string; imageUri: string; price: number | null }) => Promise<void>;
 }
 
@@ -199,24 +203,8 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
   updateCondition: async (id: string, condition: CardCondition | null) => {
     set({ isSyncing: true });
     try {
-      const res = await fetch(`/api/collection/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ condition }),
-      });
-      if (!res.ok) throw new Error("Failed to update condition");
-      const updated: CollectionCard = await res.json();
-      const hydrated: CollectionCard = {
-        ...updated,
-        createdAt: new Date(updated.createdAt),
-        acquiredAt: updated.acquiredAt ? new Date(updated.acquiredAt) : null,
-      };
-      set((state) => {
-        if (hydrated.foil) {
-          return { collectionCardsFoil: { ...state.collectionCardsFoil, [hydrated.scryfallId]: hydrated } };
-        }
-        return { collectionCards: { ...state.collectionCards, [hydrated.scryfallId]: hydrated } };
-      });
+      const result = await patchCollectionCard(id, { condition });
+      set((state) => applyCollectionPatchResult(state, id, result));
     } catch (err) {
       logger.error("Unexpected error", "updateCondition", err);
     } finally {
@@ -227,42 +215,15 @@ export const useCollectionStore = create<CollectionStore>()((set, get) => ({
   swapPrinting: async (id: string, next: { scryfallId: string; name: string; imageUri: string; price: number | null }) => {
     set({ isSyncing: true });
     try {
-      const res = await fetch(`/api/collection/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scryfallId: next.scryfallId,
-          name: next.name,
-          imageUri: next.imageUri,
-          price: next.price,
-        }),
+      const result = await patchCollectionCard(id, {
+        scryfallId: next.scryfallId,
+        name: next.name,
+        imageUri: next.imageUri,
+        price: next.price,
       });
-      if (!res.ok) throw new Error("Failed to swap printing");
-      const data: unknown = await res.json();
-
-      if (!isRecord(data)) throw new Error("Invalid response from server");
-      const cardPayload = parseCollectionCard(data["card"]);
-      if (!cardPayload) throw new Error("Invalid response from server");
-
-      set((state) => {
-        const collectionCards = { ...state.collectionCards };
-        const collectionCardsFoil = { ...state.collectionCardsFoil };
-
-        for (const [k, c] of Object.entries(collectionCards)) {
-          if (c.id === id) delete collectionCards[k];
-        }
-        for (const [k, c] of Object.entries(collectionCardsFoil)) {
-          if (c.id === id) delete collectionCardsFoil[k];
-        }
-
-        if (cardPayload.foil) {
-          collectionCardsFoil[cardPayload.scryfallId] = cardPayload;
-        } else {
-          collectionCards[cardPayload.scryfallId] = cardPayload;
-        }
-
-        return { collectionCards, collectionCardsFoil };
-      });
+      // A swap onto a printing the user already owns merges the two rows; the
+      // surviving row has another id, which the result carries.
+      set((state) => applyCollectionPatchResult(state, id, result));
     } catch (err) {
       logger.error("Unexpected error", "swapPrinting", err);
     } finally {
