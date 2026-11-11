@@ -59,7 +59,7 @@ pnpm install --frozen-lockfile
 → pnpm lint                                  (eslint flat config; any warning fails)
 → pnpm arch                                  (dependency-cruiser; a cycle or a new boundary violation fails)
 → npx tsc --noEmit
-→ pnpm test:coverage                         (vitest; no coverage threshold)
+→ pnpm test:coverage                         (vitest; fails under a layer floor in src/modules/)
 → pnpm build
 ```
 
@@ -151,20 +151,12 @@ pnpm git:prune        # owner only: delete every non-protected branch (local + r
 ### SonarCloud
 
 - Analysis on every PR, **advisory** (`continue-on-error: true` in `sonar.yml`)
-- Coverage uploaded from CI (lcov format); SonarCloud's coverage scope excludes `src/app/**` and `src/components/**`
+- Coverage uploaded from CI (lcov format); SonarCloud's coverage scope excludes `src/app/**`, `src/components/**` and `src/modules/*/ui/**` ([ADR 0010](../adr/0010-coverage-scope-by-layer.md))
 - Targets: see [quality-gate.md](quality-gate.md#sonarcloud-targets-advisory)
 
 ### Test coverage (Vitest)
 
-Vitest measures coverage over all of `src`; no threshold is enforced. Last measured on 2026-08-23 (breakdown in `vitest.config.ts`):
-
-| Area          | Coverage |
-| ------------- | -------- |
-| All of `src`  | 48.5%    |
-| `lib/`        | 96.6%    |
-| `hooks/`      | 87.4%    |
-| `components/` | 25.2%    |
-| `app/`        | 25.1%    |
+Vitest measures coverage over all of `src`. `pnpm test:coverage` fails when `src/modules/*/domain/**` falls under 90% of lines or branches, or `src/modules/*/application/**` under 80% ([ADR 0010](../adr/0010-coverage-scope-by-layer.md)). No file matches a floor until the first context moves. The current figures and their sources are in [quality-gate.md](quality-gate.md#coverage).
 
 ### Dependabot
 
