@@ -1,8 +1,9 @@
 "use client";
 // Advanced search filters — color (OR/AND/EXACT), lands, colorless, CMC modes,
-// price range, subtype, keyword, power/toughness, interaction type, presets
+// price range, subtype, keyword, power/toughness, interaction type, Collection only, presets
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Check } from "lucide-react";
 import { cn } from "@/components/ui/utils";
 import type {
   CmcMode,
@@ -10,7 +11,6 @@ import type {
   InteractionType,
   SearchFilters,
 } from "@/lib/deck/types";
-import { useCollectionStore } from "@/lib/collection/store";
 
 // These tables live at module scope, where useTranslations cannot run, so they
 // carry catalog keys and are resolved at render time.
@@ -149,11 +149,6 @@ export function SearchFilters({
 }: SearchFiltersProps) {
   const t = useTranslations("search");
   const tf = useTranslations("search.filters");
-  const collectionSize = useCollectionStore(
-    (s) =>
-      Object.keys(s.collectionCards).length +
-      Object.keys(s.collectionCardsFoil).length
-  );
 
   const [presets, setPresets] = useState<FilterPreset[]>(loadPresets);
   const [presetName, setPresetName] = useState("");
@@ -481,28 +476,35 @@ export function SearchFilters({
         </select>
       </div>
 
-      {/* ── Collection only ── */}
-      {collectionSize > 0 && (
-        <div className="flex items-center gap-2 pt-1">
-          <button
-            type="button"
-            onClick={() =>
-              onChange({ ...filters, collectionOnly: !filters.collectionOnly })
-            }
-            className={cn(
-              "flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border transition-colors",
-              filters.collectionOnly
-                ? "border-green-500 text-green-400 bg-green-500/10"
-                : "border-[var(--border)] text-[var(--text-secondary)] hover:border-green-500/50"
-            )}
-          >
-            <span className="text-sm">📦</span>
-            {filters.collectionOnly
-              ? tf("collectionOnlyActive")
-              : tf("collectionOnlyToggle")}
-          </button>
-        </div>
-      )}
+      {/* ── Collection only ──
+          Shown to every player, even a guest or an empty collection: a preset can turn it on,
+          and the results then explain why nothing is listed. The name stays the same and
+          aria-pressed carries the state, as the WAI-ARIA APG toggle button asks:
+          https://www.w3.org/WAI/ARIA/apg/patterns/button/ */}
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="button"
+          aria-pressed={filters.collectionOnly === true}
+          onClick={() =>
+            onChange({ ...filters, collectionOnly: !filters.collectionOnly })
+          }
+          className={cn(
+            "flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border transition-colors",
+            filters.collectionOnly
+              ? "border-green-500 text-green-400 bg-green-500/10"
+              : "border-[var(--border)] text-[var(--text-secondary)] hover:border-green-500/50"
+          )}
+        >
+          {filters.collectionOnly ? (
+            <Check className="w-3.5 h-3.5" aria-hidden="true" />
+          ) : (
+            <span className="text-sm" aria-hidden="true">
+              📦
+            </span>
+          )}
+          {tf("collectionOnly")}
+        </button>
+      </div>
 
       {/* ── Filter presets ── */}
       <div className="pt-1 space-y-2 border-t border-[var(--border)]">

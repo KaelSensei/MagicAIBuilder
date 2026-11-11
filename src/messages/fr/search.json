@@ -12,6 +12,14 @@
   "noSetsFound": "Aucune édition trouvée pour « {query} »",
   "clearSet": "Retirer l'édition sélectionnée",
   "setsAvailable": "{count, plural, one {# édition disponible} other {# éditions disponibles}} — tape pour rechercher",
+  "collectionOnly": {
+    "signedOut": "Connecte-toi et ajoute des cartes à ta collection pour ne voir que les cartes que tu possèdes.",
+    "emptyCollection": "Ta collection est vide. Ajoutes-y des cartes : ce filtre n'affichera alors que les cartes que tu possèdes.",
+    "collectionUnavailable": "Ta collection n'a pas pu être chargée, donc les cartes que tu possèdes ne peuvent pas être affichées. Recharge la page pour réessayer.",
+    "noMatch": "Aucune des cartes que tu possèdes ne correspond à cette recherche.",
+    "ownedCount": "{count, plural, one {# carte possédée} other {# cartes possédées}}",
+    "partialScan": "{scanned, number} cartes les plus jouées vérifiées sur {total, number} correspondances. Affine ta recherche pour vérifier les autres."
+  },
   "filters": {
     "colors": "Couleurs",
     "colorless": "Incolore (c:c) — artefacts, Eldrazi, etc.",
@@ -35,8 +43,7 @@
     "atMost": "≤",
     "subtypeExample": "ex. Elfe, Dragon",
     "keywordExample": "ex. Vol, Piétinement",
-    "collectionOnlyActive": "Collection uniquement",
-    "collectionOnlyToggle": "Afficher ma collection",
+    "collectionOnly": "Seulement mes cartes",
     "presets": "Préréglages",
     "presetNamePlaceholder": "Nom du préréglage…",
     "savePreset": "Enregistrer",

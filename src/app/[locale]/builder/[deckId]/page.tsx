@@ -278,7 +278,7 @@ export default function BuilderPage() {
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
-  const { data: sessionData } = useSession();
+  const { data: sessionData, status: sessionStatus } = useSession();
 
   const setActiveDeck = useDeckStore((s) => s.setActiveDeck);
   const addCard = useDeckStore((s) => s.addCard);
@@ -457,7 +457,12 @@ export default function BuilderPage() {
     format: deck?.format,
   });
 
-  const searchResults = useCardSearchResults(query);
+  // Set and colour search show no filters panel, so a "Collection only" left on there must not
+  // filter a list whose toggle the player cannot see.
+  const searchResults = useCardSearchResults(query, {
+    collectionOnly: searchMode === "name" && filters.collectionOnly === true,
+    sessionStatus,
+  });
   const searchLoading = searchResults.isLoading;
 
   const handleSearch = useCallback((text: string) => {
@@ -979,6 +984,7 @@ export default function BuilderPage() {
                 isLoading={searchLoading}
                 error={searchResults.error}
                 totalCards={searchResults.totalCards}
+                collectionOnly={searchResults.collectionOnly}
                 onCardClick={handleCardClick}
                 onAddToMaybeboard={addToMaybeboard}
                 onAddToZone={handleAddToZone}
