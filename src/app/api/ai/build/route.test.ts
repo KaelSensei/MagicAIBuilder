@@ -58,6 +58,37 @@ function answerCollection(init: RequestInit | undefined): Response {
   return Response.json({ object: "list", not_found: notFound, data: found });
 }
 
+/**
+ * Same collection answer as {@link answerCollection}, except a name missing
+ * from the fixture comes back as a legal green legendary creature.
+ *
+ * The placeholder list names cards the fixture does not carry (Azusa, the
+ * colourless staples). A live Scryfall call used to resolve them, and that
+ * call hung past the 5s limit in CI run 43028423672.
+ *
+ * @param init - the collection POST, whose body is `{ identifiers }`
+ * @returns a collection payload with one card per requested name
+ */
+function answerCollectionOffline(init: RequestInit | undefined): Response {
+  const { identifiers } = COLLECTION_REQUEST.parse(
+    JSON.parse(String(init?.body))
+  );
+  const data = identifiers.map(({ name }) => {
+    const known = CARD_DATA.get(normalizeImportedName(name));
+    if (known) return known;
+    return {
+      id: name.toLowerCase().replaceAll(/\W+/g, "-"),
+      name,
+      cmc: 0,
+      type_line: "Legendary Creature — Human",
+      oracle_text: "",
+      color_identity: ["G"],
+      legalities: { commander: "legal" },
+    };
+  });
+  return Response.json({ object: "list", not_found: [], data });
+}
+
 function buildRequest(bracket: number): Request {
   return new Request("http://localhost/api/ai/build", {
     method: "POST",
@@ -563,6 +594,14 @@ describe("POST /api/ai/build monthly allowance and metering", () => {
 
   it("answers with the placeholder deck at zero cost without reserving a build when no provider key is set", async () => {
     delete process.env.ANTHROPIC_API_KEY;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async (input, init) =>
+        String(input) === SCRYFALL_COLLECTION
+          ? answerCollectionOffline(init)
+          : new Response("{}", { status: 500 })
+      )
+    );
 
     const events = (await (await POST(buildRequest(2))).text())
       .trim()
