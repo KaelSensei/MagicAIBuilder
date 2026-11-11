@@ -4,14 +4,18 @@ import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { searchCards, autocompleteCardName } from "@/lib/scryfall/client";
 import type { ScryfallSearchResponse } from "@/lib/scryfall/types";
 
-const STALE_TIME_5MIN = 5 * 60 * 1000;
+/** How long a search answer stays fresh before TanStack Query refetches it. */
+export const STALE_TIME_5MIN = 5 * 60 * 1000;
+
+/** Shortest query, once trimmed, that a search hook sends to Scryfall. */
+export const MIN_SEARCH_QUERY_LENGTH = 2;
 
 /** Search cards with TanStack Query — 5 min cache */
 export function useCardSearch(query: string) {
   return useQuery({
     queryKey: ["scryfall", "search", query],
     queryFn: () => searchCards(query),
-    enabled: query.trim().length >= 2,
+    enabled: query.trim().length >= MIN_SEARCH_QUERY_LENGTH,
     staleTime: STALE_TIME_5MIN,
     retry: (failureCount, error) => {
       // Don't retry on 404 (no results)
@@ -27,7 +31,7 @@ export function useCardSearchInfinite(query: string) {
     queryKey: ["scryfall", "search", "infinite", query],
     queryFn: ({ pageParam }) =>
       searchCards(query, pageParam as number),
-    enabled: query.trim().length >= 2,
+    enabled: query.trim().length >= MIN_SEARCH_QUERY_LENGTH,
     staleTime: STALE_TIME_5MIN,
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -47,7 +51,7 @@ export function useCardAutocomplete(partial: string) {
   return useQuery({
     queryKey: ["scryfall", "autocomplete", partial],
     queryFn: () => autocompleteCardName(partial),
-    enabled: partial.trim().length >= 2,
+    enabled: partial.trim().length >= MIN_SEARCH_QUERY_LENGTH,
     staleTime: STALE_TIME_5MIN,
   });
 }
