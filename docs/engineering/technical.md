@@ -422,7 +422,7 @@ All format-specific behavior is driven by `src/lib/deck/formats.ts`:
 | Validation      | Deck size (100 vs 60), singleton rule, commander requirement  |
 | Card multiples  | maxCopiesPerCard (1 for Commander, 4 for Standard)            |
 | Bracket scoring | Only computed for Commander (returns null otherwise)          |
-| Playtest        | startingLife (40 Commander, 30 Brawl, 20 elsewhere)           |
+| Playtest        | startingLife per table size (Brawl 25 or 30, Commander 40)    |
 | Deck statistics | Card-count target, and the curve / threat / interaction bands |
 
 ---

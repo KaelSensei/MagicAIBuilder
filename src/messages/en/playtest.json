@@ -4,7 +4,7 @@
   "start": {
     "prompt": "Ready to test your deck?",
     "hint": "Shuffle and draw your opening hand of seven cards.",
-    "multiplayer": "Multiplayer game (first mulligan free)",
+    "multiplayer": "Multiplayer game (more than two players)",
     "action": "Draw opening hand"
   },
   "turn": "Turn {turn}",

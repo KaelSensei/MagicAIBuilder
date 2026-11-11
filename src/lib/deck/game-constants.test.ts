@@ -12,6 +12,9 @@ describe("game constants", () => {
   // CR 103.4c, 903.7: Commander players start at 40 life.
   it("starts a Commander game at 40 life, the same total as the Commander format entry", () => {
     expect(STARTING_LIFE).toBe(40);
-    expect(STARTING_LIFE).toBe(FORMAT_CONFIG.commander.startingLife);
+    expect(FORMAT_CONFIG.commander.startingLife).toEqual({
+      twoPlayer: STARTING_LIFE,
+      multiplayer: STARTING_LIFE,
+    });
   });
 });

@@ -249,6 +249,22 @@ describe("usePlaytestStore", () => {
     }
   );
 
+  // CR 903.12f: 25 life in a two-player Brawl game, 30 in a multiplayer one.
+  // Other formats start on the same total at any table (CR 103.4c: 40 in Commander).
+  it.each([
+    { format: "brawl", options: { multiplayer: false }, life: 25 },
+    { format: "brawl", options: { multiplayer: true }, life: 30 },
+    { format: "brawl", options: {}, life: 30 },
+    { format: "commander", options: { multiplayer: false }, life: 40 },
+  ] as const)(
+    "starts a $format game with options $options at $life life",
+    ({ format, options, life }) => {
+      usePlaytestStore.getState().startPlaytest(makeDeck({ format }), options);
+
+      expect(usePlaytestStore.getState().engine?.lifeTotal).toBe(life);
+    }
+  );
+
   it("restarts under the multiplayer choice the session started with", () => {
     usePlaytestStore
       .getState()
