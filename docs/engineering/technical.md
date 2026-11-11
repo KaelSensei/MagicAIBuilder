@@ -830,7 +830,7 @@ Field `notes String?` on `DeckCard`. Synced via `PATCH /api/decks/[id]/cards/[ca
 
 ### Deck Tags
 
-Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array. The `DeckTagsEditor` component shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. The home page renders a tag filter bar when any decks have tags, and tag pills on deck cards are clickable to activate filtering.
+Field `tags String[] @default([])` on `Deck` (PostgreSQL array). Tags are synced via `PATCH /api/decks/[id]` with the full updated array (at most 20 tags of 50 characters, `patchDeckSchema`). The `DeckTagsEditor` component, in the builder's **Deck details** panel (`DeckDetailsPanel`, top of the analysis sidebar), shows pill-shaped tags with color coding per tag value. Predefined suggestions: `casual`, `cEDH`, `WIP`, `budget`, `tuned`, `theme`. Tab in the input autocompletes the first suggestion. No other screen reads the tags yet: the deck list has no tag filter.
 
 ---
 

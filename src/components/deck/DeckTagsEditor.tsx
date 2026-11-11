@@ -144,6 +144,9 @@ export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
           <button
             type="button"
             onClick={handleShowInput}
+            // Once the deck has tags the button shows only its icon, so the
+            // label carries its name for screen readers and voice control.
+            aria-label={t("tags.add")}
             className="inline-flex items-center gap-0.5 text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors px-1.5 py-0.5 rounded-full border border-dashed border-[var(--border)] hover:border-[var(--accent)]"
           >
             <Plus className="w-2.5 h-2.5" />

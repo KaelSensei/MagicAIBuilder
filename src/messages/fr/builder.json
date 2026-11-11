@@ -23,6 +23,9 @@
     "add": "Ajouter une étiquette",
     "placeholder": "nom de l'étiquette…"
   },
+  "details": {
+    "title": "Détails du deck"
+  },
   "searchCommander": "Recherchez un commandant ci-dessus",
   "searchPartner": "Recherchez un {partnerLabel}",
   "zones": {

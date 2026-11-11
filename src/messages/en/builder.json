@@ -23,6 +23,9 @@
     "add": "Add tag",
     "placeholder": "tag name…"
   },
+  "details": {
+    "title": "Deck details"
+  },
   "searchCommander": "Search for a commander above",
   "searchPartner": "Search for a {partnerLabel}",
   "zones": {

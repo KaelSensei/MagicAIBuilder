@@ -42,6 +42,7 @@ import { SearchResults } from "@/components/search/SearchResults";
 import { DeckEditor } from "@/components/deck/DeckEditor";
 import { DeckStats } from "@/components/deck/DeckStats";
 import { BracketIndicator } from "@/components/deck/BracketIndicator";
+import { DeckDetailsPanel } from "@/components/deck/DeckDetailsPanel";
 import { GameChangersBadge } from "@/components/deck/GameChangersBadge";
 import { BanlistAlert } from "@/components/deck/BanlistAlert";
 import {
@@ -1060,6 +1061,8 @@ export default function BuilderPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.15 }}
           >
+            <DeckDetailsPanel deck={deck} />
+
             <BracketIndicator
               score={bracketScore}
               targetBracket={deck.targetBracket}

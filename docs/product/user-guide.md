@@ -232,6 +232,12 @@ This is **not** the same as the Partner / Background slot — it is the optional
 
 The editor shows a **short rule summary** where the app encodes it (for example Lurrus → each card’s mana value ≤ 2) and **warnings** if commander color identity or that mechanical check fails. For companions we only describe as **custom**, verify the printed **Companion —** rule yourself; **Lutri** is blocked as a companion in Commander in-app.
 
+### Deck Details
+
+The **Deck details** panel opens the right panel (the **Stats** tab on a phone). It holds the settings of the deck itself, and each one is saved as soon as you change it:
+
+- **Tags** — short labels such as `casual` or `WIP`. Click **Add tag**, type a tag and press Enter; Tab takes the first suggestion. Click × on a tag to remove it.
+
 ### Deck Statistics
 
 The right panel shows:
