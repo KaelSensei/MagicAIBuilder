@@ -1,0 +1,9 @@
+{"type":"status","message":"Thinking…"}
+{"type":"status","message":"Consulting the AI oracle…"}
+{"type":"commander","name":"Talrand, Sky Summoner"}
+{"type":"status","message":"Building card list…"}
+{"type":"card","name":"Sol Ring","category":"ramp","quantity":1}
+{"type":"card","name":"Counterspell","category":"removal","quantity":1}
+{"type":"card","name":"Persistent Petitioners","category":"creature","quantity":4}
+{"type":"card","name":"Island","category":"land","quantity":93}
+{"type":"done","totalCards":99,"source":"ai","corrections":[{"action":"removed","name":"Counterspell","quantity":1,"reason":"extra_copies"},{"action":"removed","name":"Lightning Bolt","quantity":1,"reason":"outside_color_identity"},{"action":"removed","name":"Mana Crypt","quantity":1,"reason":"banned"},{"action":"removed","name":"Talrand's Invocation","quantity":1,"reason":"unknown_card"},{"action":"added","name":"Island","quantity":4,"reason":"fill_to_size"}]}

@@ -15,6 +15,7 @@
  *
  * @module test/ai-route-msw
  */
+import { vi } from "vitest";
 import { http, type HttpHandler } from "msw";
 import { z } from "zod";
 import {
@@ -90,14 +91,17 @@ export function modelProviderServes(
  * accents and apostrophe style ignored).
  *
  * @param cards - the card data Scryfall "holds" for the test
+ * @param asked - when given, receives the names of each request, in order
  * @returns the handler, for `useMsw` or `server.use`
  */
 export function scryfallCollectionServes(
-  cards: readonly ScryfallCard[]
+  cards: readonly ScryfallCard[],
+  asked: string[][] = []
 ): HttpHandler {
   const index = buildScryfallNameIndex(cards);
   return http.post(SCRYFALL_COLLECTION_URL, async ({ request }) => {
     const { identifiers } = COLLECTION_REQUEST.parse(await request.json());
+    asked.push(identifiers.map(({ name }) => name));
     const data = identifiers.flatMap(({ name }) => {
       const card = index.get(normalizeImportedName(name));
       return card ? [card] : [];
@@ -124,4 +128,62 @@ export async function readNdjsonEvents(
     .split("\n")
     .filter((line) => line !== "")
     .map((line): unknown => JSON.parse(line));
+}
+
+/** One streamed event, and when it arrived on Vitest's fake clock. */
+export interface TimedEvent {
+  /** Milliseconds of fake time since the reading started. */
+  readonly at: number;
+  readonly event: unknown;
+}
+
+/**
+ * Reads a route's NDJSON response while it drives Vitest's fake clock, so a
+ * delay the route waits between events costs no real time and still shows in
+ * each event's `at`.
+ *
+ * The caller fakes `setTimeout` and `Date` (`vi.useFakeTimers({ toFake:
+ * ["setTimeout", "Date"] })`) before it posts the request. Between reads the
+ * loop yields one real macrotask, so network work served by MSW completes,
+ * then fires the next fake timer. It gives up after five real seconds.
+ *
+ * @param response - the route's streamed response
+ * @returns the raw body, and every event with its arrival time
+ */
+export async function readNdjsonOnFakeClock(response: Response): Promise<{
+  readonly body: string;
+  readonly events: readonly TimedEvent[];
+}> {
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("The response has no body to stream.");
+  const start = Date.now();
+  const decoder = new TextDecoder();
+  const events: TimedEvent[] = [];
+  let body = "";
+  let finished = false;
+
+  const pump = (async () => {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      const pending = body.slice(body.lastIndexOf("\n") + 1) + chunk;
+      body += chunk;
+      for (const line of pending.split("\n").slice(0, -1)) {
+        events.push({ at: Date.now() - start, event: JSON.parse(line) });
+      }
+    }
+    finished = true;
+  })();
+
+  const deadline = performance.now() + 5_000;
+  while (!finished) {
+    if (performance.now() > deadline) {
+      throw new Error("The stream did not end within five real seconds.");
+    }
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    await vi.advanceTimersToNextTimerAsync();
+  }
+  await pump;
+  return { body, events };
 }
