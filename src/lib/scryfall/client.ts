@@ -3,6 +3,7 @@
 // (/api/cache/cards, 24h; /api/cache/search, 1h). Only the server writes it, from
 // Scryfall answers it fetched itself; this client never writes it back.
 import { forEachSequential } from "@/lib/async/sequential";
+import { USER_AGENT } from "@/lib/http";
 import {
   EMPTY_SEARCH_RESPONSE,
   type ScryfallCard,
@@ -19,10 +20,29 @@ import { logger } from "@/lib/logger";
 
 const SCRYFALL_BASE = "https://api.scryfall.com";
 
-const defaultHeaders = {
-  "User-Agent": "MagicAIBuilder/1.0",
-  Accept: "application/json",
-};
+/**
+ * How long one Scryfall request may run, in milliseconds, before it is aborted
+ * and rejects with a `TimeoutError`.
+ *
+ * The queue starts the next request only once this one settles, so a request
+ * that never answers would stall every Scryfall call of the runtime after it:
+ * on a server, every visitor that instance serves. Ten seconds is the budget
+ * `httpGet` gives the server's own Scryfall fetches (`server-fetch.ts`).
+ */
+export const SCRYFALL_TIMEOUT_MS = 10_000;
+
+/**
+ * Headers for a request to api.scryfall.com, which requires a User-Agent and
+ * an Accept header on every request. A server sends the app's `USER_AGENT`;
+ * a browser keeps its own, as Scryfall asks of on-page JavaScript
+ * (https://scryfall.com/docs/api, "Required Headers", read 2026-11-10).
+ */
+function scryfallHeaders(): Record<string, string> {
+  const runsInBrowser = typeof window !== "undefined";
+  return runsInBrowser
+    ? { Accept: "application/json" }
+    : { "User-Agent": USER_AGENT, Accept: "application/json" };
+}
 
 /**
  * Reset the rate limiter state (for tests only)
@@ -32,6 +52,13 @@ export function __resetRateLimiter() {
   resetScryfallQueue();
 }
 
+/**
+ * Sends one request to api.scryfall.com in its turn in the runtime's queue.
+ *
+ * Rejects with a `TimeoutError` after `SCRYFALL_TIMEOUT_MS`. The clock starts
+ * when the request leaves the queue, so time spent waiting for its turn never
+ * counts against it.
+ */
 function rateLimitedFetch(
   url: string,
   options?: RequestInit
@@ -40,9 +67,10 @@ function rateLimitedFetch(
     fetch(url, {
       ...options,
       headers: {
-        ...defaultHeaders,
+        ...scryfallHeaders(),
         ...options?.headers,
       },
+      signal: AbortSignal.timeout(SCRYFALL_TIMEOUT_MS),
     })
   );
 }

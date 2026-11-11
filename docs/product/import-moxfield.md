@@ -108,7 +108,7 @@ An earlier version of this guide made requests “browser-like” to avoid 403 b
 
 In MagicAIBuilder, `src/lib/import/moxfield-client.ts` is the only code that calls Moxfield:
 
-- It sends `Accept: application/json` and the app's own `User-Agent` (`MagicAIBuilder/1.0 (+https://magicaibuilder.com)`, set by `httpGet` in `src/lib/http.ts`). It sends no `Origin`, no `Referer` and no browser `User-Agent`.
+- It sends `Accept: application/json` and the app's own `User-Agent` (`MagicAIBuilder/1.0 (+https://magic-ai-builder.vercel.app)`, set by `httpGet` in `src/lib/http.ts`). It sends no `Origin`, no `Referer` and no browser `User-Agent`.
 - A 403, a 429, or an HTML page where JSON was expected throws `MoxfieldRefusedError` (`src/lib/import/moxfield-refusal.ts`). The import routes answer it with `code: "moxfield_refused"`, and the import dialog tells the player to copy the list from Moxfield's Export and paste it in the **Plain Text** tab. A refusal is never retried.
 
 On 2026-11-09, both endpoints answered these honest requests with HTTP 403 and Cloudflare's “Attention Required!” page. Reliable access needs an agreement with Moxfield (I-29, partnership track).

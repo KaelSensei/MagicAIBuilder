@@ -13,6 +13,7 @@
  */
 
 import { NextResponse } from "next/server";
+import { USER_AGENT } from "@/lib/http";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -113,7 +114,7 @@ async function proxyCardImage(request: Request): Promise<NextResponse> {
     const upstream = await fetch(urlParam, {
       headers: {
         Accept: "image/*",
-        "User-Agent": "MagicAIBuilder/1.0 (image proxy for print export)",
+        "User-Agent": USER_AGENT,
       },
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
       // The allowlist checked only this URL: following a redirect would let any
