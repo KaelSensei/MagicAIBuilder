@@ -1,3 +1,7 @@
+/*
+ * POST /api/ai/build: builds a Commander deck from a colour identity, a
+ * strategy, a bracket and an optional commander, then streams the checked list.
+ */
 import { NextResponse } from "next/server";
 import { flattenError } from "zod";
 import { buildSchema, sanitizeForPrompt } from "@/lib/validation/ai";
@@ -108,8 +112,10 @@ function buildPrompt(req: BuildRequest): string {
   const bracketDesc = describeBracket(req.bracket);
   const deckPlan = formatDeckPlanForPrompt(createDeckPlan(req));
 
+  // JSON encoding escapes the quotes inside a name such as
+  // `Henzie "Toolbox" Torre`, so they cannot close the quoted value.
   const commanderStr = req.commanderName
-    ? `Use exactly "${req.commanderName}" as the commander`
+    ? `Use exactly ${JSON.stringify(req.commanderName)} as the commander`
     : `Choose the best commander whose color identity is EXACTLY {${colorSymbols || "C"}} — meaning the commander uses ONLY these colors and no others`;
 
   return `You are a Magic: The Gathering Commander deck builder expert.
