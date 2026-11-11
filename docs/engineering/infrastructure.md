@@ -156,6 +156,37 @@ All CRUD operations go through Next.js App Router API routes:
 | PATCH  | `/api/decks/[id]/cards/[cardId]` | Update card (category, etc.) |
 | GET    | `/api/cache/cards?id=<id>`       | Card via server-filled cache |
 
+### Deck version on card writes
+
+`Deck.version` is the deck's optimistic lock: it moves by one with every saved
+card write, in the same transaction as the card rows
+(`src/lib/deck/deck-repository.ts`). `GET /api/decks/[id]` returns it with the
+deck.
+
+The four single-card routes (`POST` and `DELETE /api/decks/[id]/cards`,
+`PATCH` and `DELETE /api/decks/[id]/cards/[cardId]`) accept an optional
+`expectedVersion`, the version the client last read:
+
+| Route kind  | Where `expectedVersion` goes         | Success body                                    |
+| ----------- | ------------------------------------ | ----------------------------------------------- |
+| POST, PATCH | JSON body field, an integer from 0   | The card row, plus `version` (POST answers 201) |
+| DELETE      | Query string, `?expectedVersion=<n>` | `{ "success": true, "version": <n> }`           |
+
+DELETE takes the query string because a DELETE body has no defined meaning and
+some proxies reject one (RFC 9110 §9.3.5).
+
+| Case                                        | Status | Body                                                                                                     |
+| ------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------- |
+| No `expectedVersion`                        | 2xx    | The write is not checked; it still moves the version                                                     |
+| `expectedVersion` equals the stored version | 2xx    | The write is stored; `version` is the new one                                                            |
+| Another write landed since the client read  | 409    | `{ "error": "The deck changed since it was opened — reload it and try again" }`                          |
+| `expectedVersion` is not a whole number ≥ 0 | 400    | `{ "error": "Invalid request body" \| "Invalid request query", "details": { formErrors, fieldErrors } }` |
+| The deck was deleted after the owner check  | 404    | `{ "error": "Deck not found" }`                                                                          |
+
+A 409 stores nothing. Its body is the one the bulk edit (`PATCH
+/api/decks/[id]/cards`) already answers for a stale change set. The bulk edit
+and the other deck writes do not move the version yet.
+
 ---
 
 ## Data Flow
