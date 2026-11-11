@@ -1,8 +1,17 @@
 "use client";
-// Deck tags editor — pill tags with suggestions and add/remove
+/**
+ * The deck's free-form tags, as removable pills, with an inline input and a few suggestions.
+ *
+ * Context: deck building (ui). It saves through the deck store's `addTag` and
+ * `removeTag`, which trim a tag to 50 characters, skip duplicates, save the whole
+ * list with `PATCH /api/decks/[id]`, and restore the previous list on a failed save.
+ *
+ * @module deck/DeckTagsEditor
+ */
 import { useTranslations } from "next-intl";
 import { useState, useRef } from "react";
 import { X, Plus } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 import { useDeckStore } from "@/lib/deck/store";
 
 const TAG_SUGGESTIONS = ["casual", "cEDH", "WIP", "budget", "tuned", "theme"];
@@ -24,12 +33,26 @@ interface DeckTagsEditorProps {
   readonly tags: readonly string[];
 }
 
+/**
+ * Edits the tags of one deck.
+ *
+ * Enter adds the typed tag, Tab adds the first matching suggestion, Escape
+ * closes the input. `tags` is the deck's saved list, read from the store by the
+ * caller, so a failed save shows the restored list.
+ */
 export function DeckTagsEditor({ deckId, tags }: DeckTagsEditorProps) {
   const t = useTranslations("builder");
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { addTag, removeTag } = useDeckStore();
+  // Actions only: subscribing to the whole store re-rendered the editor on every
+  // store change, such as each save's isSyncing toggle.
+  const { addTag, removeTag } = useDeckStore(
+    useShallow((state) => ({
+      addTag: state.addTag,
+      removeTag: state.removeTag,
+    }))
+  );
 
   const suggestions = TAG_SUGGESTIONS.filter(
     (s) =>

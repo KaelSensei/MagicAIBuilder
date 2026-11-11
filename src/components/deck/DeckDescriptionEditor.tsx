@@ -1,8 +1,20 @@
 "use client";
-// Expandable deck description editor — collapsed by default, supports basic markdown preview
+/**
+ * The deck's description: one collapsed line that expands into a textarea,
+ * with a primer template for an empty description.
+ *
+ * Context: deck building (ui). It saves through the deck store's
+ * `updateDeckDescription`, which sends `PATCH /api/decks/[id]` and restores the
+ * previous text on a failed save. The server caps a description at 2,000
+ * characters (`patchDeckSchema` in `src/lib/validation/deck.ts`), so the
+ * textarea does too.
+ *
+ * @module deck/DeckDescriptionEditor
+ */
 import { useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, Edit3, ListPlus } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 import { useDeckStore } from "@/lib/deck/store";
 
 interface DeckDescriptionEditorProps {
@@ -10,6 +22,12 @@ interface DeckDescriptionEditorProps {
   readonly description: string | null | undefined;
 }
 
+/**
+ * Edits the description of one deck.
+ *
+ * Saves on blur, on Save and on Ctrl+Enter (Cmd+Enter on macOS); Escape drops
+ * the draft. The textarea stays open until the save settles.
+ */
 export function DeckDescriptionEditor({
   deckId,
   description,
@@ -19,7 +37,13 @@ export function DeckDescriptionEditor({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(description ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { updateDeckDescription } = useDeckStore();
+  // The action only: subscribing to the whole store re-rendered the editor on
+  // every store change, such as each save's isSyncing toggle.
+  const { updateDeckDescription } = useDeckStore(
+    useShallow((state) => ({
+      updateDeckDescription: state.updateDeckDescription,
+    }))
+  );
 
   // Sync draft when external description changes
   useEffect(() => {
@@ -153,9 +177,7 @@ export function DeckDescriptionEditor({
               title={t("description.clickToEdit")}
             >
               {hasContent ? (
-                <span className="text-[var(--text-primary)]">
-                  {description!.trim()}
-                </span>
+                <span className="text-[var(--text-primary)]">{hasContent}</span>
               ) : (
                 <span className="italic opacity-50">
                   {t("description.empty")}
