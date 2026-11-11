@@ -111,10 +111,17 @@ SonarCloud also runs on PRs, as an advisory report. Record its result in the PR;
 
 ### Pre-commit (Husky + lint-staged)
 
-On every `git commit`, automatically runs:
+On every `git commit`, `.husky/pre-commit` runs `pnpm exec lint-staged --no-stash`, which automatically runs:
 
 - `eslint --fix` on staged `.ts` / `.tsx` files (rules in `eslint.config.mjs`)
 - `prettier --write` on `.json`, `.md`, `.yml`, `.yaml`
+
+**Why `--no-stash`.** By default lint-staged backs up the working tree with `git stash create` + `git stash store` before its tasks and drops the entry afterwards ("Backed up original state in git stash" on every commit). The git stash stack is shared by the main checkout and every worktree, and several agents commit concurrently from different worktrees, so one hook could drop another worktree's stash entry. With `--no-stash` the hook never touches the stash. Two consequences, from the lint-staged 16.4.0 README ("Command line flags"):
+
+- `--no-stash` implies `--no-revert`: when a task fails, lint-staged leaves the task's modifications in the index and aborts the commit, instead of reverting them. Fix the reported error and commit again.
+- Partially staged files are still protected. lint-staged hides their unstaged hunks in a patch file (`.git/lint-staged_unstaged.patch`) and applies it back after the tasks (`lib/gitWorkflow.js`); that mechanism does not use the stash, so `--no-hide-partially-staged` is **not** needed and must not be added, since it would commit the unstaged hunks too.
+
+Every commit now prints lint-staged's own warning, `Skipping backup because --no-stash was used. This might result in data loss.`; it is expected. `scripts/pre-commit-hook.test.ts` pins the flag.
 
 ### Pre-push (Husky)
 
