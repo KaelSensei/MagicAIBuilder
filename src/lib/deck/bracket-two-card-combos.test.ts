@@ -24,7 +24,8 @@ import { describe, expect, it } from "vitest";
 import { FIND_MY_COMBOS_RECORDED } from "@/lib/combos/fixtures/find-my-combos-v1";
 import { parseFindMyCombos } from "@/lib/combos/find-my-combos";
 import { scoreBracket } from "@/lib/deck/bracket";
-import type { Deck, DeckStats } from "@/lib/deck/types";
+import type { Deck } from "@/lib/deck/types";
+import type { DeckStats } from "@/lib/deck/analysis-types";
 
 const THORACLE = "742-1295";
 const SCEPTER = "4821-5261";

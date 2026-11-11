@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useAISuggestions } from "./useAISuggestions";
-import type { Deck, DeckStats, BracketScore } from "@/lib/deck/types";
+import type { Deck } from "@/lib/deck/types";
+import type { DeckStats, BracketScore } from "@/lib/deck/analysis-types";
 
 function makeDeck(): Deck {
   return {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DeckStats } from "@/lib/deck/types";
+import type { DeckStats } from "@/lib/deck/analysis-types";
 import { compareDeckAnalysis } from "./analysis-change-diff";
 
 const before: DeckStats = {

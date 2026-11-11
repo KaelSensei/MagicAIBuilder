@@ -1,6 +1,15 @@
+/**
+ * Core deck and card types: the deck, its cards, zones and categories, and the card search filters.
+ *
+ * Context: deck building; most of the app imports this file. It must not import analysis or
+ * playtest modules, which import it back: the analysis report types (`DeckStats`, `BracketScore`)
+ * live in `analysis-types.ts`, the playtest state in `lib/playtest/engine.ts`.
+ *
+ * @module deck/types
+ */
+
 import type { DeckFormat } from "./formats";
 import type { BracketLevel } from "@/lib/constants/brackets";
-// Core deck and card types for MagicAIBuilder
 export type CardCategory =
   | "commander"
   | "companion"
@@ -94,55 +103,6 @@ export interface Deck {
   seekingFeedback?: boolean;
   feedbackQuestion?: string | null;
 }
-export interface DeckStats {
-  totalCards: number;
-  lands: number;
-  creatures: number;
-  ramp: number;
-  draw: number;
-  removal: number;
-  boardWipes: number;
-  avgCmc: number;
-  manaCurve: Record<number, number>;
-  colorDistribution: Record<string, number>;
-  gameChangersCount: number;
-  gameChangersList: string[];
-  totalPrice: number;
-  overBudgetCards: string[];
-  bannedCards: string[];
-  colorIdentityViolations: string[];
-  /** Main-deck cards whose rules text cannot work with this commander (deterministic rules check) */
-  commanderRuleIssues: readonly import("./commander-rules-check").CommanderRuleIssue[];
-  themes?: import("./themes").DetectedTheme[];
-  flexibleLands: number;
-  /** Curve / threat / interaction measures; null for Commander (bracket scoring instead) */
-  formatStats: import("./format-stats").FormatStats | null;
-  /** Pips asked for vs. sources produced; null when no spell needs coloured mana */
-  manaAlignment: import("./mana-alignment").ManaAlignment | null;
-  /** Odds the opening hand can act on turn one; null when the deck has no one-drops */
-  turnOnePlayability: import("./turn-one").TurnOnePlayability | null;
-}
-export interface BracketScore {
-  /** Estimated bracket, 1 to 4: the cEDH metagame that sets Bracket 5 apart is not visible in a list. */
-  overall: BracketLevel;
-  /**
-   * Power signals, each scored 1–4. Tutors are not one: Wizards removed the
-   * tutor restriction on 2025-10-21 and lets the Game Changers list catch them.
-   */
-  dimensions: {
-    ramp: number;
-    draw: number;
-    removal: number;
-    winSpeed: number;
-    avgCmc: number;
-  };
-  gameChangers: number;
-  twoCardInfiniteCombos: number;
-  warnings: string[];
-}
-
-// Playtest state lives in PlaytestEngine (src/lib/playtest/engine.ts), which
-// also tracks phases, life, and the battlefield / graveyard / exile zones.
 
 export type ViewMode = "grid" | "list";
 export type ColorMode = "or" | "and" | "exact";

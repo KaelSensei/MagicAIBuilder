@@ -1,5 +1,6 @@
 // Deck statistics computation
-import type { Deck, DeckStats } from "./types";
+import type { Deck } from "./types";
+import type { DeckStats } from "./analysis-types";
 import { detectThemes } from "./themes";
 import { extractColorPips } from "@/lib/mana/parse";
 import { getColorIdentityViolations } from "./color-identity";

@@ -6,7 +6,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { z } from "zod";
 import { DORMANT_LOCALES } from "@/i18n/routing";
 import enDeck from "@/messages/en/deck.json";
-import type { BracketScore } from "@/lib/deck/types";
+import type { BracketScore } from "@/lib/deck/analysis-types";
 import { renderWithIntl as renderInLocale } from "@/test/render-with-intl";
 import { BracketIndicator } from "./BracketIndicator";
 

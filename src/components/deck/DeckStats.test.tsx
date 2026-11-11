@@ -3,7 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { DeckStats } from "./DeckStats";
 import messages from "@/messages/en/deck.json";
-import type { DeckStats as DeckStatsData } from "@/lib/deck/types";
+import type { DeckStats as DeckStatsData } from "@/lib/deck/analysis-types";
 import type { DeckFormat } from "@/lib/deck/formats";
 import type { FormatStats } from "@/lib/deck/format-stats";
 import type { ManaAlignment } from "@/lib/deck/mana-alignment";
