@@ -13,6 +13,7 @@ import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
 import { duplicatesOtherCommandSlot } from "@/lib/deck/commander-pairing";
 import { COMMAND_SLOT_ROWS } from "@/lib/deck/bulk-edit-command-zone";
+import { writeDeckCards } from "@/lib/deck/deck-card-writes";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -82,36 +83,32 @@ export async function POST(request: Request, { params }: Params) {
       );
     }
 
-    const card = await prisma.deckCard.create({
-      data: {
-        deckId,
-        scryfallId,
-        name,
-        manaCost,
-        cmc,
-        typeLine,
-        oracleText,
-        power,
-        toughness,
-        colorIdentity,
-        isGameChanger,
-        isBanned,
-        price,
-        imageUri,
-        artCropUri,
-        category,
-        quantity,
-        isCommander,
-        isPartner,
-        zone,
-      },
-    });
-
-    // Update deck updatedAt
-    await prisma.deck.update({
-      where: { id: deckId },
-      data: { updatedAt: new Date() },
-    });
+    const card = await writeDeckCards(deckId, (tx) =>
+      tx.deckCard.create({
+        data: {
+          deckId,
+          scryfallId,
+          name,
+          manaCost,
+          cmc,
+          typeLine,
+          oracleText,
+          power,
+          toughness,
+          colorIdentity,
+          isGameChanger,
+          isBanned,
+          price,
+          imageUri,
+          artCropUri,
+          category,
+          quantity,
+          isCommander,
+          isPartner,
+          zone,
+        },
+      })
+    );
 
     return NextResponse.json(card, { status: 201 });
   } catch (error) {
@@ -230,11 +227,9 @@ export async function DELETE(_req: Request, { params }: Params) {
     const ownership = await requireDeckOwner(deckId);
     if (ownership.error) return ownership.error;
 
-    await prisma.deckCard.deleteMany({ where: { deckId } });
-    await prisma.deck.update({
-      where: { id: deckId },
-      data: { updatedAt: new Date() },
-    });
+    await writeDeckCards(deckId, (tx) =>
+      tx.deckCard.deleteMany({ where: { deckId } })
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

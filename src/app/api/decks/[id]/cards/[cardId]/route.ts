@@ -5,6 +5,7 @@ import { patchCardSchema } from "@/lib/validation/card";
 import { requireDeckOwner } from "@/lib/auth/helpers";
 import { logger } from "@/lib/logger";
 import { readJsonBody } from "@/lib/api/json-body";
+import { writeDeckCards } from "@/lib/deck/deck-card-writes";
 
 type Params = { params: Promise<{ id: string; cardId: string }> };
 
@@ -23,11 +24,9 @@ export async function DELETE(_req: Request, { params }: Params) {
       return NextResponse.json({ error: "Card not found" }, { status: 404 });
     }
 
-    await prisma.deckCard.delete({ where: { id: cardId } });
-    await prisma.deck.update({
-      where: { id: deckId },
-      data: { updatedAt: new Date() },
-    });
+    await writeDeckCards(deckId, (tx) =>
+      tx.deckCard.delete({ where: { id: cardId } })
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -69,15 +68,12 @@ export async function PATCH(request: Request, { params }: Params) {
 
     // The schema is the allow-list: it drops unknown keys and leaves absent
     // ones out, so the parsed body is exactly the columns to write.
-    const updated = await prisma.deckCard.update({
-      where: { id: cardId },
-      data: parsed.data,
-    });
-
-    await prisma.deck.update({
-      where: { id: deckId },
-      data: { updatedAt: new Date() },
-    });
+    const updated = await writeDeckCards(deckId, (tx) =>
+      tx.deckCard.update({
+        where: { id: cardId },
+        data: parsed.data,
+      })
+    );
 
     return NextResponse.json(updated);
   } catch (error) {
