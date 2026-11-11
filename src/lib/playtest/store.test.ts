@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { usePlaytestStore } from "./store";
+import { createPlaytestStore, usePlaytestStore } from "./store";
+import type { PlaytestDeps } from "./engine";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { seededRandom } from "@/test/seeded-random";
 
 function makeCard(id: string, name = id): DeckCard {
   return {
@@ -431,5 +433,67 @@ describe("dealing a Commander deck", () => {
 
     expect((engine?.hand.length ?? 0) + (engine?.library.length ?? 0)).toBe(59);
     expect(namesIn(engine?.commandZone)).toEqual(["Kenrith"]);
+  });
+});
+
+describe("createPlaytestStore", () => {
+  const GAME_START = Date.UTC(2026, 10, 10, 20, 0, 0);
+  /** Always picks the last index, so the Fisher–Yates shuffle swaps nothing. */
+  const inDeckOrder: PlaytestDeps = {
+    random: { intBelow: (upperExclusive) => upperExclusive - 1 },
+    clock: { now: () => GAME_START },
+  };
+  const seeded = (seed: number): PlaytestDeps => ({
+    random: seededRandom(seed),
+    clock: { now: () => GAME_START },
+  });
+  const handIds = (store: ReturnType<typeof createPlaytestStore>) =>
+    store.getState().engine?.hand.map((card) => card.id);
+
+  it("deals the opening hand in the order its random source dictates", () => {
+    const store = createPlaytestStore(inDeckOrder);
+
+    store.getState().startPlaytest(makeDeck());
+
+    expect(handIds(store)).toEqual(["c0", "c1", "c2", "c3", "c4", "c5", "c6"]);
+  });
+
+  it("rolls the die its random source dictates", () => {
+    const store = createPlaytestStore(inDeckOrder);
+    store.getState().startPlaytest(makeDeck());
+
+    store.getState().rollDie(20);
+
+    expect(store.getState().engine?.diceRolls).toEqual([{ sides: 20, result: 20 }]);
+  });
+
+  it("stamps life changes with its clock", () => {
+    const store = createPlaytestStore(inDeckOrder);
+    store.getState().startPlaytest(makeDeck());
+
+    store.getState().damage(3);
+
+    expect(store.getState().engine?.lifeHistory[0]?.timestamp).toBe(GAME_START);
+  });
+
+  it("replays the same deal from the same seed, and deals on from it after a reset", () => {
+    const first = createPlaytestStore(seeded(42));
+    const second = createPlaytestStore(seeded(42));
+    first.getState().startPlaytest(makeDeck());
+    second.getState().startPlaytest(makeDeck());
+    const dealt = handIds(first);
+
+    first.getState().resetPlaytest();
+
+    expect(handIds(second)).toEqual(dealt);
+    expect(handIds(first)).not.toEqual(dealt);
+  });
+
+  it("is independent of the app's store", () => {
+    usePlaytestStore.setState({ engine: null, isActive: false, setup: null });
+
+    createPlaytestStore(inDeckOrder).getState().startPlaytest(makeDeck());
+
+    expect(usePlaytestStore.getState().engine).toBeNull();
   });
 });

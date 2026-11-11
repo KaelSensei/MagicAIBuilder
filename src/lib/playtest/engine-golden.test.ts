@@ -8,16 +8,24 @@
  * which names every card in hand at each checkpoint, with the approved one below. A change in
  * how the engine shuffles, draws, moves cards or writes its log shows up as a readable diff.
  *
- * Randomness: Web Crypto replays a mulberry32 stream (`src/test/seeded-random.ts`), so the
- * engine's production shuffle runs unchanged. Time: `Date` is faked at a fixed instant.
+ * The game runs twice and must give the same transcript both times:
+ * - on the default ports, with Web Crypto replaying a mulberry32 stream
+ *   (`src/test/seeded-random.ts`) and `Date` faked at a fixed instant, which proves the
+ *   production wiring draws and stamps exactly as before the ports existed;
+ * - on injected ports (a seeded `RandomSource` and a fixed `Clock`), with Web Crypto and the
+ *   system clock made to throw, which proves no move reaches past its ports.
  *
  * Approval rule: when the transcript changes, read the diff, check that the new game is right,
  * and say why in the pull request before updating `GOLDEN_TRANSCRIPT` (ADR 0005: actual output
  * is never copied into the expectation unchecked).
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DeckCard } from "@/lib/deck/types";
-import { mulberry32, replayWebCrypto } from "@/test/seeded-random";
+import {
+  mulberry32,
+  replayWebCrypto,
+  seededRandom,
+} from "@/test/seeded-random";
 import { exportActionLogText } from "./action-log-export";
 import {
   applyAddActionLogEntry,
@@ -39,7 +47,7 @@ import {
   applyUndo,
   createPlaytestState,
 } from "./engine";
-import type { PlaytestEngine } from "./engine";
+import type { PlaytestDeps, PlaytestEngine } from "./engine";
 
 const SEED = 20261110;
 const GAME_START = Date.UTC(2026, 10, 10, 20, 0, 0);
@@ -113,7 +121,8 @@ const SOLDIER = {
 /** One step of the game: a label for the transcript and the move it makes. */
 interface Step {
   readonly label: (state: PlaytestEngine) => string;
-  readonly act: (state: PlaytestEngine) => PlaytestEngine;
+  /** `deps` is undefined when the game runs on the default ports. */
+  readonly act: (state: PlaytestEngine, deps?: PlaytestDeps) => PlaytestEngine;
   /** Whether the transcript shows the board after this step. */
   readonly checkpoint?: boolean;
 }
@@ -147,109 +156,143 @@ function describeBoard(state: PlaytestEngine): readonly string[] {
 const STEPS: readonly Step[] = [
   {
     label: () => "free mulligan",
-    act: (s) => applyMulligan(s),
+    act: (s, deps) => applyMulligan(s, deps),
     checkpoint: true,
   },
-  { label: () => "mulligan", act: (s) => applyMulligan(s), checkpoint: true },
+  {
+    label: () => "mulligan",
+    act: (s, deps) => applyMulligan(s, deps),
+    checkpoint: true,
+  },
   {
     label: (s) => `bottom ${first(s.hand).name}`,
-    act: (s) => applyBottomCards(s, [first(s.hand).id]),
+    act: (s, deps) => applyBottomCards(s, [first(s.hand).id], deps),
     checkpoint: true,
   },
-  { label: () => "next phase", act: (s) => applyNextPhase(s) },
+  { label: () => "next phase", act: (s, deps) => applyNextPhase(s, deps) },
   {
     label: (s) => `play ${first(s.hand).name}`,
-    act: (s) => applyMoveToZone(s, first(s.hand).id, "hand", "battlefield"),
+    act: (s, deps) =>
+      applyMoveToZone(s, first(s.hand).id, "hand", "battlefield", deps),
   },
   {
     label: (s) => `tap ${first(s.battlefield).name}`,
-    act: (s) => applyTap(s, first(s.battlefield).id),
+    act: (s, deps) => applyTap(s, first(s.battlefield).id, deps),
   },
   {
     label: () => "record 1 mana",
-    act: (s) => applyRecordMana(s, 1),
+    act: (s, deps) => applyRecordMana(s, 1, deps),
     checkpoint: true,
   },
-  { label: () => "next turn", act: (s) => applyNextTurn(s) },
+  { label: () => "next turn", act: (s, deps) => applyNextTurn(s, deps) },
   {
     label: (s) => `play ${first(s.hand).name}`,
-    act: (s) => applyMoveToZone(s, first(s.hand).id, "hand", "battlefield"),
+    act: (s, deps) =>
+      applyMoveToZone(s, first(s.hand).id, "hand", "battlefield", deps),
   },
   {
     label: () => "create a Soldier token",
-    act: (s) => applyCreateToken(s, SOLDIER, "token-1"),
+    act: (s, deps) => applyCreateToken(s, SOLDIER, "token-1", deps),
   },
   {
     label: (s) => `copy ${first(s.battlefield).name}`,
-    act: (s) => applyCreateCardCopy(s, first(s.battlefield).id, "copy-1"),
+    act: (s, deps) =>
+      applyCreateCardCopy(s, first(s.battlefield).id, "copy-1", deps),
   },
   {
     label: () => "two counters on the token",
-    act: (s) => applyAddCounter(applyAddCounter(s, "token-1", 1), "token-1", 1),
+    act: (s, deps) =>
+      applyAddCounter(
+        applyAddCounter(s, "token-1", 1, deps),
+        "token-1",
+        1,
+        deps
+      ),
   },
-  { label: () => "roll a d20 (14)", act: (s) => applyRollDie(s, 20, 14) },
+  {
+    label: () => "roll a d20 (14)",
+    act: (s, deps) => applyRollDie(s, 20, 14, deps),
+  },
   {
     label: () => "take 7 combat damage",
-    act: (s) => applyDamage(s, 7, "combat"),
+    act: (s, deps) => applyDamage(s, 7, "combat", deps),
   },
-  { label: () => "gain 2 life", act: (s) => applyHeal(s, 2), checkpoint: true },
-  { label: () => "next turn", act: (s) => applyNextTurn(s) },
+  {
+    label: () => "gain 2 life",
+    act: (s, deps) => applyHeal(s, 2, deps),
+    checkpoint: true,
+  },
+  { label: () => "next turn", act: (s, deps) => applyNextTurn(s, deps) },
   {
     label: (s) => `tutor ${first(s.library).name} to hand`,
-    act: (s) => applyMoveToZone(s, first(s.library).id, "library", "hand"),
+    act: (s, deps) =>
+      applyMoveToZone(s, first(s.library).id, "library", "hand", deps),
   },
   {
     label: () => "cast the commander",
-    act: (s) => applyMoveToZone(s, KENRITH.id, "command", "battlefield"),
+    act: (s, deps) =>
+      applyMoveToZone(s, KENRITH.id, "command", "battlefield", deps),
   },
   {
     label: () => "the copy dies",
-    act: (s) => applyMoveToZone(s, "copy-1", "battlefield", "graveyard"),
+    act: (s, deps) =>
+      applyMoveToZone(s, "copy-1", "battlefield", "graveyard", deps),
   },
   {
     label: () => "the commander dies",
-    act: (s) => applyMoveToZone(s, KENRITH.id, "battlefield", "graveyard"),
+    act: (s, deps) =>
+      applyMoveToZone(s, KENRITH.id, "battlefield", "graveyard", deps),
   },
   {
     label: () => "return the commander",
-    act: (s) => applyMoveToZone(s, KENRITH.id, "graveyard", "command"),
+    act: (s, deps) =>
+      applyMoveToZone(s, KENRITH.id, "graveyard", "command", deps),
   },
   {
     label: (s) => `exile ${first(s.battlefield).name}`,
-    act: (s) =>
-      applyMoveToZone(s, first(s.battlefield).id, "battlefield", "exile"),
+    act: (s, deps) =>
+      applyMoveToZone(s, first(s.battlefield).id, "battlefield", "exile", deps),
   },
   {
     label: () => "note",
-    act: (s) => applyAddActionLogEntry(s, "Opponent at 12"),
+    act: (s, deps) => applyAddActionLogEntry(s, "Opponent at 12", deps),
   },
   {
     label: () => "draw, then undo it",
-    act: (s) => applyUndo(applyDrawCard(s)),
+    act: (s, deps) => applyUndo(applyDrawCard(s, deps)),
   },
   {
     label: () => "edit the note",
-    act: (s) =>
-      applyEditActionLogEntry(s, s.nextActionId - 1, "Opponent at 11"),
+    act: (s, deps) =>
+      applyEditActionLogEntry(s, s.nextActionId - 1, "Opponent at 11", deps),
   },
   {
     label: () => "next phase ×4",
-    act: (s) => [1, 2, 3, 4].reduce((state) => applyNextPhase(state), s),
+    act: (s, deps) =>
+      [1, 2, 3, 4].reduce((state) => applyNextPhase(state, deps), s),
   },
   {
     label: () => "next phase (End wraps)",
-    act: (s) => applyNextPhase(s),
+    act: (s, deps) => applyNextPhase(s, deps),
     checkpoint: true,
   },
 ];
 
-/** Replays the golden game and renders its transcript. */
-function playGoldenGame(deal: () => PlaytestEngine): string {
-  let state = deal();
+/**
+ * Replays the golden game and renders its transcript.
+ *
+ * @param deps - the ports every move receives; omit them to run on the defaults
+ */
+function playGoldenGame(deps?: PlaytestDeps): string {
+  let state = createPlaytestState(
+    LIBRARY,
+    { commandZone: [KENRITH], firstMulliganFree: true, lifeTotal: 40 },
+    deps
+  );
   const lines = ["deal", ...describeBoard(state)];
   for (const step of STEPS) {
     lines.push(step.label(state));
-    state = step.act(state);
+    state = step.act(state, deps);
     if (step.checkpoint) lines.push(...describeBoard(state));
   }
   const life = state.lifeHistory.map(
@@ -379,26 +422,31 @@ Turn 4
 - Untap: Started turn 4`;
 
 describe("golden game", () => {
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(GAME_START);
-  });
-
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
-  it("replays the approved transcript with Web Crypto replaying the seed", () => {
+  it("replays the approved transcript on the default ports, with Web Crypto replaying the seed", () => {
     replayWebCrypto(mulberry32(SEED));
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(GAME_START);
 
-    const transcript = playGoldenGame(() =>
-      createPlaytestState(LIBRARY, {
-        commandZone: [KENRITH],
-        firstMulliganFree: true,
-        lifeTotal: 40,
-      })
-    );
+    expect(playGoldenGame()).toBe(GOLDEN_TRANSCRIPT);
+  });
+
+  it("replays the same transcript on injected ports, without reading Web Crypto or the system clock", () => {
+    vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation(() => {
+      throw new Error("a move read Web Crypto instead of its RandomSource");
+    });
+    vi.spyOn(Date, "now").mockImplementation(() => {
+      throw new Error("a move read the system clock instead of its Clock");
+    });
+
+    const transcript = playGoldenGame({
+      random: seededRandom(SEED),
+      clock: { now: () => GAME_START },
+    });
 
     expect(transcript).toBe(GOLDEN_TRANSCRIPT);
   });

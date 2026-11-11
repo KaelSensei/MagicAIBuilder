@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomIntBelow } from "@/lib/crypto-random";
-import { intBelowFrom, mulberry32, replayWebCrypto } from "./seeded-random";
+import {
+  intBelowFrom,
+  mulberry32,
+  replayWebCrypto,
+  seededRandom,
+} from "./seeded-random";
 
 /** Takes the next `count` values from a generator function. */
 const take = (count: number, next: () => number) =>
@@ -68,5 +73,26 @@ describe("intBelowFrom", () => {
   it("rejects a bound that is not a positive integer", () => {
     expect(() => intBelowFrom(mulberry32(1), 0)).toThrow(RangeError);
     expect(() => intBelowFrom(mulberry32(1), 2.5)).toThrow(RangeError);
+  });
+});
+
+describe("seededRandom", () => {
+  it("draws the same integers as intBelowFrom on the seed's stream", () => {
+    const bounds = [30, 29, 28, 6, 20];
+    const source = seededRandom(9);
+    const stream = mulberry32(9);
+
+    expect(bounds.map((bound) => source.intBelow(bound))).toEqual(
+      bounds.map((bound) => intBelowFrom(stream, bound))
+    );
+  });
+
+  it("gives two sources built from one seed the same numbers", () => {
+    const left = seededRandom(5);
+    const right = seededRandom(5);
+
+    expect(take(5, () => left.intBelow(100))).toEqual(
+      take(5, () => right.intBelow(100))
+    );
   });
 });

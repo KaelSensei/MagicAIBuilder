@@ -12,13 +12,15 @@
  * state, a period of 2^32 and good enough statistical quality for card shuffles.
  *
  * `intBelowFrom` turns the words into bounded integers with the rejection sampling that
- * `randomIntBelow` applies to Web Crypto's words, and `replayWebCrypto` feeds the words to code
- * that reads Web Crypto itself. One seed therefore gives the same deal through either path.
+ * `randomIntBelow` applies to Web Crypto's words. A seed reaches the engine through either
+ * path and gives the same deal: `seededRandom` is an injected `RandomSource`, and
+ * `replayWebCrypto` feeds the words to code that reads Web Crypto itself.
  *
  * @module test/seeded-random
  */
 
 import { vi } from "vitest";
+import type { RandomSource } from "@/lib/playtest/engine";
 
 /** An endless stream of unsigned 32-bit words. Each call returns the next one. */
 export type WordStream = () => number;
@@ -63,6 +65,17 @@ export function intBelowFrom(
   let word = words();
   while (word >= limit) word = words();
   return word % upperExclusive;
+}
+
+/**
+ * The playtest engine's `RandomSource`, replaying mulberry32 from `seed`.
+ *
+ * Each call starts its own stream, so two sources built from one seed give the same numbers,
+ * and a source shared by several moves continues where the last move stopped.
+ */
+export function seededRandom(seed: number): RandomSource {
+  const words = mulberry32(seed);
+  return { intBelow: (upperExclusive) => intBelowFrom(words, upperExclusive) };
 }
 
 /**
