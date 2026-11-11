@@ -8,26 +8,33 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "@/styles/globals.css";
 import { routing } from "@/i18n/routing";
 import { themeBootScript } from "@/lib/theme/preference";
 import { Providers } from "./providers";
 
-const geistSans = Geist({
+// The fonts are committed files, so `next build` reads them from disk instead
+// of downloading them from Google Fonts, whose malformed answers failed
+// builds (backlog row 54). Sources, licences, and how the files were cut to
+// match what Google served: `src/styles/fonts/README.md`.
+
+/** Geist, second in the body font stack (`globals.css`): Latin. */
+const geistSans = localFont({
+  src: "../../styles/fonts/geist/geist-variable-latin.woff2",
+  weight: "100 900",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+/**
+ * Inter, the body font: Latin, and Cyrillic for the `ru` locale. The weight
+ * range is the 300–600 the app has always loaded; bolder text renders at
+ * 600, as it did.
+ */
+const inter = localFont({
+  src: "../../styles/fonts/inter/inter-variable-latin-cyrillic.woff2",
+  weight: "300 600",
   variable: "--font-inter",
 });
 
@@ -99,7 +106,7 @@ export default async function LocaleLayout({
         <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased min-h-screen bg-[var(--background)] text-[var(--text-primary)]`}
+        className={`${geistSans.variable} ${inter.variable} antialiased min-h-screen bg-[var(--background)] text-[var(--text-primary)]`}
       >
         {/* `locale` is passed explicitly rather than left to be inferred from
             the request context. next-intl can infer it, but only while that

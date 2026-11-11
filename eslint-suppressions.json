@@ -74,7 +74,7 @@
       "count": 1
     },
     "vitest/prefer-import-in-mock": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/[locale]/layout.tsx": {
