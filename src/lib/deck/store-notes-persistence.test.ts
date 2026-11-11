@@ -22,15 +22,25 @@ vi.mock(import("@/lib/auth/helpers"), () => ({
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
   const storedRow = () => ({ id: "card-1", deckId: "deck-1", notes: db.notes });
+  const deckCard = {
+    findFirst: vi.fn(async () => storedRow()),
+    update: vi.fn(async ({ data }: { data: { notes?: string | null } }) => {
+      if (data.notes !== undefined) db.notes = data.notes;
+      return storedRow();
+    }),
+  };
+  const deck = { update: vi.fn(async () => ({ id: "deck-1" })) };
   return stubPrisma(await importOriginal(), {
-    deckCard: {
-      findFirst: vi.fn(async () => storedRow()),
-      update: vi.fn(async ({ data }: { data: { notes?: string | null } }) => {
-        if (data.notes !== undefined) db.notes = data.notes;
-        return storedRow();
-      }),
-    },
-    deck: { update: vi.fn(async () => ({ id: "deck-1" })) },
+    deckCard,
+    deck,
+    // The route writes the card and the deck in one transaction (B2-09); this
+    // fake has no rollback to model, so the transaction runs on the same tables.
+    $transaction: (
+      run: (tx: {
+        deck: typeof deck;
+        deckCard: typeof deckCard;
+      }) => Promise<unknown>
+    ) => run({ deck, deckCard }),
   });
 });
 

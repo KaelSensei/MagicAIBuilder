@@ -123,6 +123,21 @@ describe("PATCH /api/collection/[id]", () => {
     expect(collectionDb.all()).toHaveLength(1);
   });
 
+  it("keeps both rows as they were when the merge cannot delete the source row", async () => {
+    const owned = collectionRow({
+      id: "row-sol-ring-alt",
+      scryfallId: "printing-sol-ring-alt",
+      quantity: 2,
+    });
+    collectionDb.reset([SOL_RING, owned]);
+    collectionDb.failNextDelete();
+
+    const response = await patch(SOL_RING.id, { scryfallId: owned.scryfallId });
+
+    expect(response.status).toBe(500);
+    expect(collectionDb.all()).toEqual([SOL_RING, owned]);
+  });
+
   it("rejects an anonymous request before reading the row", async () => {
     requireAuth.mockResolvedValue({
       error: new Response(null, { status: 401 }),

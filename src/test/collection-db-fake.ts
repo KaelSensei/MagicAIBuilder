@@ -3,6 +3,12 @@
  * from the client store through the real `/api/collection/[id]` route to the
  * stored row. Supports the lookups that route makes: by `id`, and by the
  * `scryfallId_foil_userId` compound unique key.
+ *
+ * `$transaction` follows Prisma's interactive transactions: the `tx` client
+ * writes to a draft that is stored only when the callback resolves. A write
+ * made outside a transaction is stored at once, so a test that breaks the
+ * second write of a merge (`failNextDelete`) sees whether the first one stayed
+ * (B2-08).
  */
 
 /** The user who owns every row built by {@link collectionRow}. */
@@ -71,56 +77,86 @@ export function wireRow(row: FakeCollectionRow): unknown {
  * @returns The Prisma-shaped client plus helpers to seed and inspect it.
  */
 function createCollectionDb() {
-  let rows: readonly FakeCollectionRow[] = [];
+  const stored: { rows: readonly FakeCollectionRow[] } = { rows: [] };
+  let failDelete = false;
 
-  const locate = (where: UniqueWhere): FakeCollectionRow | undefined => {
-    if ("id" in where) return rows.find((row) => row.id === where.id);
-    const key = where.scryfallId_foil_userId;
-    return rows.find(
-      (row) =>
-        row.scryfallId === key.scryfallId &&
-        row.foil === key.foil &&
-        row.userId === key.userId
-    );
+  /** Prisma-shaped delegate that reads and writes one copy of the table. */
+  const delegateOver = (table: { rows: readonly FakeCollectionRow[] }) => {
+    const locate = (where: UniqueWhere): FakeCollectionRow | undefined => {
+      if ("id" in where) return table.rows.find((row) => row.id === where.id);
+      const key = where.scryfallId_foil_userId;
+      return table.rows.find(
+        (row) =>
+          row.scryfallId === key.scryfallId &&
+          row.foil === key.foil &&
+          row.userId === key.userId
+      );
+    };
+
+    return {
+      findUnique: async ({ where }: { readonly where: UniqueWhere }) =>
+        locate(where) ?? null,
+      update: async ({
+        where,
+        data,
+      }: {
+        readonly where: UniqueWhere;
+        readonly data: Partial<FakeCollectionRow>;
+      }) => {
+        const current = locate(where);
+        if (!current) throw new Error("Record to update not found.");
+        const next: FakeCollectionRow = { ...current, ...data };
+        table.rows = table.rows.map((row) =>
+          row.id === current.id ? next : row
+        );
+        return next;
+      },
+      delete: async ({ where }: { readonly where: UniqueWhere }) => {
+        if (failDelete) {
+          failDelete = false;
+          throw new Error("delete failed");
+        }
+        const current = locate(where);
+        if (!current) throw new Error("Record to delete does not exist.");
+        table.rows = table.rows.filter((row) => row.id !== current.id);
+        return current;
+      },
+    };
   };
 
-  const collectionCard = {
-    findUnique: async ({ where }: { readonly where: UniqueWhere }) =>
-      locate(where) ?? null,
-    update: async ({
-      where,
-      data,
-    }: {
-      readonly where: UniqueWhere;
-      readonly data: Partial<FakeCollectionRow>;
-    }) => {
-      const current = locate(where);
-      if (!current) throw new Error("Record to update not found.");
-      const next: FakeCollectionRow = { ...current, ...data };
-      rows = rows.map((row) => (row.id === current.id ? next : row));
-      return next;
-    },
-    delete: async ({ where }: { readonly where: UniqueWhere }) => {
-      const current = locate(where);
-      if (!current) throw new Error("Record to delete does not exist.");
-      rows = rows.filter((row) => row.id !== current.id);
-      return current;
-    },
-  };
+  const collectionCard = delegateOver(stored);
 
   return {
-    prisma: { collectionCard },
-    /** Replaces the table contents. */
+    prisma: {
+      collectionCard,
+      /** Runs `run` on a draft and stores the draft only if `run` resolves. */
+      $transaction: async <Result>(
+        run: (tx: {
+          readonly collectionCard: ReturnType<typeof delegateOver>;
+        }) => Promise<Result>
+      ): Promise<Result> => {
+        const draft = { rows: stored.rows };
+        const result = await run({ collectionCard: delegateOver(draft) });
+        stored.rows = draft.rows;
+        return result;
+      },
+    },
+    /** Replaces the table contents and clears any planned failure. */
     reset(seed: readonly FakeCollectionRow[]): void {
-      rows = [...seed];
+      stored.rows = [...seed];
+      failDelete = false;
+    },
+    /** Makes the next `delete` throw, as a lost connection would. */
+    failNextDelete(): void {
+      failDelete = true;
     },
     /** @returns The row with this id, if it is still stored. */
     row(id: string): FakeCollectionRow | undefined {
-      return rows.find((row) => row.id === id);
+      return stored.rows.find((row) => row.id === id);
     },
     /** @returns Every stored row, in insertion order. */
     all(): readonly FakeCollectionRow[] {
-      return rows;
+      return stored.rows;
     },
   };
 }

@@ -11,10 +11,20 @@ const { mockDeckFindUnique, mockDeckUpdate, mockCardCreate, mockUserFindUnique }
 
 vi.mock(import("@/lib/db/prisma"), async (importOriginal) => {
   const { stubPrisma } = await import("@/test/prisma-stub");
+  const deck = { findUnique: mockDeckFindUnique, update: mockDeckUpdate };
+  const deckCard = { create: mockCardCreate };
   return stubPrisma(await importOriginal(), {
-    deck: { findUnique: mockDeckFindUnique, update: mockDeckUpdate },
-    deckCard: { create: mockCardCreate },
+    deck,
+    deckCard,
     user: { findUnique: mockUserFindUnique },
+    // The card and the deck update share a transaction (B2-09). Here it runs on
+    // the same mocks; route.atomic.test.ts checks what a failure leaves stored.
+    $transaction: (
+      run: (tx: {
+        deck: typeof deck;
+        deckCard: typeof deckCard;
+      }) => Promise<unknown>
+    ) => run({ deck, deckCard }),
   });
 });
 
