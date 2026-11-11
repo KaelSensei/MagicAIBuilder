@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 import { ShareDeckView } from "@/components/deck/ShareDeckView";
 import type { ApiSharedDeck } from "@/lib/deck/share-types";
 import { normalizeScryfallImageUrl } from "@/lib/scryfall/images";
+import { metadataTranslations } from "@/lib/seo/page-metadata";
 
 interface Params {
-  readonly params: Promise<{ token: string }>;
+  readonly params: Promise<{ locale: string; token: string }>;
 }
 
 // ─── Server-side data fetching ────────────────────────────────────────────────
@@ -15,7 +16,9 @@ async function fetchSharedDeck(token: string): Promise<ApiSharedDeck | null> {
   try {
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000");
 
     const res = await fetch(`${baseUrl}/api/share/${token}`, {
       next: { revalidate: 60 }, // Cache for 60 seconds
@@ -31,11 +34,14 @@ async function fetchSharedDeck(token: string): Promise<ApiSharedDeck | null> {
 // ─── OG meta tags ─────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { token } = await params;
-  const deck = await fetchSharedDeck(token);
+  const { token, locale } = await params;
+  const [t, deck] = await Promise.all([
+    metadataTranslations(locale, "share"),
+    fetchSharedDeck(token),
+  ]);
 
   if (!deck) {
-    return { title: "Deck not found — MagicAIBuilder" };
+    return { title: t("notFound") };
   }
 
   const commander = deck.cards.find((c) => c.isCommander && !c.isPartner);
@@ -43,14 +49,23 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const cardCount = deck.cards.length;
 
   let commanderLabel: string;
-  if (!commander) { commanderLabel = "No commander"; }
-  else if (partner) { commanderLabel = `${commander.name} + ${partner.name}`; }
-  else { commanderLabel = commander.name; }
+  if (!commander) {
+    commanderLabel = t("noCommander");
+  } else if (partner) {
+    commanderLabel = `${commander.name} + ${partner.name}`;
+  } else {
+    commanderLabel = commander.name;
+  }
 
-  const description = `Commander: ${commanderLabel} · ${cardCount} cards · Bracket ${deck.targetBracket} · ${deck.format}`;
+  const description = t("description", {
+    commander: commanderLabel,
+    cardCount,
+    bracket: deck.targetBracket,
+    format: deck.format,
+  });
 
   return {
-    title: `${deck.name} — MagicAIBuilder`,
+    title: t("title", { name: deck.name }),
     description,
     robots: {
       index: false,

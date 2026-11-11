@@ -25,6 +25,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     await import(`@/messages/${locale}/commander-rules.json`)
   ).default;
   const settings = (await import(`@/messages/${locale}/settings.json`)).default;
+  const metadata = (await import(`@/messages/${locale}/metadata.json`)).default;
 
   return {
     locale,
@@ -44,6 +45,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       playtestEvidence,
       commanderRules,
       settings,
+      metadata,
     },
   };
 });

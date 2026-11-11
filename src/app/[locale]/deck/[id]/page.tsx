@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { alternatesFor } from "@/lib/seo/alternates";
+import { metadataTranslations } from "@/lib/seo/page-metadata";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
@@ -19,27 +20,36 @@ async function fetchDeckForViewer(id: string) {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id, locale } = await params;
+  const t = await metadataTranslations(locale, "deck");
   let deck;
   try {
     deck = await fetchDeckForViewer(id);
   } catch {
-    return { title: "Deck unavailable — MagicAIBuilder" };
+    return { title: t("unavailable") };
   }
 
-  if (!deck) return { title: "Deck not found — MagicAIBuilder" };
+  if (!deck) return { title: t("notFound") };
 
   const commander = deck.cards?.find(
-    (c: { isCommander: boolean; isPartner: boolean }) => c.isCommander && !c.isPartner
+    (c: { isCommander: boolean; isPartner: boolean }) =>
+      c.isCommander && !c.isPartner
   );
-  const author = deck.user?.name ?? deck.user?.username ?? "Unknown";
+  const byline = {
+    name: deck.name,
+    author: deck.user?.name ?? deck.user?.username ?? t("unknownAuthor"),
+  };
+  const summary = {
+    commander: commander?.name ?? t("unknownCommander"),
+    bracket: deck.targetBracket,
+  };
 
   return {
     alternates: alternatesFor(locale, `/deck/${id}`),
-    title: `${deck.name} by ${author} — MagicAIBuilder`,
-    description: `Commander: ${commander?.name ?? "Unknown"} · Bracket ${deck.targetBracket} · ${deck.format}`,
+    title: t("title", byline),
+    description: t("description", { ...summary, format: deck.format }),
     openGraph: {
-      title: `${deck.name} by ${author}`,
-      description: `Commander: ${commander?.name ?? "Unknown"} · Bracket ${deck.targetBracket}`,
+      title: t("socialTitle", byline),
+      description: t("socialDescription", summary),
       images: commander?.artCropUri
         ? [{ url: normalizeScryfallImageUrl(commander.artCropUri) }]
         : [],

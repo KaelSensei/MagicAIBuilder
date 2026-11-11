@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { alternatesFor } from "@/lib/seo/alternates";
+import { metadataTranslations } from "@/lib/seo/page-metadata";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
@@ -55,23 +56,24 @@ function profileRobots(profile: unknown): Pick<Metadata, "robots"> {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { username, locale } = await params;
+  const t = await metadataTranslations(locale, "profile");
   let profile;
   try {
     profile = await fetchProfile(username);
   } catch {
-    return { title: "Profile unavailable — MagicAIBuilder" };
+    return { title: t("unavailable") };
   }
 
   if (!profile) {
-    return { title: "Profile not found — MagicAIBuilder" };
+    return { title: t("notFound") };
   }
 
   const displayName = profile.name ?? profile.username;
   return {
     ...profileRobots(profile),
     alternates: alternatesFor(locale, `/u/${username}`),
-    title: `${displayName} — MagicAIBuilder`,
-    description: `${displayName}'s public Commander decks on MagicAIBuilder.`,
+    title: t("title", { name: displayName }),
+    description: t("description", { name: displayName }),
   };
 }
 

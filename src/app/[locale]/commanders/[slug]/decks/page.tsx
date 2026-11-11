@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { alternatesFor } from "@/lib/seo/alternates";
+import { metadataTranslations } from "@/lib/seo/page-metadata";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
@@ -55,21 +56,22 @@ function commanderNameFor(data: CommanderDecksResponse, slug: string): string {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug, locale } = await params;
+  const t = await metadataTranslations(locale, "commanderDecks");
   if (!isCommanderSlug(slug)) {
-    return { title: "Commander not found — MagicAIBuilder" };
+    return { title: t("notFound") };
   }
 
   let data: CommanderDecksResponse;
   try {
     data = await fetchCommanderDecks(slug);
   } catch {
-    return { title: "Commander decks unavailable — MagicAIBuilder" };
+    return { title: t("unavailable") };
   }
 
-  const name = commanderNameFor(data, slug);
+  const commander = commanderNameFor(data, slug);
   const listing = {
-    title: `${name} decks — MagicAIBuilder`,
-    description: `Public Commander decks led by ${name}, ranked by community votes.`,
+    title: t("title", { commander }),
+    description: t("description", { commander }),
   };
 
   // An empty listing stays reachable — the builder links to it for any

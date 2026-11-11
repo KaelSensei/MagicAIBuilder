@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { siteUrl } from "@/lib/seo/alternates";
+import {
+  metadataTranslations,
+  type LocaleMetadataProps,
+} from "@/lib/seo/page-metadata";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
@@ -27,29 +31,46 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-export const metadata: Metadata = {
-  // Relative URLs below (the OG image) resolve against this. Without it Next
-  // warns and falls back to localhost, so shared links carried a dead preview.
-  metadataBase: new URL(siteUrl()),
-  title: {
-    default: "MagicAIBuilder — Commander Deck Builder",
-    template: "%s | MagicAIBuilder",
-  },
-  description:
-    "Build Commander decks with live bracket scoring, AI suggestions, and Scryfall integration.",
-  keywords: ["MTG", "Magic the Gathering", "Commander", "EDH", "deck builder"],
-  icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-  },
-  openGraph: {
-    title: "MagicAIBuilder — Commander Deck Builder",
-    description:
-      "Build Commander decks with live bracket scoring, AI suggestions, and Scryfall integration.",
-    type: "website",
-    images: [{ url: "/og-image.svg", width: 1200, height: 630 }],
-  },
-};
+/**
+ * Site-wide metadata, in the language of the page. Its title and description
+ * are what every page without its own shows, the home page first among them.
+ */
+export async function generateMetadata({
+  params,
+}: LocaleMetadataProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await metadataTranslations(locale, "site");
+  const title = t("title");
+  const description = t("description");
+
+  return {
+    // Relative URLs below (the OG image) resolve against this. Without it Next
+    // warns and falls back to localhost, so shared links carried a dead preview.
+    metadataBase: new URL(siteUrl()),
+    title: {
+      default: title,
+      template: "%s | MagicAIBuilder",
+    },
+    description,
+    keywords: [
+      "MTG",
+      "Magic the Gathering",
+      "Commander",
+      "EDH",
+      "deck builder",
+    ],
+    icons: {
+      icon: "/favicon.svg",
+      shortcut: "/favicon.svg",
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: [{ url: "/og-image.svg", width: 1200, height: 630 }],
+    },
+  };
+}
 
 /** Pre-render all supported locales at build time. */
 export function generateStaticParams() {
