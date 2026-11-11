@@ -8,27 +8,21 @@ import {
 } from "./proxy";
 import type { DeckCard } from "./types";
 import type { LocalizedCardText } from "@/lib/scryfall/localized";
+import { aDeckCard } from "@/test/builders/card";
 
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
+  return aDeckCard({
     id: "card1",
     name: "Sol Ring",
     manaCost: "{1}",
     cmc: 1,
     typeLine: "Artifact",
     oracleText: "Tap: Add two mana.",
-    colorIdentity: [],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
     imageUri: "https://example.com/img.jpg",
-    artCropUri: "",
     category: "ramp",
-    quantity: 1,
-    zone: "main",
     scryfallId: "abc",
     ...overrides,
-  };
+  });
 }
 
 const BASE_COMMANDER: DeckCard = makeCard({

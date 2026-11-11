@@ -5,54 +5,25 @@
 import { describe, it, expect } from "vitest";
 import { exportPlainText } from "@/lib/deck/export";
 import type { Deck, DeckCard } from "@/lib/deck/types";
+import { aDeckCard } from "@/test/builders/card";
+import { aDeck } from "@/test/builders/deck";
 
 function makeCard(overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
-    id: "card-1",
+  return aDeckCard({
     name: "Swords to Plowshares",
     manaCost: "{W}",
     cmc: 1,
     typeLine: "Instant",
     oracleText: "Exile target creature.",
     colorIdentity: ["W"],
-    isGameChanger: false,
-    isBanned: false,
-    price: null,
-    imageUri: "",
-    artCropUri: "",
     category: "removal",
-    quantity: 1,
     notes: null,
-    zone: "main" as const,
     ...overrides,
-  };
+  });
 }
 
 function makeDeck(cards: DeckCard[], overrides: Partial<Deck> = {}): Deck {
-  return {
-    id: "deck-1",
-    name: "Test Deck",
-    description: "",
-    tags: [],
-    commander: null,
-    partner: null,
-    companion: null,
-    pairingType: "none",
-    cards,
-    maybeboard: [],
-    format: "commander",
-    cardCount: 0,
-    targetBracket: 2 as 1 | 2 | 3 | 4,
-    manualBracket: null as 1 | 2 | 3 | 4 | null,
-    budget: null,
-    shareToken: null,
-    shareEnabled: false,
-    isPublic: false,
-    isAIGenerated: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
+  return aDeck({ cards, targetBracket: 2, ...overrides });
 }
 
 describe("exportPlainText — card notes as comments", () => {
